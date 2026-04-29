@@ -9,7 +9,7 @@
 //   - Option A vs Option B verdict against the plan's rubric
 //
 // Run:
-//   pnpm --filter @dnd/prototype-content-surface exec tsx \
+//   pnpm --filter @dnd/surface exec tsx \
 //     ../../scripts/content-surface-survey/aggregate.ts
 //
 // Output: scripts/content-surface-survey/REPORT_SRD.md

@@ -43,7 +43,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 1,
       "id": "CAM1",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Rename Prototype Surface To @dnd/surface"
     },
     {
@@ -55,13 +55,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 3,
       "id": "CAM3",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add Generic StatBlockRecord Catalog Boundary"
     },
     {
       "number": 4,
       "id": "CAM4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add Minimal Character-Creation Surface Records"
     },
     {
@@ -73,7 +73,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 6,
       "id": "CAM6",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Create Character Creation Runtime Skeleton"
     },
     {
@@ -181,12 +181,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | Order | Task                                                            | Status                                        | Depends on        | Blocks                               | Next action                                                                                                                                                                     | Handoff readiness                                                                                                      |
 | ----- | --------------------------------------------------------------- | --------------------------------------------- | ----------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | 0     | CAM0 - Phase 0 Audit Pack                                       | done                                          | none              | CAM1..CAM19                          | Landed audit pack and migration plan updates.                                                                                                                                   | Done in `e8ecbd6b`.                                                                                                    |
-| 1     | CAM1 - Rename Prototype Surface To @dnd/surface                 | ready-for-implementation-after-light-research | CAM0              | CAM3, CAM4, CAM5, CAM6, CAM11, CAM16 | Hard rename/promote `@dnd/prototype-content-surface` to `@dnd/surface` across package metadata, imports, tsconfig/workspace references, and active docs.                        | Ready after import/doc blast-radius check.                                                                             |
+| 1     | CAM1 - Rename Prototype Surface To @dnd/surface                 | done                                          | CAM0              | CAM3, CAM4, CAM5, CAM6, CAM11, CAM16 | Package cutover complete: active imports, workspace dependencies, lockfile, and docs use `@dnd/surface`.                                                                        | Done in this task.                                                                                                     |
 | 2     | CAM2 - Resolve Correction Action-Economy Drift                  | done                                          | CAM0              | CAM6, CAM11                          | Resolved by `52cf18b5`: Surface action resource sidecars and Correction action-resource handling landed.                                                                        | Done on current `master`.                                                                                              |
-| 3     | CAM3 - Add Generic StatBlockRecord Catalog Boundary             | blocked                                       | CAM1              | CAM5, CAM11, CAM12                   | Add generic `StatBlockRecord`, SRD-only stat-block collection, duplicate/provenance validation, and `buildStatBlockCatalog`.                                                    | Blocker Type: dependency. Blocker Detail: waits on CAM1 package rename so the boundary lands in `@dnd/surface`.        |
-| 4     | CAM4 - Add Minimal Character-Creation Surface Records           | blocked                                       | CAM1              | CAM5, CAM6, CAM7                     | Add minimum `ClassRecord`, `BackgroundRecord`, and `SpeciesRecord` Surface shapes/readers needed for Fighter, Soldier, and Orc.                                                 | Blocker Type: dependency. Blocker Detail: waits on CAM1 package rename so new records land in `@dnd/surface`.          |
+| 3     | CAM3 - Add Generic StatBlockRecord Catalog Boundary             | ready-for-implementation-after-light-research | CAM1              | CAM5, CAM11, CAM12                   | Add generic `StatBlockRecord`, SRD-only stat-block collection, duplicate/provenance validation, and `buildStatBlockCatalog`.                                                    | Ready after SRD/provenance boundary check.                                                                             |
+| 4     | CAM4 - Add Minimal Character-Creation Surface Records           | ready-for-implementation-after-light-research | CAM1              | CAM5, CAM6, CAM7                     | Add minimum `ClassRecord`, `BackgroundRecord`, and `SpeciesRecord` Surface shapes/readers needed for Fighter, Soldier, and Orc.                                                 | Ready after SRD/blast-radius check.                                                                                    |
 | 5     | CAM5 - Author First Vertical SRD Surface Content                | blocked                                       | CAM3, CAM4        | CAM7, CAM9, CAM12, CAM16             | Author minimum SRD records for Fighter, Soldier, Orc, Savage Attacker if needed for legality, Fighter Weapon Mastery grant, and Goblin Warrior Stat Block.                      | Blocker Type: dependency. Blocker Detail: waits on generic stat-block boundary and character-creation Surface records. |
-| 6     | CAM6 - Create Character Creation Runtime Skeleton               | blocked                                       | CAM1, CAM2        | CAM7, CAM8, CAM9, CAM10, CAM17       | Create `@dnd/character-creation-runtime` package with public draft/session/hole/fill/finalization types matching `phase0-runtime-boundary-api.md`.                              | Blocker Type: dependency. Blocker Detail: waits on Surface rename; CAM2 is already done.                               |
+| 6     | CAM6 - Create Character Creation Runtime Skeleton               | ready-for-implementation-after-light-research | CAM1, CAM2        | CAM7, CAM8, CAM9, CAM10, CAM17       | Create `@dnd/character-creation-runtime` package with public draft/session/hole/fill/finalization types matching `phase0-runtime-boundary-api.md`.                              | Ready after runtime package architecture check.                                                                        |
 | 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | blocked                                       | CAM5, CAM6        | CAM8, CAM9                           | Implement hole discovery for the exact Orc Soldier Fighter manifest using real Surface records and package-private support gates.                                               | Blocker Type: dependency. Blocker Detail: waits on authored first-vertical content and runtime skeleton.               |
 | 8     | CAM8 - Implement Atomic Creation Batch Fill                     | blocked                                       | CAM7              | CAM9, CAM10, CAM17                   | Implement accepted/rejected batch semantics, stable hole ids, duplicate-fill rejection, stale revision handling, and hole rediscovery after accepted fills.                     | Blocker Type: dependency. Blocker Detail: waits on creation hole discovery.                                            |
 | 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | blocked                                       | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Finalize the manifest draft into a legal `CharacterSheet` with selected Unit refs, advancement exactly one Fighter level, loadout, and legality tests.                          | Blocker Type: dependency. Blocker Detail: waits on batch fill semantics and authored content.                          |
@@ -240,7 +240,7 @@ Handoff readiness: complete in `e8ecbd6b`.
 
 ### Task 1 - CAM1 - Rename Prototype Surface To @dnd/surface
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM0  
 Blocks: CAM3, CAM4, CAM5, CAM6, CAM11, CAM16
@@ -248,8 +248,8 @@ Blocks: CAM3, CAM4, CAM5, CAM6, CAM11, CAM16
 Input:
 
 - [phase0-surface-unit-availability.md](/workspace/typescript/dnd/plans/phase0-surface-unit-availability.md)
-- `packages/prototype-content-surface/`
-- Workspace package config, path aliases, docs, and imports referencing `@dnd/prototype-content-surface`.
+- `packages/surface/`
+- Workspace package config, path aliases, docs, and imports referencing the former prototype package name.
 
 Output:
 
@@ -259,21 +259,25 @@ Output:
 
 Acceptance:
 
-- No active package import uses `@dnd/prototype-content-surface`.
+- No active package import uses the former prototype package name.
 - `pnpm` workspace and TypeScript path references resolve `@dnd/surface`.
 - Existing Surface package tests/typecheck still pass or pre-existing failures are recorded.
 - Active docs name `@dnd/surface`; historical docs are either updated or explicitly archival.
 
 Verification:
 
-- `rg '@dnd/prototype-content-surface|prototype-content-surface' package.json pnpm-workspace.yaml tsconfig*.json packages plans README.md ARCHITECTURE.md`
-- `pnpm --filter @dnd/surface typecheck`
-- `pnpm --filter @dnd/surface test` if a test script exists.
+- Verified in this task:
+  - Former package-name search across package/workspace/docs scope returned no matches.
+  - `pnpm --filter @dnd/surface typecheck`
+  - `pnpm --filter @dnd/surface test` is not applicable because the package has no `test` script.
+  - `/simplify` convergence completed in two manual rounds after the rename. Round 1 accepted the package cutover with one doc cleanup gap in the root executable projection design doc. Round 2 confirmed the cleanup and found no additional active-doc, import, dependency, or package-path issues.
 
 Plan Impact:
 
-- Mark CAM3, CAM4, CAM6, CAM11, and CAM16 runnable if their other dependencies are satisfied.
-- Update any downstream task paths if the directory rename differs from the planned package name.
+- CAM3, CAM4, and CAM6 are ready for implementation after their required light research.
+- CAM11 remains blocked on CAM3.
+- CAM16 remains blocked on CAM5.
+- Downstream package paths should use `packages/surface/`.
 
 ### Task 2 - CAM2 - Resolve Correction Action-Economy Drift
 
@@ -313,13 +317,12 @@ Plan Impact:
 
 ### Task 3 - CAM3 - Add Generic StatBlockRecord Catalog Boundary
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM1  
 Blocks: CAM5, CAM11, CAM12
 
-Blocker Type: dependency  
-Blocker Detail: waits on CAM1 package rename so the boundary lands in `@dnd/surface`.
+Next action: run the SRD/provenance boundary check, then add the generic stat-block catalog boundary in `@dnd/surface`.
 
 Input:
 
@@ -354,13 +357,12 @@ Plan Impact:
 
 ### Task 4 - CAM4 - Add Minimal Character-Creation Surface Records
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM1  
 Blocks: CAM5, CAM6, CAM7
 
-Blocker Type: dependency  
-Blocker Detail: waits on CAM1 package rename so new records land in `@dnd/surface`.
+Next action: run the SRD/blast-radius check, then add the minimum character-creation Surface records in `@dnd/surface`.
 
 Input:
 
@@ -433,13 +435,12 @@ Plan Impact:
 
 ### Task 6 - CAM6 - Create Character Creation Runtime Skeleton
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM1, CAM2  
 Blocks: CAM7, CAM8, CAM9, CAM10, CAM17
 
-Blocker Type: dependency  
-Blocker Detail: waits on Surface rename; CAM2 is already done.
+Next action: run the runtime package architecture check, then create the character creation runtime skeleton.
 
 Input:
 

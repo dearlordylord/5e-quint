@@ -5,7 +5,7 @@
 // actual text at runtime. This keeps PHB text out of main-repo files.
 //
 // Run from repo root:
-//   pnpm --filter @dnd/prototype-content-surface exec tsx \
+//   pnpm --filter @dnd/surface exec tsx \
 //     ../../scripts/content-surface-survey/unit-catalog.ts
 
 import fs from "node:fs";

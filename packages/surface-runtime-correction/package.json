@@ -13,7 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@dnd/prototype-content-surface": "workspace:*",
+    "@dnd/surface": "workspace:*",
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
     "@firfi/quint-connect": "^0.8.2",

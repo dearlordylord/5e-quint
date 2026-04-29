@@ -2,7 +2,7 @@
 // has written its artifacts. Produces an authoritative verdict that
 // doesn't trust claude's self-report.
 //
-// Expected working directory is a copy of packages/prototype-content-surface/,
+// Expected working directory is a copy of packages/surface/,
 // with at least `content/<slug>.json` and optionally `result.json` + `proposal.md`.
 //
 // Run from worker:

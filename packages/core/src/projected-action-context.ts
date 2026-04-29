@@ -12,17 +12,17 @@ import { spellId, type SpellName } from "#/types.ts";
 import {
   decodeClassFeatureRecordSync,
   decodeSpellRecordSync,
-} from "@dnd/prototype-content-surface/surface/schema";
+} from "@dnd/surface/surface/schema";
 import type {
   ClassFeatureRecord,
   SpellRecord,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 import type { ProjectedAvailabilityState } from "#/projected-action-bridge-helpers.ts";
-import acidSplashSurface from "../../prototype-content-surface/content/acid_splash.json";
-import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
-import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
+import acidSplashSurface from "../../surface/content/acid_splash.json";
+import actionSurgeSurface from "../../surface/content/fighter_action_surge_l2.json";
+import secondWindSurface from "../../surface/content/fighter_second_wind.json";
 
 const ACID_SPLASH_SURFACE: SpellRecord =
   decodeSpellRecordSync(acidSplashSurface);

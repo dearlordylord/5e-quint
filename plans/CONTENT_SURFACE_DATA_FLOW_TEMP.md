@@ -6,8 +6,8 @@ motion.
 
 The end artifact is still just:
 
-- `packages/prototype-content-surface/src/surface/types.ts`
-- `packages/prototype-content-surface/content/<slug>.dhall`
+- `packages/surface/src/surface/types.ts`
+- `packages/surface/content/<slug>.dhall`
 - compiled `content/<slug>.json`
 
 Everything else in this document is support machinery around getting that
@@ -48,9 +48,9 @@ flowchart TD
   REPORT[REPORT_SRD.md]
   LOOP[auto-close-loop.ts]
   EVIDENCE[scripts/content-surface-survey/evidence/auto-close-loop/]
-  SURFACE[packages/prototype-content-surface/src/surface/types.ts]
-  DHALL[packages/prototype-content-surface/content/*.dhall]
-  JSON[packages/prototype-content-surface/content/*.json]
+  SURFACE[packages/surface/src/surface/types.ts]
+  DHALL[packages/surface/content/*.dhall]
+  JSON[packages/surface/content/*.json]
   CORE[future content-driven runtime in packages/core]
 
   SRD --> CATALOG
@@ -79,10 +79,10 @@ flowchart TD
 
 Checked into the main repo:
 
-- `packages/prototype-content-surface/src/surface/types.ts`
-- `packages/prototype-content-surface/src/interpreter/*.ts`
-- `packages/prototype-content-surface/content/<slug>.dhall`
-- `packages/prototype-content-surface/content/<slug>.json`
+- `packages/surface/src/surface/types.ts`
+- `packages/surface/src/interpreter/*.ts`
+- `packages/surface/content/<slug>.dhall`
+- `packages/surface/content/<slug>.json`
 - `scripts/content-surface-survey/survey-results-srd.jsonl`
 - `scripts/content-surface-survey/REPORT_SRD.md`
 - `scripts/content-surface-survey/evidence/auto-close-loop/`
@@ -163,7 +163,7 @@ surface.
 
 Today the active system is:
 
-- `packages/prototype-content-surface/`
+- `packages/surface/`
 - `scripts/content-surface-survey/`
 - `.references/srd-5.2.1/`
 

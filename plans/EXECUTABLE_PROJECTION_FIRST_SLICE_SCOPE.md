@@ -105,7 +105,7 @@ is the only persistent authored unit in scope.
 ### Closed `mage_armor` lifecycle surface
 
 The persistent lifecycle surface is closed to the exact authored and RAW-backed
-shape already present in [mage_armor.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/mage_armor.json):
+shape already present in [mage_armor.json](/workspace/typescript/dnd/packages/surface/content/mage_armor.json):
 
 - duration kind `timed`
 - duration value exactly `8 hour`

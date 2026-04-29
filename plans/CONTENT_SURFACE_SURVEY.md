@@ -10,7 +10,7 @@
 
 ## What actually shipped
 
-- `packages/prototype-content-surface/src/surface/types.ts` holds the B-shape `DiceAmount` (line ~369) and `UseCountCap` (line ~1845). Both use `LevelAxis` and the parameterized `ThresholdTiers<T>` / `LinearPerLevel<T>` generics.
+- `packages/surface/src/surface/types.ts` holds the B-shape `DiceAmount` (line ~369) and `UseCountCap` (line ~1845). Both use `LevelAxis` and the parameterized `ThresholdTiers<T>` / `LinearPerLevel<T>` generics.
 - `scripts/content-surface-survey/` holds the mining pipeline: `unit-catalog.ts`, `run-survey.sh`, `worker.sh`, `close-loop.ts`, `auto-close-loop.ts`, `measure.sh`.
 - Dataset: `scripts/content-surface-survey/survey-results-srd.jsonl` (1 row per unique slug; replaced on re-encode).
 - 361 overnight batch commits landed in the 2026-04-18 merge.

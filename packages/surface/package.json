@@ -1,5 +1,5 @@
 {
-  "name": "@dnd/prototype-content-surface",
+  "name": "@dnd/surface",
   "private": true,
   "version": "0.0.0",
   "type": "module",

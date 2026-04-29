@@ -1,4 +1,4 @@
-# @dnd/prototype-content-surface
+# @dnd/surface
 
 Workspace package for the content-authoring → surface → tracer flow.
 
@@ -48,7 +48,7 @@ Three-way separation:
   taxonomy problems. Fed into the pairing workspace's surface docs
   (e.g., `SURFACES_spells.md` cites `RESEARCH_foundry_effect_staging.md`
   for effect staging patterns). Read-only.
-- `packages/prototype-content-surface/` (this package) — **where the
+- `packages/surface/` (this package) — **where the
   surface evolves**. Greenfield, no `@dnd/*` deps, deletable wholesale
   without breaking the monorepo. This is the tail of the research
   work, not a downstream consumer.
@@ -67,16 +67,16 @@ Typechecks uniformly with the rest of the monorepo via
 pnpm install
 
 # trace one unit → file
-pnpm --filter @dnd/prototype-content-surface exec tsx src/run.ts content/bless.json --out content/bless.trace.md
+pnpm --filter @dnd/surface exec tsx src/run.ts content/bless.json --out content/bless.trace.md
 
 # typecheck
-pnpm --filter @dnd/prototype-content-surface typecheck
+pnpm --filter @dnd/surface typecheck
 ```
 
 Or from inside the package:
 
 ```sh
-cd packages/prototype-content-surface
+cd packages/surface
 pnpm exec tsx src/run.ts content/bless.json --out content/bless.trace.md
 pnpm typecheck
 ```

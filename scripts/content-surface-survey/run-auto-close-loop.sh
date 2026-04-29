@@ -189,17 +189,17 @@ seed_loop_inputs() {
   if [[ -d "$REPO_ROOT/node_modules" ]]; then
     ensure_symlink_target "$REPO_ROOT/node_modules" "$WORKTREE_DIR/node_modules"
   fi
-  if [[ -d "$REPO_ROOT/packages/prototype-content-surface/node_modules" ]]; then
+  if [[ -d "$REPO_ROOT/packages/surface/node_modules" ]]; then
     ensure_symlink_target \
-      "$REPO_ROOT/packages/prototype-content-surface/node_modules" \
-      "$WORKTREE_DIR/packages/prototype-content-surface/node_modules"
+      "$REPO_ROOT/packages/surface/node_modules" \
+      "$WORKTREE_DIR/packages/surface/node_modules"
   fi
   if [[ -f "$REPO_ROOT/scripts/content-surface-survey/unit-queue.jsonl" ]]; then
     cp "$REPO_ROOT/scripts/content-surface-survey/unit-queue.jsonl" \
       "$WORKTREE_DIR/scripts/content-surface-survey/unit-queue.jsonl"
   else
     (cd "$WORKTREE_DIR" && \
-      pnpm --filter @dnd/prototype-content-surface exec tsx \
+      pnpm --filter @dnd/surface exec tsx \
       ../../scripts/content-surface-survey/unit-catalog.ts >/dev/null)
   fi
   rm -f \
@@ -264,7 +264,7 @@ start() {
         exit 0
       fi
       env MAX_PARALLEL=1 AUTO_LOOP_REPO_ROOT='$WORKTREE_DIR' AUTO_LOOP_SHARED_ROOT='$REPO_ROOT' AUTO_LOOP_INTEGRATION_BRANCH='$INTEGRATION_BRANCH' AUTO_LOOP_INTEGRATION_WORKTREE='$INTEGRATION_WORKTREE' \
-        pnpm --filter @dnd/prototype-content-surface exec tsx \
+        pnpm --filter @dnd/surface exec tsx \
         ../../scripts/content-surface-survey/auto-close-loop.ts \
         $quoted_args
       status=\$?

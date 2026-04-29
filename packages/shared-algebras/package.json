@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@dnd/prototype-content-surface": "workspace:*",
+    "@dnd/surface": "workspace:*",
     "@dnd/shared": "workspace:*",
     "effect": "^3.21.0"
   },

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
-import { decodeUnitRecordSync } from "@dnd/prototype-content-surface/surface/schema";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 
 import {
   compileProjectedExecutable,
@@ -14,7 +14,7 @@ import {
 import type {
   ClassFeatureRecord,
   SpellRecord,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 
 function loadSurfaceUnit<T extends SpellRecord | ClassFeatureRecord>(
   name: string,
@@ -23,7 +23,7 @@ function loadSurfaceUnit<T extends SpellRecord | ClassFeatureRecord>(
     import.meta.dirname,
     "..",
     "..",
-    "prototype-content-surface",
+    "surface",
     "content",
     `${name}.json`,
   );

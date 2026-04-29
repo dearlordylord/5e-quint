@@ -60,7 +60,7 @@ Forbidden green-path imports:
 
 `@dnd/shared-algebras` is a package-level dependency, not a partial import boundary. Its current package may depend on Surface because `armor-class-algebra` intentionally speaks Surface armor/equipment vocabulary. New runtime packages should import algebra exports by named subpath and should not treat `@dnd/shared-algebras` as a content-language facade. If a new algebra would force broad Surface projection semantics into both runtimes, keep that projection local to the owning runtime instead.
 
-Package strategy recommendation: rename/promote `@dnd/prototype-content-surface` to `@dnd/surface`, following `plans/phase0-surface-unit-availability.md`. This is a greenfield stack with no external consumers, so preserving a prototype package name through a facade adds ambiguity without compatibility value. Green-path imports and active project docs should only use `@dnd/surface`.
+Package strategy recommendation: rename/promote `@dnd/surface` to `@dnd/surface`, following `plans/phase0-surface-unit-availability.md`. This is a greenfield stack with no external consumers, so preserving a prototype package name through a facade adds ambiguity without compatibility value. Green-path imports and active project docs should only use `@dnd/surface`.
 
 ## `@dnd/surface` API
 
@@ -794,7 +794,7 @@ Temporary authority statement:
 
 ## Questions For Owner
 
-1. Should `@dnd/surface` be a hard package rename or a facade over `@dnd/prototype-content-surface` during Phase 1?
+1. Should `@dnd/surface` be a hard package rename or a facade over `@dnd/surface` during Phase 1?
    - Recommended answer: hard rename/promote, matching `plans/phase0-surface-unit-availability.md`. The project has no external consumers, and a facade would create a second package boundary before the green runtime stabilizes. Update docs in the same migration so active docs name `@dnd/surface`.
 
 2. Should phase-1 battle expose `resolutionLog` for MCP responses?

@@ -7,7 +7,7 @@ This package contains reusable, MBT-backed reducer/model algebras. It is separat
 
 ## Surface Dependency Policy
 
-This package may depend on `@dnd/prototype-content-surface` when an algebra or adapter intentionally speaks Surface vocabulary. That is allowed here, but it must stay explicit.
+This package may depend on `@dnd/surface` when an algebra or adapter intentionally speaks Surface vocabulary. That is allowed here, but it must stay explicit.
 
 Rules:
 

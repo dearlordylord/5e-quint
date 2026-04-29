@@ -89,7 +89,7 @@ Target package name:
 
 The current package already has useful pieces:
 
-- real `Surface` decode boundary via `@dnd/prototype-content-surface`
+- real `Surface` decode boundary via `@dnd/surface`
 - Effect service wiring for authored/runtime libraries
 - a small character/roster layer
 - a small battle layer
@@ -110,7 +110,7 @@ So the next work is a rewrite of the package’s battle-facing flow, not a minor
 
 ### 1. Surface stays the semantic language
 
-The package should use the real `Surface` codec and real `Surface` types from `@dnd/prototype-content-surface`.
+The package should use the real `Surface` codec and real `Surface` types from `@dnd/surface`.
 
 Semantic dispatch must happen by **structural interpretation of `Surface`**, not by authored unit ids.
 

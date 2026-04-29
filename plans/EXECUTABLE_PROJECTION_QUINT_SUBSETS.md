@@ -72,7 +72,7 @@ Resource and usage surface:
 ### `acid_splash`
 
 Authored source:
-[packages/prototype-content-surface/content/acid_splash.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/acid_splash.json)
+[packages/surface/content/acid_splash.json](/workspace/typescript/dnd/packages/surface/content/acid_splash.json)
 
 Compiler target:
 
@@ -102,7 +102,7 @@ Owned runtime facts, not duplicated in the projection:
 ### `fighter_second_wind`
 
 Authored source:
-[packages/prototype-content-surface/content/fighter_second_wind.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/fighter_second_wind.json)
+[packages/surface/content/fighter_second_wind.json](/workspace/typescript/dnd/packages/surface/content/fighter_second_wind.json)
 
 Compiler target:
 
@@ -127,7 +127,7 @@ Required preserved authored facts:
 ### `fighter_action_surge_l2`
 
 Authored source:
-[packages/prototype-content-surface/content/fighter_action_surge_l2.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/fighter_action_surge_l2.json)
+[packages/surface/content/fighter_action_surge_l2.json](/workspace/typescript/dnd/packages/surface/content/fighter_action_surge_l2.json)
 
 Compiler target:
 
@@ -149,7 +149,7 @@ Required preserved authored facts:
 ### `mage_armor`
 
 Authored source:
-[packages/prototype-content-surface/content/mage_armor.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/mage_armor.json)
+[packages/surface/content/mage_armor.json](/workspace/typescript/dnd/packages/surface/content/mage_armor.json)
 
 Compiler target:
 

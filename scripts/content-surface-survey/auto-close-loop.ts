@@ -599,8 +599,8 @@ function batchCommitPaths(report: ClosureReport): string[] {
       continue;
     }
     for (const rel of [
-      `packages/prototype-content-surface/content/${slug}.dhall`,
-      `packages/prototype-content-surface/content/${slug}.json`,
+      `packages/surface/content/${slug}.dhall`,
+      `packages/surface/content/${slug}.json`,
     ]) {
       if (fs.existsSync(path.join(repoRoot(), rel))) {
         paths.add(rel);
@@ -629,7 +629,7 @@ function worktreeChanges(): {
 
 const PERSISTENT_UNTRACKED_PREFIXES = [
   "node_modules",
-  "packages/prototype-content-surface/node_modules",
+  "packages/surface/node_modules",
   ".output/content-surface-closure",
 ] as const;
 
@@ -665,22 +665,22 @@ function ensureSymlinkTarget(linkPath: string, targetPath: string): void {
 function ensureWorktreeDependencyLinks(): void {
   ensureSymlinkTarget(path.join(repoRoot(), "node_modules"), path.join(sharedRoot(), "node_modules"));
   ensureSymlinkTarget(
-    path.join(repoRoot(), "packages", "prototype-content-surface", "node_modules"),
-    path.join(sharedRoot(), "packages", "prototype-content-surface", "node_modules"),
+    path.join(repoRoot(), "packages", "surface", "node_modules"),
+    path.join(sharedRoot(), "packages", "surface", "node_modules"),
   );
 }
 
 function touchesPrototypeTypeScript(paths: ReadonlyArray<string>): boolean {
   return paths.some(
     (rel) =>
-      rel.startsWith("packages/prototype-content-surface/src/") &&
+      rel.startsWith("packages/surface/src/") &&
       rel.endsWith(".ts"),
   );
 }
 
 function assertPrototypeTypecheckPasses(): void {
   ensureWorktreeDependencyLinks();
-  const result = spawnSync("pnpm", ["--filter", "@dnd/prototype-content-surface", "typecheck"], {
+  const result = spawnSync("pnpm", ["--filter", "@dnd/surface", "typecheck"], {
     cwd: repoRoot(),
     stdio: "inherit",
     env: {
@@ -690,7 +690,7 @@ function assertPrototypeTypecheckPasses(): void {
   });
   if (result.status !== 0) {
     throw new Error(
-      `surface-change attempt left @dnd/prototype-content-surface untypecheckable (exit=${result.status ?? "signal"})`,
+      `surface-change attempt left @dnd/surface untypecheckable (exit=${result.status ?? "signal"})`,
     );
   }
 }
@@ -794,14 +794,14 @@ function archiveBatchEvidence(
 
 function contentPathsForSlug(slug: string): string[] {
   return [
-    `packages/prototype-content-surface/content/${slug}.dhall`,
-    `packages/prototype-content-surface/content/${slug}.json`,
+    `packages/surface/content/${slug}.dhall`,
+    `packages/surface/content/${slug}.json`,
   ];
 }
 
 function transientContentPathsForSlug(slug: string): string[] {
   return [
-    `packages/prototype-content-surface/content/${slug}.trace.md`,
+    `packages/surface/content/${slug}.trace.md`,
   ];
 }
 
@@ -1022,8 +1022,8 @@ function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: Readon
     "- make one bounded reusable TS/package surface change that closes most of this cluster",
     "- avoid per-slug hacks or slug checks",
     "- if you add a new atom kind, update scripts/content-surface-survey/atom-whitelist.ts",
-    "- you may edit packages/prototype-content-surface/src/**, scripts/content-surface-survey/atom-whitelist.ts, and content files for the target slugs if needed",
-    "- when verifying TS changes from the repo root, use: pnpm --filter @dnd/prototype-content-surface typecheck",
+    "- you may edit packages/surface/src/**, scripts/content-surface-survey/atom-whitelist.ts, and content files for the target slugs if needed",
+    "- when verifying TS changes from the repo root, use: pnpm --filter @dnd/surface typecheck",
     "- if your candidate TS change fails that typecheck, revert your own edits and exit with no code changes",
     "- prefer no change over a speculative change that widens the wrong family or leaves TS broken",
     "- do not commit",
@@ -1031,9 +1031,9 @@ function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: Readon
     "- do not read broad plans or README files unless blocked; inspect the concrete files below first",
     "",
     "Inspect these files first:",
-    "- packages/prototype-content-surface/src/surface/types.ts",
-    "- packages/prototype-content-surface/src/interpreter/tracer.ts",
-    "- packages/prototype-content-surface/src/interpreter/mermaid.ts",
+    "- packages/surface/src/surface/types.ts",
+    "- packages/surface/src/interpreter/tracer.ts",
+    "- packages/surface/src/interpreter/mermaid.ts",
     "- scripts/content-surface-survey/atom-whitelist.ts",
     "- scripts/content-surface-survey/results-srd/<slug>/{result.json,verdict.json} for the target slugs",
     "",
@@ -1369,7 +1369,7 @@ function runBatch(args: Args, cluster: string): { reportPath: string; report: Cl
     `${args.batchTimeoutSeconds}s`,
     "pnpm",
     "--filter",
-    "@dnd/prototype-content-surface",
+    "@dnd/surface",
     "exec",
     "tsx",
     "../../scripts/content-surface-survey/close-loop.ts",

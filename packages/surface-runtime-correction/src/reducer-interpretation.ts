@@ -2,7 +2,7 @@ import { Either, Match, Option } from "effect";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { getOnlyOneStrict } from "@dnd/shared/types";
 import type { CreatureId } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   type CoreAttackAct,

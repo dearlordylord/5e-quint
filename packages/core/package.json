@@ -14,7 +14,7 @@
   "dependencies": {
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
-    "@dnd/prototype-content-surface": "workspace:*",
+    "@dnd/surface": "workspace:*",
     "@firfi/quint-connect": "^0.8.2",
     "@statelyai/graph": "^0.8.0",
     "@statelyai/inspect": "^0.4.0",

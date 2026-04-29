@@ -33,9 +33,9 @@ Main repo only. Nothing in `.references/` gets touched by implementation work.
 /workspace/typescript/dnd/
 ├── plans/
 │   └── CONTENT_SURFACE_PROTOTYPE.md        ← this file
-├── packages/prototype-content-surface/     ← new workspace package, may be deleted wholesale
+├── packages/surface/     ← new workspace package, may be deleted wholesale
 │   ├── README.md
-│   ├── package.json                        ← @dnd/prototype-content-surface, no internal deps
+│   ├── package.json                        ← @dnd/surface, no internal deps
 │   ├── tsconfig.json                       ← matches @dnd/core conventions
 │   ├── eslint.config.mjs                   ← matches @dnd/core conventions
 │   ├── src/
@@ -51,7 +51,7 @@ Main repo only. Nothing in `.references/` gets touched by implementation work.
 │       └── bless.json                      ← pre-compiled (hand-written for now)
 ```
 
-`packages/prototype-content-surface/` is a pnpm workspace package (`@dnd/prototype-content-surface`) but has zero internal imports — it uses no `@dnd/*` dependency. Workspace integration depth is "medium": package follows repo conventions (tsconfig / eslint / scripts mirror `@dnd/core` and `@dnd/mcp`), and `turbo typecheck` / `pnpm install` at the root pick it up automatically via `packages/*` in `pnpm-workspace.yaml`. It can be rmed at any time without breaking other packages.
+`packages/surface/` is a pnpm workspace package (`@dnd/surface`) but has zero internal imports — it uses no `@dnd/*` dependency. Workspace integration depth is "medium": package follows repo conventions (tsconfig / eslint / scripts mirror `@dnd/core` and `@dnd/mcp`), and `turbo typecheck` / `pnpm install` at the root pick it up automatically via `packages/*` in `pnpm-workspace.yaml`. It can be rmed at any time without breaking other packages.
 
 ## Per-spell red/green loop
 
@@ -133,7 +133,7 @@ At that point, Phase 1 proper begins (per the existing research-side plan).
 
 ## Artifacts this prototype produces
 
-- `packages/prototype-content-surface/` — runnable code.
+- `packages/surface/` — runnable code.
 - One mermaid trace output file per spell (written next to the JSON, e.g., `content/bless.trace.md` — gitignored).
 
 ## Artifacts this prototype does NOT produce
@@ -198,7 +198,7 @@ At that point, Phase 1 proper begins (per the existing research-side plan).
 | `mastery_cleave` | mastery | on_hit_trigger | `grant_weapon_attack` rider with adjacent-secondary target + `once_per_turn` use fence |
 | `alarm` | spell | anchored_trigger | `store` / `release` pair; `area(cube ≤ 20 ft)` anchor; `post_action_window` × 2 (physical_contact, enters_area); filters + signals folded into release label; ritual 1-minute cast |
 
-All typecheck clean. Traces under `packages/prototype-content-surface/content/<slug>.trace.md` (gitignored). Surface types in `src/surface/types.ts`; tracer in `src/interpreter/tracer.ts`.
+All typecheck clean. Traces under `packages/surface/content/<slug>.trace.md` (gitignored). Surface types in `src/surface/types.ts`; tracer in `src/interpreter/tracer.ts`.
 
 ### Authoring conventions — holes
 
@@ -267,19 +267,19 @@ The remaining dominant widening is `class_level_tiers` (8 units) — already add
 cat plans/CONTENT_SURFACE_PROTOTYPE.md
 
 # See encoded units
-ls packages/prototype-content-surface/content/*.json
+ls packages/surface/content/*.json
 
 # Regenerate a trace
-pnpm --filter @dnd/prototype-content-surface exec tsx src/run.ts content/<slug>.json --out content/<slug>.trace.md
+pnpm --filter @dnd/surface exec tsx src/run.ts content/<slug>.json --out content/<slug>.trace.md
 
 # Typecheck everything
-pnpm --filter @dnd/prototype-content-surface typecheck
+pnpm --filter @dnd/surface typecheck
 
 # See the aggregated survey report (last-computed)
 cat scripts/content-surface-survey/REPORT_SRD.md
 
 # View a mermaid graph — any markdown renderer that supports mermaid
-cat packages/prototype-content-surface/content/shield.trace.md
+cat packages/surface/content/shield.trace.md
 ```
 
 The surface types file (`src/surface/types.ts`) and tracer (`src/interpreter/tracer.ts`) are the two files that carry the state.

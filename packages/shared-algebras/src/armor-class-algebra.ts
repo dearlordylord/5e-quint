@@ -8,7 +8,7 @@ import type {
 import type {
   ArmorAcFormula,
   ArmorTrainingCategory,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 
 export type ArmorClass = Integer & Brand.Brand<"ArmorClass">;
 const ArmorClass = Brand.all(Integer, Brand.nominal<ArmorClass>());

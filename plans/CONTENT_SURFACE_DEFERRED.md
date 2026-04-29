@@ -8,7 +8,7 @@ Source of truth for things that would otherwise rot in `.dhall` file
 comments. Updated as the survey loop lands / surfaces items.
 
 Scope: this file tracks items that came up from authored content in
-`packages/prototype-content-surface/content/*.dhall`. It does **not**
+`packages/surface/content/*.dhall`. It does **not**
 supersede the sub-agent survey corpus at
 `scripts/content-surface-survey/results-srd/<slug>/proposal.md` —
 those proposals are the broader queue and feed into this file as they

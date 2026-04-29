@@ -11,8 +11,8 @@ This document records the SRD trace, the authored/traced shape, and why
 
 ## Confirmed Unit
 
-- authored source: [acid_splash.dhall](/workspace/typescript/dnd/packages/prototype-content-surface/content/acid_splash.dhall)
-- generated artifact: [acid_splash.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/acid_splash.json)
+- authored source: [acid_splash.dhall](/workspace/typescript/dnd/packages/surface/content/acid_splash.dhall)
+- generated artifact: [acid_splash.json](/workspace/typescript/dnd/packages/surface/content/acid_splash.json)
 - provenance: `srd-5.2.1`, section `Spells/Descriptions-A-D#Acid Splash`
 - RAW text: [Descriptions-A-D.md:20](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md:20)
 
@@ -99,10 +99,10 @@ were required beyond checking in this confirmation.
 
 ## Verification
 
-- `cd packages/prototype-content-surface && pnpm typecheck` - passed.
-- `cd packages/prototype-content-surface && pnpm exec tsx scripts/content-surface-survey/trace-one.ts content/acid_splash.json` - passed with the traced shape recorded above.
+- `cd packages/surface && pnpm typecheck` - passed.
+- `cd packages/surface && pnpm exec tsx scripts/content-surface-survey/trace-one.ts content/acid_splash.json` - passed with the traced shape recorded above.
 - Full authored-content convert-and-trace sweep was run from
-  `packages/prototype-content-surface/` using the repo pattern, excluding
+  `packages/surface/` using the repo pattern, excluding
   `_types.dhall` and the documented `magic_item_gauntlets_of_ogre_power` skip.
   It surfaced existing failures in `find_familiar`, `find_steed`,
   `spike_growth`, and `summon_dragon`. EPT2 does not touch those units, so this

@@ -5,7 +5,7 @@ import type {
   Attachment,
   DamageTypeRef,
   EffectAtom,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 
 import {
   type FillableDamageTypeRef,

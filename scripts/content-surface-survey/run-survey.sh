@@ -113,7 +113,7 @@ while IFS= read -r row; do
     if [[ "$DRY_RUN" == "1" ]]; then
       # dry-run: mock against the unit's existing prototype encoding if
       # one exists; otherwise skip with a refused verdict.
-      src="$REPO_ROOT/packages/prototype-content-surface/content/$slug.json"
+      src="$REPO_ROOT/packages/surface/content/$slug.json"
       if [[ -f "$src" ]]; then
         MOCK_ENCODING_SRC="$src" bash "$SCRIPT_DIR/worker.sh" "$row"
       else

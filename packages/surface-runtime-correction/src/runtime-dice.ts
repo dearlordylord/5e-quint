@@ -1,5 +1,5 @@
 import { Either } from "effect";
-import type { DiceExpr } from "@dnd/prototype-content-surface/surface/types";
+import type { DiceExpr } from "@dnd/surface/surface/types";
 
 import type { RolledDiceGroup } from "#/reducer-types.ts";
 

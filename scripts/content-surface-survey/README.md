@@ -7,13 +7,13 @@ Temporary pipeline map:
 
 This directory runs a parallelized per-unit encoding survey across SRD 5.2.1 (and a PHB-only research sample) to decide between Option A and Option B for the content surface's scaling-shape encoding.
 
-## Not to be confused with `packages/prototype-content-surface/content/`
+## Not to be confused with `packages/surface/content/`
 
 This directory is the **mining / oracle pipeline**: for every SRD unit (504 distinct, 786+ subdirs with re-run history), it runs an LLM sub-agent against the current surface to propose an encoding or flag a widening. The outputs are **verdicts**, not content — `result.json` (sub-agent proposal) + `verdict.json` (harness validation) + `survey-results-srd.jsonl` (aggregate dataset) + `REPORT_SRD.md` (human-readable rollup). Nothing here is shipped as runtime content.
 
-The **authored corpus** lives elsewhere: `packages/prototype-content-surface/content/<slug>.{dhall,json,trace.md}`. That is one entry per actually-authored unit (far smaller than 504). Its `.dhall` files are the source-of-truth mechanics definitions; its `.json` files feed the tracer and (in Phase D) the content-driven runtime.
+The **authored corpus** lives elsewhere: `packages/surface/content/<slug>.{dhall,json,trace.md}`. That is one entry per actually-authored unit (far smaller than 504). Its `.dhall` files are the source-of-truth mechanics definitions; its `.json` files feed the tracer and (in Phase D) the content-driven runtime.
 
-One-liner: **this dir tells us what's MISSING; the package's `content/` dir holds what we've SHIPPED.** A unit typically flows: mining proposes → verdict flags a widening → we land the widening in `packages/prototype-content-surface/src/surface/types.ts` → we author the unit in `packages/prototype-content-surface/content/<slug>.dhall` → regression passes → we re-mine and the verdict goes `clean`.
+One-liner: **this dir tells us what's MISSING; the package's `content/` dir holds what we've SHIPPED.** A unit typically flows: mining proposes → verdict flags a widening → we land the widening in `packages/surface/src/surface/types.ts` → we author the unit in `packages/surface/content/<slug>.dhall` → regression passes → we re-mine and the verdict goes `clean`.
 
 ## Parts
 
@@ -53,8 +53,8 @@ phase/operation lists.
 
 SRD units produce artifacts in the **main repo**:
 
-- `packages/prototype-content-surface/content/<slug>.dhall`
-- `packages/prototype-content-surface/content/<slug>.json` + trace
+- `packages/surface/content/<slug>.dhall`
+- `packages/surface/content/<slug>.json` + trace
 - `scripts/content-surface-survey/results-srd/<slug>/` (verdict, result, proposal)
 - `scripts/content-surface-survey/survey-results-srd.jsonl` (committed)
 
@@ -72,7 +72,7 @@ The worker picks its paths by `source` field on each queue row. `provenance-chec
 ```sh
 # 1. Build the unit queue (spells only for now; class features / feats /
 #    traits / masteries / items need additional parsing).
-pnpm --filter @dnd/prototype-content-surface exec tsx \
+pnpm --filter @dnd/surface exec tsx \
   ../../scripts/content-surface-survey/unit-catalog.ts
 
 # 2. Smoke-test the pipeline in dry-run (no Claude calls).
@@ -101,20 +101,20 @@ MAX_PARALLEL=5 ./run-survey.sh --tier 2 --limit 10
 ./provenance-check.sh
 
 # 7. Aggregate report (TBD: aggregate.ts).
-pnpm --filter @dnd/prototype-content-surface exec tsx \
+pnpm --filter @dnd/surface exec tsx \
   ../../scripts/content-surface-survey/aggregate.ts
 
 # 8. Run the convergence loop on one widening cluster or explicit batch.
 #    This is the tracer-bullet closure path: rank pressure, rerun a
 #    small batch sequentially, and inspect the before/after report.
-pnpm --filter @dnd/prototype-content-surface exec tsx \
+pnpm --filter @dnd/surface exec tsx \
   ../../scripts/content-surface-survey/close-loop.ts --top 15
 
-pnpm --filter @dnd/prototype-content-surface exec tsx \
+pnpm --filter @dnd/surface exec tsx \
   ../../scripts/content-surface-survey/close-loop.ts \
   --cluster grant_sense --limit 3 --execute --backend codex
 
-pnpm --filter @dnd/prototype-content-surface exec tsx \
+pnpm --filter @dnd/surface exec tsx \
   ../../scripts/content-surface-survey/close-loop.ts \
   --kind magic_item --cluster modify_speed_effect --limit 2 --execute --backend codex
 

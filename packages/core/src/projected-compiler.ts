@@ -34,7 +34,7 @@ import type {
   ResetCadence,
   SpellRecord,
   UsageLimit,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 
 type ActivationSpellRecord = SpellRecord & {
   readonly mechanics: Extract<

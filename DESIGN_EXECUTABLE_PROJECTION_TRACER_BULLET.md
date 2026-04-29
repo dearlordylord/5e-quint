@@ -98,7 +98,7 @@ For the first tracer bullet, lifecycle ownership only needs to cover cases that 
 
 Concrete first-slice pressure:
 
-- `mage_armor` ends early if the target dons armor in [mage_armor.json](/workspace/typescript/dnd-design-domain-model/packages/prototype-content-surface/content/mage_armor.json)
+- `mage_armor` ends early if the target dons armor in [mage_armor.json](/workspace/typescript/dnd-design-domain-model/packages/surface/content/mage_armor.json)
 - reaction and action windows close at specific battle boundaries
 
 The cleanup-first framing is still correct:
@@ -163,7 +163,7 @@ Use the simplest path: compile in memory from generated JSON.
 
 Do not interpret Dhall at runtime.
 
-The first implementation can treat the existing generated JSON under `packages/prototype-content-surface/content/` as the input artifact and compile from there into projected records in memory. If later the repo wants checked-in generated projected fixtures, that can come after the first landing.
+The first implementation can treat the existing generated JSON under `packages/surface/content/` as the input artifact and compile from there into projected records in memory. If later the repo wants checked-in generated projected fixtures, that can come after the first landing.
 
 So:
 
@@ -386,7 +386,7 @@ This is intentionally tiny for v1.
 
 ### 1. Acid Splash
 
-Use the existing authored unit in [acid_splash.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/acid_splash.json).
+Use the existing authored unit in [acid_splash.json](/workspace/typescript/dnd/packages/surface/content/acid_splash.json).
 
 This is the safe SRD spell-side executable pressure case:
 
@@ -403,7 +403,7 @@ Important consequence:
 
 ### 2. Fighter Second Wind
 
-Use the existing authored unit in [fighter_second_wind.json](/workspace/typescript/dnd-design-domain-model/packages/prototype-content-surface/content/fighter_second_wind.json).
+Use the existing authored unit in [fighter_second_wind.json](/workspace/typescript/dnd-design-domain-model/packages/surface/content/fighter_second_wind.json).
 
 It projects to one executable action:
 
@@ -417,7 +417,7 @@ This is the canonical example that proves the interpreter is not spell-specific.
 
 ### 3. Fighter Action Surge
 
-Use the existing authored unit in [fighter_action_surge_l2.json](/workspace/typescript/dnd-design-domain-model/packages/prototype-content-surface/content/fighter_action_surge_l2.json).
+Use the existing authored unit in [fighter_action_surge_l2.json](/workspace/typescript/dnd-design-domain-model/packages/surface/content/fighter_action_surge_l2.json).
 
 It projects to one executable action:
 
@@ -432,7 +432,7 @@ This proves the projected executable layer must express action-economy mutation,
 
 ### 4. Mage Armor
 
-Use the existing authored unit in [mage_armor.json](/workspace/typescript/dnd-design-domain-model/packages/prototype-content-surface/content/mage_armor.json).
+Use the existing authored unit in [mage_armor.json](/workspace/typescript/dnd-design-domain-model/packages/surface/content/mage_armor.json).
 
 This belongs to the persistent projection side:
 

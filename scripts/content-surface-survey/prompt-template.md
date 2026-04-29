@@ -131,7 +131,7 @@ NOT a hole — these are inherent and authored bare:
    - Write only `result-{{UNIT_SLUG}}.json` and `proposal-{{UNIT_SLUG}}.md`.
    - Classify as `structural_widening` if the family/kind is missing, or `surface_widening` / `atom_widening` if the family exists but a specific shape/atom is missing.
 4. If the answer is **yes**, author `content/{{UNIT_SLUG}}.dhall` as the single source of truth.
-5. Run `pnpm typecheck` from `packages/prototype-content-surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
+5. Run `pnpm typecheck` from `packages/surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
 6. Run `pnpm exec tsx src/run.ts content/{{UNIT_SLUG}}.json --out content/{{UNIT_SLUG}}.trace.md`. Observe output.
 7. If the tracer throws `unhandled <...>`, STOP — record the missing shape in `proposal.md` and classify the outcome from the failure:
    - missing top-level kind / family = `structural_widening`
@@ -222,7 +222,7 @@ The harness reads `result-{{UNIT_SLUG}}.json` to extract your verdict. If you do
 
 ### Your working directory
 
-You're operating inside a copy of `packages/prototype-content-surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
+You're operating inside a copy of `packages/surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
 
 - `content/{{UNIT_SLUG}}.dhall` — the authored source of the unit.
 - `content/{{UNIT_SLUG}}.json` — the runtime artifact consumed by typecheck + tracer. The worker derives this from your `.dhall`; do not hand-maintain both.

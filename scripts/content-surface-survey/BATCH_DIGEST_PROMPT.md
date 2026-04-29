@@ -122,7 +122,7 @@ each unit and, where `stale` or `partial`, author the Dhall encoding.
 
 ## Context — read these in order
 
-1. `packages/prototype-content-surface/src/surface/types.ts` —
+1. `packages/surface/src/surface/types.ts` —
    relevant sections: <LIST THE SPECIFIC TYPES / ATOMS FOR THIS CLUSTER>.
 2. `plans/CONTENT_SURFACE_DEFERRED.md` — especially §<LIST RELEVANT §A/§B/§C>.
 3. `ARCHITECTURE.md` lines 100–130 — spatial / DM rulings caller-provided.

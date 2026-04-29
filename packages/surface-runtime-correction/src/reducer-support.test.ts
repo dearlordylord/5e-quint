@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type {
   ActivationPhase,
   UnitRecord,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 
 import { loadSupportedUnit } from "#/supported-unit-library.ts";
 import {

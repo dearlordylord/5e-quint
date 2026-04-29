@@ -119,4 +119,4 @@ File anchors:
 - support gate: [reducer-support.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/reducer-support.ts:1)
 - supported unit loading: [supported-unit-library.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/supported-unit-library.ts:1)
 - unit-backed hole projection: [runtime-holes.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/runtime-holes.ts:1)
-- Surface relationship: [SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/packages/prototype-content-surface/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md:1)
+- Surface relationship: [SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/packages/surface/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md:1)

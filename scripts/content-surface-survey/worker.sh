@@ -64,7 +64,7 @@ anchor_json=$(jq -c .anchor <<<"$ROW")
 # each other's result.json / content writes.
 
 if [[ "$source" == "srd-5.2.1" ]]; then
-  TEMPLATE_DIR="$REPO_ROOT/packages/prototype-content-surface"
+  TEMPLATE_DIR="$REPO_ROOT/packages/surface"
   RESULTS_DIR="$SCRIPTS_DIR/results-srd"
   DATASET="$SCRIPTS_DIR/survey-results-srd.jsonl"
 else
@@ -77,9 +77,9 @@ else
   if [[ ! -d "$TEMPLATE_DIR" ]]; then
     mkdir -p "$TEMPLATE_DIR"
     rsync -a --exclude node_modules --exclude 'content/*.trace.md' \
-      "$REPO_ROOT/packages/prototype-content-surface/" "$TEMPLATE_DIR/"
+      "$REPO_ROOT/packages/surface/" "$TEMPLATE_DIR/"
   fi
-  ln -sfn "$REPO_ROOT/packages/prototype-content-surface/node_modules" "$TEMPLATE_DIR/node_modules"
+  ln -sfn "$REPO_ROOT/packages/surface/node_modules" "$TEMPLATE_DIR/node_modules"
 fi
 
 mkdir -p "$RESULTS_DIR/$slug"
@@ -117,7 +117,7 @@ rm -f \
 
 # -------- extract unit text --------
 
-text=$(pnpm --filter @dnd/prototype-content-surface exec tsx \
+text=$(pnpm --filter @dnd/surface exec tsx \
   "$SCRIPTS_DIR/extract-unit-text.ts" --anchor-json "$anchor_json")
 
 # -------- build prompt --------
@@ -129,7 +129,7 @@ prompt_path="$RESULTS_DIR/$slug/prompt.md"
 # calls for context. The static prefix is identical across all units,
 # enabling Anthropic prompt caching (5-min TTL).
 
-PROTO_DIR="$REPO_ROOT/packages/prototype-content-surface"
+PROTO_DIR="$REPO_ROOT/packages/surface"
 REF_TYPES_TS=$(cat "$PROTO_DIR/src/surface/types.ts")
 REF_TRACER_TS=$(cat "$PROTO_DIR/src/interpreter/tracer.ts")
 REF_BLESS_DHALL=$(cat "$PROTO_DIR/content/bless.dhall")
@@ -396,7 +396,7 @@ if [[ -f "$WORKSPACE/content/$slug.dhall" ]]; then
     --output "$WORKSPACE/content/$slug.json"
 fi
 
-pnpm --filter @dnd/prototype-content-surface exec tsx \
+pnpm --filter @dnd/surface exec tsx \
   "$SCRIPTS_DIR/validate.ts" \
   --slug "$slug" \
   --prototype-dir "$WORKSPACE" \

@@ -20,7 +20,7 @@ Recommended first vertical:
 
 ## Surface Package Decision
 
-Recommend renaming/promoting `@dnd/prototype-content-surface` to `@dnd/surface`, not creating a facade.
+Recommend renaming/promoting `@dnd/surface` to `@dnd/surface`, not creating a facade.
 
 Reason: the existing package already owns the Surface schemas, `UnitRecord` union, decode helpers, structural vocabulary, and authored SRD content directory. A facade would create a second package boundary before the green runtime has stabilized, and it would make imports ambiguous between "prototype" and "real" Surface. This is a greenfield stack with no external consumers, so preserving the old package name has no compatibility value.
 
@@ -28,9 +28,9 @@ Package/import consequences:
 
 - Rename package directory or package name to `@dnd/surface`.
 - Runtime packages import schemas, types, and decode helpers from `@dnd/surface`.
-- Update repo docs to refer to `@dnd/surface` as the active package; any historical references to `@dnd/prototype-content-surface` should be explicitly archival or removed.
+- Update repo docs to refer to `@dnd/surface` as the active package; any historical references to `@dnd/surface` should be explicitly archival or removed.
 - Keep authored SRD content either in this package during Phase 1 or move it behind a later `@dnd/srd-units` artifact without changing Surface type imports.
-- Replace `@dnd/prototype-content-surface` imports in `packages/surface-runtime-correction` when its patterns are reused.
+- Replace `@dnd/surface` imports in `packages/surface-runtime-correction` when its patterns are reused.
 - Do not introduce `@dnd/surface-runtime-*` package-specific content languages.
 
 ## Unit Library Boundary

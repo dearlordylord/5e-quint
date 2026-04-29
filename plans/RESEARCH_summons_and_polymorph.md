@@ -286,7 +286,7 @@ given user's "XPHB = SRD in importance" policy.**
 ### Research vs code boundary
 
 - **Research and surface design**: cite XPHB spells, analyze their shape, factor them into §C4 type grammar.
-- **Authored content**: only SRD 5.2.1 Dhall/JSON files land in `packages/prototype-content-surface/content/`.
+- **Authored content**: only SRD 5.2.1 Dhall/JSON files land in `packages/surface/content/`.
 - **XPHB content**: authored under `.references/xphb-srd-pairing/phb-survey/workspace/content/` when that lane runs, gated by `provenance-check.sh`. That tree is git-ignored per repo policy.
 
 ### Ranger companion note

@@ -37,7 +37,7 @@ Target packages:
 
 | Package                           | Responsibility                                                                                                                                           |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@dnd/surface`                    | Surface schemas, `UnitRecord` types, decode helpers, structural predicates/readers. This may start as promoted/renamed `@dnd/prototype-content-surface`. |
+| `@dnd/surface`                    | Surface schemas, `UnitRecord` types, decode helpers, structural predicates/readers. This may start as promoted/renamed `@dnd/surface`. |
 | `@dnd/shared`                     | Surface-free shared scalar/domain types that genuinely need to cross runtime package boundaries.                                                         |
 | `@dnd/shared-algebras`            | Reusable non-executable reducer algebras shared by runtime packages, such as damage or hole/fill mechanics when they encode no Unit/effect semantics.    |
 | `@dnd/character-creation-runtime` | Minimal level-1 Fighter creation reducer: draft holes, batch fills, validation, and finalization to `CharacterSheet`.                                    |
@@ -176,7 +176,7 @@ During Phase 1/2, `battle-runtime-slice.qnt` is authoritative only for the green
 ## Phase 0: Audit And Preconditions
 
 1. Correction action-economy drift is resolved by `52cf18b5`, which landed Surface action resource sidecars and Correction action-resource handling. New runtime work should build on that baseline.
-2. Rename/promote `@dnd/prototype-content-surface` to `@dnd/surface`. Record the package cutover and update green-path imports and project documentation so new docs no longer speak about the prototype package as the active Surface package.
+2. Rename/promote `@dnd/surface` to `@dnd/surface`. Record the package cutover and update green-path imports and project documentation so new docs no longer speak about the prototype package as the active Surface package.
 3. Create the concrete SRD-only Unit collection artifact used by MCP. `srdUnitCollection` must be a real import before Phase 3, and duplicate-id/provenance validation must exist at `buildUnitLibrary`.
 4. Produce `plans/phase1-fighter-manifest.md` listing the exact selected background, species, ability-score method/values, languages, alignment representation, Fighting Style, weapons, armor, shield, and monster. For each item, record the SRD 5.2.1 reference file/section and the Unit id if already authored; otherwise add the minimum Unit authoring task before reducer implementation.
 5. Produce `plans/phase0-surface-unit-availability.md` auditing which exact Fighter/monster manifest facts already exist as authored Surface Units, which need minimum SRD Unit authoring, and which need a Surface shape decision.

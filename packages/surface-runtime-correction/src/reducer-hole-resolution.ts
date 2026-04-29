@@ -55,7 +55,7 @@ import type {
   DiceAmount,
   DiceExpr,
   EffectAtom,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 import {
   rolledDiceTotal,
   validateRolledDiceForDiceExpr,

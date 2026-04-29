@@ -2,11 +2,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { Context, Layer, HashMap } from "effect";
-import { decodeUnitRecordSync } from "@dnd/prototype-content-surface/surface/schema";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { assertSupportedUnit } from "#/reducer-support.ts";
 
 import type { Option } from "effect";
-import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 export type SupportedUnitLibraryShape = {
   readonly get: (unitId: string) => Option.Option<UnitRecord>;
@@ -22,7 +22,7 @@ function authoredUnitContentPath(unitId: string): string {
     import.meta.dirname,
     "..",
     "..",
-    "prototype-content-surface",
+    "surface",
     "content",
     `${unitId}.json`,
   );

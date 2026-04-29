@@ -8,7 +8,7 @@ import type {
   DamageTypeRef,
   EffectAtom,
   UnitRecord,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 
 type DamageEffect = Extract<EffectAtom, { readonly kind: "damage" }>;
 type NoneEffect = Extract<EffectAtom, { readonly kind: "none" }>;

@@ -5,7 +5,7 @@ import type {
   DamageTypeRef,
   DcSource,
   UnitRecord,
-} from "@dnd/prototype-content-surface/surface/types";
+} from "@dnd/surface/surface/types";
 import type {
   CreatureId,
   DieRollResult,

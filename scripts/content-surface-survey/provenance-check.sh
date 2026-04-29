@@ -14,7 +14,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CHECK_ROOTS=(
   "$SCRIPT_DIR/survey-results-srd.jsonl"
   "$SCRIPT_DIR/results-srd"
-  "$REPO_ROOT/packages/prototype-content-surface/content"
+  "$REPO_ROOT/packages/surface/content"
 )
 
 # Signals of non-SRD leak: any non-`srd-5.2.1` source value, known

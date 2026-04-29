@@ -3,8 +3,8 @@ import type {
   ActionRestriction,
   StandardActionKind,
   UnitRecord,
-} from "@dnd/prototype-content-surface/surface/types";
-import { STANDARD_ACTION_KINDS } from "@dnd/prototype-content-surface/surface/schema";
+} from "@dnd/surface/surface/types";
+import { STANDARD_ACTION_KINDS } from "@dnd/surface/surface/schema";
 import type { CreatureId } from "@dnd/shared/types";
 
 const STANDARD_ACTION_KIND_SET: ReadonlySet<string> = new Set(

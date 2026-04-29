@@ -3,7 +3,7 @@
 Curated architectural summary of the vertical from rules sources to reducers.
 
 This file is not the scratchpad. The evolving working diagrams live in
-[SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/packages/prototype-content-surface/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md:1).
+[SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/packages/surface/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md:1).
 
 ## Code Anchors
 

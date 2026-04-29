@@ -76,7 +76,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 **Input**
 
 - [DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md](/workspace/typescript/dnd-design-domain-model/DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md)
-- existing authored units in `packages/prototype-content-surface/content/`
+- existing authored units in `packages/surface/content/`
 - existing Quint battle and creature semantics
 
 **Output**
@@ -109,7 +109,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 **Input**
 
 - existing authored spell activation:
-  - [acid_splash.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/acid_splash.json)
+  - [acid_splash.json](/workspace/typescript/dnd/packages/surface/content/acid_splash.json)
 - the design requirement that the first safe SRD slice uses an existing licensed spell rather than a non-SRD pressure case
 
 **Output**
@@ -210,7 +210,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 
 **Input**
 
-- generated authored JSON from `packages/prototype-content-surface/content/`
+- generated authored JSON from `packages/surface/content/`
 - projected TS types from Task 4
 - Quint subset boundaries from Task 3
 
