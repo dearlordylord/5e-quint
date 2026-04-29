@@ -14,6 +14,7 @@ import {
   createScoredInitiativeStack,
   currentActing,
   initiativeOrder,
+  nextInitiative,
 } from "@dnd/shared-algebras/initiative-algebra";
 import {
   abilityModifier,
@@ -466,22 +467,20 @@ export function resolveBattleSubject(
     );
   }
 
-  if (input.subject.act === "attack") {
-    return resolveAttack(input);
-  }
+  return Match.value(input.subject.act).pipe(
+    Match.when("attack", () => resolveAttack(input)),
+    Match.when("endTurn", () => {
+      if (input.fills.length > 0) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "End Turn does not accept battle fills.",
+        );
+      }
 
-  if (input.fills.length > 0) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "End Turn does not accept battle fills.",
-    );
-  }
-
-  return invalidResult(
-    input.state,
-    "unsupportedSubject",
-    `${input.subject.act} resolution is not implemented in the battle runtime skeleton.`,
+      return resolveEndTurn(input.state);
+    }),
+    Match.exhaustive,
   );
 }
 
@@ -954,6 +953,22 @@ function spendAttackAction(
   }
 
   const nextState = { ...state, currentTurnResources: spent.right };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveEndTurn(
+  state: BattleState,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const nextState = {
+    ...state,
+    initiative: nextInitiative(state.initiative),
+    currentTurnResources: resetTurnActionEconomy(state.currentTurnResources),
+  };
+
   return {
     tag: "resolved",
     state: nextState,

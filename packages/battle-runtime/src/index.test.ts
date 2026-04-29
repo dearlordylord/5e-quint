@@ -1,3 +1,9 @@
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, test } from "vitest";
 
 import {
@@ -43,6 +49,10 @@ import type {
   CreationFill,
 } from "@dnd/character-creation-runtime";
 
+const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
+const battleRuntimeSlicePath = fileURLToPath(
+  new URL("../battle-runtime-slice.qnt", import.meta.url),
+);
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 type BattleFillableHole = Pick<BattleHole, "kind" | "holeId">;
@@ -64,7 +74,7 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
 
-describe("battle runtime skeleton", () => {
+describe("battle runtime", () => {
   test("starts a battle from a finalized Character Sheet and Goblin Warrior Stat Block", () => {
     const state = startBattleFromCharacterSheetAndStatBlock({
       battleId: battleId("battle-1"),
@@ -884,7 +894,7 @@ describe("battle runtime skeleton", () => {
     ]);
   });
 
-  test("endTurn is discoverable but not resolved before the CAM15 slice", () => {
+  test("endTurn advances to the next Initiative actor and refreshes turn resources", () => {
     const state = {
       ...startBattle({
         battleId: battleId("battle-1"),
@@ -902,19 +912,485 @@ describe("battle runtime skeleton", () => {
     const result = endTurn({ state, actorId: fighterId });
 
     expect(result).toMatchObject({
-      tag: "invalid",
-      reason: "unsupportedSubject",
+      tag: "resolved",
       snapshot: {
-        currentActorId: fighterId,
+        currentActorId: goblinId,
         round: 1,
+        turnOrder: [fighterId, goblinId],
         currentTurnResources: {
-          actionResources: [],
-          currentHasBonusAction: false,
+          actionResources: [{ kind: "action", source: "turn" }],
+          currentHasBonusAction: true,
         },
       },
     });
   });
+
+  test("endTurn advances to a new round after the last actor acts", () => {
+    const afterFighter = endTurn({
+      state: fighterVsGoblinBattle(),
+      actorId: fighterId,
+    });
+    if (afterFighter.tag !== "resolved") {
+      throw new Error(`Expected resolved End Turn, got ${afterFighter.tag}.`);
+    }
+
+    const afterGoblin = endTurn({
+      state: afterFighter.state,
+      actorId: goblinId,
+    });
+
+    expect(afterGoblin).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentActorId: fighterId,
+        round: 2,
+        turnOrder: [fighterId, goblinId],
+        currentTurnResources: {
+          actionResources: [{ kind: "action", source: "turn" }],
+          currentHasBonusAction: true,
+        },
+      },
+    });
+  });
+
+  test("endTurn rejects fills because it is a runtime command, not an SRD Action hole protocol", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "endTurn" },
+      fills: [targetFill(targetHole, goblinId)],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      snapshot: {
+        currentActorId: fighterId,
+        round: 1,
+      },
+    });
+  });
+
+  test("battle runtime QNT slice self-tests pass", () => {
+    runQuintSliceSelfTests();
+  });
+
+  test("battle runtime QNT slice matches runtime fixture outcomes", () => {
+    const miss = resolveAttackFixture({
+      attackRoll: { total: 14, naturalD20: 9 },
+    });
+    const hit = resolveAttackFixture({
+      attackRoll: { total: 15, naturalD20: 10 },
+      damageRoll: 4,
+    });
+    const tempHp = resolveAttackFixture({
+      targetTempHp: 5,
+      attackRoll: { total: 15, naturalD20: 10 },
+      damageRoll: 4,
+    });
+    const zeroHp = resolveAttackFixture({
+      targetHp: 3,
+      attackRoll: { total: 15, naturalD20: 10 },
+      damageRoll: 8,
+    });
+    const characterDropToZero = resolveCharacterAttackFixture({
+      targetHp: 3,
+      attackRoll: { total: 15, naturalD20: 10 },
+      damageRoll: 8,
+    });
+    const characterDamageAtZero = resolveCharacterAttackFixture({
+      targetHp: 0,
+      attackRoll: { total: 15, naturalD20: 10 },
+      damageRoll: 4,
+    });
+    const characterCriticalDamageAtZero = resolveCharacterAttackFixture({
+      targetHp: 0,
+      attackRoll: { total: 20, naturalD20: 20 },
+      damageRoll: 4,
+    });
+    const afterFighter = endTurn({
+      state: fighterVsGoblinBattle(),
+      actorId: fighterId,
+    });
+    if (afterFighter.tag !== "resolved") {
+      throw new Error(`Expected resolved End Turn, got ${afterFighter.tag}.`);
+    }
+    const afterGoblin = endTurn({
+      state: afterFighter.state,
+      actorId: goblinId,
+    });
+    if (afterGoblin.tag !== "resolved") {
+      throw new Error(`Expected resolved End Turn, got ${afterGoblin.tag}.`);
+    }
+
+    runGeneratedQuintParity(
+      renderBattleRuntimeParityModule({
+        miss: snapshotProjection(requireResolved(miss)),
+        hit: snapshotProjection(requireResolved(hit)),
+        tempHp: snapshotProjection(requireResolved(tempHp)),
+        zeroHp: snapshotProjection(requireResolved(zeroHp)),
+        characterDropToZero: characterProjection(
+          requireResolved(characterDropToZero),
+          targetCharacterId,
+        ),
+        characterDamageAtZero: characterProjection(
+          requireResolved(characterDamageAtZero),
+          targetCharacterId,
+        ),
+        characterCriticalDamageAtZero: characterProjection(
+          requireResolved(characterCriticalDamageAtZero),
+          targetCharacterId,
+        ),
+        afterFighterEndTurn: snapshotProjection(afterFighter),
+        afterGoblinEndTurn: snapshotProjection(afterGoblin),
+      }),
+    );
+  });
 });
+
+function resolveAttackFixture(input: {
+  readonly targetHp?: number;
+  readonly targetTempHp?: number;
+  readonly attackRoll: { readonly total: number; readonly naturalD20: number };
+  readonly damageRoll?: number;
+}): ReturnType<typeof resolveBattleSubject> {
+  const targetOverrides = {
+    ...(input.targetHp === undefined ? {} : { currentHp: input.targetHp }),
+    ...(input.targetTempHp === undefined ? {} : { tempHp: input.targetTempHp }),
+  };
+  const state = startBattle({
+    battleId: battleId("battle-qnt-parity"),
+    combatants: [
+      characterSeed({ initiative: 20 }),
+      monsterSeed({
+        initiative: 10,
+        ...targetOverrides,
+      }),
+    ],
+  });
+  const targetHole = attackInitialTargetHole(state);
+  const rollHole = attackRollHoleAfterTarget(state, targetHole);
+  const fills: BattleFill[] = [
+    targetFill(targetHole, goblinId),
+    attackRollFill(rollHole, input.attackRoll),
+  ];
+
+  if (input.damageRoll !== undefined) {
+    fills.push(
+      damageRollFill(
+        attackDamageHoleAfterHit(state, targetHole, rollHole),
+        input.damageRoll,
+      ),
+    );
+  }
+
+  return resolveBattleSubject({
+    state,
+    subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+    fills,
+  });
+}
+
+const targetCharacterId = combatantId("target-character");
+
+function resolveCharacterAttackFixture(input: {
+  readonly targetHp: number;
+  readonly attackRoll: { readonly total: number; readonly naturalD20: number };
+  readonly damageRoll: number;
+}): ReturnType<typeof resolveBattleSubject> {
+  const state = startBattle({
+    battleId: battleId("battle-character-parity"),
+    combatants: [
+      characterSeed({ initiative: 20 }),
+      characterSeed({
+        combatantId: targetCharacterId,
+        displayName: "Target Fighter",
+        initiative: 10,
+        currentHp: input.targetHp,
+        attack: null,
+      }),
+    ],
+  });
+  const targetHole = attackInitialTargetHole(state);
+  const rollHole = attackRollHoleAfterTarget(state, targetHole);
+  const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+
+  return resolveBattleSubject({
+    state,
+    subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+    fills: [
+      targetFill(targetHole, targetCharacterId),
+      attackRollFill(rollHole, input.attackRoll),
+      damageRollFill(damageHole, input.damageRoll),
+    ],
+  });
+}
+
+function requireResolved(
+  result: ReturnType<typeof resolveBattleSubject>,
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "resolved" }
+> {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected resolved battle result, got ${result.tag}.`);
+  }
+
+  return result;
+}
+
+type BattleRuntimeParityProjection = {
+  readonly round: number;
+  readonly currentActor: "Fighter" | "Goblin";
+  readonly fighterHp: number;
+  readonly fighterTempHp: number;
+  readonly fighterUnconscious: boolean;
+  readonly fighterDeathFailures: number;
+  readonly goblinHp: number;
+  readonly goblinTempHp: number;
+  readonly goblinDead: boolean;
+  readonly actionAvailable: boolean;
+  readonly bonusActionAvailable: boolean;
+};
+
+type CharacterZeroHpParityProjection = {
+  readonly hp: number;
+  readonly tempHp: number;
+  readonly unconscious: boolean;
+  readonly deathFailures: number;
+};
+
+function snapshotProjection(
+  result: Extract<
+    ReturnType<typeof resolveBattleSubject>,
+    { readonly tag: "resolved" }
+  >,
+): BattleRuntimeParityProjection {
+  const snapshot = result.snapshot;
+  const fighter = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  const goblin = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === goblinId,
+  );
+
+  if (fighter == null || goblin == null) {
+    throw new Error("Expected Fighter and Goblin combatants in snapshot.");
+  }
+
+  return {
+    round: snapshot.round,
+    currentActor: snapshot.currentActorId === fighterId ? "Fighter" : "Goblin",
+    fighterHp: fighter.hp,
+    fighterTempHp: fighter.tempHp,
+    fighterUnconscious: fighter.conditions.includes("unconscious"),
+    fighterDeathFailures:
+      fighter.zeroHpLifecycle.policy === "usesDeathSavingThrows"
+        ? fighter.zeroHpLifecycle.deathSaves.failures
+        : 0,
+    goblinHp: goblin.hp,
+    goblinTempHp: goblin.tempHp,
+    goblinDead:
+      goblin.zeroHpLifecycle.policy === "diesAtZeroHp" &&
+      goblin.zeroHpLifecycle.dead,
+    actionAvailable: snapshot.currentTurnResources.actionResources.some(
+      (resource) => resource.kind === "action",
+    ),
+    bonusActionAvailable: snapshot.currentTurnResources.currentHasBonusAction,
+  };
+}
+
+function characterProjection(
+  result: Extract<
+    ReturnType<typeof resolveBattleSubject>,
+    { readonly tag: "resolved" }
+  >,
+  combatantId: CombatantId,
+): CharacterZeroHpParityProjection {
+  const combatant = result.snapshot.combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+
+  if (combatant == null) {
+    throw new Error(`Expected ${combatantId} combatant in snapshot.`);
+  }
+
+  return {
+    hp: combatant.hp,
+    tempHp: combatant.tempHp,
+    unconscious: combatant.conditions.includes("unconscious"),
+    deathFailures:
+      combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows"
+        ? combatant.zeroHpLifecycle.deathSaves.failures
+        : 0,
+  };
+}
+
+function runQuintSliceSelfTests(): void {
+  const quintOutput = execFileSync(
+    "pnpm",
+    [
+      "exec",
+      "quint",
+      "test",
+      "--backend",
+      "typescript",
+      battleRuntimeSlicePath,
+      "--match",
+      "test_",
+    ],
+    { encoding: "utf8" },
+  );
+  expect(quintOutput).toContain("12 passing");
+}
+
+function runGeneratedQuintParity(moduleBody: string): void {
+  const tempDir = fs.mkdtempSync(
+    path.join(
+      packageRootPath,
+      `.tmp-battle-runtime-parity-${os.userInfo().username}-`,
+    ),
+  );
+  const tempFile = path.join(tempDir, "battle-runtime-parity.qnt");
+
+  try {
+    fs.writeFileSync(tempFile, moduleBody);
+    const quintOutput = execFileSync(
+      "pnpm",
+      [
+        "exec",
+        "quint",
+        "test",
+        "--backend",
+        "typescript",
+        tempFile,
+        "--match",
+        "parity_",
+      ],
+      { encoding: "utf8" },
+    );
+    expect(quintOutput).toContain("9 passing");
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+function renderBattleRuntimeParityModule(input: {
+  readonly miss: BattleRuntimeParityProjection;
+  readonly hit: BattleRuntimeParityProjection;
+  readonly tempHp: BattleRuntimeParityProjection;
+  readonly zeroHp: BattleRuntimeParityProjection;
+  readonly characterDropToZero: CharacterZeroHpParityProjection;
+  readonly characterDamageAtZero: CharacterZeroHpParityProjection;
+  readonly characterCriticalDamageAtZero: CharacterZeroHpParityProjection;
+  readonly afterFighterEndTurn: BattleRuntimeParityProjection;
+  readonly afterGoblinEndTurn: BattleRuntimeParityProjection;
+}): string {
+  return `module battleRuntimeParity {
+  import battleRuntimeSlice.* from "../battle-runtime-slice"
+
+  run parity_miss_matches_runtime = {
+    assert(resolveAttack(initialState, 14, 9, 0) == ${renderQntStateProjection(input.miss)})
+  }
+
+  run parity_hit_damage_matches_runtime = {
+    assert(resolveAttack(initialState, 15, 10, 4) == ${renderQntStateProjection(input.hit)})
+  }
+
+  run parity_temporary_hp_matches_runtime = {
+    assert(resolveAttack(withGoblinHp(initialState, 10, 5), 15, 10, 4) == ${renderQntStateProjection(input.tempHp)})
+  }
+
+  run parity_zero_hp_policy_matches_runtime = {
+    assert(resolveAttack(withGoblinHp(initialState, 3, 0), 15, 10, 8) == ${renderQntStateProjection(input.zeroHp)})
+  }
+
+  run parity_character_drop_to_zero_policy_matches_runtime = {
+    assert(applyDamage(withFighterHp(initialState, 3, 0).fighter, 11, 1) == ${renderQntCharacterProjection(input.characterDropToZero)})
+  }
+
+  run parity_character_damage_at_zero_policy_matches_runtime = {
+    assert(applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 1) == ${renderQntCharacterProjection(input.characterDamageAtZero)})
+  }
+
+  run parity_character_critical_damage_at_zero_policy_matches_runtime = {
+    assert(applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 2) == ${renderQntCharacterProjection(input.characterCriticalDamageAtZero)})
+  }
+
+  run parity_fighter_end_turn_matches_runtime = {
+    assert(endTurn(initialState) == ${renderQntStateProjection(input.afterFighterEndTurn)})
+  }
+
+  run parity_round_wrap_end_turn_matches_runtime = {
+    assert(endTurn(endTurn(initialState)) == ${renderQntStateProjection(input.afterGoblinEndTurn)})
+  }
+}
+`;
+}
+
+function renderQntCharacterProjection(
+  input: CharacterZeroHpParityProjection,
+): string {
+  return `{
+      hp: ${input.hp},
+      maxHp: 12,
+      tempHp: ${input.tempHp},
+      ac: 10,
+      unconscious: ${input.unconscious},
+      deathFailures: ${input.deathFailures},
+      lifecycle: UsesDeathSavingThrows,
+    }`;
+}
+
+function renderQntStateProjection(
+  input: BattleRuntimeParityProjection,
+): string {
+  return `{
+      initiative: {
+        round: ${input.round},
+        alreadyActed: ${renderQntAlreadyActed(input)},
+        stillToAct: ${renderQntStillToAct(input)},
+      },
+      fighter: {
+        hp: ${input.fighterHp},
+        maxHp: 12,
+        tempHp: ${input.fighterTempHp},
+        ac: 10,
+        unconscious: ${input.fighterUnconscious},
+        deathFailures: ${input.fighterDeathFailures},
+        lifecycle: UsesDeathSavingThrows,
+      },
+      goblin: {
+        hp: ${input.goblinHp},
+        maxHp: 10,
+        tempHp: ${input.goblinTempHp},
+        ac: 15,
+        unconscious: false,
+        deathFailures: 0,
+        lifecycle: DiesAtZeroHp,
+      },
+      actionAvailable: ${input.actionAvailable},
+      bonusActionAvailable: ${input.bonusActionAvailable},
+    }`;
+}
+
+function renderQntAlreadyActed(input: BattleRuntimeParityProjection): string {
+  if (input.currentActor === "Goblin") {
+    return "[Fighter]";
+  }
+
+  return "[]";
+}
+
+function renderQntStillToAct(input: BattleRuntimeParityProjection): string {
+  if (input.currentActor === "Goblin") {
+    return "[Goblin]";
+  }
+
+  return "[Fighter, Goblin]";
+}
 
 function fighterVsGoblinBattle(): BattleState {
   return startBattle({

@@ -631,17 +631,24 @@ Phase 1 subjects are only `coreAct.attack` and `coreAct.endTurn`. Do not include
 
 Battle hole identity may reuse the branded `HoleId`/`HoleInstanceKey` values
 from `@dnd/shared-algebras/runtime-hole-algebra`, but the battle public
-hole/fill union must stay as narrow as the implemented battle protocol. CAM11
-has no fillable battle protocol, so `BattleHole` and `BattleFill` are `never`.
-Later attack/damage tasks should add only battle-owned variants that are
-actually discoverable and resolvable. Do not expose Correction's
+hole/fill union must stay as narrow as the implemented battle protocol. The
+phase-1 protocol exposes only Attack target, Attack Roll, and weapon damage
+roll holes/fills. End Turn is a runtime command and must not accept fills.
+Later tasks should add only battle-owned variants that are actually
+discoverable and resolvable. Do not expose Correction's
 Surface/Unit/effect execution holes through `@dnd/battle-runtime`.
 
 ```ts
 export type BattleHoleId = HoleId;
 export type BattleHoleInstanceKey = HoleInstanceKey;
-export type BattleHole = never;
-export type BattleFill = never;
+export type BattleHole =
+  | BattleTargetChoiceHole
+  | BattleAttackRollHole
+  | BattleDamageRollHole;
+export type BattleFill = Extract<
+  FilledHoleValue,
+  { readonly kind: "targetChoice" | "attackRoll" | "rolledDice" }
+>;
 
 export type BattleResolutionInput = {
   readonly state: BattleState;
@@ -785,8 +792,8 @@ Tool sequence:
 
 9. `end_turn`
    - Calls `endTurn({ state, actorId })`.
-   - CAM11 returns `unsupportedSubject` without mutating `BattleState`.
-   - CAM15 stores the returned `BattleState` after implementing End Turn advancement.
+   - Stores the returned `BattleState` when End Turn resolves.
+   - End Turn is a runtime command with no holes or fills; it advances the shared Initiative stack and resets the next actor's per-turn resources.
 
 MCP composition root owns:
 
