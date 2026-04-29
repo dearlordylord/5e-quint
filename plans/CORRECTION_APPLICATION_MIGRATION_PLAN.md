@@ -35,14 +35,14 @@ Anything outside this green surface may break temporarily, but it must be listed
 
 Target packages:
 
-| Package                           | Responsibility                                                                                                                                           |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@dnd/surface`                    | Surface schemas, `UnitRecord` types, decode helpers, structural predicates/readers. This may start as promoted/renamed `@dnd/surface`. |
-| `@dnd/shared`                     | Surface-free shared scalar/domain types that genuinely need to cross runtime package boundaries.                                                         |
-| `@dnd/shared-algebras`            | Reusable non-executable reducer algebras shared by runtime packages, such as damage or hole/fill mechanics when they encode no Unit/effect semantics.    |
-| `@dnd/character-creation-runtime` | Minimal level-1 Fighter creation reducer: draft holes, batch fills, validation, and finalization to `CharacterSheet`.                                    |
-| `@dnd/battle-runtime`             | Minimal battle reducer: battle state, subjects, battle holes, fills, Attack with damage, End Turn, local QNT slice and MBT.                              |
-| future `@dnd/srd-units`           | SRD-only authored Unit collection. Do not create in phase 1 unless imports force it.                                                                     |
+| Package                           | Responsibility                                                                                                                                        |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@dnd/surface`                    | Surface schemas, `UnitRecord` types, decode helpers, structural predicates/readers. This may start as promoted/renamed `@dnd/surface`.                |
+| `@dnd/shared`                     | Surface-free shared scalar/domain types that genuinely need to cross runtime package boundaries.                                                      |
+| `@dnd/shared-algebras`            | Reusable non-executable reducer algebras shared by runtime packages, such as damage or hole/fill mechanics when they encode no Unit/effect semantics. |
+| `@dnd/character-creation-runtime` | Minimal level-1 Fighter creation reducer: draft holes, batch fills, validation, and finalization to `CharacterSheet`.                                 |
+| `@dnd/battle-runtime`             | Minimal battle reducer: battle state, subjects, battle holes, fills, Attack with damage, End Turn, local QNT slice and MBT.                           |
+| future `@dnd/srd-units`           | SRD-only authored Unit collection. Do not create in phase 1 unless imports force it.                                                                  |
 
 New green-path packages must have this dependency direction only:
 
@@ -181,7 +181,7 @@ During Phase 1/2, `battle-runtime-slice.qnt` is authoritative only for the green
 4. Produce `plans/phase1-fighter-manifest.md` listing the exact selected background, species, ability-score method/values, languages, alignment representation, Fighting Style, weapons, armor, shield, and monster. For each item, record the SRD 5.2.1 reference file/section and the Unit id if already authored; otherwise add the minimum Unit authoring task before reducer implementation.
 5. Produce `plans/phase0-surface-unit-availability.md` auditing which exact Fighter/monster manifest facts already exist as authored Surface Units, which need minimum SRD Unit authoring, and which need a Surface shape decision.
 6. Author the missing minimum SRD Units needed for the green surface from `.references/srd-5.2.1/` only. Each shipped SRD Unit must carry SRD 5.2.1 provenance, and the SRD collection type/builder must make mixed-provenance or mixed-license collections unrepresentable. External structured data may be used only as import/normalization input, never as provenance.
-7. Before Phase 2, define the minimum stat-block Surface catalog boundary for exactly one SRD monster as a generic `StatBlockRecord` over `MonsterStatBlock`, separate from `UnitRecord`, and expose it through `buildStatBlockCatalog`. The first collection is SRD-only and must enforce SRD 5.2.1 provenance at the collection boundary. The green path must not read `@dnd/core` monster catalogs.
+7. CAM3 defines the stat-block Surface catalog boundary as a generic `StatBlockRecord` over `MonsterStatBlock`, separate from `UnitRecord`, and exposes it through `buildStatBlockCatalog`. The first collection is `srdStatBlockCollection`; it is SRD-only and enforces SRD 5.2.1 provenance at the collection boundary. The green path must not read `@dnd/core` monster catalogs. CAM5 owns authoring the first SRD monster record into that collection.
 8. Audit current `CPU*`/`PEA*`/`PPR*` call sites and identify what can be deleted immediately. Artifact: `plans/phase0-core-deletion-restore-audit.md`.
 9. Record old-code references from baseline `39f9ab71` for every lane moved to the Restore Ledger. Artifact: `plans/phase0-core-deletion-restore-audit.md`.
 10. Produce the runtime boundary/API artifact at `plans/phase0-runtime-boundary-api.md`, defining the package-level APIs and ownership boundaries for `@dnd/surface`, `@dnd/character-creation-runtime`, `@dnd/battle-runtime`, and the MCP green path.

@@ -208,7 +208,6 @@ export function isSrd521Provenance(
   value: Provenance,
 ): value is SrdUnitRecord["provenance"];
 export function assertSrd521Unit(unit: UnitRecord): SrdUnitRecord;
-export function provenanceKey(provenance: Provenance): string;
 ```
 
 Monster/stat-block boundary:
@@ -245,6 +244,16 @@ export type StatBlockCatalog = {
   readonly requireStatBlock: (id: StatBlockId) => StatBlockRecord;
 };
 
+export type StatBlockCatalogBuildIssue =
+  | { readonly code: "duplicateStatBlockId"; readonly statBlockId: StatBlockId }
+  | {
+      readonly code: "mixedProvenance";
+      readonly collectionKind: SrdStatBlockCollection["kind"];
+      readonly expected: SurfaceCollectionProvenance;
+      readonly actual: Provenance;
+      readonly statBlockId: StatBlockId;
+    };
+
 export function defineSrdStatBlockCollection(input: {
   readonly statBlocks: readonly (StatBlockRecord & {
     readonly provenance: {
@@ -260,7 +269,7 @@ export function buildStatBlockCatalog(input: {
   | { readonly tag: "ok"; readonly catalog: StatBlockCatalog }
   | {
       readonly tag: "invalid";
-      readonly issues: readonly UnitLibraryBuildIssue[];
+      readonly issues: readonly StatBlockCatalogBuildIssue[];
     };
 ```
 

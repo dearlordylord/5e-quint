@@ -3,6 +3,7 @@
 Workspace package for the content-authoring → surface → tracer flow.
 
 Temporary system-level pipeline map:
+
 - [plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md)
 
 ## Not to be confused with `scripts/content-surface-survey/`
@@ -29,10 +30,10 @@ this package is where the vocabulary continues to be shaped by real
 authoring pressure from SRD 5.2.1 and PHB 2024 content.
 
 The eventual destination is the **main app**: once the surface
-stabilizes here, the closed vocabulary gets brought into `packages/core`
+stabilizes here, the closed vocabulary gets brought into the combat engine
 via a **Quint-first approach** — i.e., the surface types drive Quint
 variant generation, which drives XState machine shape, which drives
-TS engine code. Nothing in this package touches `@dnd/core` today;
+TS engine code. Nothing in this package touches that engine package today;
 that integration only starts once the red/green loop in this package
 has stopped producing new widenings.
 
@@ -55,10 +56,29 @@ Three-way separation:
 
 ## Isolated prototype
 
-Does not import from `@dnd/core` or any other workspace package. Can
-be deleted wholesale without affecting the rest of the repo.
+Does not import from the combat engine package. Can be deleted wholesale
+without affecting the rest of the repo.
 Typechecks uniformly with the rest of the monorepo via
 `turbo typecheck` at the root.
+
+## Stat Block Catalog Boundary
+
+Monster Stat Blocks are authored Surface records, but they are not
+`UnitRecord`s. Decode them as generic `StatBlockRecord`s with
+`decodeStatBlockRecordSync`, then install collections through
+`buildStatBlockCatalog`.
+
+The first public collection boundary is `SrdStatBlockCollection`. It enforces
+that an SRD collection contains only records whose provenance is
+`srd-5.2.1`, and the catalog rejects duplicate Stat Block ids across all
+installed collections. Catalog lookup returns generic `StatBlockRecord` values;
+SRD is represented by the collection/provenance boundary, not by a runtime-facing
+record subtype.
+
+`srdStatBlockCollection` is intentionally empty until SRD monster content is
+authored into the Surface package. Content tasks should populate that collection
+rather than adding Stat Blocks to `UnitRecord` or importing a combat-engine
+monster catalog.
 
 ## Run
 
@@ -160,7 +180,7 @@ without a new atom), the Quint-first integration begins:
    to match.
 
 None of that happens in this package. This package's job is to get
-the atom vocabulary right *before* that integration cost is paid.
+the atom vocabulary right _before_ that integration cost is paid.
 
 ## Files
 

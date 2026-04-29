@@ -216,18 +216,48 @@ import {
   WeaponTemplateRecordSchema,
   WeaponRecordSchema,
 } from "./schema-nonspell.ts";
-import {
-  SpellRecordSchema,
-} from "./schema-spell.ts";
+import { ProvenanceSchema } from "./schema-base.ts";
+import { CreatureStatBlockSchema, SpellRecordSchema } from "./schema-spell.ts";
 
 // EXPLANATION: package-owned handwritten Effect decode boundary for the full
 // content surface. Consumers decode through these helpers and derive types from
 // this schema entrypoint rather than casting authored JSON.
 
+export const MonsterStatBlockSchema = CreatureStatBlockSchema;
+
+export const StatBlockRecordSchema = Schema.Struct({
+  id: Schema.NonEmptyTrimmedString,
+  kind: Schema.Literal("statBlock"),
+  name: Schema.NonEmptyTrimmedString,
+  provenance: ProvenanceSchema,
+  statBlock: MonsterStatBlockSchema,
+});
+
 export function decodeUnitRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof UnitRecordSchema> {
   return Schema.decodeUnknownSync(UnitRecordSchema)(raw);
+}
+
+export function decodeStatBlockRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof StatBlockRecordSchema> {
+  return Schema.decodeUnknownSync(StatBlockRecordSchema)(raw);
+}
+
+export function decodeMonsterStatBlockSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof MonsterStatBlockSchema> {
+  return Schema.decodeUnknownSync(MonsterStatBlockSchema)(raw);
+}
+
+export function decodeStatBlockRecordEither(
+  raw: unknown,
+): Either.Either<
+  Schema.Schema.Type<typeof StatBlockRecordSchema>,
+  ParseResult.ParseError
+> {
+  return Schema.decodeUnknownEither(StatBlockRecordSchema)(raw);
 }
 
 export function decodeSpellRecordSync(
@@ -304,10 +334,15 @@ export function decodeWeaponTemplateRecordSync(
 
 export function decodeUnitRecordEither(
   raw: unknown,
-): Either.Either<Schema.Schema.Type<typeof UnitRecordSchema>, ParseResult.ParseError> {
+): Either.Either<
+  Schema.Schema.Type<typeof UnitRecordSchema>,
+  ParseResult.ParseError
+> {
   return Schema.decodeUnknownEither(UnitRecordSchema)(raw);
 }
 
-export function formatSurfaceDecodeError(error: ParseResult.ParseError): string {
+export function formatSurfaceDecodeError(
+  error: ParseResult.ParseError,
+): string {
   return ParseResult.TreeFormatter.formatErrorSync(error);
 }
