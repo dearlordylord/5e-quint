@@ -1,0 +1,142 @@
+{
+  "id": "stat_block_goblin_warrior",
+  "kind": "statBlock",
+  "name": "Goblin Warrior",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:721-748"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 8,
+      "con": 10,
+      "dex": 15,
+      "int": 10,
+      "str": 8,
+      "wis": 8
+    },
+    "ac": {
+      "kind": "literal",
+      "value": 15
+    },
+    "actions": {
+      "attacks": [
+        {
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "name": "Scimitar",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 2
+                },
+                "kind": "fixed"
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4
+                },
+                "kind": "fixed"
+              },
+              "damageType": "slashing",
+              "kind": "conditional_bonus_damage",
+              "when": {
+                "kind": "attack_roll_had_advantage"
+              }
+            }
+          ],
+          "reachFeet": 5
+        },
+        {
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "ranged",
+          "name": "Shortbow",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 2
+                },
+                "kind": "fixed"
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4
+                },
+                "kind": "fixed"
+              },
+              "damageType": "piercing",
+              "kind": "conditional_bonus_damage",
+              "when": {
+                "kind": "attack_roll_had_advantage"
+              }
+            }
+          ],
+          "rangeFeet": {
+            "long": 320,
+            "normal": 80
+          }
+        }
+      ]
+    },
+    "bonusActions": {
+      "actionOptions": [
+        {
+          "name": "Nimble Escape",
+          "options": ["disengage", "hide"]
+        }
+      ]
+    },
+    "creatureType": "fey",
+    "displayName": "Goblin Warrior",
+    "hp": {
+      "kind": "literal",
+      "value": 10
+    },
+    "initiativeModifier": 2,
+    "languages": ["Common", "Goblin"],
+    "savingThrowModifiers": [
+      {
+        "ability": "dex",
+        "modifier": 2
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "small",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

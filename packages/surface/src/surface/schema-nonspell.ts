@@ -46,6 +46,16 @@ import {
 
 const NonEmptyStringSchema = Schema.NonEmptyTrimmedString;
 
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
+
 const numberTierSchema = Schema.Struct({
   atLevel: Schema.Number,
   value: Schema.Number,
@@ -58,7 +68,10 @@ export const ClassFeatureActivationCostSchema = Schema.Union(
     action: StandardActionKindSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("action_plus_bonus_action") }),
-  Schema.Struct({ kind: Schema.Literal("bonus_action") }),
+  Schema.Struct({
+    kind: Schema.Literal("bonus_action"),
+    action: exactOptional(StandardActionKindSchema),
+  }),
   Schema.Struct({
     kind: Schema.Literal("reaction"),
     trigger: exactOptional(ReactionTriggerSchema),
@@ -293,6 +306,16 @@ export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
   parts: Schema.NonEmptyArray(ClassFeatureComponentMechanicsSchema),
 });
 
+export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("weapon_mastery_choice"),
+  choose: PositiveIntegerSchema,
+  eligibleWeapons: Schema.NonEmptyArray(WeaponCategorySchema),
+  changeOn: Schema.Struct({
+    kind: Schema.Literal("long_rest"),
+    count: PositiveIntegerSchema,
+  }),
+});
+
 export const PassiveMechanicsSchema = Schema.Struct({
   family: Schema.Literal("passive"),
   condition: exactOptional(EquipmentPredicateSchema),
@@ -304,6 +327,7 @@ export const PassiveMechanicsSchema = Schema.Struct({
 export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
+  WeaponMasteryChoiceMechanicsSchema,
 );
 
 export const MasteryTriggerSchema = Schema.Union(
@@ -350,13 +374,32 @@ export const SaveGateRiderSchema = Schema.Struct({
   onSuccess: SaveGateRiderResultSchema,
 });
 
+export const RerollWeaponDamageDiceRiderSchema = Schema.Struct({
+  kind: Schema.Literal("reroll_weapon_damage_dice"),
+  diceScope: Schema.Literal("weapon_damage_dice"),
+  choose: Schema.Literal("either_roll"),
+});
+
 export const MasteryEffectSchema = Schema.Union(
   ModifyRollAdvantageRiderSchema,
   SaveGateRiderSchema,
   GrantWeaponAttackRiderSchema,
 );
 
+export const OnHitRiderEffectSchema = Schema.Union(
+  MasteryEffectSchema,
+  RerollWeaponDamageDiceRiderSchema,
+);
+
 export const OnHitTriggerMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("on_hit_trigger"),
+  trigger: MasteryTriggerSchema,
+  optional: Schema.Boolean,
+  effect: OnHitRiderEffectSchema,
+  usageLimit: exactOptional(UsageLimitSchema),
+});
+
+export const MasteryMechanicsSchema = Schema.Struct({
   family: Schema.Literal("on_hit_trigger"),
   trigger: MasteryTriggerSchema,
   optional: Schema.Boolean,
@@ -364,7 +407,22 @@ export const OnHitTriggerMechanicsSchema = Schema.Struct({
   usageLimit: exactOptional(UsageLimitSchema),
 });
 
-export const MasteryMechanicsSchema = OnHitTriggerMechanicsSchema;
+export const HitPointReplacementTriggerSchema = Schema.Struct({
+  kind: Schema.Literal("reduced_to_0_hp_not_killed_outright"),
+});
+
+export const HitPointReplacementEffectSchema = Schema.Struct({
+  kind: Schema.Literal("prevent_drop_to_0_hp"),
+  replacementHp: Schema.Number,
+});
+
+export const TriggeredReplacementMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("triggered_replacement"),
+  trigger: HitPointReplacementTriggerSchema,
+  effect: HitPointReplacementEffectSchema,
+  optional: Schema.Boolean,
+  resetCadence: RestResetCadenceSchema,
+});
 
 const UnitMetadataSchema = Schema.Struct({
   id: NonEmptyStringSchema,
@@ -372,16 +430,6 @@ const UnitMetadataSchema = Schema.Struct({
   provenance: ProvenanceSchema,
   description: Schema.String,
 });
-
-const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
-);
-
-const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-);
 
 const distinctAbilities = (
   abilities: readonly [unknown, unknown, unknown],
@@ -418,6 +466,11 @@ export const StartingEquipmentItemRefSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("selected_tool_proficiency"),
   }),
+  Schema.Struct({
+    kind: Schema.Literal("draft_owned_item"),
+    itemName: NonEmptyStringSchema,
+    quantity: exactOptional(PositiveIntegerSchema),
+  }),
 );
 
 export const StartingEquipmentChoiceSchema = Schema.Union(
@@ -453,13 +506,6 @@ export const ClassRecordSchema = Schema.Struct({
   armorTraining: Schema.Array(ArmorTrainingCategorySchema),
   startingEquipment: Schema.NonEmptyArray(StartingEquipmentChoiceSchema),
   featureGrants: Schema.Array(ClassFeatureGrantSchema),
-  weaponMastery: exactOptional(
-    Schema.Struct({
-      level: PositiveIntegerSchema,
-      choose: PositiveIntegerSchema,
-      eligibleWeapons: Schema.NonEmptyArray(WeaponCategorySchema),
-    }),
-  ),
 });
 
 export const ClassFeatureRecordSchema = Schema.Struct({
@@ -479,6 +525,7 @@ export const MasteryRecordSchema = Schema.Struct({
 export const FeatMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
+  OnHitTriggerMechanicsSchema,
 );
 
 export const FeatRecordSchema = Schema.Struct({
@@ -491,6 +538,7 @@ export const FeatRecordSchema = Schema.Struct({
 export const SpeciesTraitMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
+  TriggeredReplacementMechanicsSchema,
 );
 
 export const SpeciesTraitRecordSchema = Schema.Struct({

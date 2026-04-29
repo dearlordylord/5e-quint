@@ -67,7 +67,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 5,
       "id": "CAM5",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Author First Vertical SRD Surface Content"
     },
     {
@@ -133,7 +133,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 16,
       "id": "CAM16",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add MCP Green Composition Root"
     },
     {
@@ -178,28 +178,28 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 ## DAG / Queue Order
 
-| Order | Task                                                            | Status                                        | Depends on        | Blocks                               | Next action                                                                                                                                                                     | Handoff readiness                                                                                                  |
-| ----- | --------------------------------------------------------------- | --------------------------------------------- | ----------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| 0     | CAM0 - Phase 0 Audit Pack                                       | done                                          | none              | CAM1..CAM19                          | Landed audit pack and migration plan updates.                                                                                                                                   | Done in `e8ecbd6b`.                                                                                                |
-| 1     | CAM1 - Rename Prototype Surface To @dnd/surface                 | done                                          | CAM0              | CAM3, CAM4, CAM5, CAM6, CAM11, CAM16 | Package cutover complete: active imports, workspace dependencies, lockfile, and docs use `@dnd/surface`.                                                                        | Done in this task.                                                                                                 |
-| 2     | CAM2 - Resolve Correction Action-Economy Drift                  | done                                          | CAM0              | CAM6, CAM11                          | Resolved by `52cf18b5`: Surface action resource sidecars and Correction action-resource handling landed.                                                                        | Done on current `master`.                                                                                          |
-| 3     | CAM3 - Add Generic StatBlockRecord Catalog Boundary             | done                                          | CAM1              | CAM5, CAM11, CAM12                   | Generic `StatBlockRecord`, SRD-only stat-block collection, duplicate/provenance validation, and `buildStatBlockCatalog` landed in `@dnd/surface`.                               | Done in this task.                                                                                                 |
-| 4     | CAM4 - Add Minimal Character-Creation Surface Records           | done                                          | CAM1              | CAM5, CAM6, CAM7                     | Minimum `ClassRecord`, `BackgroundRecord`, and Orc `SpeciesRecord` Surface shapes/readers landed in `@dnd/surface`.                                                             | Done in this task.                                                                                                 |
-| 5     | CAM5 - Author First Vertical SRD Surface Content                | ready-for-implementation-after-light-research | CAM3, CAM4        | CAM7, CAM9, CAM12, CAM16             | Author minimum SRD records for Fighter, Soldier, Orc, Savage Attacker if needed for legality, Fighter Weapon Mastery grant, and Goblin Warrior Stat Block.                      | Ready after SRD/content authoring check.                                                                           |
-| 6     | CAM6 - Create Character Creation Runtime Skeleton               | ready-for-implementation-after-light-research | CAM1, CAM2        | CAM7, CAM8, CAM9, CAM10, CAM17       | Create `@dnd/character-creation-runtime` package with public draft/session/hole/fill/finalization types matching `phase0-runtime-boundary-api.md`.                              | Ready after runtime package architecture check.                                                                    |
-| 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | blocked                                       | CAM5, CAM6        | CAM8, CAM9                           | Implement hole discovery for the exact Orc Soldier Fighter manifest using real Surface records and package-private support gates.                                               | Blocker Type: dependency. Blocker Detail: waits on authored first-vertical content and runtime skeleton.           |
-| 8     | CAM8 - Implement Atomic Creation Batch Fill                     | blocked                                       | CAM7              | CAM9, CAM10, CAM17                   | Implement accepted/rejected batch semantics, stable hole ids, duplicate-fill rejection, stale revision handling, and hole rediscovery after accepted fills.                     | Blocker Type: dependency. Blocker Detail: waits on creation hole discovery.                                        |
-| 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | blocked                                       | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Finalize the manifest draft into a legal `CharacterSheet` with selected Unit refs, advancement exactly one Fighter level, loadout, and legality tests.                          | Blocker Type: dependency. Blocker Detail: waits on batch fill semantics and authored content.                      |
-| 10    | CAM10 - Add Character Creation QNT Slice And Parity             | blocked                                       | CAM9              | CAM17, CAM18                         | Add `character-creation-runtime-slice.qnt` and parity/deterministic tests for complete Fighter creation and at least one invalid fill.                                          | Blocker Type: dependency. Blocker Detail: waits on finalization behavior.                                          |
-| 11    | CAM11 - Create Battle Runtime Skeleton                          | ready-for-implementation-after-light-research | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Create `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block seed types.                                  | Ready after runtime package architecture check.                                                                    |
-| 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | blocked                                       | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Implement battle initialization from finalized Character Sheet plus generic `StatBlockRecord`, deriving AC/HP/loadout/action-resource facts without Core imports.               | Blocker Type: dependency. Blocker Detail: waits on finalized sheet, authored content, and battle runtime skeleton. |
-| 13    | CAM13 - Implement Battle Attack Holes And Replay                | blocked                                       | CAM12             | CAM14, CAM15, CAM18                  | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                  | Blocker Type: dependency. Blocker Detail: waits on battle initialization.                                          |
-| 14    | CAM14 - Implement Battle Damage And Zero-HP Policy              | blocked                                       | CAM13             | CAM15, CAM18                         | Implement damage application with Temporary HP absorption, HP floor, monster death policy, and Character Sheet zero-HP policy scaffolding.                                      | Blocker Type: dependency. Blocker Detail: waits on Attack replay.                                                  |
-| 15    | CAM15 - Implement End Turn And Battle QNT Slice                 | blocked                                       | CAM14             | CAM18, CAM19                         | Implement runtime `endTurn`, initiative advancement, `battle-runtime-slice.qnt`, and deterministic/MBT checks for hit, miss, damage, action spend, and end turn.                | Blocker Type: dependency. Blocker Detail: waits on damage and zero-HP policy.                                      |
-| 16    | CAM16 - Add MCP Green Composition Root                          | blocked                                       | CAM1, CAM5        | CAM17, CAM18                         | Add isolated MCP green module/root that installs `srdUnitCollection` and `srdStatBlockCollection` and has no `@dnd/core` imports.                                               | Blocker Type: dependency. Blocker Detail: waits on Surface rename and authored collections.                        |
-| 17    | CAM17 - Add MCP Character Creation Tools                        | blocked                                       | CAM10, CAM16      | CAM18                                | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                 | Blocker Type: dependency. Blocker Detail: waits on character runtime parity and MCP green root.                    |
-| 18    | CAM18 - Add MCP Battle Tools And Green Fixture                  | blocked                                       | CAM15, CAM17      | CAM19                                | Add green MCP tools for select monster, start battle, discover battle acts, fill/resolve battle holes, end turn, and one full vertical fixture.                                 | Blocker Type: dependency. Blocker Detail: waits on battle runtime QNT slice and character MCP tools.               |
-| 19    | CAM19 - Controlled Core Break And Projected Vocabulary Deletion | blocked                                       | CAM18             | none                                 | Isolate/delete old Core-backed green-path imports, delete `CPU*`/`PEA*`/`PPR*` projected vocabulary where unreferenced, and ensure every omitted lane is in the Restore Ledger. | Blocker Type: dependency. Blocker Detail: waits on passing MCP green fixture.                                      |
+| Order | Task                                                            | Status                                        | Depends on        | Blocks                               | Next action                                                                                                                                                                     | Handoff readiness                                                                                    |
+| ----- | --------------------------------------------------------------- | --------------------------------------------- | ----------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 0     | CAM0 - Phase 0 Audit Pack                                       | done                                          | none              | CAM1..CAM19                          | Landed audit pack and migration plan updates.                                                                                                                                   | Done in `e8ecbd6b`.                                                                                  |
+| 1     | CAM1 - Rename Prototype Surface To @dnd/surface                 | done                                          | CAM0              | CAM3, CAM4, CAM5, CAM6, CAM11, CAM16 | Package cutover complete: active imports, workspace dependencies, lockfile, and docs use `@dnd/surface`.                                                                        | Done in this task.                                                                                   |
+| 2     | CAM2 - Resolve Correction Action-Economy Drift                  | done                                          | CAM0              | CAM6, CAM11                          | Resolved by `52cf18b5`: Surface action resource sidecars and Correction action-resource handling landed.                                                                        | Done on current `master`.                                                                            |
+| 3     | CAM3 - Add Generic StatBlockRecord Catalog Boundary             | done                                          | CAM1              | CAM5, CAM11, CAM12                   | Generic `StatBlockRecord`, SRD-only stat-block collection, duplicate/provenance validation, and `buildStatBlockCatalog` landed in `@dnd/surface`.                               | Done in this task.                                                                                   |
+| 4     | CAM4 - Add Minimal Character-Creation Surface Records           | done                                          | CAM1              | CAM5, CAM6, CAM7                     | Minimum `ClassRecord`, `BackgroundRecord`, and Orc `SpeciesRecord` Surface shapes/readers landed in `@dnd/surface`.                                                             | Done in this task.                                                                                   |
+| 5     | CAM5 - Author First Vertical SRD Surface Content                | done                                          | CAM3, CAM4        | CAM7, CAM9, CAM12, CAM16             | Authored first-vertical SRD Surface records and real SRD Unit/Stat Block collections for composition.                                                                           | Done in this task.                                                                                   |
+| 6     | CAM6 - Create Character Creation Runtime Skeleton               | ready-for-implementation-after-light-research | CAM1, CAM2        | CAM7, CAM8, CAM9, CAM10, CAM17       | Create `@dnd/character-creation-runtime` package with public draft/session/hole/fill/finalization types matching `phase0-runtime-boundary-api.md`.                              | Ready after runtime package architecture check.                                                      |
+| 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | blocked                                       | CAM5, CAM6        | CAM8, CAM9                           | Implement hole discovery for the exact Orc Soldier Fighter manifest using real Surface records and package-private support gates.                                               | Blocker Type: dependency. Blocker Detail: waits on runtime skeleton.                                 |
+| 8     | CAM8 - Implement Atomic Creation Batch Fill                     | blocked                                       | CAM7              | CAM9, CAM10, CAM17                   | Implement accepted/rejected batch semantics, stable hole ids, duplicate-fill rejection, stale revision handling, and hole rediscovery after accepted fills.                     | Blocker Type: dependency. Blocker Detail: waits on creation hole discovery.                          |
+| 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | blocked                                       | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Finalize the manifest draft into a legal `CharacterSheet` with selected Unit refs, advancement exactly one Fighter level, loadout, and legality tests.                          | Blocker Type: dependency. Blocker Detail: waits on batch fill semantics.                             |
+| 10    | CAM10 - Add Character Creation QNT Slice And Parity             | blocked                                       | CAM9              | CAM17, CAM18                         | Add `character-creation-runtime-slice.qnt` and parity/deterministic tests for complete Fighter creation and at least one invalid fill.                                          | Blocker Type: dependency. Blocker Detail: waits on finalization behavior.                            |
+| 11    | CAM11 - Create Battle Runtime Skeleton                          | ready-for-implementation-after-light-research | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Create `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block seed types.                                  | Ready after runtime package architecture check.                                                      |
+| 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | blocked                                       | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Implement battle initialization from finalized Character Sheet plus generic `StatBlockRecord`, deriving AC/HP/loadout/action-resource facts without Core imports.               | Blocker Type: dependency. Blocker Detail: waits on finalized sheet and battle runtime skeleton.      |
+| 13    | CAM13 - Implement Battle Attack Holes And Replay                | blocked                                       | CAM12             | CAM14, CAM15, CAM18                  | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                  | Blocker Type: dependency. Blocker Detail: waits on battle initialization.                            |
+| 14    | CAM14 - Implement Battle Damage And Zero-HP Policy              | blocked                                       | CAM13             | CAM15, CAM18                         | Implement damage application with Temporary HP absorption, HP floor, monster death policy, and Character Sheet zero-HP policy scaffolding.                                      | Blocker Type: dependency. Blocker Detail: waits on Attack replay.                                    |
+| 15    | CAM15 - Implement End Turn And Battle QNT Slice                 | blocked                                       | CAM14             | CAM18, CAM19                         | Implement runtime `endTurn`, initiative advancement, `battle-runtime-slice.qnt`, and deterministic/MBT checks for hit, miss, damage, action spend, and end turn.                | Blocker Type: dependency. Blocker Detail: waits on damage and zero-HP policy.                        |
+| 16    | CAM16 - Add MCP Green Composition Root                          | ready-for-implementation-after-light-research | CAM1, CAM5        | CAM17, CAM18                         | Add isolated MCP green module/root that installs `srdUnitCollection` and `srdStatBlockCollection` and has no `@dnd/core` imports.                                               | Ready after MCP green-root architecture check.                                                       |
+| 17    | CAM17 - Add MCP Character Creation Tools                        | blocked                                       | CAM10, CAM16      | CAM18                                | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                 | Blocker Type: dependency. Blocker Detail: waits on character runtime parity and MCP green root.      |
+| 18    | CAM18 - Add MCP Battle Tools And Green Fixture                  | blocked                                       | CAM15, CAM17      | CAM19                                | Add green MCP tools for select monster, start battle, discover battle acts, fill/resolve battle holes, end turn, and one full vertical fixture.                                 | Blocker Type: dependency. Blocker Detail: waits on battle runtime QNT slice and character MCP tools. |
+| 19    | CAM19 - Controlled Core Break And Projected Vocabulary Deletion | blocked                                       | CAM18             | none                                 | Isolate/delete old Core-backed green-path imports, delete `CPU*`/`PEA*`/`PPR*` projected vocabulary where unreferenced, and ensure every omitted lane is in the Restore Ledger. | Blocker Type: dependency. Blocker Detail: waits on passing MCP green fixture.                        |
 
 ## Task Details
 
@@ -276,7 +276,7 @@ Plan Impact:
 
 - CAM3, CAM4, and CAM6 are ready for implementation after their required light research.
 - CAM11 remains blocked on CAM3.
-- CAM16 remains blocked on CAM5.
+- CAM16 is ready after CAM5 landed authored collections.
 - Downstream package paths should use `packages/surface/`.
 
 ### Task 2 - CAM2 - Resolve Correction Action-Economy Drift
@@ -396,16 +396,16 @@ Verification:
 Plan Impact:
 
 - CAM5 is unblocked because CAM3 and CAM4 are done.
-- CAM7 remains blocked on CAM5 and CAM6; no hole-identity revision is needed yet.
+- CAM7 remains blocked on CAM6; no hole-identity revision is needed yet.
 
 ### Task 5 - CAM5 - Author First Vertical SRD Surface Content
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM3, CAM4  
 Blocks: CAM7, CAM9, CAM12, CAM16
 
-Next action: run the SRD/content authoring check, then author the first vertical SRD Surface content.
+Next action: landed first-vertical SRD Surface content and catalog imports.
 
 Input:
 
@@ -433,7 +433,10 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM7, CAM9, CAM12, and CAM16 as their runtime dependencies land.
+- CAM16 is unblocked because CAM1 and CAM5 are done.
+- CAM7 remains blocked on CAM6.
+- CAM9 remains blocked on CAM8.
+- CAM12 remains blocked on CAM9 and CAM11.
 
 ### Task 6 - CAM6 - Create Character Creation Runtime Skeleton
 
@@ -471,7 +474,7 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM7 when CAM5 is done.
+- Unblock CAM7 because CAM5 is done.
 
 ### Task 7 - CAM7 - Implement Creation Hole Discovery For Manifest
 
@@ -481,7 +484,7 @@ Depends on: CAM5, CAM6
 Blocks: CAM8, CAM9
 
 Blocker Type: dependency  
-Blocker Detail: waits on authored first-vertical content and runtime skeleton.
+Blocker Detail: waits on runtime skeleton.
 
 Input:
 
@@ -544,7 +547,7 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM9 when CAM5 is done.
+- Unblock CAM9 because CAM5 is done.
 
 ### Task 9 - CAM9 - Finalize Legal Fighter Character Sheet
 
@@ -554,7 +557,7 @@ Depends on: CAM5, CAM8
 Blocks: CAM10, CAM12, CAM17
 
 Blocker Type: dependency  
-Blocker Detail: waits on batch fill semantics and authored content.
+Blocker Detail: waits on batch fill semantics.
 
 Input:
 
@@ -654,7 +657,7 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM12 when CAM5 and CAM9 are done.
+- Unblock CAM12 when CAM9 is done.
 
 ### Task 12 - CAM12 - Start Battle From Character Sheet And Stat Block
 
@@ -664,7 +667,7 @@ Depends on: CAM5, CAM9, CAM11
 Blocks: CAM13, CAM18
 
 Blocker Type: dependency  
-Blocker Detail: waits on finalized sheet, authored content, and battle runtime skeleton.
+Blocker Detail: waits on finalized sheet and battle runtime skeleton.
 
 Input:
 
@@ -811,13 +814,12 @@ Plan Impact:
 
 ### Task 16 - CAM16 - Add MCP Green Composition Root
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM1, CAM5  
 Blocks: CAM17, CAM18
 
-Blocker Type: dependency  
-Blocker Detail: waits on Surface rename and authored collections.
+Next action: run the MCP green-root architecture check, then add the isolated green composition root.
 
 Input:
 

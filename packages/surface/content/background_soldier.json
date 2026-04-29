@@ -1,0 +1,75 @@
+{
+  "abilityScoreIncrease": {
+    "abilities": ["str", "dex", "con"],
+    "methods": [
+      {
+        "kind": "two_scores",
+        "maxScore": 20,
+        "primaryIncrease": 2,
+        "secondaryIncrease": 1
+      },
+      {
+        "eachIncrease": 1,
+        "kind": "three_scores",
+        "maxScore": 20
+      }
+    ]
+  },
+  "description": "Minimum SRD Soldier background facts for ability scores, proficiencies, feat, and equipment.",
+  "id": "background_soldier",
+  "kind": "background",
+  "name": "Soldier",
+  "originFeatId": "feat_savage_attacker",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins.md:11-29,57-63"
+  },
+  "skillProficiencies": ["athletics", "intimidation"],
+  "startingEquipment": [
+    {
+      "coinsGp": 14,
+      "id": "option_a",
+      "items": [
+        {
+          "kind": "unit_ref",
+          "unitId": "weapon_spear"
+        },
+        {
+          "kind": "unit_ref",
+          "unitId": "weapon_shortbow"
+        },
+        {
+          "itemName": "Arrows",
+          "kind": "draft_owned_item",
+          "quantity": 20
+        },
+        {
+          "kind": "selected_tool_proficiency"
+        },
+        {
+          "itemName": "Healer's Kit",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Quiver",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Traveler's Clothes",
+          "kind": "draft_owned_item"
+        }
+      ],
+      "kind": "item_bundle"
+    },
+    {
+      "coinsGp": 50,
+      "id": "option_b",
+      "kind": "coin_grant"
+    }
+  ],
+  "toolProficiency": {
+    "category": "gaming_set",
+    "choose": 1,
+    "kind": "tool_category_choice"
+  }
+}

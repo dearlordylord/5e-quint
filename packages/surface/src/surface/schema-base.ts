@@ -482,6 +482,9 @@ export const DiceAmountSchema = Schema.suspend(() =>
       kind: Schema.Literal("resource_spent"),
     }),
     Schema.Struct({
+      kind: Schema.Literal("proficiency_bonus"),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("resource_spent_linear"),
       base: DiceExprSchema,
       perResource: DiceExprDeltaSchema,

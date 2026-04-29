@@ -11,7 +11,6 @@ import type {
   SpeciesRecord,
   StartingEquipmentChoice,
   UnitRecord,
-  WeaponCategory,
   WeaponProficiencyCategory,
   Skill,
 } from "./types.ts";
@@ -44,11 +43,6 @@ export type ClassCreationFacts = {
   readonly armorTraining: readonly ArmorTrainingCategory[];
   readonly startingEquipment: readonly StartingEquipmentChoice[];
   readonly featureGrants: readonly ClassFeatureGrant[];
-  readonly weaponMastery?: {
-    readonly level: number;
-    readonly choose: number;
-    readonly eligibleWeapons: readonly WeaponCategory[];
-  };
 };
 
 export type BackgroundCreationFacts = {
@@ -99,10 +93,7 @@ export function readClassCreationFacts(
 
   return {
     tag: "readable",
-    value:
-      unit.weaponMastery === undefined
-        ? value
-        : { ...value, weaponMastery: unit.weaponMastery },
+    value,
   };
 }
 

@@ -1,0 +1,24 @@
+{
+  "creatureType": "humanoid",
+  "description": "Minimum SRD Orc aggregate species facts.",
+  "id": "species_orc",
+  "kind": "species",
+  "name": "Orc",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Creation.md:87-91; Character-Origins.md:245-259"
+  },
+  "size": {
+    "kind": "fixed",
+    "size": "medium"
+  },
+  "species": "orc",
+  "speed": {
+    "walkFeet": 30
+  },
+  "traits": {
+    "adrenalineRush": "orc_adrenaline_rush",
+    "darkvision": "orc_darkvision",
+    "relentlessEndurance": "orc_relentless_endurance"
+  }
+}

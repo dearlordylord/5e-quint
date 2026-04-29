@@ -253,10 +253,14 @@ type EffectAtom =
     }
   | {
       readonly kind: "conditional_bonus_damage";
-      readonly when: {
-        readonly kind: "target_creature_type";
-        readonly types: ReadonlyNonEmptyArray<CreatureType>;
-      };
+      readonly when:
+        | {
+            readonly kind: "target_creature_type";
+            readonly types: ReadonlyNonEmptyArray<CreatureType>;
+          }
+        | {
+            readonly kind: "attack_roll_had_advantage";
+          };
       readonly damageType: DamageTypeRef;
       readonly amount: DiceAmount;
     }
@@ -1413,10 +1417,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("conditional_bonus_damage"),
-        when: Schema.Struct({
-          kind: Schema.Literal("target_creature_type"),
-          types: nonEmpty(CreatureTypeSchema),
-        }),
+        when: Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("target_creature_type"),
+            types: nonEmpty(CreatureTypeSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("attack_roll_had_advantage"),
+          }),
+        ),
         damageType: DamageTypeRefSchema,
         amount: DiceAmountSchema,
       }),
@@ -1510,7 +1519,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("restrict_action_usage"),
         actions: nonEmpty(Schema.Literal("action", "bonus_action", "reaction")),
         whileCondition: optionalExact(ConditionSchema),
-        duration: optionalExact(Schema.Literal("current_turn", "spell_duration")),
+        duration: optionalExact(
+          Schema.Literal("current_turn", "spell_duration"),
+        ),
       }),
       Schema.Struct({
         kind: Schema.Literal("remove_condition"),
@@ -1759,7 +1770,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         maxSpellLevel: optionalExact(Schema.Number),
       }),
       Schema.Struct({ kind: Schema.Literal("reflect_triggering_spell") }),
-      Schema.Struct({ kind: Schema.Literal("waste_triggering_spell_or_effect") }),
+      Schema.Struct({
+        kind: Schema.Literal("waste_triggering_spell_or_effect"),
+      }),
       Schema.Struct({ kind: Schema.Literal("maximize_healing_received") }),
       Schema.Struct({
         kind: Schema.Literal("transform_target"),
@@ -2442,11 +2455,17 @@ export const CreatureNamedMultiattackSchema = Schema.Struct({
   ),
 });
 
+export const CreatureNamedActionOptionSchema = Schema.Struct({
+  name: Schema.String,
+  options: nonEmpty(StandardActionKindSchema),
+});
+
 export const CreatureActionsSchema = Schema.Struct({
   multiattacks: optionalExact(nonEmpty(CreatureNamedMultiattackSchema)),
   attacks: optionalExact(nonEmpty(CreatureNamedAttackRollSchema)),
   saves: optionalExact(nonEmpty(CreatureNamedSaveGateSchema)),
   supports: optionalExact(nonEmpty(CreatureNamedSupportSchema)),
+  actionOptions: optionalExact(nonEmpty(CreatureNamedActionOptionSchema)),
 });
 
 export const CreatureTraitEffectSchema = Schema.Union(
@@ -2478,6 +2497,11 @@ export const CastTimeChoiceCreatureTypeSchema = Schema.Struct({
   options: nonEmpty(CreatureTypeSchema),
 });
 
+export const CreatureSavingThrowModifierSchema = Schema.Struct({
+  ability: AbilitySchema,
+  modifier: Schema.Number.pipe(Schema.int()),
+});
+
 export const CreatureStatBlockSchema = Schema.Struct({
   displayName: Schema.String,
   size: Schema.Union(SizeSchema, CastTimeChoiceSizeSchema),
@@ -2489,6 +2513,10 @@ export const CreatureStatBlockSchema = Schema.Struct({
   hp: StatBlockValueSchema,
   speeds: nonEmpty(CreatureSpeedSchema),
   abilityScores: SixAbilityScoresSchema,
+  initiativeModifier: optionalExact(Schema.Number.pipe(Schema.int())),
+  savingThrowModifiers: optionalExact(
+    nonEmpty(CreatureSavingThrowModifierSchema),
+  ),
   saveProficiencies: optionalExact(nonEmpty(AbilitySchema)),
   resistances: optionalExact(CreatureResistanceListSchema),
   immunities: optionalExact(CreatureImmunityListSchema),

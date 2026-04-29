@@ -419,8 +419,14 @@ export type CreatureNamedSupport = Schema.Schema.Type<
 export type CreatureNamedMultiattack = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureNamedMultiattackSchema
 >;
+export type CreatureNamedActionOption = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureNamedActionOptionSchema
+>;
 export type CreatureActions = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureActionsSchema
+>;
+export type CreatureSavingThrowModifier = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureSavingThrowModifierSchema
 >;
 export type CreatureTraitEffect = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureTraitEffectSchema
@@ -542,6 +548,9 @@ export type ClassFeatureComponentMechanics = Schema.Schema.Type<
 export type CompositeClassFeatureMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.CompositeClassFeatureMechanicsSchema
 >;
+export type WeaponMasteryChoiceMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponMasteryChoiceMechanicsSchema
+>;
 export type EquipmentPredicate = Schema.Schema.Type<
   typeof SurfaceSchema.EquipmentPredicateSchema
 >;
@@ -575,8 +584,14 @@ export type SaveGateRiderResult = Schema.Schema.Type<
 export type SaveGateRider = Schema.Schema.Type<
   typeof SurfaceSchema.SaveGateRiderSchema
 >;
+export type RerollWeaponDamageDiceRider = Schema.Schema.Type<
+  typeof SurfaceSchema.RerollWeaponDamageDiceRiderSchema
+>;
 export type MasteryEffect = Schema.Schema.Type<
   typeof SurfaceSchema.MasteryEffectSchema
+>;
+export type OnHitRiderEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.OnHitRiderEffectSchema
 >;
 export type UsageLimit = Schema.Schema.Type<
   typeof SurfaceSchema.UsageLimitSchema
@@ -586,6 +601,9 @@ export type OnHitTriggerMechanics = Schema.Schema.Type<
 >;
 export type MasteryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.MasteryMechanicsSchema
+>;
+export type TriggeredReplacementMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.TriggeredReplacementMechanicsSchema
 >;
 export type Provenance = Schema.Schema.Type<
   typeof SurfaceSchema.ProvenanceSchema

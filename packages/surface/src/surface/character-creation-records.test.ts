@@ -1,6 +1,9 @@
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
+import backgroundSoldierInput from "../../content/background_soldier.json";
+import classFighterInput from "../../content/class_fighter.json";
+import speciesOrcInput from "../../content/species_orc.json";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
@@ -14,129 +17,10 @@ import {
   decodeUnitRecordSync,
 } from "./schema.ts";
 
-const srdProvenance = {
-  kind: "srd-5.2.1",
-  section: "Character-Creation.md; Classes/Fighter.md; Character-Origins.md",
-} as const;
-
-const fighterInput = {
-  id: "class_fighter",
-  kind: "class",
-  name: "Fighter",
-  provenance: {
-    ...srdProvenance,
-    section: "Classes/Fighter.md:3-13,17-20,29-31,56-74",
-  },
-  description:
-    "Minimum SRD Fighter class creation facts for a level-1 character.",
-  className: "fighter",
-  hitPointDie: 10,
-  savingThrowProficiencies: ["str", "con"],
-  skillProficiencyChoice: {
-    choose: 2,
-    options: [
-      "acrobatics",
-      "animal_handling",
-      "athletics",
-      "history",
-      "insight",
-      "intimidation",
-      "persuasion",
-      "perception",
-      "survival",
-    ],
-  },
-  weaponProficiencies: ["simple", "martial"],
-  armorTraining: ["light", "medium", "heavy", "shield"],
-  startingEquipment: [{ id: "option_c", kind: "coin_grant", coinsGp: 155 }],
-  featureGrants: [
-    { unitId: "fighter_fighting_style_l1", level: 1 },
-    { unitId: "fighter_second_wind", level: 1 },
-    { unitId: "fighter_weapon_mastery_l1", level: 1 },
-  ],
-  weaponMastery: {
-    level: 1,
-    choose: 3,
-    eligibleWeapons: ["simple", "martial"],
-  },
-} as const;
-
-const soldierInput = {
-  id: "background_soldier",
-  kind: "background",
-  name: "Soldier",
-  provenance: {
-    ...srdProvenance,
-    section: "Character-Origins.md:11-29,57-63",
-  },
-  description:
-    "Minimum SRD Soldier background facts for ability scores, proficiencies, feat, and equipment.",
-  abilityScoreIncrease: {
-    abilities: ["str", "dex", "con"],
-    methods: [
-      {
-        kind: "two_scores",
-        primaryIncrease: 2,
-        secondaryIncrease: 1,
-        maxScore: 20,
-      },
-      {
-        kind: "three_scores",
-        eachIncrease: 1,
-        maxScore: 20,
-      },
-    ],
-  },
-  originFeatId: "feat_savage_attacker",
-  skillProficiencies: ["athletics", "intimidation"],
-  toolProficiency: {
-    kind: "tool_category_choice",
-    category: "gaming_set",
-    choose: 1,
-  },
-  startingEquipment: [
-    {
-      id: "option_a",
-      kind: "item_bundle",
-      items: [
-        { kind: "unit_ref", unitId: "weapon_spear" },
-        { kind: "unit_ref", unitId: "weapon_shortbow" },
-        { kind: "unit_ref", unitId: "ammunition_arrow", quantity: 20 },
-        { kind: "selected_tool_proficiency" },
-        { kind: "unit_ref", unitId: "equipment_healers_kit" },
-        { kind: "unit_ref", unitId: "equipment_quiver" },
-        { kind: "unit_ref", unitId: "equipment_travelers_clothes" },
-      ],
-      coinsGp: 14,
-    },
-    { id: "option_b", kind: "coin_grant", coinsGp: 50 },
-  ],
-} as const;
-
-const orcInput = {
-  id: "species_orc",
-  kind: "species",
-  name: "Orc",
-  provenance: {
-    ...srdProvenance,
-    section: "Character-Creation.md:87-91; Character-Origins.md:245-259",
-  },
-  description: "Minimum SRD Orc aggregate species facts.",
-  species: "orc",
-  creatureType: "humanoid",
-  size: { kind: "fixed", size: "medium" },
-  speed: { walkFeet: 30 },
-  traits: {
-    adrenalineRush: "orc_adrenaline_rush",
-    darkvision: "orc_darkvision",
-    relentlessEndurance: "orc_relentless_endurance",
-  },
-} as const;
-
 describe("character-creation Surface records", () => {
   test("decodes and reads Fighter class creation facts", () => {
-    const classRecord = decodeClassRecordSync(fighterInput);
-    const unit = decodeUnitRecordSync(fighterInput);
+    const classRecord = decodeClassRecordSync(classFighterInput);
+    const unit = decodeUnitRecordSync(classFighterInput);
     const result = readClassCreationFacts(unit);
 
     expect(classRecord.kind).toBe("class");
@@ -147,14 +31,16 @@ describe("character-creation Surface records", () => {
         className: "fighter",
         hitPointDie: 10,
         skillProficiencyChoice: { choose: 2 },
-        weaponMastery: { level: 1, choose: 3 },
+        featureGrants: expect.arrayContaining([
+          { level: 1, unitId: "fighter_weapon_mastery_l1" },
+        ]),
       },
     });
   });
 
   test("decodes and reads Soldier background creation facts", () => {
-    const backgroundRecord = decodeBackgroundRecordSync(soldierInput);
-    const unit = decodeUnitRecordSync(soldierInput);
+    const backgroundRecord = decodeBackgroundRecordSync(backgroundSoldierInput);
+    const unit = decodeUnitRecordSync(backgroundSoldierInput);
     const result = readBackgroundCreationFacts(unit);
 
     expect(backgroundRecord.kind).toBe("background");
@@ -186,8 +72,8 @@ describe("character-creation Surface records", () => {
   });
 
   test("decodes and reads Orc as one aggregate species record", () => {
-    const speciesRecord = decodeSpeciesRecordSync(orcInput);
-    const unit = decodeUnitRecordSync(orcInput);
+    const speciesRecord = decodeSpeciesRecordSync(speciesOrcInput);
+    const unit = decodeUnitRecordSync(speciesOrcInput);
     const result = readOrcSpeciesCreationFacts(unit);
 
     expect(speciesRecord.kind).toBe("species");
@@ -212,9 +98,9 @@ describe("character-creation Surface records", () => {
     expect(
       Either.isLeft(
         decodeUnitRecordEither({
-          ...fighterInput,
+          ...classFighterInput,
           skillProficiencyChoice: {
-            ...fighterInput.skillProficiencyChoice,
+            ...classFighterInput.skillProficiencyChoice,
             options: [],
           },
         }),
@@ -224,7 +110,7 @@ describe("character-creation Surface records", () => {
     expect(
       Either.isLeft(
         decodeUnitRecordEither({
-          ...orcInput,
+          ...speciesOrcInput,
           size: { kind: "fixed", size: "colossal" },
         }),
       ),
@@ -235,9 +121,9 @@ describe("character-creation Surface records", () => {
     expect(
       Either.isLeft(
         decodeUnitRecordEither({
-          ...orcInput,
+          ...speciesOrcInput,
           traits: {
-            ...orcInput.traits,
+            ...speciesOrcInput.traits,
             darkvision: "species_human_resourceful",
           },
         }),
@@ -249,7 +135,7 @@ describe("character-creation Surface records", () => {
     expect(
       Either.isLeft(
         decodeUnitRecordEither({
-          ...fighterInput,
+          ...classFighterInput,
           hitPointDie: -10,
         }),
       ),
@@ -258,9 +144,9 @@ describe("character-creation Surface records", () => {
     expect(
       Either.isLeft(
         decodeUnitRecordEither({
-          ...fighterInput,
+          ...classFighterInput,
           skillProficiencyChoice: {
-            ...fighterInput.skillProficiencyChoice,
+            ...classFighterInput.skillProficiencyChoice,
             choose: 0,
           },
         }),
@@ -270,9 +156,9 @@ describe("character-creation Surface records", () => {
     expect(
       Either.isLeft(
         decodeUnitRecordEither({
-          ...soldierInput,
+          ...backgroundSoldierInput,
           abilityScoreIncrease: {
-            ...soldierInput.abilityScoreIncrease,
+            ...backgroundSoldierInput.abilityScoreIncrease,
             abilities: ["str", "str", "con"],
           },
         }),
@@ -282,7 +168,7 @@ describe("character-creation Surface records", () => {
     expect(
       Either.isLeft(
         decodeUnitRecordEither({
-          ...soldierInput,
+          ...backgroundSoldierInput,
           startingEquipment: [
             {
               id: "option_b",

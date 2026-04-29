@@ -75,10 +75,24 @@ installed collections. Catalog lookup returns generic `StatBlockRecord` values;
 SRD is represented by the collection/provenance boundary, not by a runtime-facing
 record subtype.
 
-`srdStatBlockCollection` is intentionally empty until SRD monster content is
-authored into the Surface package. Content tasks should populate that collection
-rather than adding Stat Blocks to `UnitRecord` or importing a combat-engine
-monster catalog.
+`srdStatBlockCollection` currently contains the first-vertical Goblin Warrior
+Stat Block. Content tasks should populate that collection rather than adding
+Stat Blocks to `UnitRecord` or importing a combat-engine monster catalog.
+
+## Unit Catalog Boundary
+
+Character-creation and equipment Units for the first vertical are installed
+through `SrdUnitCollection` in `surface/unit-catalog`. Like Stat Blocks, the SRD
+Unit collection admits only `srd-5.2.1` provenance and the catalog rejects
+duplicate Unit ids across installed collections. Catalog lookup returns generic
+`UnitRecord` values; SRD is represented by the collection/provenance boundary,
+not by a runtime-facing record subtype.
+
+`srdUnitCollection` currently contains the Orc Soldier Fighter 1 content needed
+by the manifest: Fighter, Soldier, Orc, the level-1 Fighter feature grants,
+Defense, Savage Attacker, Sap, Orc traits, Chain Mail, Shield, Longsword, Spear,
+Flail, and Shortbow. Runtime packages may derive support gates from these
+records, but the authored content remains provenance-bearing Surface data.
 
 ## Character-Creation Records
 
@@ -105,10 +119,12 @@ SRD ability-score increase rule: three eligible abilities, either +2/+1 to two
 different eligible scores or +1 to all three, capped at 20. Starting equipment
 records keep authored item bundles separate from runtime projections, including
 the Soldier bundle's selected Gaming Set, 20 Arrows, Healer's Kit, Quiver,
-Traveler's Clothes, and GP. The minimal Species record is currently the Orc
-aggregate; it keeps Orc creature type, size, speed, and named Orc trait grants
-together so Orc selection cannot be represented as a mixed-species bundle of
-independent traits.
+Traveler's Clothes, and GP. Item-bundle entries are `unit_ref`s only when the
+referenced item is installed in the Unit collection; noncombat bundle facts that
+are not Unitized yet are `draft_owned_item`s. The minimal Species record is
+currently the Orc aggregate; it keeps Orc creature type, size, speed, and named
+Orc trait grants together so Orc selection cannot be represented as a
+mixed-species bundle of independent traits.
 
 Runtime packages may narrow these records through package-private support gates,
 but `@dnd/surface` exports only structural readers. Do not export `Supported*`

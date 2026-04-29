@@ -1,5 +1,7 @@
 import { Option } from "effect";
 
+import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
+import { decodeStatBlockRecordSync } from "./schema.ts";
 import type { Provenance, StatBlockRecord } from "./types.ts";
 
 export type SurfaceCollectionProvenance = {
@@ -88,7 +90,9 @@ export function defineSrdStatBlockCollection(input: {
 }
 
 export const srdStatBlockCollection = defineSrdStatBlockCollection({
-  statBlocks: [],
+  statBlocks: [
+    assertSrd521StatBlock(decodeStatBlockRecordSync(goblinWarriorInput)),
+  ],
 });
 
 export function buildStatBlockCatalog(input: {

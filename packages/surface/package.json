@@ -6,6 +6,7 @@
   "exports": {
     "./surface/character-creation-readers": "./src/surface/character-creation-readers.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
+    "./surface/unit-catalog": "./src/surface/unit-catalog.ts",
     "./surface/types": "./src/surface/types.ts",
     "./surface/schema": "./src/surface/schema.ts"
   },

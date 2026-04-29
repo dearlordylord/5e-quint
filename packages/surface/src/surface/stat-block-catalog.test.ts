@@ -1,6 +1,7 @@
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
+import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import {
   decodeStatBlockRecordEither,
   decodeStatBlockRecordSync,
@@ -9,40 +10,12 @@ import {
   assertSrd521StatBlock,
   buildStatBlockCatalog,
   defineSrdStatBlockCollection,
+  srdStatBlockCollection,
 } from "./stat-block-catalog.ts";
 import type {
   Srd521StatBlock,
   SrdStatBlockCollection,
 } from "./stat-block-catalog.ts";
-
-const goblinWarriorInput = {
-  id: "stat_block_goblin_warrior",
-  kind: "statBlock",
-  name: "Goblin Warrior",
-  provenance: {
-    kind: "srd-5.2.1",
-    section: "Monsters/Monsters-E-G#Goblin Warrior",
-  },
-  statBlock: {
-    displayName: "Goblin Warrior",
-    size: "small",
-    creatureType: "fey",
-    ac: { kind: "literal", value: 15 },
-    hp: { kind: "literal", value: 10 },
-    speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
-    abilityScores: {
-      str: 8,
-      dex: 15,
-      con: 10,
-      int: 10,
-      wis: 8,
-      cha: 8,
-    },
-    saveProficiencies: ["dex"],
-    senses: [{ kind: "darkvision", rangeFeet: 60 }],
-    languages: ["Common", "Goblin"],
-  },
-} as const;
 
 const goblinWarrior = decodeStatBlockRecordSync(goblinWarriorInput);
 
@@ -92,6 +65,49 @@ describe("Stat Block catalog boundary", () => {
         },
       ],
     });
+  });
+
+  test("exports the authored SRD Goblin Warrior Stat Block collection", () => {
+    const valid = buildStatBlockCatalog({
+      collections: [srdStatBlockCollection],
+    });
+
+    expect(valid.tag).toBe("ok");
+    if (valid.tag === "ok") {
+      const goblin = valid.catalog.requireStatBlock(
+        "stat_block_goblin_warrior",
+      );
+
+      expect(goblin.statBlock.displayName).toBe("Goblin Warrior");
+      expect(goblin.statBlock.ac).toEqual({ kind: "literal", value: 15 });
+      expect(goblin.statBlock.hp).toEqual({ kind: "literal", value: 10 });
+      expect(goblin.statBlock.initiativeModifier).toBe(2);
+      expect(goblin.statBlock.savingThrowModifiers).toEqual([
+        { ability: "dex", modifier: 2 },
+      ]);
+      expect(goblin.statBlock.saveProficiencies).toBeUndefined();
+      expect(
+        goblin.statBlock.actions?.attacks?.map((attack) => attack.name),
+      ).toEqual(["Scimitar", "Shortbow"]);
+      expect(goblin.statBlock.actions?.attacks?.[0]?.onHit).toContainEqual({
+        amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed" },
+        damageType: "slashing",
+        kind: "conditional_bonus_damage",
+        when: { kind: "attack_roll_had_advantage" },
+      });
+      expect(goblin.statBlock.actions?.attacks?.[1]?.onHit).toContainEqual({
+        amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed" },
+        damageType: "piercing",
+        kind: "conditional_bonus_damage",
+        when: { kind: "attack_roll_had_advantage" },
+      });
+      expect(goblin.statBlock.bonusActions?.actionOptions).toEqual([
+        {
+          name: "Nimble Escape",
+          options: ["disengage", "hide"],
+        },
+      ]);
+    }
   });
 
   test("rejects malformed SRD collections with mixed provenance", () => {

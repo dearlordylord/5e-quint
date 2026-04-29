@@ -59,9 +59,9 @@ import type {
   TriggeredReactionAbilityMechanics,
   ReactionTrigger,
   MarkTransfer,
-  MasteryMechanics,
   MasteryTrigger,
-  MasteryEffect,
+  OnHitTriggerMechanics,
+  OnHitRiderEffect,
   RiderExpiry,
   DcSource,
   AnchoredTriggerMechanics,
@@ -85,6 +85,7 @@ import type {
   CreatureNamedSaveGate,
   CreatureNamedSupport,
   CreatureNamedMultiattack,
+  CreatureNamedActionOption,
   CreatureControl,
   StatBlockValue,
   ReanimatedCreatureMechanics,
@@ -108,6 +109,7 @@ import type {
   WeaponDamage,
   WeaponPropertyDetail,
   MagicEquipmentVariant,
+  TriggeredReplacementMechanics,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -3600,6 +3602,7 @@ function traceCreatureActions(
     ...(actions.attacks ?? []).map((a) => a.name),
     ...(actions.saves ?? []).map((a) => a.name),
     ...(actions.supports ?? []).map((a) => a.name),
+    ...(actions.actionOptions ?? []).map((a) => a.name),
   ]);
   actions.multiattacks?.forEach((ma, idx) => {
     for (const d of ma.dispatches) {
@@ -3615,6 +3618,9 @@ function traceCreatureActions(
   actions.saves?.forEach((sg, idx) => traceCreatureSaveGate(ctx, sg, idx + 1));
   actions.supports?.forEach((sp, idx) =>
     traceCreatureSupport(ctx, sp, idx + 1),
+  );
+  actions.actionOptions?.forEach((option, idx) =>
+    traceCreatureActionOption(ctx, option, idx + 1),
   );
 }
 
@@ -3718,6 +3724,22 @@ function traceCreatureSupport(
     ctx.edges.push({ from: dirId, to: effId, relation: "grants" });
     ctx.edges.push({ from: effId, to: ctx.compId, relation: "attaches_to" });
   }
+}
+
+function traceCreatureActionOption(
+  ctx: CreatureCtx,
+  option: CreatureNamedActionOption,
+  idx: number,
+): void {
+  const optionId = ctx.ids("act");
+  ctx.nodes.push({
+    id: optionId,
+    category: "procedure",
+    atomKind: "action_option",
+    label: `action_option [${ctx.kind} ${idx}: ${option.name}]\n${option.options.join(" or ")}`,
+  });
+  ctx.edges.push({ from: ctx.procId, to: optionId, relation: "offers" });
+  ctx.edges.push({ from: optionId, to: ctx.compId, relation: "available_to" });
 }
 
 function traceMultiattack(
@@ -4702,6 +4724,17 @@ function traceDiceAmountScaling(
       // resource expenditure, not a character or slot axis. The
       // describe side renders the label "= resource spent".
       return;
+    case "proficiency_bonus": {
+      const scId = ids("sc");
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: "scale_numeric_bonus",
+        label: "scale_numeric_bonus\naxis=proficiency_bonus",
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      return;
+    }
     case "resource_spent_linear": {
       const scId = ids("sc");
       const deltaText = describeDelta_(amt.perResource, amt.base);
@@ -5187,17 +5220,6 @@ function traceClassUnit(unit: ClassRecord): Trace {
     edges.push({ from: rootId, to: grantId, relation: "grants" });
   }
 
-  if (unit.weaponMastery !== undefined) {
-    const masteryId = ids("mastery");
-    nodes.push({
-      id: masteryId,
-      category: "hole",
-      atomKind: "class_weapon_mastery_choice",
-      label: `class_weapon_mastery_choice\nlevel ${unit.weaponMastery.level}\nchoose ${unit.weaponMastery.choose}`,
-    });
-    edges.push({ from: rootId, to: masteryId, relation: "opens" });
-  }
-
   traceStartingEquipment(rootId, unit.startingEquipment, nodes, edges, ids);
 
   return traceFromNodes(unit, nodes, edges);
@@ -5287,6 +5309,10 @@ function describeStartingEquipmentItem(item: StartingEquipmentItemRef): string {
         : `${item.quantity} ${item.unitId}`;
     case "selected_tool_proficiency":
       return "selected tool proficiency";
+    case "draft_owned_item":
+      return item.quantity === undefined
+        ? item.itemName
+        : `${item.quantity} ${item.itemName}`;
     default: {
       const _exhaustive: never = item;
       throw new Error(
@@ -5354,12 +5380,47 @@ function tracePassiveOrActivated(
   }
 }
 
+function traceTriggeredReplacementMechanics(
+  m: TriggeredReplacementMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const triggerId = ids("trig");
+  nodes.push({
+    id: triggerId,
+    category: "window",
+    atomKind: "triggered_replacement_window",
+    label: `triggered_replacement_window\n${m.trigger.kind}`,
+  });
+
+  const effectId = ids("eff");
+  nodes.push({
+    id: effectId,
+    category: "effect",
+    atomKind: m.effect.kind,
+    label: `${m.effect.kind}\nreplacement HP ${m.effect.replacementHp}`,
+  });
+  edges.push({ from: triggerId, to: effectId, relation: "replaces_with" });
+
+  const resetId = ids("reset");
+  nodes.push({
+    id: resetId,
+    category: "resource",
+    atomKind: "reset_cadence",
+    label: `reset_cadence\n${m.resetCadence.kind}`,
+  });
+  edges.push({ from: effectId, to: resetId, relation: "recovers_on" });
+
+  return triggerId;
+}
+
 function traceMagicItemMechanics(
   m:
     | PassiveMechanics
     | ActivatedAbilityMechanics
     | TriggeredReactionAbilityMechanics
-    | MasteryMechanics
+    | OnHitTriggerMechanics
     | MagicItemSpawnedCreatureMechanics
     | CompositeMagicItemMechanics,
   nodes: TraceNode[],
@@ -5371,7 +5432,7 @@ function traceMagicItemMechanics(
     case "activation":
       return [tracePassiveOrActivated(m, nodes, edges, ids)];
     case "on_hit_trigger":
-      return [traceMasteryMechanics(m, nodes, edges, ids)];
+      return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
     case "spawned_creature":
       return [traceMagicItemSpawnedCreature(m, nodes, edges, ids)];
     case "triggered_reaction":
@@ -5383,7 +5444,7 @@ function traceMagicItemMechanics(
           case "activation":
             return tracePassiveOrActivated(part, nodes, edges, ids);
           case "on_hit_trigger":
-            return traceMasteryMechanics(part, nodes, edges, ids);
+            return traceOnHitTriggerMechanics(part, nodes, edges, ids);
           case "spawned_creature":
             return traceMagicItemSpawnedCreature(part, nodes, edges, ids);
           case "triggered_reaction":
@@ -5422,7 +5483,10 @@ function traceFeatUnit(feat: FeatRecord): Trace {
     label: `feat_root\n${feat.name}\n(${feat.category})`,
   });
 
-  const procId = tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
+  const procId =
+    feat.mechanics.family === "on_hit_trigger"
+      ? traceOnHitTriggerMechanics(feat.mechanics, nodes, edges, ids)
+      : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -5451,7 +5515,10 @@ function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
     label: `species_trait_root\n${trait.name}\n(${trait.species})`,
   });
 
-  const procId = tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
+  const procId =
+    trait.mechanics.family === "triggered_replacement"
+      ? traceTriggeredReplacementMechanics(trait.mechanics, nodes, edges, ids)
+      : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -5696,6 +5763,18 @@ function traceClassFeatureMechanics(
       return [traceActivatedAbility(m, nodes, edges, ids)];
     case "passive":
       return [tracePassiveMechanics(m, nodes, edges, ids)];
+    case "weapon_mastery_choice": {
+      const masteryId = ids("mastery");
+      nodes.push({
+        id: masteryId,
+        category: "hole",
+        atomKind: "class_weapon_mastery_choice",
+        label:
+          `class_weapon_mastery_choice\nchoose ${m.choose}\n` +
+          `${m.eligibleWeapons.join(", ")}\nchange ${m.changeOn.count} on ${m.changeOn.kind}`,
+      });
+      return [masteryId];
+    }
     case "composite":
       return m.parts.map((part) => {
         switch (part.family) {
@@ -6155,11 +6234,15 @@ function traceActivationCost(
     }
     case "bonus_action": {
       const id = ids("q");
+      const activation =
+        c.action === undefined
+          ? "Bonus Action"
+          : `Bonus Action: ${describeStandardActionCost(c.action)}`;
       nodes.push({
         id,
         category: "resource",
         atomKind: "bonus_action_quota",
-        label: "bonus_action_quota\n(Activation: Bonus Action)",
+        label: `bonus_action_quota\n(Activation: ${activation})`,
       });
       edges.push({ from: procId, to: id, relation: "consumes" });
       return;
@@ -6499,7 +6582,7 @@ function traceMasteryUnit(mastery: MasteryRecord): Trace {
     label: `mastery_root\n${mastery.name}`,
   });
 
-  const resolutionId = traceMasteryMechanics(
+  const resolutionId = traceOnHitTriggerMechanics(
     mastery.mechanics,
     nodes,
     edges,
@@ -6516,15 +6599,14 @@ function traceMasteryUnit(mastery: MasteryRecord): Trace {
   };
 }
 
-function traceMasteryMechanics(
-  m: MasteryMechanics,
+function traceOnHitTriggerMechanics(
+  m: OnHitTriggerMechanics,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
 ): string {
-  // Subgraph G — On-Hit Rider. mastery_root roots an attack_roll
-  // resolution; that resolution opens an on_hit_window which grants the
-  // rider effect; the effect attaches to the primary target.
+  // Subgraph G — On-Hit Rider. The source roots an attack_roll resolution;
+  // that resolution opens an on_hit_window which grants the rider effect.
   const resId = ids("res");
   nodes.push({
     id: resId,
@@ -6551,7 +6633,7 @@ function traceMasteryMechanics(
   });
   edges.push({ from: resId, to: targetId, relation: "attaches_to" });
 
-  traceMasteryEffect(m.effect, winId, targetId, nodes, edges, ids);
+  traceOnHitRiderEffect(m.effect, winId, targetId, nodes, edges, ids);
 
   const fenceId = traceUsageLimit(
     m.usageLimit,
@@ -6588,8 +6670,8 @@ function describeMasteryTrigger(t: MasteryTrigger): string {
   }
 }
 
-function traceMasteryEffect(
-  e: MasteryEffect,
+function traceOnHitRiderEffect(
+  e: OnHitRiderEffect,
   winId: string,
   targetId: string,
   nodes: TraceNode[],
@@ -6674,9 +6756,21 @@ function traceMasteryEffect(
       edges.push({ from: dmgId, to: secondaryAttId, relation: "attaches_to" });
       return;
     }
+    case "reroll_weapon_damage_dice": {
+      const rerollId = ids("rr");
+      nodes.push({
+        id: rerollId,
+        category: "effect",
+        atomKind: "reroll_weapon_damage_dice",
+        label: `reroll_weapon_damage_dice\nscope=${e.diceScope}\nchoose=${e.choose}`,
+      });
+      edges.push({ from: winId, to: rerollId, relation: "grants" });
+      edges.push({ from: rerollId, to: targetId, relation: "attaches_to" });
+      return;
+    }
     default: {
       const _: never = e;
-      throw new Error(`unhandled mastery effect: ${String(_)}`);
+      throw new Error(`unhandled on-hit rider effect: ${String(_)}`);
     }
   }
 }
@@ -7077,6 +7171,8 @@ function describeDiceAmount(a: DiceAmount): string {
       return `${describeExpr(a.base)} (linear per ${a.axis} level)`;
     case "resource_spent":
       return "= charges spent (player choice)";
+    case "proficiency_bonus":
+      return "= proficiency bonus";
     case "resource_spent_linear": {
       const maxText =
         a.maximum === undefined ? "" : `, max ${describeExpr(a.maximum)}`;
