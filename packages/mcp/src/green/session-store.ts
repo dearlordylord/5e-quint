@@ -1,7 +1,7 @@
 import type {
   CharacterDraft,
   CharacterDraftId,
-  CharacterSheet,
+  CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import type {
   BattleFill,
@@ -21,7 +21,7 @@ export type GreenBattleFillSession = {
 
 export type GreenMcpSessionSnapshot = {
   readonly draftIds: readonly CharacterDraftId[];
-  readonly sheetIds: readonly CharacterDraftId[];
+  readonly finalizedDraftIds: readonly CharacterDraftId[];
   readonly selectedStatBlockId: StatBlockId | null;
   readonly battleState: BattleState | null;
   readonly transientBattleFills: GreenBattleFillSession | null;
@@ -29,7 +29,7 @@ export type GreenMcpSessionSnapshot = {
 
 export type GreenMcpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
-  readonly sheets: Map<CharacterDraftId, CharacterSheet>;
+  readonly buildsByDraftId: Map<CharacterDraftId, CharacterBuild>;
   battleState: BattleState | null;
   transientBattleFills: GreenBattleFillSession | null;
   clearSelectedStatBlock(): void;
@@ -42,11 +42,11 @@ export function createGreenMcpSessionStore(
   statBlockCatalog: StatBlockCatalog,
 ): GreenMcpSessionStore {
   const drafts = new Map<CharacterDraftId, CharacterDraft>();
-  const sheets = new Map<CharacterDraftId, CharacterSheet>();
+  const buildsByDraftId = new Map<CharacterDraftId, CharacterBuild>();
   let selectedStatBlockId: StatBlockId | null = null;
   const store: GreenMcpSessionStore = {
     drafts,
-    sheets,
+    buildsByDraftId,
     battleState: null,
     transientBattleFills: null,
     clearSelectedStatBlock(): void {
@@ -65,7 +65,7 @@ export function createGreenMcpSessionStore(
     snapshot(): GreenMcpSessionSnapshot {
       return {
         draftIds: Array.from(drafts.keys()),
-        sheetIds: Array.from(sheets.keys()),
+        finalizedDraftIds: Array.from(buildsByDraftId.keys()),
         selectedStatBlockId,
         battleState: store.battleState,
         transientBattleFills: store.transientBattleFills,

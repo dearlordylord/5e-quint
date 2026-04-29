@@ -14,7 +14,7 @@ module battleRuntimeSlice {
   //   HP cannot go below 0, weapon damage adds the attack ability modifier, and
   //   Temporary Hit Points absorb damage before HP.
   // - Playing-the-Game.md lines 748-780 and ASSUMPTIONS.md A12: Stat Block
-  //   monsters use Monster Death at 0 HP; Character Sheet combatants use the
+  //   monsters use Monster Death at 0 HP; Character Build combatants use the
   //   Death Saving Throw lifecycle, including instant death from massive
   //   damage.
   //

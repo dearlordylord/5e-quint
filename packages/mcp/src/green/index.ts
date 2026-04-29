@@ -3,9 +3,9 @@ export {
   type GreenMcpCompositionRoot,
 } from "./composition-root.ts";
 export {
-  battleCreatureInitFromCharacterSheet,
-  startBattleFromCharacterSheetAndStatBlock,
-  type CharacterSheetCreatureInput,
+  battleCreatureInitFromCharacterBuild,
+  startBattleFromCharacterBuildAndStatBlock,
+  type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
 export {
   createGreenMcpSessionStore,

@@ -12,7 +12,7 @@ behavior.
 
 ```mermaid
 flowchart TD
-  CharacterSheet["Character Sheet + selected Unit refs<br/>owner: composition layer<br/>why: finalized PC facts enter battle without importing character creation"]
+  CharacterBuild["Character Build + selected Unit refs<br/>owner: composition layer<br/>why: finalized PC facts enter battle without importing character creation"]
   StatBlock["StatBlockRecord<br/>owner: @dnd/surface catalog/composition<br/>why: monster/NPC authored facts enter battle without Core catalogs"]
   Init["BattleCreatureInit[]<br/>input to startBattle<br/>why: one-time battle initialization boundary<br/>without: battle would import source package state directly"]
   State["BattleState<br/>data: battle id, initiative, combatants, current-turn resources<br/>why: durable legality/replay input<br/>without: discovery and resolution would not share one combat snapshot"]
@@ -31,7 +31,7 @@ flowchart TD
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
   Snapshot["snapshotBattle(state)<br/>success: JSON-friendly read model<br/>why: callers do not depend on internal Map state"]
 
-  CharacterSheet --> Init
+  CharacterBuild --> Init
   StatBlock --> Init
   Init --> State --> Creature
   Creature --> Origin
@@ -52,7 +52,7 @@ flowchart TD
   ActionEconomy --> AttackReplay
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class CharacterSheet,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackReplay,Damage,Snapshot implemented;
+  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackReplay,Damage,Snapshot implemented;
 ```
 
 ## Interpretation Graph

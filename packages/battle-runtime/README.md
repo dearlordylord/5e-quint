@@ -5,7 +5,7 @@ inputs: starting a battle, tracking combatants and turns, discovering battle
 acts, resolving fills for those acts, and producing snapshots for callers.
 
 The package is a runtime boundary, not an authored-content package. It consumes
-battle initialization data built by a composition layer from Character Sheets,
+battle initialization data built by a composition layer from Character Builds,
 Surface Units, and Surface Stat Blocks. It may retain resolved Surface records
 or Unit refs as battle origin data, but it does not create a second executable
 content language.
@@ -14,8 +14,8 @@ content language.
 
 `@dnd/surface` is the authored-content schema. Units are Surface-authored
 selectable game objects such as classes, features, weapons, armor, and spells.
-Stat Blocks are Surface-authored monster/NPC records. Character Sheets are
-finalized player-character records produced outside battle.
+Stat Blocks are Surface-authored monster/NPC records. Character Builds are
+finalized build-only player-character records produced outside battle.
 
 This package starts after those records have already been selected and composed
 into battle initialization inputs. It does not define spells, features, monster
@@ -26,21 +26,21 @@ behavior from inputs that callers provide.
 
 | Source outside battle                          | Composition output            | Battle-owned state    |
 | ---------------------------------------------- | ----------------------------- | --------------------- |
-| Character Sheet plus selected Surface Units    | `CharacterBattleCreatureInit` | `BattleCreatureState` |
+| Character Build plus selected Surface Units    | `CharacterBattleCreatureInit` | `BattleCreatureState` |
 | Surface `StatBlockRecord` for a monster or NPC | `StatBlockBattleCreatureInit` | `BattleCreatureState` |
 
 Callers construct `BattleCreatureInit[]` outside this package, then call
-`startBattle`. Character Sheet to battle-init mapping and Stat Block catalog
+`startBattle`. Character Build to battle-init mapping and Stat Block catalog
 selection happen before this package is called.
 
 `@dnd/battle-runtime` must not import `@dnd/character-creation-runtime` or Core
-engine packages. Character Sheet to battle initialization mapping belongs to the
+engine packages. Character Build to battle initialization mapping belongs to the
 application composition layer. Stat Block selection and catalog ownership also
 belong outside this package.
 
 Do not conflate these boundaries:
 
-- a Character Sheet is not a Stat Block;
+- a Character Build is not a Stat Block;
 - a Stat Block is not a Unit;
 - a creature initialization input is not authored content;
 - a creature initialization input is not durable battle state.
@@ -113,7 +113,7 @@ Attack and damage:
 Zero-HP lifecycle:
 
 - Stat Block combatants use `diesAtZeroHp`;
-- Character Sheet combatants use `usesDeathSavingThrows`.
+- Character Build combatants use `usesDeathSavingThrows`.
 
 Not modeled in this package yet: stat-block attacks, spells, reactions,
 bonus-action subjects, nonlethal melee knockout, and start-turn Death Saving
@@ -158,13 +158,13 @@ citation or `ASSUMPTIONS.md` entry.
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Initiative order and current actor | SRD 5.2.1 `Playing-the-Game.md` "Combat" / "Initiative"; `UBIQUITOUS_LANGUAGE.md` "Initiative"             | Combat is organized into rounds and turns. Initiative determines turn order.                                                            |
 | Stat Block initialization          | SRD 5.2.1 `Rules-Glossary.md` "Stat Block"                                                                 | Monster AC, Initiative, and HP entries are Stat Block facts consumed at initialization.                                                 |
-| Character initialization           | SRD 5.2.1 `Character-Creation.md`; Character Sheet produced by `@dnd/character-creation-runtime`           | This runtime consumes finalized sheet facts; it does not recalculate character-creation legality.                                       |
+| Character initialization           | SRD 5.2.1 `Character-Creation.md`; Character Build produced by `@dnd/character-creation-runtime`           | This runtime consumes finalized build facts; it does not recalculate character-creation legality.                                       |
 | Armor Class                        | SRD 5.2.1 `Playing-the-Game.md` "Armor Class"; `Equipment.md` "Armor"                                      | Armor and Shield facts are resolved before battle initialization.                                                                       |
 | End Turn command                   | SRD 5.2.1 combat turn structure; `ASSUMPTIONS.md` A2                                                       | End Turn is a runtime command because D&D has end-of-turn trigger points, not because it is an SRD Action.                              |
 | Action resources                   | SRD 5.2.1 `Playing-the-Game.md` "Your Turn" / "Actions" / "Bonus Actions"; `UBIQUITOUS_LANGUAGE.md`        | The runtime tracks per-turn action resources through shared algebras.                                                                   |
 | Attack resolution                  | SRD 5.2.1 `Rules-Glossary.md` "Attack [Action]"; `Playing-the-Game.md` "Making an Attack" / "Attack Rolls" | Attack replay chooses a target, consumes an attack roll, and compares the roll to Armor Class, with natural 1 and natural 20 overrides. |
 | Damage and Temporary Hit Points    | SRD 5.2.1 `Playing-the-Game.md` "Damage Rolls", "Hit Points", "Temporary Hit Points"                       | Damage uses weapon damage plus the attack ability modifier, applies Temporary Hit Points first, and clamps HP at `0`.                   |
-| Zero-HP lifecycle                  | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points"; `ASSUMPTIONS.md` A12                           | Stat Block monsters die at `0` HP. Character Sheet participants use the death-save lifecycle.                                           |
+| Zero-HP lifecycle                  | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points"; `ASSUMPTIONS.md` A12                           | Stat Block monsters die at `0` HP. Character Build participants use the death-save lifecycle.                                           |
 | Incapacitated action gating        | SRD 5.2.1 `Rules-Glossary.md` "Incapacitated [Condition]" and "Unconscious [Condition]"                    | Incapacitated prevents actions; Unconscious includes Incapacitated.                                                                     |
 
 ## Files And Verification

@@ -15,7 +15,7 @@ character-creation and battle runtimes. Its composition root builds:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
-- an in-memory session store for character drafts, finalized Character Sheets,
+- an in-memory session store for character drafts, finalized Character Builds,
   selected Stat Block identity, durable battle state, and transient
   battle fills.
 
@@ -30,13 +30,13 @@ Surface-runtime tools should use their final user-facing tool names. The
 implementation boundary is the module/package registration path, not a `green_`
 tool-name prefix.
 
-This package also owns cross-runtime composition helpers. Character Sheet to
+This package also owns cross-runtime composition helpers. Character Build to
 creature-init mapping lives in `src/green/battle-creature-init.ts`, where
 finalized character facts and Surface Unit lookups are projected into
 battle-owned initialization data before calling `startBattle`. This keeps
 character draft/session concepts out of `@dnd/battle-runtime` without
 introducing a new intermediate language. This is package ownership, not a
-domain term: `@dnd/mcp` may see Character Sheets, authored Units, authored Stat
+domain term: `@dnd/mcp` may see Character Builds, authored Units, authored Stat
 Blocks, and battle creature-init APIs together because its job is wiring
 runtimes for tools.
 

@@ -1118,7 +1118,7 @@ describe("character creation batch fill", () => {
 });
 
 describe("character creation finalization", () => {
-  test("finalizes the complete Orc Soldier Fighter manifest into a legal CharacterSheet", () => {
+  test("finalizes the complete Orc Soldier Fighter manifest into a legal CharacterBuild", () => {
     const draft = completeManifestDraft();
     const result = finalizeCharacterDraft({ draft, unitLibrary });
 
@@ -1127,10 +1127,10 @@ describe("character creation finalization", () => {
       return;
     }
 
-    expect(result.sheet.selections.advancement).toEqual({
+    expect(result.build.selections.advancement).toEqual({
       entries: [{ classUnitId: "class_fighter", level: 1 }],
     });
-    expect(result.sheet.abilityScores).toEqual({
+    expect(result.build.abilityScores).toEqual({
       base: {
         str: 15,
         dex: 14,
@@ -1153,18 +1153,18 @@ describe("character creation finalization", () => {
         cha: 12,
       },
     });
-    expect(result.sheet.hitPoints).toEqual({
+    expect(result.build.hitPoints).toEqual({
       maximum: 12,
       hitDice: [{ classUnitId: "class_fighter", dieSize: 10, total: 1 }],
     });
-    expect(result.sheet.proficiencies).toEqual({
+    expect(result.build.proficiencies).toEqual({
       savingThrows: ["str", "con"],
       skills: ["perception", "survival", "athletics", "intimidation"],
       weaponCategories: ["simple", "martial"],
       armorTraining: ["light", "medium", "heavy", "shield"],
       tools: ["tool_dice_set"],
     });
-    expect(result.sheet.equipment).toEqual({
+    expect(result.build.equipment).toEqual({
       ownedUnitIds: [
         "armor_chain_mail",
         "weapon_longsword",
@@ -1176,7 +1176,7 @@ describe("character creation finalization", () => {
         weapon: { unitId: "weapon_longsword", grip: "one_handed" },
       },
     });
-    expect(result.sheet.resources).toEqual([
+    expect(result.build.resources).toEqual([
       {
         unitId: "fighter_second_wind",
         resource: {
@@ -1193,7 +1193,7 @@ describe("character creation finalization", () => {
         },
       },
     ]);
-    expect(result.sheet.unitRefs.map((ref) => ref.unitId)).toEqual([
+    expect(result.build.unitRefs.map((ref) => ref.unitId)).toEqual([
       "class_fighter",
       "fighter_fighting_style_l1",
       "fighter_second_wind",
@@ -1242,7 +1242,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized sheet advancement must be exactly one Fighter level.",
+            "Finalized build advancement must be exactly one Fighter level.",
         },
       ],
     });
@@ -1314,7 +1314,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized sheet must carry exactly the phase-1 manifest choices.",
+            "Finalized build must carry exactly the phase-1 manifest choices.",
         },
       ],
     });
@@ -1327,7 +1327,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized sheet must carry exactly the phase-1 manifest choices.",
+            "Finalized build must carry exactly the phase-1 manifest choices.",
         },
       ],
     });

@@ -1,17 +1,17 @@
 import {
   battleCreatureInitFromStatBlock,
-  initiativeScore,
-  scoreModifier,
   startBattle,
+  scoreModifier,
   type BattleAttackProfile,
   type BattleId,
   type BattleState,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
+  type InitiativeScore,
   type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
-import type { CharacterSheet } from "@dnd/character-creation-runtime";
+import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityModifier,
   armorClassDelta,
@@ -24,30 +24,31 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match } from "effect";
 
-// MCP owns cross-runtime wiring. Character creation finalizes a CharacterSheet;
+// MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;
 // battle accepts battle-owned creature-init inputs. This mapper is where
 // selected Unit refs are read into the creature combat view, so neither runtime
 // has to import the other or grow an intermediate executable content model.
 
-export type CharacterSheetCreatureInput = {
+export type CharacterBuildCreatureInput = {
   readonly combatantId: CombatantId;
   readonly characterId: CharacterId;
   readonly displayName: string;
-  readonly sheet: CharacterSheet;
+  readonly build: CharacterBuild;
+  readonly initiative: InitiativeScore;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
 };
 
-export function startBattleFromCharacterSheetAndStatBlock(input: {
+export function startBattleFromCharacterBuildAndStatBlock(input: {
   readonly battleId: BattleId;
-  readonly character: CharacterSheetCreatureInput;
+  readonly character: CharacterBuildCreatureInput;
   readonly statBlockBattleInput: StatBlockBattleInitInput;
   readonly unitLibrary: UnitCatalog;
 }): BattleState {
   return startBattle({
     battleId: input.battleId,
     combatants: [
-      battleCreatureInitFromCharacterSheet({
+      battleCreatureInitFromCharacterBuild({
         ...input.character,
         unitLibrary: input.unitLibrary,
       }),
@@ -56,38 +57,41 @@ export function startBattleFromCharacterSheetAndStatBlock(input: {
   });
 }
 
-export function battleCreatureInitFromCharacterSheet(
-  input: CharacterSheetCreatureInput & {
+export function battleCreatureInitFromCharacterBuild(
+  input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
   },
 ): BattleCreatureInit {
-  const maxHp = Hp(input.sheet.hitPoints.maximum);
+  const maxHp = Hp(input.build.hitPoints.maximum);
+  const currentHp = input.currentHp ?? maxHp;
+  if (currentHp > maxHp) {
+    throw new Error("Character battle initialization current HP exceeds max HP.");
+  }
+
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
-    initiative: initiativeScore(
-      10 + scoreModifier(input.sheet.abilityScores.final.dex),
-    ),
+    initiative: input.initiative,
     creatureInit: {
       kind: "character",
       characterId: input.characterId,
-      sheetUnitRefs: input.sheet.unitRefs,
-      armorClass: characterArmorClassState(input.sheet, input.unitLibrary),
-      currentHp: input.currentHp ?? maxHp,
+      characterUnitRefs: input.build.unitRefs,
+      armorClass: characterArmorClassState(input.build, input.unitLibrary),
+      currentHp,
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
-      selectedLoadout: input.sheet.equipment.loadout,
-      attack: characterAttackProfile(input.sheet, input.unitLibrary),
+      selectedLoadout: input.build.equipment.loadout,
+      attack: characterAttackProfile(input.build, input.unitLibrary),
     },
   };
 }
 
 function characterArmorClassState(
-  sheet: CharacterSheet,
+  build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): ArmorClassState {
-  const loadout = sheet.equipment.loadout;
+  const loadout = build.equipment.loadout;
   const defaultState = defaultArmorClassState();
   const armor = loadout.armor
     ? unitLibrary.requireUnit(loadout.armor)
@@ -100,12 +104,12 @@ function characterArmorClassState(
     ...defaultState,
     abilityModifiers: {
       ...zeroAbilityModifiers(),
-      str: abilityModifier(scoreModifier(sheet.abilityScores.final.str)),
-      dex: abilityModifier(scoreModifier(sheet.abilityScores.final.dex)),
-      con: abilityModifier(scoreModifier(sheet.abilityScores.final.con)),
-      int: abilityModifier(scoreModifier(sheet.abilityScores.final.int)),
-      wis: abilityModifier(scoreModifier(sheet.abilityScores.final.wis)),
-      cha: abilityModifier(scoreModifier(sheet.abilityScores.final.cha)),
+      str: abilityModifier(scoreModifier(build.abilityScores.final.str)),
+      dex: abilityModifier(scoreModifier(build.abilityScores.final.dex)),
+      con: abilityModifier(scoreModifier(build.abilityScores.final.con)),
+      int: abilityModifier(scoreModifier(build.abilityScores.final.int)),
+      wis: abilityModifier(scoreModifier(build.abilityScores.final.wis)),
+      cha: abilityModifier(scoreModifier(build.abilityScores.final.cha)),
     },
     base:
       armor?.kind === "armor"
@@ -123,11 +127,11 @@ function characterArmorClassState(
             },
           ]
         : []),
-      ...sheet.unitRefs.flatMap((ref) =>
+      ...build.unitRefs.flatMap((ref) =>
         armorDefenseBonus(unitLibrary.requireUnit(ref.unitId)),
       ),
     ],
-    armorTraining: new Set(sheet.proficiencies.armorTraining),
+    armorTraining: new Set(build.proficiencies.armorTraining),
     leftHandUse: shield?.kind === "shield" ? "shield" : "free",
     rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
   };
@@ -168,10 +172,10 @@ function armorDefenseBonus(unit: UnitRecord): ArmorClassState["bonuses"] {
 }
 
 function characterAttackProfile(
-  sheet: CharacterSheet,
+  build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): BattleAttackProfile | null {
-  const selectedWeapon = sheet.equipment.loadout.weapon;
+  const selectedWeapon = build.equipment.loadout.weapon;
   if (selectedWeapon == null) {
     return null;
   }
@@ -185,6 +189,6 @@ function characterAttackProfile(
     kind: "weapon",
     weapon: unit,
     ability: "str",
-    abilityModifier: scoreModifier(sheet.abilityScores.final.str),
+    abilityModifier: scoreModifier(build.abilityScores.final.str),
   };
 }

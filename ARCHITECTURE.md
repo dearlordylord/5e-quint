@@ -36,11 +36,11 @@ Local SRD corpus + ASSUMPTIONS.md + UBIQUITOUS_LANGUAGE.md
 +-------------------------------+      +--------------------------+
 | @dnd/character-creation-runtime |      | @dnd/battle-runtime      |
 | - drafts, holes, fills          |      | - battle state           |
-| - final CharacterSheet          |      | - battle subjects        |
+| - final CharacterBuild          |      | - battle subjects        |
 | - package-local QNT slice       |      | - holes/fills/replay     |
 +-------------------------------+      | - package-local QNT slice|
         |                              +--------------------------+
-        | CharacterSheet + selected Unit refs       ^
+        | CharacterBuild + selected Unit refs       ^
         +-------------------------------------------+
                          MCP composition
                          (@dnd/mcp)
@@ -76,7 +76,7 @@ derive their own execution state. They must not introduce a second executable
 content language between Surface and runtime.
 
 `@dnd/character-creation-runtime` owns character-creation reducer state:
-drafts, holes, batch fills, finalization, and the finalized `CharacterSheet`.
+drafts, holes, batch fills, finalization, and the finalized `CharacterBuild`.
 Character-creation terms live in
 `packages/character-creation-runtime/VOCABULARY.md`.
 
@@ -112,7 +112,7 @@ The Surface runtime path composes:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
-- character drafts and finalized Character Sheets;
+- character drafts and finalized Character Builds;
 - selected Stat Block identity;
 - durable `BattleState`;
 - transient battle fills kept outside `BattleState`.

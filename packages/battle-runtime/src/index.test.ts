@@ -61,6 +61,10 @@ const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
 
 describe("battle runtime", () => {
+  test("initiative scores must be integers", () => {
+    expect(() => initiativeScore(12.5)).toThrow();
+  });
+
   test("startBattle creates sorted Initiative state and the MCP snapshot contract", () => {
     const state = startBattle({
       battleId: battleId("battle-1"),
@@ -122,6 +126,28 @@ describe("battle runtime", () => {
         currentHasBonusAction: true,
       },
     });
+  });
+
+  test("startBattle rejects current HP above max HP", () => {
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-overmax-hp"),
+        combatants: [
+          characterSeed({ initiative: 12, currentHp: 13 }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).toThrow("Battle initialization current HP exceeds max HP.");
+
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-statblock-overmax-hp"),
+        combatants: [
+          characterSeed({ initiative: 12 }),
+          statBlockCreatureInit({ initiative: 10, currentHp: 11 }),
+        ],
+      }),
+    ).toThrow("Battle initialization current HP exceeds max HP.");
   });
 
   test("discoverBattleActs exposes only attack and endTurn for the current actor", () => {
@@ -1607,7 +1633,7 @@ function characterSeed(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
-      sheetUnitRefs: [],
+      characterUnitRefs: [],
       armorClass: defaultArmorClassState(),
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(12),

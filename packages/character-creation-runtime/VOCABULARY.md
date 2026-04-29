@@ -10,10 +10,10 @@ still to fill. It is not authored content. Draft holes may be opened by missing
 draft structure (`cc:draft:<path>`) or by selected Units
 (`cc:unit:<unit id>:<choice key>`). Filling a draft can reveal more holes.
 
-Character Sheet - finalized player-character boundary produced from a complete
-legal Character Draft. It carries selected Unit references plus derived
-player-character facts such as ability scores, proficiencies, HP maximum, and
-loadout. It is not a Stat Block and not battle creature state.
+Character Build - finalized build-only player-character boundary produced from
+a complete legal Character Draft. It carries selected Unit references plus
+derived build facts such as ability scores, proficiencies, HP maximum, and
+loadout. It is not a Stat Block and not in-play Character Sheet state.
 
 Creation Hole - a fillable requirement in a Character Draft. Holes can come
 from draft structure or from selected authored Units. Hole ids are stable

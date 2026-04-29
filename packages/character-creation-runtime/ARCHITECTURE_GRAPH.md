@@ -8,7 +8,7 @@ This is intentionally a representative graph, not a full Surface vocabulary
 mirror and not a list of every creation case. The Orc Soldier Fighter path is
 shown where it reinforces the architecture: authored Unit records open draft and
 Unit-backed holes, fills are applied atomically, and a complete legal draft
-finalizes into a Character Sheet. Add branches when they explain a runtime
+finalizes into a Character Build. Add branches when they explain a runtime
 boundary or implemented vertical, not just because another SRD option exists.
 
 ## System Graph
@@ -22,7 +22,7 @@ flowchart TD
 
   Create["createCharacterDraft({ unitLibrary, draftId? })<br/>success: revision-0 CharacterDraft<br/>why: canonical empty draft constructor<br/>without: callers invent partial draft shapes"]
   Draft["CharacterDraft<br/>data: draftId, selections, revision<br/>why: mutable session-owned creation state<br/>without: holes/fills have no durable subject"]
-  Session["application/session store<br/>stores: CharacterDraft and finalized CharacterSheet<br/>why: persistence belongs outside the reducer<br/>without: runtime package would own application session state"]
+  Session["application/session store<br/>stores: CharacterDraft and finalized CharacterBuild<br/>why: persistence belongs outside the reducer<br/>without: runtime package would own application session state"]
 
   Discover["discoverCreationHoles({ draft, unitLibrary })<br/>success: CreationHole[]<br/>absence: [] when no supported fillable requirements remain<br/>why: one source for current fillable requirements<br/>without: callers/finalization drift on missing choices"]
   InitialHoles["initial draft holes<br/>opens: class, background, species, ability scores, languages, alignment<br/>example options: Fighter, Soldier, Orc<br/>why: top-level SRD creation requirements<br/>without: required draft structure is implicit in callers"]
@@ -39,11 +39,11 @@ flowchart TD
   Rediscover["rediscover holes after accepted batch<br/>success: next CreationHole[]<br/>why: later holes depend on earlier selections<br/>without: callers reuse stale hole sets"]
   RefillLoop["refill loop<br/>accepted result returns next holes; caller submits another batch until finalization is ready<br/>why: creation is staged by derived holes, not by a fixed step sequence<br/>without: later Unit-backed holes are invisible or guessed by caller"]
 
-  Finalize["finalizeCharacterDraft({ draft, unitLibrary })<br/>ready: CharacterSheet<br/>incomplete: open holes<br/>invalid: finalization issues<br/>why: single draft-to-sheet boundary<br/>without: consumers decide independently when a draft is usable"]
-  Complete["finalizedSelections(draft)<br/>success: FinalizedCharacterSelections<br/>absence: undefined when required typed selections are missing<br/>why: narrow partial draft to complete selection type<br/>without: sheet building handles optional fields defensively"]
+  Finalize["finalizeCharacterDraft({ draft, unitLibrary })<br/>ready: CharacterBuild<br/>incomplete: open holes<br/>invalid: finalization issues<br/>why: single draft-to-build boundary<br/>without: consumers decide independently when a draft is usable"]
+  Complete["finalizedSelections(draft)<br/>success: FinalizedCharacterSelections<br/>absence: undefined when required typed selections are missing<br/>why: narrow partial draft to complete selection type<br/>without: build construction handles optional fields defensively"]
   Legality["finalizedSelectionIssues<br/>success: no issues for the supported manifest<br/>invalid: illegalFinalization issues<br/>why: complete does not automatically mean supported/legal<br/>without: contradictory complete drafts can finalize"]
-  SheetBuild["buildCharacterSheet<br/>input: complete legal selections + Surface facts<br/>success: CharacterSheet with Unit refs, abilities, HP, proficiencies, features, resources, equipment/loadout<br/>why: one runtime projection from accepted draft and authored Units<br/>without: callers would rederive character facts"]
-  Sheet["CharacterSheet<br/>finalized player-character boundary<br/>not: Unit, Stat Block, or execution state<br/>why: character creation owns sheet facts and exports a stable boundary<br/>without: runtime initialization can become the character-creation source of truth"]
+  BuildProjection["buildCharacterBuild<br/>input: complete legal selections + Surface facts<br/>success: CharacterBuild with Unit refs, abilities, HP, proficiencies, features, resources, equipment/loadout<br/>why: one runtime projection from accepted draft and authored Units<br/>without: callers would rederive character facts"]
+  BuildBoundary["CharacterBuild<br/>finalized player-character boundary<br/>not: Unit, Stat Block, or execution state<br/>why: character creation owns build facts and exports a stable boundary<br/>without: runtime initialization can become the character-creation source of truth"]
 
   Content --> Decode --> Collection --> Catalog
   Catalog -. protocol input .-> Create
@@ -53,7 +53,7 @@ flowchart TD
   Discover --> InitialHoles
   Discover --> Readers --> UnitGrantedHoles
   Discover --> EquipmentHoles
-  Readers --> SheetBuild
+  Readers --> BuildProjection
 
   Discover --> CallerFills --> Fill
   Draft --> Fill
@@ -70,12 +70,12 @@ flowchart TD
   Finalize --> Discover
   Finalize --> Complete
   Complete -->|missing selections| InvalidFinalization["return invalid<br/>illegalFinalization"]
-  Complete -->|complete selections| Legality --> SheetBuild --> Sheet --> Session
+  Complete -->|complete selections| Legality --> BuildProjection --> BuildBoundary --> Session
 
   classDef invalid fill:#fff7ed,stroke:#f97316,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
   class Rejected,InvalidFinalization invalid;
-  class Content,Decode,Collection,Catalog,Create,Draft,Session,Discover,InitialHoles,UnitGrantedHoles,EquipmentHoles,Readers,Fill,CallerFills,CurrentFrontier,Issues,SupportGate,Apply,Rediscover,RefillLoop,Finalize,Complete,Legality,SheetBuild,Sheet implemented;
+  class Content,Decode,Collection,Catalog,Create,Draft,Session,Discover,InitialHoles,UnitGrantedHoles,EquipmentHoles,Readers,Fill,CallerFills,CurrentFrontier,Issues,SupportGate,Apply,Rediscover,RefillLoop,Finalize,Complete,Legality,BuildProjection,BuildBoundary implemented;
 ```
 
 ## Hole Discovery Graph
@@ -151,8 +151,8 @@ flowchart TD
   OpenHoles["open holes check<br/>if holes remain: incomplete with holes<br/>why: finalization cannot skip required choices"]
   Narrow["finalizedSelections<br/>success: all required selections present<br/>absence: undefined when required selections are missing despite no open holes<br/>why: convert partial draft into complete selection type"]
   ManifestLegality["finalizedSelectionIssues<br/>checks: supported manifest values, valid ability scores, exact choices, exact owned equipment<br/>failure: illegalFinalization issues<br/>why: complete draft must still match executable support"]
-  Build["buildCharacterSheet<br/>derives: Unit refs, final ability scores, HP/Hit Dice, proficiencies, features, resources, equipment loadout<br/>why: one projection from creation choices to character boundary"]
-  Ready["ready result<br/>sheet: CharacterSheet<br/>why: finalized player-character handoff"]
+  Build["buildCharacterBuild<br/>derives: Unit refs, final ability scores, HP/Hit Dice, proficiencies, features, resources, equipment loadout<br/>why: one projection from creation choices to character boundary"]
+  Ready["ready result<br/>build: CharacterBuild<br/>why: finalized player-character handoff"]
 
   PriorDiscovery --> SubmittedFills --> Fill
   Fill --> CurrentHoles
@@ -199,16 +199,16 @@ flowchart TD
 | `holeIdForSource`             | `CreationHoleSource`                          | `cc:draft:<path>` or `cc:unit:<unit id>:<choice key>`                                          | n/a                                                                                | One source-to-id projection                                   | Hole ids and sources drift                                    |
 | `readClassCreationFacts`      | `UnitRecord`                                  | Class creation facts                                                                           | `unreadable` for unsupported kind                                                  | Surface-owned projection for class choices                    | Runtime pattern-matches broad Unit shapes everywhere          |
 | `readBackgroundCreationFacts` | `UnitRecord`                                  | Background creation facts                                                                      | `unreadable` for unsupported kind                                                  | Surface-owned projection for background choices               | Runtime duplicates background field access                    |
-| `readSpeciesCreationFacts`    | `UnitRecord`                                  | Species creation facts                                                                         | `unreadable` for unsupported kind                                                  | Surface-owned projection for species facts                    | Sheet finalization reaches through broad Unit variants        |
+| `readSpeciesCreationFacts`    | `UnitRecord`                                  | Species creation facts                                                                         | `unreadable` for unsupported kind                                                  | Surface-owned projection for species facts                    | Build finalization reaches through broad Unit variants        |
 | `fillCreationHoles`           | Draft, fills, expected revision, Unit library | `accepted` with new draft, rediscovered holes, finalization                                    | `rejected` with original draft, original holes, issues, finalization               | Atomic batch fill reducer                                     | Invalid batches can partially mutate state                    |
 | `creationFillIssues`          | Batch input, current holes                    | `[]` when batch is fully acceptable                                                            | Batch/fill issues with real `fillIndex` where applicable                           | Diagnose before mutation                                      | Validation order becomes mutation order                       |
 | `supportedHoleOptionIds`      | `CreationHole`                                | Supported option ids or unrestricted `undefined` for holes without a package-private narrowing | `[]` for unsupported Unit choice keys                                              | Separate SRD-valid options from implemented runtime support   | Valid-but-unsupported choices are accepted as executable      |
 | `applyCreationFills`          | Draft, current holes, accepted fills          | New draft selections and `revision + 1`                                                        | Throws only if accepted-fill invariant is broken                                   | One mutation boundary after validation                        | Every hole family owns its own mutation protocol              |
-| `finalizeCharacterDraft`      | Draft, Unit library                           | `ready` with `CharacterSheet`                                                                  | `incomplete` with non-empty holes, or `invalid` with non-empty finalization issues | Single draft-to-sheet boundary                                | Consumers decide independently when a draft is usable         |
-| `finalizedSelections`         | `CharacterDraft`                              | `FinalizedCharacterSelections`                                                                 | `undefined` when required fields are missing                                       | Narrows optional draft state before sheet projection          | Sheet building handles optional fields defensively            |
+| `finalizeCharacterDraft`      | Draft, Unit library                           | `ready` with `CharacterBuild`                                                                  | `incomplete` with non-empty holes, or `invalid` with non-empty finalization issues | Single draft-to-build boundary                                | Consumers decide independently when a draft is usable         |
+| `finalizedSelections`         | `CharacterDraft`                              | `FinalizedCharacterSelections`                                                                 | `undefined` when required fields are missing                                       | Narrows optional draft state before build projection          | Build construction handles optional fields defensively        |
 | `finalizedSelectionIssues`    | Complete selections, Unit library             | `[]` for legal supported manifest                                                              | `illegalFinalization` issues                                                       | Complete draft still must satisfy executable support          | Contradictory complete drafts finalize                        |
-| `buildCharacterSheet`         | Complete legal selections, Unit library       | `CharacterSheet`                                                                               | Throws if required Surface facts are unreadable                                    | One projection from choices and authored facts to sheet facts | Callers rederive character facts                              |
-| `CharacterSheet`              | n/a                                           | Finalized Unit refs, abilities, HP, proficiencies, features, resources, equipment/loadout      | n/a                                                                                | Player-character boundary after creation                      | Consumer initialization becomes the source of creation truth  |
+| `buildCharacterBuild`         | Complete legal selections, Unit library       | `CharacterBuild`                                                                               | Throws if required Surface facts are unreadable                                    | One projection from choices and authored facts to build facts | Callers rederive character facts                              |
+| `CharacterBuild`              | n/a                                           | Finalized Unit refs, abilities, HP, proficiencies, features, resources, equipment/loadout      | n/a                                                                                | Player-character boundary after creation                      | Consumer initialization becomes the source of creation truth  |
 
 ## Runtime Boundary Notes
 
@@ -231,5 +231,5 @@ flowchart TD
   supported manifest path and fill rejection algebra. Hydrated malformed-draft
   repairability depends on accepted option metadata and is covered by focused
   TypeScript runtime tests.
-- `CharacterSheet` is the finalized character boundary. Any consumer-specific
+- `CharacterBuild` is the finalized character boundary. Any consumer-specific
   input derived from it is a downstream projection owned outside this package.

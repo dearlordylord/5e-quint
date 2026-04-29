@@ -4,7 +4,7 @@ module characterCreationRuntimeSlice {
   // SRD traceability for this phase-1 slice:
   // - Character-Creation.md lines 56-91, 104-123, 143-187, 205-233,
   //   and 239-245: background/species/languages, Standard Array, alignment,
-  //   background ASI, starting equipment, and character-sheet details.
+  //   background ASI, starting equipment, and character-build details.
   // - Classes/Fighter.md lines 3-13, 17-20, 29-31, and 56-74:
   //   Fighter level-1 traits, skill choices, Fighting Style, Second Wind,
   //   Weapon Mastery, and starting-equipment option C.
@@ -18,7 +18,7 @@ module characterCreationRuntimeSlice {
   // a hole but unsupported by this first runtime slice.
   //
   // TODO(CAM follow-up): this parity slice currently checks hole/status protocol
-  // more deeply than finalized sheet values. Before widening character creation
+  // more deeply than finalized build values. Before widening character creation
   // beyond the first manifest, add parity coverage for selected Unit refs,
   // HP/Hit Die derivation, proficiencies, resources, and loadout identity.
 

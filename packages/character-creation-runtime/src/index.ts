@@ -319,24 +319,24 @@ export type FinalizedCharacterSelections = {
   readonly equipment: CharacterEquipmentSelection;
 };
 
-export type CharacterSheetAbilityScores = {
+export type CharacterBuildAbilityScores = {
   readonly base: AbilityScoreAssignment;
   readonly backgroundIncrease: BackgroundAbilityScoreIncreaseSelection;
   readonly final: AbilityScoreAssignment;
 };
 
-export type CharacterSheetHitPoints = {
+export type CharacterBuildHitPoints = {
   readonly maximum: number;
-  readonly hitDice: readonly CharacterSheetHitDie[];
+  readonly hitDice: readonly CharacterBuildHitDie[];
 };
 
-export type CharacterSheetHitDie = {
+export type CharacterBuildHitDie = {
   readonly classUnitId: UnitRecord["id"];
   readonly dieSize: number;
   readonly total: number;
 };
 
-export type CharacterSheetProficiencies = {
+export type CharacterBuildProficiencies = {
   readonly savingThrows: readonly Ability[];
   readonly skills: readonly Skill[];
   readonly weaponCategories: readonly WeaponProficiencyCategory[];
@@ -344,17 +344,17 @@ export type CharacterSheetProficiencies = {
   readonly tools: readonly CreationChoiceOptionId[];
 };
 
-export type CharacterSheetFeature = {
+export type CharacterBuildFeature = {
   readonly unitId: UnitRecord["id"];
   readonly source: "class" | "background" | "species" | "choice";
 };
 
-export type CharacterSheetResource = {
+export type CharacterBuildResource = {
   readonly unitId: UnitRecord["id"];
   readonly resource: ActivationResource;
 };
 
-export type CharacterSheetLoadout = {
+export type CharacterBuildLoadout = {
   readonly armor?: UnitRecord["id"];
   readonly shield?: UnitRecord["id"];
   readonly weapon?: {
@@ -363,23 +363,25 @@ export type CharacterSheetLoadout = {
   };
 };
 
-export type CharacterSheet = {
-  readonly sourceDraftId: CharacterDraftId;
+// CharacterBuild is the creation output: durable build and identity facts.
+// In-play CharacterSheet state such as current HP, Temporary Hit Points, and
+// Hit Dice remaining belongs to the adventuring/rest boundary, not this package.
+export type CharacterBuild = {
   readonly selections: FinalizedCharacterSelections;
   readonly unitRefs: readonly UnitRef[];
-  readonly abilityScores: CharacterSheetAbilityScores;
-  readonly hitPoints: CharacterSheetHitPoints;
-  readonly proficiencies: CharacterSheetProficiencies;
-  readonly features: readonly CharacterSheetFeature[];
-  readonly resources: readonly CharacterSheetResource[];
+  readonly abilityScores: CharacterBuildAbilityScores;
+  readonly hitPoints: CharacterBuildHitPoints;
+  readonly proficiencies: CharacterBuildProficiencies;
+  readonly features: readonly CharacterBuildFeature[];
+  readonly resources: readonly CharacterBuildResource[];
   readonly equipment: {
     readonly ownedUnitIds: readonly UnitRecord["id"][];
-    readonly loadout: CharacterSheetLoadout;
+    readonly loadout: CharacterBuildLoadout;
   };
 };
 
 export type CreationFinalizationResult =
-  | { readonly tag: "ready"; readonly sheet: CharacterSheet }
+  | { readonly tag: "ready"; readonly build: CharacterBuild }
   | {
       readonly tag: "incomplete";
       readonly holes: NonEmptyReadonlyArray<CreationHole>;
@@ -589,8 +591,7 @@ export function finalizeCharacterDraft(input: {
 
   return {
     tag: "ready",
-    sheet: buildCharacterSheet({
-      sourceDraftId: input.draft.draftId,
+    build: buildCharacterBuild({
       selections,
       unitLibrary: input.unitLibrary,
     }),
@@ -636,26 +637,26 @@ function finalizedSelectionIssues(
   return [
     ...expectedValueIssue(
       selections.primaryClass === PHASE1_CLASS_FIGHTER_UNIT_ID,
-      "Finalized sheet must use the supported Fighter class.",
+      "Finalized build must use the supported Fighter class.",
     ),
     ...expectedValueIssue(
       selections.background === PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
-      "Finalized sheet must use the supported Soldier background.",
+      "Finalized build must use the supported Soldier background.",
     ),
     ...expectedValueIssue(
       selections.species === PHASE1_SPECIES_ORC_UNIT_ID,
-      "Finalized sheet must use the supported Orc species.",
+      "Finalized build must use the supported Orc species.",
     ),
     ...expectedValueIssue(
       isInitialFighterAdvancement(selections.advancement),
-      "Finalized sheet advancement must be exactly one Fighter level.",
+      "Finalized build advancement must be exactly one Fighter level.",
     ),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
         selections.abilityScoreGeneration.method,
         selections.abilityScoreGeneration.assignedScores,
       ),
-      "Finalized sheet must use a supported ability-score generation method.",
+      "Finalized build must use a supported ability-score generation method.",
     ),
     ...expectedValueIssue(
       isPhaseOneManifestBackgroundAbilityScoreIncrease(
@@ -664,7 +665,7 @@ function finalizedSelectionIssues(
         selections.background,
         selections.abilityScoreGeneration.assignedScores,
       ),
-      "Finalized sheet must use the phase-1 Soldier ability-score increase.",
+      "Finalized build must use the phase-1 Soldier ability-score increase.",
     ),
     ...expectedValueIssue(
       sameOptionIdMultiset(selections.languages, [
@@ -672,19 +673,19 @@ function finalizedSelectionIssues(
         "Dwarvish",
         "Goblin",
       ]),
-      "Finalized sheet must use Common, Dwarvish, and Goblin.",
+      "Finalized build must use Common, Dwarvish, and Goblin.",
     ),
     ...expectedValueIssue(
       selections.alignment.order === "lawful" &&
         selections.alignment.morality === "good",
-      "Finalized sheet must use Lawful Good alignment for the phase-1 manifest.",
+      "Finalized build must use Lawful Good alignment for the phase-1 manifest.",
     ),
     ...expectedValueIssue(
       sameChoiceSelectionMultiset(
         selections.choices,
         phaseOneManifestChoiceSelections(),
       ),
-      "Finalized sheet must carry exactly the phase-1 manifest choices.",
+      "Finalized build must carry exactly the phase-1 manifest choices.",
     ),
     ...expectedValueIssue(
       sameOptionIdMultiset(selections.equipment.selectedUnitIds, [
@@ -692,7 +693,7 @@ function finalizedSelectionIssues(
         PHASE1_WEAPON_LONGSWORD_UNIT_ID,
         PHASE1_SHIELD_UNIT_ID,
       ]),
-      "Finalized sheet must own exactly the phase-1 purchased equipment.",
+      "Finalized build must own exactly the phase-1 purchased equipment.",
     ),
   ];
 }
@@ -901,11 +902,10 @@ function sameBackgroundAbilityScoreIncreaseSelection(
   return left.plusTwo === right.plusTwo && left.plusOne === right.plusOne;
 }
 
-function buildCharacterSheet(input: {
-  readonly sourceDraftId: CharacterDraftId;
+function buildCharacterBuild(input: {
   readonly selections: FinalizedCharacterSelections;
   readonly unitLibrary: UnitLibrary;
-}): CharacterSheet {
+}): CharacterBuild {
   const classFacts = requireReadable(
     readClassCreationFacts(
       input.unitLibrary.requireUnit(input.selections.primaryClass),
@@ -941,7 +941,6 @@ function buildCharacterSheet(input: {
   ];
 
   return {
-    sourceDraftId: input.sourceDraftId,
     selections: input.selections,
     unitRefs: unitRefs(
       input.selections.primaryClass,
@@ -1090,7 +1089,7 @@ function featureSource(
   unitId: UnitRecord["id"],
   classFeatureUnitIds: readonly UnitRecord["id"][],
   speciesTraits: Record<string, UnitRecord["id"]>,
-): CharacterSheetFeature["source"] {
+): CharacterBuildFeature["source"] {
   if (classFeatureUnitIds.includes(unitId)) {
     return "class";
   }
@@ -1108,7 +1107,7 @@ function featureSource(
 
 function resourceForFeature(
   unit: UnitRecord,
-): readonly CharacterSheetResource[] {
+): readonly CharacterBuildResource[] {
   if (unit.kind !== "class_feature") {
     return [];
   }

@@ -4,6 +4,7 @@ import {
   battleId,
   characterId,
   combatantId,
+  initiativeScore,
   snapshotBattle,
 } from "@dnd/battle-runtime";
 import {
@@ -14,13 +15,14 @@ import {
   fillCreationHoles,
   finalizeCharacterDraft,
   type CharacterDraft,
-  type CharacterSheet,
+  type CharacterBuild,
   type CreationFill,
 } from "@dnd/character-creation-runtime";
+import { Hp } from "@dnd/shared/types";
 
 import {
   createGreenMcpCompositionRoot,
-  startBattleFromCharacterSheetAndStatBlock,
+  startBattleFromCharacterBuildAndStatBlock,
 } from "./index.ts";
 
 const fighterId = combatantId("fighter");
@@ -38,7 +40,7 @@ describe("MCP green composition root", () => {
     expect(selected.id).toBe("stat_block_goblin_warrior");
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
-      sheetIds: [],
+      finalizedDraftIds: [],
       selectedStatBlockId: "stat_block_goblin_warrior",
       battleState: null,
       transientBattleFills: null,
@@ -53,15 +55,16 @@ describe("MCP green composition root", () => {
     expect(root.sessionStore.getSelectedStatBlock()).toBeNull();
   });
 
-  test("starts battle from Character Sheet at the MCP composition boundary", () => {
+  test("starts battle from Character Build at the MCP composition boundary", () => {
     const root = createGreenMcpCompositionRoot();
-    const state = startBattleFromCharacterSheetAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlock({
       battleId: battleId("battle-green-root"),
       character: {
         combatantId: fighterId,
         characterId: characterId("fighter-character"),
         displayName: "Orc Soldier Fighter",
-        sheet: fighterCharacterSheet(root.unitLibrary),
+        build: fighterCharacterBuild(root.unitLibrary),
+        initiative: initiativeScore(12),
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -102,17 +105,18 @@ describe("MCP green composition root", () => {
 
   test("does not apply Defense Fighting Style when no armor is worn", () => {
     const root = createGreenMcpCompositionRoot();
-    const sheet = fighterCharacterSheet(root.unitLibrary);
-    const state = startBattleFromCharacterSheetAndStatBlock({
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const state = startBattleFromCharacterBuildAndStatBlock({
       battleId: battleId("battle-green-root-unarmored"),
       character: {
         combatantId: fighterId,
         characterId: characterId("fighter-character"),
         displayName: "Orc Soldier Fighter",
-        sheet: {
-          ...sheet,
+        initiative: initiativeScore(12),
+        build: {
+          ...build,
           equipment: {
-            ...sheet.equipment,
+            ...build.equipment,
             loadout: {
               shield: "equipment_shield",
               weapon: { unitId: "weapon_longsword", grip: "one_handed" },
@@ -134,11 +138,36 @@ describe("MCP green composition root", () => {
       armorClass: 14,
     });
   });
+
+  test("rejects character battle init when current HP exceeds build max HP", () => {
+    const root = createGreenMcpCompositionRoot();
+
+    expect(() =>
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("battle-green-root-overmax-hp"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("fighter-character"),
+          displayName: "Orc Soldier Fighter",
+          build: fighterCharacterBuild(root.unitLibrary),
+          initiative: initiativeScore(12),
+          currentHp: Hp(13),
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+        },
+        unitLibrary: root.unitLibrary,
+      }),
+    ).toThrow("Character battle initialization current HP exceeds max HP.");
+  });
 });
 
-function fighterCharacterSheet(
+function fighterCharacterBuild(
   unitLibrary: ReturnType<typeof createGreenMcpCompositionRoot>["unitLibrary"],
-): CharacterSheet {
+): CharacterBuild {
   const result = finalizeCharacterDraft({
     draft: completeManifestDraft(unitLibrary),
     unitLibrary,
@@ -147,7 +176,7 @@ function fighterCharacterSheet(
     throw new Error("Expected complete manifest draft to finalize.");
   }
 
-  return result.sheet;
+  return result.build;
 }
 
 function createTestDraft(

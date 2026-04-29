@@ -60,10 +60,10 @@ import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice
 import {
   CONDITIONS as ALL_CONDITIONS,
   Hp,
+  Initiative,
   Round,
   type Condition,
   type CreatureId,
-  type Initiative,
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type {
@@ -88,7 +88,10 @@ const CharacterId = Brand.nominal<CharacterId>();
 export const characterId: (value: string) => CharacterId = CharacterId;
 
 export type InitiativeScore = Initiative & Brand.Brand<"InitiativeScore">;
-const InitiativeScore = Brand.nominal<InitiativeScore>();
+const InitiativeScore = Brand.all(
+  Initiative,
+  Brand.nominal<InitiativeScore>(),
+);
 export const initiativeScore: (value: number) => InitiativeScore =
   InitiativeScore;
 
@@ -130,7 +133,7 @@ export type BattleAttackProfile = {
 export type CharacterBattleCreatureInit = {
   readonly kind: "character";
   readonly characterId: CharacterId;
-  readonly sheetUnitRefs: readonly BattleUnitRef[];
+  readonly characterUnitRefs: readonly BattleUnitRef[];
   readonly armorClass: ArmorClassState;
   readonly currentHp: Hp;
   readonly maxHp: Hp;
@@ -184,7 +187,7 @@ export type BattleCreatureState = {
     | {
         readonly kind: "character";
         readonly characterId: CharacterId;
-        readonly sheetUnitRefs: readonly BattleUnitRef[];
+        readonly characterUnitRefs: readonly BattleUnitRef[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly attack: BattleAttackProfile | null;
       }
@@ -512,6 +515,7 @@ function battleCreatureStateFromInit(
   input: BattleCreatureInit,
 ): BattleCreatureState {
   const creatureInit = input.creatureInit;
+  assertCurrentHpWithinMaxHp(creatureInit);
   const base = {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -530,7 +534,7 @@ function battleCreatureStateFromInit(
       origin: {
         kind: "character",
         characterId: creatureInit.characterId,
-        sheetUnitRefs: creatureInit.sheetUnitRefs,
+        characterUnitRefs: creatureInit.characterUnitRefs,
         selectedLoadout: creatureInit.selectedLoadout,
         attack: creatureInit.attack,
       },
@@ -746,6 +750,14 @@ function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
       ? applyAttackDamage(input.state, target.combatantId, attack, fillSet)
       : input.state,
   );
+}
+
+function assertCurrentHpWithinMaxHp(
+  creatureInit: BattleCreatureInit["creatureInit"],
+): void {
+  if (creatureInit.currentHp > creatureInit.maxHp) {
+    throw new Error("Battle initialization current HP exceeds max HP.");
+  }
 }
 
 type AttackFillSet =

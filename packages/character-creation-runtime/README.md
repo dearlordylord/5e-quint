@@ -1,12 +1,12 @@
 # @dnd/character-creation-runtime
 
 `@dnd/character-creation-runtime` owns the reducer that turns a mutable
-character draft into a finalized `CharacterSheet` using authored Surface Units.
+character draft into a finalized `CharacterBuild` using authored Surface Units.
 
 The package is a character-creation runtime boundary. It does not author classes,
 backgrounds, species, feats, or equipment, and it does not build battle creature
 initialization data. It consumes a `UnitLibrary` built from `@dnd/surface` and
-returns draft state, creation holes, fill results, and finalized sheet facts for
+returns draft state, creation holes, fill results, and finalized build facts for
 callers to store at the session boundary.
 
 ## Mental Model
@@ -15,10 +15,10 @@ callers to store at the session boundary.
 process over those records.
 
 A Character Draft is an incomplete session object with fillable holes. Filling a
-hole can reveal more holes. A Character Sheet is the complete player-character
-boundary produced by finalization. It can reference selected Units and carry
-derived character facts, but it is not a Unit, not a Stat Block, and not battle
-state.
+hole can reveal more holes. A Character Build is the complete build-only
+player-character boundary produced by finalization. It can reference selected
+Units and carry derived build facts, but it is not a Unit, not a Stat Block, and
+not in-play Character Sheet state.
 
 ## Boundary
 
@@ -26,11 +26,11 @@ state.
 | -------------------------------------------- | ------------------------------- | ------------------------------ |
 | Surface Unit library                         | `discoverCreationHoles`         | fillable `CreationHole[]`      |
 | caller-submitted batch of `CreationFill`s    | `fillCreationHoles`             | accepted/rejected draft update |
-| complete legal draft plus Surface Unit facts | `finalizeCharacterDraft`        | finalized `CharacterSheet`     |
-| finalized `CharacterSheet`                   | application composition outside | battle creature initialization |
+| complete legal draft plus Surface Unit facts | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
+| finalized `CharacterBuild`                   | application composition outside | battle creature initialization |
 
 `@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or
-`@dnd/core`. Battle initialization from a `CharacterSheet` belongs to the
+`@dnd/core`. Battle initialization from a `CharacterBuild` belongs to the
 composition layer and battle runtime boundary.
 
 ## Runtime Flow
@@ -64,7 +64,7 @@ look interchangeable.
 
 ## Terms
 
-Package-owned terms such as Character Draft, Character Sheet, Creation Hole,
+Package-owned terms such as Character Draft, Character Build, Creation Hole,
 Creation Fill, and Unit-backed selection are defined in
 [VOCABULARY.md](./VOCABULARY.md).
 
@@ -74,7 +74,7 @@ Key boundary terms:
   or duplicate catalog state.
 - `CreationHole` - a fillable requirement in the current draft.
 - `CreationFill` - caller-submitted answer for one hole.
-- `CharacterSheet` - finalized player-character boundary used by later
+- `CharacterBuild` - finalized build-only player-character boundary used by later
   composition code.
 
 ## Implemented Behavior
@@ -91,7 +91,7 @@ This package supports the first legal character-creation vertical:
 - Fighter choices needed by the first vertical;
 - purchased equipment/loadout needed by the first battle fixture.
 
-Loadout is a runtime projection precondition for the first supported sheet, not
+Loadout is a runtime projection precondition for the first supported build, not
 an SRD-authored character-creation choice. See `../../ASSUMPTIONS.md` A40.
 
 Support gates are package-private runtime narrowings. They must not become
@@ -111,11 +111,17 @@ Choice holes carry explicit cardinality. Callers submit the selected option set
 in one fill, not as multiple fills for the same hole. Duplicate fills for one
 hole are rejected unless a future hole type explicitly says otherwise.
 
-The finalized `CharacterSheet` carries selected Unit refs plus derived
-character-sheet facts needed by later boundaries: final ability scores, level-1
-Hit Point maximum and Hit Die, proficiencies, granted feature refs, activation
-resources, and equipment/loadout refs. It does not carry battle-current HP and
-does not export battle creature-init types.
+The finalized `CharacterBuild` carries selected Unit refs plus derived build
+facts needed by later boundaries: final ability scores, level-1 Hit Point
+maximum and Hit Die pool, proficiencies, granted feature refs, activation
+resources, and equipment/loadout refs. It does not carry current HP, Temporary
+Hit Points, expended resources, Hit Dice remaining, or battle creature-init
+types.
+
+Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
+or build state. SRD 5.2.1 says they last until depleted or Long Rest, so a future
+in-play `CharacterSheet` should persist them between battles and clear them at
+that rest boundary.
 
 ## Parity
 
