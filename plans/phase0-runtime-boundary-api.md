@@ -302,6 +302,68 @@ The old Core `CharacterDraft` facts that still matter are primary class, ordered
 
 For the selected Phase 1 manifest, only Fighter level-1 creation is in scope. Spellcasting choices are a restore-ledger concern, not a Phase 1 hole family. Do not expose a spellcasting draft path until a spellcasting slice exists.
 
+Selection boundary types:
+
+```ts
+export type AbilityScoreAssignment = SixAbilityScores;
+
+export type AbilityScoreGenerationSelection = {
+  readonly method: AbilityScoreMethod;
+  readonly assignedScores: AbilityScoreAssignment;
+};
+
+export type TwoAndOneBackgroundAbilityScoreIncreaseSelection = {
+  readonly [PlusTwo in Ability]: {
+    readonly kind: "twoAndOne";
+    readonly plusTwo: PlusTwo;
+    readonly plusOne: Exclude<Ability, PlusTwo>;
+  };
+}[Ability];
+
+export type BackgroundAbilityScoreIncreaseSelection =
+  | TwoAndOneBackgroundAbilityScoreIncreaseSelection
+  | { readonly kind: "oneEach" };
+
+export type StandardLanguage = (typeof STANDARD_LANGUAGES)[number];
+export type SelectableStandardLanguage = Exclude<StandardLanguage, "Common">;
+export type CharacterStartingLanguages = {
+  readonly [First in SelectableStandardLanguage]: readonly [
+    "Common",
+    First,
+    Exclude<SelectableStandardLanguage, First>,
+  ];
+}[SelectableStandardLanguage];
+
+export type CharacterAlignment = {
+  readonly morality: "good" | "neutral" | "evil";
+  readonly order: "lawful" | "neutral" | "chaotic";
+};
+
+export type CharacterClassLevel =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20;
+```
+
+These shapes intentionally make illegal finalized states harder to represent: ability scores reuse the Surface `SixAbilityScores` domain shape, background `twoAndOne` choices require different abilities, `oneEach` means all three authored background abilities, starting languages are Common plus two distinct selectable Standard Languages, advancement entries use the SRD 1-20 class-level range, and alignment is the SRD two-axis choice from the Phase 1 manifest.
+
 Stable creation hole ids:
 
 ```ts
@@ -401,7 +463,7 @@ Batch fill behavior:
 ```ts
 export type CreationFillIssue = {
   readonly tag: "illegalFill";
-  readonly holeId?: CreationHoleId;
+  readonly holeId: CreationHoleId;
   readonly fillIndex: number;
   readonly code:
     | "unknownHole"
@@ -410,10 +472,17 @@ export type CreationFillIssue = {
     | "invalidChoice"
     | "tooFewChoices"
     | "tooManyChoices"
-    | "unsupportedChoice"
-    | "staleRevision";
+    | "unsupportedChoice";
   readonly message: string;
 };
+
+export type CreationBatchIssue = {
+  readonly tag: "illegalBatch";
+  readonly code: "staleRevision";
+  readonly message: string;
+};
+
+export type CreationIssue = CreationFillIssue | CreationBatchIssue;
 
 export type CreationBatchFillInput = {
   readonly draft: CharacterDraft;
@@ -432,7 +501,7 @@ export type CreationBatchFillResult =
       readonly tag: "rejected";
       readonly draft: CharacterDraft;
       readonly holes: readonly CreationHole[];
-      readonly issues: readonly CreationFillIssue[];
+      readonly issues: readonly CreationIssue[];
       readonly finalization: CreationFinalizationResult;
     };
 ```
@@ -458,7 +527,7 @@ export type CreationFinalizationResult =
   | { readonly tag: "incomplete"; readonly holes: readonly CreationHole[] }
   | {
       readonly tag: "invalid";
-      readonly issues: readonly CreationFillIssue[];
+      readonly issues: readonly CreationIssue[];
       readonly holes: readonly CreationHole[];
     };
 
