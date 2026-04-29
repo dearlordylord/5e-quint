@@ -8,6 +8,12 @@ The MCP green composition root installs this runtime with a Surface Unit library
 and generic Stat Block catalog. It stores durable `BattleState` separately from
 transient battle fills so `resolveBattleSubject` can remain replay-from-root.
 
+Domain boundary: battle consumes combatant seeds. Character combatant seeds are
+projected from Character Sheets plus selected Unit lookups at the composition
+boundary. Monster combatant seeds are projected from `StatBlockRecord`s. Battle
+state must not treat a Character Sheet as a Stat Block, a Stat Block as a Unit,
+or a battle seed as authored content.
+
 The current runtime covers the CAM11-CAM15 boundary:
 
 - `startBattle` accepts caller-built combatant seeds and creates sorted Initiative state.

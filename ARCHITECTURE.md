@@ -6,9 +6,10 @@ This project formalizes D&D 5e SRD 5.2.1 combat rules. Every system has a clear 
 
 **Content boundary: SRD 5.2.1 only.** The spec formalizes the [System Reference Document 5.2.1](https://www.dndbeyond.com/resources/1781-systems-reference-document-srd) and nothing else -- no homebrew, no licensed PHB-only content. Every modeled rule traces to a specific SRD passage. Where formalization requires choices the SRD doesn't prescribe, those are documented in `ASSUMPTIONS.md`.
 
-This boundary is practical, not architectural. The SRD is freely available under CC-BY-4.0, which permits redistribution and derivative works. PHB content beyond the SRD is proprietary. The modeling layers (Quint spec, XState machines, TS features) are designed to be **extensible** -- non-SRD subclasses, spells, feats, and monsters can be added to the TS features layer without changing the core spec. The spec models *mechanics* (how damage works, how conditions chain, how spell slots deplete), not *content* (which spells exist, which subclasses have which features). New content plugs into existing mechanics.
+This boundary is practical, not architectural. The SRD is freely available under CC-BY-4.0, which permits redistribution and derivative works. PHB content beyond the SRD is proprietary. The modeling layers (Quint spec, XState machines, TS features) are designed to be **extensible** -- non-SRD subclasses, spells, feats, and monsters can be added to the TS features layer without changing the core spec. The spec models _mechanics_ (how damage works, how conditions chain, how spell slots deplete), not _content_ (which spells exist, which subclasses have which features). New content plugs into existing mechanics.
 
 **Licenses:**
+
 - Project code: [Apache License 2.0](LICENSE)
 - SRD 5.2.1 content: [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/), (c) Wizards of the Coast LLC
 - SRD markdown source: [DND.SRD.Wiki](https://github.com/OldManUmby/DND.SRD.Wiki) by OldManUmby, CC-BY-4.0
@@ -85,6 +86,57 @@ Ownership rule:
 
 This keeps `StatBlock` monster-only, keeps battle/runtime surfaces narrow, and aligns PC class ownership with `creature.qnt` by making class-level maps the canonical source of truth for level progression.
 
+## Surface, Unit, Stat Block, and Runtime Boundaries
+
+The Correction Application Migration green path uses explicit content/runtime
+boundaries. These are architectural invariants, not temporary implementation
+details:
+
+- `@dnd/surface` owns authored content records and provenance-preserving
+  catalogs. Surface records are not reducer state and not a projected
+  executable IR.
+- `UnitRecord` is authored selectable/ownable content: classes, backgrounds,
+  species records, features, feats, spells, weapons, armor, shields, masteries,
+  and similar records. A player character may reference Units, but the character
+  is not a Unit.
+- `StatBlockRecord` is authored monster/NPC content. It is installed in a
+  `StatBlockCatalog`, not in the `UnitCatalog`. A Stat Block may reuse shared
+  Surface sub-shapes for attacks, damage, resources, or actions, but the Stat
+  Block remains a separate monster-authored record boundary.
+- `CharacterDraft` is session-owned mutable creation state with holes. It is not
+  authored content. Draft holes may be opened by draft structure or by selected
+  Units.
+- `CharacterSheet` is the finalized player-character boundary. It carries
+  selected Unit references and derived character facts. It is not a Stat Block
+  and not a battle seed.
+- `@dnd/battle-runtime` owns battle state and replay-from-root battle
+  resolution. It consumes battle-owned seed data, not character drafts and not
+  whole source catalogs.
+- The MCP green composition root is allowed to see the Unit Catalog, Stat Block
+  Catalog, Character Sheets, and battle seed APIs at the same time. That is
+  where Character Sheet plus Unit lookups are projected into character battle
+  seeds, and where Stat Blocks are projected into monster battle seeds.
+
+In short:
+
+```text
+Character creation:
+UnitCatalog -> CharacterDraft holes/fills -> CharacterSheet with Unit refs
+
+Monster selection:
+StatBlockCatalog -> StatBlockRecord
+
+Battle composition:
+CharacterSheet + Unit lookups -> CharacterCombatantSeed
+StatBlockRecord -> MonsterCombatantSeed
+CharacterCombatantSeed + MonsterCombatantSeed -> BattleState
+```
+
+The shared combat abstraction is `Creature`, not Unit, Character Sheet, or Stat
+Block. If a future change needs a monster attack to use the same damage shape as
+a weapon or spell, reuse the shared sub-shape; do not move the monster into the
+Unit Catalog or introduce a second executable content model.
+
 ---
 
 ## 1. Quint Spec
@@ -94,6 +146,7 @@ This keeps `StatBlock` monster-only, keeps battle/runtime surfaces narrow, and a
 **Scope:** Abstract game mechanics. `battle.qnt` is the main semantic model for combat. `creature.qnt` provides pure helpers and decompositions reused by battle logic and tests. Safety properties are proved against the battle-level model.
 
 **Owns:**
+
 - Damage pipeline (temp HP absorption, R/V/I, death/unconscious/death saves, massive damage)
 - Condition system (14 conditions, implication chains, exhaustion levels 1-6)
 - Spell slot economy (multiclass caster tables, pact slots, one-slot-per-turn)
@@ -103,6 +156,7 @@ This keeps `StatBlock` monster-only, keeps battle/runtime surfaces narrow, and a
 - 41 creature-level + 11 battle-level safety invariants
 
 **Does NOT own:**
+
 - Specific weapon/spell/feat data (no "Longsword does 1d8")
 - Spatial relationships (no positions, distances, line of sight)
 - UI state or rendering
@@ -113,11 +167,12 @@ This keeps `StatBlock` monster-only, keeps battle/runtime surfaces narrow, and a
 
 **Modeling frontier:** The spec abstracts away two categories of concerns:
 
-1. **Spatial concerns** (cover, distance, line of sight, movement geometry). These are treated as caller-provided inputs. For example, `bMove`'s threatened set is a nondeterministic powerset -- the spec tests "given any set of threatening creatures, does the OA pipeline work correctly?" without knowing *which* creatures are actually in reach. The same ownership rule applies at public MCP/session boundaries: the core may own a creature's reach statistic or movement budget, but caller/session code owns spatial relations such as "can see target," "within 5 feet now," "left reach on this step," and path or difficult-terrain facts.
+1. **Spatial concerns** (cover, distance, line of sight, movement geometry). These are treated as caller-provided inputs. For example, `bMove`'s threatened set is a nondeterministic powerset -- the spec tests "given any set of threatening creatures, does the OA pipeline work correctly?" without knowing _which_ creatures are actually in reach. The same ownership rule applies at public MCP/session boundaries: the core may own a creature's reach statistic or movement budget, but caller/session code owns spatial relations such as "can see target," "within 5 feet now," "left reach on this step," and path or difficult-terrain facts.
 
-2. **DM rulings.** D&D is a tabletop game where the DM (Dungeon Master) has final authority over many decisions that RAW leaves open. The spec models what RAW *prescribes* -- mechanical rules with deterministic outcomes. When RAW says "the DM decides," that decision is a **caller-provided input**, not something the spec resolves. The spec proves that *given any DM decision*, the mechanical consequences are correct.
+2. **DM rulings.** D&D is a tabletop game where the DM (Dungeon Master) has final authority over many decisions that RAW leaves open. The spec models what RAW _prescribes_ -- mechanical rules with deterministic outcomes. When RAW says "the DM decides," that decision is a **caller-provided input**, not something the spec resolves. The spec proves that _given any DM decision_, the mechanical consequences are correct.
 
 Examples of DM rulings treated as caller inputs:
+
 - **Battle start/end**: The DM ("Table") decides when combat begins and ends (not all creatures need to be dead; there are no "sides" in RAW so we don't model it).
 - **Ready action triggers**: The DM confirms when a trigger circumstance occurs ("the zombie steps next to me"). The spec models the action/reaction economy of readying and releasing; the trigger itself is DM agenda.
 - **Surprise**: The DM determines who is surprised (the spec receives surprise as an initiative modifier).
@@ -126,24 +181,27 @@ Examples of DM rulings treated as caller inputs:
 - **Help attack proximity**: the DM or caller determines whether the distracted enemy is within 5 feet of the helper; the spec only models the resulting advantage link.
 - **Initiative tie-breaking**: The DM decides ties (the spec receives the sorted order).
 
-This is not a limitation — it is the correct modeling boundary. The spec's value is proving that the *mechanical* rules are correct. DM rulings are the interface between the spec and the human game.
+This is not a limitation — it is the correct modeling boundary. The spec's value is proving that the _mechanical_ rules are correct. DM rulings are the interface between the spec and the human game.
 
 ---
 
 ## 2. XState Machines
 
 **Files:**
+
 - `packages/core/src/machine.ts` + `machine-*.ts` (single-creature state machine, ~28 files)
 - `packages/core/src/battle-machine.ts` + `battle-machine-*.ts` (multi-creature battle, ~8 files)
 
 **Scope:** The actual game engine. Implements the same state transitions as the Quint spec.
 
 **Owns:**
+
 - Runtime state management (XState actors, context, events)
 - Event-driven API for the UI layer
 - Integration of Tier 2 feature functions into state transitions
 
 **Does NOT own:**
+
 - Correctness of the underlying rules (delegated to Quint via MBT)
 - Content data (delegated to TS features)
 - Rendering (delegated to React)
@@ -231,12 +289,14 @@ Current `dexMod` / `strMod` note:
 **Scope:** Pure functions for specific SRD content -- class features, spells, weapons, feats. The content database.
 
 **Owns:**
+
 - Specific class feature behavior (Evasion damage halving, Aura of Protection bonus, Sneak Attack dice count, rage damage by level)
 - Specific spell implementations (organized by school: abjuration through divination)
 - Weapon mastery effects (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex)
 - Feat implementations (Grappler, etc.)
 
 **Does NOT own:**
+
 - State management (pure functions, no side effects, no XState imports)
 - Game rules engine logic (delegated to machine + spec)
 
@@ -267,6 +327,7 @@ Current `dexMod` / `strMod` note:
 **MCP API surface taxonomy:** The audit in `plans/MCP_EVENT_SURFACE_AUDIT.md` classifies every core event into one of six MCP/API-adapter categories: `suggested_action`, `control_command`, `table_event`, `action_resolution`, `domain_trigger`, `bookkeeping`. This taxonomy describes how events map to the MCP adapter layer — it is not a Quint or XState domain taxonomy.
 
 **Owns:**
+
 - Supported action registry (query tokens, resolved tokens, runtime-input requirements, event mappings)
 - Six MCP tools: `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, `record_table_event`
 - In-process session routing: active host selection plus optional encounter-draft inputs and durable character-list references only
@@ -274,6 +335,7 @@ Current `dexMod` / `strMod` note:
 - Lifecycle/control events can still use the action-token lane when the public step includes user choice or runtime resolution. `SHORT_REST` stays on `get_available_actions` / `execute_action` because hit-die order is player-chosen and the rest still needs runtime healing rolls.
 
 **Does NOT own:**
+
 - Game logic or state transitions (delegated to XState machines)
 - Legality computation (queries the same XState guards that MBT validates against Quint)
 - Dice rolls or runtime facts (supplied by the runtime layer after token resolution)
@@ -291,6 +353,7 @@ Current `dexMod` / `strMod` note:
 **Scope:** Validates the Quint spec against ~12,700 community Q&A entries from RPG Stack Exchange, Reddit r/onednd, Sage Advice, and sageadvice.eu.
 
 **Owns:**
+
 - Corpus download and parsing (SE dumps, Arctic Shift API, Sage Advice)
 - LLM-driven classification (Haiku: "is this a RAW mechanics question?")
 - LLM-driven assertion generation (Sonnet: "write a Quint test for this ruling")
@@ -305,31 +368,31 @@ Current `dexMod` / `strMod` note:
 
 ## 7. Reference Documents
 
-| Document | Scope | Authority |
-|----------|-------|-----------|
-| `.references/srd-5.2.1/` | Rules text (2024 edition) | Ground truth for all modeling |
-| `UBIQUITOUS_LANGUAGE.md` | Canonical D&D terminology (18 sections, 80+ terms) | Naming authority -- all code uses these terms |
-| `ASSUMPTIONS.md` | 34 modeling decisions where spec makes explicit what SRD leaves implicit | Curated by project owner; sole record of RAW deviations |
-| `battle/DOMAIN.md` | Battle-layer terminology (transactions, interrupt points, reaction windows) | Extends UBIQUITOUS_LANGUAGE for multi-creature concepts |
-| `battle/REQUIREMENTS.md` | SRD-derived facts for battle mechanics | Requirements only (what RAW says, not design decisions) |
-| `CLAUDE.md` | Development instructions and project conventions | Operational authority for contributors |
+| Document                 | Scope                                                                       | Authority                                               |
+| ------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `.references/srd-5.2.1/` | Rules text (2024 edition)                                                   | Ground truth for all modeling                           |
+| `UBIQUITOUS_LANGUAGE.md` | Canonical D&D terminology (18 sections, 80+ terms)                          | Naming authority -- all code uses these terms           |
+| `ASSUMPTIONS.md`         | 34 modeling decisions where spec makes explicit what SRD leaves implicit    | Curated by project owner; sole record of RAW deviations |
+| `battle/DOMAIN.md`       | Battle-layer terminology (transactions, interrupt points, reaction windows) | Extends UBIQUITOUS_LANGUAGE for multi-creature concepts |
+| `battle/REQUIREMENTS.md` | SRD-derived facts for battle mechanics                                      | Requirements only (what RAW says, not design decisions) |
+| `CLAUDE.md`              | Development instructions and project conventions                            | Operational authority for contributors                  |
 
 ---
 
 ## Choosing the Right System
 
-| Question | System | Why |
-|----------|--------|-----|
-| Can HP ever go negative? | Quint invariant | Multi-step property over all inputs |
-| Does Fireball do 8d6? | TS unit test | Specific content validation |
-| Does death save + healing + damage at 0HP interact? | Quint | State machine property |
-| Does Greatsword with GWF reroll 1s/2s? | TS feature + unit test | Specific weapon mastery behavior |
-| Can concentration break leave orphaned effects? | Quint invariant | Cross-step consistency property |
-| Does Evasion halve AoE on failed save? | Both | Quint for the mechanic pipeline, TS for the computation |
-| Are all 37 weapon stat blocks correct? | TS data tests | Content validation |
-| Can a creature with 3 rage charges rage 4 times? | Quint invariant | Resource bound property |
-| Does the XState machine match the Quint spec? | MBT bridge | Trace replay, field-by-field |
-| Does the spec match community consensus? | QA pipeline | LLM-generated assertions vs spec |
+| Question                                            | System                 | Why                                                     |
+| --------------------------------------------------- | ---------------------- | ------------------------------------------------------- |
+| Can HP ever go negative?                            | Quint invariant        | Multi-step property over all inputs                     |
+| Does Fireball do 8d6?                               | TS unit test           | Specific content validation                             |
+| Does death save + healing + damage at 0HP interact? | Quint                  | State machine property                                  |
+| Does Greatsword with GWF reroll 1s/2s?              | TS feature + unit test | Specific weapon mastery behavior                        |
+| Can concentration break leave orphaned effects?     | Quint invariant        | Cross-step consistency property                         |
+| Does Evasion halve AoE on failed save?              | Both                   | Quint for the mechanic pipeline, TS for the computation |
+| Are all 37 weapon stat blocks correct?              | TS data tests          | Content validation                                      |
+| Can a creature with 3 rage charges rage 4 times?    | Quint invariant        | Resource bound property                                 |
+| Does the XState machine match the Quint spec?       | MBT bridge             | Trace replay, field-by-field                            |
+| Does the spec match community consensus?            | QA pipeline            | LLM-generated assertions vs spec                        |
 
 ---
 
@@ -343,9 +406,10 @@ Features that create new battle phases, interrupt chains, or state machine trans
 
 Examples already in battle.qnt: Counterspell (recursive stack with slot refund), Shield (+5 AC mid-resolution), Uncanny Dodge (halve damage as reaction), Retaliation (counter-attack after damage), Legendary Resistance (auto-succeed save).
 
-These are named and specific because the *flow* matters. Counterspell's nesting can deadlock, orphan effects, or double-spend slots. Shield changes the hit/miss branch mid-resolution. Quint proves these interactions are safe.
+These are named and specific because the _flow_ matters. Counterspell's nesting can deadlock, orphan effects, or double-spend slots. Shield changes the hit/miss branch mid-resolution. Quint proves these interactions are safe.
 
 Each flow feature uses a **common facility** -- a reusable battle mechanism:
+
 - Shield, Parry, Cutting Words use the `PIAttackHit` reaction facility
 - Uncanny Dodge, Deflect Attacks use the `PIAttackDamage` reaction facility
 - Counterspell uses the `PISpellCast` + `bSpellStack` facility
@@ -358,6 +422,7 @@ Future features (from new books, homebrew, etc.) that need reactions plug into t
 Features that modify a value in an existing pipeline without creating new flow. Quint models the **mechanic shape** via generic modifier fields on `Combatant` (e.g., `hasEvasion: bool`, `saveMiscBonus: int`). TS computes the **specific values** (e.g., "Rogue 7 gets Evasion", "Paladin aura gives +CHA to saves").
 
 This separation means:
+
 - Quint proves "the save-bonus pipeline is correct under all inputs" without knowing about Paladins
 - TS proves "Paladin L6 with CHA 16 gives +3" via unit tests
 - A homebrew class with a similar aura just sets the same `saveMiscBonus` field -- no Quint changes
@@ -368,7 +433,7 @@ Specific numbers, data, stat blocks. Invariants don't depend on them. "Fireball 
 
 ### Why abstract ranges?
 
-`DAMAGE_RANGE = 0.to(60)` doesn't represent a weapon. It says "throw any damage value at the pipeline and verify invariants hold." The abstract ranges *intentionally* cover corners that real content rarely hits. A Longsword doing 4-11 damage won't trigger massive-damage instant death against a 50 HP creature. `DAMAGE_RANGE = 0.to(60)` will.
+`DAMAGE_RANGE = 0.to(60)` doesn't represent a weapon. It says "throw any damage value at the pipeline and verify invariants hold." The abstract ranges _intentionally_ cover corners that real content rarely hits. A Longsword doing 4-11 damage won't trigger massive-damage instant death against a 50 HP creature. `DAMAGE_RANGE = 0.to(60)` will.
 
 ### Promotion path
 
@@ -378,26 +443,26 @@ A feature starts in TS (specific, unit-tested). If it has subtle interaction bug
 
 ## Modeling Frontier: Current State
 
-| Flow features (Quint, named) | Modifier features (Quint generic + TS specific) | Content (TS only) | Not modeled |
-|------------------------------|--------------------------------------------------|-------------------|-------------|
-| Attack/reaction chains (10 reaction types) | hasEvasion (Rogue/Monk 7+) | Specific weapon stats | Positions / distances |
-| Counterspell stack (depth 5) | saveMiscBonus (Aura of Protection) | Specific spell effects | Cover geometry |
-| Legendary actions/resistance | critRange (Champion 19/18) | Specific feat behavior | Line of sight |
-| AoE resolution | meleeDamageBonus (Rage) | AC from specific armor | Difficult terrain |
-| Movement / opportunity attacks | recklessThisTurn (Barbarian) | Weapon mastery effects | Social / exploration |
-| Damage pipeline (R/V/I, temp HP, death) | sneakAttackDice (Rogue) | Sneak Attack dice count | Mounted combat |
-| 14 conditions + exhaustion | *Planned: conditionImmunities (external)* | Divine Smite damage | Ready action triggers |
-| Spell slot economy (multiclass) | | Rage damage bonus | Lair actions |
-| Turn structure (action economy) | | Evasion damage halving | Environmental hazards |
-| Class resource pools (creature.qnt, all 12) | | Aura of Protection bonus | |
-| Death saves / stabilization | | Bardic Inspiration | |
-| Concentration (start/break/check) | | Level-up HP calculation | |
-| Grapple / shove / escape in battle | | | |
-| TWF off-hand attack in battle | | | |
-| Hand occupancy (weapon/shield/grapple/free) | | | |
-| Qualified physical damage bypass | | | |
+| Flow features (Quint, named)                | Modifier features (Quint generic + TS specific) | Content (TS only)        | Not modeled           |
+| ------------------------------------------- | ----------------------------------------------- | ------------------------ | --------------------- |
+| Attack/reaction chains (10 reaction types)  | hasEvasion (Rogue/Monk 7+)                      | Specific weapon stats    | Positions / distances |
+| Counterspell stack (depth 5)                | saveMiscBonus (Aura of Protection)              | Specific spell effects   | Cover geometry        |
+| Legendary actions/resistance                | critRange (Champion 19/18)                      | Specific feat behavior   | Line of sight         |
+| AoE resolution                              | meleeDamageBonus (Rage)                         | AC from specific armor   | Difficult terrain     |
+| Movement / opportunity attacks              | recklessThisTurn (Barbarian)                    | Weapon mastery effects   | Social / exploration  |
+| Damage pipeline (R/V/I, temp HP, death)     | sneakAttackDice (Rogue)                         | Sneak Attack dice count  | Mounted combat        |
+| 14 conditions + exhaustion                  | _Planned: conditionImmunities (external)_       | Divine Smite damage      | Ready action triggers |
+| Spell slot economy (multiclass)             |                                                 | Rage damage bonus        | Lair actions          |
+| Turn structure (action economy)             |                                                 | Evasion damage halving   | Environmental hazards |
+| Class resource pools (creature.qnt, all 12) |                                                 | Aura of Protection bonus |                       |
+| Death saves / stabilization                 |                                                 | Bardic Inspiration       |                       |
+| Concentration (start/break/check)           |                                                 | Level-up HP calculation  |                       |
+| Grapple / shove / escape in battle          |                                                 |                          |                       |
+| TWF off-hand attack in battle               |                                                 |                          |                       |
+| Hand occupancy (weapon/shield/grapple/free) |                                                 |                          |                       |
+| Qualified physical damage bypass            |                                                 |                          |                       |
 
-Items in *italics* are planned (see PLAN_AUDIT.md, PRD 3).
+Items in _italics_ are planned (see PLAN_AUDIT.md, PRD 3).
 
 ---
 

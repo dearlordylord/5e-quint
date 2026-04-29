@@ -8,6 +8,11 @@ Sheets at the MCP session boundary, not inside this package.
 
 This package intentionally imports Surface catalog and Unit identities, not authored content records or Core battle/projected vocabulary. The runtime exports `CharacterSheet` as the finalized player-character boundary. Battle seed construction belongs to the battle runtime and composition root.
 
+Domain boundary: a character draft is mutable session state with holes, not a
+Unit record. A finalized `CharacterSheet` can carry selected Unit refs and
+derived character facts, but it is still not a Unit, not a Stat Block, and not a
+battle seed.
+
 `character-creation-runtime-slice.qnt` is the deterministic Quint parity slice for the current Orc Soldier Fighter vertical. It models draft state, stable hole ids, atomic batch fill, rediscovery, and finalization status for the same first-vertical behavior that the TypeScript reducer exposes.
 
 The current implementation covers the CAM9 Orc Soldier Fighter finalization slice:
