@@ -21,6 +21,14 @@ import type {
 } from "#/character-spellcasting.ts";
 import { CHARACTER_EQUIPMENT_ISSUE_CODES } from "#/character-equipment-validation.ts";
 import { CHARACTER_SPELLCASTING_ISSUE_CODES } from "#/character-spellcasting.ts";
+import {
+  ALIGNMENTS,
+  STANDARD_LANGUAGES,
+  alignmentFromAbbreviation,
+  alignmentLabel,
+  type AlignmentAbbreviation,
+  type StandardLanguage,
+} from "@dnd/shared/game-facts";
 
 export const CHARACTER_SPECIES = [
   "dragonborn",
@@ -35,32 +43,12 @@ export const CHARACTER_SPECIES = [
 ] as const;
 export type CharacterSpecies = (typeof CHARACTER_SPECIES)[number];
 
-export const ALIGNMENTS = [
-  "LG",
-  "NG",
-  "CG",
-  "LN",
-  "N",
-  "CN",
-  "LE",
-  "NE",
-  "CE",
-] as const;
-export type Alignment = (typeof ALIGNMENTS)[number];
+export { ALIGNMENTS };
+export { alignmentFromAbbreviation, alignmentLabel };
+export type Alignment = AlignmentAbbreviation;
 
-export const CHARACTER_LANGUAGES = [
-  "Common",
-  "Common Sign Language",
-  "Draconic",
-  "Dwarvish",
-  "Elvish",
-  "Giant",
-  "Gnomish",
-  "Goblin",
-  "Halfling",
-  "Orc",
-] as const;
-export type CharacterLanguage = (typeof CHARACTER_LANGUAGES)[number];
+export const CHARACTER_LANGUAGES = STANDARD_LANGUAGES;
+export type CharacterLanguage = StandardLanguage;
 
 export type CharacterClassLevels = Readonly<Record<ClassName, number>>;
 export type CharacterDraftClassLevels = Partial<Record<ClassName, number>>;

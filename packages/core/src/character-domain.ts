@@ -28,6 +28,8 @@ export {
   CHARACTER_LANGUAGES,
   CHARACTER_SPECIES,
   ZERO_CLASS_LEVELS,
+  alignmentFromAbbreviation,
+  alignmentLabel,
   type Alignment,
   type CharacterAdvancement,
   type CharacterClassLevels,

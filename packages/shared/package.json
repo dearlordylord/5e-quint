@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
+    "./game-facts": "./src/game-facts.ts",
     "./types": "./src/types.ts"
   },
   "imports": {

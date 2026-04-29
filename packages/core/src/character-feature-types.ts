@@ -9,19 +9,10 @@ import {
 } from "#/features/class-fighter.ts";
 import type { Skill } from "#/monster-types.ts";
 import type { Ability } from "#/types.ts";
+import { RARE_LANGUAGES, type RareLanguage } from "@dnd/shared/game-facts";
 
-export const CHARACTER_RARE_LANGUAGES = [
-  "Abyssal",
-  "Celestial",
-  "Deep Speech",
-  "Druidic",
-  "Infernal",
-  "Primordial",
-  "Sylvan",
-  "Thieves' Cant",
-  "Undercommon",
-] as const;
-export type CharacterRareLanguage = (typeof CHARACTER_RARE_LANGUAGES)[number];
+export const CHARACTER_RARE_LANGUAGES = RARE_LANGUAGES;
+export type CharacterRareLanguage = RareLanguage;
 
 export const CHARACTER_GRANTED_LANGUAGES = [
   ...CHARACTER_LANGUAGES,

@@ -36,7 +36,8 @@ For monster data in this repo:
 
 General design rule:
 
-- **Make invalid states irrepresentable.** If a proposed type can represent contradictory provenance, contradictory ownership, or support-status markers with no type/runtime consequence, redesign the type.
+- **Make invalid states irrepresentable.** This is mandatory before proposing or implementing any data shape. If a proposed type can represent contradictory provenance, contradictory ownership, mismatched derived facts, support-status markers with no type/runtime consequence, or any field combination that is impossible in the code or rules domain, redesign the type before presenting it.
+- Do not store derivable facts beside their source facts unless the duplication is executable at the boundary that matters. Prefer deriving labels, abbreviations, display names, option ids, and projections from one canonical value or table, so mismatches cannot be represented.
 - Do not add status enums or metadata labels that neither affect the type system nor runtime behavior unless there is a specific, durable reason the repo needs them.
 
 ## Domain-language reflex (extends SRD-parity rules above)

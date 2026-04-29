@@ -1,4 +1,6 @@
 import {
+  alignmentFromAbbreviation,
+  alignmentLabel,
   ALIGNMENTS,
   CHARACTER_BACKGROUNDS,
   CHARACTER_LANGUAGES,
@@ -24,18 +26,6 @@ export const STEP_TITLES: Readonly<Record<StepId, string>> = {
   alignment: "4. Choose Alignment",
   details: "5. Fill In Details",
   review: "Review And Projections"
-}
-
-const ALIGNMENT_LABELS: Readonly<Record<(typeof ALIGNMENTS)[number], string>> = {
-  LG: "Lawful Good",
-  NG: "Neutral Good",
-  CG: "Chaotic Good",
-  LN: "Lawful Neutral",
-  N: "Neutral",
-  CN: "Chaotic Neutral",
-  LE: "Lawful Evil",
-  NE: "Neutral Evil",
-  CE: "Chaotic Evil"
 }
 
 function abilityScoresComplete(draft: CharacterDraft): boolean {
@@ -202,7 +192,7 @@ export function CharacterCreationStepContent({
             <option value="">Select an alignment</option>
             {ALIGNMENTS.map((alignment) => (
               <option key={alignment} value={alignment}>
-                {ALIGNMENT_LABELS[alignment]}
+                {alignmentLabel(alignmentFromAbbreviation(alignment))}
               </option>
             ))}
           </select>

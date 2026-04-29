@@ -1,5 +1,19 @@
 import { Brand, Match } from "effect";
 import {
+  ALIGNMENT_CHOICES,
+  ALIGNMENT_MORALITIES,
+  ALIGNMENT_ORDERS,
+  STANDARD_LANGUAGES,
+  alignmentLabel,
+  alignmentOptionId,
+  type Alignment as CharacterAlignment,
+  type AlignmentMorality,
+  type AlignmentOrder,
+  type CharacterStartingLanguages,
+  type SelectableStandardLanguage,
+  type StandardLanguage,
+} from "@dnd/shared/game-facts";
+import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   isValidAbilityScoreAssignment,
   type AbilityScoreAssignment,
@@ -40,37 +54,16 @@ const CharacterDraftId = Brand.nominal<CharacterDraftId>();
 export const characterDraftId: (value: string) => CharacterDraftId =
   CharacterDraftId;
 
-export const STANDARD_LANGUAGES = [
-  "Common",
-  "Common Sign Language",
-  "Draconic",
-  "Dwarvish",
-  "Elvish",
-  "Giant",
-  "Gnomish",
-  "Goblin",
-  "Halfling",
-  "Orc",
-] as const;
-export type StandardLanguage = (typeof STANDARD_LANGUAGES)[number];
-export type SelectableStandardLanguage = Exclude<StandardLanguage, "Common">;
-export type CharacterStartingLanguages = {
-  readonly [First in SelectableStandardLanguage]: readonly [
-    "Common",
-    First,
-    Exclude<SelectableStandardLanguage, First>,
-  ];
-}[SelectableStandardLanguage];
-
-export const ALIGNMENT_MORALITIES = ["good", "neutral", "evil"] as const;
-export type AlignmentMorality = (typeof ALIGNMENT_MORALITIES)[number];
-
-export const ALIGNMENT_ORDERS = ["lawful", "neutral", "chaotic"] as const;
-export type AlignmentOrder = (typeof ALIGNMENT_ORDERS)[number];
-
-export type CharacterAlignment = {
-  readonly morality: AlignmentMorality;
-  readonly order: AlignmentOrder;
+export {
+  ALIGNMENT_MORALITIES,
+  ALIGNMENT_ORDERS,
+  STANDARD_LANGUAGES,
+  type AlignmentMorality,
+  type AlignmentOrder,
+  type CharacterAlignment,
+  type CharacterStartingLanguages,
+  type SelectableStandardLanguage,
+  type StandardLanguage,
 };
 
 export const CHARACTER_DRAFT_PATHS = [
@@ -506,20 +499,6 @@ const SURFACE_ABILITIES = [
   "wis",
   "cha",
 ] as const satisfies ReadonlyArray<Ability>;
-
-const ALIGNMENT_OPTIONS = [
-  ["lawful", "good", "Lawful Good"],
-  ["neutral", "good", "Neutral Good"],
-  ["chaotic", "good", "Chaotic Good"],
-  ["lawful", "neutral", "Lawful Neutral"],
-  ["neutral", "neutral", "Neutral"],
-  ["chaotic", "neutral", "Chaotic Neutral"],
-  ["lawful", "evil", "Lawful Evil"],
-  ["neutral", "evil", "Neutral Evil"],
-  ["chaotic", "evil", "Chaotic Evil"],
-] as const satisfies ReadonlyArray<
-  readonly [AlignmentOrder, AlignmentMorality, string]
->;
 
 let nextDraftOrdinal = 0;
 
@@ -1590,15 +1569,14 @@ function supportedUnitOptionIds(
 function requireAlignmentSelection(
   optionId: CreationChoiceOptionId,
 ): CharacterAlignment {
-  const alignment = ALIGNMENT_OPTIONS.find(
-    ([order, morality]) => `${order}_${morality}` === optionId,
+  const alignment = ALIGNMENT_CHOICES.find(
+    (choice) => alignmentOptionId(choice) === optionId,
   );
   if (alignment == null) {
     throw new Error(`Accepted fill referenced invalid alignment ${optionId}`);
   }
 
-  const [order, morality] = alignment;
-  return { order, morality };
+  return alignment;
 }
 
 function requireStartingLanguages(
@@ -1957,7 +1935,6 @@ function discoverEquipmentHoles(input: {
   if (classUnitId == null || !hasPhaseOneCoinEquipmentPath(input)) {
     return [];
   }
-
   const purchaseHole = choiceHole({
     source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
     cardinality: exactChoiceCardinality(SUPPORTED_PURCHASE_UNIT_IDS.length),
@@ -2404,9 +2381,9 @@ function draftHole(
   return choiceHole({
     source: draftSource(alignmentPath),
     cardinality: EXACTLY_ONE_CHOICE,
-    options: ALIGNMENT_OPTIONS.map(([order, morality, label]) => ({
-      optionId: creationChoiceOptionId(`${order}_${morality}`),
-      label,
+    options: ALIGNMENT_CHOICES.map((alignment) => ({
+      optionId: creationChoiceOptionId(alignmentOptionId(alignment)),
+      label: alignmentLabel(alignment),
     })),
   });
 }

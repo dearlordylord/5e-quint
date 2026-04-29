@@ -1,4 +1,4 @@
-import { Brand, Schema } from "effect";
+import { Brand } from "effect";
 import type {
   ArmorCategory,
   Condition,
@@ -8,28 +8,100 @@ import type {
   SpellSlots,
   WeaponProperty,
 } from "@dnd/shared/types";
+import {
+  AbilityScore as SharedAbilityScore,
+  AbilityModifier as SharedAbilityModifier,
+  ArmorClass as SharedArmorClass,
+  CharacterLevel as SharedCharacterLevel,
+  ClassLevel as SharedClassLevel,
+  D20Roll as SharedD20Roll,
+  DamageAmount as SharedDamageAmount,
+  DeathSaveCount as SharedDeathSaveCount,
+  deathSaveCount as sharedDeathSaveCount,
+  DifficultyClass as SharedDifficultyClass,
+  ExhaustionLevel as SharedExhaustionLevel,
+  HP as SharedHP,
+  HealAmount as SharedHealAmount,
+  MovementFeet as SharedMovementFeet,
+  ProficiencyBonus as SharedProficiencyBonus,
+  ResourceCount as SharedResourceCount,
+  SpellSlotLevel as SharedSpellSlotLevel,
+  TempHP as SharedTempHP,
+} from "@dnd/shared/types";
 
 export {
   ABILITIES,
   ACTIVATION_TIMINGS,
   ARMOR_CATEGORIES,
   ARMOR_WEIGHTS,
+  abilityScore,
+  armorClass,
+  abilityModifier,
+  abilityScoreToMod,
   CASTER_CLASSES,
   CASTER_CLASS_TO_TYPE,
   CASTER_TYPES,
+  characterLevel,
+  classLevel,
   CONDITIONS,
   COVER_TYPES,
   DAMAGE_QUALIFIERS,
   DAMAGE_TYPES,
+  d20Roll,
+  damageAmount,
+  deathSaveCount,
+  difficultyClass,
+  exhaustionLevel,
   HAND_USES,
+  healAmount,
+  hp,
   INCAP_SOURCES,
   MAGICAL_DAMAGE_TYPES,
+  movementFeet,
   PHYSICAL_DAMAGE_TYPES,
+  proficiencyBonus,
+  resourceCount,
   SHOVE_CHOICES,
   SIZES,
   SPELL_SCHOOLS,
+  spellSlotLevel,
+  tempHp,
   WEAPON_PROPERTIES,
 } from "@dnd/shared/types";
+export const AbilityScore = SharedAbilityScore;
+export type AbilityScore = typeof SharedAbilityScore.Type;
+export const AbilityModifier = SharedAbilityModifier;
+export type AbilityModifier = typeof SharedAbilityModifier.Type;
+export const ArmorClass = SharedArmorClass;
+export type ArmorClass = typeof SharedArmorClass.Type;
+export const CharacterLevel = SharedCharacterLevel;
+export type CharacterLevel = typeof SharedCharacterLevel.Type;
+export const ClassLevel = SharedClassLevel;
+export type ClassLevel = typeof SharedClassLevel.Type;
+export const D20Roll = SharedD20Roll;
+export type D20Roll = typeof SharedD20Roll.Type;
+export const DamageAmount = SharedDamageAmount;
+export type DamageAmount = typeof SharedDamageAmount.Type;
+export const DeathSaveCount = SharedDeathSaveCount;
+export type DeathSaveCount = typeof SharedDeathSaveCount.Type;
+export const DifficultyClass = SharedDifficultyClass;
+export type DifficultyClass = typeof SharedDifficultyClass.Type;
+export const ExhaustionLevel = SharedExhaustionLevel;
+export type ExhaustionLevel = typeof SharedExhaustionLevel.Type;
+export const HP = SharedHP;
+export type HP = typeof SharedHP.Type;
+export const HealAmount = SharedHealAmount;
+export type HealAmount = typeof SharedHealAmount.Type;
+export const MovementFeet = SharedMovementFeet;
+export type MovementFeet = typeof SharedMovementFeet.Type;
+export const ProficiencyBonus = SharedProficiencyBonus;
+export type ProficiencyBonus = typeof SharedProficiencyBonus.Type;
+export const ResourceCount = SharedResourceCount;
+export type ResourceCount = typeof SharedResourceCount.Type;
+export const SpellSlotLevel = SharedSpellSlotLevel;
+export type SpellSlotLevel = typeof SharedSpellSlotLevel.Type;
+export const TempHP = SharedTempHP;
+export type TempHP = typeof SharedTempHP.Type;
 export type {
   Ability,
   ActivationTiming,
@@ -354,214 +426,6 @@ export const UNARMED_STRIKE_PROFILE: BattleWeaponProfile = {
   properties: new Set(),
 };
 
-// --- Branded numeric types ---
-/* eslint-disable no-magic-numbers -- Schema constraints and literal types use domain-specific constants */
-
-const HP = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
-  Schema.brand("HP"),
-);
-type HP = typeof HP.Type;
-export function hp(n: number): HP {
-  return HP.make(Math.max(0, Math.floor(n)));
-}
-export type { HP };
-
-const TempHP = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
-  Schema.brand("TempHP"),
-);
-type TempHP = typeof TempHP.Type;
-export function tempHp(n: number): TempHP {
-  return TempHP.make(Math.max(0, Math.floor(n)));
-}
-export type { TempHP };
-
-const DamageAmount = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
-  Schema.brand("DamageAmount"),
-);
-type DamageAmount = typeof DamageAmount.Type;
-export function damageAmount(n: number): DamageAmount {
-  return DamageAmount.make(Math.max(0, Math.floor(n)));
-}
-export type { DamageAmount };
-
-const HealAmount = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.brand("HealAmount"),
-);
-type HealAmount = typeof HealAmount.Type;
-export function healAmount(n: number): HealAmount {
-  return HealAmount.make(Math.max(1, Math.floor(n)));
-}
-export type { HealAmount };
-
-const DeathSaveCount = Schema.Literal(0, 1, 2, 3).pipe(
-  Schema.brand("DeathSaveCount"),
-);
-type DeathSaveCount = typeof DeathSaveCount.Type;
-export function deathSaveCount(n: number): DeathSaveCount {
-  return DeathSaveCount.make(
-    Math.max(0, Math.min(3, Math.floor(n))) as 0 | 1 | 2 | 3,
-  );
-}
-export type { DeathSaveCount };
-
-const D20Roll = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(20),
-  Schema.brand("D20Roll"),
-);
-type D20Roll = typeof D20Roll.Type;
-export function d20Roll(n: number): D20Roll {
-  const MIN = 1;
-  const MAX = 20;
-  return D20Roll.make(Math.max(MIN, Math.min(MAX, Math.floor(n))));
-}
-export type { D20Roll };
-
-const ExhaustionLevel = Schema.Literal(0, 1, 2, 3, 4, 5, 6).pipe(
-  Schema.brand("ExhaustionLevel"),
-);
-type ExhaustionLevel = typeof ExhaustionLevel.Type;
-export function exhaustionLevel(n: number): ExhaustionLevel {
-  const MAX = 6;
-  return ExhaustionLevel.make(
-    Math.max(0, Math.min(MAX, Math.floor(n))) as 0 | 1 | 2 | 3 | 4 | 5 | 6,
-  );
-}
-export type { ExhaustionLevel };
-
-const AbilityScore = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(30),
-  Schema.brand("AbilityScore"),
-);
-type AbilityScore = typeof AbilityScore.Type;
-export function abilityScore(n: number): AbilityScore {
-  const MAX = 30;
-  return AbilityScore.make(Math.max(1, Math.min(MAX, Math.floor(n))));
-}
-export type { AbilityScore };
-
-const ProficiencyBonus = Schema.Literal(2, 3, 4, 5, 6).pipe(
-  Schema.brand("ProficiencyBonus"),
-);
-type ProficiencyBonus = typeof ProficiencyBonus.Type;
-export function proficiencyBonus(n: number): ProficiencyBonus {
-  const MIN = 2;
-  const MAX = 6;
-  return ProficiencyBonus.make(
-    Math.max(MIN, Math.min(MAX, Math.floor(n))) as 2 | 3 | 4 | 5 | 6,
-  );
-}
-export type { ProficiencyBonus };
-
-const MovementFeet = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
-  Schema.brand("MovementFeet"),
-);
-type MovementFeet = typeof MovementFeet.Type;
-export function movementFeet(n: number): MovementFeet {
-  return MovementFeet.make(Math.max(0, Math.floor(n)));
-}
-export type { MovementFeet };
-
-const ClassLevel = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(20),
-  Schema.brand("ClassLevel"),
-);
-type ClassLevel = typeof ClassLevel.Type;
-export function classLevel(n: number): ClassLevel {
-  const MAX = 20;
-  return ClassLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))));
-}
-export type { ClassLevel };
-
-const CharacterLevel = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(20),
-  Schema.brand("CharacterLevel"),
-);
-type CharacterLevel = typeof CharacterLevel.Type;
-export function characterLevel(n: number): CharacterLevel {
-  const MAX = 20;
-  return CharacterLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))));
-}
-export type { CharacterLevel };
-
-const ArmorClass = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.brand("ArmorClass"),
-);
-type ArmorClass = typeof ArmorClass.Type;
-export function armorClass(n: number): ArmorClass {
-  return ArmorClass.make(Math.max(1, Math.floor(n)));
-}
-export type { ArmorClass };
-
-const DifficultyClass = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.brand("DifficultyClass"),
-);
-type DifficultyClass = typeof DifficultyClass.Type;
-export function difficultyClass(n: number): DifficultyClass {
-  return DifficultyClass.make(Math.max(1, Math.floor(n)));
-}
-export type { DifficultyClass };
-
-const AbilityModifier = Schema.Number.pipe(
-  Schema.int(),
-  Schema.brand("AbilityModifier"),
-);
-type AbilityModifier = typeof AbilityModifier.Type;
-export function abilityModifier(n: number): AbilityModifier {
-  return AbilityModifier.make(Math.floor(n));
-}
-export type { AbilityModifier };
-
-/** SRD ability score to modifier: floor((score - 10) / 2). */
-export function abilityScoreToMod(score: number): number {
-  return Math.floor((score - 10) / 2);
-}
-
-export const SpellSlotLevel = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.lessThanOrEqualTo(9),
-  Schema.brand("SpellSlotLevel"),
-);
-export type SpellSlotLevel = typeof SpellSlotLevel.Type;
-export function spellSlotLevel(n: number): SpellSlotLevel {
-  const MAX = 9;
-  return SpellSlotLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))));
-}
-const ResourceCount = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
-  Schema.brand("ResourceCount"),
-);
-type ResourceCount = typeof ResourceCount.Type;
-export function resourceCount(n: number): ResourceCount {
-  return ResourceCount.make(Math.max(0, Math.floor(n)));
-}
-export type { ResourceCount };
-
-/* eslint-enable no-magic-numbers */
-
 // --- Branded string types (nominal — IDs) ---
 
 type CreatureId = string & Brand.Brand<"CreatureId">;
@@ -628,6 +492,6 @@ export interface DeathSaves {
 }
 
 export const DEATH_SAVES_RESET: DeathSaves = {
-  successes: deathSaveCount(0),
-  failures: deathSaveCount(0),
+  successes: sharedDeathSaveCount(0),
+  failures: sharedDeathSaveCount(0),
 };

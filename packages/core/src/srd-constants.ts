@@ -1,7 +1,7 @@
 // SRD-derived domain constants shared across core and feature modules.
 
-import type { AbilityModifier, DifficultyClass, Size } from "#/types.ts";
-import { difficultyClass } from "#/types.ts";
+import type { Size } from "@dnd/shared/types";
+export { SAVE_DC_BASE, featureSaveDC } from "@dnd/shared/game-facts";
 
 /** Creature sizes in ascending order (SRD 5.2.1). */
 export const SIZE_ORDER: ReadonlyArray<Size> = [
@@ -13,18 +13,11 @@ export const SIZE_ORDER: ReadonlyArray<Size> = [
   "gargantuan",
 ];
 
-/** Base value for SRD feature save DCs: 8 + ability modifier + proficiency bonus. */
-export const SAVE_DC_BASE = 8;
-
-/** Standard SRD feature save DC: 8 + ability modifier + proficiency bonus. */
-export function featureSaveDC(
-  abilityMod: AbilityModifier,
-  profBonus: number,
-): DifficultyClass {
-  return difficultyClass(SAVE_DC_BASE + abilityMod + profBonus);
-}
-
-/** Draconic ancestry damage types — shared by Dragonborn species and Draconic Sorcery subclass. */
+/**
+ * Draconic damage types currently shared by Dragonborn species and Draconic
+ * Sorcery. This is slated to become a Surface-authored enum/fact; Dragonborn
+ * ancestry itself is the dragon-kind choice, with damage type derived from it.
+ */
 export const DRACONIC_ANCESTRY_TYPES = [
   "acid",
   "cold",
