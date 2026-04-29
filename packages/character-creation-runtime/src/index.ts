@@ -19,6 +19,7 @@ import type {
   BackgroundToolProficiency,
   FeatRecord,
   Skill,
+  StartingEquipmentChoice,
   UnitRecord,
   WeaponRecord,
   WeaponProficiencyCategory,
@@ -232,6 +233,8 @@ export type CreationHole =
       readonly source: CreationHoleSource;
     };
 
+type ChoiceCreationHole = Extract<CreationHole, { readonly kind: "choice" }>;
+
 export type CreationFill =
   | {
       readonly kind: "choice";
@@ -291,10 +294,8 @@ export type CreationFinalizationIssue = {
   readonly message: string;
 };
 
-export type CreationIssue =
-  | CreationFillIssue
-  | CreationBatchIssue
-  | CreationFinalizationIssue;
+export type CreationBatchFillIssue = CreationFillIssue | CreationBatchIssue;
+export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 
 export type CreationBatchFillInput = {
   readonly draft: CharacterDraft;
@@ -313,7 +314,7 @@ export type CreationBatchFillResult =
       readonly tag: "rejected";
       readonly draft: CharacterDraft;
       readonly holes: readonly CreationHole[];
-      readonly issues: readonly CreationIssue[];
+      readonly issues: NonEmptyReadonlyArray<CreationBatchFillIssue>;
       readonly finalization: CreationFinalizationResult;
     };
 
@@ -391,11 +392,13 @@ export type CharacterSheet = {
 
 export type CreationFinalizationResult =
   | { readonly tag: "ready"; readonly sheet: CharacterSheet }
-  | { readonly tag: "incomplete"; readonly holes: readonly CreationHole[] }
+  | {
+      readonly tag: "incomplete";
+      readonly holes: NonEmptyReadonlyArray<CreationHole>;
+    }
   | {
       readonly tag: "invalid";
-      readonly issues: readonly CreationIssue[];
-      readonly holes: readonly CreationHole[];
+      readonly issues: NonEmptyReadonlyArray<CreationFinalizationIssue>;
     };
 
 const INITIAL_CHARACTER_DRAFT_PATHS = [
@@ -556,13 +559,14 @@ export function fillCreationHoles(
   const holes = discoverCreationHoles(input);
   const issues = creationFillIssues(input, holes);
   const finalization = finalizeCharacterDraft(input);
+  const rejectedIssues = nonEmptyReadonlyArray(issues);
 
-  if (issues.length > 0) {
+  if (rejectedIssues != null) {
     return {
       tag: "rejected",
       draft: input.draft,
       holes,
-      issues,
+      issues: rejectedIssues,
       finalization,
     };
   }
@@ -583,28 +587,29 @@ export function finalizeCharacterDraft(input: {
   readonly unitLibrary: UnitLibrary;
 }): CreationFinalizationResult {
   const holes = discoverCreationHoles(input);
-  if (holes.length > 0) {
+  const openHoles = nonEmptyReadonlyArray(holes);
+  if (openHoles != null) {
     return {
       tag: "incomplete",
-      holes,
+      holes: openHoles,
     };
   }
 
   const selections = finalizedSelections(input.draft);
-  const issues =
-    selections == null
-      ? [illegalFinalizationIssue("Draft is incomplete.")]
-      : [];
-  const legalityIssues =
-    selections == null
-      ? issues
-      : finalizedSelectionIssues(selections, input.unitLibrary);
-
-  if (legalityIssues.length > 0 || selections == null) {
+  if (selections == null) {
     return {
       tag: "invalid",
-      issues: legalityIssues.length > 0 ? legalityIssues : issues,
-      holes,
+      issues: [illegalFinalizationIssue("Draft is incomplete.")],
+    };
+  }
+
+  const invalidIssues = nonEmptyReadonlyArray(
+    finalizedSelectionIssues(selections, input.unitLibrary),
+  );
+  if (invalidIssues != null) {
+    return {
+      tag: "invalid",
+      issues: invalidIssues,
     };
   }
 
@@ -1147,10 +1152,17 @@ function uniqueValues<T>(values: readonly T[]): readonly T[] {
   return values.filter((value, index) => values.indexOf(value) === index);
 }
 
+function nonEmptyReadonlyArray<T>(
+  values: readonly T[],
+): NonEmptyReadonlyArray<T> | undefined {
+  const first = values[0];
+  return first == null ? undefined : [first, ...values.slice(1)];
+}
+
 function creationFillIssues(
   input: CreationBatchFillInput,
   holes: readonly CreationHole[],
-): readonly CreationIssue[] {
+): readonly CreationBatchFillIssue[] {
   const batchIssues =
     input.expectedRevision === input.draft.revision
       ? []
@@ -1823,14 +1835,10 @@ function discoverClassGrantedHoles(input: {
     ),
     ...unselectedUnitChoiceHole(
       input.draft,
-      choiceHole({
-        source: unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-        cardinality: EXACTLY_ONE_CHOICE,
-        options: facts.value.startingEquipment.map((choice) => ({
-          optionId: creationChoiceOptionId(choice.id),
-          label: startingEquipmentLabel(choice),
-        })),
-      }),
+      startingEquipmentChoiceHole(
+        unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
+        facts.value.startingEquipment,
+      ),
     ),
   ];
 }
@@ -1867,51 +1875,78 @@ function discoverBackgroundGrantedHoles(input: {
         ),
       }),
     ),
-    ...unselectedUnitChoiceHole(
+    ...backgroundToolChoiceHole(
       input.draft,
-      choiceHole({
-        source: unitSource(backgroundUnitId, BACKGROUND_TOOL_CHOICE_KEY),
-        cardinality: EXACTLY_ONE_CHOICE,
-        options: backgroundToolProficiencyOptions(facts.value.toolProficiency),
-      }),
+      unitSource(backgroundUnitId, BACKGROUND_TOOL_CHOICE_KEY),
+      facts.value.toolProficiency,
     ),
     ...unselectedUnitChoiceHole(
       input.draft,
-      choiceHole({
-        source: unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-        cardinality: EXACTLY_ONE_CHOICE,
-        options: facts.value.startingEquipment.map((choice) => ({
-          optionId: creationChoiceOptionId(choice.id),
-          label: startingEquipmentLabel(choice),
-        })),
-      }),
+      startingEquipmentChoiceHole(
+        unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+        facts.value.startingEquipment,
+      ),
     ),
   ];
 }
 
-function backgroundToolProficiencyOptions(
+function backgroundToolChoiceHole(
+  draft: CharacterDraft,
+  source: CreationHoleSource,
   proficiency: BackgroundToolProficiency,
-): readonly CreationChoiceOption[] {
-  return Match.value(proficiency).pipe(
-    Match.when({ kind: "specific_tool" }, (specificTool) => [
-      {
-        optionId: creationChoiceOptionId(specificTool.toolId),
-        label: specificTool.toolId,
-        unitRef: { unitId: specificTool.toolId },
-      },
-    ]),
-    Match.when({ kind: "tool_category_choice", category: "gaming_set" }, () => [
-      {
-        optionId: creationChoiceOptionId("tool_dice_set"),
-        label: "Dice Set",
-      },
-    ]),
+): readonly CreationHole[] {
+  const spec = backgroundToolChoiceSpec(proficiency);
+  return spec == null
+    ? []
+    : unselectedUnitChoiceHole(
+        draft,
+        choiceHole({
+          source,
+          cardinality: spec.cardinality,
+          options: spec.options,
+        }),
+      );
+}
+
+function backgroundToolChoiceSpec(proficiency: BackgroundToolProficiency):
+  | {
+      readonly cardinality: ChoiceCardinality;
+      readonly options: readonly CreationChoiceOption[];
+    }
+  | undefined {
+  const spec = Match.value(proficiency).pipe(
+    Match.when({ kind: "specific_tool" }, (specificTool) => ({
+      cardinality: EXACTLY_ONE_CHOICE,
+      options: [
+        {
+          optionId: creationChoiceOptionId(specificTool.toolId),
+          label: specificTool.toolId,
+          unitRef: { unitId: specificTool.toolId },
+        },
+      ],
+    })),
+    Match.when(
+      { kind: "tool_category_choice", category: "gaming_set" },
+      (toolChoice) => ({
+        cardinality: exactChoiceCardinality(toolChoice.choose),
+        options: [
+          {
+            optionId: creationChoiceOptionId("tool_dice_set"),
+            label: "Dice Set",
+          },
+        ],
+      }),
+    ),
     Match.when(
       { kind: "tool_category_choice", category: "artisan_tool" },
-      () => [],
+      () => undefined,
     ),
     Match.exhaustive,
   );
+
+  return spec != null && spec.cardinality.count <= spec.options.length
+    ? spec
+    : undefined;
 }
 
 function discoverEquipmentHoles(input: {
@@ -1919,21 +1954,24 @@ function discoverEquipmentHoles(input: {
   readonly unitLibrary: UnitLibrary;
 }): readonly CreationHole[] {
   const classUnitId = input.draft.selections.primaryClass;
-  if (classUnitId == null || !hasPhaseOneCoinEquipmentPath(input.draft)) {
+  if (classUnitId == null || !hasPhaseOneCoinEquipmentPath(input)) {
     return [];
   }
 
-  return [
-    ...unselectedPurchaseHole(
-      input.draft,
-      choiceHole({
-        source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(SUPPORTED_PURCHASE_UNIT_IDS.length),
-        options: SUPPORTED_PURCHASE_UNIT_IDS.map((unitId) =>
-          unitOption(input.unitLibrary.requireUnit(unitId)),
-        ),
-      }),
+  const purchaseHole = choiceHole({
+    source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
+    cardinality: exactChoiceCardinality(SUPPORTED_PURCHASE_UNIT_IDS.length),
+    options: SUPPORTED_PURCHASE_UNIT_IDS.map((unitId) =>
+      unitOption(input.unitLibrary.requireUnit(unitId)),
     ),
+  });
+  const hasValidPurchaseSelection = hasValidEquipmentPurchaseSelectionForHole(
+    input.draft,
+    purchaseHole,
+  );
+
+  return [
+    ...unselectedPurchaseHole(input.draft, purchaseHole),
     ...unselectedLoadoutHole(
       input.draft,
       choiceHole({
@@ -1951,6 +1989,7 @@ function discoverEquipmentHoles(input: {
         ],
       }),
       PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+      hasValidPurchaseSelection,
     ),
     ...unselectedLoadoutHole(
       input.draft,
@@ -1966,6 +2005,7 @@ function discoverEquipmentHoles(input: {
         ],
       }),
       PHASE1_SHIELD_UNIT_ID,
+      hasValidPurchaseSelection,
     ),
     ...unselectedLoadoutHole(
       input.draft,
@@ -1984,27 +2024,65 @@ function discoverEquipmentHoles(input: {
         ],
       }),
       PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+      hasValidPurchaseSelection,
     ),
   ];
 }
 
-function hasPhaseOneCoinEquipmentPath(draft: CharacterDraft): boolean {
+function startingEquipmentChoiceHole(
+  source: CreationHoleSource,
+  choices: readonly StartingEquipmentChoice[],
+): CreationHole {
+  return choiceHole({
+    source,
+    cardinality: EXACTLY_ONE_CHOICE,
+    options: choices.map((choice) => ({
+      optionId: creationChoiceOptionId(choice.id),
+      label: startingEquipmentLabel(choice),
+    })),
+  });
+}
+
+function hasPhaseOneCoinEquipmentPath(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitLibrary;
+}): boolean {
+  const draft = input.draft;
   const classUnitId = draft.selections.primaryClass;
   const backgroundUnitId = draft.selections.background;
+  if (
+    classUnitId == null ||
+    backgroundUnitId == null ||
+    !isSupported(classUnitId, SUPPORTED_CLASS_UNIT_IDS) ||
+    !isSupported(backgroundUnitId, SUPPORTED_BACKGROUND_UNIT_IDS)
+  ) {
+    return false;
+  }
+
+  const classFacts = readClassCreationFacts(
+    input.unitLibrary.requireUnit(classUnitId),
+  );
+  const backgroundFacts = readBackgroundCreationFacts(
+    input.unitLibrary.requireUnit(backgroundUnitId),
+  );
+  if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
+    return false;
+  }
+
   return (
-    classUnitId != null &&
-    backgroundUnitId != null &&
-    isSupported(classUnitId, SUPPORTED_CLASS_UNIT_IDS) &&
-    isSupported(backgroundUnitId, SUPPORTED_BACKGROUND_UNIT_IDS) &&
-    hasChoiceSelection(
+    hasValidSelectionForHole(
       draft,
-      unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-      [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
+      startingEquipmentChoiceHole(
+        unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
+        classFacts.value.startingEquipment,
+      ),
     ) &&
-    hasChoiceSelection(
+    hasValidSelectionForHole(
       draft,
-      unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-      [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
+      startingEquipmentChoiceHole(
+        unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+        backgroundFacts.value.startingEquipment,
+      ),
     )
   );
 }
@@ -2013,15 +2091,14 @@ function unselectedUnitChoiceHole(
   draft: CharacterDraft,
   hole: CreationHole,
 ): readonly CreationHole[] {
-  return hasSelectionForSource(draft, hole.source) ? [] : [hole];
+  return hasValidSelectionForHole(draft, hole) ? [] : [hole];
 }
 
 function unselectedBackgroundAbilityScoreIncreaseHole(
   draft: CharacterDraft,
   hole: CreationHole,
 ): readonly CreationHole[] {
-  return draft.selections.backgroundAbilityScoreIncrease != null ||
-    hasSelectionForSource(draft, hole.source)
+  return hasValidBackgroundAbilityScoreIncreaseSelectionForHole(draft, hole)
     ? []
     : [hole];
 }
@@ -2030,23 +2107,31 @@ function unselectedPurchaseHole(
   draft: CharacterDraft,
   hole: CreationHole,
 ): readonly CreationHole[] {
-  return hasPurchasedManifestEquipment(draft) ? [] : [hole];
+  return hasValidEquipmentPurchaseSelectionForHole(draft, hole) ? [] : [hole];
 }
 
 function unselectedLoadoutHole(
   draft: CharacterDraft,
   hole: CreationHole,
   unitId: UnitRecord["id"],
+  hasValidPurchaseSelection: boolean,
 ): readonly CreationHole[] {
-  return hasPurchasedUnit(draft, unitId) &&
-    !hasSelectionForSource(draft, hole.source)
+  return hasValidPurchaseSelection &&
+    hasPurchasedUnit(draft, unitId) &&
+    !hasValidSelectionForHole(draft, hole)
     ? [hole]
     : [];
 }
 
-function hasPurchasedManifestEquipment(draft: CharacterDraft): boolean {
-  return SUPPORTED_PURCHASE_UNIT_IDS.every((unitId) =>
-    hasPurchasedUnit(draft, unitId),
+function hasValidEquipmentPurchaseSelectionForHole(
+  draft: CharacterDraft,
+  hole: CreationHole,
+): boolean {
+  return choiceOptionIdsFitHole(
+    hole,
+    draft.selections.equipment?.selectedUnitIds.map((unitId) =>
+      creationChoiceOptionId(unitId),
+    ) ?? [],
   );
 }
 
@@ -2057,24 +2142,80 @@ function hasPurchasedUnit(
   return draft.selections.equipment?.selectedUnitIds.includes(unitId) ?? false;
 }
 
-function hasChoiceSelection(
+function hasValidSelectionForHole(
   draft: CharacterDraft,
-  source: CreationHoleSource,
-  optionIds: readonly CreationChoiceOptionId[],
+  hole: CreationHole,
 ): boolean {
-  return draft.selections.choices.some(
-    (selection) =>
-      sameCreationHoleSource(selection.source, source) &&
-      sameOptionIdMultiset(choiceSelectionOptionIds(selection), optionIds),
+  return draft.selections.choices.some((selection) =>
+    choiceSelectionMatchesHole(selection, hole),
   );
 }
 
-function hasSelectionForSource(
-  draft: CharacterDraft,
-  source: CreationHoleSource,
+function choiceSelectionMatchesHole(
+  selection: CharacterChoiceSelection,
+  hole: CreationHole,
 ): boolean {
-  return draft.selections.choices.some((selection) =>
-    sameCreationHoleSource(selection.source, source),
+  if (
+    hole.kind !== "choice" ||
+    !sameCreationHoleSource(selection.source, hole.source)
+  ) {
+    return false;
+  }
+
+  const optionIds = choiceSelectionOptionIds(selection);
+  return (
+    choiceOptionIdsFitHole(hole, optionIds) &&
+    selection.options.every((selectedOption) =>
+      selectedChoiceOptionMatchesHole(selectedOption, hole),
+    )
+  );
+}
+
+function hasValidBackgroundAbilityScoreIncreaseSelectionForHole(
+  draft: CharacterDraft,
+  hole: CreationHole,
+): boolean {
+  const selection = draft.selections.backgroundAbilityScoreIncrease;
+  return (
+    selection != null &&
+    hole.kind === "choice" &&
+    choiceOptionIdsFitHole(hole, [
+      backgroundAbilityScoreIncreaseOptionId(selection),
+    ])
+  );
+}
+
+function choiceOptionIdsFitHole(
+  hole: CreationHole,
+  optionIds: readonly CreationChoiceOptionId[],
+): boolean {
+  return (
+    hole.kind === "choice" &&
+    optionIds.length === hole.cardinality.count &&
+    !hasDuplicateOptionIds(optionIds) &&
+    optionIds.every((optionId) =>
+      hole.options.some((option) => option.optionId === optionId),
+    ) &&
+    unsupportedHoleSelectionOptionId(hole, optionIds) == null
+  );
+}
+
+function selectedChoiceOptionMatchesHole(
+  selectedOption: CharacterSelectedChoiceOption,
+  hole: ChoiceCreationHole,
+): boolean {
+  return hole.options.some(
+    (option) =>
+      choiceSelectionOptionKey(selectedOption) ===
+      choiceSelectionOptionKey(selectedChoiceOption(option)),
+  );
+}
+
+function hasDuplicateOptionIds(
+  optionIds: readonly CreationChoiceOptionId[],
+): boolean {
+  return optionIds.some(
+    (optionId, optionIndex) => optionIds.indexOf(optionId) !== optionIndex,
   );
 }
 

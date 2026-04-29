@@ -230,6 +230,39 @@ describe("character creation hole discovery", () => {
     ).toBeUndefined();
   });
 
+  test("does not open purchase from malformed equipment-path choice metadata", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        primaryClass: "class_fighter",
+        background: "background_soldier",
+        choices: [
+          selectedChoiceWithUnitRef(
+            "class_fighter",
+            "class_equipment_choice",
+            "option_c",
+            "armor_chain_mail",
+          ),
+          selectedChoice(
+            "background_soldier",
+            "background_equipment_choice",
+            "option_b",
+          ),
+        ],
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(
+      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+    ).toBeUndefined();
+  });
+
   test("does not open purchase for a non-manifest background equipment path", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -264,7 +297,7 @@ describe("character creation hole discovery", () => {
             "background_equipment_choice",
             "option_b",
           ),
-          selectedChoice("armor_chain_mail", "loadout_armor", "worn"),
+          selectedLoadoutChoice("armor_chain_mail", "loadout_armor", "worn"),
         ],
         equipment: {
           selectedUnitIds: [
@@ -299,6 +332,48 @@ describe("character creation hole discovery", () => {
     });
   });
 
+  test("keeps malformed equipment purchase selections fillable", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        primaryClass: "class_fighter",
+        background: "background_soldier",
+        choices: [
+          selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
+          selectedChoice(
+            "background_soldier",
+            "background_equipment_choice",
+            "option_b",
+          ),
+        ],
+        equipment: {
+          selectedUnitIds: [
+            "armor_chain_mail",
+            "weapon_longsword",
+            "equipment_shield",
+            "tool_dice_set",
+          ],
+        },
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 3 },
+    });
+    expect(
+      holeById(holes, "cc:unit:armor_chain_mail:loadout_armor"),
+    ).toBeUndefined();
+    expect(
+      holeById(holes, "cc:unit:equipment_shield:loadout_shield"),
+    ).toBeUndefined();
+    expect(
+      holeById(holes, "cc:unit:weapon_longsword:loadout_weapon"),
+    ).toBeUndefined();
+  });
+
   test("suppresses already-filled class and background unit-choice holes", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -311,22 +386,17 @@ describe("character creation hole discovery", () => {
             "perception",
             "survival",
           ),
-          selectedChoice(
+          selectedUnitChoice(
             "fighter_fighting_style_l1",
             "fighter_fighting_style",
             "defense",
           ),
-          selectedChoice(
+          selectedUnitChoice(
             "fighter_weapon_mastery_l1",
             "fighter_weapon_mastery_choices",
             "weapon_longsword",
             "weapon_spear",
             "weapon_flail",
-          ),
-          selectedChoice(
-            "background_soldier",
-            "background_ability_score_increase",
-            "two_and_one:str:con",
           ),
           selectedChoice(
             "background_soldier",
@@ -358,10 +428,62 @@ describe("character creation hole discovery", () => {
         holes,
         "cc:unit:background_soldier:background_ability_score_increase",
       ),
-    ).toBeUndefined();
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
     expect(
       holeById(holes, "cc:unit:background_soldier:background_tool_choice"),
     ).toBeUndefined();
+  });
+
+  test("keeps malformed existing choice selections fillable", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        primaryClass: "class_fighter",
+        choices: [
+          selectedChoice(
+            "class_fighter",
+            "fighter_skill_choices",
+            "perception",
+          ),
+        ],
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(holes, "cc:unit:class_fighter:fighter_skill_choices"),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 2 },
+    });
+  });
+
+  test("keeps existing choice selections with malformed unit refs fillable", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        primaryClass: "class_fighter",
+        choices: [
+          selectedChoice(
+            "fighter_fighting_style_l1",
+            "fighter_fighting_style",
+            "defense",
+          ),
+        ],
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(
+        holes,
+        "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
   });
 
   test("suppresses Soldier ability-score increase from the typed draft field", () => {
@@ -386,6 +508,31 @@ describe("character creation hole discovery", () => {
     ).toBeUndefined();
   });
 
+  test("keeps malformed typed Soldier ability-score increase fillable", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        primaryClass: "class_fighter",
+        background: "background_soldier",
+        backgroundAbilityScoreIncrease: {
+          kind: "twoAndOne",
+          plusTwo: "cha",
+          plusOne: "con",
+        },
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(
+        holes,
+        "cc:unit:background_soldier:background_ability_score_increase",
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
+  });
+
   test("removes selected species from draft holes without adding synthetic species choices", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -402,7 +549,7 @@ describe("character creation hole discovery", () => {
 });
 
 describe("character creation QNT slice parity", () => {
-  test("Quint slice and runtime agree on complete manifest and invalid fill behavior", () => {
+  test("Quint slice and runtime agree on manifest path and fill rejection algebra", () => {
     runQuintSliceSelfTests();
 
     const draft = createTestDraft("draft:qnt-parity");
@@ -1085,7 +1232,7 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("rejects completed drafts with non-manifest ability-score increases", () => {
+  test("keeps drafts with unsupported ability-score increases incomplete", () => {
     const complete = completeManifestDraft();
     const oneEachDraft: CharacterDraft = {
       ...complete,
@@ -1095,16 +1242,17 @@ describe("character creation finalization", () => {
       },
     };
 
-    expect(
-      finalizeCharacterDraft({ draft: oneEachDraft, unitLibrary }),
-    ).toMatchObject({
-      tag: "invalid",
-      issues: [
+    const finalization = finalizeCharacterDraft({
+      draft: oneEachDraft,
+      unitLibrary,
+    });
+
+    expect(finalization).toMatchObject({
+      tag: "incomplete",
+      holes: [
         {
-          tag: "illegalFinalization",
-          code: "illegalFinalization",
-          message:
-            "Finalized sheet must use the phase-1 Soldier ability-score increase.",
+          holeId:
+            "cc:unit:background_soldier:background_ability_score_increase",
         },
       ],
     });
@@ -1169,7 +1317,7 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("rejects completed drafts whose Unit-backed selected options lost Unit refs", () => {
+  test("keeps drafts whose Unit-backed selected options lost Unit refs incomplete", () => {
     const complete = completeManifestDraft();
     const missingUnitRefDraft: CharacterDraft = {
       ...complete,
@@ -1190,22 +1338,22 @@ describe("character creation finalization", () => {
       },
     };
 
-    expect(
-      finalizeCharacterDraft({ draft: missingUnitRefDraft, unitLibrary }),
-    ).toMatchObject({
-      tag: "invalid",
-      issues: [
+    const finalization = finalizeCharacterDraft({
+      draft: missingUnitRefDraft,
+      unitLibrary,
+    });
+
+    expect(finalization).toMatchObject({
+      tag: "incomplete",
+      holes: [
         {
-          tag: "illegalFinalization",
-          code: "illegalFinalization",
-          message:
-            "Finalized sheet must carry exactly the phase-1 manifest choices.",
+          holeId: "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
         },
       ],
     });
   });
 
-  test("rejects duplicate or missing finalized equipment ownership", () => {
+  test("keeps duplicate or missing equipment ownership fillable", () => {
     const complete = completeManifestDraft();
     const duplicateEquipmentDraft: CharacterDraft = {
       ...complete,
@@ -1238,19 +1386,23 @@ describe("character creation finalization", () => {
     expect(
       finalizeCharacterDraft({ draft: duplicateEquipmentDraft, unitLibrary }),
     ).toMatchObject({
-      tag: "invalid",
-      issues: [
+      tag: "incomplete",
+      holes: [
         {
-          tag: "illegalFinalization",
-          code: "illegalFinalization",
-          message:
-            "Finalized sheet must own exactly the phase-1 purchased equipment.",
+          holeId: "cc:unit:class_fighter:equipment_purchase",
         },
       ],
     });
     expect(
-      finalizeCharacterDraft({ draft: missingShieldDraft, unitLibrary }).tag,
-    ).not.toBe("ready");
+      finalizeCharacterDraft({ draft: missingShieldDraft, unitLibrary }),
+    ).toMatchObject({
+      tag: "incomplete",
+      holes: [
+        {
+          holeId: "cc:unit:class_fighter:equipment_purchase",
+        },
+      ],
+    });
   });
 });
 
@@ -1882,5 +2034,64 @@ function selectedChoice(
     options: optionIds.map((optionId) => ({
       optionId: creationChoiceOptionId(optionId),
     })),
+  };
+}
+
+function selectedChoiceWithUnitRef(
+  unitId: string,
+  choiceKey: string,
+  optionId: string,
+  optionUnitId: string,
+): CharacterChoiceSelection {
+  return {
+    source: {
+      tag: "unit",
+      unitId,
+      choiceKey: unitChoiceKey(choiceKey),
+    },
+    options: [
+      {
+        optionId: creationChoiceOptionId(optionId),
+        unitRef: { unitId: optionUnitId },
+      },
+    ],
+  };
+}
+
+function selectedUnitChoice(
+  unitId: string,
+  choiceKey: string,
+  ...optionIds: readonly string[]
+): CharacterChoiceSelection {
+  return {
+    source: {
+      tag: "unit",
+      unitId,
+      choiceKey: unitChoiceKey(choiceKey),
+    },
+    options: optionIds.map((optionId) => ({
+      optionId: creationChoiceOptionId(optionId),
+      unitRef: { unitId: optionId },
+    })),
+  };
+}
+
+function selectedLoadoutChoice(
+  unitId: string,
+  choiceKey: string,
+  optionId: string,
+): CharacterChoiceSelection {
+  return {
+    source: {
+      tag: "unit",
+      unitId,
+      choiceKey: unitChoiceKey(choiceKey),
+    },
+    options: [
+      {
+        optionId: creationChoiceOptionId(optionId),
+        unitRef: { unitId },
+      },
+    ],
   };
 }
