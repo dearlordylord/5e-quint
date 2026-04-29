@@ -249,10 +249,13 @@ export type BattleHole =
   | BattleTargetChoiceHole
   | BattleAttackRollHole
   | BattleDamageRollHole;
-export type BattleFill = Extract<
-  FilledHoleValue,
-  { readonly kind: "targetChoice" | "attackRoll" | "rolledDice" }
->;
+export type BattleFill =
+  | Extract<FilledHoleValue, { readonly kind: "attackRoll" | "rolledDice" }>
+  | {
+      readonly kind: "targetChoice";
+      readonly holeId: BattleHoleId;
+      readonly value: CombatantId;
+    };
 
 export type BattleResolutionInput = {
   readonly state: BattleState;
@@ -773,7 +776,7 @@ function attackFillSet(
       if (targetId !== undefined) {
         return { tag: "invalid", message: "Attack target was filled twice." };
       }
-      targetId = combatantId(fill.value);
+      targetId = fill.value;
       continue;
     }
 

@@ -59,6 +59,7 @@ module characterCreationRuntimeMbt {
     | DuplicateFill => "duplicateFill"
     | WrongFillKind => "wrongFillKind"
     | InvalidChoice => "invalidChoice"
+    | InvalidAbilityScores => "invalidAbilityScores"
     | TooFewChoices => "tooFewChoices"
     | TooManyChoices => "tooManyChoices"
     | UnsupportedChoice => "unsupportedChoice"
