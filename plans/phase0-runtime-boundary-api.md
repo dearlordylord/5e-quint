@@ -488,7 +488,6 @@ export type BattleId = string & Brand<"BattleId">;
 export type CharacterId = string & Brand<"CharacterId">;
 export type MonsterId = string & Brand<"MonsterId">;
 export type InitiativeScore = number & Brand<"InitiativeScore">;
-export type ActionQuotaRemaining = 0 | 1;
 
 export type ZeroHpLifecyclePolicy = "diesAtZeroHp" | "usesDeathSavingThrows";
 
@@ -521,7 +520,8 @@ export type CombatantSeedInput = {
 };
 
 export type BattleTurnResources = {
-  readonly actionQuotaRemaining: ActionQuotaRemaining;
+  readonly actionResources: readonly RuntimeActionResource[];
+  readonly currentHasBonusAction: boolean;
 };
 
 export type BattleState = {
@@ -534,7 +534,7 @@ export type BattleState = {
 
 `@dnd/battle-runtime` must not import `@dnd/character-creation-runtime`. MCP passes the finalized `CharacterSheet` through a composition-root mapper that copies only the sheet's selected Unit references into `CharacterCombatantSeed.sheetUnitRefs` and supplies current HP. This keeps the character draft/session model out of battle state while avoiding a parallel battle seed type in character creation.
 
-`CombatantState` may use the same reducer facts already present in Correction: HP/max HP/Temporary HP, conditions, reaction availability, actor-owned `UnitRecord[]`, structured armor facts, zero-HP lifecycle policy, death saves, spell slots, and turn-resource facts. It must not carry a duplicate current Armor Class scalar if `ArmorClassState` can derive it.
+`CombatantState` may use the same reducer facts already present in Correction: HP/max HP/Temporary HP, conditions, reaction availability, actor-owned `UnitRecord[]`, structured armor facts, zero-HP lifecycle policy, death saves, spell slots, and action-resource facts. It must not carry a duplicate current Armor Class scalar if `ArmorClassState` can derive it. Battle state should use the `RuntimeActionResource` model from `@dnd/shared-algebras`, including turn-granted actions and unit-granted restricted actions; do not introduce a scalar action quota.
 
 Battle seed data is runtime seed data only. Weapon damage dice, Damage Type, armor facts, and Shield facts must be resolved through Unit references/readers where Surface already has them, not duplicated into a new executable IR. `selectedLoadout` should use SRD-facing holding/wielding terms; do not introduce main-hand/off-hand vocabulary.
 
@@ -763,7 +763,7 @@ It may import or mirror old `character-creation.qnt` concepts where that reduces
 `packages/battle-runtime/battle-runtime-slice.qnt` owns:
 
 - combatants, initiative/current actor, and end turn;
-- action quota availability for Attack and End Turn;
+- action-resource availability for Attack and End Turn;
 - Attack subject replay: target hole, attack-roll hole, damage-roll hole;
 - hit/miss against AC;
 - action spend;

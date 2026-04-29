@@ -139,7 +139,7 @@ Phase 1 battle state:
 - initiative/current actor;
 - HP/max HP/Temporary HP;
 - AC;
-- action availability;
+- action resources/action availability;
 - death policy derived at the Character Sheet vs Stat Block boundary and stored explicitly on the combatant; resolution branches on that typed death policy, not on provenance labels;
 - battle-ready creature combat facts projected from Character Sheets and monster Stat Blocks.
 
@@ -161,7 +161,7 @@ Character creation QNT should model the phase-1 hole/fill reducer protocol and i
 Battle QNT should model only the green surface:
 
 - initiative/current actor/end turn;
-- combatants with HP/Temporary HP/AC/action availability;
+- combatants with HP/Temporary HP/AC/action resources/action availability;
 - Attack subject;
 - target/attack-roll/damage holes;
 - AC hit/miss;
@@ -175,7 +175,7 @@ During Phase 1/2, `battle-runtime-slice.qnt` is authoritative only for the green
 
 ## Phase 0: Audit And Preconditions
 
-1. Fix the current Correction action-economy test drift or explicitly move the fix to a tracked side-car job before depending on that algebra.
+1. Correction action-economy drift is resolved by `52cf18b5`, which landed Surface action resource sidecars and Correction action-resource handling. New runtime work should build on that baseline.
 2. Rename/promote `@dnd/prototype-content-surface` to `@dnd/surface`. Record the package cutover and update green-path imports and project documentation so new docs no longer speak about the prototype package as the active Surface package.
 3. Create the concrete SRD-only Unit collection artifact used by MCP. `srdUnitCollection` must be a real import before Phase 3, and duplicate-id/provenance validation must exist at `buildUnitLibrary`.
 4. Produce `plans/phase1-fighter-manifest.md` listing the exact selected background, species, ability-score method/values, languages, alignment representation, Fighting Style, weapons, armor, shield, and monster. For each item, record the SRD 5.2.1 reference file/section and the Unit id if already authored; otherwise add the minimum Unit authoring task before reducer implementation.
@@ -192,7 +192,7 @@ Phase 0 exit criteria:
 - checked-in Surface/Unit availability audit at `plans/phase0-surface-unit-availability.md`;
 - Core/projected vocabulary call-site inventory at `plans/phase0-core-deletion-restore-audit.md`;
 - checked-in runtime boundary/API artifact at `plans/phase0-runtime-boundary-api.md`;
-- Correction action-economy drift decision;
+- Correction action-resource sidecar baseline recorded;
 - Restore Ledger additions for every intentionally broken lane;
 - package/import cutover decision;
 - concrete SRD UnitRecord collection artifact or tracked blocker.
@@ -286,7 +286,8 @@ Required before marking this plan complete:
 7. Green-path dependency check proves neither runtime package nor MCP green tools import `@dnd/core`.
 8. Before completion, restore a single battle authority: either merge `battle-runtime-slice.qnt` into `battle.qnt`, replace/retire the old authority and update project documentation, or record each intentional divergence from old `battle.qnt` with an SRD 5.2.1 citation or ASSUMPTIONS.md entry.
 9. Command-level verification is added once packages exist, using `pnpm` only. Battle MBT must follow the repo MBT run protocol, including zombie evaluator checks before the run. Typecheck scope must include MCP and the new runtime packages.
-10. `/simplify` convergence: minimum two rounds after implementation, continuing until no important fixes remain.
+10. Documentation stays synchronized with code changes. Tasks that change Correction reducer behavior, shared algebras, action resources, hole/fill semantics, Surface record boundaries, or runtime package architecture must update the relevant docs in the same change, especially `packages/surface-runtime-correction/ARCHITECTURE_GRAPH.md`, `packages/surface-runtime-correction/MBT_TO_REDUCER_GRAPH.md`, `packages/surface-runtime-correction/VOCABULARY.md`, and `plans/ACTIVE_PLAN.md`.
+11. `/simplify` convergence: minimum two rounds after implementation, continuing until no important fixes remain.
 
 ## Explicit Non-Goals For Phase 1
 
