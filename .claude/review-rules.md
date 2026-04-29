@@ -77,6 +77,31 @@ Flag:
 
 Prefer discriminated unions, nested types, `Option`, branded/domain values, or stronger parser outputs that make invalid states unrepresentable.
 
+## Temporal State And Lifecycle
+
+For every field on a durable type, verify the field's lifetime matches the type's lifetime.
+
+Flag:
+
+- creation-session facts, draft ids, submitted choices, or fill protocol state stored on long-lived character sheets without a durable workflow that uses them;
+- current combat/rest state such as current HP, temporary HP, remaining Hit Dice, reactions, turn resources, pending choices, or active effects stored on creation-time or durable identity records;
+- ambiguous temporal names such as `current`, `selections`, `source`, `initial`, or `final` when the owner could be read months later and the field's time horizon is unclear;
+- derived facts stored beside their source facts when the two can drift after advancement, rest, equipment changes, or runtime effects;
+- audit/provenance fields modeled as core executable state, or executable state modeled as provenance.
+
+Required reviewer questions:
+
+1. If this object is read ten months after creation, does the field still mean what its name says?
+2. Is this a creation input, durable character fact, authored provenance, runtime projection, or current encounter state?
+3. When the character advances, rests, changes equipment, or enters/leaves battle, does this field remain correct, get recomputed, or become stale?
+
+Preferred fixes:
+
+- split creation-session records, durable sheet records, runtime creature state, and audit/provenance metadata into distinct types;
+- name fields after durable domain facts rather than the UI action that originally selected them;
+- derive replay/draft-shaped views from the durable sheet only at workflows that need draft mechanics again;
+- keep temporary/current resources in machine or encounter state, not in character creation output.
+
 ## Connascence
 
 Review every changed literal, branch condition, helper boundary, narrowed type, protocol step, and duplicated rule for connascence: code facts that must change together for correctness.

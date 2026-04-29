@@ -66,7 +66,7 @@ export function battleCreatureInitFromCharacterSheet(
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(
-      10 + scoreModifier(input.sheet.abilityScores.final.dex),
+      10 + scoreModifier(input.sheet.abilityScores.dex),
     ),
     creatureInit: {
       kind: "character",
@@ -100,12 +100,12 @@ function characterArmorClassState(
     ...defaultState,
     abilityModifiers: {
       ...zeroAbilityModifiers(),
-      str: abilityModifier(scoreModifier(sheet.abilityScores.final.str)),
-      dex: abilityModifier(scoreModifier(sheet.abilityScores.final.dex)),
-      con: abilityModifier(scoreModifier(sheet.abilityScores.final.con)),
-      int: abilityModifier(scoreModifier(sheet.abilityScores.final.int)),
-      wis: abilityModifier(scoreModifier(sheet.abilityScores.final.wis)),
-      cha: abilityModifier(scoreModifier(sheet.abilityScores.final.cha)),
+      str: abilityModifier(scoreModifier(sheet.abilityScores.str)),
+      dex: abilityModifier(scoreModifier(sheet.abilityScores.dex)),
+      con: abilityModifier(scoreModifier(sheet.abilityScores.con)),
+      int: abilityModifier(scoreModifier(sheet.abilityScores.int)),
+      wis: abilityModifier(scoreModifier(sheet.abilityScores.wis)),
+      cha: abilityModifier(scoreModifier(sheet.abilityScores.cha)),
     },
     base:
       armor?.kind === "armor"
@@ -185,6 +185,6 @@ function characterAttackProfile(
     kind: "weapon",
     weapon: unit,
     ability: "str",
-    abilityModifier: scoreModifier(sheet.abilityScores.final.str),
+    abilityModifier: scoreModifier(sheet.abilityScores.str),
   };
 }

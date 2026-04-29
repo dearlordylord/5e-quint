@@ -155,7 +155,6 @@ function createTestDraft(
   draftId: string,
 ): CharacterDraft {
   return createCharacterDraft({
-    unitLibrary,
     draftId: characterDraftId(draftId),
   });
 }

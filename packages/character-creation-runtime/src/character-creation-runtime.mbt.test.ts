@@ -476,7 +476,6 @@ function createCharacterCreationDriver() {
 
 function newDraft(): CharacterDraft {
   return createCharacterDraft({
-    unitLibrary,
     draftId: characterDraftId("cc:mbt-draft"),
   });
 }
