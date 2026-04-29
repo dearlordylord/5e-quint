@@ -1,16 +1,21 @@
-import { Brand } from "effect";
+import { Brand, Option } from "effect";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
+  readSpeciesCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
+import { SKILLS } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type {
   Ability,
+  ActivationResource,
+  ArmorTrainingCategory,
   FeatRecord,
   Skill,
   SixAbilityScores,
   UnitRecord,
   WeaponRecord,
+  WeaponProficiencyCategory,
 } from "@dnd/surface/surface/types";
 
 export type UnitLibrary = UnitCatalog;
@@ -263,7 +268,22 @@ export type CreationBatchIssue = {
   readonly message: string;
 };
 
-export type CreationIssue = CreationFillIssue | CreationBatchIssue;
+export const CREATION_FINALIZATION_ISSUE_CODES = [
+  "illegalFinalization",
+] as const;
+export type CreationFinalizationIssueCode =
+  (typeof CREATION_FINALIZATION_ISSUE_CODES)[number];
+
+export type CreationFinalizationIssue = {
+  readonly tag: "illegalFinalization";
+  readonly code: CreationFinalizationIssueCode;
+  readonly message: string;
+};
+
+export type CreationIssue =
+  | CreationFillIssue
+  | CreationBatchIssue
+  | CreationFinalizationIssue;
 
 export type CreationBatchFillInput = {
   readonly draft: CharacterDraft;
@@ -299,10 +319,63 @@ export type FinalizedCharacterSelections = {
   readonly equipment: CharacterEquipmentSelection;
 };
 
+export type CharacterSheetAbilityScores = {
+  readonly base: AbilityScoreAssignment;
+  readonly backgroundIncrease: BackgroundAbilityScoreIncreaseSelection;
+  readonly final: AbilityScoreAssignment;
+};
+
+export type CharacterSheetHitPoints = {
+  readonly maximum: number;
+  readonly hitDice: readonly CharacterSheetHitDie[];
+};
+
+export type CharacterSheetHitDie = {
+  readonly classUnitId: UnitRecord["id"];
+  readonly dieSize: number;
+  readonly total: number;
+};
+
+export type CharacterSheetProficiencies = {
+  readonly savingThrows: readonly Ability[];
+  readonly skills: readonly Skill[];
+  readonly weaponCategories: readonly WeaponProficiencyCategory[];
+  readonly armorTraining: readonly ArmorTrainingCategory[];
+  readonly tools: readonly CreationChoiceOptionId[];
+};
+
+export type CharacterSheetFeature = {
+  readonly unitId: UnitRecord["id"];
+  readonly source: "class" | "background" | "species" | "choice";
+};
+
+export type CharacterSheetResource = {
+  readonly unitId: UnitRecord["id"];
+  readonly resource: ActivationResource;
+};
+
+export type CharacterSheetLoadout = {
+  readonly armor?: UnitRecord["id"];
+  readonly shield?: UnitRecord["id"];
+  readonly weapon?: {
+    readonly unitId: UnitRecord["id"];
+    readonly grip: "one_handed";
+  };
+};
+
 export type CharacterSheet = {
   readonly sourceDraftId: CharacterDraftId;
   readonly selections: FinalizedCharacterSelections;
   readonly unitRefs: readonly UnitRef[];
+  readonly abilityScores: CharacterSheetAbilityScores;
+  readonly hitPoints: CharacterSheetHitPoints;
+  readonly proficiencies: CharacterSheetProficiencies;
+  readonly features: readonly CharacterSheetFeature[];
+  readonly resources: readonly CharacterSheetResource[];
+  readonly equipment: {
+    readonly ownedUnitIds: readonly UnitRecord["id"][];
+    readonly loadout: CharacterSheetLoadout;
+  };
 };
 
 export type CreationFinalizationResult =
@@ -382,8 +455,15 @@ const FIGHTER_WEAPON_MASTERY_FEATURE_ID = "fighter_weapon_mastery_l1";
 const PHASE1_CLASS_EQUIPMENT_OPTION_ID = creationChoiceOptionId("option_c");
 const PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID =
   creationChoiceOptionId("option_b");
+const PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION = {
+  kind: "twoAndOne",
+  plusTwo: "str",
+  plusOne: "con",
+} as const satisfies BackgroundAbilityScoreIncreaseSelection;
 const PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID =
-  creationChoiceOptionId("two_and_one:str:con");
+  backgroundAbilityScoreIncreaseOptionId(
+    PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION,
+  );
 const PHASE1_ALIGNMENT_OPTION_ID = creationChoiceOptionId("lawful_good");
 
 const BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY = unitChoiceKey(
@@ -496,10 +576,512 @@ export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitLibrary;
 }): CreationFinalizationResult {
+  const holes = discoverCreationHoles(input);
+  if (holes.length > 0) {
+    return {
+      tag: "incomplete",
+      holes,
+    };
+  }
+
+  const selections = finalizedSelections(input.draft);
+  const issues =
+    selections == null
+      ? [illegalFinalizationIssue("Draft is incomplete.")]
+      : [];
+  const legalityIssues =
+    selections == null
+      ? issues
+      : finalizedSelectionIssues(selections, input.unitLibrary);
+
+  if (legalityIssues.length > 0 || selections == null) {
+    return {
+      tag: "invalid",
+      issues: legalityIssues.length > 0 ? legalityIssues : issues,
+      holes,
+    };
+  }
+
   return {
-    tag: "incomplete",
-    holes: discoverCreationHoles(input),
+    tag: "ready",
+    sheet: buildCharacterSheet({
+      sourceDraftId: input.draft.draftId,
+      selections,
+      unitLibrary: input.unitLibrary,
+    }),
   };
+}
+
+function finalizedSelections(
+  draft: CharacterDraft,
+): FinalizedCharacterSelections | undefined {
+  const selections = draft.selections;
+  if (
+    selections.primaryClass == null ||
+    selections.advancement == null ||
+    selections.background == null ||
+    selections.abilityScoreGeneration == null ||
+    selections.backgroundAbilityScoreIncrease == null ||
+    selections.species == null ||
+    selections.languages == null ||
+    selections.alignment == null ||
+    selections.equipment == null
+  ) {
+    return undefined;
+  }
+
+  return {
+    primaryClass: selections.primaryClass,
+    advancement: selections.advancement,
+    background: selections.background,
+    abilityScoreGeneration: selections.abilityScoreGeneration,
+    backgroundAbilityScoreIncrease: selections.backgroundAbilityScoreIncrease,
+    species: selections.species,
+    languages: selections.languages,
+    alignment: selections.alignment,
+    choices: selections.choices,
+    equipment: selections.equipment,
+  };
+}
+
+function finalizedSelectionIssues(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitLibrary,
+): readonly CreationFinalizationIssue[] {
+  return [
+    ...expectedValueIssue(
+      selections.primaryClass === PHASE1_CLASS_FIGHTER_UNIT_ID,
+      "Finalized sheet must use the supported Fighter class.",
+    ),
+    ...expectedValueIssue(
+      selections.background === PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
+      "Finalized sheet must use the supported Soldier background.",
+    ),
+    ...expectedValueIssue(
+      selections.species === PHASE1_SPECIES_ORC_UNIT_ID,
+      "Finalized sheet must use the supported Orc species.",
+    ),
+    ...expectedValueIssue(
+      isInitialFighterAdvancement(selections.advancement),
+      "Finalized sheet advancement must be exactly one Fighter level.",
+    ),
+    ...expectedValueIssue(
+      isStandardArrayAssignment(
+        selections.abilityScoreGeneration.assignedScores,
+      ) && selections.abilityScoreGeneration.method === "standardArray",
+      "Finalized sheet must use the Standard Array exactly once.",
+    ),
+    ...expectedValueIssue(
+      isPhaseOneManifestBackgroundAbilityScoreIncrease(
+        selections.backgroundAbilityScoreIncrease,
+        unitLibrary,
+        selections.background,
+        selections.abilityScoreGeneration.assignedScores,
+      ),
+      "Finalized sheet must use the phase-1 Soldier ability-score increase.",
+    ),
+    ...expectedValueIssue(
+      sameOptionIdMultiset(selections.languages, [
+        "Common",
+        "Dwarvish",
+        "Goblin",
+      ]),
+      "Finalized sheet must use Common, Dwarvish, and Goblin.",
+    ),
+    ...expectedValueIssue(
+      selections.alignment.order === "lawful" &&
+        selections.alignment.morality === "good",
+      "Finalized sheet must use Lawful Good alignment for the phase-1 manifest.",
+    ),
+    ...expectedValueIssue(
+      sameChoiceSelectionMultiset(
+        selections.choices,
+        phaseOneManifestChoiceSelections(),
+      ),
+      "Finalized sheet must carry exactly the phase-1 manifest choices.",
+    ),
+    ...expectedValueIssue(
+      sameOptionIdMultiset(selections.equipment.selectedUnitIds, [
+        PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+        PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+        PHASE1_SHIELD_UNIT_ID,
+      ]),
+      "Finalized sheet must own exactly the phase-1 purchased equipment.",
+    ),
+  ];
+}
+
+function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[] {
+  return [
+    choiceSelection(PHASE1_CLASS_FIGHTER_UNIT_ID, FIGHTER_SKILL_CHOICE_KEY, [
+      ...SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
+    ]),
+    choiceSelection(
+      FIGHTER_FIGHTING_STYLE_FEATURE_ID,
+      FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
+      [...SUPPORTED_FIGHTING_STYLE_OPTION_IDS],
+    ),
+    choiceSelection(
+      FIGHTER_WEAPON_MASTERY_FEATURE_ID,
+      FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
+      [...SUPPORTED_WEAPON_MASTERY_OPTION_IDS],
+    ),
+    choiceSelection(
+      PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
+      BACKGROUND_TOOL_CHOICE_KEY,
+      [creationChoiceOptionId("tool_dice_set")],
+    ),
+    choiceSelection(PHASE1_CLASS_FIGHTER_UNIT_ID, CLASS_EQUIPMENT_CHOICE_KEY, [
+      PHASE1_CLASS_EQUIPMENT_OPTION_ID,
+    ]),
+    choiceSelection(
+      PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
+      BACKGROUND_EQUIPMENT_CHOICE_KEY,
+      [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
+    ),
+    choiceSelection(PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID, LOADOUT_ARMOR_CHOICE_KEY, [
+      creationChoiceOptionId("worn"),
+    ]),
+    choiceSelection(PHASE1_SHIELD_UNIT_ID, LOADOUT_SHIELD_CHOICE_KEY, [
+      creationChoiceOptionId("wielded"),
+    ]),
+    choiceSelection(
+      PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+      LOADOUT_WEAPON_CHOICE_KEY,
+      [creationChoiceOptionId("wielded_one_handed")],
+    ),
+  ];
+}
+
+function choiceSelection(
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+  optionIds: readonly CreationChoiceOptionId[],
+): CharacterChoiceSelection {
+  return {
+    source: unitSource(unitId, choiceKey),
+    optionIds,
+  };
+}
+
+function expectedValueIssue(
+  condition: boolean,
+  message: string,
+): readonly CreationFinalizationIssue[] {
+  return condition ? [] : [illegalFinalizationIssue(message)];
+}
+
+function illegalFinalizationIssue(message: string): CreationFinalizationIssue {
+  return {
+    tag: "illegalFinalization",
+    code: "illegalFinalization",
+    message,
+  };
+}
+
+function isInitialFighterAdvancement(
+  advancement: CharacterAdvancementSelection,
+): boolean {
+  return (
+    advancement.entries.length === 1 &&
+    advancement.entries[0]?.classUnitId === PHASE1_CLASS_FIGHTER_UNIT_ID &&
+    advancement.entries[0]?.level === 1
+  );
+}
+
+function isSupportedBackgroundAbilityScoreIncrease(
+  selection: BackgroundAbilityScoreIncreaseSelection,
+  unitLibrary: UnitLibrary,
+  backgroundUnitId: UnitRecord["id"],
+  baseScores: AbilityScoreAssignment,
+): boolean {
+  const background = unitLibrary.requireUnit(backgroundUnitId);
+  const facts = readBackgroundCreationFacts(background);
+  if (facts.tag !== "readable") {
+    return false;
+  }
+
+  const eligible = facts.value.abilityScoreIncrease.abilities;
+  const finalScores = applyBackgroundAbilityScoreIncrease(
+    baseScores,
+    selection,
+    eligible,
+  );
+
+  if (SURFACE_ABILITIES.some((ability) => finalScores[ability] > 20)) {
+    return false;
+  }
+
+  if (selection.kind === "oneEach") {
+    return true;
+  }
+
+  return (
+    eligible.includes(selection.plusTwo) && eligible.includes(selection.plusOne)
+  );
+}
+
+function isPhaseOneManifestBackgroundAbilityScoreIncrease(
+  selection: BackgroundAbilityScoreIncreaseSelection,
+  unitLibrary: UnitLibrary,
+  backgroundUnitId: UnitRecord["id"],
+  baseScores: AbilityScoreAssignment,
+): boolean {
+  return (
+    sameBackgroundAbilityScoreIncreaseSelection(
+      selection,
+      PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION,
+    ) &&
+    isSupportedBackgroundAbilityScoreIncrease(
+      selection,
+      unitLibrary,
+      backgroundUnitId,
+      baseScores,
+    )
+  );
+}
+
+function sameBackgroundAbilityScoreIncreaseSelection(
+  left: BackgroundAbilityScoreIncreaseSelection,
+  right: BackgroundAbilityScoreIncreaseSelection,
+): boolean {
+  if (left.kind !== right.kind) {
+    return false;
+  }
+
+  if (left.kind === "oneEach") {
+    return true;
+  }
+
+  if (right.kind === "oneEach") {
+    return false;
+  }
+
+  return left.plusTwo === right.plusTwo && left.plusOne === right.plusOne;
+}
+
+function buildCharacterSheet(input: {
+  readonly sourceDraftId: CharacterDraftId;
+  readonly selections: FinalizedCharacterSelections;
+  readonly unitLibrary: UnitLibrary;
+}): CharacterSheet {
+  const classFacts = requireReadable(
+    readClassCreationFacts(
+      input.unitLibrary.requireUnit(input.selections.primaryClass),
+    ),
+    "class",
+  );
+  const backgroundFacts = requireReadable(
+    readBackgroundCreationFacts(
+      input.unitLibrary.requireUnit(input.selections.background),
+    ),
+    "background",
+  );
+  const speciesFacts = requireReadable(
+    readSpeciesCreationFacts(
+      input.unitLibrary.requireUnit(input.selections.species),
+    ),
+    "species",
+  );
+  const baseScores = input.selections.abilityScoreGeneration.assignedScores;
+  const finalScores = applyBackgroundAbilityScoreIncrease(
+    baseScores,
+    input.selections.backgroundAbilityScoreIncrease,
+    backgroundFacts.abilityScoreIncrease.abilities,
+  );
+  const classFeatureUnitIds = classFacts.featureGrants
+    .filter((grant) => grant.level === 1)
+    .map((grant) => grant.unitId);
+  const featureUnitIds = [
+    ...classFeatureUnitIds,
+    backgroundFacts.originFeatId,
+    ...Object.values(speciesFacts.traits),
+    PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+  ];
+
+  return {
+    sourceDraftId: input.sourceDraftId,
+    selections: input.selections,
+    unitRefs: unitRefs(
+      input.selections.primaryClass,
+      ...classFeatureUnitIds,
+      input.selections.background,
+      backgroundFacts.originFeatId,
+      input.selections.species,
+      ...Object.values(speciesFacts.traits),
+      ...selectedChoiceUnitIds(input.selections, input.unitLibrary),
+      ...input.selections.equipment.selectedUnitIds,
+    ),
+    abilityScores: {
+      base: baseScores,
+      backgroundIncrease: input.selections.backgroundAbilityScoreIncrease,
+      final: finalScores,
+    },
+    hitPoints: {
+      maximum: classFacts.hitPointDie + abilityModifier(finalScores.con),
+      hitDice: [
+        {
+          classUnitId: input.selections.primaryClass,
+          dieSize: classFacts.hitPointDie,
+          total: 1,
+        },
+      ],
+    },
+    proficiencies: {
+      savingThrows: classFacts.savingThrowProficiencies,
+      skills: uniqueValues([
+        ...selectedSkillProficiencies(input.selections),
+        ...backgroundFacts.skillProficiencies,
+      ]),
+      weaponCategories: classFacts.weaponProficiencies,
+      armorTraining: classFacts.armorTraining,
+      tools: selectedToolProficiencies(input.selections),
+    },
+    features: unitRefs(...featureUnitIds).map((ref) => ({
+      unitId: ref.unitId,
+      source: featureSource(
+        ref.unitId,
+        classFeatureUnitIds,
+        speciesFacts.traits,
+      ),
+    })),
+    resources: classFeatureUnitIds.flatMap((unitId) =>
+      resourceForFeature(input.unitLibrary.requireUnit(unitId)),
+    ),
+    equipment: {
+      ownedUnitIds: input.selections.equipment.selectedUnitIds,
+      loadout: {
+        armor: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+        shield: PHASE1_SHIELD_UNIT_ID,
+        weapon: {
+          unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+          grip: "one_handed",
+        },
+      },
+    },
+  };
+}
+
+function requireReadable<T>(
+  result:
+    | { readonly tag: "readable"; readonly value: T }
+    | { readonly tag: "unreadable" },
+  label: string,
+): T {
+  if (result.tag === "unreadable") {
+    throw new Error(`Cannot finalize unreadable ${label} Unit.`);
+  }
+
+  return result.value;
+}
+
+function applyBackgroundAbilityScoreIncrease(
+  baseScores: AbilityScoreAssignment,
+  selection: BackgroundAbilityScoreIncreaseSelection,
+  eligibleAbilities: readonly Ability[],
+): AbilityScoreAssignment {
+  if (selection.kind === "oneEach") {
+    return eligibleAbilities.reduce(
+      (scores, ability) => ({
+        ...scores,
+        [ability]: scores[ability] + 1,
+      }),
+      baseScores,
+    );
+  }
+
+  return {
+    ...baseScores,
+    [selection.plusTwo]: baseScores[selection.plusTwo] + 2,
+    [selection.plusOne]: baseScores[selection.plusOne] + 1,
+  };
+}
+
+function abilityModifier(score: number): number {
+  return Math.floor((score - 10) / 2);
+}
+
+function selectedChoiceUnitIds(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitLibrary,
+): readonly UnitRecord["id"][] {
+  return selections.choices.flatMap((selection) =>
+    selection.optionIds.flatMap((optionId) => {
+      const unit = unitLibrary.getUnit(optionId);
+      return Option.isSome(unit) ? [unit.value.id] : [];
+    }),
+  );
+}
+
+function selectedSkillProficiencies(
+  selections: FinalizedCharacterSelections,
+): readonly Skill[] {
+  const skillSelection = selections.choices.find((selection) =>
+    sameCreationHoleSource(
+      selection.source,
+      unitSource(PHASE1_CLASS_FIGHTER_UNIT_ID, FIGHTER_SKILL_CHOICE_KEY),
+    ),
+  );
+
+  return skillSelection == null
+    ? []
+    : skillSelection.optionIds.flatMap((optionId) => {
+        const skill = SKILLS.find((candidate) => candidate === optionId);
+        return skill == null ? [] : [skill];
+      });
+}
+
+function selectedToolProficiencies(
+  selections: FinalizedCharacterSelections,
+): readonly CreationChoiceOptionId[] {
+  const toolSelection = selections.choices.find((selection) =>
+    sameCreationHoleSource(
+      selection.source,
+      unitSource(PHASE1_BACKGROUND_SOLDIER_UNIT_ID, BACKGROUND_TOOL_CHOICE_KEY),
+    ),
+  );
+
+  return toolSelection?.optionIds ?? [];
+}
+
+function featureSource(
+  unitId: UnitRecord["id"],
+  classFeatureUnitIds: readonly UnitRecord["id"][],
+  speciesTraits: Record<string, UnitRecord["id"]>,
+): CharacterSheetFeature["source"] {
+  if (classFeatureUnitIds.includes(unitId)) {
+    return "class";
+  }
+
+  if (Object.values(speciesTraits).includes(unitId)) {
+    return "species";
+  }
+
+  if (unitId === PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID) {
+    return "choice";
+  }
+
+  return "background";
+}
+
+function resourceForFeature(
+  unit: UnitRecord,
+): readonly CharacterSheetResource[] {
+  if (unit.kind !== "class_feature") {
+    return [];
+  }
+
+  return unit.mechanics.family === "activation"
+    ? [{ unitId: unit.id, resource: unit.mechanics.resource }]
+    : [];
+}
+
+function unitRefs(...unitIds: readonly UnitRecord["id"][]): readonly UnitRef[] {
+  return uniqueValues(unitIds).map((unitId) => ({ unitId }));
+}
+
+function uniqueValues<T>(values: readonly T[]): readonly T[] {
+  return values.filter((value, index) => values.indexOf(value) === index);
 }
 
 function creationFillIssues(
@@ -1400,7 +1982,7 @@ function hasChoiceSelection(
   return draft.selections.choices.some(
     (selection) =>
       sameCreationHoleSource(selection.source, source) &&
-      sameOptionIdSet(selection.optionIds, optionIds),
+      sameOptionIdMultiset(selection.optionIds, optionIds),
   );
 }
 
@@ -1428,14 +2010,39 @@ function sameCreationHoleSource(
   return false;
 }
 
-function sameOptionIdSet(
-  left: readonly CreationChoiceOptionId[],
-  right: readonly CreationChoiceOptionId[],
+function sameChoiceSelectionMultiset(
+  left: readonly CharacterChoiceSelection[],
+  right: readonly CharacterChoiceSelection[],
 ): boolean {
-  return (
-    left.length === right.length &&
-    left.every((optionId) => right.includes(optionId))
-  );
+  const rightKeys = right.map(choiceSelectionKey);
+  const leftKeys = left.map(choiceSelectionKey);
+  return sameOptionIdMultiset(leftKeys, rightKeys);
+}
+
+function choiceSelectionKey(selection: CharacterChoiceSelection): string {
+  const source =
+    selection.source.tag === "draft"
+      ? `draft:${selection.source.path}`
+      : `unit:${selection.source.unitId}:${selection.source.choiceKey}`;
+  const optionIds = [...selection.optionIds].sort().join("\u0000");
+  return `${source}\u0001${optionIds}`;
+}
+
+function sameOptionIdMultiset(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  const remainingRight = [...right];
+  for (const optionId of left) {
+    const matchIndex = remainingRight.indexOf(optionId);
+    if (matchIndex === -1) {
+      return false;
+    }
+
+    remainingRight.splice(matchIndex, 1);
+  }
+
+  return left.length === right.length && remainingRight.length === 0;
 }
 
 function discoverLevelOneFighterFeatureHole(
@@ -1596,7 +2203,13 @@ function backgroundAbilityScoreIncreaseOptions(
     abilities
       .filter((plusOne) => plusOne !== plusTwo)
       .map((plusOne) => ({
-        optionId: creationChoiceOptionId(`two_and_one:${plusTwo}:${plusOne}`),
+        // TypeScript cannot infer this mapped union branch from the local
+        // plusOne !== plusTwo filter above.
+        optionId: backgroundAbilityScoreIncreaseOptionId({
+          kind: "twoAndOne",
+          plusTwo,
+          plusOne,
+        } as BackgroundAbilityScoreIncreaseSelection),
         label: `+2 ${abilityLabel(plusTwo)}, +1 ${abilityLabel(plusOne)}`,
       })),
   );
@@ -1604,12 +2217,24 @@ function backgroundAbilityScoreIncreaseOptions(
   return [
     ...twoAndOneOptions,
     {
-      optionId: creationChoiceOptionId("one_each"),
+      optionId: backgroundAbilityScoreIncreaseOptionId({ kind: "oneEach" }),
       label: abilities
         .map((ability) => `+1 ${abilityLabel(ability)}`)
         .join(", "),
     },
   ];
+}
+
+function backgroundAbilityScoreIncreaseOptionId(
+  selection: BackgroundAbilityScoreIncreaseSelection,
+): CreationChoiceOptionId {
+  if (selection.kind === "oneEach") {
+    return creationChoiceOptionId("one_each");
+  }
+
+  return creationChoiceOptionId(
+    `two_and_one:${selection.plusTwo}:${selection.plusOne}`,
+  );
 }
 
 function singleChoiceHole(input: {

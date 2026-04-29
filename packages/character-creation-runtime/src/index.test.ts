@@ -11,6 +11,7 @@ import {
   creationHoleId,
   discoverCreationHoles,
   fillCreationHoles,
+  finalizeCharacterDraft,
   unitChoiceKey,
   type CharacterDraft,
   type CharacterChoiceSelection,
@@ -593,6 +594,270 @@ describe("character creation batch fill", () => {
   });
 });
 
+describe("character creation finalization", () => {
+  test("finalizes the complete Orc Soldier Fighter manifest into a legal CharacterSheet", () => {
+    const draft = completeManifestDraft();
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") {
+      return;
+    }
+
+    expect(result.sheet.selections.advancement).toEqual({
+      entries: [{ classUnitId: "class_fighter", level: 1 }],
+    });
+    expect(result.sheet.abilityScores).toEqual({
+      base: {
+        str: 15,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      },
+      backgroundIncrease: {
+        kind: "twoAndOne",
+        plusTwo: "str",
+        plusOne: "con",
+      },
+      final: {
+        str: 17,
+        dex: 14,
+        con: 14,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      },
+    });
+    expect(result.sheet.hitPoints).toEqual({
+      maximum: 12,
+      hitDice: [{ classUnitId: "class_fighter", dieSize: 10, total: 1 }],
+    });
+    expect(result.sheet.proficiencies).toEqual({
+      savingThrows: ["str", "con"],
+      skills: ["perception", "survival", "athletics", "intimidation"],
+      weaponCategories: ["simple", "martial"],
+      armorTraining: ["light", "medium", "heavy", "shield"],
+      tools: ["tool_dice_set"],
+    });
+    expect(result.sheet.equipment).toEqual({
+      ownedUnitIds: [
+        "armor_chain_mail",
+        "weapon_longsword",
+        "equipment_shield",
+      ],
+      loadout: {
+        armor: "armor_chain_mail",
+        shield: "equipment_shield",
+        weapon: { unitId: "weapon_longsword", grip: "one_handed" },
+      },
+    });
+    expect(result.sheet.resources).toEqual([
+      {
+        unitId: "fighter_second_wind",
+        resource: {
+          cap: {
+            axis: "class",
+            base: 2,
+            kind: "threshold_tiers",
+            tiers: [
+              { atLevel: 4, value: 3 },
+              { atLevel: 10, value: 4 },
+            ],
+          },
+          kind: "use_count",
+        },
+      },
+    ]);
+    expect(result.sheet.unitRefs.map((ref) => ref.unitId)).toEqual([
+      "class_fighter",
+      "fighter_fighting_style_l1",
+      "fighter_second_wind",
+      "fighter_weapon_mastery_l1",
+      "background_soldier",
+      "feat_savage_attacker",
+      "species_orc",
+      "orc_adrenaline_rush",
+      "orc_darkvision",
+      "orc_relentless_endurance",
+      "defense",
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+      "armor_chain_mail",
+      "equipment_shield",
+    ]);
+  });
+
+  test("does not finalize incomplete or illegal drafts", () => {
+    const incomplete = finalizeCharacterDraft({
+      draft: createTestDraft("draft:finalize-incomplete"),
+      unitLibrary,
+    });
+    expect(incomplete).toMatchObject({ tag: "incomplete" });
+
+    const complete = completeManifestDraft();
+    const illegalDraft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        advancement: {
+          entries: [{ classUnitId: "class_fighter", level: 2 }],
+        },
+      },
+    };
+    const illegal = finalizeCharacterDraft({
+      draft: illegalDraft,
+      unitLibrary,
+    });
+
+    expect(illegal).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          code: "illegalFinalization",
+          message:
+            "Finalized sheet advancement must be exactly one Fighter level.",
+        },
+      ],
+    });
+  });
+
+  test("rejects completed drafts with non-manifest ability-score increases", () => {
+    const complete = completeManifestDraft();
+    const oneEachDraft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        backgroundAbilityScoreIncrease: { kind: "oneEach" },
+      },
+    };
+
+    expect(
+      finalizeCharacterDraft({ draft: oneEachDraft, unitLibrary }),
+    ).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          code: "illegalFinalization",
+          message:
+            "Finalized sheet must use the phase-1 Soldier ability-score increase.",
+        },
+      ],
+    });
+  });
+
+  test("rejects completed drafts with extra or contradictory choices", () => {
+    const complete = completeManifestDraft();
+    const extraChoiceDraft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        choices: [
+          ...complete.selections.choices,
+          selectedChoice(
+            "fighter_fighting_style_l1",
+            "fighter_fighting_style",
+            "weapon_longsword",
+          ),
+        ],
+      },
+    };
+    const duplicateChoiceDraft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        choices: [
+          ...complete.selections.choices,
+          selectedChoice(
+            "fighter_fighting_style_l1",
+            "fighter_fighting_style",
+            "defense",
+          ),
+        ],
+      },
+    };
+
+    expect(
+      finalizeCharacterDraft({ draft: extraChoiceDraft, unitLibrary }),
+    ).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          code: "illegalFinalization",
+          message:
+            "Finalized sheet must carry exactly the phase-1 manifest choices.",
+        },
+      ],
+    });
+    expect(
+      finalizeCharacterDraft({ draft: duplicateChoiceDraft, unitLibrary }),
+    ).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          code: "illegalFinalization",
+          message:
+            "Finalized sheet must carry exactly the phase-1 manifest choices.",
+        },
+      ],
+    });
+  });
+
+  test("rejects duplicate or missing finalized equipment ownership", () => {
+    const complete = completeManifestDraft();
+    const duplicateEquipmentDraft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        equipment: {
+          selectedUnitIds: [
+            "armor_chain_mail",
+            "weapon_longsword",
+            "equipment_shield",
+            "equipment_shield",
+          ],
+        },
+      },
+    };
+    const missingShieldDraft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        equipment: {
+          selectedUnitIds: [
+            "armor_chain_mail",
+            "weapon_longsword",
+            "weapon_longsword",
+          ],
+        },
+      },
+    };
+
+    expect(
+      finalizeCharacterDraft({ draft: duplicateEquipmentDraft, unitLibrary }),
+    ).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          code: "illegalFinalization",
+          message:
+            "Finalized sheet must own exactly the phase-1 purchased equipment.",
+        },
+      ],
+    });
+    expect(
+      finalizeCharacterDraft({ draft: missingShieldDraft, unitLibrary }).tag,
+    ).not.toBe("ready");
+  });
+});
+
 function draftWithSelections(
   selections: Partial<CharacterDraft["selections"]>,
 ): CharacterDraft {
@@ -646,13 +911,115 @@ function initialManifestFills(): readonly CreationFill[] {
   ];
 }
 
-function choiceFill(
-  holeId: CreationHoleIdText,
-  optionId: string,
+function completeManifestDraft(): CharacterDraft {
+  const draft = createTestDraft("draft:complete-manifest");
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: initialManifestFills(),
+    }),
+  );
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        multiChoiceFill(
+          "cc:unit:class_fighter:fighter_skill_choices",
+          "perception",
+          "survival",
+        ),
+        choiceFill(
+          "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+          "defense",
+        ),
+        multiChoiceFill(
+          "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+        ),
+        choiceFill(
+          "cc:unit:background_soldier:background_ability_score_increase",
+          "two_and_one:str:con",
+        ),
+        choiceFill(
+          "cc:unit:background_soldier:background_tool_choice",
+          "tool_dice_set",
+        ),
+        choiceFill("cc:unit:class_fighter:class_equipment_choice", "option_c"),
+        choiceFill(
+          "cc:unit:background_soldier:background_equipment_choice",
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        multiChoiceFill(
+          "cc:unit:class_fighter:equipment_purchase",
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+
+  return requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
+        choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
+        choiceFill(
+          "cc:unit:weapon_longsword:loadout_weapon",
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+}
+
+function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
+  if (result.tag !== "accepted") {
+    throw new Error("Expected accepted character-creation fill batch.");
+  }
+
+  return result.draft;
+}
+
+function multiChoiceFill(
+  holeId: string,
+  ...optionIds: readonly string[]
 ): CreationFill {
   return {
+    kind: "multiChoice",
+    // Test fixtures pass discovered hole ids as text. Unit-backed hole ids
+    // include a branded UnitChoiceKey segment, which string literals cannot
+    // prove to TypeScript even when they match the runtime protocol.
+    holeId: creationHoleId(holeId as CreationHoleIdText),
+    optionIds: optionIds.map(creationChoiceOptionId),
+  };
+}
+
+function choiceFill(holeId: string, optionId: string): CreationFill {
+  return {
     kind: "choice",
-    holeId: creationHoleId(holeId),
+    // Test fixtures pass discovered hole ids as text. Unit-backed hole ids
+    // include a branded UnitChoiceKey segment, which string literals cannot
+    // prove to TypeScript even when they match the runtime protocol.
+    holeId: creationHoleId(holeId as CreationHoleIdText),
     optionId: creationChoiceOptionId(optionId),
   };
 }

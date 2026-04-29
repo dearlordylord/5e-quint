@@ -91,13 +91,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 9,
       "id": "CAM9",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Finalize Legal Fighter Character Sheet"
     },
     {
       "number": 10,
       "id": "CAM10",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add Character Creation QNT Slice And Parity"
     },
     {
@@ -188,9 +188,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 5     | CAM5 - Author First Vertical SRD Surface Content                | done                                          | CAM3, CAM4        | CAM7, CAM9, CAM12, CAM16             | Authored first-vertical SRD Surface records and real SRD Unit/Stat Block collections for composition.                                                                           | Done in this task.                                                                                   |
 | 6     | CAM6 - Create Character Creation Runtime Skeleton               | done                                          | CAM1, CAM2        | CAM7, CAM8, CAM9, CAM10, CAM17       | Created `@dnd/character-creation-runtime` package with public draft/session/hole/fill/finalization types matching `phase0-runtime-boundary-api.md`.                             | Done in this task.                                                                                   |
 | 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | done                                          | CAM5, CAM6        | CAM8, CAM9                           | Hole discovery for the exact Orc Soldier Fighter manifest landed using real Surface records and package-private support gates.                                                  | Done in this task.                                                                                   |
-| 8     | CAM8 - Implement Atomic Creation Batch Fill                     | done                                          | CAM7              | CAM9, CAM10, CAM17                   | Atomic batch fill landed with revision checks, duplicate/invalid/wrong-kind/unsupported issues, Standard Array validation, and hole rediscovery after accepted fills.            | Done in this task.                                                                                   |
-| 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | ready-for-implementation-after-light-research | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Finalize the manifest draft into a legal `CharacterSheet` with selected Unit refs, advancement exactly one Fighter level, loadout, and legality tests.                          | Ready after finalization legality and RAW check.                                                     |
-| 10    | CAM10 - Add Character Creation QNT Slice And Parity             | blocked                                       | CAM9              | CAM17, CAM18                         | Add `character-creation-runtime-slice.qnt` and parity/deterministic tests for complete Fighter creation and at least one invalid fill.                                          | Blocker Type: dependency. Blocker Detail: waits on finalization behavior.                            |
+| 8     | CAM8 - Implement Atomic Creation Batch Fill                     | done                                          | CAM7              | CAM9, CAM10, CAM17                   | Atomic batch fill landed with revision checks, duplicate/invalid/wrong-kind/unsupported issues, Standard Array validation, and hole rediscovery after accepted fills.           | Done in this task.                                                                                   |
+| 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | done                                          | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Legal Orc Soldier Fighter `CharacterSheet` finalization landed with legality tests and Second Wind resource preservation.                                                       | Done in this task.                                                                                   |
+| 10    | CAM10 - Add Character Creation QNT Slice And Parity             | ready-for-implementation-after-light-research | CAM9              | CAM17, CAM18                         | Add `character-creation-runtime-slice.qnt` and parity/deterministic tests for complete Fighter creation and at least one invalid fill.                                          | Ready after character-creation QNT slice and RAW check.                                              |
 | 11    | CAM11 - Create Battle Runtime Skeleton                          | ready-for-implementation-after-light-research | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Create `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block seed types.                                  | Ready after runtime package architecture check.                                                      |
 | 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | blocked                                       | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Implement battle initialization from finalized Character Sheet plus generic `StatBlockRecord`, deriving AC/HP/loadout/action-resource facts without Core imports.               | Blocker Type: dependency. Blocker Detail: waits on finalized sheet and battle runtime skeleton.      |
 | 13    | CAM13 - Implement Battle Attack Holes And Replay                | blocked                                       | CAM12             | CAM14, CAM15, CAM18                  | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                  | Blocker Type: dependency. Blocker Detail: waits on battle initialization.                            |
@@ -561,7 +561,7 @@ Plan Impact:
 
 ### Task 9 - CAM9 - Finalize Legal Fighter Character Sheet
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM5, CAM8  
 Blocks: CAM10, CAM12, CAM17
@@ -593,17 +593,18 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM10 and CAM12 when their other dependencies are satisfied.
+- Unblocked CAM10 because CAM9 is done.
+- CAM12 remains blocked on CAM11.
+- CAM17 remains blocked on CAM10.
 
 ### Task 10 - CAM10 - Add Character Creation QNT Slice And Parity
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM9  
 Blocks: CAM17, CAM18
 
-Blocker Type: dependency  
-Blocker Detail: waits on finalization behavior.
+Next action: add the character-creation QNT slice and parity checks against the finalized Orc Soldier Fighter behavior.
 
 Input:
 
