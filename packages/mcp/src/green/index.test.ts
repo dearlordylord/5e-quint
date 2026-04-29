@@ -4,7 +4,6 @@ import {
   battleId,
   characterId,
   combatantId,
-  monsterId,
   snapshotBattle,
 } from "@dnd/battle-runtime";
 import {
@@ -28,9 +27,9 @@ const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 
 describe("MCP green composition root", () => {
-  test("builds SRD catalogs and keeps selected monster state identity-only", () => {
+  test("builds SRD catalogs and keeps selected Stat Block state identity-only", () => {
     const root = createGreenMcpCompositionRoot();
-    const selected = root.sessionStore.selectMonster(
+    const selected = root.sessionStore.selectStatBlock(
       "stat_block_goblin_warrior",
     );
 
@@ -44,14 +43,14 @@ describe("MCP green composition root", () => {
       battleState: null,
       transientBattleFills: null,
     });
-    expect(root.sessionStore.getSelectedMonster()?.id).toBe(
+    expect(root.sessionStore.getSelectedStatBlock()?.id).toBe(
       "stat_block_goblin_warrior",
     );
 
-    root.sessionStore.clearSelectedMonster();
+    root.sessionStore.clearSelectedStatBlock();
 
     expect(root.sessionStore.snapshot().selectedStatBlockId).toBeNull();
-    expect(root.sessionStore.getSelectedMonster()).toBeNull();
+    expect(root.sessionStore.getSelectedStatBlock()).toBeNull();
   });
 
   test("starts battle from Character Sheet at the MCP composition boundary", () => {
@@ -64,9 +63,8 @@ describe("MCP green composition root", () => {
         displayName: "Orc Soldier Fighter",
         sheet: fighterCharacterSheet(root.unitLibrary),
       },
-      monster: {
+      statBlockBattleInput: {
         combatantId: goblinId,
-        monsterId: monsterId("goblin-warrior"),
         statBlock: root.statBlockCatalog.requireStatBlock(
           "stat_block_goblin_warrior",
         ),
@@ -122,9 +120,8 @@ describe("MCP green composition root", () => {
           },
         },
       },
-      monster: {
+      statBlockBattleInput: {
         combatantId: goblinId,
-        monsterId: monsterId("goblin-warrior"),
         statBlock: root.statBlockCatalog.requireStatBlock(
           "stat_block_goblin_warrior",
         ),

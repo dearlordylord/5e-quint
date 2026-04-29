@@ -87,10 +87,6 @@ export type CharacterId = string & Brand.Brand<"CharacterId">;
 const CharacterId = Brand.nominal<CharacterId>();
 export const characterId: (value: string) => CharacterId = CharacterId;
 
-export type MonsterId = string & Brand.Brand<"MonsterId">;
-const MonsterId = Brand.nominal<MonsterId>();
-export const monsterId: (value: string) => MonsterId = MonsterId;
-
 export type InitiativeScore = Initiative & Brand.Brand<"InitiativeScore">;
 const InitiativeScore = Brand.nominal<InitiativeScore>();
 export const initiativeScore: (value: number) => InitiativeScore =
@@ -131,7 +127,7 @@ export type BattleAttackProfile = {
   readonly abilityModifier: number;
 };
 
-export type CharacterCombatantSeed = {
+export type CharacterBattleCreatureInit = {
   readonly kind: "character";
   readonly characterId: CharacterId;
   readonly sheetUnitRefs: readonly BattleUnitRef[];
@@ -144,17 +140,15 @@ export type CharacterCombatantSeed = {
   readonly attack: BattleAttackProfile | null;
 };
 
-export type StatBlockCombatantInput = {
+export type StatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
-  readonly monsterId: MonsterId;
   readonly statBlock: StatBlockRecord;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
 };
 
-export type MonsterCombatantSeed = {
-  readonly kind: "monster";
-  readonly monsterId: MonsterId;
+export type StatBlockBattleCreatureInit = {
+  readonly kind: "statBlock";
   readonly statBlock: StatBlockRecord;
   readonly currentHp: Hp;
   readonly maxHp: Hp;
@@ -162,11 +156,13 @@ export type MonsterCombatantSeed = {
   readonly zeroHpLifecyclePolicy: "diesAtZeroHp";
 };
 
-export type CombatantSeedInput = {
+export type BattleCreatureInit = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
-  readonly seed: CharacterCombatantSeed | MonsterCombatantSeed;
+  readonly creatureInit:
+    | CharacterBattleCreatureInit
+    | StatBlockBattleCreatureInit;
 };
 
 export type BattleTurnResources = ActionEconomyState & {
@@ -174,7 +170,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly currentHasBonusAction: boolean;
 };
 
-export type CombatantState = {
+export type BattleCreatureState = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
@@ -184,7 +180,7 @@ export type CombatantState = {
   readonly conditions: ConditionState;
   readonly armorClass: ArmorClassState;
   readonly zeroHpLifecycle: ZeroHpLifecycle;
-  readonly source:
+  readonly origin:
     | {
         readonly kind: "character";
         readonly characterId: CharacterId;
@@ -193,8 +189,7 @@ export type CombatantState = {
         readonly attack: BattleAttackProfile | null;
       }
     | {
-        readonly kind: "monster";
-        readonly monsterId: MonsterId;
+        readonly kind: "statBlock";
         readonly statBlock: StatBlockRecord;
       };
 };
@@ -202,7 +197,7 @@ export type CombatantState = {
 export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
-  readonly combatants: ReadonlyMap<CombatantId, CombatantState>;
+  readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly currentTurnResources: BattleTurnResources;
 };
 
@@ -300,25 +295,25 @@ export type BattleSnapshot = {
   readonly round: RoundType;
   readonly currentActorId: CombatantId;
   readonly turnOrder: readonly CombatantId[];
-  readonly combatants: readonly CombatantSnapshot[];
+  readonly combatants: readonly BattleCreatureSnapshot[];
   readonly acts: readonly AvailableBattleAct[];
   readonly currentTurnResources: BattleTurnResources;
 };
 
-export type CombatantSnapshot = {
+export type BattleCreatureSnapshot = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
-  readonly sourceKind: CombatantState["source"]["kind"];
+  readonly originKind: BattleCreatureState["origin"]["kind"];
   readonly hp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly armorClass: ArmorClass;
   readonly defeated: boolean;
-  readonly zeroHpLifecycle: CombatantZeroHpLifecycleSnapshot;
+  readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;
   readonly conditions: readonly Condition[];
 };
 
-export type CombatantZeroHpLifecycleSnapshot =
+export type BattleCreatureZeroHpLifecycleSnapshot =
   | {
       readonly policy: "diesAtZeroHp";
       readonly dead: boolean;
@@ -342,18 +337,21 @@ const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
 
 export function startBattle(input: {
   readonly battleId: BattleId;
-  readonly combatants: readonly CombatantSeedInput[];
+  readonly combatants: readonly BattleCreatureInit[];
 }): BattleState {
   if (input.combatants.length === 0) {
     throw new Error("startBattle requires at least one combatant.");
   }
 
-  const combatants = new Map<CombatantId, CombatantState>();
+  const combatants = new Map<CombatantId, BattleCreatureState>();
   for (const combatant of input.combatants) {
     if (combatants.has(combatant.combatantId)) {
       throw new Error(`Duplicate combatant id: ${combatant.combatantId}`);
     }
-    combatants.set(combatant.combatantId, combatantState(combatant));
+    combatants.set(
+      combatant.combatantId,
+      battleCreatureStateFromInit(combatant),
+    );
   }
 
   const orderedEntries = [...input.combatants]
@@ -507,28 +505,31 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
   };
 }
 
-function combatantState(input: CombatantSeedInput): CombatantState {
+function battleCreatureStateFromInit(
+  input: BattleCreatureInit,
+): BattleCreatureState {
+  const creatureInit = input.creatureInit;
   const base = {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: input.initiative,
-    hp: input.seed.currentHp,
-    maxHp: input.seed.maxHp,
-    tempHp: input.seed.tempHp,
+    hp: creatureInit.currentHp,
+    maxHp: creatureInit.maxHp,
+    tempHp: creatureInit.tempHp,
     conditions: EMPTY_CONDITION_STATE,
-    zeroHpLifecycle: initialZeroHpLifecycle(input.seed.zeroHpLifecyclePolicy),
+    zeroHpLifecycle: initialZeroHpLifecycle(creatureInit.zeroHpLifecyclePolicy),
   };
 
-  if (input.seed.kind === "character") {
+  if (creatureInit.kind === "character") {
     return applyInitialZeroHpLifecycle({
       ...base,
-      armorClass: input.seed.armorClass,
-      source: {
+      armorClass: creatureInit.armorClass,
+      origin: {
         kind: "character",
-        characterId: input.seed.characterId,
-        sheetUnitRefs: input.seed.sheetUnitRefs,
-        selectedLoadout: input.seed.selectedLoadout,
-        attack: input.seed.attack,
+        characterId: creatureInit.characterId,
+        sheetUnitRefs: creatureInit.sheetUnitRefs,
+        selectedLoadout: creatureInit.selectedLoadout,
+        attack: creatureInit.attack,
       },
     });
   }
@@ -536,12 +537,11 @@ function combatantState(input: CombatantSeedInput): CombatantState {
   return applyInitialZeroHpLifecycle({
     ...base,
     armorClass: statBlockArmorClassState(
-      literalStatBlockNumber(input.seed.statBlock.statBlock.ac),
+      literalStatBlockNumber(creatureInit.statBlock.statBlock.ac),
     ),
-    source: {
-      kind: "monster",
-      monsterId: input.seed.monsterId,
-      statBlock: input.seed.statBlock,
+    origin: {
+      kind: "statBlock",
+      statBlock: creatureInit.statBlock,
     },
   });
 }
@@ -550,11 +550,13 @@ function currentActorId(state: BattleState): CombatantId {
   return currentActing(state.initiative);
 }
 
-function combatantSnapshot(combatant: CombatantState): CombatantSnapshot {
+function combatantSnapshot(
+  combatant: BattleCreatureState,
+): BattleCreatureSnapshot {
   return {
     combatantId: combatant.combatantId,
     displayName: combatant.displayName,
-    sourceKind: combatant.source.kind,
+    originKind: combatant.origin.kind,
     hp: combatant.hp,
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
@@ -581,8 +583,8 @@ function initialZeroHpLifecycle(
 }
 
 function combatantZeroHpLifecycleSnapshot(
-  combatant: CombatantState,
-): CombatantZeroHpLifecycleSnapshot {
+  combatant: BattleCreatureState,
+): BattleCreatureZeroHpLifecycleSnapshot {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, (lifecycle) => ({
       policy: lifecycle.policy,
@@ -599,8 +601,8 @@ function combatantZeroHpLifecycleSnapshot(
 }
 
 function combatantCanTakeActions(
-  combatant: CombatantState | undefined,
-): combatant is CombatantState {
+  combatant: BattleCreatureState | undefined,
+): combatant is BattleCreatureState {
   return combatant != null && !isIncapacitated(combatant.conditions);
 }
 
@@ -621,17 +623,16 @@ function literalStatBlockNumber(value: StatBlockValue): number {
   return value.value;
 }
 
-export function combatantSeedFromStatBlock(
-  input: StatBlockCombatantInput,
-): CombatantSeedInput {
+export function battleCreatureInitFromStatBlock(
+  input: StatBlockBattleInitInput,
+): BattleCreatureInit {
   const maxHp = Hp(literalStatBlockNumber(input.statBlock.statBlock.hp));
   return {
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
     initiative: statBlockInitiativeScore(input.statBlock),
-    seed: {
-      kind: "monster",
-      monsterId: input.monsterId,
+    creatureInit: {
+      kind: "statBlock",
       statBlock: input.statBlock,
       currentHp: input.currentHp ?? maxHp,
       maxHp,
@@ -928,10 +929,10 @@ type BattleDamageContext = {
 };
 
 function applyHpDamage(
-  combatant: CombatantState,
+  combatant: BattleCreatureState,
   damageAmount: number,
   context: BattleDamageContext,
-): CombatantState {
+): BattleCreatureState {
   const effectiveDamage = Math.max(0, Math.floor(damageAmount));
   if (effectiveDamage <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
     return combatant;
@@ -968,8 +969,8 @@ function applyHpDamage(
 }
 
 function applyInitialZeroHpLifecycle(
-  combatant: CombatantState,
-): CombatantState {
+  combatant: BattleCreatureState,
+): BattleCreatureState {
   if (Number(combatant.hp) > 0) {
     return combatant;
   }
@@ -977,7 +978,9 @@ function applyInitialZeroHpLifecycle(
   return applyDropToZeroHpLifecycle(combatant);
 }
 
-function applyDropToZeroHpLifecycle(combatant: CombatantState): CombatantState {
+function applyDropToZeroHpLifecycle(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
@@ -993,9 +996,9 @@ function applyDropToZeroHpLifecycle(combatant: CombatantState): CombatantState {
 }
 
 function applyDamageAtZeroHp(
-  combatant: CombatantState,
+  combatant: BattleCreatureState,
   context: BattleDamageContext,
-): CombatantState {
+): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
@@ -1013,7 +1016,9 @@ function applyDamageAtZeroHp(
   );
 }
 
-function applyInstantDeath(combatant: CombatantState): CombatantState {
+function applyInstantDeath(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
@@ -1028,7 +1033,7 @@ function applyInstantDeath(combatant: CombatantState): CombatantState {
   );
 }
 
-function zeroHpLifecycleIsTerminal(combatant: CombatantState): boolean {
+function zeroHpLifecycleIsTerminal(combatant: BattleCreatureState): boolean {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant.hp === 0),
     Match.when(
@@ -1132,11 +1137,11 @@ function supportedAttackProfile(
   actorId: CombatantId,
 ): BattleAttackProfile | undefined {
   const actor = state.combatants.get(actorId);
-  if (actor?.source.kind !== "character") {
+  if (actor?.origin.kind !== "character") {
     return undefined;
   }
 
-  return actor.source.attack ?? undefined;
+  return actor.origin.attack ?? undefined;
 }
 
 function selectedWeaponDamage(weapon: WeaponRecord): BattleWeaponDamage {

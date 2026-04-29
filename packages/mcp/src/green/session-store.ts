@@ -32,9 +32,9 @@ export type GreenMcpSessionStore = {
   readonly sheets: Map<CharacterDraftId, CharacterSheet>;
   battleState: BattleState | null;
   transientBattleFills: GreenBattleFillSession | null;
-  clearSelectedMonster(): void;
-  getSelectedMonster(): StatBlockRecord | null;
-  selectMonster(statBlockId: StatBlockId): StatBlockRecord;
+  clearSelectedStatBlock(): void;
+  getSelectedStatBlock(): StatBlockRecord | null;
+  selectStatBlock(statBlockId: StatBlockId): StatBlockRecord;
   snapshot(): GreenMcpSessionSnapshot;
 };
 
@@ -49,15 +49,15 @@ export function createGreenMcpSessionStore(
     sheets,
     battleState: null,
     transientBattleFills: null,
-    clearSelectedMonster(): void {
+    clearSelectedStatBlock(): void {
       selectedStatBlockId = null;
     },
-    getSelectedMonster(): StatBlockRecord | null {
+    getSelectedStatBlock(): StatBlockRecord | null {
       return selectedStatBlockId === null
         ? null
         : statBlockCatalog.requireStatBlock(selectedStatBlockId);
     },
-    selectMonster(statBlockId: StatBlockId): StatBlockRecord {
+    selectStatBlock(statBlockId: StatBlockId): StatBlockRecord {
       const statBlock = statBlockCatalog.requireStatBlock(statBlockId);
       selectedStatBlockId = statBlock.id;
       return statBlock;

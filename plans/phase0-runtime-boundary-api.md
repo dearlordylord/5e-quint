@@ -6,7 +6,7 @@ Notes from audit:
 - This draft uses `packages/surface-runtime-correction/VOCABULARY.md`, `ARCHITECTURE_GRAPH.md`, `MBT_TO_REDUCER_GRAPH.md`, and current reducer source.
 - Phase 0 artifacts are present as `plans/phase1-fighter-manifest.md` and `plans/phase0-surface-unit-availability.md`. This draft follows their selected Orc Soldier Fighter / Goblin Warrior vertical and Surface package decision.
 - Core files were read only to identify old facts and handoff shapes. The new green path must not preserve Core package boundaries.
-- Review passes applied: RAW/SRD consistency, ubiquitous language, and architecture/depth. The tightened points are the explicit SRD Stat Block catalog boundary, Phase 1-only battle subjects, and stronger domain identities for holes, choices, seeds, and snapshot projections.
+- Review passes applied: RAW/SRD consistency, ubiquitous language, and architecture/depth. The tightened points are the explicit SRD Stat Block catalog boundary, Phase 1-only battle subjects, and stronger domain identities for holes, choices, creature initialization inputs, and snapshot projections.
 
 ## Dependency Graph
 
@@ -552,24 +552,23 @@ export function finalizeCharacterDraft(input: {
 }): CreationFinalizationResult;
 ```
 
-`@dnd/character-creation-runtime` does not export battle seed types. It finalizes a `CharacterSheet` that carries selected Unit references and loadout selections. The battle package owns the battle seed interface and parses the finalized sheet plus caller-supplied current HP into battle reducer facts at the composition root.
+`@dnd/character-creation-runtime` does not export battle creature-init types. It finalizes a `CharacterSheet` that carries selected Unit references and loadout selections. The battle package owns the creature initialization interface and parses the finalized sheet plus caller-supplied current HP into battle reducer facts at the composition root.
 
 ## `@dnd/battle-runtime` API
 
-Battle owns reducer state, act discovery, replay-from-root hole resolution, combatant seed ingestion, and snapshots. It does not own durable character drafts or authored Surface schemas.
+Battle owns reducer state, act discovery, replay-from-root hole resolution, creature initialization ingestion, and snapshots. It does not own durable character drafts or authored Surface schemas.
 
-State and seed inputs:
+State and creature-init inputs:
 
 ```ts
 export type CombatantId = string & Brand<"CombatantId">;
 export type BattleId = string & Brand<"BattleId">;
 export type CharacterId = string & Brand<"CharacterId">;
-export type MonsterId = string & Brand<"MonsterId">;
 export type InitiativeScore = number & Brand<"InitiativeScore">;
 
 export type ZeroHpLifecyclePolicy = "diesAtZeroHp" | "usesDeathSavingThrows";
 
-export type CharacterCombatantSeed = {
+export type CharacterBattleCreatureInit = {
   readonly kind: "character";
   readonly characterId: CharacterId;
   readonly sheetUnitRefs: readonly UnitRef[];
@@ -581,9 +580,8 @@ export type CharacterCombatantSeed = {
   readonly selectedLoadout: CharacterLoadoutRef;
 };
 
-export type MonsterCombatantSeed = {
-  readonly kind: "monster";
-  readonly monsterId: MonsterId;
+export type StatBlockBattleCreatureInit = {
+  readonly kind: "statBlock";
   readonly statBlock: StatBlockRecord;
   readonly currentHp: Hp;
   readonly maxHp: Hp;
@@ -591,11 +589,13 @@ export type MonsterCombatantSeed = {
   readonly zeroHpLifecyclePolicy: "diesAtZeroHp";
 };
 
-export type CombatantSeedInput = {
+export type BattleCreatureInit = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
-  readonly seed: CharacterCombatantSeed | MonsterCombatantSeed;
+  readonly creatureInit:
+    | CharacterBattleCreatureInit
+    | StatBlockBattleCreatureInit;
 };
 
 export type BattleTurnResources = {
@@ -606,16 +606,16 @@ export type BattleTurnResources = {
 export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
-  readonly combatants: ReadonlyMap<CombatantId, CombatantState>;
+  readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly currentTurnResources: BattleTurnResources;
 };
 ```
 
-`@dnd/battle-runtime` must not import `@dnd/character-creation-runtime`. MCP passes the finalized `CharacterSheet` through a composition-root mapper that copies only the sheet's selected Unit references into `CharacterCombatantSeed.sheetUnitRefs` and supplies current HP plus structured `ArmorClassState`. This keeps the character draft/session model out of battle state while avoiding a parallel battle seed type in character creation.
+`@dnd/battle-runtime` must not import `@dnd/character-creation-runtime`. MCP passes the finalized `CharacterSheet` through a composition-root mapper that copies only the sheet's selected Unit references into `CharacterBattleCreatureInit.sheetUnitRefs` and supplies current HP plus structured `ArmorClassState`. This keeps the character draft/session model out of battle state while avoiding a parallel battle initialization type in character creation.
 
-`CombatantState` may use the same reducer facts already present in Correction: HP/max HP/Temporary HP, conditions, reaction availability, actor-owned `UnitRecord[]`, structured armor facts, zero-HP lifecycle policy, death saves, spell slots, and action-resource facts. It must not carry a duplicate current Armor Class scalar if `ArmorClassState` can derive it. Battle state should use the `RuntimeActionResource` model from `@dnd/shared-algebras`, including turn-granted actions and unit-granted restricted actions; do not introduce a scalar action quota.
+`BattleCreatureState` may use the same reducer facts already present in Correction: HP/max HP/Temporary HP, conditions, reaction availability, actor-owned `UnitRecord[]`, structured armor facts, zero-HP lifecycle policy, death saves, spell slots, and action-resource facts. It must not carry a duplicate current Armor Class scalar if `ArmorClassState` can derive it. Battle state should use the `RuntimeActionResource` model from `@dnd/shared-algebras`, including turn-granted actions and unit-granted restricted actions; do not introduce a scalar action quota.
 
-Battle seed data is runtime seed data only. Weapon damage dice, Damage Type, armor facts, and Shield facts must be resolved through Unit references/readers where Surface already has them, not duplicated into a new executable IR. `selectedLoadout` should use SRD-facing holding/wielding terms; do not introduce main-hand/off-hand vocabulary.
+Battle creature-init data is runtime initialization data only. Weapon damage dice, Damage Type, armor facts, and Shield facts must be resolved through Unit references/readers where Surface already has them, not duplicated into a new executable IR. `selectedLoadout` should use SRD-facing holding/wielding terms; do not introduce main-hand/off-hand vocabulary.
 
 Subjects:
 
@@ -636,8 +636,8 @@ export type BattleSubject =
 Phase 1 subjects are only `srdAction.attack` and `runtimeCommand.endTurn`.
 `endTurn` is a runtime command, not an SRD Action. Do not include `unit` or
 `monsterStatBlockAction` in the public subject union until discovery and
-resolution support them. Monster seed ownership is visible through
-`MonsterCombatantSeed` and `StatBlockCatalog`; exposing unsupported subject
+resolution support them. Stat Block creature-init ownership is visible through
+`StatBlockBattleCreatureInit` and `StatBlockCatalog`; exposing unsupported subject
 variants would make invalid act states representable.
 
 Battle hole identity may reuse the branded `HoleId`/`HoleInstanceKey` values
@@ -707,7 +707,7 @@ Public reducer API:
 ```ts
 export function startBattle(input: {
   readonly battleId: BattleId;
-  readonly combatants: readonly CombatantSeedInput[];
+  readonly combatants: readonly BattleCreatureInit[];
 }): BattleState;
 
 export function discoverBattleActs(
@@ -782,13 +782,14 @@ Tool sequence:
    - Calls `finalizeCharacterDraft({ draft, unitLibrary })`.
    - Stores `CharacterSheet` only when result is `ready`.
 
-5. `select_monster`
+5. `select_stat_block`
    - Reads `srd_stat_block_goblin_warrior` from the SRD Stat Block catalog.
    - Does not call Core monster catalog.
-   - Produces `MonsterCombatantSeed`.
+   - Stores or returns the selected `StatBlockRecord`; it does not produce battle creature-init.
 
 6. `start_battle`
-   - Builds `CharacterCombatantSeed` from the finalized sheet, selected loadout, and caller-supplied current HP at the MCP composition root.
+   - Builds `CharacterBattleCreatureInit` from the finalized sheet, selected loadout, and caller-supplied current HP at the MCP composition root.
+   - Builds `StatBlockBattleCreatureInit` from the selected `StatBlockRecord` and caller-supplied battle-local facts.
    - Calls `startBattle({ battleId, combatants })`.
    - Stores `BattleState`.
 
@@ -810,7 +811,7 @@ MCP composition root owns:
 
 - `srdUnitCollection`;
 - `srdStatBlockCollection` / `StatBlockCatalog` for Goblin Warrior, returning generic `StatBlockRecord`s;
-- session stores for drafts, sheets, selected monster, battle state, and transient battle fill accumulation.
+- session stores for drafts, sheets, selected Stat Block, battle state, and transient battle fill accumulation.
 
 Green-path isolation requirements:
 
@@ -888,7 +889,7 @@ Temporary authority statement:
    - Recommended answer: yes. Use the Orc Soldier Fighter with Chain Mail, Shield, Longsword, Defense Fighting Style, and Goblin Warrior Stat Block while keeping APIs generic enough for later SRD choices.
 
 4. Should battle `monsterStatBlockAction` be in the public subject union before monster action resolution is implemented?
-   - Recommended answer: no. Keep monster seed ownership visible through generic `StatBlockRecord` and `StatBlockCatalog`, but do not expose unsupported act subjects until discovery and resolution can handle them.
+   - Recommended answer: no. Keep Stat Block creature-init ownership visible through generic `StatBlockRecord` and `StatBlockCatalog`, but do not expose unsupported act subjects until discovery and resolution can handle them.
 
 5. Should MCP keep transient battle fills in memory only, or persist them alongside sessions?
    - Recommended answer: store them in the MCP session state only while an act is in progress. They are user-facing interaction state, not battle reducer state.

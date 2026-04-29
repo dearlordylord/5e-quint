@@ -10,17 +10,19 @@ content for character Units and monster Stat Blocks. It stores durable
 `BattleState` separately from transient battle fills so `resolveBattleSubject`
 can remain replay-from-root.
 
-Domain boundary: battle consumes combatant seeds. Character combatant seeds are
-projected from Character Sheets plus selected Unit lookups at the composition
-boundary. Monster combatant seeds are projected from `StatBlockRecord`s. Battle
-state must not treat a Character Sheet as a Stat Block, a Stat Block as a Unit,
-or a battle seed as authored content.
+Domain boundary: battle consumes creature initialization inputs. Character
+creature-init inputs are projected from Character Sheets plus selected Unit
+lookups at the composition boundary. Stat-block creature-init inputs are
+projected from `StatBlockRecord`s. Battle state must not treat a Character Sheet
+as a Stat Block, a Stat Block as a Unit, or a creature-init input as authored
+content or as the durable creature state.
 
 ## Runtime Contract
 
-- `startBattle` accepts caller-built combatant seeds and creates sorted Initiative state.
-- Character Sheet to battle-seed mapping belongs to the application composition layer, not this package. `@dnd/battle-runtime` accepts battle-owned seed data and must not import `@dnd/character-creation-runtime`.
-- Character initialization consumes battle seed facts derived by the composition boundary: Hit Point maximum/current HP, Temporary Hit Points from the optional seed override or `0`, Initiative score, selected loadout, selected Unit refs, and `usesDeathSavingThrows` as the typed zero-HP lifecycle policy.
+- `startBattle` accepts caller-built creature-init inputs and creates sorted Initiative state plus durable `BattleCreatureState`.
+- Character Sheet to creature-init mapping belongs to the application composition layer, not this package. `@dnd/battle-runtime` accepts battle-owned initialization data and must not import `@dnd/character-creation-runtime`.
+- Character initialization consumes facts derived by the composition boundary: Hit Point maximum/current HP, Temporary Hit Points from the optional init override or `0`, Initiative score, selected loadout, selected Unit refs, and `usesDeathSavingThrows` as the typed zero-HP lifecycle policy.
+- `BattleCreatureState.origin` records the battle creature's Character or Stat Block origin. Origin data is not provenance: provenance belongs to authored Surface records. The runtime may retain resolved Surface records or Unit refs in origin data so battle resolution does not need a separate executable content language.
 - Character Armor Class is structured `ArmorClassState`, not a copied scalar: armor base and category come from the loaded armor Unit, trained Shield bonus comes from the loaded Shield Unit and sheet armor training, and the Defense Fighting Style bonus comes from the loaded feat Unit as a conditional wearing-armor bonus.
 - Monster initialization derives display name, Armor Class, Hit Points, and Initiative score from the supplied generic `StatBlockRecord`; the runtime does not import Core monster catalogs or SRD-specific collection types.
 - `BattleState.currentTurnResources` uses `RuntimeActionResource[]` plus bonus-action availability from `@dnd/shared-algebras/action-economy-algebra`; it does not store a scalar action quota.
@@ -30,7 +32,7 @@ or a battle seed as authored content.
 - Filled Attack resolution uses the shared attack-roll algebra: natural 1 misses, natural 20 hits, otherwise the total is compared to the target's current Armor Class. A miss spends the Attack action and leaves HP unchanged. A hit asks for weapon damage dice before spending the action; Critical Hits require the doubled weapon damage dice hole. Once valid damage dice are supplied, the runtime sums the rolled dice plus the attack ability modifier, applies Temporary Hit Points first, clamps HP at `0`, and then spends the Attack action.
 - Zero-HP lifecycle state is a typed union on the combatant and the snapshot projects that one lifecycle object. Stat Block combatants use `diesAtZeroHp`; their dead status is derived from `0` HP. Character Sheet combatants use `usesDeathSavingThrows`; when damage drops them to `0` HP and does not kill instantly by Massive Damage, the runtime applies the Unconscious condition and initializes the death-save counters. Later damage at `0` HP records Death Saving Throw failures, including the Critical Hit two-failure case, and projects death once failures reach three. Damage that equals or exceeds the target's Hit Point maximum after reducing current HP to `0`, including damage taken while already at `0` HP, applies instant death. Start-turn Death Saving Throw rolls remain outside the CAM15 runtime slice.
 - `endTurn` is a runtime command, not an SRD Action. It accepts no holes or fills, advances the current actor through the shared Initiative algebra, increments the round after the last actor in the order acts, and resets the next actor's per-turn action resources.
-- `battle-runtime-slice.qnt` is the executable package-local spec for this runtime. Its covered slice is Initiative/current actor, End Turn, Attack replay holes, hit/miss, action spend, damage, Temporary Hit Points, HP clamp, and the supported zero-HP lifecycle policy.
+- `battle-runtime-slice.qnt` is the package-local parity slice for this runtime's implemented subset. Its covered slice is Initiative/current actor, End Turn, Attack replay holes, hit/miss, action spend, damage, Temporary Hit Points, HP clamp, and the supported zero-HP lifecycle policy. Broad combat authority remains `battle.qnt` until the package-local slice is reconciled into the canonical battle spec.
 - `snapshotBattle` projects a JSON-friendly read model without exposing mutable `Map` internals.
 
 ## RAW Traceability For Retained Phase-1 Behavior

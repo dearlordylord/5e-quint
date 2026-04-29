@@ -7,12 +7,12 @@ Application/session code installs the runtime by passing a Unit library built
 from `@dnd/surface`; it stores drafts and finalized Character Sheets at the
 session boundary, not inside this package.
 
-This package intentionally imports Surface catalog and Unit identities, not authored content records or Core battle/projected vocabulary. The runtime exports `CharacterSheet` as the finalized player-character boundary. Battle seed construction belongs to the battle runtime and composition root.
+This package intentionally imports Surface catalog and Unit identities, not authored content records or Core battle/projected vocabulary. The runtime exports `CharacterSheet` as the finalized player-character boundary. Battle creature initialization belongs to the battle runtime and composition root.
 
 Domain boundary: a character draft is mutable session state with holes, not a
 Unit record. A finalized `CharacterSheet` can carry selected Unit refs and
 derived character facts, but it is still not a Unit, not a Stat Block, and not a
-battle seed.
+battle creature state.
 
 `character-creation-runtime-slice.qnt` is the deterministic Quint parity slice
 for this package. It models draft state, stable hole ids, atomic batch fill,
@@ -49,7 +49,7 @@ adapter or duplicated catalog state.
 
 The public selection types keep SRD/domain facts structured at the runtime boundary: ability assignments reuse Surface `SixAbilityScores`, class advancement entries use `CharacterClassLevel`, starting languages are Common plus two distinct selectable Standard Languages, alignment is the SRD morality/order pair, and background ability-score increases cannot select the same ability twice.
 
-The finalized `CharacterSheet` carries selected Unit refs plus the character-sheet facts needed by the next runtime boundary: final ability scores, level-1 Hit Point maximum and Hit Die, saving throw/skill/weapon/armor/tool proficiencies, granted feature refs, activation resources such as Fighter Second Wind, and the purchased equipment/loadout refs. These facts are derived from the accepted draft and Surface Units during finalization; the package still does not export a battle seed type or battle-current HP state.
+The finalized `CharacterSheet` carries selected Unit refs plus the character-sheet facts needed by the next runtime boundary: final ability scores, level-1 Hit Point maximum and Hit Die, saving throw/skill/weapon/armor/tool proficiencies, granted feature refs, activation resources such as Fighter Second Wind, and the purchased equipment/loadout refs. These facts are derived from the accepted draft and Surface Units during finalization; the package still does not export a battle creature-init type or battle-current HP state.
 
 `createCharacterDraft` also accepts an optional caller-supplied `draftId`. Omitting it uses a process-local generated id for tests and simple composition roots; persisted callers should provide their stored draft identity.
 
@@ -57,3 +57,7 @@ Hole ids are stable domain ids. Draft-owned holes use
 `cc:draft:<draft path>`, and Unit-granted holes use
 `cc:unit:<unit id>:<choice key>`. Support gates are package-private runtime
 narrowings; they must not become public Surface classifications.
+
+Package-owned terms such as Character Draft, Character Sheet, Creation Hole,
+Creation Fill, and Unit-backed selection are defined in
+[VOCABULARY.md](./VOCABULARY.md).

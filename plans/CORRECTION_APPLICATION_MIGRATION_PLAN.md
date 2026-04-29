@@ -61,6 +61,12 @@ New green-path packages must have this dependency direction only:
 
 Neither runtime package may depend on `@dnd/core`. MCP green-surface tools must not import `@dnd/core`; any legacy MCP/Core imports must be isolated outside the green tool path and listed in the Restore Ledger if they are allowed to break.
 
+Naming note: only MCP uses a literal `src/green/` directory because it needs a
+temporary side-by-side lane next to legacy Core-backed MCP modules. The green
+path itself is broader: `@dnd/surface`, `@dnd/character-creation-runtime`,
+`@dnd/battle-runtime`, and the MCP `src/green/` subtree are all part of the
+Core-free migration path.
+
 ## Unit Collections
 
 The app/MCP composition root owns which Unit collections are installed.
@@ -156,7 +162,7 @@ Phase 1 battle state:
 - death policy derived at the Character Sheet vs Stat Block boundary and stored explicitly on the combatant; resolution branches on that typed death policy, not on provenance labels;
 - battle-ready creature combat facts projected from Character Sheets and monster Stat Blocks.
 
-Battle-ready inputs are runtime seed data only: combatant identity, current resources, selected equipment/Unit references, and numeric facts needed to initialize battle state. They must not encode executable action/effect semantics already present in decoded Surface Units. If battle needs authored semantics, pass the decoded Unit or a narrowed reader over it, not a duplicated projection record. Character creation finalizes `CharacterSheet`; MCP maps that sheet into the battle runtime's seed shape at the composition root, so character creation does not export a parallel battle seed type.
+Battle-ready inputs are one-time creature initialization data only: combatant identity, current resources, selected equipment/Unit references, and numeric facts needed to initialize battle state. They must not encode executable action/effect semantics already present in decoded Surface Units. If battle needs authored semantics, pass the decoded Unit or a narrowed reader over it, not a duplicated projection record. Character creation finalizes `CharacterSheet`; MCP maps that sheet into the battle runtime's creature-init shape at the composition root, so character creation does not export a parallel battle initialization type.
 
 The runtime Attack act must include damage. Hit/miss-only attack is not enough for the green MCP vertical.
 
@@ -244,12 +250,36 @@ Do not run a broad Surface survey loop for the phase-1 green surface by default.
    - discover creation holes;
    - fill creation holes;
    - finalize minimal Fighter;
-   - select/create monster;
+   - select Stat Block creature;
    - start battle;
    - discover battle acts;
    - fill/resolve battle holes;
    - end turn.
 3. Add one MCP fixture test for the full vertical.
+
+CAM18 carry-forward gates:
+
+- Decide whether the first fixture adds minimal Goblin Warrior attack
+  projection from the authored Stat Block or is explicitly Fighter-attacks-only.
+  Do not leave authored Goblin attack data silently unreachable once the fixture
+  claims monster battle support.
+- Audit battle durable state for stat-block and attack projection facts before
+  widening battle support. Prefer identities plus runtime facts that cannot
+  drift from Surface catalogs; avoid a second executable stat-block or attack IR.
+- Decide Initiative input semantics. The current fixture uses deterministic
+  Initiative scores derived from `10 + modifier`; tool names/docs must say
+  whether callers provide Initiative rolls or the fixture is deliberately
+  deterministic.
+- Keep target legality scoped. Current discovery is all other living combatants,
+  acceptable only for the 1v1 vertical until range, reach, line of effect, and
+  target legality are modeled.
+- Track character-creation QNT parity depth. The current QNT slice checks
+  hole/status protocol more deeply than finalized sheet values; before widening
+  character creation beyond the first manifest, add parity for selected Unit
+  refs, HP/Hit Die derivation, proficiencies, resources, and loadout identity.
+- Reconcile temporary catalog/support-gate language as support widens:
+  `UnitLibrary` aliases and package-private `unsupported*` issue vocabulary
+  should disappear unless they remain real domain/runtime concepts.
 
 ## Phase 4: Controlled Core Break
 
@@ -297,7 +327,8 @@ Green finalization criteria:
 - `src/green/` no longer contains user-facing MCP tools, or the directory is
   deleted;
 - normal MCP tests, not only green-specific tests, cover create/finalize
-  character, select monster, start battle, Attack with damage, and End Turn;
+  character, select a Stat Block creature, start battle, Attack with damage,
+  and End Turn;
 - docs stop describing the green path as the active way to use MCP and instead
   describe the promoted Surface runtime path;
 - temporary QNT authority is resolved per the Verification section's single

@@ -1,5 +1,5 @@
 import {
-  combatantSeedFromStatBlock,
+  battleCreatureInitFromStatBlock,
   initiativeScore,
   scoreModifier,
   startBattle,
@@ -8,9 +8,8 @@ import {
   type BattleState,
   type CharacterId,
   type CombatantId,
-  type CombatantSeedInput,
-  type MonsterId,
-  type StatBlockCombatantInput,
+  type BattleCreatureInit,
+  type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import type { CharacterSheet } from "@dnd/character-creation-runtime";
 import {
@@ -21,16 +20,16 @@ import {
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { Hp } from "@dnd/shared/types";
-import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match } from "effect";
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterSheet;
-// battle accepts battle-owned seeds. This mapper is the place where selected
-// Unit refs are read to derive seed facts, so neither runtime has to import the
-// other or grow an intermediate executable content model.
+// battle accepts battle-owned creature-init inputs. This mapper is where
+// selected Unit refs are read into the creature combat view, so neither runtime
+// has to import the other or grow an intermediate executable content model.
 
-export type CharacterSheetCombatantInput = {
+export type CharacterSheetCreatureInput = {
   readonly combatantId: CombatantId;
   readonly characterId: CharacterId;
   readonly displayName: string;
@@ -41,27 +40,27 @@ export type CharacterSheetCombatantInput = {
 
 export function startBattleFromCharacterSheetAndStatBlock(input: {
   readonly battleId: BattleId;
-  readonly character: CharacterSheetCombatantInput;
-  readonly monster: StatBlockCombatantInput;
+  readonly character: CharacterSheetCreatureInput;
+  readonly statBlockBattleInput: StatBlockBattleInitInput;
   readonly unitLibrary: UnitCatalog;
 }): BattleState {
   return startBattle({
     battleId: input.battleId,
     combatants: [
-      combatantSeedFromCharacterSheet({
+      battleCreatureInitFromCharacterSheet({
         ...input.character,
         unitLibrary: input.unitLibrary,
       }),
-      combatantSeedFromStatBlock(input.monster),
+      battleCreatureInitFromStatBlock(input.statBlockBattleInput),
     ],
   });
 }
 
-export function combatantSeedFromCharacterSheet(
-  input: CharacterSheetCombatantInput & {
+export function battleCreatureInitFromCharacterSheet(
+  input: CharacterSheetCreatureInput & {
     readonly unitLibrary: UnitCatalog;
   },
-): CombatantSeedInput {
+): BattleCreatureInit {
   const maxHp = Hp(input.sheet.hitPoints.maximum);
   return {
     combatantId: input.combatantId,
@@ -69,7 +68,7 @@ export function combatantSeedFromCharacterSheet(
     initiative: initiativeScore(
       10 + scoreModifier(input.sheet.abilityScores.final.dex),
     ),
-    seed: {
+    creatureInit: {
       kind: "character",
       characterId: input.characterId,
       sheetUnitRefs: input.sheet.unitRefs,
@@ -184,7 +183,7 @@ function characterAttackProfile(
 
   return {
     kind: "weapon",
-    weapon: unit as WeaponRecord,
+    weapon: unit,
     ability: "str",
     abilityModifier: scoreModifier(sheet.abilityScores.final.str),
   };

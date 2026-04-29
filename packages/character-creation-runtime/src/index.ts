@@ -1,4 +1,4 @@
-import { Brand, Match, Option } from "effect";
+import { Brand, Match } from "effect";
 import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   isValidAbilityScoreAssignment,
@@ -150,11 +150,6 @@ export type CharacterAdvancementEntry = {
   readonly level: CharacterClassLevel;
 };
 
-export type CharacterChoiceSelection = {
-  readonly source: CreationHoleSource;
-  readonly optionIds: readonly CreationChoiceOptionId[];
-};
-
 export type CharacterEquipmentSelection = {
   readonly selectedUnitIds: readonly UnitRecord["id"][];
 };
@@ -188,6 +183,16 @@ export type CreationChoiceOption = {
   readonly optionId: CreationChoiceOptionId;
   readonly label: string;
   readonly unitRef?: UnitRef;
+};
+
+export type CharacterSelectedChoiceOption = {
+  readonly optionId: CreationChoiceOptionId;
+  readonly unitRef?: UnitRef;
+};
+
+export type CharacterChoiceSelection = {
+  readonly source: CreationHoleSource;
+  readonly options: readonly CharacterSelectedChoiceOption[];
 };
 
 export type CreationHole =
@@ -410,9 +415,6 @@ const SUPPORTED_CLASS_UNIT_IDS = [
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const SUPPORTED_BACKGROUND_UNIT_IDS = [
   PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
-] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-const SUPPORTED_SPECIES_UNIT_IDS = [
-  PHASE1_SPECIES_ORC_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const SUPPORTED_FIGHTING_STYLE_FEAT_IDS = [
   PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
@@ -715,15 +717,19 @@ function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[]
     choiceSelection(PHASE1_CLASS_FIGHTER_UNIT_ID, FIGHTER_SKILL_CHOICE_KEY, [
       ...SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
     ]),
-    choiceSelection(
+    unitChoiceSelection(
       FIGHTER_FIGHTING_STYLE_FEATURE_ID,
       FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
-      [...SUPPORTED_FIGHTING_STYLE_OPTION_IDS],
+      [...SUPPORTED_FIGHTING_STYLE_FEAT_IDS],
     ),
-    choiceSelection(
+    unitChoiceSelection(
       FIGHTER_WEAPON_MASTERY_FEATURE_ID,
       FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
-      [...SUPPORTED_WEAPON_MASTERY_OPTION_IDS],
+      [
+        PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+        "weapon_spear",
+        "weapon_flail",
+      ],
     ),
     choiceSelection(
       PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
@@ -738,16 +744,31 @@ function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[]
       BACKGROUND_EQUIPMENT_CHOICE_KEY,
       [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
     ),
-    choiceSelection(PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID, LOADOUT_ARMOR_CHOICE_KEY, [
-      creationChoiceOptionId("worn"),
+    choiceSelectionWithOptions(
+      PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+      LOADOUT_ARMOR_CHOICE_KEY,
+      [
+        selectedChoiceOptionRecord(
+          creationChoiceOptionId("worn"),
+          PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+        ),
+      ],
+    ),
+    choiceSelectionWithOptions(PHASE1_SHIELD_UNIT_ID, LOADOUT_SHIELD_CHOICE_KEY, [
+      selectedChoiceOptionRecord(
+        creationChoiceOptionId("wielded"),
+        PHASE1_SHIELD_UNIT_ID,
+      ),
     ]),
-    choiceSelection(PHASE1_SHIELD_UNIT_ID, LOADOUT_SHIELD_CHOICE_KEY, [
-      creationChoiceOptionId("wielded"),
-    ]),
-    choiceSelection(
+    choiceSelectionWithOptions(
       PHASE1_WEAPON_LONGSWORD_UNIT_ID,
       LOADOUT_WEAPON_CHOICE_KEY,
-      [creationChoiceOptionId("wielded_one_handed")],
+      [
+        selectedChoiceOptionRecord(
+          creationChoiceOptionId("wielded_one_handed"),
+          PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+        ),
+      ],
     ),
   ];
 }
@@ -757,10 +778,46 @@ function choiceSelection(
   choiceKey: UnitChoiceKey,
   optionIds: readonly CreationChoiceOptionId[],
 ): CharacterChoiceSelection {
+  return choiceSelectionWithOptions(
+    unitId,
+    choiceKey,
+    optionIds.map((optionId) => ({ optionId })),
+  );
+}
+
+function unitChoiceSelection(
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+  selectedUnitIds: readonly UnitRecord["id"][],
+): CharacterChoiceSelection {
+  return choiceSelectionWithOptions(
+    unitId,
+    choiceKey,
+    selectedUnitIds.map((selectedUnitId) =>
+      selectedChoiceOptionRecord(
+        creationChoiceOptionId(selectedUnitId),
+        selectedUnitId,
+      ),
+    ),
+  );
+}
+
+function choiceSelectionWithOptions(
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+  options: readonly CharacterSelectedChoiceOption[],
+): CharacterChoiceSelection {
   return {
     source: unitSource(unitId, choiceKey),
-    optionIds,
+    options,
   };
+}
+
+function selectedChoiceOptionRecord(
+  optionId: CreationChoiceOptionId,
+  unitId: UnitRecord["id"],
+): CharacterSelectedChoiceOption {
+  return { optionId, unitRef: { unitId } };
 }
 
 function expectedValueIssue(
@@ -908,7 +965,7 @@ function buildCharacterSheet(input: {
       backgroundFacts.originFeatId,
       input.selections.species,
       ...Object.values(speciesFacts.traits),
-      ...selectedChoiceUnitIds(input.selections, input.unitLibrary),
+      ...selectedChoiceUnitIds(input.selections),
       ...input.selections.equipment.selectedUnitIds,
     ),
     abilityScores: {
@@ -949,6 +1006,9 @@ function buildCharacterSheet(input: {
     ),
     equipment: {
       ownedUnitIds: input.selections.equipment.selectedUnitIds,
+      // TODO(CAM equipment widening): the first manifest finalizes the only
+      // supported loadout. Before adding broader equipment support, derive this
+      // from accepted loadout selections instead of these phase-1 constants.
       loadout: {
         armor: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
         shield: PHASE1_SHIELD_UNIT_ID,
@@ -1002,13 +1062,11 @@ function abilityModifier(score: number): number {
 
 function selectedChoiceUnitIds(
   selections: FinalizedCharacterSelections,
-  unitLibrary: UnitLibrary,
 ): readonly UnitRecord["id"][] {
   return selections.choices.flatMap((selection) =>
-    selection.optionIds.flatMap((optionId) => {
-      const unit = unitLibrary.getUnit(optionId);
-      return Option.isSome(unit) ? [unit.value.id] : [];
-    }),
+    selection.options.flatMap((option) =>
+      option.unitRef == null ? [] : [option.unitRef.unitId],
+    ),
   );
 }
 
@@ -1024,7 +1082,7 @@ function selectedSkillProficiencies(
 
   return skillSelection == null
     ? []
-    : skillSelection.optionIds.flatMap((optionId) => {
+    : choiceSelectionOptionIds(skillSelection).flatMap((optionId) => {
         const skill = SKILLS.find((candidate) => candidate === optionId);
         return skill == null ? [] : [skill];
       });
@@ -1040,7 +1098,7 @@ function selectedToolProficiencies(
     ),
   );
 
-  return toolSelection?.optionIds ?? [];
+  return toolSelection == null ? [] : choiceSelectionOptionIds(toolSelection);
 }
 
 function featureSource(
@@ -1354,10 +1412,20 @@ function applyUnitFill(
           ...selections.choices,
           {
             source,
-            optionIds,
+            options: optionIds.map((optionId) =>
+              selectedChoiceOption(requireAcceptedChoiceOption(hole, optionId)),
+            ),
           },
         ],
       };
+}
+
+function selectedChoiceOption(
+  option: CreationChoiceOption,
+): CharacterSelectedChoiceOption {
+  return option.unitRef == null
+    ? { optionId: option.optionId }
+    : { optionId: option.optionId, unitRef: option.unitRef };
 }
 
 function requireSelectedUnitIds(
@@ -1982,7 +2050,7 @@ function hasChoiceSelection(
   return draft.selections.choices.some(
     (selection) =>
       sameCreationHoleSource(selection.source, source) &&
-      sameOptionIdMultiset(selection.optionIds, optionIds),
+      sameOptionIdMultiset(choiceSelectionOptionIds(selection), optionIds),
   );
 }
 
@@ -2024,8 +2092,23 @@ function choiceSelectionKey(selection: CharacterChoiceSelection): string {
     selection.source.tag === "draft"
       ? `draft:${selection.source.path}`
       : `unit:${selection.source.unitId}:${selection.source.choiceKey}`;
-  const optionIds = [...selection.optionIds].sort().join("\u0000");
-  return `${source}\u0001${optionIds}`;
+  const options = selection.options
+    .map(choiceSelectionOptionKey)
+    .sort()
+    .join("\u0000");
+  return `${source}\u0001${options}`;
+}
+
+function choiceSelectionOptionIds(
+  selection: CharacterChoiceSelection,
+): readonly CreationChoiceOptionId[] {
+  return selection.options.map((option) => option.optionId);
+}
+
+function choiceSelectionOptionKey(option: CharacterSelectedChoiceOption): string {
+  return option.unitRef == null
+    ? option.optionId
+    : `${option.optionId}\u0002${option.unitRef.unitId}`;
 }
 
 function sameOptionIdMultiset(
@@ -2055,9 +2138,7 @@ function discoverLevelOneFighterFeatureHole(
       .listUnits()
       .filter(
         (unit): unit is FeatRecord =>
-          unit.kind === "feat" &&
-          unit.category === "fighting_style" &&
-          isSupported(unit.id, SUPPORTED_FIGHTING_STYLE_FEAT_IDS),
+          unit.kind === "feat" && unit.category === "fighting_style",
       )
       .map(unitOption);
 
@@ -2110,11 +2191,7 @@ function draftHole(
       source: draftSource(path),
       options: unitLibrary
         .listUnits()
-        .filter(
-          (unit) =>
-            unit.kind === "class" &&
-            isSupported(unit.id, SUPPORTED_CLASS_UNIT_IDS),
-        )
+        .filter((unit) => unit.kind === "class")
         .map(unitOption),
     });
   }
@@ -2124,11 +2201,7 @@ function draftHole(
       source: draftSource(path),
       options: unitLibrary
         .listUnits()
-        .filter(
-          (unit) =>
-            unit.kind === "background" &&
-            isSupported(unit.id, SUPPORTED_BACKGROUND_UNIT_IDS),
-        )
+        .filter((unit) => unit.kind === "background")
         .map(unitOption),
     });
   }
@@ -2138,11 +2211,7 @@ function draftHole(
       source: draftSource(path),
       options: unitLibrary
         .listUnits()
-        .filter(
-          (unit) =>
-            unit.kind === "species" &&
-            isSupported(unit.id, SUPPORTED_SPECIES_UNIT_IDS),
-        )
+        .filter((unit) => unit.kind === "species")
         .map(unitOption),
     });
   }

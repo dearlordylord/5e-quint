@@ -10,52 +10,50 @@ creation, battle runtime, and MCP composition.
 authored Surface content - static rules content decoded from `@dnd/surface`.
 It has provenance. It is a broad category, not a synonym for Unit. Authored
 Surface content includes multiple record families, including Units and monster
-Stat Blocks. It is not reducer state, session state, a battle seed, or a
-projected executable IR. Lookup catalogs are an implementation detail for
+Stat Blocks. It is not reducer state, session state, battle creature state, or
+a projected executable IR. Lookup catalogs are an implementation detail for
 installing authored content, not the main domain distinction.
 
 Unit - one authored Surface content record family: selectable or ownable game
-objects that a character, creature, item, or other owner can reference as a
-capability, option, or grant. Current examples include class, background,
-species aggregate, feature, feat, spell, weapon, armor, shield, mastery, item,
-and similar records. A Unit is not "anything authored in Surface"; monster Stat
-Blocks are authored Surface content but are not Units. A character, character
-draft, character sheet, combatant, monster, and monster Stat Block are not
-Units.
+objects that can be referenced as a capability, option, or grant. Current
+examples include class, background, species aggregate, feature, feat, spell,
+weapon, armor, shield, mastery, item, and similar records. A Unit is not
+"anything authored in Surface"; monster Stat Blocks are authored Surface
+content but are not Units.
 
 Stat Block record - one authored Surface content record family for monsters and
-NPCs in the SRD Stat Block sense. It is authored content, but it is not
-selectable/ownable Unit content. A Stat Block may later reuse shared Surface
-sub-shapes for actions, attacks, damage, or resources, but it remains a
-monster-authored Stat Block record and is not a Unit.
+NPCs in the SRD Stat Block sense. Despite the name, a Stat Block is not only
+numeric stats: it is the authored rules record for a monster, including traits,
+actions, resources, senses, languages, and other entries the SRD places in a
+monster stat block. It is authored content, but it is not selectable/ownable
+Unit content. A Stat Block may later reuse shared Surface sub-shapes for
+actions, attacks, damage, or resources, but it remains a monster-authored Stat
+Block record and is not a Unit.
 
 Unit lookup - current implementation mechanism for finding authored Units.
 Character creation reads authored Unit content to discover legal holes and
 finalize selected Unit references. Battle composition may read selected
-character Unit refs to derive seed facts such as armor, shield, weapon, or
+character Unit refs to derive init facts such as armor, shield, weapon, or
 feature bonuses.
 
 Stat Block lookup - current implementation mechanism for finding authored
 monster Stat Blocks.
 
-Character Draft - session-owned mutable character-creation state with holes
-still to fill. It is not authored content and not a Unit. Draft holes may be
-opened by missing draft structure (`cc:draft:<path>`) or by selected Units
-(`cc:unit:<unit id>:<choice key>`). Filling a draft can reveal more holes.
+Battle Creature Init - one-time runtime input used to initialize a creature in
+battle. Character creature-init inputs are projected from a Character Sheet plus
+selected Unit lookups in the MCP green package. Stat Block creature-init inputs
+are projected from a Stat Block record plus encounter-local facts such as
+combatant identity and current HP. A creature-init input is not the creature; it
+is consumed by `startBattle` to build battle creature state.
 
-Character Sheet - finalized player-character boundary produced from a complete
-legal Character Draft. It carries selected Unit references plus derived
-player-character facts such as ability scores, proficiencies, HP maximum, and
-loadout. It is not a Unit, not a Stat Block, and not a battle seed.
-
-Battle Seed - runtime input used to initialize a combatant in battle. Character
-battle seeds are projected from a Character Sheet plus selected Unit lookups in
-the MCP green package. Monster battle seeds are projected from a Stat Block
-record. A battle seed is not authored content and must not become a second
-executable content language.
+Battle Creature State - durable runtime combat view of a creature inside one
+battle. Character-derived and Stat Block-derived participants both become
+Battle Creature State. This is the shared combat abstraction; Unit, Character
+Sheet, Stat Block, and Battle Creature Init are source or initialization
+boundaries, not participant state.
 
 shared sub-shape reuse - reuse of a common Surface shape inside different
-authored record families. For example, a future monster attack may use the same
+authored record families. For example, a future Stat Block attack may use the same
 damage expression shape as a weapon or spell effect. That reuse does not make
 the monster Stat Block a Unit.
 
@@ -68,24 +66,25 @@ disappear as support widens.
 
 ```text
 Character creation:
-authored Units -> CharacterDraft holes/fills -> CharacterSheet with Unit refs
+character creation runtime -> CharacterSheet with Unit refs
 
-Monster selection:
+Stat Block selection:
 authored Stat Block -> StatBlockRecord
 
 Battle composition:
-CharacterSheet + Unit lookups -> CharacterCombatantSeed
-StatBlockRecord -> MonsterCombatantSeed
-CharacterCombatantSeed + MonsterCombatantSeed -> BattleState
+CharacterSheet + Unit lookups -> CharacterBattleCreatureInit
+StatBlockRecord -> StatBlockBattleCreatureInit
+CharacterBattleCreatureInit + StatBlockBattleCreatureInit -> BattleState
 ```
 
 ## Invariants
 
 - Do not model monster Stat Blocks as Units.
-- Do not model a Character Draft or Character Sheet as a Unit.
 - Do not model a Stat Block as a Character Sheet.
-- Do not use Unit, Stat Block, or Character Sheet as the shared battle
-  participant type; use creature/combatant-level battle state.
+- Do not use Unit, Stat Block, Character Sheet, or Battle Creature Init as the
+  shared battle participant type; use creature/combatant-level battle state.
+- Do not let Stat Block-derived creatures own Units merely because Stat Blocks
+  reuse shared Surface sub-shapes.
 - Do not introduce a new executable IR between Surface and runtime packages.
 - Put cross-runtime mapping in the MCP green package unless there is a
   deliberate package ownership change.
@@ -99,14 +98,7 @@ Answer: no. Goblin Warrior is an authored Stat Block. Fighter and Longsword are
 Units. Battle may consume both authored record families through composition, but
 mixing the records collapses the monster/player-character boundary.
 
-Question: during character creation, does selecting Fighter make the character a
-Unit?
-
-Answer: no. Fighter is a Unit selected by the Character Draft. The draft remains
-mutable player-character creation state. Finalization produces a Character Sheet
-with Unit references and derived facts.
-
-Question: can a monster attack use the same damage-expression shape as a weapon
+Question: can a Stat Block attack use the same damage-expression shape as a weapon
 Unit?
 
 Answer: yes, as shared sub-shape reuse. The Stat Block remains a Stat Block.

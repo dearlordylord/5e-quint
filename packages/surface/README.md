@@ -2,7 +2,7 @@
 
 Workspace package for the content-authoring → surface → tracer flow.
 
-Temporary system-level pipeline map:
+System-level pipeline map:
 
 - [plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md)
 
@@ -20,22 +20,17 @@ One-liner: **this package holds what we've SHIPPED; `scripts/content-surface-sur
 
 ## Goal (read this first)
 
-This package is **where the taxonomy actually lives and evolves**. It
-is the next version of the atom vocabulary that emerged from the
-research in `.references/xphb-srd-pairing/` — not a re-derivation,
-not an application of it, but its continuation. The research
-converged on v4 of the atom inventory (`.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md`)
-and 18 reusable subgraphs (`.references/xphb-srd-pairing/TAXONOMY_graph_representation.md`);
-this package is where the vocabulary continues to be shaped by real
-authoring pressure from SRD 5.2.1 and PHB 2024 content.
+This package is **where the taxonomy actually lives and evolves**. It is the
+active authored-content and provenance boundary for the Surface-backed runtime
+path. The vocabulary emerged from research in `.references/xphb-srd-pairing/`
+and continues to be shaped by real authoring pressure from SRD 5.2.1 and PHB
+2024 content.
 
-The eventual destination is the **main app**: once the surface
-stabilizes here, the closed vocabulary gets brought into the combat engine
-via a **Quint-first approach** — i.e., the surface types drive Quint
-variant generation, which drives XState machine shape, which drives
-TS engine code. Nothing in this package touches that engine package today;
-that integration only starts once the red/green loop in this package
-has stopped producing new widenings.
+Runtime packages consume this package through typed authored-record boundaries.
+They derive execution state at their own package boundaries; Surface remains the
+authored content layer, not a runtime reducer and not projected executable IR.
+Formal runtime models may use Surface-authored records as input, but integration
+belongs in the consuming runtime package, not in this package.
 
 Three-way separation:
 
@@ -52,7 +47,7 @@ Three-way separation:
 - `packages/surface/` (this package) — **where the
   surface evolves**. It remains independent from engine packages and has no
   `@dnd/core` dependency, but it is now an active green-path input for
-  character creation, battle seed composition, and stat-block catalog lookup.
+  character creation, battle creature initialization, and stat-block catalog lookup.
   It is not a disposable prototype.
 
 ## Runtime Boundary
@@ -167,10 +162,9 @@ speculative atoms; the vocabulary grows one variant at a time.
 ## Relationship to the sub-agent survey corpus
 
 `scripts/content-surface-survey/results-srd/<slug>/` contains
-sub-agent analyses for ~777 SRD 5.2.1 units. The distribution of
-verdicts (as last measured): ~267 `structural_widening`,
-~132 `surface_widening`, ~47 `atom_widening`, ~19 `clean`,
-~13 `dm_agenda`, plus `refused` / `invalid`.
+sub-agent analyses for SRD 5.2.1 units. The results are classified with
+verdicts such as `structural_widening`, `surface_widening`,
+`atom_widening`, `clean`, `dm_agenda`, `refused`, and `invalid`.
 
 Each `surface_widening` / `atom_widening` entry has a `proposal.md`
 with the sub-agent's shape proposal for the needed widening. **This
@@ -182,11 +176,9 @@ evaluate, accept / refactor / reject, then author.
 See `plans/CONTENT_SURFACE_DEFERRED.md` for the current queue of
 deferred widenings drawn from authored units + the sub-agent corpus.
 
-The nightly run that produced the corpus ran ~500 units; we're in
-**digestion mode** now — migrating each authored unit's outcome into
-the corpus as a ground-truth verdict, unifying the taxonomy, then
-re-running the rest of the corpus against the unified surface
-(expected: many more `clean` verdicts, many fewer widening proposals).
+As authored records land in this package, their outcomes should be reflected
+back into the survey corpus as ground-truth verdicts before the corpus is used
+for further widening work.
 
 ## Authoring format: Dhall + JSON
 
@@ -214,22 +206,14 @@ Trace files are intentionally regenerable and ignored by Git. They are still
 part of the local review loop: a new or changed authored content record should
 have a fresh trace inspected before the JSON is treated as catalog-ready.
 
-## Where Quint comes in (later)
+## Runtime Integration
 
-**Not here, not yet.** Once this surface has stopped producing
-widenings (stability signal: ~10 consecutive units author cleanly
-without a new atom), the Quint-first integration begins:
-
-1. Surface types become input to a Quint-variant generator.
-2. Generated Quint variants enter `packages/core/*.qnt`.
-3. `battle.qnt` / `creature.qnt` gain spec-level support for the
-   new atoms.
-4. MBT parity tests in `packages/core` cover the new variants.
-5. XState machines in `battle-machine.ts` / `machine.ts` are updated
-   to match.
-
-None of that happens in this package. This package's job is to get
-the atom vocabulary right _before_ that integration cost is paid.
+Surface records are consumed by runtime packages through catalog/readers and
+package-specific projection code. Current active consumers include
+`@dnd/character-creation-runtime`, `@dnd/battle-runtime`, and the MCP Surface
+runtime composition path. Future Quint or generator integrations must preserve
+the same ownership boundary: Surface owns authored records and provenance;
+runtime packages own executable semantics and parity tests.
 
 ## Files
 

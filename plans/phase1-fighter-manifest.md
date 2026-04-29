@@ -77,9 +77,9 @@
 
 Battle initialization consumes the finalized Fighter sheet, the decoded combat-relevant Units, and the authored Goblin Warrior Stat Block.
 
-The Fighter battle seed includes combatant identity, current HP 12, current Temporary HP 0, initiative input, action availability, death policy for a player character, and loadout references to `weapon_longsword`, `armor_chain_mail`, `equipment_shield`, and `defense`. Battle init derives max HP, AC 19, attack bonus, and damage expression through one sheet/Unit reader path rather than storing duplicate battle-ready combat facts beside the derivation references.
+The Fighter battle creature-init input includes combatant identity, current HP 12, current Temporary HP 0, initiative input, action availability, death policy for a player character, and loadout references to `weapon_longsword`, `armor_chain_mail`, `equipment_shield`, and `defense`. Battle init derives max HP, AC 19, attack bonus, and damage expression through one sheet/Unit reader path rather than storing duplicate battle-ready combat facts beside the derivation references.
 
-The Goblin Warrior battle seed includes combatant identity, the `StatBlockRecord` reference from the SRD-only stat-block collection, current HP initialized to the listed HP 10, current Temporary HP 0, initiative fill, and death policy for a monster. AC 15, max HP 10, initiative modifier +2, and stat-block attacks are read from the authored Stat Block boundary, not copied from the old Core monster catalog and not re-authored in a projection record.
+The Goblin Warrior battle creature-init input includes combatant identity, the `StatBlockRecord` reference from the SRD-only stat-block collection, current HP initialized to the listed HP 10, current Temporary HP 0, initiative fill, and death policy for a monster. AC 15, max HP 10, initiative modifier +2, and stat-block attacks are read from the authored Stat Block boundary, not copied from the old Core monster catalog and not re-authored in a projection record.
 
 Minimum attack flow:
 

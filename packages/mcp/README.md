@@ -5,17 +5,22 @@ packages.
 
 ## Surface Runtime Composition
 
-The Surface runtime composition path starts at `src/green/`. It imports Surface
-authored content boundaries plus the character-creation and battle runtimes. Its
-composition root builds:
+The Surface runtime composition path starts at `src/green/`. The directory name
+exists only in MCP because MCP still has legacy Core-backed modules beside the
+new path. The broader green path is the Core-free import graph:
+`@dnd/surface`, `@dnd/character-creation-runtime`, `@dnd/battle-runtime`, and
+`packages/mcp/src/green/`.
+
+The MCP green subtree imports Surface authored content boundaries plus the
+character-creation and battle runtimes. Its composition root builds:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
 - an in-memory session store for character drafts, finalized Character Sheets,
-  selected monster Stat Block identity, durable battle state, and transient
+  selected Stat Block identity, durable battle state, and transient
   battle fills.
 
-Selected monster state stores only the catalog Stat Block id. The full Stat
+Selected Stat Block state stores only the catalog Stat Block id. The full Stat
 Block record is resolved through the green root's installed `statBlockCatalog`,
 so MCP session state cannot drift from the SRD stat-block catalog.
 
@@ -23,13 +28,14 @@ Transient battle fills are MCP session state. They are kept separate from
 `BattleState` so battle replay remains owned by `@dnd/battle-runtime`.
 
 This package also owns cross-runtime composition helpers. Character Sheet to
-battle-seed mapping lives in `src/green/battle-seed.ts`, where finalized
-character facts and Surface Unit lookups are projected into battle-owned seed
-data before calling `startBattle`. This keeps character draft/session concepts
-out of `@dnd/battle-runtime` without introducing a new intermediate language.
-This is package ownership, not a domain term: `@dnd/mcp` may see Character
-Sheets, authored Units, authored Stat Blocks, and battle seed APIs together
-because its job is wiring runtimes for tools.
+creature-init mapping lives in `src/green/battle-creature-init.ts`, where
+finalized character facts and Surface Unit lookups are projected into
+battle-owned initialization data before calling `startBattle`. This keeps
+character draft/session concepts out of `@dnd/battle-runtime` without
+introducing a new intermediate language. This is package ownership, not a
+domain term: `@dnd/mcp` may see Character Sheets, authored Units, authored Stat
+Blocks, and battle creature-init APIs together because its job is wiring
+runtimes for tools.
 
 `src/green/` is a migration isolation namespace, not the final MCP API shape.
 The promotion criteria live in

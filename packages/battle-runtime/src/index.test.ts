@@ -13,7 +13,6 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  monsterId,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -22,7 +21,7 @@ import {
   type BattleState,
   type BattleSubject,
   type CombatantId,
-  type CombatantSeedInput,
+  type BattleCreatureInit,
 } from "./index.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { DieRollResult, Hp } from "@dnd/shared/types";
@@ -67,7 +66,7 @@ describe("battle runtime", () => {
       battleId: battleId("battle-1"),
       combatants: [
         characterSeed({ initiative: 12 }),
-        monsterSeed({ initiative: 16, currentHp: 0 }),
+        statBlockCreatureInit({ initiative: 16, currentHp: 0 }),
       ],
     });
 
@@ -80,7 +79,7 @@ describe("battle runtime", () => {
         {
           combatantId: goblinId,
           displayName: "Goblin Warrior",
-          sourceKind: "monster",
+          originKind: "statBlock",
           hp: 0,
           maxHp: 10,
           tempHp: 0,
@@ -92,7 +91,7 @@ describe("battle runtime", () => {
         {
           combatantId: fighterId,
           displayName: "Fighter",
-          sourceKind: "character",
+          originKind: "character",
           hp: 12,
           maxHp: 12,
           tempHp: 0,
@@ -131,7 +130,7 @@ describe("battle runtime", () => {
         battleId: battleId("battle-1"),
         combatants: [
           characterSeed({ initiative: 20 }),
-          monsterSeed({ initiative: 10 }),
+          statBlockCreatureInit({ initiative: 10 }),
         ],
       }),
     );
@@ -168,7 +167,7 @@ describe("battle runtime", () => {
         battleId: battleId("battle-unconscious-actor"),
         combatants: [
           characterSeed({ initiative: 20, currentHp: 0 }),
-          monsterSeed({ initiative: 10 }),
+          statBlockCreatureInit({ initiative: 10 }),
         ],
       }),
     );
@@ -183,7 +182,7 @@ describe("battle runtime", () => {
       battleId: battleId("battle-unconscious-actor-resolve"),
       combatants: [
         characterSeed({ initiative: 20, currentHp: 0 }),
-        monsterSeed({ initiative: 10 }),
+        statBlockCreatureInit({ initiative: 10 }),
       ],
     });
 
@@ -604,7 +603,7 @@ describe("battle runtime", () => {
       battleId: battleId("battle-temp-hp"),
       combatants: [
         characterSeed({ initiative: 20 }),
-        monsterSeed({ initiative: 10, tempHp: 5 }),
+        statBlockCreatureInit({ initiative: 10, tempHp: 5 }),
       ],
     });
     const targetHole = attackInitialTargetHole(state);
@@ -632,12 +631,12 @@ describe("battle runtime", () => {
     });
   });
 
-  test("attack damage clamps monster HP at 0 and marks Goblin Warrior dead", () => {
+  test("attack damage clamps Stat Block creature HP at 0 and marks Goblin Warrior dead", () => {
     const state = startBattle({
-      battleId: battleId("battle-monster-zero"),
+      battleId: battleId("battle-stat-block-zero"),
       combatants: [
         characterSeed({ initiative: 20 }),
-        monsterSeed({ initiative: 10, currentHp: 3 }),
+        statBlockCreatureInit({ initiative: 10, currentHp: 3 }),
       ],
     });
     const targetHole = attackInitialTargetHole(state);
@@ -888,7 +887,7 @@ describe("battle runtime", () => {
         battleId: battleId("battle-1"),
         combatants: [
           characterSeed({ initiative: 20 }),
-          monsterSeed({ initiative: 10 }),
+          statBlockCreatureInit({ initiative: 10 }),
         ],
       }),
       currentTurnResources: {
@@ -908,7 +907,7 @@ describe("battle runtime", () => {
         battleId: battleId("battle-1"),
         combatants: [
           characterSeed({ initiative: 20 }),
-          monsterSeed({ initiative: 10 }),
+          statBlockCreatureInit({ initiative: 10 }),
         ],
       }),
       currentTurnResources: {
@@ -1076,7 +1075,7 @@ function resolveAttackFixture(input: {
     battleId: battleId("battle-qnt-parity"),
     combatants: [
       characterSeed({ initiative: 20 }),
-      monsterSeed({
+      statBlockCreatureInit({
         initiative: 10,
         ...targetOverrides,
       }),
@@ -1422,7 +1421,7 @@ function fighterVsGoblinBattle(): BattleState {
     battleId: battleId("battle-attack"),
     combatants: [
       characterSeed({ initiative: 20 }),
-      monsterSeed({ initiative: 10 }),
+      statBlockCreatureInit({ initiative: 10 }),
     ],
   });
 }
@@ -1600,12 +1599,12 @@ function characterSeed(input: {
   readonly currentHp?: number;
   readonly tempHp?: number;
   readonly attack?: ReturnType<typeof testLongswordAttack> | null;
-}): CombatantSeedInput {
+}): BattleCreatureInit {
   return {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
     initiative: initiativeScore(input.initiative),
-    seed: {
+    creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
       sheetUnitRefs: [],
@@ -1623,7 +1622,7 @@ function characterSeed(input: {
 }
 
 function testLongswordAttack(): Extract<
-  CombatantSeedInput["seed"],
+  BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
 >["attack"] {
   const weapon = unitLibrary.requireUnit("weapon_longsword");
@@ -1639,18 +1638,17 @@ function testLongswordAttack(): Extract<
   };
 }
 
-function monsterSeed(input: {
+function statBlockCreatureInit(input: {
   readonly initiative: number;
   readonly currentHp?: number;
   readonly tempHp?: number;
-}): CombatantSeedInput {
+}): BattleCreatureInit {
   return {
     combatantId: goblinId,
     displayName: "Goblin Warrior",
     initiative: initiativeScore(input.initiative),
-    seed: {
-      kind: "monster",
-      monsterId: monsterId("goblin-warrior"),
+    creatureInit: {
+      kind: "statBlock",
       statBlock: statBlockRecord(),
       currentHp: Hp(input.currentHp ?? 10),
       maxHp: Hp(10),

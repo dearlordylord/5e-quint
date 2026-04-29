@@ -648,6 +648,77 @@ describe("character creation batch fill", () => {
     expect(result.finalization).toMatchObject({ tag: "incomplete" });
   });
 
+  test("records accepted choice options without inferring Units from option ids", () => {
+    const draft = createTestDraft("draft:batch-choice-option-metadata");
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills(),
+      }),
+    );
+    const result = fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        multiChoiceFill(
+          "cc:unit:class_fighter:fighter_skill_choices",
+          "perception",
+          "survival",
+        ),
+        choiceFill(
+          "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+          "defense",
+        ),
+        multiChoiceFill(
+          "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+        ),
+      ],
+    });
+
+    expect(result.tag).toBe("accepted");
+    if (result.tag !== "accepted") {
+      return;
+    }
+
+    expect(
+      selectedChoiceBySource(
+        result.draft,
+        "class_fighter",
+        "fighter_skill_choices",
+      )?.options,
+    ).toEqual([
+      { optionId: "perception" },
+      { optionId: "survival" },
+    ]);
+    expect(
+      selectedChoiceBySource(
+        result.draft,
+        "fighter_fighting_style_l1",
+        "fighter_fighting_style",
+      )?.options,
+    ).toEqual([{ optionId: "defense", unitRef: { unitId: "defense" } }]);
+    expect(
+      selectedChoiceBySource(
+        result.draft,
+        "fighter_weapon_mastery_l1",
+        "fighter_weapon_mastery_choices",
+      )?.options,
+    ).toEqual([
+      {
+        optionId: "weapon_longsword",
+        unitRef: { unitId: "weapon_longsword" },
+      },
+      { optionId: "weapon_spear", unitRef: { unitId: "weapon_spear" } },
+      { optionId: "weapon_flail", unitRef: { unitId: "weapon_flail" } },
+    ]);
+  });
+
   test("rejects invalid choices without changing the draft", () => {
     const draft = createTestDraft("draft:batch-invalid-choice");
     const result = fillCreationHoles({
@@ -1088,6 +1159,42 @@ describe("character creation finalization", () => {
     });
     expect(
       finalizeCharacterDraft({ draft: duplicateChoiceDraft, unitLibrary }),
+    ).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          code: "illegalFinalization",
+          message:
+            "Finalized sheet must carry exactly the phase-1 manifest choices.",
+        },
+      ],
+    });
+  });
+
+  test("rejects completed drafts whose Unit-backed selected options lost Unit refs", () => {
+    const complete = completeManifestDraft();
+    const missingUnitRefDraft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        choices: complete.selections.choices.map((choice) =>
+          choice.source.tag === "unit" &&
+          choice.source.unitId === "fighter_fighting_style_l1" &&
+          choice.source.choiceKey === "fighter_fighting_style"
+            ? {
+                ...choice,
+                options: choice.options.map((option) => ({
+                  optionId: option.optionId,
+                })),
+              }
+            : choice,
+        ),
+      },
+    };
+
+    expect(
+      finalizeCharacterDraft({ draft: missingUnitRefDraft, unitLibrary }),
     ).toMatchObject({
       tag: "invalid",
       issues: [
@@ -1707,7 +1814,15 @@ function hasChoiceSelection(
   unitId: string,
   choiceKey: string,
 ): boolean {
-  return draft.selections.choices.some(
+  return selectedChoiceBySource(draft, unitId, choiceKey) != null;
+}
+
+function selectedChoiceBySource(
+  draft: CharacterDraft,
+  unitId: string,
+  choiceKey: string,
+): CharacterChoiceSelection | undefined {
+  return draft.selections.choices.find(
     (choice) =>
       choice.source.tag === "unit" &&
       choice.source.unitId === unitId &&
@@ -1778,6 +1893,8 @@ function selectedChoice(
       unitId,
       choiceKey: unitChoiceKey(choiceKey),
     },
-    optionIds: optionIds.map(creationChoiceOptionId),
+    options: optionIds.map((optionId) => ({
+      optionId: creationChoiceOptionId(optionId),
+    })),
   };
 }

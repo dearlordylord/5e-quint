@@ -16,6 +16,11 @@ module characterCreationRuntimeSlice {
   // This slice intentionally models only the Orc Soldier Fighter vertical from
   // plans/phase1-fighter-manifest.md. Other SRD options may be valid options at
   // a hole but unsupported by this first runtime slice.
+  //
+  // TODO(CAM follow-up): this parity slice currently checks hole/status protocol
+  // more deeply than finalized sheet values. Before widening character creation
+  // beyond the first manifest, add parity coverage for selected Unit refs,
+  // HP/Hit Die derivation, proficiencies, resources, and loadout identity.
 
   type HoleId =
     | HPrimaryClass
