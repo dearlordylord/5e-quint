@@ -96,7 +96,7 @@ let cloak =
                 }
               , { family = "activation"
                 , grants = None (List PassiveEffect)
-                , activationCost = Some { kind = "action" }
+                , activationCost = Some { kind = "standard_action", action = "magic" }
                 , resource =
                     Some
                       { kind = "use_count"

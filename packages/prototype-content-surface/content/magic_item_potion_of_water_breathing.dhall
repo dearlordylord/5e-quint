@@ -20,7 +20,7 @@ let potion =
           "You can breathe underwater for 24 hours after drinking this potion."
       , mechanics =
           { family = "activation"
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , resource =
               { kind = "use_count"
               , cap = { kind = "fixed", uses = 1 }

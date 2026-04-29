@@ -49,7 +49,7 @@ let potion =
           "When you drink this potion, you gain a Climb Speed equal to your Speed for 1 hour. During this time, you have Advantage on Strength (Athletics) checks to climb."
       , mechanics =
           { family = "activation"
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , resource =
               { kind = "use_count"
               , cap = { kind = "fixed", uses = 1 }

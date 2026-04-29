@@ -172,7 +172,7 @@ let staffOfPower =
               , { family = "activation"
                 , condition = Some { kind = "holding_item" }
                 , grants = None (List PassiveEffect)
-                , activationCost = Some { kind = "action" }
+                , activationCost = Some { kind = "standard_action", action = "magic" }
                 , resource =
                     Some
                       { kind = "charge_pool"

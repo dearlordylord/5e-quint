@@ -1,4 +1,5 @@
 import { Either } from "effect";
+import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 
 import type { State } from "#/reducer-state.ts";
 import type { ResolutionInvalid } from "#/reducer-types.ts";
@@ -11,12 +12,7 @@ export function spendOneAction(
   state: State,
   unavailableReason: string,
 ): Either.Either<State, ResolutionInvalid> {
-  if (state.currentActionsAvailable === 0) {
-    return Either.left(invalid(unavailableReason));
-  }
-
-  return Either.right({
-    ...state,
-    currentActionsAvailable: state.currentActionsAvailable === 1 ? 0 : 1,
-  });
+  return spendAction(state, "attack").pipe(
+    Either.mapLeft(() => invalid(unavailableReason)),
+  );
 }

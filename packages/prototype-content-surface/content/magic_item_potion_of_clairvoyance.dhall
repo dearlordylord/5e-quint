@@ -48,7 +48,7 @@ let potion =
           "When you drink this potion, you gain the effect of the Clairvoyance spell (no Concentration required)."
       , mechanics =
           { family = "activation"
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , range = { kind = "point", feet = 5280 }
           , resource =
               { kind = "use_count"

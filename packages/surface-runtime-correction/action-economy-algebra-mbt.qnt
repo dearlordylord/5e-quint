@@ -1,50 +1,79 @@
 // -*- mode: Bluespec; -*-
 
 module actionEconomyAlgebraMbt {
-  var qActions: int
+  var qTurnActionAvailable: bool
+  // 0 none, 1 A, 2 B, 3 A then B, 4 B then A.
+  var qRestrictedUnitActionOrder: int
   var qHasBonusAction: bool
-  var qHasFreeAction: bool
 
   action init = all {
-    qActions' = 1,
+    qTurnActionAvailable' = true,
+    qRestrictedUnitActionOrder' = 0,
     qHasBonusAction' = true,
-    qHasFreeAction' = true,
   }
 
-  action doSpendAction = all {
-    qActions > 0,
-    qActions' = qActions - 1,
+  action doSpendAttackAction = all {
+    qTurnActionAvailable or qRestrictedUnitActionOrder != 0,
+    qTurnActionAvailable' =
+      if (qRestrictedUnitActionOrder != 0) qTurnActionAvailable else false,
+    qRestrictedUnitActionOrder' =
+      if (qRestrictedUnitActionOrder == 3) 2
+      else if (qRestrictedUnitActionOrder == 4) 1
+      else 0,
     qHasBonusAction' = qHasBonusAction,
-    qHasFreeAction' = qHasFreeAction,
+  }
+
+  action doSpendMagicAction = all {
+    qTurnActionAvailable,
+    qTurnActionAvailable' = false,
+    qRestrictedUnitActionOrder' = qRestrictedUnitActionOrder,
+    qHasBonusAction' = qHasBonusAction,
+  }
+
+  action doGrantRestrictedUnitActionA = all {
+    qRestrictedUnitActionOrder == 0 or qRestrictedUnitActionOrder == 2,
+    qTurnActionAvailable' = qTurnActionAvailable,
+    qRestrictedUnitActionOrder' =
+      if (qRestrictedUnitActionOrder == 2) 4 else 1,
+    qHasBonusAction' = qHasBonusAction,
+  }
+
+  action doGrantRestrictedUnitActionB = all {
+    qRestrictedUnitActionOrder == 0 or qRestrictedUnitActionOrder == 1,
+    qTurnActionAvailable' = qTurnActionAvailable,
+    qRestrictedUnitActionOrder' =
+      if (qRestrictedUnitActionOrder == 1) 3 else 2,
+    qHasBonusAction' = qHasBonusAction,
   }
 
   action doSpendBonusAction = all {
     qHasBonusAction,
-    qActions' = qActions,
+    qTurnActionAvailable' = qTurnActionAvailable,
+    qRestrictedUnitActionOrder' = qRestrictedUnitActionOrder,
     qHasBonusAction' = false,
-    qHasFreeAction' = qHasFreeAction,
   }
 
   action doSpendFreeAction = all {
-    qHasFreeAction,
-    qActions' = qActions,
+    qTurnActionAvailable' = qTurnActionAvailable,
+    qRestrictedUnitActionOrder' = qRestrictedUnitActionOrder,
     qHasBonusAction' = qHasBonusAction,
-    qHasFreeAction' = false,
   }
 
   action doResetTurn = all {
-    qActions' = 1,
+    qTurnActionAvailable' = true,
+    qRestrictedUnitActionOrder' = 0,
     qHasBonusAction' = true,
-    qHasFreeAction' = true,
   }
 
   action step = any {
-    doSpendAction,
+    doSpendAttackAction,
+    doSpendMagicAction,
+    doGrantRestrictedUnitActionA,
+    doGrantRestrictedUnitActionB,
     doSpendBonusAction,
     doSpendFreeAction,
     doResetTurn,
   }
 
-  val invariant =
-    qActions >= 0 and qActions <= 2
+  val invariant = true
 }

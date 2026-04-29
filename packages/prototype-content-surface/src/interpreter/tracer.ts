@@ -1991,7 +1991,14 @@ function traceEffectAtomScaling(
         }
         if (layer.passiveEffects !== undefined) {
           for (const passive of layer.passiveEffects) {
-            traceEffectAtomScaling(passive, effectId, slotId, nodes, edges, ids);
+            traceEffectAtomScaling(
+              passive,
+              effectId,
+              slotId,
+              nodes,
+              edges,
+              ids,
+            );
           }
         }
       }
@@ -2726,7 +2733,8 @@ function traceOngoingOperation(
     op.predicate === undefined
       ? hostId
       : traceOngoingPredicateGate(op.predicate, hostId, nodes, edges, ids);
-  const effectHostRelation = op.predicate === undefined ? hostRelation : "grants";
+  const effectHostRelation =
+    op.predicate === undefined ? hostRelation : "grants";
   if (op.targetLimit !== undefined) {
     const limitId = ids("limit");
     const targetTypes = op.targetLimit.targetTypes.join("/");
@@ -5033,9 +5041,7 @@ function describeWeaponApplicability(
       return "(ammunition)";
     default: {
       const _exhaustive: never = applicability;
-      throw new Error(
-        `unhandled weapon applicability: ${String(_exhaustive)}`,
-      );
+      throw new Error(`unhandled weapon applicability: ${String(_exhaustive)}`);
     }
   }
 }
@@ -5963,17 +5969,6 @@ function traceActivationCost(
         category: "resource",
         atomKind: "action_quota",
         label: `action_quota\n(Activation: ${describeStandardActionCost(c.action)})`,
-      });
-      edges.push({ from: procId, to: id, relation: "consumes" });
-      return;
-    }
-    case "action": {
-      const id = ids("q");
-      nodes.push({
-        id,
-        category: "resource",
-        atomKind: "action_quota",
-        label: "action_quota\n(Activation: Action)",
       });
       edges.push({ from: procId, to: id, relation: "consumes" });
       return;

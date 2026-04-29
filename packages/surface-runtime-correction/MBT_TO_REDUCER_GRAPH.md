@@ -149,7 +149,7 @@ flowchart TD
   end
 
   subgraph Partial["Implemented + MBT, partially reducer-used"]
-    ActionPartial["action economy algebra<br/>MBT: action/free/bonus/reset<br/>Reducer: action spend/reset now; bonus/free only resolver-ready"]
+    ActionPartial["action economy algebra<br/>MBT: Surface action resources/free/bonus/reset<br/>Reducer: action resource spend/reset, Action Surge grant, and bonus resolver-ready"]
   end
 
   subgraph ReducerOnly["Implemented + reducer-used, not MBT-covered"]
@@ -164,8 +164,7 @@ flowchart TD
     IntegratedMbtMissing["integrated reducer MBT<br/>Surface act -> holes -> resolution -> state"]
     SurfaceMbtQuestion["OPEN QUESTION<br/>whether/where to MBT Surface fact projection"]
     CoreAttackMissing["core Attack adjudication<br/>target + roll + damage still frontier"]
-    GrantExtraActionMissing["grant_extra_action execution"]
-    UpcastUsesMissing["upcast slots / use counts / other once-turn limits"]
+    UpcastUsesMissing["upcast slots / shared or scaled use-count pools"]
     StartTurnDeathSaveMissing["start-turn death-save reducer path"]
   end
 
@@ -185,12 +184,12 @@ flowchart TD
   class InitiativeFull,ConditionsFull,DeathPureFull,ArmorFull full;
   class ActionPartial partial;
   class LifecycleOnly,SupportOnly,HolesOnly,SaveGateOnly,PublicReducerOnly reducerOnly;
-  class IntegratedMbtMissing,SurfaceMbtQuestion,CoreAttackMissing,GrantExtraActionMissing,UpcastUsesMissing,StartTurnDeathSaveMissing missing;
+  class IntegratedMbtMissing,SurfaceMbtQuestion,CoreAttackMissing,UpcastUsesMissing,StartTurnDeathSaveMissing missing;
 ```
 
 The key non-obvious status is death saves. The pure counter algebra is MBT-covered. The composed creature lifecycle that decides whether a creature dies at 0 HP, uses death saves, becomes unconscious, or resets counters on healing is not MBT-covered yet; it is covered by reducer unit tests and reducer boundary tests. The start-turn death-save roll path is missing from the public reducer. It is a "wire soon" item because the pure counter and creature lifecycle helpers already exist; what is missing is the reducer act/window that asks for the death save roll at the right turn boundary.
 
-The key action-economy status is similar. The algebra supports action, free action, bonus action, and reset. The public discovery lane currently exposes action cantrips only, so bonus/free-action algebra is implemented but only exercised when an explicit supported unit subject reaches resolution. Wiring bonus/free actions into discovery is a "wire later" item because it depends on broader supported Surface units, not just the algebra. Core adoption is also later: first evolve this into a richer shared resource-payment algebra with multi-cost validation, atomic spend, and Surface/core cost compilation into the same reducer facts.
+The key action-economy status is similar. The algebra supports action resources with Surface `ActionRestriction`, free no-op costs, bonus actions, multiple unit-granted restricted action resources, duplicate-grant rejection, and reset. The public discovery lane currently exposes action cantrips and Action Surge; broader bonus-action discovery still depends on supported Surface units, not just the algebra. Action Surge's once-per-turn guard and creature-scoped use-count spend/restore helper are implemented in the reducer; upcast slots and shared or scaled use-count pools remain explicit later work.
 
 Armor-class math is MBT-covered and used for unit attack AC comparison. Surface armor/equipment projection into `ArmorClassState` does not exist yet. Core adoption is explicitly deferred until core has a Surface-backed armor/equipment projection path. That belongs to the open Surface/MBT boundary discussion: first decide the Surface fact projection contract, then decide whether that contract needs ordinary tests, MBT, or both.
 
@@ -283,7 +282,7 @@ Possible examples:
 - `cure_wounds` covers direct `heal_hp`, target choice, healing dice, spell slot cost, and death-save/lifecycle healing.
 - `fireball` covers `save_gate`, area attachment, saving throw outcomes, and damage application in the reducer-boundary tests; it remains a candidate for selected integrated MBT if this flow becomes a proof target.
 - `chromatic_orb` should cover damage-type choice and continuation/frontier behavior until supported.
-- `fighter_action_surge_l2` should cover `grant_extra_action` once implemented.
+- `fighter_action_surge_l2` covers `grant_extra_action` as a restricted action resource that excludes Magic, cannot be activated twice in the same turn, and spends/restores its creature-scoped current use count.
 
 Open decision:
 
@@ -313,8 +312,7 @@ Missing entirely:
 - Integrated reducer MBT for a real Surface-backed act.
 - Decision on whether Surface fact projection should have MBT, ordinary tests, or both.
 - Core `Attack` adjudication and state mutation.
-- `grant_extra_action` execution.
-- Upcast slots, use counts, and other once-per-turn limits.
+- Upcast slots and shared or scaled use-count pools.
 - Start-turn death-save transition in the public reducer.
 
 Implemented but not fully utilized by MBT:
@@ -326,7 +324,7 @@ Implemented but not fully utilized by MBT:
 
 Implemented but not fully utilized by main reducer logic:
 
-- Bonus/free-action action-economy spending is implemented in the sub-reducer; discovery of bonus/free-action unit acts is not wired yet.
+- Bonus-action spending is implemented in the sub-reducer; discovery of bonus-action unit acts is not wired yet. Free activation costs are modeled as no action-economy spend.
 - Armor algebra is ready to receive projected armor/equipment reducer facts; core use waits for core's Surface-backed armor/equipment projection path, and the Surface-to-armor projection contract is undecided and not implemented.
 - Death-save counter algebra is ready for start-turn death-save rolls; the public reducer has no start-turn death-save act/window yet.
 
@@ -337,7 +335,7 @@ Likely wire soon:
 
 Likely wire later:
 
-- Bonus/free-action unit discovery. The sub-reducer can spend those resources, but useful discovery depends on more supported Surface units.
-- Shared action-economy adoption in core. The current primitive should first grow into a real resource-payment algebra with multi-cost validation and atomic spend.
+- Bonus-action unit discovery. The sub-reducer can spend the resource, but useful discovery depends on more supported Surface units.
+- Shared resource-payment adoption in core. The current primitive should grow toward multi-cost validation and atomic spend.
 - Surface armor/equipment projection. The armor reducer shape exists, but core adoption waits for core to have Surface-backed armor/equipment facts, and the projection contract from authored Surface equipment facts still needs design.
-- Upcasts, use counts, and other once-per-turn limits. These depend on broader Surface resource semantics.
+- Upcasts and shared or scaled use-count pools. These depend on broader Surface resource semantics.

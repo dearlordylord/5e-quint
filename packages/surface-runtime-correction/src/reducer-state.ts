@@ -6,8 +6,18 @@ import type { CreatureId, Hp, SpellSlots } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
 import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import type { DeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
+import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 
 export type ZeroHpLifecyclePolicy = "diesAtZeroHp" | "usesDeathSavingThrows";
+
+export type UnitResourceKey = string & Brand.Brand<"UnitResourceKey">;
+const UnitResourceKey = Brand.nominal<UnitResourceKey>();
+export function unitResourceKey(
+  creatureId: CreatureId,
+  unitId: UnitRecord["id"],
+): UnitResourceKey {
+  return UnitResourceKey(`${creatureId}:${unitId}`);
+}
 
 export type SpellcastingAbilityModifier = Integer &
   Brand.Brand<"SpellcastingAbilityModifier">;
@@ -46,8 +56,13 @@ export type State = {
   readonly combatants: ReadonlyMap<CreatureId, CreatureState>;
 
   // action economy
-  // Remaining count for the domain resource Action.
-  readonly currentActionsAvailable: 0 | 1 | 2;
+  // Available Action resources. The turn itself grants one, and Units such as
+  // Action Surge can add restricted action resources using Surface restrictions.
+  readonly actionResources: ReadonlyArray<RuntimeActionResource>;
   readonly currentHasBonusAction: boolean;
-  readonly currentHasFreeAction: boolean;
+  // Creature-owned Units with Surface once-per-turn activation limits used during this turn.
+  readonly unitActivationsThisTurn: ReadonlySet<UnitResourceKey>;
+  // Creature-owned Unit use-count resources spent after the latest matching
+  // Surface restore event, e.g. Short Rest, Long Rest, or dawn.
+  readonly expendedUnitUseCounts: ReadonlyMap<UnitResourceKey, number>;
 };

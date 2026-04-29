@@ -85,7 +85,7 @@ export const ContainerStorageProfileSchema = Schema.Struct({
   extradimensional: exactOptional(Schema.Literal(true)),
 });
 
-export const StandardActionKindSchema = Schema.Literal(
+export const STANDARD_ACTION_KINDS = [
   "attack",
   "dash",
   "disengage",
@@ -98,6 +98,10 @@ export const StandardActionKindSchema = Schema.Literal(
   "search",
   "study",
   "utilize",
+] as const;
+
+export const StandardActionKindSchema = Schema.Literal(
+  ...STANDARD_ACTION_KINDS,
 );
 
 export const ClassNameSchema = Schema.Literal(

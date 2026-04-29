@@ -112,7 +112,7 @@ let staffOfFire =
               , { family = "activation"
                 , condition = None HoldingItemCondition
                 , grants = None (List GrantResistanceOrSpellAccess)
-                , activationCost = Some { kind = "action" }
+                , activationCost = Some { kind = "standard_action", action = "magic" }
                 , resource =
                     Some
                       { kind = "charge_pool"

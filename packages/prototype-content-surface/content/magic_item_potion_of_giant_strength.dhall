@@ -37,7 +37,7 @@ let potion =
           "When you drink this potion, your Strength score changes for 1 hour. The type of giant determines the score. The potion has no effect on you if your Strength is equal to or greater than that score. (Hill variant: Strength 21, Uncommon.)"
       , mechanics =
           { family = "activation"
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , resource =
               { kind = "use_count"
               , cap = { kind = "fixed", uses = 1 }

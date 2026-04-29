@@ -29,7 +29,8 @@
       },
       {
         "activationCost": {
-          "kind": "action"
+          "action": "magic",
+          "kind": "standard_action"
         },
         "family": "activation",
         "phases": [

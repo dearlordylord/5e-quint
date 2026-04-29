@@ -16,5 +16,5 @@ export function canCurrentActorAct(state: State): boolean {
 }
 
 export function canUseCoreAttack(state: State): boolean {
-  return canCurrentActorAct(state) && canSpendAction(state);
+  return canCurrentActorAct(state) && canSpendAction(state, "attack");
 }

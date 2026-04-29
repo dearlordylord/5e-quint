@@ -7,7 +7,8 @@
   "kind": "magic_item",
   "mechanics": {
     "activationCost": {
-      "kind": "action"
+      "action": "magic",
+      "kind": "standard_action"
     },
     "duration": {
       "kind": "timed",

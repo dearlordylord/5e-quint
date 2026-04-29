@@ -133,6 +133,7 @@ export {
   SkillSchema,
   SkillFilterSchema,
   SpellAccessModeSchema,
+  STANDARD_ACTION_KINDS,
   StandardActionKindSchema,
   UsageLimitSchema,
   WeaponCategorySchema,

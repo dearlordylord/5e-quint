@@ -60,10 +60,19 @@ type CurrentSliceSupportedSaveGatePhase = Extract<
   readonly saveAppliesIf?: undefined;
 };
 
-type CurrentSliceSupportedDirectEffect = Extract<
+type CurrentSliceSupportedGrantExtraActionEffect = Extract<
   EffectAtom,
-  { readonly kind: "heal_hp" | "grant_extra_action" }
->;
+  { readonly kind: "grant_extra_action" }
+> & {
+  readonly restriction: {
+    readonly kind: "exclude";
+    readonly actions: readonly ["magic"];
+  };
+};
+
+type CurrentSliceSupportedDirectEffect =
+  | Extract<EffectAtom, { readonly kind: "heal_hp" }>
+  | CurrentSliceSupportedGrantExtraActionEffect;
 
 type CurrentSliceSupportedDirectPhase = Extract<
   ActivationPhase,
@@ -84,6 +93,21 @@ export type CurrentSliceSupportedActivationUnit = UnitRecord & {
     readonly phases: readonly [CurrentSliceSupportedActivationPhase];
   };
 };
+
+type CurrentSliceSupportedGrantExtraActionUnit =
+  CurrentSliceSupportedActivationUnit & {
+    readonly kind: "class_feature";
+    readonly acquiredAtLevel: 2;
+    readonly mechanics: CurrentSliceSupportedActivationUnit["mechanics"] & {
+      readonly activationCost: { readonly kind: "free" };
+      readonly resource: {
+        readonly kind: "use_count";
+        readonly cap: { readonly kind: "fixed"; readonly uses: 1 };
+      };
+      readonly resetCadence: { readonly kind: "short_or_long_rest" };
+      readonly usageLimit: { readonly kind: "once_per_turn" };
+    };
+  };
 
 export class UnsupportedUnitError extends Error {
   constructor(message: string) {
@@ -194,11 +218,21 @@ function supportedDamageAmount(
   return Either.isRight(currentSliceDamageBaseExpr(amount, baseSpellLevel));
 }
 
+function supportedGrantExtraActionEffect(
+  effect: Extract<EffectAtom, { readonly kind: "grant_extra_action" }>,
+): effect is CurrentSliceSupportedGrantExtraActionEffect {
+  return (
+    effect.restriction.kind === "exclude" &&
+    isArrayOfOne(effect.restriction.actions) &&
+    effect.restriction.actions[0] === "magic"
+  );
+}
+
 function supportedDirectEffect(
   effect: EffectAtom,
 ): effect is CurrentSliceSupportedDirectEffect {
   if (effect.kind === "grant_extra_action") {
-    return true;
+    return supportedGrantExtraActionEffect(effect);
   }
 
   if (effect.kind === "heal_hp") {
@@ -206,6 +240,25 @@ function supportedDirectEffect(
   }
 
   return false;
+}
+
+function currentSliceSupportsGrantExtraActionResourceSemantics(
+  unit: UnitRecord,
+): unit is CurrentSliceSupportedGrantExtraActionUnit {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "activation") {
+    return false;
+  }
+
+  const cap = unit.mechanics.resource.cap;
+  return (
+    unit.acquiredAtLevel === 2 &&
+    unit.mechanics.activationCost.kind === "free" &&
+    unit.mechanics.resource.kind === "use_count" &&
+    cap.kind === "fixed" &&
+    cap.uses === 1 &&
+    unit.mechanics.resetCadence.kind === "short_or_long_rest" &&
+    unit.mechanics.usageLimit?.kind === "once_per_turn"
+  );
 }
 
 function supportedAttackRollPhase(
@@ -378,6 +431,17 @@ export function checkSupportedUnit(
       return Either.left(
         new UnsupportedUnitError(
           `Unsupported direct effect for reducer unit ${unit.id}: ${directEffect.kind}`,
+        ),
+      );
+    }
+
+    if (
+      directEffect.kind === "grant_extra_action" &&
+      !currentSliceSupportsGrantExtraActionResourceSemantics(unit)
+    ) {
+      return Either.left(
+        new UnsupportedUnitError(
+          `Unsupported extra-action resource semantics for reducer unit ${unit.id}`,
         ),
       );
     }
