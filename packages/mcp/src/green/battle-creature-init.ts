@@ -11,7 +11,10 @@ import {
   type BattleCreatureInit,
   type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
-import type { CharacterSheet } from "@dnd/character-creation-runtime";
+import {
+  characterSheetUnitRefs,
+  type CharacterSheet,
+} from "@dnd/character-creation-runtime";
 import {
   abilityModifier,
   armorClassDelta,
@@ -62,6 +65,7 @@ export function battleCreatureInitFromCharacterSheet(
   },
 ): BattleCreatureInit {
   const maxHp = Hp(input.sheet.hitPoints.maximum);
+  const sheetUnitRefs = characterSheetUnitRefs(input.sheet);
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -71,13 +75,13 @@ export function battleCreatureInitFromCharacterSheet(
     creatureInit: {
       kind: "character",
       characterId: input.characterId,
-      sheetUnitRefs: input.sheet.unitRefs,
+      sheetUnitRefs,
       armorClass: characterArmorClassState(input.sheet, input.unitLibrary),
       currentHp: input.currentHp ?? maxHp,
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
-      selectedLoadout: input.sheet.equipment.loadout,
+      selectedLoadout: input.sheet.equipment,
       attack: characterAttackProfile(input.sheet, input.unitLibrary),
     },
   };
@@ -87,7 +91,7 @@ function characterArmorClassState(
   sheet: CharacterSheet,
   unitLibrary: UnitCatalog,
 ): ArmorClassState {
-  const loadout = sheet.equipment.loadout;
+  const loadout = sheet.equipment;
   const defaultState = defaultArmorClassState();
   const armor = loadout.armor
     ? unitLibrary.requireUnit(loadout.armor)
@@ -123,11 +127,11 @@ function characterArmorClassState(
             },
           ]
         : []),
-      ...sheet.unitRefs.flatMap((ref) =>
+      ...characterSheetUnitRefs(sheet).flatMap((ref) =>
         armorDefenseBonus(unitLibrary.requireUnit(ref.unitId)),
       ),
     ],
-    armorTraining: new Set(sheet.proficiencies.armorTraining),
+    armorTraining: new Set(sheet.armorTraining),
     leftHandUse: shield?.kind === "shield" ? "shield" : "free",
     rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
   };
@@ -171,7 +175,7 @@ function characterAttackProfile(
   sheet: CharacterSheet,
   unitLibrary: UnitCatalog,
 ): BattleAttackProfile | null {
-  const selectedWeapon = sheet.equipment.loadout.weapon;
+  const selectedWeapon = sheet.equipment.weapon;
   if (selectedWeapon == null) {
     return null;
   }

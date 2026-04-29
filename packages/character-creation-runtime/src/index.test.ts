@@ -12,6 +12,7 @@ import {
 
 import {
   characterDraftId,
+  characterSheetUnitRefs,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
@@ -44,6 +45,7 @@ const characterCreationRuntimeSlicePath = fileURLToPath(
 describe("character creation hole discovery", () => {
   test("discovers the initial manifest draft holes from Surface records", () => {
     const draft = createCharacterDraft({
+      unitLibrary,
       draftId: characterDraftId("draft:initial"),
     });
     const holes = discoverCreationHoles({ draft, unitLibrary });
@@ -1126,8 +1128,19 @@ describe("character creation finalization", () => {
       return;
     }
 
-    expect(result.sheet.selections.advancement).toEqual({
+    expect(result.sheet.advancement).toEqual({
       entries: [{ classUnitId: "class_fighter", level: 1 }],
+    });
+    expect(result.sheet.background).toBe("background_soldier");
+    expect(result.sheet.species).toBe("species_orc");
+    expect(result.sheet.originLanguages).toEqual([
+      "Common",
+      "Dwarvish",
+      "Goblin",
+    ]);
+    expect(result.sheet.alignment).toEqual({
+      order: "lawful",
+      morality: "good",
     });
     expect(result.sheet.abilityScores).toEqual({
       str: 17,
@@ -1136,22 +1149,6 @@ describe("character creation finalization", () => {
       int: 8,
       wis: 10,
       cha: 12,
-    });
-    expect(result.sheet.selections.abilityScoreGeneration).toEqual({
-      method: "standardArray",
-      assignedScores: {
-        str: 15,
-        dex: 14,
-        con: 13,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      },
-    });
-    expect(result.sheet.selections.backgroundAbilityScoreIncrease).toEqual({
-      kind: "twoAndOne",
-      plusTwo: "str",
-      plusOne: "con",
     });
     expect(result.sheet.hitPoints).toEqual({
       maximum: 12,
@@ -1171,80 +1168,46 @@ describe("character creation finalization", () => {
     ]);
     expect(result.sheet.features).toEqual([
       {
+        kind: "classFeature",
+        level: 1,
         unitId: "fighter_fighting_style_l1",
-        grant: {
-          classUnitId: "class_fighter",
-          kind: "classFeature",
-          level: 1,
-        },
       },
       {
+        kind: "classFeature",
+        level: 1,
         unitId: "fighter_second_wind",
-        grant: {
-          classUnitId: "class_fighter",
-          kind: "classFeature",
-          level: 1,
-        },
       },
       {
+        kind: "classFeature",
+        level: 1,
         unitId: "fighter_weapon_mastery_l1",
-        grant: {
-          classUnitId: "class_fighter",
-          kind: "classFeature",
-          level: 1,
-        },
       },
       {
+        kind: "backgroundOriginFeat",
         unitId: "feat_savage_attacker",
-        grant: {
-          backgroundUnitId: "background_soldier",
-          kind: "backgroundOriginFeat",
-        },
       },
       {
+        kind: "speciesTrait",
         unitId: "orc_adrenaline_rush",
-        grant: {
-          kind: "speciesTrait",
-          speciesUnitId: "species_orc",
-          traitKey: "adrenalineRush",
-        },
       },
       {
+        kind: "speciesTrait",
         unitId: "orc_darkvision",
-        grant: {
-          kind: "speciesTrait",
-          speciesUnitId: "species_orc",
-          traitKey: "darkvision",
-        },
       },
       {
+        kind: "speciesTrait",
         unitId: "orc_relentless_endurance",
-        grant: {
-          kind: "speciesTrait",
-          speciesUnitId: "species_orc",
-          traitKey: "relentlessEndurance",
-        },
       },
       {
+        choiceKey: "fighter_fighting_style",
+        kind: "classChoice",
         unitId: "defense",
-        grant: {
-          choiceKey: "fighter_fighting_style",
-          classUnitId: "class_fighter",
-          kind: "classChoice",
-        },
       },
     ]);
     expect(result.sheet.equipment).toEqual({
-      ownedUnitIds: [
-        "armor_chain_mail",
-        "weapon_longsword",
-        "equipment_shield",
-      ],
-      loadout: {
-        armor: "armor_chain_mail",
-        shield: "equipment_shield",
-        weapon: { unitId: "weapon_longsword", grip: "one_handed" },
-      },
+      armor: "armor_chain_mail",
+      shield: "equipment_shield",
+      weapon: { unitId: "weapon_longsword", grip: "one_handed" },
     });
     expect(result.sheet.resources).toEqual([
       {
@@ -1263,23 +1226,23 @@ describe("character creation finalization", () => {
         },
       },
     ]);
-    expect(result.sheet.unitRefs.map((ref) => ref.unitId)).toEqual([
+    expect(
+      characterSheetUnitRefs(result.sheet).map((ref) => ref.unitId),
+    ).toEqual([
       "class_fighter",
+      "background_soldier",
+      "species_orc",
       "fighter_fighting_style_l1",
       "fighter_second_wind",
       "fighter_weapon_mastery_l1",
-      "background_soldier",
       "feat_savage_attacker",
-      "species_orc",
       "orc_adrenaline_rush",
       "orc_darkvision",
       "orc_relentless_endurance",
       "defense",
-      "weapon_longsword",
-      "weapon_spear",
-      "weapon_flail",
       "armor_chain_mail",
       "equipment_shield",
+      "weapon_longsword",
     ]);
   });
 
@@ -1496,6 +1459,7 @@ function draftWithSelections(
   selections: Partial<CharacterDraft["selections"]>,
 ): CharacterDraft {
   const base = createCharacterDraft({
+    unitLibrary,
     draftId: characterDraftId("draft:with-selections"),
   });
 
@@ -1510,6 +1474,7 @@ function draftWithSelections(
 
 function createTestDraft(draftId: string): CharacterDraft {
   return createCharacterDraft({
+    unitLibrary,
     draftId: characterDraftId(draftId),
   });
 }

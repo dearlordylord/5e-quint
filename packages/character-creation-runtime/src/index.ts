@@ -19,17 +19,16 @@ import {
   type AbilityScoreAssignment,
   type SupportedAbilityScoreMethod,
 } from "@dnd/shared-algebras/ability-score-algebra";
-import { ABILITIES, hp, type Ability, type HP } from "@dnd/shared/types";
+import { hp, type HP } from "@dnd/shared/types";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
   readSpeciesCreationFacts,
-  type SpeciesCreationFacts,
-  type UnitReaderResult,
 } from "@dnd/surface/surface/character-creation-readers";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type {
+  Ability,
   ActivationResource,
   ArmorTrainingCategory,
   BackgroundToolProficiency,
@@ -115,6 +114,10 @@ export type CreationHoleSource =
       readonly unitId: UnitRecord["id"];
       readonly choiceKey: UnitChoiceKey;
     };
+export type UnitChoiceSource = Extract<
+  CreationHoleSource,
+  { readonly tag: "unit" }
+>;
 
 export type CreationHoleIdText =
   | `cc:draft:${CharacterDraftPath}`
@@ -154,7 +157,7 @@ export const CHARACTER_CLASS_LEVELS = [
 export type CharacterClassLevel = (typeof CHARACTER_CLASS_LEVELS)[number];
 
 export type CharacterAdvancementSelection = {
-  readonly entries: readonly CharacterAdvancementEntry[];
+  readonly entries: NonEmptyReadonlyArray<CharacterAdvancementEntry>;
 };
 
 export type CharacterAdvancementEntry = {
@@ -204,7 +207,7 @@ export type CharacterSelectedChoiceOption = {
 };
 
 export type CharacterChoiceSelection = {
-  readonly source: CreationHoleSource;
+  readonly source: UnitChoiceSource;
   readonly options: readonly CharacterSelectedChoiceOption[];
 };
 
@@ -243,7 +246,6 @@ export type CreationFill =
 // transient action-resolution inputs: they can share hole-shape algebras, but
 // not this batch/error vocabulary without losing domain precision.
 export const CREATION_FILL_ISSUE_CODES = [
-  // fixme check how hole errors are denoted in battle/combat code. probably can use common vocab moving to shared/
   "unknownHole",
   "duplicateFill",
   "wrongFillKind",
@@ -309,7 +311,7 @@ export type CreationBatchFillResult =
       readonly finalization: CreationFinalizationResult;
     };
 
-export type FinalizedCharacterSelections = {
+type FinalizedCharacterSelections = {
   readonly primaryClass: UnitRecord["id"];
   readonly advancement: CharacterAdvancementSelection;
   readonly background: UnitRecord["id"];
@@ -350,31 +352,25 @@ export type CharacterSheetProficiencies = {
   readonly tools: readonly CreationChoiceOptionId[];
 };
 
-export type CharacterSheetFeatureGrant =
+export type CharacterSheetFeature =
   | {
       readonly kind: "classFeature";
-      readonly classUnitId: UnitRecord["id"];
+      readonly unitId: UnitRecord["id"];
       readonly level: number;
     }
   | {
       readonly kind: "backgroundOriginFeat";
-      readonly backgroundUnitId: UnitRecord["id"];
+      readonly unitId: UnitRecord["id"];
     }
   | {
       readonly kind: "speciesTrait";
-      readonly speciesUnitId: UnitRecord["id"];
-      readonly traitKey: Extract<keyof SpeciesCreationFacts["traits"], string>;
+      readonly unitId: UnitRecord["id"];
     }
   | {
       readonly kind: "classChoice";
-      readonly classUnitId: UnitRecord["id"];
+      readonly unitId: UnitRecord["id"];
       readonly choiceKey: UnitChoiceKey;
     };
-
-export type CharacterSheetFeature = {
-  readonly unitId: UnitRecord["id"];
-  readonly grant: CharacterSheetFeatureGrant;
-};
 
 export type CharacterSheetResource = {
   readonly unitId: UnitRecord["id"];
@@ -386,29 +382,25 @@ export type CharacterSheetLoadout = {
   readonly shield?: UnitRecord["id"];
   readonly weapon?: {
     readonly unitId: UnitRecord["id"];
-    // Phase 1 supports only the manifest loadout from
-    // plans/phase1-fighter-manifest.md: shield plus longsword, so the weapon
-    // must be held one-handed. Widen this when loadout support moves beyond
-    // that first vertical slice.
     readonly grip: "one_handed";
   };
 };
 
+export type CharacterSheetEquipment = CharacterSheetLoadout;
+
 export type CharacterSheet = {
-  // FIXME imagine we 10 months into game. we read "selections". selections of what? of character created 10 months ago? FIXME analyze rest of the code from this temporal concept angle
-  readonly selections: FinalizedCharacterSelections;
-  readonly unitRefs: readonly UnitRef[];
+  readonly advancement: CharacterAdvancementSelection;
+  readonly background: UnitRecord["id"];
+  readonly species: UnitRecord["id"];
+  readonly originLanguages: CharacterStartingLanguages;
+  readonly alignment: CharacterAlignment;
   readonly abilityScores: CharacterSheetAbilityScores;
-  // FIXME temp hit points
   readonly hitPoints: CharacterSheetHitPoints;
   readonly proficiencies: CharacterSheetProficiencies;
   readonly armorTraining: readonly ArmorTrainingCategory[];
   readonly features: readonly CharacterSheetFeature[];
   readonly resources: readonly CharacterSheetResource[];
-  readonly equipment: {
-    readonly ownedUnitIds: readonly UnitRecord["id"][];
-    readonly loadout: CharacterSheetLoadout;
-  };
+  readonly equipment: CharacterSheetEquipment;
 };
 
 export type CreationFinalizationResult =
@@ -431,13 +423,6 @@ const INITIAL_CHARACTER_DRAFT_PATHS = [
   "draft.alignment",
 ] as const satisfies ReadonlyArray<CharacterDraftPath>;
 
-// Phase 1 is the first supported character-creation vertical from
-// plans/phase1-fighter-manifest.md: an Orc Soldier Fighter using Standard
-// Array, fixed first-slice languages/alignment, level-1 Fighter choices, Chain
-// Mail + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
-// Hole discovery may expose broader legal SRD options, but finalization is
-// intentionally gated to this manifest until the runtime and parity coverage
-// widen.
 const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
 const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
 const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
@@ -526,11 +511,26 @@ const LOADOUT_SHIELD_CHOICE_KEY = unitChoiceKey("loadout_shield");
 const LOADOUT_WEAPON_CHOICE_KEY = unitChoiceKey("loadout_weapon");
 const EXACTLY_ONE_CHOICE = exactChoiceCardinality(1);
 
+const SURFACE_ABILITIES = [
+  "str",
+  "dex",
+  "con",
+  "int",
+  "wis",
+  "cha",
+] as const satisfies ReadonlyArray<Ability>;
+
+let nextDraftOrdinal = 0;
+
 export function createCharacterDraft(input: {
-  readonly draftId: CharacterDraftId;
+  readonly unitLibrary?: UnitLibrary;
+  readonly draftId?: CharacterDraftId;
 }): CharacterDraft {
+  void input.unitLibrary;
+
   return {
-    draftId: input.draftId,
+    draftId:
+      input.draftId ?? characterDraftId(`cc:draft:${nextDraftOrdinal++}`),
     selections: {
       choices: [],
     },
@@ -623,7 +623,6 @@ export function finalizeCharacterDraft(input: {
 
 function finalizedSelections(
   draft: CharacterDraft,
-  // FIXME Option<>
 ): FinalizedCharacterSelections | undefined {
   const selections = draft.selections;
   if (
@@ -874,7 +873,7 @@ function isSupportedBackgroundAbilityScoreIncrease(
     eligible,
   );
 
-  if (ABILITIES.some((ability) => finalScores[ability] > 20)) {
+  if (SURFACE_ABILITIES.some((ability) => finalScores[ability] > 20)) {
     return false;
   }
 
@@ -907,10 +906,6 @@ function isPhaseOneManifestBackgroundAbilityScoreIncrease(
   );
 }
 
-// SRD 5.2.1 Character-Origins.md:11-13 and Character-Creation.md:185-187:
-// a background lists three abilities; either increase one by 2 and a different
-// one by 1, or increase all three by 1. For the one-each mode, the three
-// abilities come from the background Unit, so equality only compares the mode.
 function sameBackgroundAbilityScoreIncreaseSelection(
   left: BackgroundAbilityScoreIncreaseSelection,
   right: BackgroundAbilityScoreIncreaseSelection,
@@ -934,28 +929,27 @@ function buildCharacterSheet(input: {
   readonly selections: FinalizedCharacterSelections;
   readonly unitLibrary: UnitLibrary;
 }): CharacterSheet {
+  const { selections } = input;
   const classFacts = requireReadable(
     readClassCreationFacts(
-      input.unitLibrary.requireUnit(input.selections.primaryClass),
+      input.unitLibrary.requireUnit(selections.primaryClass),
     ),
     "class",
   );
   const backgroundFacts = requireReadable(
     readBackgroundCreationFacts(
-      input.unitLibrary.requireUnit(input.selections.background),
+      input.unitLibrary.requireUnit(selections.background),
     ),
     "background",
   );
   const speciesFacts = requireReadable(
-    readSpeciesCreationFacts(
-      input.unitLibrary.requireUnit(input.selections.species),
-    ),
+    readSpeciesCreationFacts(input.unitLibrary.requireUnit(selections.species)),
     "species",
   );
-  const baseScores = input.selections.abilityScoreGeneration.assignedScores;
+  const baseScores = selections.abilityScoreGeneration.assignedScores;
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
-    input.selections.backgroundAbilityScoreIncrease,
+    selections.backgroundAbilityScoreIncrease,
     backgroundFacts.abilityScoreIncrease.abilities,
   );
   const classFeatureGrants = classFacts.featureGrants.filter(
@@ -964,59 +958,45 @@ function buildCharacterSheet(input: {
   const classFeatureUnitIds = classFeatureGrants.map((grant) => grant.unitId);
   const sheetFeatures: readonly CharacterSheetFeature[] = [
     ...classFeatureGrants.map((grant) => ({
+      kind: "classFeature" as const,
       unitId: grant.unitId,
-      grant: {
-        kind: "classFeature" as const,
-        classUnitId: input.selections.primaryClass,
-        level: grant.level,
-      },
+      level: grant.level,
     })),
     {
+      kind: "backgroundOriginFeat",
       unitId: backgroundFacts.originFeatId,
-      grant: {
-        kind: "backgroundOriginFeat",
-        backgroundUnitId: input.selections.background,
-      },
     },
-    ...Object.entries(speciesFacts.traits).map(([traitKey, unitId]) => ({
+    ...Object.values(speciesFacts.traits).map((unitId) => ({
+      kind: "speciesTrait" as const,
       unitId,
-      grant: {
-        kind: "speciesTrait" as const,
-        speciesUnitId: input.selections.species,
-        traitKey: traitKey as Extract<
-          keyof SpeciesCreationFacts["traits"],
-          string
-        >,
-      },
     })),
     {
+      kind: "classChoice",
       unitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
-      grant: {
-        kind: "classChoice",
-        classUnitId: input.selections.primaryClass,
-        choiceKey: FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
-      },
+      choiceKey: FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
     },
   ];
+  const sheetEquipment: CharacterSheetEquipment = {
+    armor: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+    shield: PHASE1_SHIELD_UNIT_ID,
+    weapon: {
+      unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+      grip: "one_handed",
+    },
+  };
 
   return {
-    selections: input.selections,
-    unitRefs: unitRefs(
-      input.selections.primaryClass,
-      ...classFeatureUnitIds,
-      input.selections.background,
-      backgroundFacts.originFeatId,
-      input.selections.species,
-      ...Object.values(speciesFacts.traits),
-      ...selectedChoiceUnitIds(input.selections),
-      ...input.selections.equipment.selectedUnitIds,
-    ),
+    advancement: selections.advancement,
+    background: selections.background,
+    species: selections.species,
+    originLanguages: selections.languages,
+    alignment: selections.alignment,
     abilityScores: finalScores,
     hitPoints: {
       maximum: hp(classFacts.hitPointDie + abilityModifier(finalScores.con)),
       hitDice: [
         {
-          classUnitId: input.selections.primaryClass,
+          classUnitId: selections.primaryClass,
           dieSize: classFacts.hitPointDie,
           total: 1,
         },
@@ -1025,45 +1005,52 @@ function buildCharacterSheet(input: {
     proficiencies: {
       savingThrows: classFacts.savingThrowProficiencies,
       skills: uniqueValues([
-        ...selectedSkillProficiencies(input.selections),
+        ...selectedSkillProficiencies(selections),
         ...backgroundFacts.skillProficiencies,
       ]),
       weapon: classFacts.weaponProficiencies,
-      tools: selectedToolProficiencies(input.selections),
+      tools: selectedToolProficiencies(selections),
     },
     armorTraining: classFacts.armorTraining,
     features: sheetFeatures,
     resources: classFeatureUnitIds.flatMap((unitId) =>
       resourceForFeature(input.unitLibrary.requireUnit(unitId)),
     ),
-    equipment: {
-      ownedUnitIds: input.selections.equipment.selectedUnitIds,
-      // TODO(CAM equipment widening): the first manifest finalizes the only
-      // supported loadout. Before adding broader equipment support, derive this
-      // from accepted loadout selections instead of these phase-1 constants.
-      loadout: {
-        armor: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-        shield: PHASE1_SHIELD_UNIT_ID,
-        weapon: {
-          unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-          grip: "one_handed",
-        },
-      },
-    },
+    equipment: sheetEquipment,
   };
 }
 
+export function characterSheetUnitRefs(
+  sheet: Pick<
+    CharacterSheet,
+    "advancement" | "background" | "species" | "features" | "equipment"
+  >,
+): readonly UnitRef[] {
+  return unitRefs(
+    ...sheet.advancement.entries.map((entry) => entry.classUnitId),
+    sheet.background,
+    sheet.species,
+    ...sheet.features.map((feature) => feature.unitId),
+    ...optionalUnitId(sheet.equipment.armor),
+    ...optionalUnitId(sheet.equipment.shield),
+    ...optionalUnitId(sheet.equipment.weapon?.unitId),
+  );
+}
+
+function optionalUnitId(
+  unitId: UnitRecord["id"] | undefined,
+): readonly UnitRecord["id"][] {
+  return unitId == null ? [] : [unitId];
+}
+
 function requireReadable<T>(
-  result: UnitReaderResult<T>,
+  result:
+    | { readonly tag: "readable"; readonly value: T }
+    | { readonly tag: "unreadable" },
   label: string,
 ): T {
   if (result.tag === "unreadable") {
-    const issueText = result.issues
-      .map((issue) => issue.message)
-      .join("; ");
-    throw new Error(
-      `Cannot finalize unreadable ${label} Unit: ${issueText}`,
-    );
+    throw new Error(`Cannot finalize unreadable ${label} Unit.`);
   }
 
   return result.value;
@@ -1093,16 +1080,6 @@ function applyBackgroundAbilityScoreIncrease(
 
 function abilityModifier(score: number): number {
   return Math.floor((score - 10) / 2);
-}
-
-function selectedChoiceUnitIds(
-  selections: FinalizedCharacterSelections,
-): readonly UnitRecord["id"][] {
-  return selections.choices.flatMap((selection) =>
-    selection.options.flatMap((option) =>
-      option.unitRef == null ? [] : [option.unitRef.unitId],
-    ),
-  );
 }
 
 function selectedSkillProficiencies(
@@ -1244,8 +1221,9 @@ function choiceFillIssues(
   if (invalidOptionIds.length > 0) {
     return [
       ...cardinalityIssues,
-      // FIXME only one, forgetting the rest? what we talked about .sequence/.traverse like in other reducer (battle/combat)?
-      invalidChoiceIssue(fill, fillIndex, invalidOptionIds[0]),
+      ...invalidOptionIds.map((optionId) =>
+        invalidChoiceIssue(fill, fillIndex, optionId),
+      ),
     ];
   }
 
@@ -1260,7 +1238,6 @@ function choiceFillIssues(
 
 type ChoiceFill = Extract<CreationFill, { readonly kind: "choice" }>;
 
-// FIXME why separate function needed? and if needed, why not oneliner const f = ...
 function choiceFillOptionIds(
   fill: ChoiceFill,
 ): readonly CreationChoiceOptionId[] {
@@ -1542,7 +1519,6 @@ function supportedDraftOptionIds(
   return undefined;
 }
 
-// FIXME proper comment that this is temporary until whole feature set is there. please. and reference to similar method in Combat reducer
 function supportedUnitOptionIds(
   choiceKey: UnitChoiceKey,
 ): readonly CreationChoiceOptionId[] {
@@ -1563,8 +1539,6 @@ function supportedUnitOptionIds(
   }
 
   if (choiceKey === BACKGROUND_TOOL_CHOICE_KEY) {
-    // FIXME why not constant and why not strongly typed? at least creationChoiceOptionId could be union... | (string & {})
-    // FIXME same for the rest
     return [creationChoiceOptionId("tool_dice_set")];
   }
 
@@ -1592,7 +1566,6 @@ function supportedUnitOptionIds(
     return [creationChoiceOptionId("wielded_one_handed")];
   }
 
-  // FIXME check if we need or not exhaustiveness here. better crash than assume. same for the rest
   return [];
 }
 
@@ -1625,7 +1598,6 @@ function requireStartingLanguages(
 
   // TypeScript cannot infer this dependent tuple union from the local
   // selectable-and-distinct checks above; the values are plain strings at runtime.
-  // FIXME recheck if everyone has 3 languages?
   return ["Common", first, second] as CharacterStartingLanguages;
 }
 
@@ -1660,7 +1632,9 @@ function requireBackgroundAbilityScoreIncreaseSelection(
 }
 
 function isAbility(value: string | undefined): value is Ability {
-  return value != null && ABILITIES.some((ability) => ability === value);
+  return (
+    value != null && SURFACE_ABILITIES.some((ability) => ability === value)
+  );
 }
 
 function isSelectableStandardLanguage(
@@ -2250,10 +2224,7 @@ function sameChoiceSelectionMultiset(
 }
 
 function choiceSelectionKey(selection: CharacterChoiceSelection): string {
-  const source =
-    selection.source.tag === "draft"
-      ? `draft:${selection.source.path}`
-      : `unit:${selection.source.unitId}:${selection.source.choiceKey}`;
+  const source = `unit:${selection.source.unitId}:${selection.source.choiceKey}`;
   const options = selection.options
     .map(choiceSelectionOptionKey)
     .sort()
@@ -2500,7 +2471,7 @@ function draftSource(path: CharacterDraftPath): CreationHoleSource {
 function unitSource(
   unitId: UnitRecord["id"],
   choiceKey: UnitChoiceKey,
-): CreationHoleSource {
+): UnitChoiceSource {
   return { tag: "unit", unitId, choiceKey };
 }
 
@@ -2528,11 +2499,8 @@ function skillOption(skill: Skill): CreationChoiceOption {
 }
 
 function startingEquipmentLabel(choice: {
-  // FIXME string?
   readonly id: string;
-  // FIXME string?
   readonly kind: string;
-  // FIXME why not domain type or at least NonNegativeInteger
   readonly coinsGp?: number;
 }): string {
   return choice.coinsGp == null

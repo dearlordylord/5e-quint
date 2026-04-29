@@ -112,11 +112,8 @@ describe("MCP green composition root", () => {
         sheet: {
           ...sheet,
           equipment: {
-            ...sheet.equipment,
-            loadout: {
-              shield: "equipment_shield",
-              weapon: { unitId: "weapon_longsword", grip: "one_handed" },
-            },
+            shield: "equipment_shield",
+            weapon: { unitId: "weapon_longsword", grip: "one_handed" },
           },
         },
       },
