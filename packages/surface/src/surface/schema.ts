@@ -100,6 +100,7 @@ export {
   AreaShapeSchema,
   AttackKindSchema,
   ArmorTrainingCategorySchema,
+  BackgroundRecordKindSchema,
   ConditionSchema,
   CreatureTypeSchema,
   DamageTypeSchema,
@@ -109,6 +110,7 @@ export {
   DiceExprSchema,
   DurationUpcastTierSchema,
   DurationValueSchema,
+  ClassRecordKindSchema,
   ClassNameSchema,
   ContainerStorageProfileSchema,
   ExileDestinationSchema,
@@ -133,6 +135,7 @@ export {
   SkillSchema,
   SkillFilterSchema,
   SpellAccessModeSchema,
+  SpeciesRecordKindSchema,
   STANDARD_ACTION_KINDS,
   StandardActionKindSchema,
   UsageLimitSchema,
@@ -151,12 +154,17 @@ export {
   ActivatedAbilityMechanicsSchema,
   ArmorRecordSchema,
   ArmorTemplateRecordSchema,
+  BackgroundAbilityScoreIncreaseSchema,
+  BackgroundRecordSchema,
+  BackgroundToolProficiencySchema,
   ChargePoolResourceSchema,
   ClassFeatureActivationCostSchema,
+  ClassFeatureGrantSchema,
   ClassFeatureActivationMechanicsSchema,
   ClassFeatureComponentMechanicsSchema,
   ClassFeatureMechanicsSchema,
   ClassFeatureRecordSchema,
+  ClassRecordSchema,
   CompositeClassFeatureMechanicsSchema,
   CompositeMagicItemMechanicsSchema,
   EquipmentPredicateSchema,
@@ -187,10 +195,15 @@ export {
   SaveGateRiderResultSchema,
   SaveGateRiderSchema,
   SecondaryTargetSelectionSchema,
+  OrcSpeciesRecordSchema,
+  OrcSpeciesTraitsSchema,
+  SpeciesRecordSchema,
   SpeciesTraitMechanicsSchema,
   SpeciesTraitRecordSchema,
   ShieldRecordSchema,
   ShieldTemplateRecordSchema,
+  StartingEquipmentChoiceSchema,
+  StartingEquipmentItemRefSchema,
   TimeResetCadenceSchema,
   TriggeredReactionAbilityMechanicsSchema,
   UseCountCapSchema,
@@ -205,12 +218,15 @@ export {
 import {
   ArmorRecordSchema,
   ArmorTemplateRecordSchema,
+  BackgroundRecordSchema,
   ClassFeatureRecordSchema,
+  ClassRecordSchema,
   FeatRecordSchema,
   MagicItemRecordSchema,
   MasteryRecordSchema,
   ShieldRecordSchema,
   ShieldTemplateRecordSchema,
+  SpeciesRecordSchema,
   SpeciesTraitRecordSchema,
   UnitRecordSchema,
   WeaponTemplateRecordSchema,
@@ -270,6 +286,24 @@ export function decodeClassFeatureRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ClassFeatureRecordSchema> {
   return Schema.decodeUnknownSync(ClassFeatureRecordSchema)(raw);
+}
+
+export function decodeClassRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof ClassRecordSchema> {
+  return Schema.decodeUnknownSync(ClassRecordSchema)(raw);
+}
+
+export function decodeBackgroundRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof BackgroundRecordSchema> {
+  return Schema.decodeUnknownSync(BackgroundRecordSchema)(raw);
+}
+
+export function decodeSpeciesRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof SpeciesRecordSchema> {
+  return Schema.decodeUnknownSync(SpeciesRecordSchema)(raw);
 }
 
 export function decodeMasteryRecordSync(

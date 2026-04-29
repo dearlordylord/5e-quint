@@ -61,13 +61,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 4,
       "id": "CAM4",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Minimal Character-Creation Surface Records"
     },
     {
       "number": 5,
       "id": "CAM5",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Author First Vertical SRD Surface Content"
     },
     {
@@ -184,8 +184,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 1     | CAM1 - Rename Prototype Surface To @dnd/surface                 | done                                          | CAM0              | CAM3, CAM4, CAM5, CAM6, CAM11, CAM16 | Package cutover complete: active imports, workspace dependencies, lockfile, and docs use `@dnd/surface`.                                                                        | Done in this task.                                                                                                 |
 | 2     | CAM2 - Resolve Correction Action-Economy Drift                  | done                                          | CAM0              | CAM6, CAM11                          | Resolved by `52cf18b5`: Surface action resource sidecars and Correction action-resource handling landed.                                                                        | Done on current `master`.                                                                                          |
 | 3     | CAM3 - Add Generic StatBlockRecord Catalog Boundary             | done                                          | CAM1              | CAM5, CAM11, CAM12                   | Generic `StatBlockRecord`, SRD-only stat-block collection, duplicate/provenance validation, and `buildStatBlockCatalog` landed in `@dnd/surface`.                               | Done in this task.                                                                                                 |
-| 4     | CAM4 - Add Minimal Character-Creation Surface Records           | ready-for-implementation-after-light-research | CAM1              | CAM5, CAM6, CAM7                     | Add minimum `ClassRecord`, `BackgroundRecord`, and `SpeciesRecord` Surface shapes/readers needed for Fighter, Soldier, and Orc.                                                 | Ready after SRD/blast-radius check.                                                                                |
-| 5     | CAM5 - Author First Vertical SRD Surface Content                | blocked                                       | CAM3, CAM4        | CAM7, CAM9, CAM12, CAM16             | Author minimum SRD records for Fighter, Soldier, Orc, Savage Attacker if needed for legality, Fighter Weapon Mastery grant, and Goblin Warrior Stat Block.                      | Blocker Type: dependency. Blocker Detail: waits on character-creation Surface records from CAM4; CAM3 is done.     |
+| 4     | CAM4 - Add Minimal Character-Creation Surface Records           | done                                          | CAM1              | CAM5, CAM6, CAM7                     | Minimum `ClassRecord`, `BackgroundRecord`, and Orc `SpeciesRecord` Surface shapes/readers landed in `@dnd/surface`.                                                             | Done in this task.                                                                                                 |
+| 5     | CAM5 - Author First Vertical SRD Surface Content                | ready-for-implementation-after-light-research | CAM3, CAM4        | CAM7, CAM9, CAM12, CAM16             | Author minimum SRD records for Fighter, Soldier, Orc, Savage Attacker if needed for legality, Fighter Weapon Mastery grant, and Goblin Warrior Stat Block.                      | Ready after SRD/content authoring check.                                                                           |
 | 6     | CAM6 - Create Character Creation Runtime Skeleton               | ready-for-implementation-after-light-research | CAM1, CAM2        | CAM7, CAM8, CAM9, CAM10, CAM17       | Create `@dnd/character-creation-runtime` package with public draft/session/hole/fill/finalization types matching `phase0-runtime-boundary-api.md`.                              | Ready after runtime package architecture check.                                                                    |
 | 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | blocked                                       | CAM5, CAM6        | CAM8, CAM9                           | Implement hole discovery for the exact Orc Soldier Fighter manifest using real Surface records and package-private support gates.                                               | Blocker Type: dependency. Blocker Detail: waits on authored first-vertical content and runtime skeleton.           |
 | 8     | CAM8 - Implement Atomic Creation Batch Fill                     | blocked                                       | CAM7              | CAM9, CAM10, CAM17                   | Implement accepted/rejected batch semantics, stable hole ids, duplicate-fill rejection, stale revision handling, and hole rediscovery after accepted fills.                     | Blocker Type: dependency. Blocker Detail: waits on creation hole discovery.                                        |
@@ -353,17 +353,17 @@ Verification:
 
 Plan Impact:
 
-- CAM5 remains blocked on CAM4.
+- CAM5 is unblocked because CAM3 and CAM4 are done.
 - CAM11 is unblocked because CAM1, CAM2, and CAM3 are done.
 
 ### Task 4 - CAM4 - Add Minimal Character-Creation Surface Records
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM1  
 Blocks: CAM5, CAM6, CAM7
 
-Next action: run the SRD/blast-radius check, then add the minimum character-creation Surface records in `@dnd/surface`.
+Next action: none; CAM4 is complete.
 
 Input:
 
@@ -387,24 +387,25 @@ Acceptance:
 
 Verification:
 
-- `pnpm --filter @dnd/surface typecheck`
-- Focused decode/reader tests for minimum Fighter, Soldier, and Orc records.
-- RAW references in tests/docs point to `.references/srd-5.2.1/`.
+- Verified in this task:
+  - Read `.references/srd-5.2.1/Classes/Fighter.md`, `.references/srd-5.2.1/Character-Origins.md`, `.references/srd-5.2.1/Character-Creation.md`, and `UBIQUITOUS_LANGUAGE.md`.
+  - `pnpm --filter @dnd/surface typecheck`
+  - `pnpm --filter @dnd/surface test -- character-creation-records.test.ts`
+  - `/simplify` convergence completed in two manual rounds. Round 1 accepted the candidate schema direction but removed exported exact Fighter/Soldier support gates and fixed the Soldier SRD equipment bundle. Round 2 confirmed the final readers are structural, no `Supported*` gate is exported from Surface, and Orc trait mixing is rejected at the schema boundary.
 
 Plan Impact:
 
-- Unblock CAM5 when CAM3 is done.
-- Revise CAM7 if record shape changes hole identity.
+- CAM5 is unblocked because CAM3 and CAM4 are done.
+- CAM7 remains blocked on CAM5 and CAM6; no hole-identity revision is needed yet.
 
 ### Task 5 - CAM5 - Author First Vertical SRD Surface Content
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM3, CAM4  
 Blocks: CAM7, CAM9, CAM12, CAM16
 
-Blocker Type: dependency  
-Blocker Detail: waits on character-creation Surface records from CAM4; generic stat-block boundary is done.
+Next action: run the SRD/content authoring check, then author the first vertical SRD Surface content.
 
 Input:
 

@@ -45,7 +45,14 @@ export const SavingThrowSourceFilterSchema = Schema.Struct({
   kind: Schema.Literal("spell_or_other_magical_effect"),
 });
 
-export const AbilitySchema = Schema.Literal("str", "dex", "con", "int", "wis", "cha");
+export const AbilitySchema = Schema.Literal(
+  "str",
+  "dex",
+  "con",
+  "int",
+  "wis",
+  "cha",
+);
 
 export const DamageTypeSchema = Schema.Literal(
   "acid",
@@ -63,7 +70,10 @@ export const DamageTypeSchema = Schema.Literal(
   "thunder",
 );
 
-export const AttackKindSchema = Schema.Literal("ranged_spell_attack", "melee_spell_attack");
+export const AttackKindSchema = Schema.Literal(
+  "ranged_spell_attack",
+  "melee_spell_attack",
+);
 
 export const ExileDestinationSchema = Schema.Literal(
   "demiplane",
@@ -118,6 +128,12 @@ export const ClassNameSchema = Schema.Literal(
   "warlock",
   "wizard",
 );
+
+export const ClassRecordKindSchema = Schema.Literal("class");
+
+export const BackgroundRecordKindSchema = Schema.Literal("background");
+
+export const SpeciesRecordKindSchema = Schema.Literal("species");
 
 export const RestKindSchema = Schema.Literal("short", "long");
 
@@ -181,9 +197,8 @@ export const DurationUpcastTierSchema = Schema.Struct({
   amount: Schema.Number,
 });
 
-export const ReadonlyNonEmptyArrayDurationUpcastTierSchema = Schema.NonEmptyArray(
-  DurationUpcastTierSchema,
-);
+export const ReadonlyNonEmptyArrayDurationUpcastTierSchema =
+  Schema.NonEmptyArray(DurationUpcastTierSchema);
 
 export const DurationValueSchema = Schema.Struct({
   unit: Schema.Literal("round", "minute", "hour", "day"),
@@ -212,7 +227,8 @@ export const SkillSchema = Schema.Literal(
   "survival",
 );
 
-export const ReadonlyNonEmptyArraySkillSchema = Schema.NonEmptyArray(SkillSchema);
+export const ReadonlyNonEmptyArraySkillSchema =
+  Schema.NonEmptyArray(SkillSchema);
 
 export const SkillFilterSchema = Schema.Union(
   Schema.Struct({
@@ -225,7 +241,10 @@ export const SkillFilterSchema = Schema.Union(
   }),
 );
 
-export const WeaponProficiencyCategorySchema = Schema.Literal("simple", "martial");
+export const WeaponProficiencyCategorySchema = Schema.Literal(
+  "simple",
+  "martial",
+);
 
 export const ArmorTrainingCategorySchema = Schema.Literal(
   "light",
@@ -336,9 +355,8 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
   }),
 );
 
-export const ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema = Schema.NonEmptyArray(
-  ProficiencyGrantSubjectSchema,
-);
+export const ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema =
+  Schema.NonEmptyArray(ProficiencyGrantSubjectSchema);
 
 export const ProficiencyGrantSchema = Schema.Union(
   Schema.Struct({
@@ -370,7 +388,8 @@ export const ConditionSchema = Schema.Literal(
   "unconscious",
 );
 
-export const ReadonlyNonEmptyArrayConditionSchema = Schema.NonEmptyArray(ConditionSchema);
+export const ReadonlyNonEmptyArrayConditionSchema =
+  Schema.NonEmptyArray(ConditionSchema);
 
 export const AreaShapeSchema = Schema.Literal(
   "sphere",
@@ -405,9 +424,8 @@ export const CreatureTypeSchema = Schema.Literal(
   "undead",
 );
 
-export const ReadonlyNonEmptyArrayCreatureTypeSchema = Schema.NonEmptyArray(
-  CreatureTypeSchema,
-);
+export const ReadonlyNonEmptyArrayCreatureTypeSchema =
+  Schema.NonEmptyArray(CreatureTypeSchema);
 
 export const DiceExprSchema = Schema.Struct({
   dice: Schema.Number,

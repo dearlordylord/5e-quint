@@ -80,6 +80,40 @@ authored into the Surface package. Content tasks should populate that collection
 rather than adding Stat Blocks to `UnitRecord` or importing a combat-engine
 monster catalog.
 
+## Character-Creation Records
+
+Class, Background, and Species aggregates are authored `UnitRecord` variants
+when they carry character-creation legality facts. Decode them through the
+normal Unit boundary or the specific helpers:
+
+- `decodeClassRecordSync`
+- `decodeBackgroundRecordSync`
+- `decodeSpeciesRecordSync`
+
+Use `surface/character-creation-readers` to read structural creation facts:
+
+- `readClassCreationFacts`
+- `readBackgroundCreationFacts`
+- `readSpeciesCreationFacts`
+- `readOrcSpeciesCreationFacts`
+
+For the first Fighter vertical, the RAW sources are local SRD 5.2.1 files:
+`.references/srd-5.2.1/Classes/Fighter.md`,
+`.references/srd-5.2.1/Character-Origins.md`, and
+`.references/srd-5.2.1/Character-Creation.md`. Background records author the
+SRD ability-score increase rule: three eligible abilities, either +2/+1 to two
+different eligible scores or +1 to all three, capped at 20. Starting equipment
+records keep authored item bundles separate from runtime projections, including
+the Soldier bundle's selected Gaming Set, 20 Arrows, Healer's Kit, Quiver,
+Traveler's Clothes, and GP. The minimal Species record is currently the Orc
+aggregate; it keeps Orc creature type, size, speed, and named Orc trait grants
+together so Orc selection cannot be represented as a mixed-species bundle of
+independent traits.
+
+Runtime packages may narrow these records through package-private support gates,
+but `@dnd/surface` exports only structural readers. Do not export `Supported*`
+gates or re-author SRD legality tables outside authored Surface records.
+
 ## Run
 
 ```sh

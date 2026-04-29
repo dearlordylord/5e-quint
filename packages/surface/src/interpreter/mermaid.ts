@@ -84,6 +84,8 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
   switch (unit.kind) {
     case "spell":
       return `https://5e.tools/spells.html#${encodeHashParts(unit.name, source)}`;
+    case "class":
+      return null;
     case "class_feature":
       return `https://5e.tools/classfeatures.html#${encodeHashParts(
         unit.name,
@@ -92,8 +94,12 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
         unit.acquiredAtLevel,
         source,
       )}`;
+    case "background":
+      return null;
     case "feat":
       return `https://5e.tools/feats.html#${encodeHashParts(unit.name, source)}`;
+    case "species":
+      return null;
     case "species_trait":
       return `https://5e.tools/races.html#${encodeHashParts(unit.species, source)}`;
     case "magic_item":

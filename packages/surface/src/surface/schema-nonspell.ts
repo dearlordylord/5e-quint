@@ -3,6 +3,9 @@ import { Schema } from "effect";
 import {
   AbilitySchema,
   ArmorCategorySchema,
+  ArmorTrainingCategorySchema,
+  BackgroundRecordKindSchema,
+  ClassRecordKindSchema,
   ClassNameSchema,
   ConditionSchema,
   DiceAmountSchema,
@@ -14,11 +17,14 @@ import {
   MediumArmorAcFormulaSchema,
   ProvenanceSchema,
   RollKindSchema,
+  SkillSchema,
+  SpeciesRecordKindSchema,
   StandardActionKindSchema,
   UsageLimitSchema,
   WeaponCategorySchema,
   WeaponDamageSchema,
   WeaponMasteryNameSchema,
+  WeaponProficiencyCategorySchema,
   WeaponPropertyDetailSchema,
   WeaponUsageSchema,
 } from "./schema-base.ts";
@@ -367,11 +373,100 @@ const UnitMetadataSchema = Schema.Struct({
   description: Schema.String,
 });
 
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
+
+const distinctAbilities = (
+  abilities: readonly [unknown, unknown, unknown],
+): boolean => new Set(abilities).size === abilities.length;
+
+export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
+  abilities: Schema.Tuple(AbilitySchema, AbilitySchema, AbilitySchema).pipe(
+    Schema.filter(distinctAbilities, {
+      message: () =>
+        "Background ability score list must contain three distinct abilities.",
+    }),
+  ),
+  methods: Schema.Tuple(
+    Schema.Struct({
+      kind: Schema.Literal("two_scores"),
+      primaryIncrease: Schema.Literal(2),
+      secondaryIncrease: Schema.Literal(1),
+      maxScore: Schema.Literal(20),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("three_scores"),
+      eachIncrease: Schema.Literal(1),
+      maxScore: Schema.Literal(20),
+    }),
+  ),
+});
+
+export const StartingEquipmentItemRefSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("unit_ref"),
+    unitId: NonEmptyStringSchema,
+    quantity: exactOptional(PositiveIntegerSchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("selected_tool_proficiency"),
+  }),
+);
+
+export const StartingEquipmentChoiceSchema = Schema.Union(
+  Schema.Struct({
+    id: NonEmptyStringSchema,
+    kind: Schema.Literal("coin_grant"),
+    coinsGp: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    id: NonEmptyStringSchema,
+    kind: Schema.Literal("item_bundle"),
+    items: Schema.NonEmptyArray(StartingEquipmentItemRefSchema),
+    coinsGp: exactOptional(NonNegativeIntegerSchema),
+  }),
+);
+
+export const ClassFeatureGrantSchema = Schema.Struct({
+  unitId: NonEmptyStringSchema,
+  level: PositiveIntegerSchema,
+});
+
+export const ClassRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: ClassRecordKindSchema,
+  className: ClassNameSchema,
+  hitPointDie: PositiveIntegerSchema,
+  savingThrowProficiencies: Schema.NonEmptyArray(AbilitySchema),
+  skillProficiencyChoice: Schema.Struct({
+    choose: PositiveIntegerSchema,
+    options: Schema.NonEmptyArray(SkillSchema),
+  }),
+  weaponProficiencies: Schema.NonEmptyArray(WeaponProficiencyCategorySchema),
+  armorTraining: Schema.Array(ArmorTrainingCategorySchema),
+  startingEquipment: Schema.NonEmptyArray(StartingEquipmentChoiceSchema),
+  featureGrants: Schema.Array(ClassFeatureGrantSchema),
+  weaponMastery: exactOptional(
+    Schema.Struct({
+      level: PositiveIntegerSchema,
+      choose: PositiveIntegerSchema,
+      eligibleWeapons: Schema.NonEmptyArray(WeaponCategorySchema),
+    }),
+  ),
+});
+
 export const ClassFeatureRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("class_feature"),
   className: ClassNameSchema,
-  acquiredAtLevel: Schema.Number,
+  acquiredAtLevel: PositiveIntegerSchema,
   mechanics: ClassFeatureMechanicsSchema,
 });
 
@@ -404,6 +499,51 @@ export const SpeciesTraitRecordSchema = Schema.Struct({
   species: NonEmptyStringSchema,
   mechanics: SpeciesTraitMechanicsSchema,
 });
+
+export const BackgroundToolProficiencySchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("specific_tool"),
+    toolId: NonEmptyStringSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("tool_category_choice"),
+    category: Schema.Literal("gaming_set", "artisan_tool"),
+    choose: PositiveIntegerSchema,
+  }),
+);
+
+export const BackgroundRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: BackgroundRecordKindSchema,
+  abilityScoreIncrease: BackgroundAbilityScoreIncreaseSchema,
+  originFeatId: NonEmptyStringSchema,
+  skillProficiencies: Schema.NonEmptyArray(SkillSchema),
+  toolProficiency: BackgroundToolProficiencySchema,
+  startingEquipment: Schema.NonEmptyArray(StartingEquipmentChoiceSchema),
+});
+
+export const OrcSpeciesTraitsSchema = Schema.Struct({
+  adrenalineRush: Schema.Literal("orc_adrenaline_rush"),
+  darkvision: Schema.Literal("orc_darkvision"),
+  relentlessEndurance: Schema.Literal("orc_relentless_endurance"),
+});
+
+export const OrcSpeciesRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: SpeciesRecordKindSchema,
+  species: Schema.Literal("orc"),
+  creatureType: Schema.Literal("humanoid"),
+  size: Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    size: Schema.Literal("medium"),
+  }),
+  speed: Schema.Struct({
+    walkFeet: Schema.Literal(30),
+  }),
+  traits: OrcSpeciesTraitsSchema,
+});
+
+export const SpeciesRecordSchema = OrcSpeciesRecordSchema;
 
 export const MagicItemComponentMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
@@ -624,9 +764,12 @@ export const WeaponRecordSchema = Schema.Struct({
 
 export const UnitRecordSchema = Schema.Union(
   SpellRecordSchema,
+  ClassRecordSchema,
   ClassFeatureRecordSchema,
+  BackgroundRecordSchema,
   MasteryRecordSchema,
   FeatRecordSchema,
+  SpeciesRecordSchema,
   SpeciesTraitRecordSchema,
   MagicItemRecordSchema,
   ArmorRecordSchema,

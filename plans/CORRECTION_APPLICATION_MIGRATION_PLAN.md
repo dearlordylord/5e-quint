@@ -77,6 +77,19 @@ Later, a licensed/private authored Unit collection may use the same `UnitRecord`
 
 Duplicate Unit ids across collections are invalid unless a later explicit namespacing design is accepted.
 
+CAM4 adds the minimum character-creation aggregate `UnitRecord` variants in
+`@dnd/surface`: `ClassRecord`, `BackgroundRecord`, and `SpeciesRecord`. These
+records carry SRD-authored legality facts for class traits, background
+benefits, and species identity. Runtime packages consume them through structural
+readers exported from `@dnd/surface/surface/character-creation-readers`, then
+apply any supported-subset narrowing in package-private runtime gates rather
+than in Surface exports. Background records carry the SRD ability-score
+increase rule as authored Surface content. Starting-equipment bundles preserve
+authored item references, GP, and selected-tool placeholders separately from
+runtime inventory projection. The Orc Species aggregate keeps creature type,
+size, speed, and named Orc trait grants together so a selected Orc cannot be
+represented as independent mixed-species trait state.
+
 ## Character Creation Semantics
 
 Character creation uses durable draft patch/fill semantics.

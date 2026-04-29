@@ -4,7 +4,9 @@
 import type {
   UnitRecord,
   SpellRecord,
+  BackgroundRecord,
   ClassFeatureRecord,
+  ClassRecord,
   MasteryRecord,
   SpellMechanics,
   OngoingEffectMechanics,
@@ -42,8 +44,11 @@ import type {
   MagicItemMechanics,
   EquipmentPredicate,
   FeatRecord,
+  SpeciesRecord,
   SpeciesTraitRecord,
   MagicItemRecord,
+  StartingEquipmentChoice,
+  StartingEquipmentItemRef,
   MagicItemAttunement,
   ClassFeatureActivationCost,
   ActivationResource,
@@ -142,12 +147,18 @@ export function traceUnit(unit: UnitRecord): Trace {
   switch (unit.kind) {
     case "spell":
       return traceSpellUnit(unit);
+    case "class":
+      return traceClassUnit(unit);
     case "class_feature":
       return traceClassFeatureUnit(unit);
+    case "background":
+      return traceBackgroundUnit(unit);
     case "mastery":
       return traceMasteryUnit(unit);
     case "feat":
       return traceFeatUnit(unit);
+    case "species":
+      return traceSpeciesUnit(unit);
     case "species_trait":
       return traceSpeciesTraitUnit(unit);
     case "magic_item":
@@ -5120,8 +5131,11 @@ function traceFromNodes(
   unit:
     | ArmorRecord
     | ArmorTemplateRecord
+    | BackgroundRecord
+    | ClassRecord
     | ShieldRecord
     | ShieldTemplateRecord
+    | SpeciesRecord
     | WeaponTemplateRecord
     | WeaponRecord,
   nodes: ReadonlyArray<TraceNode>,
@@ -5134,6 +5148,152 @@ function traceFromNodes(
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+// ============================================================
+// Character-creation aggregate tracers
+// ============================================================
+
+function traceClassUnit(unit: ClassRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "class_root",
+    label: `class_root\n${unit.name}\nhit die d${unit.hitPointDie}`,
+  });
+
+  const skillId = ids("skill");
+  nodes.push({
+    id: skillId,
+    category: "hole",
+    atomKind: "class_skill_proficiency_choice",
+    label: `class_skill_proficiency_choice\nchoose ${unit.skillProficiencyChoice.choose}\n${unit.skillProficiencyChoice.options.join(", ")}`,
+  });
+  edges.push({ from: rootId, to: skillId, relation: "opens" });
+
+  for (const grant of unit.featureGrants) {
+    const grantId = ids("grant");
+    nodes.push({
+      id: grantId,
+      category: "source",
+      atomKind: "class_feature_grant",
+      label: `class_feature_grant\nlevel ${grant.level}\n${grant.unitId}`,
+    });
+    edges.push({ from: rootId, to: grantId, relation: "grants" });
+  }
+
+  if (unit.weaponMastery !== undefined) {
+    const masteryId = ids("mastery");
+    nodes.push({
+      id: masteryId,
+      category: "hole",
+      atomKind: "class_weapon_mastery_choice",
+      label: `class_weapon_mastery_choice\nlevel ${unit.weaponMastery.level}\nchoose ${unit.weaponMastery.choose}`,
+    });
+    edges.push({ from: rootId, to: masteryId, relation: "opens" });
+  }
+
+  traceStartingEquipment(rootId, unit.startingEquipment, nodes, edges, ids);
+
+  return traceFromNodes(unit, nodes, edges);
+}
+
+function traceBackgroundUnit(unit: BackgroundRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "background_root",
+    label: `background_root\n${unit.name}\n${unit.abilityScoreIncrease.abilities.join(", ")}`,
+  });
+
+  const featId = ids("feat");
+  nodes.push({
+    id: featId,
+    category: "source",
+    atomKind: "background_origin_feat",
+    label: `background_origin_feat\n${unit.originFeatId}`,
+  });
+  edges.push({ from: rootId, to: featId, relation: "grants" });
+
+  traceStartingEquipment(rootId, unit.startingEquipment, nodes, edges, ids);
+
+  return traceFromNodes(unit, nodes, edges);
+}
+
+function traceSpeciesUnit(unit: SpeciesRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "species_root",
+    label: `species_root\n${unit.name}\n${unit.creatureType}, ${unit.size.size}, ${unit.speed.walkFeet} ft.`,
+  });
+
+  for (const traitId of Object.values(unit.traits)) {
+    const traitNodeId = ids("trait");
+    nodes.push({
+      id: traitNodeId,
+      category: "source",
+      atomKind: "species_trait_grant",
+      label: `species_trait_grant\n${traitId}`,
+    });
+    edges.push({ from: rootId, to: traitNodeId, relation: "grants" });
+  }
+
+  return traceFromNodes(unit, nodes, edges);
+}
+
+function traceStartingEquipment(
+  rootId: string,
+  choices: readonly StartingEquipmentChoice[],
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  for (const choice of choices) {
+    const nodeId = ids("equipment");
+    nodes.push({
+      id: nodeId,
+      category: "hole",
+      atomKind: "starting_equipment_choice",
+      label:
+        choice.kind === "coin_grant"
+          ? `starting_equipment_choice\n${choice.id}: ${choice.coinsGp} GP`
+          : `starting_equipment_choice\n${choice.id}: ${choice.items.map(describeStartingEquipmentItem).join(", ")}`,
+    });
+    edges.push({ from: rootId, to: nodeId, relation: "offers" });
+  }
+}
+
+function describeStartingEquipmentItem(item: StartingEquipmentItemRef): string {
+  switch (item.kind) {
+    case "unit_ref":
+      return item.quantity === undefined
+        ? item.unitId
+        : `${item.quantity} ${item.unitId}`;
+    case "selected_tool_proficiency":
+      return "selected tool proficiency";
+    default: {
+      const _exhaustive: never = item;
+      throw new Error(
+        `unhandled starting equipment item: ${String(_exhaustive)}`,
+      );
+    }
+  }
 }
 
 // ============================================================

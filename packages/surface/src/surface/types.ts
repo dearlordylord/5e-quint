@@ -175,6 +175,15 @@ export type StandardActionKind = Schema.Schema.Type<
 export type ClassName = Schema.Schema.Type<
   typeof SurfaceSchema.ClassNameSchema
 >;
+export type ClassRecordKind = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassRecordKindSchema
+>;
+export type BackgroundRecordKind = Schema.Schema.Type<
+  typeof SurfaceSchema.BackgroundRecordKindSchema
+>;
+export type SpeciesRecordKind = Schema.Schema.Type<
+  typeof SurfaceSchema.SpeciesRecordKindSchema
+>;
 export type RestKind = Schema.Schema.Type<typeof SurfaceSchema.RestKindSchema>;
 export type FeatCategory = Schema.Schema.Type<
   typeof SurfaceSchema.FeatCategorySchema
@@ -584,8 +593,29 @@ export type Provenance = Schema.Schema.Type<
 export type SpellRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SpellRecordSchema
 >;
+export type StartingEquipmentChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.StartingEquipmentChoiceSchema
+>;
+export type StartingEquipmentItemRef = Schema.Schema.Type<
+  typeof SurfaceSchema.StartingEquipmentItemRefSchema
+>;
+export type ClassFeatureGrant = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassFeatureGrantSchema
+>;
+export type ClassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassRecordSchema
+>;
 export type ClassFeatureRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureRecordSchema
+>;
+export type BackgroundToolProficiency = Schema.Schema.Type<
+  typeof SurfaceSchema.BackgroundToolProficiencySchema
+>;
+export type BackgroundAbilityScoreIncrease = Schema.Schema.Type<
+  typeof SurfaceSchema.BackgroundAbilityScoreIncreaseSchema
+>;
+export type BackgroundRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.BackgroundRecordSchema
 >;
 export type MasteryRecord = Schema.Schema.Type<
   typeof SurfaceSchema.MasteryRecordSchema
@@ -598,6 +628,15 @@ export type FeatRecord = Schema.Schema.Type<
 >;
 export type SpeciesTraitMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SpeciesTraitMechanicsSchema
+>;
+export type OrcSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.OrcSpeciesTraitsSchema
+>;
+export type OrcSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.OrcSpeciesRecordSchema
+>;
+export type SpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.SpeciesRecordSchema
 >;
 export type SpeciesTraitRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SpeciesTraitRecordSchema
