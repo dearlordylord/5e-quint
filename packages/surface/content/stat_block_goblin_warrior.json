@@ -104,7 +104,10 @@
       "actionOptions": [
         {
           "name": "Nimble Escape",
-          "options": ["disengage", "hide"]
+          "options": [
+            "disengage",
+            "hide"
+          ]
         }
       ]
     },
@@ -115,7 +118,10 @@
       "value": 10
     },
     "initiativeModifier": 2,
-    "languages": ["Common", "Goblin"],
+    "languages": [
+      "Common",
+      "Goblin"
+    ],
     "savingThrowModifiers": [
       {
         "ability": "dex",

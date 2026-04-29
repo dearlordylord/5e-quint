@@ -1,8 +1,20 @@
 import { Option } from "effect";
 
+// Content JSON is generated from the matching content/*.dhall source.
+// Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import { decodeStatBlockRecordSync } from "./schema.ts";
 import type { Provenance, StatBlockRecord } from "./types.ts";
+
+/**
+ * Authored monster Stat Block lookup/provenance boundary.
+ *
+ * Keep this distinction local to the Stat Block code path: Stat Blocks are
+ * authored Surface records, but they are not UnitRecords. Runtime packages can
+ * consume generic StatBlockRecords and may later reuse shared Surface sub-shapes
+ * from a Stat Block's actions, but the monster record itself stays in this
+ * record family rather than becoming a Unit.
+ */
 
 export type SurfaceCollectionProvenance = {
   readonly kind: "srd-5.2.1";

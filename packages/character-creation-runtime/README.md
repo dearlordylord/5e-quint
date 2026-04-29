@@ -1,10 +1,11 @@
 # @dnd/character-creation-runtime
 
-Character creation runtime owns durable draft, hole, fill, and finalization shapes for the Surface/Unit green path.
+Character creation runtime owns durable draft, hole, fill, and finalization
+shapes for Surface-authored character creation.
 
-The MCP green composition root installs the runtime by passing the SRD Unit
-library built from `@dnd/surface`; it stores drafts and finalized Character
-Sheets at the MCP session boundary, not inside this package.
+Application/session code installs the runtime by passing a Unit library built
+from `@dnd/surface`; it stores drafts and finalized Character Sheets at the
+session boundary, not inside this package.
 
 This package intentionally imports Surface catalog and Unit identities, not authored content records or Core battle/projected vocabulary. The runtime exports `CharacterSheet` as the finalized player-character boundary. Battle seed construction belongs to the battle runtime and composition root.
 
@@ -13,9 +14,12 @@ Unit record. A finalized `CharacterSheet` can carry selected Unit refs and
 derived character facts, but it is still not a Unit, not a Stat Block, and not a
 battle seed.
 
-`character-creation-runtime-slice.qnt` is the deterministic Quint parity slice for the current Orc Soldier Fighter vertical. It models draft state, stable hole ids, atomic batch fill, rediscovery, and finalization status for the same first-vertical behavior that the TypeScript reducer exposes.
+`character-creation-runtime-slice.qnt` is the deterministic Quint parity slice
+for this package. It models draft state, stable hole ids, atomic batch fill,
+rediscovery, and finalization status for the same behavior that the TypeScript
+reducer exposes.
 
-The current implementation covers the CAM9 Orc Soldier Fighter finalization slice:
+## Runtime Contract
 
 - `createCharacterDraft` creates an empty revision-0 draft.
 - `discoverCreationHoles` derives the first Orc Soldier Fighter vertical holes from the draft plus the Surface Unit catalog.
@@ -34,13 +38,14 @@ The fill reducer uses the same package-private Phase 1 support gates as hole dis
 
 Unit-backed selections are projected from the accepted hole option's `unitRef`, not from the submitted option id. Option ids are protocol choices; Unit ids are durable draft selections.
 
-Background-granted tool holes are derived from Surface background facts. In the
-current first vertical, Soldier grants a `gaming_set` category choice and the
-runtime narrows that category to the authored Dice Set option because the SRD
-Unit catalog does not yet contain the full gaming-set catalog. This is a
-package-private phase narrowing, not a new Soldier rule and not a preset.
+Background-granted tool holes are derived from Surface background facts. When a
+runtime package supports only part of a broader authored option family, that
+narrowing must stay package-private and must not become a new source rule or a
+preset.
 
-The phase-0 draft used the name `UnitLibrary`; the current Surface package exposes `UnitCatalog`. This package exports `UnitLibrary` as a type alias to `UnitCatalog` so the runtime API can keep the durable boundary language without adding an adapter or duplicated catalog state.
+This package exports `UnitLibrary` as a type alias to the Surface `UnitCatalog`
+so the runtime API can keep the durable boundary language without adding an
+adapter or duplicated catalog state.
 
 The public selection types keep SRD/domain facts structured at the runtime boundary: ability assignments reuse Surface `SixAbilityScores`, class advancement entries use `CharacterClassLevel`, starting languages are Common plus two distinct selectable Standard Languages, alignment is the SRD morality/order pair, and background ability-score increases cannot select the same ability twice.
 
@@ -48,4 +53,7 @@ The finalized `CharacterSheet` carries selected Unit refs plus the character-she
 
 `createCharacterDraft` also accepts an optional caller-supplied `draftId`. Omitting it uses a process-local generated id for tests and simple composition roots; persisted callers should provide their stored draft identity.
 
-Hole ids are stable domain ids. Draft-owned holes use `cc:draft:<draft path>`, and Unit-granted holes use `cc:unit:<unit id>:<choice key>`. The current support gates are package-private and intentionally narrow: Fighter, Soldier, Orc, Defense Fighting Style, Fighter Weapon Mastery over authored Simple/Martial weapon Units, Soldier Dice Set, the two starting-equipment coin/package choices, and the manifest purchase/loadout choices for Chain Mail, Longsword, and Shield.
+Hole ids are stable domain ids. Draft-owned holes use
+`cc:draft:<draft path>`, and Unit-granted holes use
+`cc:unit:<unit id>:<choice key>`. Support gates are package-private runtime
+narrowings; they must not become public Surface classifications.

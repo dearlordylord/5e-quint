@@ -1,5 +1,7 @@
 import { Option } from "effect";
 
+// Content JSON is generated from the matching content/*.dhall source.
+// Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import classFighterInput from "../../content/class_fighter.json";

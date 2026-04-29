@@ -110,6 +110,7 @@ import type {
   WeaponPropertyDetail,
   MagicEquipmentVariant,
   TriggeredReplacementMechanics,
+  StatBlockRecord,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -122,7 +123,8 @@ export type AtomCategory =
   | "lifecycle"
   | "resource"
   | "scaling"
-  | "effect";
+  | "effect"
+  | "statBlock";
 
 export type TraceNode = {
   readonly id: string;
@@ -182,6 +184,48 @@ export function traceUnit(unit: UnitRecord): Trace {
       throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
     }
   }
+}
+
+export function traceStatBlock(record: StatBlockRecord): Trace {
+  const ids = idGen();
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const rootId = ids("stat");
+
+  nodes.push({
+    id: rootId,
+    category: "statBlock",
+    atomKind: "stat_block_record",
+    label: `stat_block_record\n${record.name}\nauthored content, not Unit`,
+  });
+
+  for (const [slot, kind] of [
+    [record.statBlock.actions, "action"],
+    [record.statBlock.bonusActions, "bonus_action"],
+    [record.statBlock.reactions, "reaction"],
+  ] as const) {
+    if (slot === undefined) continue;
+    traceCreatureActions(
+      {
+        procId: rootId,
+        compId: rootId,
+        slotId: null,
+        kind,
+        nodes,
+        edges,
+        ids,
+      },
+      slot,
+    );
+  }
+
+  return {
+    unitId: record.id,
+    unitName: record.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
 }
 
 // ============================================================

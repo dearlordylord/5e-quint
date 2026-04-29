@@ -1,16 +1,22 @@
-// CLI entry: load an authored unit JSON, trace it, emit mermaid.
+// CLI entry: load authored content JSON, trace it, emit mermaid.
 //
 // Usage:
-//   tsx src/run.ts content/<unit>.json
-//   tsx src/run.ts content/<unit>.json --out content/<unit>.trace.md
+//   tsx src/run.ts content/<record>.json
+//   tsx src/run.ts content/<record>.json --out content/<record>.trace.md
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { argv, exit, stdout } from "node:process";
 
-import { decodeUnitRecordSync } from "./surface/schema.ts";
-import { traceUnit } from "./interpreter/tracer.ts";
-import { renderTraceDocument } from "./interpreter/mermaid.ts";
+import {
+  decodeStatBlockRecordSync,
+  decodeUnitRecordSync,
+} from "./surface/schema.ts";
+import { traceStatBlock, traceUnit } from "./interpreter/tracer.ts";
+import {
+  renderStatBlockTraceDocument,
+  renderTraceDocument,
+} from "./interpreter/mermaid.ts";
 
 function main(): void {
   const args = argv.slice(2);
@@ -26,10 +32,20 @@ function main(): void {
   }
   const unitPath = resolve(unitPathArg);
   const raw = readFileSync(unitPath, "utf8");
-  const unit = decodeUnitRecordSync(JSON.parse(raw));
-
-  const trace = traceUnit(unit);
-  const doc = renderTraceDocument(trace, unit);
+  const parsed = JSON.parse(raw) as { readonly kind?: unknown };
+  const doc =
+    parsed.kind === "statBlock"
+      ? (() => {
+          const statBlock = decodeStatBlockRecordSync(parsed);
+          return renderStatBlockTraceDocument(
+            traceStatBlock(statBlock),
+            statBlock,
+          );
+        })()
+      : (() => {
+          const unit = decodeUnitRecordSync(parsed);
+          return renderTraceDocument(traceUnit(unit), unit);
+        })();
 
   const outIdx = args.indexOf("--out");
   if (outIdx >= 0 && args.length > outIdx + 1) {

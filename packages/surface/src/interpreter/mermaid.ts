@@ -1,6 +1,6 @@
 // Render a Trace as a mermaid flowchart. Color-codes nodes by atom category.
 
-import type { UnitRecord } from "../surface/types.ts";
+import type { StatBlockRecord, UnitRecord } from "../surface/types.ts";
 import type { Trace, AtomCategory } from "./tracer.ts";
 
 const CLASS_DEFS = `  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
@@ -12,7 +12,8 @@ const CLASS_DEFS = `  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
   classDef lifecycle fill:#7f7f7f,color:#fff,stroke:#333
   classDef resource fill:#e377c2,color:#000,stroke:#8a457a
   classDef scaling fill:#17becf,color:#000,stroke:#0a5f6a
-  classDef effect fill:#d62728,color:#fff,stroke:#6a1414`;
+  classDef effect fill:#d62728,color:#fff,stroke:#6a1414
+  classDef statBlock fill:#111827,color:#fff,stroke:#f59e0b,stroke-width:4px`;
 
 const CATEGORY_CLASS: Record<AtomCategory, string> = {
   source: "source",
@@ -25,6 +26,7 @@ const CATEGORY_CLASS: Record<AtomCategory, string> = {
   resource: "resource",
   scaling: "scaling",
   effect: "effect",
+  statBlock: "statBlock",
 };
 
 export function renderMermaid(trace: Trace): string {
@@ -54,6 +56,39 @@ export function renderTraceDocument(trace: Trace, unit: UnitRecord): string {
     out.push("");
     out.push(`5e.tools: <${externalLink}>`);
   }
+  out.push("");
+  out.push(renderMermaid(trace));
+  out.push("");
+  out.push("## Atoms referenced");
+  out.push("");
+  for (const k of trace.atomKinds) {
+    out.push(`- \`${k}\``);
+  }
+  out.push("");
+  out.push("## Relations referenced");
+  out.push("");
+  const relations = [...new Set(trace.edges.map((e) => e.relation))].sort();
+  for (const r of relations) {
+    out.push(`- \`${r}\``);
+  }
+  out.push("");
+  return out.join("\n");
+}
+
+export function renderStatBlockTraceDocument(
+  trace: Trace,
+  statBlock: StatBlockRecord,
+): string {
+  const out: string[] = [];
+  out.push(`# Dependency graph: ${trace.unitName}`);
+  out.push("");
+  out.push(`Stat Block id: \`${trace.unitId}\``);
+  out.push("");
+  out.push("Record family: `StatBlockRecord`");
+  out.push("");
+  out.push("This authored Surface content is **not** a `UnitRecord`.");
+  out.push("");
+  out.push(`SRD source: \`${statBlock.provenance.section}\``);
   out.push("");
   out.push(renderMermaid(trace));
   out.push("");

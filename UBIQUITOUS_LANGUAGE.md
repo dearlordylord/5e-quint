@@ -334,8 +334,8 @@ Avoid these as domain-language terms because the SRD does not define them:
 - A **Stat Block** and a **Character Sheet** both produce creature-level combat statistics (AC, HP, Speed, Ability Scores, damage modifiers, etc.). Combat rules reference these as **creature** properties — they never distinguish between PC-derived and monster-authored values. A monster's **Stat Block** is authored directly; a PC's equivalent is derived from **Class**, level, species, and equipment via the **Character Sheet**.
 - **Legendary Actions**, **Recharge** abilities, and **Creature Type** are **Stat Block**-only concepts — PCs do not have them. Conversely, **Class**, level, **Hit Dice** recovery, and **Ability Score Improvement** are **Character Sheet**-only concepts — monsters do not have them.
 - In SRD language, **monster** does not mean hostile, non-NPC, or non-humanoid. A friendly named humanoid controlled by the GM is still a **monster** and therefore still uses a **Stat Block** rather than a **Character Sheet**.
-- Technical green-path ownership terms such as authored Units, Character Draft,
-  and Battle Seed live in
+- Technical implementation ownership terms such as authored Units, Character
+  Draft, and Battle Seed live in
   [CORRECTION_APPLICATION_VOCABULARY.md](./plans/CORRECTION_APPLICATION_VOCABULARY.md),
   not in this domain glossary.
 

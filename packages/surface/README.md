@@ -12,11 +12,11 @@ This package holds the **authored corpus** and the **surface types** it is autho
 
 - `src/surface/types.ts` — the closed atom vocabulary. Widenings land here.
 - `src/interpreter/tracer.ts` — projects authored content into a mermaid-renderable dependency graph for review.
-- `content/<slug>.{dhall,json,trace.md}` — one entry per **actually-authored** unit. `.dhall` is the source-of-truth mechanics definition; `.json` is `dhall-to-json --omit-empty` output; `.trace.md` is the tracer's graph (gitignored). Roughly 130+ units currently; far smaller than the 504-unit SRD total.
+- `content/<slug>.{dhall,json,trace.md}` — one entry per **actually-authored** content record. `.dhall` is the source-of-truth mechanics definition; `.json` is `dhall-to-json --omit-empty` output consumed by package code; `.trace.md` is generated from that JSON for review. Unit records and monster Stat Block records are separate record families; Stat Block traces render with a distinct root style so they are not read as Units.
 
 The **mining / oracle pipeline** lives in `scripts/content-surface-survey/`. That directory runs a per-SRD-unit LLM sub-agent survey to propose encodings and flag widenings against this package's current surface. Its outputs are **verdicts**, not content — they live in `scripts/content-surface-survey/results-srd/<slug>/` and aggregate into `survey-results-srd.jsonl` + `REPORT_SRD.md`. Nothing under `scripts/content-surface-survey/` is shipped; it's the "what's MISSING" oracle, not the "what's SHIPPED" artifact.
 
-One-liner: **this package holds what we've SHIPPED; `scripts/content-surface-survey/` tells us what's MISSING.** A unit typically flows: mining proposes → verdict flags a widening → we land the widening in this package's `src/surface/types.ts` → we author the unit in this package's `content/<slug>.dhall` → regression passes → we re-mine and the verdict goes `clean`.
+One-liner: **this package holds what we've SHIPPED; `scripts/content-surface-survey/` tells us what's MISSING.** A content record typically flows: mining proposes → verdict flags a widening → we land the widening in this package's `src/surface/types.ts` → we author the record in this package's `content/<slug>.dhall` → regression passes → we re-mine and the verdict goes `clean`.
 
 ## Goal (read this first)
 
@@ -58,33 +58,12 @@ Three-way separation:
 ## Runtime Boundary
 
 This package does not import from the combat engine package. Runtime packages
-consume Surface through typed Unit and Stat Block catalog boundaries, then
-derive their own execution state at package boundaries. Surface records remain
+consume Surface through typed authored-record boundaries, then derive their own
+execution state at package boundaries. Surface records remain
 provenance-bearing authored content, not a projected executable IR.
 
-Boundary invariant: Units and Stat Blocks are different authored record
-families. Characters may select and reference Units during creation, but a
-Character Draft or Character Sheet is not a Unit. Monsters/NPCs use
-`StatBlockRecord`s; a Stat Block is not a Unit even if its actions later reuse
-shared Surface sub-shapes.
-
-## Stat Block Catalog Boundary
-
-Monster Stat Blocks are authored Surface records, but they are not
-`UnitRecord`s. Decode them as generic `StatBlockRecord`s with
-`decodeStatBlockRecordSync`, then install collections through
-`buildStatBlockCatalog`.
-
-The first public collection boundary is `SrdStatBlockCollection`. It enforces
-that an SRD collection contains only records whose provenance is
-`srd-5.2.1`, and the catalog rejects duplicate Stat Block ids across all
-installed collections. Catalog lookup returns generic `StatBlockRecord` values;
-SRD is represented by the collection/provenance boundary, not by a runtime-facing
-record subtype.
-
-`srdStatBlockCollection` currently contains the first-vertical Goblin Warrior
-Stat Block. Content tasks should populate that collection rather than adding
-Stat Blocks to `UnitRecord` or importing a combat-engine monster catalog.
+Detailed record-family rules live next to the code that owns them. For monster
+Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
 
 ## Unit Catalog Boundary
 
@@ -211,9 +190,12 @@ re-running the rest of the corpus against the unified surface
 
 ## Authoring format: Dhall + JSON
 
-Units are authored in Dhall (`content/<slug>.dhall`) as the canonical
-source. The compiled JSON (`content/<slug>.json`) is what the tracer
-reads.
+Authored content records are written in Dhall (`content/<slug>.dhall`)
+as the canonical source. The compiled JSON (`content/<slug>.json`) is
+the generated artifact that package code imports and the tracer reads.
+Do not hand-author or manually patch content JSON except as part of
+debugging a Dhall compile problem; make the source change in Dhall,
+regenerate JSON, then regenerate the trace.
 
 The worker and local authoring flow assume `dhall-to-json` is
 installed. Compile with:
@@ -221,6 +203,16 @@ installed. Compile with:
 ```sh
 dhall-to-json --omit-empty --file content/bless.dhall --output content/bless.json
 ```
+
+Generate the review trace from the compiled JSON:
+
+```sh
+pnpm --filter @dnd/surface exec tsx src/run.ts content/bless.json --out content/bless.trace.md
+```
+
+Trace files are intentionally regenerable and ignored by Git. They are still
+part of the local review loop: a new or changed authored content record should
+have a fresh trace inspected before the JSON is treated as catalog-ready.
 
 ## Where Quint comes in (later)
 
@@ -245,7 +237,7 @@ the atom vocabulary right _before_ that integration cost is paid.
 - `src/interpreter/tracer.ts` — ADT walker, records nodes + edges.
 - `src/interpreter/mermaid.ts` — mermaid renderer.
 - `src/run.ts` — CLI entry.
-- `content/<slug>.dhall` — authored source (one per unit).
+- `content/<slug>.dhall` — authored source.
 - `content/<slug>.json` — compiled runtime artifact.
 - `content/<slug>.trace.md` — regenerable trace output.
 

@@ -8,15 +8,26 @@ creation, battle runtime, and MCP composition.
 ## Terms
 
 authored Surface content - static rules content decoded from `@dnd/surface`.
-It has provenance. It is not reducer state, session state, a battle seed, or a
+It has provenance. It is a broad category, not a synonym for Unit. Authored
+Surface content includes multiple record families, including Units and monster
+Stat Blocks. It is not reducer state, session state, a battle seed, or a
 projected executable IR. Lookup catalogs are an implementation detail for
 installing authored content, not the main domain distinction.
 
-Unit - authored Surface content record for a selectable or ownable game object:
-class, background, species aggregate, feature, feat, spell, weapon, armor,
-shield, mastery, item, and similar records. A player character can select or
-reference Units during creation and finalization. A character, character draft,
-character sheet, combatant, monster, and monster Stat Block are not Units.
+Unit - one authored Surface content record family: selectable or ownable game
+objects that a character, creature, item, or other owner can reference as a
+capability, option, or grant. Current examples include class, background,
+species aggregate, feature, feat, spell, weapon, armor, shield, mastery, item,
+and similar records. A Unit is not "anything authored in Surface"; monster Stat
+Blocks are authored Surface content but are not Units. A character, character
+draft, character sheet, combatant, monster, and monster Stat Block are not
+Units.
+
+Stat Block record - one authored Surface content record family for monsters and
+NPCs in the SRD Stat Block sense. It is authored content, but it is not
+selectable/ownable Unit content. A Stat Block may later reuse shared Surface
+sub-shapes for actions, attacks, damage, or resources, but it remains a
+monster-authored Stat Block record and is not a Unit.
 
 Unit lookup - current implementation mechanism for finding authored Units.
 Character creation reads authored Unit content to discover legal holes and
@@ -25,10 +36,7 @@ character Unit refs to derive seed facts such as armor, shield, weapon, or
 feature bonuses.
 
 Stat Block lookup - current implementation mechanism for finding authored
-monster Stat Blocks. Stat Blocks are a separate record family from Units. A Stat
-Block may later reuse shared Surface sub-shapes for actions, attacks, damage, or
-resources, but it remains a monster-authored Stat Block record and is not a
-Unit.
+monster Stat Blocks.
 
 Character Draft - session-owned mutable character-creation state with holes
 still to fill. It is not authored content and not a Unit. Draft holes may be

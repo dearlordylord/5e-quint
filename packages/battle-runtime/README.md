@@ -1,10 +1,11 @@
 # @dnd/battle-runtime
 
-Battle runtime owns the durable battle state, phase-1 battle subjects, replay-from-root hole/fill boundary, and snapshots for the Surface/Unit green path.
+Battle runtime owns durable battle state, battle subjects, replay-from-root
+hole/fill resolution, and snapshots for Surface-authored runtime inputs.
 
 This package intentionally imports generic Surface `StatBlockRecord`s and shared algebras. It does not import legacy engine packages, SRD-specific stat-block collection types, or projected-executable vocabulary.
 
-The MCP green composition root installs this runtime with authored Surface
+The application composition layer installs this runtime with authored Surface
 content for character Units and monster Stat Blocks. It stores durable
 `BattleState` separately from transient battle fills so `resolveBattleSubject`
 can remain replay-from-root.
@@ -15,32 +16,28 @@ boundary. Monster combatant seeds are projected from `StatBlockRecord`s. Battle
 state must not treat a Character Sheet as a Stat Block, a Stat Block as a Unit,
 or a battle seed as authored content.
 
-The current runtime covers the CAM11-CAM15 boundary:
+## Runtime Contract
 
 - `startBattle` accepts caller-built combatant seeds and creates sorted Initiative state.
-- Character Sheet to battle-seed mapping belongs to the MCP green composition boundary, not this package. `@dnd/battle-runtime` accepts battle-owned seed data and must not import `@dnd/character-creation-runtime`.
+- Character Sheet to battle-seed mapping belongs to the application composition layer, not this package. `@dnd/battle-runtime` accepts battle-owned seed data and must not import `@dnd/character-creation-runtime`.
 - Character initialization consumes battle seed facts derived by the composition boundary: Hit Point maximum/current HP, Temporary Hit Points from the optional seed override or `0`, Initiative score, selected loadout, selected Unit refs, and `usesDeathSavingThrows` as the typed zero-HP lifecycle policy.
 - Character Armor Class is structured `ArmorClassState`, not a copied scalar: armor base and category come from the loaded armor Unit, trained Shield bonus comes from the loaded Shield Unit and sheet armor training, and the Defense Fighting Style bonus comes from the loaded feat Unit as a conditional wearing-armor bonus.
 - Monster initialization derives display name, Armor Class, Hit Points, and Initiative score from the supplied generic `StatBlockRecord`; the runtime does not import Core monster catalogs or SRD-specific collection types.
 - `BattleState.currentTurnResources` uses `RuntimeActionResource[]` plus bonus-action availability from `@dnd/shared-algebras/action-economy-algebra`; it does not store a scalar action quota.
-- `discoverBattleActs` exposes phase-1 `srdAction.attack` only for the current actor when the actor can take actions, an Attack-compatible action resource is present, and the single supported character weapon attack profile is present. `runtimeCommand.endTurn` remains discoverable for the current actor.
+- `discoverBattleActs` exposes `srdAction.attack` for the current actor when the actor can take actions, an Attack-compatible action resource is present, and a supported character weapon attack profile is present. `runtimeCommand.endTurn` remains discoverable for the current actor.
 - `resolveBattleSubject` is replay-from-root: callers pass the root `BattleState`, the selected `BattleSubject`, and all accumulated `BattleFill`s. Fills are caller/session state and are not stored in `BattleState`.
 - Attack replay uses shared runtime holes and fills: target choice, attack roll, and on-hit rolled-dice damage. The damage hole id and instance key are derived at the hole boundary from the dice-result protocol and the selected weapon damage expression, for example `battle:attack:damage-result:1d8+3-slashing`.
 - Filled Attack resolution uses the shared attack-roll algebra: natural 1 misses, natural 20 hits, otherwise the total is compared to the target's current Armor Class. A miss spends the Attack action and leaves HP unchanged. A hit asks for weapon damage dice before spending the action; Critical Hits require the doubled weapon damage dice hole. Once valid damage dice are supplied, the runtime sums the rolled dice plus the attack ability modifier, applies Temporary Hit Points first, clamps HP at `0`, and then spends the Attack action.
 - Zero-HP lifecycle state is a typed union on the combatant and the snapshot projects that one lifecycle object. Stat Block combatants use `diesAtZeroHp`; their dead status is derived from `0` HP. Character Sheet combatants use `usesDeathSavingThrows`; when damage drops them to `0` HP and does not kill instantly by Massive Damage, the runtime applies the Unconscious condition and initializes the death-save counters. Later damage at `0` HP records Death Saving Throw failures, including the Critical Hit two-failure case, and projects death once failures reach three. Damage that equals or exceeds the target's Hit Point maximum after reducing current HP to `0`, including damage taken while already at `0` HP, applies instant death. Start-turn Death Saving Throw rolls remain outside the CAM15 runtime slice.
 - `endTurn` is a runtime command, not an SRD Action. It accepts no holes or fills, advances the current actor through the shared Initiative algebra, increments the round after the last actor in the order acts, and resets the next actor's per-turn action resources.
-- `battle-runtime-slice.qnt` is the executable phase-1 spec for the runtime green path. Its covered slice is Initiative/current actor, End Turn, Attack replay holes, hit/miss, action spend, damage, Temporary Hit Points, HP clamp, and the supported zero-HP lifecycle policy.
+- `battle-runtime-slice.qnt` is the executable package-local spec for this runtime. Its covered slice is Initiative/current actor, End Turn, Attack replay holes, hit/miss, action spend, damage, Temporary Hit Points, HP clamp, and the supported zero-HP lifecycle policy.
 - `snapshotBattle` projects a JSON-friendly read model without exposing mutable `Map` internals.
-
-## Temporary Authority Relationship
-
-During the Correction Application Migration, `packages/battle-runtime/battle-runtime-slice.qnt` is authoritative for `@dnd/battle-runtime` green-path behavior only. The root `battle.qnt` remains authoritative for the old Core-backed combat lanes until those lanes are disabled or deleted. Shared behavior between the slice and `battle.qnt` must match or be tracked as an explicit migration divergence; before the migration is complete, the repo should return to one named battle authority.
 
 ## RAW Traceability For Retained Phase-1 Behavior
 
 - Initiative order and the current actor are traced to SRD 5.2.1 `Playing-the-Game.md` "Combat" / "Initiative": combat is organized into rounds and turns, everyone rolls Initiative at the beginning of combat, the GM ranks combatants from highest to lowest Initiative, and that order remains the same from round to round. `UBIQUITOUS_LANGUAGE.md` defines Initiative as the Dexterity check that determines turn order.
 - Deterministic initialization uses Initiative scores for the phase-1 fixture: SRD 5.2.1 `Rules-Glossary.md` "Initiative" defines the Initiative score as `10 + Dexterity modifier`, and `Rules-Glossary.md` "Stat Block" says monster AC, Initiative, and HP entries appear in the monster's stat block.
-- Character Hit Point maximum and Initiative are traced to SRD 5.2.1 `Character-Creation.md` "Hit Points" and "Initiative": level-1 Hit Points come from class plus Constitution modifier, and Initiative written on the character sheet is the Dexterity modifier. CAM12 consumes those finalized sheet facts rather than recalculating character creation legality.
+- Character Hit Point maximum and Initiative are traced to SRD 5.2.1 `Character-Creation.md` "Hit Points" and "Initiative": level-1 Hit Points come from class plus Constitution modifier, and Initiative written on the character sheet is the Dexterity modifier. This runtime consumes finalized sheet facts rather than recalculating character creation legality.
 - Character Armor Class is traced to SRD 5.2.1 `Playing-the-Game.md` "Armor Class" and `Equipment.md` "Armor": base AC can come from armor, Shield benefit requires Shield training, and the Defense feat says wearing Light, Medium, or Heavy armor grants +1 AC.
 - `endTurn` is exposed as a runtime command, not an SRD Action. SRD combat has participants take turns in Initiative order and starts a new round after everyone has taken a turn. `ASSUMPTIONS.md` A2 records the repository's explicit modeling decision to expose a discrete End Turn transition because D&D has end-of-turn trigger points even though "end turn" is not itself an SRD action.
 - Per-turn action resources are traced to SRD 5.2.1 `Playing-the-Game.md` "Your Turn" / "Actions" and "Bonus Actions": on your turn you can take one action, and at most one Bonus Action when a rule grants one. `UBIQUITOUS_LANGUAGE.md` defines Action and Bonus Action using those same per-turn resource boundaries.

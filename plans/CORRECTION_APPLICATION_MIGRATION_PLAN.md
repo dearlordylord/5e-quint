@@ -262,6 +262,47 @@ every intentionally omitted projected lane has a Restore Ledger row with
 3. Allow old app/Core routes outside the green surface to fail only if they are in the Restore Ledger.
 4. Keep local comments only as pointers to this plan; this plan is the source of truth.
 
+## Phase 5: Green Reconciliation And MCP Promotion
+
+`packages/mcp/src/green/` is a migration isolation lane, not the final MCP
+architecture. It exists so the Surface-backed runtime vertical can be made
+runnable while the legacy Core-backed `src/server.ts` path still exists.
+
+After CAM19 deletes or isolates projected/Core-backed green-path dependencies,
+the next required step is to reconcile the green MCP tools into the main MCP
+server path:
+
+1. Promote the Surface-backed character creation, monster selection, battle
+   start, battle act discovery, battle fill/resolve, and End Turn tools to the
+   normal MCP server/router entrypoint.
+2. Remove or rewrite legacy `src/server.ts`, `src/session-router.ts`,
+   `src/character-session.ts`, and related Core-backed routes that overlap the
+   promoted Surface runtime behavior.
+3. Retire `src/green/` as a separate namespace once its tools are either moved
+   into the main MCP path or reduced to ordinary composition helpers with no
+   "green" naming.
+4. Replace "green fixture" tests with normal MCP server tests over the promoted
+   entrypoint.
+5. Keep any still-omitted app/Core behavior only through Restore Ledger rows
+   with restore conditions.
+
+Green finalization criteria:
+
+- no MCP tool path needed for the runnable Fighter/Goblin vertical imports
+  `@dnd/core`;
+- no `CPU*`, `PEA*`, `PPR*`, or projected executable vocabulary remains in the
+  promoted MCP/runtime path;
+- `packages/mcp/src/server.ts` or its replacement serves the Surface-backed
+  vertical directly;
+- `src/green/` no longer contains user-facing MCP tools, or the directory is
+  deleted;
+- normal MCP tests, not only green-specific tests, cover create/finalize
+  character, select monster, start battle, Attack with damage, and End Turn;
+- docs stop describing the green path as the active way to use MCP and instead
+  describe the promoted Surface runtime path;
+- temporary QNT authority is resolved per the Verification section's single
+  battle-authority gate.
+
 ## Restore Ledger
 
 Every omitted lane is wanted back after Correction application and app growth resumes.
@@ -314,3 +355,4 @@ Required before marking this plan complete:
 - Full monster catalog execution.
 - Full battle parity with old `battle.qnt`.
 - Any new executable IR.
+- Treating `packages/mcp/src/green/` as a final MCP namespace.

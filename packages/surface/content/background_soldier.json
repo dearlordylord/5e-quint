@@ -1,6 +1,10 @@
 {
   "abilityScoreIncrease": {
-    "abilities": ["str", "dex", "con"],
+    "abilities": [
+      "str",
+      "dex",
+      "con"
+    ],
     "methods": [
       {
         "kind": "two_scores",
@@ -24,7 +28,10 @@
     "kind": "srd-5.2.1",
     "section": "Character-Origins.md:11-29,57-63"
   },
-  "skillProficiencies": ["athletics", "intimidation"],
+  "skillProficiencies": [
+    "athletics",
+    "intimidation"
+  ],
   "startingEquipment": [
     {
       "coinsGp": 14,

@@ -1,13 +1,13 @@
 # @dnd/mcp
 
-`@dnd/mcp` currently contains two MCP paths during the Correction Application
-Migration.
+`@dnd/mcp` exposes tool-facing composition and session wiring for the runtime
+packages.
 
-## Green Composition Root
+## Surface Runtime Composition
 
-The green path starts at `src/green/`. It imports only the Surface catalog
-boundary and the new character-creation and battle runtimes. Its composition
-root builds:
+The Surface runtime composition path starts at `src/green/`. It imports Surface
+authored content boundaries plus the character-creation and battle runtimes. Its
+composition root builds:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
@@ -22,7 +22,7 @@ so MCP session state cannot drift from the SRD stat-block catalog.
 Transient battle fills are MCP session state. They are kept separate from
 `BattleState` so battle replay remains owned by `@dnd/battle-runtime`.
 
-The green root also owns cross-runtime composition helpers. Character Sheet to
+This package also owns cross-runtime composition helpers. Character Sheet to
 battle-seed mapping lives in `src/green/battle-seed.ts`, where finalized
 character facts and Surface Unit lookups are projected into battle-owned seed
 data before calling `startBattle`. This keeps character draft/session concepts
@@ -31,6 +31,13 @@ This is package ownership, not a domain term: `@dnd/mcp` may see Character
 Sheets, authored Units, authored Stat Blocks, and battle seed APIs together
 because its job is wiring runtimes for tools.
 
+`src/green/` is a migration isolation namespace, not the final MCP API shape.
+The promotion criteria live in
+`plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md` Phase 5 and
+`plans/ACTIVE_PLAN.md` CAM20. Once the Core-backed overlap is deleted or
+rewritten, these tools should move into the normal MCP server path and the
+green namespace should disappear or become internal-only composition helpers.
+
 No file under `src/green/` may import or re-export from the legacy Core-backed
 MCP modules. Check that boundary with:
 
@@ -38,9 +45,8 @@ MCP modules. Check that boundary with:
 rg '@dnd/core' packages/mcp/src/green packages/character-creation-runtime packages/battle-runtime
 ```
 
-## Legacy Core Path
+## Core-Backed Path
 
-The existing `src/server.ts`, `src/session-router.ts`, `src/character-session.ts`,
-and related modules are legacy-only while the migration is in progress. They may
-keep using `@dnd/core` until the old path is intentionally deleted or isolated by
-a later task, but green tools must not be threaded through those modules.
+`src/server.ts`, `src/session-router.ts`, `src/character-session.ts`, and
+related modules use the Core-backed engine path. Keep Surface runtime tools out
+of those modules unless the package ownership model is intentionally changed.

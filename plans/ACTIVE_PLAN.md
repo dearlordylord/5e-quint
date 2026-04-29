@@ -154,6 +154,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "CAM19",
       "status": "blocked",
       "title": "Controlled Core Break And Projected Vocabulary Deletion"
+    },
+    {
+      "number": 20,
+      "id": "CAM20",
+      "status": "blocked",
+      "title": "Green Reconciliation And MCP Promotion"
     }
   ]
 }
@@ -200,7 +206,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 16    | CAM16 - Add MCP Green Composition Root                          | done                                          | CAM1, CAM5        | CAM17, CAM18                         | Added isolated MCP green module/root that installs `srdUnitCollection` and `srdStatBlockCollection` and has no `@dnd/core` imports.                                                             | Done in this task.                                                            |
 | 17    | CAM17 - Add MCP Character Creation Tools                        | ready-for-implementation-after-light-research | CAM10, CAM16      | CAM18                                | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                 | Ready after MCP green character-tool architecture check.                      |
 | 18    | CAM18 - Add MCP Battle Tools And Green Fixture                  | blocked                                       | CAM15, CAM17      | CAM19                                | Add green MCP tools for select monster, start battle, discover battle acts, fill/resolve battle holes, end turn, and one full vertical fixture.                                                 | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.       |
-| 19    | CAM19 - Controlled Core Break And Projected Vocabulary Deletion | blocked                                       | CAM18             | none                                 | Isolate/delete old Core-backed green-path imports, delete `CPU*`/`PEA*`/`PPR*` projected vocabulary where unreferenced, and ensure every omitted lane is in the Restore Ledger.                 | Blocker Type: dependency. Blocker Detail: waits on passing MCP green fixture. |
+| 19    | CAM19 - Controlled Core Break And Projected Vocabulary Deletion | blocked                                       | CAM18             | CAM20                                | Isolate/delete old Core-backed green-path imports, delete `CPU*`/`PEA*`/`PPR*` projected vocabulary where unreferenced, and ensure every omitted lane is in the Restore Ledger.                 | Blocker Type: dependency. Blocker Detail: waits on passing MCP green fixture. |
+| 20    | CAM20 - Green Reconciliation And MCP Promotion                  | blocked                                       | CAM19             | none                                 | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.           | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.     |
 
 ## Task Details
 
@@ -946,7 +953,7 @@ Plan Impact:
 Status: `blocked`
 
 Depends on: CAM18  
-Blocks: none
+Blocks: CAM20
 
 Blocker Type: dependency  
 Blocker Detail: waits on passing MCP green fixture.
@@ -980,7 +987,51 @@ Verification:
 
 Plan Impact:
 
-- If successful, update [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md) with actual deletion status and any remaining Restore Ledger rows.
+- If successful, unblock CAM20 and update [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md) with actual deletion status and any remaining Restore Ledger rows.
+
+### Task 20 - CAM20 - Green Reconciliation And MCP Promotion
+
+Status: `blocked`
+
+Depends on: CAM19
+Blocks: none
+
+Blocker Type: dependency
+Blocker Detail: waits on controlled Core break.
+
+Input:
+
+- Passing MCP green vertical.
+- CAM19 deletion/isolation results.
+- MCP Core-backed server modules and green composition modules.
+- Phase 5 criteria in [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md).
+
+Output:
+
+- Surface-backed tools promoted into the normal MCP server/router entrypoint.
+- `packages/mcp/src/green/` deleted or reduced to internal composition helpers with no user-facing green namespace.
+- Legacy Core-backed overlapping routes removed or rewritten over Surface runtimes.
+- Normal MCP server tests replace green-specific fixture-only coverage.
+
+Acceptance:
+
+- The runnable Fighter/Goblin vertical works through the normal MCP server path.
+- `packages/mcp/src/server.ts` or its replacement no longer routes the vertical through Core/projected vocabulary.
+- No user-facing MCP tool requires importing from `packages/mcp/src/green`.
+- `src/green/` is deleted, or remaining files are internal helpers without "green" API naming.
+- MCP docs describe the promoted Surface runtime path, not a green path as the active user workflow.
+- Restore Ledger still covers omitted behavior that has not been rebuilt.
+
+Verification:
+
+- Normal MCP server tests cover create/finalize character, select Goblin Warrior, start battle, Attack with damage, and End Turn.
+- `rg '@dnd/core' packages/mcp/src packages/character-creation-runtime packages/battle-runtime` returns no matches for promoted paths, with any legacy-only matches either deleted or ledgered.
+- `rg 'CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime` returns no promoted-path matches.
+- MCP/runtime typecheck and focused runtime tests pass.
+
+Plan Impact:
+
+- If successful, update the migration plan and MCP docs to mark green reconciliation complete and remove temporary green-path wording.
 
 ## Deferred Previous Queue
 

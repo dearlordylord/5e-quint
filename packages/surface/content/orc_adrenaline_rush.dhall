@@ -1,0 +1,25 @@
+let adrenalineRush =
+      { description =
+          "When you take the Dash action, you gain Temporary Hit Points equal to your Proficiency Bonus. You can use this trait a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
+      , id = "orc_adrenaline_rush"
+      , kind = "species_trait"
+      , mechanics =
+        { activationCost = { action = "dash", kind = "bonus_action" }
+        , family = "activation"
+        , phases =
+          [ { attachment.kind = "self"
+            , effects =
+              [ { amount.kind = "proficiency_bonus", kind = "grant_temp_hp" } ]
+            , kind = "direct"
+            }
+          ]
+        , resetCadence.kind = "short_or_long_rest"
+        , resource = { cap.kind = "proficiency_bonus", kind = "use_count" }
+        }
+      , name = "Adrenaline Rush"
+      , provenance =
+        { kind = "srd-5.2.1", section = "Character-Origins.md:251-255" }
+      , species = "orc"
+      }
+
+in  adrenalineRush
