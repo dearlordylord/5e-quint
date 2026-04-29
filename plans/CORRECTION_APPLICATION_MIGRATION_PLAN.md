@@ -160,7 +160,7 @@ Battle-ready inputs are runtime seed data only: combatant identity, current reso
 
 The runtime Attack act must include damage. Hit/miss-only attack is not enough for the green MCP vertical.
 
-Phase 1 chooses one damage protocol for the vertical and names it in the battle hole type. The default protocol is dice-result fill for character weapon attacks. Deterministic tests must cover hit, miss, Temporary HP absorption, HP floor at 0, monster dead/defeated status, and the selected Character Sheet participant behavior at 0 HP. Death policy must follow ASSUMPTIONS.md A12 for supported combatants: monsters die immediately at 0 HP; player characters enter the 0-HP/death-save track when applicable. Any narrower phase-1 handling requires an explicit ASSUMPTIONS.md entry before implementation.
+Phase 1 chooses one damage protocol for the vertical and names it in the battle hole type. The default protocol is dice-result fill for character weapon attacks. CAM14 implements that protocol for `@dnd/battle-runtime`: completed weapon hits sum rolled damage dice plus the attack ability modifier, apply Temporary HP before HP, clamp HP at 0, and branch through the combatant's typed zero-HP lifecycle. Death policy follows ASSUMPTIONS.md A12 for supported combatants: Stat Block monsters die immediately at 0 HP; Character Sheet participants enter the 0-HP/death-save track by gaining Unconscious with reset death-save counters, and later damage at 0 HP records Death Saving Throw failures. CAM15 owns start-turn Death Saving Throw rolls. Massive Damage and nonlethal melee knockout remain outside the phase-1 runtime slice until explicitly widened.
 
 ## QNT Plan
 

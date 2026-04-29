@@ -24,9 +24,15 @@ import {
   zeroAbilityModifiers,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
+  applyCondition,
   EMPTY_CONDITION_STATE,
   hasCondition,
+  isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  addDeathFailures,
+  resetDeathSaveRuntimeState,
+} from "@dnd/shared-algebras/death-saves-algebra";
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -37,6 +43,10 @@ import type {
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
+import type {
+  DeathSaves,
+  DeathSaveRuntimeState,
+} from "@dnd/shared-algebras/death-saves-algebra";
 import type {
   HoleId,
   HoleInstanceKey,
@@ -92,7 +102,15 @@ const InitiativeScore = Brand.nominal<InitiativeScore>();
 export const initiativeScore: (value: number) => InitiativeScore =
   InitiativeScore;
 
-export type ZeroHpLifecyclePolicy = "diesAtZeroHp" | "usesDeathSavingThrows";
+export type ZeroHpLifecycle =
+  | {
+      readonly policy: "diesAtZeroHp";
+    }
+  | {
+      readonly policy: "usesDeathSavingThrows";
+      readonly deathSaves: DeathSaveRuntimeState;
+    };
+export type ZeroHpLifecyclePolicy = ZeroHpLifecycle["policy"];
 
 export type CharacterLoadoutRef = CharacterSheet["equipment"]["loadout"];
 export type BattleWeaponDamage = Extract<
@@ -168,7 +186,7 @@ export type CombatantState = {
   readonly tempHp: Hp;
   readonly conditions: ConditionState;
   readonly armorClass: ArmorClassState;
-  readonly zeroHpLifecyclePolicy: ZeroHpLifecyclePolicy;
+  readonly zeroHpLifecycle: ZeroHpLifecycle;
   readonly source:
     | {
         readonly kind: "character";
@@ -289,9 +307,21 @@ export type CombatantSnapshot = {
   readonly tempHp: Hp;
   readonly armorClass: ArmorClass;
   readonly defeated: boolean;
-  readonly zeroHpLifecyclePolicy: ZeroHpLifecyclePolicy;
+  readonly zeroHpLifecycle: CombatantZeroHpLifecycleSnapshot;
   readonly conditions: readonly Condition[];
 };
+
+export type CombatantZeroHpLifecycleSnapshot =
+  | {
+      readonly policy: "diesAtZeroHp";
+      readonly dead: boolean;
+    }
+  | {
+      readonly policy: "usesDeathSavingThrows";
+      readonly deathSaves: DeathSaves;
+      readonly stable: boolean;
+      readonly dead: boolean;
+    };
 
 const INITIAL_ROUND: RoundType = Round(1);
 const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
@@ -373,6 +403,7 @@ export function discoverBattleActs(
 
   const acts: AvailableBattleAct[] = [];
   if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "attack") &&
     supportedAttackProfile(state, actorId) != null &&
     attackTargetChoices(state, actorId).length > 0
@@ -410,6 +441,17 @@ export function resolveBattleSubject(
       input.state,
       "missingCombatant",
       "Subject actor is not in this battle.",
+    );
+  }
+
+  if (
+    input.subject.act === "attack" &&
+    !combatantCanTakeActions(input.state.combatants.get(input.subject.actorId))
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack is no longer available for the current actor.",
     );
   }
 
@@ -486,11 +528,11 @@ function combatantState(input: CombatantSeedInput): CombatantState {
     maxHp: input.seed.maxHp,
     tempHp: input.seed.tempHp,
     conditions: EMPTY_CONDITION_STATE,
-    zeroHpLifecyclePolicy: input.seed.zeroHpLifecyclePolicy,
+    zeroHpLifecycle: initialZeroHpLifecycle(input.seed.zeroHpLifecyclePolicy),
   };
 
   if (input.seed.kind === "character") {
-    return {
+    return applyInitialZeroHpLifecycle({
       ...base,
       armorClass: input.seed.armorClass,
       source: {
@@ -500,10 +542,10 @@ function combatantState(input: CombatantSeedInput): CombatantState {
         selectedLoadout: input.seed.selectedLoadout,
         attack: input.seed.attack,
       },
-    };
+    });
   }
 
-  return {
+  return applyInitialZeroHpLifecycle({
     ...base,
     armorClass: statBlockArmorClassState(
       literalStatBlockNumber(input.seed.statBlock.statBlock.ac),
@@ -513,7 +555,7 @@ function combatantState(input: CombatantSeedInput): CombatantState {
       monsterId: input.seed.monsterId,
       statBlock: input.seed.statBlock,
     },
-  };
+  });
 }
 
 function currentActorId(state: BattleState): CombatantId {
@@ -530,9 +572,48 @@ function combatantSnapshot(combatant: CombatantState): CombatantSnapshot {
     tempHp: combatant.tempHp,
     armorClass: currentArmorClass(combatant.armorClass),
     defeated: combatant.hp === 0,
-    zeroHpLifecyclePolicy: combatant.zeroHpLifecyclePolicy,
+    zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
     conditions: activeConditions(combatant.conditions),
   };
+}
+
+function initialZeroHpLifecycle(
+  policy: ZeroHpLifecyclePolicy,
+): ZeroHpLifecycle {
+  return Match.value(policy).pipe(
+    Match.when("diesAtZeroHp", () => ({
+      policy: "diesAtZeroHp" as const,
+    })),
+    Match.when("usesDeathSavingThrows", () => ({
+      policy: "usesDeathSavingThrows" as const,
+      deathSaves: resetDeathSaveRuntimeState(),
+    })),
+    Match.exhaustive,
+  );
+}
+
+function combatantZeroHpLifecycleSnapshot(
+  combatant: CombatantState,
+): CombatantZeroHpLifecycleSnapshot {
+  return Match.value(combatant.zeroHpLifecycle).pipe(
+    Match.when({ policy: "diesAtZeroHp" }, (lifecycle) => ({
+      policy: lifecycle.policy,
+      dead: combatant.hp === 0,
+    })),
+    Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
+      policy: lifecycle.policy,
+      deathSaves: lifecycle.deathSaves.deathSaves,
+      stable: lifecycle.deathSaves.stable,
+      dead: lifecycle.deathSaves.dead,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function combatantCanTakeActions(
+  combatant: CombatantState | undefined,
+): combatant is CombatantState {
+  return combatant != null && !isIncapacitated(combatant.conditions);
 }
 
 function activeConditions(state: ConditionState): readonly Condition[] {
@@ -774,7 +855,11 @@ function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
     );
   }
 
-  return spendAttackAction(input.state);
+  return spendAttackAction(
+    hit
+      ? applyAttackDamage(input.state, target.combatantId, attack, fillSet)
+      : input.state,
+  );
 }
 
 type AttackFillSet =
@@ -874,6 +959,147 @@ function spendAttackAction(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function applyAttackDamage(
+  state: BattleState,
+  targetId: CombatantId,
+  attack: BattleAttackProfile,
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): BattleState {
+  if (fillSet.damageRoll == null) {
+    return state;
+  }
+
+  const target = state.combatants.get(targetId);
+  if (target == null) {
+    return state;
+  }
+
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      targetId,
+      applyHpDamage(
+        target,
+        weaponAttackDamageAmount(attack, fillSet.damageRoll),
+        {
+          deathFailuresAtZeroHp:
+            Number(fillSet.attackRoll?.naturalD20) === 20 ? 2 : 1,
+        },
+      ),
+    ),
+  };
+}
+
+type BattleDamageContext = {
+  readonly deathFailuresAtZeroHp: 1 | 2;
+};
+
+function applyHpDamage(
+  combatant: CombatantState,
+  damageAmount: number,
+  context: BattleDamageContext,
+): CombatantState {
+  const effectiveDamage = Math.max(0, Math.floor(damageAmount));
+  if (effectiveDamage <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
+    return combatant;
+  }
+
+  const currentTempHp = Number(combatant.tempHp);
+  const currentHp = Number(combatant.hp);
+  const tempHpAbsorbed = Math.min(currentTempHp, effectiveDamage);
+  const hpDamage = effectiveDamage - tempHpAbsorbed;
+  const nextHp = Hp(Math.max(0, currentHp - hpDamage));
+  const damaged = {
+    ...combatant,
+    hp: nextHp,
+    tempHp: Hp(currentTempHp - tempHpAbsorbed),
+  };
+
+  if (currentHp <= 0) {
+    return applyDamageAtZeroHp(damaged, context);
+  }
+
+  if (Number(nextHp) > 0) {
+    return damaged;
+  }
+
+  return applyDropToZeroHpLifecycle(damaged);
+}
+
+function applyInitialZeroHpLifecycle(
+  combatant: CombatantState,
+): CombatantState {
+  if (Number(combatant.hp) > 0) {
+    return combatant;
+  }
+
+  return applyDropToZeroHpLifecycle(combatant);
+}
+
+function applyDropToZeroHpLifecycle(combatant: CombatantState): CombatantState {
+  return Match.value(combatant.zeroHpLifecycle).pipe(
+    Match.when({ policy: "diesAtZeroHp" }, () => combatant),
+    Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
+      ...combatant,
+      conditions: applyCondition(combatant.conditions, "unconscious"),
+      zeroHpLifecycle: {
+        ...lifecycle,
+        deathSaves: resetDeathSaveRuntimeState(),
+      },
+    })),
+    Match.exhaustive,
+  );
+}
+
+function applyDamageAtZeroHp(
+  combatant: CombatantState,
+  context: BattleDamageContext,
+): CombatantState {
+  return Match.value(combatant.zeroHpLifecycle).pipe(
+    Match.when({ policy: "diesAtZeroHp" }, () => combatant),
+    Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
+      ...combatant,
+      conditions: applyCondition(combatant.conditions, "unconscious"),
+      zeroHpLifecycle: {
+        ...lifecycle,
+        deathSaves: addDeathFailures(
+          lifecycle.deathSaves,
+          context.deathFailuresAtZeroHp,
+        ),
+      },
+    })),
+    Match.exhaustive,
+  );
+}
+
+function zeroHpLifecycleIsTerminal(combatant: CombatantState): boolean {
+  return Match.value(combatant.zeroHpLifecycle).pipe(
+    Match.when({ policy: "diesAtZeroHp" }, () => combatant.hp === 0),
+    Match.when(
+      { policy: "usesDeathSavingThrows" },
+      (lifecycle) => lifecycle.deathSaves.dead,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function weaponAttackDamageAmount(
+  attack: BattleAttackProfile,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): number {
+  return (
+    damageRoll.value.reduce(
+      (total, group) =>
+        total +
+        group.results.reduce(
+          (groupTotal, dieResult) => groupTotal + Number(dieResult),
+          0,
+        ),
+      0,
+    ) + attack.abilityModifier
+  );
 }
 
 function needsHolesResult(

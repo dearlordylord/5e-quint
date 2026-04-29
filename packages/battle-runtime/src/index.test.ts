@@ -15,6 +15,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
+  type CombatantId,
   type CombatantSeedInput,
 } from "./index.ts";
 import {
@@ -99,7 +100,12 @@ describe("battle runtime skeleton", () => {
           tempHp: 0,
           armorClass: 19,
           defeated: false,
-          zeroHpLifecyclePolicy: "usesDeathSavingThrows",
+          zeroHpLifecycle: {
+            policy: "usesDeathSavingThrows",
+            deathSaves: { successes: 0, failures: 0 },
+            stable: false,
+            dead: false,
+          },
         },
         {
           combatantId: goblinId,
@@ -110,7 +116,7 @@ describe("battle runtime skeleton", () => {
           tempHp: 0,
           armorClass: 15,
           defeated: false,
-          zeroHpLifecyclePolicy: "diesAtZeroHp",
+          zeroHpLifecycle: { policy: "diesAtZeroHp", dead: false },
         },
       ],
       currentTurnResources: {
@@ -198,7 +204,7 @@ describe("battle runtime skeleton", () => {
           tempHp: 0,
           armorClass: 15,
           defeated: true,
-          zeroHpLifecyclePolicy: "diesAtZeroHp",
+          zeroHpLifecycle: { policy: "diesAtZeroHp", dead: true },
           conditions: [],
         },
         {
@@ -210,7 +216,12 @@ describe("battle runtime skeleton", () => {
           tempHp: 0,
           armorClass: 10,
           defeated: false,
-          zeroHpLifecyclePolicy: "usesDeathSavingThrows",
+          zeroHpLifecycle: {
+            policy: "usesDeathSavingThrows",
+            deathSaves: { successes: 0, failures: 0 },
+            stable: false,
+            dead: false,
+          },
           conditions: [],
         },
       ],
@@ -263,6 +274,60 @@ describe("battle runtime skeleton", () => {
     expect(acts.map((act) => act.subject)).toEqual([
       { tag: "coreAct", actorId: fighterId, act: "endTurn" },
     ]);
+  });
+
+  test("discoverBattleActs omits attack when the current character is Unconscious at 0 HP", () => {
+    const acts = discoverBattleActs(
+      startBattle({
+        battleId: battleId("battle-unconscious-actor"),
+        combatants: [
+          characterSeed({ initiative: 20, currentHp: 0 }),
+          monsterSeed({ initiative: 10 }),
+        ],
+      }),
+    );
+
+    expect(acts.map((act) => act.subject)).toEqual([
+      { tag: "coreAct", actorId: fighterId, act: "endTurn" },
+    ]);
+  });
+
+  test("attack resolution rejects an Unconscious current character at 0 HP", () => {
+    const state = startBattle({
+      battleId: battleId("battle-unconscious-actor-resolve"),
+      combatants: [
+        characterSeed({ initiative: 20, currentHp: 0 }),
+        monsterSeed({ initiative: 10 }),
+      ],
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: fighterId,
+            hp: 0,
+            zeroHpLifecycle: expect.objectContaining({
+              policy: "usesDeathSavingThrows",
+              dead: false,
+            }),
+            conditions: expect.arrayContaining([
+              "incapacitated",
+              "unconscious",
+              "prone",
+            ]),
+          }),
+        ]),
+      },
+    });
   });
 
   test("attack replay asks for a target before roll or damage", () => {
@@ -578,7 +643,7 @@ describe("battle runtime skeleton", () => {
     });
   });
 
-  test("filled attack hit spends the action and keeps damage application for CAM14", () => {
+  test("filled attack hit spends the action and applies rolled weapon damage to HP", () => {
     const state = fighterVsGoblinBattle();
     const targetHole = attackInitialTargetHole(state);
     const rollHole = attackRollHoleAfterTarget(state, targetHole);
@@ -612,7 +677,188 @@ describe("battle runtime skeleton", () => {
         },
         combatants: [
           { combatantId: fighterId },
-          { combatantId: goblinId, hp: 10 },
+          { combatantId: goblinId, hp: 3, tempHp: 0, defeated: false },
+        ],
+      },
+    });
+  });
+
+  test("attack damage removes Temporary Hit Points before HP", () => {
+    const state = startBattle({
+      battleId: battleId("battle-temp-hp"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        monsterSeed({ initiative: 10, tempHp: 5 }),
+      ],
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 4),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: goblinId, hp: 8, tempHp: 0, defeated: false },
+        ],
+      },
+    });
+  });
+
+  test("attack damage clamps monster HP at 0 and marks Goblin Warrior dead", () => {
+    const state = startBattle({
+      battleId: battleId("battle-monster-zero"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        monsterSeed({ initiative: 10, currentHp: 3 }),
+      ],
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 8),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: goblinId,
+            hp: 0,
+            tempHp: 0,
+            defeated: true,
+            zeroHpLifecycle: { policy: "diesAtZeroHp", dead: true },
+          },
+        ],
+      },
+    });
+  });
+
+  test("character target at 0 HP enters the death-save lifecycle scaffold", () => {
+    const targetCharacterId = combatantId("target-character");
+    const state = startBattle({
+      battleId: battleId("battle-character-zero"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 3,
+          attack: null,
+        }),
+      ],
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, targetCharacterId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 8),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 0,
+            defeated: true,
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 0 },
+              stable: false,
+              dead: false,
+            },
+            conditions: expect.arrayContaining(["unconscious", "prone"]),
+          },
+        ],
+      },
+    });
+  });
+
+  test("later critical attack damage at 0 HP projects a dead death-save lifecycle", () => {
+    const targetCharacterId = combatantId("target-character");
+    const state = startBattle({
+      battleId: battleId("battle-character-zero-damage"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+        }),
+      ],
+    });
+    const firstDamageResult = criticalAttackDamageResult(
+      state,
+      targetCharacterId,
+    );
+    if (firstDamageResult.tag !== "resolved") {
+      throw new Error(
+        `Expected resolved first damage, got ${firstDamageResult.tag}.`,
+      );
+    }
+    const secondDamageState = {
+      ...firstDamageResult.state,
+      currentTurnResources: {
+        actionResources: [{ kind: "action", source: "turn" }],
+        currentHasBonusAction: true,
+      },
+    } satisfies BattleState;
+
+    const result = criticalAttackDamageResult(
+      secondDamageState,
+      targetCharacterId,
+    );
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 0,
+            defeated: true,
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 3 },
+              stable: false,
+              dead: true,
+            },
+          },
         ],
       },
     });
@@ -695,14 +941,57 @@ function attackRollHoleAfterTarget(
   state: BattleState,
   targetHole: BattleHole,
 ): BattleHole {
+  if (targetHole.kind !== "targetChoice") {
+    throw new Error("Expected targetChoice hole.");
+  }
   return requireHole(
     resolveBattleSubject({
       state,
       subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
-      fills: [targetFill(targetHole, goblinId)],
+      fills: [targetFill(targetHole, targetHole.choices[0] ?? goblinId)],
     }),
     "attackRoll",
   );
+}
+
+function attackDamageHoleAfterHit(
+  state: BattleState,
+  targetHole: BattleHole,
+  rollHole: BattleHole,
+): BattleHole {
+  if (targetHole.kind !== "targetChoice") {
+    throw new Error("Expected targetChoice hole.");
+  }
+  return requireHole(
+    resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, targetHole.choices[0] ?? goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+      ],
+    }),
+    "rolledDice",
+  );
+}
+
+function criticalAttackDamageResult(
+  state: BattleState,
+  targetId: CombatantId,
+): ReturnType<typeof resolveBattleSubject> {
+  const targetHole = attackInitialTargetHole(state);
+  const rollHole = attackRollHoleAfterTarget(state, targetHole);
+  const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+
+  return resolveBattleSubject({
+    state,
+    subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+    fills: [
+      targetFill(targetHole, targetId),
+      attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
+      damageRollFill(damageHole, 4),
+    ],
+  });
 }
 
 function requireHole(
@@ -719,7 +1008,7 @@ function requireHole(
   return hole;
 }
 
-function targetFill(hole: BattleHole, targetId: typeof goblinId): BattleFill {
+function targetFill(hole: BattleHole, targetId: CombatantId): BattleFill {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
   }
@@ -797,25 +1086,30 @@ function rolledDiceGroup(group: readonly number[]): DamageRollValue[number] {
 }
 
 function characterSeed(input: {
+  readonly combatantId?: CombatantId;
+  readonly displayName?: string;
   readonly initiative: number;
+  readonly currentHp?: number;
+  readonly tempHp?: number;
+  readonly attack?: ReturnType<typeof testLongswordAttack> | null;
 }): CombatantSeedInput {
   return {
-    combatantId: fighterId,
-    displayName: "Fighter",
+    combatantId: input.combatantId ?? fighterId,
+    displayName: input.displayName ?? "Fighter",
     initiative: initiativeScore(input.initiative),
     seed: {
       kind: "character",
       characterId: characterId("fighter-character"),
       sheetUnitRefs: [],
       armorClass: defaultArmorClassState(),
-      currentHp: Hp(12),
+      currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(12),
-      tempHp: Hp(0),
+      tempHp: Hp(input.tempHp ?? 0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
       selectedLoadout: {
         weapon: { unitId: "weapon_longsword", grip: "one_handed" },
       },
-      attack: testLongswordAttack(),
+      attack: input.attack === undefined ? testLongswordAttack() : input.attack,
     },
   };
 }
@@ -840,6 +1134,7 @@ function testLongswordAttack(): Extract<
 function monsterSeed(input: {
   readonly initiative: number;
   readonly currentHp?: number;
+  readonly tempHp?: number;
 }): CombatantSeedInput {
   return {
     combatantId: goblinId,
@@ -851,7 +1146,7 @@ function monsterSeed(input: {
       statBlock: statBlockRecord(),
       currentHp: Hp(input.currentHp ?? 10),
       maxHp: Hp(10),
-      tempHp: Hp(0),
+      tempHp: Hp(input.tempHp ?? 0),
       zeroHpLifecyclePolicy: "diesAtZeroHp",
     },
   };
