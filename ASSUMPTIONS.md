@@ -4,6 +4,14 @@ The spec (`creature.qnt`) maintains direct feature parity with the SRD. Formaliz
 
 Each entry records the assumption, rules justification, and what changed in both Quint and XState.
 
+## A0: "Point Buy" naming for SRD "Point Cost"
+
+**Assumption:** Code and user-facing runtime APIs use the term "Point Buy" for the SRD 5.2.1 ability-score generation method titled "Point Cost."
+
+**Rules basis (SRD 5.2.1 Character Creation, Step 3):** The SRD names the method "Point Cost" and defines the 27-point budget and the Ability Score Point Costs table. "Point Buy" is the established community term for the same method and is the term used in this repo's ubiquitous language.
+
+**Changes:** `@dnd/shared-algebras/ability-score-algebra` and character creation runtime method identifiers use `pointBuy` while preserving the SRD budget and cost table exactly.
+
 ## A1: Spell slot expenditure requires ability to act
 
 **Assumption:** EXPEND_SLOT and EXPEND_PACT_SLOT are only valid when alive (hp > 0, not dead) AND not incapacitated.

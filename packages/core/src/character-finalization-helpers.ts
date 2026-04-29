@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import { ABILITIES } from "#/types.ts";
 import {
   applyBackgroundAbilityScoreIncrease,
@@ -83,10 +84,10 @@ export function validateAbilityScoreGeneration(
     }
   }
 
-  if (
-    generation.mode === "pointBuy" &&
-    totalPointBuyCost(scores) > POINT_BUY_BUDGET
-  ) {
+  const pointBuyTotal =
+    generation.mode === "pointBuy" ? totalPointBuyCost(scores) : Option.none();
+
+  if (Option.isSome(pointBuyTotal) && pointBuyTotal.value > POINT_BUY_BUDGET) {
     issues.push({
       code: "invalidPointBuy",
       message: `Point Buy characters cannot spend more than ${POINT_BUY_BUDGET} points.`,

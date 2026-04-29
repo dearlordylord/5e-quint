@@ -256,6 +256,7 @@ function initialManifestFills(): readonly CreationFill[] {
     {
       kind: "abilityScores",
       holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+      method: "standardArray",
       value: {
         str: 15,
         dex: 14,

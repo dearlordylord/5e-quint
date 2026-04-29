@@ -100,10 +100,12 @@ module characterCreationRuntimeSlice {
     charisma: int,
   }
 
+  type SupportedAbilityScoreMethod = StandardArray | PointBuy
+
   type Fill =
     | FChoice({ hole: HoleId, option: ChoiceOptionId })
     | FMultiChoice({ hole: HoleId, options: List[ChoiceOptionId] })
-    | FAbilityScores({ hole: HoleId, scores: AbilityScores })
+    | FAbilityScores({ hole: HoleId, method: SupportedAbilityScoreMethod, scores: AbilityScores })
 
   type FillIssueCode =
     | UnknownHole
@@ -193,6 +195,42 @@ module characterCreationRuntimeSlice {
 
   pure def isStandardArrayAssignment(scores: AbilityScores): bool =
     abilityScoreSet(scores) == standardArrayScoreSet
+
+  pure def pointBuyCost(score: int): int =
+    if (score == 8) 0
+    else if (score == 9) 1
+    else if (score == 10) 2
+    else if (score == 11) 3
+    else if (score == 12) 4
+    else if (score == 13) 5
+    else if (score == 14) 7
+    else if (score == 15) 9
+    else 0
+
+  pure def isPointBuyScore(score: int): bool =
+    score >= 8 and score <= 15
+
+  pure def pointBuyTotalCost(scores: AbilityScores): int =
+    pointBuyCost(scores.strength)
+      + pointBuyCost(scores.dexterity)
+      + pointBuyCost(scores.constitution)
+      + pointBuyCost(scores.intelligence)
+      + pointBuyCost(scores.wisdom)
+      + pointBuyCost(scores.charisma)
+
+  pure def isPointBuyAssignment(scores: AbilityScores): bool =
+    isPointBuyScore(scores.strength)
+      and isPointBuyScore(scores.dexterity)
+      and isPointBuyScore(scores.constitution)
+      and isPointBuyScore(scores.intelligence)
+      and isPointBuyScore(scores.wisdom)
+      and isPointBuyScore(scores.charisma)
+      and pointBuyTotalCost(scores) <= 27
+
+  pure def isValidAbilityScoreAssignment(method: SupportedAbilityScoreMethod, scores: AbilityScores): bool = match method {
+    | StandardArray => isStandardArrayAssignment(scores)
+    | PointBuy => isPointBuyAssignment(scores)
+  }
 
   pure def openCreationHoles(draft: Draft): Set[HoleId] = {
     val initial = Set(
@@ -387,7 +425,7 @@ module characterCreationRuntimeSlice {
             else Set()
           cardinalityIssues.union(optionIssues)
       | FAbilityScores(v) =>
-          if (isStandardArrayAssignment(v.scores)) Set()
+          if (isValidAbilityScoreAssignment(v.method, v.scores)) Set()
           else Set({ fillIndex: fillIndex, hole: hole, code: InvalidChoice })
     }
   }
@@ -448,7 +486,7 @@ module characterCreationRuntimeSlice {
     FChoice({ hole: HPrimaryClass, option: OClassFighter }),
     FChoice({ hole: HBackground, option: OBackgroundSoldier }),
     FChoice({ hole: HSpecies, option: OSpeciesOrc }),
-    FAbilityScores({ hole: HAbilityScores, scores: fighterStandardArray }),
+    FAbilityScores({ hole: HAbilityScores, method: StandardArray, scores: fighterStandardArray }),
     FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
     FChoice({ hole: HAlignment, option: OAlignmentLawfulGood }),
   ]
@@ -576,6 +614,7 @@ module characterCreationRuntimeSlice {
     match fillCreationHoles(emptyDraft, 0, [
       FAbilityScores({
         hole: HAbilityScores,
+        method: StandardArray,
         scores: {
           strength: 14,
           dexterity: 15,

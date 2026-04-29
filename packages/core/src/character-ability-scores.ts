@@ -1,4 +1,14 @@
-import { ABILITIES, abilityScoreToMod, type Ability } from "#/types.ts";
+import {
+  POINT_BUY_BUDGET,
+  POINT_BUY_MAX_SCORE,
+  POINT_BUY_MIN_SCORE,
+  STANDARD_ARRAY_SCORES,
+  abilityScoreToMod,
+  pointBuyCost,
+  totalPointBuyCost,
+  type AbilityScoreAssignment,
+} from "@dnd/shared-algebras/ability-score-algebra";
+import { ABILITIES, type Ability } from "#/types.ts";
 
 export const CHARACTER_BACKGROUNDS = [
   "acolyte",
@@ -16,14 +26,18 @@ export const ABILITY_SCORE_GENERATION_MODES = [
 export type AbilityScoreGenerationMode =
   (typeof ABILITY_SCORE_GENERATION_MODES)[number];
 
-export type CharacterAbilityScores = Readonly<Record<Ability, number>>;
+export type CharacterAbilityScores = AbilityScoreAssignment;
 export type CharacterDraftAbilityScores = Partial<Record<Ability, number>>;
 export type CharacterAbilityModifiers = Readonly<Record<Ability, number>>;
 
-export const STANDARD_ARRAY_SCORES = [15, 14, 13, 12, 10, 8] as const;
-export const POINT_BUY_BUDGET = 27;
-export const POINT_BUY_MIN_SCORE = 8;
-export const POINT_BUY_MAX_SCORE = 15;
+export {
+  POINT_BUY_BUDGET,
+  POINT_BUY_MAX_SCORE,
+  POINT_BUY_MIN_SCORE,
+  STANDARD_ARRAY_SCORES,
+  pointBuyCost,
+  totalPointBuyCost,
+};
 
 export interface StandardArrayAbilityScoreGeneration {
   readonly mode: "standardArray";
@@ -88,40 +102,10 @@ export const BACKGROUND_ABILITY_SCORE_OPTIONS = {
   Record<CharacterBackground, ReadonlyArray<Ability>>
 >;
 
-export function pointBuyCost(score: number): number {
-  switch (score) {
-    case 8:
-      return 0;
-    case 9:
-      return 1;
-    case 10:
-      return 2;
-    case 11:
-      return 3;
-    case 12:
-      return 4;
-    case 13:
-      return 5;
-    case 14:
-      return 7;
-    case 15:
-      return 9;
-    default:
-      return -1;
-  }
-}
-
 export function isCompleteAbilityScores(
   scores: CharacterDraftAbilityScores,
 ): scores is CharacterAbilityScores {
   return ABILITIES.every((ability) => scores[ability] != null);
-}
-
-export function totalPointBuyCost(scores: CharacterAbilityScores): number {
-  return ABILITIES.reduce(
-    (total, ability) => total + pointBuyCost(scores[ability]),
-    0,
-  );
 }
 
 export function abilityModifiersFromScores(

@@ -229,6 +229,9 @@ importers:
 
   packages/character-creation-runtime:
     dependencies:
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
       '@dnd/surface':
         specifier: workspace:*
         version: link:../surface

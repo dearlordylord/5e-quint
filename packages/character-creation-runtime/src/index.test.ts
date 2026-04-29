@@ -53,7 +53,11 @@ describe("character creation hole discovery", () => {
       ["singleChoice", "cc:draft:draft.primaryClass", ["class_fighter"]],
       ["singleChoice", "cc:draft:draft.background", ["background_soldier"]],
       ["singleChoice", "cc:draft:draft.species", ["species_orc"]],
-      ["abilityScores", "cc:draft:draft.abilityScoreGeneration", []],
+      [
+        "abilityScores",
+        "cc:draft:draft.abilityScoreGeneration",
+        ["standardArray", "pointBuy"],
+      ],
       [
         "multiChoice",
         "cc:draft:draft.languages",
@@ -496,6 +500,7 @@ describe("character creation QNT slice parity", () => {
         {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
           value: {
             str: 14,
             dex: 15,
@@ -511,6 +516,30 @@ describe("character creation QNT slice parity", () => {
       throw new Error(
         "Expected the Standard Array permutation fill to be accepted.",
       );
+    }
+
+    const pointBuyAssignment = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "pointBuy",
+          value: {
+            str: 13,
+            dex: 13,
+            con: 13,
+            int: 12,
+            wis: 12,
+            cha: 12,
+          },
+        },
+      ],
+    });
+    if (pointBuyAssignment.tag !== "accepted") {
+      throw new Error("Expected the Point Buy fill to be accepted.");
     }
 
     const tooFewLanguages = fillCreationHoles({
@@ -563,6 +592,7 @@ describe("character creation QNT slice parity", () => {
         duplicateLanguage,
         unsupportedLaterChoices,
         standardArrayPermutation,
+        pointBuyAssignment,
         tooFewLanguages,
         tooManyLanguages,
         staleRevision,
@@ -634,7 +664,50 @@ describe("character creation batch fill", () => {
     });
   });
 
-  test("rejects non-Standard Array ability score assignments", () => {
+  test("accepts Point Buy ability score assignments and records the method", () => {
+    const draft = createTestDraft("draft:batch-point-buy-ability-scores");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "pointBuy",
+          value: {
+            str: 13,
+            dex: 13,
+            con: 13,
+            int: 12,
+            wis: 12,
+            cha: 12,
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "accepted",
+      draft: {
+        selections: {
+          abilityScoreGeneration: {
+            method: "pointBuy",
+            assignedScores: {
+              str: 13,
+              dex: 13,
+              con: 13,
+              int: 12,
+              wis: 12,
+              cha: 12,
+            },
+          },
+        },
+      },
+    });
+  });
+
+  test("rejects ability score assignments that are invalid for their method", () => {
     const draft = createTestDraft("draft:batch-invalid-ability-scores");
     const result = fillCreationHoles({
       draft,
@@ -644,6 +717,7 @@ describe("character creation batch fill", () => {
         {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
           value: {
             str: 20,
             dex: 20,
@@ -657,6 +731,33 @@ describe("character creation batch fill", () => {
     });
 
     expect(result).toMatchObject({
+      tag: "rejected",
+      draft,
+      issues: [{ tag: "illegalFill", code: "invalidChoice", fillIndex: 0 }],
+    });
+
+    const invalidPointBuy = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "pointBuy",
+          value: {
+            str: 15,
+            dex: 15,
+            con: 15,
+            int: 15,
+            wis: 8,
+            cha: 8,
+          },
+        },
+      ],
+    });
+
+    expect(invalidPointBuy).toMatchObject({
       tag: "rejected",
       draft,
       issues: [{ tag: "illegalFill", code: "invalidChoice", fillIndex: 0 }],
@@ -1081,6 +1182,7 @@ function initialManifestFills(): readonly CreationFill[] {
     {
       kind: "abilityScores",
       holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+      method: "standardArray",
       value: {
         str: 15,
         dex: 14,
@@ -1278,7 +1380,7 @@ function runGeneratedQuintParity(moduleBody: string): void {
       ],
       { encoding: "utf8" },
     );
-    expect(quintOutput).toContain("12 passing");
+    expect(quintOutput).toContain("13 passing");
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -1296,6 +1398,7 @@ function renderQuintParityModule(input: {
   readonly duplicateLanguage: RejectedCreationBatch;
   readonly unsupportedLaterChoices: RejectedCreationBatch;
   readonly standardArrayPermutation: AcceptedCreationBatch;
+  readonly pointBuyAssignment: AcceptedCreationBatch;
   readonly tooFewLanguages: RejectedCreationBatch;
   readonly tooManyLanguages: RejectedCreationBatch;
   readonly staleRevision: RejectedCreationBatch;
@@ -1335,6 +1438,7 @@ function renderQuintParityModule(input: {
     match fillCreationHoles(emptyDraft, 0, [
       FAbilityScores({
         hole: HAbilityScores,
+        method: StandardArray,
         scores: {
           strength: 14,
           dexterity: 15,
@@ -1350,6 +1454,31 @@ function renderQuintParityModule(input: {
             assert(v.draft == ${renderQntDraftProjection(input.standardArrayPermutation.draft)}),
             assert(v.holes == ${renderQntHoleSet(input.standardArrayPermutation.holes)}),
             assert(v.finalization == ${qntFinalizationTag(input.standardArrayPermutation.finalization.tag)}),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run parity_point_buy_assignment_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FAbilityScores({
+        hole: HAbilityScores,
+        method: PointBuy,
+        scores: {
+          strength: 13,
+          dexterity: 13,
+          constitution: 13,
+          intelligence: 12,
+          wisdom: 12,
+          charisma: 12,
+        },
+      }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.pointBuyAssignment.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.pointBuyAssignment.holes)}),
+            assert(v.finalization == ${qntFinalizationTag(input.pointBuyAssignment.finalization.tag)}),
           }
       | Rejected(_) => assert(false)
     }
@@ -1617,7 +1746,11 @@ function holeSummary(
   return holes.map((hole) => [
     hole.kind,
     hole.holeId,
-    "options" in hole ? hole.options.map((option) => option.optionId) : [],
+    hole.kind === "abilityScores"
+      ? hole.methods
+      : "options" in hole
+        ? hole.options.map((option) => option.optionId)
+        : [],
   ]);
 }
 

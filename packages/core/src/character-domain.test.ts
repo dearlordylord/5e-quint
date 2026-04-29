@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Option } from "effect";
 
 import {
   assessCharacterDraft,
@@ -1149,7 +1150,9 @@ describe("character-domain", () => {
     if (!result.ok) throw new Error("expected successful finalization");
 
     expect(
-      totalPointBuyCost(result.sheet.abilityScoreGeneration.assignedScores),
+      Option.getOrThrow(
+        totalPointBuyCost(result.sheet.abilityScoreGeneration.assignedScores),
+      ),
     ).toBe(POINT_BUY_BUDGET);
     expect(result.sheet.abilityScores).toEqual({
       str: 8,

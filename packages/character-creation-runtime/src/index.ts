@@ -1,5 +1,11 @@
 import { Brand, Match, Option } from "effect";
 import {
+  SUPPORTED_ABILITY_SCORE_METHODS,
+  isValidAbilityScoreAssignment,
+  type AbilityScoreAssignment,
+  type SupportedAbilityScoreMethod,
+} from "@dnd/shared-algebras/ability-score-algebra";
+import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
   readSpeciesCreationFacts,
@@ -13,11 +19,13 @@ import type {
   BackgroundToolProficiency,
   FeatRecord,
   Skill,
-  SixAbilityScores,
   UnitRecord,
   WeaponRecord,
   WeaponProficiencyCategory,
 } from "@dnd/surface/surface/types";
+
+export { SUPPORTED_ABILITY_SCORE_METHODS };
+export type { AbilityScoreAssignment, SupportedAbilityScoreMethod };
 
 export type UnitLibrary = UnitCatalog;
 
@@ -30,13 +38,6 @@ export type CharacterDraftId = string & Brand.Brand<"CharacterDraftId">;
 const CharacterDraftId = Brand.nominal<CharacterDraftId>();
 export const characterDraftId: (value: string) => CharacterDraftId =
   CharacterDraftId;
-
-export const ABILITY_SCORE_METHODS = [
-  "standardArray",
-  "randomGeneration",
-  "pointCost",
-] as const;
-export type AbilityScoreMethod = (typeof ABILITY_SCORE_METHODS)[number];
 
 export const STANDARD_LANGUAGES = [
   "Common",
@@ -116,10 +117,8 @@ export type UnitRef = {
   readonly unitId: UnitRecord["id"];
 };
 
-export type AbilityScoreAssignment = SixAbilityScores;
-
 export type AbilityScoreGenerationSelection = {
-  readonly method: AbilityScoreMethod;
+  readonly method: SupportedAbilityScoreMethod;
   readonly assignedScores: AbilityScoreAssignment;
 };
 
@@ -210,7 +209,7 @@ export type CreationHole =
       readonly kind: "abilityScores";
       readonly holeId: CreationHoleId;
       readonly source: CreationHoleSource;
-      readonly methods: readonly AbilityScoreMethod[];
+      readonly methods: readonly SupportedAbilityScoreMethod[];
     }
   | {
       readonly kind: "freeText";
@@ -232,6 +231,7 @@ export type CreationFill =
   | {
       readonly kind: "abilityScores";
       readonly holeId: CreationHoleId;
+      readonly method: SupportedAbilityScoreMethod;
       readonly value: AbilityScoreAssignment;
     }
   | {
@@ -495,9 +495,6 @@ const SURFACE_ABILITIES = [
   "wis",
   "cha",
 ] as const satisfies ReadonlyArray<Ability>;
-const STANDARD_ARRAY_SCORES = [
-  15, 14, 13, 12, 10, 8,
-] as const satisfies ReadonlyArray<number>;
 
 const ALIGNMENT_OPTIONS = [
   ["lawful", "good", "Lawful Good"],
@@ -667,10 +664,11 @@ function finalizedSelectionIssues(
       "Finalized sheet advancement must be exactly one Fighter level.",
     ),
     ...expectedValueIssue(
-      isStandardArrayAssignment(
+      isValidAbilityScoreAssignment(
+        selections.abilityScoreGeneration.method,
         selections.abilityScoreGeneration.assignedScores,
-      ) && selections.abilityScoreGeneration.method === "standardArray",
-      "Finalized sheet must use the Standard Array exactly once.",
+      ),
+      "Finalized sheet must use a supported ability-score generation method.",
     ),
     ...expectedValueIssue(
       isPhaseOneManifestBackgroundAbilityScoreIncrease(
@@ -1145,7 +1143,7 @@ function fillIssuesForHole(
   }
 
   if (hole.kind === "abilityScores" && fill.kind === "abilityScores") {
-    return abilityScoreFillIssues(fill, fillIndex);
+    return abilityScoreFillIssues(fill, fillIndex, hole);
   }
 
   return [];
@@ -1201,31 +1199,12 @@ function multiChoiceFillIssues(
 function abilityScoreFillIssues(
   fill: Extract<CreationFill, { readonly kind: "abilityScores" }>,
   fillIndex: number,
+  hole: Extract<CreationHole, { readonly kind: "abilityScores" }>,
 ): readonly CreationFillIssue[] {
-  return isStandardArrayAssignment(fill.value)
+  return hole.methods.includes(fill.method) &&
+    isValidAbilityScoreAssignment(fill.method, fill.value)
     ? []
     : [invalidAbilityScoresIssue(fill, fillIndex)];
-}
-
-function isStandardArrayAssignment(value: SixAbilityScores): boolean {
-  return sameNumberMultiset(abilityScoreValues(value), STANDARD_ARRAY_SCORES);
-}
-
-function abilityScoreValues(value: SixAbilityScores): readonly number[] {
-  return SURFACE_ABILITIES.map((ability) => value[ability]);
-}
-
-function sameNumberMultiset(
-  left: readonly number[],
-  right: readonly number[],
-): boolean {
-  const sortedLeft = [...left].sort((a, b) => a - b);
-  const sortedRight = [...right].sort((a, b) => a - b);
-
-  return (
-    sortedLeft.length === sortedRight.length &&
-    sortedLeft.every((value, index) => value === sortedRight[index])
-  );
 }
 
 function applyCreationFills(
@@ -1308,7 +1287,7 @@ function applyDraftFill(
     return {
       ...selections,
       abilityScoreGeneration: {
-        method: "standardArray",
+        method: fill.method,
         assignedScores: fill.value,
       },
     };
@@ -1637,7 +1616,7 @@ function invalidAbilityScoresIssue(
     fillIndex,
     code: "invalidChoice",
     message:
-      "Invalid Standard Array assignment; expected the scores 15, 14, 13, 12, 10, and 8 exactly once.",
+      "Invalid ability score assignment for the selected generation method.",
   };
 }
 
@@ -2173,7 +2152,7 @@ function draftHole(
       kind: "abilityScores",
       holeId: creationHoleId(`cc:draft:${path}`),
       source: draftSource(path),
-      methods: ["standardArray"],
+      methods: SUPPORTED_ABILITY_SCORE_METHODS,
     };
   }
 
