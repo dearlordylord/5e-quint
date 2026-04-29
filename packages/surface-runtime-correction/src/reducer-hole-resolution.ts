@@ -535,6 +535,9 @@ function currentSliceHealingBaseExpr(
     Match.when({ kind: "resource_spent" }, () =>
       Either.left(invalid("unsupported resource-spent healing amount")),
     ),
+    Match.when({ kind: "proficiency_bonus" }, () =>
+      Either.left(invalid("unsupported proficiency-bonus healing amount")),
+    ),
     Match.when({ kind: "resource_spent_linear" }, () =>
       Either.left(invalid("unsupported resource-spent healing amount")),
     ),

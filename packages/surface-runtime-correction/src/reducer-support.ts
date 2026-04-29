@@ -183,6 +183,11 @@ export function currentSliceDamageBaseExpr(
         new UnsupportedUnitError("unsupported resource-spent damage amount"),
       ),
     ),
+    Match.when({ kind: "proficiency_bonus" }, () =>
+      Either.left(
+        new UnsupportedUnitError("unsupported proficiency-bonus damage amount"),
+      ),
+    ),
     Match.when({ kind: "resource_spent_linear" }, () =>
       Either.left(
         new UnsupportedUnitError("unsupported resource-spent damage amount"),
