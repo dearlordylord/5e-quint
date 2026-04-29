@@ -109,11 +109,6 @@ export type FilledHoleValue =
       readonly value: FillableAttachment;
     }
   | {
-      readonly kind: "slotLevel";
-      readonly holeId: HoleId;
-      readonly value: number;
-    }
-  | {
       readonly kind: "attackRoll";
       readonly holeId: HoleId;
       readonly value: AttackRollResult;

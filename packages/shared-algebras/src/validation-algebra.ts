@@ -7,6 +7,12 @@ type ValidationAccumulator<A, E> = {
   readonly errors: ReadonlyArray<E>;
 };
 
+function isNonEmptyReadonlyArray<T>(
+  values: ReadonlyArray<T>,
+): values is ReadonlyNonEmptyArray<T> {
+  return values.length > 0;
+}
+
 export function traverseValidation<A, B, E>(
   values: ReadonlyArray<A>,
   validate: (value: A, index: number) => Either.Either<B, E>,
@@ -28,7 +34,9 @@ export function traverseValidation<A, B, E>(
     { values: [], errors: [] },
   );
 
-  return accumulated.errors.length === 0
-    ? Either.right(accumulated.values)
-    : Either.left(accumulated.errors as ReadonlyNonEmptyArray<E>);
+  if (isNonEmptyReadonlyArray(accumulated.errors)) {
+    return Either.left(accumulated.errors);
+  }
+
+  return Either.right(accumulated.values);
 }

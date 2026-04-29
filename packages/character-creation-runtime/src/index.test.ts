@@ -952,7 +952,9 @@ describe("character creation batch fill", () => {
     expect(result).toMatchObject({
       tag: "rejected",
       draft,
-      issues: [{ tag: "illegalFill", code: "invalidChoice", fillIndex: 0 }],
+      issues: [
+        { tag: "illegalFill", code: "invalidAbilityScores", fillIndex: 0 },
+      ],
     });
 
     const invalidPointBuy = fillCreationHoles({
@@ -979,7 +981,9 @@ describe("character creation batch fill", () => {
     expect(invalidPointBuy).toMatchObject({
       tag: "rejected",
       draft,
-      issues: [{ tag: "illegalFill", code: "invalidChoice", fillIndex: 0 }],
+      issues: [
+        { tag: "illegalFill", code: "invalidAbilityScores", fillIndex: 0 },
+      ],
     });
   });
 
@@ -1600,6 +1604,7 @@ const FILL_ISSUE_CODE_TO_QNT_VARIANT = {
   duplicateFill: "DuplicateFill",
   wrongFillKind: "WrongFillKind",
   invalidChoice: "InvalidChoice",
+  invalidAbilityScores: "InvalidAbilityScores",
   tooFewChoices: "TooFewChoices",
   tooManyChoices: "TooManyChoices",
   unsupportedChoice: "UnsupportedChoice",

@@ -236,11 +236,16 @@ export type CreationFill =
       readonly value: AbilityScoreAssignment;
     };
 
+// Creation fill issues stay package-owned because this protocol validates
+// atomic mutations to durable draft state. Runtime and battle hole fills are
+// transient action-resolution inputs: they can share hole-shape algebras, but
+// not this batch/error vocabulary without losing domain precision.
 export const CREATION_FILL_ISSUE_CODES = [
   "unknownHole",
   "duplicateFill",
   "wrongFillKind",
   "invalidChoice",
+  "invalidAbilityScores",
   "tooFewChoices",
   "tooManyChoices",
   "unsupportedChoice",
@@ -1669,7 +1674,7 @@ function invalidAbilityScoresIssue(
     tag: "illegalFill",
     holeId: fill.holeId,
     fillIndex,
-    code: "invalidChoice",
+    code: "invalidAbilityScores",
     message:
       "Invalid ability score assignment for the selected generation method.",
   };

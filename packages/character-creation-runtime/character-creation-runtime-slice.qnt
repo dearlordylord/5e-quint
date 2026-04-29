@@ -118,6 +118,7 @@ module characterCreationRuntimeSlice {
     | DuplicateFill
     | WrongFillKind
     | InvalidChoice
+    | InvalidAbilityScores
     | TooFewChoices
     | TooManyChoices
     | UnsupportedChoice
@@ -421,7 +422,7 @@ module characterCreationRuntimeSlice {
           cardinalityIssues.union(optionIssues)
       | FAbilityScores(v) =>
           if (isValidAbilityScoreAssignment(v.method, v.scores)) Set()
-          else Set({ fillIndex: fillIndex, hole: hole, code: InvalidChoice })
+          else Set({ fillIndex: fillIndex, hole: hole, code: InvalidAbilityScores })
     }
   }
 

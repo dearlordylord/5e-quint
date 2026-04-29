@@ -47,6 +47,21 @@ Character creation fill semantics are intentionally different from battle
 fills. Creation fills patch durable draft state in atomic batches; battle fills
 are transient replay inputs for one selected battle subject.
 
+## Fill Issue Vocabulary
+
+Creation fill issue codes are deliberately local to this package. They validate
+the current draft frontier and the submitted batch as one optimistic-concurrency
+mutation: hole ids are creation semantic addresses, choice cardinality comes from
+the current `CreationHole`, and `staleRevision` only applies to draft updates.
+
+Runtime and battle holes are analogous, not the same protocol. The shared
+runtime hole algebra supplies transient action hole shapes, while battle errors
+report action-resolution failures such as unavailable actions, runtime input
+mismatches, unsupported subjects, or invalid replay fills. Those domains do not
+share creation's draft revision semantics, creation option cardinality, or
+finalization failures, so a shared fill-error enum would make unrelated states
+look interchangeable.
+
 ## Terms
 
 Package-owned terms such as Character Draft, Character Sheet, Creation Hole,
