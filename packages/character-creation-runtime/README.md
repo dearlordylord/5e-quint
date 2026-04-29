@@ -76,6 +76,9 @@ This package supports the first legal character-creation vertical:
 - Fighter choices needed by the first vertical;
 - purchased equipment/loadout needed by the first battle fixture.
 
+Loadout is a runtime projection precondition for the first supported sheet, not
+an SRD-authored character-creation choice. See `../../ASSUMPTIONS.md` A40.
+
 Support gates are package-private runtime narrowings. They must not become
 public Surface classifications or new source rules.
 
@@ -106,20 +109,21 @@ parity slice. It models draft state, stable hole ids, atomic batch fill,
 rediscovery, and finalization status for the same behavior the TypeScript
 reducer exposes.
 
-**TODO: add character creation MBT.** This package currently has deterministic
-Quint self-tests and generated TS-to-Quint parity assertions, but no randomized
-model-based test bridge like the battle and creature suites. Add one before
-expanding this reducer beyond the phase-1 manifest or depending on randomized
-coverage for draft traversal, batching, stale-revision, and rediscovery behavior.
+`character-creation-runtime.mbt.qnt` is the package-local randomized MBT model.
+It imports the deterministic slice and drives fill-batch traces against the
+TypeScript reducer through `src/character-creation-runtime.mbt.test.ts`.
 
 When changing reducer behavior in this package, update `src/index.ts`, focused
-tests, and `character-creation-runtime-slice.qnt` together.
+tests, `character-creation-runtime-slice.qnt`, and
+`character-creation-runtime.mbt.qnt` together.
 
 ## Files And Verification
 
 - `src/index.ts` - public API and reducer implementation.
 - `src/index.test.ts` - deterministic reducer tests and Quint-slice checks.
+- `src/character-creation-runtime.mbt.test.ts` - randomized MBT bridge.
 - `character-creation-runtime-slice.qnt` - local parity slice.
+- `character-creation-runtime.mbt.qnt` - local randomized MBT model.
 - `VOCABULARY.md` - package-owned creation terminology.
 
 Useful checks:

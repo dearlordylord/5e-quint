@@ -1,0 +1,230 @@
+// -*- mode: Bluespec; -*-
+
+module characterCreationRuntimeMbt {
+  import characterCreationRuntimeSlice.* from "./character-creation-runtime-slice"
+
+  var qDraft: Draft
+  var qHoles: Set[HoleId]
+  var qFinalization: FinalizationStatus
+  var qLastResult: str
+  var qLastBatchIssueCodes: Set[str]
+  var qLastFillIssues: Set[FillIssueProjection]
+
+  type FillIssueProjection = {
+    fillIndex: int,
+    hole: HoleId,
+    code: str,
+  }
+
+  pure val initialChoicesOnlyFills: List[Fill] = [
+    FChoice({ hole: HPrimaryClass, options: [OClassFighter] }),
+    FChoice({ hole: HBackground, options: [OBackgroundSoldier] }),
+    FChoice({ hole: HSpecies, options: [OSpeciesOrc] }),
+    FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
+    FChoice({ hole: HAlignment, options: [OAlignmentLawfulGood] }),
+  ]
+
+  pure val abilityScoresOnlyFills: List[Fill] = [
+    FAbilityScores({
+      hole: HAbilityScores,
+      method: StandardArray,
+      scores: fighterStandardArray,
+    }),
+  ]
+
+  pure val staleExpectedRevision: int = 999
+
+  pure def resultDraft(result: FillBatchResult): Draft = match result {
+    | Accepted(v) => v.draft
+    | Rejected(v) => v.draft
+  }
+
+  pure def resultHoles(result: FillBatchResult): Set[HoleId] = match result {
+    | Accepted(v) => v.holes
+    | Rejected(v) => v.holes
+  }
+
+  pure def resultFinalization(result: FillBatchResult): FinalizationStatus = match result {
+    | Accepted(v) => v.finalization
+    | Rejected(v) => v.finalization
+  }
+
+  pure def resultTag(result: FillBatchResult): str = match result {
+    | Accepted(_) => "accepted"
+    | Rejected(_) => "rejected"
+  }
+
+  pure def fillIssueCodeName(code: FillIssueCode): str = match code {
+    | UnknownHole => "unknownHole"
+    | DuplicateFill => "duplicateFill"
+    | WrongFillKind => "wrongFillKind"
+    | InvalidChoice => "invalidChoice"
+    | TooFewChoices => "tooFewChoices"
+    | TooManyChoices => "tooManyChoices"
+    | UnsupportedChoice => "unsupportedChoice"
+  }
+
+  pure def batchIssueCodeName(code: BatchIssueCode): str = match code {
+    | StaleRevision => "staleRevision"
+  }
+
+  pure def resultBatchIssueCodes(result: FillBatchResult): Set[str] = match result {
+    | Accepted(_) => Set()
+    | Rejected(v) =>
+        v.issues.batch.map(batchIssueCodeName)
+  }
+
+  pure def projectFillIssue(issue: FillIssue): FillIssueProjection =
+    {
+      fillIndex: issue.fillIndex,
+      hole: issue.hole,
+      code: fillIssueCodeName(issue.code),
+    }
+
+  pure def resultFillIssues(result: FillBatchResult): Set[FillIssueProjection] = match result {
+    | Accepted(_) => Set()
+    | Rejected(v) =>
+        v.issues.fills.map(projectFillIssue)
+  }
+
+  action recordResult(result: FillBatchResult): bool = all {
+    qDraft' = resultDraft(result),
+    qHoles' = resultHoles(result),
+    qFinalization' = resultFinalization(result),
+    qLastResult' = resultTag(result),
+    qLastBatchIssueCodes' = resultBatchIssueCodes(result),
+    qLastFillIssues' = resultFillIssues(result),
+  }
+
+  action init = all {
+    qDraft' = emptyDraft,
+    qHoles' = openCreationHoles(emptyDraft),
+    qFinalization' = finalizeDraft(emptyDraft),
+    qLastResult' = "init",
+    qLastBatchIssueCodes' = Set(),
+    qLastFillIssues' = Set(),
+  }
+
+  action doFillInitialManifest =
+    all {
+      qHoles == initialHoleIds,
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, initialManifestFills)),
+    }
+
+  action doFillInitialChoicesOnly =
+    all {
+      qHoles.contains(HPrimaryClass),
+      qHoles.contains(HBackground),
+      qHoles.contains(HSpecies),
+      qHoles.contains(HLanguages),
+      qHoles.contains(HAlignment),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, initialChoicesOnlyFills)),
+    }
+
+  action doFillAbilityScoresOnly =
+    all {
+      qHoles.contains(HAbilityScores),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, abilityScoresOnlyFills)),
+    }
+
+  action doFillManifestChoices =
+    all {
+      qHoles == afterInitialHoleIds,
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestChoiceFills)),
+    }
+
+  action doFillManifestPurchase =
+    all {
+      qHoles == Set(HEquipmentPurchase),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestPurchaseFills)),
+    }
+
+  action doFillManifestLoadout =
+    all {
+      qHoles == Set(HLoadoutArmor, HLoadoutShield, HLoadoutWeapon),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestLoadoutFills)),
+    }
+
+  action doRejectStaleInitialManifest =
+    all {
+      qHoles == initialHoleIds,
+      recordResult(fillCreationHoles(qDraft, staleExpectedRevision, initialManifestFills)),
+    }
+
+  action doRejectUnsupportedLanguage =
+    all {
+      qHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+        FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
+      ])),
+    }
+
+  action doRejectDuplicateLanguage =
+    all {
+      qHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+        FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageDwarvish] }),
+      ])),
+    }
+
+  action doRejectTooFewLanguages =
+    all {
+      qHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+        FChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
+      ])),
+    }
+
+  action doRejectTooManyLanguages =
+    all {
+      qHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+        FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin, OLanguageElvish] }),
+      ])),
+    }
+
+  action doRejectWrongKindPrimaryClass =
+    all {
+      qHoles.contains(HPrimaryClass),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+        FAbilityScores({
+          hole: HPrimaryClass,
+          method: StandardArray,
+          scores: fighterStandardArray,
+        }),
+      ])),
+    }
+
+  action doRejectUnknownLoadoutArmor =
+    all {
+      not(qHoles.contains(HLoadoutArmor)),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+        FChoice({ hole: HLoadoutArmor, options: [OLoadoutWorn] }),
+      ])),
+    }
+
+  action doRejectUnsupportedClassEquipment =
+    all {
+      qHoles.contains(HClassEquipment),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+        FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
+      ])),
+    }
+
+  action step = any {
+    doFillInitialManifest,
+    doFillInitialChoicesOnly,
+    doFillAbilityScoresOnly,
+    doFillManifestChoices,
+    doFillManifestPurchase,
+    doFillManifestLoadout,
+    doRejectStaleInitialManifest,
+    doRejectUnsupportedLanguage,
+    doRejectDuplicateLanguage,
+    doRejectTooFewLanguages,
+    doRejectTooManyLanguages,
+    doRejectWrongKindPrimaryClass,
+    doRejectUnknownLoadoutArmor,
+    doRejectUnsupportedClassEquipment,
+  }
+}

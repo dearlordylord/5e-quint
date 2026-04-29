@@ -147,8 +147,12 @@ describe("character creation hole discovery", () => {
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
-      options: [{ optionId: "option_c" }],
     });
+    expect(
+      optionIds(
+        holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
+      ),
+    ).toEqual(["option_a", "option_b", "option_c"]);
   });
 
   test("opens Soldier holes after class and background selections", () => {
@@ -742,7 +746,7 @@ describe("character creation QNT slice parity", () => {
         staleRevision,
       }),
     );
-  });
+  }, 30_000);
 });
 
 describe("character creation batch fill", () => {

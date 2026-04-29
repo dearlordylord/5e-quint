@@ -359,3 +359,13 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rules basis:** SRD 5.2.1 repeatedly distinguishes taking the Attack action from attacks made as part of that action. Multiattack says some creatures can make more than one attack when they take the Attack action. Grapple and Shove say they can replace one attack when a creature takes the Attack action. This implies a two-step structure: spend the Action to take the Attack action, then spend the attacks made available by that action.
 
 **Changes:** `UBIQUITOUS_LANGUAGE.md` records the terminology distinction. Surface uses `replace_attack` for authored units such as Dragonborn Breath Weapon and Javelin of Lightning, keeping them separate from `standard_action` activation costs. The current `surface-runtime-correction` slice does not yet implement attack-opportunity accounting; this assumption records the intended model before that reducer work.
+
+## A40: Character creation runtime loadout precondition
+
+**Assumption:** `@dnd/character-creation-runtime` requires loadout choices before finalizing its first supported Character Sheet.
+
+**Rules basis:** SRD 5.2.1 Character Creation, Step 4 requires a character to choose starting equipment, spend any coins gained at that step, record chosen equipment, and note coins left after purchases. It does not require choosing whether armor is worn, a shield is wielded, or a weapon is wielded one-handed during character creation.
+
+**Why the runtime requires it:** The package finalizes a player-character boundary for later battle composition, not just a paper character sheet. The first supported vertical buys Chain Mail, a Shield, and a Longsword from Fighter option C coins; battle initialization needs an unambiguous starting loadout to derive armor/shield/weapon state without adding a second post-finalization setup protocol.
+
+**Changes:** `@dnd/character-creation-runtime` exposes loadout Creation Holes after the supported equipment purchase. The phase-1 Quint slice and runtime MBT model require those holes before `finalizeCharacterDraft` returns `ready`. This is a runtime projection precondition, not an SRD-authored character-creation choice.

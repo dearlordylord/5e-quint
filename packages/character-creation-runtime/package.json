@@ -20,8 +20,10 @@
     "effect": "^3.21.0"
   },
   "devDependencies": {
+    "@firfi/quint-connect": "^0.8.2",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.5",
+    "zod": "^4.3.6"
   }
 }

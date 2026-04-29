@@ -1,3 +1,19 @@
+let StartingItem
+    : Type
+    = { itemName : Optional Text
+      , kind : Text
+      , quantity : Optional Natural
+      , unitId : Optional Text
+      }
+
+let StartingEquipmentOption
+    : Type
+    = { coinsGp : Natural
+      , id : Text
+      , items : Optional (List StartingItem)
+      , kind : Text
+      }
+
 let fighter =
       { armorTraining = [ "light", "medium", "heavy", "shield" ]
       , className = "fighter"
@@ -32,7 +48,84 @@ let fighter =
           ]
         }
       , startingEquipment =
-        [ { coinsGp = 155, id = "option_c", kind = "coin_grant" } ]
+        [ { coinsGp = 4
+          , id = "option_a"
+          , items = Some
+            [ { itemName = Some "Chain Mail"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            , { itemName = Some "Greatsword"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            , { itemName = Some "Flail"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            , { itemName = Some "Javelin"
+              , kind = "draft_owned_item"
+              , quantity = Some 8
+              , unitId = None Text
+              }
+            , { itemName = Some "Dungeoneer's Pack"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            ]
+          , kind = "item_bundle"
+          }
+        , { coinsGp = 11
+          , id = "option_b"
+          , items = Some
+            [ { itemName = Some "Studded Leather Armor"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            , { itemName = Some "Scimitar"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            , { itemName = Some "Shortsword"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            , { itemName = Some "Longbow"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            , { itemName = Some "Arrows"
+              , kind = "draft_owned_item"
+              , quantity = Some 20
+              , unitId = None Text
+              }
+            , { itemName = Some "Quiver"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            , { itemName = Some "Dungeoneer's Pack"
+              , kind = "draft_owned_item"
+              , quantity = None Natural
+              , unitId = None Text
+              }
+            ]
+          , kind = "item_bundle"
+          }
+        , { coinsGp = 155
+          , id = "option_c"
+          , items = None (List StartingItem)
+          , kind = "coin_grant"
+          }
+        ] : List StartingEquipmentOption
       , weaponProficiencies = [ "simple", "martial" ]
       }
 

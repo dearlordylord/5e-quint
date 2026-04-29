@@ -21,12 +21,6 @@ module characterCreationRuntimeSlice {
   // more deeply than finalized sheet values. Before widening character creation
   // beyond the first manifest, add parity coverage for selected Unit refs,
   // HP/Hit Die derivation, proficiencies, resources, and loadout identity.
-  //
-  // TODO(MBT): character creation is not covered by randomized model-based
-  // testing yet. Existing coverage is deterministic Quint self-tests plus
-  // generated parity assertions from TypeScript fixtures. Add a dedicated
-  // character-creation MBT bridge before relying on this reducer for broader
-  // draft traversal, batching, stale-revision, or rediscovery behavior.
 
   type HoleId =
     | HPrimaryClass
@@ -93,6 +87,8 @@ module characterCreationRuntimeSlice {
     | OBackgroundAsiConDex
     | OBackgroundAsiOneEach
     | OToolDiceSet
+    | OClassEquipmentPackageA
+    | OClassEquipmentPackageB
     | OClassEquipmentCoins
     | OBackgroundEquipmentPack
     | OBackgroundEquipmentCoins
@@ -361,7 +357,7 @@ module characterCreationRuntimeSlice {
         OBackgroundAsiOneEach,
       )
     | HBackgroundTool => Set(OToolDiceSet)
-    | HClassEquipment => Set(OClassEquipmentCoins)
+    | HClassEquipment => Set(OClassEquipmentPackageA, OClassEquipmentPackageB, OClassEquipmentCoins)
     | HBackgroundEquipment => Set(OBackgroundEquipmentPack, OBackgroundEquipmentCoins)
     | HEquipmentPurchase => Set(OArmorChainMail, OWeaponLongsword, OEquipmentShield)
     | HLoadoutArmor => Set(OLoadoutWorn)
@@ -376,6 +372,7 @@ module characterCreationRuntimeSlice {
     | HFighterSkills => Set(OSkillPerception, OSkillSurvival)
     | HFighterWeaponMastery => Set(OWeaponLongsword, OWeaponSpear, OWeaponFlail)
     | HBackgroundAbilityScoreIncrease => Set(OBackgroundAsiStrCon)
+    | HClassEquipment => Set(OClassEquipmentCoins)
     | HBackgroundEquipment => Set(OBackgroundEquipmentCoins)
     | _ => validOptions(hole)
   }
