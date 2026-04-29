@@ -1,3 +1,9 @@
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, test } from "vitest";
 import {
   buildUnitCatalog,
@@ -16,6 +22,7 @@ import {
   type CharacterDraft,
   type CharacterChoiceSelection,
   type CreationFill,
+  type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
 } from "./index.ts";
@@ -29,6 +36,10 @@ if (unitCatalogResult.tag !== "ok") {
 }
 
 const unitLibrary = unitCatalogResult.catalog;
+const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
+const characterCreationRuntimeSlicePath = fileURLToPath(
+  new URL("../character-creation-runtime-slice.qnt", import.meta.url),
+);
 
 describe("character creation hole discovery", () => {
   test("discovers the initial manifest draft holes from Surface records", () => {
@@ -376,6 +387,186 @@ describe("character creation hole discovery", () => {
     expect(holeById(holes, "cc:draft:draft.species")).toBeUndefined();
     expect(holes.map((hole) => hole.holeId)).not.toContain(
       "cc:unit:species_orc:species-derived-traits",
+    );
+  });
+});
+
+describe("character creation QNT slice parity", () => {
+  test("Quint slice and runtime agree on complete manifest and invalid fill behavior", () => {
+    runQuintSliceSelfTests();
+
+    const draft = createTestDraft("draft:qnt-parity");
+    const initialHoles = discoverCreationHoles({ draft, unitLibrary });
+
+    const afterInitial = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: initialManifestFills(),
+    });
+    if (afterInitial.tag !== "accepted") {
+      throw new Error("Expected the initial manifest fill to be accepted.");
+    }
+
+    const unsupportedLaterChoices = fillCreationHoles({
+      draft: afterInitial.draft,
+      unitLibrary,
+      expectedRevision: afterInitial.draft.revision,
+      fills: [
+        multiChoiceFill(
+          "cc:unit:class_fighter:fighter_skill_choices",
+          "perception",
+          "athletics",
+        ),
+        choiceFill(
+          "cc:unit:background_soldier:background_equipment_choice",
+          "option_a",
+        ),
+      ],
+    });
+    if (unsupportedLaterChoices.tag !== "rejected") {
+      throw new Error(
+        "Expected later valid-but-unsupported choices to be rejected.",
+      );
+    }
+
+    const complete = completeManifestDraft();
+    const completeHoles = discoverCreationHoles({
+      draft: complete,
+      unitLibrary,
+    });
+    const completeFinalization = finalizeCharacterDraft({
+      draft: complete,
+      unitLibrary,
+    });
+
+    const invalid = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [choiceFill("cc:draft:draft.primaryClass", "background_soldier")],
+    });
+    if (invalid.tag !== "rejected") {
+      throw new Error(
+        "Expected the invalid primary-class fill to be rejected.",
+      );
+    }
+
+    const unsupportedLanguage = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        multiChoiceFill("cc:draft:draft.languages", "Dwarvish", "Elvish"),
+      ],
+    });
+    if (unsupportedLanguage.tag !== "rejected") {
+      throw new Error("Expected the unsupported language fill to be rejected.");
+    }
+
+    const unsupportedAlignment = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [choiceFill("cc:draft:draft.alignment", "neutral_good")],
+    });
+    if (unsupportedAlignment.tag !== "rejected") {
+      throw new Error(
+        "Expected the unsupported alignment fill to be rejected.",
+      );
+    }
+
+    const duplicateLanguage = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        multiChoiceFill("cc:draft:draft.languages", "Dwarvish", "Dwarvish"),
+      ],
+    });
+    if (duplicateLanguage.tag !== "rejected") {
+      throw new Error("Expected the duplicate language fill to be rejected.");
+    }
+
+    const standardArrayPermutation = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          value: {
+            str: 14,
+            dex: 15,
+            con: 13,
+            int: 8,
+            wis: 10,
+            cha: 12,
+          },
+        },
+      ],
+    });
+    if (standardArrayPermutation.tag !== "accepted") {
+      throw new Error(
+        "Expected the Standard Array permutation fill to be accepted.",
+      );
+    }
+
+    const tooFewLanguages = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [multiChoiceFill("cc:draft:draft.languages", "Dwarvish")],
+    });
+    if (tooFewLanguages.tag !== "rejected") {
+      throw new Error("Expected the too-few language fill to be rejected.");
+    }
+
+    const tooManyLanguages = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        multiChoiceFill(
+          "cc:draft:draft.languages",
+          "Dwarvish",
+          "Goblin",
+          "Elvish",
+        ),
+      ],
+    });
+    if (tooManyLanguages.tag !== "rejected") {
+      throw new Error("Expected the too-many language fill to be rejected.");
+    }
+
+    const staleRevision = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision + 1,
+      fills: [],
+    });
+    if (staleRevision.tag !== "rejected") {
+      throw new Error("Expected the stale-revision fill to be rejected.");
+    }
+
+    runGeneratedQuintParity(
+      renderQuintParityModule({
+        initialHoles,
+        afterInitial,
+        complete,
+        completeHoles,
+        completeFinalization,
+        invalid,
+        unsupportedLanguage,
+        unsupportedAlignment,
+        duplicateLanguage,
+        unsupportedLaterChoices,
+        standardArrayPermutation,
+        tooFewLanguages,
+        tooManyLanguages,
+        staleRevision,
+      }),
     );
   });
 });
@@ -997,6 +1188,402 @@ function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
   }
 
   return result.draft;
+}
+
+type AcceptedCreationBatch = Extract<
+  ReturnType<typeof fillCreationHoles>,
+  { readonly tag: "accepted" }
+>;
+type RejectedCreationBatch = Extract<
+  ReturnType<typeof fillCreationHoles>,
+  { readonly tag: "rejected" }
+>;
+
+const HOLE_ID_TO_QNT_VARIANT = {
+  "cc:draft:draft.primaryClass": "HPrimaryClass",
+  "cc:draft:draft.background": "HBackground",
+  "cc:draft:draft.species": "HSpecies",
+  "cc:draft:draft.abilityScoreGeneration": "HAbilityScores",
+  "cc:draft:draft.languages": "HLanguages",
+  "cc:draft:draft.alignment": "HAlignment",
+  "cc:unit:class_fighter:fighter_skill_choices": "HFighterSkills",
+  "cc:unit:fighter_fighting_style_l1:fighter_fighting_style":
+    "HFighterFightingStyle",
+  "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices":
+    "HFighterWeaponMastery",
+  "cc:unit:background_soldier:background_ability_score_increase":
+    "HBackgroundAbilityScoreIncrease",
+  "cc:unit:background_soldier:background_tool_choice": "HBackgroundTool",
+  "cc:unit:class_fighter:class_equipment_choice": "HClassEquipment",
+  "cc:unit:background_soldier:background_equipment_choice":
+    "HBackgroundEquipment",
+  "cc:unit:class_fighter:equipment_purchase": "HEquipmentPurchase",
+  "cc:unit:armor_chain_mail:loadout_armor": "HLoadoutArmor",
+  "cc:unit:equipment_shield:loadout_shield": "HLoadoutShield",
+  "cc:unit:weapon_longsword:loadout_weapon": "HLoadoutWeapon",
+} as const satisfies Record<string, string>;
+const HOLE_ID_TO_QNT_VARIANT_LOOKUP: Readonly<Record<string, string>> =
+  HOLE_ID_TO_QNT_VARIANT;
+
+const FILL_ISSUE_CODE_TO_QNT_VARIANT = {
+  unknownHole: "UnknownHole",
+  duplicateFill: "DuplicateFill",
+  wrongFillKind: "WrongFillKind",
+  invalidChoice: "InvalidChoice",
+  tooFewChoices: "TooFewChoices",
+  tooManyChoices: "TooManyChoices",
+  unsupportedChoice: "UnsupportedChoice",
+} as const satisfies Record<CreationFillIssue["code"], string>;
+
+function runQuintSliceSelfTests(): void {
+  const quintOutput = execFileSync(
+    "pnpm",
+    [
+      "exec",
+      "quint",
+      "test",
+      "--backend",
+      "typescript",
+      characterCreationRuntimeSlicePath,
+      "--match",
+      "test_",
+    ],
+    { encoding: "utf8" },
+  );
+  expect(quintOutput).toContain("9 passing");
+}
+
+function runGeneratedQuintParity(moduleBody: string): void {
+  const tempDir = fs.mkdtempSync(
+    path.join(
+      packageRootPath,
+      `.tmp-character-creation-parity-${os.userInfo().username}-`,
+    ),
+  );
+  const tempFile = path.join(tempDir, "character-creation-runtime-parity.qnt");
+
+  try {
+    fs.writeFileSync(tempFile, moduleBody);
+    const quintOutput = execFileSync(
+      "pnpm",
+      [
+        "exec",
+        "quint",
+        "test",
+        "--backend",
+        "typescript",
+        tempFile,
+        "--match",
+        "parity_",
+      ],
+      { encoding: "utf8" },
+    );
+    expect(quintOutput).toContain("12 passing");
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+function renderQuintParityModule(input: {
+  readonly initialHoles: readonly CreationHole[];
+  readonly afterInitial: AcceptedCreationBatch;
+  readonly complete: CharacterDraft;
+  readonly completeHoles: readonly CreationHole[];
+  readonly completeFinalization: ReturnType<typeof finalizeCharacterDraft>;
+  readonly invalid: RejectedCreationBatch;
+  readonly unsupportedLanguage: RejectedCreationBatch;
+  readonly unsupportedAlignment: RejectedCreationBatch;
+  readonly duplicateLanguage: RejectedCreationBatch;
+  readonly unsupportedLaterChoices: RejectedCreationBatch;
+  readonly standardArrayPermutation: AcceptedCreationBatch;
+  readonly tooFewLanguages: RejectedCreationBatch;
+  readonly tooManyLanguages: RejectedCreationBatch;
+  readonly staleRevision: RejectedCreationBatch;
+}): string {
+  const completeFinalizationTag = qntFinalizationTag(
+    input.completeFinalization.tag,
+  );
+
+  return `module characterCreationRuntimeParity {
+  import characterCreationRuntimeSlice.* from "../character-creation-runtime-slice"
+
+  run parity_initial_holes_match_runtime = {
+    assert(openCreationHoles(emptyDraft) == ${renderQntHoleSet(input.initialHoles)})
+  }
+
+  run parity_initial_batch_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, initialManifestFills) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.afterInitial.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.afterInitial.holes)}),
+            assert(v.finalization == ${qntFinalizationTag(input.afterInitial.finalization.tag)}),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run parity_complete_manifest_matches_runtime = {
+    all {
+      assert(completeManifestDraft == ${renderQntDraftProjection(input.complete)}),
+      assert(openCreationHoles(completeManifestDraft) == ${renderQntHoleSet(input.completeHoles)}),
+      assert(finalizeDraft(completeManifestDraft) == ${completeFinalizationTag}),
+    }
+  }
+
+  run parity_standard_array_permutation_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FAbilityScores({
+        hole: HAbilityScores,
+        scores: {
+          strength: 14,
+          dexterity: 15,
+          constitution: 13,
+          intelligence: 8,
+          wisdom: 10,
+          charisma: 12,
+        },
+      }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.standardArrayPermutation.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.standardArrayPermutation.holes)}),
+            assert(v.finalization == ${qntFinalizationTag(input.standardArrayPermutation.finalization.tag)}),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run parity_invalid_primary_class_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FChoice({ hole: HPrimaryClass, option: OBackgroundSoldier }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.invalid.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.invalid.holes)}),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == ${renderQntFillIssueSet(input.invalid.issues)}),
+            assert(v.finalization == ${qntFinalizationTag(input.invalid.finalization.tag)}),
+          }
+    }
+  }
+
+  run parity_unsupported_language_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.unsupportedLanguage.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.unsupportedLanguage.holes)}),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == ${renderQntFillIssueSet(input.unsupportedLanguage.issues)}),
+            assert(v.finalization == ${qntFinalizationTag(input.unsupportedLanguage.finalization.tag)}),
+          }
+    }
+  }
+
+  run parity_duplicate_language_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageDwarvish] }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.duplicateLanguage.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.duplicateLanguage.holes)}),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == ${renderQntFillIssueSet(input.duplicateLanguage.issues)}),
+            assert(v.finalization == ${qntFinalizationTag(input.duplicateLanguage.finalization.tag)}),
+          }
+    }
+  }
+
+  run parity_unsupported_alignment_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FChoice({ hole: HAlignment, option: OAlignmentNeutralGood }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.unsupportedAlignment.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.unsupportedAlignment.holes)}),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == ${renderQntFillIssueSet(input.unsupportedAlignment.issues)}),
+            assert(v.finalization == ${qntFinalizationTag(input.unsupportedAlignment.finalization.tag)}),
+          }
+    }
+  }
+
+  run parity_later_valid_but_unsupported_choices_match_runtime = {
+    match fillCreationHoles(afterInitialManifest, 1, [
+      FMultiChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
+      FChoice({ hole: HBackgroundEquipment, option: OBackgroundEquipmentPack }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.unsupportedLaterChoices.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.unsupportedLaterChoices.holes)}),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == ${renderQntFillIssueSet(input.unsupportedLaterChoices.issues)}),
+            assert(v.finalization == ${qntFinalizationTag(input.unsupportedLaterChoices.finalization.tag)}),
+          }
+    }
+  }
+
+  run parity_too_few_languages_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.tooFewLanguages.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.tooFewLanguages.holes)}),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == ${renderQntFillIssueSet(input.tooFewLanguages.issues)}),
+            assert(v.finalization == ${qntFinalizationTag(input.tooFewLanguages.finalization.tag)}),
+          }
+    }
+  }
+
+  run parity_too_many_languages_matches_runtime = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin, OLanguageElvish] }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.tooManyLanguages.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.tooManyLanguages.holes)}),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == ${renderQntFillIssueSet(input.tooManyLanguages.issues)}),
+            assert(v.finalization == ${qntFinalizationTag(input.tooManyLanguages.finalization.tag)}),
+          }
+    }
+  }
+
+  run parity_stale_revision_matches_runtime_boundary = {
+    match fillCreationHoles(emptyDraft, 1, []) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.staleRevision.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.staleRevision.holes)}),
+            assert(v.issues.batch == ${renderQntBatchIssueSet(input.staleRevision.issues)}),
+            assert(v.issues.fills == Set()),
+            assert(v.finalization == ${qntFinalizationTag(input.staleRevision.finalization.tag)}),
+          }
+    }
+  }
+}
+`;
+}
+
+function renderQntDraftProjection(draft: CharacterDraft): string {
+  const selections = draft.selections;
+
+  return `{
+    revision: ${draft.revision},
+    primaryClass: ${qntBool(selections.primaryClass != null)},
+    advancement: ${qntBool(selections.advancement != null)},
+    background: ${qntBool(selections.background != null)},
+    species: ${qntBool(selections.species != null)},
+    abilityScores: ${qntBool(selections.abilityScoreGeneration != null)},
+    languages: ${qntBool(selections.languages != null)},
+    alignment: ${qntBool(selections.alignment != null)},
+    fighterSkills: ${qntBool(hasChoiceSelection(draft, "class_fighter", "fighter_skill_choices"))},
+    fighterFightingStyle: ${qntBool(hasChoiceSelection(draft, "fighter_fighting_style_l1", "fighter_fighting_style"))},
+    fighterWeaponMastery: ${qntBool(hasChoiceSelection(draft, "fighter_weapon_mastery_l1", "fighter_weapon_mastery_choices"))},
+    backgroundAbilityScoreIncrease: ${qntBool(selections.backgroundAbilityScoreIncrease != null)},
+    backgroundTool: ${qntBool(hasChoiceSelection(draft, "background_soldier", "background_tool_choice"))},
+    classEquipment: ${qntBool(hasChoiceSelection(draft, "class_fighter", "class_equipment_choice"))},
+    backgroundEquipment: ${qntBool(hasChoiceSelection(draft, "background_soldier", "background_equipment_choice"))},
+    equipmentPurchase: ${qntBool(selections.equipment != null)},
+    loadoutArmor: ${qntBool(hasChoiceSelection(draft, "armor_chain_mail", "loadout_armor"))},
+    loadoutShield: ${qntBool(hasChoiceSelection(draft, "equipment_shield", "loadout_shield"))},
+    loadoutWeapon: ${qntBool(hasChoiceSelection(draft, "weapon_longsword", "loadout_weapon"))},
+  }`;
+}
+
+function renderQntHoleSet(holes: readonly CreationHole[]): string {
+  return renderQntSet(holes.map((hole) => qntHoleVariant(hole.holeId)));
+}
+
+function renderQntFillIssueSet(issues: readonly unknown[]): string {
+  const fillIssues = issues.filter(
+    (issue): issue is CreationFillIssue =>
+      typeof issue === "object" &&
+      issue != null &&
+      "tag" in issue &&
+      issue.tag === "illegalFill",
+  );
+
+  return renderQntSet(
+    fillIssues.map(
+      (issue) =>
+        `{ fillIndex: ${issue.fillIndex}, hole: ${qntHoleVariant(issue.holeId)}, code: ${FILL_ISSUE_CODE_TO_QNT_VARIANT[issue.code]} }`,
+    ),
+  );
+}
+
+function renderQntBatchIssueSet(issues: readonly unknown[]): string {
+  const hasStaleRevision = issues.some(
+    (issue) =>
+      typeof issue === "object" &&
+      issue != null &&
+      "tag" in issue &&
+      issue.tag === "illegalBatch" &&
+      "code" in issue &&
+      issue.code === "staleRevision",
+  );
+
+  return hasStaleRevision ? "Set(StaleRevision)" : "Set()";
+}
+
+function renderQntSet(items: readonly string[]): string {
+  return items.length === 0 ? "Set()" : `Set(${items.join(", ")})`;
+}
+
+function qntHoleVariant(holeId: string): string {
+  const variant = HOLE_ID_TO_QNT_VARIANT_LOOKUP[holeId];
+  if (variant == null) {
+    throw new Error(`No QNT hole-id variant mapping for ${holeId}.`);
+  }
+
+  return variant;
+}
+
+function qntFinalizationTag(
+  tag: ReturnType<typeof finalizeCharacterDraft>["tag"],
+): string {
+  if (tag === "ready") {
+    return "Ready";
+  }
+
+  return tag === "incomplete" ? "Incomplete" : "Invalid";
+}
+
+function qntBool(value: boolean): string {
+  return value ? "true" : "false";
+}
+
+function hasChoiceSelection(
+  draft: CharacterDraft,
+  unitId: string,
+  choiceKey: string,
+): boolean {
+  return draft.selections.choices.some(
+    (choice) =>
+      choice.source.tag === "unit" &&
+      choice.source.unitId === unitId &&
+      choice.source.choiceKey === choiceKey,
+  );
 }
 
 function multiChoiceFill(
