@@ -106,6 +106,12 @@ parity slice. It models draft state, stable hole ids, atomic batch fill,
 rediscovery, and finalization status for the same behavior the TypeScript
 reducer exposes.
 
+**TODO: add character creation MBT.** This package currently has deterministic
+Quint self-tests and generated TS-to-Quint parity assertions, but no randomized
+model-based test bridge like the battle and creature suites. Add one before
+expanding this reducer beyond the phase-1 manifest or depending on randomized
+coverage for draft traversal, batching, stale-revision, and rediscovery behavior.
+
 When changing reducer behavior in this package, update `src/index.ts`, focused
 tests, and `character-creation-runtime-slice.qnt` together.
 
