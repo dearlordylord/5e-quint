@@ -24,7 +24,7 @@ flowchart TD
   Draft["CharacterDraft<br/>data: draftId, selections, revision<br/>why: mutable session-owned creation state<br/>without: holes/fills have no durable subject"]
   Session["application/session store<br/>stores: CharacterDraft and finalized CharacterSheet<br/>why: persistence belongs outside the reducer<br/>without: runtime package would own application session state"]
 
-  Discover["discoverCreationHoles({ draft, unitLibrary })<br/>success: CreationHole[]<br/>absence: [] only when draft has no open requirements<br/>why: one source for current fillable requirements<br/>without: callers/finalization drift on missing choices"]
+  Discover["discoverCreationHoles({ draft, unitLibrary })<br/>success: CreationHole[]<br/>absence: [] when no supported fillable requirements remain<br/>why: one source for current fillable requirements<br/>without: callers/finalization drift on missing choices"]
   InitialHoles["initial draft holes<br/>opens: class, background, species, ability scores, languages, alignment<br/>example options: Fighter, Soldier, Orc<br/>why: top-level SRD creation requirements<br/>without: required draft structure is implicit in callers"]
   UnitGrantedHoles["Unit-granted holes<br/>opens after selections: Fighter skills/style/mastery/equipment; Soldier ASI/tool/equipment<br/>why: authored Units can require more creation choices<br/>without: selected content cannot drive follow-up requirements"]
   EquipmentHoles["equipment and loadout holes<br/>opens after supported coin-equipment path<br/>example: buy Chain Mail, Shield, Longsword, then choose worn/wielded loadout<br/>why: loadout depends on owned equipment, not on an independent preset<br/>without: equipment ownership and use diverge"]
@@ -82,7 +82,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  Discover["discoverCreationHoles<br/>input: CharacterDraft + UnitCatalog<br/>success: ordered CreationHole[]<br/>absence: [] when no draft, Unit, equipment, or loadout requirements remain<br/>why: current creation frontier<br/>without: every caller recomputes missing requirements"]
+  Discover["discoverCreationHoles<br/>input: CharacterDraft + UnitCatalog<br/>success: ordered CreationHole[]<br/>absence: [] when no supported fillable draft, Unit, equipment, or loadout requirements remain<br/>why: current creation frontier<br/>without: every caller recomputes missing requirements"]
   DraftPaths["INITIAL_CHARACTER_DRAFT_PATHS<br/>data: primaryClass, background, species, abilityScoreGeneration, languages, alignment<br/>why: stable draft-owned hole sources<br/>without: top-level required fields are encoded by scattered string literals"]
   DraftHole["draftHole(path, unitLibrary)<br/>success: choice or abilityScores CreationHole<br/>why: draft source -> public hole projection<br/>without: hole id/source/cardinality/options are duplicated"]
   HasDraftSelection["hasDraftSelection(selections, path)<br/>success: suppresses already-filled draft hole<br/>why: hole discovery is derived from draft state<br/>without: filled draft fields keep reopening"]
@@ -94,7 +94,7 @@ flowchart TD
   BackgroundGranted["discoverBackgroundGrantedHoles<br/>input: selected background<br/>success: background ASI, tool, and equipment holes<br/>absence: [] if background missing, unsupported, or unreadable<br/>why: background selection opens background-owned choices"]
   ReadBackground["readBackgroundCreationFacts(background Unit)<br/>success: ASI rules, origin feat, skills, tool proficiency, starting equipment<br/>failure: unreadable unsupported kind<br/>why: Surface-owned background facts projected for creation"]
   BackgroundAsi["backgroundAbilityScoreIncreaseOptions<br/>success: two-and-one and one-each option ids from eligible abilities<br/>why: option ids encode the selected ASI shape<br/>without: ASI parsing and option generation drift"]
-  BackgroundTool["backgroundToolProficiencyOptions<br/>success: specific tool or supported category choice options; may be an empty option set for unsupported categories<br/>why: category grants become fillable choices only when supported"]
+  BackgroundTool["backgroundToolChoiceSpec<br/>success: specific tool or supported category choice spec when enough supported options exist<br/>absence: undefined for unsupported categories or unsupported cardinality<br/>why: category grants become fillable choices only when supported"]
 
   Equipment["discoverEquipmentHoles<br/>input: draft + UnitCatalog<br/>success: purchase and loadout holes for supported coin path<br/>absence: [] until class/background equipment choices select the coin path<br/>why: purchase/loadout are conditional creation requirements"]
   CoinPath["hasPhaseOneCoinEquipmentPath<br/>success: class option C + background option B selected<br/>why: purchase holes are gated by earlier equipment choices<br/>without: purchase opens for incompatible equipment paths"]
@@ -138,9 +138,9 @@ flowchart TD
   ChoiceValidation["choice-fill diagnostics<br/>checks: cardinality, duplicate option ids, option exists, option is supported<br/>failure: invalidChoice, tooFewChoices, tooManyChoices, unsupportedChoice<br/>why: distinguish illegal SRD choice from valid-but-unsupported slice choice"]
   AbilityValidation["abilityScoreFillIssues<br/>checks: supported method + shared ability-score algebra<br/>failure: invalidChoice<br/>why: ability-score rules live in shared algebra<br/>without: creation duplicates Standard Array and Point Buy validation"]
   SupportGate["package-private support gates<br/>input: current hole + selected option ids<br/>success: supported or unrestricted choice<br/>failure: unsupportedChoice diagnostic<br/>why: valid SRD choices can still be outside this runtime slice"]
-  Issues["CreationIssue[] aggregate<br/>success path: []<br/>failure path: stale revision plus every diagnosable fill issue<br/>why: all-or-nothing acceptance decision without short-circuiting"]
+  Issues["CreationBatchFillIssue[] aggregate<br/>success path: []<br/>failure path: stale revision plus every diagnosable fill issue<br/>why: all-or-nothing acceptance decision without short-circuiting"]
 
-  Rejected["rejected result<br/>draft: original draft<br/>holes: original holes<br/>issues: CreationIssue[]<br/>finalization: status of original draft<br/>why: rejected batches are atomic"]
+  Rejected["rejected result<br/>draft: original draft<br/>holes: original holes<br/>issues: CreationBatchFillIssue[]<br/>finalization: status of original draft<br/>why: rejected batches are atomic"]
   Apply["applyCreationFills<br/>precondition: no issues<br/>success: CharacterDraftSelections updated by all fills<br/>why: mutation only runs after complete validation"]
   DraftApply["applyDraftFill<br/>updates: primary class + level-1 advancement, background, species, ability scores, languages, alignment<br/>why: draft-owned holes update typed draft fields"]
   UnitApply["applyUnitFill<br/>updates: background ASI, equipment selectedUnitIds, or CharacterChoiceSelection[]<br/>why: Unit-backed holes preserve their source and selected Unit refs"]
@@ -194,7 +194,7 @@ flowchart TD
 | `UnitCatalog`                 | SRD Unit collections                          | Provenance-erased `getUnit`, `listUnits`, `requireUnit` over decoded `UnitRecord`s             | Catalog build issues                                                     | Single authored Unit lookup boundary                          | Creation code duplicates content lookup and collection checks |
 | `CharacterDraft`              | n/a                                           | Draft identity, typed partial selections, revision                                             | n/a                                                                      | Durable mutable creation state                                | Holes and fills have no owned subject                         |
 | `createCharacterDraft`        | `UnitLibrary`, optional `draftId`             | Revision-0 `CharacterDraft`                                                                    | n/a                                                                      | Canonical empty draft constructor                             | Callers invent incompatible partial drafts                    |
-| `discoverCreationHoles`       | `CharacterDraft`, `UnitLibrary`               | Current `CreationHole[]`                                                                       | `[]` when no requirements remain                                         | Current fillable frontier                                     | Callers and finalization rediscover different holes           |
+| `discoverCreationHoles`       | `CharacterDraft`, `UnitLibrary`               | Current `CreationHole[]`                                                                       | `[]` when no supported fillable requirements remain                      | Current fillable frontier                                     | Callers and finalization rediscover different holes           |
 | `CreationHoleSource`          | n/a                                           | Draft source or Unit source                                                                    | n/a                                                                      | Semantic address for hole identity                            | Hole ids become detached protocol strings                     |
 | `holeIdForSource`             | `CreationHoleSource`                          | `cc:draft:<path>` or `cc:unit:<unit id>:<choice key>`                                          | n/a                                                                      | One source-to-id projection                                   | Hole ids and sources drift                                    |
 | `readClassCreationFacts`      | `UnitRecord`                                  | Class creation facts                                                                           | `unreadable` for unsupported kind                                        | Surface-owned projection for class choices                    | Runtime pattern-matches broad Unit shapes everywhere          |
@@ -204,7 +204,7 @@ flowchart TD
 | `creationFillIssues`          | Batch input, current holes                    | `[]` when batch is fully acceptable                                                            | Batch/fill issues with real `fillIndex` where applicable                 | Diagnose before mutation                                      | Validation order becomes mutation order                       |
 | `supportedHoleOptionIds`      | `CreationHole`                                | Supported option ids or unrestricted `undefined` for holes without a package-private narrowing | `[]` for unsupported Unit choice keys                                    | Separate SRD-valid options from implemented runtime support   | Valid-but-unsupported choices are accepted as executable      |
 | `applyCreationFills`          | Draft, current holes, accepted fills          | New draft selections and `revision + 1`                                                        | Throws only if accepted-fill invariant is broken                         | One mutation boundary after validation                        | Every hole family owns its own mutation protocol              |
-| `finalizeCharacterDraft`      | Draft, Unit library                           | `ready` with `CharacterSheet`                                                                  | `incomplete` with holes, or `invalid` with finalization issues and holes | Single draft-to-sheet boundary                                | Consumers decide independently when a draft is usable         |
+| `finalizeCharacterDraft`      | Draft, Unit library                           | `ready` with `CharacterSheet`                                                                  | `incomplete` with holes, or `invalid` with finalization issues           | Single draft-to-sheet boundary                                | Consumers decide independently when a draft is usable         |
 | `finalizedSelections`         | `CharacterDraft`                              | `FinalizedCharacterSelections`                                                                 | `undefined` when required fields are missing                             | Narrows optional draft state before sheet projection          | Sheet building handles optional fields defensively            |
 | `finalizedSelectionIssues`    | Complete selections, Unit library             | `[]` for legal supported manifest                                                              | `illegalFinalization` issues                                             | Complete draft still must satisfy executable support          | Contradictory complete drafts finalize                        |
 | `buildCharacterSheet`         | Complete legal selections, Unit library       | `CharacterSheet`                                                                               | Throws if required Surface facts are unreadable                          | One projection from choices and authored facts to sheet facts | Callers rederive character facts                              |
@@ -216,8 +216,9 @@ flowchart TD
   not execution state.
 - `CreationHole` is a runtime fill requirement derived from draft state and
   authored Units. Hole ids are stable protocol ids, not SRD terms.
-- Unit-backed selections store accepted `unitRef`s from the hole option. The
-  submitted option id is a protocol choice, not the durable authored identity.
+- Unit-backed selections preserve accepted option metadata from the hole option.
+  `unitRef` is optional; the submitted option id is a protocol choice, not
+  always a durable authored identity.
 - `UnitCatalog` intentionally erases SRD-specific collection typing. Runtime
   behavior branches on Unit structure and package support gates, not on
   provenance. The current concrete collection is SRD-only; a later PHB,
@@ -226,5 +227,9 @@ flowchart TD
   `srdUnitCollection`.
 - Support gates are package-private runtime narrowings. They are not Surface
   provenance, not SRD source truth, and not public content metadata.
+- `character-creation-runtime-slice.qnt` is a compact parity model for the
+  supported manifest path and fill rejection algebra. Hydrated malformed-draft
+  repairability depends on accepted option metadata and is covered by focused
+  TypeScript runtime tests.
 - `CharacterSheet` is the finalized character boundary. Any consumer-specific
   input derived from it is a downstream projection owned outside this package.

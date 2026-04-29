@@ -408,19 +408,18 @@ Rules for hole ids:
 Creation holes and fills:
 
 ```ts
+export type ChoiceCount = number & Brand<"ChoiceCount">;
+export type ChoiceCardinality = {
+  readonly tag: "exactly";
+  readonly count: ChoiceCount;
+};
+
 export type CreationHole =
   | {
-      readonly kind: "singleChoice";
+      readonly kind: "choice";
       readonly holeId: CreationHoleId;
       readonly source: CreationHoleSource;
-      readonly options: readonly CreationChoiceOption[];
-    }
-  | {
-      readonly kind: "multiChoice";
-      readonly holeId: CreationHoleId;
-      readonly source: CreationHoleSource;
-      readonly min: number;
-      readonly max: number;
+      readonly cardinality: ChoiceCardinality;
       readonly options: readonly CreationChoiceOption[];
     }
   | {
@@ -439,16 +438,12 @@ export type CreationFill =
   | {
       readonly kind: "choice";
       readonly holeId: CreationHoleId;
-      readonly optionId: CreationChoiceOptionId;
-    }
-  | {
-      readonly kind: "multiChoice";
-      readonly holeId: CreationHoleId;
       readonly optionIds: readonly CreationChoiceOptionId[];
     }
   | {
       readonly kind: "abilityScores";
       readonly holeId: CreationHoleId;
+      readonly method: AbilityScoreMethod;
       readonly value: AbilityScoreAssignment;
     }
   | {
@@ -482,7 +477,8 @@ export type CreationBatchIssue = {
   readonly message: string;
 };
 
-export type CreationIssue = CreationFillIssue | CreationBatchIssue;
+export type CreationBatchFillIssue = CreationFillIssue | CreationBatchIssue;
+export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 
 export type CreationBatchFillInput = {
   readonly draft: CharacterDraft;
@@ -501,7 +497,7 @@ export type CreationBatchFillResult =
       readonly tag: "rejected";
       readonly draft: CharacterDraft;
       readonly holes: readonly CreationHole[];
-      readonly issues: readonly CreationIssue[];
+      readonly issues: NonEmptyReadonlyArray<CreationBatchFillIssue>;
       readonly finalization: CreationFinalizationResult;
     };
 ```
@@ -522,13 +518,21 @@ export type CharacterSheet = {
   readonly unitRefs: readonly UnitRef[];
 };
 
+export type CreationFinalizationIssue = {
+  readonly tag: "illegalFinalization";
+  readonly code: "illegalFinalization";
+  readonly message: string;
+};
+
 export type CreationFinalizationResult =
   | { readonly tag: "ready"; readonly sheet: CharacterSheet }
-  | { readonly tag: "incomplete"; readonly holes: readonly CreationHole[] }
+  | {
+      readonly tag: "incomplete";
+      readonly holes: NonEmptyReadonlyArray<CreationHole>;
+    }
   | {
       readonly tag: "invalid";
-      readonly issues: readonly CreationIssue[];
-      readonly holes: readonly CreationHole[];
+      readonly issues: NonEmptyReadonlyArray<CreationFinalizationIssue>;
     };
 
 export function createCharacterDraft(input: {
