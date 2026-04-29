@@ -29,7 +29,7 @@ let cube =
       , mechanics =
           { family = "activation"
           , condition = { kind = "holding_item" }
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , resource =
               { kind = "charge_pool"
               , cap = { kind = "fixed", uses = 10 }

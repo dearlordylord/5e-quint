@@ -343,3 +343,11 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 - `creature.qnt`: adds `doCastPreparedSpell`, deterministic `pDefaultPreparedSpells`, and spell-casting bookkeeping helpers.
 - TypeScript machine: adds `CAST_PREPARED_SPELL`, `preparedSpells` input/context, and default prepared-spell derivation when explicit input is omitted.
 - MBT bridge: adds `CAST_PREPARED_SPELL` driver mapping and compares `slotExpendedThisTurn` from the real creature machine state.
+
+## A39: The Attack action grants attack opportunities; replacement costs spend those attacks, not another Action
+
+**Assumption:** Taking the Attack action is modeled as spending one Action resource to open one or more attack opportunities. Effects with `replace_attack` spend one of those attack opportunities. They do not spend a separate Action and are not equivalent to an `activationCost` of `standard_action`.
+
+**Rules basis:** SRD 5.2.1 repeatedly distinguishes taking the Attack action from attacks made as part of that action. Multiattack says some creatures can make more than one attack when they take the Attack action. Grapple and Shove say they can replace one attack when a creature takes the Attack action. This implies a two-step structure: spend the Action to take the Attack action, then spend the attacks made available by that action.
+
+**Changes:** `UBIQUITOUS_LANGUAGE.md` records the terminology distinction. Surface uses `replace_attack` for authored units such as Dragonborn Breath Weapon and Javelin of Lightning, keeping them separate from `standard_action` activation costs. The current `surface-runtime-correction` slice does not yet implement attack-opportunity accounting; this assumption records the intended model before that reducer work.

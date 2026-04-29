@@ -67,7 +67,8 @@
       },
       {
         "activationCost": {
-          "kind": "action"
+          "action": "magic",
+          "kind": "standard_action"
         },
         "condition": {
           "kind": "holding_item"

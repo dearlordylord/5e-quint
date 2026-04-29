@@ -4,25 +4,64 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import type { CreatureId } from "@dnd/shared/types";
 
 import {
+  grantUnitActionResource,
   resetTurnActionEconomy,
   spendActivationResource,
   type ActionEconomyState,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 const quintStateSchema = z.object({
-  qActions: z.bigint(),
+  qTurnActionAvailable: z.boolean(),
+  qRestrictedUnitActionOrder: z.bigint().transform(Number),
   qHasBonusAction: z.boolean(),
-  qHasFreeAction: z.boolean(),
 });
+const ownerA = "A" as CreatureId;
+const ownerB = "B" as CreatureId;
+
+function restrictedUnitResources(
+  order: number,
+): ActionEconomyState["actionResources"] {
+  const unitA = {
+    kind: "action" as const,
+    source: "unit" as const,
+    sourceOwnerId: ownerA,
+    sourceUnitId: "fighter_action_surge_l2_a",
+    restriction: {
+      kind: "exclude" as const,
+      actions: ["magic"] as const,
+    },
+  };
+  const unitB = {
+    kind: "action" as const,
+    source: "unit" as const,
+    sourceOwnerId: ownerB,
+    sourceUnitId: "fighter_action_surge_l2_b",
+    restriction: {
+      kind: "exclude" as const,
+      actions: ["magic"] as const,
+    },
+  };
+
+  if (order === 1) return [unitA];
+  if (order === 2) return [unitB];
+  if (order === 3) return [unitA, unitB];
+  if (order === 4) return [unitB, unitA];
+  return [];
+}
 
 function normalizeQuintState(raw: unknown): ActionEconomyState {
   const parsed = quintStateSchema.parse(raw);
   return {
-    currentActionsAvailable: Number(parsed.qActions) as 0 | 1 | 2,
+    actionResources: [
+      ...(parsed.qTurnActionAvailable
+        ? [{ kind: "action" as const, source: "turn" as const }]
+        : []),
+      ...restrictedUnitResources(parsed.qRestrictedUnitActionOrder),
+    ],
     currentHasBonusAction: parsed.qHasBonusAction,
-    currentHasFreeAction: parsed.qHasFreeAction,
   };
 }
 
@@ -44,7 +83,10 @@ function expectRight<T, E>(value: Either.Either<T, E>): T {
 
 const driverSchema = {
   init: {},
-  doSpendAction: {},
+  doSpendAttackAction: {},
+  doSpendMagicAction: {},
+  doGrantRestrictedUnitActionA: {},
+  doGrantRestrictedUnitActionB: {},
   doSpendBonusAction: {},
   doSpendFreeAction: {},
   doResetTurn: {},
@@ -54,17 +96,39 @@ const driverSchema = {
 function createActionEconomyDriver() {
   return defineDriver(driverSchema, () => {
     let state: ActionEconomyState = {
-      currentActionsAvailable: 1,
+      actionResources: [{ kind: "action", source: "turn" }],
       currentHasBonusAction: true,
-      currentHasFreeAction: true,
     };
 
     return {
       init: () => {
         state = resetTurnActionEconomy(state);
       },
-      doSpendAction: () => {
-        state = expectRight(spendActivationResource(state, { kind: "action" }));
+      doSpendAttackAction: () => {
+        state = expectRight(
+          spendActivationResource(state, { kind: "action", action: "attack" }),
+        );
+      },
+      doSpendMagicAction: () => {
+        state = expectRight(
+          spendActivationResource(state, { kind: "action", action: "magic" }),
+        );
+      },
+      doGrantRestrictedUnitActionA: () => {
+        state = expectRight(
+          grantUnitActionResource(state, ownerA, "fighter_action_surge_l2_a", {
+            kind: "exclude",
+            actions: ["magic"],
+          }),
+        );
+      },
+      doGrantRestrictedUnitActionB: () => {
+        state = expectRight(
+          grantUnitActionResource(state, ownerB, "fighter_action_surge_l2_b", {
+            kind: "exclude",
+            actions: ["magic"],
+          }),
+        );
       },
       doSpendBonusAction: () => {
         state = expectRight(

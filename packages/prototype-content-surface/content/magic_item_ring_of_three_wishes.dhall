@@ -31,7 +31,7 @@ let ring =
           "While wearing this ring, you can expend 1 of its 3 charges to cast Wish from it. The ring becomes nonmagical when you use the last charge."
       , mechanics =
           { family = "activation"
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , resource =
               { kind = "charge_pool"
               , cap = { kind = "fixed", uses = 3 }

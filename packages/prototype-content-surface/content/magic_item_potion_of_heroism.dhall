@@ -30,7 +30,7 @@ let potionOfHeroism =
           "When you drink this potion, you gain 10 Temporary Hit Points that last for 1 hour. For the same duration, you are under the effect of the Bless spell (no Concentration required)."
       , mechanics =
           { family = "activation"
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , resource =
               { kind = "use_count"
               , cap = { kind = "fixed", uses = 1 }

@@ -27,7 +27,7 @@ let wand =
           "This wand has 3 charges. While holding it, you can expend 1 charge to cast Detect Magic from it. The wand regains 1d3 expended charges daily at dawn."
       , mechanics =
           { family = "activation"
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , resource =
               { kind = "charge_pool"
               , cap = { kind = "fixed", uses = 3 }

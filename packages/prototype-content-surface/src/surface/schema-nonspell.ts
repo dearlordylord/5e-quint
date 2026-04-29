@@ -51,7 +51,6 @@ export const ClassFeatureActivationCostSchema = Schema.Union(
     kind: Schema.Literal("standard_action"),
     action: StandardActionKindSchema,
   }),
-  Schema.Struct({ kind: Schema.Literal("action") }),
   Schema.Struct({ kind: Schema.Literal("action_plus_bonus_action") }),
   Schema.Struct({ kind: Schema.Literal("bonus_action") }),
   Schema.Struct({

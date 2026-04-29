@@ -9,18 +9,20 @@ import {
   createInitiativeStack,
   currentActing,
 } from "@dnd/shared-algebras/initiative-algebra";
-import type {
-  CreatureId,
-  Hp,
-  ReadonlyNonEmptyArray,
-} from "@dnd/shared/types";
+import type { CreatureId, Hp, ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { DieRollResult } from "@dnd/shared/types";
 
 import { discoverAvailableActs } from "#/reducer-discovery.ts";
 import { statBlockArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import { resolveSubjectHoles } from "#/reducer-hole-resolution.ts";
+import {
+  restoreUnitUseCountsForCreature,
+  resolveSubjectHoles,
+} from "#/reducer-hole-resolution.ts";
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
-import { spellcastingAbilityModifier } from "#/reducer-state.ts";
+import {
+  spellcastingAbilityModifier,
+  unitResourceKey,
+} from "#/reducer-state.ts";
 import type { CreatureState, State } from "#/reducer-state.ts";
 import { holeId } from "#/reducer-types.ts";
 import type { FilledHoleValue, RolledDiceGroup } from "#/reducer-types.ts";
@@ -140,9 +142,28 @@ function emptyState(): State {
   return {
     initiative: createInitiativeStack(order, 1 as never),
     combatants: new Map(),
-    currentActionsAvailable: 1,
+    actionResources: [{ kind: "action", source: "turn" }],
     currentHasBonusAction: true,
-    currentHasFreeAction: true,
+    unitActivationsThisTurn: new Set(),
+    expendedUnitUseCounts: new Map(),
+  };
+}
+
+function singleActingCreatureState(
+  actorId: CreatureId,
+  actor: CreatureState,
+): State {
+  const order = [
+    { creature: actorId, initiative: 10 as never },
+  ] as unknown as ReadonlyNonEmptyArray<{
+    readonly creature: CreatureId;
+    readonly initiative: never;
+  }>;
+
+  return {
+    ...emptyState(),
+    initiative: createInitiativeStack(order, 1 as never),
+    combatants: new Map([[actorId, actor]]),
   };
 }
 
@@ -160,7 +181,7 @@ function twoCreatureState(): State {
 function exhaustedActionState(): State {
   return {
     ...twoCreatureState(),
-    currentActionsAvailable: 0,
+    actionResources: [],
   };
 }
 
@@ -249,7 +270,7 @@ describe("reducer boundaries", () => {
     expect(
       discoverAvailableActs({
         ...twoCreatureStateWithActingUnit("fire_bolt"),
-        currentActionsAvailable: 0,
+        actionResources: [],
       }),
     ).toEqual([
       {
@@ -327,6 +348,143 @@ describe("reducer boundaries", () => {
     ]);
   });
 
+  it("discoverAvailableActs surfaces action surge as a unit-backed act", () => {
+    expect(
+      discoverAvailableActs(
+        twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+      ),
+    ).toEqual([
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        label: "Attack",
+        summary: "Make an attack.",
+        initialHoles: [
+          {
+            holeInstanceKey: "core:attack:target",
+            holeId: "core_attack_target",
+            kind: "targetChoice",
+            label: "attack target",
+          },
+        ],
+      },
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        label: "End Turn",
+        summary: "End the current turn.",
+        initialHoles: [],
+      },
+      {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fighter_action_surge_l2",
+        },
+        label: "Action Surge",
+        summary: expect.stringContaining("push yourself beyond"),
+        initialHoles: [],
+      },
+    ]);
+  });
+
+  it("discoverAvailableActs does not expose action surge after it was used this turn", () => {
+    expect(
+      discoverAvailableActs({
+        ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        unitActivationsThisTurn: new Set([
+          unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"),
+        ]),
+      }),
+    ).toEqual([
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        label: "Attack",
+        summary: "Make an attack.",
+        initialHoles: [
+          {
+            holeInstanceKey: "core:attack:target",
+            holeId: "core_attack_target",
+            kind: "targetChoice",
+            label: "attack target",
+          },
+        ],
+      },
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        label: "End Turn",
+        summary: "End the current turn.",
+        initialHoles: [],
+      },
+    ]);
+  });
+
+  it("discoverAvailableActs does not expose action surge after its use count was expended", () => {
+    expect(
+      discoverAvailableActs({
+        ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        expendedUnitUseCounts: new Map([
+          [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+        ]),
+      }),
+    ).toEqual([
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        label: "Attack",
+        summary: "Make an attack.",
+        initialHoles: [
+          {
+            holeInstanceKey: "core:attack:target",
+            holeId: "core_attack_target",
+            kind: "targetChoice",
+            label: "attack target",
+          },
+        ],
+      },
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        label: "End Turn",
+        summary: "End the current turn.",
+        initialHoles: [],
+      },
+    ]);
+  });
+
+  it("discoverAvailableActs does not expose action cantrips when only an Action Surge resource remains", () => {
+    expect(
+      discoverAvailableActs({
+        ...twoCreatureStateWithActingUnit("fire_bolt"),
+        actionResources: [
+          {
+            kind: "action",
+            source: "unit",
+            sourceOwnerId: "A" as CreatureId,
+            sourceUnitId: "fighter_action_surge_l2",
+            restriction: { kind: "exclude", actions: ["magic"] },
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        label: "Attack",
+        summary: "Make an attack.",
+        initialHoles: [
+          {
+            holeInstanceKey: "core:attack:target",
+            holeId: "core_attack_target",
+            kind: "targetChoice",
+            label: "attack target",
+          },
+        ],
+      },
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        label: "End Turn",
+        summary: "End the current turn.",
+        initialHoles: [],
+      },
+    ]);
+  });
+
   it("resolveSubjectHoles advances initiative for core endTurn", () => {
     const result = resolveSubjectHoles(emptyState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
@@ -339,9 +497,32 @@ describe("reducer boundaries", () => {
     }
 
     expect(currentActing(result.state.initiative)).toBe("A");
-    expect(result.state.currentActionsAvailable).toBe(1);
+    expect(result.state.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
     expect(result.state.currentHasBonusAction).toBe(true);
-    expect(result.state.currentHasFreeAction).toBe(true);
+    expect(result.state.unitActivationsThisTurn).toEqual(new Set());
+  });
+
+  it("resolveSubjectHoles resets unit activations for the next turn", () => {
+    const result = resolveSubjectHoles(
+      {
+        ...emptyState(),
+        unitActivationsThisTurn: new Set([
+          unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"),
+        ]),
+      },
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        filledHoleValues: [],
+      },
+    );
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.unitActivationsThisTurn).toEqual(new Set());
+      expect(result.state.expendedUnitUseCounts).toEqual(new Map());
+    }
   });
 
   it("resolveSubjectHoles resets the next actor's slot-expended flag on endTurn", () => {
@@ -432,7 +613,7 @@ describe("reducer boundaries", () => {
       tag: "resolved",
       state: {
         ...twoCreatureState(),
-        currentActionsAvailable: 0,
+        actionResources: [],
       },
     });
   });
@@ -453,7 +634,7 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(1);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
     }
   });
 
@@ -512,7 +693,7 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(10);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
     }
   });
 
@@ -724,7 +905,7 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(1);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
     }
   });
 
@@ -790,7 +971,7 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(10);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
     }
   });
 
@@ -817,7 +998,7 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(1);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
     }
   });
 
@@ -883,7 +1064,7 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(10);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
     }
   });
 
@@ -925,7 +1106,7 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(4);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
     }
   });
 
@@ -1244,7 +1425,7 @@ describe("reducer boundaries", () => {
         result.state.combatants.get("A" as CreatureId)?.spellSlots,
       ).toEqual([0, 0, 0]);
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(6);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
     }
   });
 
@@ -1423,7 +1604,7 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(12);
-      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(result.state.actionResources).toEqual([]);
       expect(
         result.state.combatants.get("A" as CreatureId)?.spellSlots,
       ).toEqual([0]);
@@ -1493,7 +1674,7 @@ describe("reducer boundaries", () => {
       resolveSubjectHoles(
         {
           ...twoCreatureStateWithActingSpellSlot("cure_wounds"),
-          currentActionsAvailable: 0,
+          actionResources: [],
         },
         {
           subject: {
@@ -1515,7 +1696,7 @@ describe("reducer boundaries", () => {
       resolveSubjectHoles(
         {
           ...twoCreatureStateWithActingUnit("cure_wounds"),
-          currentActionsAvailable: 0,
+          actionResources: [],
         },
         {
           subject: {
@@ -1741,12 +1922,54 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubjectHoles reaches direct execution boundary for holeless action surge even with no action", () => {
+  it("resolveSubjectHoles resolves action surge as a restricted action resource", () => {
+    const result = resolveSubjectHoles(
+      {
+        ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        actionResources: [],
+      },
+      {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fighter_action_surge_l2",
+        },
+        filledHoleValues: [],
+      },
+    );
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.actionResources).toEqual([
+        {
+          kind: "action",
+          source: "unit",
+          sourceOwnerId: "A" as CreatureId,
+          sourceUnitId: "fighter_action_surge_l2",
+          restriction: { kind: "exclude", actions: ["magic"] },
+        },
+      ]);
+      expect(result.state.unitActivationsThisTurn).toEqual(
+        new Set([
+          unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"),
+        ]),
+      );
+      expect(result.state.expendedUnitUseCounts).toEqual(
+        new Map([
+          [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+        ]),
+      );
+    }
+  });
+
+  it("resolveSubjectHoles rejects action surge after its use count was expended on a previous turn", () => {
     expect(
       resolveSubjectHoles(
         {
           ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
-          currentActionsAvailable: 0,
+          expendedUnitUseCounts: new Map([
+            [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+          ]),
         },
         {
           subject: {
@@ -1759,7 +1982,169 @@ describe("reducer boundaries", () => {
       ),
     ).toEqual({
       tag: "invalid",
-      reason: "direct unit effect application is not implemented yet",
+      reason: "unit use count expended",
+    });
+  });
+
+  it("resolveSubjectHoles keeps action surge use counts owned by creature", () => {
+    const actionSurge = loadSupportedUnit("fighter_action_surge_l2");
+    const result = resolveSubjectHoles(
+      {
+        ...singleActingCreatureState(
+          "B" as CreatureId,
+          creatureState({ units: [actionSurge] }),
+        ),
+        actionResources: [],
+        expendedUnitUseCounts: new Map([
+          [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+        ]),
+      },
+      {
+        subject: {
+          tag: "unit",
+          actorId: "B" as CreatureId,
+          unitId: "fighter_action_surge_l2",
+        },
+        filledHoleValues: [],
+      },
+    );
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.expendedUnitUseCounts).toEqual(
+        new Map([
+          [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+          [unitResourceKey("B" as CreatureId, "fighter_action_surge_l2"), 1],
+        ]),
+      );
+    }
+  });
+
+  it("restoreUnitUseCountsForCreature clears only the restored creature's use counts", () => {
+    const state: State = {
+      ...twoCreatureState(),
+      expendedUnitUseCounts: new Map([
+        [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+        [unitResourceKey("B" as CreatureId, "fighter_action_surge_l2"), 1],
+      ]),
+    };
+
+    expect(
+      restoreUnitUseCountsForCreature(state, "A" as CreatureId)
+        .expendedUnitUseCounts,
+    ).toEqual(
+      new Map([
+        [unitResourceKey("B" as CreatureId, "fighter_action_surge_l2"), 1],
+      ]),
+    );
+  });
+
+  it("resolveSubjectHoles rejects action surge when its resource is already granted", () => {
+    expect(
+      resolveSubjectHoles(
+        {
+          ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+          actionResources: [
+            {
+              kind: "action",
+              source: "unit",
+              sourceOwnerId: "A" as CreatureId,
+              sourceUnitId: "fighter_action_surge_l2",
+              restriction: { kind: "exclude", actions: ["magic"] },
+            },
+          ],
+        },
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fighter_action_surge_l2",
+          },
+          filledHoleValues: [],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "unit action resource already granted",
+    });
+  });
+
+  it("resolveSubjectHoles rejects action surge again after its granted action is spent this turn", () => {
+    const surged = resolveSubjectHoles(
+      {
+        ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        actionResources: [],
+      },
+      {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fighter_action_surge_l2",
+        },
+        filledHoleValues: [],
+      },
+    );
+    if (surged.tag !== "resolved") {
+      throw new Error("expected Action Surge to resolve");
+    }
+
+    const attacked = resolveSubjectHoles(surged.state, {
+      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("core_attack_target"),
+          value: "B" as CreatureId,
+        },
+        attackRollFill("core_attack_roll", 1),
+      ],
+    });
+    if (attacked.tag !== "resolved") {
+      throw new Error("expected core attack to spend Action Surge resource");
+    }
+
+    expect(
+      resolveSubjectHoles(attacked.state, {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fighter_action_surge_l2",
+        },
+        filledHoleValues: [],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "unit already used this turn",
+    });
+  });
+
+  it("resolveSubjectHoles rejects action cantrips when only an Action Surge resource remains", () => {
+    expect(
+      resolveSubjectHoles(
+        {
+          ...twoCreatureStateWithActingUnit("fire_bolt"),
+          actionResources: [
+            {
+              kind: "action",
+              source: "unit",
+              sourceOwnerId: "A" as CreatureId,
+              sourceUnitId: "fighter_action_surge_l2",
+              restriction: { kind: "exclude", actions: ["magic"] },
+            },
+          ],
+        },
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fire_bolt",
+          },
+          filledHoleValues: [],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "no action available for unit",
     });
   });
 

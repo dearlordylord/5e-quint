@@ -8,6 +8,8 @@ import type { CreatureId, ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 import {
   activationResourceCost,
+  grantUnitActionResource,
+  hasUnitActionResource,
   resetTurnActionEconomy,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -32,6 +34,7 @@ import {
   interpretSubject,
 } from "#/reducer-interpretation.ts";
 import { currentSliceDamageBaseExpr } from "#/reducer-support.ts";
+import { unitResourceKey } from "#/reducer-state.ts";
 import type { SpellcastingAbilityModifier, State } from "#/reducer-state.ts";
 import type {
   CurrentSliceSupportedActivationPhase,
@@ -113,6 +116,7 @@ function resolveCoreEndTurn(state: State): ResolutionResult {
       ...state,
       initiative,
       combatants,
+      unitActivationsThisTurn: new Set(),
     }),
   };
 }
@@ -397,6 +401,78 @@ function unitCostPaidState(
     const actionPaidState = yield* spendActivationCost(state, unit);
     return yield* spendBaseSpellSlot(actionPaidState, actorId, unit);
   });
+}
+
+function unitUsedThisTurnState(
+  state: State,
+  actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
+): State {
+  const key = unitResourceKey(actorId, unit.id);
+  return {
+    ...state,
+    unitActivationsThisTurn: new Set([...state.unitActivationsThisTurn, key]),
+  };
+}
+
+function unitUseCountSpentState(
+  state: State,
+  actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
+): State {
+  const key = unitResourceKey(actorId, unit.id);
+  return {
+    ...state,
+    expendedUnitUseCounts: new Map(state.expendedUnitUseCounts).set(
+      key,
+      (state.expendedUnitUseCounts.get(key) ?? 0) + 1,
+    ),
+  };
+}
+
+function requireUnitNotUsedThisTurn(
+  state: State,
+  actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
+): Either.Either<void, ResolutionInvalid> {
+  return state.unitActivationsThisTurn.has(unitResourceKey(actorId, unit.id))
+    ? Either.left(invalid("unit already used this turn"))
+    : Either.right(undefined);
+}
+
+function requireUnitUseCountAvailable(
+  state: State,
+  actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
+): Either.Either<void, ResolutionInvalid> {
+  return (state.expendedUnitUseCounts.get(unitResourceKey(actorId, unit.id)) ??
+    0) >= 1
+    ? Either.left(invalid("unit use count expended"))
+    : Either.right(undefined);
+}
+
+export function restoreUnitUseCountsForCreature(
+  state: State,
+  creatureId: CreatureId,
+): State {
+  return {
+    ...state,
+    expendedUnitUseCounts: new Map(
+      [...state.expendedUnitUseCounts].filter(
+        ([key]) => !key.startsWith(`${creatureId}:`),
+      ),
+    ),
+  };
+}
+
+function requireUnitActionResourceNotAlreadyGranted(
+  state: State,
+  actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
+): Either.Either<void, ResolutionInvalid> {
+  return hasUnitActionResource(state, actorId, unit.id)
+    ? Either.left(invalid("unit action resource already granted"))
+    : Either.right(undefined);
 }
 
 function requireUnitCostsAvailable(
@@ -893,10 +969,31 @@ function resolveFilledActivationPhase(
               return { tag: "resolved" as const, state: nextState };
             }),
           ),
-          Match.when({ kind: "grant_extra_action" }, () =>
-            Either.right(
-              invalid("direct unit effect application is not implemented yet"),
-            ),
+          Match.when({ kind: "grant_extra_action" }, (grantExtraAction) =>
+            Either.gen(function* () {
+              yield* requireUnitNotUsedThisTurn(state, actorId, unit);
+              yield* requireUnitUseCountAvailable(state, actorId, unit);
+              yield* requireUnitActionResourceNotAlreadyGranted(
+                state,
+                actorId,
+                unit,
+              );
+              const paidState = yield* unitCostPaidState(state, actorId, unit);
+              const grantedState = yield* grantUnitActionResource(
+                paidState,
+                actorId,
+                unit.id,
+                grantExtraAction.restriction,
+              ).pipe(Either.mapLeft((reason) => invalid(reason)));
+              return {
+                tag: "resolved" as const,
+                state: unitUseCountSpentState(
+                  unitUsedThisTurnState(grantedState, actorId, unit),
+                  actorId,
+                  unit,
+                ),
+              };
+            }),
           ),
           Match.exhaustive,
         );

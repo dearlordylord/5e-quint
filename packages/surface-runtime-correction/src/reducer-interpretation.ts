@@ -12,7 +12,9 @@ import { canCurrentActorAct } from "#/reducer-core-acts.ts";
 import {
   activationResourceCost,
   canSpendAction,
+  hasUnitActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import { unitResourceKey } from "#/reducer-state.ts";
 import type { CreatureState, State } from "#/reducer-state.ts";
 import {
   type CurrentSliceSupportedActivationPhase,
@@ -144,6 +146,15 @@ function actionCantripUnit(unit: UnitRecord): DiscoverableActionCantrip | null {
   return unitValue as DiscoverableActionCantrip;
 }
 
+function isDiscoverableGrantExtraActionUnit(
+  unit: CurrentSliceSupportedActivationUnit,
+): boolean {
+  const phase = currentSliceActivationPhase(unit);
+  return (
+    phase.kind === "direct" && phase.effects[0].kind === "grant_extra_action"
+  );
+}
+
 function discoverUnitActs(
   state: State,
   actorId: CreatureId,
@@ -154,28 +165,48 @@ function discoverUnitActs(
   }
 
   return actor.units.flatMap((unit) => {
-    const cantripUnit = actionCantripUnit(unit);
-    if (cantripUnit === null) {
-      return [];
-    }
+    const supportedUnit = getCurrentSliceSupportedActivationUnit(unit);
+    if (Option.isNone(supportedUnit)) return [];
 
-    const cost = activationResourceCost(cantripUnit);
+    const unitValue = supportedUnit.value;
+    const cantripUnit = actionCantripUnit(unit);
+    const isActionCantrip = cantripUnit !== null;
+    const isGrantExtraAction = isDiscoverableGrantExtraActionUnit(unitValue);
+    if (!isActionCantrip && !isGrantExtraAction) return [];
+
+    const cost = activationResourceCost(unitValue);
     if (Either.isLeft(cost)) {
       throw new Error(cost.left);
     }
 
-    if (cost.right.kind !== "action") {
+    if (isActionCantrip && cost.right.kind !== "action") {
       throw new Error("discoverable action cantrip must spend an action");
     }
 
-    if (!canSpendAction(state)) {
+    if (
+      cost.right.kind === "action" &&
+      !canSpendAction(state, cost.right.action)
+    ) {
+      return [];
+    }
+
+    if (
+      isGrantExtraAction &&
+      (state.unitActivationsThisTurn.has(
+        unitResourceKey(actorId, unitValue.id),
+      ) ||
+        (state.expendedUnitUseCounts.get(
+          unitResourceKey(actorId, unitValue.id),
+        ) ?? 0) >= 1 ||
+        hasUnitActionResource(state, actorId, unitValue.id))
+    ) {
       return [];
     }
 
     const subject = {
       tag: "unit" as const,
       actorId,
-      unitId: cantripUnit.id,
+      unitId: unitValue.id,
     };
     const interpreted = interpretUnitAct(state, subject);
     return Either.isRight(interpreted) ? [interpreted.right] : [];
