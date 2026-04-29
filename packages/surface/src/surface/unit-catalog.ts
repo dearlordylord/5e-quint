@@ -162,6 +162,12 @@ export function buildUnitCatalog(input: {
       issues.push(...findUnknownStartingEquipmentRefs(unit, records));
     }
   }
+  // Class feature grant refs are intentionally not catalog-validated yet:
+  // this first vertical slice can load partial class progressions while
+  // unimplemented higher-level feature Units are still absent. Consumers that
+  // need a granted feature Unit dereference it at the point of use. Once the
+  // catalog has an explicit supported-level horizon, validate all grant refs
+  // inside that horizon here.
 
   if (issues.length > 0) {
     return { tag: "invalid", issues };

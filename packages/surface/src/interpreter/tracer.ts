@@ -5244,6 +5244,33 @@ function traceClassUnit(unit: ClassRecord): Trace {
     label: `class_root\n${unit.name}\nhit die d${unit.hitPointDie}`,
   });
 
+  const savesId = ids("save");
+  nodes.push({
+    id: savesId,
+    category: "source",
+    atomKind: "class_saving_throw_proficiencies",
+    label: `class_saving_throw_proficiencies\n${unit.savingThrowProficiencies.join(", ")}`,
+  });
+  edges.push({ from: rootId, to: savesId, relation: "grants" });
+
+  const weaponId = ids("weapon");
+  nodes.push({
+    id: weaponId,
+    category: "source",
+    atomKind: "class_weapon_proficiencies",
+    label: `class_weapon_proficiencies\n${unit.weaponProficiencies.join(", ")}`,
+  });
+  edges.push({ from: rootId, to: weaponId, relation: "grants" });
+
+  const armorId = ids("armor");
+  nodes.push({
+    id: armorId,
+    category: "source",
+    atomKind: "class_armor_training",
+    label: `class_armor_training\n${unit.armorTraining.join(", ")}`,
+  });
+  edges.push({ from: rootId, to: armorId, relation: "grants" });
+
   const skillId = ids("skill");
   nodes.push({
     id: skillId,
