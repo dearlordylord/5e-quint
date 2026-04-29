@@ -133,13 +133,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 16,
       "id": "CAM16",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add MCP Green Composition Root"
     },
     {
       "number": 17,
       "id": "CAM17",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add MCP Character Creation Tools"
     },
     {
@@ -196,8 +196,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 13    | CAM13 - Implement Battle Attack Holes And Replay                | done                                          | CAM12             | CAM14, CAM15, CAM18                  | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                                  | Done in this task.                                                                                   |
 | 14    | CAM14 - Implement Battle Damage And Zero-HP Policy              | done                                          | CAM13             | CAM15, CAM18                         | Implemented damage application with Temporary HP absorption, HP floor, monster death policy, and Character Sheet zero-HP policy scaffolding.                                                    | Done in this task.                                                                                   |
 | 15    | CAM15 - Implement End Turn And Battle QNT Slice                 | done                                          | CAM14             | CAM18, CAM19                         | Runtime `endTurn`, initiative advancement, `battle-runtime-slice.qnt`, and deterministic QNT/runtime parity checks landed for hit, miss, damage, action spend, and end turn.                     | Done in this task.                                                                                   |
-| 16    | CAM16 - Add MCP Green Composition Root                          | ready-for-implementation-after-light-research | CAM1, CAM5        | CAM17, CAM18                         | Add isolated MCP green module/root that installs `srdUnitCollection` and `srdStatBlockCollection` and has no `@dnd/core` imports.                                                               | Ready after MCP green-root architecture check.                                                       |
-| 17    | CAM17 - Add MCP Character Creation Tools                        | blocked                                       | CAM10, CAM16      | CAM18                                | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                 | Blocker Type: dependency. Blocker Detail: waits on MCP green root.                                   |
+| 16    | CAM16 - Add MCP Green Composition Root                          | done                                          | CAM1, CAM5        | CAM17, CAM18                         | Added isolated MCP green module/root that installs `srdUnitCollection` and `srdStatBlockCollection` and has no `@dnd/core` imports.                                                             | Done in this task.                                                                                   |
+| 17    | CAM17 - Add MCP Character Creation Tools                        | ready-for-implementation-after-light-research | CAM10, CAM16      | CAM18                                | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                 | Ready after MCP green character-tool architecture check.                                             |
 | 18    | CAM18 - Add MCP Battle Tools And Green Fixture                  | blocked                                       | CAM15, CAM17      | CAM19                                | Add green MCP tools for select monster, start battle, discover battle acts, fill/resolve battle holes, end turn, and one full vertical fixture.                                                 | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.                              |
 | 19    | CAM19 - Controlled Core Break And Projected Vocabulary Deletion | blocked                                       | CAM18             | none                                 | Isolate/delete old Core-backed green-path imports, delete `CPU*`/`PEA*`/`PPR*` projected vocabulary where unreferenced, and ensure every omitted lane is in the Restore Ledger.                 | Blocker Type: dependency. Blocker Detail: waits on passing MCP green fixture.                        |
 
@@ -817,7 +817,7 @@ Plan Impact:
 
 ### Task 16 - CAM16 - Add MCP Green Composition Root
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM1, CAM5  
 Blocks: CAM17, CAM18
@@ -851,17 +851,16 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM17 when CAM10 is done.
+- CAM17 is unblocked because CAM10 and CAM16 are done.
 
 ### Task 17 - CAM17 - Add MCP Character Creation Tools
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM10, CAM16  
 Blocks: CAM18
 
-Blocker Type: dependency  
-Blocker Detail: waits on MCP green root.
+Next action: run the MCP green character-tool architecture check, then add green character creation tools.
 
 Input:
 

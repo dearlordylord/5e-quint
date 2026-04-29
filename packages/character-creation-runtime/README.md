@@ -2,6 +2,10 @@
 
 Character creation runtime owns durable draft, hole, fill, and finalization shapes for the Surface/Unit green path.
 
+The MCP green composition root installs the runtime by passing the SRD Unit
+library built from `@dnd/surface`; it stores drafts and finalized Character
+Sheets at the MCP session boundary, not inside this package.
+
 This package intentionally imports Surface catalog and Unit identities, not authored content records or Core battle/projected vocabulary. The runtime exports `CharacterSheet` as the finalized player-character boundary. Battle seed construction belongs to the battle runtime and composition root.
 
 `character-creation-runtime-slice.qnt` is the deterministic Quint parity slice for the current Orc Soldier Fighter vertical. It models draft state, stable hole ids, atomic batch fill, rediscovery, and finalization status for the same first-vertical behavior that the TypeScript reducer exposes.

@@ -12,7 +12,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dnd/battle-runtime": "workspace:*",
+    "@dnd/character-creation-runtime": "workspace:*",
     "@dnd/core": "workspace:*",
+    "@dnd/surface": "workspace:*",
     "@effect/platform-node": "^0.106.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "effect": "^3.21.0",
