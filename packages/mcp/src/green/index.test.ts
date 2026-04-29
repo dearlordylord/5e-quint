@@ -181,7 +181,7 @@ function completeManifestDraft(
       unitLibrary,
       expectedRevision: afterInitial.revision,
       fills: [
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
           "perception",
           "survival",
@@ -190,7 +190,7 @@ function completeManifestDraft(
           "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
           "defense",
         ),
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
           "weapon_longsword",
           "weapon_spear",
@@ -218,7 +218,7 @@ function completeManifestDraft(
       unitLibrary,
       expectedRevision: afterChoices.revision,
       fills: [
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:class_fighter:equipment_purchase",
           "armor_chain_mail",
           "weapon_longsword",
@@ -264,7 +264,7 @@ function initialManifestFills(): readonly CreationFill[] {
       },
     },
     {
-      kind: "multiChoice",
+      kind: "choice",
       holeId: creationHoleId("cc:draft:draft.languages"),
       optionIds: [
         creationChoiceOptionId("Dwarvish"),
@@ -275,20 +275,12 @@ function initialManifestFills(): readonly CreationFill[] {
   ];
 }
 
-function choiceFill(holeId: string, optionId: string): CreationFill {
-  return {
-    kind: "choice",
-    holeId: testCreationHoleId(holeId),
-    optionId: creationChoiceOptionId(optionId),
-  };
-}
-
-function multiChoiceFill(
+function choiceFill(
   holeId: string,
   ...optionIds: readonly string[]
 ): CreationFill {
   return {
-    kind: "multiChoice",
+    kind: "choice",
     holeId: testCreationHoleId(holeId),
     optionIds: optionIds.map(creationChoiceOptionId),
   };

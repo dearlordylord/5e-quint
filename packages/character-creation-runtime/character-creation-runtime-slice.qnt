@@ -41,7 +41,7 @@ module characterCreationRuntimeSlice {
     | HLoadoutShield
     | HLoadoutWeapon
 
-  type HoleKind = SingleChoice | MultiChoice | AbilityScoreHole
+  type HoleKind = ChoiceHole | AbilityScoreHole
 
   type ChoiceOptionId =
     | OClassFighter
@@ -108,8 +108,7 @@ module characterCreationRuntimeSlice {
   type SupportedAbilityScoreMethod = StandardArray | PointBuy
 
   type Fill =
-    | FChoice({ hole: HoleId, option: ChoiceOptionId })
-    | FMultiChoice({ hole: HoleId, options: List[ChoiceOptionId] })
+    | FChoice({ hole: HoleId, options: List[ChoiceOptionId] })
     | FAbilityScores({ hole: HoleId, method: SupportedAbilityScoreMethod, scores: AbilityScores })
 
   type FillIssueCode =
@@ -294,22 +293,16 @@ module characterCreationRuntimeSlice {
 
   pure def holeKind(hole: HoleId): HoleKind = match hole {
     | HAbilityScores => AbilityScoreHole
-    | HLanguages => MultiChoice
-    | HFighterSkills => MultiChoice
-    | HFighterWeaponMastery => MultiChoice
-    | HEquipmentPurchase => MultiChoice
-    | _ => SingleChoice
+    | _ => ChoiceHole
   }
 
   pure def fillHole(fill: Fill): HoleId = match fill {
     | FChoice(v) => v.hole
-    | FMultiChoice(v) => v.hole
     | FAbilityScores(v) => v.hole
   }
 
   pure def fillKindMatchesHole(fill: Fill, hole: HoleId): bool = match fill {
-    | FChoice(_) => holeKind(hole) == SingleChoice
-    | FMultiChoice(_) => holeKind(hole) == MultiChoice
+    | FChoice(_) => holeKind(hole) == ChoiceHole
     | FAbilityScores(_) => holeKind(hole) == AbilityScoreHole
   }
 
@@ -381,7 +374,7 @@ module characterCreationRuntimeSlice {
     | _ => validOptions(hole)
   }
 
-  pure def requiredMultiChoiceCount(hole: HoleId): int = match hole {
+  pure def requiredChoiceCount(hole: HoleId): int = match hole {
     | HLanguages => 2
     | HFighterSkills => 2
     | HFighterWeaponMastery => 3
@@ -407,18 +400,12 @@ module characterCreationRuntimeSlice {
     else if (not(fillKindMatchesHole(fill, hole))) Set({ fillIndex: fillIndex, hole: hole, code: WrongFillKind })
     else match fill {
       | FChoice(v) =>
-          if (not(validOptions(hole).contains(v.option)))
-            Set({ fillIndex: fillIndex, hole: hole, code: InvalidChoice })
-          else if (not(supportedOptions(hole).contains(v.option)))
-            Set({ fillIndex: fillIndex, hole: hole, code: UnsupportedChoice })
-          else Set()
-      | FMultiChoice(v) =>
           val cardinalityIssues =
             Set(
-              if (v.options.length() < requiredMultiChoiceCount(hole))
+              if (v.options.length() < requiredChoiceCount(hole))
                 Set({ fillIndex: fillIndex, hole: hole, code: TooFewChoices })
               else Set(),
-              if (v.options.length() > requiredMultiChoiceCount(hole))
+              if (v.options.length() > requiredChoiceCount(hole))
                 Set({ fillIndex: fillIndex, hole: hole, code: TooManyChoices })
               else Set(),
             ).flatten()
@@ -444,27 +431,24 @@ module characterCreationRuntimeSlice {
       }).issues
 
   pure def applyFill(draft: Draft, fill: Fill): Draft = match fill {
-    | FChoice(v) => match v.hole {
+      | FChoice(v) => match v.hole {
         | HPrimaryClass => draft.with("primaryClass", true).with("advancement", true)
         | HBackground => draft.with("background", true)
         | HSpecies => draft.with("species", true)
+        | HLanguages => draft.with("languages", true)
         | HAlignment => draft.with("alignment", true)
+        | HFighterSkills => draft.with("fighterSkills", true)
         | HFighterFightingStyle => draft.with("fighterFightingStyle", true)
+        | HFighterWeaponMastery => draft.with("fighterWeaponMastery", true)
         | HBackgroundAbilityScoreIncrease => draft.with("backgroundAbilityScoreIncrease", true)
         | HBackgroundTool => draft.with("backgroundTool", true)
         | HClassEquipment => draft.with("classEquipment", true)
         | HBackgroundEquipment => draft.with("backgroundEquipment", true)
+        | HEquipmentPurchase => draft.with("equipmentPurchase", true)
         | HLoadoutArmor => draft.with("loadoutArmor", true)
         | HLoadoutShield => draft.with("loadoutShield", true)
         | HLoadoutWeapon => draft.with("loadoutWeapon", true)
-        | _ => draft
-      }
-    | FMultiChoice(v) => match v.hole {
-        | HLanguages => draft.with("languages", true)
-        | HFighterSkills => draft.with("fighterSkills", true)
-        | HFighterWeaponMastery => draft.with("fighterWeaponMastery", true)
-        | HEquipmentPurchase => draft.with("equipmentPurchase", true)
-        | _ => draft
+        | HAbilityScores => draft
       }
     | FAbilityScores(_) => draft.with("abilityScores", true)
   }
@@ -488,32 +472,32 @@ module characterCreationRuntimeSlice {
   }
 
   pure val initialManifestFills: List[Fill] = [
-    FChoice({ hole: HPrimaryClass, option: OClassFighter }),
-    FChoice({ hole: HBackground, option: OBackgroundSoldier }),
-    FChoice({ hole: HSpecies, option: OSpeciesOrc }),
+    FChoice({ hole: HPrimaryClass, options: [OClassFighter] }),
+    FChoice({ hole: HBackground, options: [OBackgroundSoldier] }),
+    FChoice({ hole: HSpecies, options: [OSpeciesOrc] }),
     FAbilityScores({ hole: HAbilityScores, method: StandardArray, scores: fighterStandardArray }),
-    FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
-    FChoice({ hole: HAlignment, option: OAlignmentLawfulGood }),
+    FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
+    FChoice({ hole: HAlignment, options: [OAlignmentLawfulGood] }),
   ]
 
   pure val manifestChoiceFills: List[Fill] = [
-    FMultiChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillSurvival] }),
-    FChoice({ hole: HFighterFightingStyle, option: OFightingStyleDefense }),
-    FMultiChoice({ hole: HFighterWeaponMastery, options: [OWeaponLongsword, OWeaponSpear, OWeaponFlail] }),
-    FChoice({ hole: HBackgroundAbilityScoreIncrease, option: OBackgroundAsiStrCon }),
-    FChoice({ hole: HBackgroundTool, option: OToolDiceSet }),
-    FChoice({ hole: HClassEquipment, option: OClassEquipmentCoins }),
-    FChoice({ hole: HBackgroundEquipment, option: OBackgroundEquipmentCoins }),
+    FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillSurvival] }),
+    FChoice({ hole: HFighterFightingStyle, options: [OFightingStyleDefense] }),
+    FChoice({ hole: HFighterWeaponMastery, options: [OWeaponLongsword, OWeaponSpear, OWeaponFlail] }),
+    FChoice({ hole: HBackgroundAbilityScoreIncrease, options: [OBackgroundAsiStrCon] }),
+    FChoice({ hole: HBackgroundTool, options: [OToolDiceSet] }),
+    FChoice({ hole: HClassEquipment, options: [OClassEquipmentCoins] }),
+    FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentCoins] }),
   ]
 
   pure val manifestPurchaseFills: List[Fill] = [
-    FMultiChoice({ hole: HEquipmentPurchase, options: [OArmorChainMail, OWeaponLongsword, OEquipmentShield] }),
+    FChoice({ hole: HEquipmentPurchase, options: [OArmorChainMail, OWeaponLongsword, OEquipmentShield] }),
   ]
 
   pure val manifestLoadoutFills: List[Fill] = [
-    FChoice({ hole: HLoadoutArmor, option: OLoadoutWorn }),
-    FChoice({ hole: HLoadoutShield, option: OLoadoutWielded }),
-    FChoice({ hole: HLoadoutWeapon, option: OLoadoutWieldedOneHanded }),
+    FChoice({ hole: HLoadoutArmor, options: [OLoadoutWorn] }),
+    FChoice({ hole: HLoadoutShield, options: [OLoadoutWielded] }),
+    FChoice({ hole: HLoadoutWeapon, options: [OLoadoutWieldedOneHanded] }),
   ]
 
   pure def requireAccepted(result: FillBatchResult): Draft = match result {
@@ -575,7 +559,7 @@ module characterCreationRuntimeSlice {
 
   run test_invalid_primary_class_fill_rejected_atomically = {
     match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HPrimaryClass, option: OBackgroundSoldier }),
+      FChoice({ hole: HPrimaryClass, options: [OBackgroundSoldier] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -591,7 +575,7 @@ module characterCreationRuntimeSlice {
 
   run test_unsupported_language_fill_rejected_atomically = {
     match fillCreationHoles(emptyDraft, 0, [
-      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -602,9 +586,9 @@ module characterCreationRuntimeSlice {
     }
   }
 
-  run test_duplicate_multi_choice_option_rejected_atomically = {
+  run test_duplicate_choice_option_rejected_atomically = {
     match fillCreationHoles(emptyDraft, 0, [
-      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageDwarvish] }),
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageDwarvish] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -641,10 +625,10 @@ module characterCreationRuntimeSlice {
 
   run test_cardinality_issues_are_distinct = {
     val tooFew = fillCreationHoles(emptyDraft, 0, [
-      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
     ])
     val tooMany = fillCreationHoles(emptyDraft, 0, [
-      FMultiChoice({
+      FChoice({
         hole: HLanguages,
         options: [OLanguageDwarvish, OLanguageGoblin, OLanguageElvish],
       }),
@@ -663,8 +647,8 @@ module characterCreationRuntimeSlice {
 
   run test_later_hole_valid_but_unsupported_options_are_distinct = {
     match fillCreationHoles(afterInitialManifest, 1, [
-      FMultiChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
-      FChoice({ hole: HBackgroundEquipment, option: OBackgroundEquipmentPack }),
+      FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
+      FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>

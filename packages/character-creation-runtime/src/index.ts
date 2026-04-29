@@ -96,6 +96,22 @@ const CreationChoiceOptionId = Brand.nominal<CreationChoiceOptionId>();
 export const creationChoiceOptionId: (value: string) => CreationChoiceOptionId =
   CreationChoiceOptionId;
 
+export type ChoiceCount = number & Brand.Brand<"ChoiceCount">;
+const ChoiceCount = Brand.nominal<ChoiceCount>();
+
+export type ChoiceCardinality = {
+  readonly tag: "exactly";
+  readonly count: ChoiceCount;
+};
+
+export function exactChoiceCardinality(count: number): ChoiceCardinality {
+  if (!Number.isInteger(count) || count < 1) {
+    throw new Error(`Choice cardinality must be a positive integer: ${count}`);
+  }
+
+  return { tag: "exactly", count: ChoiceCount(count) };
+}
+
 export type CreationHoleSource =
   | { readonly tag: "draft"; readonly path: CharacterDraftPath }
   | {
@@ -170,6 +186,7 @@ export type CharacterDraftSelections = {
 export type CharacterDraft = {
   readonly draftId: CharacterDraftId;
   readonly selections: CharacterDraftSelections;
+  // Optimistic concurrency token for fill batches against this draft identity.
   readonly revision: number;
 };
 
@@ -197,17 +214,10 @@ export type CharacterChoiceSelection = {
 
 export type CreationHole =
   | {
-      readonly kind: "singleChoice";
+      readonly kind: "choice";
       readonly holeId: CreationHoleId;
       readonly source: CreationHoleSource;
-      readonly options: readonly CreationChoiceOption[];
-    }
-  | {
-      readonly kind: "multiChoice";
-      readonly holeId: CreationHoleId;
-      readonly source: CreationHoleSource;
-      readonly min: number;
-      readonly max: number;
+      readonly cardinality: ChoiceCardinality;
       readonly options: readonly CreationChoiceOption[];
     }
   | {
@@ -225,11 +235,6 @@ export type CreationHole =
 export type CreationFill =
   | {
       readonly kind: "choice";
-      readonly holeId: CreationHoleId;
-      readonly optionId: CreationChoiceOptionId;
-    }
-  | {
-      readonly kind: "multiChoice";
       readonly holeId: CreationHoleId;
       readonly optionIds: readonly CreationChoiceOptionId[];
     }
@@ -488,6 +493,7 @@ const FIGHTER_WEAPON_MASTERY_CHOICE_KEY = unitChoiceKey(
 const LOADOUT_ARMOR_CHOICE_KEY = unitChoiceKey("loadout_armor");
 const LOADOUT_SHIELD_CHOICE_KEY = unitChoiceKey("loadout_shield");
 const LOADOUT_WEAPON_CHOICE_KEY = unitChoiceKey("loadout_weapon");
+const EXACTLY_ONE_CHOICE = exactChoiceCardinality(1);
 
 const SURFACE_ABILITIES = [
   "str",
@@ -725,11 +731,7 @@ function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[]
     unitChoiceSelection(
       FIGHTER_WEAPON_MASTERY_FEATURE_ID,
       FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
-      [
-        PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-        "weapon_spear",
-        "weapon_flail",
-      ],
+      [PHASE1_WEAPON_LONGSWORD_UNIT_ID, "weapon_spear", "weapon_flail"],
     ),
     choiceSelection(
       PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
@@ -754,12 +756,16 @@ function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[]
         ),
       ],
     ),
-    choiceSelectionWithOptions(PHASE1_SHIELD_UNIT_ID, LOADOUT_SHIELD_CHOICE_KEY, [
-      selectedChoiceOptionRecord(
-        creationChoiceOptionId("wielded"),
-        PHASE1_SHIELD_UNIT_ID,
-      ),
-    ]),
+    choiceSelectionWithOptions(
+      PHASE1_SHIELD_UNIT_ID,
+      LOADOUT_SHIELD_CHOICE_KEY,
+      [
+        selectedChoiceOptionRecord(
+          creationChoiceOptionId("wielded"),
+          PHASE1_SHIELD_UNIT_ID,
+        ),
+      ],
+    ),
     choiceSelectionWithOptions(
       PHASE1_WEAPON_LONGSWORD_UNIT_ID,
       LOADOUT_WEAPON_CHOICE_KEY,
@@ -1180,24 +1186,8 @@ function fillIssuesForHole(
     return [wrongFillKindIssue(fill, fillIndex, hole)];
   }
 
-  if (hole.kind === "singleChoice" && fill.kind === "choice") {
-    const hasOption = hole.options.some(
-      (option) => option.optionId === fill.optionId,
-    );
-    if (!hasOption) {
-      return [invalidChoiceIssue(fill, fillIndex, fill.optionId)];
-    }
-
-    const unsupportedOptionId = unsupportedHoleSelectionOptionId(hole, [
-      fill.optionId,
-    ]);
-    return unsupportedOptionId == null
-      ? []
-      : [unsupportedChoiceIssue(fill, fillIndex, unsupportedOptionId)];
-  }
-
-  if (hole.kind === "multiChoice" && fill.kind === "multiChoice") {
-    return multiChoiceFillIssues(fill, fillIndex, hole);
+  if (hole.kind === "choice" && fill.kind === "choice") {
+    return choiceFillIssues(fill, fillIndex, hole);
   }
 
   if (hole.kind === "abilityScores" && fill.kind === "abilityScores") {
@@ -1209,29 +1199,30 @@ function fillIssuesForHole(
 
 function fillKindMatchesHole(fill: CreationFill, hole: CreationHole): boolean {
   return (
-    (hole.kind === "singleChoice" && fill.kind === "choice") ||
-    (hole.kind === "multiChoice" && fill.kind === "multiChoice") ||
+    (hole.kind === "choice" && fill.kind === "choice") ||
     (hole.kind === "abilityScores" && fill.kind === "abilityScores") ||
     (hole.kind === "freeText" && fill.kind === "text")
   );
 }
 
-function multiChoiceFillIssues(
-  fill: Extract<CreationFill, { readonly kind: "multiChoice" }>,
+function choiceFillIssues(
+  fill: ChoiceFill,
   fillIndex: number,
-  hole: Extract<CreationHole, { readonly kind: "multiChoice" }>,
+  hole: Extract<CreationHole, { readonly kind: "choice" }>,
 ): readonly CreationFillIssue[] {
+  const optionIds = choiceFillOptionIds(fill);
+  const requiredCount = hole.cardinality.count;
   const cardinalityIssues = [
-    ...(fill.optionIds.length < hole.min
-      ? [tooFewChoicesIssue(fill, fillIndex, hole)]
+    ...(optionIds.length < requiredCount
+      ? [tooFewChoicesIssue(fill, fillIndex, requiredCount)]
       : []),
-    ...(fill.optionIds.length > hole.max
-      ? [tooManyChoicesIssue(fill, fillIndex, hole)]
+    ...(optionIds.length > requiredCount
+      ? [tooManyChoicesIssue(fill, fillIndex, requiredCount)]
       : []),
   ];
-  const invalidOptionIds = fill.optionIds.filter(
+  const invalidOptionIds = optionIds.filter(
     (optionId, optionIndex) =>
-      fill.optionIds.indexOf(optionId) !== optionIndex ||
+      optionIds.indexOf(optionId) !== optionIndex ||
       !hole.options.some((option) => option.optionId === optionId),
   );
 
@@ -1242,16 +1233,21 @@ function multiChoiceFillIssues(
     ];
   }
 
-  const unsupportedOptionId = unsupportedHoleSelectionOptionId(
-    hole,
-    fill.optionIds,
-  );
+  const unsupportedOptionId = unsupportedHoleSelectionOptionId(hole, optionIds);
   return unsupportedOptionId == null
     ? cardinalityIssues
     : [
         ...cardinalityIssues,
         unsupportedChoiceIssue(fill, fillIndex, unsupportedOptionId),
       ];
+}
+
+type ChoiceFill = Extract<CreationFill, { readonly kind: "choice" }>;
+
+function choiceFillOptionIds(
+  fill: ChoiceFill,
+): readonly CreationChoiceOptionId[] {
+  return fill.optionIds;
 }
 
 function abilityScoreFillIssues(
@@ -1314,7 +1310,7 @@ function applyDraftFill(
   fill: CreationFill,
 ): CharacterDraftSelections {
   if (path === "draft.primaryClass" && fill.kind === "choice") {
-    const classUnitId = requireSelectedUnitId(hole, fill.optionId);
+    const classUnitId = requireSelectedUnitId(hole, requireOneOptionId(fill));
     return {
       ...selections,
       primaryClass: classUnitId,
@@ -1327,14 +1323,14 @@ function applyDraftFill(
   if (path === "draft.background" && fill.kind === "choice") {
     return {
       ...selections,
-      background: requireSelectedUnitId(hole, fill.optionId),
+      background: requireSelectedUnitId(hole, requireOneOptionId(fill)),
     };
   }
 
   if (path === "draft.species" && fill.kind === "choice") {
     return {
       ...selections,
-      species: requireSelectedUnitId(hole, fill.optionId),
+      species: requireSelectedUnitId(hole, requireOneOptionId(fill)),
     };
   }
 
@@ -1351,17 +1347,17 @@ function applyDraftFill(
     };
   }
 
-  if (path === "draft.languages" && fill.kind === "multiChoice") {
+  if (path === "draft.languages" && fill.kind === "choice") {
     return {
       ...selections,
-      languages: requireStartingLanguages(fill.optionIds),
+      languages: requireStartingLanguages(choiceFillOptionIds(fill)),
     };
   }
 
   if (path === "draft.alignment" && fill.kind === "choice") {
     return {
       ...selections,
-      alignment: requireAlignmentSelection(fill.optionId),
+      alignment: requireAlignmentSelection(requireOneOptionId(fill)),
     };
   }
 
@@ -1381,28 +1377,28 @@ function applyUnitFill(
     return {
       ...selections,
       backgroundAbilityScoreIncrease:
-        requireBackgroundAbilityScoreIncreaseSelection(fill.optionId),
+        requireBackgroundAbilityScoreIncreaseSelection(
+          requireOneOptionId(fill),
+        ),
     };
   }
 
   if (
     source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY &&
-    fill.kind === "multiChoice"
+    fill.kind === "choice"
   ) {
     return {
       ...selections,
       equipment: {
-        selectedUnitIds: requireSelectedUnitIds(hole, fill.optionIds),
+        selectedUnitIds: requireSelectedUnitIds(
+          hole,
+          choiceFillOptionIds(fill),
+        ),
       },
     };
   }
 
-  const optionIds =
-    fill.kind === "choice"
-      ? [fill.optionId]
-      : fill.kind === "multiChoice"
-        ? fill.optionIds
-        : [];
+  const optionIds = fill.kind === "choice" ? choiceFillOptionIds(fill) : [];
 
   return optionIds.length === 0
     ? selections
@@ -1433,6 +1429,18 @@ function requireSelectedUnitIds(
   optionIds: readonly CreationChoiceOptionId[],
 ): readonly UnitRecord["id"][] {
   return optionIds.map((optionId) => requireSelectedUnitId(hole, optionId));
+}
+
+function requireOneOptionId(fill: ChoiceFill): CreationChoiceOptionId {
+  const optionIds = choiceFillOptionIds(fill);
+  const optionId = optionIds[0];
+  if (optionId == null || optionIds.length !== 1) {
+    throw new Error(
+      `Accepted choice fill ${fill.holeId} must carry exactly one option.`,
+    );
+  }
+
+  return optionId;
 }
 
 function requireSelectedUnitId(
@@ -1691,28 +1699,28 @@ function invalidAbilityScoresIssue(
 function tooFewChoicesIssue(
   fill: CreationFill,
   fillIndex: number,
-  hole: Extract<CreationHole, { readonly kind: "multiChoice" }>,
+  expectedCount: ChoiceCount,
 ): CreationFillIssue {
   return {
     tag: "illegalFill",
     holeId: fill.holeId,
     fillIndex,
     code: "tooFewChoices",
-    message: `Too few choices for character creation hole ${fill.holeId}; expected at least ${hole.min}.`,
+    message: `Too few choices for character creation hole ${fill.holeId}; expected at least ${expectedCount}.`,
   };
 }
 
 function tooManyChoicesIssue(
   fill: CreationFill,
   fillIndex: number,
-  hole: Extract<CreationHole, { readonly kind: "multiChoice" }>,
+  expectedCount: ChoiceCount,
 ): CreationFillIssue {
   return {
     tag: "illegalFill",
     holeId: fill.holeId,
     fillIndex,
     code: "tooManyChoices",
-    message: `Too many choices for character creation hole ${fill.holeId}; expected at most ${hole.max}.`,
+    message: `Too many choices for character creation hole ${fill.holeId}; expected at most ${expectedCount}.`,
   };
 }
 
@@ -1796,10 +1804,11 @@ function discoverClassGrantedHoles(input: {
   return [
     ...unselectedUnitChoiceHole(
       input.draft,
-      multiChoiceHole({
+      choiceHole({
         source: unitSource(classUnitId, FIGHTER_SKILL_CHOICE_KEY),
-        min: facts.value.skillProficiencyChoice.choose,
-        max: facts.value.skillProficiencyChoice.choose,
+        cardinality: exactChoiceCardinality(
+          facts.value.skillProficiencyChoice.choose,
+        ),
         options: facts.value.skillProficiencyChoice.options.map(skillOption),
       }),
     ),
@@ -1814,8 +1823,9 @@ function discoverClassGrantedHoles(input: {
     ),
     ...unselectedUnitChoiceHole(
       input.draft,
-      singleChoiceHole({
+      choiceHole({
         source: unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
+        cardinality: EXACTLY_ONE_CHOICE,
         options: facts.value.startingEquipment.map((choice) => ({
           optionId: creationChoiceOptionId(choice.id),
           label: startingEquipmentLabel(choice),
@@ -1846,11 +1856,12 @@ function discoverBackgroundGrantedHoles(input: {
   return [
     ...unselectedBackgroundAbilityScoreIncreaseHole(
       input.draft,
-      singleChoiceHole({
+      choiceHole({
         source: unitSource(
           backgroundUnitId,
           BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
         ),
+        cardinality: EXACTLY_ONE_CHOICE,
         options: backgroundAbilityScoreIncreaseOptions(
           facts.value.abilityScoreIncrease.abilities,
         ),
@@ -1858,15 +1869,17 @@ function discoverBackgroundGrantedHoles(input: {
     ),
     ...unselectedUnitChoiceHole(
       input.draft,
-      singleChoiceHole({
+      choiceHole({
         source: unitSource(backgroundUnitId, BACKGROUND_TOOL_CHOICE_KEY),
+        cardinality: EXACTLY_ONE_CHOICE,
         options: backgroundToolProficiencyOptions(facts.value.toolProficiency),
       }),
     ),
     ...unselectedUnitChoiceHole(
       input.draft,
-      singleChoiceHole({
+      choiceHole({
         source: unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+        cardinality: EXACTLY_ONE_CHOICE,
         options: facts.value.startingEquipment.map((choice) => ({
           optionId: creationChoiceOptionId(choice.id),
           label: startingEquipmentLabel(choice),
@@ -1913,10 +1926,9 @@ function discoverEquipmentHoles(input: {
   return [
     ...unselectedPurchaseHole(
       input.draft,
-      multiChoiceHole({
+      choiceHole({
         source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
-        min: SUPPORTED_PURCHASE_UNIT_IDS.length,
-        max: SUPPORTED_PURCHASE_UNIT_IDS.length,
+        cardinality: exactChoiceCardinality(SUPPORTED_PURCHASE_UNIT_IDS.length),
         options: SUPPORTED_PURCHASE_UNIT_IDS.map((unitId) =>
           unitOption(input.unitLibrary.requireUnit(unitId)),
         ),
@@ -1924,11 +1936,12 @@ function discoverEquipmentHoles(input: {
     ),
     ...unselectedLoadoutHole(
       input.draft,
-      singleChoiceHole({
+      choiceHole({
         source: unitSource(
           PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
           LOADOUT_ARMOR_CHOICE_KEY,
         ),
+        cardinality: EXACTLY_ONE_CHOICE,
         options: [
           {
             optionId: creationChoiceOptionId("worn"),
@@ -1941,8 +1954,9 @@ function discoverEquipmentHoles(input: {
     ),
     ...unselectedLoadoutHole(
       input.draft,
-      singleChoiceHole({
+      choiceHole({
         source: unitSource(PHASE1_SHIELD_UNIT_ID, LOADOUT_SHIELD_CHOICE_KEY),
+        cardinality: EXACTLY_ONE_CHOICE,
         options: [
           {
             optionId: creationChoiceOptionId("wielded"),
@@ -1955,11 +1969,12 @@ function discoverEquipmentHoles(input: {
     ),
     ...unselectedLoadoutHole(
       input.draft,
-      singleChoiceHole({
+      choiceHole({
         source: unitSource(
           PHASE1_WEAPON_LONGSWORD_UNIT_ID,
           LOADOUT_WEAPON_CHOICE_KEY,
         ),
+        cardinality: EXACTLY_ONE_CHOICE,
         options: [
           {
             optionId: creationChoiceOptionId("wielded_one_handed"),
@@ -2105,7 +2120,9 @@ function choiceSelectionOptionIds(
   return selection.options.map((option) => option.optionId);
 }
 
-function choiceSelectionOptionKey(option: CharacterSelectedChoiceOption): string {
+function choiceSelectionOptionKey(
+  option: CharacterSelectedChoiceOption,
+): string {
   return option.unitRef == null
     ? option.optionId
     : `${option.optionId}\u0002${option.unitRef.unitId}`;
@@ -2144,8 +2161,9 @@ function discoverLevelOneFighterFeatureHole(
 
     return unselectedUnitChoiceHole(
       draft,
-      singleChoiceHole({
+      choiceHole({
         source: unitSource(featureUnitId, FIGHTER_FIGHTING_STYLE_CHOICE_KEY),
+        cardinality: EXACTLY_ONE_CHOICE,
         options,
       }),
     );
@@ -2170,10 +2188,9 @@ function discoverLevelOneFighterFeatureHole(
 
     return unselectedUnitChoiceHole(
       draft,
-      multiChoiceHole({
+      choiceHole({
         source: unitSource(featureUnitId, FIGHTER_WEAPON_MASTERY_CHOICE_KEY),
-        min: mechanics.choose,
-        max: mechanics.choose,
+        cardinality: exactChoiceCardinality(mechanics.choose),
         options,
       }),
     );
@@ -2187,8 +2204,9 @@ function draftHole(
   unitLibrary: UnitLibrary,
 ): CreationHole {
   if (path === "draft.primaryClass") {
-    return singleChoiceHole({
+    return choiceHole({
       source: draftSource(path),
+      cardinality: EXACTLY_ONE_CHOICE,
       options: unitLibrary
         .listUnits()
         .filter((unit) => unit.kind === "class")
@@ -2197,8 +2215,9 @@ function draftHole(
   }
 
   if (path === "draft.background") {
-    return singleChoiceHole({
+    return choiceHole({
       source: draftSource(path),
+      cardinality: EXACTLY_ONE_CHOICE,
       options: unitLibrary
         .listUnits()
         .filter((unit) => unit.kind === "background")
@@ -2207,8 +2226,9 @@ function draftHole(
   }
 
   if (path === "draft.species") {
-    return singleChoiceHole({
+    return choiceHole({
       source: draftSource(path),
+      cardinality: EXACTLY_ONE_CHOICE,
       options: unitLibrary
         .listUnits()
         .filter((unit) => unit.kind === "species")
@@ -2226,10 +2246,9 @@ function draftHole(
   }
 
   if (path === "draft.languages") {
-    return multiChoiceHole({
+    return choiceHole({
       source: draftSource(path),
-      min: 2,
-      max: 2,
+      cardinality: exactChoiceCardinality(2),
       options: STANDARD_LANGUAGES.filter(
         (language): language is SelectableStandardLanguage =>
           language !== "Common",
@@ -2241,8 +2260,9 @@ function draftHole(
   }
 
   const alignmentPath: "draft.alignment" = path;
-  return singleChoiceHole({
+  return choiceHole({
     source: draftSource(alignmentPath),
+    cardinality: EXACTLY_ONE_CHOICE,
     options: ALIGNMENT_OPTIONS.map(([order, morality, label]) => ({
       optionId: creationChoiceOptionId(`${order}_${morality}`),
       label,
@@ -2306,30 +2326,22 @@ function backgroundAbilityScoreIncreaseOptionId(
   );
 }
 
-function singleChoiceHole(input: {
+function choiceHole(input: {
   readonly source: CreationHoleSource;
+  readonly cardinality: ChoiceCardinality;
   readonly options: readonly CreationChoiceOption[];
 }): CreationHole {
-  return {
-    kind: "singleChoice",
-    holeId: holeIdForSource(input.source),
-    source: input.source,
-    options: input.options,
-  };
-}
+  if (input.cardinality.count > input.options.length) {
+    throw new Error(
+      `Choice cardinality ${input.cardinality.count} exceeds option count ${input.options.length} for ${holeIdForSource(input.source)}.`,
+    );
+  }
 
-function multiChoiceHole(input: {
-  readonly source: CreationHoleSource;
-  readonly min: number;
-  readonly max: number;
-  readonly options: readonly CreationChoiceOption[];
-}): CreationHole {
   return {
-    kind: "multiChoice",
+    kind: "choice",
     holeId: holeIdForSource(input.source),
     source: input.source,
-    min: input.min,
-    max: input.max,
+    cardinality: input.cardinality,
     options: input.options,
   };
 }

@@ -50,16 +50,16 @@ describe("character creation hole discovery", () => {
     const holes = discoverCreationHoles({ draft, unitLibrary });
 
     expect(holeSummary(holes)).toEqual([
-      ["singleChoice", "cc:draft:draft.primaryClass", ["class_fighter"]],
-      ["singleChoice", "cc:draft:draft.background", ["background_soldier"]],
-      ["singleChoice", "cc:draft:draft.species", ["species_orc"]],
+      ["choice", "cc:draft:draft.primaryClass", ["class_fighter"]],
+      ["choice", "cc:draft:draft.background", ["background_soldier"]],
+      ["choice", "cc:draft:draft.species", ["species_orc"]],
       [
         "abilityScores",
         "cc:draft:draft.abilityScoreGeneration",
         ["standardArray", "pointBuy"],
       ],
       [
-        "multiChoice",
+        "choice",
         "cc:draft:draft.languages",
         [
           "Common Sign Language",
@@ -74,7 +74,7 @@ describe("character creation hole discovery", () => {
         ],
       ],
       [
-        "singleChoice",
+        "choice",
         "cc:draft:draft.alignment",
         [
           "lawful_good",
@@ -103,9 +103,8 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(holes, "cc:unit:class_fighter:fighter_skill_choices"),
     ).toMatchObject({
-      kind: "multiChoice",
-      min: 2,
-      max: 2,
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 2 },
       options: [
         { optionId: "acrobatics" },
         { optionId: "animal_handling" },
@@ -124,7 +123,8 @@ describe("character creation hole discovery", () => {
         "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
       ),
     ).toMatchObject({
-      kind: "singleChoice",
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "defense", unitRef: { unitId: "defense" } }],
     });
     const weaponMasteryHole = holeById(
@@ -132,9 +132,8 @@ describe("character creation hole discovery", () => {
       "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
     );
     expect(weaponMasteryHole).toMatchObject({
-      kind: "multiChoice",
-      min: 3,
-      max: 3,
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 3 },
     });
     expect(optionIds(weaponMasteryHole)).toEqual(
       expect.arrayContaining([
@@ -146,7 +145,8 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
     ).toMatchObject({
-      kind: "singleChoice",
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "option_c" }],
     });
   });
@@ -165,20 +165,25 @@ describe("character creation hole discovery", () => {
       holes,
       "cc:unit:background_soldier:background_ability_score_increase",
     );
-    expect(backgroundIncreaseHole).toMatchObject({ kind: "singleChoice" });
+    expect(backgroundIncreaseHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
     expect(optionIds(backgroundIncreaseHole)).toEqual(
       expect.arrayContaining(["two_and_one:str:con", "one_each"]),
     );
     expect(
       holeById(holes, "cc:unit:background_soldier:background_tool_choice"),
     ).toMatchObject({
-      kind: "singleChoice",
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "tool_dice_set" }],
     });
     expect(
       holeById(holes, "cc:unit:background_soldier:background_equipment_choice"),
     ).toMatchObject({
-      kind: "singleChoice",
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "option_a" }, { optionId: "option_b" }],
     });
     expect(
@@ -212,9 +217,8 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
     ).toMatchObject({
-      kind: "multiChoice",
-      min: 3,
-      max: 3,
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 3 },
       options: [
         { optionId: "armor_chain_mail" },
         { optionId: "weapon_longsword" },
@@ -282,13 +286,15 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(holes, "cc:unit:equipment_shield:loadout_shield"),
     ).toMatchObject({
-      kind: "singleChoice",
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "wielded" }],
     });
     expect(
       holeById(holes, "cc:unit:weapon_longsword:loadout_weapon"),
     ).toMatchObject({
-      kind: "singleChoice",
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "wielded_one_handed" }],
     });
   });
@@ -417,7 +423,7 @@ describe("character creation QNT slice parity", () => {
       unitLibrary,
       expectedRevision: afterInitial.draft.revision,
       fills: [
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
           "perception",
           "athletics",
@@ -460,9 +466,7 @@ describe("character creation QNT slice parity", () => {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: [
-        multiChoiceFill("cc:draft:draft.languages", "Dwarvish", "Elvish"),
-      ],
+      fills: [choiceFill("cc:draft:draft.languages", "Dwarvish", "Elvish")],
     });
     if (unsupportedLanguage.tag !== "rejected") {
       throw new Error("Expected the unsupported language fill to be rejected.");
@@ -484,9 +488,7 @@ describe("character creation QNT slice parity", () => {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: [
-        multiChoiceFill("cc:draft:draft.languages", "Dwarvish", "Dwarvish"),
-      ],
+      fills: [choiceFill("cc:draft:draft.languages", "Dwarvish", "Dwarvish")],
     });
     if (duplicateLanguage.tag !== "rejected") {
       throw new Error("Expected the duplicate language fill to be rejected.");
@@ -546,7 +548,7 @@ describe("character creation QNT slice parity", () => {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: [multiChoiceFill("cc:draft:draft.languages", "Dwarvish")],
+      fills: [choiceFill("cc:draft:draft.languages", "Dwarvish")],
     });
     if (tooFewLanguages.tag !== "rejected") {
       throw new Error("Expected the too-few language fill to be rejected.");
@@ -557,12 +559,7 @@ describe("character creation QNT slice parity", () => {
       unitLibrary,
       expectedRevision: draft.revision,
       fills: [
-        multiChoiceFill(
-          "cc:draft:draft.languages",
-          "Dwarvish",
-          "Goblin",
-          "Elvish",
-        ),
+        choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin", "Elvish"),
       ],
     });
     if (tooManyLanguages.tag !== "rejected") {
@@ -644,7 +641,10 @@ describe("character creation batch fill", () => {
     ).toBeUndefined();
     expect(
       holeById(result.holes, "cc:unit:class_fighter:fighter_skill_choices"),
-    ).toMatchObject({ kind: "multiChoice" });
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 2 },
+    });
     expect(result.finalization).toMatchObject({ tag: "incomplete" });
   });
 
@@ -663,7 +663,7 @@ describe("character creation batch fill", () => {
       unitLibrary,
       expectedRevision: afterInitial.revision,
       fills: [
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
           "perception",
           "survival",
@@ -672,7 +672,7 @@ describe("character creation batch fill", () => {
           "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
           "defense",
         ),
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
           "weapon_longsword",
           "weapon_spear",
@@ -692,10 +692,7 @@ describe("character creation batch fill", () => {
         "class_fighter",
         "fighter_skill_choices",
       )?.options,
-    ).toEqual([
-      { optionId: "perception" },
-      { optionId: "survival" },
-    ]);
+    ).toEqual([{ optionId: "perception" }, { optionId: "survival" }]);
     expect(
       selectedChoiceBySource(
         result.draft,
@@ -903,15 +900,15 @@ describe("character creation batch fill", () => {
     ]);
   });
 
-  test("reports the unsupported selected option for multi-choice fills", () => {
-    const draft = createTestDraft("draft:batch-unsupported-multi-choice");
+  test("reports the unsupported selected option for choice fills", () => {
+    const draft = createTestDraft("draft:batch-unsupported-choice");
     const result = fillCreationHoles({
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
       fills: [
         {
-          kind: "multiChoice",
+          kind: "choice",
           holeId: creationHoleId("cc:draft:draft.languages"),
           optionIds: [
             creationChoiceOptionId("Dwarvish"),
@@ -1300,7 +1297,7 @@ function initialManifestFills(): readonly CreationFill[] {
       },
     },
     {
-      kind: "multiChoice",
+      kind: "choice",
       holeId: creationHoleId("cc:draft:draft.languages"),
       optionIds: [
         creationChoiceOptionId("Dwarvish"),
@@ -1327,7 +1324,7 @@ function completeManifestDraft(): CharacterDraft {
       unitLibrary,
       expectedRevision: afterInitial.revision,
       fills: [
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
           "perception",
           "survival",
@@ -1336,7 +1333,7 @@ function completeManifestDraft(): CharacterDraft {
           "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
           "defense",
         ),
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
           "weapon_longsword",
           "weapon_spear",
@@ -1364,7 +1361,7 @@ function completeManifestDraft(): CharacterDraft {
       unitLibrary,
       expectedRevision: afterChoices.revision,
       fills: [
-        multiChoiceFill(
+        choiceFill(
           "cc:unit:class_fighter:equipment_purchase",
           "armor_chain_mail",
           "weapon_longsword",
@@ -1593,7 +1590,7 @@ function renderQuintParityModule(input: {
 
   run parity_invalid_primary_class_matches_runtime = {
     match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HPrimaryClass, option: OBackgroundSoldier }),
+      FChoice({ hole: HPrimaryClass, options: [OBackgroundSoldier] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -1609,7 +1606,7 @@ function renderQuintParityModule(input: {
 
   run parity_unsupported_language_matches_runtime = {
     match fillCreationHoles(emptyDraft, 0, [
-      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -1625,7 +1622,7 @@ function renderQuintParityModule(input: {
 
   run parity_duplicate_language_matches_runtime = {
     match fillCreationHoles(emptyDraft, 0, [
-      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageDwarvish] }),
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageDwarvish] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -1641,7 +1638,7 @@ function renderQuintParityModule(input: {
 
   run parity_unsupported_alignment_matches_runtime = {
     match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HAlignment, option: OAlignmentNeutralGood }),
+      FChoice({ hole: HAlignment, options: [OAlignmentNeutralGood] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -1657,8 +1654,8 @@ function renderQuintParityModule(input: {
 
   run parity_later_valid_but_unsupported_choices_match_runtime = {
     match fillCreationHoles(afterInitialManifest, 1, [
-      FMultiChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
-      FChoice({ hole: HBackgroundEquipment, option: OBackgroundEquipmentPack }),
+      FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
+      FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -1674,7 +1671,7 @@ function renderQuintParityModule(input: {
 
   run parity_too_few_languages_matches_runtime = {
     match fillCreationHoles(emptyDraft, 0, [
-      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -1690,7 +1687,7 @@ function renderQuintParityModule(input: {
 
   run parity_too_many_languages_matches_runtime = {
     match fillCreationHoles(emptyDraft, 0, [
-      FMultiChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin, OLanguageElvish] }),
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin, OLanguageElvish] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -1830,28 +1827,17 @@ function selectedChoiceBySource(
   );
 }
 
-function multiChoiceFill(
+function choiceFill(
   holeId: string,
   ...optionIds: readonly string[]
 ): CreationFill {
-  return {
-    kind: "multiChoice",
-    // Test fixtures pass discovered hole ids as text. Unit-backed hole ids
-    // include a branded UnitChoiceKey segment, which string literals cannot
-    // prove to TypeScript even when they match the runtime protocol.
-    holeId: creationHoleId(holeId as CreationHoleIdText),
-    optionIds: optionIds.map(creationChoiceOptionId),
-  };
-}
-
-function choiceFill(holeId: string, optionId: string): CreationFill {
   return {
     kind: "choice",
     // Test fixtures pass discovered hole ids as text. Unit-backed hole ids
     // include a branded UnitChoiceKey segment, which string literals cannot
     // prove to TypeScript even when they match the runtime protocol.
     holeId: creationHoleId(holeId as CreationHoleIdText),
-    optionId: creationChoiceOptionId(optionId),
+    optionIds: optionIds.map(creationChoiceOptionId),
   };
 }
 

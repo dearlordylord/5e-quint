@@ -32,7 +32,9 @@ Fill-level issues carry a real submitted `fillIndex`. Batch protocol issues, suc
 
 Finalization issues are reported as `CreationFinalizationIssue` because they describe completed draft legality rather than a submitted fill or batch protocol problem.
 
-Duplicate fills for the same hole are rejected. Current creation holes accept multiple selected options only inside one `multiChoice` fill; no Phase 1 hole accepts multiple separate fills in one batch.
+Duplicate fills for the same hole are rejected. Choice holes carry explicit
+cardinality; callers submit the selected option set in one fill, not as multiple
+fills for the same hole.
 
 The fill reducer uses the same package-private Phase 1 support gates as hole discovery. A fill can therefore be syntactically valid for a discovered hole while still returning `unsupportedChoice` when it selects a valid SRD option outside the Orc Soldier Fighter manifest.
 
