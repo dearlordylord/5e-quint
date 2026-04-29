@@ -8,11 +8,15 @@ import {
   characterDraftId,
   createCharacterDraft,
   creationChoiceOptionId,
+  creationHoleId,
   discoverCreationHoles,
+  fillCreationHoles,
   unitChoiceKey,
   type CharacterDraft,
   type CharacterChoiceSelection,
+  type CreationFill,
   type CreationHole,
+  type CreationHoleIdText,
 } from "./index.ts";
 
 const unitCatalogResult = buildUnitCatalog({
@@ -375,6 +379,220 @@ describe("character creation hole discovery", () => {
   });
 });
 
+describe("character creation batch fill", () => {
+  test("accepts a legal batch atomically, increments revision, and rederives holes", () => {
+    const draft = createTestDraft("draft:batch-accepted");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: initialManifestFills(),
+    });
+
+    expect(result.tag).toBe("accepted");
+    if (result.tag !== "accepted") {
+      return;
+    }
+
+    expect(draft.revision).toBe(0);
+    expect(result.draft.revision).toBe(1);
+    expect(result.draft.selections).toMatchObject({
+      primaryClass: "class_fighter",
+      advancement: {
+        entries: [{ classUnitId: "class_fighter", level: 1 }],
+      },
+      background: "background_soldier",
+      species: "species_orc",
+      abilityScoreGeneration: {
+        method: "standardArray",
+        assignedScores: {
+          str: 15,
+          dex: 14,
+          con: 13,
+          int: 8,
+          wis: 10,
+          cha: 12,
+        },
+      },
+      languages: ["Common", "Dwarvish", "Goblin"],
+      alignment: { order: "lawful", morality: "good" },
+    });
+    expect(
+      holeById(result.holes, "cc:draft:draft.primaryClass"),
+    ).toBeUndefined();
+    expect(
+      holeById(result.holes, "cc:unit:class_fighter:fighter_skill_choices"),
+    ).toMatchObject({ kind: "multiChoice" });
+    expect(result.finalization).toMatchObject({ tag: "incomplete" });
+  });
+
+  test("rejects invalid choices without changing the draft", () => {
+    const draft = createTestDraft("draft:batch-invalid-choice");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [choiceFill("cc:draft:draft.primaryClass", "background_soldier")],
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      draft,
+      issues: [{ tag: "illegalFill", code: "invalidChoice", fillIndex: 0 }],
+    });
+  });
+
+  test("rejects non-Standard Array ability score assignments", () => {
+    const draft = createTestDraft("draft:batch-invalid-ability-scores");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          value: {
+            str: 20,
+            dex: 20,
+            con: 20,
+            int: 20,
+            wis: 20,
+            cha: 20,
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      draft,
+      issues: [{ tag: "illegalFill", code: "invalidChoice", fillIndex: 0 }],
+    });
+  });
+
+  test("rejects duplicate fills for the same hole", () => {
+    const draft = createTestDraft("draft:batch-duplicate");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+        choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      draft,
+      issues: [{ tag: "illegalFill", code: "duplicateFill", fillIndex: 1 }],
+    });
+  });
+
+  test("rejects stale revisions while still reporting diagnosable fill issues", () => {
+    const draft = createTestDraft("draft:batch-stale");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision + 1,
+      fills: [choiceFill("cc:draft:draft.primaryClass", "background_soldier")],
+    });
+
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") {
+      return;
+    }
+
+    expect(result.draft).toBe(draft);
+    expect(result.issues.map((issue) => issue.code)).toEqual([
+      "staleRevision",
+      "invalidChoice",
+    ]);
+  });
+
+  test("rejects wrong fill kinds and unsupported but otherwise valid choices", () => {
+    const draft = createTestDraft("draft:batch-wrong-kind");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        {
+          kind: "text",
+          holeId: creationHoleId("cc:draft:draft.primaryClass"),
+          value: "Fighter",
+        },
+        choiceFill("cc:draft:draft.alignment", "neutral_good"),
+      ],
+    });
+
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") {
+      return;
+    }
+
+    expect(result.draft).toBe(draft);
+    expect(result.issues.map((issue) => issue.code)).toEqual([
+      "wrongFillKind",
+      "unsupportedChoice",
+    ]);
+  });
+
+  test("reports the unsupported selected option for multi-choice fills", () => {
+    const draft = createTestDraft("draft:batch-unsupported-multi-choice");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        {
+          kind: "multiChoice",
+          holeId: creationHoleId("cc:draft:draft.languages"),
+          optionIds: [
+            creationChoiceOptionId("Dwarvish"),
+            creationChoiceOptionId("Elvish"),
+          ],
+        },
+      ],
+    });
+
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") {
+      return;
+    }
+
+    expect(result.issues).toMatchObject([
+      {
+        tag: "illegalFill",
+        code: "unsupportedChoice",
+        fillIndex: 0,
+        message:
+          "Unsupported choice Elvish for character creation hole: cc:draft:draft.languages",
+      },
+    ]);
+  });
+
+  test("replaying the same accepted batch from the same prior draft is idempotent", () => {
+    const draft = createTestDraft("draft:batch-replay");
+    const fills = initialManifestFills();
+    const first = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills,
+    });
+    const second = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills,
+    });
+
+    expect(second).toEqual(first);
+  });
+});
+
 function draftWithSelections(
   selections: Partial<CharacterDraft["selections"]>,
 ): CharacterDraft {
@@ -389,6 +607,53 @@ function draftWithSelections(
       ...base.selections,
       ...selections,
     },
+  };
+}
+
+function createTestDraft(draftId: string): CharacterDraft {
+  return createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(draftId),
+  });
+}
+
+function initialManifestFills(): readonly CreationFill[] {
+  return [
+    choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+    choiceFill("cc:draft:draft.background", "background_soldier"),
+    choiceFill("cc:draft:draft.species", "species_orc"),
+    {
+      kind: "abilityScores",
+      holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+      value: {
+        str: 15,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      },
+    },
+    {
+      kind: "multiChoice",
+      holeId: creationHoleId("cc:draft:draft.languages"),
+      optionIds: [
+        creationChoiceOptionId("Dwarvish"),
+        creationChoiceOptionId("Goblin"),
+      ],
+    },
+    choiceFill("cc:draft:draft.alignment", "lawful_good"),
+  ];
+}
+
+function choiceFill(
+  holeId: CreationHoleIdText,
+  optionId: string,
+): CreationFill {
+  return {
+    kind: "choice",
+    holeId: creationHoleId(holeId),
+    optionId: creationChoiceOptionId(optionId),
   };
 }
 

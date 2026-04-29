@@ -348,12 +348,43 @@ const SUPPORTED_PURCHASE_UNIT_IDS = [
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const SUPPORTED_CLASS_OPTION_IDS = [
+  creationChoiceOptionId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_BACKGROUND_OPTION_IDS = [
+  creationChoiceOptionId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_SPECIES_OPTION_IDS = [
+  creationChoiceOptionId(PHASE1_SPECIES_ORC_UNIT_ID),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_PURCHASE_OPTION_IDS = SUPPORTED_PURCHASE_UNIT_IDS.map(
+  creationChoiceOptionId,
+);
+const SUPPORTED_FIGHTER_SKILL_OPTION_IDS = [
+  creationChoiceOptionId("perception"),
+  creationChoiceOptionId("survival"),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_FIGHTING_STYLE_OPTION_IDS = [
+  creationChoiceOptionId(PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_WEAPON_MASTERY_OPTION_IDS = [
+  creationChoiceOptionId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
+  creationChoiceOptionId("weapon_spear"),
+  creationChoiceOptionId("weapon_flail"),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_LANGUAGE_OPTION_IDS = [
+  creationChoiceOptionId("Dwarvish"),
+  creationChoiceOptionId("Goblin"),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 
 const FIGHTER_FIGHTING_STYLE_FEATURE_ID = "fighter_fighting_style_l1";
 const FIGHTER_WEAPON_MASTERY_FEATURE_ID = "fighter_weapon_mastery_l1";
 const PHASE1_CLASS_EQUIPMENT_OPTION_ID = creationChoiceOptionId("option_c");
 const PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID =
   creationChoiceOptionId("option_b");
+const PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID =
+  creationChoiceOptionId("two_and_one:str:con");
+const PHASE1_ALIGNMENT_OPTION_ID = creationChoiceOptionId("lawful_good");
 
 const BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY = unitChoiceKey(
   "background_ability_score_increase",
@@ -374,6 +405,18 @@ const FIGHTER_WEAPON_MASTERY_CHOICE_KEY = unitChoiceKey(
 const LOADOUT_ARMOR_CHOICE_KEY = unitChoiceKey("loadout_armor");
 const LOADOUT_SHIELD_CHOICE_KEY = unitChoiceKey("loadout_shield");
 const LOADOUT_WEAPON_CHOICE_KEY = unitChoiceKey("loadout_weapon");
+
+const SURFACE_ABILITIES = [
+  "str",
+  "dex",
+  "con",
+  "int",
+  "wis",
+  "cha",
+] as const satisfies ReadonlyArray<Ability>;
+const STANDARD_ARRAY_SCORES = [
+  15, 14, 13, 12, 10, 8,
+] as const satisfies ReadonlyArray<number>;
 
 const ALIGNMENT_OPTIONS = [
   ["lawful", "good", "Lawful Good"],
@@ -438,11 +481,14 @@ export function fillCreationHoles(
     };
   }
 
+  const nextDraft = applyCreationFills(input.draft, holes, input.fills);
+  const nextInput = { draft: nextDraft, unitLibrary: input.unitLibrary };
+
   return {
     tag: "accepted",
-    draft: input.draft,
-    holes,
-    finalization,
+    draft: nextDraft,
+    holes: discoverCreationHoles(nextInput),
+    finalization: finalizeCharacterDraft(nextInput),
   };
 }
 
@@ -460,26 +506,598 @@ function creationFillIssues(
   input: CreationBatchFillInput,
   holes: readonly CreationHole[],
 ): readonly CreationIssue[] {
-  if (input.expectedRevision !== input.draft.revision) {
-    return [staleRevisionIssue(input)];
+  const batchIssues =
+    input.expectedRevision === input.draft.revision
+      ? []
+      : [staleRevisionIssue(input)];
+
+  return [
+    ...batchIssues,
+    ...input.fills.flatMap((fill, fillIndex) => {
+      const matchingHole = holes.find((hole) => hole.holeId === fill.holeId);
+      const isDuplicate = input.fills
+        .slice(0, fillIndex)
+        .some((priorFill) => priorFill.holeId === fill.holeId);
+
+      if (isDuplicate) {
+        return [duplicateFillIssue(fill, fillIndex)];
+      }
+
+      if (matchingHole == null) {
+        return [unknownHoleIssue(fill, fillIndex)];
+      }
+
+      return fillIssuesForHole(fill, fillIndex, matchingHole);
+    }),
+  ];
+}
+
+function fillIssuesForHole(
+  fill: CreationFill,
+  fillIndex: number,
+  hole: CreationHole,
+): readonly CreationFillIssue[] {
+  if (!fillKindMatchesHole(fill, hole)) {
+    return [wrongFillKindIssue(fill, fillIndex, hole)];
   }
 
-  return input.fills.flatMap((fill, fillIndex) => {
-    const matchingHole = holes.find((hole) => hole.holeId === fill.holeId);
-    const isDuplicate = input.fills
-      .slice(0, fillIndex)
-      .some((priorFill) => priorFill.holeId === fill.holeId);
-
-    if (isDuplicate) {
-      return [duplicateFillIssue(fill, fillIndex)];
+  if (hole.kind === "singleChoice" && fill.kind === "choice") {
+    const hasOption = hole.options.some(
+      (option) => option.optionId === fill.optionId,
+    );
+    if (!hasOption) {
+      return [invalidChoiceIssue(fill, fillIndex, fill.optionId)];
     }
 
-    if (matchingHole == null) {
-      return [unknownHoleIssue(fill, fillIndex)];
-    }
+    const unsupportedOptionId = unsupportedHoleSelectionOptionId(hole, [
+      fill.optionId,
+    ]);
+    return unsupportedOptionId == null
+      ? []
+      : [unsupportedChoiceIssue(fill, fillIndex, unsupportedOptionId)];
+  }
 
-    return [unsupportedFillIssue(fill, fillIndex)];
-  });
+  if (hole.kind === "multiChoice" && fill.kind === "multiChoice") {
+    return multiChoiceFillIssues(fill, fillIndex, hole);
+  }
+
+  if (hole.kind === "abilityScores" && fill.kind === "abilityScores") {
+    return abilityScoreFillIssues(fill, fillIndex);
+  }
+
+  return [];
+}
+
+function fillKindMatchesHole(fill: CreationFill, hole: CreationHole): boolean {
+  return (
+    (hole.kind === "singleChoice" && fill.kind === "choice") ||
+    (hole.kind === "multiChoice" && fill.kind === "multiChoice") ||
+    (hole.kind === "abilityScores" && fill.kind === "abilityScores") ||
+    (hole.kind === "freeText" && fill.kind === "text")
+  );
+}
+
+function multiChoiceFillIssues(
+  fill: Extract<CreationFill, { readonly kind: "multiChoice" }>,
+  fillIndex: number,
+  hole: Extract<CreationHole, { readonly kind: "multiChoice" }>,
+): readonly CreationFillIssue[] {
+  const cardinalityIssues = [
+    ...(fill.optionIds.length < hole.min
+      ? [tooFewChoicesIssue(fill, fillIndex, hole)]
+      : []),
+    ...(fill.optionIds.length > hole.max
+      ? [tooManyChoicesIssue(fill, fillIndex, hole)]
+      : []),
+  ];
+  const invalidOptionIds = fill.optionIds.filter(
+    (optionId, optionIndex) =>
+      fill.optionIds.indexOf(optionId) !== optionIndex ||
+      !hole.options.some((option) => option.optionId === optionId),
+  );
+
+  if (invalidOptionIds.length > 0) {
+    return [
+      ...cardinalityIssues,
+      invalidChoiceIssue(fill, fillIndex, invalidOptionIds[0]),
+    ];
+  }
+
+  const unsupportedOptionId = unsupportedHoleSelectionOptionId(
+    hole,
+    fill.optionIds,
+  );
+  return unsupportedOptionId == null
+    ? cardinalityIssues
+    : [
+        ...cardinalityIssues,
+        unsupportedChoiceIssue(fill, fillIndex, unsupportedOptionId),
+      ];
+}
+
+function abilityScoreFillIssues(
+  fill: Extract<CreationFill, { readonly kind: "abilityScores" }>,
+  fillIndex: number,
+): readonly CreationFillIssue[] {
+  return isStandardArrayAssignment(fill.value)
+    ? []
+    : [invalidAbilityScoresIssue(fill, fillIndex)];
+}
+
+function isStandardArrayAssignment(value: SixAbilityScores): boolean {
+  return sameNumberMultiset(abilityScoreValues(value), STANDARD_ARRAY_SCORES);
+}
+
+function abilityScoreValues(value: SixAbilityScores): readonly number[] {
+  return SURFACE_ABILITIES.map((ability) => value[ability]);
+}
+
+function sameNumberMultiset(
+  left: readonly number[],
+  right: readonly number[],
+): boolean {
+  const sortedLeft = [...left].sort((a, b) => a - b);
+  const sortedRight = [...right].sort((a, b) => a - b);
+
+  return (
+    sortedLeft.length === sortedRight.length &&
+    sortedLeft.every((value, index) => value === sortedRight[index])
+  );
+}
+
+function applyCreationFills(
+  draft: CharacterDraft,
+  holes: readonly CreationHole[],
+  fills: readonly CreationFill[],
+): CharacterDraft {
+  const selections = fills.reduce(
+    (selectionsSoFar, fill) =>
+      applyCreationFill(selectionsSoFar, requireHole(holes, fill.holeId), fill),
+    draft.selections,
+  );
+
+  return {
+    ...draft,
+    selections,
+    revision: draft.revision + 1,
+  };
+}
+
+function requireHole(
+  holes: readonly CreationHole[],
+  holeId: CreationHoleId,
+): CreationHole {
+  const hole = holes.find((candidate) => candidate.holeId === holeId);
+  if (hole == null) {
+    throw new Error(`Accepted fill referenced missing creation hole ${holeId}`);
+  }
+
+  return hole;
+}
+
+function applyCreationFill(
+  selections: CharacterDraftSelections,
+  hole: CreationHole,
+  fill: CreationFill,
+): CharacterDraftSelections {
+  if (hole.source.tag === "draft") {
+    return applyDraftFill(selections, hole, hole.source.path, fill);
+  }
+
+  return applyUnitFill(selections, hole, hole.source, fill);
+}
+
+function applyDraftFill(
+  selections: CharacterDraftSelections,
+  hole: CreationHole,
+  path: CharacterDraftPath,
+  fill: CreationFill,
+): CharacterDraftSelections {
+  if (path === "draft.primaryClass" && fill.kind === "choice") {
+    const classUnitId = requireSelectedUnitId(hole, fill.optionId);
+    return {
+      ...selections,
+      primaryClass: classUnitId,
+      advancement: {
+        entries: [{ classUnitId, level: 1 }],
+      },
+    };
+  }
+
+  if (path === "draft.background" && fill.kind === "choice") {
+    return {
+      ...selections,
+      background: requireSelectedUnitId(hole, fill.optionId),
+    };
+  }
+
+  if (path === "draft.species" && fill.kind === "choice") {
+    return {
+      ...selections,
+      species: requireSelectedUnitId(hole, fill.optionId),
+    };
+  }
+
+  if (
+    path === "draft.abilityScoreGeneration" &&
+    fill.kind === "abilityScores"
+  ) {
+    return {
+      ...selections,
+      abilityScoreGeneration: {
+        method: "standardArray",
+        assignedScores: fill.value,
+      },
+    };
+  }
+
+  if (path === "draft.languages" && fill.kind === "multiChoice") {
+    return {
+      ...selections,
+      languages: requireStartingLanguages(fill.optionIds),
+    };
+  }
+
+  if (path === "draft.alignment" && fill.kind === "choice") {
+    return {
+      ...selections,
+      alignment: requireAlignmentSelection(fill.optionId),
+    };
+  }
+
+  return selections;
+}
+
+function applyUnitFill(
+  selections: CharacterDraftSelections,
+  hole: CreationHole,
+  source: Extract<CreationHoleSource, { readonly tag: "unit" }>,
+  fill: CreationFill,
+): CharacterDraftSelections {
+  if (
+    source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY &&
+    fill.kind === "choice"
+  ) {
+    return {
+      ...selections,
+      backgroundAbilityScoreIncrease:
+        requireBackgroundAbilityScoreIncreaseSelection(fill.optionId),
+    };
+  }
+
+  if (
+    source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY &&
+    fill.kind === "multiChoice"
+  ) {
+    return {
+      ...selections,
+      equipment: {
+        selectedUnitIds: requireSelectedUnitIds(hole, fill.optionIds),
+      },
+    };
+  }
+
+  const optionIds =
+    fill.kind === "choice"
+      ? [fill.optionId]
+      : fill.kind === "multiChoice"
+        ? fill.optionIds
+        : [];
+
+  return optionIds.length === 0
+    ? selections
+    : {
+        ...selections,
+        choices: [
+          ...selections.choices,
+          {
+            source,
+            optionIds,
+          },
+        ],
+      };
+}
+
+function requireSelectedUnitIds(
+  hole: CreationHole,
+  optionIds: readonly CreationChoiceOptionId[],
+): readonly UnitRecord["id"][] {
+  return optionIds.map((optionId) => requireSelectedUnitId(hole, optionId));
+}
+
+function requireSelectedUnitId(
+  hole: CreationHole,
+  optionId: CreationChoiceOptionId,
+): UnitRecord["id"] {
+  const option = requireAcceptedChoiceOption(hole, optionId);
+  if (option.unitRef == null) {
+    throw new Error(
+      `Accepted fill option ${optionId} for ${hole.holeId} does not reference a Unit.`,
+    );
+  }
+
+  return option.unitRef.unitId;
+}
+
+function requireAcceptedChoiceOption(
+  hole: CreationHole,
+  optionId: CreationChoiceOptionId,
+): CreationChoiceOption {
+  if (!("options" in hole)) {
+    throw new Error(`Accepted fill referenced non-choice hole ${hole.holeId}.`);
+  }
+
+  const option = hole.options.find(
+    (candidate) => candidate.optionId === optionId,
+  );
+  if (option == null) {
+    throw new Error(
+      `Accepted fill referenced invalid choice ${optionId} for ${hole.holeId}.`,
+    );
+  }
+
+  return option;
+}
+
+function unsupportedHoleSelectionOptionId(
+  hole: CreationHole,
+  optionIds: readonly CreationChoiceOptionId[],
+): CreationChoiceOptionId | undefined {
+  const supportedOptionIds = supportedHoleOptionIds(hole);
+  if (supportedOptionIds == null) {
+    return undefined;
+  }
+
+  return optionIds.find((optionId) => !supportedOptionIds.includes(optionId));
+}
+
+function supportedHoleOptionIds(
+  hole: CreationHole,
+): readonly CreationChoiceOptionId[] | undefined {
+  if (hole.source.tag === "draft") {
+    return supportedDraftOptionIds(hole.source.path);
+  }
+
+  return supportedUnitOptionIds(hole.source.choiceKey);
+}
+
+function supportedDraftOptionIds(
+  path: CharacterDraftPath,
+): readonly CreationChoiceOptionId[] | undefined {
+  if (path === "draft.primaryClass") {
+    return SUPPORTED_CLASS_OPTION_IDS;
+  }
+
+  if (path === "draft.background") {
+    return SUPPORTED_BACKGROUND_OPTION_IDS;
+  }
+
+  if (path === "draft.species") {
+    return SUPPORTED_SPECIES_OPTION_IDS;
+  }
+
+  if (path === "draft.languages") {
+    return SUPPORTED_LANGUAGE_OPTION_IDS;
+  }
+
+  if (path === "draft.alignment") {
+    return [PHASE1_ALIGNMENT_OPTION_ID];
+  }
+
+  return undefined;
+}
+
+function supportedUnitOptionIds(
+  choiceKey: UnitChoiceKey,
+): readonly CreationChoiceOptionId[] {
+  if (choiceKey === FIGHTER_SKILL_CHOICE_KEY) {
+    return SUPPORTED_FIGHTER_SKILL_OPTION_IDS;
+  }
+
+  if (choiceKey === FIGHTER_FIGHTING_STYLE_CHOICE_KEY) {
+    return SUPPORTED_FIGHTING_STYLE_OPTION_IDS;
+  }
+
+  if (choiceKey === FIGHTER_WEAPON_MASTERY_CHOICE_KEY) {
+    return SUPPORTED_WEAPON_MASTERY_OPTION_IDS;
+  }
+
+  if (choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY) {
+    return [PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID];
+  }
+
+  if (choiceKey === BACKGROUND_TOOL_CHOICE_KEY) {
+    return [creationChoiceOptionId("tool_dice_set")];
+  }
+
+  if (choiceKey === CLASS_EQUIPMENT_CHOICE_KEY) {
+    return [PHASE1_CLASS_EQUIPMENT_OPTION_ID];
+  }
+
+  if (choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY) {
+    return [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID];
+  }
+
+  if (choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY) {
+    return SUPPORTED_PURCHASE_OPTION_IDS;
+  }
+
+  if (choiceKey === LOADOUT_ARMOR_CHOICE_KEY) {
+    return [creationChoiceOptionId("worn")];
+  }
+
+  if (choiceKey === LOADOUT_SHIELD_CHOICE_KEY) {
+    return [creationChoiceOptionId("wielded")];
+  }
+
+  if (choiceKey === LOADOUT_WEAPON_CHOICE_KEY) {
+    return [creationChoiceOptionId("wielded_one_handed")];
+  }
+
+  return [];
+}
+
+function requireAlignmentSelection(
+  optionId: CreationChoiceOptionId,
+): CharacterAlignment {
+  const alignment = ALIGNMENT_OPTIONS.find(
+    ([order, morality]) => `${order}_${morality}` === optionId,
+  );
+  if (alignment == null) {
+    throw new Error(`Accepted fill referenced invalid alignment ${optionId}`);
+  }
+
+  const [order, morality] = alignment;
+  return { order, morality };
+}
+
+function requireStartingLanguages(
+  optionIds: readonly CreationChoiceOptionId[],
+): CharacterStartingLanguages {
+  const first = optionIds[0];
+  const second = optionIds[1];
+  if (
+    optionIds.length !== 2 ||
+    !isSelectableStandardLanguage(first) ||
+    !isSelectableStandardLanguage(second) ||
+    first === second
+  ) {
+    throw new Error("Accepted fill referenced invalid starting languages.");
+  }
+
+  // TypeScript cannot infer this dependent tuple union from the local
+  // selectable-and-distinct checks above; the values are plain strings at runtime.
+  return ["Common", first, second] as CharacterStartingLanguages;
+}
+
+function requireBackgroundAbilityScoreIncreaseSelection(
+  optionId: CreationChoiceOptionId,
+): BackgroundAbilityScoreIncreaseSelection {
+  if (optionId === "one_each") {
+    return { kind: "oneEach" };
+  }
+
+  const parts = optionId.split(":");
+  const plusTwo = parts[1];
+  const plusOne = parts[2];
+  if (
+    parts[0] !== "two_and_one" ||
+    !isAbility(plusTwo) ||
+    !isAbility(plusOne) ||
+    plusTwo === plusOne
+  ) {
+    throw new Error(
+      `Accepted fill referenced invalid background ability score increase ${optionId}`,
+    );
+  }
+
+  // TypeScript cannot infer this mapped union branch from the local
+  // plusTwo/plusOne distinctness check above.
+  return {
+    kind: "twoAndOne",
+    plusTwo,
+    plusOne,
+  } as BackgroundAbilityScoreIncreaseSelection;
+}
+
+function isAbility(value: string | undefined): value is Ability {
+  return (
+    value != null && SURFACE_ABILITIES.some((ability) => ability === value)
+  );
+}
+
+function isSelectableStandardLanguage(
+  value: CreationChoiceOptionId | undefined,
+): value is CreationChoiceOptionId & SelectableStandardLanguage {
+  return (
+    value != null &&
+    value !== "Common" &&
+    STANDARD_LANGUAGES.some((language) => language === value)
+  );
+}
+
+function wrongFillKindIssue(
+  fill: CreationFill,
+  fillIndex: number,
+  hole: CreationHole,
+): CreationFillIssue {
+  return {
+    tag: "illegalFill",
+    holeId: fill.holeId,
+    fillIndex,
+    code: "wrongFillKind",
+    message: `Fill kind ${fill.kind} does not match character creation hole ${hole.holeId} of kind ${hole.kind}.`,
+  };
+}
+
+function invalidChoiceIssue(
+  fill: CreationFill,
+  fillIndex: number,
+  optionId: CreationChoiceOptionId,
+): CreationFillIssue {
+  return {
+    tag: "illegalFill",
+    holeId: fill.holeId,
+    fillIndex,
+    code: "invalidChoice",
+    message: `Invalid choice ${optionId} for character creation hole: ${fill.holeId}`,
+  };
+}
+
+function invalidAbilityScoresIssue(
+  fill: Extract<CreationFill, { readonly kind: "abilityScores" }>,
+  fillIndex: number,
+): CreationFillIssue {
+  return {
+    tag: "illegalFill",
+    holeId: fill.holeId,
+    fillIndex,
+    code: "invalidChoice",
+    message:
+      "Invalid Standard Array assignment; expected the scores 15, 14, 13, 12, 10, and 8 exactly once.",
+  };
+}
+
+function tooFewChoicesIssue(
+  fill: CreationFill,
+  fillIndex: number,
+  hole: Extract<CreationHole, { readonly kind: "multiChoice" }>,
+): CreationFillIssue {
+  return {
+    tag: "illegalFill",
+    holeId: fill.holeId,
+    fillIndex,
+    code: "tooFewChoices",
+    message: `Too few choices for character creation hole ${fill.holeId}; expected at least ${hole.min}.`,
+  };
+}
+
+function tooManyChoicesIssue(
+  fill: CreationFill,
+  fillIndex: number,
+  hole: Extract<CreationHole, { readonly kind: "multiChoice" }>,
+): CreationFillIssue {
+  return {
+    tag: "illegalFill",
+    holeId: fill.holeId,
+    fillIndex,
+    code: "tooManyChoices",
+    message: `Too many choices for character creation hole ${fill.holeId}; expected at most ${hole.max}.`,
+  };
+}
+
+function unsupportedChoiceIssue(
+  fill: CreationFill,
+  fillIndex: number,
+  optionId: CreationChoiceOptionId,
+): CreationFillIssue {
+  return {
+    tag: "illegalFill",
+    holeId: fill.holeId,
+    fillIndex,
+    code: "unsupportedChoice",
+    message: `Unsupported choice ${optionId} for character creation hole: ${fill.holeId}`,
+  };
 }
 
 function staleRevisionIssue(input: CreationBatchFillInput): CreationBatchIssue {
@@ -513,19 +1131,6 @@ function unknownHoleIssue(
     fillIndex,
     code: "unknownHole",
     message: `Unknown character creation hole: ${fill.holeId}`,
-  };
-}
-
-function unsupportedFillIssue(
-  fill: CreationFill,
-  fillIndex: number,
-): CreationFillIssue {
-  return {
-    tag: "illegalFill",
-    holeId: fill.holeId,
-    fillIndex,
-    code: "unsupportedChoice",
-    message: `Filling character creation hole is not implemented yet: ${fill.holeId}`,
   };
 }
 

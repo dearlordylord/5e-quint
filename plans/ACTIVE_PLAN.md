@@ -85,13 +85,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 8,
       "id": "CAM8",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Implement Atomic Creation Batch Fill"
     },
     {
       "number": 9,
       "id": "CAM9",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Finalize Legal Fighter Character Sheet"
     },
     {
@@ -188,8 +188,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 5     | CAM5 - Author First Vertical SRD Surface Content                | done                                          | CAM3, CAM4        | CAM7, CAM9, CAM12, CAM16             | Authored first-vertical SRD Surface records and real SRD Unit/Stat Block collections for composition.                                                                           | Done in this task.                                                                                   |
 | 6     | CAM6 - Create Character Creation Runtime Skeleton               | done                                          | CAM1, CAM2        | CAM7, CAM8, CAM9, CAM10, CAM17       | Created `@dnd/character-creation-runtime` package with public draft/session/hole/fill/finalization types matching `phase0-runtime-boundary-api.md`.                             | Done in this task.                                                                                   |
 | 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | done                                          | CAM5, CAM6        | CAM8, CAM9                           | Hole discovery for the exact Orc Soldier Fighter manifest landed using real Surface records and package-private support gates.                                                  | Done in this task.                                                                                   |
-| 8     | CAM8 - Implement Atomic Creation Batch Fill                     | ready-for-implementation-after-light-research | CAM7              | CAM9, CAM10, CAM17                   | Implement accepted/rejected batch semantics, stable hole ids, duplicate-fill rejection, stale revision handling, and hole rediscovery after accepted fills.                     | Ready after batch-fill boundary check.                                                               |
-| 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | blocked                                       | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Finalize the manifest draft into a legal `CharacterSheet` with selected Unit refs, advancement exactly one Fighter level, loadout, and legality tests.                          | Blocker Type: dependency. Blocker Detail: waits on batch fill semantics.                             |
+| 8     | CAM8 - Implement Atomic Creation Batch Fill                     | done                                          | CAM7              | CAM9, CAM10, CAM17                   | Atomic batch fill landed with revision checks, duplicate/invalid/wrong-kind/unsupported issues, Standard Array validation, and hole rediscovery after accepted fills.            | Done in this task.                                                                                   |
+| 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | ready-for-implementation-after-light-research | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Finalize the manifest draft into a legal `CharacterSheet` with selected Unit refs, advancement exactly one Fighter level, loadout, and legality tests.                          | Ready after finalization legality and RAW check.                                                     |
 | 10    | CAM10 - Add Character Creation QNT Slice And Parity             | blocked                                       | CAM9              | CAM17, CAM18                         | Add `character-creation-runtime-slice.qnt` and parity/deterministic tests for complete Fighter creation and at least one invalid fill.                                          | Blocker Type: dependency. Blocker Detail: waits on finalization behavior.                            |
 | 11    | CAM11 - Create Battle Runtime Skeleton                          | ready-for-implementation-after-light-research | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Create `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block seed types.                                  | Ready after runtime package architecture check.                                                      |
 | 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | blocked                                       | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Implement battle initialization from finalized Character Sheet plus generic `StatBlockRecord`, deriving AC/HP/loadout/action-resource facts without Core imports.               | Blocker Type: dependency. Blocker Detail: waits on finalized sheet and battle runtime skeleton.      |
@@ -519,12 +519,12 @@ Plan Impact:
 
 ### Task 8 - CAM8 - Implement Atomic Creation Batch Fill
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM7  
 Blocks: CAM9, CAM10, CAM17
 
-Next action: run the batch-fill boundary check, then implement atomic fill semantics against the CAM7 stable hole ids.
+Next action: none; CAM8 is complete.
 
 Input:
 
@@ -545,22 +545,28 @@ Acceptance:
 
 Verification:
 
-- Focused reducer tests for accepted batch, invalid choice, duplicate fill, stale revision, and idempotent replay from same prior draft.
-- `pnpm --filter @dnd/character-creation-runtime test`
+- Verified in this task:
+  - Read `.references/srd-5.2.1/Character-Creation.md` and `UBIQUITOUS_LANGUAGE.md` for Standard Array and character-creation terminology.
+  - `pnpm --filter @dnd/character-creation-runtime test`
+  - `pnpm --filter @dnd/character-creation-runtime typecheck`
+  - `pnpm exec prettier --check packages/character-creation-runtime/README.md packages/character-creation-runtime/src/index.ts packages/character-creation-runtime/src/index.test.ts`
+  - `rg '@dnd/core|CPU|PEA|PPR' packages/character-creation-runtime`
+  - `git diff --check`
+  - `pnpm quality` was attempted and stopped on pre-existing `@dnd/core` Prettier drift outside this task's ownership surface.
+  - `/simplify` convergence completed in two manual rounds. Round 1 accepted the candidate reducer shape but fixed Standard Array legality so arbitrary `SixAbilityScores` cannot be recorded as `standardArray`. Round 2 confirmed duplicate-fill, issue-index, support-gate, and accepted-fill replay facts remain localized in the reducer/tests.
 
 Plan Impact:
 
-- Unblock CAM9 because CAM5 is done.
+- Unblocked CAM9 because CAM5 and CAM8 are done.
 
 ### Task 9 - CAM9 - Finalize Legal Fighter Character Sheet
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM5, CAM8  
 Blocks: CAM10, CAM12, CAM17
 
-Blocker Type: dependency  
-Blocker Detail: waits on batch fill semantics.
+Next action: run the finalization legality and RAW check, then implement legal Fighter sheet finalization.
 
 Input:
 
