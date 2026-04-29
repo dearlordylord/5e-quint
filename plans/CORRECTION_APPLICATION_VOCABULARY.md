@@ -1,9 +1,13 @@
 # Correction Application Vocabulary
 
-Technical vocabulary for the Correction Application Migration green path.
+Technical vocabulary for the Correction Application Migration plan.
 Domain rules language remains in [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
 This file names repository architecture terms that cross Surface, character
 creation, battle runtime, and MCP composition.
+
+Status: migration vocabulary. Stable package-owned terms should move into the
+owning package docs as packages mature; this file preserves cross-package
+planning language and restore-work context.
 
 ## Terms
 
@@ -30,14 +34,14 @@ Unit content. A Stat Block may later reuse shared Surface sub-shapes for
 actions, attacks, damage, or resources, but it remains a monster-authored Stat
 Block record and is not a Unit.
 
-Unit lookup - current implementation mechanism for finding authored Units.
+Unit lookup - implementation mechanism for finding authored Units.
 Character creation reads authored Unit content to discover legal holes and
 finalize selected Unit references. Battle composition may read selected
 character Unit refs to derive init facts such as armor, shield, weapon, or
 feature bonuses.
 
-Stat Block lookup - current implementation mechanism for finding authored
-monster Stat Blocks.
+Stat Block lookup - implementation mechanism for finding authored monster Stat
+Blocks.
 
 Battle Creature Init - one-time runtime input used to initialize a creature in
 battle. Character creature-init inputs are projected from a Character Sheet plus
@@ -58,8 +62,8 @@ damage expression shape as a weapon or spell effect. That reuse does not make
 the monster Stat Block a Unit.
 
 support gate - package-private narrowing from all authored content to the
-currently implemented runtime slice. Support gates are allowed while the green
-path is narrow. They must not become public semantic classifications and should
+implemented runtime slice. Support gates are allowed while a runtime package is
+narrow. They must not become public semantic classifications and should
 disappear as support widens.
 
 ## Boundary Flow

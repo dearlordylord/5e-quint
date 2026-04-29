@@ -1,9 +1,13 @@
 # Shared Algebras
 
-This package contains reusable, MBT-backed reducer/model algebras. It is separate from `@dnd/shared` on purpose:
+This package contains reusable reducer/model algebras. It is separate from
+`@dnd/shared` on purpose:
 
 - `@dnd/shared` owns low-level scalar/domain types and package-neutral utilities.
-- `@dnd/shared-algebras` owns reusable semantic algebras that can be consumed by `@dnd/core`, `@dnd/surface-runtime-correction`, and other runtime packages.
+- `@dnd/shared-algebras` owns reusable semantic algebras that can be consumed by
+  runtime packages such as `@dnd/battle-runtime`,
+  `@dnd/character-creation-runtime`, legacy `@dnd/core`, and legacy
+  `@dnd/surface-runtime-correction`.
 
 ## Surface Dependency Policy
 
@@ -16,12 +20,26 @@ Rules:
 - Do not let a Surface import leak into an algebra just because it is convenient. If the algebra only needs reducer facts, model those facts directly.
 - `@dnd/shared` should remain the lower-level package. Since `@dnd/shared-algebras` depends on `@dnd/shared`, `@dnd/shared` should not re-export `@dnd/shared-algebras`.
 
-Current adoption note: `@dnd/core` and `@dnd/surface-runtime-correction` both import reusable algebras from this package. `@dnd/shared` should not contain algebra modules.
+Runtime packages import reusable algebras from this package. `@dnd/shared`
+should not contain algebra modules.
+
+## Algebra Inventory
+
+- `ability-score-algebra` - ability-score generation and assignment rules.
+- `action-economy-algebra` - turn resource availability, spending, and reset.
+- `armor-class-algebra` - structured Armor Class state and current AC reading.
+- `attack-roll-algebra` - d20 attack-roll hit adjudication.
+- `conditions-algebra` - condition set operations.
+- `death-saves-algebra` - death-save counter state.
+- `initiative-algebra` - Initiative order and turn advancement.
+- `runtime-dice-algebra` - rolled-dice validation and totaling.
+- `runtime-hole-algebra` - shared hole identity/refill vocabulary.
+- `validation-algebra` - small validation/result helpers.
 
 ## Runtime Hole Algebra
 
-`runtime-hole-algebra` owns the reducer-facing hole/fill vocabulary currently
-used by Correction:
+`runtime-hole-algebra` owns reducer-facing hole/fill identity and refill
+vocabulary:
 
 - stable `HoleId` values pair holes with submitted fills across replay;
 - `HoleInstanceKey` identifies one concrete occurrence in a replay path;
@@ -30,13 +48,13 @@ used by Correction:
 - `FilledHoleValue` carries keyed answers supplied by the caller.
 
 The algebra intentionally does not own act subjects, battle state, Unit support
-gates, or execution semantics. Those remain in the consuming runtime.
-`@dnd/battle-runtime` may reuse the branded hole identity types, but it should
-expose only the battle hole/fill variants that its own reducer can discover and
-resolve.
+gates, or execution semantics. Those remain in the consuming runtime. Legacy
+Correction uses the broad runtime hole variants. `@dnd/battle-runtime` may reuse
+the branded hole identity types, but it should expose only the battle hole/fill
+variants that its own reducer can discover and resolve.
 
-## Core Adoption Notes
+## Verification
 
-- Death saves are the first core adoption target because the algebra is Surface-free and replaces duplicated counter transition logic.
-- Action economy should be adopted by core later, after the small action/bonus/free primitive grows into a shared resource-payment algebra: multi-cost validation, atomic spend, richer resource vocabulary, and Surface/core cost compilation into the same reducer facts.
-- Armor class should be adopted by core when core has a Surface-backed armor/equipment projection path. Until then, wiring the armor algebra into core would mostly adapt the existing scalar/projected AC model into a shape intended for richer projected armor facts.
+Algebras should have focused deterministic tests. When an algebra models state
+transition behavior with a corresponding Quint file, its package tests should
+replay that model against the TypeScript module that runtime packages import.

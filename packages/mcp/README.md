@@ -5,13 +5,12 @@ packages.
 
 ## Surface Runtime Composition
 
-The Surface runtime composition path starts at `src/green/`. The directory name
-exists only in MCP because MCP still has legacy Core-backed modules beside the
-new path. The broader green path is the Core-free import graph:
-`@dnd/surface`, `@dnd/character-creation-runtime`, `@dnd/battle-runtime`, and
-`packages/mcp/src/green/`.
+The Surface runtime composition path wires `@dnd/surface`,
+`@dnd/character-creation-runtime`, and `@dnd/battle-runtime` for tool-facing
+workflows. Its implementation lives under `src/green/` while MCP also contains
+the older Core-backed tool path.
 
-The MCP green subtree imports Surface authored content boundaries plus the
+The `src/green/` subtree imports Surface authored content boundaries plus the
 character-creation and battle runtimes. Its composition root builds:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
@@ -27,6 +26,10 @@ so MCP session state cannot drift from the SRD stat-block catalog.
 Transient battle fills are MCP session state. They are kept separate from
 `BattleState` so battle replay remains owned by `@dnd/battle-runtime`.
 
+Surface-runtime tools should use their final user-facing tool names. The
+implementation boundary is the module/package registration path, not a `green_`
+tool-name prefix.
+
 This package also owns cross-runtime composition helpers. Character Sheet to
 creature-init mapping lives in `src/green/battle-creature-init.ts`, where
 finalized character facts and Surface Unit lookups are projected into
@@ -37,12 +40,15 @@ domain term: `@dnd/mcp` may see Character Sheets, authored Units, authored Stat
 Blocks, and battle creature-init APIs together because its job is wiring
 runtimes for tools.
 
-`src/green/` is a migration isolation namespace, not the final MCP API shape.
-The promotion criteria live in
-`plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md` Phase 5 and
-`plans/ACTIVE_PLAN.md` CAM20. Once the Core-backed overlap is deleted or
-rewritten, these tools should move into the normal MCP server path and the
-green namespace should disappear or become internal-only composition helpers.
+`start_battle` must receive caller-supplied Initiative scores for every
+combatant. MCP must not derive Initiative as `10 + modifier` in the promoted
+Surface runtime path.
+
+`src/green/` is an isolation namespace, not the final MCP API shape. Once the
+Core-backed overlap is deleted or rewritten, these tools should move into the
+normal MCP server path and the green namespace should disappear or become
+internal-only composition helpers. The promotion checklist belongs in the
+migration plans, not in this package contract.
 
 No file under `src/green/` may import or re-export from the legacy Core-backed
 MCP modules. Check that boundary with:

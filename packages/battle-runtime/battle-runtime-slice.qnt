@@ -18,9 +18,10 @@ module battleRuntimeSlice {
   //   Death Saving Throw lifecycle, including instant death from massive
   //   damage.
   //
-  // This slice is the executable authority for @dnd/battle-runtime's CAM15
-  // green path. The legacy root battle.qnt remains the broader combat authority
-  // until CAM19 removes the old Core/projected runtime path.
+  // This slice is the package-local parity reference for implemented
+  // @dnd/battle-runtime behavior. The root battle.qnt remains the broader
+  // combat authority until the package-local slice is reconciled into the
+  // canonical battle spec.
 
   type Actor = Fighter | Goblin
 

@@ -6,7 +6,10 @@ The MBT entry points do not currently prove `resolveSubjectHoles` as one large s
 
 ## Ownership Note
 
-`@dnd/shared-algebras` is the correction package's algebra home. It contains the shared initiative, conditions, death-save, armor-class, and action-economy algebras consumed by this package's MBT drivers and reducer code.
+`@dnd/shared-algebras` is the correction package's reusable algebra home. It
+contains shared initiative, conditions, death-save, armor-class, and
+action-economy algebras consumed by this package's MBT drivers and reducer
+code.
 
 The shared-algebras package is intentionally separate from `@dnd/shared`:
 
@@ -20,10 +23,13 @@ The death-save, armor-class, and action-economy algebras used to live inside `su
 - armor class is the reducer-local structured state for armor/equipment reducer facts, regardless of whether those facts later come from Surface, fixtures, or another caller;
 - action economy is tied to this reducer's current turn-resource fields and current Surface activation-cost support.
 
-Promotion rule:
+Ownership rule:
 
 - move reusable algebra to `@dnd/shared-algebras`;
-- move battle-owned lifecycle/action semantics to `@dnd/core` when they become canonical runtime behavior;
+- move Surface-backed battle lifecycle/action semantics to `@dnd/battle-runtime`
+  when they become canonical runtime behavior for the new battle path;
+- keep `@dnd/core` ownership scoped to the legacy/broad Core lane until that
+  lane is deleted, rewritten, or explicitly preserved;
 - keep Surface projection glue near the Surface/correction runtime.
 
 MBT is evidence about behavior, not ownership. Passing MBT does not make a module canonical; canonical status is decided by where the repo wants that rule to live and which callers should depend on it.
@@ -191,7 +197,12 @@ The key non-obvious status is death saves. The pure counter algebra is MBT-cover
 
 The key action-economy status is similar. The algebra supports action resources with Surface `ActionRestriction`, free no-op costs, bonus actions, multiple unit-granted restricted action resources, duplicate-grant rejection, and reset. The public discovery lane currently exposes action cantrips and Action Surge; broader bonus-action discovery still depends on supported Surface units, not just the algebra. Action Surge's once-per-turn guard and creature-scoped use-count spend/restore helper are implemented in the reducer; upcast slots and shared or scaled use-count pools remain explicit later work.
 
-Armor-class math is MBT-covered and used for unit attack AC comparison. Surface armor/equipment projection into `ArmorClassState` does not exist yet. Core adoption is explicitly deferred until core has a Surface-backed armor/equipment projection path. That belongs to the open Surface/MBT boundary discussion: first decide the Surface fact projection contract, then decide whether that contract needs ordinary tests, MBT, or both.
+Armor-class math is MBT-covered and used for unit attack AC comparison. Surface
+armor/equipment projection into `ArmorClassState` does not exist in this
+package. The new Surface-backed battle path owns that projection at
+`@dnd/battle-runtime` or its MCP composition boundary. That belongs to the open
+Surface/MBT boundary discussion: first decide the Surface fact projection
+contract, then decide whether that contract needs ordinary tests, MBT, or both.
 
 ## Surface Boundary
 
@@ -208,7 +219,16 @@ Current MBT validates reducer algebra over reducer facts, not Surface facts. The
 
 The distinction matters: a reducer fact is something like "this activation costs one action", "this target has AC 18", or "this runtime hole asks for an attack roll". A Surface fact is authored content shape: `UnitRecord`, phases, attachments, effects, dice expressions, equipment, and other content-level data.
 
-Core also has a separate projected-unit bridge in `@dnd/core`, with local tags such as `CPUExecutable`, `CPUPersistent`, `PEASaveGateDamage`, `PPRSetBaseAc`, and `PRGUseCount`. Those names are not Surface vocabulary and are not the correction package's reducer-fact vocabulary. They are a transitional core-local compiled projected-unit IR: authored Surface-like records are narrowed into execution/persistent records that core can currently consume. Treat that bridge as another projection boundary, not as the canonical Surface model. This `CPU*`/`PEA*`/`PPR*` projected-unit vocabulary is not the intended long-term architecture; it should be removed or replaced once core consumes Surface/shared reducer facts through the same contracts used by correction.
+Core also has a separate projected-unit bridge in `@dnd/core`, with local tags
+such as `CPUExecutable`, `CPUPersistent`, `PEASaveGateDamage`, `PPRSetBaseAc`,
+and `PRGUseCount`. Those names are not Surface vocabulary and are not the
+correction package's reducer-fact vocabulary. They are a transitional core-local
+compiled projected-unit IR: authored Surface-like records are narrowed into
+execution/persistent records that core can consume. Treat that bridge as another
+projection boundary, not as the canonical Surface model. This
+`CPU*`/`PEA*`/`PPR*` projected-unit vocabulary is not the intended long-term
+architecture; it should be removed or replaced by direct Surface-authored
+records feeding the owning runtime packages.
 
 Whether Surface fact projection should get MBT is an open question. For now, this document must not assume a Surface projection MBT exists or must exist. The current concrete coverage is ordinary unit/boundary testing around support gates, runtime-hole projection, and reducer execution.
 

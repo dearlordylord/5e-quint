@@ -1,3 +1,9 @@
+# Surface Runtime Correction Vocabulary
+
+Status: package-local vocabulary for `@dnd/surface-runtime-correction`. New
+Surface-backed battle and character-creation terms live in their owning runtime
+package docs.
+
 acts - executable branches in the reducer protocol. We say `acts` here to avoid
 collision with the domain resource `action` in the action economy.
 When an act is chosen, its `subject` becomes the execution identity reused
@@ -10,9 +16,10 @@ unit-backed acts - executable branches derived from authored units.
 authored units - authored `UnitRecord`s from Surface.
 In this slice, `units` is acceptable shorthand for authored units.
 
-supported units - authored units that currently pass this package's support gate.
-This term is only needed while the reducer supports a subset of authored units.
-Once the reducer supports the whole intended unit subset, this distinction should disappear.
+supported units - authored units that pass this package's support gate. This
+term is only needed while the reducer supports a subset of authored units. Once
+the reducer supports the whole intended unit subset, this distinction should
+disappear.
 
 holes - caller-visible missing pieces needed to continue resolution. called "holes" not to call them "slots" to not confuse with the domain resource `slot`.
 Examples: `targetChoice`, `attackRoll`, `rolledDice`, projected fillable Surface holes.
@@ -46,13 +53,13 @@ filled hole values - caller-supplied values for currently known holes.
 Runtime holes are asks; filled hole values are keyed answers to those asks for the same subject.
 Replay-from-root always resends the full accumulated filled-hole assignment for
 the chosen subject.
-The filled-value union is Correction's current runtime-hole protocol.
+The filled-value union is Correction's runtime-hole protocol.
 `@dnd/battle-runtime` may reuse hole identity brands, but it exposes only its
 own implemented battle hole/fill variants. Durable state in either runtime
 stores the root state, not accumulated fills.
 
 subject - execution identity for one attempted branch.
-Current variants:
+Variants:
 
 - core act subject
 - unit subject
@@ -72,12 +79,12 @@ filled-hole set after `needsHoles`.
 hole resolution - replay-from-root advancement of a chosen subject plus filled holes.
 This is the reducer-side step paired with caller-side hole refilling.
 
-support gate - the load-time assertion that a unit is inside this reducer slice's
-currently supported subset.
-This term is only needed while the reducer supports a subset of authored units.
-Once the reducer supports the whole intended unit subset, this distinction should disappear.
+support gate - the load-time assertion that a unit is inside this reducer
+slice's supported subset. This term is only needed while the reducer supports a
+subset of authored units. Once the reducer supports the whole intended unit
+subset, this distinction should disappear.
 
-## Current Slice Graph
+## Slice Graph
 
 ```mermaid
 flowchart TD
