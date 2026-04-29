@@ -414,6 +414,8 @@ export type ChoiceCardinality = {
   readonly count: ChoiceCount;
 };
 
+export function exactChoiceCardinality(count: number): ChoiceCardinality;
+
 export type CreationHole =
   | {
       readonly kind: "choice";
@@ -452,6 +454,10 @@ export type CreationFill =
       readonly value: string;
     };
 ```
+
+`exactChoiceCardinality` is the only constructor for `ChoiceCardinality`; it
+rejects non-integer and non-positive counts before a hole crosses the runtime
+boundary.
 
 Batch fill behavior:
 
@@ -596,6 +602,8 @@ export type StatBlockBattleCreatureInit = {
 export type BattleCreatureInit = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
+  // Caller-supplied Initiative score for this battle. MCP must not derive this
+  // as `10 + modifier` in the promoted path.
   readonly initiative: InitiativeScore;
   readonly creatureInit:
     | CharacterBattleCreatureInit
@@ -638,20 +646,26 @@ export type BattleSubject =
 ```
 
 Phase 1 subjects are only `srdAction.attack` and `runtimeCommand.endTurn`.
-`endTurn` is a runtime command, not an SRD Action. Do not include `unit` or
-`monsterStatBlockAction` in the public subject union until discovery and
-resolution support them. Stat Block creature-init ownership is visible through
-`StatBlockBattleCreatureInit` and `StatBlockCatalog`; exposing unsupported subject
-variants would make invalid act states representable.
+`endTurn` is a runtime command, not an SRD Action. CAM18 widens
+`srdAction.attack` so the current actor may be either the finalized Fighter or
+the Goblin Warrior when a supported attack profile can be derived from that
+actor's origin. Do not introduce a separate `monsterStatBlockAction` subject for
+Goblin attacks; the SRD action is still Attack. If multiple supported attack
+profiles are available for one actor, the subject or first replay hole must
+carry the selected attack identity so Scimitar and Shortbow cannot be confused.
+Stat Block creature-init ownership is visible through
+`StatBlockBattleCreatureInit` and `StatBlockCatalog`; unsupported authored
+Stat Block actions must not appear in discovery.
 
 Battle hole identity may reuse the branded `HoleId`/`HoleInstanceKey` values
 from `@dnd/shared-algebras/runtime-hole-algebra`, but the battle public
 hole/fill union must stay as narrow as the implemented battle protocol. The
-phase-1 protocol exposes only Attack target, Attack Roll, and weapon damage
-roll holes/fills. End Turn is a runtime command and must not accept fills.
-Later tasks should add only battle-owned variants that are actually
-discoverable and resolvable. Do not expose Correction's
-Surface/Unit/effect execution holes through `@dnd/battle-runtime`.
+phase-1 protocol exposes only Attack target, Attack Roll, and damage roll
+holes/fills for supported character weapon and Goblin Warrior Stat Block attack
+profiles. End Turn is a runtime command and must not accept fills. Later tasks
+should add only battle-owned variants that are actually discoverable and
+resolvable. Do not expose Correction's Surface/Unit/effect execution holes
+through `@dnd/battle-runtime`.
 
 ```ts
 export type BattleHoleId = HoleId;
@@ -785,6 +799,7 @@ Tool sequence:
 4. `finalize_character`
    - Calls `finalizeCharacterDraft({ draft, unitLibrary })`.
    - Stores `CharacterSheet` only when result is `ready`.
+   - Removes the finalized draft from the active draft store.
 
 5. `select_stat_block`
    - Reads `srd_stat_block_goblin_warrior` from the SRD Stat Block catalog.
@@ -792,8 +807,11 @@ Tool sequence:
    - Stores or returns the selected `StatBlockRecord`; it does not produce battle creature-init.
 
 6. `start_battle`
-   - Builds `CharacterBattleCreatureInit` from the finalized sheet, selected loadout, and caller-supplied current HP at the MCP composition root.
-   - Builds `StatBlockBattleCreatureInit` from the selected `StatBlockRecord` and caller-supplied battle-local facts.
+   - Requires caller-supplied Initiative scores for the character and selected
+     Stat Block combatants. Initiative is start-battle input, not a separate
+     in-battle hole.
+   - Builds `CharacterBattleCreatureInit` from the finalized sheet, selected loadout, caller-supplied Initiative, and caller-supplied current HP at the MCP composition root.
+   - Builds `StatBlockBattleCreatureInit` from the selected `StatBlockRecord` and caller-supplied battle-local facts, including Initiative.
    - Calls `startBattle({ battleId, combatants })`.
    - Stores `BattleState`.
 
@@ -822,6 +840,8 @@ Green-path isolation requirements:
 - Put new green tools in a dedicated MCP module subtree, for example `packages/mcp/src/green/`, with no imports from existing Core-backed server modules.
 - The green subtree must not import `@dnd/core` directly or indirectly. Add a package script or focused test that fails on `@dnd/core` imports under the green subtree.
 - Existing Core-backed MCP tools may keep the package-level `@dnd/core` dependency during controlled breakage, but no green file may re-export from legacy MCP modules that import Core.
+- CAM19 moves Core-backed MCP routes/tests into a separate deletion-marked
+  package before the Surface runtime tools become the normal `@dnd/mcp` route.
 
 ## RAW Traceability Checkpoints
 
@@ -830,11 +850,18 @@ Before implementation, the runtime slices must trace every modeled rule in the s
 - Fighter, Soldier, Orc, Standard Array, languages, alignment, and starting-equipment facts come from the manifest rows pointing to `Character-Creation.md`, `Character-Origins.md`, and `Classes/Fighter.md`.
 - Chain Mail, Shield, Longsword, one-handed damage, and the selected loadout come from the manifest rows pointing to `Equipment.md` and Defense in `Feats.md`.
 - Attack Roll vs Armor Class, damage application, Temporary Hit Points, and HP clamp come from the manifest rows pointing to `Playing-the-Game.md` and `Rules-Glossary.md`.
-- Goblin Warrior AC, HP, Initiative, and attacks come from `Monsters/Monsters-E-G.md` through the SRD Stat Block catalog, not the Core monster catalog.
+- Goblin Warrior AC, HP, and attacks come from `Monsters/Monsters-E-G.md`
+  through the SRD Stat Block catalog, not the Core monster catalog. Goblin
+  Warrior Initiative is caller-supplied battle-local input.
 - End Turn is an explicit modeling event under `ASSUMPTIONS.md` A2.
 - Zero-HP lifecycle policy follows `ASSUMPTIONS.md` A12: monsters die at 0 HP; player characters use the death-saving-throw track when applicable.
 
-The first battle slice must not execute Longsword Sap, Savage Attacker, Orc Relentless Endurance, or Goblin Warrior attack riders unless the selected manifest and QNT slice are widened with SRD citations. Authored Units may grant those facts for sheet legality, but unsupported execution must fail at a named support gate or be absent from discovery.
+The first battle slice must not execute Longsword Sap, Savage Attacker, Orc
+Relentless Endurance, or Goblin Warrior attack riders unless the selected
+manifest and QNT slice are widened with SRD citations. CAM18 does execute the
+Goblin Warrior's supported base Attack damage from the authored Stat Block.
+Unsupported authored riders must fail at a named support gate or be absent from
+discovery.
 
 ## QNT Slice Ownership
 
@@ -874,9 +901,10 @@ Ubiquitous-language review requirements:
 - Use "Stat Block" for authored monster records. Do not rename them as Monster Units.
 - Keep Correction reducer vocabulary (`act`, `subject`, `runtime hole`, `filled hole value`, `hole resolution`, `hole refilling`) when describing the reducer protocol.
 
-Temporary authority statement:
+Slice authority statement:
 
-- During Phase 1/2, `battle-runtime-slice.qnt` is authoritative for `@dnd/battle-runtime` green behavior only.
+- During Phase 1/2, `battle-runtime-slice.qnt` is the package-local parity
+  reference for implemented `@dnd/battle-runtime` behavior.
 - Existing `battle.qnt` remains authoritative for old Core lanes until those lanes are disabled or deleted and entered in the Restore Ledger.
 - Any behavior shared by `battle-runtime-slice.qnt` and `battle.qnt` must match or be recorded as an explicit tracked divergence.
 - Before the migration is declared complete, the repo must return to one named battle authority by merging/replacing the slice and updating MBT gates.
@@ -893,7 +921,9 @@ Temporary authority statement:
    - Recommended answer: yes. Use the Orc Soldier Fighter with Chain Mail, Shield, Longsword, Defense Fighting Style, and Goblin Warrior Stat Block while keeping APIs generic enough for later SRD choices.
 
 4. Should battle `monsterStatBlockAction` be in the public subject union before monster action resolution is implemented?
-   - Recommended answer: no. Keep Stat Block creature-init ownership visible through generic `StatBlockRecord` and `StatBlockCatalog`, but do not expose unsupported act subjects until discovery and resolution can handle them.
+   - Answer after CAM18 planning: no separate `monsterStatBlockAction`. Goblin
+     Warrior uses the same `srdAction.attack` subject once Stat Block attack
+     discovery/resolution is implemented.
 
 5. Should MCP keep transient battle fills in memory only, or persist them alongside sessions?
    - Recommended answer: store them in the MCP session state only while an act is in progress. They are user-facing interaction state, not battle reducer state.

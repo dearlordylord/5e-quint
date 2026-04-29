@@ -41,7 +41,7 @@ Target packages:
 | `@dnd/shared`                     | Surface-free shared scalar/domain types that genuinely need to cross runtime package boundaries.                                                      |
 | `@dnd/shared-algebras`            | Reusable non-executable reducer algebras shared by runtime packages, such as damage or hole/fill mechanics when they encode no Unit/effect semantics. |
 | `@dnd/character-creation-runtime` | Minimal level-1 Fighter creation reducer: draft holes, batch fills, validation, and finalization to `CharacterSheet`.                                 |
-| `@dnd/battle-runtime`             | Minimal battle reducer: battle state, subjects, battle holes, fills, Attack with damage, End Turn, local QNT slice and MBT.                           |
+| `@dnd/battle-runtime`             | Minimal battle reducer: battle state, subjects, battle holes, fills, Attack with damage, End Turn, local QNT slice and deterministic parity tests.    |
 | future `@dnd/srd-units`           | SRD-only authored Unit collection. Do not create in phase 1 unless imports force it.                                                                  |
 
 New green-path packages must have this dependency direction only:
@@ -162,11 +162,34 @@ Phase 1 battle state:
 - death policy derived at the Character Sheet vs Stat Block boundary and stored explicitly on the combatant; resolution branches on that typed death policy, not on provenance labels;
 - battle-ready creature combat facts projected from Character Sheets and monster Stat Blocks.
 
-Battle-ready inputs are one-time creature initialization data only: combatant identity, current resources, selected equipment/Unit references, and numeric facts needed to initialize battle state. They must not encode executable action/effect semantics already present in decoded Surface Units. If battle needs authored semantics, pass the decoded Unit or a narrowed reader over it, not a duplicated projection record. Character creation finalizes `CharacterSheet`; MCP maps that sheet into the battle runtime's creature-init shape at the composition root, so character creation does not export a parallel battle initialization type.
+Battle-ready inputs are one-time creature initialization data only: combatant
+identity, caller-supplied Initiative score, current resources, selected
+equipment/Unit references, and numeric facts needed to initialize battle state.
+They must not encode executable action/effect semantics already present in
+decoded Surface Units or Stat Blocks. If battle needs authored semantics, pass
+the decoded Unit/Stat Block or a narrowed reader over it, not a duplicated
+projection record. Character creation finalizes `CharacterSheet`; MCP maps that
+sheet into the battle runtime's creature-init shape at the composition root, so
+character creation does not export a parallel battle initialization type.
 
 The runtime Attack act must include damage. Hit/miss-only attack is not enough for the green MCP vertical.
 
-Phase 1 chooses one damage protocol for the vertical and names it in the battle hole type. The default protocol is dice-result fill for character weapon attacks. CAM14 implements that protocol for `@dnd/battle-runtime`: completed weapon hits sum rolled damage dice plus the attack ability modifier, apply Temporary HP before HP, clamp HP at 0, and branch through the combatant's typed zero-HP lifecycle. Death policy follows ASSUMPTIONS.md A12 for supported combatants: Stat Block monsters die immediately at 0 HP; Character Sheet participants enter the 0-HP/death-save track by gaining Unconscious with reset death-save counters, and later damage at 0 HP records Death Saving Throw failures. CAM15 owns start-turn Death Saving Throw rolls. Massive Damage and nonlethal melee knockout remain outside the phase-1 runtime slice until explicitly widened.
+Phase 1 chooses one damage protocol for the vertical and names it in the battle
+hole type. CAM14 implements dice-result fills for character weapon attacks:
+completed weapon hits sum rolled damage dice plus the attack ability modifier,
+apply Temporary HP before HP, clamp HP at 0, and branch through the combatant's
+typed zero-HP lifecycle. CAM18 widens that same Attack replay protocol to the
+Goblin Warrior's authored Stat Block attacks. The runtime must derive supported
+Goblin attack profiles from `StatBlockRecord` without introducing a second
+executable Stat Block IR; unsupported authored riders, such as conditional
+bonus damage that depends on Advantage, remain absent or rejected by a named
+support gate until widened. Death policy follows ASSUMPTIONS.md A12 for
+supported combatants: Stat Block monsters die immediately at 0 HP; Character
+Sheet participants enter the 0-HP/death-save track by gaining Unconscious with
+reset death-save counters, and later damage at 0 HP records Death Saving Throw
+failures. CAM15 owns start-turn Death Saving Throw rolls. Massive Damage and
+nonlethal melee knockout remain outside the phase-1 runtime slice until
+explicitly widened.
 
 ## QNT Plan
 
@@ -190,7 +213,7 @@ Battle QNT should model only the green surface:
 
 These QNT specs are temporary seeds, not throwaways. The battle slice must eventually become, merge into, or replace old `battle.qnt`, and documentation must be updated so the repo has one battle authority again.
 
-During Phase 1/2, `battle-runtime-slice.qnt` is authoritative only for the green `@dnd/battle-runtime` surface. Existing `battle.qnt` remains authoritative for old Core lanes until those lanes are disabled or deleted and entered in the Restore Ledger. Any behavior shared by both specs must either match or have an explicit tracked divergence. Before declaring one battle authority again, merge/replace the slice and update the old MBT gate accordingly.
+During Phase 1/2, `battle-runtime-slice.qnt` is the package-local parity reference for implemented `@dnd/battle-runtime` behavior. Existing `battle.qnt` remains authoritative for old Core lanes until those lanes are disabled or deleted and entered in the Restore Ledger. Any behavior shared by both specs must either match or have an explicit tracked divergence. Before declaring one battle authority again, merge/replace the slice and update the old MBT gate accordingly.
 
 ## Phase 0: Audit And Preconditions
 
@@ -251,7 +274,7 @@ Do not run a broad Surface survey loop for the phase-1 green surface by default.
    - fill creation holes;
    - finalize minimal Fighter;
    - select Stat Block creature;
-   - start battle;
+   - start battle with caller-supplied Initiative scores;
    - discover battle acts;
    - fill/resolve battle holes;
    - end turn.
@@ -259,20 +282,17 @@ Do not run a broad Surface survey loop for the phase-1 green surface by default.
 
 CAM18 carry-forward gates:
 
-- Decide whether the first fixture adds minimal Goblin Warrior attack
-  projection from the authored Stat Block or is explicitly Fighter-attacks-only.
-  Do not leave authored Goblin attack data silently unreachable once the fixture
-  claims monster battle support.
+- Add minimal Goblin Warrior attack support from the authored Stat Block. The
+  fixture is not Fighter-attacks-only.
 - Audit battle durable state for stat-block and attack projection facts before
   widening battle support. Prefer identities plus runtime facts that cannot
   drift from Surface catalogs; avoid a second executable stat-block or attack IR.
-- Decide Initiative input semantics. The current fixture uses deterministic
-  Initiative scores derived from `10 + modifier`; tool names/docs must say
-  whether callers provide Initiative rolls or the fixture is deliberately
-  deterministic.
-- Keep target legality scoped. Current discovery is all other living combatants,
-  acceptable only for the 1v1 vertical until range, reach, line of effect, and
-  target legality are modeled.
+- Use caller-supplied Initiative scores on `start_battle`; do not derive
+  Initiative as `10 + modifier` and do not model Initiative as an in-battle act
+  hole.
+- Keep target legality scoped. Current discovery is all other combatants,
+  acceptable only for the first 1v1 vertical before defeat until range, reach,
+  line of effect, defeated-target filtering, and target legality are modeled.
 - Track character-creation QNT parity depth. The current QNT slice checks
   hole/status protocol more deeply than finalized sheet values; before widening
   character creation beyond the first manifest, add parity for selected Unit
@@ -287,7 +307,9 @@ After the phase-1/2 QNT tests exist, the MCP green vertical fixture passes, and
 every intentionally omitted projected lane has a Restore Ledger row with
 `39f9ab71` references:
 
-1. Disable or delete conflicting promoted old lanes.
+1. Move legacy Core-backed MCP routes/tests into a separate deletion-marked
+   package before deleting projected code, so `@dnd/mcp` package tests describe
+   the Surface runtime path instead of mixed legacy behavior.
 2. Delete `CPU*`, `PEA*`, and `PPR*` projected execution code where no longer referenced.
 3. Allow old app/Core routes outside the green surface to fail only if they are in the Restore Ledger.
 4. Keep local comments only as pointers to this plan; this plan is the source of truth.
@@ -298,16 +320,15 @@ every intentionally omitted projected lane has a Restore Ledger row with
 architecture. It exists so the Surface-backed runtime vertical can be made
 runnable while the legacy Core-backed `src/server.ts` path still exists.
 
-After CAM19 deletes or isolates projected/Core-backed green-path dependencies,
-the next required step is to reconcile the green MCP tools into the main MCP
-server path:
+After CAM19 isolates the Core-backed MCP path into a deletion-marked legacy
+package and deletes unreferenced projected vocabulary, the next required step
+is to reconcile the Surface runtime MCP tools into the main MCP server path:
 
 1. Promote the Surface-backed character creation, monster selection, battle
    start, battle act discovery, battle fill/resolve, and End Turn tools to the
    normal MCP server/router entrypoint.
-2. Remove or rewrite legacy `src/server.ts`, `src/session-router.ts`,
-   `src/character-session.ts`, and related Core-backed routes that overlap the
-   promoted Surface runtime behavior.
+2. Remove the deletion-marked legacy MCP package, or keep it only with explicit
+   Restore Ledger coverage outside the promoted route.
 3. Retire `src/green/` as a separate namespace once its tools are either moved
    into the main MCP path or reduced to ordinary composition helpers with no
    "green" naming.
@@ -328,7 +349,7 @@ Green finalization criteria:
   deleted;
 - normal MCP tests, not only green-specific tests, cover create/finalize
   character, select a Stat Block creature, start battle, Attack with damage,
-  and End Turn;
+  Goblin Warrior Attack with damage, and End Turn;
 - docs stop describing the green path as the active way to use MCP and instead
   describe the promoted Surface runtime path;
 - temporary QNT authority is resolved per the Verification section's single
@@ -344,7 +365,7 @@ Every omitted lane is wanted back after Correction application and app growth re
 | Level advancement and higher-level starts   | `git show 39f9ab71:packages/core/src/character-advancement.ts`; `git show 39f9ab71:packages/core/src/character-sheet-advancement.ts`                                                                                                                                                  | Old advancement tests may be excluded from green gate                       | None in phase 1; explicit non-goal                                            | Ordered advancement replay, subclass/feat/ASI timing, multiclass prerequisites                                                             | First green surface is level-1 Fighter only                                               | `@dnd/character-creation-runtime` adds advancement reducer/QNT                                                    |
 | Spellcasting and Mage/Wizard creation       | `git show 39f9ab71:packages/core/src/character-spellcasting.ts`; `git show 39f9ab71:packages/core/src/battle-spell-access.ts`                                                                                                                                                         | Old spellcasting/app spell paths may fail                                   | None in phase 1; explicit non-goal                                            | Spell definition/access/invocation/effect distinction; prepared choices as character-owned facts                                           | Fighter-only vertical avoids spell access and slots                                       | Surface UnitRecord-backed spell access holes and battle spell act holes exist                                     |
 | Old `available-actions.ts` breadth          | `git show 39f9ab71:packages/core/src/available-actions.ts`                                                                                                                                                                                                                            | Old action preview/finalize tests may be excluded from green gate           | Runtime act discovery/resolution tests                                        | Discover/preview/finalize user-action workflows                                                                                            | New runtime owns only promoted Attack/End Turn                                            | Runtime action protocol covers omitted action families structurally                                               |
-| Old Core battle MBT                         | `git show 39f9ab71:packages/core/src/battle-machine.mbt.test.ts`; `git show 39f9ab71:packages/core/src/battle-projection.mbt.test.ts`; `battle.qnt`                                                                                                                                   | Old Core battle MBT may be outside green gate during breakage               | `@dnd/battle-runtime` slice QNT/MBT                                           | Formal battle parity discipline and safety invariants                                                                                      | New battle authority is being seeded separately                                           | `battle-runtime-slice.qnt` merges into/replaces old `battle.qnt`, and docs/tests name one battle authority        |
+| Old Core battle MBT                         | `git show 39f9ab71:packages/core/src/battle-machine.mbt.test.ts`; `git show 39f9ab71:packages/core/src/battle-projection.mbt.test.ts`; `battle.qnt`                                                                                                                                   | Old Core battle MBT may be outside green gate during breakage               | `@dnd/battle-runtime` slice QNT/parity checks                                 | Formal battle parity discipline and safety invariants                                                                                      | New battle authority is being seeded separately                                           | `battle-runtime-slice.qnt` merges into/replaces old `battle.qnt`, and docs/tests name one battle authority        |
 | Old MCP Core-backed tools                   | `git show 39f9ab71:packages/mcp/src/server.ts`; `git show 39f9ab71:packages/mcp/src/server-control.ts`; `git show 39f9ab71:packages/mcp/src/start-battle.ts`                                                                                                                          | Core-backed MCP tools outside green path may fail                           | MCP green vertical fixture                                                    | Server-side stored workflows and tool ergonomics                                                                                           | Green tools prove the new runtime path first                                              | MCP tools are rebuilt over Unit library, character runtime, and battle runtime                                    |
 | App simulator and trace visualizers         | `git show 39f9ab71:packages/app/src/components/App.tsx`; `git show 39f9ab71:packages/app/src/components/trace-visualizer/TraceVisualizer.tsx`                                                                                                                                         | Old app routes may fail                                                     | MCP green vertical fixture                                                    | Debug and trace review workflows                                                                                                           | MCP green surface is the priority                                                         | New runtime exposes stable snapshots/traces                                                                       |
 | Advanced battle scene polish                | `git show 39f9ab71:packages/app/src/battle-scene/BattlePage.tsx`; `git show 39f9ab71:packages/core/src/battle-scene/director.ts`                                                                                                                                                      | Old battle UI checks may fail                                               | MCP green vertical fixture                                                    | Field rendering, narration, dice cues, visual replay                                                                                       | MCP can validate runtime without full UI                                                  | Battle runtime snapshot contract stabilizes                                                                       |
@@ -364,14 +385,14 @@ Required before marking this plan complete:
 
 1. RAW agent check: before implementing each phase-1 rule, read the relevant SRD passage in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md`. Each modeled rule must trace to SRD 5.2.1 or ASSUMPTIONS.md. If implementation requires a new interpretation or narrower phase-1 modeling choice not directly stated by SRD, stop and add/obtain an ASSUMPTIONS.md entry before coding.
 2. Character runtime QNT/parity passes.
-3. Battle runtime QNT/MBT passes.
+3. Battle runtime QNT/parity checks pass.
 4. MCP full vertical test passes.
 5. Typecheck passes for the green surface packages and MCP.
 6. Circular dependency check passes for new package graph.
 7. Green-path dependency check proves neither runtime package nor MCP green tools import `@dnd/core`.
 8. Before completion, restore a single battle authority: either merge `battle-runtime-slice.qnt` into `battle.qnt`, replace/retire the old authority and update project documentation, or record each intentional divergence from old `battle.qnt` with an SRD 5.2.1 citation or ASSUMPTIONS.md entry.
 9. Command-level verification is added once packages exist, using `pnpm` only. Battle MBT must follow the repo MBT run protocol, including zombie evaluator checks before the run. Typecheck scope must include MCP and the new runtime packages.
-10. Documentation stays synchronized with code changes. Tasks that change Correction reducer behavior, shared algebras, action resources, hole/fill semantics, Surface record boundaries, or runtime package architecture must update the relevant docs in the same change, especially `packages/surface-runtime-correction/ARCHITECTURE_GRAPH.md`, `packages/surface-runtime-correction/MBT_TO_REDUCER_GRAPH.md`, `packages/surface-runtime-correction/VOCABULARY.md`, and `plans/ACTIVE_PLAN.md`.
+10. Documentation stays synchronized with code changes. Tasks that change reducer behavior, shared algebras, action resources, hole/fill semantics, Surface record boundaries, or runtime package architecture must update the docs owned by the changed package in the same change. Battle runtime changes update `packages/battle-runtime/README.md` and `packages/battle-runtime/ARCHITECTURE_GRAPH.md`; character-creation changes update `packages/character-creation-runtime/README.md` and package vocabulary; shared algebra changes update `packages/shared-algebras` docs or package-local MBT docs. `packages/surface-runtime-correction/*` docs are legacy source material unless the task intentionally edits that package.
 11. `/simplify` convergence: minimum two rounds after implementation, continuing until no important fixes remain.
 
 ## Explicit Non-Goals For Phase 1

@@ -337,10 +337,12 @@ Avoid these as domain-language terms because the SRD does not define them:
 - In SRD language, **monster** does not mean hostile, non-NPC, or non-humanoid. A friendly named humanoid controlled by the GM is still a **monster** and therefore still uses a **Stat Block** rather than a **Character Sheet**.
 - An **NPC** is a kind of **monster** in SRD language: a GM-controlled creature with a name and distinct personality. **Monstrosity** is only a **Creature Type** and is not a synonym for monster.
 - A **Stat Block** contains the game statistics of a monster or NPC. If the GM makes an evil slime friendly or turns a guard captain into a quest giver, that changes the creature's attitude or scene role; it does not turn the Stat Block into a Character Sheet.
-- Technical implementation ownership terms such as authored Units, Character
-  Draft, and battle creature initialization live in
-  [CORRECTION_APPLICATION_VOCABULARY.md](./plans/CORRECTION_APPLICATION_VOCABULARY.md),
-  not in this domain glossary.
+- Technical implementation ownership terms live in the package docs that own
+  them. Character-creation terms such as Character Draft and Creation Fill live
+  in
+  [packages/character-creation-runtime/VOCABULARY.md](./packages/character-creation-runtime/VOCABULARY.md).
+  Battle initialization and battle-state terms live in
+  [packages/battle-runtime/README.md](./packages/battle-runtime/README.md).
 
 ## Example dialogue
 

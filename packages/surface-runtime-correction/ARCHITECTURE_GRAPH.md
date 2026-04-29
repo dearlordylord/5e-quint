@@ -1,5 +1,15 @@
 # Surface Runtime Correction Architecture
 
+Status: legacy architecture map for `@dnd/surface-runtime-correction`.
+
+The battle reducer protocol extracted from this package now has a package-owned
+map at [../battle-runtime/ARCHITECTURE_GRAPH.md](../battle-runtime/ARCHITECTURE_GRAPH.md).
+Do not copy this whole file into `@dnd/battle-runtime`: this graph also contains
+Correction-owned Unit activation, cantrip/save-gate/heal/grant-extra-action,
+spell-slot, and use-count machinery. Treat those lanes as source material for
+restore work until they are intentionally implemented in the owning runtime
+package.
+
 <!-- Keep mutation examples intentionally sparse. Do not add more edge-case mutation
 examples to this graph unless explicitly asked; one or two concrete examples are
 enough to keep the architecture readable. -->

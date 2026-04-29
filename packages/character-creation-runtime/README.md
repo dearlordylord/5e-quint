@@ -1,65 +1,124 @@
 # @dnd/character-creation-runtime
 
-Character creation runtime owns durable draft, hole, fill, and finalization
-shapes for Surface-authored character creation.
+`@dnd/character-creation-runtime` owns the reducer that turns a mutable
+character draft into a finalized `CharacterSheet` using authored Surface Units.
 
-Application/session code installs the runtime by passing a Unit library built
-from `@dnd/surface`; it stores drafts and finalized Character Sheets at the
-session boundary, not inside this package.
+The package is a character-creation runtime boundary. It does not author classes,
+backgrounds, species, feats, or equipment, and it does not build battle creature
+initialization data. It consumes a `UnitLibrary` built from `@dnd/surface` and
+returns draft state, creation holes, fill results, and finalized sheet facts for
+callers to store at the session boundary.
 
-This package intentionally imports Surface catalog and Unit identities, not authored content records or Core battle/projected vocabulary. The runtime exports `CharacterSheet` as the finalized player-character boundary. Battle creature initialization belongs to the battle runtime and composition root.
+## Mental Model
 
-Domain boundary: a character draft is mutable session state with holes, not a
-Unit record. A finalized `CharacterSheet` can carry selected Unit refs and
-derived character facts, but it is still not a Unit, not a Stat Block, and not a
-battle creature state.
+`@dnd/surface` owns the authored records. This package owns the mutable creation
+process over those records.
 
-`character-creation-runtime-slice.qnt` is the deterministic Quint parity slice
-for this package. It models draft state, stable hole ids, atomic batch fill,
-rediscovery, and finalization status for the same behavior that the TypeScript
-reducer exposes.
+A Character Draft is an incomplete session object with fillable holes. Filling a
+hole can reveal more holes. A Character Sheet is the complete player-character
+boundary produced by finalization. It can reference selected Units and carry
+derived character facts, but it is not a Unit, not a Stat Block, and not battle
+state.
 
-## Runtime Contract
+## Boundary
 
-- `createCharacterDraft` creates an empty revision-0 draft.
-- `discoverCreationHoles` derives the first Orc Soldier Fighter vertical holes from the draft plus the Surface Unit catalog.
-- `fillCreationHoles` validates an entire batch against the current draft revision and hole set before applying anything.
-- Accepted batches return a new draft with `revision + 1` and rediscovered holes.
-- Rejected batches return the original draft unchanged, the original holes, and every stale-revision/fill issue diagnosable from the submitted batch.
-- `finalizeCharacterDraft` returns `incomplete` while required holes remain, `invalid` for contradictory completed draft state, and `ready` with a legal `CharacterSheet` for the complete phase-1 manifest.
+| Source outside runtime                       | Runtime operation               | Runtime output                 |
+| -------------------------------------------- | ------------------------------- | ------------------------------ |
+| Surface Unit library                         | `discoverCreationHoles`         | fillable `CreationHole[]`      |
+| caller-submitted batch of `CreationFill`s    | `fillCreationHoles`             | accepted/rejected draft update |
+| complete legal draft plus Surface Unit facts | `finalizeCharacterDraft`        | finalized `CharacterSheet`     |
+| finalized `CharacterSheet`                   | application composition outside | battle creature initialization |
 
-Fill-level issues carry a real submitted `fillIndex`. Batch protocol issues, such as `staleRevision`, are reported as `CreationBatchIssue` so the API does not invent a non-fill index for a batch-wide failure.
+`@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or
+`@dnd/core`. Battle initialization from a `CharacterSheet` belongs to the
+composition layer and battle runtime boundary.
 
-Finalization issues are reported as `CreationFinalizationIssue` because they describe completed draft legality rather than a submitted fill or batch protocol problem.
+## Runtime Flow
 
-Duplicate fills for the same hole are rejected. Choice holes carry explicit
-cardinality; callers submit the selected option set in one fill, not as multiple
-fills for the same hole.
+1. Caller builds a Surface `UnitLibrary` and calls `createCharacterDraft`.
+2. Caller passes the draft and Unit library to `discoverCreationHoles`.
+3. Caller submits one batch of fills to `fillCreationHoles`.
+4. If the batch is accepted, the returned draft has a new revision and a new
+   hole set. If the batch is rejected, the original draft is returned unchanged.
+5. Caller repeats discovery/fill until `finalizeCharacterDraft` returns
+   `ready`.
 
-The fill reducer uses the same package-private Phase 1 support gates as hole discovery. A fill can therefore be syntactically valid for a discovered hole while still returning `unsupportedChoice` when it selects a valid SRD option outside the Orc Soldier Fighter manifest.
+Character creation fill semantics are intentionally different from battle
+fills. Creation fills patch durable draft state in atomic batches; battle fills
+are transient replay inputs for one selected battle subject.
 
-Unit-backed selections are projected from the accepted hole option's `unitRef`, not from the submitted option id. Option ids are protocol choices; Unit ids are durable draft selections.
-
-Background-granted tool holes are derived from Surface background facts. When a
-runtime package supports only part of a broader authored option family, that
-narrowing must stay package-private and must not become a new source rule or a
-preset.
-
-This package exports `UnitLibrary` as a type alias to the Surface `UnitCatalog`
-so the runtime API can keep the durable boundary language without adding an
-adapter or duplicated catalog state.
-
-The public selection types keep SRD/domain facts structured at the runtime boundary: ability assignments reuse Surface `SixAbilityScores`, class advancement entries use `CharacterClassLevel`, starting languages are Common plus two distinct selectable Standard Languages, alignment is the SRD morality/order pair, and background ability-score increases cannot select the same ability twice.
-
-The finalized `CharacterSheet` carries selected Unit refs plus the character-sheet facts needed by the next runtime boundary: final ability scores, level-1 Hit Point maximum and Hit Die, saving throw/skill/weapon/armor/tool proficiencies, granted feature refs, activation resources such as Fighter Second Wind, and the purchased equipment/loadout refs. These facts are derived from the accepted draft and Surface Units during finalization; the package still does not export a battle creature-init type or battle-current HP state.
-
-`createCharacterDraft` also accepts an optional caller-supplied `draftId`. Omitting it uses a process-local generated id for tests and simple composition roots; persisted callers should provide their stored draft identity.
-
-Hole ids are stable domain ids. Draft-owned holes use
-`cc:draft:<draft path>`, and Unit-granted holes use
-`cc:unit:<unit id>:<choice key>`. Support gates are package-private runtime
-narrowings; they must not become public Surface classifications.
+## Terms
 
 Package-owned terms such as Character Draft, Character Sheet, Creation Hole,
 Creation Fill, and Unit-backed selection are defined in
 [VOCABULARY.md](./VOCABULARY.md).
+
+Key boundary terms:
+
+- `UnitLibrary` - type alias for the Surface `UnitCatalog`; it avoids an adapter
+  or duplicate catalog state.
+- `CreationHole` - a fillable requirement in the current draft.
+- `CreationFill` - caller-submitted answer for one hole.
+- `CharacterSheet` - finalized player-character boundary used by later
+  composition code.
+
+## Implemented Behavior
+
+This package supports the first legal character-creation vertical:
+
+- level-1 Fighter;
+- Orc species;
+- Soldier background;
+- Standard Array ability assignment;
+- background ability-score increase;
+- Common plus selected standard languages;
+- structured alignment;
+- Fighter choices needed by the first vertical;
+- purchased equipment/loadout needed by the first battle fixture.
+
+Support gates are package-private runtime narrowings. They must not become
+public Surface classifications or new source rules.
+
+## State Ownership Rules
+
+Draft-owned holes use stable ids such as `cc:draft:<draft path>`. Unit-granted
+holes use stable ids such as `cc:unit:<unit id>:<choice key>`. Hole ids are
+semantic addresses, not array positions.
+
+Accepted option ids are protocol choices. When a selected option references a
+Surface Unit, the draft records the Unit reference rather than treating the
+submitted option id as authored truth.
+
+Choice holes carry explicit cardinality. Callers submit the selected option set
+in one fill, not as multiple fills for the same hole. Duplicate fills for one
+hole are rejected unless a future hole type explicitly says otherwise.
+
+The finalized `CharacterSheet` carries selected Unit refs plus derived
+character-sheet facts needed by later boundaries: final ability scores, level-1
+Hit Point maximum and Hit Die, proficiencies, granted feature refs, activation
+resources, and equipment/loadout refs. It does not carry battle-current HP and
+does not export battle creature-init types.
+
+## Parity
+
+`character-creation-runtime-slice.qnt` is the deterministic package-local Quint
+parity slice. It models draft state, stable hole ids, atomic batch fill,
+rediscovery, and finalization status for the same behavior the TypeScript
+reducer exposes.
+
+When changing reducer behavior in this package, update `src/index.ts`, focused
+tests, and `character-creation-runtime-slice.qnt` together.
+
+## Files And Verification
+
+- `src/index.ts` - public API and reducer implementation.
+- `src/index.test.ts` - deterministic reducer tests and Quint-slice checks.
+- `character-creation-runtime-slice.qnt` - local parity slice.
+- `VOCABULARY.md` - package-owned creation terminology.
+
+Useful checks:
+
+```sh
+pnpm --filter @dnd/character-creation-runtime typecheck
+pnpm --filter @dnd/character-creation-runtime test
+```

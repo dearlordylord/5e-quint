@@ -1,14 +1,12 @@
 # @dnd/surface
 
-Workspace package for the content-authoring → surface → tracer flow.
-
-System-level pipeline map:
-
-- [plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md)
+Workspace package for authored D&D content records, provenance-bearing Surface
+schemas, catalogs, and review traces.
 
 ## Not to be confused with `scripts/content-surface-survey/`
 
-This package holds the **authored corpus** and the **surface types** it is authored against:
+This package holds the **authored corpus** and the **surface types** it is
+authored against:
 
 - `src/surface/types.ts` — the closed atom vocabulary. Widenings land here.
 - `src/interpreter/tracer.ts` — projects authored content into a mermaid-renderable dependency graph for review.
@@ -44,10 +42,10 @@ Three-way separation:
   taxonomy problems. Fed into the pairing workspace's surface docs
   (e.g., `SURFACES_spells.md` cites `RESEARCH_foundry_effect_staging.md`
   for effect staging patterns). Read-only.
-- `packages/surface/` (this package) — **where the
-  surface evolves**. It remains independent from engine packages and has no
-  `@dnd/core` dependency, but it is now an active green-path input for
-  character creation, battle creature initialization, and stat-block catalog lookup.
+- `packages/surface/` (this package) — **where the surface evolves**. It remains
+  independent from engine packages and has no `@dnd/core` dependency, but it is
+  now an active runtime input for character creation, battle creature
+  initialization, and stat-block catalog lookup.
   It is not a disposable prototype.
 
 ## Runtime Boundary
@@ -62,18 +60,19 @@ Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
 
 ## Unit Catalog Boundary
 
-Character-creation and equipment Units for the first vertical are installed
+Character-creation and equipment Units for the first runnable vertical are installed
 through `SrdUnitCollection` in `surface/unit-catalog`. Like Stat Blocks, the SRD
 Unit collection admits only `srd-5.2.1` provenance and the catalog rejects
 duplicate Unit ids across installed collections. Catalog lookup returns generic
 `UnitRecord` values; SRD is represented by the collection/provenance boundary,
 not by a runtime-facing record subtype.
 
-`srdUnitCollection` currently contains the Orc Soldier Fighter 1 content needed
-by the manifest: Fighter, Soldier, Orc, the level-1 Fighter feature grants,
-Defense, Savage Attacker, Sap, Orc traits, Chain Mail, Shield, Longsword, Spear,
-Flail, and Shortbow. Runtime packages may derive support gates from these
-records, but the authored content remains provenance-bearing Surface data.
+`srdUnitCollection` contains the Orc Soldier Fighter 1 content needed by the
+current runnable vertical: Fighter, Soldier, Orc, the level-1 Fighter feature
+grants, Defense, Savage Attacker, Sap, Orc traits, Chain Mail, Shield,
+Longsword, Spear, Flail, and Shortbow. Runtime packages may derive support gates
+from these records, but the authored content remains provenance-bearing Surface
+data.
 
 ## Character-Creation Records
 
@@ -142,10 +141,9 @@ pnpm typecheck
    `src/interpreter/mermaid.ts`.
 4. Prints or writes the result.
 
-The tracer is an **interpreter over the authored ADT**. It does not
-invoke the real combat engine in `packages/core/`. It proves the
-surface types are expressive enough to carry the unit before we wire
-a runtime projection.
+The tracer is an **interpreter over the authored ADT**. It does not invoke a
+runtime package. It proves the surface types are expressive enough to carry the
+authored record before runtime integration consumes it.
 
 ## Per-unit red/green loop
 

@@ -1,50 +1,182 @@
 # @dnd/battle-runtime
 
-Battle runtime owns durable battle state, battle subjects, replay-from-root
-hole/fill resolution, and snapshots for Surface-authored runtime inputs.
+`@dnd/battle-runtime` owns the battle reducer for already-composed creature
+inputs: starting a battle, tracking combatants and turns, discovering battle
+acts, resolving fills for those acts, and producing snapshots for callers.
 
-This package intentionally imports generic Surface `StatBlockRecord`s and shared algebras. It does not import legacy engine packages, SRD-specific stat-block collection types, or projected-executable vocabulary.
+The package is a runtime boundary, not an authored-content package. It consumes
+battle initialization data built by a composition layer from Character Sheets,
+Surface Units, and Surface Stat Blocks. It may retain resolved Surface records
+or Unit refs as battle origin data, but it does not create a second executable
+content language.
 
-The application composition layer installs this runtime with authored Surface
-content for character Units and monster Stat Blocks. It stores durable
-`BattleState` separately from transient battle fills so `resolveBattleSubject`
-can remain replay-from-root.
+## Mental Model
 
-Domain boundary: battle consumes creature initialization inputs. Character
-creature-init inputs are projected from Character Sheets plus selected Unit
-lookups at the composition boundary. Stat-block creature-init inputs are
-projected from `StatBlockRecord`s. Battle state must not treat a Character Sheet
-as a Stat Block, a Stat Block as a Unit, or a creature-init input as authored
-content or as the durable creature state.
+`@dnd/surface` is the authored-content schema. Units are Surface-authored
+selectable game objects such as classes, features, weapons, armor, and spells.
+Stat Blocks are Surface-authored monster/NPC records. Character Sheets are
+finalized player-character records produced outside battle.
 
-## Runtime Contract
+This package starts after those records have already been selected and composed
+into battle initialization inputs. It does not define spells, features, monster
+catalogs, or character-building legality. It executes implemented battle
+behavior from inputs that callers provide.
 
-- `startBattle` accepts caller-built creature-init inputs and creates sorted Initiative state plus durable `BattleCreatureState`.
-- Character Sheet to creature-init mapping belongs to the application composition layer, not this package. `@dnd/battle-runtime` accepts battle-owned initialization data and must not import `@dnd/character-creation-runtime`.
-- Character initialization consumes facts derived by the composition boundary: Hit Point maximum/current HP, Temporary Hit Points from the optional init override or `0`, Initiative score, selected loadout, selected Unit refs, and `usesDeathSavingThrows` as the typed zero-HP lifecycle policy.
-- `BattleCreatureState.origin` records the battle creature's Character or Stat Block origin. Origin data is not provenance: provenance belongs to authored Surface records. The runtime may retain resolved Surface records or Unit refs in origin data so battle resolution does not need a separate executable content language.
-- Character Armor Class is structured `ArmorClassState`, not a copied scalar: armor base and category come from the loaded armor Unit, trained Shield bonus comes from the loaded Shield Unit and sheet armor training, and the Defense Fighting Style bonus comes from the loaded feat Unit as a conditional wearing-armor bonus.
-- Monster initialization derives display name, Armor Class, Hit Points, and Initiative score from the supplied generic `StatBlockRecord`; the runtime does not import Core monster catalogs or SRD-specific collection types.
-- `BattleState.currentTurnResources` uses `RuntimeActionResource[]` plus bonus-action availability from `@dnd/shared-algebras/action-economy-algebra`; it does not store a scalar action quota.
-- `discoverBattleActs` exposes `srdAction.attack` for the current actor when the actor can take actions, an Attack-compatible action resource is present, and a supported character weapon attack profile is present. `runtimeCommand.endTurn` remains discoverable for the current actor.
-- `resolveBattleSubject` is replay-from-root: callers pass the root `BattleState`, the selected `BattleSubject`, and all accumulated `BattleFill`s. Fills are caller/session state and are not stored in `BattleState`.
-- Attack replay uses shared runtime holes and fills: target choice, attack roll, and on-hit rolled-dice damage. The damage hole id and instance key are derived at the hole boundary from the dice-result protocol and the selected weapon damage expression, for example `battle:attack:damage-result:1d8+3-slashing`.
-- Filled Attack resolution uses the shared attack-roll algebra: natural 1 misses, natural 20 hits, otherwise the total is compared to the target's current Armor Class. A miss spends the Attack action and leaves HP unchanged. A hit asks for weapon damage dice before spending the action; Critical Hits require the doubled weapon damage dice hole. Once valid damage dice are supplied, the runtime sums the rolled dice plus the attack ability modifier, applies Temporary Hit Points first, clamps HP at `0`, and then spends the Attack action.
-- Zero-HP lifecycle state is a typed union on the combatant and the snapshot projects that one lifecycle object. Stat Block combatants use `diesAtZeroHp`; their dead status is derived from `0` HP. Character Sheet combatants use `usesDeathSavingThrows`; when damage drops them to `0` HP and does not kill instantly by Massive Damage, the runtime applies the Unconscious condition and initializes the death-save counters. Later damage at `0` HP records Death Saving Throw failures, including the Critical Hit two-failure case, and projects death once failures reach three. Damage that equals or exceeds the target's Hit Point maximum after reducing current HP to `0`, including damage taken while already at `0` HP, applies instant death. Start-turn Death Saving Throw rolls remain outside the CAM15 runtime slice.
-- `endTurn` is a runtime command, not an SRD Action. It accepts no holes or fills, advances the current actor through the shared Initiative algebra, increments the round after the last actor in the order acts, and resets the next actor's per-turn action resources.
-- `battle-runtime-slice.qnt` is the package-local parity slice for this runtime's implemented subset. Its covered slice is Initiative/current actor, End Turn, Attack replay holes, hit/miss, action spend, damage, Temporary Hit Points, HP clamp, and the supported zero-HP lifecycle policy. Broad combat authority remains `battle.qnt` until the package-local slice is reconciled into the canonical battle spec.
-- `snapshotBattle` projects a JSON-friendly read model without exposing mutable `Map` internals.
+## Boundary
 
-## RAW Traceability For Retained Phase-1 Behavior
+| Source outside battle                          | Composition output            | Battle-owned state    |
+| ---------------------------------------------- | ----------------------------- | --------------------- |
+| Character Sheet plus selected Surface Units    | `CharacterBattleCreatureInit` | `BattleCreatureState` |
+| Surface `StatBlockRecord` for a monster or NPC | `StatBlockBattleCreatureInit` | `BattleCreatureState` |
 
-- Initiative order and the current actor are traced to SRD 5.2.1 `Playing-the-Game.md` "Combat" / "Initiative": combat is organized into rounds and turns, everyone rolls Initiative at the beginning of combat, the GM ranks combatants from highest to lowest Initiative, and that order remains the same from round to round. `UBIQUITOUS_LANGUAGE.md` defines Initiative as the Dexterity check that determines turn order.
-- Deterministic initialization uses Initiative scores for the phase-1 fixture: SRD 5.2.1 `Rules-Glossary.md` "Initiative" defines the Initiative score as `10 + Dexterity modifier`, and `Rules-Glossary.md` "Stat Block" says monster AC, Initiative, and HP entries appear in the monster's stat block.
-- Character Hit Point maximum and Initiative are traced to SRD 5.2.1 `Character-Creation.md` "Hit Points" and "Initiative": level-1 Hit Points come from class plus Constitution modifier, and Initiative written on the character sheet is the Dexterity modifier. This runtime consumes finalized sheet facts rather than recalculating character creation legality.
-- Character Armor Class is traced to SRD 5.2.1 `Playing-the-Game.md` "Armor Class" and `Equipment.md` "Armor": base AC can come from armor, Shield benefit requires Shield training, and the Defense feat says wearing Light, Medium, or Heavy armor grants +1 AC.
-- `endTurn` is exposed as a runtime command, not an SRD Action. SRD combat has participants take turns in Initiative order and starts a new round after everyone has taken a turn. `ASSUMPTIONS.md` A2 records the repository's explicit modeling decision to expose a discrete End Turn transition because D&D has end-of-turn trigger points even though "end turn" is not itself an SRD action.
-- Per-turn action resources are traced to SRD 5.2.1 `Playing-the-Game.md` "Your Turn" / "Actions" and "Bonus Actions": on your turn you can take one action, and at most one Bonus Action when a rule grants one. `UBIQUITOUS_LANGUAGE.md` defines Action and Bonus Action using those same per-turn resource boundaries.
-- Attack replay is traced to SRD 5.2.1 `Rules-Glossary.md` "Attack [Action]" and `Playing-the-Game.md` "Making an Attack": taking the Attack action permits one weapon or Unarmed Strike attack roll, attacks choose a target, and resolving the attack makes an attack roll. `Playing-the-Game.md` "Attack Rolls" says an attack roll hits when it equals or exceeds the target's Armor Class, with natural 20 and natural 1 overriding the total.
-- Attack availability for a 0-HP character is traced to SRD 5.2.1 `Rules-Glossary.md` "Incapacitated [Condition]" and "Unconscious [Condition]": Incapacitated prevents actions, and Unconscious includes Incapacitated. `UBIQUITOUS_LANGUAGE.md` preserves the same condition relationship.
-- Longsword damage-hole naming is traced to SRD 5.2.1 `Equipment.md` "Weapons" and `Playing-the-Game.md` "Damage Rolls": weapon damage specifies the amount and type dealt on a hit, the Longsword row is `1d8 Slashing` with the Versatile `1d10` property, and weapon damage rolls add the same ability modifier used for the attack roll. The first vertical uses the character sheet's one-handed Longsword loadout with Strength +3, so the selected damage expression is `1d8+3-slashing`; on a Critical Hit, the weapon dice are doubled before adding the modifier, so the selected damage expression is `2d8+3-slashing`.
-- Damage application is traced to SRD 5.2.1 `Playing-the-Game.md` "Hit Points" and "Temporary Hit Points": current HP can range down to `0`, damage subtracts from HP, and Temporary Hit Points are lost before leftover damage carries over to HP.
-- Zero-HP lifecycle is traced to SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points": Monster Death happens instantly at `0` HP, while a character that reaches `0` HP and does not die instantly gains the Unconscious condition and faces Death Saving Throws; Massive Damage can kill instantly, and damage at `0` HP causes one failure, or two from a Critical Hit. `ASSUMPTIONS.md` A12 fixes the phase-1 boundary: Stat Block monsters die at `0` HP and Character Sheet participants use the death-save track. The runtime does not yet model nonlethal melee knockout or start-turn Death Saving Throw rolls.
+Callers construct `BattleCreatureInit[]` outside this package, then call
+`startBattle`. Character Sheet to battle-init mapping and Stat Block catalog
+selection happen before this package is called.
+
+`@dnd/battle-runtime` must not import `@dnd/character-creation-runtime` or Core
+engine packages. Character Sheet to battle initialization mapping belongs to the
+application composition layer. Stat Block selection and catalog ownership also
+belong outside this package.
+
+Do not conflate these boundaries:
+
+- a Character Sheet is not a Stat Block;
+- a Stat Block is not a Unit;
+- a creature initialization input is not authored content;
+- a creature initialization input is not durable battle state.
+
+## Runtime Flow
+
+1. Caller passes `BattleCreatureInit[]` to `startBattle` and receives a durable
+   `BattleState`.
+2. Caller reads `snapshotBattle(state)` and `discoverBattleActs(state)` to show
+   the current battle and available acts.
+3. Caller chooses a `BattleSubject` and calls
+   `resolveBattleSubject({ state, subject, fills })`.
+4. If the result is `needsHoles`, the caller renders those holes, stores the
+   submitted fills outside `BattleState`, and calls `resolveBattleSubject` again
+   with the same durable state plus the accumulated fills.
+5. If the result is `resolved`, the caller replaces the durable state with the
+   returned `state`. If the result is `invalid`, the caller does not commit a new
+   battle state.
+
+`resolveBattleSubject` is replay-from-root: the `state` argument is the current
+durable battle state before attempting the selected subject. Because callers
+resubmit all accumulated fills on each attempt, `BattleState` stores durable
+combat facts, not partially answered hole forms.
+
+## Terms
+
+- `BattleState` - durable battle state: battle id, Initiative order,
+  combatants, and current-turn resources.
+- `BattleCreatureState` - the durable runtime state for one creature in battle.
+  It is identified by `CombatantId`.
+- `BattleSubject` - the selected thing a caller wants to resolve, such as an SRD
+  Attack action or the runtime End Turn command.
+- `BattleHole` - a missing runtime input needed to resolve a subject, such as an
+  attack target, attack roll, or damage roll.
+- `BattleFill` - caller-provided answer for a `BattleHole`.
+- `origin` - the Character or Stat Block origin data retained on a
+  `BattleCreatureState`. Origin is not provenance. Provenance is the canonical
+  rules/content source claimed by authored Surface records.
+- Snapshot - JSON-friendly read model for callers. Snapshots do not expose
+  internal `Map` state.
+
+## Implemented Behavior
+
+This package supports:
+
+Initialization:
+
+- start battle from caller-built creature initialization inputs;
+- derive Initiative order, current actor, Hit Points, Armor Class, and zero-HP
+  lifecycle policy.
+
+Turn flow:
+
+- track per-turn action resources through `@dnd/shared-algebras`;
+- expose End Turn as a runtime command, not an SRD Action.
+
+Available acts:
+
+- discover End Turn for the current actor;
+- discover Attack for supported character weapon attacks when the current actor
+  can take actions.
+
+Attack and damage:
+
+- replay Attack through target, attack-roll, and damage holes;
+- resolve hit/miss through the shared attack-roll algebra;
+- apply weapon damage, Critical Hit doubled weapon dice, Temporary Hit Points,
+  and HP clamping at `0`.
+
+Zero-HP lifecycle:
+
+- Stat Block combatants use `diesAtZeroHp`;
+- Character Sheet combatants use `usesDeathSavingThrows`.
+
+Not modeled in this package yet: stat-block attacks, spells, reactions,
+bonus-action subjects, nonlethal melee knockout, and start-turn Death Saving
+Throw rolls. The action-resource state can represent bonus-action availability;
+this package does not yet expose a bonus-action battle subject.
+
+## State Ownership Rules
+
+Battle state stores durable combat facts and origin references needed to
+rediscover supported acts. It avoids duplicate scalar projections when a
+structured runtime type already owns the fact.
+
+Character-derived battle creatures keep selected Unit refs and resolved attack
+facts in `origin` so battle can discover and resolve supported acts without
+importing character-creation state.
+
+Stat Block-derived battle creatures keep the generic `StatBlockRecord` in
+`origin`. The runtime does not import Core monster catalogs or SRD-specific
+Stat Block collection types.
+
+Armor Class is structured `ArmorClassState`, not a copied scalar. Turn resources
+use `RuntimeActionResource[]`; the runtime does not store a scalar action quota.
+Zero-HP lifecycle is a typed union on each `BattleCreatureState`.
+
+## Parity
+
+`battle-runtime-slice.qnt` is the package-local parity slice for this runtime's
+implemented subset. Broad combat authority remains `battle.qnt` until this
+package-local slice is reconciled into the canonical battle spec.
+
+Reducer tests cover the TypeScript runtime behavior and the package-local Quint
+slice. Broad Core MBT is still owned by `@dnd/core`.
+
+When changing battle behavior in this package, update `src/index.ts`, focused
+reducer tests, and `battle-runtime-slice.qnt` together. Check `battle.qnt` for
+canonical SRD combat semantics and do not intentionally diverge without an SRD
+citation or `ASSUMPTIONS.md` entry.
+
+## RAW Traceability
+
+| Runtime behavior                   | Source                                                                                                     | Notes                                                                                                                                   |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Initiative order and current actor | SRD 5.2.1 `Playing-the-Game.md` "Combat" / "Initiative"; `UBIQUITOUS_LANGUAGE.md` "Initiative"             | Combat is organized into rounds and turns. Initiative determines turn order.                                                            |
+| Stat Block initialization          | SRD 5.2.1 `Rules-Glossary.md` "Stat Block"                                                                 | Monster AC, Initiative, and HP entries are Stat Block facts consumed at initialization.                                                 |
+| Character initialization           | SRD 5.2.1 `Character-Creation.md`; Character Sheet produced by `@dnd/character-creation-runtime`           | This runtime consumes finalized sheet facts; it does not recalculate character-creation legality.                                       |
+| Armor Class                        | SRD 5.2.1 `Playing-the-Game.md` "Armor Class"; `Equipment.md` "Armor"                                      | Armor and Shield facts are resolved before battle initialization.                                                                       |
+| End Turn command                   | SRD 5.2.1 combat turn structure; `ASSUMPTIONS.md` A2                                                       | End Turn is a runtime command because D&D has end-of-turn trigger points, not because it is an SRD Action.                              |
+| Action resources                   | SRD 5.2.1 `Playing-the-Game.md` "Your Turn" / "Actions" / "Bonus Actions"; `UBIQUITOUS_LANGUAGE.md`        | The runtime tracks per-turn action resources through shared algebras.                                                                   |
+| Attack resolution                  | SRD 5.2.1 `Rules-Glossary.md` "Attack [Action]"; `Playing-the-Game.md` "Making an Attack" / "Attack Rolls" | Attack replay chooses a target, consumes an attack roll, and compares the roll to Armor Class, with natural 1 and natural 20 overrides. |
+| Damage and Temporary Hit Points    | SRD 5.2.1 `Playing-the-Game.md` "Damage Rolls", "Hit Points", "Temporary Hit Points"                       | Damage uses weapon damage plus the attack ability modifier, applies Temporary Hit Points first, and clamps HP at `0`.                   |
+| Zero-HP lifecycle                  | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points"; `ASSUMPTIONS.md` A12                           | Stat Block monsters die at `0` HP. Character Sheet participants use the death-save lifecycle.                                           |
+| Incapacitated action gating        | SRD 5.2.1 `Rules-Glossary.md` "Incapacitated [Condition]" and "Unconscious [Condition]"                    | Incapacitated prevents actions; Unconscious includes Incapacitated.                                                                     |
+
+## Files And Verification
+
+- `src/index.ts` - public API and reducer implementation.
+- `src/index.test.ts` - deterministic reducer tests and package-local Quint
+  slice checks.
+- `battle-runtime-slice.qnt` - local parity slice for the implemented subset.
+
+Useful checks:
+
+```sh
+pnpm --filter @dnd/battle-runtime typecheck
+pnpm --filter @dnd/battle-runtime test
+```

@@ -56,7 +56,7 @@ coverage, and Core-specific feature helpers. Core details live in
 `@dnd/surface` owns authored content records and provenance. Surface records are
 not reducer state, runtime state, or projected executable IR.
 
-Surface currently has separate authored record families:
+Surface has separate authored record families:
 
 - `UnitRecord` for selectable/ownable content such as classes, backgrounds,
   species records, features, feats, spells, weapons, armor, shields, masteries,
@@ -86,6 +86,8 @@ and fills, snapshots, and the package-local battle QNT slice. It consumes
 battle-owned creature initialization inputs; it does not import character
 creation runtime state.
 Battle runtime details live in `packages/battle-runtime/README.md`.
+Its reducer data-flow map lives in
+`packages/battle-runtime/ARCHITECTURE_GRAPH.md`.
 
 The shared domain abstraction is **Creature**. In `@dnd/battle-runtime`, the
 durable implementation type is `BattleCreatureState`, identified by
