@@ -1,6 +1,6 @@
 -- Action Surge (fighter L2) — SRD 5.2.1.
--- The level-17 two-use upgrade should be authored as a separate supported slice
--- once the reducer has actor-level resource projection.
+-- The use cap follows the Fighter Features table and the level-17 feature text:
+-- one use at Fighter level 2, two uses at Fighter level 17.
 
 let actionSurgeL2 =
       { kind = "class_feature"
@@ -20,7 +20,11 @@ let actionSurgeL2 =
           , resource =
               { kind = "use_count"
               , cap =
-                  { kind = "fixed", uses = 1 }
+                  { kind = "threshold_tiers"
+                  , axis = "class"
+                  , base = 1
+                  , tiers = [ { atLevel = 17, value = 2 } ]
+                  }
               }
           , resetCadence = { kind = "short_or_long_rest" }
           , usageLimit = { kind = "once_per_turn" }

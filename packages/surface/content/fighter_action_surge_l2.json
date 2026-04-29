@@ -33,8 +33,15 @@
     },
     "resource": {
       "cap": {
-        "kind": "fixed",
-        "uses": 1
+        "axis": "class",
+        "base": 1,
+        "kind": "threshold_tiers",
+        "tiers": [
+          {
+            "atLevel": 17,
+            "value": 2
+          }
+        ]
       },
       "kind": "use_count"
     },

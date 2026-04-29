@@ -13,10 +13,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@dnd/surface": "workspace:*",
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
-    "@firfi/quint-connect": "^0.8.2",
+    "@dnd/surface": "workspace:*",
+    "@firfi/quint-connect": "^1.0.0",
     "effect": "^3.21.0"
   },
   "devDependencies": {
