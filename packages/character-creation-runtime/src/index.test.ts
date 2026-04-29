@@ -12,6 +12,7 @@ import {
 
 import {
   characterDraftId,
+  characterBuildUnitRefs,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
@@ -1127,31 +1128,27 @@ describe("character creation finalization", () => {
       return;
     }
 
-    expect(result.build.selections.advancement).toEqual({
+    expect(result.build.advancement).toEqual({
       entries: [{ classUnitId: "class_fighter", level: 1 }],
     });
+    expect(result.build.background).toBe("background_soldier");
+    expect(result.build.species).toBe("species_orc");
+    expect(result.build.originLanguages).toEqual([
+      "Common",
+      "Dwarvish",
+      "Goblin",
+    ]);
+    expect(result.build.alignment).toEqual({
+      order: "lawful",
+      morality: "good",
+    });
     expect(result.build.abilityScores).toEqual({
-      base: {
-        str: 15,
-        dex: 14,
-        con: 13,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      },
-      backgroundIncrease: {
-        kind: "twoAndOne",
-        plusTwo: "str",
-        plusOne: "con",
-      },
-      final: {
-        str: 17,
-        dex: 14,
-        con: 14,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      },
+      str: 17,
+      dex: 14,
+      con: 14,
+      int: 8,
+      wis: 10,
+      cha: 12,
     });
     expect(result.build.hitPoints).toEqual({
       maximum: 12,
@@ -1160,21 +1157,57 @@ describe("character creation finalization", () => {
     expect(result.build.proficiencies).toEqual({
       savingThrows: ["str", "con"],
       skills: ["perception", "survival", "athletics", "intimidation"],
-      weaponCategories: ["simple", "martial"],
-      armorTraining: ["light", "medium", "heavy", "shield"],
+      weapon: ["simple", "martial"],
       tools: ["tool_dice_set"],
     });
-    expect(result.build.equipment).toEqual({
-      ownedUnitIds: [
-        "armor_chain_mail",
-        "weapon_longsword",
-        "equipment_shield",
-      ],
-      loadout: {
-        armor: "armor_chain_mail",
-        shield: "equipment_shield",
-        weapon: { unitId: "weapon_longsword", grip: "one_handed" },
+    expect(result.build.armorTraining).toEqual([
+      "light",
+      "medium",
+      "heavy",
+      "shield",
+    ]);
+    expect(result.build.features).toEqual([
+      {
+        kind: "classFeature",
+        level: 1,
+        unitId: "fighter_fighting_style_l1",
       },
+      {
+        kind: "classFeature",
+        level: 1,
+        unitId: "fighter_second_wind",
+      },
+      {
+        kind: "classFeature",
+        level: 1,
+        unitId: "fighter_weapon_mastery_l1",
+      },
+      {
+        kind: "backgroundOriginFeat",
+        unitId: "feat_savage_attacker",
+      },
+      {
+        kind: "speciesTrait",
+        unitId: "orc_adrenaline_rush",
+      },
+      {
+        kind: "speciesTrait",
+        unitId: "orc_darkvision",
+      },
+      {
+        kind: "speciesTrait",
+        unitId: "orc_relentless_endurance",
+      },
+      {
+        choiceKey: "fighter_fighting_style",
+        kind: "classChoice",
+        unitId: "defense",
+      },
+    ]);
+    expect(result.build.equipment).toEqual({
+      armor: "armor_chain_mail",
+      shield: "equipment_shield",
+      weapon: { unitId: "weapon_longsword", grip: "one_handed" },
     });
     expect(result.build.resources).toEqual([
       {
@@ -1193,23 +1226,23 @@ describe("character creation finalization", () => {
         },
       },
     ]);
-    expect(result.build.unitRefs.map((ref) => ref.unitId)).toEqual([
+    expect(
+      characterBuildUnitRefs(result.build).map((ref) => ref.unitId),
+    ).toEqual([
       "class_fighter",
+      "background_soldier",
+      "species_orc",
       "fighter_fighting_style_l1",
       "fighter_second_wind",
       "fighter_weapon_mastery_l1",
-      "background_soldier",
       "feat_savage_attacker",
-      "species_orc",
       "orc_adrenaline_rush",
       "orc_darkvision",
       "orc_relentless_endurance",
       "defense",
-      "weapon_longsword",
-      "weapon_spear",
-      "weapon_flail",
       "armor_chain_mail",
       "equipment_shield",
+      "weapon_longsword",
     ]);
   });
 

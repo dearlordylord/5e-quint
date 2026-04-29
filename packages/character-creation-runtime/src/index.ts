@@ -19,6 +19,7 @@ import {
   type AbilityScoreAssignment,
   type SupportedAbilityScoreMethod,
 } from "@dnd/shared-algebras/ability-score-algebra";
+import { hp, type HP } from "@dnd/shared/types";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
@@ -113,6 +114,10 @@ export type CreationHoleSource =
       readonly unitId: UnitRecord["id"];
       readonly choiceKey: UnitChoiceKey;
     };
+export type UnitChoiceSource = Extract<
+  CreationHoleSource,
+  { readonly tag: "unit" }
+>;
 
 export type CreationHoleIdText =
   | `cc:draft:${CharacterDraftPath}`
@@ -152,7 +157,7 @@ export const CHARACTER_CLASS_LEVELS = [
 export type CharacterClassLevel = (typeof CHARACTER_CLASS_LEVELS)[number];
 
 export type CharacterAdvancementSelection = {
-  readonly entries: readonly CharacterAdvancementEntry[];
+  readonly entries: NonEmptyReadonlyArray<CharacterAdvancementEntry>;
 };
 
 export type CharacterAdvancementEntry = {
@@ -202,7 +207,7 @@ export type CharacterSelectedChoiceOption = {
 };
 
 export type CharacterChoiceSelection = {
-  readonly source: CreationHoleSource;
+  readonly source: UnitChoiceSource;
   readonly options: readonly CharacterSelectedChoiceOption[];
 };
 
@@ -306,7 +311,7 @@ export type CreationBatchFillResult =
       readonly finalization: CreationFinalizationResult;
     };
 
-export type FinalizedCharacterSelections = {
+type FinalizedCharacterSelections = {
   readonly primaryClass: UnitRecord["id"];
   readonly advancement: CharacterAdvancementSelection;
   readonly background: UnitRecord["id"];
@@ -319,18 +324,22 @@ export type FinalizedCharacterSelections = {
   readonly equipment: CharacterEquipmentSelection;
 };
 
-export type CharacterBuildAbilityScores = {
-  readonly base: AbilityScoreAssignment;
-  readonly backgroundIncrease: BackgroundAbilityScoreIncreaseSelection;
-  readonly final: AbilityScoreAssignment;
-};
+export type CharacterBuildAbilityScores = AbilityScoreAssignment;
 
 export type CharacterBuildHitPoints = {
-  readonly maximum: number;
-  readonly hitDice: readonly CharacterBuildHitDie[];
+  readonly maximum: HP;
+  readonly hitDice: readonly CharacterBuildHitDiePool[];
 };
 
-export type CharacterBuildHitDie = {
+/**
+ * Recoverable player-character Hit Dice grouped by class.
+ *
+ * This is a character-build resource used for short-rest healing and
+ * long-rest recovery. It is intentionally separate from monster stat-block
+ * Hit Point Dice, which are authored HP formula data rather than a PC class
+ * recovery pool.
+ */
+export type CharacterBuildHitDiePool = {
   readonly classUnitId: UnitRecord["id"];
   readonly dieSize: number;
   readonly total: number;
@@ -339,15 +348,29 @@ export type CharacterBuildHitDie = {
 export type CharacterBuildProficiencies = {
   readonly savingThrows: readonly Ability[];
   readonly skills: readonly Skill[];
-  readonly weaponCategories: readonly WeaponProficiencyCategory[];
-  readonly armorTraining: readonly ArmorTrainingCategory[];
+  readonly weapon: readonly WeaponProficiencyCategory[];
   readonly tools: readonly CreationChoiceOptionId[];
 };
 
-export type CharacterBuildFeature = {
-  readonly unitId: UnitRecord["id"];
-  readonly source: "class" | "background" | "species" | "choice";
-};
+export type CharacterBuildFeature =
+  | {
+      readonly kind: "classFeature";
+      readonly unitId: UnitRecord["id"];
+      readonly level: number;
+    }
+  | {
+      readonly kind: "backgroundOriginFeat";
+      readonly unitId: UnitRecord["id"];
+    }
+  | {
+      readonly kind: "speciesTrait";
+      readonly unitId: UnitRecord["id"];
+    }
+  | {
+      readonly kind: "classChoice";
+      readonly unitId: UnitRecord["id"];
+      readonly choiceKey: UnitChoiceKey;
+    };
 
 export type CharacterBuildResource = {
   readonly unitId: UnitRecord["id"];
@@ -363,21 +386,24 @@ export type CharacterBuildLoadout = {
   };
 };
 
+export type CharacterBuildEquipment = CharacterBuildLoadout;
+
 // CharacterBuild is the creation output: durable build and identity facts.
 // In-play CharacterSheet state such as current HP, Temporary Hit Points, and
 // Hit Dice remaining belongs to the adventuring/rest boundary, not this package.
 export type CharacterBuild = {
-  readonly selections: FinalizedCharacterSelections;
-  readonly unitRefs: readonly UnitRef[];
+  readonly advancement: CharacterAdvancementSelection;
+  readonly background: UnitRecord["id"];
+  readonly species: UnitRecord["id"];
+  readonly originLanguages: CharacterStartingLanguages;
+  readonly alignment: CharacterAlignment;
   readonly abilityScores: CharacterBuildAbilityScores;
   readonly hitPoints: CharacterBuildHitPoints;
   readonly proficiencies: CharacterBuildProficiencies;
+  readonly armorTraining: readonly ArmorTrainingCategory[];
   readonly features: readonly CharacterBuildFeature[];
   readonly resources: readonly CharacterBuildResource[];
-  readonly equipment: {
-    readonly ownedUnitIds: readonly UnitRecord["id"][];
-    readonly loadout: CharacterBuildLoadout;
-  };
+  readonly equipment: CharacterBuildEquipment;
 };
 
 export type CreationFinalizationResult =
@@ -500,7 +526,7 @@ const SURFACE_ABILITIES = [
 let nextDraftOrdinal = 0;
 
 export function createCharacterDraft(input: {
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary?: UnitLibrary;
   readonly draftId?: CharacterDraftId;
 }): CharacterDraft {
   void input.unitLibrary;
@@ -906,62 +932,74 @@ function buildCharacterBuild(input: {
   readonly selections: FinalizedCharacterSelections;
   readonly unitLibrary: UnitLibrary;
 }): CharacterBuild {
+  const { selections } = input;
   const classFacts = requireReadable(
     readClassCreationFacts(
-      input.unitLibrary.requireUnit(input.selections.primaryClass),
+      input.unitLibrary.requireUnit(selections.primaryClass),
     ),
     "class",
   );
   const backgroundFacts = requireReadable(
     readBackgroundCreationFacts(
-      input.unitLibrary.requireUnit(input.selections.background),
+      input.unitLibrary.requireUnit(selections.background),
     ),
     "background",
   );
   const speciesFacts = requireReadable(
-    readSpeciesCreationFacts(
-      input.unitLibrary.requireUnit(input.selections.species),
-    ),
+    readSpeciesCreationFacts(input.unitLibrary.requireUnit(selections.species)),
     "species",
   );
-  const baseScores = input.selections.abilityScoreGeneration.assignedScores;
+  const baseScores = selections.abilityScoreGeneration.assignedScores;
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
-    input.selections.backgroundAbilityScoreIncrease,
+    selections.backgroundAbilityScoreIncrease,
     backgroundFacts.abilityScoreIncrease.abilities,
   );
-  const classFeatureUnitIds = classFacts.featureGrants
-    .filter((grant) => grant.level === 1)
-    .map((grant) => grant.unitId);
-  const featureUnitIds = [
-    ...classFeatureUnitIds,
-    backgroundFacts.originFeatId,
-    ...Object.values(speciesFacts.traits),
-    PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+  const classFeatureGrants = classFacts.featureGrants.filter(
+    (grant) => grant.level === 1,
+  );
+  const classFeatureUnitIds = classFeatureGrants.map((grant) => grant.unitId);
+  const buildFeatures: readonly CharacterBuildFeature[] = [
+    ...classFeatureGrants.map((grant) => ({
+      kind: "classFeature" as const,
+      unitId: grant.unitId,
+      level: grant.level,
+    })),
+    {
+      kind: "backgroundOriginFeat",
+      unitId: backgroundFacts.originFeatId,
+    },
+    ...Object.values(speciesFacts.traits).map((unitId) => ({
+      kind: "speciesTrait" as const,
+      unitId,
+    })),
+    {
+      kind: "classChoice",
+      unitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+      choiceKey: FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
+    },
   ];
+  const buildEquipment: CharacterBuildEquipment = {
+    armor: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+    shield: PHASE1_SHIELD_UNIT_ID,
+    weapon: {
+      unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+      grip: "one_handed",
+    },
+  };
 
   return {
-    selections: input.selections,
-    unitRefs: unitRefs(
-      input.selections.primaryClass,
-      ...classFeatureUnitIds,
-      input.selections.background,
-      backgroundFacts.originFeatId,
-      input.selections.species,
-      ...Object.values(speciesFacts.traits),
-      ...selectedChoiceUnitIds(input.selections),
-      ...input.selections.equipment.selectedUnitIds,
-    ),
-    abilityScores: {
-      base: baseScores,
-      backgroundIncrease: input.selections.backgroundAbilityScoreIncrease,
-      final: finalScores,
-    },
+    advancement: selections.advancement,
+    background: selections.background,
+    species: selections.species,
+    originLanguages: selections.languages,
+    alignment: selections.alignment,
+    abilityScores: finalScores,
     hitPoints: {
-      maximum: classFacts.hitPointDie + abilityModifier(finalScores.con),
+      maximum: hp(classFacts.hitPointDie + abilityModifier(finalScores.con)),
       hitDice: [
         {
-          classUnitId: input.selections.primaryClass,
+          classUnitId: selections.primaryClass,
           dieSize: classFacts.hitPointDie,
           total: 1,
         },
@@ -970,39 +1008,42 @@ function buildCharacterBuild(input: {
     proficiencies: {
       savingThrows: classFacts.savingThrowProficiencies,
       skills: uniqueValues([
-        ...selectedSkillProficiencies(input.selections),
+        ...selectedSkillProficiencies(selections),
         ...backgroundFacts.skillProficiencies,
       ]),
-      weaponCategories: classFacts.weaponProficiencies,
-      armorTraining: classFacts.armorTraining,
-      tools: selectedToolProficiencies(input.selections),
+      weapon: classFacts.weaponProficiencies,
+      tools: selectedToolProficiencies(selections),
     },
-    features: unitRefs(...featureUnitIds).map((ref) => ({
-      unitId: ref.unitId,
-      source: featureSource(
-        ref.unitId,
-        classFeatureUnitIds,
-        speciesFacts.traits,
-      ),
-    })),
+    armorTraining: classFacts.armorTraining,
+    features: buildFeatures,
     resources: classFeatureUnitIds.flatMap((unitId) =>
       resourceForFeature(input.unitLibrary.requireUnit(unitId)),
     ),
-    equipment: {
-      ownedUnitIds: input.selections.equipment.selectedUnitIds,
-      // TODO(CAM equipment widening): the first manifest finalizes the only
-      // supported loadout. Before adding broader equipment support, derive this
-      // from accepted loadout selections instead of these phase-1 constants.
-      loadout: {
-        armor: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-        shield: PHASE1_SHIELD_UNIT_ID,
-        weapon: {
-          unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-          grip: "one_handed",
-        },
-      },
-    },
+    equipment: buildEquipment,
   };
+}
+
+export function characterBuildUnitRefs(
+  build: Pick<
+    CharacterBuild,
+    "advancement" | "background" | "species" | "features" | "equipment"
+  >,
+): readonly UnitRef[] {
+  return unitRefs(
+    ...build.advancement.entries.map((entry) => entry.classUnitId),
+    build.background,
+    build.species,
+    ...build.features.map((feature) => feature.unitId),
+    ...optionalUnitId(build.equipment.armor),
+    ...optionalUnitId(build.equipment.shield),
+    ...optionalUnitId(build.equipment.weapon?.unitId),
+  );
+}
+
+function optionalUnitId(
+  unitId: UnitRecord["id"] | undefined,
+): readonly UnitRecord["id"][] {
+  return unitId == null ? [] : [unitId];
 }
 
 function requireReadable<T>(
@@ -1044,16 +1085,6 @@ function abilityModifier(score: number): number {
   return Math.floor((score - 10) / 2);
 }
 
-function selectedChoiceUnitIds(
-  selections: FinalizedCharacterSelections,
-): readonly UnitRecord["id"][] {
-  return selections.choices.flatMap((selection) =>
-    selection.options.flatMap((option) =>
-      option.unitRef == null ? [] : [option.unitRef.unitId],
-    ),
-  );
-}
-
 function selectedSkillProficiencies(
   selections: FinalizedCharacterSelections,
 ): readonly Skill[] {
@@ -1083,26 +1114,6 @@ function selectedToolProficiencies(
   );
 
   return toolSelection == null ? [] : choiceSelectionOptionIds(toolSelection);
-}
-
-function featureSource(
-  unitId: UnitRecord["id"],
-  classFeatureUnitIds: readonly UnitRecord["id"][],
-  speciesTraits: Record<string, UnitRecord["id"]>,
-): CharacterBuildFeature["source"] {
-  if (classFeatureUnitIds.includes(unitId)) {
-    return "class";
-  }
-
-  if (Object.values(speciesTraits).includes(unitId)) {
-    return "species";
-  }
-
-  if (unitId === PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID) {
-    return "choice";
-  }
-
-  return "background";
 }
 
 function resourceForFeature(
@@ -1213,7 +1224,9 @@ function choiceFillIssues(
   if (invalidOptionIds.length > 0) {
     return [
       ...cardinalityIssues,
-      invalidChoiceIssue(fill, fillIndex, invalidOptionIds[0]),
+      ...invalidOptionIds.map((optionId) =>
+        invalidChoiceIssue(fill, fillIndex, optionId),
+      ),
     ];
   }
 
@@ -2214,10 +2227,7 @@ function sameChoiceSelectionMultiset(
 }
 
 function choiceSelectionKey(selection: CharacterChoiceSelection): string {
-  const source =
-    selection.source.tag === "draft"
-      ? `draft:${selection.source.path}`
-      : `unit:${selection.source.unitId}:${selection.source.choiceKey}`;
+  const source = `unit:${selection.source.unitId}:${selection.source.choiceKey}`;
   const options = selection.options
     .map(choiceSelectionOptionKey)
     .sort()
@@ -2464,7 +2474,7 @@ function draftSource(path: CharacterDraftPath): CreationHoleSource {
 function unitSource(
   unitId: UnitRecord["id"],
   choiceKey: UnitChoiceKey,
-): CreationHoleSource {
+): UnitChoiceSource {
   return { tag: "unit", unitId, choiceKey };
 }
 

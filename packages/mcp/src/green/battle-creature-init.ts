@@ -1,7 +1,7 @@
 import {
   battleCreatureInitFromStatBlock,
-  startBattle,
   scoreModifier,
+  startBattle,
   type BattleAttackProfile,
   type BattleId,
   type BattleState,
@@ -11,7 +11,10 @@ import {
   type InitiativeScore,
   type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
-import type { CharacterBuild } from "@dnd/character-creation-runtime";
+import {
+  characterBuildUnitRefs,
+  type CharacterBuild,
+} from "@dnd/character-creation-runtime";
 import {
   abilityModifier,
   armorClassDelta,
@@ -63,6 +66,7 @@ export function battleCreatureInitFromCharacterBuild(
   },
 ): BattleCreatureInit {
   const maxHp = Hp(input.build.hitPoints.maximum);
+  const characterUnitRefs = characterBuildUnitRefs(input.build);
   const currentHp = input.currentHp ?? maxHp;
   if (currentHp > maxHp) {
     throw new Error("Character battle initialization current HP exceeds max HP.");
@@ -75,13 +79,13 @@ export function battleCreatureInitFromCharacterBuild(
     creatureInit: {
       kind: "character",
       characterId: input.characterId,
-      characterUnitRefs: input.build.unitRefs,
+      characterUnitRefs,
       armorClass: characterArmorClassState(input.build, input.unitLibrary),
       currentHp,
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
-      selectedLoadout: input.build.equipment.loadout,
+      selectedLoadout: input.build.equipment,
       attack: characterAttackProfile(input.build, input.unitLibrary),
     },
   };
@@ -91,7 +95,7 @@ function characterArmorClassState(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): ArmorClassState {
-  const loadout = build.equipment.loadout;
+  const loadout = build.equipment;
   const defaultState = defaultArmorClassState();
   const armor = loadout.armor
     ? unitLibrary.requireUnit(loadout.armor)
@@ -104,12 +108,12 @@ function characterArmorClassState(
     ...defaultState,
     abilityModifiers: {
       ...zeroAbilityModifiers(),
-      str: abilityModifier(scoreModifier(build.abilityScores.final.str)),
-      dex: abilityModifier(scoreModifier(build.abilityScores.final.dex)),
-      con: abilityModifier(scoreModifier(build.abilityScores.final.con)),
-      int: abilityModifier(scoreModifier(build.abilityScores.final.int)),
-      wis: abilityModifier(scoreModifier(build.abilityScores.final.wis)),
-      cha: abilityModifier(scoreModifier(build.abilityScores.final.cha)),
+      str: abilityModifier(scoreModifier(build.abilityScores.str)),
+      dex: abilityModifier(scoreModifier(build.abilityScores.dex)),
+      con: abilityModifier(scoreModifier(build.abilityScores.con)),
+      int: abilityModifier(scoreModifier(build.abilityScores.int)),
+      wis: abilityModifier(scoreModifier(build.abilityScores.wis)),
+      cha: abilityModifier(scoreModifier(build.abilityScores.cha)),
     },
     base:
       armor?.kind === "armor"
@@ -127,11 +131,11 @@ function characterArmorClassState(
             },
           ]
         : []),
-      ...build.unitRefs.flatMap((ref) =>
+      ...characterBuildUnitRefs(build).flatMap((ref) =>
         armorDefenseBonus(unitLibrary.requireUnit(ref.unitId)),
       ),
     ],
-    armorTraining: new Set(build.proficiencies.armorTraining),
+    armorTraining: new Set(build.armorTraining),
     leftHandUse: shield?.kind === "shield" ? "shield" : "free",
     rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
   };
@@ -175,7 +179,7 @@ function characterAttackProfile(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): BattleAttackProfile | null {
-  const selectedWeapon = build.equipment.loadout.weapon;
+  const selectedWeapon = build.equipment.weapon;
   if (selectedWeapon == null) {
     return null;
   }
@@ -189,6 +193,6 @@ function characterAttackProfile(
     kind: "weapon",
     weapon: unit,
     ability: "str",
-    abilityModifier: scoreModifier(build.abilityScores.final.str),
+    abilityModifier: scoreModifier(build.abilityScores.str),
   };
 }

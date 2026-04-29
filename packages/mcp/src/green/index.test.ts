@@ -116,11 +116,8 @@ describe("MCP green composition root", () => {
         build: {
           ...build,
           equipment: {
-            ...build.equipment,
-            loadout: {
-              shield: "equipment_shield",
-              weapon: { unitId: "weapon_longsword", grip: "one_handed" },
-            },
+            shield: "equipment_shield",
+            weapon: { unitId: "weapon_longsword", grip: "one_handed" },
           },
         },
       },
@@ -184,7 +181,6 @@ function createTestDraft(
   draftId: string,
 ): CharacterDraft {
   return createCharacterDraft({
-    unitLibrary,
     draftId: characterDraftId(draftId),
   });
 }
