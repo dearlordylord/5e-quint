@@ -24,6 +24,7 @@ type ModelState = {
   readonly shieldTrained: boolean;
   readonly wieldingShield: boolean;
   readonly unarmoredBonus: number;
+  readonly wearingArmorBonus: number;
   readonly floor: number;
   readonly currentAc: number;
 };
@@ -37,6 +38,7 @@ const quintStateSchema = z.object({
   qShieldTrained: z.boolean(),
   qWieldingShield: z.boolean(),
   qUnarmoredBonus: z.bigint(),
+  qWearingArmorBonus: z.bigint(),
   qFloor: z.bigint(),
   qCurrentAc: z.bigint(),
 });
@@ -52,6 +54,7 @@ function normalizeQuintState(raw: unknown): ModelState {
     shieldTrained: parsed.qShieldTrained,
     wieldingShield: parsed.qWieldingShield,
     unarmoredBonus: Number(parsed.qUnarmoredBonus),
+    wearingArmorBonus: Number(parsed.qWearingArmorBonus),
     floor: Number(parsed.qFloor),
     currentAc: Number(parsed.qCurrentAc),
   };
@@ -66,6 +69,13 @@ const bracers = {
   kind: "unarmored_no_shield" as const,
   bonus: armorClassDelta(2),
   sourceUnitId: "magic_item_bracers_of_defense",
+};
+
+const defense = {
+  kind: "wearing_armor" as const,
+  bonus: armorClassDelta(1),
+  categories: ["light", "medium", "heavy"] as const,
+  sourceUnitId: "feat_defense",
 };
 
 function armorClassFixture(fixture: number): ArmorClassState {
@@ -133,6 +143,7 @@ function armorClassFixture(fixture: number): ArmorClassState {
       },
       base: {
         kind: "armor",
+        category: "medium",
         formula: {
           kind: "medium_dex_max_2",
           base: 14,
@@ -153,6 +164,25 @@ function armorClassFixture(fixture: number): ArmorClassState {
       ...defaultArmorClassState(),
       bonuses: [bracers],
       leftHandUse: "shield",
+    };
+  }
+
+  if (fixture === 7) {
+    return {
+      ...defaultArmorClassState(),
+      abilityModifiers: {
+        ...zeroAbilityModifiers(),
+        dex: abilityModifier(2),
+      },
+      base: {
+        kind: "armor",
+        category: "medium",
+        formula: {
+          kind: "medium_dex_max_2",
+          base: 14,
+        },
+      },
+      bonuses: [defense],
     };
   }
 
@@ -177,6 +207,7 @@ function modelState(fixture: number): ModelState {
       shieldTrained: false,
       wieldingShield: false,
       unarmoredBonus: 0,
+      wearingArmorBonus: 0,
       floor: 1,
     },
     {
@@ -188,6 +219,7 @@ function modelState(fixture: number): ModelState {
       shieldTrained: false,
       wieldingShield: false,
       unarmoredBonus: 0,
+      wearingArmorBonus: 0,
       floor: 1,
     },
     {
@@ -199,6 +231,7 @@ function modelState(fixture: number): ModelState {
       shieldTrained: true,
       wieldingShield: true,
       unarmoredBonus: 0,
+      wearingArmorBonus: 0,
       floor: 1,
     },
     {
@@ -210,6 +243,7 @@ function modelState(fixture: number): ModelState {
       shieldTrained: true,
       wieldingShield: false,
       unarmoredBonus: 0,
+      wearingArmorBonus: 0,
       floor: 1,
     },
     {
@@ -221,6 +255,7 @@ function modelState(fixture: number): ModelState {
       shieldTrained: false,
       wieldingShield: false,
       unarmoredBonus: 0,
+      wearingArmorBonus: 0,
       floor: 1,
     },
     {
@@ -232,6 +267,7 @@ function modelState(fixture: number): ModelState {
       shieldTrained: false,
       wieldingShield: false,
       unarmoredBonus: 2,
+      wearingArmorBonus: 0,
       floor: 1,
     },
     {
@@ -243,6 +279,19 @@ function modelState(fixture: number): ModelState {
       shieldTrained: false,
       wieldingShield: true,
       unarmoredBonus: 2,
+      wearingArmorBonus: 0,
+      floor: 1,
+    },
+    {
+      baseKind: 3,
+      baseAc: 14,
+      dex: 2,
+      con: 0,
+      shieldBonus: 0,
+      shieldTrained: false,
+      wieldingShield: false,
+      unarmoredBonus: 0,
+      wearingArmorBonus: 1,
       floor: 1,
     },
     {
@@ -254,6 +303,7 @@ function modelState(fixture: number): ModelState {
       shieldTrained: false,
       wieldingShield: false,
       unarmoredBonus: 0,
+      wearingArmorBonus: 0,
       floor: 17,
     },
   ] as const;
@@ -274,6 +324,7 @@ const driverSchema = {
   doBracersUnarmored: {},
   doBracersWithShield: {},
   doFloorAfterBase: {},
+  doDefenseMediumArmor: {},
   step: {},
 } as const;
 
@@ -294,7 +345,8 @@ function createArmorClassDriver() {
       doMediumDexCapped: () => setFixture(4),
       doBracersUnarmored: () => setFixture(5),
       doBracersWithShield: () => setFixture(6),
-      doFloorAfterBase: () => setFixture(7),
+      doFloorAfterBase: () => setFixture(8),
+      doDefenseMediumArmor: () => setFixture(7),
       step: () => {},
       getState: () => state,
     };

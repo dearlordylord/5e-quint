@@ -1,4 +1,4 @@
-import { Brand } from "effect";
+import { Brand, Match } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
 import {
@@ -11,8 +11,12 @@ import {
   initiativeOrder,
 } from "@dnd/shared-algebras/initiative-algebra";
 import {
+  abilityModifier,
+  armorClassDelta,
   currentArmorClass,
+  defaultArmorClassState,
   statBlockArmorClassState,
+  zeroAbilityModifiers,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   EMPTY_CONDITION_STATE,
@@ -34,18 +38,21 @@ import type {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   CONDITIONS as ALL_CONDITIONS,
+  Hp,
   Round,
   type Condition,
   type CreatureId,
-  type Hp,
   type Initiative,
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type {
-  StatBlockValue,
+  SixAbilityScores,
   StatBlockRecord,
+  StatBlockValue,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { CharacterSheet, UnitRef } from "@dnd/character-creation-runtime";
 
 export type CombatantId = CreatureId & Brand.Brand<"CombatantId">;
 const CombatantId = Brand.nominal<CombatantId>();
@@ -70,18 +77,7 @@ export const initiativeScore: (value: number) => InitiativeScore =
 
 export type ZeroHpLifecyclePolicy = "diesAtZeroHp" | "usesDeathSavingThrows";
 
-export type UnitRef = {
-  readonly unitId: UnitRecord["id"];
-};
-
-export type CharacterLoadoutRef = {
-  readonly armor?: UnitRecord["id"];
-  readonly shield?: UnitRecord["id"];
-  readonly weapon?: {
-    readonly unitId: UnitRecord["id"];
-    readonly grip: "one_handed";
-  };
-};
+export type CharacterLoadoutRef = CharacterSheet["equipment"]["loadout"];
 
 export type CharacterCombatantSeed = {
   readonly kind: "character";
@@ -93,6 +89,23 @@ export type CharacterCombatantSeed = {
   readonly tempHp: Hp;
   readonly zeroHpLifecyclePolicy: "usesDeathSavingThrows";
   readonly selectedLoadout: CharacterLoadoutRef;
+};
+
+export type CharacterSheetCombatantInput = {
+  readonly combatantId: CombatantId;
+  readonly characterId: CharacterId;
+  readonly displayName: string;
+  readonly sheet: CharacterSheet;
+  readonly currentHp?: Hp;
+  readonly tempHp?: Hp;
+};
+
+export type StatBlockCombatantInput = {
+  readonly combatantId: CombatantId;
+  readonly monsterId: MonsterId;
+  readonly statBlock: StatBlockRecord;
+  readonly currentHp?: Hp;
+  readonly tempHp?: Hp;
 };
 
 export type MonsterCombatantSeed = {
@@ -276,6 +289,24 @@ export function startBattle(input: {
   };
 }
 
+export function startBattleFromCharacterSheetAndStatBlock(input: {
+  readonly battleId: BattleId;
+  readonly character: CharacterSheetCombatantInput;
+  readonly monster: StatBlockCombatantInput;
+  readonly unitLibrary: UnitCatalog;
+}): BattleState {
+  return startBattle({
+    battleId: input.battleId,
+    combatants: [
+      combatantSeedFromCharacterSheet({
+        ...input.character,
+        unitLibrary: input.unitLibrary,
+      }),
+      combatantSeedFromStatBlock(input.monster),
+    ],
+  });
+}
+
 export function discoverBattleActs(
   state: BattleState,
 ): readonly AvailableBattleAct[] {
@@ -446,10 +477,162 @@ function activeConditions(state: ConditionState): readonly Condition[] {
 function literalStatBlockNumber(value: StatBlockValue): number {
   if (value.kind !== "literal") {
     throw new Error(
-      "Battle runtime skeleton requires literal Stat Block AC values.",
+      "Battle runtime initialization requires literal Stat Block numeric values.",
     );
   }
   return value.value;
+}
+
+function combatantSeedFromCharacterSheet(
+  input: CharacterSheetCombatantInput & {
+    readonly unitLibrary: UnitCatalog;
+  },
+): CombatantSeedInput {
+  const maxHp = Hp(input.sheet.hitPoints.maximum);
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScoreFromDexterity(input.sheet.abilityScores.final),
+    seed: {
+      kind: "character",
+      characterId: input.characterId,
+      sheetUnitRefs: input.sheet.unitRefs,
+      armorClass: characterArmorClassState(input.sheet, input.unitLibrary),
+      currentHp: input.currentHp ?? maxHp,
+      maxHp,
+      tempHp: input.tempHp ?? Hp(0),
+      zeroHpLifecyclePolicy: "usesDeathSavingThrows",
+      selectedLoadout: input.sheet.equipment.loadout,
+    },
+  };
+}
+
+function combatantSeedFromStatBlock(
+  input: StatBlockCombatantInput,
+): CombatantSeedInput {
+  const maxHp = Hp(literalStatBlockNumber(input.statBlock.statBlock.hp));
+  return {
+    combatantId: input.combatantId,
+    displayName: input.statBlock.statBlock.displayName,
+    initiative: statBlockInitiativeScore(input.statBlock),
+    seed: {
+      kind: "monster",
+      monsterId: input.monsterId,
+      statBlock: input.statBlock,
+      currentHp: input.currentHp ?? maxHp,
+      maxHp,
+      tempHp: input.tempHp ?? Hp(0),
+      zeroHpLifecyclePolicy: "diesAtZeroHp",
+    },
+  };
+}
+
+function characterArmorClassState(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): ArmorClassState {
+  const loadout = sheet.equipment.loadout;
+  const defaultState = defaultArmorClassState();
+  const armor = loadout.armor
+    ? unitLibrary.requireUnit(loadout.armor)
+    : undefined;
+  const shield = loadout.shield
+    ? unitLibrary.requireUnit(loadout.shield)
+    : undefined;
+
+  return {
+    ...defaultState,
+    abilityModifiers: abilityModifiers(sheet.abilityScores.final),
+    base:
+      armor?.kind === "armor"
+        ? { kind: "armor", formula: armor.acFormula, category: armor.category }
+        : defaultState.base,
+    bonuses: [
+      ...(shield?.kind === "shield"
+        ? [
+            {
+              kind: "shield" as const,
+              bonus: armorClassDelta(shield.armorClassProjection.bonus),
+              handUse: shield.armorClassProjection.handUse,
+              trainingRequired: shield.armorClassProjection.trainingRequired,
+              sourceUnitId: shield.id,
+            },
+          ]
+        : []),
+      ...sheet.unitRefs.flatMap((ref) =>
+        armorDefenseBonus(unitLibrary.requireUnit(ref.unitId)),
+      ),
+    ],
+    armorTraining: new Set(sheet.proficiencies.armorTraining),
+    leftHandUse: shield?.kind === "shield" ? "shield" : "free",
+    rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
+  };
+}
+
+function armorDefenseBonus(unit: UnitRecord): ArmorClassState["bonuses"] {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
+    return [];
+  }
+
+  if (
+    unit.mechanics.condition?.kind !== "wearing_armor" ||
+    unit.mechanics.grants.length !== 1
+  ) {
+    return [];
+  }
+
+  const grant = unit.mechanics.grants[0];
+  if (grant?.kind !== "modify_ac" || grant.delta.kind !== "fixed_dice") {
+    return [];
+  }
+  const fixedDelta = grant.delta;
+
+  return [
+    {
+      kind: "wearing_armor",
+      bonus: armorClassDelta(
+        Match.value(fixedDelta.sign).pipe(
+          Match.when("+", () => fixedDelta.dice * fixedDelta.dieSize),
+          Match.when("-", () => -(fixedDelta.dice * fixedDelta.dieSize)),
+          Match.exhaustive,
+        ),
+      ),
+      categories: unit.mechanics.condition.categories,
+      sourceUnitId: unit.id,
+    },
+  ];
+}
+
+function abilityModifiers(
+  scores: SixAbilityScores,
+): ArmorClassState["abilityModifiers"] {
+  return {
+    ...zeroAbilityModifiers(),
+    str: abilityModifier(scoreModifier(scores.str)),
+    dex: abilityModifier(scoreModifier(scores.dex)),
+    con: abilityModifier(scoreModifier(scores.con)),
+    int: abilityModifier(scoreModifier(scores.int)),
+    wis: abilityModifier(scoreModifier(scores.wis)),
+    cha: abilityModifier(scoreModifier(scores.cha)),
+  };
+}
+
+function scoreModifier(score: number): number {
+  return Math.floor((score - 10) / 2);
+}
+
+function initiativeScoreFromDexterity(
+  scores: SixAbilityScores,
+): InitiativeScore {
+  return initiativeScore(10 + scoreModifier(scores.dex));
+}
+
+function statBlockInitiativeScore(statBlock: StatBlockRecord): InitiativeScore {
+  return initiativeScore(
+    10 +
+      (statBlock.statBlock.initiativeModifier ??
+        scoreModifier(statBlock.statBlock.abilityScores.dex)),
+  );
 }
 
 function invalidResult(

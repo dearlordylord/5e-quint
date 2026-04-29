@@ -109,13 +109,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 12,
       "id": "CAM12",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Start Battle From Character Sheet And Stat Block"
     },
     {
       "number": 13,
       "id": "CAM13",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Implement Battle Attack Holes And Replay"
     },
     {
@@ -192,8 +192,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | done                                          | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Legal Orc Soldier Fighter `CharacterSheet` finalization landed with legality tests and Second Wind resource preservation.                                                                       | Done in this task.                                                                                   |
 | 10    | CAM10 - Add Character Creation QNT Slice And Parity             | done                                          | CAM9              | CAM17, CAM18                         | Added `character-creation-runtime-slice.qnt` plus deterministic runtime/QNT parity for complete Fighter creation, invalid fills, stale revision, cardinality, and duplicate multi-choice input. | Done in this task.                                                                                   |
 | 11    | CAM11 - Create Battle Runtime Skeleton                          | done                                          | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Created `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block seed types.                                                 | Done in this task.                                                                                   |
-| 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | ready-for-implementation-after-light-research | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Implement battle initialization from finalized Character Sheet plus generic `StatBlockRecord`, deriving AC/HP/loadout/action-resource facts without Core imports.                               | Ready after battle initialization architecture check.                                                |
-| 13    | CAM13 - Implement Battle Attack Holes And Replay                | blocked                                       | CAM12             | CAM14, CAM15, CAM18                  | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                                  | Blocker Type: dependency. Blocker Detail: waits on battle initialization.                            |
+| 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | done                                          | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Battle initialization from finalized Character Sheet plus generic `StatBlockRecord` landed with derived AC/HP/loadout/action-resource facts and no Core import.                                 | Done in this task.                                                                                   |
+| 13    | CAM13 - Implement Battle Attack Holes And Replay                | ready-for-implementation-after-light-research | CAM12             | CAM14, CAM15, CAM18                  | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                                  | Ready after attack replay architecture check.                                                        |
 | 14    | CAM14 - Implement Battle Damage And Zero-HP Policy              | blocked                                       | CAM13             | CAM15, CAM18                         | Implement damage application with Temporary HP absorption, HP floor, monster death policy, and Character Sheet zero-HP policy scaffolding.                                                      | Blocker Type: dependency. Blocker Detail: waits on Attack replay.                                    |
 | 15    | CAM15 - Implement End Turn And Battle QNT Slice                 | blocked                                       | CAM14             | CAM18, CAM19                         | Implement runtime `endTurn`, initiative advancement, `battle-runtime-slice.qnt`, and deterministic/MBT checks for hit, miss, damage, action spend, and end turn.                                | Blocker Type: dependency. Blocker Detail: waits on damage and zero-HP policy.                        |
 | 16    | CAM16 - Add MCP Green Composition Root                          | ready-for-implementation-after-light-research | CAM1, CAM5        | CAM17, CAM18                         | Add isolated MCP green module/root that installs `srdUnitCollection` and `srdStatBlockCollection` and has no `@dnd/core` imports.                                                               | Ready after MCP green-root architecture check.                                                       |
@@ -672,7 +672,7 @@ Plan Impact:
 
 ### Task 12 - CAM12 - Start Battle From Character Sheet And Stat Block
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM5, CAM9, CAM11  
 Blocks: CAM13, CAM18
@@ -703,17 +703,16 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM13.
+- CAM13 is unblocked.
 
 ### Task 13 - CAM13 - Implement Battle Attack Holes And Replay
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM12  
 Blocks: CAM14, CAM15, CAM18
 
-Blocker Type: dependency  
-Blocker Detail: waits on battle initialization.
+Ready after attack replay architecture check.
 
 Input:
 

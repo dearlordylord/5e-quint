@@ -6,6 +6,7 @@ import type {
   ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
+  ArmorCategory,
   ArmorAcFormula,
   ArmorTrainingCategory,
 } from "@dnd/surface/surface/types";
@@ -57,6 +58,7 @@ export type ArmorClassBaseSource =
   | {
       readonly kind: "armor";
       readonly formula: ArmorAcFormula;
+      readonly category: ArmorCategory;
     };
 
 export type ArmorClassBonusSource =
@@ -75,6 +77,12 @@ export type ArmorClassBonusSource =
   | {
       readonly kind: "unarmored_no_shield";
       readonly bonus: ArmorClassDelta;
+      readonly sourceUnitId?: string;
+    }
+  | {
+      readonly kind: "wearing_armor";
+      readonly bonus: ArmorClassDelta;
+      readonly categories: ReadonlyArray<ArmorCategory>;
       readonly sourceUnitId?: string;
     };
 
@@ -170,8 +178,14 @@ function wieldingShield(armorClassState: ArmorClassState): boolean {
   );
 }
 
-function wearingArmor(armorClassState: ArmorClassState): boolean {
-  return armorClassState.base.kind === "armor";
+function wearingArmor(
+  armorClassState: ArmorClassState,
+  categories?: ReadonlyArray<ArmorCategory>,
+): boolean {
+  return (
+    armorClassState.base.kind === "armor" &&
+    (categories == null || categories.includes(armorClassState.base.category))
+  );
 }
 
 function bonusApplies(
@@ -189,6 +203,9 @@ function bonusApplies(
     Match.when(
       { kind: "unarmored_no_shield" },
       () => !wearingArmor(armorClassState) && !wieldingShield(armorClassState),
+    ),
+    Match.when({ kind: "wearing_armor" }, ({ categories }) =>
+      wearingArmor(armorClassState, categories),
     ),
     Match.exhaustive,
   );

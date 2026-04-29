@@ -91,6 +91,7 @@ describe("reducer armor class state", () => {
       },
       base: {
         kind: "armor" as const,
+        category: "medium" as const,
         formula: {
           kind: "medium_dex_max_2" as const,
           base: 14,
@@ -99,6 +100,38 @@ describe("reducer armor class state", () => {
     };
 
     expect(Number(currentArmorClass(armorClassState))).toBe(16);
+  });
+
+  it("applies wearing-armor bonuses only for matching armor categories", () => {
+    const defense = {
+      kind: "wearing_armor" as const,
+      bonus: armorClassDelta(1),
+      categories: ["light", "medium", "heavy"] as const,
+      sourceUnitId: "defense",
+    };
+
+    expect(
+      Number(
+        currentArmorClass({
+          ...defaultArmorClassState(),
+          bonuses: [defense],
+        }),
+      ),
+    ).toBe(10);
+
+    expect(
+      Number(
+        currentArmorClass({
+          ...defaultArmorClassState(),
+          base: {
+            kind: "armor" as const,
+            category: "heavy" as const,
+            formula: { kind: "heavy_fixed" as const, ac: 16 },
+          },
+          bonuses: [defense],
+        }),
+      ),
+    ).toBe(17);
   });
 
   it("supports unarmored/no-shield bonuses such as Bracers of Defense", () => {

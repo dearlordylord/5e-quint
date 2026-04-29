@@ -204,6 +204,9 @@ importers:
 
   packages/battle-runtime:
     dependencies:
+      '@dnd/character-creation-runtime':
+        specifier: workspace:*
+        version: link:../character-creation-runtime
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
