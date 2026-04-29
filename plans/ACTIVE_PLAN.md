@@ -79,13 +79,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 7,
       "id": "CAM7",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Implement Creation Hole Discovery For Manifest"
     },
     {
       "number": 8,
       "id": "CAM8",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Implement Atomic Creation Batch Fill"
     },
     {
@@ -187,8 +187,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 4     | CAM4 - Add Minimal Character-Creation Surface Records           | done                                          | CAM1              | CAM5, CAM6, CAM7                     | Minimum `ClassRecord`, `BackgroundRecord`, and Orc `SpeciesRecord` Surface shapes/readers landed in `@dnd/surface`.                                                             | Done in this task.                                                                                   |
 | 5     | CAM5 - Author First Vertical SRD Surface Content                | done                                          | CAM3, CAM4        | CAM7, CAM9, CAM12, CAM16             | Authored first-vertical SRD Surface records and real SRD Unit/Stat Block collections for composition.                                                                           | Done in this task.                                                                                   |
 | 6     | CAM6 - Create Character Creation Runtime Skeleton               | done                                          | CAM1, CAM2        | CAM7, CAM8, CAM9, CAM10, CAM17       | Created `@dnd/character-creation-runtime` package with public draft/session/hole/fill/finalization types matching `phase0-runtime-boundary-api.md`.                             | Done in this task.                                                                                   |
-| 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | ready-for-implementation-after-light-research | CAM5, CAM6        | CAM8, CAM9                           | Implement hole discovery for the exact Orc Soldier Fighter manifest using real Surface records and package-private support gates.                                               | Ready after manifest/runtime hole-discovery blast-radius check.                                      |
-| 8     | CAM8 - Implement Atomic Creation Batch Fill                     | blocked                                       | CAM7              | CAM9, CAM10, CAM17                   | Implement accepted/rejected batch semantics, stable hole ids, duplicate-fill rejection, stale revision handling, and hole rediscovery after accepted fills.                     | Blocker Type: dependency. Blocker Detail: waits on creation hole discovery.                          |
+| 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | done                                          | CAM5, CAM6        | CAM8, CAM9                           | Hole discovery for the exact Orc Soldier Fighter manifest landed using real Surface records and package-private support gates.                                                  | Done in this task.                                                                                   |
+| 8     | CAM8 - Implement Atomic Creation Batch Fill                     | ready-for-implementation-after-light-research | CAM7              | CAM9, CAM10, CAM17                   | Implement accepted/rejected batch semantics, stable hole ids, duplicate-fill rejection, stale revision handling, and hole rediscovery after accepted fills.                     | Ready after batch-fill boundary check.                                                               |
 | 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | blocked                                       | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Finalize the manifest draft into a legal `CharacterSheet` with selected Unit refs, advancement exactly one Fighter level, loadout, and legality tests.                          | Blocker Type: dependency. Blocker Detail: waits on batch fill semantics.                             |
 | 10    | CAM10 - Add Character Creation QNT Slice And Parity             | blocked                                       | CAM9              | CAM17, CAM18                         | Add `character-creation-runtime-slice.qnt` and parity/deterministic tests for complete Fighter creation and at least one invalid fill.                                          | Blocker Type: dependency. Blocker Detail: waits on finalization behavior.                            |
 | 11    | CAM11 - Create Battle Runtime Skeleton                          | ready-for-implementation-after-light-research | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Create `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block seed types.                                  | Ready after runtime package architecture check.                                                      |
@@ -478,12 +478,12 @@ Plan Impact:
 
 ### Task 7 - CAM7 - Implement Creation Hole Discovery For Manifest
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM5, CAM6  
 Blocks: CAM8, CAM9
 
-Next action: run the manifest/runtime hole-discovery blast-radius check, then implement discovery for the exact Orc Soldier Fighter manifest.
+Next action: none; CAM7 is complete.
 
 Input:
 
@@ -505,8 +505,13 @@ Acceptance:
 
 Verification:
 
-- Deterministic hole discovery tests for initial draft and post-class/background/species selections.
-- `pnpm --filter @dnd/character-creation-runtime test`
+- Verified in this task:
+  - Read `.references/srd-5.2.1/Classes/Fighter.md`, `.references/srd-5.2.1/Character-Origins.md`, `.references/srd-5.2.1/Character-Creation.md`, `.references/srd-5.2.1/Equipment.md`, and `UBIQUITOUS_LANGUAGE.md`.
+  - `pnpm --filter @dnd/character-creation-runtime test`
+  - `pnpm --filter @dnd/character-creation-runtime typecheck`
+  - `pnpm exec prettier --check packages/character-creation-runtime/README.md packages/character-creation-runtime/package.json packages/character-creation-runtime/src/index.ts packages/character-creation-runtime/src/index.test.ts`
+  - `git diff --check`
+  - `/simplify` convergence completed in two manual rounds. Round 1 accepted the Surface-derived discovery shape but fixed Soldier background ability-score-increase suppression to use the typed draft field. Round 2 confirmed hole ids remain stable domain ids, support gates stay package-private, and no later batch-fill/finalization behavior was implemented.
 
 Plan Impact:
 
@@ -514,13 +519,12 @@ Plan Impact:
 
 ### Task 8 - CAM8 - Implement Atomic Creation Batch Fill
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM7  
 Blocks: CAM9, CAM10, CAM17
 
-Blocker Type: dependency  
-Blocker Detail: waits on creation hole discovery.
+Next action: run the batch-fill boundary check, then implement atomic fill semantics against the CAM7 stable hole ids.
 
 Input:
 
