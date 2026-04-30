@@ -2402,6 +2402,11 @@ export const CreatureResistanceListSchema = Schema.Union(
   }),
 );
 
+export const CreatureVulnerabilityListSchema = Schema.Struct({
+  kind: Schema.Literal("fixed"),
+  damageTypes: nonEmpty(DamageTypeSchema),
+});
+
 export const CreatureImmunityListSchema = Schema.Struct({
   damageTypes: optionalExact(nonEmpty(DamageTypeSchema)),
   conditions: optionalExact(nonEmpty(ConditionSchema)),
@@ -2518,6 +2523,7 @@ export const CreatureStatBlockSchema = Schema.Struct({
     nonEmpty(CreatureSavingThrowModifierSchema),
   ),
   saveProficiencies: optionalExact(nonEmpty(AbilitySchema)),
+  vulnerabilities: optionalExact(CreatureVulnerabilityListSchema),
   resistances: optionalExact(CreatureResistanceListSchema),
   immunities: optionalExact(CreatureImmunityListSchema),
   senses: optionalExact(nonEmpty(CreatureSenseSchema)),

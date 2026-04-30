@@ -15,14 +15,19 @@ let StartingEquipmentOption
       }
 
 let fighter =
-      { armorTraining = [ "light", "medium", "heavy", "shield" ]
+      { armorTraining =
+          { categories = [ "light", "medium", "heavy", "shield" ]
+          , kind = "trained"
+          }
       , className = "fighter"
       , description =
-          "Minimum SRD Fighter class creation facts for a level-1 character."
+          "Minimum SRD Fighter class creation facts through level 2."
       , featureGrants =
         [ { level = 1, unitId = "fighter_fighting_style_l1" }
         , { level = 1, unitId = "fighter_second_wind" }
         , { level = 1, unitId = "fighter_weapon_mastery_l1" }
+        , { level = 2, unitId = "fighter_action_surge" }
+        , { level = 2, unitId = "fighter_tactical_mind" }
         ]
       , hitPointDie = 10
       , id = "class_fighter"
@@ -30,7 +35,7 @@ let fighter =
       , name = "Fighter"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Fighter.md:3-13,17-20,29-31,56-74"
+        , section = "Classes/Fighter.md:3-13,17-20,29-32,56-84"
         }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =

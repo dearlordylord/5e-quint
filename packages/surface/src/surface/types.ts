@@ -401,6 +401,9 @@ export type CreatureSpeed = Schema.Schema.Type<
 export type CreatureResistanceList = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureResistanceListSchema
 >;
+export type CreatureVulnerabilityList = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureVulnerabilityListSchema
+>;
 export type CreatureImmunityList = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureImmunityListSchema
 >;
@@ -620,8 +623,29 @@ export type StartingEquipmentItemRef = Schema.Schema.Type<
 export type ClassFeatureGrant = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureGrantSchema
 >;
+export type ArmorTraining = Schema.Schema.Type<
+  typeof SurfaceSchema.ArmorTrainingSchema
+>;
+export type WizardSpellcastingCreation = Schema.Schema.Type<
+  typeof SurfaceSchema.WizardSpellcastingCreationSchema
+>;
+export type RitualAdeptMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.RitualAdeptMechanicsSchema
+>;
+export type ArcaneRecoveryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ArcaneRecoveryMechanicsSchema
+>;
+export type TacticalMindMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.TacticalMindMechanicsSchema
+>;
 export type ClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassRecordSchema
+>;
+export type WizardClassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.WizardClassRecordSchema
+>;
+export type NonWizardClassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.NonWizardClassRecordSchema
 >;
 export type ClassFeatureRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureRecordSchema

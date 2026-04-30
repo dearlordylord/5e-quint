@@ -1,0 +1,143 @@
+{
+  "id": "stat_block_skeleton",
+  "kind": "statBlock",
+  "name": "Skeleton",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-P-S.md:1152-1175"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 5,
+      "con": 15,
+      "dex": 16,
+      "int": 6,
+      "str": 10,
+      "wis": 8
+    },
+    "ac": {
+      "kind": "literal",
+      "value": 14
+    },
+    "actions": {
+      "attacks": [
+        {
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "name": "Shortsword",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 3
+                },
+                "kind": "fixed"
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        {
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "ranged",
+          "name": "Shortbow",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 3
+                },
+                "kind": "fixed"
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "rangeFeet": {
+            "long": 320,
+            "normal": 80
+          }
+        }
+      ]
+    },
+    "creatureType": "undead",
+    "displayName": "Skeleton",
+    "hp": {
+      "kind": "literal",
+      "value": 13
+    },
+    "immunities": {
+      "conditions": [
+        "exhaustion",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "poison"
+      ]
+    },
+    "initiativeModifier": 3,
+    "languages": [
+      "Understands Common plus one other language but can't speak"
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": -2
+      },
+      {
+        "ability": "wis",
+        "modifier": -1
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "vulnerabilities": {
+      "damageTypes": [
+        "bludgeoning"
+      ],
+      "kind": "fixed"
+    }
+  }
+}

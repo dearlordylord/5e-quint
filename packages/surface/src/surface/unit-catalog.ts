@@ -5,11 +5,14 @@ import { Option } from "effect";
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import classFighterInput from "../../content/class_fighter.json";
+import classWizardInput from "../../content/class_wizard.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
 import featDefenseInput from "../../content/feat_defense.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
+import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
 import fighterFightingStyleL1Input from "../../content/fighter_fighting_style_l1.json";
 import fighterSecondWindInput from "../../content/fighter_second_wind.json";
+import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import fighterWeaponMasteryL1Input from "../../content/fighter_weapon_mastery_l1.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
@@ -20,6 +23,8 @@ import weaponFlailInput from "../../content/weapon_flail.json";
 import weaponLongswordInput from "../../content/weapon_longsword.json";
 import weaponShortbowInput from "../../content/weapon_shortbow.json";
 import weaponSpearInput from "../../content/weapon_spear.json";
+import wizardArcaneRecoveryInput from "../../content/wizard_arcane_recovery.json";
+import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
   Provenance,
@@ -116,11 +121,16 @@ export function defineSrdUnitCollection(input: {
 export const srdUnitCollection = defineSrdUnitCollection({
   units: [
     classFighterInput,
+    classWizardInput,
     backgroundSoldierInput,
     speciesOrcInput,
     fighterFightingStyleL1Input,
     fighterSecondWindInput,
     fighterWeaponMasteryL1Input,
+    fighterActionSurgeInput,
+    fighterTacticalMindInput,
+    wizardRitualAdeptInput,
+    wizardArcaneRecoveryInput,
     featDefenseInput,
     featSavageAttackerInput,
     masterySapInput,

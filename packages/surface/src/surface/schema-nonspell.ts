@@ -15,6 +15,8 @@ import {
   LightArmorAcFormulaSchema,
   MagicItemRaritySchema,
   MediumArmorAcFormulaSchema,
+  NON_FIGHTER_NON_WIZARD_CLASS_NAMES,
+  NON_WIZARD_CLASS_NAMES,
   ProvenanceSchema,
   RollKindSchema,
   SkillSchema,
@@ -306,6 +308,38 @@ export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
   parts: Schema.NonEmptyArray(ClassFeatureComponentMechanicsSchema),
 });
 
+export const RitualAdeptMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("wizard_ritual_adept"),
+  source: Schema.Literal("spellbook"),
+  preparationRequirement: Schema.Literal("not_prepared"),
+});
+
+export const ArcaneRecoveryMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("arcane_recovery"),
+  recoveryTrigger: Schema.Literal("short_rest"),
+  resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+  recoveredSlotLevelCap: Schema.Struct({
+    kind: Schema.Literal("half_class_level_rounded_up"),
+    maximumSlotLevelExclusive: Schema.Literal(6),
+  }),
+});
+
+export const TacticalMindMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("failed_ability_check_second_wind_boost"),
+  trigger: Schema.Struct({ kind: Schema.Literal("failed_ability_check") }),
+  spends: Schema.Struct({
+    resourceUnitId: Schema.Literal("fighter_second_wind"),
+  }),
+  bonus: Schema.Struct({
+    kind: Schema.Literal("dice"),
+    expr: Schema.Struct({
+      dice: Schema.Literal(1),
+      dieSize: Schema.Literal(10),
+    }),
+  }),
+  refundSpendOnStillFailed: Schema.Literal(true),
+});
+
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
   choose: PositiveIntegerSchema,
@@ -328,7 +362,23 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
+  RitualAdeptMechanicsSchema,
+  ArcaneRecoveryMechanicsSchema,
+  TacticalMindMechanicsSchema,
 );
+
+export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
+  ClassFeatureComponentMechanicsSchema,
+  CompositeClassFeatureMechanicsSchema,
+  WeaponMasteryChoiceMechanicsSchema,
+);
+
+export const WizardClassFeatureMechanicsSchema = Schema.Union(
+  RitualAdeptMechanicsSchema,
+  ArcaneRecoveryMechanicsSchema,
+);
+
+export const FighterClassFeatureMechanicsSchema = TacticalMindMechanicsSchema;
 
 export const MasteryTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("weapon_hit") }),
@@ -492,10 +542,119 @@ export const ClassFeatureGrantSchema = Schema.Struct({
   level: PositiveIntegerSchema,
 });
 
-export const ClassRecordSchema = Schema.Struct({
+export const ArmorTrainingSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("trained"),
+    categories: Schema.NonEmptyArray(ArmorTrainingCategorySchema),
+  }),
+  Schema.Struct({ kind: Schema.Literal("none") }),
+);
+
+const SpellSlotProjectionSchema = Schema.Struct({
+  kind: Schema.Literal("leveled_spell_slots"),
+  slots: Schema.NonEmptyArray(
+    Schema.Struct({
+      spellLevel: PositiveIntegerSchema,
+      count: NonNegativeIntegerSchema,
+    }),
+  ),
+  resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+});
+
+const SpellbookSpellAccessSchema = Schema.Struct({
+  spellId: NonEmptyStringSchema,
+  spellLevel: PositiveIntegerSchema,
+});
+
+const distinctStrings = (values: readonly string[]): boolean =>
+  new Set(values).size === values.length;
+
+export const WizardSpellcastingCreationSchema = Schema.Struct({
+  kind: Schema.Literal("wizard_spellcasting_creation"),
+  spellcastingAbility: Schema.Literal("int"),
+  cantripAccess: Schema.Struct({
+    kind: Schema.Literal("known_cantrips"),
+    choose: PositiveIntegerSchema,
+    spellIds: Schema.NonEmptyArray(NonEmptyStringSchema),
+    changeOn: Schema.Struct({
+      kind: Schema.Literal("long_rest"),
+      count: PositiveIntegerSchema,
+    }),
+  }),
+  spellbookAccess: Schema.Struct({
+    kind: Schema.Literal("spellbook"),
+    choose: PositiveIntegerSchema,
+    spells: Schema.NonEmptyArray(SpellbookSpellAccessSchema),
+  }),
+  preparedAccess: Schema.Struct({
+    kind: Schema.Literal("prepared_from_spellbook"),
+    choose: PositiveIntegerSchema,
+    spellIds: Schema.NonEmptyArray(NonEmptyStringSchema),
+    changeOn: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+  }),
+  spellSlotProjection: SpellSlotProjectionSchema,
+  spellcastingFocuses: Schema.NonEmptyArray(
+    Schema.Literal("arcane_focus", "spellbook"),
+  ),
+}).pipe(
+  Schema.filter(
+    (spellcasting) => {
+      if (
+        spellcasting.cantripAccess.choose !==
+          spellcasting.cantripAccess.spellIds.length ||
+        spellcasting.spellbookAccess.choose !==
+          spellcasting.spellbookAccess.spells.length ||
+        spellcasting.preparedAccess.choose !==
+          spellcasting.preparedAccess.spellIds.length
+      ) {
+        return false;
+      }
+
+      if (
+        !distinctStrings(spellcasting.cantripAccess.spellIds) ||
+        !distinctStrings(
+          spellcasting.spellbookAccess.spells.map((spell) => spell.spellId),
+        ) ||
+        !distinctStrings(spellcasting.preparedAccess.spellIds)
+      ) {
+        return false;
+      }
+
+      const slotLevels = spellcasting.spellSlotProjection.slots.map((slot) =>
+        slot.spellLevel.toString(),
+      );
+      if (!distinctStrings(slotLevels)) {
+        return false;
+      }
+
+      const spellbookById = new Map(
+        spellcasting.spellbookAccess.spells.map((spell) => [
+          spell.spellId,
+          spell.spellLevel,
+        ]),
+      );
+      const availableSlotLevels = new Set(
+        spellcasting.spellSlotProjection.slots
+          .filter((slot) => slot.count > 0)
+          .map((slot) => slot.spellLevel),
+      );
+
+      return spellcasting.preparedAccess.spellIds.every((spellId) => {
+        const spellLevel = spellbookById.get(spellId);
+
+        return spellLevel !== undefined && availableSlotLevels.has(spellLevel);
+      });
+    },
+    {
+      message: () =>
+        "Wizard spellcasting choices must match their counts, be unique, and prepare only spellbook spells with available Spell Slot levels.",
+    },
+  ),
+);
+
+const ClassRecordBaseFields = {
   ...UnitMetadataSchema.fields,
   kind: ClassRecordKindSchema,
-  className: ClassNameSchema,
   hitPointDie: PositiveIntegerSchema,
   savingThrowProficiencies: Schema.NonEmptyArray(AbilitySchema),
   skillProficiencyChoice: Schema.Struct({
@@ -503,18 +662,63 @@ export const ClassRecordSchema = Schema.Struct({
     options: Schema.NonEmptyArray(SkillSchema),
   }),
   weaponProficiencies: Schema.NonEmptyArray(WeaponProficiencyCategorySchema),
-  armorTraining: Schema.Array(ArmorTrainingCategorySchema),
+  armorTraining: ArmorTrainingSchema,
   startingEquipment: Schema.NonEmptyArray(StartingEquipmentChoiceSchema),
   featureGrants: Schema.Array(ClassFeatureGrantSchema),
+};
+
+export const WizardClassRecordSchema = Schema.Struct({
+  ...ClassRecordBaseFields,
+  className: Schema.Literal("wizard"),
+  spellcasting: WizardSpellcastingCreationSchema,
 });
 
-export const ClassFeatureRecordSchema = Schema.Struct({
+export const NonWizardClassRecordSchema = Schema.Struct({
+  ...ClassRecordBaseFields,
+  className: Schema.Literal(...NON_WIZARD_CLASS_NAMES),
+  spellcasting: exactOptional(Schema.Never),
+});
+
+export const ClassRecordSchema = Schema.Union(
+  WizardClassRecordSchema,
+  NonWizardClassRecordSchema,
+);
+
+const ClassFeatureRecordBaseFields = {
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("class_feature"),
-  className: ClassNameSchema,
   acquiredAtLevel: PositiveIntegerSchema,
-  mechanics: ClassFeatureMechanicsSchema,
+};
+
+export const WizardClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("wizard"),
+  mechanics: Schema.Union(
+    ClassGeneralFeatureMechanicsSchema,
+    WizardClassFeatureMechanicsSchema,
+  ),
 });
+
+export const FighterClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("fighter"),
+  mechanics: Schema.Union(
+    ClassGeneralFeatureMechanicsSchema,
+    FighterClassFeatureMechanicsSchema,
+  ),
+});
+
+export const OtherClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal(...NON_FIGHTER_NON_WIZARD_CLASS_NAMES),
+  mechanics: ClassGeneralFeatureMechanicsSchema,
+});
+
+export const ClassFeatureRecordSchema = Schema.Union(
+  WizardClassFeatureRecordSchema,
+  FighterClassFeatureRecordSchema,
+  OtherClassFeatureRecordSchema,
+);
 
 export const MasteryRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,

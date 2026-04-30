@@ -3,6 +3,7 @@ import { Option } from "effect";
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
+import skeletonInput from "../../content/stat_block_skeleton.json";
 import { decodeStatBlockRecordSync } from "./schema.ts";
 import type { Provenance, StatBlockRecord } from "./types.ts";
 
@@ -104,6 +105,7 @@ export function defineSrdStatBlockCollection(input: {
 export const srdStatBlockCollection = defineSrdStatBlockCollection({
   statBlocks: [
     assertSrd521StatBlock(decodeStatBlockRecordSync(goblinWarriorInput)),
+    assertSrd521StatBlock(decodeStatBlockRecordSync(skeletonInput)),
   ],
 });
 

@@ -5,12 +5,14 @@ import type {
   BackgroundRecord,
   BackgroundToolProficiency,
   ClassFeatureGrant,
-  ClassName,
   ClassRecord,
+  NonWizardClassRecord,
   OrcSpeciesRecord,
   SpeciesRecord,
   StartingEquipmentChoice,
   UnitRecord,
+  WizardClassRecord,
+  WizardSpellcastingCreation,
   WeaponProficiencyCategory,
   Skill,
 } from "./types.ts";
@@ -30,10 +32,10 @@ export type UnitReaderResult<T> =
       readonly issues: readonly SurfaceReadIssue[];
     };
 
-export type ClassCreationFacts = {
-  readonly recordId: ClassRecord["id"];
-  readonly className: ClassName;
-  readonly hitPointDie: number;
+type CommonClassCreationFacts<TClassRecord extends ClassRecord> = {
+  readonly recordId: TClassRecord["id"];
+  readonly className: TClassRecord["className"];
+  readonly hitPointDie: TClassRecord["hitPointDie"];
   readonly savingThrowProficiencies: readonly Ability[];
   readonly skillProficiencyChoice: {
     readonly choose: number;
@@ -44,6 +46,20 @@ export type ClassCreationFacts = {
   readonly startingEquipment: readonly StartingEquipmentChoice[];
   readonly featureGrants: readonly ClassFeatureGrant[];
 };
+
+export type WizardClassCreationFacts =
+  CommonClassCreationFacts<WizardClassRecord> & {
+    readonly spellcasting: WizardSpellcastingCreation;
+  };
+
+export type NonWizardClassCreationFacts =
+  CommonClassCreationFacts<NonWizardClassRecord> & {
+    readonly spellcasting?: never;
+  };
+
+export type ClassCreationFacts =
+  | WizardClassCreationFacts
+  | NonWizardClassCreationFacts;
 
 export type BackgroundCreationFacts = {
   readonly recordId: BackgroundRecord["id"];
@@ -79,21 +95,38 @@ export function readClassCreationFacts(
     return unsupportedKind(unit, "class");
   }
 
-  const value: ClassCreationFacts = {
+  if (unit.className === "wizard") {
+    return {
+      tag: "readable",
+      value: {
+        ...readCommonClassCreationFacts(unit),
+        spellcasting: unit.spellcasting,
+      },
+    };
+  }
+
+  return {
+    tag: "readable",
+    value: readCommonClassCreationFacts(unit),
+  };
+}
+
+function readCommonClassCreationFacts<TClassRecord extends ClassRecord>(
+  unit: TClassRecord,
+): CommonClassCreationFacts<TClassRecord> {
+  return {
     recordId: unit.id,
     className: unit.className,
     hitPointDie: unit.hitPointDie,
     savingThrowProficiencies: unit.savingThrowProficiencies,
     skillProficiencyChoice: unit.skillProficiencyChoice,
     weaponProficiencies: unit.weaponProficiencies,
-    armorTraining: unit.armorTraining,
+    armorTraining:
+      unit.armorTraining.kind === "trained"
+        ? unit.armorTraining.categories
+        : [],
     startingEquipment: unit.startingEquipment,
     featureGrants: unit.featureGrants,
-  };
-
-  return {
-    tag: "readable",
-    value,
   };
 }
 

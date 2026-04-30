@@ -1,0 +1,17 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "wizard",
+  "description": "You can cast any spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn't have the spell prepared, but you must read from the book to cast a spell in this way.",
+  "id": "wizard_ritual_adept",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "wizard_ritual_adept",
+    "preparationRequirement": "not_prepared",
+    "source": "spellbook"
+  },
+  "name": "Ritual Adept",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Wizard.md:94-96"
+  }
+}

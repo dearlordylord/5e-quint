@@ -2,6 +2,7 @@ import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
+import skeletonInput from "../../content/stat_block_skeleton.json";
 import {
   decodeStatBlockRecordEither,
   decodeStatBlockRecordSync,
@@ -18,6 +19,7 @@ import type {
 } from "./stat-block-catalog.ts";
 
 const goblinWarrior = decodeStatBlockRecordSync(goblinWarriorInput);
+const skeleton = decodeStatBlockRecordSync(skeletonInput);
 
 describe("Stat Block catalog boundary", () => {
   test("decodes generic Stat Block records", () => {
@@ -106,6 +108,40 @@ describe("Stat Block catalog boundary", () => {
           name: "Nimble Escape",
           options: ["disengage", "hide"],
         },
+      ]);
+    }
+  });
+
+  test("exports Skeleton's SRD Stat Block vulnerabilities and immunities", () => {
+    const valid = buildStatBlockCatalog({
+      collections: [srdStatBlockCollection],
+    });
+
+    expect(valid.tag).toBe("ok");
+    if (valid.tag === "ok") {
+      const skeletonRecord = valid.catalog.requireStatBlock(
+        "stat_block_skeleton",
+      );
+
+      expect(skeletonRecord).toEqual(skeleton);
+      expect(skeletonRecord.statBlock.displayName).toBe("Skeleton");
+      expect(skeletonRecord.statBlock.creatureType).toBe("undead");
+      expect(skeletonRecord.statBlock.vulnerabilities).toEqual({
+        damageTypes: ["bludgeoning"],
+        kind: "fixed",
+      });
+      expect(skeletonRecord.statBlock.immunities).toEqual({
+        conditions: ["exhaustion", "poisoned"],
+        damageTypes: ["poison"],
+      });
+      expect(
+        skeletonRecord.statBlock.actions?.attacks?.map((attack) => ({
+          name: attack.name,
+          attackType: attack.attackType,
+        })),
+      ).toEqual([
+        { attackType: "melee", name: "Shortsword" },
+        { attackType: "ranged", name: "Shortbow" },
       ]);
     }
   });

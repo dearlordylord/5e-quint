@@ -5267,7 +5267,11 @@ function traceClassUnit(unit: ClassRecord): Trace {
     id: armorId,
     category: "source",
     atomKind: "class_armor_training",
-    label: `class_armor_training\n${unit.armorTraining.join(", ")}`,
+    label: `class_armor_training\n${
+      unit.armorTraining.kind === "trained"
+        ? unit.armorTraining.categories.join(", ")
+        : "none"
+    }`,
   });
   edges.push({ from: rootId, to: armorId, relation: "grants" });
 
@@ -5845,6 +5849,45 @@ function traceClassFeatureMechanics(
           `${m.eligibleWeapons.join(", ")}\nchange ${m.changeOn.count} on ${m.changeOn.kind}`,
       });
       return [masteryId];
+    }
+    case "wizard_ritual_adept": {
+      const ritualId = ids("ritual");
+      nodes.push({
+        id: ritualId,
+        category: "procedure",
+        atomKind: "wizard_ritual_adept",
+        label:
+          `wizard_ritual_adept\nsource ${m.source}\n` +
+          `preparation ${m.preparationRequirement}`,
+      });
+      return [ritualId];
+    }
+    case "arcane_recovery": {
+      const recoveryId = ids("arcane");
+      nodes.push({
+        id: recoveryId,
+        category: "resource",
+        atomKind: "arcane_recovery",
+        label:
+          `arcane_recovery\ntrigger ${m.recoveryTrigger}\n` +
+          `${m.recoveredSlotLevelCap.kind}\n` +
+          `slot level < ${m.recoveredSlotLevelCap.maximumSlotLevelExclusive}\n` +
+          `reset ${m.resetCadence.kind}`,
+      });
+      return [recoveryId];
+    }
+    case "failed_ability_check_second_wind_boost": {
+      const tacticalId = ids("tactical");
+      nodes.push({
+        id: tacticalId,
+        category: "resource",
+        atomKind: "failed_ability_check_second_wind_boost",
+        label:
+          `failed_ability_check_second_wind_boost\n` +
+          `spend ${m.spends.resourceUnitId}\n` +
+          `+${m.bonus.expr.dice}d${m.bonus.expr.dieSize}`,
+      });
+      return [tacticalId];
     }
     case "composite":
       return m.parts.map((part) => {

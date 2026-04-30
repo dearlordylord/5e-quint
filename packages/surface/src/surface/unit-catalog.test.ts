@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+
 import { describe, expect, test } from "vitest";
 
 import { decodeUnitRecordSync } from "./schema.ts";
@@ -11,11 +13,16 @@ import type { WeaponRecord } from "./types.ts";
 
 const requiredFirstVerticalUnitIds = [
   "class_fighter",
+  "class_wizard",
   "background_soldier",
   "species_orc",
   "fighter_fighting_style_l1",
   "fighter_second_wind",
   "fighter_weapon_mastery_l1",
+  "fighter_action_surge",
+  "fighter_tactical_mind",
+  "wizard_ritual_adept",
+  "wizard_arcane_recovery",
   "defense",
   "feat_savage_attacker",
   "mastery_sap",
@@ -88,6 +95,76 @@ describe("SRD Unit catalog boundary", () => {
         },
       });
     }
+  });
+
+  test("authors Fighter 2 grants through canonical feature Unit ids", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const fighter = result.catalog.requireUnit("class_fighter");
+      const actionSurge = result.catalog.requireUnit("fighter_action_surge");
+      const tacticalMind = result.catalog.requireUnit("fighter_tactical_mind");
+
+      expect(fighter).toMatchObject({
+        kind: "class",
+        featureGrants: expect.arrayContaining([
+          { level: 2, unitId: "fighter_action_surge" },
+          { level: 2, unitId: "fighter_tactical_mind" },
+        ]),
+      });
+      expect(
+        result.catalog
+          .listUnits()
+          .some((unit) => unit.id === "fighter_action_surge_l2"),
+      ).toBe(false);
+      expect(actionSurge).toMatchObject({
+        acquiredAtLevel: 2,
+        kind: "class_feature",
+        mechanics: {
+          family: "activation",
+          resource: {
+            cap: {
+              axis: "class",
+              base: 1,
+              kind: "threshold_tiers",
+              tiers: [{ atLevel: 17, value: 2 }],
+            },
+            kind: "use_count",
+          },
+          usageLimit: { kind: "once_per_turn" },
+        },
+      });
+      expect(tacticalMind).toMatchObject({
+        acquiredAtLevel: 2,
+        kind: "class_feature",
+        mechanics: {
+          family: "failed_ability_check_second_wind_boost",
+          spends: { resourceUnitId: "fighter_second_wind" },
+        },
+      });
+    }
+  });
+
+  test("keeps Action Surge authored through one canonical content record", () => {
+    expect(
+      existsSync(
+        new URL("../../content/fighter_action_surge.dhall", import.meta.url),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        new URL("../../content/fighter_action_surge.json", import.meta.url),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(new URL("../../content/action_surge.dhall", import.meta.url)),
+    ).toBe(false);
+    expect(
+      existsSync(
+        new URL("../../content/fighter_action_surge_l2.dhall", import.meta.url),
+      ),
+    ).toBe(false);
   });
 
   test("keeps Soldier option A free of unresolved Unit refs", () => {

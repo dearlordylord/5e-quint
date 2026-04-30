@@ -1,0 +1,155 @@
+{
+  "armorTraining": {
+    "kind": "none"
+  },
+  "className": "wizard",
+  "description": "SRD Wizard class creation facts for a level-1 character, including spellbook, prepared spells, Spell Slots, Ritual Adept, Arcane Recovery, and spellcasting focus facts.",
+  "featureGrants": [
+    {
+      "level": 1,
+      "unitId": "wizard_ritual_adept"
+    },
+    {
+      "level": 1,
+      "unitId": "wizard_arcane_recovery"
+    }
+  ],
+  "hitPointDie": 6,
+  "id": "class_wizard",
+  "kind": "class",
+  "name": "Wizard",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Wizard.md:3-25,31-35,56-82,94-102,134-190"
+  },
+  "savingThrowProficiencies": [
+    "int",
+    "wis"
+  ],
+  "skillProficiencyChoice": {
+    "choose": 2,
+    "options": [
+      "arcana",
+      "history",
+      "insight",
+      "investigation",
+      "medicine",
+      "nature",
+      "religion"
+    ]
+  },
+  "spellcasting": {
+    "cantripAccess": {
+      "changeOn": {
+        "count": 1,
+        "kind": "long_rest"
+      },
+      "choose": 3,
+      "kind": "known_cantrips",
+      "spellIds": [
+        "light",
+        "mage_hand",
+        "ray_of_frost"
+      ]
+    },
+    "kind": "wizard_spellcasting_creation",
+    "preparedAccess": {
+      "changeOn": {
+        "kind": "long_rest"
+      },
+      "choose": 4,
+      "kind": "prepared_from_spellbook",
+      "spellIds": [
+        "detect_magic",
+        "mage_armor",
+        "magic_missile",
+        "sleep"
+      ]
+    },
+    "spellSlotProjection": {
+      "kind": "leveled_spell_slots",
+      "resetCadence": {
+        "kind": "long_rest"
+      },
+      "slots": [
+        {
+          "count": 2,
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellbookAccess": {
+      "choose": 6,
+      "kind": "spellbook",
+      "spells": [
+        {
+          "spellId": "detect_magic",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "feather_fall",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "mage_armor",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "magic_missile",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "sleep",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "thunderwave",
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellcastingAbility": "int",
+    "spellcastingFocuses": [
+      "arcane_focus",
+      "spellbook"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "coinsGp": 5,
+      "id": "option_a",
+      "items": [
+        {
+          "itemName": "Dagger",
+          "kind": "draft_owned_item",
+          "quantity": 2
+        },
+        {
+          "itemName": "Arcane Focus (Quarterstaff)",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Robe",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Spellbook",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Scholar's Pack",
+          "kind": "draft_owned_item"
+        }
+      ],
+      "kind": "item_bundle"
+    },
+    {
+      "coinsGp": 55,
+      "id": "option_b",
+      "kind": "coin_grant"
+    }
+  ],
+  "weaponProficiencies": [
+    "simple"
+  ]
+}

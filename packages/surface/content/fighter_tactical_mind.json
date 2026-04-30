@@ -1,0 +1,29 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "fighter",
+  "description": "When you fail an ability check, you can expend a use of Second Wind to roll 1d10 and add the number rolled to the ability check, potentially turning it into a success. If the check still fails, this use of Second Wind isn't expended.",
+  "id": "fighter_tactical_mind",
+  "kind": "class_feature",
+  "mechanics": {
+    "bonus": {
+      "expr": {
+        "dice": 1,
+        "dieSize": 10
+      },
+      "kind": "dice"
+    },
+    "family": "failed_ability_check_second_wind_boost",
+    "refundSpendOnStillFailed": true,
+    "spends": {
+      "resourceUnitId": "fighter_second_wind"
+    },
+    "trigger": {
+      "kind": "failed_ability_check"
+    }
+  },
+  "name": "Tactical Mind",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter.md:82-84"
+  }
+}

@@ -89,6 +89,14 @@ starting equipment bundles, and species aggregate facts. Item-bundle entries are
 `unit_ref`s only when the referenced item is installed in the Unit collection;
 noncombat bundle facts that are not Unitized yet are `draft_owned_item`s.
 
+Spellcasting creation facts stay inside the class record when they are class
+legality facts. Wizard 1 uses one `spellcasting` aggregate that keeps Spell
+Access and runtime projection separate: known cantrips, spellbook Spell Access,
+prepared Spell Access chosen from that spellbook, level-1 Spell Slot projection,
+spellcasting ability, and allowed focuses are distinct fields. The decode
+boundary rejects prepared spells that are absent from the spellbook or above the
+available Spell Slot levels.
+
 Runtime packages may narrow these records through package-private support gates,
 but `@dnd/surface` exports only structural readers. Do not export `Supported*`
 gates or re-author SRD legality tables outside authored Surface records.

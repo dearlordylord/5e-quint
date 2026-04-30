@@ -114,20 +114,27 @@ export const StandardActionKindSchema = Schema.Literal(
   ...STANDARD_ACTION_KINDS,
 );
 
-export const ClassNameSchema = Schema.Literal(
+export const NON_FIGHTER_NON_WIZARD_CLASS_NAMES = [
   "barbarian",
   "bard",
   "cleric",
   "druid",
-  "fighter",
   "monk",
   "paladin",
   "ranger",
   "rogue",
   "sorcerer",
   "warlock",
-  "wizard",
-);
+] as const;
+
+export const NON_WIZARD_CLASS_NAMES = [
+  ...NON_FIGHTER_NON_WIZARD_CLASS_NAMES,
+  "fighter",
+] as const;
+
+export const CLASS_NAMES = [...NON_WIZARD_CLASS_NAMES, "wizard"] as const;
+
+export const ClassNameSchema = Schema.Literal(...CLASS_NAMES);
 
 export const ClassRecordKindSchema = Schema.Literal("class");
 
