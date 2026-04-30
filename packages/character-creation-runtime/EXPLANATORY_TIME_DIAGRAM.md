@@ -1,6 +1,6 @@
 # Character Creation Runtime Time Diagram
 
-This document traces `packages/character-creation-runtime/src/index.ts` as a
+This document traces `packages/character-creation-runtime/src/` as a
 time-ordered runtime story. The example character is the currently supported
 phase-1 "orc warrior" vertical: an Orc Soldier Fighter at level 1.
 
@@ -11,12 +11,15 @@ The important architectural idea is this:
    frontier.
 3. Only a completely legal batch reaches `applyCreationFills`.
 4. Accepted fills reveal later Unit-backed holes.
-5. `finalizeCharacterDraft` refuses to build a `CharacterSheet` until discovery
+5. `finalizeCharacterDraft` refuses to build a `CharacterBuild` until discovery
    says there are no open holes and final legality checks pass.
 
 ## Source Anchors
 
-- Runtime implementation: `src/index.ts`.
+- Runtime implementation: `src/index.ts` re-exports the split runtime modules:
+  `src/types.ts`, `src/draft.ts`, `src/discovery.ts`, `src/fill-reducer.ts`,
+  `src/finalization.ts`, `src/hole-factories.ts`, `src/phase1-manifest.ts`, and
+  `src/support-gates.ts`.
 - Reducer tests and executable examples: `src/index.test.ts`.
 - Package terms: `VOCABULARY.md`.
 - Rules vocabulary: `../../UBIQUITOUS_LANGUAGE.md`.
@@ -36,10 +39,10 @@ flowchart TD
   Caller["Caller / UI / session boundary<br/>owns persistence and expectedRevision"]
   Draft["CharacterDraft<br/>draftId, selections, revision"]
   Catalog["UnitLibrary<br/>Surface UnitCatalog"]
-  Runtime["character-creation-runtime/src/index.ts"]
+  Runtime["character-creation-runtime/src/*"]
   SurfaceReaders["Surface readers<br/>readClassCreationFacts<br/>readBackgroundCreationFacts<br/>readSpeciesCreationFacts"]
   SharedAlgebra["shared-algebras<br/>isValidAbilityScoreAssignment"]
-  Sheet["CharacterSheet<br/>finalized player-character boundary"]
+  Sheet["CharacterBuild<br/>finalized player-character boundary"]
 
   Caller -->|createCharacterDraft| Runtime
   Runtime --> Draft
@@ -63,12 +66,12 @@ duplicating data.
 sequenceDiagram
   autonumber
   actor Caller
-  participant Runtime as character-creation-runtime/index.ts
+  participant Runtime as character-creation-runtime/src/*
   participant Draft as CharacterDraft
   participant Catalog as UnitLibrary
   participant Surface as Surface creation readers
   participant Algebra as Ability score algebra
-  participant Sheet as CharacterSheet
+  participant Sheet as CharacterBuild
 
   Caller->>Runtime: createCharacterDraft({ draftId })
   Runtime-->>Caller: draft revision 0, selections.choices = []
@@ -198,19 +201,19 @@ sequenceDiagram
   Runtime->>Runtime: isPhaseOneManifestBackgroundAbilityScoreIncrease(...)
   Runtime->>Runtime: sameOptionIdMultiset(...)
   Runtime->>Runtime: sameChoiceSelectionMultiset(...)
-  Runtime->>Runtime: buildCharacterSheet(...)
+  Runtime->>Runtime: buildCharacterBuild(...)
   Runtime->>Catalog: requireUnit(class/background/species/features)
   Runtime->>Surface: readClassCreationFacts(...)
   Runtime->>Surface: readBackgroundCreationFacts(...)
   Runtime->>Surface: readSpeciesCreationFacts(...)
   Runtime->>Runtime: applyBackgroundAbilityScoreIncrease(...)
   Runtime->>Runtime: abilityModifier(finalScores.con)
-  Runtime->>Runtime: selectedSkillProficiencies(...)
-  Runtime->>Runtime: selectedToolProficiencies(...)
-  Runtime->>Runtime: selectedChoiceUnitIds(...)
+  Runtime->>Runtime: finalizedBuildSkillProficiencies(...)
+  Runtime->>Runtime: finalizedBuildToolProficiencies(...)
+  Runtime->>Runtime: characterBuildUnitRefs(...)
   Runtime->>Runtime: unitRefs(...)
   Runtime->>Runtime: resourceForFeature(fighter_second_wind)
-  Runtime-->>Sheet: ready CharacterSheet
+  Runtime-->>Sheet: ready CharacterBuild
 ```
 
 ## What The First Discovery Actually Opens
@@ -288,17 +291,17 @@ flowchart TD
 
 Examples from the tests:
 
-| Bad caller action | Function path | Issue |
-| --- | --- | --- |
-| Uses `expectedRevision: draft.revision + 1` | `creationFillIssues` -> `staleRevisionIssue` | `staleRevision` |
-| Sends two fills for `cc:draft:draft.primaryClass` | fill loop -> duplicate check -> `duplicateFillIssue` | `duplicateFill` |
-| Sends a future equipment hole before equipment path is open | fill loop -> `holes.find(...)` fails -> `unknownHoleIssue` | `unknownHole` |
-| Sends `{ kind: "abilityScores" }` for the primary class choice hole | `fillKindMatchesHole` -> `wrongFillKindIssue` | `wrongFillKind` |
-| Sends `background_soldier` as the primary class option | `choiceFillIssues` -> option not in class hole | `invalidChoice` |
-| Sends `neutral_good` alignment in the phase-1 manifest | `supportedDraftOptionIds("draft.alignment")` allows only `lawful_good` | `unsupportedChoice` |
-| Sends `Dwarvish, Elvish` languages | valid language options, but `supportedDraftOptionIds("draft.languages")` allows only Dwarvish/Goblin | `unsupportedChoice` |
-| Sends only one language | `choiceFillIssues` compares length to cardinality 2 | `tooFewChoices` |
-| Sends three languages | `choiceFillIssues` compares length to cardinality 2 | `tooManyChoices` |
+| Bad caller action                                                   | Function path                                                                                        | Issue               |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------- |
+| Uses `expectedRevision: draft.revision + 1`                         | `creationFillIssues` -> `staleRevisionIssue`                                                         | `staleRevision`     |
+| Sends two fills for `cc:draft:draft.primaryClass`                   | fill loop -> duplicate check -> `duplicateFillIssue`                                                 | `duplicateFill`     |
+| Sends a future equipment hole before equipment path is open         | fill loop -> `holes.find(...)` fails -> `unknownHoleIssue`                                           | `unknownHole`       |
+| Sends `{ kind: "abilityScores" }` for the primary class choice hole | `fillKindMatchesHole` -> `wrongFillKindIssue`                                                        | `wrongFillKind`     |
+| Sends `background_soldier` as the primary class option              | `choiceFillIssues` -> option not in class hole                                                       | `invalidChoice`     |
+| Sends `neutral_good` alignment in the phase-1 manifest              | `supportedDraftOptionIds("draft.alignment")` allows only `lawful_good`                               | `unsupportedChoice` |
+| Sends `Dwarvish, Elvish` languages                                  | valid language options, but `supportedDraftOptionIds("draft.languages")` allows only Dwarvish/Goblin | `unsupportedChoice` |
+| Sends only one language                                             | `choiceFillIssues` compares length to cardinality 2                                                  | `tooFewChoices`     |
+| Sends three languages                                               | `choiceFillIssues` compares length to cardinality 2                                                  | `tooManyChoices`    |
 
 The rejection still includes `finalizeCharacterDraft(original draft)`, which is
 usually `incomplete` because the original draft still has open holes.
@@ -473,7 +476,7 @@ sequenceDiagram
   participant Discover as discoverCreationHoles
   participant Narrow as finalizedSelections
   participant Legal as finalizedSelectionIssues
-  participant Build as buildCharacterSheet
+  participant Build as buildCharacterBuild
   participant Catalog as UnitLibrary
   participant Surface as Surface readers
 
@@ -494,7 +497,7 @@ sequenceDiagram
   Legal->>Legal: sameChoiceSelectionMultiset(phaseOneManifestChoiceSelections)
   Legal->>Legal: sameOptionIdMultiset(equipment, chain mail/longsword/shield)
   Legal-->>Runtime: []
-  Runtime->>Build: buildCharacterSheet({ sourceDraftId, selections, unitLibrary })
+  Runtime->>Build: buildCharacterBuild({ phaseOneSelections, unitLibrary })
   Build->>Catalog: requireUnit(class_fighter)
   Build->>Surface: readClassCreationFacts(...)
   Build->>Catalog: requireUnit(background_soldier)
@@ -503,14 +506,13 @@ sequenceDiagram
   Build->>Surface: readSpeciesCreationFacts(...)
   Build->>Build: applyBackgroundAbilityScoreIncrease(base, +2 str/+1 con)
   Build->>Build: maximum HP = class hit die 10 + Con modifier 2
-  Build->>Build: selectedSkillProficiencies + background skills
-  Build->>Build: selectedToolProficiencies
-  Build->>Build: selectedChoiceUnitIds
+  Build->>Build: finalizedBuildSkillProficiencies + background skills
+  Build->>Build: finalizedBuildToolProficiencies
   Build->>Build: unitRefs(unique ids)
-  Build->>Build: featureSource(...)
+  Build->>Build: resourceForFeature(...)
   Build->>Build: resourceForFeature(fighter_second_wind)
-  Build-->>Runtime: CharacterSheet
-  Runtime-->>Caller: { tag: "ready", sheet }
+  Build-->>Runtime: CharacterBuild
+  Runtime-->>Caller: { tag: "ready", build }
 ```
 
 If any holes remain, finalization returns `incomplete` before it tries to narrow
@@ -519,26 +521,29 @@ the draft. If no holes remain but required typed fields are still missing,
 If typed fields exist but contradict the supported manifest, the
 `finalizedSelectionIssues` checks return `illegalFinalization`.
 
-## Sheet Projection For The Supported Orc Soldier Fighter
+## Build Projection For The Supported Orc Soldier Fighter
 
-The ready sheet contains:
+The ready `CharacterBuild` contains durable build facts only:
 
-- `sourceDraftId`: the creation draft identity.
-- `selections`: the complete creation choices that produced the sheet.
-- `unitRefs`: class, level-1 Fighter features, Soldier background, Savage
-  Attacker origin feat, Orc species traits, chosen style/masteries, and owned
-  equipment.
-- `abilityScores.base`: Standard Array assignment.
-- `abilityScores.backgroundIncrease`: `+2 str, +1 con`.
-- `abilityScores.final`: Strength 17, Dexterity 14, Constitution 14,
-  Intelligence 8, Wisdom 10, Charisma 12.
+- `advancement`: one level-1 Fighter entry.
+- `background`: Soldier.
+- `species`: Orc.
+- `originLanguages`: Common, Dwarvish, and Goblin.
+- `alignment`: Lawful Good.
+- `abilityScores`: final scores after the Soldier background increase:
+  Strength 17, Dexterity 14, Constitution 14, Intelligence 8, Wisdom 10,
+  Charisma 12.
 - `hitPoints.maximum`: `10 + abilityModifier(14) = 12`.
 - `hitPoints.hitDice`: one d10 Fighter Hit Die.
 - `proficiencies`: Fighter saving throws, selected skills plus Soldier skills,
   Fighter weapon/armor training, and selected tool.
 - `features`: class, background, species, and choice-sourced feature refs.
 - `resources`: activation resources from class features such as Second Wind.
-- `equipment`: owned Units and the phase-1 loadout.
+- `equipment`: phase-1 starting loadout.
+
+It does not store creation-session facts such as `sourceDraftId`, raw
+`selections`, or a cached `unitRefs` list. Callers can derive Unit refs from the
+build with `characterBuildUnitRefs` when they need that projection.
 
 ## Why Some Legal-Looking Choices Are Unsupported
 
@@ -582,19 +587,19 @@ gates are runtime implementation boundaries for the currently modeled vertical.
 The diagrams above intentionally include most of the package-local runtime
 functions. This inventory groups them by responsibility.
 
-| Responsibility | Functions |
-| --- | --- |
-| Public API | `createCharacterDraft`, `discoverCreationHoles`, `fillCreationHoles`, `finalizeCharacterDraft` |
-| Draft discovery | `discoverInitialDraftHoles`, `draftHole`, `hasDraftSelection`, `draftSource`, `choiceHole`, `holeIdForSource`, `unitOption`, `skillOption` |
-| Class discovery | `discoverClassGrantedHoles`, `discoverLevelOneFighterFeatureHole`, `startingEquipmentChoiceHole`, `unselectedUnitChoiceHole` |
-| Background discovery | `discoverBackgroundGrantedHoles`, `backgroundAbilityScoreIncreaseOptions`, `backgroundAbilityScoreIncreaseOptionId`, `backgroundToolChoiceHole`, `backgroundToolChoiceSpec` |
-| Equipment discovery | `discoverEquipmentHoles`, `hasPhaseOneCoinEquipmentPath`, `unselectedPurchaseHole`, `unselectedLoadoutHole`, `hasValidEquipmentPurchaseSelectionForHole`, `hasPurchasedUnit` |
-| Existing-selection checks | `hasValidSelectionForHole`, `choiceSelectionMatchesHole`, `hasValidBackgroundAbilityScoreIncreaseSelectionForHole`, `choiceOptionIdsFitHole`, `selectedChoiceOptionMatchesHole`, `hasDuplicateOptionIds`, `sameCreationHoleSource` |
-| Batch validation | `creationFillIssues`, `fillIssuesForHole`, `fillKindMatchesHole`, `choiceFillIssues`, `abilityScoreFillIssues`, `unsupportedHoleSelectionOptionId`, `supportedHoleOptionIds`, `supportedDraftOptionIds`, `supportedUnitOptionIds` |
-| Issue constructors | `wrongFillKindIssue`, `invalidChoiceIssue`, `invalidAbilityScoresIssue`, `tooFewChoicesIssue`, `tooManyChoicesIssue`, `unsupportedChoiceIssue`, `staleRevisionIssue`, `duplicateFillIssue`, `unknownHoleIssue` |
-| Applying accepted fills | `applyCreationFills`, `requireHole`, `applyCreationFill`, `applyDraftFill`, `applyUnitFill`, `selectedChoiceOption`, `requireSelectedUnitIds`, `requireOneOptionId`, `requireSelectedUnitId`, `requireAcceptedChoiceOption`, `requireStartingLanguages`, `requireAlignmentSelection`, `requireBackgroundAbilityScoreIncreaseSelection` |
-| Final legality | `finalizedSelections`, `finalizedSelectionIssues`, `phaseOneManifestChoiceSelections`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isInitialFighterAdvancement`, `isSupportedBackgroundAbilityScoreIncrease`, `isPhaseOneManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
-| Sheet building | `buildCharacterSheet`, `requireReadable`, `applyBackgroundAbilityScoreIncrease`, `abilityModifier`, `selectedChoiceUnitIds`, `selectedSkillProficiencies`, `selectedToolProficiencies`, `featureSource`, `resourceForFeature`, `unitRefs`, `uniqueValues`, `nonEmptyReadonlyArray` |
+| Responsibility            | Functions                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public API                | `createCharacterDraft`, `discoverCreationHoles`, `fillCreationHoles`, `finalizeCharacterDraft`                                                                                                                                                                                                                                                                                                                                                                                      |
+| Draft discovery           | `discoverInitialDraftHoles`, `draftHole`, `hasDraftSelection`, `draftSource`, `choiceHole`, `holeIdForSource`, `unitOption`, `skillOption`                                                                                                                                                                                                                                                                                                                                          |
+| Class discovery           | `discoverClassGrantedHoles`, `discoverLevelOneFighterFeatureHole`, `startingEquipmentChoiceHole`, `unselectedUnitChoiceHole`                                                                                                                                                                                                                                                                                                                                                        |
+| Background discovery      | `discoverBackgroundGrantedHoles`, `backgroundAbilityScoreIncreaseOptions`, `backgroundAbilityScoreIncreaseOptionId`, `backgroundToolChoiceHole`, `backgroundToolChoiceSpec`                                                                                                                                                                                                                                                                                                         |
+| Equipment discovery       | `discoverEquipmentHoles`, `hasPhaseOneCoinEquipmentPath`, `unselectedPurchaseHole`, `unselectedLoadoutHole`, `hasValidEquipmentPurchaseSelectionForHole`, `hasPurchasedUnit`                                                                                                                                                                                                                                                                                                        |
+| Existing-selection checks | `hasValidSelectionForHole`, `choiceSelectionMatchesHole`, `hasValidBackgroundAbilityScoreIncreaseSelectionForHole`, `choiceOptionIdsFitHole`, `selectedChoiceOptionMatchesHole`, `hasDuplicateOptionIds`, `sameCreationHoleSource`                                                                                                                                                                                                                                                  |
+| Batch validation          | `creationFillIssues`, `fillIssuesForHole`, `fillKindMatchesHole`, `choiceFillIssues`, `abilityScoreFillIssues`, `unsupportedHoleSelectionOptionId`, `supportedHoleOptionIds`, `supportedDraftOptionIds`, `supportedUnitOptionIds`                                                                                                                                                                                                                                                   |
+| Issue constructors        | `wrongFillKindIssue`, `invalidChoiceIssue`, `invalidAbilityScoresIssue`, `tooFewChoicesIssue`, `tooManyChoicesIssue`, `unsupportedChoiceIssue`, `staleRevisionIssue`, `duplicateFillIssue`, `unknownHoleIssue`                                                                                                                                                                                                                                                                      |
+| Applying accepted fills   | `applyCreationFills`, `requireHole`, `applyCreationFill`, `applyDraftFill`, `applyUnitFill`, `selectedChoiceOption`, `requireSelectedUnitIds`, `requireOneOptionId`, `requireSelectedUnitId`, `requireAcceptedChoiceOption`, `requireStartingLanguages`, `requireAlignmentSelection`, `requireBackgroundAbilityScoreIncreaseSelection`                                                                                                                                              |
+| Final legality            | `finalizedSelections`, `finalizedSelectionIssues`, `phaseOneManifestChoiceSelections`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isInitialFighterAdvancement`, `isSupportedBackgroundAbilityScoreIncrease`, `isPhaseOneManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
+| Build projection          | `buildCharacterBuild`, `characterBuildUnitRefs`, `requireReadable`, `applyBackgroundAbilityScoreIncrease`, `abilityModifier`, `finalizedBuildSkillProficiencies`, `finalizedBuildToolProficiencies`, `resourceForFeature`, `unitRefs`, `uniqueValues`, `nonEmptyReadonlyArray`                                                                                                                                                                                                      |
 
 ## Connascence Notes For Future Readers
 

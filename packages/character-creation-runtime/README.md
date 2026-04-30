@@ -134,13 +134,21 @@ reducer exposes.
 It imports the deterministic slice and drives fill-batch traces against the
 TypeScript reducer through `src/character-creation-runtime.mbt.test.ts`.
 
-When changing reducer behavior in this package, update `src/index.ts`, focused
-tests, `character-creation-runtime-slice.qnt`, and
+When changing reducer behavior in this package, update the affected `src/*`
+runtime module, focused tests, `character-creation-runtime-slice.qnt`, and
 `character-creation-runtime.mbt.qnt` together.
 
 ## Files And Verification
 
-- `src/index.ts` - public API and reducer implementation.
+- `src/index.ts` - public API barrel.
+- `src/types.ts` - public protocol and build types.
+- `src/draft.ts` - draft construction.
+- `src/discovery.ts` - current creation-hole frontier discovery.
+- `src/fill-reducer.ts` - batch fill validation and draft mutation.
+- `src/finalization.ts` - draft finalization and `CharacterBuild` projection.
+- `src/hole-factories.ts` - hole ids, sources, option builders, and choice codecs.
+- `src/phase1-manifest.ts` - Phase 1 manifest facts and supported option ids.
+- `src/support-gates.ts` - current support-slice gates, not RAW legality.
 - `src/index.test.ts` - deterministic reducer tests and Quint-slice checks.
 - `src/character-creation-runtime.mbt.test.ts` - randomized MBT bridge.
 - `character-creation-runtime-slice.qnt` - local parity slice.

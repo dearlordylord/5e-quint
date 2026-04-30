@@ -27,6 +27,7 @@ import {
   type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
+  type UnitLibrary,
 } from "./index.ts";
 
 const unitCatalogResult = buildUnitCatalog({
@@ -44,6 +45,12 @@ const characterCreationRuntimeSlicePath = fileURLToPath(
 );
 
 describe("character creation hole discovery", () => {
+  test("rejects unknown Unit choice keys at the protocol boundary", () => {
+    expect(() => unitChoiceKey("future_choice")).toThrow(
+      "Unsupported creation unit choice key: future_choice",
+    );
+  });
+
   test("discovers the initial manifest draft holes from Surface records", () => {
     const draft = createCharacterDraft({
       unitLibrary,
@@ -178,13 +185,20 @@ describe("character creation hole discovery", () => {
     expect(optionIds(backgroundIncreaseHole)).toEqual(
       expect.arrayContaining(["two_and_one:str:con", "one_each"]),
     );
-    expect(
-      holeById(holes, "cc:unit:background_soldier:background_tool_choice"),
-    ).toMatchObject({
+    const backgroundToolHole = holeById(
+      holes,
+      "cc:unit:background_soldier:background_tool_choice",
+    );
+    expect(backgroundToolHole).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
-      options: [{ optionId: "tool_dice_set" }],
     });
+    expect(optionIds(backgroundToolHole)).toEqual([
+      "tool_dice_set",
+      "tool_dragonchess_set",
+      "tool_playing_card_set",
+      "tool_three_dragon_ante_set",
+    ]);
     expect(
       holeById(holes, "cc:unit:background_soldier:background_equipment_choice"),
     ).toMatchObject({
@@ -550,6 +564,24 @@ describe("character creation hole discovery", () => {
     expect(holeById(holes, "cc:draft:draft.species")).toBeUndefined();
     expect(holes.map((hole) => hole.holeId)).not.toContain(
       "cc:unit:species_orc:species-derived-traits",
+    );
+  });
+
+  test("crashes when a level-1 Fighter grant is not modeled", () => {
+    const draft = draftWithSelections({
+      primaryClass: "class_fighter",
+      advancement: {
+        entries: [{ classUnitId: "class_fighter", level: 1 }],
+      },
+    });
+
+    expect(() =>
+      discoverCreationHoles({
+        draft,
+        unitLibrary: unitLibraryWithLevelOneFighterGrant("fighter_future_l1"),
+      }),
+    ).toThrow(
+      "Unsupported level-1 Fighter feature grant in character creation: fighter_future_l1",
     );
   });
 });
@@ -1135,6 +1167,39 @@ describe("character creation batch fill", () => {
     ]);
   });
 
+  test("reports unsupported Soldier gaming sets as unsupported, not invalid", () => {
+    const draft = draftWithSelections({
+      primaryClass: "class_fighter",
+      background: "background_soldier",
+    });
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill(
+          "cc:unit:background_soldier:background_tool_choice",
+          "tool_dragonchess_set",
+        ),
+      ],
+    });
+
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") {
+      return;
+    }
+
+    expect(result.issues).toMatchObject([
+      {
+        tag: "illegalFill",
+        code: "unsupportedChoice",
+        fillIndex: 0,
+        message:
+          "Unsupported choice tool_dragonchess_set for character creation hole: cc:unit:background_soldier:background_tool_choice",
+      },
+    ]);
+  });
+
   test("replaying the same accepted batch from the same prior draft is idempotent", () => {
     const draft = createTestDraft("draft:batch-replay");
     const fills = initialManifestFills();
@@ -1514,6 +1579,35 @@ function createTestDraft(draftId: string): CharacterDraft {
     unitLibrary,
     draftId: characterDraftId(draftId),
   });
+}
+
+function unitLibraryWithLevelOneFighterGrant(
+  featureUnitId: string,
+): UnitLibrary {
+  const units = unitLibrary.listUnits().map((unit) =>
+    unit.id === "class_fighter" && unit.kind === "class"
+      ? {
+          ...unit,
+          featureGrants: [
+            ...unit.featureGrants,
+            { level: 1, unitId: featureUnitId },
+          ],
+        }
+      : unit,
+  );
+
+  return {
+    ...unitLibrary,
+    listUnits: () => units,
+    requireUnit: (id) => {
+      const unit = units.find((candidate) => candidate.id === id);
+      if (unit == null) {
+        throw new Error(`Missing test Unit: ${id}`);
+      }
+
+      return unit;
+    },
+  };
 }
 
 function initialManifestFills(): readonly CreationFill[] {
@@ -2072,9 +2166,8 @@ function choiceFill(
 ): CreationFill {
   return {
     kind: "choice",
-    // Test fixtures pass discovered hole ids as text. Unit-backed hole ids
-    // include a branded UnitChoiceKey segment, which string literals cannot
-    // prove to TypeScript even when they match the runtime protocol.
+    // Test fixtures pass discovered hole ids as text, so they cast at the same
+    // protocol boundary as caller-provided fill payloads.
     holeId: creationHoleId(holeId as CreationHoleIdText),
     optionIds: optionIds.map(creationChoiceOptionId),
   };
