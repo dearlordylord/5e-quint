@@ -160,6 +160,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "CAM20",
       "status": "blocked",
       "title": "Green Reconciliation And MCP Promotion"
+    },
+    {
+      "number": 21,
+      "id": "CAM21",
+      "status": "blocked",
+      "title": "End-User Vertical Acceptance"
     }
   ]
 }
@@ -187,7 +193,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task                                                            | Status                                        | Depends on        | Blocks                               | Next action                                                                                                                                                                                                                                                                                          | Handoff readiness                                                             |
 | ----- | --------------------------------------------------------------- | --------------------------------------------- | ----------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 0     | CAM0 - Phase 0 Audit Pack                                       | done                                          | none              | CAM1..CAM19                          | Landed audit pack and migration plan updates.                                                                                                                                                                                                                                                        | Done in `e8ecbd6b`.                                                           |
+| 0     | CAM0 - Phase 0 Audit Pack                                       | done                                          | none              | CAM1..CAM21                          | Landed audit pack and migration plan updates.                                                                                                                                                                                                                                                        | Done in `e8ecbd6b`.                                                           |
 | 1     | CAM1 - Rename Prototype Surface To @dnd/surface                 | done                                          | CAM0              | CAM3, CAM4, CAM5, CAM6, CAM11, CAM16 | Package cutover complete: active imports, workspace dependencies, lockfile, and docs use `@dnd/surface`.                                                                                                                                                                                             | Done in this task.                                                            |
 | 2     | CAM2 - Resolve Correction Action-Economy Drift                  | done                                          | CAM0              | CAM6, CAM11                          | Resolved by `52cf18b5`: Surface action resource sidecars and Correction action-resource handling landed.                                                                                                                                                                                             | Done on current `master`.                                                     |
 | 3     | CAM3 - Add Generic StatBlockRecord Catalog Boundary             | done                                          | CAM1              | CAM5, CAM11, CAM12                   | Generic `StatBlockRecord`, SRD-only stat-block collection, duplicate/provenance validation, and `buildStatBlockCatalog` landed in `@dnd/surface`.                                                                                                                                                    | Done in this task.                                                            |
@@ -207,7 +213,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 17    | CAM17 - Add MCP Character Creation Tools                        | ready-for-implementation-after-light-research | CAM10, CAM16      | CAM18                                | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                                                                                                                      | Ready after MCP green character-tool architecture check.                      |
 | 18    | CAM18 - Add MCP Battle Tools And Green Fixture                  | blocked                                       | CAM15, CAM17      | CAM19                                | Add green MCP tools for selecting a Stat Block, start battle, discover battle acts, fill/resolve battle holes, end turn, and one full vertical fixture.                                                                                                                                              | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.       |
 | 19    | CAM19 - Controlled Core Break And Projected Vocabulary Deletion | blocked                                       | CAM18             | CAM20                                | Isolate/delete old Core-backed green-path imports, delete `CPU*`/`PEA*`/`PPR*` projected vocabulary where unreferenced, and ensure every omitted lane is in the Restore Ledger.                                                                                                                      | Blocker Type: dependency. Blocker Detail: waits on passing MCP green fixture. |
-| 20    | CAM20 - Green Reconciliation And MCP Promotion                  | blocked                                       | CAM19             | none                                 | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.                                                                                                                | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.     |
+| 20    | CAM20 - Green Reconciliation And MCP Promotion                  | blocked                                       | CAM19             | CAM21                                | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.                                                                                                                | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.     |
+| 21    | CAM21 - End-User Vertical Acceptance                            | blocked                                       | CAM20             | none                                 | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP.                                                                                                      | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.         |
 
 ## Task Details
 
@@ -216,7 +223,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 Status: `done`
 
 Depends on: none  
-Blocks: CAM1..CAM19
+Blocks: CAM1..CAM21
 
 Input:
 
@@ -1032,7 +1039,7 @@ Plan Impact:
 Status: `blocked`
 
 Depends on: CAM19
-Blocks: none
+Blocks: CAM21
 
 Blocker Type: dependency
 Blocker Detail: waits on controlled Core break.
@@ -1073,7 +1080,70 @@ Verification:
 
 Plan Impact:
 
-- If successful, update the migration plan and MCP docs to mark green reconciliation complete and remove temporary green-path wording.
+- If successful, unblock CAM21 and update the migration plan and MCP docs to mark green reconciliation complete and remove temporary green-path wording.
+
+### Task 21 - CAM21 - End-User Vertical Acceptance
+
+Status: `blocked`
+
+Depends on: CAM20
+Blocks: none
+
+Blocker Type: dependency
+Blocker Detail: waits on promoted MCP path.
+
+Input:
+
+- Promoted normal MCP server path from CAM20.
+- Character creation tools, battle tools, and persistence/session state from
+  CAM17-CAM20.
+- The first vertical: Orc Soldier Fighter 1 and Goblin Warrior.
+
+Output:
+
+- One end-user acceptance fixture or test that exercises the promoted workflow
+  through user-facing tools only.
+- Character-list/read-model behavior after battle completion, including updated
+  durable character facts that changed because of battle.
+- MCP/user docs updated with the accepted end-to-end workflow and the supported
+  post-battle character state semantics.
+
+Acceptance:
+
+- As a user, I can simulate character creation through the normal MCP path:
+  create a draft, discover creation holes, fill them, and finalize the Orc
+  Soldier Fighter character.
+- As a user, I can start a battle from that finalized character.
+- As a user, I can add a Goblin Warrior to the battle from the authored SRD Stat
+  Block catalog.
+- As a user, I can run the supported battle flow through user-facing commands,
+  including discovering battle actions, resolving attacks/damage, ending turns,
+  and ending the battle.
+- As a user, after the battle ends, I can view my character list and see the
+  character with updated post-battle facts, including facts changed by battle
+  such as reduced current HP.
+- Post-battle facts are not duplicated projections that can drift from the
+  authoritative runtime/session state. The character list either reads the
+  updated durable state directly or uses a single documented projection from it.
+- The accepted workflow does not require importing from `packages/mcp/src/green`
+  or any legacy Core/projected execution path.
+
+Verification:
+
+- Normal MCP server acceptance test covers create character, finalize, add Goblin
+  Warrior, start battle, run battle actions through battle end, and read the
+  post-battle character list with updated HP.
+- `pnpm --filter @dnd/mcp test`
+- Runtime package tests relevant to any state handoff changed for post-battle
+  character facts.
+- Source-only checks confirm the promoted path has no legacy Core/projected
+  execution dependency and no user-facing `green` namespace dependency.
+
+Plan Impact:
+
+- If successful, mark the Correction Application Migration accepted for the
+  first end-user vertical and record any explicitly deferred post-battle facts
+  in the Restore Ledger or a follow-up CAM task.
 
 ## Deferred Previous Queue
 
