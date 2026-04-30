@@ -539,6 +539,203 @@ describe("MCP green composition root", () => {
     });
   });
 
+  test("runs the full Orc Soldier Fighter vs Goblin Warrior vertical through MCP tools only", () => {
+    const root = createGreenMcpCompositionRoot();
+    const draftId = "draft:mcp-green-full-vertical";
+
+    const finalized = createAndFinalizeManifestFighterThroughTools(
+      root,
+      draftId,
+    );
+
+    expect(finalized.finalization).toMatchObject({
+      tag: "ready",
+      build: {
+        background: "background_soldier",
+        species: "species_orc",
+        hitPoints: { maximum: 12 },
+      },
+    });
+    expect(root.sessionStore.snapshot()).toMatchObject({
+      draftIds: [],
+      sheetDraftIds: [draftId],
+      battleState: null,
+      transientBattleFills: null,
+    });
+
+    const selected = readPayload(
+      handleGreenBattleToolCall(root, "select_stat_block", {
+        statBlockId: "stat_block_goblin_warrior",
+      }),
+    );
+    expect(selected.selectedStatBlock).toMatchObject({
+      id: "stat_block_goblin_warrior",
+      provenance: { kind: "srd-5.2.1" },
+      statBlock: {
+        displayName: "Goblin Warrior",
+      },
+    });
+
+    const started = readPayload(
+      handleGreenBattleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-green-full-vertical",
+        sheetDraftId: draftId,
+        characterCombatantId: "fighter",
+        characterId: "character:fighter",
+        characterDisplayName: "Orc Soldier Fighter",
+        characterInitiative: 18,
+        statBlockCombatantId: "goblin",
+        statBlockInitiative: 7,
+      }),
+    );
+
+    expect(started.snapshot).toMatchObject({
+      currentActorId: "fighter",
+      turnOrder: ["fighter", "goblin"],
+      combatants: [
+        { combatantId: "fighter", hp: 12, armorClass: 19 },
+        { combatantId: "goblin", hp: 10, armorClass: 15 },
+      ],
+    });
+    expect(started.session.transientBattleFills).toBeNull();
+
+    const fighterActs = readPayload(
+      handleGreenBattleToolCall(root, "discover_battle_acts", {}),
+    );
+    expect(fighterActs.snapshot.acts).toMatchObject([
+      {
+        label: "Attack",
+        subject: {
+          tag: "srdAction",
+          actorId: "fighter",
+          action: "attack",
+          attackName: "Longsword",
+        },
+      },
+      {
+        label: "End Turn",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "fighter",
+          command: "endTurn",
+        },
+      },
+    ]);
+
+    fillBattleHoleThroughTool(root, "fighter", "Longsword", {
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "goblin",
+    });
+    expect(root.sessionStore.battleState?.combatants.get(goblinId)?.hp).toBe(
+      10,
+    );
+    expect(root.sessionStore.transientBattleFills).toMatchObject({
+      subject: { actorId: "fighter", attackName: "Longsword" },
+      fills: [{ kind: "targetChoice", value: "goblin" }],
+    });
+
+    fillBattleHoleThroughTool(root, "fighter", "Longsword", {
+      kind: "attackRoll",
+      holeId: "battle:attack:roll",
+      value: { total: 16, naturalD20: 14 },
+    });
+    const afterFighterDamage = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Longsword",
+      {
+        kind: "rolledDice",
+        holeId: "battle:attack:damage-result:1d8+3-slashing",
+        value: [{ results: [5] }],
+      },
+    );
+
+    expect(afterFighterDamage.result.tag).toBe("resolved");
+    expect(afterFighterDamage.battleState.combatants).toEqual([
+      expect.objectContaining({ combatantId: "fighter", hp: 12 }),
+      expect.objectContaining({ combatantId: "goblin", hp: 2 }),
+    ]);
+    expect(afterFighterDamage.session.transientBattleFills).toBeNull();
+
+    const afterEndTurn = readPayload(
+      handleGreenBattleToolCall(root, "end_turn", { actorId: "fighter" }),
+    );
+    expect(afterEndTurn.result.tag).toBe("resolved");
+    expect(afterEndTurn.snapshot.currentActorId).toBe("goblin");
+
+    const goblinActs = readPayload(
+      handleGreenBattleToolCall(root, "discover_battle_acts", {}),
+    );
+    expect(goblinActs.snapshot.acts).toMatchObject([
+      {
+        label: "Attack",
+        subject: {
+          tag: "srdAction",
+          actorId: "goblin",
+          action: "attack",
+          attackName: "Scimitar",
+        },
+        initialHoles: [
+          {
+            kind: "targetChoice",
+            choices: ["fighter"],
+          },
+        ],
+      },
+      {
+        label: "Attack",
+        subject: {
+          tag: "srdAction",
+          actorId: "goblin",
+          action: "attack",
+          attackName: "Shortbow",
+        },
+        initialHoles: [
+          {
+            kind: "targetChoice",
+            choices: ["fighter"],
+          },
+        ],
+      },
+      { label: "End Turn" },
+    ]);
+
+    fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "fighter",
+    });
+    fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
+      kind: "attackRoll",
+      holeId: "battle:attack:roll",
+      value: { total: 20, naturalD20: 18 },
+    });
+    const afterGoblinDamage = fillBattleHoleThroughTool(
+      root,
+      "goblin",
+      "Scimitar",
+      {
+        kind: "rolledDice",
+        holeId: "battle:attack:damage-result:1d6+2-slashing",
+        value: [{ results: [5] }],
+      },
+    );
+
+    expect(afterGoblinDamage.result.tag).toBe("resolved");
+    expect(afterGoblinDamage.battleState.combatants).toEqual([
+      expect.objectContaining({ combatantId: "fighter", hp: 5 }),
+      expect.objectContaining({ combatantId: "goblin", hp: 2 }),
+    ]);
+    expect(root.sessionStore.snapshot()).toMatchObject({
+      selectedStatBlockId: "stat_block_goblin_warrior",
+      transientBattleFills: null,
+    });
+    expect(root.sessionStore.battleState?.combatants.get(fighterId)?.hp).toBe(
+      5,
+    );
+  });
+
   test("discovers creation holes through the explicit tool path", () => {
     const root = createGreenMcpCompositionRoot();
     const draftId = "draft:mcp-green-tool-discover-holes";
@@ -929,6 +1126,58 @@ function fillThroughTool(
       draftId,
       expectedRevision,
       fills,
+    }),
+  );
+}
+
+function createAndFinalizeManifestFighterThroughTools(
+  root: ReturnType<typeof createGreenMcpCompositionRoot>,
+  draftId: string,
+) {
+  const created = readPayload(
+    handleGreenCharacterToolCall(root, "create_character_draft", { draftId }),
+  );
+  expect(created.holes.map((hole: CreationHole) => hole.holeId)).toEqual([
+    "cc:draft:draft.primaryClass",
+    "cc:draft:draft.background",
+    "cc:draft:draft.species",
+    "cc:draft:draft.abilityScoreGeneration",
+    "cc:draft:draft.languages",
+    "cc:draft:draft.alignment",
+  ]);
+
+  fillThroughTool(root, draftId, 0, initialManifestFills());
+  const discoveredChoices = readPayload(
+    handleGreenCharacterToolCall(root, "discover_creation_holes", { draftId }),
+  );
+  expect(
+    discoveredChoices.holes.map((hole: CreationHole) => hole.holeId),
+  ).toEqual(manifestChoiceFills().map((fill) => fill.holeId));
+
+  fillThroughTool(root, draftId, 1, manifestChoiceFills());
+  fillThroughTool(root, draftId, 2, manifestPurchaseFills());
+  fillThroughTool(root, draftId, 3, manifestLoadoutFills());
+
+  return readPayload(
+    handleGreenCharacterToolCall(root, "finalize_character", { draftId }),
+  );
+}
+
+function fillBattleHoleThroughTool(
+  root: ReturnType<typeof createGreenMcpCompositionRoot>,
+  actorId: string,
+  attackName: string,
+  fill: {
+    readonly kind: "targetChoice" | "attackRoll" | "rolledDice";
+    readonly holeId: string;
+    readonly value: unknown;
+  },
+) {
+  return readPayload(
+    handleGreenBattleToolCall(root, "fill_battle_hole", {
+      actorId,
+      attackName,
+      fill,
     }),
   );
 }

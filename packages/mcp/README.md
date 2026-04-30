@@ -47,7 +47,8 @@ The green battle-session path exposes these user-facing tools:
 - `read_battle_state` returns the stored `BattleState` projection and current
   battle snapshot.
 - `discover_battle_acts` returns the current actor's battle acts. The current
-  Fighter slice exposes the Attack action and the End Turn runtime command.
+  first-vertical slice exposes the Fighter Attack action, supported Goblin
+  Warrior Stat Block attacks, and the End Turn runtime command.
 - `fill_battle_hole` submits one Attack fill at a time. MCP stores transient
   target, attack-roll, and damage-result fills until `@dnd/battle-runtime`
   resolves the Attack, then stores the returned `BattleState` and clears the
@@ -55,8 +56,38 @@ The green battle-session path exposes these user-facing tools:
 - `end_turn` resolves the End Turn runtime command for the current actor, stores
   the returned `BattleState`, and clears transient battle fills.
 
-The current battle flow supports the Fighter's selected weapon Attack and End
-Turn. Stat Block attacks are intentionally not exposed yet.
+The current verified green vertical is Orc Soldier Fighter versus Goblin
+Warrior, entirely through MCP tools:
+
+1. create a character draft;
+2. discover and fill the real creation holes for Orc, Soldier, Fighter, ability
+   scores, languages, alignment, Fighter choices, purchases, and loadout;
+3. finalize the Character Build;
+4. select the authored SRD Goblin Warrior Stat Block;
+5. start battle with explicit caller-supplied Initiative scores;
+6. resolve Fighter Longsword Attack target, attack roll, and damage fills;
+7. resolve End Turn;
+8. resolve Goblin Warrior Scimitar or Shortbow Attack target, attack roll, and
+   damage fills.
+
+That fixture uses the authored Surface Unit and Stat Block catalogs. It does
+not use character presets, Core projections, duplicated executable stat-block
+data, or reducer-owned in-progress battle fills.
+
+Remaining first-vertical gates:
+
+- the green path is still isolated under `src/green/` until the Core-backed MCP
+  path is deleted or promoted;
+- post-battle character state handoff is not implemented here;
+- normal-path user acceptance belongs to the promoted MCP server path, not this
+  green fixture;
+- broader character choices, additional Stat Blocks, Multiattack, long-range
+  Disadvantage, reactions, spells, and post-turn lifecycle subjects remain
+  outside this first vertical.
+
+`BattleResolutionResult` may include display-facing result details for tool
+responses, but `BattleState` remains authoritative. Optional display logs must
+not become the source of combat truth.
 
 Selected Stat Block state stores only the catalog Stat Block id. The full Stat
 Block record is resolved through the green root's installed `statBlockCatalog`,
