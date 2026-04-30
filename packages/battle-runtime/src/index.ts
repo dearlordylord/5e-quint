@@ -146,6 +146,7 @@ export type CharacterBattleCreatureInit = {
 export type StatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
+  // defaults to max
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
 };
