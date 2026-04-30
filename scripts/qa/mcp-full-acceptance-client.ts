@@ -24,7 +24,159 @@ const expectedTools = [
   "end_battle",
 ] as const;
 
+const agentConversationScenarios = [
+  {
+    name: "Discover the MCP surface",
+    userSays: "What can you do for DND character creation and battle?",
+    agentReads:
+      "The agent calls listTools and sees create/discover/fill/finalize/list character tools plus select/start/read/discover/fill/resolve/end battle tools.",
+    agentDecision:
+      "It treats tool descriptions as the source of truth for sequencing: create a draft, inspect holes, fill returned holes, finalize, select a Stat Block, start battle, discover battle acts, then resolve or fill the current act.",
+    executableCoverage: "verifyToolContract",
+    insufficiency:
+      "listTools exposes the operations, but not a catalog browser for supported classes, species, backgrounds, Stat Blocks, spells, weapons, or examples of full fill objects.",
+  },
+  {
+    name: "Create a warrior 2nd level",
+    userSays: "Create a warrior 2nd level.",
+    agentReads:
+      "No tool accepts natural language character goals. The agent must first create_character_draft, then inspect holes and optionIds. The closest implemented class option is class_fighter, and the second-level advancement option is class_fighter:level_2.",
+    agentDecision:
+      "It should either ask whether 'warrior' means Fighter or proceed only if its product vocabulary maps warrior to Fighter. It then fills primary class, background, species, ability scores, languages, alignment, class advancement, class/background choices, equipment purchase, and loadout using optionIds returned by discover_creation_holes.",
+    executableCoverage: "createAndFinalizeFighterTwo",
+    insufficiency:
+      "The MCP does not expose synonym/intent mapping. It cannot independently know that 'warrior' means Fighter without product guidance or a user clarification.",
+  },
+  {
+    name: "Create the first green character",
+    userSays: "Create the Orc Soldier Fighter we support.",
+    agentReads:
+      "create_character_draft returns initial holes and finalization status. discover_creation_holes returns concrete holeId and optionId values after each accepted batch.",
+    agentDecision:
+      "It fills only currently returned holes, tracks expectedRevision from the draft, and calls finalize_character only after finalization reports ready or no holes remain.",
+    executableCoverage: "verifyGreenVertical",
+    insufficiency:
+      "The generic fill_creation_holes schema says optionIds is an array, but cardinality and the user-friendly meaning of each option must be inferred from the returned hole payload.",
+  },
+  {
+    name: "Create a Wizard with spells",
+    userSays:
+      "Create an Orc Soldier Wizard 1 with Ray of Frost and Magic Missile.",
+    agentReads:
+      "After class_wizard and class_wizard:level_1, discovery returns wizard skill, cantrip, spellbook, prepared spell, background, equipment, and loadout holes.",
+    agentDecision:
+      "It selects ray_of_frost in wizard_cantrip_choices, magic_missile in both spellbook and prepared spell choices, and verifies finalization exposes spellSlots before entering battle.",
+    executableCoverage: "createAndFinalizeWizardOne",
+    insufficiency:
+      "There is no spell catalog search or semantic helper; the agent must find spell optionIds from the discovered hole options or already know exact ids.",
+  },
+  {
+    name: "Select monsters",
+    userSays: "Fight a Goblin Warrior, then fight a Skeleton.",
+    agentReads:
+      "select_stat_block requires a statBlockId string and returns the selected record if the id exists.",
+    agentDecision:
+      "It calls select_stat_block with stat_block_goblin_warrior or stat_block_skeleton, then verifies the returned displayName/provenance before starting battle.",
+    executableCoverage: "verifyGreenVertical and verifyWidthVertical",
+    insufficiency:
+      "There is no list_stat_blocks or search_stat_blocks tool, so an LLM with no code or prior examples cannot discover valid Stat Block ids from MCP alone.",
+  },
+  {
+    name: "Start battle with Initiative",
+    userSays: "Start battle with these characters and initiative scores.",
+    agentReads:
+      "start_battle exposes battleId, non-empty characters, statBlockCombatantId, statBlockInitiative, optional statBlock HP overrides, and per-character sourceDraftId/combatantId/characterId/initiative.",
+    agentDecision:
+      "It uses sourceDraftIds from finalized character sessions, caller-chosen combatantIds for table actors, caller-chosen durable characterIds for battle handoff, and rejects/repairs an empty characters array.",
+    executableCoverage:
+      "verifyToolContract, verifyGreenVertical, verifyWidthVertical",
+    insufficiency:
+      "The schema is structurally correct, but the difference between sourceDraftId, combatantId, and characterId is not self-explanatory to an LLM without examples.",
+  },
+  {
+    name: "Take turns and resolve attacks",
+    userSays: "Run the battle round.",
+    agentReads:
+      "discover_battle_acts returns the current actor, turn order, acts, subjects, and initial holes. fill_battle_hole requires the exact subject returned by discovery and one fill at a time.",
+    agentDecision:
+      "It chooses an available act, copies its subject exactly, fills targetChoice, then attackRoll, then rolledDice using the holeIds requested by the runtime. If the result says needsHoles, it continues the same subject; if resolved, it rediscovers or ends turn.",
+    executableCoverage: "verifyGreenVertical and verifyWidthVertical",
+    insufficiency:
+      "The MCP does not roll dice. The agent needs user-provided rolls, an external roller, or a future dice tool, and must preserve exact damage holeIds.",
+  },
+  {
+    name: "Use Action Surge",
+    userSays: "Use Action Surge and attack again.",
+    agentReads:
+      "discover_battle_acts returns an Action Surge act with a unitFeature subject and no initial holes.",
+    agentDecision:
+      "It calls resolve_battle_act with that subject, verifies the resource has zero uses remaining and usedThisTurn=true, then rediscovers available acts before attacking again.",
+    executableCoverage: "verifyWidthVertical",
+    insufficiency:
+      "Only no-hole acts fit resolve_battle_act. If the agent tries resolve_battle_act for Attack or Magic, MCP returns a requires-holes error and the agent must switch to fill_battle_hole.",
+  },
+  {
+    name: "Cast cantrips and slotted spells",
+    userSays: "Cast Ray of Frost, then Magic Missile.",
+    agentReads:
+      "discover_battle_acts returns Magic-action subjects for wizard spells. Ray of Frost uses targetChoice and attackRoll; Magic Missile uses targetChoice and rolledDice.",
+    agentDecision:
+      "It resolves Ray of Frost and verifies spellSlots remain unspent, then resolves Magic Missile and verifies one level-1 slot is expended.",
+    executableCoverage: "verifyWidthVertical",
+    insufficiency:
+      "Spell resolution shape is discoverable only after battle act discovery. Tool metadata does not describe each spell's required fill sequence.",
+  },
+  {
+    name: "Finish battle and inspect durable character state",
+    userSays: "End the battle and show the updated character list.",
+    agentReads:
+      "end_battle takes empty args and returns endedBattleId, character sessions, and session snapshot. list_characters returns available characters with current HP and spellSlots.",
+    agentDecision:
+      "It calls end_battle only when no transient fills are pending, then list_characters to show durable HP and Spell Slot expenditure handoff.",
+    executableCoverage: "verifyGreenVertical and verifyWidthVertical",
+    insufficiency:
+      "Post-battle handoff currently rejects 0 HP characters; the first vertical cannot finish a battle where a character is at 0 HP.",
+  },
+  {
+    name: "Recover from invalid or stale actions",
+    userSays: "Do the thing from earlier.",
+    agentReads:
+      "MCP rejects stale/unavailable subjects, different-subject fills while pending fills exist, empty character starts, unknown draft ids, duplicate ids, and end_turn/end_battle during pending fills.",
+    agentDecision:
+      "It reads the error code, rediscovers current holes or battle acts, then retries with the current revision/subject instead of replaying stale input.",
+    executableCoverage: "verifyToolContract and verifyGreenVertical",
+    insufficiency:
+      "Errors are structured enough to recover, but there is no single 'what should I do next?' field in every response.",
+  },
+  {
+    name: "Navigate result payloads without repository context",
+    userSays: "Use whatever the MCP returns to decide the next step.",
+    agentReads:
+      "Tool results arrive as JSON text content. Creation state is under holes/finalization/draft, battle options are under snapshot.acts, follow-up battle holes are under result.holes, and pending fills are under session.transientBattleFills.",
+    agentDecision:
+      "It must parse the text payload as JSON, learn the response shape by inspection, and keep using returned holeIds, optionIds, subjects, revisions, actorIds, and result tags instead of inventing them.",
+    executableCoverage:
+      "callTool, holeIds, actionLabels, combatantHp, wizardSpellSlots",
+    insufficiency:
+      "MCP listTools has inputSchema only. There is no outputSchema or typed resource document that tells an agent where holes, acts, result.holes, or session state live.",
+  },
+  {
+    name: "Distinguish known-good acceptance from autonomous discovery",
+    userSays:
+      "Can an LLM with only this MCP create and run the whole scenario?",
+    agentReads:
+      "The executable client can run the full current domain because it has known-good ids and JSON paths embedded in this file.",
+    agentDecision:
+      "A real LLM agent should still rely on discovery responses once started, but it cannot bootstrap every id and protocol detail from listTools alone. It needs examples, richer schemas, or catalog/guide tools.",
+    executableCoverage: "whole file",
+    insufficiency:
+      "This QA runner proves transport and workflow correctness for known-good calls. It deliberately records that autonomous LLM drivability still needs better catalog discovery, output contracts, and fill-shape schemas.",
+  },
+] as const;
+
 async function main() {
+  verifyAgentConversationScenarios();
+
   const preexistingDndMcpPids = dndMcpServerPids();
   assert.deepEqual(
     preexistingDndMcpPids,
@@ -227,10 +379,10 @@ async function verifyGreenVertical(client: Client) {
 
   const read = await callTool(client, "read_battle_state", {});
   assert.equal(get(read, "snapshot.currentActorId"), "fighter");
-  assert.deepEqual(actionLabels(await callTool(client, "discover_battle_acts", {})), [
-    "Attack",
-    "End Turn",
-  ]);
+  assert.deepEqual(
+    actionLabels(await callTool(client, "discover_battle_acts", {})),
+    ["Attack", "End Turn"],
+  );
 
   await callTool(client, "fill_battle_hole", {
     subject: attackSubject("fighter", "Longsword"),
@@ -245,9 +397,7 @@ async function verifyGreenVertical(client: Client) {
   });
   const fighterDamage = await callTool(client, "fill_battle_hole", {
     subject: attackSubject("fighter", "Longsword"),
-    fill: rolledDiceFill("battle:attack:damage-result:1d8+3-slashing", [
-      [5],
-    ]),
+    fill: rolledDiceFill("battle:attack:damage-result:1d8+3-slashing", [[5]]),
   });
   assert.equal(get(fighterDamage, "result.tag"), "resolved");
   assert.equal(combatantHp(fighterDamage, "goblin"), 2);
@@ -256,11 +406,10 @@ async function verifyGreenVertical(client: Client) {
     actorId: "fighter",
   });
   assert.equal(get(endedFighterTurn, "snapshot.currentActorId"), "goblin");
-  assert.deepEqual(actionLabels(await callTool(client, "discover_battle_acts", {})), [
-    "Attack",
-    "Attack",
-    "End Turn",
-  ]);
+  assert.deepEqual(
+    actionLabels(await callTool(client, "discover_battle_acts", {})),
+    ["Attack", "Attack", "End Turn"],
+  );
 
   await callTool(client, "fill_battle_hole", {
     subject: attackSubject("goblin", "Scimitar"),
@@ -297,23 +446,38 @@ async function verifyWidthVertical(client: Client) {
   const fighterDraftId = "draft:stdio-post5-orc-soldier-fighter-two";
   const wizardDraftId = "draft:stdio-post5-orc-soldier-wizard-one";
   await createAndFinalizeFighterTwo(client, fighterDraftId);
-  const finalizedWizard = await createAndFinalizeWizardOne(client, wizardDraftId);
-  assert.deepEqual(get(finalizedWizard, "finalization.build.spellcasting.spellSlots"), [
-    { count: 2, spellLevel: 1 },
-  ]);
-  assert.ok(
-    (get(finalizedWizard, "finalization.build.spellcasting.cantrips") as string[])
-      .includes("ray_of_frost"),
+  const finalizedWizard = await createAndFinalizeWizardOne(
+    client,
+    wizardDraftId,
+  );
+  assert.deepEqual(
+    get(finalizedWizard, "finalization.build.spellcasting.spellSlots"),
+    [{ count: 2, spellLevel: 1 }],
   );
   assert.ok(
-    (get(finalizedWizard, "finalization.build.spellcasting.preparedSpells") as string[])
-      .includes("magic_missile"),
+    (
+      get(
+        finalizedWizard,
+        "finalization.build.spellcasting.cantrips",
+      ) as string[]
+    ).includes("ray_of_frost"),
+  );
+  assert.ok(
+    (
+      get(
+        finalizedWizard,
+        "finalization.build.spellcasting.preparedSpells",
+      ) as string[]
+    ).includes("magic_missile"),
   );
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_skeleton",
   });
-  assert.equal(get(selected, "selectedStatBlock.statBlock.displayName"), "Skeleton");
+  assert.equal(
+    get(selected, "selectedStatBlock.statBlock.displayName"),
+    "Skeleton",
+  );
   assert.deepEqual(
     get(selected, "selectedStatBlock.statBlock.vulnerabilities.damageTypes"),
     ["bludgeoning"],
@@ -351,11 +515,10 @@ async function verifyWidthVertical(client: Client) {
   assert.equal(combatantHp(started, "wizard"), 8);
   assert.equal(combatantHp(started, "skeleton"), 13);
 
-  assert.deepEqual(actionLabels(await callTool(client, "discover_battle_acts", {})), [
-    "Attack",
-    "Action Surge",
-    "End Turn",
-  ]);
+  assert.deepEqual(
+    actionLabels(await callTool(client, "discover_battle_acts", {})),
+    ["Attack", "Action Surge", "End Turn"],
+  );
 
   await callTool(client, "fill_battle_hole", {
     subject: attackSubject("fighter", "Flail"),
@@ -405,7 +568,10 @@ async function verifyWidthVertical(client: Client) {
   assert.equal(get(missedExtraAttack, "result.tag"), "resolved");
 
   assert.equal(
-    get(await callTool(client, "end_turn", { actorId: "fighter" }), "snapshot.currentActorId"),
+    get(
+      await callTool(client, "end_turn", { actorId: "fighter" }),
+      "snapshot.currentActorId",
+    ),
     "wizard",
   );
 
@@ -427,7 +593,10 @@ async function verifyWidthVertical(client: Client) {
   ]);
 
   assert.equal(
-    get(await callTool(client, "end_turn", { actorId: "wizard" }), "snapshot.currentActorId"),
+    get(
+      await callTool(client, "end_turn", { actorId: "wizard" }),
+      "snapshot.currentActorId",
+    ),
     "skeleton",
   );
   const skeletonActs = await callTool(client, "discover_battle_acts", {});
@@ -448,11 +617,17 @@ async function verifyWidthVertical(client: Client) {
   assert.equal(combatantHp(afterSkeletonAttack, "fighter"), 16);
 
   assert.equal(
-    get(await callTool(client, "end_turn", { actorId: "skeleton" }), "snapshot.currentActorId"),
+    get(
+      await callTool(client, "end_turn", { actorId: "skeleton" }),
+      "snapshot.currentActorId",
+    ),
     "fighter",
   );
   assert.equal(
-    get(await callTool(client, "end_turn", { actorId: "fighter" }), "snapshot.currentActorId"),
+    get(
+      await callTool(client, "end_turn", { actorId: "fighter" }),
+      "snapshot.currentActorId",
+    ),
     "wizard",
   );
 
@@ -727,7 +902,10 @@ function attackRollFill(total: number, naturalD20: number) {
   };
 }
 
-function rolledDiceFill(holeId: string, groups: readonly (readonly number[])[]) {
+function rolledDiceFill(
+  holeId: string,
+  groups: readonly (readonly number[])[],
+) {
   return {
     kind: "rolledDice",
     holeId,
@@ -790,6 +968,18 @@ function get(value: unknown, path: string): unknown {
     if (Array.isArray(current)) return current[Number(key)];
     return (current as JsonObject)[key];
   }, value);
+}
+
+function verifyAgentConversationScenarios() {
+  assert.equal(agentConversationScenarios.length, 13);
+  for (const scenario of agentConversationScenarios) {
+    assert.notEqual(scenario.name.trim(), "");
+    assert.notEqual(scenario.userSays.trim(), "");
+    assert.notEqual(scenario.agentReads.trim(), "");
+    assert.notEqual(scenario.agentDecision.trim(), "");
+    assert.notEqual(scenario.executableCoverage.trim(), "");
+    assert.notEqual(scenario.insufficiency.trim(), "");
+  }
 }
 
 async function closeTransportBestEffort(transport: StdioClientTransport) {
