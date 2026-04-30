@@ -89,7 +89,7 @@ export function finalizeCharacterDraft(input: {
     };
   }
 
-  const supportedSelections = supportedFinalizedCharacterSelections(
+  const supportedSelections = temporarySupportedSliceSelections(
     selections,
     input.unitLibrary,
   );
@@ -112,6 +112,9 @@ export function finalizeCharacterDraft(input: {
 export function finalizedSelections(
   draft: CharacterDraft,
 ): FinalizedCharacterSelections | undefined {
+  // Narrow an in-progress draft's optional selections into the complete
+  // finalization shape. Projection code below should consume this required
+  // shape instead of repeatedly re-checking draft fields for undefined.
   const selections = draft.selections;
   if (
     selections.primaryClass == null ||
@@ -141,7 +144,11 @@ export function finalizedSelections(
   };
 }
 
-export function finalizedSelectionIssues(
+// Temporary executable-width gate. This is not the final rules-legality model:
+// it rejects complete drafts that are legal for the active rules corpus but
+// that the current runtime cannot yet project or execute. Remove this boundary
+// as implemented creation coverage reaches the project's supported content set.
+export function temporarySupportedSliceIssues(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): readonly CreationFinalizationIssue[] {
@@ -252,38 +259,38 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
   });
 }
 
-const SupportedFinalizedCharacterSelections = Symbol(
-  "SupportedFinalizedCharacterSelections",
+const TemporarySupportedSliceSelections = Symbol(
+  "TemporarySupportedSliceSelections",
 );
 
-type SupportedFinalizedCharacterSelections = {
+type TemporarySupportedSliceSelections = {
   readonly selections: FinalizedCharacterSelections;
-  readonly [SupportedFinalizedCharacterSelections]: true;
+  readonly [TemporarySupportedSliceSelections]: true;
 };
 
-type SupportedFinalizedCharacterSelectionsResult =
+type TemporarySupportedSliceSelectionsResult =
   | {
       readonly tag: "accepted";
-      readonly value: SupportedFinalizedCharacterSelections;
+      readonly value: TemporarySupportedSliceSelections;
     }
   | {
       readonly tag: "rejected";
       readonly issues: NonEmptyReadonlyArray<CreationFinalizationIssue>;
     };
 
-function supportedFinalizedCharacterSelections(
+function temporarySupportedSliceSelections(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): SupportedFinalizedCharacterSelectionsResult {
+): TemporarySupportedSliceSelectionsResult {
   const issues = nonEmptyReadonlyArray(
-    finalizedSelectionIssues(selections, unitLibrary),
+    temporarySupportedSliceIssues(selections, unitLibrary),
   );
   return issues == null
     ? {
         tag: "accepted",
         value: {
           selections,
-          [SupportedFinalizedCharacterSelections]: true,
+          [TemporarySupportedSliceSelections]: true,
         },
       }
     : { tag: "rejected", issues };
@@ -396,9 +403,12 @@ export function sameBackgroundAbilityScoreIncreaseSelection(
 }
 
 export function buildCharacterBuild(input: {
-  readonly supportedSelections: SupportedFinalizedCharacterSelections;
+  readonly supportedSelections: TemporarySupportedSliceSelections;
   readonly unitLibrary: UnitCatalog;
 }): CharacterBuild {
+  // Project the selected supported class level, not only level 1. The current
+  // temporary gate is single-class, but Fighter 2 and Wizard 1 both flow through
+  // this same build projection.
   const { selections } = input.supportedSelections;
   const classFacts = requireReadable(
     readClassCreationFacts(

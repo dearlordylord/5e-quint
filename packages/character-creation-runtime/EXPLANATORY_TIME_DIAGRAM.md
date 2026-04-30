@@ -196,7 +196,7 @@ sequenceDiagram
   Caller->>Runtime: finalizeCharacterDraft({ draft rev 4, unitLibrary })
   Runtime->>Runtime: discoverCreationHoles(...) returns []
   Runtime->>Runtime: finalizedSelections(draft)
-  Runtime->>Runtime: finalizedSelectionIssues(selections, unitLibrary)
+  Runtime->>Runtime: temporarySupportedSliceIssues(selections, unitLibrary)
   Runtime->>Algebra: isValidAbilityScoreAssignment(...)
   Runtime->>Runtime: isSupportedManifestBackgroundAbilityScoreIncrease(...)
   Runtime->>Runtime: sameOptionIdMultiset(...)
@@ -478,7 +478,7 @@ sequenceDiagram
   participant Runtime as finalizeCharacterDraft
   participant Discover as discoverCreationHoles
   participant Narrow as finalizedSelections
-  participant Legal as finalizedSelectionIssues
+  participant Legal as temporarySupportedSliceIssues
   participant Build as buildCharacterBuild
   participant Catalog as UnitCatalog
   participant Surface as Surface readers
@@ -488,7 +488,7 @@ sequenceDiagram
   Discover-->>Runtime: []
   Runtime->>Narrow: finalizedSelections(draft)
   Narrow-->>Runtime: FinalizedCharacterSelections
-  Runtime->>Legal: finalizedSelectionIssues(selections, unitLibrary)
+  Runtime->>Legal: temporarySupportedSliceIssues(selections, unitLibrary)
   Legal->>Legal: primaryClass is supported
   Legal->>Legal: background === background_soldier
   Legal->>Legal: species === species_orc
@@ -521,8 +521,8 @@ sequenceDiagram
 If any holes remain, finalization returns `incomplete` before it tries to narrow
 the draft. If no holes remain but required typed fields are still missing,
 `finalizedSelections` returns `undefined` and finalization returns `invalid`.
-If typed fields exist but contradict the supported manifest, the
-`finalizedSelectionIssues` checks return `illegalFinalization`.
+If typed fields exist but contradict the current executable support slice, the
+`temporarySupportedSliceIssues` checks return `illegalFinalization`.
 
 ## Build Projection For The Supported Orc Soldier Fighter
 
@@ -601,7 +601,7 @@ functions. This inventory groups them by responsibility.
 | Batch validation          | `creationFillIssues`, `fillIssuesForHole`, `fillKindMatchesHole`, `choiceFillIssues`, `abilityScoreFillIssues`, `unsupportedHoleSelectionOptionId`, `supportedHoleOptionIds`, `supportedDraftOptionIds`, `supportedUnitOptionIds`                                                                                                                                                                                                                                                   |
 | Issue constructors        | `wrongFillKindIssue`, `invalidChoiceIssue`, `invalidAbilityScoresIssue`, `tooFewChoicesIssue`, `tooManyChoicesIssue`, `unsupportedChoiceIssue`, `staleRevisionIssue`, `duplicateFillIssue`, `unknownHoleIssue`                                                                                                                                                                                                                                                                      |
 | Applying accepted fills   | `applyCreationFills`, `requireHole`, `applyCreationFill`, `applyDraftFill`, `applyUnitFill`, `selectedChoiceOption`, `requireSelectedUnitIds`, `requireOneOptionId`, `requireSelectedUnitId`, `requireAcceptedChoiceOption`, `requireStartingLanguages`, `requireAlignmentSelection`, `requireBackgroundAbilityScoreIncreaseSelection`                                                                                                                                              |
-| Final legality            | `finalizedSelections`, `finalizedSelectionIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedSingleClassAdvancement`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
+| Final legality            | `finalizedSelections`, `temporarySupportedSliceIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedSingleClassAdvancement`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
 | Build projection          | `buildCharacterBuild`, `characterBuildUnitRefs`, `requireReadable`, `applyBackgroundAbilityScoreIncrease`, `abilityModifier`, `finalizedBuildSkillProficiencies`, `finalizedBuildToolProficiencies`, `resourceForFeature`, `unitRefs`, `uniqueValues`, `nonEmptyReadonlyArray`                                                                                                                                                                                                      |
 
 ## Connascence Notes For Future Readers
@@ -610,7 +610,7 @@ Several facts must change together:
 
 - Support-profile constants such as `SUPPORTED_CLASS_UNIT_IDS`,
   `SUPPORTED_ADVANCEMENTS`, supported option ids, and
-  `finalizedSelectionIssues` all encode the currently executable creation
+  `temporarySupportedSliceIssues` all encode the currently executable creation
   slice.
 - `CreationHoleSource` and `holeIdForSource` are coupled by name and meaning:
   changing one requires changing fill ids, tests, and the Quint slice.
