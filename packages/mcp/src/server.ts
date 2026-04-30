@@ -151,7 +151,7 @@ export const toolDefinitions = [
   {
     name: "start_battle",
     description:
-      "Start a battle from the current creature host by compiling its Fighter durable state into an initial BATTLE_INIT batch and adding a core-owned monster stat block through the generic monster session surface. This promotes already-authored creatures into battle participation; it does not create creatures inside battle.",
+      "Start a battle by projecting a participant roster into an initial BATTLE_INIT batch. Participants can come from the active Fighter host, the stored Fighter sheet, monster stat blocks, or basic raw PC/Monster configs. This promotes already-authored or boundary-provided creatures into battle participation; it does not handle mid-fight roster changes.",
     inputSchema: startBattleJsonSchema,
   },
   {

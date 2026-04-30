@@ -11,7 +11,6 @@ import {
 } from "./host-factories.ts";
 import {
   buildStartBattleCommand,
-  buildStartBattleCommandFromSheet,
   decodeStartBattleInput,
 } from "./start-battle.ts";
 
@@ -123,26 +122,14 @@ export function createSessionRouter(
         }
 
         const storedSheet = characterSession.getStoredSheet();
-        const useDemoHost = decoded.useDemoHost === true;
-
-        let command:
-          | ReturnType<typeof buildStartBattleCommand>
-          | ReturnType<typeof buildStartBattleCommandFromSheet>;
-        if (useDemoHost) {
-          command = buildStartBattleCommand(activeHost, decoded);
-        } else if (storedSheet !== null) {
-          command = buildStartBattleCommandFromSheet(storedSheet, decoded);
-        } else {
-          const storedKind =
-            characterSession.getSnapshot().storedCharacterState;
-          return errorContent(
-            "start_battle requires a finalized stored character sheet. Finalize a draft first, or pass useDemoHost:true for the demo Fighter.",
-            {
-              code: "START_BATTLE_MISSING_SHEET",
-              storedCharacterState: storedKind,
-            },
-          );
-        }
+        const storedCharacterState =
+          characterSession.getSnapshot().storedCharacterState;
+        const command = buildStartBattleCommand(
+          activeHost,
+          storedSheet,
+          storedCharacterState,
+          decoded,
+        );
 
         if ("isError" in command) {
           return command;
