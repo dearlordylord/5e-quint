@@ -1,4 +1,5 @@
 import { snapshotBattle } from "@dnd/battle-runtime";
+import { Either } from "effect";
 
 import { startBattleFromCharacterBuildsAndStatBlock } from "./battle-creature-init.ts";
 import { battleStateProjection } from "./battle-state-projection.ts";
@@ -10,16 +11,16 @@ import {
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
-import { schemaJsonContent, toolInputValue } from "./schema-codec.ts";
+import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
-import { isToolError } from "./tool-input-helpers.ts";
 
 export function handleStartBattleToolCall(
   root: McpCompositionRoot,
   args: unknown,
 ) {
-  const decoded = toolInputValue(decodeStartBattleArgs(args, "start_battle"));
-  if (isToolError(decoded)) return decoded;
+  const decoded = decodeStartBattleArgs(args, "start_battle");
+  if (Either.isLeft(decoded)) return decoded.left;
+  const input = decoded.right;
   const activeBattle = root.sessionStore.battleState;
   if (activeBattle !== null) {
     return errorContent("A battle session is already active.", {
@@ -28,10 +29,10 @@ export function handleStartBattleToolCall(
     });
   }
 
-  const characterSessions = startBattleCharacterSessions(root, decoded);
+  const characterSessions = startBattleCharacterSessions(root, input);
   const duplicateInput = duplicateStartBattleInputContent(
     characterSessions.map(({ character }) => character),
-    decoded.statBlockCombatantId,
+    input.statBlockCombatantId,
   );
   if (duplicateInput !== null) return duplicateInput;
 
@@ -68,7 +69,7 @@ export function handleStartBattleToolCall(
 
   try {
     const state = startBattleFromCharacterBuildsAndStatBlock({
-      battleId: decoded.battleId,
+      battleId: input.battleId,
       characters: characterSessions.map(({ character, session }) => {
         if (session?.tag !== "available") {
           throw new Error("Character session is not available.");
@@ -87,15 +88,15 @@ export function handleStartBattleToolCall(
         };
       }),
       statBlockBattleInput: {
-        combatantId: decoded.statBlockCombatantId,
+        combatantId: input.statBlockCombatantId,
         statBlock,
-        initiative: decoded.statBlockInitiative,
-        ...(decoded.statBlockCurrentHp === undefined
+        initiative: input.statBlockInitiative,
+        ...(input.statBlockCurrentHp === undefined
           ? {}
-          : { currentHp: decoded.statBlockCurrentHp }),
-        ...(decoded.statBlockTempHp === undefined
+          : { currentHp: input.statBlockCurrentHp }),
+        ...(input.statBlockTempHp === undefined
           ? {}
-          : { tempHp: decoded.statBlockTempHp }),
+          : { tempHp: input.statBlockTempHp }),
       },
       unitLibrary: root.unitLibrary,
     });
@@ -106,7 +107,7 @@ export function handleStartBattleToolCall(
       root.sessionStore.characters.set(character.sourceDraftId, {
         tag: "inBattle",
         build: session.build,
-        battleId: decoded.battleId,
+        battleId: input.battleId,
         characterId: character.characterId,
       });
     }

@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Either, Schema } from "effect";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -7,10 +7,8 @@ import {
   mcpObjectJsonSchema,
   mcpOutputJsonSchema,
   schemaJsonContent,
-  toolInputValue,
 } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
-import { isToolError } from "./tool-input-helpers.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
 const StringArraySchema = Schema.Array(Schema.String);
@@ -121,8 +119,8 @@ export function handleContentToolCall(
   if (!isContentToolName(name)) {
     return errorContent(`Unknown Surface-runtime content tool: ${name}`);
   }
-  const decoded = toolInputValue(decodeToolArgs(EmptyArgsSchema, args, name));
-  if (isToolError(decoded)) return decoded;
+  const decoded = decodeToolArgs(EmptyArgsSchema, args, name);
+  if (Either.isLeft(decoded)) return decoded.left;
 
   if (name === "describe_mcp_workflow") {
     return schemaJsonContent(WorkflowGuideOutputSchema, workflowGuide());

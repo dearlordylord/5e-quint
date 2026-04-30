@@ -27,10 +27,6 @@ export function decodeToolArgs<A, I>(
   );
 }
 
-export function toolInputValue<A>(result: ToolInputResult<A>): A | ToolError {
-  return Either.isRight(result) ? result.right : result.left;
-}
-
 export function mcpObjectJsonSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
 ): McpObjectInputSchema {
