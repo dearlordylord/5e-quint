@@ -1,4 +1,4 @@
-import { Effect, Match, Random } from "effect";
+import { Effect, Match, Random, Schema } from "effect";
 
 import { battleMainHandDamageDie } from "@dnd/core/battle-machine-creature.ts";
 import type {
@@ -11,21 +11,155 @@ import type {
   ResolutionRequest,
   ResolutionRuntimeInputs,
 } from "@dnd/core/available-actions.ts";
-import {
-  decodeProjectedPreparedSpellRuntimeInputs as decodeProjectedPreparedSpellRuntimeOverride,
-  formatProjectedPreparedSpellExpectedFields,
-} from "@dnd/core/projected-action-bridge-prepared-spell.ts";
 import { bardicInspirationDie } from "@dnd/core/features/class-bard.ts";
 import { classHitDie } from "@dnd/core/features/class-tables.ts";
 import { pMartialArtsDie } from "@dnd/core/features/class-monk.ts";
 import type { DndContext } from "@dnd/core/machine-types.ts";
+
+const LEGACY_PREPARED_SPELL_RUNTIME_EXPECTED_FIELDS = [
+  "targetIds: array<string>",
+  'saveOutcomes: array<{ targetId: string, outcome: "fail" | "success" }>',
+  "amounts: array<{ targetId: string, total: integer, rolledTotal?: integer }>",
+].join(", ");
+
+const LegacyPreparedSpellRuntimeOverrideSchema = Schema.Struct({
+  runtime: Schema.Literal("projectedPreparedSpell"),
+  values: Schema.Struct({
+    targetIds: Schema.Array(Schema.String),
+    saveOutcomes: Schema.Array(
+      Schema.Struct({
+        targetId: Schema.String,
+        outcome: Schema.Literal("fail", "success"),
+      }),
+    ),
+    amounts: Schema.Array(
+      Schema.Struct({
+        targetId: Schema.String,
+        total: Schema.Number.pipe(Schema.int()),
+        rolledTotal: Schema.optional(Schema.Number.pipe(Schema.int())),
+      }),
+    ),
+  }),
+});
+
+type LegacyPreparedSpellRuntimeOverride = Schema.Schema.Type<
+  typeof LegacyPreparedSpellRuntimeOverrideSchema
+>;
+
+function hasExactKeys(
+  value: unknown,
+  allowedKeys: ReadonlySet<string>,
+): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  return Object.keys(value).every((key) => allowedKeys.has(key));
+}
+
+function hasUniqueValues(values: ReadonlyArray<string>): boolean {
+  return new Set(values).size === values.length;
+}
+
+function isLegacyPreparedSpellTargetResult(
+  result: {
+    readonly targetId: string;
+    readonly saveOutcome: "failure" | "success";
+  } | null,
+): result is {
+  readonly targetId: string;
+  readonly saveOutcome: "failure" | "success";
+} {
+  return result !== null;
+}
+
+function decodeLegacyPreparedSpellRuntimeOverride(
+  decoded: LegacyPreparedSpellRuntimeOverride,
+): Extract<
+  ResolutionRuntimeInputs,
+  { readonly runtime: "projectedPreparedSpell" }
+> | null {
+  const { amounts, saveOutcomes, targetIds } = decoded.values;
+  if (
+    !hasUniqueValues(targetIds) ||
+    !hasUniqueValues(saveOutcomes.map((outcome) => outcome.targetId)) ||
+    !hasUniqueValues(amounts.map((amount) => amount.targetId))
+  ) {
+    return null;
+  }
+
+  const targetIdSet = new Set(targetIds);
+  if (saveOutcomes.some((outcome) => !targetIdSet.has(outcome.targetId))) {
+    return null;
+  }
+
+  const saveByTarget = new Map(
+    saveOutcomes.map((outcome) => [outcome.targetId, outcome.outcome]),
+  );
+  const targetResults = targetIds.map((targetId) => {
+    const outcome = saveByTarget.get(targetId);
+    return outcome == null
+      ? null
+      : {
+          targetId,
+          saveOutcome:
+            outcome === "fail" ? ("failure" as const) : ("success" as const),
+        };
+  });
+  if (!targetResults.every(isLegacyPreparedSpellTargetResult)) {
+    return null;
+  }
+
+  const failedTargets = targetResults
+    .filter((result) => result.saveOutcome === "failure")
+    .map((result) => result.targetId);
+  const failedTargetSet = new Set(failedTargets);
+  if (amounts.some((amount) => !failedTargetSet.has(amount.targetId))) {
+    return null;
+  }
+  if (failedTargets.length !== amounts.length) {
+    return null;
+  }
+
+  const firstAmount = amounts[0];
+  if (firstAmount === undefined) {
+    return {
+      runtime: "projectedPreparedSpell",
+      values: {
+        tag: "chooseAreaEffect",
+        targetResults,
+        total: 0,
+      },
+    };
+  }
+  if (
+    amounts.some(
+      (amount) =>
+        amount.total !== firstAmount.total ||
+        amount.rolledTotal !== firstAmount.rolledTotal,
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    runtime: "projectedPreparedSpell",
+    values: {
+      tag: "chooseAreaEffect",
+      targetResults,
+      total: firstAmount.total,
+      ...(firstAmount.rolledTotal == null
+        ? {}
+        : { rolledTotal: firstAmount.rolledTotal }),
+    },
+  };
+}
 
 function projectedPreparedSpellRuntimeShapeError(
   tokenType: "CAST_PREPARED_SPELL",
 ) {
   return {
     code: "INVALID_RUNTIME_INPUT" as const,
-    message: `${tokenType} requires explicit runtime projectedPreparedSpell inputs on execute_action. Expected shape: { runtime: "projectedPreparedSpell", values: { ${formatProjectedPreparedSpellExpectedFields()} } }.`,
+    message: `${tokenType} requires explicit runtime projectedPreparedSpell inputs on execute_action. Expected shape: { runtime: "projectedPreparedSpell", values: { ${LEGACY_PREPARED_SPELL_RUNTIME_EXPECTED_FIELDS} } }.`,
   };
 }
 
@@ -42,8 +176,25 @@ export function decodeProjectedPreparedSpellRuntimeInputs(
     return projectedPreparedSpellRuntimeShapeError(tokenType);
   }
 
+  const runtime = Reflect.get(args, "runtime");
+  const decoded = Schema.decodeUnknownEither(
+    LegacyPreparedSpellRuntimeOverrideSchema,
+  )(runtime);
+  if (decoded._tag === "Left") {
+    return projectedPreparedSpellRuntimeShapeError(tokenType);
+  }
+  if (
+    !hasExactKeys(runtime, new Set(["runtime", "values"])) ||
+    !hasExactKeys(
+      Reflect.get(runtime as object, "values"),
+      new Set(["targetIds", "saveOutcomes", "amounts"]),
+    )
+  ) {
+    return projectedPreparedSpellRuntimeShapeError(tokenType);
+  }
+
   return (
-    decodeProjectedPreparedSpellRuntimeOverride(args) ??
+    decodeLegacyPreparedSpellRuntimeOverride(decoded.right) ??
     projectedPreparedSpellRuntimeShapeError(tokenType)
   );
 }
