@@ -3,6 +3,7 @@ import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
 import {
   canSpendAction,
+  grantUnitActionResource,
   resetTurnActionEconomy,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -64,13 +65,16 @@ import {
   Round,
   type Condition,
   type CreatureId,
+  type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type {
   Ability,
+  ActivationResource,
   CreatureNamedAttackRoll,
   DamageType,
   DiceExpr,
+  SpellRecord,
   StatBlockRecord,
   StatBlockValue,
   UnitRecord,
@@ -128,6 +132,37 @@ export type CharacterWeaponAttackProfile = {
   readonly weapon: WeaponRecord;
   readonly ability: Ability;
   readonly abilityModifier: number;
+};
+export type CharacterBattleResourceInit = {
+  readonly unit: UnitRecord;
+  readonly resource: ActivationResource;
+  readonly usesRemaining?: number;
+};
+export type CharacterBattleResourceState = {
+  readonly unit: UnitRecord;
+  readonly resource: ActivationResource;
+  readonly usesRemaining: number;
+  readonly usedThisTurn: boolean;
+};
+export type CharacterBattleSpellSlotInit = {
+  readonly spellLevel: number;
+  readonly count: number;
+};
+export type CharacterBattleSpellSlotState = CharacterBattleSpellSlotInit & {
+  readonly expended: number;
+};
+export type CharacterBattleSpellcastingInit = {
+  readonly spellcastingAbilityModifier: number;
+  readonly proficiencyBonus: ProficiencyBonusType;
+  readonly cantrips: readonly SpellRecord[];
+  readonly preparedSpells: readonly SpellRecord[];
+  readonly spellSlots: readonly CharacterBattleSpellSlotInit[];
+};
+export type CharacterBattleSpellcastingState = Omit<
+  CharacterBattleSpellcastingInit,
+  "spellSlots"
+> & {
+  readonly spellSlots: readonly CharacterBattleSpellSlotState[];
 };
 type LiteralStatBlockValue = Extract<
   StatBlockValue,
@@ -194,6 +229,16 @@ type StatBlockAttackDamage = {
     readonly damageType: DamageType;
   };
 };
+export type BattleActiveEffect = {
+  readonly kind: "speedDelta";
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceCombatantId: CombatantId;
+  readonly deltaFeet: number;
+  readonly expiresAt: {
+    readonly kind: "startOfTurn";
+    readonly combatantId: CombatantId;
+  };
+};
 type AttackTargetConstraint =
   | { readonly kind: "meleeReach"; readonly reachFeet: number }
   | {
@@ -203,6 +248,34 @@ type AttackTargetConstraint =
 export type BattleAttackProfile =
   | CharacterWeaponAttackProfile
   | StatBlockAuthoredAttack;
+export type SupportedSpellInvocation =
+  | {
+      readonly kind: "preparedSlotSpell";
+      readonly spell: SpellRecord;
+      readonly targeting: {
+        readonly kind: "allRepeatedEffectsAtOneTarget";
+        readonly repeatedEffectCount: number;
+      };
+      readonly slotLevel: number;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: number;
+    }
+  | {
+      readonly kind: "cantripSpellAttack";
+      readonly spell: SpellRecord;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: number;
+      readonly attackBonus: number;
+      readonly speedReduction: {
+        readonly deltaFeet: number;
+      };
+    };
 
 export type CharacterBattleCreatureInit = {
   readonly kind: "character";
@@ -215,6 +288,8 @@ export type CharacterBattleCreatureInit = {
   readonly zeroHpLifecyclePolicy: "usesDeathSavingThrows";
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly attack: CharacterWeaponAttackProfile | null;
+  readonly resources?: readonly CharacterBattleResourceInit[];
+  readonly spellcasting?: CharacterBattleSpellcastingInit;
 };
 
 export type StatBlockBattleInitInput = {
@@ -263,6 +338,7 @@ export type BattleCreatureState = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly conditions: ConditionState;
+  readonly activeEffects: readonly BattleActiveEffect[];
   readonly armorClass: ArmorClassState;
   readonly zeroHpLifecycle: ZeroHpLifecycle;
   readonly origin:
@@ -272,6 +348,8 @@ export type BattleCreatureState = {
         readonly characterUnitRefs: readonly BattleUnitRef[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly attack: CharacterWeaponAttackProfile | null;
+        readonly resources: readonly CharacterBattleResourceState[];
+        readonly spellcasting?: CharacterBattleSpellcastingState;
       }
     | {
         readonly kind: "statBlock";
@@ -290,7 +368,7 @@ export type BattleState = {
   readonly currentTurnResources: BattleTurnResources;
 };
 
-export const BATTLE_SRD_ACTIONS = ["attack"] as const;
+export const BATTLE_SRD_ACTIONS = ["attack", "magic"] as const;
 export type BattleSrdAction = (typeof BATTLE_SRD_ACTIONS)[number];
 
 export const BATTLE_RUNTIME_COMMANDS = ["endTurn"] as const;
@@ -300,8 +378,19 @@ export type BattleSubject =
   | {
       readonly tag: "srdAction";
       readonly actorId: CombatantId;
-      readonly action: BattleSrdAction;
+      readonly action: "attack";
       readonly attackName: string;
+    }
+  | {
+      readonly tag: "srdAction";
+      readonly actorId: CombatantId;
+      readonly action: "magic";
+      readonly spellId: SpellRecord["id"];
+    }
+  | {
+      readonly tag: "unitFeature";
+      readonly actorId: CombatantId;
+      readonly unitId: UnitRecord["id"];
     }
   | {
       readonly tag: "runtimeCommand";
@@ -331,6 +420,13 @@ export type BattleAttackRollHole = Extract<
   readonly attack: BattleAttackProfile;
   readonly attackBonus: number;
 };
+export type BattleSpellAttackRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "attackRoll" }
+> & {
+  readonly spell: SupportedSpellInvocation;
+  readonly attackBonus: number;
+};
 export type BattleDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -338,10 +434,19 @@ export type BattleDamageRollHole = Extract<
   readonly attack: BattleAttackProfile;
   readonly critical: boolean;
 };
+export type BattleSpellDamageRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly spell: SupportedSpellInvocation;
+  readonly critical: boolean;
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleAttackRollHole
-  | BattleDamageRollHole;
+  | BattleSpellAttackRollHole
+  | BattleDamageRollHole
+  | BattleSpellDamageRollHole;
 export type BattleFill =
   | Extract<FilledHoleValue, { readonly kind: "attackRoll" | "rolledDice" }>
   | {
@@ -407,6 +512,7 @@ export type BattleCreatureSnapshot = {
   readonly defeated: boolean;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;
   readonly conditions: readonly Condition[];
+  readonly activeEffects: readonly BattleActiveEffect[];
 };
 
 export type BattleCreatureZeroHpLifecycleSnapshot =
@@ -430,6 +536,7 @@ const ATTACK_TARGET_HOLE_ID = holeId("battle:attack:target");
 const ATTACK_ROLL_HOLE_ID = holeId("battle:attack:roll");
 const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:attack:target");
 const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
+const ACTION_SURGE_UNIT_ID = "fighter_action_surge";
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = 5;
 
 export function startBattle(input: {
@@ -517,6 +624,13 @@ export function discoverBattleActs(
       }),
     );
   }
+  acts.push(...supportedUnitFeatureActs(state, actorId));
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "magic")
+  ) {
+    acts.push(...supportedSpellActs(state, actorId));
+  }
   acts.push({
     subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
     label: "End Turn",
@@ -570,11 +684,27 @@ export function resolveBattleSubject(
       "Attack is no longer available for the current actor.",
     );
   }
+  if (
+    input.subject.tag === "srdAction" &&
+    input.subject.action === "magic" &&
+    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
+      !canSpendAction(input.state.currentTurnResources, "magic"))
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
 
   return Match.value(input.subject).pipe(
     Match.when({ tag: "srdAction", action: "attack" }, () =>
       resolveAttack(input),
     ),
+    Match.when({ tag: "srdAction", action: "magic" }, () =>
+      resolveSpellInvocation(input),
+    ),
+    Match.when({ tag: "unitFeature" }, () => resolveUnitFeature(input)),
     Match.when({ tag: "runtimeCommand", command: "endTurn" }, () =>
       resolveEndTurnCommand(input),
     ),
@@ -633,6 +763,7 @@ function battleCreatureStateFromInit(
     maxHp: creatureInit.maxHp,
     tempHp: creatureInit.tempHp,
     conditions: EMPTY_CONDITION_STATE,
+    activeEffects: [],
     zeroHpLifecycle: initialZeroHpLifecycle(creatureInit.zeroHpLifecyclePolicy),
   };
 
@@ -646,6 +777,14 @@ function battleCreatureStateFromInit(
         characterUnitRefs: creatureInit.characterUnitRefs,
         selectedLoadout: creatureInit.selectedLoadout,
         attack: creatureInit.attack,
+        resources: (creatureInit.resources ?? []).map(characterResourceState),
+        ...(creatureInit.spellcasting === undefined
+          ? {}
+          : {
+              spellcasting: characterSpellcastingState(
+                creatureInit.spellcasting,
+              ),
+            }),
       },
     });
   }
@@ -746,6 +885,7 @@ function combatantSnapshot(
     defeated: combatant.hp === 0,
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
     conditions: activeConditions(combatant.conditions),
+    activeEffects: combatant.activeEffects,
   };
 }
 
@@ -800,6 +940,42 @@ function battleSubjectActorId(subject: BattleSubject): CombatantId {
   return subject.actorId;
 }
 
+function characterResourceState(
+  input: CharacterBattleResourceInit,
+): CharacterBattleResourceState {
+  return {
+    unit: input.unit,
+    resource: input.resource,
+    usesRemaining: input.usesRemaining ?? supportedUseCountCap(input.resource),
+    usedThisTurn: false,
+  };
+}
+
+function characterSpellcastingState(
+  input: CharacterBattleSpellcastingInit,
+): CharacterBattleSpellcastingState {
+  return {
+    spellcastingAbilityModifier: input.spellcastingAbilityModifier,
+    proficiencyBonus: input.proficiencyBonus,
+    cantrips: input.cantrips,
+    preparedSpells: input.preparedSpells,
+    spellSlots: input.spellSlots.map((slot) => ({ ...slot, expended: 0 })),
+  };
+}
+
+function supportedUseCountCap(resource: ActivationResource): number {
+  if (
+    resource.kind !== "use_count" ||
+    resource.cap.kind !== "threshold_tiers"
+  ) {
+    throw new Error(
+      "Battle runtime supports only threshold-tier use-count resources.",
+    );
+  }
+
+  return resource.cap.base;
+}
+
 function literalStatBlockNumber(value: StatBlockValue): number {
   if (value.kind !== "literal") {
     throw new Error(
@@ -833,15 +1009,16 @@ export function scoreModifier(score: number): number {
 }
 
 function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
-  if (input.subject.tag !== "srdAction") {
+  if (input.subject.tag !== "srdAction" || input.subject.action !== "attack") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
       "Attack resolution requires an SRD Attack subject.",
     );
   }
+  const subject = input.subject;
 
-  const attack = supportedAttackProfile(input.state, input.subject);
+  const attack = supportedAttackProfile(input.state, subject);
   if (attack == null) {
     return invalidResult(
       input.state,
@@ -1079,9 +1256,15 @@ function spendAttackAction(
 function resolveEndTurn(
   state: BattleState,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const combatants = new Map<CombatantId, BattleCreatureState>();
+  for (const [id, combatant] of state.combatants) {
+    combatants.set(id, resetPerTurnCharacterResources(combatant));
+  }
+  const initiative = nextInitiative(state.initiative);
   const nextState = {
     ...state,
-    initiative: nextInitiative(state.initiative),
+    initiative,
+    combatants: expireStartOfTurnEffects(combatants, currentActing(initiative)),
     currentTurnResources: resetTurnActionEconomy(state.currentTurnResources),
   };
 
@@ -1090,6 +1273,23 @@ function resolveEndTurn(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function expireStartOfTurnEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => [
+      id,
+      {
+        ...combatant,
+        activeEffects: combatant.activeEffects.filter(
+          (effect) => effect.expiresAt.combatantId !== actorId,
+        ),
+      },
+    ]),
+  );
 }
 
 function resolveEndTurnCommand(
@@ -1104,6 +1304,364 @@ function resolveEndTurnCommand(
   }
 
   return resolveEndTurn(input.state);
+}
+
+function resetPerTurnCharacterResources(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
+  if (combatant.origin.kind !== "character") {
+    return combatant;
+  }
+
+  return {
+    ...combatant,
+    origin: {
+      ...combatant.origin,
+      resources: combatant.origin.resources.map((resource) => ({
+        ...resource,
+        usedThisTurn: false,
+      })),
+    },
+  };
+}
+
+function supportedUnitFeatureActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character" || !combatantCanTakeActions(actor)) {
+    return [];
+  }
+
+  return actor.origin.resources.flatMap((resource) =>
+    resource.unit.id === ACTION_SURGE_UNIT_ID &&
+    resource.usesRemaining > 0 &&
+    !resource.usedThisTurn
+      ? [
+          {
+            subject: {
+              tag: "unitFeature" as const,
+              actorId,
+              unitId: resource.unit.id,
+            },
+            label: resource.unit.name,
+            summary: "Grant one additional non-Magic action this turn.",
+            initialHoles: [],
+          },
+        ]
+      : [],
+  );
+}
+
+function resolveUnitFeature(
+  input: BattleResolutionInput,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.subject.tag !== "unitFeature") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Unit feature resolution requires a Unit feature subject.",
+    );
+  }
+  const subject = input.subject;
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Action Surge does not accept battle fills.",
+    );
+  }
+
+  const actor = input.state.combatants.get(subject.actorId);
+  const resource =
+    actor?.origin.kind === "character"
+      ? actor.origin.resources.find(
+          (candidate) => candidate.unit.id === subject.unitId,
+        )
+      : undefined;
+  const restriction = actionSurgeRestriction(resource?.unit);
+  if (
+    actor?.origin.kind !== "character" ||
+    resource == null ||
+    restriction == null ||
+    resource.usesRemaining <= 0 ||
+    resource.usedThisTurn
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Action Surge is no longer available for the current actor.",
+    );
+  }
+
+  const granted = grantUnitActionResource(
+    input.state.currentTurnResources,
+    subject.actorId,
+    subject.unitId,
+    restriction,
+  );
+  if (Either.isLeft(granted)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Action Surge has already granted an action this turn.",
+    );
+  }
+
+  const nextActor: BattleCreatureState = {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        candidate.unit.id === subject.unitId
+          ? {
+              ...candidate,
+              usesRemaining: candidate.usesRemaining - 1,
+              usedThisTurn: true,
+            }
+          : candidate,
+      ),
+    },
+  };
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(subject.actorId, nextActor),
+    currentTurnResources: granted.right,
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function actionSurgeRestriction(unit: UnitRecord | undefined) {
+  if (unit?.id !== ACTION_SURGE_UNIT_ID || unit.kind !== "class_feature") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "activation" ||
+    mechanics.activationCost.kind !== "free" ||
+    mechanics.resource.kind !== "use_count" ||
+    mechanics.resetCadence.kind !== "short_or_long_rest" ||
+    mechanics.usageLimit?.kind !== "once_per_turn"
+  ) {
+    return null;
+  }
+  const phase = mechanics.phases[0];
+  if (phase?.kind !== "direct") {
+    return null;
+  }
+  const effect = phase.effects?.[0];
+  return effect?.kind === "grant_extra_action" ? effect.restriction : null;
+}
+
+function supportedSpellActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return [];
+  }
+  return supportedSpellInvocations(actor).flatMap((invocation) => {
+    if (!spellHasAvailableSpend(actor, invocation)) {
+      return [];
+    }
+    const targetHole = spellTargetHole(state, actorId, invocation);
+    return targetHole.choices.length === 0
+      ? []
+      : [
+          {
+            subject: {
+              tag: "srdAction" as const,
+              actorId,
+              action: "magic" as const,
+              spellId: invocation.spell.id,
+            },
+            label: invocation.spell.name,
+            summary:
+              invocation.kind === "preparedSlotSpell"
+                ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot, with all darts at one target.`
+                : `Cast ${invocation.spell.name} as a cantrip.`,
+            initialHoles: [targetHole],
+          },
+        ];
+  });
+}
+
+function resolveSpellInvocation(
+  input: BattleResolutionInput,
+): BattleResolutionResult {
+  if (input.subject.tag !== "srdAction" || input.subject.action !== "magic") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Spell Invocation resolution requires a Magic action subject.",
+    );
+  }
+  const subject = input.subject;
+  const actor = input.state.combatants.get(subject.actorId);
+  const invocation =
+    actor?.origin.kind === "character"
+      ? supportedSpellInvocations(actor).find(
+          (candidate) => candidate.spell.id === subject.spellId,
+        )
+      : undefined;
+  if (actor?.origin.kind !== "character" || invocation == null) {
+    return invalidResult(
+      input.state,
+      "unsupportedSurfaceShape",
+      "Spell Invocation requires a supported prepared spell or cantrip.",
+    );
+  }
+  if (!spellHasAvailableSpend(actor, invocation)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Spell Invocation no longer has its required runtime spell resource.",
+    );
+  }
+
+  const fillSet = attackFillSet(input.fills);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (fillSet.targetId == null) {
+    return needsHolesResult(input.state, input.subject, [
+      spellTargetHole(input.state, subject.actorId, invocation),
+    ]);
+  }
+  const target = input.state.combatants.get(fillSet.targetId);
+  if (
+    target == null ||
+    target.combatantId === input.subject.actorId ||
+    !spellTargetIsLegal(
+      input.state,
+      subject.actorId,
+      target.combatantId,
+      invocation,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell target must be another combatant within the selected spell's supported range.",
+    );
+  }
+
+  if (invocation.kind === "cantripSpellAttack") {
+    if (fillSet.attackRoll == null) {
+      return needsHolesResult(input.state, input.subject, [
+        spellAttackRollHole(invocation),
+      ]);
+    }
+    if (!attackRollResultIsValid(fillSet.attackRoll)) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Spell attack roll result is outside the d20 attack-roll protocol.",
+      );
+    }
+    const hit = attackRollHits(
+      fillSet.attackRoll,
+      currentArmorClass(target.armorClass),
+    );
+    const critical = attackRollIsCriticalHit(fillSet.attackRoll);
+    if (hit && fillSet.damageRoll == null) {
+      return needsHolesResult(input.state, input.subject, [
+        spellDamageHole(invocation, critical),
+      ]);
+    }
+    if (!hit && fillSet.damageRoll != null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Spell damage can only be filled after a hit.",
+      );
+    }
+    if (!hit) {
+      return spendMagicAction(input.state);
+    }
+  } else if (fillSet.attackRoll != null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Magic Missile does not use an attack roll.",
+    );
+  }
+
+  if (fillSet.damageRoll == null) {
+    return needsHolesResult(input.state, input.subject, [
+      spellDamageHole(invocation),
+    ]);
+  }
+  const critical =
+    invocation.kind === "cantripSpellAttack" &&
+    fillSet.attackRoll != null &&
+    attackRollIsCriticalHit(fillSet.attackRoll);
+  const damageValidation = validateSpellDamageFill(
+    fillSet.damageRoll,
+    invocation,
+    critical,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", damageValidation);
+  }
+
+  const damaged = applySpellDamage(
+    input.state,
+    target.combatantId,
+    invocation,
+    fillSet.damageRoll,
+    critical,
+  );
+  const effected = applySpellActiveEffects(
+    damaged,
+    subject.actorId,
+    target.combatantId,
+    invocation,
+  );
+  const spent = spendAction(effected.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+  const slotted =
+    invocation.kind === "preparedSlotSpell"
+      ? expendSpellSlot(effected, subject.actorId, invocation.slotLevel)
+      : effected;
+  const nextState = { ...slotted, currentTurnResources: spent.right };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function spendMagicAction(
+  state: BattleState,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const spent = spendAction(state.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+
+  const nextState = { ...state, currentTurnResources: spent.right };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function applyAttackDamage(
@@ -1127,7 +1685,14 @@ function applyAttackDamage(
       targetId,
       applyHpDamage(
         target,
-        weaponAttackDamageAmount(attack, fillSet.damageRoll),
+        attackDamageAmount(
+          target,
+          attack,
+          fillSet.damageRoll,
+          fillSet.attackRoll != null &&
+            attackRollIsCriticalHit(fillSet.attackRoll),
+          fillSet.attackRoll,
+        ),
         {
           deathFailuresAtZeroHp:
             fillSet.attackRoll != null &&
@@ -1260,21 +1825,448 @@ function zeroHpLifecycleIsTerminal(combatant: BattleCreatureState): boolean {
   );
 }
 
-function weaponAttackDamageAmount(
+function attackDamageAmount(
+  target: BattleCreatureState,
   attack: BattleAttackProfile,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  critical: boolean,
+  attackRoll?: AttackRollResult,
 ): number {
-  return (
-    damageRoll.value.reduce(
-      (total, group) =>
-        total +
-        group.results.reduce(
-          (groupTotal, dieResult) => groupTotal + Number(dieResult),
-          0,
-        ),
+  const components = attackDamageComponents(attack, critical, attackRoll);
+  return damageRoll.value.reduce((total, group, index) => {
+    const component = components[index];
+    if (component === undefined) {
+      return total;
+    }
+    const diceTotal = group.results.reduce(
+      (groupTotal, dieResult) => groupTotal + Number(dieResult),
       0,
-    ) + attackDamageModifier(attack)
+    );
+    const unadjusted =
+      diceTotal + (index === 0 ? attackDamageModifier(attack) : 0);
+    return (
+      total +
+      damageAmountAfterTargetAdjustments(
+        target,
+        unadjusted,
+        component.damageType,
+      )
+    );
+  }, 0);
+}
+
+function damageAmountAfterTargetAdjustments(
+  target: BattleCreatureState,
+  amount: number,
+  damageType: DamageType,
+): number {
+  if (target.origin.kind !== "statBlock") {
+    return amount;
+  }
+
+  const statBlock = target.origin.statBlock.statBlock;
+  if (statBlock.immunities?.damageTypes?.includes(damageType) === true) {
+    return 0;
+  }
+
+  const afterResistance =
+    statBlock.resistances?.kind === "fixed" &&
+    statBlock.resistances.damageTypes.includes(damageType)
+      ? Math.floor(amount / 2)
+      : amount;
+
+  return statBlock.vulnerabilities?.damageTypes.includes(damageType) === true
+    ? afterResistance * 2
+    : afterResistance;
+}
+
+function supportedSpellInvocations(
+  actor: BattleCreatureState,
+): readonly SupportedSpellInvocation[] {
+  if (actor.origin.kind !== "character") {
+    return [];
+  }
+  const spellcasting = actor.origin.spellcasting;
+  if (spellcasting === undefined) {
+    return [];
+  }
+
+  return [
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedSlotSpell(spell),
+    ),
+    ...spellcasting.cantrips.flatMap((spell) =>
+      supportedCantripSpellAttack(
+        spell,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
+      ),
+    ),
+  ];
+}
+
+function supportedPreparedSlotSpell(
+  spell: SpellRecord,
+): readonly SupportedSpellInvocation[] {
+  if (spell.id !== "magic_missile" || spell.mechanics.family !== "activation") {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.effects?.length !== 1
+  ) {
+    return [];
+  }
+  const effect = phase.effects?.[0];
+  if (effect?.kind !== "damage" || typeof effect.damageType !== "string") {
+    return [];
+  }
+  const damageExpr = supportedDamageAmountExpr(effect.amount);
+  if (damageExpr == null || typeof effect.damageType !== "string") {
+    return [];
+  }
+  const repeatedEffectCount = supportedAllDartsAtOneTargetCount(
+    phase.attachment.value.selection,
   );
+  return repeatedEffectCount !== null
+    ? [
+        {
+          kind: "preparedSlotSpell",
+          spell,
+          targeting: {
+            kind: "allRepeatedEffectsAtOneTarget",
+            repeatedEffectCount,
+          },
+          slotLevel: 1,
+          damage: {
+            expr: damageExpr,
+            damageType: effect.damageType,
+          },
+          rangeFeet: spell.mechanics.range.feet,
+        },
+      ]
+    : [];
+}
+
+function supportedCantripSpellAttack(
+  spell: SpellRecord,
+  spellcastingAbilityModifier: number,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SupportedSpellInvocation[] {
+  if (spell.id !== "ray_of_frost" || spell.mechanics.family !== "activation") {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "attack_roll" ||
+    phase.attackKind !== "ranged_spell_attack" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.onHit.length !== 2 ||
+    phase.onMiss.length !== 1 ||
+    phase.onMiss[0]?.kind !== "none"
+  ) {
+    return [];
+  }
+  const [damageEffect, speedEffect] = phase.onHit;
+  if (
+    damageEffect?.kind !== "damage" ||
+    typeof damageEffect.damageType !== "string" ||
+    speedEffect?.kind !== "modify_speed" ||
+    speedEffect.unit !== "feet" ||
+    speedEffect.delta >= 0
+  ) {
+    return [];
+  }
+  const damageExpr = supportedDamageAmountExpr(damageEffect.amount);
+  if (damageExpr == null || typeof damageEffect.damageType !== "string") {
+    return [];
+  }
+
+  return [
+    {
+      kind: "cantripSpellAttack",
+      spell,
+      damage: {
+        expr: damageExpr,
+        damageType: damageEffect.damageType,
+      },
+      rangeFeet: spell.mechanics.range.feet,
+      attackBonus: spellcastingAbilityModifier + proficiencyBonus,
+      speedReduction: {
+        deltaFeet: speedEffect.delta,
+      },
+    },
+  ];
+}
+
+function supportedAllDartsAtOneTargetCount(selection: {
+  readonly mode: string;
+  readonly repeatsAllowed?: boolean;
+  readonly count?: number | { readonly base?: number };
+}): number | null {
+  const count =
+    typeof selection.count === "number"
+      ? selection.count
+      : selection.count?.base;
+  if (
+    selection.mode !== "choose_up_to" ||
+    selection.repeatsAllowed !== true ||
+    typeof count !== "number"
+  ) {
+    return null;
+  }
+  return count;
+}
+
+function supportedDamageAmountExpr(amount: {
+  readonly kind: string;
+  readonly expr?: DiceExpr;
+  readonly base?: DiceExpr;
+}): DiceExpr | null {
+  if (amount.kind === "fixed" && amount.expr !== undefined) {
+    return amount.expr;
+  }
+  if (amount.kind === "threshold_tiers" && amount.base !== undefined) {
+    return amount.base;
+  }
+  return null;
+}
+
+function spellHasAvailableSpend(
+  actor: BattleCreatureState,
+  invocation: SupportedSpellInvocation,
+): boolean {
+  if (actor.origin.kind !== "character") {
+    return false;
+  }
+  if (invocation.kind === "cantripSpellAttack") {
+    return true;
+  }
+  return (
+    actor.origin.spellcasting?.spellSlots.some(
+      (slot) =>
+        slot.spellLevel === invocation.slotLevel && slot.expended < slot.count,
+    ) === true
+  );
+}
+
+function spellTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: ATTACK_TARGET_HOLE_ID,
+    holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
+    label:
+      invocation.kind === "preparedSlotSpell"
+        ? `${invocation.spell.name} all-darts target`
+        : `${invocation.spell.name} target`,
+    choices: [...state.combatants.keys()].filter(
+      (id) =>
+        id !== actorId && spellTargetIsLegal(state, actorId, id, invocation),
+    ),
+  };
+}
+
+function spellTargetIsLegal(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): boolean {
+  const distanceFeet = combatantDistanceFeet(state, actorId, targetId);
+  return distanceFeet !== undefined && distanceFeet <= invocation.rangeFeet;
+}
+
+function spellAttackRollHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly kind: "cantripSpellAttack" }
+  >,
+): BattleSpellAttackRollHole {
+  return {
+    kind: "attackRoll",
+    holeId: ATTACK_ROLL_HOLE_ID,
+    holeInstanceKey: ATTACK_ROLL_HOLE_INSTANCE,
+    label: `${invocation.spell.name} spell attack roll`,
+    spell: invocation,
+    attackBonus: invocation.attackBonus,
+  };
+}
+
+function spellDamageHole(
+  invocation: SupportedSpellInvocation,
+  critical = false,
+): BattleSpellDamageRollHole {
+  const expr = spellDamageExpression(invocation, critical);
+  return {
+    kind: "rolledDice",
+    holeId: holeId(`battle:spell:damage-result:${invocation.spell.id}:${expr}`),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:damage-result:${invocation.spell.id}:${expr}`,
+    ),
+    label: `${invocation.spell.name} damage (${expr})`,
+    spell: invocation,
+    critical,
+  };
+}
+
+function validateSpellDamageFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  invocation: SupportedSpellInvocation,
+  critical: boolean,
+): string | null {
+  if (fill.holeId !== spellDamageHole(invocation, critical).holeId) {
+    return critical
+      ? "Critical hit spell damage must use the critical spell damage hole."
+      : "Spell damage must use the selected Spell Invocation damage hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, {
+    dice:
+      invocation.kind === "preparedSlotSpell"
+        ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
+        : invocation.damage.expr.dice * (critical ? 2 : 1),
+    dieSize: invocation.damage.expr.dieSize,
+  });
+  return validation?.reason ?? null;
+}
+
+function applySpellDamage(
+  state: BattleState,
+  targetId: CombatantId,
+  invocation: SupportedSpellInvocation,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  critical: boolean,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target == null) {
+    return state;
+  }
+  const diceTotal = damageRoll.value.reduce(
+    (total, group) =>
+      total +
+      group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      ),
+    0,
+  );
+  const flat =
+    (invocation.damage.expr.flat ?? 0) *
+    (invocation.kind === "preparedSlotSpell"
+      ? invocation.targeting.repeatedEffectCount
+      : 1);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      targetId,
+      applyHpDamage(
+        target,
+        damageAmountAfterTargetAdjustments(
+          target,
+          diceTotal + flat,
+          invocation.damage.damageType,
+        ),
+        { deathFailuresAtZeroHp: critical ? 2 : 1 },
+      ),
+    ),
+  };
+}
+
+function applySpellActiveEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): BattleState {
+  if (invocation.kind !== "cantripSpellAttack") {
+    return state;
+  }
+  const target = state.combatants.get(targetId);
+  if (target == null) {
+    return state;
+  }
+
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects,
+        {
+          kind: "speedDelta",
+          sourceSpellId: invocation.spell.id,
+          sourceCombatantId: actorId,
+          deltaFeet: invocation.speedReduction.deltaFeet,
+          expiresAt: {
+            kind: "startOfTurn",
+            combatantId: actorId,
+          },
+        },
+      ],
+    }),
+  };
+}
+
+function expendSpellSlot(
+  state: BattleState,
+  actorId: CombatantId,
+  spellLevel: number,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (
+    actor?.origin.kind !== "character" ||
+    actor.origin.spellcasting === undefined
+  ) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        spellcasting: {
+          ...actor.origin.spellcasting,
+          spellSlots: actor.origin.spellcasting.spellSlots.map((slot) =>
+            slot.spellLevel === spellLevel && slot.expended < slot.count
+              ? { ...slot, expended: slot.expended + 1 }
+              : slot,
+          ),
+        },
+      },
+    }),
+  };
+}
+
+function spellDamageExpression(
+  invocation: SupportedSpellInvocation,
+  critical = false,
+): string {
+  const dice =
+    invocation.kind === "preparedSlotSpell"
+      ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
+      : invocation.damage.expr.dice * (critical ? 2 : 1);
+  const flat =
+    (invocation.damage.expr.flat ?? 0) *
+    (invocation.kind === "preparedSlotSpell"
+      ? invocation.targeting.repeatedEffectCount
+      : 1);
+  return `${dice}d${invocation.damage.expr.dieSize}${signedModifier(flat)}-${invocation.damage.damageType}`;
 }
 
 function needsHolesResult(
@@ -1393,7 +2385,10 @@ function attackDamageHoleId(
 
 function supportedAttackProfile(
   state: BattleState,
-  subject: Extract<BattleSubject, { readonly tag: "srdAction" }>,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "srdAction"; readonly action: "attack" }
+  >,
 ): BattleAttackProfile | undefined {
   return supportedAttackProfiles(state, subject.actorId).find(
     (attack) => attackProfileName(attack) === subject.attackName,

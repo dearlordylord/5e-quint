@@ -4,6 +4,7 @@ import {
   battleId,
   characterId,
   combatantId,
+  discoverBattleActs,
   initiativeScore,
   snapshotBattle,
 } from "@dnd/battle-runtime";
@@ -108,6 +109,38 @@ describe("MCP server route", () => {
     expect(state.combatants.get(goblinId)?.initiative).toBe(11);
     expect(root.sessionStore.snapshot().battleState).toBe(state);
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
+  });
+
+  test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
+    const root = createMcpCompositionRoot();
+    const state = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-root-fighter-two"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Orc Soldier Fighter 2",
+        build: fighterTwoCharacterBuild(root.unitLibrary),
+        initiative: initiativeScore(12),
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+      },
+      unitLibrary: root.unitLibrary,
+    });
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "fighter_action_surge",
+        },
+      ]),
+    );
   });
 
   test("registers final user-facing Surface-runtime character tool names", () => {
@@ -1050,6 +1083,63 @@ function fighterCharacterBuild(
   });
   if (result.tag !== "ready") {
     throw new Error("Expected complete manifest draft to finalize.");
+  }
+
+  return result.build;
+}
+
+function fighterTwoCharacterBuild(
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+): CharacterBuild {
+  const draft = createTestDraft("draft:mcp-complete-fighter-two");
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: initialManifestFills(),
+    }),
+  );
+  const afterAdvancement = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.advancement.initial",
+          "class_fighter:level_2",
+        ),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterAdvancement,
+      unitLibrary,
+      expectedRevision: afterAdvancement.revision,
+      fills: manifestChoiceFills(),
+    }),
+  );
+  const afterPurchase = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: manifestPurchaseFills(),
+    }),
+  );
+  const finalDraft = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: manifestLoadoutFills(),
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: finalDraft, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error("Expected complete Fighter 2 manifest draft to finalize.");
   }
 
   return result.build;

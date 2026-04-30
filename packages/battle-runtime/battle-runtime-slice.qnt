@@ -17,6 +17,17 @@ module battleRuntimeSlice {
   //   monsters use Monster Death at 0 HP; Character Build combatants use the
   //   Death Saving Throw lifecycle, including instant death from massive
   //   damage.
+  // - Classes/Fighter.md lines 76-80: Action Surge grants one additional action
+  //   except Magic, spends one use per Short or Long Rest, and is limited to
+  //   once per turn.
+  // - Spells/Gaining-and-Casting.md lines 40-65 and 178-182, Classes/Wizard.md
+  //   lines 56-82, Spells/Descriptions-M-P.md lines 86-96, and
+  //   Spells/Descriptions-Q-R.md lines 41-52: prepared level-1 Wizard spells
+  //   spend Spell Slots; cantrips do not; spell attacks add Proficiency Bonus;
+  //   Magic Missile can put all darts on one target; Ray of Frost reduces Speed
+  //   until the start of the caster's next turn.
+  // - Monsters/Monsters-P-S.md lines 1152-1175 and UBIQUITOUS_LANGUAGE.md:
+  //   Skeleton has Bludgeoning vulnerability and Poison damage immunity.
   //
   // This slice is the package-local parity reference for implemented
   // @dnd/battle-runtime behavior. The root battle.qnt remains the broader
@@ -24,6 +35,10 @@ module battleRuntimeSlice {
   // canonical battle spec.
 
   type Actor = Fighter | Goblin
+
+  type DamageType = Bludgeoning | Poison | Force | Cold | Slashing | Piercing
+
+  type SpellInvocation = MagicMissile | RayOfFrost
 
   type Hole = TargetChoice | AttackRoll | DamageRoll
 
@@ -51,6 +66,12 @@ module battleRuntimeSlice {
     goblin: Combatant,
     actionAvailable: bool,
     bonusActionAvailable: bool,
+  }
+
+  type ActionSurgeResult = {
+    state: BattleState,
+    usesRemaining: int,
+    usedThisTurn: bool,
   }
 
   type AttackReplay =
@@ -191,6 +212,59 @@ module battleRuntimeSlice {
       if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
   }
 
+  pure def damageAfterAdjustments(
+    damage: int,
+    damageType: DamageType,
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType],
+  ): int =
+    if (immunities.contains(damageType)) 0
+    else if (vulnerabilities.contains(damageType)) damage * 2
+    else damage
+
+  pure def grantActionSurge(
+    state: BattleState,
+    usesRemaining: int,
+    usedThisTurn: bool,
+  ): ActionSurgeResult =
+    if (currentActor(state) == Fighter and usesRemaining > 0 and not(usedThisTurn))
+      {
+        state: { ...state, actionAvailable: true },
+        usesRemaining: usesRemaining - 1,
+        usedThisTurn: true,
+      }
+    else
+      { state: state, usesRemaining: usesRemaining, usedThisTurn: usedThisTurn }
+
+  pure def expendedSlotsAfterInvocation(
+    invocation: SpellInvocation,
+    expendedLevelOneSlots: int,
+  ): int =
+    match invocation {
+      | MagicMissile => expendedLevelOneSlots + 1
+      | RayOfFrost => expendedLevelOneSlots
+    }
+
+  pure def spellAttackModifier(
+    spellcastingAbilityModifier: int,
+    proficiencyBonus: int,
+  ): int =
+    spellcastingAbilityModifier + proficiencyBonus
+
+  pure def magicMissileAllDartsDamage(
+    dieTotal: int,
+    dartCount: int,
+    flatPerDart: int,
+  ): int =
+    dieTotal + (dartCount * flatPerDart)
+
+  pure def rayOfFrostSpeedEffectActive(
+    hit: bool,
+    currentActor: Actor,
+    caster: Actor,
+  ): bool =
+    hit and currentActor != caster
+
   pure def applyDropToZeroHp(target: Combatant): Combatant =
     match target.lifecycle {
       | DiesAtZeroHp => target
@@ -255,6 +329,39 @@ module battleRuntimeSlice {
     all {
       assert(result.actionAvailable == false),
       assert(result.fighter.hp == 5),
+    }
+  }
+
+  run test_skeleton_damage_adjustments_apply_vulnerability_and_immunity = {
+    all {
+      assert(damageAfterAdjustments(5, Bludgeoning, Set(Bludgeoning), Set(Poison)) == 10),
+      assert(damageAfterAdjustments(5, Poison, Set(Bludgeoning), Set(Poison)) == 0),
+    }
+  }
+
+  run test_action_surge_grants_one_extra_action_and_spends_use = {
+    val result = grantActionSurge({ ...initialState, actionAvailable: false }, 1, false)
+    all {
+      assert(result.state.actionAvailable),
+      assert(result.usesRemaining == 0),
+      assert(result.usedThisTurn),
+      assert(grantActionSurge(result.state, result.usesRemaining, result.usedThisTurn) == result),
+    }
+  }
+
+  run test_spell_invocation_slot_spend_distinguishes_prepared_spell_from_cantrip = {
+    all {
+      assert(expendedSlotsAfterInvocation(MagicMissile, 0) == 1),
+      assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
+    }
+  }
+
+  run test_spell_invocation_executable_spell_facts = {
+    all {
+      assert(spellAttackModifier(3, 2) == 5),
+      assert(magicMissileAllDartsDamage(3, 3, 1) == 6),
+      assert(rayOfFrostSpeedEffectActive(true, Goblin, Fighter)),
+      assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
     }
   }
 

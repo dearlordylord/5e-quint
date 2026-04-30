@@ -25,7 +25,7 @@ import {
 } from "./index.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { DieRollResult, Hp } from "@dnd/shared/types";
+import { DieRollResult, Hp, proficiencyBonus } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -34,7 +34,10 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import magicMissileInput from "../../surface/content/magic_missile.json";
+import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 
 const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
 const battleRuntimeSlicePath = fileURLToPath(
@@ -42,6 +45,8 @@ const battleRuntimeSlicePath = fileURLToPath(
 );
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
+const skeletonId = combatantId("skeleton");
+const wizardId = combatantId("wizard");
 const distantFighterId = combatantId("distant-fighter");
 const longRangeFighterId = combatantId("long-range-fighter");
 type BattleFillableHole = Pick<BattleHole, "kind" | "holeId">;
@@ -62,6 +67,11 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
+const testSpellRecords = new Map(
+  [magicMissileInput, rayOfFrostInput]
+    .map((input) => decodeUnitRecordSync(input))
+    .flatMap((unit) => (unit.kind === "spell" ? [[unit.id, unit]] : [])),
+);
 
 describe("battle runtime", () => {
   test("initiative scores must be integers", () => {
@@ -1412,6 +1422,418 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Skeleton Bludgeoning vulnerability and Poison immunity modify supported damage paths", () => {
+    const state = startBattle({
+      battleId: battleId("battle-skeleton-damage-modifiers"),
+      combatants: [
+        characterSeed({ initiative: 20, attack: testLightHammerAttack() }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const flailSubject = fighterAttackSubject("Flail");
+    const targetHole = attackInitialTargetHole(state, flailSubject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, flailSubject);
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 14, naturalD20: 10 },
+      flailSubject,
+      skeletonId,
+    );
+
+    const bludgeoning = resolveBattleSubject({
+      state,
+      subject: flailSubject,
+      fills: [
+        targetFill(targetHole, skeletonId),
+        attackRollFill(rollHole, { total: 14, naturalD20: 10 }),
+        damageRollFill(damageHole, 2),
+      ],
+    });
+
+    expect(bludgeoning).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: skeletonId, hp: 3 },
+        ],
+      },
+    });
+
+    const poisonState = startBattle({
+      battleId: battleId("battle-skeleton-poison-immunity"),
+      combatants: [
+        characterSeed({ initiative: 20, attack: testPoisonWeaponAttack() }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const poisonSubject = fighterAttackSubject("Flail");
+    const poisonTarget = attackInitialTargetHole(poisonState, poisonSubject);
+    const poisonRoll = attackRollHoleAfterTarget(
+      poisonState,
+      poisonTarget,
+      poisonSubject,
+    );
+    const poisonDamage = attackDamageHoleAfterHit(
+      poisonState,
+      poisonTarget,
+      poisonRoll,
+      { total: 14, naturalD20: 10 },
+      poisonSubject,
+      skeletonId,
+    );
+    const poison = resolveBattleSubject({
+      state: poisonState,
+      subject: poisonSubject,
+      fills: [
+        targetFill(poisonTarget, skeletonId),
+        attackRollFill(poisonRoll, { total: 14, naturalD20: 10 }),
+        damageRollFill(poisonDamage, 4),
+      ],
+    });
+
+    expect(poison).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+      },
+    });
+  });
+
+  test("Action Surge grants one additional non-Magic action and cannot be used twice in one turn", () => {
+    const state = {
+      ...startBattle({
+        battleId: battleId("battle-action-surge"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            resources: [actionSurgeResource()],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+      currentTurnResources: {
+        actionResources: [],
+        currentHasBonusAction: true,
+      },
+    } satisfies BattleState;
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual([
+      {
+        tag: "unitFeature",
+        actorId: fighterId,
+        unitId: "fighter_action_surge",
+      },
+      { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
+    ]);
+
+    const surged = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "unitFeature",
+        actorId: fighterId,
+        unitId: "fighter_action_surge",
+      },
+      fills: [],
+    });
+
+    expect(surged).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentTurnResources: {
+          actionResources: [
+            {
+              kind: "action",
+              source: "unit",
+              sourceOwnerId: fighterId,
+              sourceUnitId: "fighter_action_surge",
+              restriction: { kind: "exclude", actions: ["magic"] },
+            },
+          ],
+        },
+        acts: [
+          expect.objectContaining({
+            subject: expect.objectContaining({ action: "attack" }),
+          }),
+          expect.objectContaining({
+            subject: {
+              tag: "runtimeCommand",
+              actorId: fighterId,
+              command: "endTurn",
+            },
+          }),
+        ],
+      },
+    });
+
+    if (surged.tag !== "resolved") {
+      throw new Error(`Expected resolved Action Surge, got ${surged.tag}.`);
+    }
+    expect(
+      surged.snapshot.acts.some(
+        (act) =>
+          act.subject.tag === "srdAction" && act.subject.action === "magic",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: surged.state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "fighter_action_surge",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("Wizard Spell Invocations spend slots for prepared level-1 spells but not cantrips", () => {
+    const magicMissileState = wizardVsSkeletonBattle();
+    expect(
+      discoverBattleActs(magicMissileState).map((act) => act.subject),
+    ).toEqual([
+      {
+        tag: "srdAction",
+        actorId: wizardId,
+        action: "magic",
+        spellId: "magic_missile",
+      },
+      {
+        tag: "srdAction",
+        actorId: wizardId,
+        action: "magic",
+        spellId: "ray_of_frost",
+      },
+      { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
+    ]);
+
+    const magicMissileTarget = requireHole(
+      resolveBattleSubject({
+        state: magicMissileState,
+        subject: magicSubject("magic_missile"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    expect(magicMissileTarget).toMatchObject({
+      label: "Magic Missile all-darts target",
+      choices: [skeletonId],
+    });
+    const magicMissileDamage = requireHole(
+      resolveBattleSubject({
+        state: magicMissileState,
+        subject: magicSubject("magic_missile"),
+        fills: [targetFill(magicMissileTarget, skeletonId)],
+      }),
+      "rolledDice",
+    );
+    expect(magicMissileDamage).toMatchObject({
+      label: "Magic Missile damage (3d4+3-force)",
+    });
+
+    const magicMissile = resolveBattleSubject({
+      state: magicMissileState,
+      subject: magicSubject("magic_missile"),
+      fills: [
+        targetFill(magicMissileTarget, skeletonId),
+        damageRollFillWithGroups(magicMissileDamage, [[1, 1, 1]]),
+      ],
+    });
+    expect(magicMissile).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: skeletonId, hp: 7 },
+        ],
+        currentTurnResources: { actionResources: [] },
+      },
+    });
+    expect(expendedLevelOneSlots(requireResolved(magicMissile), wizardId)).toBe(
+      1,
+    );
+
+    const rayState = wizardVsSkeletonBattle();
+    const rayTarget = requireHole(
+      resolveBattleSubject({
+        state: rayState,
+        subject: magicSubject("ray_of_frost"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const rayRoll = requireHole(
+      resolveBattleSubject({
+        state: rayState,
+        subject: magicSubject("ray_of_frost"),
+        fills: [targetFill(rayTarget, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    expect(rayRoll).toMatchObject({
+      attackBonus: 5,
+    });
+    const rayDamage = requireHole(
+      resolveBattleSubject({
+        state: rayState,
+        subject: magicSubject("ray_of_frost"),
+        fills: [
+          targetFill(rayTarget, skeletonId),
+          attackRollFill(rayRoll, { total: 14, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const ray = resolveBattleSubject({
+      state: rayState,
+      subject: magicSubject("ray_of_frost"),
+      fills: [
+        targetFill(rayTarget, skeletonId),
+        attackRollFill(rayRoll, { total: 14, naturalD20: 10 }),
+        damageRollFill(rayDamage, 4),
+      ],
+    });
+
+    expect(ray).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          {
+            combatantId: skeletonId,
+            hp: 9,
+            activeEffects: [
+              {
+                kind: "speedDelta",
+                sourceSpellId: "ray_of_frost",
+                sourceCombatantId: wizardId,
+                deltaFeet: -10,
+                expiresAt: {
+                  kind: "startOfTurn",
+                  combatantId: wizardId,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(expendedLevelOneSlots(requireResolved(ray), wizardId)).toBe(0);
+
+    const criticalRayState = wizardVsSkeletonBattle();
+    const criticalRayTarget = requireHole(
+      resolveBattleSubject({
+        state: criticalRayState,
+        subject: magicSubject("ray_of_frost"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const criticalRayRoll = requireHole(
+      resolveBattleSubject({
+        state: criticalRayState,
+        subject: magicSubject("ray_of_frost"),
+        fills: [targetFill(criticalRayTarget, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    const criticalRayDamage = requireHole(
+      resolveBattleSubject({
+        state: criticalRayState,
+        subject: magicSubject("ray_of_frost"),
+        fills: [
+          targetFill(criticalRayTarget, skeletonId),
+          attackRollFill(criticalRayRoll, { total: 20, naturalD20: 20 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(criticalRayDamage).toMatchObject({
+      label: "Ray of Frost damage (2d8-cold)",
+      critical: true,
+    });
+    expect(
+      resolveBattleSubject({
+        state: criticalRayState,
+        subject: magicSubject("ray_of_frost"),
+        fills: [
+          targetFill(criticalRayTarget, skeletonId),
+          attackRollFill(criticalRayRoll, { total: 20, naturalD20: 20 }),
+          damageRollFill(criticalRayDamage, 4),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state: criticalRayState,
+        subject: magicSubject("ray_of_frost"),
+        fills: [
+          targetFill(criticalRayTarget, skeletonId),
+          attackRollFill(criticalRayRoll, { total: 20, naturalD20: 20 }),
+          damageRollFillWithGroups(criticalRayDamage, [[4, 4]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: skeletonId, hp: 5 },
+        ],
+      },
+    });
+
+    const afterWizardTurn = endTurn({
+      state: requireResolved(ray).state,
+      actorId: wizardId,
+    });
+    if (afterWizardTurn.tag !== "resolved") {
+      throw new Error(
+        `Expected resolved Wizard End Turn, got ${afterWizardTurn.tag}.`,
+      );
+    }
+    const afterSkeletonTurn = endTurn({
+      state: afterWizardTurn.state,
+      actorId: skeletonId,
+    });
+    expect(afterSkeletonTurn).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentActorId: wizardId,
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: skeletonId, activeEffects: [] },
+        ],
+      },
+    });
+
+    const rayMiss = resolveBattleSubject({
+      state: rayState,
+      subject: magicSubject("ray_of_frost"),
+      fills: [
+        targetFill(rayTarget, skeletonId),
+        attackRollFill(rayRoll, { total: 1, naturalD20: 1 }),
+      ],
+    });
+    expect(rayMiss).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentTurnResources: { actionResources: [] },
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+      },
+    });
+    expect(expendedLevelOneSlots(requireResolved(rayMiss), wizardId)).toBe(0);
+  });
+
   test("endTurn advances to a new round after the last actor acts", () => {
     const afterFighter = endTurn({
       state: fighterVsGoblinBattle(),
@@ -1651,8 +2073,16 @@ function requireResolved(
   return result;
 }
 
-function subjectName(subject: BattleSubject): "attack" | "endTurn" {
-  return subject.tag === "srdAction" ? subject.action : subject.command;
+function subjectName(
+  subject: BattleSubject,
+): "attack" | "magic" | "unitFeature" | "endTurn" {
+  if (subject.tag === "srdAction") {
+    return subject.action;
+  }
+  if (subject.tag === "unitFeature") {
+    return "unitFeature";
+  }
+  return subject.command;
 }
 
 type BattleRuntimeParityProjection = {
@@ -1757,7 +2187,7 @@ function runQuintSliceSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("18 passing");
+  expect(quintOutput).toContain("22 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -1941,15 +2371,14 @@ function goblinTurnBattle(
   return afterFighter.state;
 }
 
-function fighterAttackSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "srdAction" }
-> {
+function fighterAttackSubject(
+  attackName: string = "Longsword",
+): Extract<BattleSubject, { readonly tag: "srdAction" }> {
   return {
     tag: "srdAction",
     actorId: fighterId,
     action: "attack",
-    attackName: "Longsword",
+    attackName,
   };
 }
 
@@ -2171,6 +2600,14 @@ function characterSeed(input: {
   readonly currentHp?: number;
   readonly tempHp?: number;
   readonly attack?: ReturnType<typeof testLongswordAttack> | null;
+  readonly resources?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"];
+  readonly spellcasting?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"];
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId ?? fighterId,
@@ -2189,6 +2626,10 @@ function characterSeed(input: {
         weapon: { unitId: "weapon_longsword", grip: "one_handed" },
       },
       attack: input.attack === undefined ? testLongswordAttack() : input.attack,
+      ...(input.resources === undefined ? {} : { resources: input.resources }),
+      ...(input.spellcasting === undefined
+        ? {}
+        : { spellcasting: input.spellcasting }),
     },
   };
 }
@@ -2207,6 +2648,41 @@ function testLongswordAttack(): Extract<
     weapon,
     ability: "str",
     abilityModifier: 3,
+  };
+}
+
+function testLightHammerAttack(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const weapon = unitLibrary.requireUnit("weapon_flail");
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Flail weapon Unit.");
+  }
+
+  return {
+    kind: "weapon",
+    weapon,
+    ability: "str",
+    abilityModifier: 3,
+  };
+}
+
+function testPoisonWeaponAttack(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const base = testLightHammerAttack();
+  return {
+    ...base,
+    weapon: {
+      ...base.weapon,
+      damage: { ...base.weapon.damage, damageType: "poison" },
+    },
   };
 }
 
@@ -2232,4 +2708,102 @@ function statBlockCreatureInit(input: {
 
 function statBlockRecord(): StatBlockRecord {
   return statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+}
+
+function skeletonCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  return {
+    combatantId: skeletonId,
+    displayName: "Skeleton",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "statBlock",
+      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      currentHp: Hp(13),
+      maxHp: Hp(13),
+      tempHp: Hp(0),
+      zeroHpLifecyclePolicy: "diesAtZeroHp",
+    },
+  };
+}
+
+function actionSurgeResource(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  const unit = unitLibrary.requireUnit("fighter_action_surge");
+  if (unit.kind !== "class_feature" || !("resource" in unit.mechanics)) {
+    throw new Error("Expected Action Surge resource Unit.");
+  }
+  return { unit, resource: unit.mechanics.resource };
+}
+
+function wizardVsSkeletonBattle(): BattleState {
+  return startBattle({
+    battleId: battleId("battle-wizard-skeleton"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 20,
+        attack: null,
+        spellcasting: wizardSpellcasting(),
+      }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function wizardSpellcasting(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"]
+> {
+  return {
+    spellcastingAbilityModifier: 3,
+    proficiencyBonus: proficiencyBonus(2),
+    cantrips: [spellRecord("ray_of_frost")],
+    preparedSpells: [spellRecord("magic_missile")],
+    spellSlots: [{ spellLevel: 1, count: 2 }],
+  };
+}
+
+function spellRecord(spellId: "magic_missile" | "ray_of_frost") {
+  const unit = testSpellRecords.get(spellId);
+  if (unit === undefined) {
+    throw new Error(`Expected ${spellId} spell Unit.`);
+  }
+  return unit satisfies SpellRecord;
+}
+
+function magicSubject(
+  spellId: "magic_missile" | "ray_of_frost",
+): BattleSubject {
+  return {
+    tag: "srdAction",
+    actorId: wizardId,
+    action: "magic",
+    spellId,
+  };
+}
+
+function expendedLevelOneSlots(
+  result: Extract<
+    ReturnType<typeof resolveBattleSubject>,
+    { readonly tag: "resolved" }
+  >,
+  actorId: CombatantId,
+): number {
+  const actor = result.state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected character spellcaster.");
+  }
+  return (
+    actor.origin.spellcasting?.spellSlots.find((slot) => slot.spellLevel === 1)
+      ?.expended ?? 0
+  );
 }

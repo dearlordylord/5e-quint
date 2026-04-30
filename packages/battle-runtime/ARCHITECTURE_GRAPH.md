@@ -23,11 +23,13 @@ flowchart TD
   AttackRoll["attack-roll-algebra<br/>input: AttackRollResult + Armor Class<br/>success: SRD natural 1/20 and AC hit fact<br/>why: one d20 attack-roll adjudication path"]
   RuntimeDice["runtime-dice-algebra<br/>input: rolled dice groups + weapon damage dice expression<br/>success: validated dice count/range facts<br/>why: one dice-roll validation path"]
   Discover["discoverBattleActs(state)<br/>success: AvailableBattleAct[] = subject + label + summary + initial holes<br/>why: public act discovery API<br/>without: callers duplicate legality checks"]
-  Subject["BattleSubject<br/>srdAction.attack or runtimeCommand.endTurn<br/>why: stable caller-selected branch identity"]
+  Subject["BattleSubject<br/>srdAction.attack, srdAction.magic, unitFeature, or runtimeCommand.endTurn<br/>why: stable caller-selected branch identity"]
   FillSession["caller-owned BattleFill[]<br/>data: accumulated answers for a selected subject<br/>why: replay-from-root input<br/>without: partially answered forms become durable battle state"]
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
   AttackProfile["supported attack profile<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
+  UnitFeature["Unit feature activation<br/>source: retained Surface Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action and spends one use"]
+  SpellInvocation["Spell Invocation<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
   Snapshot["snapshotBattle(state)<br/>success: JSON-friendly read model<br/>why: callers do not depend on internal Map state"]
@@ -45,6 +47,8 @@ flowchart TD
   FillSession --> Resolve
   Resolve -->|runtimeCommand.endTurn| EndTurn --> State
   Resolve -->|srdAction.attack| AttackProfile --> AttackReplay
+  Resolve -->|unitFeature| UnitFeature --> State
+  Resolve -->|srdAction.magic| SpellInvocation --> Damage
   AttackReplay --> AttackRoll
   AttackReplay --> RuntimeDice
   AttackReplay --> Damage --> State
@@ -53,17 +57,19 @@ flowchart TD
   ActionEconomy --> AttackReplay
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackProfile,AttackReplay,Damage,Snapshot implemented;
+  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackProfile,AttackReplay,UnitFeature,SpellInvocation,Damage,Snapshot implemented;
 ```
 
 ## Interpretation Graph
 
 ```mermaid
 flowchart TD
-  Subject["BattleSubject<br/>srdAction(actorId, attack) or runtimeCommand(actorId, endTurn)"]
+  Subject["BattleSubject<br/>srdAction.attack, srdAction.magic, unitFeature, or runtimeCommand.endTurn"]
   CurrentActor["actorId === currentActing(state.initiative)<br/>success: continue<br/>failure: invalid wrongActor<br/>why: subject legality is turn-local"]
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn<br/>invalid: fills are not accepted"]
   Attack["srdAction.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
+  UnitFeature["unitFeature Action Surge<br/>success: spend use-count resource and grant non-Magic action<br/>invalid: no use remains or already used this turn"]
+  Magic["srdAction.magic + spellId<br/>success: staged Spell Invocation replay<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
   AttackProfile["supported attack profile<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
   Target["target choice<br/>choices filtered by selected attack reach or normal range and combatant distance<br/>needsHoles until caller selects a legal combatant"]
   Roll["attack roll<br/>needsHoles until caller supplies AttackRollResult"]
@@ -74,17 +80,20 @@ flowchart TD
   Subject --> CurrentActor
   CurrentActor --> EndTurn
   CurrentActor --> Attack --> AttackProfile --> Target --> Roll --> HitCheck
+  CurrentActor --> UnitFeature
+  CurrentActor --> Magic
   HitCheck -->|hit| DamageHole --> Apply
   HitCheck -->|miss| Apply
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class Subject,CurrentActor,EndTurn,Attack,AttackProfile,Target,Roll,HitCheck,DamageHole,Apply implemented;
+  class Subject,CurrentActor,EndTurn,Attack,UnitFeature,Magic,AttackProfile,Target,Roll,HitCheck,DamageHole,Apply implemented;
 ```
 
 ## Implemented Slice Boundaries
 
-- Public subjects are `srdAction.attack` with an authored `attackName` and
-  `runtimeCommand.endTurn`.
+- Public subjects are `srdAction.attack` with an authored `attackName`,
+  `srdAction.magic` with a retained Spell Record id, `unitFeature` with a
+  retained Unit id, and `runtimeCommand.endTurn`.
 - Fills are caller/session state, not durable `BattleState`.
 - Initiative scores are caller-supplied in `BattleCreatureInit`; this runtime
   orders turns from those scores but does not derive them from Stat Blocks.
@@ -95,6 +104,16 @@ flowchart TD
   named attacks derived from `StatBlockRecord.actions.attacks`.
 - Character-derived attacks come from a supported weapon attack profile
   assembled at the composition boundary.
+- Character-derived Action Surge comes from a retained Surface Unit plus
+  runtime use-count state. It grants a Unit-sourced action resource carrying
+  the authored non-Magic restriction.
+- Character-derived Wizard Spell Invocations come from retained Spell Records
+  plus runtime Spell Slot and active-effect state. Prepared level-1 spells spend
+  slots; cantrips do not. `magic_missile` is narrowed by a support gate to all
+  repeated darts at one target. `ray_of_frost` requires both its Cold damage and
+  Speed-reduction rider before discovery.
+- Stat Block damage vulnerabilities, resistances, and immunities are read from
+  the retained `StatBlockRecord` at the HP mutation boundary.
 - Unsupported Stat Block attack branches such as Multiattack and unsupported
   conditional on-hit riders are filtered by support gates and are not copied
   into MCP state.

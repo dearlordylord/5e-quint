@@ -2,6 +2,7 @@ import {
   battleCreatureInitFromStatBlock,
   scoreModifier,
   startBattle,
+  type CharacterBattleResourceInit,
   type CharacterWeaponAttackProfile,
   type BattleId,
   type BattleState,
@@ -22,8 +23,8 @@ import {
   zeroAbilityModifiers,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import { Hp } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import { Hp, proficiencyBonus } from "@dnd/shared/types";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match } from "effect";
 
@@ -89,8 +90,31 @@ export function battleCreatureInitFromCharacterBuild(
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
       selectedLoadout: input.build.equipment,
       attack: characterAttackProfile(input.build, input.unitLibrary),
+      resources: characterBattleResources(input.build, input.unitLibrary),
+      ...(input.build.spellcasting === undefined
+        ? {}
+        : {
+            spellcasting: characterSpellcasting(input.build, input.unitLibrary),
+          }),
     },
   };
+}
+
+function characterBattleResources(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): readonly CharacterBattleResourceInit[] {
+  return build.resources.map((resource) => {
+    const unit = unitLibrary.requireUnit(resource.unitId);
+    if (unit.kind !== "class_feature") {
+      throw new Error(`Expected class feature Unit for resource: ${unit.id}`);
+    }
+
+    return {
+      unit,
+      resource: resource.resource,
+    };
+  });
 }
 
 function characterArmorClassState(
@@ -197,4 +221,48 @@ function characterAttackProfile(
     ability: "str",
     abilityModifier: scoreModifier(build.abilityScores.str),
   };
+}
+
+function characterSpellcasting(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"]
+> {
+  const spellcasting = build.spellcasting;
+  if (spellcasting === undefined) {
+    throw new Error("Character build does not have spellcasting.");
+  }
+
+  return {
+    spellcastingAbilityModifier: scoreModifier(
+      build.abilityScores[spellcasting.spellcastingAbility],
+    ),
+    proficiencyBonus: proficiencyBonus(characterLevel(build)),
+    cantrips: spellcasting.cantrips.map((spellId) =>
+      requireSpell(unitLibrary, spellId),
+    ),
+    preparedSpells: spellcasting.preparedSpells.map((spellId) =>
+      requireSpell(unitLibrary, spellId),
+    ),
+    spellSlots: spellcasting.spellSlots,
+  };
+}
+
+function characterLevel(build: CharacterBuild): number {
+  return build.advancement.entries.reduce(
+    (total, entry) => total + entry.level,
+    0,
+  );
+}
+
+function requireSpell(unitLibrary: UnitCatalog, unitId: UnitRecord["id"]) {
+  const unit = unitLibrary.requireUnit(unitId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected spell Unit: ${unitId}`);
+  }
+  return unit satisfies SpellRecord;
 }

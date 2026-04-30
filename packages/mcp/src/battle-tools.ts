@@ -1,7 +1,6 @@
 import {
   resolveBattleSubject,
   snapshotBattle,
-  type BattleCreatureState,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -29,6 +28,7 @@ import {
   startBattleInputSchema,
 } from "./battle-tool-input.ts";
 import { startBattleFromCharacterBuildAndStatBlock } from "./battle-creature-init.ts";
+import { battleStateProjection } from "./battle-state-projection.ts";
 import { errorContent, jsonContent } from "./tool-content.ts";
 
 export const battleToolDefinitions = [
@@ -418,35 +418,21 @@ function noStoredBattleContent() {
 function sameBattleSubject(left: BattleSubject, right: BattleSubject): boolean {
   if (left.tag !== right.tag || left.actorId !== right.actorId) return false;
   if (left.tag === "srdAction" && right.tag === "srdAction") {
-    return left.action === right.action && left.attackName === right.attackName;
+    if (left.action !== right.action) return false;
+    if (left.action === "attack" && right.action === "attack") {
+      return left.attackName === right.attackName;
+    }
+    if (left.action === "magic" && right.action === "magic") {
+      return left.spellId === right.spellId;
+    }
+    return false;
+  }
+  if (left.tag === "unitFeature" && right.tag === "unitFeature") {
+    return left.unitId === right.unitId;
   }
   if (left.tag === "runtimeCommand" && right.tag === "runtimeCommand") {
     return left.command === right.command;
   }
 
   return false;
-}
-
-function battleStateProjection(state: BattleState) {
-  return {
-    battleId: state.battleId,
-    initiative: state.initiative,
-    combatants: Array.from(state.combatants.values()).map(
-      battleCreatureStateProjection,
-    ),
-    currentTurnResources: state.currentTurnResources,
-  };
-}
-
-function battleCreatureStateProjection(combatant: BattleCreatureState) {
-  return {
-    combatantId: combatant.combatantId,
-    displayName: combatant.displayName,
-    initiative: combatant.initiative,
-    hp: combatant.hp,
-    maxHp: combatant.maxHp,
-    tempHp: combatant.tempHp,
-    originKind: combatant.origin.kind,
-    zeroHpLifecycle: combatant.zeroHpLifecycle,
-  };
 }
