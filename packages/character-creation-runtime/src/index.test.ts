@@ -681,23 +681,6 @@ describe("character creation hole discovery", () => {
     );
   });
 
-  test("crashes when a level-1 Fighter grant is not modeled", () => {
-    const draft = draftWithSelections({
-      primaryClass: "class_fighter",
-      advancement: {
-        entries: [{ classUnitId: "class_fighter", level: 1 }],
-      },
-    });
-
-    expect(() =>
-      discoverCreationHoles({
-        draft,
-        unitLibrary: unitLibraryWithLevelOneFighterGrant("fighter_future_l1"),
-      }),
-    ).toThrow(
-      "Unsupported level-1 Fighter feature grant in character creation: fighter_future_l1",
-    );
-  });
 });
 
 describe("character creation QNT slice parity", () => {
@@ -1666,10 +1649,6 @@ describe("character creation finalization", () => {
     const originalPurchasableEquipmentUnitIds =
       mutableProfile.purchasableEquipmentUnitIds;
     const originalLoadoutChoices = mutableProfile.loadoutChoices;
-    const originalFinalizedChoiceSelections =
-      mutableProfile.manifest.finalizedChoiceSelections;
-    const originalFinalizedEquipmentUnitIds =
-      mutableProfile.manifest.finalizedEquipmentUnitIds;
     const spearWeaponLoadout: SupportedLoadoutChoice = {
       choiceKey: "loadout_weapon",
       unitId: "weapon_spear",
@@ -1693,22 +1672,6 @@ describe("character creation finalization", () => {
       originalLoadoutChoices[0]!,
       originalLoadoutChoices[1]!,
       spearWeaponLoadout,
-    ];
-    mutableProfile.manifest.finalizedChoiceSelections =
-      originalFinalizedChoiceSelections.map((choice) =>
-        choice.source.unitId === "weapon_longsword" &&
-        choice.source.choiceKey === "loadout_weapon"
-          ? selectedLoadoutChoice(
-              "weapon_spear",
-              "loadout_weapon",
-              "wielded_one_handed",
-            )
-          : choice,
-      );
-    mutableProfile.manifest.finalizedEquipmentUnitIds = [
-      "armor_chain_mail",
-      "weapon_spear",
-      "equipment_shield",
     ];
 
     try {
@@ -1754,10 +1717,6 @@ describe("character creation finalization", () => {
       mutableProfile.purchasableEquipmentUnitIds =
         originalPurchasableEquipmentUnitIds;
       mutableProfile.loadoutChoices = originalLoadoutChoices;
-      mutableProfile.manifest.finalizedChoiceSelections =
-        originalFinalizedChoiceSelections;
-      mutableProfile.manifest.finalizedEquipmentUnitIds =
-        originalFinalizedEquipmentUnitIds;
     }
   });
 
@@ -1992,35 +1951,6 @@ function createTestDraft(draftId: string): CharacterDraft {
     unitLibrary,
     draftId: characterDraftId(draftId),
   });
-}
-
-function unitLibraryWithLevelOneFighterGrant(
-  featureUnitId: string,
-): UnitCatalog {
-  const units = unitLibrary.listUnits().map((unit) =>
-    unit.id === "class_fighter" && unit.kind === "class"
-      ? {
-          ...unit,
-          featureGrants: [
-            ...unit.featureGrants,
-            { level: 1, unitId: featureUnitId },
-          ],
-        }
-      : unit,
-  );
-
-  return {
-    ...unitLibrary,
-    listUnits: () => units,
-    requireUnit: (id) => {
-      const unit = units.find((candidate) => candidate.id === id);
-      if (unit == null) {
-        throw new Error(`Missing test Unit: ${id}`);
-      }
-
-      return unit;
-    },
-  };
 }
 
 function unitLibraryWithUnrelatedUnits(count: number): UnitCatalog {
@@ -2356,10 +2286,6 @@ type MutableSupportProfile = {
   };
   purchasableEquipmentUnitIds: UnitRecord["id"][];
   loadoutChoices: SupportedLoadoutChoice[];
-  manifest: {
-    finalizedChoiceSelections: CharacterChoiceSelection[];
-    finalizedEquipmentUnitIds: UnitRecord["id"][];
-  };
 };
 
 const HOLE_ID_TO_QNT_VARIANT = {

@@ -26,6 +26,7 @@ import { Hp } from "@dnd/shared/types";
 import {
   battleToolDefinitions,
   characterToolDefinitions,
+  contentToolDefinitions,
   createMcpCompositionRoot,
   handleToolCall,
   startBattleFromCharacterBuildAndStatBlock,
@@ -146,6 +147,14 @@ describe("MCP server route", () => {
     );
   });
 
+  test("registers agent-facing content discovery tool names", () => {
+    expect(contentToolDefinitions.map((tool) => tool.name)).toEqual([
+      "describe_mcp_workflow",
+      "list_stat_blocks",
+      "list_supported_units",
+    ]);
+  });
+
   test("registers final user-facing Surface-runtime character tool names", () => {
     expect(characterToolDefinitions.map((tool) => tool.name)).toEqual([
       "create_character_draft",
@@ -166,6 +175,55 @@ describe("MCP server route", () => {
       "resolve_battle_act",
       "end_turn",
       "end_battle",
+    ]);
+  });
+
+  test("describes MCP workflow and lists discoverable catalogs through tools", () => {
+    const root = createMcpCompositionRoot();
+    const workflow = readPayload(
+      handleToolCall(root, "describe_mcp_workflow", {}),
+    );
+    expect(workflow).toMatchObject({
+      resultPaths: {
+        creationHoles: "holes",
+        battleActs: "snapshot.acts",
+        followUpBattleHoles: "result.holes",
+      },
+      acceptedInputs: {
+        choiceFill: expect.stringContaining('"kind":"choice"'),
+        attackRollFill: expect.stringContaining('"kind":"attackRoll"'),
+      },
+    });
+
+    const units = readPayload(handleToolCall(root, "list_supported_units", {}));
+    expect(units.unitsByKind.class).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "class_fighter", name: "Fighter" }),
+        expect.objectContaining({ id: "class_wizard", name: "Wizard" }),
+      ]),
+    );
+    expect(units.unitsByKind.spell).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "magic_missile", name: "Magic Missile" }),
+      ]),
+    );
+
+    const statBlocks = readPayload(
+      handleToolCall(root, "list_stat_blocks", {}),
+    );
+    expect(statBlocks.statBlocks).toEqual([
+      expect.objectContaining({
+        statBlockId: "stat_block_goblin_warrior",
+        displayName: "Goblin Warrior",
+        attacks: expect.arrayContaining([
+          expect.objectContaining({ attackName: "Scimitar" }),
+        ]),
+      }),
+      expect.objectContaining({
+        statBlockId: "stat_block_skeleton",
+        displayName: "Skeleton",
+        damageVulnerabilities: ["bludgeoning"],
+      }),
     ]);
   });
 
@@ -613,7 +671,6 @@ describe("MCP server route", () => {
     expect(rejected).toMatchObject({
       details: {
         code: "INVALID_ARGUMENTS",
-        expected: "StartBattleToolInput",
       },
     });
     expect(root.sessionStore.battleState).toBeNull();
@@ -644,7 +701,6 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "INVALID_ARGUMENTS",
-        expected: "StartBattleToolInput",
       },
     });
     expect(
@@ -665,7 +721,6 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "INVALID_ARGUMENTS",
-        expected: "StartBattleToolInput",
       },
     });
     expect(root.sessionStore.battleState).toBeNull();
@@ -756,9 +811,7 @@ describe("MCP server route", () => {
       ),
     ).toMatchObject({
       details: {
-        code: "INVALID_FIELD",
-        field: "subject.spellId",
-        expected: "no field",
+        code: "INVALID_ARGUMENTS",
       },
     });
     expect(

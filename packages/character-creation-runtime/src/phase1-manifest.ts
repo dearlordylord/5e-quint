@@ -46,9 +46,6 @@ export const SUPPORTED_CLASS_UNIT_IDS = [
 export const SUPPORTED_BACKGROUND_UNIT_IDS = [
   PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-export const SUPPORTED_FIGHTING_STYLE_FEAT_IDS = [
-  PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
-] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_PURCHASE_UNIT_IDS = [
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
@@ -97,19 +94,7 @@ export const SUPPORTED_LANGUAGE_OPTION_IDS = [
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 
 export const FIGHTER_FIGHTING_STYLE_FEATURE_ID = "fighter_fighting_style_l1";
-export const FIGHTER_SECOND_WIND_FEATURE_ID = "fighter_second_wind";
 export const FIGHTER_WEAPON_MASTERY_FEATURE_ID = "fighter_weapon_mastery_l1";
-export const FIGHTER_ACTION_SURGE_FEATURE_ID = "fighter_action_surge";
-export const FIGHTER_TACTICAL_MIND_FEATURE_ID = "fighter_tactical_mind";
-export const WIZARD_RITUAL_ADEPT_FEATURE_ID = "wizard_ritual_adept";
-export const WIZARD_ARCANE_RECOVERY_FEATURE_ID = "wizard_arcane_recovery";
-export const LEVEL_ONE_FIGHTER_FEATURE_IDS = [
-  FIGHTER_FIGHTING_STYLE_FEATURE_ID,
-  FIGHTER_SECOND_WIND_FEATURE_ID,
-  FIGHTER_WEAPON_MASTERY_FEATURE_ID,
-] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-export type LevelOneFighterFeatureId =
-  (typeof LEVEL_ONE_FIGHTER_FEATURE_IDS)[number];
 export const PHASE1_CLASS_EQUIPMENT_OPTION_ID =
   creationChoiceOptionId("option_c");
 export const PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID =

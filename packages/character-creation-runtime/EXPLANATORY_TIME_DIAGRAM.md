@@ -139,9 +139,9 @@ sequenceDiagram
   Runtime->>Runtime: discoverClassGrantedHoles(...)
   Runtime->>Catalog: requireUnit("class_fighter")
   Runtime->>Surface: readClassCreationFacts(class_fighter)
-  Runtime->>Runtime: discoverLevelOneFighterFeatureHole(fighter_fighting_style_l1)
+  Runtime->>Runtime: discoverClassFeatureGrantHoles(fighter_fighting_style_l1)
   Runtime->>Catalog: listUnits()
-  Runtime->>Runtime: discoverLevelOneFighterFeatureHole(fighter_weapon_mastery_l1)
+  Runtime->>Runtime: discoverClassFeatureGrantHoles(fighter_weapon_mastery_l1)
   Runtime->>Catalog: requireUnit("fighter_weapon_mastery_l1")
   Runtime->>Catalog: listUnits()
   Runtime->>Runtime: startingEquipmentChoiceHole(class_fighter option_c)
@@ -164,7 +164,7 @@ sequenceDiagram
   Runtime->>Runtime: selectedChoiceOption(requireAcceptedChoiceOption(...))
   Runtime-->>Caller: accepted draft revision 2
   Runtime->>Runtime: discoverCreationHoles(new draft)
-  Runtime->>Runtime: hasPhaseOneCoinEquipmentPath(...)
+  Runtime->>Runtime: hasSupportedCoinEquipmentPath(...)
   Runtime->>Catalog: requireUnit("class_fighter")
   Runtime->>Surface: readClassCreationFacts(...)
   Runtime->>Catalog: requireUnit("background_soldier")
@@ -198,7 +198,7 @@ sequenceDiagram
   Runtime->>Runtime: finalizedSelections(draft)
   Runtime->>Runtime: finalizedSelectionIssues(selections, unitLibrary)
   Runtime->>Algebra: isValidAbilityScoreAssignment(...)
-  Runtime->>Runtime: isPhaseOneManifestBackgroundAbilityScoreIncrease(...)
+  Runtime->>Runtime: isSupportedManifestBackgroundAbilityScoreIncrease(...)
   Runtime->>Runtime: sameOptionIdMultiset(...)
   Runtime->>Runtime: sameChoiceSelectionMultiset(...)
   Runtime->>Runtime: buildCharacterBuild(...)
@@ -243,7 +243,7 @@ flowchart TD
 
   Class --> NoClass["[] because selections.primaryClass is missing"]
   Background --> NoBg["[] because selections.background is missing"]
-  Equipment --> NoEquip["[] because hasPhaseOneCoinEquipmentPath is false"]
+  Equipment --> NoEquip["[] because hasSupportedCoinEquipmentPath is false"]
 ```
 
 Each choice hole is built through `choiceHole`, which calls
@@ -318,7 +318,8 @@ flowchart TD
   Apply["applyCreationFills"]
   Dispatch["applyCreationFill"]
   DraftFill["applyDraftFill"]
-  Class["primaryClass<br/>requireSelectedUnitId -> class_fighter<br/>also creates advancement level 1"]
+  Class["primaryClass<br/>requireSelectedUnitId -> class_fighter"]
+  Advancement["advancement.initial<br/>class_fighter:level_1"]
   Background["background<br/>requireSelectedUnitId -> background_soldier"]
   Species["species<br/>requireSelectedUnitId -> species_orc"]
   Scores["abilityScoreGeneration<br/>method standardArray<br/>assigned scores"]
@@ -329,12 +330,14 @@ flowchart TD
 
   Batch --> Fill --> Validate --> Apply --> Dispatch --> DraftFill
   DraftFill --> Class
+  DraftFill --> Advancement
   DraftFill --> Background
   DraftFill --> Species
   DraftFill --> Scores
   DraftFill --> Languages
   DraftFill --> Alignment
   Class --> Rev
+  Advancement --> Rev
   Background --> Rev
   Species --> Rev
   Scores --> Rev
@@ -343,10 +346,10 @@ flowchart TD
   Rev --> Next
 ```
 
-Important detail: picking `class_fighter` writes both `primaryClass` and
-`advancement.entries: [{ classUnitId: "class_fighter", level: 1 }]`. That is why
-the later finalization can require "exactly one Fighter level" without asking
-the caller for a separate level-1 fill.
+Important detail: picking `class_fighter` writes only `primaryClass`. Advancement
+is a separate `draft.advancement.initial` fill whose selected option writes
+`advancement.entries`, such as
+`[{ classUnitId: "class_fighter", level: 1 }]`.
 
 ## Legal Batch 2: Unit-Granted Holes
 
@@ -359,8 +362,8 @@ flowchart TD
   Class["discoverClassGrantedHoles"]
   ClassRead["requireUnit(class_fighter)<br/>readClassCreationFacts"]
   Skills["choiceHole(class_fighter, fighter_skill_choices)<br/>exactly 2"]
-  Style["discoverLevelOneFighterFeatureHole(fighter_fighting_style_l1)<br/>list fighting_style feats<br/>exactly 1"]
-  Mastery["discoverLevelOneFighterFeatureHole(fighter_weapon_mastery_l1)<br/>read mechanics.choose = 3<br/>list eligible simple/martial weapons"]
+  Style["discoverClassFeatureGrantHoles(fighter_fighting_style_l1)<br/>read grant_feat fighting_style<br/>list fighting_style feats<br/>exactly 1"]
+  Mastery["discoverClassFeatureGrantHoles(fighter_weapon_mastery_l1)<br/>read weapon_mastery_choice<br/>list eligible simple/martial weapons"]
   ClassEquip["startingEquipmentChoiceHole(class_fighter)<br/>option_c coin grant"]
 
   Background["discoverBackgroundGrantedHoles"]
@@ -402,12 +405,12 @@ hole option. The runtime does not infer a Unit from a raw option id later.
 
 ## Legal Batch 3: Equipment Purchase Opens Only After Coin Path
 
-`discoverEquipmentHoles` is gated by `hasPhaseOneCoinEquipmentPath`.
+`discoverEquipmentHoles` is gated by `hasSupportedCoinEquipmentPath`.
 
 ```mermaid
 flowchart TD
   Equipment["discoverEquipmentHoles"]
-  Gate["hasPhaseOneCoinEquipmentPath"]
+  Gate["hasSupportedCoinEquipmentPath"]
   ClassBg["primaryClass and background selected<br/>and both are supported"]
   Read["readClassCreationFacts<br/>readBackgroundCreationFacts"]
   ClassChoice["hasValidSelectionForHole(class equipment option_c)"]
@@ -486,18 +489,18 @@ sequenceDiagram
   Runtime->>Narrow: finalizedSelections(draft)
   Narrow-->>Runtime: FinalizedCharacterSelections
   Runtime->>Legal: finalizedSelectionIssues(selections, unitLibrary)
-  Legal->>Legal: primaryClass === class_fighter
+  Legal->>Legal: primaryClass is supported
   Legal->>Legal: background === background_soldier
   Legal->>Legal: species === species_orc
-  Legal->>Legal: isInitialFighterAdvancement(...)
+  Legal->>Legal: isSupportedSingleClassAdvancement(...)
   Legal->>Legal: isValidAbilityScoreAssignment(...)
-  Legal->>Legal: isPhaseOneManifestBackgroundAbilityScoreIncrease(...)
+  Legal->>Legal: isSupportedManifestBackgroundAbilityScoreIncrease(...)
   Legal->>Legal: sameOptionIdMultiset(languages, Common/Dwarvish/Goblin)
   Legal->>Legal: alignment is lawful good
-  Legal->>Legal: sameChoiceSelectionMultiset(phaseOneManifestChoiceSelections)
-  Legal->>Legal: sameOptionIdMultiset(equipment, chain mail/longsword/shield)
+  Legal->>Legal: allFinalizedChoicesSupported(...)
+  Legal->>Legal: isSupportedEquipmentSelection(...)
   Legal-->>Runtime: []
-  Runtime->>Build: buildCharacterBuild({ phaseOneSelections, unitLibrary })
+  Runtime->>Build: buildCharacterBuild({ supportedSelections, unitLibrary })
   Build->>Catalog: requireUnit(class_fighter)
   Build->>Surface: readClassCreationFacts(...)
   Build->>Catalog: requireUnit(background_soldier)
@@ -591,23 +594,24 @@ functions. This inventory groups them by responsibility.
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public API                | `createCharacterDraft`, `discoverCreationHoles`, `fillCreationHoles`, `finalizeCharacterDraft`                                                                                                                                                                                                                                                                                                                                                                                      |
 | Draft discovery           | `discoverInitialDraftHoles`, `draftHole`, `hasDraftSelection`, `draftSource`, `choiceHole`, `holeIdForSource`, `unitOption`, `skillOption`                                                                                                                                                                                                                                                                                                                                          |
-| Class discovery           | `discoverClassGrantedHoles`, `discoverLevelOneFighterFeatureHole`, `startingEquipmentChoiceHole`, `unselectedUnitChoiceHole`                                                                                                                                                                                                                                                                                                                                                        |
+| Class discovery           | `discoverClassGrantedHoles`, `discoverClassFeatureGrantHoles`, `startingEquipmentChoiceHole`, `unselectedUnitChoiceHole`                                                                                                                                                                                                                                                                                                                                                            |
 | Background discovery      | `discoverBackgroundGrantedHoles`, `backgroundAbilityScoreIncreaseOptions`, `backgroundAbilityScoreIncreaseOptionId`, `backgroundToolChoiceHole`, `backgroundToolChoiceSpec`                                                                                                                                                                                                                                                                                                         |
-| Equipment discovery       | `discoverEquipmentHoles`, `hasPhaseOneCoinEquipmentPath`, `unselectedPurchaseHole`, `unselectedLoadoutHole`, `hasValidEquipmentPurchaseSelectionForHole`, `hasPurchasedUnit`                                                                                                                                                                                                                                                                                                        |
+| Equipment discovery       | `discoverEquipmentHoles`, `hasSupportedCoinEquipmentPath`, `unselectedPurchaseHole`, `unselectedLoadoutHole`, `hasValidEquipmentPurchaseSelectionForHole`, `hasPurchasedUnit`                                                                                                                                                                                                                                                                                                      |
 | Existing-selection checks | `hasValidSelectionForHole`, `choiceSelectionMatchesHole`, `hasValidBackgroundAbilityScoreIncreaseSelectionForHole`, `choiceOptionIdsFitHole`, `selectedChoiceOptionMatchesHole`, `hasDuplicateOptionIds`, `sameCreationHoleSource`                                                                                                                                                                                                                                                  |
 | Batch validation          | `creationFillIssues`, `fillIssuesForHole`, `fillKindMatchesHole`, `choiceFillIssues`, `abilityScoreFillIssues`, `unsupportedHoleSelectionOptionId`, `supportedHoleOptionIds`, `supportedDraftOptionIds`, `supportedUnitOptionIds`                                                                                                                                                                                                                                                   |
 | Issue constructors        | `wrongFillKindIssue`, `invalidChoiceIssue`, `invalidAbilityScoresIssue`, `tooFewChoicesIssue`, `tooManyChoicesIssue`, `unsupportedChoiceIssue`, `staleRevisionIssue`, `duplicateFillIssue`, `unknownHoleIssue`                                                                                                                                                                                                                                                                      |
 | Applying accepted fills   | `applyCreationFills`, `requireHole`, `applyCreationFill`, `applyDraftFill`, `applyUnitFill`, `selectedChoiceOption`, `requireSelectedUnitIds`, `requireOneOptionId`, `requireSelectedUnitId`, `requireAcceptedChoiceOption`, `requireStartingLanguages`, `requireAlignmentSelection`, `requireBackgroundAbilityScoreIncreaseSelection`                                                                                                                                              |
-| Final legality            | `finalizedSelections`, `finalizedSelectionIssues`, `phaseOneManifestChoiceSelections`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isInitialFighterAdvancement`, `isSupportedBackgroundAbilityScoreIncrease`, `isPhaseOneManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
+| Final legality            | `finalizedSelections`, `finalizedSelectionIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedSingleClassAdvancement`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
 | Build projection          | `buildCharacterBuild`, `characterBuildUnitRefs`, `requireReadable`, `applyBackgroundAbilityScoreIncrease`, `abilityModifier`, `finalizedBuildSkillProficiencies`, `finalizedBuildToolProficiencies`, `resourceForFeature`, `unitRefs`, `uniqueValues`, `nonEmptyReadonlyArray`                                                                                                                                                                                                      |
 
 ## Connascence Notes For Future Readers
 
 Several facts must change together:
 
-- Phase-1 constants such as `PHASE1_CLASS_FIGHTER_UNIT_ID`,
-  `SUPPORTED_CLASS_OPTION_IDS`, `phaseOneManifestChoiceSelections`, and
-  `finalizedSelectionIssues` all encode the supported vertical.
+- Support-profile constants such as `SUPPORTED_CLASS_UNIT_IDS`,
+  `SUPPORTED_ADVANCEMENTS`, supported option ids, and
+  `finalizedSelectionIssues` all encode the currently executable creation
+  slice.
 - `CreationHoleSource` and `holeIdForSource` are coupled by name and meaning:
   changing one requires changing fill ids, tests, and the Quint slice.
 - Choice cardinality, accepted option metadata, and selection suppression are
@@ -615,8 +619,9 @@ Several facts must change together:
   `choiceSelectionMatchesHole`.
 - Equipment purchase and loadout are intentionally ordered: loadout holes depend
   on a valid purchase selection and `hasPurchasedUnit`.
-- `applyDraftFill("draft.primaryClass")` also creates level-1 advancement; that
-  is later checked by `isInitialFighterAdvancement`.
+- `applyDraftFill("draft.advancement.initial")` creates the single-class
+  advancement entry selected from `supportedAdvancements`; finalization later
+  checks that entry with `isSupportedSingleClassAdvancement`.
 
 When extending the runtime beyond this Orc Soldier Fighter vertical, update the
 runtime, tests, Surface records/readers if needed, and

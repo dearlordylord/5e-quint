@@ -8,6 +8,11 @@ import {
   handleCharacterToolCall,
   isCharacterToolName,
 } from "./character-tools.ts";
+import {
+  contentToolDefinitions,
+  handleContentToolCall,
+  isContentToolName,
+} from "./content-tools.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import { errorContent } from "./tool-content.ts";
 
@@ -29,6 +34,12 @@ export {
   type CharacterToolResult,
 } from "./character-tools.ts";
 export {
+  contentToolDefinitions,
+  handleContentToolCall,
+  isContentToolName,
+  type ContentToolResult,
+} from "./content-tools.ts";
+export {
   createMcpCompositionRoot,
   type McpCompositionRoot,
 } from "./composition-root.ts";
@@ -43,6 +54,7 @@ export {
 } from "./session-store.ts";
 
 export const toolDefinitions = [
+  ...contentToolDefinitions,
   ...characterToolDefinitions,
   ...battleToolDefinitions,
 ];
@@ -54,6 +66,10 @@ export function handleToolCall(
 ) {
   if (isCharacterToolName(name)) {
     return handleCharacterToolCall(root, name, args);
+  }
+
+  if (isContentToolName(name)) {
+    return handleContentToolCall(root, name, args);
   }
 
   if (isBattleToolName(name)) {

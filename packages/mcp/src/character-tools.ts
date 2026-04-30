@@ -8,6 +8,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import { Schema } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -20,12 +21,37 @@ import {
   createCharacterDraftInputSchema,
   decodeCreateCharacterDraftArgs,
   decodeDraftIdArg,
+  decodeEmptyArgs,
   decodeFillCreationHolesArgs,
   draftIdInputSchema,
+  emptyInputSchema,
   fillCreationHolesInputSchema,
   isToolError,
 } from "./character-tool-input.ts";
-import { errorContent, jsonContent } from "./tool-content.ts";
+import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
+import { errorContent } from "./tool-content.ts";
+
+const CreationDraftOutputSchema = Schema.Struct({
+  draft: Schema.Any,
+  holes: Schema.Any,
+  finalization: Schema.Any,
+  session: Schema.Any,
+});
+const FillCreationHolesOutputSchema = Schema.Struct({
+  result: Schema.Any,
+  storedDraft: Schema.Any,
+  session: Schema.Any,
+});
+const FinalizeCharacterOutputSchema = Schema.Struct({
+  draftId: Schema.String,
+  finalization: Schema.Any,
+  sheet: Schema.Any,
+  session: Schema.Any,
+});
+const ListCharactersOutputSchema = Schema.Struct({
+  characters: Schema.Array(Schema.Any),
+  session: Schema.Any,
+});
 
 export const characterToolDefinitions = [
   {
@@ -33,34 +59,35 @@ export const characterToolDefinitions = [
     description:
       "Create and store a Surface-runtime character draft, then return its current creation holes and finalization status.",
     inputSchema: createCharacterDraftInputSchema,
+    outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
   {
     name: "discover_creation_holes",
     description:
       "Return the current fillable creation holes, draft revision, and finalization status for a stored Surface-runtime character draft.",
     inputSchema: draftIdInputSchema,
+    outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
   {
     name: "fill_creation_holes",
     description:
       "Submit an atomic batch of creation fills for a stored draft. Accepted batches replace the stored draft; rejected batches leave it unchanged.",
     inputSchema: fillCreationHolesInputSchema,
+    outputSchema: mcpOutputJsonSchema(FillCreationHolesOutputSchema),
   },
   {
     name: "finalize_character",
     description:
       "Finalize a complete supported character draft. A ready finalization stores the resulting character session by source draft id and removes the active draft.",
     inputSchema: draftIdInputSchema,
+    outputSchema: mcpOutputJsonSchema(FinalizeCharacterOutputSchema),
   },
   {
     name: "list_characters",
     description:
       "List durable character-session records. Monster Stat Blocks and live battle combatants are not character-list rows.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      additionalProperties: false,
-    },
+    inputSchema: emptyInputSchema,
+    outputSchema: mcpOutputJsonSchema(ListCharactersOutputSchema),
   },
 ] as const;
 
@@ -70,7 +97,7 @@ const CHARACTER_TOOL_NAMES = characterToolDefinitions.map(
 type CharacterToolName = (typeof CHARACTER_TOOL_NAMES)[number];
 
 export type CharacterToolResult =
-  | ReturnType<typeof jsonContent>
+  | ReturnType<typeof schemaJsonContent>
   | ReturnType<typeof errorContent>;
 
 export function isCharacterToolName(name: string): name is CharacterToolName {
@@ -100,7 +127,10 @@ export function handleCharacterToolCall(
       return duplicateDraftIdContent(draft.draftId, "finalizedSession");
     }
     root.sessionStore.drafts.set(draft.draftId, draft);
-    return jsonContent(creationDraftPayload(root, draft));
+    return schemaJsonContent(
+      CreationDraftOutputSchema,
+      creationDraftPayload(root, draft),
+    );
   }
 
   if (name === "fill_creation_holes") {
@@ -121,7 +151,7 @@ export function handleCharacterToolCall(
       root.sessionStore.drafts.set(result.draft.draftId, result.draft);
     }
 
-    return jsonContent({
+    return schemaJsonContent(FillCreationHolesOutputSchema, {
       result,
       storedDraft: root.sessionStore.drafts.get(decoded.draftId),
       session: root.sessionStore.snapshot(),
@@ -131,7 +161,7 @@ export function handleCharacterToolCall(
   if (name === "list_characters") {
     const decoded = decodeEmptyArgs(args, name);
     if (isToolError(decoded)) return decoded;
-    return jsonContent({
+    return schemaJsonContent(ListCharactersOutputSchema, {
       characters: Array.from(root.sessionStore.characters.entries()).map(
         ([sourceDraftId, session]) =>
           characterListRow(root.unitLibrary, sourceDraftId, session),
@@ -149,7 +179,10 @@ export function handleCharacterToolCall(
   }
 
   if (name === "discover_creation_holes") {
-    return jsonContent(creationDraftPayload(root, draft));
+    return schemaJsonContent(
+      CreationDraftOutputSchema,
+      creationDraftPayload(root, draft),
+    );
   }
 
   if (name === "finalize_character") {
@@ -168,7 +201,7 @@ export function handleCharacterToolCall(
       root.sessionStore.drafts.delete(draftId);
     }
 
-    return jsonContent({
+    return schemaJsonContent(FinalizeCharacterOutputSchema, {
       draftId,
       finalization,
       sheet:
@@ -244,20 +277,4 @@ function characterListRow(
     battleId: session.battleId,
     characterId: session.characterId,
   };
-}
-
-function decodeEmptyArgs(args: unknown, toolName: string) {
-  if (
-    typeof args !== "object" ||
-    args === null ||
-    Array.isArray(args) ||
-    Object.keys(args).length > 0
-  ) {
-    return errorContent(`${toolName} expects empty object arguments.`, {
-      code: "INVALID_ARGUMENTS",
-      expected: "empty object",
-    });
-  }
-
-  return {};
 }

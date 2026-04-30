@@ -13,19 +13,25 @@ import {
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import { Hp, type Hp as HpType } from "@dnd/shared/types";
-import { Either, JSONSchema, Schema } from "effect";
+import { Schema } from "effect";
 
-import type { ToolError } from "./tool-input-helpers.ts";
-import { errorContent } from "./tool-content.ts";
-
-type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
-  readonly type: "object";
-};
+import {
+  decodeToolArgs,
+  mcpObjectJsonSchema,
+  type McpObjectInputSchema,
+  type ToolError,
+} from "./schema-codec.ts";
+import { isToolError } from "./tool-input-helpers.ts";
 
 const IntegerSchema = Schema.Number.pipe(Schema.int());
 const NonNegativeIntegerSchema = IntegerSchema.pipe(
   Schema.greaterThanOrEqualTo(0),
 );
+export const StartBattleOutputSchema = Schema.Struct({
+  battleState: Schema.Any,
+  snapshot: Schema.Any,
+  session: Schema.Any,
+});
 
 const StartBattleCharacterArgsSchema = Schema.Struct({
   sourceDraftId: Schema.NonEmptyTrimmedString,
@@ -49,14 +55,9 @@ const StartBattleToolArgsSchema = Schema.Struct({
 
 type StartBattleToolArgs = Schema.Schema.Type<typeof StartBattleToolArgsSchema>;
 
-const generatedStartBattleInputSchema = JSONSchema.make(
-  StartBattleToolArgsSchema,
+export const startBattleInputSchema = describeStartBattleInputSchema(
+  mcpObjectJsonSchema(StartBattleToolArgsSchema),
 );
-
-// JSONSchema.make preserves the object shape from StartBattleToolArgsSchema,
-// but its library type does not retain the literal top-level `type: "object"`.
-export const startBattleInputSchema =
-  generatedStartBattleInputSchema as unknown as McpObjectInputSchema;
 
 export type StartBattleToolInput = {
   readonly battleId: BattleId;
@@ -81,18 +82,8 @@ export function decodeStartBattleArgs(
   args: unknown,
   toolName: string,
 ): StartBattleToolInput | ToolError {
-  const decoded = Schema.decodeUnknownEither(StartBattleToolArgsSchema, {
-    onExcessProperty: "error",
-  })(args);
-  if (Either.isLeft(decoded)) {
-    return errorContent(`${toolName} expects valid start battle arguments.`, {
-      code: "INVALID_ARGUMENTS",
-      expected: "StartBattleToolInput",
-      message: decoded.left.message,
-    });
-  }
-
-  const record = decoded.right;
+  const record = decodeToolArgs(StartBattleToolArgsSchema, args, toolName);
+  if (isToolError(record)) return record;
 
   return {
     battleId: battleId(record.battleId),
@@ -122,4 +113,80 @@ function decodeCharacters(
     throw new Error("Start battle character codec returned an empty array.");
   }
   return [first, ...rest];
+}
+
+function describeStartBattleInputSchema(
+  schema: McpObjectInputSchema,
+): McpObjectInputSchema {
+  const properties = (schema.properties ?? {}) as Record<string, unknown>;
+  const characters = properties.characters as
+    | { readonly items?: { readonly properties?: Record<string, unknown> } }
+    | undefined;
+  return {
+    ...schema,
+    description:
+      "Start battle after finalize_character and select_stat_block. Provide one or more finalized character sessions plus caller-supplied Initiative for every combatant.",
+    properties: {
+      ...properties,
+      battleId: {
+        ...objectProperty(properties.battleId),
+        description: "Caller-chosen durable battle id.",
+      },
+      characters: {
+        ...objectProperty(properties.characters),
+        description:
+          "Non-empty finalized character combatants. sourceDraftId comes from list_characters; combatantId is the battle actor id; characterId is the durable identity used for post-battle handoff.",
+        items: {
+          ...(characters?.items ?? {}),
+          properties: {
+            ...(characters?.items?.properties ?? {}),
+            sourceDraftId: {
+              ...objectProperty(characters?.items?.properties?.sourceDraftId),
+              description:
+                "sourceDraftId for an available finalized character from list_characters.",
+            },
+            combatantId: {
+              ...objectProperty(characters?.items?.properties?.combatantId),
+              description:
+                "Caller-chosen battle actor id used in turn order, targets, and battle subjects.",
+            },
+            characterId: {
+              ...objectProperty(characters?.items?.properties?.characterId),
+              description:
+                "Caller-chosen durable character identity stored in battle and used for post-battle handoff.",
+            },
+            initiative: {
+              ...objectProperty(characters?.items?.properties?.initiative),
+              description: "Caller-supplied Initiative score.",
+            },
+          },
+        },
+      },
+      statBlockCombatantId: {
+        ...objectProperty(properties.statBlockCombatantId),
+        description:
+          "Caller-chosen battle actor id for the selected Stat Block.",
+      },
+      statBlockInitiative: {
+        ...objectProperty(properties.statBlockInitiative),
+        description: "Caller-supplied Initiative score for the Stat Block.",
+      },
+      statBlockCurrentHp: {
+        ...objectProperty(properties.statBlockCurrentHp),
+        description:
+          "Optional non-negative current HP override for the selected Stat Block.",
+      },
+      statBlockTempHp: {
+        ...objectProperty(properties.statBlockTempHp),
+        description:
+          "Optional non-negative temporary HP for the selected Stat Block.",
+      },
+    },
+  };
+}
+
+function objectProperty(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }

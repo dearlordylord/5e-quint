@@ -8,9 +8,11 @@ import type { McpCompositionRoot } from "./composition-root.ts";
 import { characterBattleSpellSlots } from "./session-store.ts";
 import {
   decodeStartBattleArgs,
+  StartBattleOutputSchema,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
-import { errorContent, jsonContent } from "./tool-content.ts";
+import { schemaJsonContent } from "./schema-codec.ts";
+import { errorContent } from "./tool-content.ts";
 
 export function handleStartBattleToolCall(
   root: McpCompositionRoot,
@@ -109,7 +111,7 @@ export function handleStartBattleToolCall(
       });
     }
 
-    return jsonContent({
+    return schemaJsonContent(StartBattleOutputSchema, {
       battleState: battleStateProjection(state),
       snapshot: snapshotBattle(state),
       session: root.sessionStore.snapshot(),

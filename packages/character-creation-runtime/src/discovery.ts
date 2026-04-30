@@ -14,6 +14,7 @@ import {
 } from "@dnd/surface/surface/character-creation-readers";
 import type {
   BackgroundToolProficiency,
+  ClassFeatureRecord,
   FeatRecord,
   StartingEquipmentChoice,
   UnitRecord,
@@ -28,22 +29,13 @@ import {
   EQUIPMENT_PURCHASE_CHOICE_KEY,
   EXACTLY_ONE_CHOICE,
   FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
-  FIGHTER_FIGHTING_STYLE_FEATURE_ID,
-  FIGHTER_ACTION_SURGE_FEATURE_ID,
-  FIGHTER_SECOND_WIND_FEATURE_ID,
-  FIGHTER_TACTICAL_MIND_FEATURE_ID,
   FIGHTER_SKILL_CHOICE_KEY,
   FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
-  FIGHTER_WEAPON_MASTERY_FEATURE_ID,
   INITIAL_CHARACTER_DRAFT_PATHS,
-  LEVEL_ONE_FIGHTER_FEATURE_IDS,
-  WIZARD_ARCANE_RECOVERY_FEATURE_ID,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
-  WIZARD_RITUAL_ADEPT_FEATURE_ID,
   WIZARD_SKILL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
-  type LevelOneFighterFeatureId,
 } from "./phase1-manifest.ts";
 import {
   backgroundAbilityScoreIncreaseOptionId,
@@ -168,7 +160,7 @@ export function discoverClassGrantedHoles(input: {
     ),
     ...facts.value.featureGrants.flatMap((grant) =>
       grant.level <= classLevel
-        ? discoverLevelOneFighterFeatureHole(
+        ? discoverClassFeatureGrantHoles(
             grant.unitId,
             input.draft,
             input.unitLibrary,
@@ -700,50 +692,59 @@ export function sameOptionIdMultiset(
   return left.length === right.length && remainingRight.length === 0;
 }
 
-export function discoverLevelOneFighterFeatureHole(
+export function discoverClassFeatureGrantHoles(
   featureUnitId: UnitRecord["id"],
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
 ): readonly CreationHole[] {
+  const feature = requireClassFeature(unitLibrary, featureUnitId);
+  const mechanics = feature.mechanics;
+
   if (
-    featureUnitId === FIGHTER_ACTION_SURGE_FEATURE_ID ||
-    featureUnitId === FIGHTER_TACTICAL_MIND_FEATURE_ID ||
-    featureUnitId === WIZARD_RITUAL_ADEPT_FEATURE_ID ||
-    featureUnitId === WIZARD_ARCANE_RECOVERY_FEATURE_ID
+    mechanics.family === "passive" &&
+    mechanics.grants.some(
+      (grant) =>
+        grant.kind === "grant_feat" &&
+        ("category" in grant
+          ? grant.category === "fighting_style"
+          : grant.categories.includes("fighting_style")),
+    )
   ) {
-    return [];
+    return discoverFightingStyleFeatureHole(featureUnitId, draft, unitLibrary);
   }
 
-  const featureId = requireLevelOneFighterFeatureId(featureUnitId);
+  if (isWeaponMasteryChoiceFeature(feature)) {
+    return discoverWeaponMasteryFeatureHole(feature, draft, unitLibrary);
+  }
 
-  return Match.value(featureId).pipe(
-    Match.when(FIGHTER_FIGHTING_STYLE_FEATURE_ID, () =>
-      discoverFighterFightingStyleHole(draft, unitLibrary),
-    ),
-    Match.when(FIGHTER_SECOND_WIND_FEATURE_ID, () => []),
-    Match.when(FIGHTER_WEAPON_MASTERY_FEATURE_ID, () =>
-      discoverFighterWeaponMasteryHole(draft, unitLibrary),
-    ),
-    Match.exhaustive,
-  );
+  return [];
 }
 
-function requireLevelOneFighterFeatureId(
+function requireClassFeature(
+  unitLibrary: UnitCatalog,
   featureUnitId: UnitRecord["id"],
-): LevelOneFighterFeatureId {
-  const featureId = LEVEL_ONE_FIGHTER_FEATURE_IDS.find(
-    (knownFeatureId) => knownFeatureId === featureUnitId,
-  );
-  if (featureId == null) {
-    throw new Error(
-      `Unsupported level-1 Fighter feature grant in character creation: ${featureUnitId}`,
-    );
+): ClassFeatureRecord {
+  const feature = unitLibrary.requireUnit(featureUnitId);
+  if (feature.kind !== "class_feature") {
+    throw new Error(`Expected ${featureUnitId} to be a class feature Unit.`);
   }
 
-  return featureId;
+  return feature;
 }
 
-function discoverFighterFightingStyleHole(
+function isWeaponMasteryChoiceFeature(
+  feature: ClassFeatureRecord,
+): feature is ClassFeatureRecord & {
+  readonly mechanics: Extract<
+    ClassFeatureRecord["mechanics"],
+    { readonly family: "weapon_mastery_choice" }
+  >;
+} {
+  return feature.mechanics.family === "weapon_mastery_choice";
+}
+
+function discoverFightingStyleFeatureHole(
+  featureUnitId: UnitRecord["id"],
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
 ): readonly CreationHole[] {
@@ -758,27 +759,24 @@ function discoverFighterFightingStyleHole(
   return unselectedUnitChoiceHole(
     draft,
     choiceHole({
-      source: unitSource(
-        FIGHTER_FIGHTING_STYLE_FEATURE_ID,
-        FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
-      ),
+      source: unitSource(featureUnitId, FIGHTER_FIGHTING_STYLE_CHOICE_KEY),
       cardinality: EXACTLY_ONE_CHOICE,
       options,
     }),
   );
 }
 
-function discoverFighterWeaponMasteryHole(
+function discoverWeaponMasteryFeatureHole(
+  feature: ClassFeatureRecord & {
+    readonly mechanics: Extract<
+      ClassFeatureRecord["mechanics"],
+      { readonly family: "weapon_mastery_choice" }
+    >;
+  },
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
 ): readonly CreationHole[] {
-  const feature = unitLibrary.requireUnit(FIGHTER_WEAPON_MASTERY_FEATURE_ID);
-  const mechanics = feature.kind === "class_feature" ? feature.mechanics : null;
-  if (mechanics?.family !== "weapon_mastery_choice") {
-    throw new Error(
-      `Expected ${FIGHTER_WEAPON_MASTERY_FEATURE_ID} to be a weapon mastery choice feature.`,
-    );
-  }
+  const mechanics = feature.mechanics;
 
   const options = unitLibrary
     .listUnits()
@@ -792,10 +790,7 @@ function discoverFighterWeaponMasteryHole(
   return unselectedUnitChoiceHole(
     draft,
     choiceHole({
-      source: unitSource(
-        FIGHTER_WEAPON_MASTERY_FEATURE_ID,
-        FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
-      ),
+      source: unitSource(feature.id, FIGHTER_WEAPON_MASTERY_CHOICE_KEY),
       cardinality: exactChoiceCardinality(mechanics.choose),
       options,
     }),

@@ -21,6 +21,15 @@ the character-creation and battle runtimes. Its composition root builds:
 
 The Surface-runtime character-creation tool boundary exposes these user-facing tools:
 
+- `describe_mcp_workflow` returns the agent-facing lifecycle, accepted fill
+  examples, result paths, recovery rules, and current slice limits. This tool
+  has an Effect Schema-derived output schema and returns structured content.
+- `list_supported_units` lists installed Surface Unit ids grouped by kind for
+  discovery. These ids are catalog facts, not MCP-local support lists; legal
+  character choices still come from `discover_creation_holes`.
+- `list_stat_blocks` lists selectable SRD Stat Block ids, display names,
+  attacks, defenses, damage modifiers, and provenance for `select_stat_block`.
+
 - `create_character_draft` creates and stores a new Surface-runtime draft, then
   returns the current creation holes.
 - `discover_creation_holes` returns the stored draft's current hole frontier,
@@ -142,6 +151,12 @@ Reducer state and rules behavior remain owned by the runtime packages.
 Surface-runtime tools should use their final user-facing tool names. The
 implementation boundary is the module/package registration path, not a
 migration-prefixed tool name.
+
+MCP input and output contracts are authored as Effect Schema codecs and exported
+to MCP as generated JSON Schema. Boundary handlers decode tool arguments through
+those schemas before converting to branded runtime ids. Tool responses include
+JSON text content plus `structuredContent`; success responses are encoded
+through their output schemas.
 
 This package also owns cross-runtime composition helpers. Character Build to
 creature-init mapping lives in `src/battle-creature-init.ts`, where finalized

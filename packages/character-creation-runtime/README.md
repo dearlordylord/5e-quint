@@ -108,7 +108,7 @@ Support gates are package-private runtime narrowings. They must not become
 public Surface classifications or new source rules. The current
 `src/support-gates.ts` support profile owns the supported
 class/background/species ids, Unit choice keys, option ids, purchasable
-equipment, loadout choices, supported class levels, and remaining manifest-only
+equipment, loadout choices, supported class levels, and remaining fixed
 origin facts. Legal Surface options can be discovered outside that profile, but
 fill validation rejects them at this one runtime boundary until widening work
 adds support-profile entries and projection logic.

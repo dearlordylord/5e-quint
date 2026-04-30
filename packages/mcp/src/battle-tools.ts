@@ -5,11 +5,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
-  type CharacterBattleSpellSlotState,
-  type CharacterId,
 } from "@dnd/battle-runtime";
-import type { CharacterDraftId } from "@dnd/character-creation-runtime";
-import type { Hp } from "@dnd/shared/types";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
@@ -29,14 +25,22 @@ import {
   resolveBattleActInputSchema,
   selectStatBlockInputSchema,
 } from "./battle-tool-input.ts";
+import { finalizeCharacterSessionsFromBattle } from "./battle-handoff.ts";
+import {
+  BattleResolutionOutputSchema,
+  BattleSessionOutputSchema,
+  EndBattleOutputSchema,
+  SelectStatBlockOutputSchema,
+} from "./battle-tool-output.ts";
 import { battleStateProjection } from "./battle-state-projection.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
-import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 import {
-  availableCharacterSession,
-  type BattleFillSession,
-} from "./session-store.ts";
-import { errorContent, jsonContent } from "./tool-content.ts";
+  StartBattleOutputSchema,
+  startBattleInputSchema,
+} from "./start-battle-tool-input.ts";
+import type { BattleFillSession } from "./session-store.ts";
+import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
+import { errorContent } from "./tool-content.ts";
 import type { ToolError } from "./tool-input-helpers.ts";
 
 export const battleToolDefinitions = [
@@ -45,48 +49,56 @@ export const battleToolDefinitions = [
     description:
       "Select an SRD Surface Stat Block for the battle session. This stores only the Stat Block id in the MCP session.",
     inputSchema: selectStatBlockInputSchema,
+    outputSchema: mcpOutputJsonSchema(SelectStatBlockOutputSchema),
   },
   {
     name: "start_battle",
     description:
       "Start the battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every character combatant and the Stat Block combatant.",
     inputSchema: startBattleInputSchema,
+    outputSchema: mcpOutputJsonSchema(StartBattleOutputSchema),
   },
   {
     name: "read_battle_state",
     description:
       "Return the stored battle state projection and current battle snapshot, including discoverable battle acts.",
     inputSchema: readBattleStateInputSchema,
+    outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
   },
   {
     name: "discover_battle_acts",
     description:
       "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Fighter 2 Action Surge, Wizard Magic-action spell acts, and End Turn.",
     inputSchema: discoverBattleActsInputSchema,
+    outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
   },
   {
     name: "fill_battle_hole",
     description:
       "Fill one hole for a selected battle act subject. MCP stores transient target, attack-roll, and damage-result fills until the battle runtime resolves the act.",
     inputSchema: fillBattleHoleInputSchema,
+    outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
     name: "resolve_battle_act",
     description:
       "Resolve a selected battle act subject that does not need holes, such as Action Surge.",
     inputSchema: resolveBattleActInputSchema,
+    outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
     name: "end_turn",
     description:
       "Resolve the current actor's End Turn runtime command and store the returned BattleState.",
     inputSchema: endTurnInputSchema,
+    outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
     name: "end_battle",
     description:
       "Finalize the stored battle session and hand character-owned post-battle facts, including current HP, back to durable character session state.",
     inputSchema: endBattleInputSchema,
+    outputSchema: mcpOutputJsonSchema(EndBattleOutputSchema),
   },
 ] as const;
 
@@ -96,7 +108,7 @@ const BATTLE_TOOL_NAMES = battleToolDefinitions.map(
 type BattleToolName = (typeof BATTLE_TOOL_NAMES)[number];
 
 export type BattleToolResult =
-  | ReturnType<typeof jsonContent>
+  | ReturnType<typeof schemaJsonContent>
   | ReturnType<typeof errorContent>;
 
 export function isBattleToolName(name: string): name is BattleToolName {
@@ -117,7 +129,7 @@ export function handleBattleToolCall(
     if (isBattleToolError(statBlockId)) return statBlockId;
     try {
       const selected = root.sessionStore.selectStatBlock(statBlockId);
-      return jsonContent({
+      return schemaJsonContent(SelectStatBlockOutputSchema, {
         selectedStatBlock: selected,
         session: root.sessionStore.snapshot(),
       });
@@ -133,7 +145,8 @@ export function handleBattleToolCall(
   if (name === "read_battle_state") {
     const decoded = decodeReadBattleStateArgs(args, name);
     if (isBattleToolError(decoded)) return decoded;
-    return jsonContent(
+    return schemaJsonContent(
+      BattleSessionOutputSchema,
       battleSessionPayload(root, root.sessionStore.battleState),
     );
   }
@@ -141,7 +154,8 @@ export function handleBattleToolCall(
   if (name === "discover_battle_acts") {
     const decoded = decodeDiscoverBattleActsArgs(args, name);
     if (isBattleToolError(decoded)) return decoded;
-    return jsonContent(
+    return schemaJsonContent(
+      BattleSessionOutputSchema,
       battleSessionPayload(root, root.sessionStore.battleState),
     );
   }
@@ -167,14 +181,23 @@ export function handleBattleToolCall(
     if (result.tag === "resolved") {
       root.sessionStore.battleState = result.state;
       root.sessionStore.transientBattleFills = null;
-      return jsonContent(battleResolutionPayload(root, result));
+      return schemaJsonContent(
+        BattleResolutionOutputSchema,
+        battleResolutionPayload(root, result),
+      );
     }
     if (result.tag === "needsHoles") {
       root.sessionStore.transientBattleFills = { subject, fills };
-      return jsonContent(battleResolutionPayload(root, result));
+      return schemaJsonContent(
+        BattleResolutionOutputSchema,
+        battleResolutionPayload(root, result),
+      );
     }
 
-    return jsonContent(battleResolutionPayload(root, result));
+    return schemaJsonContent(
+      BattleResolutionOutputSchema,
+      battleResolutionPayload(root, result),
+    );
   }
 
   if (name === "resolve_battle_act") {
@@ -208,7 +231,10 @@ export function handleBattleToolCall(
     if (result.tag === "resolved") {
       root.sessionStore.battleState = result.state;
     }
-    return jsonContent(battleResolutionPayload(root, result));
+    return schemaJsonContent(
+      BattleResolutionOutputSchema,
+      battleResolutionPayload(root, result),
+    );
   }
 
   if (name === "end_turn") {
@@ -232,7 +258,10 @@ export function handleBattleToolCall(
       root.sessionStore.battleState = result.state;
       root.sessionStore.transientBattleFills = null;
     }
-    return jsonContent(battleResolutionPayload(root, result));
+    return schemaJsonContent(
+      BattleResolutionOutputSchema,
+      battleResolutionPayload(root, result),
+    );
   }
 
   if (name === "end_battle") {
@@ -249,7 +278,7 @@ export function handleBattleToolCall(
     root.sessionStore.battleState = null;
     root.sessionStore.transientBattleFills = null;
 
-    return jsonContent({
+    return schemaJsonContent(EndBattleOutputSchema, {
       endedBattleId: state.battleId,
       characters: Array.from(root.sessionStore.characters.entries()).map(
         ([sourceDraftId, session]) => ({
@@ -265,92 +294,6 @@ export function handleBattleToolCall(
   return errorContent(
     `Unhandled Surface-runtime battle tool: ${unhandledToolName}`,
   );
-}
-
-function finalizeCharacterSessionsFromBattle(
-  root: McpCompositionRoot,
-  state: BattleState,
-): ReturnType<typeof errorContent> | null {
-  const updates: {
-    readonly sourceDraftId: CharacterDraftId;
-    readonly currentHp: Hp;
-    readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
-  }[] = [];
-
-  for (const combatant of state.combatants.values()) {
-    if (combatant.origin.kind !== "character") continue;
-    if (combatant.hp === 0) {
-      return errorContent(
-        "Post-battle handoff for 0 HP characters is outside the first vertical.",
-        {
-          code: "POST_BATTLE_ZERO_HP_DEFERRED",
-          combatantId: combatant.combatantId,
-          characterId: combatant.origin.characterId,
-        },
-      );
-    }
-
-    const sourceDraftId = sourceDraftIdForInBattleCharacter(
-      root,
-      state,
-      combatant.origin.characterId,
-    );
-    if (sourceDraftId === null) {
-      return errorContent("Battle character has no matching session record.", {
-        code: "UNKNOWN_BATTLE_CHARACTER_SESSION",
-        combatantId: combatant.combatantId,
-        characterId: combatant.origin.characterId,
-      });
-    }
-
-    const session = root.sessionStore.characters.get(sourceDraftId);
-    if (session?.tag !== "inBattle") {
-      return errorContent("Battle character session is not in battle.", {
-        code: "CHARACTER_SESSION_NOT_IN_BATTLE",
-        sourceDraftId,
-      });
-    }
-    updates.push({
-      sourceDraftId,
-      currentHp: combatant.hp,
-      ...(combatant.origin.spellcasting === undefined
-        ? {}
-        : { spellSlots: combatant.origin.spellcasting.spellSlots }),
-    });
-  }
-
-  for (const update of updates) {
-    const session = root.sessionStore.characters.get(update.sourceDraftId);
-    if (session?.tag !== "inBattle") continue;
-    root.sessionStore.characters.set(
-      update.sourceDraftId,
-      availableCharacterSession({
-        build: session.build,
-        currentHp: update.currentHp,
-        spellSlots: update.spellSlots,
-      }),
-    );
-  }
-
-  return null;
-}
-
-function sourceDraftIdForInBattleCharacter(
-  root: McpCompositionRoot,
-  state: BattleState,
-  characterId: CharacterId,
-) {
-  for (const [sourceDraftId, session] of root.sessionStore.characters) {
-    if (
-      session.tag === "inBattle" &&
-      session.battleId === state.battleId &&
-      session.characterId === characterId
-    ) {
-      return sourceDraftId;
-    }
-  }
-
-  return null;
 }
 
 function unknownStatBlockContent(statBlockId: string, error: unknown) {

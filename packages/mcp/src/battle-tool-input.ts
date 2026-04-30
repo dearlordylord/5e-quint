@@ -5,89 +5,137 @@ import {
   type CombatantId,
 } from "@dnd/battle-runtime";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
+import { JSONSchema, Schema } from "effect";
 
 import { decodeBattleFill } from "./battle-fill-input.ts";
 import {
   invalidFieldContent,
   isRecord,
   isToolError,
-  readToolArgsRecord,
   type ToolError,
 } from "./tool-input-helpers.ts";
+import {
+  decodeToolArgs,
+  mcpObjectJsonSchema,
+  type McpObjectInputSchema,
+} from "./schema-codec.ts";
 
-type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
-  readonly type: "object";
-};
-
-export const selectStatBlockInputSchema = {
-  type: "object",
-  required: ["statBlockId"],
-  properties: {
-    statBlockId: {
-      type: "string",
-      description: "SRD Stat Block id from the Surface Stat Block catalog.",
-    },
-  },
-  additionalProperties: false,
-} satisfies McpObjectInputSchema;
-
-export const readBattleStateInputSchema = {
-  type: "object",
-  properties: {},
-  additionalProperties: false,
-} satisfies McpObjectInputSchema;
-
-export const discoverBattleActsInputSchema = {
-  type: "object",
-  properties: {},
-  additionalProperties: false,
-} satisfies McpObjectInputSchema;
-
-export const fillBattleHoleInputSchema = {
-  type: "object",
-  required: ["subject", "fill"],
-  properties: {
-    subject: {
-      type: "object",
+const EmptyArgsSchema = Schema.Struct({});
+const CombatantIdTextSchema = Schema.NonEmptyTrimmedString.annotations({
+  description: "Combatant id from the current battle snapshot.",
+});
+const BattleSubjectArgsSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("srdAction"),
+    actorId: CombatantIdTextSchema,
+    action: Schema.Literal("attack"),
+    attackName: Schema.NonEmptyTrimmedString.annotations({
       description:
-        "Battle act subject returned by discover_battle_acts. Attack subjects use action=attack plus attackName; Magic subjects use action=magic plus spellId.",
-    },
-    fill: {
-      type: "object",
+        "Attack name from a subject returned by discover_battle_acts.",
+    }),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("srdAction"),
+    actorId: CombatantIdTextSchema,
+    action: Schema.Literal("magic"),
+    spellId: Schema.NonEmptyTrimmedString.annotations({
+      description: "Spell id from a subject returned by discover_battle_acts.",
+    }),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unitFeature"),
+    actorId: CombatantIdTextSchema,
+    unitId: Schema.NonEmptyTrimmedString.annotations({
       description:
-        "One BattleFill for the current act replay: targetChoice, attackRoll, or rolledDice. attackRoll values may include rollMode: normal, advantage, or disadvantage.",
-    },
-  },
-  additionalProperties: false,
-} satisfies McpObjectInputSchema;
-
-export const resolveBattleActInputSchema = {
-  type: "object",
-  required: ["subject"],
-  properties: {
-    subject: {
-      type: "object",
+        "Feature Unit id from a no-hole subject returned by discover_battle_acts, such as fighter_action_surge.",
+    }),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantIdTextSchema,
+    command: Schema.Literal("endTurn"),
+  }),
+);
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThan(0),
+);
+const BattleFillArgsSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("targetChoice"),
+    holeId: Schema.NonEmptyTrimmedString.annotations({
+      description: "Target hole id from initialHoles or result.holes.",
+    }),
+    value: Schema.NonEmptyTrimmedString.annotations({
+      description: "Target combatantId from the battle snapshot.",
+    }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackRoll"),
+    holeId: Schema.NonEmptyTrimmedString.annotations({
+      description: "Attack-roll hole id from initialHoles or result.holes.",
+    }),
+    value: Schema.Struct({
+      total: Schema.Number.pipe(Schema.int()),
+      naturalD20: Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
+      rollMode: Schema.optionalWith(
+        Schema.Literal("normal", "advantage", "disadvantage"),
+        { exact: true },
+      ),
+    }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("rolledDice"),
+    holeId: Schema.NonEmptyTrimmedString.annotations({
       description:
-        "Battle act subject returned by discover_battle_acts. Used for acts that do not need holes, such as Action Surge.",
-    },
-  },
-  additionalProperties: false,
-} satisfies McpObjectInputSchema;
+        "Exact damage-result hole id from initialHoles or result.holes.",
+    }),
+    value: Schema.NonEmptyArray(
+      Schema.Struct({
+        results: Schema.NonEmptyArray(PositiveIntegerSchema),
+      }),
+    ),
+  }),
+);
+const SelectStatBlockArgsSchema = Schema.Struct({
+  statBlockId: Schema.NonEmptyTrimmedString.annotations({
+    description: "SRD Stat Block id from list_stat_blocks.",
+  }),
+});
+const FillBattleHoleArgsSchema = Schema.Struct({
+  subject: BattleSubjectArgsSchema.annotations({
+    description:
+      "Battle act subject returned by discover_battle_acts. Copy it exactly.",
+  }),
+  fill: BattleFillArgsSchema.annotations({
+    description:
+      "One BattleFill for the current act replay: targetChoice, attackRoll, or rolledDice.",
+  }),
+});
+const ResolveBattleActArgsSchema = Schema.Struct({
+  subject: BattleSubjectArgsSchema.annotations({
+    description:
+      "No-hole battle act subject returned by discover_battle_acts, such as Action Surge.",
+  }),
+});
+const EndTurnArgsSchema = Schema.Struct({ actorId: CombatantIdTextSchema });
 
-export const endTurnInputSchema = {
-  type: "object",
-  required: ["actorId"],
-  properties: {
-    actorId: { type: "string" },
-  },
-  additionalProperties: false,
-} satisfies McpObjectInputSchema;
-
-export const endBattleInputSchema = {
-  type: "object",
-  properties: {},
-  additionalProperties: false,
-} satisfies McpObjectInputSchema;
+export const selectStatBlockInputSchema = JSONSchema.make(
+  SelectStatBlockArgsSchema,
+) as unknown as McpObjectInputSchema;
+export const readBattleStateInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
+export const discoverBattleActsInputSchema =
+  mcpObjectJsonSchema(EmptyArgsSchema);
+export const fillBattleHoleInputSchema = JSONSchema.make(
+  FillBattleHoleArgsSchema,
+) as unknown as McpObjectInputSchema;
+export const resolveBattleActInputSchema = JSONSchema.make(
+  ResolveBattleActArgsSchema,
+) as unknown as McpObjectInputSchema;
+export const endTurnInputSchema = JSONSchema.make(
+  EndTurnArgsSchema,
+) as unknown as McpObjectInputSchema;
+export const endBattleInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 
 export type BattleActorToolInput = {
   readonly actorId: CombatantId;
@@ -106,11 +154,8 @@ export function decodeSelectStatBlockArgs(
   args: unknown,
   toolName: string,
 ): StatBlockId | ToolError {
-  const record = readToolArgsRecord(args, toolName, ["statBlockId"]);
+  const record = decodeToolArgs(SelectStatBlockArgsSchema, args, toolName);
   if (isToolError(record)) return record;
-  if (typeof record.statBlockId !== "string") {
-    return invalidFieldContent(toolName, "statBlockId", "string");
-  }
   return record.statBlockId;
 }
 
@@ -118,23 +163,21 @@ export function decodeReadBattleStateArgs(
   args: unknown,
   toolName: string,
 ): Record<string, never> | ToolError {
-  const record = readToolArgsRecord(args, toolName, []);
-  return isToolError(record) ? record : {};
+  return decodeEmptyArgs(args, toolName);
 }
 
 export function decodeDiscoverBattleActsArgs(
   args: unknown,
   toolName: string,
 ): Record<string, never> | ToolError {
-  const record = readToolArgsRecord(args, toolName, []);
-  return isToolError(record) ? record : {};
+  return decodeEmptyArgs(args, toolName);
 }
 
 export function decodeFillBattleHoleArgs(
   args: unknown,
   toolName: string,
 ): FillBattleHoleToolInput | ToolError {
-  const record = readToolArgsRecord(args, toolName, ["subject", "fill"]);
+  const record = decodeToolArgs(FillBattleHoleArgsSchema, args, toolName);
   if (isToolError(record)) return record;
   const subject = decodeBattleSubject(record.subject, toolName, "subject");
   if (isToolError(subject)) return subject;
@@ -151,7 +194,7 @@ export function decodeResolveBattleActArgs(
   args: unknown,
   toolName: string,
 ): ResolveBattleActToolInput | ToolError {
-  const record = readToolArgsRecord(args, toolName, ["subject"]);
+  const record = decodeToolArgs(ResolveBattleActArgsSchema, args, toolName);
   if (isToolError(record)) return record;
   const subject = decodeBattleSubject(record.subject, toolName, "subject");
   return isToolError(subject) ? subject : { subject };
@@ -161,12 +204,8 @@ export function decodeEndTurnArgs(
   args: unknown,
   toolName: string,
 ): BattleActorToolInput | ToolError {
-  const record = readToolArgsRecord(args, toolName, ["actorId"]);
+  const record = decodeToolArgs(EndTurnArgsSchema, args, toolName);
   if (isToolError(record)) return record;
-  if (typeof record.actorId !== "string") {
-    return invalidFieldContent(toolName, "actorId", "string");
-  }
-
   return { actorId: combatantId(record.actorId) };
 }
 
@@ -174,8 +213,7 @@ export function decodeEndBattleArgs(
   args: unknown,
   toolName: string,
 ): Record<string, never> | ToolError {
-  const record = readToolArgsRecord(args, toolName, []);
-  return isToolError(record) ? record : {};
+  return decodeEmptyArgs(args, toolName);
 }
 
 export function isBattleToolError(value: unknown): value is ToolError {
@@ -308,4 +346,9 @@ function decodeSubjectActorId(
     );
   }
   return combatantId(record.actorId);
+}
+
+function decodeEmptyArgs(args: unknown, toolName: string) {
+  const decoded = decodeToolArgs(EmptyArgsSchema, args, toolName);
+  return isToolError(decoded) ? decoded : {};
 }

@@ -9,6 +9,9 @@ type JsonObject = Record<string, unknown>;
 const REPO_ROOT = "/workspace/typescript/dnd";
 
 const expectedTools = [
+  "describe_mcp_workflow",
+  "list_stat_blocks",
+  "list_supported_units",
   "create_character_draft",
   "discover_creation_holes",
   "fill_creation_holes",
@@ -29,23 +32,23 @@ const agentConversationScenarios = [
     name: "Discover the MCP surface",
     userSays: "What can you do for DND character creation and battle?",
     agentReads:
-      "The agent calls listTools and sees create/discover/fill/finalize/list character tools plus select/start/read/discover/fill/resolve/end battle tools.",
+      "The agent calls listTools and sees workflow guide, catalog discovery, create/discover/fill/finalize/list character tools plus select/start/read/discover/fill/resolve/end battle tools.",
     agentDecision:
-      "It treats tool descriptions as the source of truth for sequencing: create a draft, inspect holes, fill returned holes, finalize, select a Stat Block, start battle, discover battle acts, then resolve or fill the current act.",
+      "It first calls describe_mcp_workflow, list_supported_units, or list_stat_blocks as needed, then treats returned holes and battle subjects as the source of truth for sequencing.",
     executableCoverage: "verifyToolContract",
     insufficiency:
-      "listTools exposes the operations, but not a catalog browser for supported classes, species, backgrounds, Stat Blocks, spells, weapons, or examples of full fill objects.",
+      "This is now discoverable through MCP. Every tool exposes codec-derived inputSchema and outputSchema, and responses include structuredContent.",
   },
   {
     name: "Create a warrior 2nd level",
     userSays: "Create a warrior 2nd level.",
     agentReads:
-      "No tool accepts natural language character goals. The agent must first create_character_draft, then inspect holes and optionIds. The closest implemented class option is class_fighter, and the second-level advancement option is class_fighter:level_2.",
+      "No tool accepts natural language character goals. The agent can call list_supported_units and see Fighter as class_fighter, but the workflow guide says MCP does not own synonym lists.",
     agentDecision:
       "It should either ask whether 'warrior' means Fighter or proceed only if its product vocabulary maps warrior to Fighter. It then fills primary class, background, species, ability scores, languages, alignment, class advancement, class/background choices, equipment purchase, and loadout using optionIds returned by discover_creation_holes.",
     executableCoverage: "createAndFinalizeFighterTwo",
     insufficiency:
-      "The MCP does not expose synonym/intent mapping. It cannot independently know that 'warrior' means Fighter without product guidance or a user clarification.",
+      "The ambiguity is now explicit: a cold agent knows it should ask before mapping 'warrior' to Fighter.",
   },
   {
     name: "Create the first green character",
@@ -56,7 +59,7 @@ const agentConversationScenarios = [
       "It fills only currently returned holes, tracks expectedRevision from the draft, and calls finalize_character only after finalization reports ready or no holes remain.",
     executableCoverage: "verifyGreenVertical",
     insufficiency:
-      "The generic fill_creation_holes schema says optionIds is an array, but cardinality and the user-friendly meaning of each option must be inferred from the returned hole payload.",
+      "The input schema now exposes the fill union shapes. Cardinality and option meaning still correctly come from the returned runtime hole payload.",
   },
   {
     name: "Create a Wizard with spells",
@@ -68,7 +71,7 @@ const agentConversationScenarios = [
       "It selects ray_of_frost in wizard_cantrip_choices, magic_missile in both spellbook and prepared spell choices, and verifies finalization exposes spellSlots before entering battle.",
     executableCoverage: "createAndFinalizeWizardOne",
     insufficiency:
-      "There is no spell catalog search or semantic helper; the agent must find spell optionIds from the discovered hole options or already know exact ids.",
+      "Spell Unit ids are now catalog-discoverable, but legal prepared/cantrip choices still correctly come from creation holes.",
   },
   {
     name: "Select monsters",
@@ -79,7 +82,7 @@ const agentConversationScenarios = [
       "It calls select_stat_block with stat_block_goblin_warrior or stat_block_skeleton, then verifies the returned displayName/provenance before starting battle.",
     executableCoverage: "verifyGreenVertical and verifyWidthVertical",
     insufficiency:
-      "There is no list_stat_blocks or search_stat_blocks tool, so an LLM with no code or prior examples cannot discover valid Stat Block ids from MCP alone.",
+      "Stat Block ids are now discoverable through list_stat_blocks.",
   },
   {
     name: "Start battle with Initiative",
@@ -91,7 +94,7 @@ const agentConversationScenarios = [
     executableCoverage:
       "verifyToolContract, verifyGreenVertical, verifyWidthVertical",
     insufficiency:
-      "The schema is structurally correct, but the difference between sourceDraftId, combatantId, and characterId is not self-explanatory to an LLM without examples.",
+      "The schema now describes sourceDraftId, combatantId, and characterId, and list_characters exposes a formal outputSchema for sourceDraftId result rows.",
   },
   {
     name: "Take turns and resolve attacks",
@@ -102,7 +105,7 @@ const agentConversationScenarios = [
       "It chooses an available act, copies its subject exactly, fills targetChoice, then attackRoll, then rolledDice using the holeIds requested by the runtime. If the result says needsHoles, it continues the same subject; if resolved, it rediscovers or ends turn.",
     executableCoverage: "verifyGreenVertical and verifyWidthVertical",
     insufficiency:
-      "The MCP does not roll dice. The agent needs user-provided rolls, an external roller, or a future dice tool, and must preserve exact damage holeIds.",
+      "Battle fill shapes are now schema-discoverable. The MCP still intentionally does not roll dice, so the agent needs user-provided rolls, an external roller, or a future dice tool.",
   },
   {
     name: "Use Action Surge",
@@ -124,7 +127,7 @@ const agentConversationScenarios = [
       "It resolves Ray of Frost and verifies spellSlots remain unspent, then resolves Magic Missile and verifies one level-1 slot is expended.",
     executableCoverage: "verifyWidthVertical",
     insufficiency:
-      "Spell resolution shape is discoverable only after battle act discovery. Tool metadata does not describe each spell's required fill sequence.",
+      "Tool metadata now describes fill shapes, while the exact per-spell fill sequence remains runtime-owned and discoverable from battle act holes.",
   },
   {
     name: "Finish battle and inspect durable character state",
@@ -158,19 +161,19 @@ const agentConversationScenarios = [
     executableCoverage:
       "callTool, holeIds, actionLabels, combatantHp, wizardSpellSlots",
     insufficiency:
-      "MCP listTools has inputSchema only. There is no outputSchema or typed resource document that tells an agent where holes, acts, result.holes, or session state live.",
+      "describe_mcp_workflow documents these result paths, and the runtime tools expose outputSchema plus structuredContent for machine readers.",
   },
   {
     name: "Distinguish known-good acceptance from autonomous discovery",
     userSays:
       "Can an LLM with only this MCP create and run the whole scenario?",
     agentReads:
-      "The executable client can run the full current domain because it has known-good ids and JSON paths embedded in this file.",
+      "The executable client can run the full current domain and now verifies that key catalogs, input schemas, and result-path guidance are discoverable from MCP.",
     agentDecision:
       "A real LLM agent should still rely on discovery responses once started, but it cannot bootstrap every id and protocol detail from listTools alone. It needs examples, richer schemas, or catalog/guide tools.",
     executableCoverage: "whole file",
     insufficiency:
-      "This QA runner proves transport and workflow correctness for known-good calls. It deliberately records that autonomous LLM drivability still needs better catalog discovery, output contracts, and fill-shape schemas.",
+      "This QA runner still uses known-good decisions for speed. True autonomous validation would need a separate agent that chooses from discovered response payloads at runtime.",
   },
 ] as const;
 
@@ -212,13 +215,45 @@ async function verifyToolContract(client: Client) {
   const listed = await client.listTools();
   const toolNames = listed.tools.map((tool) => tool.name).sort();
   assert.deepEqual(toolNames, [...expectedTools].sort());
+  for (const tool of listed.tools) {
+    assert.ok(tool.inputSchema, `${tool.name} must expose inputSchema`);
+    assert.ok(
+      (tool as { readonly outputSchema?: unknown }).outputSchema,
+      `${tool.name} must expose outputSchema`,
+    );
+  }
 
   const startBattle = listed.tools.find((tool) => tool.name === "start_battle");
   assert.ok(startBattle, "start_battle tool must be registered");
   const schemaText = JSON.stringify(startBattle.inputSchema);
+  const startBattleOutputSchemaText = JSON.stringify(
+    (startBattle as { readonly outputSchema?: unknown }).outputSchema,
+  );
   assert.match(schemaText, /characters/);
+  assert.match(schemaText, /sourceDraftId comes from list_characters/);
   assert.doesNotMatch(schemaText, /characterCombatantId/);
   assert.doesNotMatch(schemaText, /additionalCharacters/);
+  assert.match(startBattleOutputSchemaText, /battleState/);
+  assert.match(startBattleOutputSchemaText, /snapshot/);
+  assert.match(startBattleOutputSchemaText, /session/);
+
+  const fillCreationHoles = listed.tools.find(
+    (tool) => tool.name === "fill_creation_holes",
+  );
+  assert.ok(fillCreationHoles, "fill_creation_holes tool must be registered");
+  const creationSchemaText = JSON.stringify(fillCreationHoles.inputSchema);
+  assert.match(creationSchemaText, /anyOf|oneOf/);
+  assert.match(creationSchemaText, /abilityScores/);
+  assert.match(creationSchemaText, /optionIds/);
+
+  const fillBattleHole = listed.tools.find(
+    (tool) => tool.name === "fill_battle_hole",
+  );
+  assert.ok(fillBattleHole, "fill_battle_hole tool must be registered");
+  const battleFillSchemaText = JSON.stringify(fillBattleHole.inputSchema);
+  assert.match(battleFillSchemaText, /targetChoice/);
+  assert.match(battleFillSchemaText, /attackRoll/);
+  assert.match(battleFillSchemaText, /rolledDice/);
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
@@ -234,6 +269,26 @@ async function verifyToolContract(client: Client) {
     statBlockCombatantId: "goblin",
     statBlockInitiative: 10,
   });
+
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.ok((get(workflow, "lifecycle") as string[]).length > 0);
+  assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
+
+  const units = await callTool(client, "list_supported_units", {});
+  assert.ok(
+    unitSummaries(units, "class").some((unit) => unit.id === "class_fighter"),
+  );
+  assert.ok(
+    unitSummaries(units, "spell").some((unit) => unit.id === "magic_missile"),
+  );
+
+  const statBlocks = await callTool(client, "list_stat_blocks", {});
+  assert.deepEqual(
+    (get(statBlocks, "statBlocks") as Array<{ statBlockId: string }>).map(
+      (statBlock) => statBlock.statBlockId,
+    ),
+    ["stat_block_goblin_warrior", "stat_block_skeleton"],
+  );
 }
 
 async function verifyGreenVertical(client: Client) {
@@ -857,6 +912,11 @@ async function callTool(client: Client, name: string, args: JsonObject) {
   if (result.isError === true) {
     throw new Error(`${name} returned error: ${JSON.stringify(result)}`);
   }
+  assert.notEqual(
+    result.structuredContent,
+    undefined,
+    `${name} success result must include structuredContent`,
+  );
   return parseToolPayload(result, name);
 }
 
@@ -868,6 +928,8 @@ async function expectToolError(client: Client, name: string, args: JsonObject) {
 
 function parseToolPayload(result: unknown, name: string) {
   const content = (result as { readonly content?: unknown }).content;
+  const structuredContent = (result as { readonly structuredContent?: unknown })
+    .structuredContent;
   assert.ok(Array.isArray(content), `${name} result content must be an array`);
   const [first] = content;
   assert.equal(
@@ -875,7 +937,15 @@ function parseToolPayload(result: unknown, name: string) {
     "text",
     `${name} result content must be text`,
   );
-  return JSON.parse((first as { readonly text: string }).text);
+  const textPayload = JSON.parse((first as { readonly text: string }).text);
+  if (structuredContent !== undefined) {
+    assert.deepEqual(
+      structuredContent,
+      textPayload,
+      `${name} structuredContent must match text JSON`,
+    );
+  }
+  return textPayload;
 }
 
 function choiceFill(holeId: string, ...optionIds: readonly string[]) {
@@ -960,6 +1030,10 @@ function characterRow(payload: JsonObject, sourceDraftId: string) {
   );
   assert.ok(character, `Missing listed character ${sourceDraftId}`);
   return character;
+}
+
+function unitSummaries(payload: JsonObject, kind: string) {
+  return get(payload, `unitsByKind.${kind}`) as Array<{ readonly id: string }>;
 }
 
 function get(value: unknown, path: string): unknown {

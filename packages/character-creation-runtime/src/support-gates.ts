@@ -6,10 +6,8 @@ import {
   CLASS_EQUIPMENT_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
   FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
-  FIGHTER_FIGHTING_STYLE_FEATURE_ID,
   FIGHTER_SKILL_CHOICE_KEY,
   FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
-  FIGHTER_WEAPON_MASTERY_FEATURE_ID,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SKILL_CHOICE_KEY,
@@ -33,13 +31,11 @@ import {
   PHASE1_SPECIES_ORC_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-  PHASE1_WEAPON_MASTERY_UNIT_IDS,
   SUPPORTED_BACKGROUND_OPTION_IDS,
   SUPPORTED_BACKGROUND_UNIT_IDS,
   SUPPORTED_CLASS_OPTION_IDS,
   SUPPORTED_CLASS_UNIT_IDS,
   SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
-  SUPPORTED_FIGHTING_STYLE_FEAT_IDS,
   SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
   SUPPORTED_LANGUAGE_OPTION_IDS,
   SUPPORTED_PURCHASE_OPTION_IDS,
@@ -53,9 +49,7 @@ import type {
   CharacterAdvancementEntry,
   CharacterAlignment,
   CharacterBuildEquipment,
-  CharacterChoiceSelection,
   CharacterDraftPath,
-  CharacterSelectedChoiceOption,
   CharacterStartingLanguages,
   CreationChoiceOptionId,
   CreationHole,
@@ -115,19 +109,11 @@ export type CharacterCreationSupportProfile = {
   >;
   readonly loadoutChoices: readonly SupportedLoadoutChoice[];
   readonly manifest: {
-    readonly primaryClassUnitId: UnitRecord["id"];
     readonly backgroundUnitId: UnitRecord["id"];
     readonly speciesUnitId: UnitRecord["id"];
-    readonly fightingStyleFeatureUnitId: UnitRecord["id"];
-    readonly initialAdvancement: {
-      readonly classUnitId: UnitRecord["id"];
-      readonly level: 1;
-    };
     readonly backgroundAbilityScoreIncrease: BackgroundAbilityScoreIncreaseSelection;
     readonly languages: CharacterStartingLanguages;
     readonly alignment: CharacterAlignment;
-    readonly finalizedChoiceSelections: readonly CharacterChoiceSelection[];
-    readonly finalizedEquipmentUnitIds: readonly UnitRecord["id"][];
   };
   readonly supportedAdvancements: readonly CharacterAdvancementEntry[];
 };
@@ -242,127 +228,15 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     },
   ],
   manifest: {
-    primaryClassUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
     backgroundUnitId: PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
     speciesUnitId: PHASE1_SPECIES_ORC_UNIT_ID,
-    fightingStyleFeatureUnitId: FIGHTER_FIGHTING_STYLE_FEATURE_ID,
-    initialAdvancement: {
-      classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
-      level: 1,
-    },
     backgroundAbilityScoreIncrease:
       PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION,
     languages: ["Common", "Dwarvish", "Goblin"],
     alignment: { order: "lawful", morality: "good" },
-    finalizedChoiceSelections: [
-      choiceSelection(PHASE1_CLASS_FIGHTER_UNIT_ID, FIGHTER_SKILL_CHOICE_KEY, [
-        ...SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
-      ]),
-      unitChoiceSelection(
-        FIGHTER_FIGHTING_STYLE_FEATURE_ID,
-        FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
-        [...SUPPORTED_FIGHTING_STYLE_FEAT_IDS],
-      ),
-      unitChoiceSelection(
-        FIGHTER_WEAPON_MASTERY_FEATURE_ID,
-        FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
-        PHASE1_WEAPON_MASTERY_UNIT_IDS,
-      ),
-      choiceSelection(
-        PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
-        BACKGROUND_TOOL_CHOICE_KEY,
-        [PHASE1_BACKGROUND_TOOL_OPTION_ID],
-      ),
-      choiceSelection(
-        PHASE1_CLASS_FIGHTER_UNIT_ID,
-        CLASS_EQUIPMENT_CHOICE_KEY,
-        [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
-      ),
-      choiceSelection(
-        PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
-        BACKGROUND_EQUIPMENT_CHOICE_KEY,
-        [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
-      ),
-      loadoutChoiceSelection(
-        PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-        LOADOUT_ARMOR_CHOICE_KEY,
-        PHASE1_LOADOUT_ARMOR_OPTION_ID,
-      ),
-      loadoutChoiceSelection(
-        PHASE1_SHIELD_UNIT_ID,
-        LOADOUT_SHIELD_CHOICE_KEY,
-        PHASE1_LOADOUT_SHIELD_OPTION_ID,
-      ),
-      loadoutChoiceSelection(
-        PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-        LOADOUT_WEAPON_CHOICE_KEY,
-        PHASE1_LOADOUT_WEAPON_OPTION_ID,
-      ),
-    ],
-    finalizedEquipmentUnitIds: [
-      PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-      PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-      PHASE1_SHIELD_UNIT_ID,
-    ],
   },
   supportedAdvancements: SUPPORTED_ADVANCEMENTS,
 } as const satisfies CharacterCreationSupportProfile;
-
-function choiceSelection(
-  unitId: UnitRecord["id"],
-  choiceKey: UnitChoiceKey,
-  optionIds: readonly CreationChoiceOptionId[],
-): CharacterChoiceSelection {
-  return choiceSelectionWithOptions(
-    unitId,
-    choiceKey,
-    optionIds.map((optionId) => ({ optionId })),
-  );
-}
-
-function unitChoiceSelection(
-  unitId: UnitRecord["id"],
-  choiceKey: UnitChoiceKey,
-  selectedUnitIds: readonly UnitRecord["id"][],
-): CharacterChoiceSelection {
-  return choiceSelectionWithOptions(
-    unitId,
-    choiceKey,
-    selectedUnitIds.map((selectedUnitId) =>
-      selectedChoiceOptionRecord(selectedUnitId),
-    ),
-  );
-}
-
-function loadoutChoiceSelection(
-  unitId: UnitRecord["id"],
-  choiceKey: UnitChoiceKey,
-  optionId: CreationChoiceOptionId,
-): CharacterChoiceSelection {
-  return choiceSelectionWithOptions(unitId, choiceKey, [
-    { optionId, unitRef: { unitId } },
-  ]);
-}
-
-function choiceSelectionWithOptions(
-  unitId: UnitRecord["id"],
-  choiceKey: UnitChoiceKey,
-  options: readonly CharacterSelectedChoiceOption[],
-): CharacterChoiceSelection {
-  return {
-    source: { tag: "unit", unitId, choiceKey },
-    options,
-  };
-}
-
-function selectedChoiceOptionRecord(
-  selectedUnitId: UnitRecord["id"],
-): CharacterSelectedChoiceOption {
-  return {
-    optionId: creationChoiceOptionId(selectedUnitId),
-    unitRef: { unitId: selectedUnitId },
-  };
-}
 
 export function unsupportedHoleSelectionOptionId(
   hole: CreationHole,
@@ -469,14 +343,6 @@ export function supportedEquipmentPurchaseChoiceCount(): number {
 
 export function supportedLoadoutChoices(): readonly SupportedLoadoutChoice[] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices;
-}
-
-export function supportedFinalizedChoiceSelections(): readonly CharacterChoiceSelection[] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.manifest.finalizedChoiceSelections;
-}
-
-export function supportedFinalizedEquipmentUnitIds(): readonly UnitRecord["id"][] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.manifest.finalizedEquipmentUnitIds;
 }
 
 export function isSupportedAdvancement(

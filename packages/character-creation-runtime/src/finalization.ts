@@ -52,7 +52,6 @@ import {
   nonEmptyReadonlyArray,
   type AbilityScoreAssignment,
   type BackgroundAbilityScoreIncreaseSelection,
-  type CharacterAdvancementSelection,
   type CharacterBuild,
   type CharacterBuildEquipment,
   type CharacterBuildFeature,
@@ -305,19 +304,6 @@ export function illegalFinalizationIssue(
     code: "illegalFinalization",
     message,
   };
-}
-
-export function isInitialFighterAdvancement(
-  advancement: CharacterAdvancementSelection,
-): boolean {
-  return (
-    advancement.entries.length === 1 &&
-    advancement.entries[0]?.classUnitId ===
-      CHARACTER_CREATION_SUPPORT_PROFILE.manifest.initialAdvancement
-        .classUnitId &&
-    advancement.entries[0]?.level ===
-      CHARACTER_CREATION_SUPPORT_PROFILE.manifest.initialAdvancement.level
-  );
 }
 
 export function isSupportedSingleClassAdvancement(

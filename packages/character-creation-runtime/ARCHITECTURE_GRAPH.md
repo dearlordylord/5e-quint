@@ -87,9 +87,9 @@ flowchart TD
   DraftHole["draftHole(path, unitLibrary)<br/>success: choice or abilityScores CreationHole<br/>why: draft source -> public hole projection<br/>without: hole id/source/cardinality/options are duplicated"]
   HasDraftSelection["hasDraftSelection(selections, path)<br/>success: suppresses already-filled draft hole<br/>why: hole discovery is derived from draft state<br/>without: filled draft fields keep reopening"]
 
-  ClassGranted["discoverClassGrantedHoles<br/>input: selected primaryClass<br/>success: Fighter skill, Fighting Style, Weapon Mastery, and class equipment holes<br/>absence: [] if class missing, unsupported, or unreadable<br/>why: class selection opens class-owned choices"]
+  ClassGranted["discoverClassGrantedHoles<br/>input: selected primaryClass + advancement<br/>success: supported class skill, feature, spellcasting, and class equipment holes<br/>absence: [] if class missing, unsupported, or unreadable<br/>why: class and selected level open class-owned choices"]
   ReadClass["readClassCreationFacts(class Unit)<br/>success: hit die, proficiencies, skill choice, starting equipment, feature grants<br/>failure: unreadable unsupported kind<br/>why: Surface-owned class facts projected for creation"]
-  FeatureHole["discoverLevelOneFighterFeatureHole<br/>success: feat-backed Fighting Style hole or weapon-backed Weapon Mastery hole<br/>absence: [] for unrelated features<br/>why: feature Units open Unit-backed choices"]
+  FeatureHole["discoverClassFeatureGrantHoles<br/>success: feat-backed Fighting Style hole or weapon-backed Weapon Mastery hole<br/>absence: [] for features with no creation choices<br/>why: feature Unit mechanics open Unit-backed choices"]
 
   BackgroundGranted["discoverBackgroundGrantedHoles<br/>input: selected background<br/>success: background ASI, tool, and equipment holes<br/>absence: [] if background missing, unsupported, or unreadable<br/>why: background selection opens background-owned choices"]
   ReadBackground["readBackgroundCreationFacts(background Unit)<br/>success: ASI rules, origin feat, skills, tool proficiency, starting equipment<br/>failure: unreadable unsupported kind<br/>why: Surface-owned background facts projected for creation"]
@@ -97,7 +97,7 @@ flowchart TD
   BackgroundTool["backgroundToolChoiceSpec<br/>success: specific tool or supported category choice spec when enough supported options exist<br/>absence: undefined for unsupported categories or unsupported cardinality<br/>why: category grants become fillable choices only when supported"]
 
   Equipment["discoverEquipmentHoles<br/>input: draft + UnitCatalog<br/>success: purchase and loadout holes for supported coin path<br/>absence: [] until class/background equipment choices select the coin path<br/>why: purchase/loadout are conditional creation requirements"]
-  CoinPath["hasPhaseOneCoinEquipmentPath<br/>success: class option C + background option B selected<br/>why: purchase holes are gated by earlier equipment choices<br/>without: purchase opens for incompatible equipment paths"]
+  CoinPath["hasSupportedCoinEquipmentPath<br/>success: supported class/background coin-grant equipment choices selected<br/>why: purchase holes are gated by earlier equipment choices<br/>without: purchase opens for incompatible equipment paths"]
   Purchase["unselectedPurchaseHole<br/>success: equipment_purchase hole until manifest equipment owned<br/>why: ownership is stored as equipment.selectedUnitIds<br/>without: purchases are represented as ordinary unrelated choices"]
   Loadout["unselectedLoadoutHole<br/>success: loadout holes only for purchased Units<br/>why: use choices depend on ownership<br/>without: caller can wield or wear unowned equipment"]
 
