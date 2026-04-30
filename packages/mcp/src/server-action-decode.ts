@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import {
   ResolvedActionTokenSchema,
+  type AuthoredBattleResolvedActionToken,
   type ResolvedActionToken,
 } from "@dnd/core/available-actions.ts";
 
@@ -56,6 +57,12 @@ function resolvedActionTypesFromSchema(): ReadonlySet<string> {
 }
 
 const RESOLVED_ACTION_TYPES = resolvedActionTypesFromSchema();
+const AUTHORED_BATTLE_ACTION_TYPES = new Set<string>([
+  "USE_ACTION_SURGE",
+  "ENTER_RAGE",
+  "DECLARE_RECKLESS",
+  "USE_UNCANNY_DODGE",
+]);
 
 function unknownActionTypeContent(
   toolName: "execute_action" | "preview_action",
@@ -88,6 +95,15 @@ export function decodeResolvedActionInput(
   const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args);
   if (decoded._tag === "Left") {
     return errorContent(`Invalid ${toolName} input`, String(decoded.left));
+  }
+
+  const scope = Reflect.get(args, "scope");
+  if (scope === "authoredBattle" && AUTHORED_BATTLE_ACTION_TYPES.has(type)) {
+    return {
+      ...decoded.right,
+      ...(args as Record<string, unknown>),
+      scope,
+    } as AuthoredBattleResolvedActionToken;
   }
 
   return decoded.right;

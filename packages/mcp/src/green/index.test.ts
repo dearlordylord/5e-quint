@@ -176,10 +176,7 @@ function fighterCharacterBuild(
   return result.build;
 }
 
-function createTestDraft(
-  unitLibrary: ReturnType<typeof createGreenMcpCompositionRoot>["unitLibrary"],
-  draftId: string,
-): CharacterDraft {
+function createTestDraft(draftId: string): CharacterDraft {
   return createCharacterDraft({
     draftId: characterDraftId(draftId),
   });
@@ -188,10 +185,7 @@ function createTestDraft(
 function completeManifestDraft(
   unitLibrary: ReturnType<typeof createGreenMcpCompositionRoot>["unitLibrary"],
 ): CharacterDraft {
-  const draft = createTestDraft(
-    unitLibrary,
-    "draft:mcp-green-complete-manifest",
-  );
+  const draft = createTestDraft("draft:mcp-green-complete-manifest");
   const afterInitial = requireAcceptedBatch(
     fillCreationHoles({
       draft,

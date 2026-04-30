@@ -16,6 +16,7 @@ import {
   characterSheetBattleProjection,
   characterSheetCreatureProjection,
 } from "@dnd/core/character-sheet-derived.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "@dnd/core/features/spell-registry.ts";
 
 import {
   advanceCharacterSheetInputSchema,
@@ -38,6 +39,8 @@ import {
   type CharacterToolError,
 } from "./character-session-helpers.ts";
 import { errorContent, jsonContent } from "./server-shared.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 export const characterToolDefinitions = [
   {
@@ -407,7 +410,9 @@ export function createCharacterSession(): CharacterSession {
         storedCharacter: encodeStoredCharacterState(storedCharacter),
         projections: {
           creature: encodeStableJson(characterSheetCreatureProjection(sheet)),
-          battle: encodeStableJson(characterSheetBattleProjection(sheet)),
+          battle: encodeStableJson(
+            characterSheetBattleProjection(sheet, SPELL_LIBRARY),
+          ),
         },
       });
     },

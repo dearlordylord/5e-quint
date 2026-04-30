@@ -22,6 +22,8 @@ import {
   characterSheetBattleProjection,
   characterSheetCreatureProjection,
 } from "@dnd/core/character-sheet-derived.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "@dnd/core/features/spell-registry.ts";
+import { preparedBattleSpellAccesses } from "@dnd/core/battle-spell-access.ts";
 import { TABLE_EVENT_WARNING_CODES } from "@dnd/core/available-actions.ts";
 import type { BattleWeaponProfile } from "@dnd/core/types.ts";
 import {
@@ -43,6 +45,8 @@ import {
 } from "./server.ts";
 import { createSessionRouter } from "./session-router.ts";
 import { tableEventSuccess } from "./server-table-events.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 function quota(resource: "action" | "bonusAction" | "reaction") {
   return { kind: "quota" as const, resource };
@@ -70,6 +74,14 @@ function preparedSpellIds(
   ...spells: ReadonlyArray<string>
 ): ReadonlySet<ReturnType<typeof spellId>> {
   return new Set(spells.map(spellId));
+}
+
+function preparedSpellAccesses(...spells: ReadonlyArray<string>) {
+  return preparedBattleSpellAccesses({
+    spellDictionary: SPELL_LIBRARY,
+    spellIds: spells.map(spellId),
+    sharedSpellSaveDC: difficultyClass(13),
+  });
 }
 
 function readPayload(response: ReturnType<typeof handleToolCall>) {
@@ -323,7 +335,7 @@ function initBattleHostWithHitWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("shield"),
+        spellAccesses: preparedSpellAccesses("shield"),
         initiativeRoll: 15,
       },
       {
@@ -567,7 +579,7 @@ function initBattleHostWithPublicAttackReactionWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("shield"),
+        spellAccesses: preparedSpellAccesses("shield"),
         initiativeRoll: 15,
       },
     ],
@@ -682,7 +694,7 @@ function initBattleHostWithReadySpellActor() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("hold_person"),
+        spellAccesses: preparedSpellAccesses("hold_person"),
         initiativeRoll: 15,
       },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
@@ -703,7 +715,7 @@ function initBattleHostWithAoeSpellActor() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("burning_hands", "fireball"),
+        spellAccesses: preparedSpellAccesses("burning_hands", "fireball"),
         initiativeRoll: 15,
       },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
@@ -726,7 +738,7 @@ function initBattleHostWithHellishRebukeWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("hellish_rebuke"),
+        spellAccesses: preparedSpellAccesses("hellish_rebuke"),
         initiativeRoll: 10,
       },
     ],
@@ -817,7 +829,7 @@ function initBattleHostWithCounterspellWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("hold_person"),
+        spellAccesses: preparedSpellAccesses("hold_person"),
         slotsMax: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         slotsCurrent: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         initiativeRoll: 15,
@@ -827,7 +839,7 @@ function initBattleHostWithCounterspellWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("counterspell"),
+        spellAccesses: preparedSpellAccesses("counterspell"),
         slotsMax: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         slotsCurrent: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         initiativeRoll: 10,
@@ -1584,7 +1596,7 @@ describe("MCP server adapter", () => {
           characterSheetCreatureProjection(finalized.sheet),
         ),
         battle: encodeStableJsonForTest(
-          characterSheetBattleProjection(finalized.sheet),
+          characterSheetBattleProjection(finalized.sheet, SPELL_LIBRARY),
         ),
       },
     });
@@ -1967,8 +1979,7 @@ describe("MCP server adapter", () => {
     const response = handleToolCall(host, "execute_control_command", {
       scope: "battle",
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
-      creatures: [{ id: "C", maxHp: 18, kind: "PC" }],
+      creatures: [{ id: "C", maxHp: 18, kind: "PC", initiativeRoll: 15 }],
     });
 
     expect(readPayload(response)).toMatchObject({
@@ -1999,9 +2010,13 @@ describe("MCP server adapter", () => {
     const response = handleToolCall(host, "execute_control_command", {
       scope: "battle",
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
       creatures: [
-        { id: "goblin-1", kind: "Monster", statBlockId: "goblinMinion" },
+        {
+          id: "goblin-1",
+          kind: "Monster",
+          statBlockId: "goblinMinion",
+          initiativeRoll: 10,
+        },
       ],
     });
 
@@ -2063,8 +2078,9 @@ describe("MCP server adapter", () => {
     const response = handleToolCall(host, "execute_control_command", {
       scope: "battle",
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
-      creatures: [{ id: "harpy-1", kind: "Monster", statBlockId: "harpy" }],
+      creatures: [
+        { id: "harpy-1", kind: "Monster", statBlockId: "harpy", initiativeRoll: 10 },
+      ],
     });
 
     expect(readPayload(response)).toMatchObject({
@@ -3342,7 +3358,7 @@ describe("MCP server adapter", () => {
     );
 
     const attack = handleToolCall(host, "execute_action", {
-      scope: "battle",
+      scope: "authoredBattle",
       actorId: "aboleth-1",
       type: "BATTLE_LEGENDARY_ATTACK",
       abilityId: "lash",
@@ -3639,7 +3655,8 @@ describe("MCP server adapter", () => {
 
     expect("isError" in response && response.isError).toBe(true);
     expect(readPayload(response)).toEqual({
-      error: "Action scope battle does not match the current creature host.",
+      error:
+        "Action scope battle does not match the current creature host.",
       details: "ACTION_SCOPE_MISMATCH",
     });
   });
@@ -5070,6 +5087,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_SHIELD",
+          accessId: "prepared:shield",
           cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
@@ -5130,9 +5148,9 @@ describe("MCP server adapter", () => {
       ]),
       bonusAction: [
         {
-          scope: "battle",
+          scope: "authoredBattle",
           actorId: "A",
-          type: "BATTLE_ENTER_RAGE",
+          type: "ENTER_RAGE",
           cost: cost(quota("bonusAction"), pool("rage")),
           outcome: {
             summary:
@@ -5143,9 +5161,9 @@ describe("MCP server adapter", () => {
       reaction: [],
       free: expect.arrayContaining([
         {
-          scope: "battle",
+          scope: "authoredBattle",
           actorId: "A",
-          type: "BATTLE_ACTION_SURGE",
+          type: "USE_ACTION_SURGE",
           cost: cost(pool("actionSurge")),
           outcome: {
             summary:
@@ -5153,9 +5171,9 @@ describe("MCP server adapter", () => {
           },
         },
         {
-          scope: "battle",
+          scope: "authoredBattle",
           actorId: "A",
-          type: "BATTLE_DECLARE_RECKLESS",
+          type: "DECLARE_RECKLESS",
           cost: cost(),
           outcome: { summary: "Declare Reckless Attack for this turn" },
         },
@@ -5163,9 +5181,9 @@ describe("MCP server adapter", () => {
     });
 
     const actionSurge = handleToolCall(host, "execute_action", {
-      scope: "battle",
+      scope: "authoredBattle",
       actorId: "A",
-      type: "BATTLE_ACTION_SURGE",
+      type: "USE_ACTION_SURGE",
     });
     expect("isError" in actionSurge).toBe(false);
     expect(readPayload(actionSurge)).toEqual(
@@ -5181,9 +5199,9 @@ describe("MCP server adapter", () => {
     ).toBe(2);
 
     const rage = handleToolCall(host, "execute_action", {
-      scope: "battle",
+      scope: "authoredBattle",
       actorId: "A",
-      type: "BATTLE_ENTER_RAGE",
+      type: "ENTER_RAGE",
     });
     expect("isError" in rage).toBe(false);
     expect(readPayload(rage)).toEqual(
@@ -5203,9 +5221,9 @@ describe("MCP server adapter", () => {
     ).toBe(1);
 
     const reckless = handleToolCall(host, "execute_action", {
-      scope: "battle",
+      scope: "authoredBattle",
       actorId: "A",
-      type: "BATTLE_DECLARE_RECKLESS",
+      type: "DECLARE_RECKLESS",
     });
     expect("isError" in reckless).toBe(false);
     expect(readPayload(reckless)).toEqual(
@@ -5226,9 +5244,9 @@ describe("MCP server adapter", () => {
     const before = readPayload(handleToolCall(host, "get_state", {}));
     const preview = readPayload(
       handleToolCall(host, "preview_action", {
-        scope: "battle",
+        scope: "authoredBattle",
         actorId: "A",
-        type: "BATTLE_ENTER_RAGE",
+        type: "ENTER_RAGE",
       }),
     );
     const after = readPayload(handleToolCall(host, "get_state", {}));
@@ -5822,7 +5840,8 @@ describe("MCP server adapter", () => {
       scope: "battle",
       actorId: "A",
       type: "BATTLE_HIDE",
-      stealthTotal: 35,
+      activation: "action",
+      stealthTotal: 30,
       hasCoverOrObscurement: true,
       outOfEnemyLineOfSight: true,
     });
@@ -5830,7 +5849,7 @@ describe("MCP server adapter", () => {
     expect(
       host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
         ?.hiddenDiscoveryDc,
-    ).toBe(35);
+    ).toBe(30);
 
     host.actor.send({
       type: "BATTLE_END_TURN",
@@ -5858,7 +5877,7 @@ describe("MCP server adapter", () => {
     );
 
     const searchResponse = handleToolCall(host, "execute_action", {
-      scope: "battle",
+      scope: "authoredBattle",
       actorId: "B",
       type: "BATTLE_SEARCH",
       targetId: "A",
@@ -5944,7 +5963,8 @@ describe("MCP server adapter", () => {
             scope: "battle",
             actorId: "A",
             type: "BATTLE_READY_SPELL",
-            spellName: "hold_person",
+            accessId: "prepared:hold_person",
+            spellId: "hold_person",
             slotLevel: { options: [2, 3] },
             targetId: { options: ["B"] },
           }),
@@ -5956,7 +5976,8 @@ describe("MCP server adapter", () => {
       scope: "battle",
       actorId: "A",
       type: "BATTLE_READY_SPELL",
-      spellName: "hold_person",
+      accessId: "prepared:hold_person",
+      spellId: "hold_person",
       slotLevel: 2,
       targetId: "B",
     });
@@ -6114,6 +6135,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_HELLISH_REBUKE",
+          accessId: "prepared:hellish_rebuke",
           cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
@@ -6153,6 +6175,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_COUNTERSPELL",
+          accessId: "prepared:counterspell",
           slotLevel: { options: [3, 4] },
           cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
@@ -6359,6 +6382,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_SHIELD",
+          accessId: "prepared:shield",
           cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:
@@ -6461,7 +6485,8 @@ describe("MCP server adapter", () => {
       true,
     );
     expect(readPayload(battleOnCreature)).toEqual({
-      error: "Action scope battle does not match the current creature host.",
+      error:
+        "Action scope authoredBattle does not match the current creature host.",
       details: "ACTION_SCOPE_MISMATCH",
     });
 
@@ -7006,7 +7031,6 @@ describe("SessionRouter", () => {
     const response = handleToolCall(host, "execute_control_command", {
       scope: "battle",
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
       creatures: [
         { id: "C", maxHp: 20, kind: "PC" },
         { id: "C", maxHp: 20, kind: "PC" },

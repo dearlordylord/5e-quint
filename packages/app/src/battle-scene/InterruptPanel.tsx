@@ -1,6 +1,7 @@
 import { battleMachine } from "@dnd/core/battle-machine.ts"
 import type { BattleContext, BattleEvent, PendingInterrupt, SpellStackEntry } from "@dnd/core/battle-machine-types.ts"
 import type { ScenarioMeta } from "@dnd/core/battle-scene/scene-snapshot.ts"
+import { getSpellVisual } from "@dnd/core/battle-scene/visual-catalog.ts"
 import { useMemo } from "react"
 import { createActor } from "xstate"
 
@@ -104,7 +105,7 @@ function interruptFrame(pi: PendingInterrupt, await_: BattleContext["awaitCtx"],
         id: "spellCast",
         kind: "SPELL",
         title: "Spell Being Cast",
-        subtitle: ctx.spellName || "Unknown spell",
+        subtitle: getSpellVisual(ctx.spellId).label,
         participants: [
           { role: "Caster", name: n(names, ctx.caster), highlight: "red" },
           ...waiting.map((id) => ({ role: "Can Counter", name: n(names, id), highlight: "amber" as const }))
@@ -207,7 +208,7 @@ function spellStackFrame(entry: SpellStackEntry, depth: number, names: Names): S
     id: `cs_${depth}`,
     kind: "COUNTER",
     title: `Counterspell (depth ${depth})`,
-    subtitle: `Countering ${n(names, entry.spellCasterId)}'s ${entry.spellName}`,
+    subtitle: `Countering ${n(names, entry.spellCasterId)}'s ${getSpellVisual(entry.spellId).label}`,
     participants: [
       { role: "Original Caster", name: n(names, entry.spellCasterId), highlight: "red" },
       ...waiting.map((w) => ({ role: w, name: "", highlight: "amber" as const }))

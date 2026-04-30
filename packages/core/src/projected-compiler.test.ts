@@ -293,7 +293,7 @@ describe("projected compiler shape-driven widening", () => {
       ...secondWind,
       mechanics: {
         ...secondWind.mechanics,
-        activationCost: { kind: "action" },
+        activationCost: { kind: "standard_action", action: "utilize" },
       },
     };
 

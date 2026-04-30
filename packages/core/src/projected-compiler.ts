@@ -124,6 +124,7 @@ function compileActivationCost(
 ): ProjectedExecutableAction["activationCost"] {
   return Match.value(activation.kind).pipe(
     Match.when("action", () => "PACAction" as const),
+    Match.when("standard_action", () => "PACAction" as const),
     Match.when("bonus_action", () => "PACBonusAction" as const),
     Match.when("free", () => "PACFree" as const),
     Match.orElse(() =>

@@ -1,6 +1,7 @@
 import { ABILITY_SCORE_GENERATION_MODES, BACKGROUND_ABILITY_SCORE_OPTIONS } from "@dnd/core/character-ability-scores.ts"
 import { type CharacterDraft, STANDARD_ARRAY_SCORES, totalPointBuyCost } from "@dnd/core/character-domain.ts"
 import { ABILITIES, type Ability } from "@dnd/core/types.ts"
+import { Option } from "effect"
 
 import { titleCase } from "#/components/character-creation/characterCreationShared.tsx"
 
@@ -48,7 +49,9 @@ export function AbilityScoresStep({
           <p className="mt-2">Standard Array: {STANDARD_ARRAY_SCORES.join(", ")}</p>
           <p className="mt-1">
             Point-buy cost:{" "}
-            {assignedScores == null ? "complete all six scores to compute" : totalPointBuyCost(assignedScores)}
+            {assignedScores == null
+              ? "complete all six scores to compute"
+              : Option.getOrElse(totalPointBuyCost(assignedScores), () => "invalid point-buy scores")}
           </p>
         </div>
       </div>

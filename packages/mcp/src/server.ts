@@ -10,9 +10,11 @@ import {
   previewAction,
   previewBattleAction,
   ControlCommandSchema,
+  resolveAuthoredBattleAction,
   resolveBattleAction,
   resolveAction,
   ResolvedActionTokenSchema,
+  type AuthoredBattleResolvedActionToken,
   type ActionToken,
   type BattleResolvedActionToken,
   type ResolvedActionToken,
@@ -225,7 +227,7 @@ function executeCreatureResolvedAction(
 }
 
 function scopeMismatchContent(
-  tokenScope: "creature" | "battle",
+  tokenScope: ResolvedActionToken["scope"],
   hostScope: "creature" | "battle",
 ) {
   return errorContent(
@@ -234,13 +236,22 @@ function scopeMismatchContent(
   );
 }
 
+function isBattleHostActionToken(
+  token: ResolvedActionToken,
+): token is BattleResolvedActionToken | AuthoredBattleResolvedActionToken {
+  return token.scope === "battle" || token.scope === "authoredBattle";
+}
+
 function executeBattleResolvedAction(
   actor: BattleActor,
-  token: BattleResolvedActionToken,
+  token: BattleResolvedActionToken | AuthoredBattleResolvedActionToken,
   args: unknown,
 ) {
   const before = actor.getSnapshot();
-  const resolution = resolveBattleAction(before.context, token);
+  const resolution =
+    token.scope === "authoredBattle"
+      ? resolveAuthoredBattleAction(before.context, token)
+      : resolveBattleAction(before.context, token);
   if ("code" in resolution) {
     return errorContent(resolution.message, resolution.code);
   }
@@ -300,7 +311,7 @@ function executeResolvedAction(host: SupportedActionHost, args: unknown) {
       return executeCreatureResolvedAction(actor, decoded, args);
     }),
     Match.when({ scope: "battle" }, ({ actor }) => {
-      if (decoded.scope !== "battle") {
+      if (!isBattleHostActionToken(decoded)) {
         return scopeMismatchContent(decoded.scope, "battle");
       }
       return executeBattleResolvedAction(actor, decoded, args);
@@ -344,7 +355,7 @@ function previewResolvedAction(host: SupportedActionHost, args: unknown) {
       );
     }),
     Match.when({ scope: "battle" }, ({ actor }) => {
-      if (decoded.scope !== "battle") {
+      if (!isBattleHostActionToken(decoded)) {
         return scopeMismatchContent(decoded.scope, "battle");
       }
       return jsonContent(

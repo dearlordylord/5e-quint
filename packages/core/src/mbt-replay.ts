@@ -76,7 +76,7 @@ export async function replayFromDir<S, Actions extends SimpleActionMap>(opts: {
       }
 
       // Dispatch action through driver
-      if (drv.step) {
+      if ("step" in drv && typeof drv.step === "function") {
         await Promise.resolve(drv.step(action, picks));
       } else if (action in drv.actions) {
         const actionDef = drv.actions[action] as {

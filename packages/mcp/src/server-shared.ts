@@ -9,6 +9,10 @@ import type {
 import { encodeDndSnapshot } from "@dnd/core/context-encoding.ts";
 import { creatureMachine } from "@dnd/core/machine.ts";
 import {
+  currentActing,
+  initiativeOrder,
+} from "@dnd/shared-algebras/initiative-algebra";
+import {
   getMonsterStatBlockByStateId,
   statBlockAbilityName,
 } from "@dnd/core/monster-catalog.ts";
@@ -53,20 +57,25 @@ export function battleSnapshotUnchanged(
   );
 }
 
+function battleInitiative(context: BattleContext) {
+  return context.initiative as BattleContext["initiative"] | null;
+}
+
 function battlePhase(context: BattleContext) {
+  const initiative = battleInitiative(context);
   if (context.awaitCtx !== null) return "awaitingReaction" as const;
   if (context.aoeCtx !== null) return "resolvingAoE" as const;
   if (context.movementCtx !== null) return "resolvingMovement" as const;
   if (context.laCtx !== null) return "awaitingLegendaryAction" as const;
   if (context.readyCtx !== null) return "awaitingReadiedAction" as const;
-  if (context.initiative.length > 0 && !context.turnStarted) {
+  if (initiative != null && !context.turnStarted) {
     return "awaitingStartTurn" as const;
   }
   return "activeTurn" as const;
 }
 
 function nextRequiredAction(context: BattleContext) {
-  if (context.initiative.length === 0) return null;
+  if (battleInitiative(context) == null) return null;
   if (!context.turnStarted && context.awaitCtx === null) {
     return {
       tool: "execute_control_command" as const,
@@ -79,7 +88,8 @@ function nextRequiredAction(context: BattleContext) {
 }
 
 function currentTurnCreatureId(context: BattleContext): CreatureId | null {
-  return context.initiative[context.turnIndex] ?? null;
+  const initiative = battleInitiative(context);
+  return initiative == null ? null : currentActing(initiative);
 }
 
 function encodeMonsterControlState(context: BattleContext) {
@@ -189,15 +199,16 @@ function encodeCreatureSummaries(context: BattleContext) {
 export function encodeBattleRuntimeState(snapshot: BattleSnapshot) {
   const monsterControl = encodeMonsterControlState(snapshot.context);
   const nextAction = nextRequiredAction(snapshot.context);
+  const initiative = battleInitiative(snapshot.context);
   return {
     scope: "battle" as const,
     machineState: snapshot.value,
     tags: [...snapshot.tags].sort(),
-    round: snapshot.context.round,
-    turnIndex: snapshot.context.turnIndex,
+    round: initiative?.round ?? 0,
+    turnIndex: initiative?.alreadyActed.length ?? 0,
     turnStarted: snapshot.context.turnStarted,
     activeCreatureId: currentTurnCreatureId(snapshot.context),
-    initiative: snapshot.context.initiative,
+    initiative: initiative == null ? [] : initiativeOrder(initiative),
     creatureIds: [...snapshot.context.creatures.keys()].sort(),
     creatures: encodeCreatureSummaries(snapshot.context),
     phase: battlePhase(snapshot.context),

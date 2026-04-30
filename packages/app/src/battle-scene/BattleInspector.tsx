@@ -32,6 +32,17 @@ function replayState(events: ReadonlyArray<BattleEvent>, upTo: number) {
   return snap
 }
 
+type BattleInitiative = ReturnType<typeof replayState>["context"]["initiative"]
+type BattleInitiativeCreatureId = BattleInitiative["stillToAct"][number]["creature"]
+
+function battleInitiativeCreatureIds(initiative: BattleInitiative): ReadonlyArray<BattleInitiativeCreatureId> {
+  return [...initiative.alreadyActed, ...initiative.stillToAct].map((entry) => entry.creature)
+}
+
+function activeBattleCreatureId(initiative: BattleInitiative): BattleInitiativeCreatureId {
+  return initiative.stillToAct[0].creature
+}
+
 function deriveDamageTrack(cs: BattleCreatureState): string {
   if (cs.dead) return "dead"
   if (cs.hp <= 0 && cs.unconscious) return cs.stable ? "stable" : "unstable"
@@ -168,6 +179,8 @@ export function BattleInspector({
   }, [events, cursor])
 
   const [compact, setCompact] = useState(false)
+  const initiativeIds = battleInitiativeCreatureIds(battleCtx.initiative)
+  const activeCreatureId = activeBattleCreatureId(battleCtx.initiative)
 
   return (
     <div className={`w-full ${compact ? "" : "max-w-4xl"} flex flex-col gap-4`}>
@@ -189,10 +202,10 @@ export function BattleInspector({
 
       {compact ? (
         <div className="grid grid-cols-6 gap-1.5">
-          {battleCtx.initiative.map((id) => {
+          {initiativeIds.map((id) => {
             const cs = battleCtx.creatures.get(id)
             if (!cs) return null
-            const isActive = battleCtx.initiative[battleCtx.turnIndex] === id
+            const isActive = activeCreatureId === id
             return (
               <CreatureStateCard
                 key={id}
@@ -208,10 +221,10 @@ export function BattleInspector({
           })}
         </div>
       ) : (
-        battleCtx.initiative.map((id) => {
+        initiativeIds.map((id) => {
           const cs = battleCtx.creatures.get(id)
           if (!cs) return null
-          const isActive = battleCtx.initiative[battleCtx.turnIndex] === id
+          const isActive = activeCreatureId === id
           return (
             <CreatureStateCard
               key={id}

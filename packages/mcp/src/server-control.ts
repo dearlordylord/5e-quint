@@ -122,10 +122,14 @@ function buildBattleControlEvent(
     })),
     Match.when(
       { type: "BATTLE_ADD_CREATURE" },
-      ({ creatures, insertAtIndex }) => ({
+      ({ creatures, tieDecisions }) => ({
         type: "BATTLE_ADD_CREATURE" as const,
         creatures: creatures.map(toBattleInitCreatureConfig),
-        insertAtIndex,
+        tieDecisions: tieDecisions?.map((decision) => ({
+          creatureId: CreatureId(decision.creatureId),
+          tie: decision.tie.map((id) => CreatureId(id)),
+          index: decision.index,
+        })),
       }),
     ),
     Match.when({ type: "BATTLE_REMOVE_CREATURE" }, ({ creatureIds }) => ({

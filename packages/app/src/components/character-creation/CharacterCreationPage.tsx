@@ -12,6 +12,7 @@ import {
   characterSheetMachineInput,
   deriveCharacterSheetNumbers
 } from "@dnd/core/character-sheet-derived.ts"
+import { makeSpellLibrary, SRD_SPELLS } from "@dnd/core/features/spell-registry.ts"
 import { useCallback, useEffect, useState } from "react"
 
 import {
@@ -29,6 +30,7 @@ import {
 import { PageShell } from "#/components/PageShell.tsx"
 
 const STORAGE_KEY = "dnd.characterDraft.v1"
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS)
 
 function parseStoredDraft(): CharacterDraft {
   if (typeof window === "undefined") return {}
@@ -174,7 +176,7 @@ export function CharacterCreationPage() {
           sheet: completeSheet,
           derived: deriveCharacterSheetNumbers(completeSheet),
           machineInput: characterSheetMachineInput(completeSheet),
-          battleProjection: characterSheetBattleProjection(completeSheet)
+          battleProjection: characterSheetBattleProjection(completeSheet, SPELL_LIBRARY)
         }
 
   function updateDraft(patch: Partial<CharacterDraft>) {

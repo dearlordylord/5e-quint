@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { type CharacterSheet } from "@dnd/core/character-domain.ts";
 import { characterSheetBattleProjection } from "@dnd/core/character-sheet-derived.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "@dnd/core/features/spell-registry.ts";
 import { MONSTER_STAT_BLOCK_IDS } from "@dnd/core/monster-catalog.ts";
 import { fighterStartBattleLoadout } from "@dnd/core/player-loadouts.ts";
 import type { BattleWeaponProfile } from "@dnd/core/types.ts";
@@ -10,6 +11,7 @@ import type { CreatureActionHost } from "./host-factories.ts";
 import { errorContent } from "./server-shared.ts";
 
 const strictParseOptions = { onExcessProperty: "error" } as const;
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 const InitiativeRollSchema = Schema.Number.pipe(
   Schema.int(),
@@ -198,7 +200,7 @@ export function buildStartBattleCommandFromSheet(
     );
   }
 
-  const projection = characterSheetBattleProjection(sheet);
+  const projection = characterSheetBattleProjection(sheet, SPELL_LIBRARY);
   if ((projection.fighterLevel ?? 0) <= 0) {
     return errorContent(
       "start_battle requires the stored character sheet to include Fighter levels.",
