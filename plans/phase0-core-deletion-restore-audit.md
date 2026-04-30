@@ -3,11 +3,101 @@
 Migration baseline: `39f9ab71`  
 Current audit date: 2026-04-28
 
+CAM19A refresh: `41a71d3dec664ab3a7036b5c02da7c6d41ac3670`
+on 2026-04-29, after the MCP green path can close a battle and hand reduced
+player-character HP back to the character list.
+
 This audit inventories old Core, App, and MCP lanes that will break, move, or be
 deleted while Correction replaces the old Core vertical. The migration rule is
 controlled breakage, not compatibility preservation: `CPU*`, `PEA*`, and `PPR*`
 are deleted architecture, while old domain knowledge is preserved by baseline
 references and Restore Ledger rows.
+
+## CAM19A Current-HEAD Refresh
+
+Source inventory commands:
+
+```sh
+git rev-parse HEAD
+rg -l '@dnd/core' packages/mcp packages/character-creation-runtime packages/battle-runtime | sort
+rg -n '@dnd/core|CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime
+rg -n '@dnd/core' packages/mcp/src/green packages/character-creation-runtime/src packages/battle-runtime/src packages/character-creation-runtime/character-creation-runtime-slice.qnt packages/battle-runtime/battle-runtime-slice.qnt
+rg -n 'projectedPreparedSpell|projected-action-bridge|projected-persistent|projected-compiler|projected-executable|CPU|PEA|PPR' packages/mcp/src packages/character-creation-runtime/src packages/battle-runtime/src
+```
+
+Current-HEAD comparison against baseline audit:
+
+- Stale item: the baseline statement that no `CPU*`/`PEA*`/`PPR*` production
+  code is safe to delete before a green MCP entrypoint exists is now stale. The
+  green entrypoint exists under `packages/mcp/src/green/` and the full green
+  fixture includes post-battle character HP handoff. The next action is legacy
+  isolation, not production deletion in CAM19A.
+- Still-legacy MCP files with `@dnd/core` imports:
+  `packages/mcp/src/server.ts`, `server-shared.ts`, `host-factories.ts`,
+  `server-control.ts`, `server-table-events.ts`, `server-runtime.ts`,
+  `server-battle-attack-runtime.ts`, `server-action-decode.ts`,
+  `character-session.ts`, `character-session-helpers.ts`, `start-battle.ts`,
+  and `server.test.ts`.
+- Still-legacy MCP script call sites for the old Core-backed tool surface:
+  `packages/mcp/src/harness.ts` calls `get_state`,
+  `get_available_actions`, and `execute_action`; and
+  `packages/mcp/src/probe-short-rest.ts` calls `get_available_actions`.
+  These scripts do not import Core directly, but they exercise the legacy
+  `server.ts` tool surface and must move with the legacy boundary or be
+  deleted. Retain them only if CAM19B rewrites them to call the promoted green
+  tools through `packages/mcp/src/green/`.
+- Still-legacy MCP package metadata:
+  `packages/mcp/package.json` keeps the package-level `@dnd/core` dependency
+  and `packages/mcp/tsconfig.json` keeps the path alias while old MCP files
+  remain in the package.
+- Newly safe to isolate: every non-`src/green/` MCP file above can move behind
+  a deletion-marked legacy boundary because the Surface runtime vertical no
+  longer needs them for the green fixture. `packages/mcp/src/index.ts` and
+  `packages/mcp/src/session-router.ts` do not import Core directly, but they
+  route through `server.ts`, `server-shared.ts`, `host-factories.ts`,
+  `character-session.ts`, and `start-battle.ts`, so they belong to the same
+  legacy boundary until promotion.
+- Missing from the old audit: `packages/mcp/src/green/` is now the current
+  promoted candidate path. The direct Core import check over
+  `packages/mcp/src/green`, `packages/character-creation-runtime/src`,
+  `packages/battle-runtime/src`, and both package-local QNT slices returns no
+  matches.
+- Still-legacy projected MCP lane:
+  `packages/mcp/src/server-runtime.ts` imports
+  `@dnd/core/projected-action-bridge-prepared-spell.ts`; `server.ts` branches
+  on `projectedPreparedSpell`; `server.test.ts` still carries Acid Splash
+  projected prepared spell tests.
+- Stale projected-vocabulary false positive: the acceptance regex finds
+  `PHASE1_WEAPON_SPEAR_UNIT_ID` in
+  `packages/character-creation-runtime/src/phase1-manifest.ts` because the
+  substring `PEA` appears in `SPEAR`. This is not projected vocabulary.
+- Still clean runtime packages: `@dnd/character-creation-runtime` and
+  `@dnd/battle-runtime` source/QNT files do not import `@dnd/core` and do not
+  use old projected executable module names. README mentions of `@dnd/core` are
+  documentation of the boundary, not runtime dependencies.
+- Promoted-path Core import checks must target source/QNT files when the
+  desired result is zero matches. Broad package checks include expected
+  documentation mentions in package READMEs and are classification checks, not
+  executable zero-match gates.
+
+Restore Ledger coverage at this refresh:
+
+- Core-backed MCP host, action-token workflow, old character session, and old
+  start-battle route are covered by the Restore Ledger row "Old MCP Core-backed
+  tools".
+- `server-runtime.ts`, `server.ts`, and `server.test.ts` projected prepared
+  spell call sites are covered by "Projected prepared spell / Acid Splash lane".
+- Old `available-actions.ts` imports in MCP are covered by "Old
+  `available-actions.ts` breadth".
+- Old character draft/sheet/session behavior is covered by "Full character
+  creation width", "Level advancement and higher-level starts",
+  "Spellcasting and Mage/Wizard creation", and "Old MCP Core-backed tools".
+- Old battle machine host, old battle event/runtime input decoding, and old
+  monster catalog startup are covered by "Old Core battle MBT", "Monster
+  legendary/recharge/daily controls", and "Old MCP Core-backed tools".
+- The old projected executable modules and `CPU*`/`PEA*`/`PPR*` vocabulary are
+  covered by "Old projected execution vocabulary", with Acid Splash, Second
+  Wind, Action Surge, and Mage Armor lanes covered by their dedicated rows.
 
 Prior Phase 0 outputs consulted:
 
@@ -204,6 +294,7 @@ Delete after green runtime:
 - `packages/core/src/projected-mechanic-interpreter-types.ts`
 - `packages/core/src/projected-mechanic-interpreter-helpers.ts`
 - `packages/core/src/projected-action-bridge.ts`
+- `packages/core/src/projected-action-bridge-prepared-spell.ts`
 - `packages/core/src/projected-action-bridge-helpers.ts`
 - `packages/core/src/projected-action-context.ts`
 - `packages/core/src/projected-creature-action-reducer.ts`
@@ -279,6 +370,139 @@ Delete now candidates:
    must return no matches.
 7. After the green fixture passes, either isolate old Core-backed MCP tools under
    an explicit legacy entrypoint or delete them with Restore Ledger coverage.
+
+## CAM19B-CAM19D Deletion / Isolation Checklist
+
+### CAM19B: isolate the legacy Core MCP path
+
+Files to move or place behind an explicitly deletion-marked legacy boundary:
+
+- `packages/mcp/src/index.ts`
+- `packages/mcp/src/session-router.ts`
+- `packages/mcp/src/server.ts`
+- `packages/mcp/src/server-shared.ts`
+- `packages/mcp/src/host-factories.ts`
+- `packages/mcp/src/server-control.ts`
+- `packages/mcp/src/server-table-events.ts`
+- `packages/mcp/src/server-runtime.ts`
+- `packages/mcp/src/server-battle-attack-runtime.ts`
+- `packages/mcp/src/server-action-decode.ts`
+- `packages/mcp/src/character-session.ts`
+- `packages/mcp/src/character-session-helpers.ts`
+- `packages/mcp/src/start-battle.ts`
+- `packages/mcp/src/server.test.ts`
+- `packages/mcp/src/harness.ts`
+- `packages/mcp/src/probe-short-rest.ts`
+
+Files that must remain on the Surface runtime path:
+
+- `packages/mcp/src/green/battle-creature-init.ts`
+- `packages/mcp/src/green/battle-fill-input.ts`
+- `packages/mcp/src/green/battle-tool-input.ts`
+- `packages/mcp/src/green/battle-tools.ts`
+- `packages/mcp/src/green/character-tool-input.ts`
+- `packages/mcp/src/green/character-tools.ts`
+- `packages/mcp/src/green/composition-root.ts`
+- `packages/mcp/src/green/index.ts`
+- `packages/mcp/src/green/session-store.ts`
+- `packages/mcp/src/green/index.test.ts`
+
+CAM19B tests and checks:
+
+- Keep `packages/mcp/src/green/index.test.ts` passing.
+- Move or mark `packages/mcp/src/server.test.ts` as legacy-only with the
+  legacy files; do not require it for the promoted MCP gate.
+- Move `packages/mcp/src/harness.ts` and
+  `packages/mcp/src/probe-short-rest.ts` with the legacy files or delete them.
+  They call the old `get_state`/`get_available_actions`/`execute_action`
+  surface and are not promoted-compatible unless rewritten against
+  `packages/mcp/src/green/`.
+- Run the promoted source/QNT Core import check:
+  `rg '@dnd/core' packages/mcp/src/green packages/character-creation-runtime/src packages/battle-runtime/src packages/character-creation-runtime/character-creation-runtime-slice.qnt packages/battle-runtime/battle-runtime-slice.qnt`.
+- A broader `rg '@dnd/core' packages/mcp/src/green packages/character-creation-runtime packages/battle-runtime`
+  may still report expected README documentation mentions; do not use it as the
+  zero-match gate unless docs are excluded.
+- Run `rg '@dnd/core' packages/mcp/src packages/character-creation-runtime packages/battle-runtime` and classify any remaining MCP matches as legacy-only.
+- Update `packages/mcp/README.md` if the legacy boundary path or package name
+  differs from this checklist.
+
+### CAM19C: delete projected vocabulary from the promoted path
+
+Projected MCP call sites to delete from the promoted path or leave reachable
+only from the deletion-marked legacy boundary:
+
+- `packages/mcp/src/server-runtime.ts` import of
+  `@dnd/core/projected-action-bridge-prepared-spell.ts`.
+- `packages/mcp/src/server.ts` branch on `projectedPreparedSpell`.
+- Acid Splash `projectedPreparedSpell` tests in
+  `packages/mcp/src/server.test.ts`.
+
+Projected Core files to delete once no promoted or legacy-retained code imports
+them:
+
+- `packages/core/src/projected-executable.ts`
+- `packages/core/src/projected-compiler.ts`
+- `packages/core/src/projected-mechanic-interpreter.ts`
+- `packages/core/src/projected-mechanic-interpreter-types.ts`
+- `packages/core/src/projected-mechanic-interpreter-helpers.ts`
+- `packages/core/src/projected-action-bridge.ts`
+- `packages/core/src/projected-action-bridge-prepared-spell.ts`
+- `packages/core/src/projected-action-bridge-helpers.ts`
+- `packages/core/src/projected-action-context.ts`
+- `packages/core/src/projected-creature-action-reducer.ts`
+- `packages/core/src/projected-battle-action-reducer.ts`
+- `packages/core/src/projected-persistent.ts`
+- `packages/core/src/projected-compiler.test.ts`
+- `packages/core/src/projected-executable.test.ts`
+- `packages/core/src/projected-mechanic-interpreter.test.ts`
+- `packages/core/src/projected-persistent.test.ts`
+- `projected-executable.qnt`
+
+CAM19C checks:
+
+- Run `rg 'CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime`.
+- Treat `PHASE1_WEAPON_SPEAR_UNIT_ID` as a documented false positive unless
+  the check is tightened to projected tag boundaries.
+- Verify Second Wind remains as a level-1 Fighter sheet/resource fact and is
+  not restored through `PEADirectHealHp`.
+- Confirm Acid Splash, Action Surge, and Mage Armor remain ledgered omissions,
+  not renamed projected IR.
+
+### CAM19D: reconcile docs and tests after deletion
+
+Docs to reconcile:
+
+- `plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`
+- `plans/phase0-core-deletion-restore-audit.md`
+- `packages/mcp/README.md`
+- `packages/character-creation-runtime/README.md`
+- `packages/battle-runtime/README.md`
+- Any remaining `plans/EXECUTABLE_PROJECTION_*` document that still describes
+  projected executable/Core-backed MCP as active architecture.
+
+Test ownership to reconcile:
+
+- The MCP promoted-path test should cover create/finalize character, select
+  Goblin Warrior, start battle, Fighter Attack with damage, End Turn, Goblin
+  Attack with damage, battle closeout, and post-battle character HP handoff.
+- Legacy `server.test.ts` assertions for Core action tokens, Core character
+  sessions, `projectedPreparedSpell`, monster controls, and old runtime input
+  decoders should be deleted with the legacy path or documented as legacy-only.
+- Runtime package tests remain the verification surface for the Surface-backed
+  character and battle reducers.
+
+CAM19D checks:
+
+- Run the promoted-path Core import check:
+  `rg '@dnd/core' packages/mcp/src/green packages/character-creation-runtime/src packages/battle-runtime/src packages/character-creation-runtime/character-creation-runtime-slice.qnt packages/battle-runtime/battle-runtime-slice.qnt`.
+- If CAM19D also runs the broader package check
+  `rg '@dnd/core' packages/mcp/src/green packages/character-creation-runtime packages/battle-runtime`,
+  classify README matches as expected documentation noise unless the docs now
+  claim an active Core dependency.
+- Run the projected vocabulary check:
+  `rg 'CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime`.
+- Record any remaining expected failure against a Restore Ledger row before
+  unblocking CAM20.
 
 ## Expected Breakage List
 

@@ -92,13 +92,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 9,
       "id": "CAM19A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Refresh Core And Projected Deletion Inventory"
     },
     {
       "number": 10,
       "id": "CAM19B",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Isolate Legacy Core MCP Path"
     },
     {
@@ -184,8 +184,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 6     | CAM18C - Add Goblin Warrior Attack Support                       | done               | CAM18B             | CAM18D       | Added Goblin Warrior Scimitar and Shortbow Attack discovery/resolution from authored StatBlockRecord, through the shared battle-runtime and MCP Attack replay.                                   | Completed.                                                                  |
 | 7     | CAM18D - Add Full Green Vertical Fixture                         | done               | CAM18C             | CAM18E       | Added the full MCP-only green fixture: create/finalize Fighter, select Goblin Warrior, start battle, Fighter attacks, End Turn, and Goblin attacks using normal-range Goblin target legality.    | Completed.                                                                  |
 | 8     | CAM18E - Add Post-Battle Character State Handoff                 | done               | CAM18D             | CAM19A       | Added explicit green MCP battle closeout, post-battle character HP handoff, and character-list read model for reduced current HP.                                                                | Completed.                                                                  |
-| 9     | CAM19A - Refresh Core And Projected Deletion Inventory           | ready-for-research | CAM18E             | CAM19B       | Inventory current Core/projected/MCP legacy call sites after the full green path and update Restore Ledger coverage before deletion.                                                             | Ready after CAM18E.                                                         |
-| 10    | CAM19B - Isolate Legacy Core MCP Path                            | blocked            | CAM19A             | CAM19C       | Move old Core-backed MCP routes/tests into a deletion-marked legacy package/path and keep them out of the promotable MCP entrypoint.                                                             | Blocker Type: dependency. Blocker Detail: waits on deletion inventory.      |
+| 9     | CAM19A - Refresh Core And Projected Deletion Inventory           | done               | CAM18E             | CAM19B       | Refreshed current Core/projected/MCP legacy call-site inventory and updated Restore Ledger/checklist coverage before deletion.                                                                    | Completed.                                                                  |
+| 10    | CAM19B - Isolate Legacy Core MCP Path                            | ready-for-implementation-after-light-research | CAM19A             | CAM19C       | Move old Core-backed MCP routes/tests into a deletion-marked legacy package/path and keep them out of the promotable MCP entrypoint.                                                             | Ready after CAM19A; use the current-head checklist in `plans/phase0-core-deletion-restore-audit.md`. |
 | 11    | CAM19C - Delete Projected Vocabulary From Promoted Path          | blocked            | CAM19B             | CAM19D       | Delete projected executable vocabulary from the promoted MCP/runtime path after legacy isolation, preserving omitted semantics only through Restore Ledger rows.                                 | Blocker Type: dependency. Blocker Detail: waits on legacy isolation.        |
 | 12    | CAM19D - Reconcile Post-Deletion Docs And Tests                  | blocked            | CAM19C             | CAM20        | Reconcile docs, tests, Restore Ledger status, and expected failures after isolation/deletion so CAM20 has a concrete promotion handoff.                                                          | Blocker Type: dependency. Blocker Detail: waits on projected cleanup.       |
 | 13    | CAM20 - Green Reconciliation And MCP Promotion                   | blocked            | CAM19D             | CAM21        | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.            | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.   |
@@ -787,7 +787,7 @@ Plan Impact:
 
 ### Task 9 - CAM19A - Refresh Core And Projected Deletion Inventory
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: CAM18E
 Blocks: CAM19B
@@ -822,17 +822,14 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM19B.
+- CAM19B unblocked.
 
 ### Task 10 - CAM19B - Isolate Legacy Core MCP Path
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM19A
 Blocks: CAM19C
-
-Blocker Type: dependency
-Blocker Detail: waits on deletion inventory.
 
 Input:
 

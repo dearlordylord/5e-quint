@@ -359,6 +359,38 @@ Green finalization criteria:
 
 Every omitted lane is wanted back after Correction application and app growth resumes.
 
+CAM19A current-head refresh (`41a71d3dec664ab3a7036b5c02da7c6d41ac3670`):
+the Surface runtime MCP lane exists under `packages/mcp/src/green/` and has no
+direct `@dnd/core` imports. The remaining Core-backed MCP files are now a
+deletion-marked legacy isolation target for CAM19B, not shared infrastructure
+for the promoted path. The detailed current inventory and CAM19B-CAM19D
+checklist live in `plans/phase0-core-deletion-restore-audit.md`.
+
+Current legacy MCP files covered by the ledger:
+
+- `packages/mcp/src/index.ts` and `packages/mcp/src/session-router.ts` route
+  through the old Core-backed server/session path and are covered by "Old MCP
+  Core-backed tools" until CAM20 promotes the Surface runtime tools.
+- `packages/mcp/src/server.ts`, `server-shared.ts`, `host-factories.ts`,
+  `server-control.ts`, `server-table-events.ts`, `server-runtime.ts`,
+  `server-battle-attack-runtime.ts`, `server-action-decode.ts`,
+  `character-session.ts`, `character-session-helpers.ts`, `start-battle.ts`,
+  and `server.test.ts` are covered by "Old MCP Core-backed tools" plus the
+  narrower rows for old `available-actions.ts` breadth, projected prepared
+  spells, character creation width, old battle MBT, monster controls, and
+  projected execution vocabulary.
+- `packages/mcp/src/harness.ts` and `packages/mcp/src/probe-short-rest.ts`
+  call the old `get_state`/`get_available_actions`/`execute_action` tool
+  surface and are covered by "Old MCP Core-backed tools" unless CAM19B rewrites
+  them against the promoted green tools.
+- `packages/mcp/src/server-runtime.ts`, `packages/mcp/src/server.ts`, and the
+  Acid Splash tests in `packages/mcp/src/server.test.ts` are covered by
+  "Projected prepared spell / Acid Splash lane".
+- `PHASE1_WEAPON_SPEAR_UNIT_ID` in
+  `packages/character-creation-runtime/src/phase1-manifest.ts` is a documented
+  false positive for the broad `PEA` inventory regex; it is not projected
+  executable vocabulary.
+
 | Omitted lane                                | Baseline references                                                                                                                                                                                                                                                                   | Disabled/expected-failing checks                                            | Green replacement check                                                       | Preserve conceptually                                                                                                                      | Safe to omit now because                                                                  | Restore condition                                                                                                 |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Full character creation width               | `git show 39f9ab71:packages/core/src/character-domain.ts`; `character-creation.qnt`; `character.qnt`                                                                                                                                                                                  | Old broad character tests may be excluded from green gate                   | `@dnd/character-creation-runtime` Fighter slice QNT/parity                    | Draft/sheet split, open choices vs illegal issues, level-1 creation distinct from advancement, higher-level starts via ordered advancement | Phase 1 proves only level-1 Fighter holes                                                 | Surface UnitRecord-backed character runtime supports broad SRD choices                                            |
