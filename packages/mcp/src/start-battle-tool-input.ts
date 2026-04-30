@@ -73,9 +73,12 @@ export type StartBattleCharacterToolInput = {
 
 export function decodeStartBattleArgs(
   args: unknown,
-  toolName: string,
 ): ToolInputResult<StartBattleToolInput> {
-  const record = decodeToolArgs(StartBattleToolArgsSchema, args, toolName);
+  const record = decodeToolArgs(
+    StartBattleToolArgsSchema,
+    args,
+    "start_battle",
+  );
   if (Either.isLeft(record)) return Either.left(record.left);
 
   return Either.right({

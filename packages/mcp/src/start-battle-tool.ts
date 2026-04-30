@@ -1,26 +1,19 @@
 import { snapshotBattle } from "@dnd/battle-runtime";
-import { Either } from "effect";
 
 import { startBattleFromCharacterBuildsAndStatBlock } from "./battle-creature-init.ts";
 import { battleStateProjection } from "./battle-state-projection.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import { characterBattleSpellSlots } from "./session-store.ts";
-import {
-  decodeStartBattleArgs,
-  type StartBattleToolInput,
-} from "./start-battle-tool-input.ts";
+import { type StartBattleToolInput } from "./start-battle-tool-input.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 
 export function handleStartBattleToolCall(
   root: McpCompositionRoot,
-  args: unknown,
+  input: StartBattleToolInput,
 ) {
-  const decoded = decodeStartBattleArgs(args, "start_battle");
-  if (Either.isLeft(decoded)) return decoded.left;
-  const input = decoded.right;
   const activeBattle = root.sessionStore.battleState;
   if (activeBattle !== null) {
     return errorContent("A battle session is already active.", {

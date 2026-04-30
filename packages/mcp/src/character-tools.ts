@@ -8,7 +8,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Schema } from "effect";
+import { Match, Schema } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -18,14 +18,14 @@ import {
   type CharacterSession,
 } from "./session-store.ts";
 import {
+  CHARACTER_TOOL_NAMES,
+  characterToolNames,
   createCharacterDraftInputSchema,
-  decodeCreateCharacterDraftArgs,
-  decodeDraftIdArg,
-  decodeEmptyArgs,
-  decodeFillCreationHolesArgs,
   draftIdInputSchema,
   emptyInputSchema,
   fillCreationHolesInputSchema,
+  type CharacterToolCall,
+  type CharacterToolName,
 } from "./character-tool-input.ts";
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
@@ -54,35 +54,35 @@ const ListCharactersOutputSchema = Schema.Struct({
 
 export const characterToolDefinitions = [
   {
-    name: "create_character_draft",
+    name: characterToolNames.createCharacterDraft,
     description:
-      "Create and store a Surface-runtime character draft, then return its current creation holes and finalization status.",
+      "Create and store a character draft, then return its current creation holes and finalization status.",
     inputSchema: createCharacterDraftInputSchema,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
   {
-    name: "discover_creation_holes",
+    name: characterToolNames.discoverCreationHoles,
     description:
-      "Return the current fillable creation holes, draft revision, and finalization status for a stored Surface-runtime character draft.",
+      "Return the current fillable creation holes, draft revision, and finalization status for a stored character draft.",
     inputSchema: draftIdInputSchema,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
   {
-    name: "fill_creation_holes",
+    name: characterToolNames.fillCreationHoles,
     description:
       "Submit an atomic batch of creation fills for a stored draft. Accepted batches replace the stored draft; rejected batches leave it unchanged.",
     inputSchema: fillCreationHolesInputSchema,
     outputSchema: mcpOutputJsonSchema(FillCreationHolesOutputSchema),
   },
   {
-    name: "finalize_character",
+    name: characterToolNames.finalizeCharacter,
     description:
       "Finalize a complete supported character draft. A ready finalization stores the resulting character session by source draft id and removes the active draft.",
     inputSchema: draftIdInputSchema,
     outputSchema: mcpOutputJsonSchema(FinalizeCharacterOutputSchema),
   },
   {
-    name: "list_characters",
+    name: characterToolNames.listCharacters,
     description:
       "List durable character-session records. Monster Stat Blocks and live battle combatants are not character-list rows.",
     inputSchema: emptyInputSchema,
@@ -90,132 +90,113 @@ export const characterToolDefinitions = [
   },
 ] as const;
 
-const CHARACTER_TOOL_NAMES = characterToolDefinitions.map(
-  (tool) => tool.name,
-) satisfies ReadonlyArray<(typeof characterToolDefinitions)[number]["name"]>;
-type CharacterToolName = (typeof CHARACTER_TOOL_NAMES)[number];
-
 export type CharacterToolResult =
   | ReturnType<typeof schemaJsonContent>
   | ReturnType<typeof errorContent>;
 
 export function isCharacterToolName(name: string): name is CharacterToolName {
-  return characterToolDefinitions.some((tool) => tool.name === name);
+  return CHARACTER_TOOL_NAMES.some((toolName) => toolName === name);
 }
 
 export function handleCharacterToolCall(
   root: McpCompositionRoot,
-  name: string,
-  args: unknown,
+  call: CharacterToolCall,
 ): CharacterToolResult {
-  if (!isCharacterToolName(name)) {
-    return errorContent(`Unknown Surface-runtime character tool: ${name}`);
-  }
-
-  if (name === "create_character_draft") {
-    const decoded = decodeCreateCharacterDraftArgs(args, name);
-    if (Either.isLeft(decoded)) return decoded.left;
-    const draft = createCharacterDraft({
-      unitLibrary: root.unitLibrary,
-      ...(decoded.right.draftId == null
-        ? {}
-        : { draftId: decoded.right.draftId }),
-    });
-    if (root.sessionStore.drafts.has(draft.draftId)) {
-      return duplicateDraftIdContent(draft.draftId, "activeDraft");
-    }
-    if (root.sessionStore.characters.has(draft.draftId)) {
-      return duplicateDraftIdContent(draft.draftId, "finalizedSession");
-    }
-    root.sessionStore.drafts.set(draft.draftId, draft);
-    return schemaJsonContent(
-      CreationDraftOutputSchema,
-      creationDraftPayload(root, draft),
-    );
-  }
-
-  if (name === "fill_creation_holes") {
-    const decoded = decodeFillCreationHolesArgs(args, name);
-    if (Either.isLeft(decoded)) return decoded.left;
-    const input = decoded.right;
-    const draft = root.sessionStore.drafts.get(input.draftId);
-    if (draft == null) {
-      return unknownDraftContent(input.draftId);
-    }
-    const result = fillCreationHoles({
-      draft,
-      unitLibrary: root.unitLibrary,
-      expectedRevision: input.expectedRevision,
-      fills: input.fills,
-    });
-
-    if (result.tag === "accepted") {
-      root.sessionStore.drafts.set(result.draft.draftId, result.draft);
-    }
-
-    return schemaJsonContent(FillCreationHolesOutputSchema, {
-      result,
-      storedDraft: root.sessionStore.drafts.get(input.draftId),
-      session: root.sessionStore.snapshot(),
-    });
-  }
-
-  if (name === "list_characters") {
-    const decoded = decodeEmptyArgs(args, name);
-    if (Either.isLeft(decoded)) return decoded.left;
-    return schemaJsonContent(ListCharactersOutputSchema, {
-      characters: Array.from(root.sessionStore.characters.entries()).map(
-        ([sourceDraftId, session]) =>
-          characterListRow(root.unitLibrary, sourceDraftId, session),
-      ),
-      session: root.sessionStore.snapshot(),
-    });
-  }
-
-  const decodedDraftId = decodeDraftIdArg(args, name);
-  if (Either.isLeft(decodedDraftId)) return decodedDraftId.left;
-  const draftId = decodedDraftId.right;
-
-  const draft = root.sessionStore.drafts.get(draftId);
-  if (draft == null) {
-    return unknownDraftContent(draftId);
-  }
-
-  if (name === "discover_creation_holes") {
-    return schemaJsonContent(
-      CreationDraftOutputSchema,
-      creationDraftPayload(root, draft),
-    );
-  }
-
-  if (name === "finalize_character") {
-    const finalization = finalizeCharacterDraft({
-      draft,
-      unitLibrary: root.unitLibrary,
-    });
-    if (finalization.tag === "ready") {
-      root.sessionStore.characters.set(
-        draftId,
-        availableCharacterSession({
-          build: finalization.build,
-          currentHp: Hp(finalization.build.hitPoints.maximum),
-        }),
+  return Match.value(call).pipe(
+    Match.when({ name: characterToolNames.createCharacterDraft }, (matched) => {
+      const draft = createCharacterDraft({
+        unitLibrary: root.unitLibrary,
+        ...(matched.args.draftId == null
+          ? {}
+          : { draftId: matched.args.draftId }),
+      });
+      if (root.sessionStore.drafts.has(draft.draftId)) {
+        return duplicateDraftIdContent(draft.draftId, "activeDraft");
+      }
+      if (root.sessionStore.characters.has(draft.draftId)) {
+        return duplicateDraftIdContent(draft.draftId, "finalizedSession");
+      }
+      root.sessionStore.drafts.set(draft.draftId, draft);
+      return schemaJsonContent(
+        CreationDraftOutputSchema,
+        creationDraftPayload(root, draft),
       );
-      root.sessionStore.drafts.delete(draftId);
-    }
+    }),
+    Match.when(
+      { name: characterToolNames.discoverCreationHoles },
+      (matched) => {
+        const draft = root.sessionStore.drafts.get(matched.args.draftId);
+        if (draft == null) return unknownDraftContent(matched.args.draftId);
+        return schemaJsonContent(
+          CreationDraftOutputSchema,
+          creationDraftPayload(root, draft),
+        );
+      },
+    ),
+    Match.when({ name: characterToolNames.fillCreationHoles }, (matched) => {
+      const input = matched.args;
+      const draft = root.sessionStore.drafts.get(input.draftId);
+      if (draft == null) {
+        return unknownDraftContent(input.draftId);
+      }
+      const result = fillCreationHoles({
+        draft,
+        unitLibrary: root.unitLibrary,
+        expectedRevision: input.expectedRevision,
+        fills: input.fills,
+      });
 
-    return schemaJsonContent(FinalizeCharacterOutputSchema, {
-      draftId,
-      finalization,
-      sheet:
-        finalization.tag === "ready"
-          ? root.sessionStore.characters.get(draftId)?.build
-          : null,
-      session: root.sessionStore.snapshot(),
-    });
-  }
+      if (result.tag === "accepted") {
+        root.sessionStore.drafts.set(result.draft.draftId, result.draft);
+      }
 
-  return errorContent(`Unknown Surface-runtime character tool: ${name}`);
+      return schemaJsonContent(FillCreationHolesOutputSchema, {
+        result,
+        storedDraft: root.sessionStore.drafts.get(input.draftId),
+        session: root.sessionStore.snapshot(),
+      });
+    }),
+    Match.when({ name: characterToolNames.finalizeCharacter }, (matched) => {
+      const draftId = matched.args.draftId;
+      const draft = root.sessionStore.drafts.get(draftId);
+      if (draft == null) return unknownDraftContent(draftId);
+
+      const finalization = finalizeCharacterDraft({
+        draft,
+        unitLibrary: root.unitLibrary,
+      });
+      if (finalization.tag === "ready") {
+        root.sessionStore.characters.set(
+          draftId,
+          availableCharacterSession({
+            build: finalization.build,
+            currentHp: Hp(finalization.build.hitPoints.maximum),
+          }),
+        );
+        root.sessionStore.drafts.delete(draftId);
+      }
+
+      return schemaJsonContent(FinalizeCharacterOutputSchema, {
+        draftId,
+        finalization,
+        sheet:
+          finalization.tag === "ready"
+            ? root.sessionStore.characters.get(draftId)?.build
+            : null,
+        session: root.sessionStore.snapshot(),
+      });
+    }),
+    Match.when({ name: characterToolNames.listCharacters }, () =>
+      schemaJsonContent(ListCharactersOutputSchema, {
+        characters: Array.from(root.sessionStore.characters.entries()).map(
+          ([sourceDraftId, session]) =>
+            characterListRow(root.unitLibrary, sourceDraftId, session),
+        ),
+        session: root.sessionStore.snapshot(),
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function unknownDraftContent(draftId: CharacterDraftId) {

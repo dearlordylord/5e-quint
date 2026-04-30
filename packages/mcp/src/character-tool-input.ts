@@ -8,7 +8,7 @@ import {
   type CreationFill,
   type DraftRevision,
 } from "@dnd/character-creation-runtime";
-import { Either, JSONSchema, Schema } from "effect";
+import { Either, JSONSchema, Match, Schema } from "effect";
 
 import { errorContent } from "./tool-content.ts";
 import {
@@ -93,6 +93,57 @@ type FillCreationHolesArgs = Schema.Schema.Type<
 >;
 type CreationFillArgs = FillCreationHolesArgs["fills"][number];
 
+export const characterToolNames = {
+  createCharacterDraft: "create_character_draft",
+  discoverCreationHoles: "discover_creation_holes",
+  fillCreationHoles: "fill_creation_holes",
+  finalizeCharacter: "finalize_character",
+  listCharacters: "list_characters",
+} as const;
+export const CHARACTER_TOOL_NAMES = [
+  characterToolNames.createCharacterDraft,
+  characterToolNames.discoverCreationHoles,
+  characterToolNames.fillCreationHoles,
+  characterToolNames.finalizeCharacter,
+  characterToolNames.listCharacters,
+] as const;
+export type CharacterToolName = (typeof CHARACTER_TOOL_NAMES)[number];
+
+type CreateCharacterDraftToolInput = {
+  readonly draftId?: CharacterDraftId;
+};
+type DraftIdToolInput = {
+  readonly draftId: CharacterDraftId;
+};
+type FillCreationHolesToolInput = {
+  readonly draftId: CharacterDraftId;
+  readonly expectedRevision: DraftRevision;
+  readonly fills: readonly CreationFill[];
+};
+type EmptyToolInput = Record<string, never>;
+
+export type CharacterToolCall =
+  | {
+      readonly name: typeof characterToolNames.createCharacterDraft;
+      readonly args: CreateCharacterDraftToolInput;
+    }
+  | {
+      readonly name: typeof characterToolNames.discoverCreationHoles;
+      readonly args: DraftIdToolInput;
+    }
+  | {
+      readonly name: typeof characterToolNames.fillCreationHoles;
+      readonly args: FillCreationHolesToolInput;
+    }
+  | {
+      readonly name: typeof characterToolNames.finalizeCharacter;
+      readonly args: DraftIdToolInput;
+    }
+  | {
+      readonly name: typeof characterToolNames.listCharacters;
+      readonly args: EmptyToolInput;
+    };
+
 export const draftIdInputSchema = JSONSchema.make(
   DraftIdArgsSchema,
 ) as unknown as McpObjectInputSchema;
@@ -104,11 +155,59 @@ export const fillCreationHolesInputSchema = JSONSchema.make(
 ) as unknown as McpObjectInputSchema;
 export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 
-export function decodeCreateCharacterDraftArgs(
+export function decodeCharacterToolCall(input: {
+  readonly name: CharacterToolName;
+  readonly args: unknown;
+}): ToolInputResult<CharacterToolCall> {
+  return Match.value(input.name).pipe(
+    Match.when(characterToolNames.createCharacterDraft, () =>
+      Either.map(decodeCreateCharacterDraftArgs(input.args), (args) => ({
+        name: characterToolNames.createCharacterDraft,
+        args,
+      })),
+    ),
+    Match.when(characterToolNames.discoverCreationHoles, () =>
+      Either.map(
+        decodeDraftIdArg(input.args, characterToolNames.discoverCreationHoles),
+        (draftId) => ({
+          name: characterToolNames.discoverCreationHoles,
+          args: { draftId },
+        }),
+      ),
+    ),
+    Match.when(characterToolNames.fillCreationHoles, () =>
+      Either.map(decodeFillCreationHolesArgs(input.args), (args) => ({
+        name: characterToolNames.fillCreationHoles,
+        args,
+      })),
+    ),
+    Match.when(characterToolNames.finalizeCharacter, () =>
+      Either.map(
+        decodeDraftIdArg(input.args, characterToolNames.finalizeCharacter),
+        (draftId) => ({
+          name: characterToolNames.finalizeCharacter,
+          args: { draftId },
+        }),
+      ),
+    ),
+    Match.when(characterToolNames.listCharacters, () =>
+      Either.map(decodeEmptyArgs(input.args), (args) => ({
+        name: characterToolNames.listCharacters,
+        args,
+      })),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function decodeCreateCharacterDraftArgs(
   args: unknown,
-  toolName: string,
-): ToolInputResult<{ readonly draftId?: CharacterDraftId }> {
-  const record = decodeToolArgs(CreateCharacterDraftArgsSchema, args, toolName);
+): ToolInputResult<CreateCharacterDraftToolInput> {
+  const record = decodeToolArgs(
+    CreateCharacterDraftArgsSchema,
+    args,
+    characterToolNames.createCharacterDraft,
+  );
   return Either.map(record, (value) =>
     value.draftId === undefined
       ? {}
@@ -116,27 +215,30 @@ export function decodeCreateCharacterDraftArgs(
   );
 }
 
-export function decodeDraftIdArg(
+type DraftIdToolName =
+  | typeof characterToolNames.discoverCreationHoles
+  | typeof characterToolNames.finalizeCharacter;
+
+function decodeDraftIdArg(
   args: unknown,
-  toolName: string,
+  toolName: DraftIdToolName,
 ): ToolInputResult<CharacterDraftId> {
   const record = decodeToolArgs(DraftIdArgsSchema, args, toolName);
   return Either.map(record, (value) => characterDraftId(value.draftId));
 }
 
-export function decodeFillCreationHolesArgs(
+function decodeFillCreationHolesArgs(
   args: unknown,
-  toolName: string,
-): ToolInputResult<{
-  readonly draftId: CharacterDraftId;
-  readonly expectedRevision: DraftRevision;
-  readonly fills: readonly CreationFill[];
-}> {
-  const record = decodeToolArgs(FillCreationHolesArgsSchema, args, toolName);
+): ToolInputResult<FillCreationHolesToolInput> {
+  const record = decodeToolArgs(
+    FillCreationHolesArgsSchema,
+    args,
+    characterToolNames.fillCreationHoles,
+  );
   if (Either.isLeft(record)) return Either.left(record.left);
   const fills: CreationFill[] = [];
   for (const [index, fill] of record.right.fills.entries()) {
-    const decoded = decodeCreationFill(fill, toolName, index);
+    const decoded = decodeCreationFill(fill, index);
     if (Either.isLeft(decoded)) return Either.left(decoded.left);
     fills.push(decoded.right);
   }
@@ -148,38 +250,35 @@ export function decodeFillCreationHolesArgs(
   });
 }
 
-export function decodeEmptyArgs(
-  args: unknown,
-  toolName: string,
-): ToolInputResult<Record<string, never>> {
-  const decoded = decodeToolArgs(EmptyArgsSchema, args, toolName);
+function decodeEmptyArgs(args: unknown): ToolInputResult<EmptyToolInput> {
+  const decoded = decodeToolArgs(
+    EmptyArgsSchema,
+    args,
+    characterToolNames.listCharacters,
+  );
   return Either.map(decoded, () => ({}));
 }
 
 function decodeCreationFill(
   value: CreationFillArgs,
-  toolName: string,
   index: number,
 ): ToolInputResult<CreationFill> {
   if (value.kind === "choice") {
-    return decodeChoiceFill(value, value.holeId, toolName, index);
+    return decodeChoiceFill(value, value.holeId, index);
   }
   if (value.kind === "abilityScores") {
-    return decodeAbilityScoreFill(value, value.holeId, toolName, index);
+    return decodeAbilityScoreFill(value, value.holeId, index);
   }
 
-  return Either.left(
-    invalidFieldContent(toolName, `fills[${index}].kind`, "fill kind"),
-  );
+  return Either.left(invalidFieldContent(`fills[${index}].kind`, "fill kind"));
 }
 
 function decodeChoiceFill(
   value: Extract<CreationFillArgs, { readonly kind: "choice" }>,
   holeIdText: string,
-  toolName: string,
   index: number,
 ): ToolInputResult<CreationFill> {
-  const holeId = decodeCreationHoleId(holeIdText, toolName, index);
+  const holeId = decodeCreationHoleId(holeIdText, index);
   return Either.map(holeId, (decodedHoleId) => ({
     kind: "choice",
     holeId: decodedHoleId,
@@ -190,10 +289,9 @@ function decodeChoiceFill(
 function decodeAbilityScoreFill(
   value: Extract<CreationFillArgs, { readonly kind: "abilityScores" }>,
   holeIdText: string,
-  toolName: string,
   index: number,
 ): ToolInputResult<CreationFill> {
-  const holeId = decodeCreationHoleId(holeIdText, toolName, index);
+  const holeId = decodeCreationHoleId(holeIdText, index);
   return Either.map(holeId, (decodedHoleId) => ({
     kind: "abilityScores",
     holeId: decodedHoleId,
@@ -204,28 +302,19 @@ function decodeAbilityScoreFill(
 
 function decodeCreationHoleId(
   holeIdText: string,
-  toolName: string,
   index: number,
 ): ToolInputResult<CreationFill["holeId"]> {
   const holeId = parseCreationHoleId(holeIdText);
   if (holeId == null) {
     return Either.left(
-      invalidFieldContent(
-        toolName,
-        `fills[${index}].holeId`,
-        "creation hole id",
-      ),
+      invalidFieldContent(`fills[${index}].holeId`, "creation hole id"),
     );
   }
   return Either.right(holeId);
 }
 
-function invalidFieldContent(
-  toolName: string,
-  field: string,
-  expected: string,
-) {
-  return errorContent(`Invalid ${toolName} input`, {
+function invalidFieldContent(field: string, expected: string) {
+  return errorContent(`Invalid ${characterToolNames.fillCreationHoles} input`, {
     code: "INVALID_FIELD",
     field,
     expected,

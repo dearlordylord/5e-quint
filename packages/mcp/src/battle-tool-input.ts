@@ -7,7 +7,7 @@ import {
   type CombatantId,
 } from "@dnd/battle-runtime";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
-import { Either, JSONSchema, Schema } from "effect";
+import { Either, JSONSchema, Match, Schema } from "effect";
 
 import {
   decodeToolArgs,
@@ -15,6 +15,10 @@ import {
   type McpObjectInputSchema,
   type ToolInputResult,
 } from "./schema-codec.ts";
+import {
+  decodeStartBattleArgs,
+  type StartBattleToolInput,
+} from "./start-battle-tool-input.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
 const CombatantIdTextSchema = Schema.NonEmptyTrimmedString.annotations({
@@ -60,46 +64,168 @@ export const endTurnInputSchema = JSONSchema.make(
 ) as unknown as McpObjectInputSchema;
 export const endBattleInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 
-export type BattleActorToolInput = {
+export const battleToolNames = {
+  selectStatBlock: "select_stat_block",
+  startBattle: "start_battle",
+  readBattleState: "read_battle_state",
+  discoverBattleActs: "discover_battle_acts",
+  fillBattleHole: "fill_battle_hole",
+  resolveBattleAct: "resolve_battle_act",
+  endTurn: "end_turn",
+  endBattle: "end_battle",
+} as const;
+export const BATTLE_TOOL_NAMES = [
+  battleToolNames.selectStatBlock,
+  battleToolNames.startBattle,
+  battleToolNames.readBattleState,
+  battleToolNames.discoverBattleActs,
+  battleToolNames.fillBattleHole,
+  battleToolNames.resolveBattleAct,
+  battleToolNames.endTurn,
+  battleToolNames.endBattle,
+] as const;
+export type BattleToolName = (typeof BATTLE_TOOL_NAMES)[number];
+
+type SelectStatBlockToolInput = {
+  readonly statBlockId: StatBlockId;
+};
+
+type BattleActorToolInput = {
   readonly actorId: CombatantId;
 };
 
-export type FillBattleHoleToolInput = {
+type FillBattleHoleToolInput = {
   readonly subject: BattleSubject;
   readonly fill: BattleFill;
 };
 
-export type ResolveBattleActToolInput = {
+type ResolveBattleActToolInput = {
   readonly subject: BattleSubject;
 };
 
-export function decodeSelectStatBlockArgs(
-  args: unknown,
-  toolName: string,
-): ToolInputResult<StatBlockId> {
-  const record = decodeToolArgs(SelectStatBlockArgsSchema, args, toolName);
-  return Either.map(record, (value) => value.statBlockId);
+type EmptyToolInput = Record<string, never>;
+
+export type BattleToolCall =
+  | {
+      readonly name: typeof battleToolNames.selectStatBlock;
+      readonly args: SelectStatBlockToolInput;
+    }
+  | {
+      readonly name: typeof battleToolNames.startBattle;
+      readonly args: StartBattleToolInput;
+    }
+  | {
+      readonly name: typeof battleToolNames.readBattleState;
+      readonly args: EmptyToolInput;
+    }
+  | {
+      readonly name: typeof battleToolNames.discoverBattleActs;
+      readonly args: EmptyToolInput;
+    }
+  | {
+      readonly name: typeof battleToolNames.fillBattleHole;
+      readonly args: FillBattleHoleToolInput;
+    }
+  | {
+      readonly name: typeof battleToolNames.resolveBattleAct;
+      readonly args: ResolveBattleActToolInput;
+    }
+  | {
+      readonly name: typeof battleToolNames.endTurn;
+      readonly args: BattleActorToolInput;
+    }
+  | {
+      readonly name: typeof battleToolNames.endBattle;
+      readonly args: EmptyToolInput;
+    };
+
+export function decodeBattleToolCall(input: {
+  readonly name: BattleToolName;
+  readonly args: unknown;
+}): ToolInputResult<BattleToolCall> {
+  return Match.value(input.name).pipe(
+    Match.when(battleToolNames.selectStatBlock, () =>
+      Either.map(decodeSelectStatBlockArgs(input.args), (args) => ({
+        name: battleToolNames.selectStatBlock,
+        args,
+      })),
+    ),
+    Match.when(battleToolNames.startBattle, () =>
+      Either.map(decodeStartBattleArgs(input.args), (args) => ({
+        name: battleToolNames.startBattle,
+        args,
+      })),
+    ),
+    Match.when(battleToolNames.readBattleState, () =>
+      Either.map(
+        decodeEmptyArgs(input.args, battleToolNames.readBattleState),
+        (args) => ({
+          name: battleToolNames.readBattleState,
+          args,
+        }),
+      ),
+    ),
+    Match.when(battleToolNames.discoverBattleActs, () =>
+      Either.map(
+        decodeEmptyArgs(input.args, battleToolNames.discoverBattleActs),
+        (args) => ({
+          name: battleToolNames.discoverBattleActs,
+          args,
+        }),
+      ),
+    ),
+    Match.when(battleToolNames.fillBattleHole, () =>
+      Either.map(decodeFillBattleHoleArgs(input.args), (args) => ({
+        name: battleToolNames.fillBattleHole,
+        args,
+      })),
+    ),
+    Match.when(battleToolNames.resolveBattleAct, () =>
+      Either.map(decodeResolveBattleActArgs(input.args), (args) => ({
+        name: battleToolNames.resolveBattleAct,
+        args,
+      })),
+    ),
+    Match.when(battleToolNames.endTurn, () =>
+      Either.map(decodeEndTurnArgs(input.args), (args) => ({
+        name: battleToolNames.endTurn,
+        args,
+      })),
+    ),
+    Match.when(battleToolNames.endBattle, () =>
+      Either.map(
+        decodeEmptyArgs(input.args, battleToolNames.endBattle),
+        (args) => ({
+          name: battleToolNames.endBattle,
+          args,
+        }),
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
-export function decodeReadBattleStateArgs(
+function decodeSelectStatBlockArgs(
   args: unknown,
-  toolName: string,
-): ToolInputResult<Record<string, never>> {
-  return decodeEmptyArgs(args, toolName);
+): ToolInputResult<SelectStatBlockToolInput> {
+  const record = decodeToolArgs(
+    SelectStatBlockArgsSchema,
+    args,
+    battleToolNames.selectStatBlock,
+  );
+  return Either.map(record, (value) => ({
+    statBlockId: value.statBlockId,
+  }));
 }
 
-export function decodeDiscoverBattleActsArgs(
+function decodeFillBattleHoleArgs(
   args: unknown,
-  toolName: string,
-): ToolInputResult<Record<string, never>> {
-  return decodeEmptyArgs(args, toolName);
-}
-
-export function decodeFillBattleHoleArgs(
-  args: unknown,
-  toolName: string,
 ): ToolInputResult<FillBattleHoleToolInput> {
-  const record = decodeToolArgs(FillBattleHoleArgsSchema, args, toolName);
+  const record = decodeToolArgs(
+    FillBattleHoleArgsSchema,
+    args,
+    battleToolNames.fillBattleHole,
+  );
   if (Either.isLeft(record)) return Either.left(record.left);
 
   return Either.right({
@@ -108,35 +234,39 @@ export function decodeFillBattleHoleArgs(
   });
 }
 
-export function decodeResolveBattleActArgs(
+function decodeResolveBattleActArgs(
   args: unknown,
-  toolName: string,
 ): ToolInputResult<ResolveBattleActToolInput> {
-  const record = decodeToolArgs(ResolveBattleActArgsSchema, args, toolName);
+  const record = decodeToolArgs(
+    ResolveBattleActArgsSchema,
+    args,
+    battleToolNames.resolveBattleAct,
+  );
   return Either.map(record, (value) => ({ subject: value.subject }));
 }
 
-export function decodeEndTurnArgs(
+function decodeEndTurnArgs(
   args: unknown,
-  toolName: string,
 ): ToolInputResult<BattleActorToolInput> {
-  const record = decodeToolArgs(EndTurnArgsSchema, args, toolName);
+  const record = decodeToolArgs(
+    EndTurnArgsSchema,
+    args,
+    battleToolNames.endTurn,
+  );
   return Either.map(record, (value) => ({
     actorId: combatantId(value.actorId),
   }));
 }
 
-export function decodeEndBattleArgs(
-  args: unknown,
-  toolName: string,
-): ToolInputResult<Record<string, never>> {
-  return decodeEmptyArgs(args, toolName);
-}
+type EmptyBattleToolName =
+  | typeof battleToolNames.readBattleState
+  | typeof battleToolNames.discoverBattleActs
+  | typeof battleToolNames.endBattle;
 
 function decodeEmptyArgs(
   args: unknown,
-  toolName: string,
-): ToolInputResult<Record<string, never>> {
+  toolName: EmptyBattleToolName,
+): ToolInputResult<EmptyToolInput> {
   const decoded = decodeToolArgs(EmptyArgsSchema, args, toolName);
   return Either.map(decoded, () => ({}));
 }

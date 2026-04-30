@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -73,32 +73,48 @@ const listCatalogUnitsOutputSchema = mcpOutputJsonSchema(
   ListCatalogUnitsOutputSchema,
 );
 
+const contentToolNames = {
+  describeMcpWorkflow: "describe_mcp_workflow",
+  listStatBlocks: "list_stat_blocks",
+  listCatalogUnits: "list_catalog_units",
+} as const;
+const CONTENT_TOOL_NAMES = [
+  contentToolNames.describeMcpWorkflow,
+  contentToolNames.listStatBlocks,
+  contentToolNames.listCatalogUnits,
+] as const;
+type ContentToolName = (typeof CONTENT_TOOL_NAMES)[number];
+type ContentToolCall = {
+  readonly [Name in ContentToolName]: {
+    readonly name: Name;
+    readonly args: Record<string, never>;
+  };
+}[ContentToolName];
+
 export const contentToolDefinitions = [
   {
-    name: "describe_mcp_workflow",
+    name: contentToolNames.describeMcpWorkflow,
     description:
       "Return the agent-facing workflow guide, accepted fill shapes, result paths, supported intent aliases, and recovery rules for this MCP.",
     inputSchema: emptyInputSchema,
     outputSchema: workflowGuideOutputSchema,
   },
   {
-    name: "list_stat_blocks",
+    name: contentToolNames.listStatBlocks,
     description:
       "List selectable SRD Stat Blocks with ids, display names, attacks, defenses, and damage modifiers for select_stat_block.",
     inputSchema: emptyInputSchema,
     outputSchema: listStatBlocksOutputSchema,
   },
   {
-    name: "list_catalog_units",
+    name: contentToolNames.listCatalogUnits,
     description:
-      "List installed Surface Unit ids grouped by kind. This is catalog discovery only; legal choices still come from creation holes and battle acts.",
+      "List installed Unit ids grouped by kind. This is catalog discovery only; legal choices still come from creation holes and battle acts.",
     inputSchema: emptyInputSchema,
     outputSchema: listCatalogUnitsOutputSchema,
   },
 ] as const;
 
-const CONTENT_TOOL_NAMES = contentToolDefinitions.map((tool) => tool.name);
-type ContentToolName = (typeof contentToolDefinitions)[number]["name"];
 type StatBlockAttack = NonNullable<
   NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
 >[number];
@@ -111,39 +127,80 @@ export function isContentToolName(name: string): name is ContentToolName {
   return CONTENT_TOOL_NAMES.some((toolName) => toolName === name);
 }
 
+export function decodeContentToolCall(input: {
+  readonly name: ContentToolName;
+  readonly args: unknown;
+}): Either.Either<ContentToolCall, ReturnType<typeof errorContent>> {
+  return Match.value(input.name).pipe(
+    Match.when(contentToolNames.describeMcpWorkflow, () =>
+      Either.map(
+        decodeToolArgs(
+          EmptyArgsSchema,
+          input.args,
+          contentToolNames.describeMcpWorkflow,
+        ),
+        (args) => ({
+          name: contentToolNames.describeMcpWorkflow,
+          args,
+        }),
+      ),
+    ),
+    Match.when(contentToolNames.listStatBlocks, () =>
+      Either.map(
+        decodeToolArgs(
+          EmptyArgsSchema,
+          input.args,
+          contentToolNames.listStatBlocks,
+        ),
+        (args) => ({
+          name: contentToolNames.listStatBlocks,
+          args,
+        }),
+      ),
+    ),
+    Match.when(contentToolNames.listCatalogUnits, () =>
+      Either.map(
+        decodeToolArgs(
+          EmptyArgsSchema,
+          input.args,
+          contentToolNames.listCatalogUnits,
+        ),
+        (args) => ({
+          name: contentToolNames.listCatalogUnits,
+          args,
+        }),
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function handleContentToolCall(
   root: McpCompositionRoot,
-  name: string,
-  args: unknown,
+  call: ContentToolCall,
 ): ContentToolResult {
-  if (!isContentToolName(name)) {
-    return errorContent(`Unknown Surface-runtime content tool: ${name}`);
-  }
-  const decoded = decodeToolArgs(EmptyArgsSchema, args, name);
-  if (Either.isLeft(decoded)) return decoded.left;
-
-  if (name === "describe_mcp_workflow") {
-    return schemaJsonContent(WorkflowGuideOutputSchema, workflowGuide());
-  }
-  if (name === "list_stat_blocks") {
-    return schemaJsonContent(ListStatBlocksOutputSchema, {
-      statBlocks: root.statBlockCatalog
-        .listStatBlocks()
-        .map((record) => statBlockSummary(record)),
-      next: "Call select_stat_block with one of these statBlockId values before start_battle.",
-    });
-  }
-  if (name === "list_catalog_units") {
-    return schemaJsonContent(ListCatalogUnitsOutputSchema, {
-      unitsByKind: groupUnitsByKind(root.unitLibrary.listUnits()),
-      naturalLanguagePolicy:
-        "Map user wording to returned Unit names and ids only when the intent is unambiguous. If a user says 'warrior', ask whether they mean Fighter before filling class_fighter.",
-      next: "Use create_character_draft and discover_creation_holes for the authoritative holeId, optionId, and cardinality values before filling a draft.",
-    });
-  }
-
-  const unhandled: never = name;
-  return errorContent(`Unhandled Surface-runtime content tool: ${unhandled}`);
+  return Match.value(call).pipe(
+    Match.when({ name: contentToolNames.describeMcpWorkflow }, () =>
+      schemaJsonContent(WorkflowGuideOutputSchema, workflowGuide()),
+    ),
+    Match.when({ name: contentToolNames.listStatBlocks }, () =>
+      schemaJsonContent(ListStatBlocksOutputSchema, {
+        statBlocks: root.statBlockCatalog
+          .listStatBlocks()
+          .map((record) => statBlockSummary(record)),
+        next: "Call select_stat_block with one of these statBlockId values before start_battle.",
+      }),
+    ),
+    Match.when({ name: contentToolNames.listCatalogUnits }, () =>
+      schemaJsonContent(ListCatalogUnitsOutputSchema, {
+        unitsByKind: groupUnitsByKind(root.unitLibrary.listUnits()),
+        naturalLanguagePolicy:
+          "Map user wording to returned Unit names and ids only when the intent is unambiguous. If a user says 'warrior', ask whether they mean Fighter before filling class_fighter.",
+        next: "Use create_character_draft and discover_creation_holes for the authoritative holeId, optionId, and cardinality values before filling a draft.",
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function workflowGuide() {

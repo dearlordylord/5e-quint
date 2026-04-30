@@ -3,18 +3,22 @@ import {
   handleBattleToolCall,
   isBattleToolName,
 } from "./battle-tools.ts";
+import { decodeBattleToolCall } from "./battle-tool-input.ts";
 import {
   characterToolDefinitions,
   handleCharacterToolCall,
   isCharacterToolName,
 } from "./character-tools.ts";
+import { decodeCharacterToolCall } from "./character-tool-input.ts";
 import {
   contentToolDefinitions,
+  decodeContentToolCall,
   handleContentToolCall,
   isContentToolName,
 } from "./content-tools.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import { errorContent } from "./tool-content.ts";
+import { Either } from "effect";
 
 export {
   battleCreatureInitFromCharacterBuild,
@@ -65,16 +69,25 @@ export function handleToolCall(
   args: unknown,
 ) {
   if (isCharacterToolName(name)) {
-    return handleCharacterToolCall(root, name, args);
+    const decoded = decodeCharacterToolCall({ name, args });
+    return Either.isLeft(decoded)
+      ? decoded.left
+      : handleCharacterToolCall(root, decoded.right);
   }
 
   if (isContentToolName(name)) {
-    return handleContentToolCall(root, name, args);
+    const decoded = decodeContentToolCall({ name, args });
+    return Either.isLeft(decoded)
+      ? decoded.left
+      : handleContentToolCall(root, decoded.right);
   }
 
   if (isBattleToolName(name)) {
-    return handleBattleToolCall(root, name, args);
+    const decoded = decodeBattleToolCall({ name, args });
+    return Either.isLeft(decoded)
+      ? decoded.left
+      : handleBattleToolCall(root, decoded.right);
   }
 
-  return errorContent(`Unknown Surface-runtime MCP tool: ${name}`);
+  return errorContent(`Unknown MCP tool: ${name}`);
 }
