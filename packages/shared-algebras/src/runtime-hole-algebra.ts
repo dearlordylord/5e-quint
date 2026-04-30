@@ -46,9 +46,17 @@ export type RolledDiceGroup = {
   readonly results: ReadonlyNonEmptyArray<DieRollResult>;
 };
 
+export const ATTACK_ROLL_MODES = [
+  "normal",
+  "advantage",
+  "disadvantage",
+] as const;
+export type AttackRollMode = (typeof ATTACK_ROLL_MODES)[number];
+
 export type AttackRollResult = {
   readonly total: number;
   readonly naturalD20: DieRollResult;
+  readonly rollMode?: AttackRollMode;
 };
 
 export type SavingThrowOutcome = {

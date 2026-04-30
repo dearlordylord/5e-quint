@@ -106,25 +106,33 @@ Turn flow:
 Available acts:
 
 - discover End Turn for the current actor;
-- discover Attack for supported character weapon attacks when the current actor
-  can take actions.
+- discover Attack for supported character weapon attacks and supported
+  Stat Block named attacks when the current actor can take actions and at least
+  one target is legal for the selected attack's melee reach or normal range.
 
 Attack and damage:
 
 - replay Attack through target, attack-roll, and damage holes;
+- carry the selected attack name in the Attack subject so authored Stat Block
+  attacks such as Scimitar and Shortbow cannot be confused during replay;
+- derive target choices from the selected attack's authored reach or normal
+  range and the battle's pairwise combatant distance facts;
 - resolve hit/miss through the shared attack-roll algebra;
-- apply weapon damage, Critical Hit doubled weapon dice, Temporary Hit Points,
-  and HP clamping at `0`.
+- apply character weapon damage or supported Stat Block attack damage including
+  the Goblin Warrior's advantage-triggered on-hit bonus damage, Critical Hit
+  doubled damage dice, Temporary Hit Points, and HP clamping at `0`.
 
 Zero-HP lifecycle:
 
 - Stat Block combatants use `diesAtZeroHp`;
 - Character Build combatants use `usesDeathSavingThrows`.
 
-Not modeled in this package yet: stat-block attacks, spells, reactions,
-bonus-action subjects, nonlethal melee knockout, and start-turn Death Saving
-Throw rolls. The action-resource state can represent bonus-action availability;
-this package does not yet expose a bonus-action battle subject.
+Not modeled in this package yet: Stat Block Multiattack, ranged attacks beyond
+normal range with Disadvantage, Stat Block bonus-action options, unsupported
+conditional attack riders, spells, reactions, bonus-action subjects, nonlethal
+melee knockout, and start-turn Death Saving Throw rolls. The action-resource
+state can represent bonus-action availability; this package does not yet expose
+a bonus-action battle subject.
 
 ## State Ownership Rules
 
@@ -137,8 +145,10 @@ facts in `origin` so battle can discover and resolve supported acts without
 importing character-creation state.
 
 Stat Block-derived battle creatures keep the generic `StatBlockRecord` in
-`origin`. The runtime does not import Core monster catalogs or SRD-specific
-Stat Block collection types.
+`origin`. Supported named attacks are derived from that authored record during
+discovery and replay; the runtime does not copy attack bonus, damage expression,
+damage type, melee reach, or normal range into MCP state. The runtime does not
+import Core monster catalogs or SRD-specific Stat Block collection types.
 
 Armor Class is structured `ArmorClassState`, not a copied scalar. Turn resources
 use `RuntimeActionResource[]`; the runtime does not store a scalar action quota.
@@ -160,18 +170,19 @@ citation or `ASSUMPTIONS.md` entry.
 
 ## RAW Traceability
 
-| Runtime behavior                   | Source                                                                                                     | Notes                                                                                                                                   |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Initiative order and current actor | SRD 5.2.1 `Playing-the-Game.md` "Combat" / "Initiative"; `UBIQUITOUS_LANGUAGE.md` "Initiative"             | Combat is organized into rounds and turns. Initiative determines turn order.                                                            |
-| Stat Block initialization          | SRD 5.2.1 `Rules-Glossary.md` "Stat Block"                                                                 | Monster AC, Initiative, and HP entries are Stat Block facts consumed at initialization.                                                 |
-| Character initialization           | SRD 5.2.1 `Character-Creation.md`; Character Build produced by `@dnd/character-creation-runtime`           | This runtime consumes finalized build facts; it does not recalculate character-creation legality.                                       |
-| Armor Class                        | SRD 5.2.1 `Playing-the-Game.md` "Armor Class"; `Equipment.md` "Armor"                                      | Armor and Shield facts are resolved before battle initialization.                                                                       |
-| End Turn command                   | SRD 5.2.1 combat turn structure; `ASSUMPTIONS.md` A2                                                       | End Turn is a runtime command because D&D has end-of-turn trigger points, not because it is an SRD Action.                              |
-| Action resources                   | SRD 5.2.1 `Playing-the-Game.md` "Your Turn" / "Actions" / "Bonus Actions"; `UBIQUITOUS_LANGUAGE.md`        | The runtime tracks per-turn action resources through shared algebras.                                                                   |
-| Attack resolution                  | SRD 5.2.1 `Rules-Glossary.md` "Attack [Action]"; `Playing-the-Game.md` "Making an Attack" / "Attack Rolls" | Attack replay chooses a target, consumes an attack roll, and compares the roll to Armor Class, with natural 1 and natural 20 overrides. |
-| Damage and Temporary Hit Points    | SRD 5.2.1 `Playing-the-Game.md` "Damage Rolls", "Hit Points", "Temporary Hit Points"                       | Damage uses weapon damage plus the attack ability modifier, applies Temporary Hit Points first, and clamps HP at `0`.                   |
-| Zero-HP lifecycle                  | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points"; `ASSUMPTIONS.md` A12                           | Stat Block monsters die at `0` HP. Character Build participants use the death-save lifecycle.                                           |
-| Incapacitated action gating        | SRD 5.2.1 `Rules-Glossary.md` "Incapacitated [Condition]" and "Unconscious [Condition]"                    | Incapacitated prevents actions; Unconscious includes Incapacitated.                                                                     |
+| Runtime behavior                   | Source                                                                                                     | Notes                                                                                                                                                                       |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Initiative order and current actor | SRD 5.2.1 `Playing-the-Game.md` "Combat" / "Initiative"; `UBIQUITOUS_LANGUAGE.md` "Initiative"             | Combat is organized into rounds and turns. Initiative determines turn order.                                                                                                |
+| Stat Block initialization          | SRD 5.2.1 `Rules-Glossary.md` "Stat Block"                                                                 | Monster AC, Initiative, and HP entries are Stat Block facts consumed at initialization.                                                                                     |
+| Character initialization           | SRD 5.2.1 `Character-Creation.md`; Character Build produced by `@dnd/character-creation-runtime`           | This runtime consumes finalized build facts; it does not recalculate character-creation legality.                                                                           |
+| Armor Class                        | SRD 5.2.1 `Playing-the-Game.md` "Armor Class"; `Equipment.md` "Armor"                                      | Armor and Shield facts are resolved before battle initialization.                                                                                                           |
+| End Turn command                   | SRD 5.2.1 combat turn structure; `ASSUMPTIONS.md` A2                                                       | End Turn is a runtime command because D&D has end-of-turn trigger points, not because it is an SRD Action.                                                                  |
+| Action resources                   | SRD 5.2.1 `Playing-the-Game.md` "Your Turn" / "Actions" / "Bonus Actions"; `UBIQUITOUS_LANGUAGE.md`        | The runtime tracks per-turn action resources through shared algebras.                                                                                                       |
+| Attack resolution                  | SRD 5.2.1 `Rules-Glossary.md` "Attack [Action]"; `Playing-the-Game.md` "Making an Attack" / "Attack Rolls" | Attack replay chooses a target, consumes an attack roll, and compares the roll to Armor Class, with natural 1 and natural 20 overrides.                                     |
+| Stat Block named attacks           | SRD 5.2.1 `Monsters/Monsters-E-G.md` "Goblin Warrior"; `Playing-the-Game.md` "Making an Attack"            | Supported Stat Block attacks derive attack bonus, reach or normal range, base on-hit damage, and the Goblin Warrior advantage bonus from the authored `StatBlockRecord`.    |
+| Damage and Temporary Hit Points    | SRD 5.2.1 `Playing-the-Game.md` "Damage Rolls", "Hit Points", "Temporary Hit Points"                       | Damage uses character weapon damage plus the attack ability modifier or a supported Stat Block damage expression, applies Temporary Hit Points first, and clamps HP at `0`. |
+| Zero-HP lifecycle                  | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points"; `ASSUMPTIONS.md` A12                           | Stat Block monsters die at `0` HP. Character Build participants use the death-save lifecycle.                                                                               |
+| Incapacitated action gating        | SRD 5.2.1 `Rules-Glossary.md` "Incapacitated [Condition]" and "Unconscious [Condition]"                    | Incapacitated prevents actions; Unconscious includes Incapacitated.                                                                                                         |
 
 ## Files And Verification
 

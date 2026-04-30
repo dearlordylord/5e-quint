@@ -82,16 +82,21 @@ export const discoverBattleActsInputSchema = {
 
 export const fillBattleHoleInputSchema = {
   type: "object",
-  required: ["actorId", "fill"],
+  required: ["actorId", "attackName", "fill"],
   properties: {
     actorId: {
       type: "string",
       description: "Current actor combatant id for the Attack action.",
     },
+    attackName: {
+      type: "string",
+      description:
+        "Authored attack name from the selected battle act subject, such as Longsword, Scimitar, or Shortbow.",
+    },
     fill: {
       type: "object",
       description:
-        "One BattleFill for the current Attack replay: targetChoice, attackRoll, or rolledDice.",
+        "One BattleFill for the current Attack replay: targetChoice, attackRoll, or rolledDice. attackRoll values may include rollMode: normal, advantage, or disadvantage.",
     },
   },
   additionalProperties: false,
@@ -126,6 +131,7 @@ export type BattleActorToolInput = {
 };
 
 export type FillBattleHoleToolInput = BattleActorToolInput & {
+  readonly attackName: string;
   readonly fill: BattleFill;
 };
 
@@ -245,10 +251,20 @@ export function decodeFillBattleHoleArgs(
   args: unknown,
   toolName: string,
 ): FillBattleHoleToolInput | GreenToolError {
-  const record = readToolArgsRecord(args, toolName, ["actorId", "fill"]);
+  const record = readToolArgsRecord(args, toolName, [
+    "actorId",
+    "attackName",
+    "fill",
+  ]);
   if (isGreenToolError(record)) return record;
   if (typeof record.actorId !== "string") {
     return invalidFieldContent(toolName, "actorId", "string");
+  }
+  if (
+    typeof record.attackName !== "string" ||
+    record.attackName.trim() === ""
+  ) {
+    return invalidFieldContent(toolName, "attackName", "non-empty string");
   }
 
   const fill = decodeBattleFill(record.fill, toolName);
@@ -256,6 +272,7 @@ export function decodeFillBattleHoleArgs(
 
   return {
     actorId: combatantId(record.actorId),
+    attackName: record.attackName,
     fill,
   };
 }

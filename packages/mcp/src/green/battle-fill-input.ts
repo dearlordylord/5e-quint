@@ -1,6 +1,8 @@
 import { combatantId, type BattleFill } from "@dnd/battle-runtime";
 import {
+  ATTACK_ROLL_MODES,
   holeId,
+  type AttackRollMode,
   type AttackRollResult,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { DieRollResult, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -80,11 +82,34 @@ function decodeAttackRollValue(
     "fill.value.naturalD20",
   );
   if (isGreenToolError(naturalD20)) return naturalD20;
+  const rollMode = decodeAttackRollMode(value.rollMode);
+  if (rollMode === false) {
+    return invalidFieldContent(
+      toolName,
+      "fill.value.rollMode",
+      "normal, advantage, or disadvantage",
+    );
+  }
 
   return {
     total: value.total,
     naturalD20,
+    ...(rollMode === undefined ? {} : { rollMode }),
   };
+}
+
+function decodeAttackRollMode(
+  value: unknown,
+): AttackRollMode | undefined | false {
+  return value === undefined
+    ? undefined
+    : typeof value === "string" && isAttackRollMode(value)
+      ? value
+      : false;
+}
+
+function isAttackRollMode(value: string): value is AttackRollMode {
+  return ATTACK_ROLL_MODES.some((mode) => mode === value);
 }
 
 function decodeRolledDiceGroups(

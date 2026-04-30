@@ -252,7 +252,12 @@ describe("MCP green composition root", () => {
       acts: [
         {
           label: "Attack",
-          subject: { tag: "srdAction", actorId: "fighter", action: "attack" },
+          subject: {
+            tag: "srdAction",
+            actorId: "fighter",
+            action: "attack",
+            attackName: "Longsword",
+          },
           initialHoles: [
             {
               kind: "targetChoice",
@@ -275,6 +280,7 @@ describe("MCP green composition root", () => {
     const afterTarget = readPayload(
       handleGreenBattleToolCall(root, "fill_battle_hole", {
         actorId: "fighter",
+        attackName: "Longsword",
         fill: {
           kind: "targetChoice",
           holeId: "battle:attack:target",
@@ -287,13 +293,19 @@ describe("MCP green composition root", () => {
       holes: [{ kind: "attackRoll", holeId: "battle:attack:roll" }],
     });
     expect(afterTarget.session.transientBattleFills).toMatchObject({
-      subject: { tag: "srdAction", actorId: "fighter", action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: "fighter",
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [{ kind: "targetChoice", value: "goblin" }],
     });
 
     const afterAttackRoll = readPayload(
       handleGreenBattleToolCall(root, "fill_battle_hole", {
         actorId: "fighter",
+        attackName: "Longsword",
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
@@ -316,6 +328,7 @@ describe("MCP green composition root", () => {
     const afterDamage = readPayload(
       handleGreenBattleToolCall(root, "fill_battle_hole", {
         actorId: "fighter",
+        attackName: "Longsword",
         fill: {
           kind: "rolledDice",
           holeId: "battle:attack:damage-result:1d8+3-slashing",
@@ -345,6 +358,91 @@ describe("MCP green composition root", () => {
       ],
     });
     expect(root.sessionStore.battleState?.combatants.get(goblinId)?.hp).toBe(2);
+
+    const goblinActs = readPayload(
+      handleGreenBattleToolCall(root, "discover_battle_acts", {}),
+    );
+    expect(goblinActs.snapshot.acts).toMatchObject([
+      {
+        label: "Attack",
+        subject: {
+          tag: "srdAction",
+          actorId: "goblin",
+          action: "attack",
+          attackName: "Scimitar",
+        },
+      },
+      {
+        label: "Attack",
+        subject: {
+          tag: "srdAction",
+          actorId: "goblin",
+          action: "attack",
+          attackName: "Shortbow",
+        },
+      },
+      {
+        label: "End Turn",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "goblin",
+          command: "endTurn",
+        },
+      },
+    ]);
+
+    readPayload(
+      handleGreenBattleToolCall(root, "fill_battle_hole", {
+        actorId: "goblin",
+        attackName: "Scimitar",
+        fill: {
+          kind: "targetChoice",
+          holeId: "battle:attack:target",
+          value: "fighter",
+        },
+      }),
+    );
+    const afterGoblinAttackRoll = readPayload(
+      handleGreenBattleToolCall(root, "fill_battle_hole", {
+        actorId: "goblin",
+        attackName: "Scimitar",
+        fill: {
+          kind: "attackRoll",
+          holeId: "battle:attack:roll",
+          value: { total: 20, naturalD20: 18 },
+        },
+      }),
+    );
+    expect(afterGoblinAttackRoll.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "rolledDice",
+          holeId: "battle:attack:damage-result:1d6+2-slashing",
+          attack: {
+            kind: "statBlockAttack",
+            attack: { name: "Scimitar" },
+          },
+        },
+      ],
+    });
+
+    const afterGoblinDamage = readPayload(
+      handleGreenBattleToolCall(root, "fill_battle_hole", {
+        actorId: "goblin",
+        attackName: "Scimitar",
+        fill: {
+          kind: "rolledDice",
+          holeId: "battle:attack:damage-result:1d6+2-slashing",
+          value: [{ results: [5] }],
+        },
+      }),
+    );
+    expect(afterGoblinDamage.result.tag).toBe("resolved");
+    expect(afterGoblinDamage.battleState.combatants).toEqual([
+      expect.objectContaining({ combatantId: "fighter", hp: 5 }),
+      expect.objectContaining({ combatantId: "goblin", hp: 2 }),
+    ]);
   });
 
   test("start_battle rejects missing caller-supplied Initiative scores", () => {

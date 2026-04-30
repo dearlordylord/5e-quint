@@ -86,19 +86,29 @@ module battleRuntimeSlice {
   pure def currentActor(state: BattleState): Actor =
     state.initiative.stillToAct[0]
 
+  pure def currentActorCanAttack(state: BattleState): bool =
+    state.actionAvailable and
+    (
+      (currentActor(state) == Fighter and not(state.fighter.unconscious)) or
+      (currentActor(state) == Goblin and state.goblin.hp > 0)
+    )
+
+  pure def attackTargetAc(state: BattleState): int =
+    if (currentActor(state) == Fighter) state.goblin.ac else state.fighter.ac
+
   pure def openHoles(state: BattleState): Set[Hole] =
-    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious))
+    if (currentActorCanAttack(state))
       Set(TargetChoice)
     else Set()
 
   pure def attackReplayHoles(state: BattleState, replay: AttackReplay): Set[Hole] =
-    if (currentActor(state) != Fighter or not(state.actionAvailable) or state.fighter.unconscious)
+    if (not(currentActorCanAttack(state)))
       Set()
     else match replay {
       | AttackNeedsTarget => Set(TargetChoice)
       | AttackNeedsAttackRoll => Set(AttackRoll)
       | AttackRollFilled(roll) =>
-          if (attackHits(roll.attackTotal, roll.naturalD20, state.goblin.ac))
+          if (attackHits(roll.attackTotal, roll.naturalD20, attackTargetAc(state)))
             Set(DamageRoll)
           else
             Set()
@@ -147,6 +157,19 @@ module battleRuntimeSlice {
       { ...state, actionAvailable: false }
     else
       { ...state, goblin: applyDamage(state.goblin, damageRoll + 3, if (naturalD20 == 20) 2 else 1), actionAvailable: false }
+
+  pure def resolveGoblinAttack(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Goblin or state.goblin.hp == 0)
+      state
+    else if (not(attackHits(attackTotal, naturalD20, state.fighter.ac)))
+      { ...state, actionAvailable: false }
+    else
+      { ...state, fighter: applyDamage(state.fighter, damageRoll + 2, if (naturalD20 == 20) 2 else 1), actionAvailable: false }
 
   pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int): Combatant = {
     val effectiveDamage = if (damage < 0) 0 else damage
@@ -202,6 +225,14 @@ module battleRuntimeSlice {
     assert(attackReplayHoles(initialState, AttackRollFilled({ attackTotal: 15, naturalD20: 10 })) == Set(DamageRoll))
   }
 
+  run test_goblin_turn_opens_stat_block_attack_target_hole = {
+    assert(openHoles(endTurn(initialState)) == Set(TargetChoice))
+  }
+
+  run test_goblin_attack_replay_uses_fighter_armor_class = {
+    assert(attackReplayHoles(endTurn(initialState), AttackRollFilled({ attackTotal: 19, naturalD20: 10 })) == Set(DamageRoll))
+  }
+
   run test_attack_miss_spends_action_without_damage = {
     val result = resolveAttack(initialState, 14, 9, 0)
     all {
@@ -216,6 +247,14 @@ module battleRuntimeSlice {
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 3),
+    }
+  }
+
+  run test_goblin_attack_hit_applies_stat_block_damage_to_fighter = {
+    val result = resolveGoblinAttack(endTurn(initialState), 20, 18, 5)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.fighter.hp == 5),
     }
   }
 

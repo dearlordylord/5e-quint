@@ -15,7 +15,7 @@ flowchart TD
   CharacterBuild["Character Build + selected Unit refs<br/>owner: composition layer<br/>why: finalized PC facts enter battle without importing character creation"]
   StatBlock["StatBlockRecord<br/>owner: @dnd/surface catalog/composition<br/>why: monster/NPC authored facts enter battle without Core catalogs"]
   Init["BattleCreatureInit[]<br/>input to startBattle; includes caller-supplied Initiative scores<br/>why: one-time battle initialization boundary<br/>without: battle would import source package state directly"]
-  State["BattleState<br/>data: battle id, initiative, combatants, current-turn resources<br/>why: durable legality/replay input<br/>without: discovery and resolution would not share one combat snapshot"]
+  State["BattleState<br/>data: battle id, initiative, combatants, pairwise distances, current-turn resources<br/>why: durable legality/replay input<br/>without: discovery and resolution would not share one combat snapshot"]
   Creature["BattleCreatureState<br/>data: HP, temp HP, AC state, conditions, zero-HP lifecycle, origin<br/>why: shared combat view for Character-derived and Stat Block-derived creatures<br/>without: runtime branches on source objects instead of combat facts"]
   Origin["origin<br/>data: Character or Stat Block origin facts retained for supported act discovery<br/>why: source attribution without a second executable content language<br/>without: battle either loses selected capability facts or imports source package state"]
   ArmorClass["ArmorClassState helpers<br/>input: combatant.armorClass<br/>success: current Armor Class<br/>why: attack rolls compare against derived AC without storing a duplicate scalar"]
@@ -27,7 +27,8 @@ flowchart TD
   FillSession["caller-owned BattleFill[]<br/>data: accumulated answers for a selected subject<br/>why: replay-from-root input<br/>without: partially answered forms become durable battle state"]
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
-  AttackReplay["Attack replay<br/>needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence"]
+  AttackProfile["supported attack profile<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
+  AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
   Snapshot["snapshotBattle(state)<br/>success: JSON-friendly read model<br/>why: callers do not depend on internal Map state"]
 
@@ -43,7 +44,7 @@ flowchart TD
   Subject --> Resolve
   FillSession --> Resolve
   Resolve -->|runtimeCommand.endTurn| EndTurn --> State
-  Resolve -->|srdAction.attack| AttackReplay
+  Resolve -->|srdAction.attack| AttackProfile --> AttackReplay
   AttackReplay --> AttackRoll
   AttackReplay --> RuntimeDice
   AttackReplay --> Damage --> State
@@ -52,7 +53,7 @@ flowchart TD
   ActionEconomy --> AttackReplay
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackReplay,Damage,Snapshot implemented;
+  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackProfile,AttackReplay,Damage,Snapshot implemented;
 ```
 
 ## Interpretation Graph
@@ -62,9 +63,9 @@ flowchart TD
   Subject["BattleSubject<br/>srdAction(actorId, attack) or runtimeCommand(actorId, endTurn)"]
   CurrentActor["actorId === currentActing(state.initiative)<br/>success: continue<br/>failure: invalid wrongActor<br/>why: subject legality is turn-local"]
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn<br/>invalid: fills are not accepted"]
-  Attack["srdAction.attack<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
-  AttackProfile["supported character weapon attack profile<br/>source: BattleCreatureState.origin<br/>why: implemented slice discovers character weapon attacks only"]
-  Target["target choice<br/>needsHoles until caller selects another combatant"]
+  Attack["srdAction.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
+  AttackProfile["supported attack profile<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
+  Target["target choice<br/>choices filtered by selected attack reach or normal range and combatant distance<br/>needsHoles until caller selects a legal combatant"]
   Roll["attack roll<br/>needsHoles until caller supplies AttackRollResult"]
   HitCheck["attackRollHits(roll, target AC)<br/>hit: ask/apply damage<br/>miss: spend action"]
   DamageHole["damage roll<br/>needsHoles only after a hit"]
@@ -82,15 +83,21 @@ flowchart TD
 
 ## Implemented Slice Boundaries
 
-- Public subjects are `srdAction.attack` and `runtimeCommand.endTurn`.
+- Public subjects are `srdAction.attack` with an authored `attackName` and
+  `runtimeCommand.endTurn`.
 - Fills are caller/session state, not durable `BattleState`.
 - Initiative scores are caller-supplied in `BattleCreatureInit`; this runtime
   orders turns from those scores but does not derive them from Stat Blocks.
-- Attack replay uses target, attack-roll, and on-hit damage holes.
-- Stat Block-derived creatures can be initialized and damaged, but Stat Block
-  attack actions are not implemented yet.
+- Attack replay uses target, attack-roll, and on-hit damage holes. Target
+  choices are filtered from the selected attack's melee reach or normal range
+  and the battle's pairwise combatant distances.
+- Stat Block-derived creatures can be initialized, damaged, and use supported
+  named attacks derived from `StatBlockRecord.actions.attacks`.
 - Character-derived attacks come from a supported weapon attack profile
   assembled at the composition boundary.
+- Unsupported Stat Block attack branches such as Multiattack and unsupported
+  conditional on-hit riders are filtered by support gates and are not copied
+  into MCP state.
 - Bonus-action availability can be represented in turn resources, but no
   bonus-action subject is exposed yet.
 - The package-local QNT slice constrains this implemented subset; `battle.qnt`

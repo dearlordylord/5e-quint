@@ -1,4 +1,5 @@
 import type { AttackRollResult } from "./runtime-hole-algebra.ts";
+import { ATTACK_ROLL_MODES } from "./runtime-hole-algebra.ts";
 
 export function attackRollHits(
   roll: AttackRollResult,
@@ -24,6 +25,7 @@ export function attackRollResultIsValid(roll: AttackRollResult): boolean {
     Number.isInteger(roll.total) &&
     Number.isInteger(Number(roll.naturalD20)) &&
     Number(roll.naturalD20) >= 1 &&
-    Number(roll.naturalD20) <= 20
+    Number(roll.naturalD20) <= 20 &&
+    (roll.rollMode === undefined || ATTACK_ROLL_MODES.includes(roll.rollMode))
   );
 }

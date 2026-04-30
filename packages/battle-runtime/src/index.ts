@@ -68,6 +68,9 @@ import {
 } from "@dnd/shared/types";
 import type {
   Ability,
+  CreatureNamedAttackRoll,
+  DamageType,
+  DiceExpr,
   StatBlockRecord,
   StatBlockValue,
   UnitRecord,
@@ -120,12 +123,86 @@ export type CharacterBattleLoadoutRef = {
   };
 };
 
-export type BattleAttackProfile = {
+export type CharacterWeaponAttackProfile = {
   readonly kind: "weapon";
   readonly weapon: WeaponRecord;
   readonly ability: Ability;
   readonly abilityModifier: number;
 };
+type LiteralStatBlockValue = Extract<
+  StatBlockValue,
+  { readonly kind: "literal" }
+>;
+type SupportedStatBlockBaseDamageEffect = Extract<
+  CreatureNamedAttackRoll["onHit"][number],
+  { readonly kind: "damage" }
+> & {
+  readonly amount: { readonly kind: "fixed"; readonly expr: DiceExpr };
+  readonly damageType: DamageType;
+};
+type SupportedStatBlockAdvantageBonusDamageEffect = Extract<
+  CreatureNamedAttackRoll["onHit"][number],
+  { readonly kind: "conditional_bonus_damage" }
+> & {
+  readonly when: { readonly kind: "attack_roll_had_advantage" };
+  readonly amount: { readonly kind: "fixed"; readonly expr: DiceExpr };
+  readonly damageType: DamageType;
+};
+type SupportedStatBlockAttackEffectList =
+  | readonly [SupportedStatBlockBaseDamageEffect]
+  | readonly [
+      SupportedStatBlockBaseDamageEffect,
+      SupportedStatBlockAdvantageBonusDamageEffect,
+    ]
+  | readonly [
+      SupportedStatBlockAdvantageBonusDamageEffect,
+      SupportedStatBlockBaseDamageEffect,
+    ];
+type SupportedCreatureNamedAttackRoll = Omit<
+  CreatureNamedAttackRoll,
+  | "attackBonus"
+  | "multiattackCount"
+  | "onHit"
+  | "attackType"
+  | "reachFeet"
+  | "rangeFeet"
+> & {
+  readonly attackBonus: LiteralStatBlockValue;
+  readonly multiattackCount?: never;
+  readonly onHit: SupportedStatBlockAttackEffectList;
+} & (
+    | {
+        readonly attackType: "melee";
+        readonly reachFeet: number;
+        readonly rangeFeet?: never;
+      }
+    | {
+        readonly attackType: "ranged";
+        readonly reachFeet?: never;
+        readonly rangeFeet: { readonly normal: number; readonly long: number };
+      }
+  );
+export type StatBlockAuthoredAttack = {
+  readonly kind: "statBlockAttack";
+  readonly attack: SupportedCreatureNamedAttackRoll;
+};
+type StatBlockAttackDamage = {
+  readonly expr: DiceExpr;
+  readonly damageType: DamageType;
+  readonly advantageBonus?: {
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
+  };
+};
+type AttackTargetConstraint =
+  | { readonly kind: "meleeReach"; readonly reachFeet: number }
+  | {
+      readonly kind: "rangedRange";
+      readonly normalFeet: number;
+    };
+export type BattleAttackProfile =
+  | CharacterWeaponAttackProfile
+  | StatBlockAuthoredAttack;
 
 export type CharacterBattleCreatureInit = {
   readonly kind: "character";
@@ -137,7 +214,7 @@ export type CharacterBattleCreatureInit = {
   readonly tempHp: Hp;
   readonly zeroHpLifecyclePolicy: "usesDeathSavingThrows";
   readonly selectedLoadout: CharacterBattleLoadoutRef;
-  readonly attack: BattleAttackProfile | null;
+  readonly attack: CharacterWeaponAttackProfile | null;
 };
 
 export type StatBlockBattleInitInput = {
@@ -167,6 +244,12 @@ export type BattleCreatureInit = {
     | StatBlockBattleCreatureInit;
 };
 
+export type BattleCombatantDistance = {
+  readonly combatantA: CombatantId;
+  readonly combatantB: CombatantId;
+  readonly feet: number;
+};
+
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
@@ -188,7 +271,7 @@ export type BattleCreatureState = {
         readonly characterId: CharacterId;
         readonly characterUnitRefs: readonly BattleUnitRef[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
-        readonly attack: BattleAttackProfile | null;
+        readonly attack: CharacterWeaponAttackProfile | null;
       }
     | {
         readonly kind: "statBlock";
@@ -200,6 +283,10 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
+  readonly combatantDistances: ReadonlyMap<
+    CombatantId,
+    ReadonlyMap<CombatantId, number>
+  >;
   readonly currentTurnResources: BattleTurnResources;
 };
 
@@ -214,6 +301,7 @@ export type BattleSubject =
       readonly tag: "srdAction";
       readonly actorId: CombatantId;
       readonly action: BattleSrdAction;
+      readonly attackName: string;
     }
   | {
       readonly tag: "runtimeCommand";
@@ -239,7 +327,10 @@ export type BattleTargetChoiceHole = Extract<
 export type BattleAttackRollHole = Extract<
   RuntimeHole,
   { readonly kind: "attackRoll" }
->;
+> & {
+  readonly attack: BattleAttackProfile;
+  readonly attackBonus: number;
+};
 export type BattleDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -339,10 +430,12 @@ const ATTACK_TARGET_HOLE_ID = holeId("battle:attack:target");
 const ATTACK_ROLL_HOLE_ID = holeId("battle:attack:roll");
 const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:attack:target");
 const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
+const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = 5;
 
 export function startBattle(input: {
   readonly battleId: BattleId;
   readonly combatants: readonly BattleCreatureInit[];
+  readonly combatantDistances?: readonly BattleCombatantDistance[];
 }): BattleState {
   if (input.combatants.length === 0) {
     throw new Error("startBattle requires at least one combatant.");
@@ -381,6 +474,7 @@ export function startBattle(input: {
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
+    combatantDistances: battleCombatantDistances(input),
     currentTurnResources: INITIAL_TURN_RESOURCES,
   };
 }
@@ -394,18 +488,34 @@ export function discoverBattleActs(
   }
 
   const acts: AvailableBattleAct[] = [];
+  const supportedAttacks = supportedAttackProfiles(state, actorId);
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "attack") &&
-    supportedAttackProfile(state, actorId) != null &&
-    attackTargetChoices(state, actorId).length > 0
+    supportedAttacks.some(
+      (attack) => attackTargetChoices(state, actorId, attack).length > 0,
+    )
   ) {
-    acts.push({
-      subject: { tag: "srdAction", actorId, action: "attack" },
-      label: "Attack",
-      summary: "Take the Attack action.",
-      initialHoles: [attackTargetHole(state, actorId)],
-    });
+    acts.push(
+      ...supportedAttacks.flatMap((attack) => {
+        const targetHole = attackTargetHole(state, actorId, attack);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "srdAction" as const,
+                  actorId,
+                  action: "attack" as const,
+                  attackName: attackProfileName(attack),
+                },
+                label: "Attack",
+                summary: `Take the Attack action with ${attackProfileName(attack)}.`,
+                initialHoles: [targetHole],
+              },
+            ];
+      }),
+    );
   }
   acts.push({
     subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
@@ -552,6 +662,72 @@ function battleCreatureStateFromInit(
   });
 }
 
+function battleCombatantDistances(input: {
+  readonly combatants: readonly BattleCreatureInit[];
+  readonly combatantDistances?: readonly BattleCombatantDistance[];
+}): BattleState["combatantDistances"] {
+  const distances = new Map<CombatantId, Map<CombatantId, number>>();
+  const combatantIds = input.combatants.map(
+    (combatant) => combatant.combatantId,
+  );
+  const authoredDistances =
+    input.combatantDistances ??
+    combatantIds.flatMap((combatantA, index) =>
+      combatantIds.slice(index + 1).map((combatantB) => ({
+        combatantA,
+        combatantB,
+        feet: DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET,
+      })),
+    );
+
+  for (const distance of authoredDistances) {
+    if (!Number.isInteger(distance.feet) || distance.feet < 0) {
+      throw new Error(
+        "Battle combatant distance must be a non-negative integer.",
+      );
+    }
+    if (
+      !combatantIds.includes(distance.combatantA) ||
+      !combatantIds.includes(distance.combatantB)
+    ) {
+      throw new Error(
+        "Battle combatant distance references an unknown combatant.",
+      );
+    }
+    if (distance.combatantA === distance.combatantB) {
+      throw new Error("Battle combatant distance requires two combatants.");
+    }
+    setBattleCombatantDistance(
+      distances,
+      distance.combatantA,
+      distance.combatantB,
+      distance.feet,
+    );
+    setBattleCombatantDistance(
+      distances,
+      distance.combatantB,
+      distance.combatantA,
+      distance.feet,
+    );
+  }
+
+  return distances;
+}
+
+function setBattleCombatantDistance(
+  distances: Map<CombatantId, Map<CombatantId, number>>,
+  from: CombatantId,
+  to: CombatantId,
+  feet: number,
+): void {
+  const existing = distances.get(from);
+  if (existing == null) {
+    distances.set(from, new Map([[to, feet]]));
+    return;
+  }
+  existing.set(to, feet);
+}
+
 function currentActorId(state: BattleState): CombatantId {
   return currentActing(state.initiative);
 }
@@ -609,7 +785,11 @@ function combatantZeroHpLifecycleSnapshot(
 function combatantCanTakeActions(
   combatant: BattleCreatureState | undefined,
 ): combatant is BattleCreatureState {
-  return combatant != null && !isIncapacitated(combatant.conditions);
+  return (
+    combatant != null &&
+    !isIncapacitated(combatant.conditions) &&
+    !zeroHpLifecycleIsTerminal(combatant)
+  );
 }
 
 function activeConditions(state: ConditionState): readonly Condition[] {
@@ -653,16 +833,24 @@ export function scoreModifier(score: number): number {
 }
 
 function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
-  const attack = supportedAttackProfile(input.state, input.subject.actorId);
+  if (input.subject.tag !== "srdAction") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Attack resolution requires an SRD Attack subject.",
+    );
+  }
+
+  const attack = supportedAttackProfile(input.state, input.subject);
   if (attack == null) {
     return invalidResult(
       input.state,
       "unsupportedSurfaceShape",
-      "Attack resolution requires a supported weapon attack profile.",
+      "Attack resolution requires a supported attack profile.",
     );
   }
 
-  const fillSet = attackFillSet(input.fills, attack);
+  const fillSet = attackFillSet(input.fills);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
@@ -676,7 +864,7 @@ function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
       );
     }
     return needsHolesResult(input.state, input.subject, [
-      attackTargetHole(input.state, input.subject.actorId),
+      attackTargetHole(input.state, input.subject.actorId, attack),
     ]);
   }
 
@@ -688,6 +876,20 @@ function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
       "Attack target must be another combatant in this battle.",
     );
   }
+  if (
+    !attackTargetIsLegal(
+      input.state,
+      input.subject.actorId,
+      target.combatantId,
+      attack,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack target is outside the selected attack's supported target constraint.",
+    );
+  }
 
   if (fillSet.attackRoll == null) {
     if (fillSet.damageRoll != null) {
@@ -697,7 +899,9 @@ function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
         "Attack roll must be filled before attack damage.",
       );
     }
-    return needsHolesResult(input.state, input.subject, [attackRollHole()]);
+    return needsHolesResult(input.state, input.subject, [
+      attackRollHole(attack),
+    ]);
   }
 
   if (!attackRollResultIsValid(fillSet.attackRoll)) {
@@ -715,7 +919,7 @@ function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
   const critical = attackRollIsCriticalHit(fillSet.attackRoll);
   if (hit && fillSet.damageRoll == null) {
     return needsHolesResult(input.state, input.subject, [
-      attackDamageHole(attack, critical),
+      attackDamageHole(attack, critical, fillSet.attackRoll),
     ]);
   }
   if (!hit && fillSet.damageRoll != null) {
@@ -730,6 +934,7 @@ function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
       fillSet.damageRoll,
       attack,
       critical,
+      fillSet.attackRoll,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
@@ -762,18 +967,12 @@ type AttackFillSet =
     }
   | { readonly tag: "invalid"; readonly message: string };
 
-function attackFillSet(
-  fills: readonly BattleFill[],
-  attack: BattleAttackProfile,
-): AttackFillSet {
+function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let targetId: CombatantId | undefined;
   let attackRoll: AttackRollResult | undefined;
   let damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
-  const damageHoleId = attackDamageHoleId(attack);
-  const criticalDamageHoleId = attackDamageHoleId(attack, true);
-
   for (const fill of fills) {
     if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
       if (targetId !== undefined) {
@@ -791,10 +990,7 @@ function attackFillSet(
       continue;
     }
 
-    if (
-      fill.kind === "rolledDice" &&
-      (fill.holeId === damageHoleId || fill.holeId === criticalDamageHoleId)
-    ) {
+    if (fill.kind === "rolledDice") {
       if (damageRoll !== undefined) {
         return { tag: "invalid", message: "Attack damage was filled twice." };
       }
@@ -815,28 +1011,42 @@ function validateAttackDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   attack: BattleAttackProfile,
   critical: boolean,
+  attackRoll: AttackRollResult,
 ): string | null {
-  if (fill.holeId !== attackDamageHoleId(attack, critical)) {
+  if (fill.holeId !== attackDamageHoleId(attack, critical, attackRoll)) {
     return critical
       ? "Critical hit damage must use the critical damage hole."
       : "Attack damage must use the normal hit damage hole.";
   }
 
-  return validateRolledDiceForWeaponAttack(fill.value, attack, critical);
+  return validateRolledDiceForWeaponAttack(
+    fill.value,
+    attack,
+    critical,
+    attackRoll,
+  );
 }
 
 function validateRolledDiceForWeaponAttack(
   groups: ReadonlyArray<RolledDiceGroup>,
   attack: BattleAttackProfile,
   critical: boolean,
+  attackRoll: AttackRollResult,
 ): string | null {
-  const damage = selectedWeaponDamage(attack.weapon);
-  const validation = validateRolledDiceForDiceExpr(groups, {
-    dice: critical ? damage.dice * 2 : damage.dice,
-    dieSize: damage.dieSize,
-  });
-  if (validation !== null) {
-    return validation.reason;
+  const components = attackDamageComponents(attack, critical, attackRoll);
+  if (groups.length !== components.length) {
+    return "filled damage groups do not match current attack damage";
+  }
+
+  for (const [index, component] of components.entries()) {
+    const group = groups[index];
+    if (group === undefined) {
+      return "filled damage groups do not match current attack damage";
+    }
+    const validation = validateRolledDiceForDiceExpr([group], component.expr);
+    if (validation !== null) {
+      return validation.reason;
+    }
   }
 
   return null;
@@ -1063,7 +1273,7 @@ function weaponAttackDamageAmount(
           0,
         ),
       0,
-    ) + attack.abilityModifier
+    ) + attackDamageModifier(attack)
   );
 }
 
@@ -1083,44 +1293,85 @@ function needsHolesResult(
 function attackTargetHole(
   state: BattleState,
   actorId: CombatantId,
+  attack: BattleAttackProfile,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
     holeId: ATTACK_TARGET_HOLE_ID,
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
     label: "Attack target",
-    choices: attackTargetChoices(state, actorId),
+    choices: attackTargetChoices(state, actorId, attack),
   };
 }
 
 function attackTargetChoices(
   state: BattleState,
   actorId: CombatantId,
+  attack: BattleAttackProfile,
 ): readonly CombatantId[] {
-  return [...state.combatants.keys()].filter((id) => id !== actorId);
+  return [...state.combatants.keys()].filter(
+    (id) => id !== actorId && attackTargetIsLegal(state, actorId, id, attack),
+  );
 }
 
-function attackRollHole(): BattleAttackRollHole {
+function attackTargetIsLegal(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  attack: BattleAttackProfile,
+): boolean {
+  const distanceFeet = combatantDistanceFeet(state, actorId, targetId);
+  if (distanceFeet == null) {
+    return false;
+  }
+
+  return Match.value(attackTargetConstraint(attack)).pipe(
+    Match.when(
+      { kind: "meleeReach" },
+      (constraint) => distanceFeet <= constraint.reachFeet,
+    ),
+    Match.when(
+      { kind: "rangedRange" },
+      (constraint) => distanceFeet <= constraint.normalFeet,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function combatantDistanceFeet(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+): number | undefined {
+  return state.combatantDistances.get(actorId)?.get(targetId);
+}
+
+function attackRollHole(attack: BattleAttackProfile): BattleAttackRollHole {
+  const name = attackProfileName(attack);
   return {
     kind: "attackRoll",
     holeId: ATTACK_ROLL_HOLE_ID,
     holeInstanceKey: ATTACK_ROLL_HOLE_INSTANCE,
-    label: "Attack roll",
+    label: `${name} attack roll`,
+    attack,
+    attackBonus: attackBonus(attack),
   };
 }
 
 function attackDamageHole(
   attack: BattleAttackProfile,
   critical = false,
+  attackRoll?: AttackRollResult,
 ): BattleDamageRollHole {
-  const expression = weaponAttackDamageExpression(attack, critical);
+  const expression = weaponAttackDamageExpression(attack, critical, attackRoll);
+  const name = attackProfileName(attack);
   return {
     kind: "rolledDice",
-    holeId: attackDamageHoleId(attack, critical),
+    holeId: attackDamageHoleId(attack, critical, attackRoll),
     holeInstanceKey: holeInstanceKey(
       `battle:attack:damage-result:${expression}`,
     ),
-    label: `${attack.weapon.name} damage (${expression})`,
+    label: `${name} damage (${expression})`,
     attack,
     critical,
   };
@@ -1129,25 +1380,218 @@ function attackDamageHole(
 function attackDamageHoleId(
   attack: BattleAttackProfile,
   critical = false,
+  attackRoll?: AttackRollResult,
 ): BattleHoleId {
   return holeId(
     `battle:attack:damage-result:${weaponAttackDamageExpression(
       attack,
       critical,
+      attackRoll,
     )}`,
   );
 }
 
 function supportedAttackProfile(
   state: BattleState,
-  actorId: CombatantId,
+  subject: Extract<BattleSubject, { readonly tag: "srdAction" }>,
 ): BattleAttackProfile | undefined {
+  return supportedAttackProfiles(state, subject.actorId).find(
+    (attack) => attackProfileName(attack) === subject.attackName,
+  );
+}
+
+function supportedAttackProfiles(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly BattleAttackProfile[] {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") {
-    return undefined;
+  if (actor?.origin.kind === "character") {
+    return actor.origin.attack == null ? [] : [actor.origin.attack];
   }
 
-  return actor.origin.attack ?? undefined;
+  if (actor?.origin.kind === "statBlock") {
+    return (
+      actor.origin.statBlock.statBlock.actions?.attacks?.flatMap((attack) => {
+        const profile = supportedStatBlockAttackProfile(attack);
+        return profile == null ? [] : [profile];
+      }) ?? []
+    );
+  }
+
+  return [];
+}
+
+function supportedStatBlockAttackProfile(
+  attack: CreatureNamedAttackRoll,
+): StatBlockAuthoredAttack | null {
+  if (!isSupportedCreatureNamedAttackRoll(attack)) {
+    return null;
+  }
+
+  return {
+    kind: "statBlockAttack",
+    attack,
+  };
+}
+
+function isSupportedCreatureNamedAttackRoll(
+  attack: CreatureNamedAttackRoll,
+): attack is SupportedCreatureNamedAttackRoll {
+  return (
+    attack.multiattackCount === undefined &&
+    attack.attackBonus.kind === "literal" &&
+    supportedStatBlockAttackDamage(attack) !== null &&
+    supportedStatBlockAttackTargetConstraint(attack) !== null
+  );
+}
+
+function supportedStatBlockAttackDamage(
+  attack: SupportedCreatureNamedAttackRoll,
+): StatBlockAttackDamage;
+function supportedStatBlockAttackDamage(
+  attack: CreatureNamedAttackRoll,
+): StatBlockAttackDamage | null;
+function supportedStatBlockAttackDamage(
+  attack: CreatureNamedAttackRoll,
+): StatBlockAttackDamage | null {
+  const baseDamage = attack.onHit.flatMap((effect) =>
+    supportedStatBlockBaseDamageEffect(effect),
+  );
+  const advantageBonus = attack.onHit.flatMap((effect) =>
+    supportedStatBlockAdvantageBonusDamageEffect(effect),
+  );
+  if (
+    baseDamage.length !== 1 ||
+    baseDamage.length + advantageBonus.length !== attack.onHit.length
+  ) {
+    return null;
+  }
+
+  const damage = baseDamage[0];
+  if (damage === undefined) {
+    return null;
+  }
+  const bonus = advantageBonus[0];
+  if (advantageBonus.length > 1) {
+    return null;
+  }
+  if (bonus !== undefined && bonus.damageType !== damage.damageType) {
+    return null;
+  }
+
+  return {
+    expr: damage.expr,
+    damageType: damage.damageType,
+    ...(bonus === undefined ? {} : { advantageBonus: bonus }),
+  };
+}
+
+function supportedStatBlockBaseDamageEffect(
+  effect: CreatureNamedAttackRoll["onHit"][number],
+): readonly StatBlockAttackDamage[] {
+  return effect.kind === "damage" &&
+    effect.amount.kind === "fixed" &&
+    typeof effect.damageType === "string"
+    ? [
+        {
+          expr: effect.amount.expr,
+          damageType: effect.damageType,
+        },
+      ]
+    : [];
+}
+
+function supportedStatBlockAdvantageBonusDamageEffect(
+  effect: CreatureNamedAttackRoll["onHit"][number],
+): readonly Required<StatBlockAttackDamage>["advantageBonus"][] {
+  return effect.kind === "conditional_bonus_damage" &&
+    effect.when.kind === "attack_roll_had_advantage" &&
+    effect.amount.kind === "fixed" &&
+    typeof effect.damageType === "string"
+    ? [
+        {
+          expr: effect.amount.expr,
+          damageType: effect.damageType,
+        },
+      ]
+    : [];
+}
+
+function supportedStatBlockAttackTargetConstraint(
+  attack: SupportedCreatureNamedAttackRoll,
+): AttackTargetConstraint;
+function supportedStatBlockAttackTargetConstraint(
+  attack: CreatureNamedAttackRoll,
+): AttackTargetConstraint | null;
+function supportedStatBlockAttackTargetConstraint(
+  attack: CreatureNamedAttackRoll,
+): AttackTargetConstraint | null {
+  if (attack.attackType === "melee" && attack.reachFeet !== undefined) {
+    return { kind: "meleeReach", reachFeet: attack.reachFeet };
+  }
+  if (attack.attackType === "ranged" && attack.rangeFeet !== undefined) {
+    return {
+      kind: "rangedRange",
+      normalFeet: attack.rangeFeet.normal,
+    };
+  }
+
+  return null;
+}
+
+function statBlockAttackDamage(
+  attack: StatBlockAuthoredAttack,
+): StatBlockAttackDamage {
+  return supportedStatBlockAttackDamage(attack.attack);
+}
+
+function statBlockAttackTargetConstraint(
+  attack: StatBlockAuthoredAttack,
+): AttackTargetConstraint {
+  return supportedStatBlockAttackTargetConstraint(attack.attack);
+}
+
+function statBlockAttackBonus(attack: StatBlockAuthoredAttack): number {
+  return attack.attack.attackBonus.value;
+}
+
+function attackTargetConstraint(
+  attack: BattleAttackProfile,
+): AttackTargetConstraint {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "statBlockAttack" }, (profile) =>
+      statBlockAttackTargetConstraint(profile),
+    ),
+    Match.when({ kind: "weapon" }, (profile) =>
+      weaponTargetConstraint(profile.weapon),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function weaponTargetConstraint(weapon: WeaponRecord): AttackTargetConstraint {
+  const properties = weapon.properties ?? [];
+  if (weapon.usage === "ranged") {
+    const ammunition = properties.find(
+      (property) => property.kind === "ammunition",
+    );
+    const thrown = properties.find((property) => property.kind === "thrown");
+    const range = ammunition?.range ?? thrown?.range;
+    if (range == null) {
+      throw new Error("Ranged Battle Attack requires weapon range.");
+    }
+    return {
+      kind: "rangedRange",
+      normalFeet: range.normal,
+    };
+  }
+
+  return {
+    kind: "meleeReach",
+    reachFeet: properties.some((property) => property.kind === "reach")
+      ? 10
+      : 5,
+  };
 }
 
 function selectedWeaponDamage(weapon: WeaponRecord): BattleWeaponDamage {
@@ -1158,16 +1602,143 @@ function selectedWeaponDamage(weapon: WeaponRecord): BattleWeaponDamage {
   return weapon.damage;
 }
 
+function attackProfileName(attack: BattleAttackProfile): string {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, (weaponAttack) => weaponAttack.weapon.name),
+    Match.when(
+      { kind: "statBlockAttack" },
+      (statBlockAttack) => statBlockAttack.attack.name,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function attackDamage(attack: BattleAttackProfile): {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flat?: number;
+  readonly damageType: DamageType;
+} {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, (weaponAttack) =>
+      selectedWeaponDamage(weaponAttack.weapon),
+    ),
+    Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
+      const damage = statBlockAttackDamage(statBlockAttack);
+      return {
+        dice: damage.expr.dice,
+        dieSize: damage.expr.dieSize,
+        ...(damage.expr.flat === undefined ? {} : { flat: damage.expr.flat }),
+        damageType: damage.damageType,
+      };
+    }),
+    Match.exhaustive,
+  );
+}
+
+type AttackDamageComponent = {
+  readonly expr: DiceExpr;
+  readonly damageType: DamageType;
+};
+
+function attackDamageComponents(
+  attack: BattleAttackProfile,
+  critical: boolean,
+  attackRoll?: AttackRollResult,
+): readonly AttackDamageComponent[] {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, (weaponAttack) => {
+      const damage = selectedWeaponDamage(weaponAttack.weapon);
+      return [
+        {
+          expr: critical
+            ? {
+                dice: damage.dice * 2,
+                dieSize: damage.dieSize,
+              }
+            : {
+                dice: damage.dice,
+                dieSize: damage.dieSize,
+              },
+          damageType: damage.damageType,
+        },
+      ];
+    }),
+    Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
+      const damage = statBlockAttackDamage(statBlockAttack);
+      const base = damage.expr;
+      const baseComponent = {
+        expr: {
+          dice: critical ? base.dice * 2 : base.dice,
+          dieSize: base.dieSize,
+        },
+        damageType: damage.damageType,
+      };
+      const advantageBonus = damage.advantageBonus;
+      if (
+        attackRoll?.rollMode !== "advantage" ||
+        advantageBonus === undefined
+      ) {
+        return [baseComponent];
+      }
+
+      return [
+        baseComponent,
+        {
+          expr: {
+            dice: critical
+              ? advantageBonus.expr.dice * 2
+              : advantageBonus.expr.dice,
+            dieSize: advantageBonus.expr.dieSize,
+          },
+          damageType: advantageBonus.damageType,
+        },
+      ];
+    }),
+    Match.exhaustive,
+  );
+}
+
+function attackDamageModifier(attack: BattleAttackProfile): number {
+  return Match.value(attack).pipe(
+    Match.when(
+      { kind: "weapon" },
+      (weaponAttack) => weaponAttack.abilityModifier,
+    ),
+    Match.when(
+      { kind: "statBlockAttack" },
+      (statBlockAttack) =>
+        statBlockAttackDamage(statBlockAttack).expr.flat ?? 0,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function attackBonus(attack: BattleAttackProfile): number {
+  return Match.value(attack).pipe(
+    Match.when(
+      { kind: "weapon" },
+      (weaponAttack) => weaponAttack.abilityModifier,
+    ),
+    Match.when({ kind: "statBlockAttack" }, (statBlockAttack) =>
+      statBlockAttackBonus(statBlockAttack),
+    ),
+    Match.exhaustive,
+  );
+}
+
 function weaponAttackDamageExpression(
   attack: BattleAttackProfile,
   critical = false,
+  attackRoll?: AttackRollResult,
 ): string {
-  const damage = selectedWeaponDamage(attack.weapon);
-  const modifier = signedModifier(attack.abilityModifier);
+  const damage = attackDamage(attack);
+  const components = attackDamageComponents(attack, critical, attackRoll);
+  const modifier = signedModifier(attackDamageModifier(attack));
 
-  return `${critical ? damage.dice * 2 : damage.dice}d${
-    damage.dieSize
-  }${modifier}-${damage.damageType}`;
+  return `${components
+    .map((component) => `${component.expr.dice}d${component.expr.dieSize}`)
+    .join("+")}${modifier}-${damage.damageType}`;
 }
 
 function signedModifier(modifier: number): string {

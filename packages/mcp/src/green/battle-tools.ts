@@ -48,13 +48,13 @@ export const greenBattleToolDefinitions = [
   {
     name: "discover_battle_acts",
     description:
-      "Return the current battle snapshot and available acts for the current combatant. The supported Fighter slice exposes Attack and End Turn.",
+      "Return the current battle snapshot and available acts for the current combatant. Supported character and Stat Block attacks expose Attack subjects with an attackName plus End Turn.",
     inputSchema: discoverBattleActsInputSchema,
   },
   {
     name: "fill_battle_hole",
     description:
-      "Fill one hole for the current actor's Attack replay. MCP stores transient target, attack-roll, and damage-result fills until the battle runtime resolves the Attack.",
+      "Fill one hole for the current actor's named Attack replay. MCP stores transient target, attack-roll, and damage-result fills until the battle runtime resolves the Attack.",
     inputSchema: fillBattleHoleInputSchema,
   },
   {
@@ -190,6 +190,7 @@ export function handleGreenBattleToolCall(
       tag: "srdAction",
       actorId: decoded.actorId,
       action: "attack",
+      attackName: decoded.attackName,
     };
     const previous = root.sessionStore.transientBattleFills;
     if (previous !== null && !sameBattleSubject(previous.subject, subject)) {
@@ -283,7 +284,7 @@ function noStoredBattleContent() {
 function sameBattleSubject(left: BattleSubject, right: BattleSubject): boolean {
   if (left.tag !== right.tag || left.actorId !== right.actorId) return false;
   if (left.tag === "srdAction" && right.tag === "srdAction") {
-    return left.action === right.action;
+    return left.action === right.action && left.attackName === right.attackName;
   }
   if (left.tag === "runtimeCommand" && right.tag === "runtimeCommand") {
     return left.command === right.command;

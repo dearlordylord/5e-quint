@@ -2,7 +2,7 @@ import {
   battleCreatureInitFromStatBlock,
   scoreModifier,
   startBattle,
-  type BattleAttackProfile,
+  type CharacterWeaponAttackProfile,
   type BattleId,
   type BattleState,
   type CharacterId,
@@ -69,7 +69,9 @@ export function battleCreatureInitFromCharacterBuild(
   const characterUnitRefs = characterBuildUnitRefs(input.build);
   const currentHp = input.currentHp ?? maxHp;
   if (currentHp > maxHp) {
-    throw new Error("Character battle initialization current HP exceeds max HP.");
+    throw new Error(
+      "Character battle initialization current HP exceeds max HP.",
+    );
   }
 
   return {
@@ -178,7 +180,7 @@ function armorDefenseBonus(unit: UnitRecord): ArmorClassState["bonuses"] {
 function characterAttackProfile(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): BattleAttackProfile | null {
+): CharacterWeaponAttackProfile | null {
   const selectedWeapon = build.equipment.weapon;
   if (selectedWeapon == null) {
     return null;

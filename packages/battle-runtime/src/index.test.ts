@@ -24,6 +24,7 @@ import {
   type BattleCreatureInit,
 } from "./index.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { DieRollResult, Hp } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
@@ -41,6 +42,8 @@ const battleRuntimeSlicePath = fileURLToPath(
 );
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
+const distantFighterId = combatantId("distant-fighter");
+const longRangeFighterId = combatantId("long-range-fighter");
 type BattleFillableHole = Pick<BattleHole, "kind" | "holeId">;
 type DamageRollValue = Extract<
   BattleFill,
@@ -162,7 +165,12 @@ describe("battle runtime", () => {
     );
 
     expect(acts.map((act) => act.subject)).toEqual([
-      { tag: "srdAction", actorId: fighterId, action: "attack" },
+      {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
     expect(acts[0]?.initialHoles).toMatchObject([
@@ -214,7 +222,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [],
     });
 
@@ -245,7 +258,12 @@ describe("battle runtime", () => {
     const state = fighterVsGoblinBattle();
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [],
     });
 
@@ -266,7 +284,12 @@ describe("battle runtime", () => {
     const targetHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
         fills: [],
       }),
       "targetChoice",
@@ -274,13 +297,18 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [targetFill(targetHole, goblinId)],
     });
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "attackRoll", label: "Attack roll" }],
+      holes: [{ kind: "attackRoll", label: "Longsword attack roll" }],
     });
   });
 
@@ -289,7 +317,12 @@ describe("battle runtime", () => {
     const targetHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
         fills: [],
       }),
       "targetChoice",
@@ -297,7 +330,12 @@ describe("battle runtime", () => {
     const rollHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
         fills: [targetFill(targetHole, goblinId)],
       }),
       "attackRoll",
@@ -305,7 +343,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -340,7 +383,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 14, naturalD20: 9 }),
@@ -368,7 +416,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 99, naturalD20: 1 }),
@@ -388,7 +441,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 1, naturalD20: 20 }),
@@ -415,7 +473,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 21 }),
@@ -440,7 +503,12 @@ describe("battle runtime", () => {
     const damageHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
         fills: [
           targetFill(targetHole, goblinId),
           attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -451,7 +519,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 14, naturalD20: 9 }),
@@ -472,7 +545,12 @@ describe("battle runtime", () => {
     const damageHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
         fills: [
           targetFill(targetHole, goblinId),
           attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -483,7 +561,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -509,7 +592,12 @@ describe("battle runtime", () => {
     const damageHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
         fills: [
           targetFill(targetHole, goblinId),
           attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -520,7 +608,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -550,7 +643,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -574,7 +672,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: goblinId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: goblinId,
+        action: "attack",
+        attackName: "Scimitar",
+      },
       fills: [],
     });
 
@@ -591,7 +694,12 @@ describe("battle runtime", () => {
     const damageHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
         fills: [
           targetFill(targetHole, goblinId),
           attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -602,7 +710,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -638,7 +751,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -671,7 +789,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -717,7 +840,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
@@ -771,7 +899,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -822,7 +955,12 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
       fills: [
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -954,6 +1092,322 @@ describe("battle runtime", () => {
           actionResources: [{ kind: "action", source: "turn" }],
           currentHasBonusAction: true,
         },
+      },
+    });
+  });
+
+  test("Goblin Warrior discovers authored Scimitar and Shortbow attacks", () => {
+    const afterFighter = endTurn({
+      state: fighterVsGoblinBattle(),
+      actorId: fighterId,
+    });
+    if (afterFighter.tag !== "resolved") {
+      throw new Error(`Expected resolved End Turn, got ${afterFighter.tag}.`);
+    }
+
+    const acts = discoverBattleActs(afterFighter.state);
+
+    expect(acts.map((act) => act.subject)).toEqual([
+      {
+        tag: "srdAction",
+        actorId: goblinId,
+        action: "attack",
+        attackName: "Scimitar",
+      },
+      {
+        tag: "srdAction",
+        actorId: goblinId,
+        action: "attack",
+        attackName: "Shortbow",
+      },
+      { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
+    ]);
+  });
+
+  test("Goblin Warrior Scimitar attack derives roll bonus and damage from the Stat Block", () => {
+    const state = goblinTurnBattle();
+    const subject = goblinAttackSubject("Scimitar");
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const rollHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(targetHole, fighterId)],
+      }),
+      "attackRoll",
+    );
+
+    expect(rollHole).toMatchObject({
+      kind: "attackRoll",
+      label: "Scimitar attack roll",
+      attackBonus: 4,
+      attack: {
+        kind: "statBlockAttack",
+        attack: { name: "Scimitar" },
+      },
+    });
+
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(targetHole, fighterId),
+          attackRollFill(rollHole, { total: 14, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damageHole).toMatchObject({
+      kind: "rolledDice",
+      holeId: "battle:attack:damage-result:1d6+2-slashing",
+      label: "Scimitar damage (1d6+2-slashing)",
+      critical: false,
+    });
+  });
+
+  test("Goblin Warrior target legality is derived from authored reach and range", () => {
+    const state = startBattle({
+      battleId: battleId("battle-goblin-target-legality"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({ initiative: 10 }),
+        characterSeed({
+          combatantId: distantFighterId,
+          displayName: "Distant Fighter",
+          initiative: 9,
+        }),
+        characterSeed({
+          combatantId: longRangeFighterId,
+          displayName: "Long Range Fighter",
+          initiative: 8,
+        }),
+      ],
+      combatantDistances: [
+        { combatantA: goblinId, combatantB: fighterId, feet: 5 },
+        { combatantA: goblinId, combatantB: distantFighterId, feet: 10 },
+        { combatantA: goblinId, combatantB: longRangeFighterId, feet: 100 },
+        { combatantA: fighterId, combatantB: distantFighterId, feet: 10 },
+        { combatantA: fighterId, combatantB: longRangeFighterId, feet: 100 },
+      ],
+    });
+
+    const scimitarTargetHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: goblinAttackSubject("Scimitar"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const shortbowTargetHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: goblinAttackSubject("Shortbow"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    if (
+      scimitarTargetHole.kind !== "targetChoice" ||
+      shortbowTargetHole.kind !== "targetChoice"
+    ) {
+      throw new Error("Expected targetChoice holes.");
+    }
+
+    expect(scimitarTargetHole.choices).toEqual([fighterId]);
+    expect(shortbowTargetHole.choices).toEqual([fighterId, distantFighterId]);
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: goblinAttackSubject("Scimitar"),
+        fills: [targetFill(scimitarTargetHole, distantFighterId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack target is outside the selected attack's supported target constraint.",
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: goblinAttackSubject("Shortbow"),
+        fills: [targetFill(shortbowTargetHole, longRangeFighterId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack target is outside the selected attack's supported target constraint.",
+    });
+  });
+
+  test("Goblin Warrior Shortbow attack keeps its authored identity separate from Scimitar", () => {
+    const state = goblinTurnBattle();
+    const shortbowSubject = goblinAttackSubject("Shortbow");
+    const shortbowTargetHole = requireHole(
+      resolveBattleSubject({ state, subject: shortbowSubject, fills: [] }),
+      "targetChoice",
+    );
+    const shortbowRollHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: shortbowSubject,
+        fills: [targetFill(shortbowTargetHole, fighterId)],
+      }),
+      "attackRoll",
+    );
+    const shortbowDamageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: shortbowSubject,
+        fills: [
+          targetFill(shortbowTargetHole, fighterId),
+          attackRollFill(shortbowRollHole, { total: 14, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(shortbowDamageHole).toMatchObject({
+      holeId: "battle:attack:damage-result:1d6+2-piercing",
+      label: "Shortbow damage (1d6+2-piercing)",
+      attack: {
+        kind: "statBlockAttack",
+        attack: { name: "Shortbow" },
+      },
+    });
+
+    const scimitarDamageHole = attackDamageHoleAfterHit(
+      state,
+      shortbowTargetHole,
+      shortbowRollHole,
+      { total: 14, naturalD20: 10 },
+      goblinAttackSubject("Scimitar"),
+      fighterId,
+    );
+    const confused = resolveBattleSubject({
+      state,
+      subject: shortbowSubject,
+      fills: [
+        targetFill(shortbowTargetHole, fighterId),
+        attackRollFill(shortbowRollHole, { total: 14, naturalD20: 10 }),
+        damageRollFill(scimitarDamageHole, 4),
+      ],
+    });
+
+    expect(confused).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Attack damage must use the normal hit damage hole.",
+    });
+  });
+
+  test("Goblin Warrior advantage rider is included when the attack roll had Advantage", () => {
+    const state = goblinTurnBattle({ fighterHp: 12 });
+    const subject = goblinAttackSubject("Scimitar");
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(
+      state,
+      targetHole,
+      subject,
+      fighterId,
+    );
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 18, naturalD20: 14, rollMode: "advantage" },
+      subject,
+      fighterId,
+    );
+
+    expect(damageHole).toMatchObject({
+      kind: "rolledDice",
+      holeId: "battle:attack:damage-result:1d6+1d4+2-slashing",
+      label: "Scimitar damage (1d6+1d4+2-slashing)",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, fighterId),
+        attackRollFill(rollHole, {
+          total: 18,
+          naturalD20: 14,
+          rollMode: "advantage",
+        }),
+        damageRollFillWithGroups(damageHole, [[4], [3]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: fighterId, hp: 3 }),
+        ]),
+      },
+    });
+  });
+
+  test("Goblin Warrior attack resolves through HP mutation, action spend, and zero-HP policy", () => {
+    const state = goblinTurnBattle({ fighterHp: 6 });
+    const subject = goblinAttackSubject("Shortbow");
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const rollHole = attackRollHoleAfterTarget(
+      state,
+      targetHole,
+      subject,
+      fighterId,
+    );
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 14, naturalD20: 10 },
+      subject,
+      fighterId,
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, fighterId),
+        attackRollFill(rollHole, { total: 14, naturalD20: 10 }),
+        damageRollFill(damageHole, 4),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentActorId: goblinId,
+        currentTurnResources: { actionResources: [] },
+        combatants: [
+          {
+            combatantId: fighterId,
+            hp: 0,
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 0 },
+              dead: false,
+            },
+            conditions: expect.arrayContaining(["unconscious", "prone"]),
+          },
+          { combatantId: goblinId, hp: 10 },
+        ],
       },
     });
   });
@@ -1125,7 +1579,12 @@ function resolveAttackFixture(input: {
 
   return resolveBattleSubject({
     state,
-    subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+    subject: {
+      tag: "srdAction",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Longsword",
+    },
     fills,
   });
 }
@@ -1161,7 +1620,12 @@ function resolveCharacterAttackFixture(input: {
 
   return resolveBattleSubject({
     state,
-    subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+    subject: {
+      tag: "srdAction",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Longsword",
+    },
     fills: [
       targetFill(targetHole, targetCharacterId),
       attackRollFill(rollHole, input.attackRoll),
@@ -1293,7 +1757,7 @@ function runQuintSliceSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("15 passing");
+  expect(quintOutput).toContain("18 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -1452,11 +1916,65 @@ function fighterVsGoblinBattle(): BattleState {
   });
 }
 
-function attackInitialTargetHole(state: BattleState): BattleHole {
+function goblinTurnBattle(
+  input: { readonly fighterHp?: number } = {},
+): BattleState {
+  const afterFighter = endTurn({
+    state: startBattle({
+      battleId: battleId("battle-goblin-attack"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          ...(input.fighterHp === undefined
+            ? {}
+            : { currentHp: input.fighterHp }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    }),
+    actorId: fighterId,
+  });
+  if (afterFighter.tag !== "resolved") {
+    throw new Error(`Expected resolved End Turn, got ${afterFighter.tag}.`);
+  }
+
+  return afterFighter.state;
+}
+
+function fighterAttackSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "srdAction" }
+> {
+  return {
+    tag: "srdAction",
+    actorId: fighterId,
+    action: "attack",
+    attackName: "Longsword",
+  };
+}
+
+function goblinAttackSubject(
+  attackName: "Scimitar" | "Shortbow",
+): Extract<BattleSubject, { readonly tag: "srdAction" }> {
+  return {
+    tag: "srdAction",
+    actorId: goblinId,
+    action: "attack",
+    attackName,
+  };
+}
+
+function attackInitialTargetHole(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "srdAction" }
+  > = fighterAttackSubject(),
+): BattleHole {
   return requireHole(
     resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject,
       fills: [],
     }),
     "targetChoice",
@@ -1466,6 +1984,13 @@ function attackInitialTargetHole(state: BattleState): BattleHole {
 function attackRollHoleAfterTarget(
   state: BattleState,
   targetHole: BattleHole,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "srdAction" }
+  > = fighterAttackSubject(),
+  targetId: CombatantId = targetHole.kind === "targetChoice"
+    ? (targetHole.choices[0] ?? goblinId)
+    : goblinId,
 ): BattleHole {
   if (targetHole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
@@ -1473,8 +1998,8 @@ function attackRollHoleAfterTarget(
   return requireHole(
     resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
-      fills: [targetFill(targetHole, targetHole.choices[0] ?? goblinId)],
+      subject,
+      fills: [targetFill(targetHole, targetId)],
     }),
     "attackRoll",
   );
@@ -1484,10 +2009,21 @@ function attackDamageHoleAfterHit(
   state: BattleState,
   targetHole: BattleHole,
   rollHole: BattleHole,
-  attackRoll: { readonly total: number; readonly naturalD20: number } = {
+  attackRoll: {
+    readonly total: number;
+    readonly naturalD20: number;
+    readonly rollMode?: AttackRollMode;
+  } = {
     total: 15,
     naturalD20: 10,
   },
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "srdAction" }
+  > = fighterAttackSubject(),
+  targetId: CombatantId = targetHole.kind === "targetChoice"
+    ? (targetHole.choices[0] ?? goblinId)
+    : goblinId,
 ): BattleHole {
   if (targetHole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
@@ -1495,9 +2031,9 @@ function attackDamageHoleAfterHit(
   return requireHole(
     resolveBattleSubject({
       state,
-      subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+      subject,
       fills: [
-        targetFill(targetHole, targetHole.choices[0] ?? goblinId),
+        targetFill(targetHole, targetId),
         attackRollFill(rollHole, attackRoll),
       ],
     }),
@@ -1518,7 +2054,12 @@ function criticalAttackDamageResult(
 
   return resolveBattleSubject({
     state,
-    subject: { tag: "srdAction", actorId: fighterId, action: "attack" },
+    subject: {
+      tag: "srdAction",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Longsword",
+    },
     fills: [
       targetFill(targetHole, targetId),
       attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
@@ -1554,7 +2095,11 @@ function targetFill(hole: BattleHole, targetId: CombatantId): BattleFill {
 
 function attackRollFill(
   hole: BattleHole,
-  value: { readonly total: number; readonly naturalD20: number },
+  value: {
+    readonly total: number;
+    readonly naturalD20: number;
+    readonly rollMode?: AttackRollMode;
+  },
 ): BattleFill {
   if (hole.kind !== "attackRoll") {
     throw new Error("Expected attackRoll hole.");
@@ -1565,6 +2110,7 @@ function attackRollFill(
     value: {
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
+      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
     },
   };
 }
