@@ -32,6 +32,7 @@ import type {
   Skill,
   UnitRecord,
   WeaponProficiencyCategory,
+  WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
 
 export { SUPPORTED_ABILITY_SCORE_METHODS };
@@ -83,6 +84,10 @@ export const UNIT_CHOICE_KEYS = [
   "fighter_skill_choices",
   "fighter_fighting_style",
   "fighter_weapon_mastery_choices",
+  "wizard_skill_choices",
+  "wizard_cantrip_choices",
+  "wizard_spellbook_choices",
+  "wizard_prepared_spell_choices",
   "loadout_armor",
   "loadout_shield",
   "loadout_weapon",
@@ -463,6 +468,32 @@ export type CharacterBuildResource = {
   readonly resource: ActivationResource;
 };
 
+export type CharacterBuildSpellcasting = {
+  readonly spellcastingAbility: Ability;
+  readonly cantrips: readonly UnitRecord["id"][];
+  readonly spellbook: readonly CharacterBuildSpellbookEntry[];
+  readonly preparedSpells: readonly UnitRecord["id"][];
+  readonly spellSlots: readonly CharacterBuildSpellSlotCapacity[];
+  readonly spellcastingFocuses: readonly CharacterBuildSpellcastingFocus[];
+};
+
+export type CharacterBuildSpellcastingFocus =
+  WizardSpellcastingCreation["spellcastingFocuses"][number];
+export type CharacterBuildSpellLevel =
+  WizardSpellcastingCreation["spellbookAccess"]["spells"][number]["spellLevel"];
+export type CharacterBuildSpellSlotCount =
+  WizardSpellcastingCreation["spellSlotProjection"]["slots"][number]["count"];
+
+export type CharacterBuildSpellbookEntry = {
+  readonly spellId: UnitRecord["id"];
+  readonly spellLevel: CharacterBuildSpellLevel;
+};
+
+export type CharacterBuildSpellSlotCapacity = {
+  readonly spellLevel: CharacterBuildSpellLevel;
+  readonly count: CharacterBuildSpellSlotCount;
+};
+
 export type CharacterBuildLoadout = {
   readonly armor?: UnitRecord["id"];
   readonly shield?: UnitRecord["id"];
@@ -492,6 +523,7 @@ export type CharacterBuild = {
   readonly armorTraining: readonly ArmorTrainingCategory[];
   readonly features: readonly CharacterBuildFeature[];
   readonly resources: readonly CharacterBuildResource[];
+  readonly spellcasting?: CharacterBuildSpellcasting;
   readonly equipment: CharacterBuildEquipment;
 };
 

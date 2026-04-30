@@ -2,6 +2,7 @@ import {
   creationChoiceOptionId,
   exactChoiceCardinality,
   type BackgroundAbilityScoreIncreaseSelection,
+  type CharacterAdvancementEntry,
   type CharacterDraftPath,
   type CreationChoiceOptionId,
   type UnitChoiceKey,
@@ -11,6 +12,7 @@ import type { Ability, UnitRecord } from "@dnd/surface/surface/types";
 
 export const INITIAL_CHARACTER_DRAFT_PATHS = [
   "draft.primaryClass",
+  "draft.advancement.initial",
   "draft.background",
   "draft.species",
   "draft.abilityScoreGeneration",
@@ -18,14 +20,15 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
   "draft.alignment",
 ] as const satisfies ReadonlyArray<CharacterDraftPath>;
 
-// Phase 1 is the first supported character-creation vertical from
+// This manifest started as the first supported character-creation vertical from
 // plans/phase1-fighter-manifest.md: an Orc Soldier Fighter using Standard
 // Array, fixed first-slice languages/alignment, level-1 Fighter choices, Chain
 // Mail + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
 // Hole discovery may expose broader legal SRD options, but finalization is
-// intentionally gated to this manifest until the runtime and parity coverage
-// widen.
+// intentionally gated to the support profile that now widens selected class
+// facts while keeping Orc/Soldier origin facts manifest-owned.
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
+export const WIDTH_CLASS_WIZARD_UNIT_ID = "class_wizard";
 export const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
 export const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
 export const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID = "armor_chain_mail";
@@ -37,6 +40,7 @@ export const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = "defense";
 
 export const SUPPORTED_CLASS_UNIT_IDS = [
   PHASE1_CLASS_FIGHTER_UNIT_ID,
+  WIDTH_CLASS_WIZARD_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_BACKGROUND_UNIT_IDS = [
   PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
@@ -47,11 +51,20 @@ export const SUPPORTED_FIGHTING_STYLE_FEAT_IDS = [
 export const SUPPORTED_PURCHASE_UNIT_IDS = [
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_CLASS_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  creationChoiceOptionId(WIDTH_CLASS_WIZARD_UNIT_ID),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+export function advancementOptionId(
+  advancement: CharacterAdvancementEntry,
+): CreationChoiceOptionId {
+  return creationChoiceOptionId(
+    `${advancement.classUnitId}:level_${advancement.level}`,
+  );
+}
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
@@ -84,6 +97,10 @@ export const SUPPORTED_LANGUAGE_OPTION_IDS = [
 export const FIGHTER_FIGHTING_STYLE_FEATURE_ID = "fighter_fighting_style_l1";
 export const FIGHTER_SECOND_WIND_FEATURE_ID = "fighter_second_wind";
 export const FIGHTER_WEAPON_MASTERY_FEATURE_ID = "fighter_weapon_mastery_l1";
+export const FIGHTER_ACTION_SURGE_FEATURE_ID = "fighter_action_surge";
+export const FIGHTER_TACTICAL_MIND_FEATURE_ID = "fighter_tactical_mind";
+export const WIZARD_RITUAL_ADEPT_FEATURE_ID = "wizard_ritual_adept";
+export const WIZARD_ARCANE_RECOVERY_FEATURE_ID = "wizard_arcane_recovery";
 export const LEVEL_ONE_FIGHTER_FEATURE_IDS = [
   FIGHTER_FIGHTING_STYLE_FEATURE_ID,
   FIGHTER_SECOND_WIND_FEATURE_ID,
@@ -129,6 +146,14 @@ export const FIGHTER_FIGHTING_STYLE_CHOICE_KEY =
   "fighter_fighting_style" satisfies UnitChoiceKey;
 export const FIGHTER_WEAPON_MASTERY_CHOICE_KEY =
   "fighter_weapon_mastery_choices" satisfies UnitChoiceKey;
+export const WIZARD_SKILL_CHOICE_KEY =
+  "wizard_skill_choices" satisfies UnitChoiceKey;
+export const WIZARD_CANTRIP_CHOICE_KEY =
+  "wizard_cantrip_choices" satisfies UnitChoiceKey;
+export const WIZARD_SPELLBOOK_CHOICE_KEY =
+  "wizard_spellbook_choices" satisfies UnitChoiceKey;
+export const WIZARD_PREPARED_SPELL_CHOICE_KEY =
+  "wizard_prepared_spell_choices" satisfies UnitChoiceKey;
 export const LOADOUT_ARMOR_CHOICE_KEY = "loadout_armor" satisfies UnitChoiceKey;
 export const LOADOUT_SHIELD_CHOICE_KEY =
   "loadout_shield" satisfies UnitChoiceKey;

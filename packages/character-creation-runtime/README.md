@@ -87,9 +87,11 @@ Key boundary terms:
 
 ## Implemented Behavior
 
-This package supports the first legal character-creation vertical:
+This package supports the first legal character-creation vertical plus the
+POST3 class-width slice:
 
-- level-1 Fighter;
+- level-1 Fighter and level-2 Fighter advancement;
+- level-1 Wizard spellcasting creation facts;
 - Orc species;
 - Soldier background;
 - Standard Array ability assignment;
@@ -104,12 +106,12 @@ an SRD-authored character-creation choice. See `../../ASSUMPTIONS.md` A40.
 
 Support gates are package-private runtime narrowings. They must not become
 public Surface classifications or new source rules. The current
-`src/support-gates.ts` support profile owns the Phase 1 class/background/species
-ids, supported Unit choice keys, supported option ids, purchasable equipment,
-loadout choices, and manifest-only finalization facts. Legal Surface options can
-be discovered outside that profile, but fill validation rejects them at this one
-runtime boundary until widening work adds support-profile entries and projection
-logic.
+`src/support-gates.ts` support profile owns the supported
+class/background/species ids, Unit choice keys, option ids, purchasable
+equipment, loadout choices, supported class levels, and remaining manifest-only
+origin facts. Legal Surface options can be discovered outside that profile, but
+fill validation rejects them at this one runtime boundary until widening work
+adds support-profile entries and projection logic.
 
 ## State Ownership Rules
 
@@ -132,14 +134,16 @@ hole list. This keeps the validation boundary stable as Surface catalogs gain
 more legal Units and options.
 
 The finalized `CharacterBuild` carries selected Unit refs plus derived build
-facts needed by later boundaries: final ability scores, level-1 Hit Point
-maximum and Hit Die pool, proficiencies, granted feature refs, activation
-resources, and equipment/loadout refs. Supported class-choice features and
-loadout refs are projected from accepted draft selections, not reauthored as
-parallel constants. The remaining Phase 1 finalization gate still rejects any
-complete draft whose selected vertical is not exactly the Orc Soldier Fighter 1
-manifest. `CharacterBuild` does not carry current HP, Temporary Hit Points,
-expended resources, Hit Dice remaining, or battle creature-init types.
+facts needed by later boundaries: final ability scores, Hit Point maximum and
+Hit Die pool, proficiencies, granted feature refs, activation resources,
+starting Wizard Spell Access and Spell Slot capacity, and equipment/loadout
+refs. Supported class-choice features, Wizard spellcasting facts, and loadout
+refs are projected from accepted draft selections and Surface Unit readers, not
+reauthored as parallel constants. The remaining finalization gate rejects
+complete drafts whose selected class level, origin facts, choices, or equipment
+are outside the support profile. `CharacterBuild` does not carry current HP,
+Temporary Hit Points, expended resources or Spell Slots, Hit Dice remaining, or
+battle creature-init types.
 
 Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
 or build state. SRD 5.2.1 says they last until depleted or Long Rest, so a future
@@ -150,8 +154,10 @@ that rest boundary.
 
 `character-creation-runtime-slice.qnt` is the deterministic package-local Quint
 parity slice. It models draft state, stable hole ids, atomic batch fill,
-rediscovery, and finalization status for the same behavior the TypeScript
-reducer exposes.
+rediscovery, and finalization status for the established Fighter manifest path,
+with the POST3 supported class-option width reflected at the initial class
+choice boundary. Focused TypeScript tests cover the widened Fighter 2 and Wizard
+1 build projection facts.
 
 `character-creation-runtime.mbt.qnt` is the package-local randomized MBT model.
 It imports the deterministic slice and drives fill-batch traces against the

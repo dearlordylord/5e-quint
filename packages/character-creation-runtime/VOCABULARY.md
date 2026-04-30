@@ -12,8 +12,9 @@ draft structure (`cc:draft:<path>`) or by selected Units
 
 Character Build - finalized build-only player-character boundary produced from
 a complete legal Character Draft. It carries selected Unit references plus
-derived build facts such as ability scores, proficiencies, HP maximum, and
-loadout. It is not a Stat Block and not in-play Character Sheet state.
+derived build facts such as ability scores, proficiencies, HP maximum, Hit Dice,
+starting Spell Access, starting Spell Slot capacity, and loadout. It is not a
+Stat Block and not in-play Character Sheet state.
 
 Creation Hole - a fillable requirement in a Character Draft. Holes can come
 from draft structure or from selected authored Units. Hole ids are stable
@@ -34,6 +35,8 @@ authored provenance and not a Surface content classification. Legal choices
 outside the profile can appear in holes, but fills are rejected as unsupported
 until widening work adds support and projection behavior.
 
-Finalization Gate - the remaining Phase 1 readiness check after all holes are
-filled. The gate keeps the only finalizable vertical to Orc Soldier Fighter 1 and
-requires the exact manifest-owned choices before producing a `CharacterBuild`.
+Finalization Gate - the readiness check after all holes are filled. The gate
+keeps finalizable builds inside the current support profile: Orc/Soldier origin
+facts, supported class levels, supported Unit choice families, and supported
+equipment/loadout facts. It rejects complete drafts outside that profile before
+producing a `CharacterBuild`.

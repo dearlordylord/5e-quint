@@ -128,9 +128,15 @@ module characterCreationRuntimeMbt {
       recordResult(fillCreationHoles(qDraft, qDraft.revision, abilityScoresOnlyFills)),
     }
 
+  action doFillManifestAdvancement =
+    all {
+      qHoles.contains(HAdvancement),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestAdvancementFills)),
+    }
+
   action doFillManifestChoices =
     all {
-      qHoles == afterInitialHoleIds,
+      qHoles == afterManifestAdvancementHoleIds,
       recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestChoiceFills)),
     }
 
@@ -216,6 +222,7 @@ module characterCreationRuntimeMbt {
     doFillInitialManifest,
     doFillInitialChoicesOnly,
     doFillAbilityScoresOnly,
+    doFillManifestAdvancement,
     doFillManifestChoices,
     doFillManifestPurchase,
     doFillManifestLoadout,

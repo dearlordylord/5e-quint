@@ -14,8 +14,10 @@ module characterCreationRuntimeSlice {
   //   selected weapon mastery metadata and Dice Set tool option.
   //
   // This slice intentionally models only the Orc Soldier Fighter vertical from
-  // plans/phase1-fighter-manifest.md. Other SRD options may be valid options at
-  // a hole but unsupported by this first runtime slice.
+  // plans/phase1-fighter-manifest.md plus POST3's first class-width boundary:
+  // Wizard is now a supported class option in TypeScript. The randomized slice
+  // still drives the established Fighter manifest path while deterministic
+  // TypeScript tests cover widened Wizard/Fighter build projection.
   //
   // TODO(CAM follow-up): this parity slice currently checks hole/status protocol
   // more deeply than finalized build values. Before widening character creation
@@ -24,6 +26,7 @@ module characterCreationRuntimeSlice {
 
   type HoleId =
     | HPrimaryClass
+    | HAdvancement
     | HBackground
     | HSpecies
     | HAbilityScores
@@ -45,6 +48,10 @@ module characterCreationRuntimeSlice {
 
   type ChoiceOptionId =
     | OClassFighter
+    | OClassWizard
+    | OClassFighterLevel1
+    | OClassFighterLevel2
+    | OClassWizardLevel1
     | OBackgroundSoldier
     | OSpeciesOrc
     | OLanguageCommonSignLanguage
@@ -242,6 +249,7 @@ module characterCreationRuntimeSlice {
   pure def openCreationHoles(draft: Draft): Set[HoleId] = {
     val initial = Set(
       if (draft.primaryClass) Set() else Set(HPrimaryClass),
+      if (draft.primaryClass and not(draft.advancement)) Set(HAdvancement) else Set(),
       if (draft.background) Set() else Set(HBackground),
       if (draft.species) Set() else Set(HSpecies),
       if (draft.abilityScores) Set() else Set(HAbilityScores),
@@ -310,7 +318,8 @@ module characterCreationRuntimeSlice {
   }
 
   pure def validOptions(hole: HoleId): Set[ChoiceOptionId] = match hole {
-    | HPrimaryClass => Set(OClassFighter)
+    | HPrimaryClass => Set(OClassFighter, OClassWizard)
+    | HAdvancement => Set(OClassFighterLevel1, OClassFighterLevel2, OClassWizardLevel1)
     | HBackground => Set(OBackgroundSoldier)
     | HSpecies => Set(OSpeciesOrc)
     | HLanguages => Set(
@@ -360,7 +369,7 @@ module characterCreationRuntimeSlice {
     | HBackgroundTool => Set(OToolDiceSet)
     | HClassEquipment => Set(OClassEquipmentPackageA, OClassEquipmentPackageB, OClassEquipmentCoins)
     | HBackgroundEquipment => Set(OBackgroundEquipmentPack, OBackgroundEquipmentCoins)
-    | HEquipmentPurchase => Set(OArmorChainMail, OWeaponLongsword, OEquipmentShield)
+    | HEquipmentPurchase => Set(OArmorChainMail, OWeaponLongsword, OWeaponFlail, OEquipmentShield)
     | HLoadoutArmor => Set(OLoadoutWorn)
     | HLoadoutShield => Set(OLoadoutWielded)
     | HLoadoutWeapon => Set(OLoadoutWieldedOneHanded)
@@ -368,6 +377,8 @@ module characterCreationRuntimeSlice {
   }
 
   pure def supportedOptions(hole: HoleId): Set[ChoiceOptionId] = match hole {
+    | HPrimaryClass => Set(OClassFighter, OClassWizard)
+    | HAdvancement => Set(OClassFighterLevel1, OClassFighterLevel2, OClassWizardLevel1)
     | HLanguages => Set(OLanguageDwarvish, OLanguageGoblin)
     | HAlignment => Set(OAlignmentLawfulGood)
     | HFighterSkills => Set(OSkillPerception, OSkillSurvival)
@@ -436,7 +447,8 @@ module characterCreationRuntimeSlice {
 
   pure def applyFill(draft: Draft, fill: Fill): Draft = match fill {
       | FChoice(v) => match v.hole {
-        | HPrimaryClass => draft.with("primaryClass", true).with("advancement", true)
+        | HPrimaryClass => draft.with("primaryClass", true)
+        | HAdvancement => draft.with("advancement", true)
         | HBackground => draft.with("background", true)
         | HSpecies => draft.with("species", true)
         | HLanguages => draft.with("languages", true)
@@ -484,6 +496,10 @@ module characterCreationRuntimeSlice {
     FChoice({ hole: HAlignment, options: [OAlignmentLawfulGood] }),
   ]
 
+  pure val manifestAdvancementFills: List[Fill] = [
+    FChoice({ hole: HAdvancement, options: [OClassFighterLevel1] }),
+  ]
+
   pure val manifestChoiceFills: List[Fill] = [
     FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillSurvival] }),
     FChoice({ hole: HFighterFightingStyle, options: [OFightingStyleDefense] }),
@@ -512,19 +528,34 @@ module characterCreationRuntimeSlice {
   pure val afterInitialManifest: Draft =
     requireAccepted(fillCreationHoles(emptyDraft, 0, initialManifestFills))
 
+  pure val afterManifestAdvancement: Draft =
+    requireAccepted(fillCreationHoles(afterInitialManifest, 1, manifestAdvancementFills))
+
   pure val afterManifestChoices: Draft =
-    requireAccepted(fillCreationHoles(afterInitialManifest, 1, manifestChoiceFills))
+    requireAccepted(fillCreationHoles(afterManifestAdvancement, 2, manifestChoiceFills))
 
   pure val afterManifestPurchase: Draft =
-    requireAccepted(fillCreationHoles(afterManifestChoices, 2, manifestPurchaseFills))
+    requireAccepted(fillCreationHoles(afterManifestChoices, 3, manifestPurchaseFills))
 
   pure val completeManifestDraft: Draft =
-    requireAccepted(fillCreationHoles(afterManifestPurchase, 3, manifestLoadoutFills))
+    requireAccepted(fillCreationHoles(afterManifestPurchase, 4, manifestLoadoutFills))
 
   pure val initialHoleIds: Set[HoleId] =
     Set(HPrimaryClass, HBackground, HSpecies, HAbilityScores, HLanguages, HAlignment)
 
   pure val afterInitialHoleIds: Set[HoleId] =
+    Set(
+      HAdvancement,
+      HFighterSkills,
+      HFighterFightingStyle,
+      HFighterWeaponMastery,
+      HBackgroundAbilityScoreIncrease,
+      HBackgroundTool,
+      HClassEquipment,
+      HBackgroundEquipment,
+    )
+
+  pure val afterManifestAdvancementHoleIds: Set[HoleId] =
     Set(
       HFighterSkills,
       HFighterFightingStyle,
@@ -545,7 +576,7 @@ module characterCreationRuntimeSlice {
           all {
             assert(v.draft.revision == 1),
             assert(v.draft.primaryClass),
-            assert(v.draft.advancement),
+            assert(not(v.draft.advancement)),
             assert(v.holes == afterInitialHoleIds),
             assert(v.finalization == Incomplete),
           }
@@ -555,7 +586,7 @@ module characterCreationRuntimeSlice {
 
   run test_complete_manifest_finalizes = {
     all {
-      assert(completeManifestDraft.revision == 4),
+      assert(completeManifestDraft.revision == 5),
       assert(openCreationHoles(completeManifestDraft) == Set()),
       assert(finalizeDraft(completeManifestDraft) == Ready),
     }

@@ -4,27 +4,43 @@ import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
   readSpeciesCreationFacts,
+  type ClassCreationFacts,
   type UnitReaderResult,
 } from "@dnd/surface/surface/character-creation-readers";
 import { SKILLS } from "@dnd/surface/surface/types";
-import type { Ability, Skill, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  Ability,
+  Skill,
+  StartingEquipmentChoice,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
 import {
   choiceSelectionOptionIds,
-  sameChoiceSelectionMultiset,
+  choiceSelectionMatchesHole,
   sameCreationHoleSource,
   sameOptionIdMultiset,
+  startingEquipmentChoiceHole,
 } from "./discovery.ts";
 import { unitSource } from "./hole-factories.ts";
 import {
+  BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
+  CLASS_EQUIPMENT_CHOICE_KEY,
+  FIGHTER_FIGHTING_STYLE_FEATURE_ID,
+  FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
   FIGHTER_SKILL_CHOICE_KEY,
+  FIGHTER_WEAPON_MASTERY_FEATURE_ID,
+  FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
+  WIZARD_CANTRIP_CHOICE_KEY,
+  WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  WIZARD_SKILL_CHOICE_KEY,
+  WIZARD_SPELLBOOK_CHOICE_KEY,
   SURFACE_ABILITIES,
 } from "./phase1-manifest.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
-  supportedFinalizedChoiceSelections,
-  supportedFinalizedEquipmentUnitIds,
+  isSupportedAdvancement,
   supportedLoadoutChoiceForSource,
   unitRefsForSupportedClassChoice,
 } from "./support-gates.ts";
@@ -40,6 +56,7 @@ import {
   type CharacterBuildEquipment,
   type CharacterBuildFeature,
   type CharacterBuildResource,
+  type CharacterBuildSpellcasting,
   type CharacterChoiceSelection,
   type CharacterDraft,
   type CreationChoiceOptionId,
@@ -72,21 +89,21 @@ export function finalizeCharacterDraft(input: {
     };
   }
 
-  const phaseOneSelections = phaseOneFinalizedCharacterSelections(
+  const supportedSelections = supportedFinalizedCharacterSelections(
     selections,
     input.unitLibrary,
   );
-  if (phaseOneSelections.tag === "rejected") {
+  if (supportedSelections.tag === "rejected") {
     return {
       tag: "invalid",
-      issues: phaseOneSelections.issues,
+      issues: supportedSelections.issues,
     };
   }
 
   return {
     tag: "ready",
     build: buildCharacterBuild({
-      phaseOneSelections: phaseOneSelections.value,
+      supportedSelections: supportedSelections.value,
       unitLibrary: input.unitLibrary,
     }),
   };
@@ -130,9 +147,10 @@ export function finalizedSelectionIssues(
 ): readonly CreationFinalizationIssue[] {
   return [
     ...expectedValueIssue(
-      selections.primaryClass ===
-        CHARACTER_CREATION_SUPPORT_PROFILE.manifest.primaryClassUnitId,
-      "Finalized build must use the supported manifest class.",
+      (
+        CHARACTER_CREATION_SUPPORT_PROFILE.classUnitIds as readonly string[]
+      ).includes(selections.primaryClass),
+      "Finalized build must use a supported class.",
     ),
     ...expectedValueIssue(
       selections.background ===
@@ -145,8 +163,8 @@ export function finalizedSelectionIssues(
       "Finalized build must use the supported manifest species.",
     ),
     ...expectedValueIssue(
-      isInitialFighterAdvancement(selections.advancement),
-      "Finalized build advancement must match the supported manifest level.",
+      isSupportedSingleClassAdvancement(selections),
+      "Finalized build advancement must match a supported class level.",
     ),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
@@ -156,7 +174,7 @@ export function finalizedSelectionIssues(
       "Finalized build must use a supported ability-score generation method.",
     ),
     ...expectedValueIssue(
-      isPhaseOneManifestBackgroundAbilityScoreIncrease(
+      isSupportedManifestBackgroundAbilityScoreIncrease(
         selections.backgroundAbilityScoreIncrease,
         unitLibrary,
         selections.background,
@@ -178,45 +196,82 @@ export function finalizedSelectionIssues(
       "Finalized build must use the supported manifest alignment.",
     ),
     ...expectedValueIssue(
-      sameChoiceSelectionMultiset(
-        selections.choices,
-        supportedFinalizedChoiceSelections(),
-      ),
-      "Finalized build must carry exactly the supported manifest choices.",
+      allFinalizedChoicesSupported(selections, unitLibrary),
+      "Finalized build must carry exactly the supported choices for the selected class level.",
     ),
     ...expectedValueIssue(
-      sameOptionIdMultiset(
-        selections.equipment.selectedUnitIds,
-        supportedFinalizedEquipmentUnitIds(),
-      ),
-      "Finalized build must own exactly the supported manifest purchased equipment.",
+      selectedPreparedSpellsAreInSelectedSpellbook(selections, unitLibrary),
+      "Finalized Wizard prepared spells must be selected from the spellbook and match available Spell Slot levels.",
+    ),
+    ...expectedValueIssue(
+      isSupportedEquipmentSelection(selections),
+      "Finalized build must own supported purchased equipment.",
     ),
   ];
 }
 
-const PhaseOneFinalizedCharacterSelections = Symbol(
-  "PhaseOneFinalizedCharacterSelections",
+export function selectedPreparedSpellsAreInSelectedSpellbook(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): boolean {
+  const classFacts = readClassCreationFacts(
+    unitLibrary.requireUnit(selections.primaryClass),
+  );
+  if (classFacts.tag !== "readable" || !("spellcasting" in classFacts.value)) {
+    return true;
+  }
+
+  const spellcasting = classFacts.value.spellcasting;
+  const selectedSpellbook = new Set(
+    selectedUnitRefsForChoice(selections, WIZARD_SPELLBOOK_CHOICE_KEY),
+  );
+  const selectedPrepared = selectedUnitRefsForChoice(
+    selections,
+    WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  );
+  const slotLevels = new Set(
+    spellcasting.spellSlotProjection.slots.map((slot) => slot.spellLevel),
+  );
+  const spellbookLevels = new Map(
+    spellcasting.spellbookAccess.spells.map((spell) => [
+      spell.spellId,
+      spell.spellLevel,
+    ]),
+  );
+
+  return selectedPrepared.every((spellId) => {
+    const spellLevel = spellbookLevels.get(spellId);
+    return (
+      selectedSpellbook.has(spellId) &&
+      spellLevel != null &&
+      slotLevels.has(spellLevel)
+    );
+  });
+}
+
+const SupportedFinalizedCharacterSelections = Symbol(
+  "SupportedFinalizedCharacterSelections",
 );
 
-type PhaseOneFinalizedCharacterSelections = {
+type SupportedFinalizedCharacterSelections = {
   readonly selections: FinalizedCharacterSelections;
-  readonly [PhaseOneFinalizedCharacterSelections]: true;
+  readonly [SupportedFinalizedCharacterSelections]: true;
 };
 
-type PhaseOneFinalizedCharacterSelectionsResult =
+type SupportedFinalizedCharacterSelectionsResult =
   | {
       readonly tag: "accepted";
-      readonly value: PhaseOneFinalizedCharacterSelections;
+      readonly value: SupportedFinalizedCharacterSelections;
     }
   | {
       readonly tag: "rejected";
       readonly issues: NonEmptyReadonlyArray<CreationFinalizationIssue>;
     };
 
-function phaseOneFinalizedCharacterSelections(
+function supportedFinalizedCharacterSelections(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): PhaseOneFinalizedCharacterSelectionsResult {
+): SupportedFinalizedCharacterSelectionsResult {
   const issues = nonEmptyReadonlyArray(
     finalizedSelectionIssues(selections, unitLibrary),
   );
@@ -225,7 +280,7 @@ function phaseOneFinalizedCharacterSelections(
         tag: "accepted",
         value: {
           selections,
-          [PhaseOneFinalizedCharacterSelections]: true,
+          [SupportedFinalizedCharacterSelections]: true,
         },
       }
     : { tag: "rejected", issues };
@@ -261,6 +316,23 @@ export function isInitialFighterAdvancement(
   );
 }
 
+export function isSupportedSingleClassAdvancement(
+  selections: Pick<
+    FinalizedCharacterSelections,
+    "primaryClass" | "advancement"
+  >,
+): boolean {
+  return (
+    selections.advancement.entries.length === 1 &&
+    selections.advancement.entries[0]?.classUnitId ===
+      selections.primaryClass &&
+    isSupportedAdvancement(
+      selections.advancement.entries[0].classUnitId,
+      selections.advancement.entries[0].level,
+    )
+  );
+}
+
 export function isSupportedBackgroundAbilityScoreIncrease(
   selection: BackgroundAbilityScoreIncreaseSelection,
   unitLibrary: UnitCatalog,
@@ -293,7 +365,7 @@ export function isSupportedBackgroundAbilityScoreIncrease(
   );
 }
 
-export function isPhaseOneManifestBackgroundAbilityScoreIncrease(
+export function isSupportedManifestBackgroundAbilityScoreIncrease(
   selection: BackgroundAbilityScoreIncreaseSelection,
   unitLibrary: UnitCatalog,
   backgroundUnitId: UnitRecord["id"],
@@ -334,10 +406,10 @@ export function sameBackgroundAbilityScoreIncreaseSelection(
 }
 
 export function buildCharacterBuild(input: {
-  readonly phaseOneSelections: PhaseOneFinalizedCharacterSelections;
+  readonly supportedSelections: SupportedFinalizedCharacterSelections;
   readonly unitLibrary: UnitCatalog;
 }): CharacterBuild {
-  const { selections } = input.phaseOneSelections;
+  const { selections } = input.supportedSelections;
   const classFacts = requireReadable(
     readClassCreationFacts(
       input.unitLibrary.requireUnit(selections.primaryClass),
@@ -360,10 +432,12 @@ export function buildCharacterBuild(input: {
     selections.backgroundAbilityScoreIncrease,
     backgroundFacts.abilityScoreIncrease.abilities,
   );
+  const selectedClassLevel = selections.advancement.entries[0]?.level ?? 1;
   const classFeatureGrants = classFacts.featureGrants.filter(
-    (grant) => grant.level === 1,
+    (grant) => grant.level <= selectedClassLevel,
   );
   const classFeatureUnitIds = classFeatureGrants.map((grant) => grant.unitId);
+  const buildSpellcasting = finalizedBuildSpellcasting(classFacts, selections);
   const buildFeatures: readonly CharacterBuildFeature[] = [
     ...classFeatureGrants.map((grant) => ({
       kind: "classFeature" as const,
@@ -390,19 +464,27 @@ export function buildCharacterBuild(input: {
     alignment: selections.alignment,
     abilityScores: finalScores,
     hitPoints: {
-      maximum: hp(classFacts.hitPointDie + abilityModifier(finalScores.con)),
+      maximum: hp(
+        classFacts.hitPointDie +
+          abilityModifier(finalScores.con) +
+          (selectedClassLevel - 1) *
+            fixedHitPointsAfterLevelOne(
+              classFacts.hitPointDie,
+              finalScores.con,
+            ),
+      ),
       hitDice: [
         {
           classUnitId: selections.primaryClass,
           dieSize: hitDieSize(classFacts.hitPointDie),
-          total: hitDieTotal(1),
+          total: hitDieTotal(selectedClassLevel),
         },
       ],
     },
     proficiencies: {
       savingThrows: classFacts.savingThrowProficiencies,
       skills: uniqueValues([
-        ...finalizedBuildSkillProficiencies(selections),
+        ...finalizedBuildSkillProficiencies(selections, classFacts),
         ...backgroundFacts.skillProficiencies,
       ]),
       weapon: classFacts.weaponProficiencies,
@@ -413,14 +495,162 @@ export function buildCharacterBuild(input: {
     resources: classFeatureUnitIds.flatMap((unitId) =>
       resourceForFeature(input.unitLibrary.requireUnit(unitId)),
     ),
+    ...(buildSpellcasting == null ? {} : { spellcasting: buildSpellcasting }),
     equipment: buildEquipment,
   };
+}
+
+function fixedHitPointsAfterLevelOne(
+  hitPointDie: number,
+  constitutionScore: number,
+): number {
+  return Math.max(
+    1,
+    Math.floor(hitPointDie / 2) + 1 + abilityModifier(constitutionScore),
+  );
+}
+
+export function allFinalizedChoicesSupported(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): boolean {
+  const classFacts = requireReadable(
+    readClassCreationFacts(unitLibrary.requireUnit(selections.primaryClass)),
+    "class",
+  );
+  const backgroundFacts = requireReadable(
+    readBackgroundCreationFacts(unitLibrary.requireUnit(selections.background)),
+    "background",
+  );
+  const classLevel = selections.advancement.entries[0]?.level ?? 1;
+  const selectedEquipment = new Set(selections.equipment.selectedUnitIds);
+  const choiceSourceKeys = selections.choices.map(
+    (choice) => `${choice.source.unitId}:${choice.source.choiceKey}`,
+  );
+  return (
+    new Set(choiceSourceKeys).size === choiceSourceKeys.length &&
+    selections.choices.every((choice) => {
+      const key = choice.source.choiceKey;
+      return (
+        choiceHasSource(
+          choice,
+          selections.primaryClass,
+          classFacts.className === "wizard"
+            ? WIZARD_SKILL_CHOICE_KEY
+            : FIGHTER_SKILL_CHOICE_KEY,
+        ) ||
+        (classFacts.className === "fighter" &&
+          classLevel >= 1 &&
+          (choiceHasSource(
+            choice,
+            FIGHTER_FIGHTING_STYLE_FEATURE_ID,
+            FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
+          ) ||
+            choiceHasSource(
+              choice,
+              FIGHTER_WEAPON_MASTERY_FEATURE_ID,
+              FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
+            ))) ||
+        (classFacts.className === "wizard" &&
+          (choiceHasSource(
+            choice,
+            selections.primaryClass,
+            WIZARD_CANTRIP_CHOICE_KEY,
+          ) ||
+            choiceHasSource(
+              choice,
+              selections.primaryClass,
+              WIZARD_SPELLBOOK_CHOICE_KEY,
+            ) ||
+            choiceHasSource(
+              choice,
+              selections.primaryClass,
+              WIZARD_PREPARED_SPELL_CHOICE_KEY,
+            ))) ||
+        choiceHasSource(
+          choice,
+          selections.background,
+          BACKGROUND_TOOL_CHOICE_KEY,
+        ) ||
+        supportedStartingEquipmentCoinGrantChoice(
+          choice,
+          selections.primaryClass,
+          CLASS_EQUIPMENT_CHOICE_KEY,
+          classFacts.startingEquipment,
+        ) ||
+        supportedStartingEquipmentCoinGrantChoice(
+          choice,
+          selections.background,
+          BACKGROUND_EQUIPMENT_CHOICE_KEY,
+          backgroundFacts.startingEquipment,
+        ) ||
+        (key.startsWith("loadout_") &&
+          selectedEquipment.has(choice.source.unitId))
+      );
+    })
+  );
+}
+
+function choiceHasSource(
+  selection: CharacterChoiceSelection,
+  unitId: UnitRecord["id"],
+  choiceKey: CharacterChoiceSelection["source"]["choiceKey"],
+): boolean {
+  return (
+    selection.source.unitId === unitId &&
+    selection.source.choiceKey === choiceKey
+  );
+}
+
+function supportedStartingEquipmentCoinGrantChoice(
+  selection: CharacterChoiceSelection,
+  unitId: UnitRecord["id"],
+  choiceKey:
+    | typeof CLASS_EQUIPMENT_CHOICE_KEY
+    | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY,
+  choices: readonly StartingEquipmentChoice[],
+): boolean {
+  if (
+    selection.source.unitId !== unitId ||
+    selection.source.choiceKey !== choiceKey
+  ) {
+    return false;
+  }
+
+  const hole = startingEquipmentChoiceHole(
+    unitSource(unitId, choiceKey),
+    choices,
+  );
+  if (!choiceSelectionMatchesHole(selection, hole)) {
+    return false;
+  }
+
+  const selectedOptionId = selection.options[0]?.optionId;
+  const selectedChoice = choices.find(
+    (choice) => choice.id === selectedOptionId,
+  );
+  return selectedChoice?.kind === "coin_grant";
+}
+
+export function isSupportedEquipmentSelection(
+  selections: FinalizedCharacterSelections,
+): boolean {
+  return selections.equipment.selectedUnitIds.every((unitId) =>
+    (
+      CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds as readonly string[]
+    ).includes(unitId),
+  );
 }
 
 export function characterBuildUnitRefs(
   build: Pick<
     CharacterBuild,
-    "advancement" | "background" | "species" | "features" | "equipment"
+    | "advancement"
+    | "background"
+    | "species"
+    | "features"
+    | "equipment"
+    | "spellcasting"
   >,
 ): readonly UnitRef[] {
   return unitRefs(
@@ -431,6 +661,9 @@ export function characterBuildUnitRefs(
     ...optionalUnitId(build.equipment.armor),
     ...optionalUnitId(build.equipment.shield),
     ...optionalUnitId(build.equipment.weapon?.unitId),
+    ...(build.spellcasting?.cantrips ?? []),
+    ...(build.spellcasting?.spellbook.map((spell) => spell.spellId) ?? []),
+    ...(build.spellcasting?.preparedSpells ?? []),
   );
 }
 
@@ -480,6 +713,49 @@ export function finalizedBuildEquipment(
     },
     {},
   );
+}
+
+export function finalizedBuildSpellcasting(
+  classFacts: ClassCreationFacts,
+  selections: FinalizedCharacterSelections,
+): CharacterBuildSpellcasting | undefined {
+  if (!("spellcasting" in classFacts)) {
+    return undefined;
+  }
+
+  const spellcasting = classFacts.spellcasting;
+  return {
+    spellcastingAbility: spellcasting.spellcastingAbility,
+    cantrips: selectedUnitRefsForChoice(selections, WIZARD_CANTRIP_CHOICE_KEY),
+    spellbook: spellcasting.spellbookAccess.spells.filter((spell) =>
+      selectedUnitRefsForChoice(
+        selections,
+        WIZARD_SPELLBOOK_CHOICE_KEY,
+      ).includes(spell.spellId),
+    ),
+    preparedSpells: selectedUnitRefsForChoice(
+      selections,
+      WIZARD_PREPARED_SPELL_CHOICE_KEY,
+    ),
+    spellSlots: spellcasting.spellSlotProjection.slots,
+    spellcastingFocuses: spellcasting.spellcastingFocuses,
+  };
+}
+
+function selectedUnitRefsForChoice(
+  selections: FinalizedCharacterSelections,
+  choiceKey:
+    | typeof WIZARD_CANTRIP_CHOICE_KEY
+    | typeof WIZARD_SPELLBOOK_CHOICE_KEY
+    | typeof WIZARD_PREPARED_SPELL_CHOICE_KEY,
+): readonly UnitRecord["id"][] {
+  return selections.choices
+    .filter((choice) => choice.source.choiceKey === choiceKey)
+    .flatMap((choice) =>
+      choice.options.flatMap((option) =>
+        option.unitRef == null ? [] : [option.unitRef.unitId],
+      ),
+    );
 }
 
 function selectedUnitIdForLoadoutChoice(
@@ -542,11 +818,16 @@ export function abilityModifier(score: number): number {
 
 export function finalizedBuildSkillProficiencies(
   selections: FinalizedCharacterSelections,
+  classFacts?: ClassCreationFacts,
 ): readonly Skill[] {
+  const skillChoiceKey =
+    classFacts?.className === "wizard"
+      ? WIZARD_SKILL_CHOICE_KEY
+      : FIGHTER_SKILL_CHOICE_KEY;
   const skillSelection = selections.choices.find((selection) =>
     sameCreationHoleSource(
       selection.source,
-      unitSource(selections.primaryClass, FIGHTER_SKILL_CHOICE_KEY),
+      unitSource(selections.primaryClass, skillChoiceKey),
     ),
   );
 

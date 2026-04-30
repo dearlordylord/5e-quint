@@ -65,7 +65,11 @@ describe("character creation hole discovery", () => {
     const holes = discoverCreationHoles({ draft, unitLibrary });
 
     expect(holeSummary(holes)).toEqual([
-      ["choice", "cc:draft:draft.primaryClass", ["class_fighter"]],
+      [
+        "choice",
+        "cc:draft:draft.primaryClass",
+        ["class_fighter", "class_wizard"],
+      ],
       ["choice", "cc:draft:draft.background", ["background_soldier"]],
       ["choice", "cc:draft:draft.species", ["species_orc"]],
       [
@@ -289,6 +293,7 @@ describe("character creation hole discovery", () => {
       options: [
         { optionId: "armor_chain_mail" },
         { optionId: "weapon_longsword" },
+        { optionId: "weapon_flail" },
         { optionId: "equipment_shield" },
       ],
     });
@@ -352,6 +357,34 @@ describe("character creation hole discovery", () => {
     ).toBeUndefined();
   });
 
+  test("does not open purchase for Fighter item-bundle equipment choices", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        primaryClass: "class_fighter",
+        background: "background_soldier",
+        choices: [
+          selectedChoice("class_fighter", "class_equipment_choice", "option_b"),
+          selectedChoice(
+            "background_soldier",
+            "background_equipment_choice",
+            "option_b",
+          ),
+        ],
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(
+      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+    ).toBeUndefined();
+  });
+
   test("opens loadout only for purchased equipment and suppresses filled loadout choices", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -392,6 +425,39 @@ describe("character creation hole discovery", () => {
     });
     expect(
       holeById(holes, "cc:unit:weapon_longsword:loadout_weapon"),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+      options: [{ optionId: "wielded_one_handed" }],
+    });
+  });
+
+  test("opens Flail loadout when the Skeleton-pressure bludgeoning weapon is purchased", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        primaryClass: "class_fighter",
+        background: "background_soldier",
+        choices: [
+          selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
+          selectedChoice(
+            "background_soldier",
+            "background_equipment_choice",
+            "option_b",
+          ),
+        ],
+        equipment: {
+          selectedUnitIds: [
+            "armor_chain_mail",
+            "weapon_flail",
+            "equipment_shield",
+          ],
+        },
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(holes, "cc:unit:weapon_flail:loadout_weapon"),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -651,9 +717,21 @@ describe("character creation QNT slice parity", () => {
     }
 
     const unsupportedLaterChoices = fillCreationHoles({
-      draft: afterInitial.draft,
+      draft: requireAcceptedBatch(
+        fillCreationHoles({
+          draft: afterInitial.draft,
+          unitLibrary,
+          expectedRevision: afterInitial.draft.revision,
+          fills: [
+            choiceFill(
+              "cc:draft:draft.advancement.initial",
+              "class_fighter:level_1",
+            ),
+          ],
+        }),
+      ),
       unitLibrary,
-      expectedRevision: afterInitial.draft.revision,
+      expectedRevision: draftRevision(afterInitial.draft.revision + 1),
       fills: [
         choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
@@ -849,9 +927,6 @@ describe("character creation batch fill", () => {
     expect(result.draft.revision).toBe(1);
     expect(result.draft.selections).toMatchObject({
       primaryClass: "class_fighter",
-      advancement: {
-        entries: [{ classUnitId: "class_fighter", level: 1 }],
-      },
       background: "background_soldier",
       species: "species_orc",
       abilityScoreGeneration: {
@@ -871,6 +946,9 @@ describe("character creation batch fill", () => {
     expect(
       holeById(result.holes, "cc:draft:draft.primaryClass"),
     ).toBeUndefined();
+    expect(
+      holeById(result.holes, "cc:draft:draft.advancement.initial"),
+    ).toMatchObject({ kind: "choice" });
     expect(
       holeById(result.holes, "cc:unit:class_fighter:fighter_skill_choices"),
     ).toMatchObject({
@@ -961,6 +1039,32 @@ describe("character creation batch fill", () => {
       tag: "rejected",
       draft,
       issues: [{ tag: "illegalFill", code: "invalidChoice", fillIndex: 0 }],
+    });
+  });
+
+  test("rejects source-unsupported class equipment option ids", () => {
+    const draft = createTestDraft("draft:batch-fighter-item-equipment");
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills(),
+      }),
+    );
+    const result = fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill("cc:unit:class_fighter:class_equipment_choice", "option_b"),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      draft: afterInitial,
+      issues: [{ tag: "illegalFill", code: "unsupportedChoice", fillIndex: 0 }],
     });
   });
 
@@ -1395,6 +1499,112 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test("accepts Fighter 2 through the runtime advancement fill", () => {
+    const fighterTwo = completeFighterTwoDraft();
+    const result = finalizeCharacterDraft({ draft: fighterTwo, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(result.build.hitPoints.hitDice).toEqual([
+      { classUnitId: "class_fighter", dieSize: 10, total: 2 },
+    ]);
+    expect(result.build.features).toEqual(
+      expect.arrayContaining([
+        { kind: "classFeature", level: 2, unitId: "fighter_action_surge" },
+        { kind: "classFeature", level: 2, unitId: "fighter_tactical_mind" },
+      ]),
+    );
+    expect(result.build.resources.map((resource) => resource.unitId)).toContain(
+      "fighter_action_surge",
+    );
+  });
+
+  test("finalizes Wizard 1 spellcasting build facts from selected spell access", () => {
+    const wizard = completeWizardDraft();
+    const result = finalizeCharacterDraft({ draft: wizard, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(result.build.spellcasting).toEqual({
+      spellcastingAbility: "int",
+      cantrips: ["light", "mage_hand", "ray_of_frost"],
+      spellbook: [
+        { spellId: "detect_magic", spellLevel: 1 },
+        { spellId: "feather_fall", spellLevel: 1 },
+        { spellId: "mage_armor", spellLevel: 1 },
+        { spellId: "magic_missile", spellLevel: 1 },
+        { spellId: "sleep", spellLevel: 1 },
+        { spellId: "thunderwave", spellLevel: 1 },
+      ],
+      preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "sleep"],
+      spellSlots: [{ count: 2, spellLevel: 1 }],
+      spellcastingFocuses: ["arcane_focus", "spellbook"],
+    });
+    expect(result.build.proficiencies.skills).toEqual([
+      "arcana",
+      "history",
+      "athletics",
+      "intimidation",
+    ]);
+    expect(
+      characterBuildUnitRefs(result.build).map((ref) => ref.unitId),
+    ).toEqual([
+      "class_wizard",
+      "background_soldier",
+      "species_orc",
+      "wizard_ritual_adept",
+      "wizard_arcane_recovery",
+      "feat_savage_attacker",
+      "orc_adrenaline_rush",
+      "orc_darkvision",
+      "orc_relentless_endurance",
+      "armor_chain_mail",
+      "equipment_shield",
+      "weapon_longsword",
+      "light",
+      "mage_hand",
+      "ray_of_frost",
+      "detect_magic",
+      "feather_fall",
+      "mage_armor",
+      "magic_missile",
+      "sleep",
+      "thunderwave",
+    ]);
+  });
+
+  test("does not finalize Fighter item-bundle equipment with purchased loadout", () => {
+    const complete = completeManifestDraft();
+    const itemBundleWithPurchasedEquipment: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        choices: complete.selections.choices.map((choice) =>
+          choice.source.unitId === "class_fighter" &&
+          choice.source.choiceKey === "class_equipment_choice"
+            ? selectedChoice(
+                "class_fighter",
+                "class_equipment_choice",
+                "option_b",
+              )
+            : choice,
+        ),
+      },
+    };
+
+    expect(
+      finalizeCharacterDraft({
+        draft: itemBundleWithPurchasedEquipment,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      tag: "incomplete",
+      holes: [{ holeId: "cc:unit:class_fighter:class_equipment_choice" }],
+    });
+  });
+
   test("derives build loadout projection from selected loadout Unit refs", () => {
     const complete = completeManifestDraft();
     const projection = finalizedBuildEquipment({
@@ -1564,7 +1774,7 @@ describe("character creation finalization", () => {
       selections: {
         ...complete.selections,
         advancement: {
-          entries: [{ classUnitId: "class_fighter", level: 2 }],
+          entries: [{ classUnitId: "class_fighter", level: 3 }],
         },
       },
     };
@@ -1580,7 +1790,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized build advancement must match the supported manifest level.",
+            "Finalized build advancement must match a supported class level.",
         },
       ],
     });
@@ -1652,7 +1862,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized build must carry exactly the supported manifest choices.",
+            "Finalized build must carry exactly the supported choices for the selected class level.",
         },
       ],
     });
@@ -1665,7 +1875,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized build must carry exactly the supported manifest choices.",
+            "Finalized build must carry exactly the supported choices for the selected class level.",
         },
       ],
     });
@@ -1884,11 +2094,58 @@ function completeManifestDraft(): CharacterDraft {
       fills: initialManifestFills(),
     }),
   );
-  const afterChoices = requireAcceptedBatch(
+  const afterAdvancement = requireAcceptedBatch(
     fillCreationHoles({
       draft: afterInitial,
       unitLibrary,
       expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.advancement.initial",
+          "class_fighter:level_1",
+        ),
+      ],
+    }),
+  );
+
+  return completeManifestDraftAfterAdvancement(afterAdvancement);
+}
+
+function completeFighterTwoDraft(): CharacterDraft {
+  const draft = createTestDraft("draft:complete-fighter-two");
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: initialManifestFills(),
+    }),
+  );
+  const afterAdvancement = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.advancement.initial",
+          "class_fighter:level_2",
+        ),
+      ],
+    }),
+  );
+
+  return completeManifestDraftAfterAdvancement(afterAdvancement);
+}
+
+function completeManifestDraftAfterAdvancement(
+  afterAdvancement: CharacterDraft,
+): CharacterDraft {
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterAdvancement,
+      unitLibrary,
+      expectedRevision: afterAdvancement.revision,
       fills: [
         choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
@@ -1954,6 +2211,130 @@ function completeManifestDraft(): CharacterDraft {
   );
 }
 
+function completeWizardDraft(): CharacterDraft {
+  const draft = createTestDraft("draft:complete-wizard");
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill("cc:draft:draft.primaryClass", "class_wizard"),
+        choiceFill("cc:draft:draft.background", "background_soldier"),
+        choiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: {
+            str: 8,
+            dex: 14,
+            con: 13,
+            int: 15,
+            wis: 10,
+            cha: 12,
+          },
+        },
+        choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        choiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterAdvancement = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.advancement.initial",
+          "class_wizard:level_1",
+        ),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterAdvancement,
+      unitLibrary,
+      expectedRevision: afterAdvancement.revision,
+      fills: [
+        choiceFill(
+          "cc:unit:class_wizard:wizard_skill_choices",
+          "arcana",
+          "history",
+        ),
+        choiceFill(
+          "cc:unit:class_wizard:wizard_cantrip_choices",
+          "light",
+          "mage_hand",
+          "ray_of_frost",
+        ),
+        choiceFill(
+          "cc:unit:class_wizard:wizard_spellbook_choices",
+          "detect_magic",
+          "feather_fall",
+          "mage_armor",
+          "magic_missile",
+          "sleep",
+          "thunderwave",
+        ),
+        choiceFill(
+          "cc:unit:class_wizard:wizard_prepared_spell_choices",
+          "detect_magic",
+          "mage_armor",
+          "magic_missile",
+          "sleep",
+        ),
+        choiceFill(
+          "cc:unit:background_soldier:background_ability_score_increase",
+          "two_and_one:str:con",
+        ),
+        choiceFill(
+          "cc:unit:background_soldier:background_tool_choice",
+          "tool_dice_set",
+        ),
+        choiceFill("cc:unit:class_wizard:class_equipment_choice", "option_b"),
+        choiceFill(
+          "cc:unit:background_soldier:background_equipment_choice",
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        choiceFill(
+          "cc:unit:class_wizard:equipment_purchase",
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+
+  return requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
+        choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
+        choiceFill(
+          "cc:unit:weapon_longsword:loadout_weapon",
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+}
+
 function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
   if (result.tag !== "accepted") {
     throw new Error("Expected accepted character-creation fill batch.");
@@ -1984,6 +2365,7 @@ type MutableSupportProfile = {
 
 const HOLE_ID_TO_QNT_VARIANT = {
   "cc:draft:draft.primaryClass": "HPrimaryClass",
+  "cc:draft:draft.advancement.initial": "HAdvancement",
   "cc:draft:draft.background": "HBackground",
   "cc:draft:draft.species": "HSpecies",
   "cc:draft:draft.abilityScoreGeneration": "HAbilityScores",
@@ -2231,7 +2613,7 @@ function renderQuintParityModule(input: {
   }
 
   run parity_later_valid_but_unsupported_choices_match_runtime = {
-    match fillCreationHoles(afterInitialManifest, 1, [
+    match fillCreationHoles(afterManifestAdvancement, 2, [
       FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
       FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
     ]) {

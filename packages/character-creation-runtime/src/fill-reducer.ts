@@ -10,7 +10,10 @@ import type { Ability, UnitRecord } from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
 import { finalizeCharacterDraft } from "./finalization.ts";
 import { selectedChoiceOption } from "./hole-factories.ts";
-import { unsupportedHoleSelectionOptionId } from "./support-gates.ts";
+import {
+  supportedAdvancementForOptionId,
+  unsupportedHoleSelectionOptionId,
+} from "./support-gates.ts";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
@@ -292,8 +295,23 @@ export function applyDraftFill(
     return {
       ...selections,
       primaryClass: classUnitId,
+    };
+  }
+
+  if (path === "draft.advancement.initial" && fill.kind === "choice") {
+    const advancement = supportedAdvancementForOptionId(
+      requireOneOptionId(fill),
+    );
+    if (advancement == null) {
+      throw new Error(
+        `Accepted fill ${fill.holeId} referenced unsupported advancement option.`,
+      );
+    }
+
+    return {
+      ...selections,
       advancement: {
-        entries: [{ classUnitId, level: 1 }],
+        entries: [advancement],
       },
     };
   }

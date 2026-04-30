@@ -20,6 +20,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  advancementOptionId,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
@@ -27,12 +28,20 @@ import {
   EXACTLY_ONE_CHOICE,
   FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
   FIGHTER_FIGHTING_STYLE_FEATURE_ID,
+  FIGHTER_ACTION_SURGE_FEATURE_ID,
   FIGHTER_SECOND_WIND_FEATURE_ID,
+  FIGHTER_TACTICAL_MIND_FEATURE_ID,
   FIGHTER_SKILL_CHOICE_KEY,
   FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
   FIGHTER_WEAPON_MASTERY_FEATURE_ID,
   INITIAL_CHARACTER_DRAFT_PATHS,
   LEVEL_ONE_FIGHTER_FEATURE_IDS,
+  WIZARD_ARCANE_RECOVERY_FEATURE_ID,
+  WIZARD_CANTRIP_CHOICE_KEY,
+  WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  WIZARD_RITUAL_ADEPT_FEATURE_ID,
+  WIZARD_SKILL_CHOICE_KEY,
+  WIZARD_SPELLBOOK_CHOICE_KEY,
   type LevelOneFighterFeatureId,
 } from "./phase1-manifest.ts";
 import {
@@ -66,6 +75,8 @@ import {
 import {
   supportedBackgroundUnitIds,
   supportedClassUnitIds,
+  supportedEquipmentPurchaseChoiceCount,
+  supportedAdvancementsForClass,
   supportedLoadoutChoices,
   supportedPurchasableEquipmentUnitIds,
   unsupportedHoleSelectionOptionId,
@@ -106,9 +117,21 @@ export function discoverInitialDraftHoles(input: {
   readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   return INITIAL_CHARACTER_DRAFT_PATHS.flatMap((path) =>
-    hasDraftSelection(input.draft.selections, path)
+    hasDraftSelection(input.draft.selections, path) ||
+    isBlockedInitialDraftPath(input.draft, path)
       ? []
-      : [draftHole(path, input.unitLibrary)],
+      : [draftHole(path, input.unitLibrary, input.draft)],
+  );
+}
+
+function isBlockedInitialDraftPath(
+  draft: CharacterDraft,
+  path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
+): boolean {
+  return (
+    path === "draft.advancement.initial" &&
+    (draft.selections.primaryClass == null ||
+      !isSupported(draft.selections.primaryClass, supportedClassUnitIds()))
   );
 }
 
@@ -126,6 +149,7 @@ export function discoverClassGrantedHoles(input: {
 
   const classUnit = input.unitLibrary.requireUnit(classUnitId);
   const facts = readClassCreationFacts(classUnit);
+  const classLevel = selectedClassLevel(input.draft, classUnitId);
   if (facts.tag !== "readable") {
     return [];
   }
@@ -134,7 +158,7 @@ export function discoverClassGrantedHoles(input: {
     ...unselectedUnitChoiceHole(
       input.draft,
       choiceHole({
-        source: unitSource(classUnitId, FIGHTER_SKILL_CHOICE_KEY),
+        source: unitSource(classUnitId, classSkillChoiceKey(facts.value)),
         cardinality: exactChoiceCardinality(
           facts.value.skillProficiencyChoice.choose,
         ),
@@ -142,7 +166,7 @@ export function discoverClassGrantedHoles(input: {
       }),
     ),
     ...facts.value.featureGrants.flatMap((grant) =>
-      grant.level === 1
+      grant.level <= classLevel
         ? discoverLevelOneFighterFeatureHole(
             grant.unitId,
             input.draft,
@@ -156,6 +180,81 @@ export function discoverClassGrantedHoles(input: {
         unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
         facts.value.startingEquipment,
       ),
+    ),
+    ...discoverWizardSpellcastingHoles(classUnitId, facts.value, input.draft),
+  ];
+}
+
+type ReadableClassCreationFacts = Extract<
+  ReturnType<typeof readClassCreationFacts>,
+  { readonly tag: "readable" }
+>["value"];
+
+function selectedClassLevel(
+  draft: CharacterDraft,
+  classUnitId: UnitRecord["id"],
+): number {
+  return (
+    draft.selections.advancement?.entries.find(
+      (entry) => entry.classUnitId === classUnitId,
+    )?.level ?? 1
+  );
+}
+
+function classSkillChoiceKey(facts: ReadableClassCreationFacts) {
+  return facts.className === "wizard"
+    ? WIZARD_SKILL_CHOICE_KEY
+    : FIGHTER_SKILL_CHOICE_KEY;
+}
+
+function discoverWizardSpellcastingHoles(
+  classUnitId: UnitRecord["id"],
+  facts: ReadableClassCreationFacts,
+  draft: CharacterDraft,
+): readonly CreationHole[] {
+  if (!("spellcasting" in facts)) {
+    return [];
+  }
+
+  const spellcasting = facts.spellcasting;
+  return [
+    ...unselectedUnitChoiceHole(
+      draft,
+      choiceHole({
+        source: unitSource(classUnitId, WIZARD_CANTRIP_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(spellcasting.cantripAccess.choose),
+        options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
+          optionId: creationChoiceOptionId(spellId),
+          label: spellId,
+          unitRef: { unitId: spellId },
+        })),
+      }),
+    ),
+    ...unselectedUnitChoiceHole(
+      draft,
+      choiceHole({
+        source: unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(
+          spellcasting.spellbookAccess.choose,
+        ),
+        options: spellcasting.spellbookAccess.spells.map((spell) => ({
+          optionId: creationChoiceOptionId(spell.spellId),
+          label: spell.spellId,
+          unitRef: { unitId: spell.spellId },
+        })),
+      }),
+    ),
+    ...unselectedUnitChoiceHole(
+      draft,
+      choiceHole({
+        source: unitSource(classUnitId, WIZARD_PREPARED_SPELL_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
+        options: spellcasting.preparedAccess.spellIds.map((spellId) => ({
+          optionId: creationChoiceOptionId(spellId),
+          label: spellId,
+          unitRef: { unitId: spellId },
+        })),
+      }),
     ),
   ];
 }
@@ -271,13 +370,13 @@ export function discoverEquipmentHoles(input: {
   readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   const classUnitId = input.draft.selections.primaryClass;
-  if (classUnitId == null || !hasPhaseOneCoinEquipmentPath(input)) {
+  if (classUnitId == null || !hasSupportedCoinEquipmentPath(input)) {
     return [];
   }
   const purchaseHole = choiceHole({
     source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
     cardinality: exactChoiceCardinality(
-      supportedPurchasableEquipmentUnitIds().length,
+      supportedEquipmentPurchaseChoiceCount(),
     ),
     options: supportedPurchasableEquipmentUnitIds().map((unitId) =>
       unitOption(input.unitLibrary.requireUnit(unitId)),
@@ -325,7 +424,7 @@ export function startingEquipmentChoiceHole(
   });
 }
 
-export function hasPhaseOneCoinEquipmentPath(input: {
+export function hasSupportedCoinEquipmentPath(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
 }): boolean {
@@ -352,21 +451,48 @@ export function hasPhaseOneCoinEquipmentPath(input: {
   }
 
   return (
-    hasValidSelectionForHole(
+    selectedCoinGrantStartingEquipmentChoice(
       draft,
       startingEquipmentChoiceHole(
         unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
         classFacts.value.startingEquipment,
       ),
-    ) &&
-    hasValidSelectionForHole(
+      classFacts.value.startingEquipment,
+    ) != null &&
+    selectedCoinGrantStartingEquipmentChoice(
       draft,
       startingEquipmentChoiceHole(
         unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
         backgroundFacts.value.startingEquipment,
       ),
-    )
+      backgroundFacts.value.startingEquipment,
+    ) != null
   );
+}
+
+export function selectedCoinGrantStartingEquipmentChoice(
+  draft: CharacterDraft,
+  hole: CreationHole,
+  choices: readonly StartingEquipmentChoice[],
+): StartingEquipmentChoice | undefined {
+  const selectedChoice = selectedStartingEquipmentChoice(draft, hole, choices);
+  return selectedChoice?.kind === "coin_grant" ? selectedChoice : undefined;
+}
+
+export function selectedStartingEquipmentChoice(
+  draft: CharacterDraft,
+  hole: CreationHole,
+  choices: readonly StartingEquipmentChoice[],
+): StartingEquipmentChoice | undefined {
+  const selection = draft.selections.choices.find((candidate) =>
+    choiceSelectionMatchesHole(candidate, hole),
+  );
+  if (selection?.options.length !== 1) {
+    return undefined;
+  }
+
+  const optionId = selection.options[0]?.optionId;
+  return choices.find((choice) => choice.id === optionId);
 }
 
 export function unselectedUnitChoiceHole(
@@ -572,6 +698,15 @@ export function discoverLevelOneFighterFeatureHole(
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
 ): readonly CreationHole[] {
+  if (
+    featureUnitId === FIGHTER_ACTION_SURGE_FEATURE_ID ||
+    featureUnitId === FIGHTER_TACTICAL_MIND_FEATURE_ID ||
+    featureUnitId === WIZARD_RITUAL_ADEPT_FEATURE_ID ||
+    featureUnitId === WIZARD_ARCANE_RECOVERY_FEATURE_ID
+  ) {
+    return [];
+  }
+
   const featureId = requireLevelOneFighterFeatureId(featureUnitId);
 
   return Match.value(featureId).pipe(
@@ -663,6 +798,7 @@ function discoverFighterWeaponMasteryHole(
 export function draftHole(
   path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
   unitLibrary: UnitCatalog,
+  draft?: CharacterDraft,
 ): CreationHole {
   if (path === "draft.primaryClass") {
     return choiceHole({
@@ -672,6 +808,30 @@ export function draftHole(
         .listUnits()
         .filter((unit) => unit.kind === "class")
         .map(unitOption),
+    });
+  }
+
+  if (path === "draft.advancement.initial") {
+    const classUnitIds =
+      draft?.selections.primaryClass == null
+        ? supportedClassUnitIds()
+        : [draft.selections.primaryClass];
+    const supportedClassIds = new Set(classUnitIds);
+    return choiceHole({
+      source: draftSource(path),
+      cardinality: EXACTLY_ONE_CHOICE,
+      options: unitLibrary
+        .listUnits()
+        .filter(
+          (unit) => unit.kind === "class" && supportedClassIds.has(unit.id),
+        )
+        .flatMap((unit) =>
+          supportedAdvancementsForClass(unit.id).map((advancement) => ({
+            optionId: advancementOptionId(advancement),
+            label: `${unit.name} ${advancement.level}`,
+            unitRef: { unitId: unit.id },
+          })),
+        ),
     });
   }
 

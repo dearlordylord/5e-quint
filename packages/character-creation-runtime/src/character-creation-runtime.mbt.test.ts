@@ -222,6 +222,7 @@ function compareState(spec: RuntimeMbtState, impl: RuntimeMbtState): boolean {
 
 const holeIds = {
   HPrimaryClass: "cc:draft:draft.primaryClass",
+  HAdvancement: "cc:draft:draft.advancement.initial",
   HBackground: "cc:draft:draft.background",
   HSpecies: "cc:draft:draft.species",
   HAbilityScores: "cc:draft:draft.abilityScoreGeneration",
@@ -324,6 +325,12 @@ function abilityScoresOnlyFills(
   return [standardArrayFill(holes, "HAbilityScores")];
 }
 
+function manifestAdvancementFills(
+  holes: readonly CreationHole[],
+): readonly CreationFill[] {
+  return [choiceFill(holes, "HAdvancement", ["class_fighter:level_1"])];
+}
+
 function manifestChoiceFills(
   holes: readonly CreationHole[],
 ): readonly CreationFill[] {
@@ -371,6 +378,7 @@ const driverSchema = {
   doFillInitialManifest: {},
   doFillInitialChoicesOnly: {},
   doFillAbilityScoresOnly: {},
+  doFillManifestAdvancement: {},
   doFillManifestChoices: {},
   doFillManifestPurchase: {},
   doFillManifestLoadout: {},
@@ -429,6 +437,8 @@ function createCharacterCreationDriver() {
         submit(draft.revision, initialChoicesOnlyFills(holes)),
       doFillAbilityScoresOnly: () =>
         submit(draft.revision, abilityScoresOnlyFills(holes)),
+      doFillManifestAdvancement: () =>
+        submit(draft.revision, manifestAdvancementFills(holes)),
       doFillManifestChoices: () =>
         submit(draft.revision, manifestChoiceFills(holes)),
       doFillManifestPurchase: () =>

@@ -2,6 +2,7 @@ import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
+  advancementOptionId,
   CLASS_EQUIPMENT_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
   FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
@@ -9,6 +10,10 @@ import {
   FIGHTER_SKILL_CHOICE_KEY,
   FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
   FIGHTER_WEAPON_MASTERY_FEATURE_ID,
+  WIZARD_CANTRIP_CHOICE_KEY,
+  WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  WIZARD_SKILL_CHOICE_KEY,
+  WIZARD_SPELLBOOK_CHOICE_KEY,
   LOADOUT_ARMOR_CHOICE_KEY,
   LOADOUT_SHIELD_CHOICE_KEY,
   LOADOUT_WEAPON_CHOICE_KEY,
@@ -26,6 +31,7 @@ import {
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
   PHASE1_SHIELD_UNIT_ID,
   PHASE1_SPECIES_ORC_UNIT_ID,
+  PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_MASTERY_UNIT_IDS,
   SUPPORTED_BACKGROUND_OPTION_IDS,
@@ -40,9 +46,11 @@ import {
   SUPPORTED_PURCHASE_UNIT_IDS,
   SUPPORTED_SPECIES_OPTION_IDS,
   SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
+  WIDTH_CLASS_WIZARD_UNIT_ID,
 } from "./phase1-manifest.ts";
 import type {
   BackgroundAbilityScoreIncreaseSelection,
+  CharacterAdvancementEntry,
   CharacterAlignment,
   CharacterBuildEquipment,
   CharacterChoiceSelection,
@@ -82,17 +90,29 @@ export type SupportedLoadoutChoice =
       readonly grip: NonNullable<CharacterBuildEquipment["weapon"]>["grip"];
     };
 
+type SourceScopedEquipmentChoiceKey =
+  | typeof CLASS_EQUIPMENT_CHOICE_KEY
+  | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY;
+type SupportProfileUnitChoiceKey = Exclude<
+  UnitChoiceKey,
+  SourceScopedEquipmentChoiceKey
+>;
+
 export type CharacterCreationSupportProfile = {
   readonly draftOptionIdsByPath: Partial<
     Record<CharacterDraftPath, readonly CreationChoiceOptionId[]>
   >;
   readonly unitOptionIdsByChoiceKey: Record<
-    UnitChoiceKey,
+    SupportProfileUnitChoiceKey,
     readonly CreationChoiceOptionId[]
   >;
   readonly classUnitIds: readonly UnitRecord["id"][];
   readonly backgroundUnitIds: readonly UnitRecord["id"][];
   readonly purchasableEquipmentUnitIds: readonly UnitRecord["id"][];
+  readonly equipmentPurchaseChoiceCount: 3;
+  readonly coinEquipmentChoiceOptionIdsByUnitId: Partial<
+    Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
+  >;
   readonly loadoutChoices: readonly SupportedLoadoutChoice[];
   readonly manifest: {
     readonly primaryClassUnitId: UnitRecord["id"];
@@ -109,10 +129,12 @@ export type CharacterCreationSupportProfile = {
     readonly finalizedChoiceSelections: readonly CharacterChoiceSelection[];
     readonly finalizedEquipmentUnitIds: readonly UnitRecord["id"][];
   };
+  readonly supportedAdvancements: readonly CharacterAdvancementEntry[];
 };
 
 const SUPPORTED_DRAFT_CHOICE_PATHS = [
   "draft.primaryClass",
+  "draft.advancement.initial",
   "draft.background",
   "draft.species",
   "draft.languages",
@@ -120,8 +142,15 @@ const SUPPORTED_DRAFT_CHOICE_PATHS = [
 ] as const satisfies ReadonlyArray<CharacterDraftPath>;
 type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
+const SUPPORTED_ADVANCEMENTS = [
+  { classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID, level: 1 },
+  { classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID, level: 2 },
+  { classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID, level: 1 },
+] as const satisfies ReadonlyArray<CharacterAdvancementEntry>;
+
 const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
   "draft.primaryClass": SUPPORTED_CLASS_OPTION_IDS,
+  "draft.advancement.initial": SUPPORTED_ADVANCEMENTS.map(advancementOptionId),
   "draft.background": SUPPORTED_BACKGROUND_OPTION_IDS,
   "draft.species": SUPPORTED_SPECIES_OPTION_IDS,
   "draft.languages": SUPPORTED_LANGUAGE_OPTION_IDS,
@@ -137,12 +166,33 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [FIGHTER_SKILL_CHOICE_KEY]: SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
     [FIGHTER_FIGHTING_STYLE_CHOICE_KEY]: SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
     [FIGHTER_WEAPON_MASTERY_CHOICE_KEY]: SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
+    [WIZARD_SKILL_CHOICE_KEY]: [
+      creationChoiceOptionId("arcana"),
+      creationChoiceOptionId("history"),
+    ],
+    [WIZARD_CANTRIP_CHOICE_KEY]: [
+      creationChoiceOptionId("light"),
+      creationChoiceOptionId("mage_hand"),
+      creationChoiceOptionId("ray_of_frost"),
+    ],
+    [WIZARD_SPELLBOOK_CHOICE_KEY]: [
+      creationChoiceOptionId("detect_magic"),
+      creationChoiceOptionId("feather_fall"),
+      creationChoiceOptionId("mage_armor"),
+      creationChoiceOptionId("magic_missile"),
+      creationChoiceOptionId("sleep"),
+      creationChoiceOptionId("thunderwave"),
+    ],
+    [WIZARD_PREPARED_SPELL_CHOICE_KEY]: [
+      creationChoiceOptionId("detect_magic"),
+      creationChoiceOptionId("mage_armor"),
+      creationChoiceOptionId("magic_missile"),
+      creationChoiceOptionId("sleep"),
+    ],
     [BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY]: [
       PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID,
     ],
     [BACKGROUND_TOOL_CHOICE_KEY]: [PHASE1_BACKGROUND_TOOL_OPTION_ID],
-    [CLASS_EQUIPMENT_CHOICE_KEY]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
-    [BACKGROUND_EQUIPMENT_CHOICE_KEY]: [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
     [EQUIPMENT_PURCHASE_CHOICE_KEY]: SUPPORTED_PURCHASE_OPTION_IDS,
     [LOADOUT_ARMOR_CHOICE_KEY]: [PHASE1_LOADOUT_ARMOR_OPTION_ID],
     [LOADOUT_SHIELD_CHOICE_KEY]: [PHASE1_LOADOUT_SHIELD_OPTION_ID],
@@ -151,6 +201,14 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   classUnitIds: SUPPORTED_CLASS_UNIT_IDS,
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
+  equipmentPurchaseChoiceCount: 3,
+  coinEquipmentChoiceOptionIdsByUnitId: {
+    [PHASE1_CLASS_FIGHTER_UNIT_ID]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
+    [WIDTH_CLASS_WIZARD_UNIT_ID]: [creationChoiceOptionId("option_b")],
+    [PHASE1_BACKGROUND_SOLDIER_UNIT_ID]: [
+      PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
+    ],
+  },
   loadoutChoices: [
     {
       choiceKey: LOADOUT_ARMOR_CHOICE_KEY,
@@ -169,6 +227,14 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     {
       choiceKey: LOADOUT_WEAPON_CHOICE_KEY,
       unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+      optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
+      label: "Wielded one-handed",
+      buildSlot: "weapon",
+      grip: "one_handed",
+    },
+    {
+      choiceKey: LOADOUT_WEAPON_CHOICE_KEY,
+      unitId: PHASE1_WEAPON_FLAIL_UNIT_ID,
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
       buildSlot: "weapon",
@@ -239,6 +305,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       PHASE1_SHIELD_UNIT_ID,
     ],
   },
+  supportedAdvancements: SUPPORTED_ADVANCEMENTS,
 } as const satisfies CharacterCreationSupportProfile;
 
 function choiceSelection(
@@ -316,7 +383,7 @@ export function supportedHoleOptionIds(
     return supportedDraftOptionIds(hole);
   }
 
-  return supportedUnitOptionIds(hole.source.choiceKey);
+  return supportedUnitOptionIdsForSource(hole.source);
 }
 
 export function supportedDraftOptionIds(
@@ -353,11 +420,28 @@ function isSupportedDraftChoicePath(
 // creation equivalent of battle-runtime's supportedAttackProfile: legal
 // Surface/RAW choices may be discoverable, but finalization only accepts the
 // subset this reducer can currently project and execute. This should shrink as
-// character creation support widens beyond the Phase 1 manifest.
+// character creation support widens beyond the current profile.
 export function supportedUnitOptionIds(
-  choiceKey: UnitChoiceKey,
+  choiceKey: SupportProfileUnitChoiceKey,
 ): readonly CreationChoiceOptionId[] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey[choiceKey];
+}
+
+export function supportedUnitOptionIdsForSource(
+  source: UnitChoiceSource,
+): readonly CreationChoiceOptionId[] {
+  if (
+    source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY ||
+    source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY
+  ) {
+    const coinEquipmentChoices =
+      CHARACTER_CREATION_SUPPORT_PROFILE.coinEquipmentChoiceOptionIdsByUnitId as Partial<
+        Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
+      >;
+    return coinEquipmentChoices[source.unitId] ?? [];
+  }
+
+  return supportedUnitOptionIds(source.choiceKey);
 }
 
 export function supportedHoleOptionIdSet(
@@ -379,6 +463,10 @@ export function supportedPurchasableEquipmentUnitIds(): readonly UnitRecord["id"
   return CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds;
 }
 
+export function supportedEquipmentPurchaseChoiceCount(): number {
+  return CHARACTER_CREATION_SUPPORT_PROFILE.equipmentPurchaseChoiceCount;
+}
+
 export function supportedLoadoutChoices(): readonly SupportedLoadoutChoice[] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices;
 }
@@ -389,6 +477,32 @@ export function supportedFinalizedChoiceSelections(): readonly CharacterChoiceSe
 
 export function supportedFinalizedEquipmentUnitIds(): readonly UnitRecord["id"][] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.manifest.finalizedEquipmentUnitIds;
+}
+
+export function isSupportedAdvancement(
+  classUnitId: UnitRecord["id"],
+  level: number,
+): boolean {
+  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedAdvancements.some(
+    (advancement) =>
+      advancement.classUnitId === classUnitId && advancement.level === level,
+  );
+}
+
+export function supportedAdvancementsForClass(
+  classUnitId: UnitRecord["id"],
+): readonly CharacterAdvancementEntry[] {
+  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedAdvancements.filter(
+    (advancement) => advancement.classUnitId === classUnitId,
+  );
+}
+
+export function supportedAdvancementForOptionId(
+  optionId: CreationChoiceOptionId,
+): CharacterAdvancementEntry | undefined {
+  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedAdvancements.find(
+    (advancement) => advancementOptionId(advancement) === optionId,
+  );
 }
 
 export function supportedLoadoutChoiceForSource(

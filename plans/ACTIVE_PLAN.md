@@ -134,13 +134,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 16,
       "id": "POST3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Widen Character Creation Runtime Support Profile"
     },
     {
       "number": 17,
       "id": "POST4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Widen Battle Runtime For First Width Slice"
     },
     {
@@ -191,8 +191,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 13    | CAM20 - Green Reconciliation And MCP Promotion                   | done                                          | CAM19D             | CAM21        | Promoted the Surface-backed tools into the normal MCP server path, deleted `src/green` and `src/legacy-core`, and replaced green fixture coverage with normal MCP server tests.                  | Completed; CAM21 is unblocked.                                                           |
 | 14    | CAM21 - End-User Vertical Acceptance                             | done                                          | CAM20              | POST2        | Accepted the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with reduced positive HP.                 | Completed; deferred zero-HP/death-save/rest handoff facts are ledgered.                  |
 | 15    | POST2 - Add First Width Slice Surface Records And Readers        | done                                          | POST1, CAM21       | POST3        | Added the researched Surface width slice: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and Skeleton SRD Stat Block vulnerability/immunity shape.                           | Completed; POST3 is unblocked.                                                           |
-| 16    | POST3 - Widen Character Creation Runtime Support Profile         | ready-for-implementation-after-light-research | POST2              | POST4        | Extend CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.                   | Unblocked by POST2; ready for implementation after light source review.                   |
-| 17    | POST4 - Widen Battle Runtime For First Width Slice               | blocked                                       | POST3              | POST5        | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Surface-backed acts/resources/spell or monster facts, preserving runtime parity discipline.              | Blocker Type: dependency. Blocker Detail: waits on character runtime width.               |
+| 16    | POST3 - Widen Character Creation Runtime Support Profile         | done                                          | POST2              | POST4        | Extended CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.                 | Completed; POST4 is unblocked.                                                           |
+| 17    | POST4 - Widen Battle Runtime For First Width Slice               | ready-for-implementation-after-light-research | POST3              | POST5        | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Surface-backed acts/resources/spell or monster facts, preserving runtime parity discipline.              | Unblocked by POST3; ready for implementation after light source review.                   |
 | 18    | POST5 - Add Widened MCP User Workflow Coverage                   | blocked                                       | POST4              | none         | Exercise the widened slice through promoted MCP/user workflows and update Restore Ledger status for restored width rows.                                                                         | Blocker Type: dependency. Blocker Detail: waits on battle runtime width.                  |
 
 ## Task Details
@@ -1133,7 +1133,7 @@ Plan Impact:
 
 ### Task 16 - POST3 - Widen Character Creation Runtime Support Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: POST2
 Blocks: POST4
@@ -1190,17 +1190,15 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock POST4.
+- Status: applied.
+- POST4: unblocked for battle-runtime width implementation.
 
 ### Task 17 - POST4 - Widen Battle Runtime For First Width Slice
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: POST3
 Blocks: POST5
-
-Blocker Type: dependency
-Blocker Detail: waits on character creation runtime width.
 
 Input:
 
