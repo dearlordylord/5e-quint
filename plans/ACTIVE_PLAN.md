@@ -43,72 +43,84 @@ The Ralph harness reads this machine-readable index for task order and status. K
     },
     {
       "number": 1,
+      "id": "POST0",
+      "status": "blocked",
+      "title": "Reconsider Post-CAM Width Plan After CAM16A"
+    },
+    {
+      "number": 2,
+      "id": "POST1",
+      "status": "blocked",
+      "title": "Research First Width Slice RAW And Corpus"
+    },
+    {
+      "number": 3,
       "id": "CAM17",
       "status": "ready-for-implementation-after-light-research",
       "title": "Add MCP Character Creation Tools"
     },
     {
-      "number": 2,
+      "number": 4,
       "id": "CAM18A",
       "status": "blocked",
       "title": "Add MCP Battle Session Shell"
     },
     {
-      "number": 3,
+      "number": 5,
       "id": "CAM18B",
       "status": "blocked",
       "title": "Add MCP Fighter Battle Flow"
     },
     {
-      "number": 4,
+      "number": 6,
       "id": "CAM18C",
       "status": "blocked",
       "title": "Add Goblin Warrior Attack Support"
     },
     {
-      "number": 5,
+      "number": 7,
       "id": "CAM18D",
       "status": "blocked",
       "title": "Add Full Green Vertical Fixture"
     },
     {
-      "number": 6,
+      "number": 8,
       "id": "CAM18E",
       "status": "blocked",
       "title": "Add Post-Battle Character State Handoff"
     },
     {
-      "number": 7,
+      "number": 9,
       "id": "CAM19A",
       "status": "blocked",
       "title": "Refresh Core And Projected Deletion Inventory"
     },
     {
-      "number": 8,
+      "number": 10,
       "id": "CAM19B",
       "status": "blocked",
       "title": "Isolate Legacy Core MCP Path"
     },
     {
-      "number": 9,
+      "number": 11,
       "id": "CAM19C",
       "status": "blocked",
       "title": "Delete Projected Vocabulary From Promoted Path"
     },
     {
-      "number": 10,
+      "number": 12,
       "id": "CAM19D",
       "status": "blocked",
       "title": "Reconcile Post-Deletion Docs And Tests"
     },
     {
-      "number": 11,
+      "number": 13,
       "id": "CAM20",
       "status": "blocked",
       "title": "Green Reconciliation And MCP Promotion"
     },
     {
-      "number": 12,
+      "number": 14,
       "id": "CAM21",
       "status": "blocked",
       "title": "End-User Vertical Acceptance"
@@ -139,19 +151,21 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task                                                             | Status                                        | Depends on         | Blocks | Next action                                                                                                                                                                                     | Handoff readiness                                                           |
 | ----- | ---------------------------------------------------------------- | --------------------------------------------- | ------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 0     | CAM16A - Prepare Character Creation Runtime For Catalog Widening | ready-for-implementation-after-light-research | completed baseline | CAM17  | Localize Phase 1 support gates, derive build projection from accepted selections, and index hole/option validation before MCP exposes the creation runtime.                                     | Ready after character-creation runtime architecture check.                  |
-| 1     | CAM17 - Add MCP Character Creation Tools                         | ready-for-implementation-after-light-research | CAM16A             | CAM18A | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                 | Ready after MCP green character-tool architecture check.                    |
-| 2     | CAM18A - Add MCP Battle Session Shell                            | blocked                                       | CAM17              | CAM18B | Add green MCP tools for selecting a Stat Block, starting battle with explicit Initiative, storing battle session state, and returning battle state/snapshot.                                    | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.     |
-| 3     | CAM18B - Add MCP Fighter Battle Flow                             | blocked                                       | CAM18A             | CAM18C | Drive Fighter battle acts through MCP: discover Attack/End Turn, resolve target/attack-roll/damage fills, store returned BattleState, clear transient fills, and End Turn.                      | Blocker Type: dependency. Blocker Detail: waits on battle session shell.    |
-| 4     | CAM18C - Add Goblin Warrior Attack Support                       | blocked                                       | CAM18B             | CAM18D | Derive Goblin Warrior attacks from authored StatBlockRecord and resolve Goblin Attack through the same battle flow without a second attack IR.                                                  | Blocker Type: dependency. Blocker Detail: waits on Fighter MCP battle flow. |
-| 5     | CAM18D - Add Full Green Vertical Fixture                         | blocked                                       | CAM18C             | CAM18E | Add the full MCP-only green fixture: create/finalize Fighter, select Goblin Warrior, start battle, Fighter attacks, End Turn, and Goblin attacks.                                               | Blocker Type: dependency. Blocker Detail: waits on both combatant flows.    |
-| 6     | CAM18E - Add Post-Battle Character State Handoff                 | blocked                                       | CAM18D             | CAM19A | Add explicit end-battle/finalize-battle handoff and character-list read model showing post-battle facts such as reduced current HP.                                                             | Blocker Type: dependency. Blocker Detail: waits on full green fixture.      |
-| 7     | CAM19A - Refresh Core And Projected Deletion Inventory           | blocked                                       | CAM18E             | CAM19B | Inventory current Core/projected/MCP legacy call sites after the full green path and update Restore Ledger coverage before deletion.                                                            | Blocker Type: dependency. Blocker Detail: waits on post-battle green path.  |
-| 8     | CAM19B - Isolate Legacy Core MCP Path                            | blocked                                       | CAM19A             | CAM19C | Move old Core-backed MCP routes/tests into a deletion-marked legacy package/path and keep them out of the promotable MCP entrypoint.                                                            | Blocker Type: dependency. Blocker Detail: waits on deletion inventory.      |
-| 9     | CAM19C - Delete Projected Vocabulary From Promoted Path          | blocked                                       | CAM19B             | CAM19D | Delete projected executable vocabulary from the promoted MCP/runtime path after legacy isolation, preserving omitted semantics only through Restore Ledger rows.                                | Blocker Type: dependency. Blocker Detail: waits on legacy isolation.        |
-| 10    | CAM19D - Reconcile Post-Deletion Docs And Tests                  | blocked                                       | CAM19C             | CAM20  | Reconcile docs, tests, Restore Ledger status, and expected failures after isolation/deletion so CAM20 has a concrete promotion handoff.                                                         | Blocker Type: dependency. Blocker Detail: waits on projected cleanup.       |
-| 11    | CAM20 - Green Reconciliation And MCP Promotion                   | blocked                                       | CAM19D             | CAM21  | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.           | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.   |
-| 12    | CAM21 - End-User Vertical Acceptance                             | blocked                                       | CAM20              | none   | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP. | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.       |
+| 0     | CAM16A - Prepare Character Creation Runtime For Catalog Widening | ready-for-implementation-after-light-research | completed baseline | CAM17, POST0 | Localize Phase 1 support gates, derive build projection from accepted selections, and index hole/option validation before MCP exposes the creation runtime.                                | Ready after character-creation runtime architecture check.                  |
+| 1     | POST0 - Reconsider Post-CAM Width Plan After CAM16A              | blocked                                       | CAM16A             | POST1  | Rewrite the mandatory post-CAM width tasks after CAM16A reveals the support-profile/projection shape; do not leave widening as optional follow-up.                                            | Blocker Type: dependency. Blocker Detail: waits on CAM16A output.           |
+| 2     | POST1 - Research First Width Slice RAW And Corpus                | blocked                                       | POST0              | future POST implementation tasks | Validate the default Fighter 2 + Wizard 1 + second monster width slice against local RAW/corpus, then produce proactive widening implementation tasks.                    | Blocker Type: dependency. Blocker Detail: waits on POST0 plan rewrite.       |
+| 3     | CAM17 - Add MCP Character Creation Tools                         | ready-for-implementation-after-light-research | CAM16A             | CAM18A | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                 | Ready after MCP green character-tool architecture check.                    |
+| 4     | CAM18A - Add MCP Battle Session Shell                            | blocked                                       | CAM17              | CAM18B | Add green MCP tools for selecting a Stat Block, starting battle with explicit Initiative, storing battle session state, and returning battle state/snapshot.                                    | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.     |
+| 5     | CAM18B - Add MCP Fighter Battle Flow                             | blocked                                       | CAM18A             | CAM18C | Drive Fighter battle acts through MCP: discover Attack/End Turn, resolve target/attack-roll/damage fills, store returned BattleState, clear transient fills, and End Turn.                      | Blocker Type: dependency. Blocker Detail: waits on battle session shell.    |
+| 6     | CAM18C - Add Goblin Warrior Attack Support                       | blocked                                       | CAM18B             | CAM18D | Derive Goblin Warrior attacks from authored StatBlockRecord and resolve Goblin Attack through the same battle flow without a second attack IR.                                                  | Blocker Type: dependency. Blocker Detail: waits on Fighter MCP battle flow. |
+| 7     | CAM18D - Add Full Green Vertical Fixture                         | blocked                                       | CAM18C             | CAM18E | Add the full MCP-only green fixture: create/finalize Fighter, select Goblin Warrior, start battle, Fighter attacks, End Turn, and Goblin attacks.                                               | Blocker Type: dependency. Blocker Detail: waits on both combatant flows.    |
+| 8     | CAM18E - Add Post-Battle Character State Handoff                 | blocked                                       | CAM18D             | CAM19A | Add explicit end-battle/finalize-battle handoff and character-list read model showing post-battle facts such as reduced current HP.                                                             | Blocker Type: dependency. Blocker Detail: waits on full green fixture.      |
+| 9     | CAM19A - Refresh Core And Projected Deletion Inventory           | blocked                                       | CAM18E             | CAM19B | Inventory current Core/projected/MCP legacy call sites after the full green path and update Restore Ledger coverage before deletion.                                                            | Blocker Type: dependency. Blocker Detail: waits on post-battle green path.  |
+| 10    | CAM19B - Isolate Legacy Core MCP Path                            | blocked                                       | CAM19A             | CAM19C | Move old Core-backed MCP routes/tests into a deletion-marked legacy package/path and keep them out of the promotable MCP entrypoint.                                                            | Blocker Type: dependency. Blocker Detail: waits on deletion inventory.      |
+| 11    | CAM19C - Delete Projected Vocabulary From Promoted Path          | blocked                                       | CAM19B             | CAM19D | Delete projected executable vocabulary from the promoted MCP/runtime path after legacy isolation, preserving omitted semantics only through Restore Ledger rows.                                | Blocker Type: dependency. Blocker Detail: waits on legacy isolation.        |
+| 12    | CAM19D - Reconcile Post-Deletion Docs And Tests                  | blocked                                       | CAM19C             | CAM20  | Reconcile docs, tests, Restore Ledger status, and expected failures after isolation/deletion so CAM20 has a concrete promotion handoff.                                                         | Blocker Type: dependency. Blocker Detail: waits on projected cleanup.       |
+| 13    | CAM20 - Green Reconciliation And MCP Promotion                   | blocked                                       | CAM19D             | CAM21  | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.           | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.   |
+| 14    | CAM21 - End-User Vertical Acceptance                             | blocked                                       | CAM20              | none   | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP. | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.       |
 
 ## Task Details
 
@@ -164,7 +178,7 @@ CAM0-CAM16 are complete and removed from the active queue to keep this file smal
 Status: `ready-for-implementation-after-light-research`
 
 Depends on: completed baseline
-Blocks: CAM17
+Blocks: CAM17, POST0
 
 Next action: run the character-creation runtime architecture check, then localize Phase 1 support gates and validation/projection boundaries before MCP exposes the runtime.
 
@@ -209,9 +223,96 @@ Verification:
 
 Plan Impact:
 
-- If successful, CAM17 remains ready and depends only on CAM16A.
+- If successful, unblock CAM17 and POST0.
 
-### Task 1 - CAM17 - Add MCP Character Creation Tools
+### Task 1 - POST0 - Reconsider Post-CAM Width Plan After CAM16A
+
+Status: `blocked`
+
+Depends on: CAM16A
+Blocks: POST1
+
+Blocker Type: dependency
+Blocker Detail: waits on CAM16A output.
+
+Input:
+
+- CAM16A support-profile/projection/validation shape.
+- Current post-CAM candidate: Fighter 2, Wizard 1, and a second non-Goblin-shaped monster.
+- Restore Ledger rows for full character creation width, spellcasting/Wizard creation, Fighter 2/Action Surge, and monster breadth.
+
+Output:
+
+- Revised POST task outline that reflects the actual CAM16A architecture and requires proactive width implementation after the CAM green path.
+- Explicit decision on the first mandatory width implementation slice: default Fighter 2 + Wizard 1 + second monster, or a recorded replacement before implementation.
+- Concrete, non-optional dependencies between post-CAM research, Surface content/reader widening, runtime widening, battle widening, and MCP/user workflow tests.
+
+Acceptance:
+
+- POST tasks are rewritten only as planning tasks unless CAM21 is already done; implementation tasks remain blocked behind CAM21, but the plan must make widening the next required body of work after CAM acceptance.
+- The rewritten POST queue must contain concrete implementation tasks, not a vague research backlog or optional exploration bucket.
+- The plan explains how widening should flow through CAM16A's support-profile boundary rather than adding new scattered Phase 1 branches.
+- Any uncertainty that requires RAW/local-corpus review is pushed into POST1 with specific files/topics to inspect.
+- The default width hypothesis remains Fighter 2 + Wizard 1 + second monster unless POST0 records a concrete reason to revise it.
+
+Verification:
+
+- Plan-only change; run `git diff --check -- plans/ACTIVE_PLAN.md`.
+- If POST task index/order changes, validate the Ralph task index JSON parses.
+
+Plan Impact:
+
+- Unblock POST1. Ensure POST1 produces mandatory widening work. Do not unblock any post-CAM implementation task before CAM21.
+
+### Task 2 - POST1 - Research First Width Slice RAW And Corpus
+
+Status: `blocked`
+
+Depends on: POST0
+Blocks: future POST implementation tasks
+
+Blocker Type: dependency
+Blocker Detail: waits on POST0 plan rewrite.
+
+Default hypothesis:
+
+- Fighter 2 for advancement/level-up replay and level-2 class feature pressure.
+- Wizard 1 for spell slots, prepared-spell legality, spell access, and spellcasting creation holes.
+- One second SRD monster with mechanics materially different from Goblin Warrior.
+
+Input:
+
+- POST0 revised task outline.
+- Local RAW corpus in `.references/srd-5.2.1/`.
+- Existing Surface content/readers and Restore Ledger rows.
+
+Output:
+
+- Researched first-width-slice decision with exact SRD citations.
+- Selected second monster, or a justified replacement if local RAW/corpus shows a better pressure case.
+- Concrete proactive widening implementation task list for Surface records/readers, character creation runtime, battle runtime, MCP, and tests.
+
+Acceptance:
+
+- Re-read local RAW rather than relying on the default hypothesis.
+- Confirm or revise Fighter 2 as the advancement pressure case, including the exact level-2 feature(s) to model.
+- Confirm or revise Wizard 1 as the spellcasting pressure case, including spell slot and prepared-spell legality facts.
+- Select a second monster whose authored facts force at least one new runtime shape beyond Goblin Warrior's current support.
+- Identify one deterministic scenario that exercises the widened class and monster facts without becoming a broad content survey.
+- Produce implementation-ready POST tasks that proactively add this width; do not close POST1 with only notes, recommendations, or a deferred decision.
+- Keep post-CAM implementation tasks blocked until CAM21 unless the owner explicitly changes queue policy.
+
+Verification:
+
+- RAW citations from `.references/srd-5.2.1/` are recorded in the task output.
+- No external rules source is used unless the local corpus is missing needed text and the owner directs a source of truth.
+- Plan-only change; run `git diff --check -- plans/ACTIVE_PLAN.md`.
+
+Plan Impact:
+
+- Add or revise concrete POST implementation tasks for proactive width, still blocked behind CAM21 by default.
+
+### Task 3 - CAM17 - Add MCP Character Creation Tools
 
 Status: `ready-for-implementation-after-light-research`
 
@@ -261,7 +362,7 @@ Plan Impact:
 
 - Unblock CAM18A when CAM17 is done.
 
-### Task 2 - CAM18A - Add MCP Battle Session Shell
+### Task 4 - CAM18A - Add MCP Battle Session Shell
 
 Status: `blocked`
 
@@ -334,7 +435,7 @@ Plan Impact:
 
 - Unblock CAM18B.
 
-### Task 3 - CAM18B - Add MCP Fighter Battle Flow
+### Task 5 - CAM18B - Add MCP Fighter Battle Flow
 
 Status: `blocked`
 
@@ -382,7 +483,7 @@ Plan Impact:
 
 - Unblock CAM18C.
 
-### Task 4 - CAM18C - Add Goblin Warrior Attack Support
+### Task 6 - CAM18C - Add Goblin Warrior Attack Support
 
 Status: `blocked`
 
@@ -430,7 +531,7 @@ Plan Impact:
 
 - Unblock CAM18D.
 
-### Task 5 - CAM18D - Add Full Green Vertical Fixture
+### Task 7 - CAM18D - Add Full Green Vertical Fixture
 
 Status: `blocked`
 
@@ -478,7 +579,7 @@ Plan Impact:
 
 - Unblock CAM18E.
 
-### Task 6 - CAM18E - Add Post-Battle Character State Handoff
+### Task 8 - CAM18E - Add Post-Battle Character State Handoff
 
 Status: `blocked`
 
@@ -527,7 +628,7 @@ Plan Impact:
 
 - Unblock CAM19A.
 
-### Task 7 - CAM19A - Refresh Core And Projected Deletion Inventory
+### Task 9 - CAM19A - Refresh Core And Projected Deletion Inventory
 
 Status: `blocked`
 
@@ -569,7 +670,7 @@ Plan Impact:
 
 - Unblock CAM19B.
 
-### Task 8 - CAM19B - Isolate Legacy Core MCP Path
+### Task 10 - CAM19B - Isolate Legacy Core MCP Path
 
 Status: `blocked`
 
@@ -610,7 +711,7 @@ Plan Impact:
 
 - Unblock CAM19C.
 
-### Task 9 - CAM19C - Delete Projected Vocabulary From Promoted Path
+### Task 11 - CAM19C - Delete Projected Vocabulary From Promoted Path
 
 Status: `blocked`
 
@@ -654,7 +755,7 @@ Plan Impact:
 
 - Unblock CAM19D.
 
-### Task 10 - CAM19D - Reconcile Post-Deletion Docs And Tests
+### Task 12 - CAM19D - Reconcile Post-Deletion Docs And Tests
 
 Status: `blocked`
 
@@ -697,7 +798,7 @@ Plan Impact:
 
 - Unblock CAM20 and update [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md) with actual deletion status and any remaining Restore Ledger rows.
 
-### Task 11 - CAM20 - Green Reconciliation And MCP Promotion
+### Task 13 - CAM20 - Green Reconciliation And MCP Promotion
 
 Status: `blocked`
 
@@ -745,7 +846,7 @@ Plan Impact:
 
 - If successful, unblock CAM21 and update the migration plan and MCP docs to mark green reconciliation complete and remove temporary green-path wording.
 
-### Task 12 - CAM21 - End-User Vertical Acceptance
+### Task 14 - CAM21 - End-User Vertical Acceptance
 
 Status: `blocked`
 
