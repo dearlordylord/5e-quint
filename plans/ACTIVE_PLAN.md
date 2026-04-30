@@ -50,7 +50,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 2,
       "id": "POST1",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research First Width Slice RAW And Corpus"
     },
     {
@@ -177,7 +177,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | ----- | ---------------------------------------------------------------- | --------------------------------------------- | ------------------ | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 0     | CAM16A - Prepare Character Creation Runtime For Catalog Widening | done                                          | completed baseline | CAM17, POST0                     | Localized Phase 1 support gates, derived build projection from accepted selections, and indexed hole/option validation before MCP exposes the creation runtime.                                 | Completed.                                                                   |
 | 1     | POST0 - Reconsider Post-CAM Width Plan After CAM16A              | done                                          | CAM16A             | POST1                            | Rewrote the mandatory post-CAM width queue around CAM16A's support-profile boundary.                                                                                                             | Completed.                                                                   |
-| 2     | POST1 - Research First Width Slice RAW And Corpus                | ready-for-research                            | POST0              | POST2                            | Validate the default Fighter 2 + Wizard 1 + second monster width slice against local RAW/corpus, then revise the concrete POST2-POST5 implementation tasks if the researched slice changes.       | Ready for RAW/corpus research; no implementation before CAM21.               |
+| 2     | POST1 - Research First Width Slice RAW And Corpus                | done                                          | POST0              | POST2                            | Confirmed Fighter 2 + Wizard 1 and selected Skeleton as the second SRD Stat Block pressure case, with deterministic scenario and POST2-POST5 scope recorded below.                              | Completed; POST2 remains blocked by CAM21.                                   |
 | 3     | CAM17 - Add MCP Character Creation Tools                         | ready-for-implementation-after-light-research | CAM16A             | CAM18A                           | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                 | Ready after MCP green character-tool architecture check.                     |
 | 4     | CAM18A - Add MCP Battle Session Shell                            | blocked                                       | CAM17              | CAM18B                           | Add green MCP tools for selecting a Stat Block, starting battle with explicit Initiative, storing battle session state, and returning battle state/snapshot.                                    | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.      |
 | 5     | CAM18B - Add MCP Fighter Battle Flow                             | blocked                                       | CAM18A             | CAM18C                           | Drive Fighter battle acts through MCP: discover Attack/End Turn, resolve target/attack-roll/damage fills, store returned BattleState, clear transient fills, and End Turn.                      | Blocker Type: dependency. Blocker Detail: waits on battle session shell.     |
@@ -190,7 +190,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 12    | CAM19D - Reconcile Post-Deletion Docs And Tests                  | blocked                                       | CAM19C             | CAM20                            | Reconcile docs, tests, Restore Ledger status, and expected failures after isolation/deletion so CAM20 has a concrete promotion handoff.                                                         | Blocker Type: dependency. Blocker Detail: waits on projected cleanup.        |
 | 13    | CAM20 - Green Reconciliation And MCP Promotion                   | blocked                                       | CAM19D             | CAM21                            | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.           | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.    |
 | 14    | CAM21 - End-User Vertical Acceptance                             | blocked                                       | CAM20              | POST2                            | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP. | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.        |
-| 15    | POST2 - Add First Width Slice Surface Records And Readers        | blocked                                       | POST1, CAM21       | POST3                            | Add the researched width slice to Surface records/readers: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and the selected non-Goblin-shaped SRD Stat Block.                | Blocker Type: dependency. Blocker Detail: waits on POST1 research and CAM21. |
+| 15    | POST2 - Add First Width Slice Surface Records And Readers        | blocked                                       | POST1, CAM21       | POST3                            | Add the researched width slice to Surface records/readers: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and the Skeleton SRD Stat Block with vulnerability/immunity shape. | Blocker Type: dependency. Blocker Detail: POST1 complete; waits on CAM21.    |
 | 16    | POST3 - Widen Character Creation Runtime Support Profile         | blocked                                       | POST2              | POST4                            | Extend CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.                  | Blocker Type: dependency. Blocker Detail: waits on Surface width.            |
 | 17    | POST4 - Widen Battle Runtime For First Width Slice               | blocked                                       | POST3              | POST5                            | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Surface-backed acts/resources/spell or monster facts, preserving runtime parity discipline.              | Blocker Type: dependency. Blocker Detail: waits on character runtime width.  |
 | 18    | POST5 - Add Widened MCP User Workflow Coverage                   | blocked                                       | POST4              | none                             | Exercise the widened slice through promoted MCP/user workflows and update Restore Ledger status for restored width rows.                                                                         | Blocker Type: dependency. Blocker Detail: waits on battle runtime width.     |
@@ -308,7 +308,7 @@ Plan Impact:
 
 ### Task 2 - POST1 - Research First Width Slice RAW And Corpus
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: POST0
 Blocks: POST2
@@ -318,6 +318,102 @@ Default hypothesis:
 - Fighter 2 for advancement/level-up replay and level-2 class feature pressure.
 - Wizard 1 for spell slots, prepared-spell legality, spell access, and spellcasting creation holes.
 - One second SRD monster with mechanics materially different from Goblin Warrior.
+
+Research decision:
+
+- Retain Fighter 2 as the advancement pressure case. Local RAW separates level-1
+  creation from higher-level starts and advancement: characters typically start
+  at level 1 and advance by XP
+  (`.references/srd-5.2.1/Character-Creation.md:38-44`), higher-level
+  characters use the normal creation steps plus advancement rules
+  (`.references/srd-5.2.1/Character-Creation.md:372-379`), and gaining a class
+  level grants that level's class features
+  (`.references/srd-5.2.1/Character-Creation.md:421-425`). Fighter level 2
+  gives Action Surge (one use) and Tactical Mind
+  (`.references/srd-5.2.1/Classes/Fighter.md:29-32`). The first executable
+  pressure is Action Surge: one additional non-Magic action on the Fighter's
+  turn, one use per Short or Long Rest, scaling only at level 17
+  (`.references/srd-5.2.1/Classes/Fighter.md:76-80`). Tactical Mind is retained
+  as a sheet/resource fact from the same level, but it is not the first battle
+  action pressure because it modifies failed ability checks, not the planned
+  Attack/Spell combat scenario
+  (`.references/srd-5.2.1/Classes/Fighter.md:82-84`).
+- Retain Wizard 1 as the spellcasting creation pressure case. RAW gives Wizard
+  level 1 Spellcasting, Ritual Adept, and Arcane Recovery with 3 cantrips, 4
+  prepared spells, and two level-1 Spell Slots
+  (`.references/srd-5.2.1/Classes/Wizard.md:31-35`). Wizard Spellcasting grants
+  three Wizard cantrips, a spellbook containing six level-1 Wizard spells, two
+  level-1 Spell Slots restored on Long Rest, and four prepared level-1+ spells
+  chosen from the spellbook and limited to levels for which the Wizard has slots
+  (`.references/srd-5.2.1/Classes/Wizard.md:56-82`). General spellcasting RAW
+  distinguishes spell access/preparation from casting, spell slots from
+  cantrips, and slot expenditure/restoration
+  (`.references/srd-5.2.1/Spells/Gaining-and-Casting.md:3-28`,
+  `:40-65`). Use the project terms Spell Definition, Spell Access, Spell
+  Invocation, and Spell Effect from `UBIQUITOUS_LANGUAGE.md:203-217`; do not
+  collapse spellbook ownership, prepared-spell legality, and runtime slot
+  expenditure into one field.
+- Select Skeleton as the second SRD monster. Goblin Warrior already pressures
+  conditional bonus damage keyed to attack-roll Advantage and Bonus Action
+  options (`.references/srd-5.2.1/Monsters/Monsters-E-G.md:721-746`).
+  Skeleton keeps attack execution simple but forces a new authored Stat Block
+  shape: Bludgeoning vulnerability plus Poison damage immunity and Exhaustion /
+  Poisoned condition immunities
+  (`.references/srd-5.2.1/Monsters/Monsters-P-S.md:1152-1175`). The monster
+  overview explicitly treats Resistances and Immunities as optional stat-block
+  details and describes stat-block attack/damage notation
+  (`.references/srd-5.2.1/Monsters/Overview.md:3-21`,
+  `:209-227`). Current Surface stat-block schema already carries
+  `resistances` and `immunities`, but not vulnerabilities
+  (`packages/surface/src/surface/schema-spell.ts:2394-2408`,
+  `:2505-2528`), so Skeleton forces a real Surface/runtime shape beyond
+  Goblin without pulling in broad monster spellcasting, recharge, or legendary
+  controls.
+- Wizard spell pressure should use existing/nearby SRD Spell Definitions rather
+  than a broad spell survey. The deterministic slice should include three
+  Wizard cantrips from the Wizard list and six level-1 spellbook choices, with
+  four prepared from that spellbook
+  (`.references/srd-5.2.1/Classes/Wizard.md:134-190`). Recommended concrete
+  pressure spells: `magic_missile` for level-1 prepared Spell Invocation and
+  slot spend (`.references/srd-5.2.1/Spells/Descriptions-M-P.md:85-96`),
+  `ray_of_frost` for cantrip/no-slot spell attack plus speed rider
+  (`.references/srd-5.2.1/Spells/Descriptions-Q-R.md:41-52`), and
+  `mage_armor` as an authored Spell Definition/access fact that remains
+  out-of-scenario for battle unless the runtime already supports persistent AC
+  effects (`.references/srd-5.2.1/Spells/Descriptions-M-P.md:5-14`).
+- Do not add Acolyte as part of this first width slice. RAW lets a player
+  choose any detailed background; the Ability Scores and Backgrounds table is
+  guidance for beneficial pairings when a player has trouble choosing
+  (`.references/srd-5.2.1/Character-Creation.md:54-71`). Reusing the existing
+  Soldier background keeps the deterministic Wizard pressure on spellcasting
+  holes and avoids hiding a second background authoring/runtime dependency in
+  POST2-POST5. Acolyte is a later background-width case, not part of POST1's
+  selected implementation slice.
+
+Deterministic scenario outline:
+
+- Through promoted MCP tools, create and finalize two sheets from authored
+  Surface facts: an Orc Soldier Fighter 2 and an Orc Soldier Wizard 1. The
+  Wizard intentionally reuses the already-scoped Orc species and Soldier
+  background; Wizard-specific pressure comes from class Spell Access,
+  spellbook/preparation legality, and Spell Slot projection, not from adding a
+  second background. The Fighter uses a support-profile path that advances from
+  the existing Fighter 1 manifest to Fighter 2, includes Action Surge and
+  Tactical Mind sheet facts, and selects/buys a bludgeoning weapon such as
+  Light Hammer if the scenario is going to prove Skeleton vulnerability through
+  damage resolution. The Wizard chooses 3 Wizard cantrips, creates a six-spell
+  spellbook, prepares exactly 4 level-1 spells from that spellbook, and starts
+  with two unexpended level-1 Spell Slots.
+- Start one battle with explicit Initiative scores: Fighter first, Wizard
+  second, Skeleton third. The Fighter attacks Skeleton with bludgeoning damage
+  to prove vulnerability application, uses Action Surge, and attacks again to
+  prove the extra non-Magic action resource. The Wizard casts `magic_missile`
+  using a level-1 slot at Skeleton to prove prepared-spell access and slot
+  expenditure; a second discovery pass may show `ray_of_frost` as a cantrip
+  Spell Invocation that does not spend a slot. Skeleton then uses one authored
+  Shortsword or Shortbow attack from its Stat Block. Keep the scenario narrow:
+  no monster spellcasting, no broad spell catalog survey, and no old projected
+  executable vocabulary.
 
 Input:
 
@@ -370,8 +466,18 @@ Verification:
 
 Plan Impact:
 
-- Revise POST2-POST5 if RAW/corpus research changes the default slice; keep
-  implementation blocked behind CAM21 by default.
+- Status: applied.
+- POST2: revised to implement Fighter 2, Wizard 1, and Skeleton Surface
+  records/readers while reusing existing Orc/Soldier origin Surface records for
+  the Wizard scenario; remains blocked by CAM21.
+- POST3: revised to widen character creation for Fighter 2 advancement and
+  Wizard 1 spellbook/prepared-spell legality without adding Acolyte background
+  runtime support; remains blocked by POST2.
+- POST4: revised to cover Action Surge, Wizard Spell Invocation pressure, and
+  Skeleton vulnerability/immunity battle pressure; remains blocked by POST3.
+- POST5: revised to use the deterministic Fighter 2 + Wizard 1 versus Skeleton
+  MCP workflow with the existing Orc/Soldier origin support; remains blocked by
+  POST4.
 
 ### Task 3 - CAM17 - Add MCP Character Creation Tools
 
@@ -978,7 +1084,7 @@ Depends on: POST1, CAM21
 Blocks: POST3
 
 Blocker Type: dependency
-Blocker Detail: waits on POST1 RAW/corpus research and CAM21 end-user acceptance.
+Blocker Detail: POST1 RAW/corpus research is complete; waits on CAM21 end-user acceptance.
 
 Input:
 
@@ -991,8 +1097,25 @@ Input:
 Output:
 
 - Surface-authored records and reader support for the selected first width
-  slice. Default until POST1 revises it: Fighter 2 advancement facts, Wizard 1
-  spellcasting creation facts, and one non-Goblin-shaped SRD Stat Block.
+  slice: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and
+  the Skeleton SRD Stat Block.
+- Fighter Surface records/readers connect `class_fighter` level-2 grants to the
+  existing Action Surge authored feature and a Tactical Mind sheet feature fact;
+  reconcile the duplicate `fighter_action_surge` / `fighter_action_surge_l2`
+  authored records into one canonical Unit id before widening readers.
+- Wizard Surface records/readers add a `class_wizard` creation record and the
+  level-1 spellcasting ownership facts needed for 3 cantrips, a six-spell
+  spellbook, 4 prepared spells selected from that spellbook, two level-1 Spell
+  Slots, Ritual Adept, Arcane Recovery, Intelligence spellcasting ability, and
+  Arcane Focus/spellbook focus. Model spellbook Spell Access, prepared Spell
+  Access, and runtime Spell Slot projection as distinct concepts.
+- No Acolyte Surface record is part of this slice; the deterministic Wizard
+  uses existing Orc/Soldier origin records so POST2 remains about Wizard class
+  spellcasting facts, Fighter 2 advancement, and Skeleton's Stat Block shape.
+- Skeleton Surface record adds a focused Stat Block vulnerability shape named
+  for the SRD stat-block detail, plus Poison damage immunity and Exhaustion /
+  Poisoned condition immunities. Keep the SRD-only `srdStatBlockCollection`
+  boundary so mixed-provenance monster catalogs remain unrepresentable.
 - Reader tests proving the new records are discoverable through existing
   catalog boundaries without treating 5e-tools or other structured inputs as
   provenance.
@@ -1006,9 +1129,12 @@ Acceptance:
   authored records, not duplicated runtime state.
 - Surface widening is driven by the POST1 pressure cases and local RAW
   citations, not by a broad content survey.
-- If the selected second monster needs a new Stat Block shape, the shape is
-  named after the SRD domain fact it models and has a focused reader/regression
-  test.
+- The new Stat Block vulnerability shape is named after the SRD domain fact it
+  models and has focused reader/regression tests for Skeleton's Bludgeoning
+  vulnerability and Poison/Exhaustion/Poisoned immunities.
+- Wizard spellbook/prepared-spell facts cannot represent prepared spells that
+  are absent from the spellbook or above the Wizard's available Spell Slot
+  levels.
 
 Verification:
 
@@ -1041,8 +1167,10 @@ Input:
 Output:
 
 - Character creation runtime support-profile entries for the selected width
-  slice, including supported draft choices, Unit choice families, option ids,
-  purchasable equipment/loadout facts if required, and finalization facts.
+  slice, including Fighter 2 advancement, Wizard 1 creation choices,
+  spellbook/prepared-spell/cantrip choice families, option ids, purchasable
+  equipment/loadout facts needed by the Skeleton scenario, and finalization
+  facts.
 - Finalization/build projection widened from accepted selections and Surface
   Unit refs, not hard-coded parallel constants.
 - QNT slice/MBT bridge and docs updated for the widened character creation
@@ -1052,14 +1180,23 @@ Acceptance:
 
 - Legal-but-unsupported options still fail through one support-profile boundary
   with precise issues.
-- Fighter 2 and Wizard 1 creation/advancement facts, if retained by POST1, are
-  accepted only where the selected Surface facts and support profile make them
-  executable.
+- Fighter 2 advancement is accepted only through selected Surface class-feature
+  grants and produces Action Surge/Tactical Mind sheet facts without adding
+  scattered Fighter branches outside support-profile/projection boundaries.
+- Wizard 1 creation is accepted only when selected cantrips, spellbook spells,
+  prepared spells, spell slots, and spellcasting ability/focus facts are
+  supported and internally legal. Prepared spells must be selected from the
+  spellbook and must be of levels for which the Wizard has Spell Slots.
+- The deterministic Wizard path reuses the already-supported Orc/Soldier origin
+  choices; POST3 does not add Acolyte holes or background support unless a later
+  task explicitly widens background content.
 - The remaining Phase 1-specific branches are removed or narrowed to named
   manifest-only facts; no scattered Wizard/Fighter special cases are added
   outside the support-profile/projection boundary.
 - CharacterBuild carries only build facts needed by later boundaries and does
   not gain in-play state such as current HP, expended slots, or temporary HP.
+  It may carry starting Spell Slot capacity/access facts; expended slot counts
+  belong to battle/runtime state.
 
 Verification:
 
@@ -1096,9 +1233,9 @@ Input:
 Output:
 
 - Battle runtime support for the selected first width slice's battle pressure.
-  Default until POST1 revises it: Fighter 2 Action Surge pressure, Wizard 1
-  spell access or selected spell pressure, and the selected second monster's
-  authored combat shape.
+  This means Fighter 2 Action Surge pressure, Wizard 1 prepared-spell/cantrip
+  Spell Invocation pressure for the deterministic spells selected by POST1, and
+  Skeleton's authored combat shape including vulnerability/immunity facts.
 - Surface-backed act/resource/spell/monster facts derived from records and
   runtime state, not a restored projected-executable IR.
 - Battle runtime docs and QNT/parity artifacts updated for the widened behavior.
@@ -1109,6 +1246,16 @@ Acceptance:
   CAM21.
 - Action/resources/spell/monster identities are carried by typed selections or
   authored record refs so selected options cannot drift from executable facts.
+- Action Surge grants one additional non-Magic action on the Fighter's turn,
+  spends one Short/Long Rest resource use, and cannot be used twice in one turn
+  at Fighter 2.
+- Wizard Spell Invocations distinguish prepared level-1 spells that spend Spell
+  Slots from cantrips that do not. Runtime state owns expended slots; Character
+  Build owns only starting capacity/access facts.
+- Skeleton vulnerability/immunity facts affect damage/condition application
+  where the runtime supports those damage or condition paths; unsupported
+  Skeleton facts are rejected or absent through a named support gate with
+  runtime consequences.
 - Any support gate for omitted spell, feature, or monster behavior has runtime
   consequences and a test; no inert status enum or metadata label is added.
 - No old `CPU*`, `PEA*`, `PPR*`, projected compiler, or projected action bridge
@@ -1141,7 +1288,10 @@ Input:
 
 - Promoted MCP server path accepted by CAM21.
 - POST2-POST4 widened Surface, character creation runtime, and battle runtime.
-- POST1 deterministic scenario outline.
+- POST1 deterministic scenario outline: Orc Soldier Fighter 2 plus Orc Soldier
+  Wizard 1 versus Skeleton, with explicit Initiative scores, Fighter Action
+  Surge, Wizard `magic_missile`/`ray_of_frost` pressure, and Skeleton authored
+  attack/vulnerability/immunity facts.
 - Restore Ledger rows for the restored width.
 
 Output:
@@ -1155,6 +1305,11 @@ Acceptance:
 
 - The scenario exercises character creation, battle setup, widened battle
   behavior, and post-battle read models through user-facing MCP tools.
+- The MCP workflow creates/finalizes both selected sheets through real creation
+  holes, starts battle from identities plus authoritative runtime state, applies
+  Fighter Action Surge, casts a prepared Wizard level-1 spell with slot spend,
+  exposes a cantrip with no slot spend, and includes Skeleton's authored Stat
+  Block pressure without a broad monster catalog survey.
 - MCP does not duplicate Surface or runtime facts in session state; it stores
   identities plus authoritative runtime state and projects read models from
   those boundaries.
