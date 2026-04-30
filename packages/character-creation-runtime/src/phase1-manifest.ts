@@ -30,7 +30,7 @@ export const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
 export const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
 export const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID = "armor_chain_mail";
 export const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
-export const PHASE1_THRUSTING_WEAPON_UNIT_ID = "weapon_spear";
+export const PHASE1_WEAPON_SPEAR_UNIT_ID = "weapon_spear";
 export const PHASE1_WEAPON_FLAIL_UNIT_ID = "weapon_flail";
 export const PHASE1_SHIELD_UNIT_ID = "equipment_shield";
 export const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = "defense";
@@ -70,7 +70,7 @@ export const SUPPORTED_FIGHTING_STYLE_OPTION_IDS = [
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-  PHASE1_THRUSTING_WEAPON_UNIT_ID,
+  PHASE1_WEAPON_SPEAR_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_WEAPON_MASTERY_OPTION_IDS = [
