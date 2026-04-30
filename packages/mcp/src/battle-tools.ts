@@ -10,7 +10,7 @@ import {
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type { Hp } from "@dnd/shared/types";
 
-import type { GreenMcpCompositionRoot } from "./composition-root.ts";
+import type { McpCompositionRoot } from "./composition-root.ts";
 import {
   decodeDiscoverBattleActsArgs,
   decodeEndBattleArgs,
@@ -23,31 +23,31 @@ import {
   endBattleInputSchema,
   endTurnInputSchema,
   fillBattleHoleInputSchema,
-  isGreenBattleToolError,
+  isBattleToolError,
   readBattleStateInputSchema,
   selectStatBlockInputSchema,
   startBattleInputSchema,
 } from "./battle-tool-input.ts";
 import { startBattleFromCharacterBuildAndStatBlock } from "./battle-creature-init.ts";
-import { errorContent, jsonContent } from "../tool-content.ts";
+import { errorContent, jsonContent } from "./tool-content.ts";
 
-export const greenBattleToolDefinitions = [
+export const battleToolDefinitions = [
   {
     name: "select_stat_block",
     description:
-      "Select an SRD Surface Stat Block for the partial green battle session shell. This stores only the Stat Block id in the MCP session.",
+      "Select an SRD Surface Stat Block for the battle session. This stores only the Stat Block id in the MCP session.",
     inputSchema: selectStatBlockInputSchema,
   },
   {
     name: "start_battle",
     description:
-      "Start the partial green battle session shell from a finalized Character Build and the selected SRD Stat Block. The caller must provide Initiative scores for both combatants.",
+      "Start the battle session from a finalized Character Build and the selected SRD Stat Block. The caller must provide Initiative scores for both combatants.",
     inputSchema: startBattleInputSchema,
   },
   {
     name: "read_battle_state",
     description:
-      "Return the stored green battle state projection and current battle snapshot, including discoverable battle acts.",
+      "Return the stored battle state projection and current battle snapshot, including discoverable battle acts.",
     inputSchema: readBattleStateInputSchema,
   },
   {
@@ -76,33 +76,31 @@ export const greenBattleToolDefinitions = [
   },
 ] as const;
 
-const GREEN_BATTLE_TOOL_NAMES = greenBattleToolDefinitions.map(
+const BATTLE_TOOL_NAMES = battleToolDefinitions.map(
   (tool) => tool.name,
-) satisfies ReadonlyArray<(typeof greenBattleToolDefinitions)[number]["name"]>;
-type GreenBattleToolName = (typeof GREEN_BATTLE_TOOL_NAMES)[number];
+) satisfies ReadonlyArray<(typeof battleToolDefinitions)[number]["name"]>;
+type BattleToolName = (typeof BATTLE_TOOL_NAMES)[number];
 
-export type GreenBattleToolResult =
+export type BattleToolResult =
   | ReturnType<typeof jsonContent>
   | ReturnType<typeof errorContent>;
 
-export function isGreenBattleToolName(
-  name: string,
-): name is GreenBattleToolName {
-  return greenBattleToolDefinitions.some((tool) => tool.name === name);
+export function isBattleToolName(name: string): name is BattleToolName {
+  return battleToolDefinitions.some((tool) => tool.name === name);
 }
 
-export function handleGreenBattleToolCall(
-  root: GreenMcpCompositionRoot,
+export function handleBattleToolCall(
+  root: McpCompositionRoot,
   name: string,
   args: unknown,
-): GreenBattleToolResult {
-  if (!isGreenBattleToolName(name)) {
+): BattleToolResult {
+  if (!isBattleToolName(name)) {
     return errorContent(`Unknown Surface-runtime battle tool: ${name}`);
   }
 
   if (name === "select_stat_block") {
     const statBlockId = decodeSelectStatBlockArgs(args, name);
-    if (isGreenBattleToolError(statBlockId)) return statBlockId;
+    if (isBattleToolError(statBlockId)) return statBlockId;
     try {
       const selected = root.sessionStore.selectStatBlock(statBlockId);
       return jsonContent({
@@ -116,7 +114,7 @@ export function handleGreenBattleToolCall(
 
   if (name === "start_battle") {
     const decoded = decodeStartBattleArgs(args, name);
-    if (isGreenBattleToolError(decoded)) return decoded;
+    if (isBattleToolError(decoded)) return decoded;
     const activeBattle = root.sessionStore.battleState;
     if (activeBattle !== null) {
       return errorContent("A battle session is already active.", {
@@ -194,7 +192,7 @@ export function handleGreenBattleToolCall(
 
   if (name === "read_battle_state") {
     const decoded = decodeReadBattleStateArgs(args, name);
-    if (isGreenBattleToolError(decoded)) return decoded;
+    if (isBattleToolError(decoded)) return decoded;
     return jsonContent(
       battleSessionPayload(root, root.sessionStore.battleState),
     );
@@ -202,7 +200,7 @@ export function handleGreenBattleToolCall(
 
   if (name === "discover_battle_acts") {
     const decoded = decodeDiscoverBattleActsArgs(args, name);
-    if (isGreenBattleToolError(decoded)) return decoded;
+    if (isBattleToolError(decoded)) return decoded;
     return jsonContent(
       battleSessionPayload(root, root.sessionStore.battleState),
     );
@@ -210,7 +208,7 @@ export function handleGreenBattleToolCall(
 
   if (name === "fill_battle_hole") {
     const decoded = decodeFillBattleHoleArgs(args, name);
-    if (isGreenBattleToolError(decoded)) return decoded;
+    if (isBattleToolError(decoded)) return decoded;
     const state = root.sessionStore.battleState;
     if (state == null) return noStoredBattleContent();
 
@@ -246,7 +244,7 @@ export function handleGreenBattleToolCall(
 
   if (name === "end_turn") {
     const decoded = decodeEndTurnArgs(args, name);
-    if (isGreenBattleToolError(decoded)) return decoded;
+    if (isBattleToolError(decoded)) return decoded;
     const state = root.sessionStore.battleState;
     if (state == null) return noStoredBattleContent();
     const result = resolveBattleSubject({
@@ -267,7 +265,7 @@ export function handleGreenBattleToolCall(
 
   if (name === "end_battle") {
     const decoded = decodeEndBattleArgs(args, name);
-    if (isGreenBattleToolError(decoded)) return decoded;
+    if (isBattleToolError(decoded)) return decoded;
     const state = root.sessionStore.battleState;
     if (state == null) return noStoredBattleContent();
     if (root.sessionStore.transientBattleFills !== null) {
@@ -301,7 +299,7 @@ export function handleGreenBattleToolCall(
 }
 
 function finalizeCharacterSessionsFromBattle(
-  root: GreenMcpCompositionRoot,
+  root: McpCompositionRoot,
   state: BattleState,
 ): ReturnType<typeof errorContent> | null {
   const updates: {
@@ -362,7 +360,7 @@ function finalizeCharacterSessionsFromBattle(
 }
 
 function sourceDraftIdForInBattleCharacter(
-  root: GreenMcpCompositionRoot,
+  root: McpCompositionRoot,
   state: BattleState,
   characterId: CharacterId,
 ) {
@@ -388,7 +386,7 @@ function unknownStatBlockContent(statBlockId: string, error: unknown) {
 }
 
 function battleSessionPayload(
-  root: GreenMcpCompositionRoot,
+  root: McpCompositionRoot,
   state: BattleState | null,
 ) {
   return {
@@ -399,7 +397,7 @@ function battleSessionPayload(
 }
 
 function battleResolutionPayload(
-  root: GreenMcpCompositionRoot,
+  root: McpCompositionRoot,
   result: BattleResolutionResult,
 ) {
   return {

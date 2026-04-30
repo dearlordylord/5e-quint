@@ -17,12 +17,12 @@ import { Hp, type Hp as HpType } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 
 import { decodeBattleFill } from "./battle-fill-input.ts";
-import { errorContent } from "../tool-content.ts";
+import { errorContent } from "./tool-content.ts";
 
 type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
 };
-type GreenToolError = ReturnType<typeof errorContent>;
+type ToolError = ReturnType<typeof errorContent>;
 
 export const selectStatBlockInputSchema = {
   type: "object",
@@ -140,9 +140,9 @@ export type FillBattleHoleToolInput = BattleActorToolInput & {
 export function decodeSelectStatBlockArgs(
   args: unknown,
   toolName: string,
-): StatBlockId | GreenToolError {
+): StatBlockId | ToolError {
   const record = readToolArgsRecord(args, toolName, ["statBlockId"]);
-  if (isGreenToolError(record)) return record;
+  if (isToolError(record)) return record;
   if (typeof record.statBlockId !== "string") {
     return invalidFieldContent(toolName, "statBlockId", "string");
   }
@@ -152,7 +152,7 @@ export function decodeSelectStatBlockArgs(
 export function decodeStartBattleArgs(
   args: unknown,
   toolName: string,
-): StartBattleToolInput | GreenToolError {
+): StartBattleToolInput | ToolError {
   const record = readToolArgsRecord(args, toolName, [
     "battleId",
     "sheetDraftId",
@@ -165,7 +165,7 @@ export function decodeStartBattleArgs(
     "statBlockCurrentHp",
     "statBlockTempHp",
   ]);
-  if (isGreenToolError(record)) return record;
+  if (isToolError(record)) return record;
 
   const requiredString = decodeRequiredStringFields(record, toolName, [
     "battleId",
@@ -175,33 +175,33 @@ export function decodeStartBattleArgs(
     "characterDisplayName",
     "statBlockCombatantId",
   ]);
-  if (isGreenToolError(requiredString)) return requiredString;
+  if (isToolError(requiredString)) return requiredString;
 
   const characterInitiative = decodeInitiativeField(
     record.characterInitiative,
     toolName,
     "characterInitiative",
   );
-  if (isGreenToolError(characterInitiative)) return characterInitiative;
+  if (isToolError(characterInitiative)) return characterInitiative;
   const statBlockInitiative = decodeInitiativeField(
     record.statBlockInitiative,
     toolName,
     "statBlockInitiative",
   );
-  if (isGreenToolError(statBlockInitiative)) return statBlockInitiative;
+  if (isToolError(statBlockInitiative)) return statBlockInitiative;
 
   const statBlockCurrentHp = decodeOptionalHpField(
     record.statBlockCurrentHp,
     toolName,
     "statBlockCurrentHp",
   );
-  if (isGreenToolError(statBlockCurrentHp)) return statBlockCurrentHp;
+  if (isToolError(statBlockCurrentHp)) return statBlockCurrentHp;
   const statBlockTempHp = decodeOptionalHpField(
     record.statBlockTempHp,
     toolName,
     "statBlockTempHp",
   );
-  if (isGreenToolError(statBlockTempHp)) return statBlockTempHp;
+  if (isToolError(statBlockTempHp)) return statBlockTempHp;
 
   return {
     battleId: battleId(requiredString.battleId),
@@ -220,29 +220,29 @@ export function decodeStartBattleArgs(
 export function decodeReadBattleStateArgs(
   args: unknown,
   toolName: string,
-): Record<string, never> | GreenToolError {
+): Record<string, never> | ToolError {
   const record = readToolArgsRecord(args, toolName, []);
-  return isGreenToolError(record) ? record : {};
+  return isToolError(record) ? record : {};
 }
 
 export function decodeDiscoverBattleActsArgs(
   args: unknown,
   toolName: string,
-): Record<string, never> | GreenToolError {
+): Record<string, never> | ToolError {
   const record = readToolArgsRecord(args, toolName, []);
-  return isGreenToolError(record) ? record : {};
+  return isToolError(record) ? record : {};
 }
 
 export function decodeFillBattleHoleArgs(
   args: unknown,
   toolName: string,
-): FillBattleHoleToolInput | GreenToolError {
+): FillBattleHoleToolInput | ToolError {
   const record = readToolArgsRecord(args, toolName, [
     "actorId",
     "attackName",
     "fill",
   ]);
-  if (isGreenToolError(record)) return record;
+  if (isToolError(record)) return record;
   if (typeof record.actorId !== "string") {
     return invalidFieldContent(toolName, "actorId", "string");
   }
@@ -254,7 +254,7 @@ export function decodeFillBattleHoleArgs(
   }
 
   const fill = decodeBattleFill(record.fill, toolName);
-  if (isGreenToolError(fill)) return fill;
+  if (isToolError(fill)) return fill;
 
   return {
     actorId: combatantId(record.actorId),
@@ -266,9 +266,9 @@ export function decodeFillBattleHoleArgs(
 export function decodeEndTurnArgs(
   args: unknown,
   toolName: string,
-): BattleActorToolInput | GreenToolError {
+): BattleActorToolInput | ToolError {
   const record = readToolArgsRecord(args, toolName, ["actorId"]);
-  if (isGreenToolError(record)) return record;
+  if (isToolError(record)) return record;
   if (typeof record.actorId !== "string") {
     return invalidFieldContent(toolName, "actorId", "string");
   }
@@ -279,14 +279,12 @@ export function decodeEndTurnArgs(
 export function decodeEndBattleArgs(
   args: unknown,
   toolName: string,
-): Record<string, never> | GreenToolError {
+): Record<string, never> | ToolError {
   const record = readToolArgsRecord(args, toolName, []);
-  return isGreenToolError(record) ? record : {};
+  return isToolError(record) ? record : {};
 }
 
-export function isGreenBattleToolError(
-  value: unknown,
-): value is GreenToolError {
+export function isBattleToolError(value: unknown): value is ToolError {
   return isRecord(value) && value.isError === true;
 }
 
@@ -294,7 +292,7 @@ function decodeRequiredStringFields<const Fields extends readonly string[]>(
   record: Readonly<Record<string, unknown>>,
   toolName: string,
   fields: Fields,
-): Readonly<Record<Fields[number], string>> | GreenToolError {
+): Readonly<Record<Fields[number], string>> | ToolError {
   const decoded: Record<string, string> = {};
   for (const field of fields) {
     const value = record[field];
@@ -313,7 +311,7 @@ function decodeInitiativeField(
   value: unknown,
   toolName: string,
   field: string,
-): InitiativeScore | GreenToolError {
+): InitiativeScore | ToolError {
   if (typeof value !== "number" || !Number.isInteger(value)) {
     return invalidFieldContent(toolName, field, "integer Initiative score");
   }
@@ -324,7 +322,7 @@ function decodeOptionalHpField(
   value: unknown,
   toolName: string,
   field: string,
-): HpType | undefined | GreenToolError {
+): HpType | undefined | ToolError {
   if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
     return invalidFieldContent(toolName, field, "non-negative integer HP");
@@ -336,7 +334,7 @@ function readToolArgsRecord(
   args: unknown,
   toolName: string,
   allowedFields: readonly string[],
-): Readonly<Record<string, unknown>> | GreenToolError {
+): Readonly<Record<string, unknown>> | ToolError {
   if (!isRecord(args)) {
     return errorContent(`${toolName} expects object arguments.`, {
       code: "INVALID_ARGUMENTS",
@@ -368,7 +366,7 @@ function invalidFieldContent(
   });
 }
 
-function isGreenToolError(value: unknown): value is GreenToolError {
+function isToolError(value: unknown): value is ToolError {
   return isRecord(value) && value.isError === true;
 }
 

@@ -12,7 +12,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { ABILITIES, type Ability } from "@dnd/shared/types";
 
-import { errorContent } from "../tool-content.ts";
+import { errorContent } from "./tool-content.ts";
 
 type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
@@ -73,14 +73,14 @@ export const fillCreationHolesInputSchema = {
   additionalProperties: false,
 } satisfies McpObjectInputSchema;
 
-type GreenToolError = ReturnType<typeof errorContent>;
+type ToolError = ReturnType<typeof errorContent>;
 
 export function decodeCreateCharacterDraftArgs(
   args: unknown,
   toolName: string,
-): { readonly draftId?: CharacterDraftId } | GreenToolError {
+): { readonly draftId?: CharacterDraftId } | ToolError {
   const record = readToolArgsRecord(args, toolName, ["draftId"]);
-  if (isGreenToolError(record)) return record;
+  if (isToolError(record)) return record;
   if (record.draftId === undefined) return {};
   if (typeof record.draftId !== "string") {
     return invalidFieldContent(toolName, "draftId", "string");
@@ -91,9 +91,9 @@ export function decodeCreateCharacterDraftArgs(
 export function decodeDraftIdArg(
   args: unknown,
   toolName: string,
-): CharacterDraftId | GreenToolError {
+): CharacterDraftId | ToolError {
   const record = readToolArgsRecord(args, toolName, ["draftId"]);
-  if (isGreenToolError(record)) return record;
+  if (isToolError(record)) return record;
   if (typeof record.draftId !== "string") {
     return invalidFieldContent(toolName, "draftId", "string");
   }
@@ -109,13 +109,13 @@ export function decodeFillCreationHolesArgs(
       readonly expectedRevision: DraftRevision;
       readonly fills: readonly CreationFill[];
     }
-  | GreenToolError {
+  | ToolError {
   const record = readToolArgsRecord(args, toolName, [
     "draftId",
     "expectedRevision",
     "fills",
   ]);
-  if (isGreenToolError(record)) return record;
+  if (isToolError(record)) return record;
   if (typeof record.draftId !== "string") {
     return invalidFieldContent(toolName, "draftId", "string");
   }
@@ -137,7 +137,7 @@ export function decodeFillCreationHolesArgs(
   const fills: CreationFill[] = [];
   for (const [index, fill] of record.fills.entries()) {
     const decoded = decodeCreationFill(fill, toolName, index);
-    if (isGreenToolError(decoded)) return decoded;
+    if (isToolError(decoded)) return decoded;
     fills.push(decoded);
   }
 
@@ -148,7 +148,7 @@ export function decodeFillCreationHolesArgs(
   };
 }
 
-export function isGreenToolError(value: unknown): value is GreenToolError {
+export function isToolError(value: unknown): value is ToolError {
   return isRecord(value) && value.isError === true;
 }
 
@@ -156,7 +156,7 @@ function decodeCreationFill(
   value: unknown,
   toolName: string,
   index: number,
-): CreationFill | GreenToolError {
+): CreationFill | ToolError {
   if (!isRecord(value)) {
     return invalidFieldContent(toolName, `fills[${index}]`, "object");
   }
@@ -189,7 +189,7 @@ function decodeChoiceFill(
   holeIdText: string,
   toolName: string,
   index: number,
-): CreationFill | GreenToolError {
+): CreationFill | ToolError {
   if (!isStringArray(value.optionIds)) {
     return invalidFieldContent(
       toolName,
@@ -220,7 +220,7 @@ function decodeAbilityScoreFill(
   holeIdText: string,
   toolName: string,
   index: number,
-): CreationFill | GreenToolError {
+): CreationFill | ToolError {
   if (!isSupportedAbilityScoreMethod(value.method)) {
     return invalidFieldContent(
       toolName,
@@ -274,7 +274,7 @@ function isSupportedAbilityScoreMethod(
 function readArgsRecord(
   args: unknown,
   toolName: string,
-): Readonly<Record<string, unknown>> | GreenToolError {
+): Readonly<Record<string, unknown>> | ToolError {
   return args === undefined
     ? {}
     : isRecord(args)
@@ -289,9 +289,9 @@ function readToolArgsRecord(
   args: unknown,
   toolName: string,
   allowedFields: readonly string[],
-): Readonly<Record<string, unknown>> | GreenToolError {
+): Readonly<Record<string, unknown>> | ToolError {
   const record = readArgsRecord(args, toolName);
-  if (isGreenToolError(record)) return record;
+  if (isToolError(record)) return record;
   const unknownFields = unexpectedFields(record, allowedFields);
   return unknownFields.length === 0
     ? record

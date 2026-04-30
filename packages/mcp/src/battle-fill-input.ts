@@ -7,16 +7,16 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { DieRollResult, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
-import { errorContent } from "../tool-content.ts";
+import { errorContent } from "./tool-content.ts";
 
-type GreenToolError = ReturnType<typeof errorContent>;
+type ToolError = ReturnType<typeof errorContent>;
 type RolledDiceFill = Extract<BattleFill, { readonly kind: "rolledDice" }>;
 type RolledDiceGroup = RolledDiceFill["value"][number];
 
 export function decodeBattleFill(
   value: unknown,
   toolName: string,
-): BattleFill | GreenToolError {
+): BattleFill | ToolError {
   if (!isRecord(value)) {
     return invalidFieldContent(toolName, "fill", "BattleFill object");
   }
@@ -41,7 +41,7 @@ export function decodeBattleFill(
 
   if (value.kind === "attackRoll") {
     const attackRoll = decodeAttackRollValue(value.value, toolName);
-    if (isGreenToolError(attackRoll)) return attackRoll;
+    if (isToolError(attackRoll)) return attackRoll;
     return {
       kind: "attackRoll",
       holeId: holeId(value.holeId),
@@ -51,7 +51,7 @@ export function decodeBattleFill(
 
   if (value.kind === "rolledDice") {
     const groups = decodeRolledDiceGroups(value.value, toolName);
-    if (isGreenToolError(groups)) return groups;
+    if (isToolError(groups)) return groups;
     return {
       kind: "rolledDice",
       holeId: holeId(value.holeId),
@@ -69,7 +69,7 @@ export function decodeBattleFill(
 function decodeAttackRollValue(
   value: unknown,
   toolName: string,
-): AttackRollResult | GreenToolError {
+): AttackRollResult | ToolError {
   if (!isRecord(value)) {
     return invalidFieldContent(toolName, "fill.value", "attack-roll object");
   }
@@ -81,7 +81,7 @@ function decodeAttackRollValue(
     toolName,
     "fill.value.naturalD20",
   );
-  if (isGreenToolError(naturalD20)) return naturalD20;
+  if (isToolError(naturalD20)) return naturalD20;
   const rollMode = decodeAttackRollMode(value.rollMode);
   if (rollMode === false) {
     return invalidFieldContent(
@@ -115,7 +115,7 @@ function isAttackRollMode(value: string): value is AttackRollMode {
 function decodeRolledDiceGroups(
   value: unknown,
   toolName: string,
-): RolledDiceFill["value"] | GreenToolError {
+): RolledDiceFill["value"] | ToolError {
   if (!Array.isArray(value) || value.length === 0) {
     return invalidFieldContent(
       toolName,
@@ -127,7 +127,7 @@ function decodeRolledDiceGroups(
   const groups: Array<RolledDiceGroup> = [];
   for (const [groupIndex, group] of value.entries()) {
     const decoded = decodeRolledDiceGroup(group, toolName, groupIndex);
-    if (isGreenToolError(decoded)) return decoded;
+    if (isToolError(decoded)) return decoded;
     groups.push(decoded);
   }
 
@@ -144,7 +144,7 @@ function decodeRolledDiceGroup(
   value: unknown,
   toolName: string,
   groupIndex: number,
-): RolledDiceGroup | GreenToolError {
+): RolledDiceGroup | ToolError {
   if (!isRecord(value) || !Array.isArray(value.results)) {
     return invalidFieldContent(
       toolName,
@@ -167,7 +167,7 @@ function decodeRolledDiceGroup(
       toolName,
       `fill.value[${groupIndex}].results[${resultIndex}]`,
     );
-    if (isGreenToolError(decoded)) return decoded;
+    if (isToolError(decoded)) return decoded;
     results.push(decoded);
   }
 
@@ -184,7 +184,7 @@ function decodeDieRollResult(
   value: unknown,
   toolName: string,
   field: string,
-): DieRollResult | GreenToolError {
+): DieRollResult | ToolError {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
     return invalidFieldContent(toolName, field, "positive integer");
   }
@@ -204,7 +204,7 @@ function invalidFieldContent(
   });
 }
 
-function isGreenToolError(value: unknown): value is GreenToolError {
+function isToolError(value: unknown): value is ToolError {
   return isRecord(value) && value.isError === true;
 }
 

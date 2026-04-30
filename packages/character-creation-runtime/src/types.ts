@@ -36,8 +36,7 @@ import type {
 
 export { SUPPORTED_ABILITY_SCORE_METHODS };
 export type { AbilityScoreAssignment, SupportedAbilityScoreMethod };
-
-export type UnitLibrary = UnitCatalog;
+export type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 
 export type CreationSessionId = string & Brand.Brand<"CreationSessionId">;
 const CreationSessionId = Brand.nominal<CreationSessionId>();
@@ -266,7 +265,7 @@ export type CharacterDraft = {
 export type CreationSession = {
   readonly sessionId: CreationSessionId;
   readonly draft: CharacterDraft;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 };
 
 export type CreationChoiceOption = {

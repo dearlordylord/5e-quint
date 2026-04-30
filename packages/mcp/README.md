@@ -10,10 +10,8 @@ may see content catalogs, character sessions, battle sessions, and runtime
 initialization inputs because it is the composition boundary; it must not become
 the owner of character-creation or battle semantics.
 
-The current implementation modules still live under `src/green/` until CAM20
-renames or internalizes that migration namespace. That subtree imports Surface
-authored content boundaries plus the character-creation and battle runtimes. Its
-composition root builds:
+The normal MCP server route imports Surface authored content boundaries plus
+the character-creation and battle runtimes. Its composition root builds:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
@@ -21,7 +19,7 @@ composition root builds:
   durable post-battle character state, selected Stat Block identity, durable
   battle state, and transient battle fills.
 
-The green character-creation tool boundary exposes these user-facing tools:
+The Surface-runtime character-creation tool boundary exposes these user-facing tools:
 
 - `create_character_draft` creates and stores a new Surface-runtime draft, then
   returns the current creation holes.
@@ -43,7 +41,7 @@ These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
 character helpers in the Surface-runtime path.
 
-The green battle-session path exposes these user-facing tools:
+The Surface-runtime battle-session path exposes these user-facing tools:
 
 - `select_stat_block` selects a Stat Block from the Surface SRD Stat Block
   catalog and stores only that Stat Block id in the session.
@@ -68,7 +66,7 @@ The green battle-session path exposes these user-facing tools:
   session, clears battle state, and leaves monster combatants behind in the
   closed battle.
 
-The current verified green vertical is Orc Soldier Fighter versus Goblin
+The current verified Surface-runtime vertical is Orc Soldier Fighter versus Goblin
 Warrior, entirely through MCP tools:
 
 1. create a character draft;
@@ -89,29 +87,24 @@ data, or reducer-owned in-progress battle fills.
 
 Remaining first-vertical gates:
 
-- the Surface-runtime tools are registered by the normal MCP entrypoint, but
-  the implementation modules still live under `src/green/` until CAM20 removes
-  that implementation namespace;
 - post-battle handoff currently accepts reduced positive character HP. Zero-HP,
   Death Saving Throw, Stable, dead, rest, and broader adventuring-state handoff
   facts remain deferred to later runtime width;
-- normal-path user acceptance belongs to the promoted MCP server path, not this
-  green fixture;
 - broader character choices, additional Stat Blocks, Multiattack, long-range
   Disadvantage, reactions, spells, and post-turn lifecycle subjects remain
   outside this first vertical.
 
-Normal package tests cover the Surface-runtime path. The old Core-backed test
-suite under `src/legacy-core/` is excluded from the normal Vitest gate because
-it documents a deletion-marked path whose omitted behavior is governed by the
-Restore Ledger in `plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`.
+Normal package tests cover the promoted Surface-runtime MCP server route. The
+old Core-backed MCP route has been removed from this package; omitted behavior
+is governed by the Restore Ledger in
+`plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`.
 
 `BattleResolutionResult` may include display-facing result details for tool
 responses, but `BattleState` remains authoritative. Optional display logs must
 not become the source of combat truth.
 
 Selected Stat Block state stores only the catalog Stat Block id. The full Stat
-Block record is resolved through the green root's installed `statBlockCatalog`,
+Block record is resolved through the MCP root's installed `statBlockCatalog`,
 so MCP session state cannot drift from the SRD stat-block catalog.
 
 Transient battle fills are MCP session state. They are kept separate from
@@ -122,39 +115,25 @@ draft handles, selected content ids, durable battle ids, and transient fills.
 Reducer state and rules behavior remain owned by the runtime packages.
 
 Surface-runtime tools should use their final user-facing tool names. The
-implementation boundary is the module/package registration path, not a `green_`
-tool-name prefix.
+implementation boundary is the module/package registration path, not a
+migration-prefixed tool name.
 
 This package also owns cross-runtime composition helpers. Character Build to
-creature-init mapping lives in `src/green/battle-creature-init.ts`, where
-finalized character facts and Surface Unit lookups are projected into
-battle-owned initialization data before calling `startBattle`. This keeps
-character draft/session concepts out of `@dnd/battle-runtime` without
-introducing a new intermediate language. This is package ownership, not a
-domain term: `@dnd/mcp` may see Character Builds, authored Units, authored Stat
-Blocks, and battle creature-init APIs together because its job is wiring
-runtimes for tools.
+creature-init mapping lives in `src/battle-creature-init.ts`, where finalized
+character facts and Surface Unit lookups are projected into battle-owned
+initialization data before calling `startBattle`. This keeps character
+draft/session concepts out of `@dnd/battle-runtime` without introducing a new
+intermediate language. This is package ownership, not a domain term:
+`@dnd/mcp` may see Character Builds, authored Units, authored Stat Blocks, and
+battle creature-init APIs together because its job is wiring runtimes for
+tools.
 
 `start_battle` must receive caller-supplied Initiative scores for every
 combatant. MCP must not derive Initiative as `10 + modifier` in the promoted
 Surface runtime path.
 
-`src/green/` is an implementation namespace, not the final MCP API shape. The
-normal MCP entrypoint registers these tools directly, and CAM20 should remove
-or internalize the green namespace once the Core-backed overlap is deleted or
-rewritten. The promotion checklist belongs in the migration plans, not in this
-package contract.
-
-No file under `src/green/` may import or re-export from the legacy Core-backed
-MCP modules. Check that boundary with:
+No promoted MCP/runtime path may import `@dnd/core`. Check that boundary with:
 
 ```sh
-rg '@dnd/core' packages/mcp/src/green packages/character-creation-runtime packages/battle-runtime
+rg '@dnd/core' packages/mcp/src packages/character-creation-runtime packages/battle-runtime
 ```
-
-## Core-Backed Path
-
-`src/legacy-core/` contains the old Core-backed MCP host, session router,
-runtime input decoders, scripts, and tests. That directory is deletion-marked,
-not compatibility-supported, and it is not part of the normal MCP package test
-gate. Keep Surface-runtime tools out of those modules.

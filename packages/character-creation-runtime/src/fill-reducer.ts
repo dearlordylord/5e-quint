@@ -39,7 +39,7 @@ import {
   type CreationHoleId,
   type CreationHoleSource,
   type FillIndex,
-  type UnitLibrary,
+  type UnitCatalog,
 } from "./types.ts";
 
 export type CreationHoleIndex = {
@@ -52,7 +52,7 @@ export type CreationHoleIndex = {
 
 export function fillCreationHoles(
   input: CreationBatchFillInput & {
-    readonly unitLibrary: UnitLibrary;
+    readonly unitLibrary: UnitCatalog;
   },
 ): CreationBatchFillResult {
   const holes = discoverCreationHoles(input);

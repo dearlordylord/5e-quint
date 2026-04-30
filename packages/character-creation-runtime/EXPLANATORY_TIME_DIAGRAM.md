@@ -38,7 +38,7 @@ The important architectural idea is this:
 flowchart TD
   Caller["Caller / UI / session boundary<br/>owns persistence and expectedRevision"]
   Draft["CharacterDraft<br/>draftId, selections, revision"]
-  Catalog["UnitLibrary<br/>Surface UnitCatalog"]
+  Catalog["UnitCatalog<br/>Surface UnitCatalog"]
   Runtime["character-creation-runtime/src/*"]
   SurfaceReaders["Surface readers<br/>readClassCreationFacts<br/>readBackgroundCreationFacts<br/>readSpeciesCreationFacts"]
   SharedAlgebra["shared-algebras<br/>isValidAbilityScoreAssignment"]
@@ -56,7 +56,7 @@ flowchart TD
   Caller -->|stores sheet| Sheet
 ```
 
-`UnitLibrary` is not copied into a runtime-owned catalog. The runtime accepts the
+`UnitCatalog` is not copied into a runtime-owned catalog. The runtime accepts the
 Surface `UnitCatalog` directly because the repo owns both layers and avoids
 duplicating data.
 
@@ -68,7 +68,7 @@ sequenceDiagram
   actor Caller
   participant Runtime as character-creation-runtime/src/*
   participant Draft as CharacterDraft
-  participant Catalog as UnitLibrary
+  participant Catalog as UnitCatalog
   participant Surface as Surface creation readers
   participant Algebra as Ability score algebra
   participant Sheet as CharacterBuild
@@ -477,7 +477,7 @@ sequenceDiagram
   participant Narrow as finalizedSelections
   participant Legal as finalizedSelectionIssues
   participant Build as buildCharacterBuild
-  participant Catalog as UnitLibrary
+  participant Catalog as UnitCatalog
   participant Surface as Surface readers
 
   Caller->>Runtime: finalizeCharacterDraft({ complete draft, unitLibrary })

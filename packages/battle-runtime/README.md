@@ -161,7 +161,7 @@ implemented subset. Broad combat authority remains `battle.qnt` until this
 package-local slice is reconciled into the canonical battle spec.
 
 Reducer tests cover the TypeScript runtime behavior and the package-local Quint
-slice. Broad Core MBT is still owned by `@dnd/core`.
+slice. Broad legacy Core MBT remains outside this package.
 
 When changing battle behavior in this package, update `src/index.ts`, focused
 reducer tests, and `battle-runtime-slice.qnt` together. Check `battle.qnt` for

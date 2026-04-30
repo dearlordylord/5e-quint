@@ -116,13 +116,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 13,
       "id": "CAM20",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Green Reconciliation And MCP Promotion"
     },
     {
       "number": 14,
       "id": "CAM21",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "End-User Vertical Acceptance"
     },
     {
@@ -188,8 +188,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 10    | CAM19B - Isolate Legacy Core MCP Path                            | done                                          | CAM19A             | CAM19C       | Move old Core-backed MCP routes/tests into a deletion-marked legacy package/path and keep them out of the promotable MCP entrypoint.                                                             | Completed; legacy Core-backed MCP path is isolated under `packages/mcp/src/legacy-core/`. |
 | 11    | CAM19C - Delete Projected Vocabulary From Promoted Path          | done                                          | CAM19B             | CAM19D       | Delete projected executable vocabulary from the promoted MCP/runtime path after legacy isolation, preserving omitted semantics only through Restore Ledger rows.                                 | Completed.                                                                                |
 | 12    | CAM19D - Reconcile Post-Deletion Docs And Tests                  | done                                          | CAM19C             | CAM20        | Reconciled normal MCP test ownership, post-deletion docs, Restore Ledger status, and archival projected-executable docs.                                                                         | Completed; CAM20 has a concrete promotion handoff.                                        |
-| 13    | CAM20 - Green Reconciliation And MCP Promotion                   | ready-for-implementation-after-light-research | CAM19D             | CAM21        | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.            | Unblocked by CAM19D; run light promotion/import blast-radius research first.              |
-| 14    | CAM21 - End-User Vertical Acceptance                             | blocked                                       | CAM20              | POST2        | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP.  | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.                     |
+| 13    | CAM20 - Green Reconciliation And MCP Promotion                   | done                                          | CAM19D             | CAM21        | Promoted the Surface-backed tools into the normal MCP server path, deleted `src/green` and `src/legacy-core`, and replaced green fixture coverage with normal MCP server tests.                  | Completed; CAM21 is unblocked.                                                           |
+| 14    | CAM21 - End-User Vertical Acceptance                             | ready-for-implementation-after-light-research | CAM20              | POST2        | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP.  | Unblocked by CAM20; run the promoted-path source checks before editing.                   |
 | 15    | POST2 - Add First Width Slice Surface Records And Readers        | blocked                                       | POST1, CAM21       | POST3        | Add the researched width slice to Surface records/readers: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and the Skeleton SRD Stat Block with vulnerability/immunity shape. | Blocker Type: dependency. Blocker Detail: POST1 complete; waits on CAM21.                 |
 | 16    | POST3 - Widen Character Creation Runtime Support Profile         | blocked                                       | POST2              | POST4        | Extend CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.                   | Blocker Type: dependency. Blocker Detail: waits on Surface width.                         |
 | 17    | POST4 - Widen Battle Runtime For First Width Slice               | blocked                                       | POST3              | POST5        | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Surface-backed acts/resources/spell or monster facts, preserving runtime parity discipline.              | Blocker Type: dependency. Blocker Detail: waits on character runtime width.               |
@@ -950,14 +950,14 @@ Plan Impact:
 
 ### Task 13 - CAM20 - Green Reconciliation And MCP Promotion
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM19D
 Blocks: CAM21
 
-Preflight: run a light promotion/import blast-radius check before editing. The
-legacy Core-backed MCP path remains isolated under `packages/mcp/src/legacy-core/`
-and excluded from the normal MCP Vitest gate.
+Preflight: completed. The promotion/import blast-radius check found the
+Surface-runtime MCP modules and legacy Core-backed MCP path were isolated as
+expected before promotion.
 
 Input:
 
@@ -995,17 +995,16 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock CAM21 and update the migration plan and MCP docs to mark green reconciliation complete and remove temporary green-path wording.
+- Completed. CAM21 is unblocked, and the migration plan plus MCP docs now
+  describe the promoted Surface-runtime MCP path instead of an active green
+  path.
 
 ### Task 14 - CAM21 - End-User Vertical Acceptance
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM20
 Blocks: none
-
-Blocker Type: dependency
-Blocker Detail: waits on promoted MCP path.
 
 Input:
 

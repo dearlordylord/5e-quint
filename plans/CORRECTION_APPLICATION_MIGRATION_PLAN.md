@@ -8,7 +8,7 @@ Goal: controlled Core breakage in favor of Surface/Unit-driven character creatio
 
 Use controlled breakage, not a strangler migration and not a full rewrite.
 
-The first green surface is:
+The first Surface-runtime vertical is:
 
 1. MCP creates a minimal level-1 Fighter through real character-creation holes.
 2. Character creation consumes actual decoded Surface Units wherever the authored Unit exists.
@@ -18,7 +18,9 @@ The first green surface is:
 6. MCP resolves core Attack with damage through battle holes.
 7. MCP resolves End Turn.
 
-Anything outside this green surface may break temporarily, but it must be listed in the Restore Ledger below. The migration must not silently erase knowledge.
+Anything outside this Surface-runtime vertical may break temporarily, but it must
+be listed in the Restore Ledger below. The migration must not silently erase
+knowledge.
 
 ## Non-Negotiables
 
@@ -44,7 +46,7 @@ Target packages:
 | `@dnd/battle-runtime`             | Minimal battle reducer: battle state, subjects, battle holes, fills, Attack with damage, End Turn, local QNT slice and deterministic parity tests.    |
 | future `@dnd/srd-units`           | SRD-only authored Unit collection. Do not create in phase 1 unless imports force it.                                                                  |
 
-New green-path packages must have this dependency direction only:
+Core-free runtime packages must have this dependency direction only:
 
 ```text
 @dnd/shared <- @dnd/shared-algebras
@@ -59,13 +61,17 @@ New green-path packages must have this dependency direction only:
 @dnd/surface <- @dnd/mcp
 ```
 
-Neither runtime package may depend on `@dnd/core`. MCP green-surface tools must not import `@dnd/core`; any legacy MCP/Core imports must be isolated outside the green tool path and listed in the Restore Ledger if they are allowed to break.
+Neither runtime package may depend on `@dnd/core`. The promoted MCP
+Surface-runtime tools must not import `@dnd/core`; omitted legacy MCP/Core
+behavior must stay represented by Restore Ledger rows instead of retained
+route code.
 
-Naming note: only MCP uses a literal `src/green/` directory because it needs a
-temporary side-by-side lane next to legacy Core-backed MCP modules. The green
-path itself is broader: `@dnd/surface`, `@dnd/character-creation-runtime`,
-`@dnd/battle-runtime`, and the MCP `src/green/` subtree are all part of the
-Core-free migration path.
+Historical naming note: MCP temporarily used a literal `src/green/` directory
+as a side-by-side lane next to legacy Core-backed MCP modules. CAM20 promoted
+that lane into the normal MCP server route and deleted the old Core-backed MCP
+directory. The promoted MCP path, `@dnd/surface`,
+`@dnd/character-creation-runtime`, and `@dnd/battle-runtime` are all part of
+the Core-free migration path.
 
 ## Unit Collections
 
@@ -172,7 +178,8 @@ projection record. Character creation finalizes `CharacterSheet`; MCP maps that
 sheet into the battle runtime's creature-init shape at the composition root, so
 character creation does not export a parallel battle initialization type.
 
-The runtime Attack act must include damage. Hit/miss-only attack is not enough for the green MCP vertical.
+The runtime Attack act must include damage. Hit/miss-only attack is not enough
+for the Surface-runtime MCP vertical.
 
 Phase 1 chooses one damage protocol for the vertical and names it in the battle
 hole type. CAM14 implements dice-result fills for character weapon attacks:
@@ -200,7 +207,7 @@ Create local reducer-shaped QNT specs next to their runtime packages:
 
 Character creation QNT should model the phase-1 hole/fill reducer protocol and import/reuse broad `character-creation.qnt` concepts where practical. It may be a small composition/algebra spec rather than a fork of all character semantics.
 
-Battle QNT should model only the green surface:
+Battle QNT should model only the first Surface-runtime vertical:
 
 - initiative/current actor/end turn;
 - combatants with HP/Temporary HP/AC/action resources/action availability;
@@ -218,15 +225,15 @@ During Phase 1/2, `battle-runtime-slice.qnt` is the package-local parity referen
 ## Phase 0: Audit And Preconditions
 
 1. Correction action-economy drift is resolved by `52cf18b5`, which landed Surface action resource sidecars and Correction action-resource handling. New runtime work should build on that baseline.
-2. Rename/promote `@dnd/surface` to `@dnd/surface`. Record the package cutover and update green-path imports and project documentation so new docs no longer speak about the prototype package as the active Surface package.
+2. Rename/promote `@dnd/surface` to `@dnd/surface`. Record the package cutover and update Core-free path imports and project documentation so new docs no longer speak about the prototype package as the active Surface package.
 3. Create the concrete SRD-only Unit collection artifact used by MCP. `srdUnitCollection` must be a real import before Phase 3, and duplicate-id/provenance validation must exist at `buildUnitLibrary`.
 4. Produce `plans/phase1-fighter-manifest.md` listing the exact selected background, species, ability-score method/values, languages, alignment representation, Fighting Style, weapons, armor, shield, and monster. For each item, record the SRD 5.2.1 reference file/section and the Unit id if already authored; otherwise add the minimum Unit authoring task before reducer implementation.
 5. Produce `plans/phase0-surface-unit-availability.md` auditing which exact Fighter/monster manifest facts already exist as authored Surface Units, which need minimum SRD Unit authoring, and which need a Surface shape decision.
-6. Author the missing minimum SRD Units needed for the green surface from `.references/srd-5.2.1/` only. Each shipped SRD Unit must carry SRD 5.2.1 provenance, and the SRD collection type/builder must make mixed-provenance or mixed-license collections unrepresentable. External structured data may be used only as import/normalization input, never as provenance.
-7. CAM3 defines the stat-block Surface catalog boundary as a generic `StatBlockRecord` over `MonsterStatBlock`, separate from `UnitRecord`, and exposes it through `buildStatBlockCatalog`. The first collection is `srdStatBlockCollection`; it is SRD-only and enforces SRD 5.2.1 provenance at the collection boundary. The green path must not read `@dnd/core` monster catalogs. CAM5 owns authoring the first SRD monster record into that collection.
+6. Author the missing minimum SRD Units needed for the Surface-runtime vertical from `.references/srd-5.2.1/` only. Each shipped SRD Unit must carry SRD 5.2.1 provenance, and the SRD collection type/builder must make mixed-provenance or mixed-license collections unrepresentable. External structured data may be used only as import/normalization input, never as provenance.
+7. CAM3 defines the stat-block Surface catalog boundary as a generic `StatBlockRecord` over `MonsterStatBlock`, separate from `UnitRecord`, and exposes it through `buildStatBlockCatalog`. The first collection is `srdStatBlockCollection`; it is SRD-only and enforces SRD 5.2.1 provenance at the collection boundary. The Core-free path must not read `@dnd/core` monster catalogs. CAM5 owns authoring the first SRD monster record into that collection.
 8. Audit current `CPU*`/`PEA*`/`PPR*` call sites and identify what can be deleted immediately. Artifact: `plans/phase0-core-deletion-restore-audit.md`.
 9. Record old-code references from baseline `39f9ab71` for every lane moved to the Restore Ledger. Artifact: `plans/phase0-core-deletion-restore-audit.md`.
-10. Produce the runtime boundary/API artifact at `plans/phase0-runtime-boundary-api.md`, defining the package-level APIs and ownership boundaries for `@dnd/surface`, `@dnd/character-creation-runtime`, `@dnd/battle-runtime`, and the MCP green path.
+10. Produce the runtime boundary/API artifact at `plans/phase0-runtime-boundary-api.md`, defining the package-level APIs and ownership boundaries for `@dnd/surface`, `@dnd/character-creation-runtime`, `@dnd/battle-runtime`, and the MCP Surface-runtime path.
 
 Phase 0 exit criteria:
 
@@ -241,7 +248,13 @@ Phase 0 exit criteria:
 
 Phase 1 may not start until these artifacts exist.
 
-Do not run a broad Surface survey loop for the phase-1 green surface by default. Use the targeted Unit audit at `plans/phase0-surface-unit-availability.md` against the exact Fighter/monster manifest. If that audit finds a missing Surface shape or widening pressure case, consult the existing `scripts/content-surface-survey/results-srd/<slug>/` proposal first, then run only the narrow survey/red-green loop needed for that Unit family.
+Do not run a broad Surface survey loop for the phase-1 Surface-runtime vertical
+by default. Use the targeted Unit audit at
+`plans/phase0-surface-unit-availability.md` against the exact Fighter/monster
+manifest. If that audit finds a missing Surface shape or widening pressure
+case, consult the existing `scripts/content-surface-survey/results-srd/<slug>/`
+proposal first, then run only the narrow survey/red-green loop needed for that
+Unit family.
 
 ## Phase 1: Character Creation Runtime
 
@@ -303,7 +316,7 @@ CAM18 carry-forward gates:
 
 ## Phase 4: Controlled Core Break
 
-After the phase-1/2 QNT tests exist, the MCP green vertical fixture passes, and
+After the phase-1/2 QNT tests exist, the promoted MCP server vertical fixture passes, and
 every intentionally omitted projected lane has a Restore Ledger row with
 `39f9ab71` references:
 
@@ -311,7 +324,8 @@ every intentionally omitted projected lane has a Restore Ledger row with
    package before deleting projected code, so `@dnd/mcp` package tests describe
    the Surface runtime path instead of mixed legacy behavior.
 2. Delete `CPU*`, `PEA*`, and `PPR*` projected execution code where no longer referenced.
-3. Allow old app/Core routes outside the green surface to fail only if they are in the Restore Ledger.
+3. Allow old app/Core routes outside the Surface-runtime vertical to fail only
+   if they are in the Restore Ledger.
 4. Keep local comments only as pointers to this plan; this plan is the source of truth.
 
 ## Phase 5: Green Reconciliation And MCP Promotion
@@ -366,60 +380,46 @@ deletion-marked legacy isolation target for CAM19B, not shared infrastructure
 for the promoted path. The detailed current inventory and CAM19B-CAM19D
 checklist live in `plans/phase0-core-deletion-restore-audit.md`.
 
-CAM19D post-deletion reconciliation (`8e99039bc8e3a0a6d35b429a038d9ad6248ae7e1`
-integration baseline): the normal MCP entrypoint is Surface-runtime backed and
-imports `packages/mcp/src/green/` modules directly. The old Core-backed host,
-session router, runtime input decoders, probes, and tests are isolated under
-`packages/mcp/src/legacy-core/`. The normal `@dnd/mcp` Vitest gate excludes
-`src/legacy-core/**`; those tests are legacy-only evidence for Restore Ledger
-rows, not promoted-path acceptance. `packages/mcp/package.json` and
-`packages/mcp/tsconfig.json` still carry `@dnd/core` while the legacy directory
-remains in-package. CAM20 owns deleting that dependency or moving/removing the
-legacy directory during promotion.
+CAM20 promotion: the normal MCP server route is Surface-runtime backed through
+`packages/mcp/src/server.ts`. The temporary `packages/mcp/src/green/` namespace
+and deletion-marked `packages/mcp/src/legacy-core/` directory were removed from
+the package. `@dnd/mcp` no longer depends on `@dnd/core`; omitted legacy Core
+behavior remains preserved conceptually through the Restore Ledger rows below,
+with baseline references pointing at pre-migration commits instead of retained
+legacy files.
 
-Current legacy MCP files covered by the ledger:
+CAM20 closeout checks:
 
-- `packages/mcp/src/legacy-core/server.ts`, `server-shared.ts`,
-  `host-factories.ts`, `server-control.ts`, `server-table-events.ts`,
-  `server-runtime.ts`, `server-battle-attack-runtime.ts`,
-  `server-action-decode.ts`, `character-session.ts`,
-  `character-session-helpers.ts`, `session-router.ts`, `start-battle.ts`, and
-  `server.test.ts` are covered by "Old MCP Core-backed tools" plus the narrower
-  rows for old `available-actions.ts` breadth, projected prepared spells,
-  character creation width, old battle MBT, monster controls, and projected
-  execution vocabulary.
-- `packages/mcp/src/legacy-core/harness.ts` and
-  `packages/mcp/src/legacy-core/probe-short-rest.ts` call the old
-  `get_state`/`get_available_actions`/`execute_action` tool surface and are
-  covered by "Old MCP Core-backed tools".
-- `packages/mcp/src/legacy-core/server-runtime.ts`,
-  `packages/mcp/src/legacy-core/server.ts`, and the Acid Splash tests in
-  `packages/mcp/src/legacy-core/server.test.ts` are covered by "Projected
-  prepared spell / Acid Splash lane".
-- `PHASE1_WEAPON_SPEAR_UNIT_ID` in
-  `packages/character-creation-runtime/src/phase1-manifest.ts` is a documented
-  false positive for the broad `PEA` inventory regex; it is not projected
-  executable vocabulary.
+- RAW/SRD traceability: CAM20 promoted wiring, tests, and documentation without
+  adding new modeled D&D rule behavior. The existing Fighter/Goblin vertical
+  remains traced through the SRD-backed manifest, Surface records, and
+  `UBIQUITOUS_LANGUAGE.md` terms such as Attack Roll, Initiative, Hit Points,
+  and Damage Type.
+- `/simplify` convergence: round 1 replaced remaining active green-path wording
+  in this plan with promoted Surface-runtime terminology and added this closeout
+  note; round 2 rechecked promoted MCP/runtime paths for `@dnd/core`,
+  projected-executable vocabulary, `src/green`, and user-facing green naming
+  and found no further important fixes.
 
-| Omitted lane                                | Baseline references                                                                                                                                                                                                                                                                   | Disabled/expected-failing checks                                            | Green replacement check                                                       | Preserve conceptually                                                                                                                      | Safe to omit now because                                                                  | Restore condition                                                                                                 |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Full character creation width               | `git show 39f9ab71:packages/core/src/character-domain.ts`; `character-creation.qnt`; `character.qnt`                                                                                                                                                                                  | Old broad character lanes are omitted from the promoted gate                | `@dnd/character-creation-runtime` Fighter slice QNT/parity                    | Draft/sheet split, open choices vs illegal issues, level-1 creation distinct from advancement, higher-level starts via ordered advancement | Phase 1 proves only level-1 Fighter holes                                                 | Surface UnitRecord-backed character runtime supports broad SRD choices                                            |
-| Level advancement and higher-level starts   | `git show 39f9ab71:packages/core/src/character-advancement.ts`; `git show 39f9ab71:packages/core/src/character-sheet-advancement.ts`                                                                                                                                                  | Old advancement lanes are omitted from the promoted gate                    | None in phase 1; explicit non-goal                                            | Ordered advancement replay, subclass/feat/ASI timing, multiclass prerequisites                                                             | First green surface is level-1 Fighter only                                               | `@dnd/character-creation-runtime` adds advancement reducer/QNT                                                    |
-| Spellcasting and Mage/Wizard creation       | `git show 39f9ab71:packages/core/src/character-spellcasting.ts`; `git show 39f9ab71:packages/core/src/battle-spell-access.ts`                                                                                                                                                         | Old spellcasting/app spell paths are omitted from the promoted gate         | None in phase 1; explicit non-goal                                            | Spell definition/access/invocation/effect distinction; prepared choices as character-owned facts                                           | Fighter-only vertical avoids spell access and slots                                       | Surface UnitRecord-backed spell access holes and battle spell act holes exist                                     |
-| Old `available-actions.ts` breadth          | `git show 39f9ab71:packages/core/src/available-actions.ts`                                                                                                                                                                                                                            | Old action preview/finalize lanes are omitted from the promoted gate        | Runtime act discovery/resolution tests                                        | Discover/preview/finalize user-action workflows                                                                                            | New runtime owns only promoted Attack/End Turn                                            | Runtime action protocol covers omitted action families structurally                                               |
-| Old Core battle MBT                         | `git show 39f9ab71:packages/core/src/battle-machine.mbt.test.ts`; `git show 39f9ab71:packages/core/src/battle-projection.mbt.test.ts`; `battle.qnt`                                                                                                                                   | Old Core battle MBT is outside the promoted gate                            | `@dnd/battle-runtime` slice QNT/parity checks                                 | Formal battle parity discipline and safety invariants                                                                                      | New battle authority is being seeded separately                                           | `battle-runtime-slice.qnt` merges into/replaces old `battle.qnt`, and docs/tests name one battle authority        |
-| Old MCP Core-backed tools                   | `git show 39f9ab71:packages/mcp/src/server.ts`; `git show 39f9ab71:packages/mcp/src/server-control.ts`; `git show 39f9ab71:packages/mcp/src/start-battle.ts`                                                                                                                          | Core-backed MCP tools are legacy-only under `packages/mcp/src/legacy-core/` | MCP green vertical fixture                                                    | Server-side stored workflows and tool ergonomics                                                                                           | Green tools prove the new runtime path first                                              | MCP tools are rebuilt over Unit library, character runtime, and battle runtime                                    |
-| App simulator and trace visualizers         | `git show 39f9ab71:packages/app/src/components/App.tsx`; `git show 39f9ab71:packages/app/src/components/trace-visualizer/TraceVisualizer.tsx`                                                                                                                                         | Old app routes are omitted from the promoted MCP/runtime gate               | MCP green vertical fixture                                                    | Debug and trace review workflows                                                                                                           | MCP green surface is the priority                                                         | New runtime exposes stable snapshots/traces                                                                       |
-| Advanced battle scene polish                | `git show 39f9ab71:packages/app/src/battle-scene/BattlePage.tsx`; `git show 39f9ab71:packages/core/src/battle-scene/director.ts`                                                                                                                                                      | Old battle UI checks are omitted from the promoted MCP/runtime gate         | MCP green vertical fixture                                                    | Field rendering, narration, dice cues, visual replay                                                                                       | MCP can validate runtime without full UI                                                  | Battle runtime snapshot contract stabilizes                                                                       |
-| Spells and reactions                        | `git show 39f9ab71:packages/core/src/battle-machine-actions-spell.ts`; `git show 39f9ab71:packages/core/src/battle-machine-actions-spell-reaction.ts`                                                                                                                                 | Old spell/reaction lanes are omitted from the promoted gate                 | None in phase 1; explicit non-goal                                            | Reaction windows, spell access identity, slot spend/refund, concentration                                                                  | Attack/End Turn vertical does not need them                                               | Battle runtime supports Surface Unit spell acts and interrupt windows                                             |
-| Monster legendary/recharge/daily controls   | `git show 39f9ab71:packages/core/src/monster-types.ts`; `git show 39f9ab71:packages/core/src/monster-catalog.ts`                                                                                                                                                                      | Old monster control lanes are omitted from the promoted gate                | One SRD Stat Block battle fixture                                             | Monster provenance, Stat Block authored facts, resource controls                                                                           | One basic monster can fight with ordinary attack only                                     | Monster Stat Block projection is Surface-backed through a distinct authored Stat Block boundary, not `UnitRecord` |
-| Movement geometry and spatial actions       | `git show 39f9ab71:packages/core/src/battle-machine-actions-movement.ts`                                                                                                                                                                                                              | Old movement lanes are omitted from the promoted gate                       | None in phase 1; explicit non-goal                                            | Caller-owned spatial facts, movement budget, OA triggers                                                                                   | First vertical has no movement                                                            | Battle runtime has spatial input boundary and movement QNT slice                                                  |
-| Old projected execution vocabulary          | `git show 39f9ab71:packages/core/src/projected-executable.ts`; `git show 39f9ab71:packages/core/src/projected-compiler.ts`; `git show 39f9ab71:packages/core/src/projected-action-bridge.ts`; `git show 39f9ab71:packages/core/src/projected-persistent.ts`                           | Projected executable tests are deleted, omitted, or legacy-only             | Surface structural interpretation tests                                       | Surface-authored semantics reach runtime without hardcoded unit ids                                                                        | This vocabulary is the architecture being removed                                         | Do not restore as IR; restore only missing semantics directly through Surface UnitRecords                         |
-| Projected prepared spell / Acid Splash lane | `git show 39f9ab71:packages/core/src/projected-action-bridge-prepared-spell.ts`; `git show 39f9ab71:packages/mcp/src/server-runtime.ts`; RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md:20`, `:29`                                                                            | Acid Splash projected runtime tests are legacy-only                         | None in phase 1; explicit non-goal                                            | Save-gate + damage spell pressure; explicit runtime facts                                                                                  | Fighter Attack action plus runtime end-turn command vertical does not include Acid Splash | Surface UnitRecord-backed spell act holes exist                                                                   |
-| Second Wind battle action lane              | `git show 39f9ab71:packages/core/src/projected-creature-action-reducer.ts`; `git show 39f9ab71:packages/core/src/projected-action-context.ts`; RAW: `.references/srd-5.2.1/Classes/Fighter.md:31`, `:62`; manifest: `plans/phase1-fighter-manifest.md:26`                             | Feature projected action tests are omitted from the promoted gate           | Character finalization preserves Second Wind as a level-1 sheet/resource fact | Class feature action and resource pressure                                                                                                 | First green battle slice does not exercise the Bonus Action healing act                   | Runtime supports Surface UnitRecord-backed Second Wind battle action holes                                        |
-| Action Surge projected lane                 | `git show 39f9ab71:packages/core/src/projected-battle-action-reducer.ts`; `git show 39f9ab71:packages/core/src/projected-action-context.ts`                                                                                                                                           | Action Surge projected tests are omitted from the promoted gate             | None in phase 1; explicit non-goal                                            | Class feature extra-action pressure                                                                                                        | First green Fighter is level 1                                                            | Runtime supports Surface UnitRecord-backed class feature action holes                                             |
-| Mage Armor projected persistent lane        | `git show 39f9ab71:packages/core/src/projected-persistent.ts`; `git show 39f9ab71:packages/core/src/battle-init-creature-config.ts`; `git show 39f9ab71:packages/core/src/character-sheet-derived.ts`; RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md:5`, `:14`               | Persistent projection and AC override tests are omitted from the promoted gate | None in phase 1; explicit non-goal                                         | Base AC override plus early-end lifecycle                                                                                                  | First green vertical does not include Mage Armor                                          | Runtime supports Surface UnitRecord-backed persistent effects/lifecycle                                           |
-| App character creation UI                   | `git show 39f9ab71:packages/app/src/components/character-creation/CharacterCreationPage.tsx`; `git show 39f9ab71:packages/app/src/components/character-creation/OpenChoicePicker.tsx`; `git show 39f9ab71:packages/app/src/components/character-creation/characterCreationPresets.ts` | App character creation tests/build are omitted from the promoted MCP/runtime gate | MCP green vertical fixture                                                 | Step UI and open-choice display workflow                                                                                                   | MCP green surface is the priority                                                         | App consumes new character runtime                                                                                |
+| Omitted lane                                | Baseline references                                                                                                                                                                                                                                                                   | Disabled/expected-failing checks                                                  | Surface-runtime replacement check                                             | Preserve conceptually                                                                                                                      | Safe to omit now because                                                                  | Restore condition                                                                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Full character creation width               | `git show 39f9ab71:packages/core/src/character-domain.ts`; `character-creation.qnt`; `character.qnt`                                                                                                                                                                                  | Old broad character lanes are omitted from the promoted gate                      | `@dnd/character-creation-runtime` Fighter slice QNT/parity                    | Draft/sheet split, open choices vs illegal issues, level-1 creation distinct from advancement, higher-level starts via ordered advancement | Phase 1 proves only level-1 Fighter holes                                                 | Surface UnitRecord-backed character runtime supports broad SRD choices                                            |
+| Level advancement and higher-level starts   | `git show 39f9ab71:packages/core/src/character-advancement.ts`; `git show 39f9ab71:packages/core/src/character-sheet-advancement.ts`                                                                                                                                                  | Old advancement lanes are omitted from the promoted gate                          | None in phase 1; explicit non-goal                                            | Ordered advancement replay, subclass/feat/ASI timing, multiclass prerequisites                                                             | First Surface-runtime vertical is level-1 Fighter only                                    | `@dnd/character-creation-runtime` adds advancement reducer/QNT                                                    |
+| Spellcasting and Mage/Wizard creation       | `git show 39f9ab71:packages/core/src/character-spellcasting.ts`; `git show 39f9ab71:packages/core/src/battle-spell-access.ts`                                                                                                                                                         | Old spellcasting/app spell paths are omitted from the promoted gate               | None in phase 1; explicit non-goal                                            | Spell definition/access/invocation/effect distinction; prepared choices as character-owned facts                                           | Fighter-only vertical avoids spell access and slots                                       | Surface UnitRecord-backed spell access holes and battle spell act holes exist                                     |
+| Old `available-actions.ts` breadth          | `git show 39f9ab71:packages/core/src/available-actions.ts`                                                                                                                                                                                                                            | Old action preview/finalize lanes are omitted from the promoted gate              | Runtime act discovery/resolution tests                                        | Discover/preview/finalize user-action workflows                                                                                            | New runtime owns only promoted Attack/End Turn                                            | Runtime action protocol covers omitted action families structurally                                               |
+| Old Core battle MBT                         | `git show 39f9ab71:packages/core/src/battle-machine.mbt.test.ts`; `git show 39f9ab71:packages/core/src/battle-projection.mbt.test.ts`; `battle.qnt`                                                                                                                                   | Old Core battle MBT is outside the promoted gate                                  | `@dnd/battle-runtime` slice QNT/parity checks                                 | Formal battle parity discipline and safety invariants                                                                                      | New battle authority is being seeded separately                                           | `battle-runtime-slice.qnt` merges into/replaces old `battle.qnt`, and docs/tests name one battle authority        |
+| Old MCP Core-backed tools                   | `git show 39f9ab71:packages/mcp/src/server.ts`; `git show 39f9ab71:packages/mcp/src/server-control.ts`; `git show 39f9ab71:packages/mcp/src/start-battle.ts`                                                                                                                          | Core-backed MCP tools are deleted from the promoted package                       | Promoted MCP server vertical fixture                                          | Server-side stored workflows and tool ergonomics                                                                                           | Surface-runtime MCP tools now prove the replacement path                                  | MCP tools are rebuilt over Unit library, character runtime, and battle runtime                                    |
+| App simulator and trace visualizers         | `git show 39f9ab71:packages/app/src/components/App.tsx`; `git show 39f9ab71:packages/app/src/components/trace-visualizer/TraceVisualizer.tsx`                                                                                                                                         | Old app routes are omitted from the promoted MCP/runtime gate                     | Promoted MCP server vertical fixture                                          | Debug and trace review workflows                                                                                                           | MCP Surface-runtime path is the priority                                                  | New runtime exposes stable snapshots/traces                                                                       |
+| Advanced battle scene polish                | `git show 39f9ab71:packages/app/src/battle-scene/BattlePage.tsx`; `git show 39f9ab71:packages/core/src/battle-scene/director.ts`                                                                                                                                                      | Old battle UI checks are omitted from the promoted MCP/runtime gate               | Promoted MCP server vertical fixture                                          | Field rendering, narration, dice cues, visual replay                                                                                       | MCP can validate runtime without full UI                                                  | Battle runtime snapshot contract stabilizes                                                                       |
+| Spells and reactions                        | `git show 39f9ab71:packages/core/src/battle-machine-actions-spell.ts`; `git show 39f9ab71:packages/core/src/battle-machine-actions-spell-reaction.ts`                                                                                                                                 | Old spell/reaction lanes are omitted from the promoted gate                       | None in phase 1; explicit non-goal                                            | Reaction windows, spell access identity, slot spend/refund, concentration                                                                  | Attack/End Turn vertical does not need them                                               | Battle runtime supports Surface Unit spell acts and interrupt windows                                             |
+| Monster legendary/recharge/daily controls   | `git show 39f9ab71:packages/core/src/monster-types.ts`; `git show 39f9ab71:packages/core/src/monster-catalog.ts`                                                                                                                                                                      | Old monster control lanes are omitted from the promoted gate                      | One SRD Stat Block battle fixture                                             | Monster provenance, Stat Block authored facts, resource controls                                                                           | One basic monster can fight with ordinary attack only                                     | Monster Stat Block projection is Surface-backed through a distinct authored Stat Block boundary, not `UnitRecord` |
+| Movement geometry and spatial actions       | `git show 39f9ab71:packages/core/src/battle-machine-actions-movement.ts`                                                                                                                                                                                                              | Old movement lanes are omitted from the promoted gate                             | None in phase 1; explicit non-goal                                            | Caller-owned spatial facts, movement budget, OA triggers                                                                                   | First vertical has no movement                                                            | Battle runtime has spatial input boundary and movement QNT slice                                                  |
+| Old projected execution vocabulary          | `git show 39f9ab71:packages/core/src/projected-executable.ts`; `git show 39f9ab71:packages/core/src/projected-compiler.ts`; `git show 39f9ab71:packages/core/src/projected-action-bridge.ts`; `git show 39f9ab71:packages/core/src/projected-persistent.ts`                           | Projected executable tests are deleted, omitted, or legacy-only                   | Surface structural interpretation tests                                       | Surface-authored semantics reach runtime without hardcoded unit ids                                                                        | This vocabulary is the architecture being removed                                         | Do not restore as IR; restore only missing semantics directly through Surface UnitRecords                         |
+| Projected prepared spell / Acid Splash lane | `git show 39f9ab71:packages/core/src/projected-action-bridge-prepared-spell.ts`; `git show 39f9ab71:packages/mcp/src/server-runtime.ts`; RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md:20`, `:29`                                                                            | Acid Splash projected runtime tests are legacy-only                               | None in phase 1; explicit non-goal                                            | Save-gate + damage spell pressure; explicit runtime facts                                                                                  | Fighter Attack action plus runtime end-turn command vertical does not include Acid Splash | Surface UnitRecord-backed spell act holes exist                                                                   |
+| Second Wind battle action lane              | `git show 39f9ab71:packages/core/src/projected-creature-action-reducer.ts`; `git show 39f9ab71:packages/core/src/projected-action-context.ts`; RAW: `.references/srd-5.2.1/Classes/Fighter.md:31`, `:62`; manifest: `plans/phase1-fighter-manifest.md:26`                             | Feature projected action tests are omitted from the promoted gate                 | Character finalization preserves Second Wind as a level-1 sheet/resource fact | Class feature action and resource pressure                                                                                                 | First Surface-runtime battle slice does not exercise the Bonus Action healing act         | Runtime supports Surface UnitRecord-backed Second Wind battle action holes                                        |
+| Action Surge projected lane                 | `git show 39f9ab71:packages/core/src/projected-battle-action-reducer.ts`; `git show 39f9ab71:packages/core/src/projected-action-context.ts`                                                                                                                                           | Action Surge projected tests are omitted from the promoted gate                   | None in phase 1; explicit non-goal                                            | Class feature extra-action pressure                                                                                                        | First Surface-runtime Fighter is level 1                                                   | Runtime supports Surface UnitRecord-backed class feature action holes                                             |
+| Mage Armor projected persistent lane        | `git show 39f9ab71:packages/core/src/projected-persistent.ts`; `git show 39f9ab71:packages/core/src/battle-init-creature-config.ts`; `git show 39f9ab71:packages/core/src/character-sheet-derived.ts`; RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md:5`, `:14`               | Persistent projection and AC override tests are omitted from the promoted gate    | None in phase 1; explicit non-goal                                            | Base AC override plus early-end lifecycle                                                                                                  | First Surface-runtime vertical does not include Mage Armor                                | Runtime supports Surface UnitRecord-backed persistent effects/lifecycle                                           |
+| App character creation UI                   | `git show 39f9ab71:packages/app/src/components/character-creation/CharacterCreationPage.tsx`; `git show 39f9ab71:packages/app/src/components/character-creation/OpenChoicePicker.tsx`; `git show 39f9ab71:packages/app/src/components/character-creation/characterCreationPresets.ts` | App character creation tests/build are omitted from the promoted MCP/runtime gate | Promoted MCP server vertical fixture                                          | Step UI and open-choice display workflow                                                                                                   | MCP Surface-runtime path is the priority                                                  | App consumes new character runtime                                                                                |
 
 ## Verification
 
@@ -429,9 +429,9 @@ Required before marking this plan complete:
 2. Character runtime QNT/parity passes.
 3. Battle runtime QNT/parity checks pass.
 4. MCP full vertical test passes.
-5. Typecheck passes for the green surface packages and MCP.
+5. Typecheck passes for the Surface-runtime packages and MCP.
 6. Circular dependency check passes for new package graph.
-7. Green-path dependency check proves neither runtime package nor MCP green tools import `@dnd/core`.
+7. Promoted-path dependency check proves neither runtime package nor MCP tools import `@dnd/core`.
 8. Before completion, restore a single battle authority: either merge `battle-runtime-slice.qnt` into `battle.qnt`, replace/retire the old authority and update project documentation, or record each intentional divergence from old `battle.qnt` with an SRD 5.2.1 citation or ASSUMPTIONS.md entry.
 9. Command-level verification is added once packages exist, using `pnpm` only. Battle MBT must follow the repo MBT run protocol, including zombie evaluator checks before the run. Typecheck scope must include MCP and the new runtime packages.
 10. Documentation stays synchronized with code changes. Tasks that change reducer behavior, shared algebras, action resources, hole/fill semantics, Surface record boundaries, or runtime package architecture must update the docs owned by the changed package in the same change. Battle runtime changes update `packages/battle-runtime/README.md` and `packages/battle-runtime/ARCHITECTURE_GRAPH.md`; character-creation changes update `packages/character-creation-runtime/README.md` and package vocabulary; shared algebra changes update `packages/shared-algebras` docs or package-local MBT docs. `packages/surface-runtime-correction/*` docs are legacy source material unless the task intentionally edits that package.
@@ -449,4 +449,4 @@ Required before marking this plan complete:
 - Full monster catalog execution.
 - Full battle parity with old `battle.qnt`.
 - Any new executable IR.
-- Treating `packages/mcp/src/green/` as a final MCP namespace.
+- Reintroducing a temporary MCP namespace as a final MCP route.

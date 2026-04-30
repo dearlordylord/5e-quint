@@ -28,7 +28,7 @@ import {
   type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
-  type UnitLibrary,
+  type UnitCatalog,
 } from "./index.ts";
 import { finalizedBuildEquipment } from "./finalization.ts";
 import {
@@ -107,14 +107,14 @@ describe("character creation hole discovery", () => {
   });
 
   test("discovers legal catalog width while support gates reject unsupported choices", () => {
-    const widenedUnitLibrary = unitLibraryWithUnrelatedUnits(48);
+    const widenedUnitCatalog = unitLibraryWithUnrelatedUnits(48);
     const draft = createCharacterDraft({
-      unitLibrary: widenedUnitLibrary,
+      unitLibrary: widenedUnitCatalog,
       draftId: characterDraftId("draft:widened-catalog"),
     });
     const holes = discoverCreationHoles({
       draft,
-      unitLibrary: widenedUnitLibrary,
+      unitLibrary: widenedUnitCatalog,
     });
 
     expect(optionIds(holeById(holes, "cc:draft:draft.primaryClass"))).toContain(
@@ -129,7 +129,7 @@ describe("character creation hole discovery", () => {
 
     const result = fillCreationHoles({
       draft,
-      unitLibrary: widenedUnitLibrary,
+      unitLibrary: widenedUnitCatalog,
       expectedRevision: draft.revision,
       fills: [choiceFill("cc:draft:draft.primaryClass", "class_unrelated_0")],
     });
@@ -1786,7 +1786,7 @@ function createTestDraft(draftId: string): CharacterDraft {
 
 function unitLibraryWithLevelOneFighterGrant(
   featureUnitId: string,
-): UnitLibrary {
+): UnitCatalog {
   const units = unitLibrary.listUnits().map((unit) =>
     unit.id === "class_fighter" && unit.kind === "class"
       ? {
@@ -1813,7 +1813,7 @@ function unitLibraryWithLevelOneFighterGrant(
   };
 }
 
-function unitLibraryWithUnrelatedUnits(count: number): UnitLibrary {
+function unitLibraryWithUnrelatedUnits(count: number): UnitCatalog {
   const fighter = unitLibrary.requireUnit("class_fighter");
   const soldier = unitLibrary.requireUnit("background_soldier");
   const orc = unitLibrary.requireUnit("species_orc");

@@ -12,23 +12,23 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import {
-  createGreenMcpSessionStore,
-  type GreenMcpSessionStore,
+  createMcpSessionStore,
+  type McpSessionStore,
 } from "./session-store.ts";
 
-export type GreenMcpCompositionRoot = {
+export type McpCompositionRoot = {
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: StatBlockCatalog;
-  readonly sessionStore: GreenMcpSessionStore;
+  readonly sessionStore: McpSessionStore;
 };
 
-export function createGreenMcpCompositionRoot(): GreenMcpCompositionRoot {
+export function createMcpCompositionRoot(): McpCompositionRoot {
   const unitCatalog = buildUnitCatalog({
     collections: [srdUnitCollection],
   });
   if (unitCatalog.tag === "invalid") {
     throw new Error(
-      `Invalid SRD Unit library for MCP green root: ${formatBuildIssues(
+      `Invalid SRD Unit catalog for MCP root: ${formatBuildIssues(
         unitCatalog.issues,
       )}`,
     );
@@ -39,7 +39,7 @@ export function createGreenMcpCompositionRoot(): GreenMcpCompositionRoot {
   });
   if (statBlockCatalog.tag === "invalid") {
     throw new Error(
-      `Invalid SRD Stat Block catalog for MCP green root: ${formatBuildIssues(
+      `Invalid SRD Stat Block catalog for MCP root: ${formatBuildIssues(
         statBlockCatalog.issues,
       )}`,
     );
@@ -48,7 +48,7 @@ export function createGreenMcpCompositionRoot(): GreenMcpCompositionRoot {
   return {
     unitLibrary: unitCatalog.catalog,
     statBlockCatalog: statBlockCatalog.catalog,
-    sessionStore: createGreenMcpSessionStore(statBlockCatalog.catalog),
+    sessionStore: createMcpSessionStore(statBlockCatalog.catalog),
   };
 }
 

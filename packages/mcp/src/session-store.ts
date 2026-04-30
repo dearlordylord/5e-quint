@@ -17,54 +17,54 @@ import type {
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
-export type GreenAvailableCharacterSession = {
+export type AvailableCharacterSession = {
   readonly tag: "available";
   readonly build: CharacterBuild;
   readonly currentHp: Hp;
 };
 
-export type GreenInBattleCharacterSession = {
+export type InBattleCharacterSession = {
   readonly tag: "inBattle";
   readonly build: CharacterBuild;
   readonly battleId: BattleId;
   readonly characterId: CharacterId;
 };
 
-export type GreenCharacterSession =
-  | GreenAvailableCharacterSession
-  | GreenInBattleCharacterSession;
+export type CharacterSession =
+  | AvailableCharacterSession
+  | InBattleCharacterSession;
 
-export type GreenBattleFillSession = {
+export type BattleFillSession = {
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
 };
 
-export type GreenMcpSessionSnapshot = {
+export type McpSessionSnapshot = {
   readonly draftIds: readonly CharacterDraftId[];
   readonly characterIds: readonly CharacterDraftId[];
   readonly selectedStatBlockId: StatBlockId | null;
   readonly battleState: BattleState | null;
-  readonly transientBattleFills: GreenBattleFillSession | null;
+  readonly transientBattleFills: BattleFillSession | null;
 };
 
-export type GreenMcpSessionStore = {
+export type McpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
-  readonly characters: Map<CharacterDraftId, GreenCharacterSession>;
+  readonly characters: Map<CharacterDraftId, CharacterSession>;
   battleState: BattleState | null;
-  transientBattleFills: GreenBattleFillSession | null;
+  transientBattleFills: BattleFillSession | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): StatBlockRecord | null;
   selectStatBlock(statBlockId: StatBlockId): StatBlockRecord;
-  snapshot(): GreenMcpSessionSnapshot;
+  snapshot(): McpSessionSnapshot;
 };
 
-export function createGreenMcpSessionStore(
+export function createMcpSessionStore(
   statBlockCatalog: StatBlockCatalog,
-): GreenMcpSessionStore {
+): McpSessionStore {
   const drafts = new Map<CharacterDraftId, CharacterDraft>();
-  const characters = new Map<CharacterDraftId, GreenCharacterSession>();
+  const characters = new Map<CharacterDraftId, CharacterSession>();
   let selectedStatBlockId: StatBlockId | null = null;
-  const store: GreenMcpSessionStore = {
+  const store: McpSessionStore = {
     drafts,
     characters,
     battleState: null,
@@ -82,7 +82,7 @@ export function createGreenMcpSessionStore(
       selectedStatBlockId = statBlock.id;
       return statBlock;
     },
-    snapshot(): GreenMcpSessionSnapshot {
+    snapshot(): McpSessionSnapshot {
       const characterIds = Array.from(characters.keys());
       return {
         draftIds: Array.from(drafts.keys()),
@@ -92,7 +92,7 @@ export function createGreenMcpSessionStore(
         transientBattleFills: store.transientBattleFills,
       };
     },
-  } satisfies GreenMcpSessionStore;
+  } satisfies McpSessionStore;
 
   return store;
 }

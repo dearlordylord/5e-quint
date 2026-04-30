@@ -47,13 +47,13 @@ import {
   type CreationFinalizationResult,
   type FinalizedCharacterSelections,
   type NonEmptyReadonlyArray,
-  type UnitLibrary,
+  type UnitCatalog,
   type UnitRef,
 } from "./types.ts";
 
 export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 }): CreationFinalizationResult {
   const holes = discoverCreationHoles(input);
   const openHoles = nonEmptyReadonlyArray(holes);
@@ -126,7 +126,7 @@ export function finalizedSelections(
 
 export function finalizedSelectionIssues(
   selections: FinalizedCharacterSelections,
-  unitLibrary: UnitLibrary,
+  unitLibrary: UnitCatalog,
 ): readonly CreationFinalizationIssue[] {
   return [
     ...expectedValueIssue(
@@ -215,7 +215,7 @@ type PhaseOneFinalizedCharacterSelectionsResult =
 
 function phaseOneFinalizedCharacterSelections(
   selections: FinalizedCharacterSelections,
-  unitLibrary: UnitLibrary,
+  unitLibrary: UnitCatalog,
 ): PhaseOneFinalizedCharacterSelectionsResult {
   const issues = nonEmptyReadonlyArray(
     finalizedSelectionIssues(selections, unitLibrary),
@@ -263,7 +263,7 @@ export function isInitialFighterAdvancement(
 
 export function isSupportedBackgroundAbilityScoreIncrease(
   selection: BackgroundAbilityScoreIncreaseSelection,
-  unitLibrary: UnitLibrary,
+  unitLibrary: UnitCatalog,
   backgroundUnitId: UnitRecord["id"],
   baseScores: AbilityScoreAssignment,
 ): boolean {
@@ -295,7 +295,7 @@ export function isSupportedBackgroundAbilityScoreIncrease(
 
 export function isPhaseOneManifestBackgroundAbilityScoreIncrease(
   selection: BackgroundAbilityScoreIncreaseSelection,
-  unitLibrary: UnitLibrary,
+  unitLibrary: UnitCatalog,
   backgroundUnitId: UnitRecord["id"],
   baseScores: AbilityScoreAssignment,
 ): boolean {
@@ -335,7 +335,7 @@ export function sameBackgroundAbilityScoreIncreaseSelection(
 
 export function buildCharacterBuild(input: {
   readonly phaseOneSelections: PhaseOneFinalizedCharacterSelections;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 }): CharacterBuild {
   const { selections } = input.phaseOneSelections;
   const classFacts = requireReadable(

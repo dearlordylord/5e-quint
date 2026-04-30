@@ -3,13 +3,13 @@ import {
   draftRevision,
   type CharacterDraft,
   type CharacterDraftId,
-  type UnitLibrary,
+  type UnitCatalog,
 } from "./types.ts";
 
 let nextDraftOrdinal = 0;
 
 export function createCharacterDraft(input: {
-  readonly unitLibrary?: UnitLibrary;
+  readonly unitLibrary?: UnitCatalog;
   readonly draftId?: CharacterDraftId;
 }): CharacterDraft {
   void input.unitLibrary;

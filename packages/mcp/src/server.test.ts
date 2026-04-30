@@ -23,22 +23,21 @@ import {
 import { Hp } from "@dnd/shared/types";
 
 import {
-  createGreenMcpCompositionRoot,
-  greenBattleToolDefinitions,
-  greenCharacterToolDefinitions,
-  handleGreenBattleToolCall,
-  handleGreenCharacterToolCall,
+  battleToolDefinitions,
+  characterToolDefinitions,
+  createMcpCompositionRoot,
+  handleToolCall,
   startBattleFromCharacterBuildAndStatBlock,
-} from "./index.ts";
-import type { GreenBattleToolResult } from "./battle-tools.ts";
-import type { GreenCharacterToolResult } from "./character-tools.ts";
+} from "./server.ts";
+import type { BattleToolResult } from "./battle-tools.ts";
+import type { CharacterToolResult } from "./character-tools.ts";
 
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 
-describe("MCP green composition root", () => {
+describe("MCP server route", () => {
   test("builds SRD catalogs and keeps selected Stat Block state identity-only", () => {
-    const root = createGreenMcpCompositionRoot();
+    const root = createMcpCompositionRoot();
     const selected = root.sessionStore.selectStatBlock(
       "stat_block_goblin_warrior",
     );
@@ -63,9 +62,9 @@ describe("MCP green composition root", () => {
   });
 
   test("starts battle from Character Build at the MCP composition boundary", () => {
-    const root = createGreenMcpCompositionRoot();
+    const root = createMcpCompositionRoot();
     const state = startBattleFromCharacterBuildAndStatBlock({
-      battleId: battleId("battle-green-root"),
+      battleId: battleId("battle-root"),
       character: {
         combatantId: fighterId,
         characterId: characterId("fighter-character"),
@@ -87,7 +86,7 @@ describe("MCP green composition root", () => {
     root.sessionStore.transientBattleFills = null;
 
     expect(snapshotBattle(state)).toMatchObject({
-      battleId: battleId("battle-green-root"),
+      battleId: battleId("battle-root"),
       currentActorId: fighterId,
       turnOrder: [fighterId, goblinId],
       combatants: [
@@ -112,7 +111,7 @@ describe("MCP green composition root", () => {
   });
 
   test("registers final user-facing Surface-runtime character tool names", () => {
-    expect(greenCharacterToolDefinitions.map((tool) => tool.name)).toEqual([
+    expect(characterToolDefinitions.map((tool) => tool.name)).toEqual([
       "create_character_draft",
       "discover_creation_holes",
       "fill_creation_holes",
@@ -122,7 +121,7 @@ describe("MCP green composition root", () => {
   });
 
   test("registers partial Surface-runtime battle shell tool names", () => {
-    expect(greenBattleToolDefinitions.map((tool) => tool.name)).toEqual([
+    expect(battleToolDefinitions.map((tool) => tool.name)).toEqual([
       "select_stat_block",
       "start_battle",
       "read_battle_state",
@@ -134,12 +133,12 @@ describe("MCP green composition root", () => {
   });
 
   test("selects Goblin Warrior and starts a stored partial battle shell through tools", () => {
-    const root = createGreenMcpCompositionRoot();
-    const draftId = "draft:mcp-green-battle-shell";
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-battle-shell";
     createFinalizedFighterSheet(root, draftId);
 
     const selected = readPayload(
-      handleGreenBattleToolCall(root, "select_stat_block", {
+      handleToolCall(root, "select_stat_block", {
         statBlockId: "stat_block_goblin_warrior",
       }),
     );
@@ -152,8 +151,8 @@ describe("MCP green composition root", () => {
     });
 
     const started = readPayload(
-      handleGreenBattleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-green-shell",
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-shell",
         sheetDraftId: draftId,
         characterCombatantId: "fighter",
         characterId: "character:fighter",
@@ -174,7 +173,7 @@ describe("MCP green composition root", () => {
     });
     expect(started).toMatchObject({
       battleState: {
-        battleId: "battle:mcp-green-shell",
+        battleId: "battle:mcp-shell",
         combatants: [
           {
             combatantId: "fighter",
@@ -189,7 +188,7 @@ describe("MCP green composition root", () => {
         ],
       },
       snapshot: {
-        battleId: "battle:mcp-green-shell",
+        battleId: "battle:mcp-shell",
         currentActorId: "fighter",
         turnOrder: ["fighter", "goblin"],
       },
@@ -200,11 +199,9 @@ describe("MCP green composition root", () => {
       },
     });
 
-    const read = readPayload(
-      handleGreenBattleToolCall(root, "read_battle_state", {}),
-    );
+    const read = readPayload(handleToolCall(root, "read_battle_state", {}));
     expect(read.snapshot).toMatchObject({
-      battleId: "battle:mcp-green-shell",
+      battleId: "battle:mcp-shell",
       currentActorId: "fighter",
       combatants: [
         {
@@ -224,19 +221,19 @@ describe("MCP green composition root", () => {
   });
 
   test("start_battle rejects a second battle while the single battle slot is active", () => {
-    const root = createGreenMcpCompositionRoot();
-    const firstDraftId = "draft:mcp-green-active-battle-first";
-    const secondDraftId = "draft:mcp-green-active-battle-second";
+    const root = createMcpCompositionRoot();
+    const firstDraftId = "draft:mcp-active-battle-first";
+    const secondDraftId = "draft:mcp-active-battle-second";
     createFinalizedFighterSheet(root, firstDraftId);
     createFinalizedFighterSheet(root, secondDraftId);
     readPayload(
-      handleGreenBattleToolCall(root, "select_stat_block", {
+      handleToolCall(root, "select_stat_block", {
         statBlockId: "stat_block_goblin_warrior",
       }),
     );
     readPayload(
-      handleGreenBattleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-green-active-battle-first",
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-active-battle-first",
         sheetDraftId: firstDraftId,
         characterCombatantId: "fighter",
         characterId: "character:first-fighter",
@@ -250,8 +247,8 @@ describe("MCP green composition root", () => {
     expect(firstBattleState).not.toBeNull();
 
     const rejected = readPayload(
-      handleGreenBattleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-green-active-battle-second",
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-active-battle-second",
         sheetDraftId: secondDraftId,
         characterCombatantId: "second-fighter",
         characterId: "character:second-fighter",
@@ -265,7 +262,7 @@ describe("MCP green composition root", () => {
     expect(rejected).toMatchObject({
       details: {
         code: "BATTLE_SESSION_ALREADY_ACTIVE",
-        battleId: "battle:mcp-green-active-battle-first",
+        battleId: "battle:mcp-active-battle-first",
       },
     });
     expect(root.sessionStore.battleState).toBe(firstBattleState);
@@ -273,7 +270,7 @@ describe("MCP green composition root", () => {
       root.sessionStore.characters.get(characterDraftId(firstDraftId)),
     ).toMatchObject({
       tag: "inBattle",
-      battleId: "battle:mcp-green-active-battle-first",
+      battleId: "battle:mcp-active-battle-first",
       characterId: "character:first-fighter",
     });
     expect(
@@ -285,17 +282,17 @@ describe("MCP green composition root", () => {
   });
 
   test("discovers and resolves Fighter Attack fills, then ends the Fighter turn", () => {
-    const root = createGreenMcpCompositionRoot();
-    const draftId = "draft:mcp-green-fighter-battle-flow";
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-fighter-battle-flow";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
-      handleGreenBattleToolCall(root, "select_stat_block", {
+      handleToolCall(root, "select_stat_block", {
         statBlockId: "stat_block_goblin_warrior",
       }),
     );
     readPayload(
-      handleGreenBattleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-green-fighter-flow",
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-fighter-flow",
         sheetDraftId: draftId,
         characterCombatantId: "fighter",
         characterId: "character:fighter",
@@ -307,7 +304,7 @@ describe("MCP green composition root", () => {
     );
 
     const discovered = readPayload(
-      handleGreenBattleToolCall(root, "discover_battle_acts", {}),
+      handleToolCall(root, "discover_battle_acts", {}),
     );
     expect(discovered.snapshot).toMatchObject({
       currentActorId: "fighter",
@@ -340,7 +337,7 @@ describe("MCP green composition root", () => {
     });
 
     const afterTarget = readPayload(
-      handleGreenBattleToolCall(root, "fill_battle_hole", {
+      handleToolCall(root, "fill_battle_hole", {
         actorId: "fighter",
         attackName: "Longsword",
         fill: {
@@ -365,7 +362,7 @@ describe("MCP green composition root", () => {
     });
 
     const afterAttackRoll = readPayload(
-      handleGreenBattleToolCall(root, "fill_battle_hole", {
+      handleToolCall(root, "fill_battle_hole", {
         actorId: "fighter",
         attackName: "Longsword",
         fill: {
@@ -388,7 +385,7 @@ describe("MCP green composition root", () => {
     expect(afterAttackRoll.session.transientBattleFills.fills).toHaveLength(2);
 
     const afterDamage = readPayload(
-      handleGreenBattleToolCall(root, "fill_battle_hole", {
+      handleToolCall(root, "fill_battle_hole", {
         actorId: "fighter",
         attackName: "Longsword",
         fill: {
@@ -409,7 +406,7 @@ describe("MCP green composition root", () => {
     expect(root.sessionStore.transientBattleFills).toBeNull();
 
     const afterEndTurn = readPayload(
-      handleGreenBattleToolCall(root, "end_turn", { actorId: "fighter" }),
+      handleToolCall(root, "end_turn", { actorId: "fighter" }),
     );
     expect(afterEndTurn.result.tag).toBe("resolved");
     expect(afterEndTurn.snapshot).toMatchObject({
@@ -422,7 +419,7 @@ describe("MCP green composition root", () => {
     expect(root.sessionStore.battleState?.combatants.get(goblinId)?.hp).toBe(2);
 
     const goblinActs = readPayload(
-      handleGreenBattleToolCall(root, "discover_battle_acts", {}),
+      handleToolCall(root, "discover_battle_acts", {}),
     );
     expect(goblinActs.snapshot.acts).toMatchObject([
       {
@@ -454,7 +451,7 @@ describe("MCP green composition root", () => {
     ]);
 
     readPayload(
-      handleGreenBattleToolCall(root, "fill_battle_hole", {
+      handleToolCall(root, "fill_battle_hole", {
         actorId: "goblin",
         attackName: "Scimitar",
         fill: {
@@ -465,7 +462,7 @@ describe("MCP green composition root", () => {
       }),
     );
     const afterGoblinAttackRoll = readPayload(
-      handleGreenBattleToolCall(root, "fill_battle_hole", {
+      handleToolCall(root, "fill_battle_hole", {
         actorId: "goblin",
         attackName: "Scimitar",
         fill: {
@@ -490,7 +487,7 @@ describe("MCP green composition root", () => {
     });
 
     const afterGoblinDamage = readPayload(
-      handleGreenBattleToolCall(root, "fill_battle_hole", {
+      handleToolCall(root, "fill_battle_hole", {
         actorId: "goblin",
         attackName: "Scimitar",
         fill: {
@@ -508,18 +505,18 @@ describe("MCP green composition root", () => {
   });
 
   test("start_battle rejects missing caller-supplied Initiative scores", () => {
-    const root = createGreenMcpCompositionRoot();
-    const draftId = "draft:mcp-green-battle-shell-missing-initiative";
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-battle-shell-missing-initiative";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
-      handleGreenBattleToolCall(root, "select_stat_block", {
+      handleToolCall(root, "select_stat_block", {
         statBlockId: "stat_block_goblin_warrior",
       }),
     );
 
     const rejected = readPayload(
-      handleGreenBattleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-green-shell-missing-initiative",
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-shell-missing-initiative",
         sheetDraftId: draftId,
         characterCombatantId: "fighter",
         characterId: "character:fighter",
@@ -540,11 +537,11 @@ describe("MCP green composition root", () => {
   });
 
   test("creates and finalizes the minimal Fighter through stored creation holes", () => {
-    const root = createGreenMcpCompositionRoot();
-    const draftId = "draft:mcp-green-tool-complete-fighter";
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-tool-complete-fighter";
 
     const created = readPayload(
-      handleGreenCharacterToolCall(root, "create_character_draft", {
+      handleToolCall(root, "create_character_draft", {
         draftId,
       }),
     );
@@ -575,7 +572,7 @@ describe("MCP green composition root", () => {
     });
 
     const finalized = readPayload(
-      handleGreenCharacterToolCall(root, "finalize_character", { draftId }),
+      handleToolCall(root, "finalize_character", { draftId }),
     );
 
     expect(finalized.finalization).toMatchObject({
@@ -606,8 +603,8 @@ describe("MCP green composition root", () => {
   });
 
   test("runs the full Orc Soldier Fighter vs Goblin Warrior vertical through MCP tools only", () => {
-    const root = createGreenMcpCompositionRoot();
-    const draftId = "draft:mcp-green-full-vertical";
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-full-vertical";
 
     const finalized = createAndFinalizeManifestFighterThroughTools(
       root,
@@ -630,7 +627,7 @@ describe("MCP green composition root", () => {
     });
 
     const selected = readPayload(
-      handleGreenBattleToolCall(root, "select_stat_block", {
+      handleToolCall(root, "select_stat_block", {
         statBlockId: "stat_block_goblin_warrior",
       }),
     );
@@ -643,8 +640,8 @@ describe("MCP green composition root", () => {
     });
 
     const started = readPayload(
-      handleGreenBattleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-green-full-vertical",
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-full-vertical",
         sheetDraftId: draftId,
         characterCombatantId: "fighter",
         characterId: "character:fighter",
@@ -666,7 +663,7 @@ describe("MCP green composition root", () => {
     expect(started.session.transientBattleFills).toBeNull();
 
     const fighterActs = readPayload(
-      handleGreenBattleToolCall(root, "discover_battle_acts", {}),
+      handleToolCall(root, "discover_battle_acts", {}),
     );
     expect(fighterActs.snapshot.acts).toMatchObject([
       {
@@ -725,13 +722,13 @@ describe("MCP green composition root", () => {
     expect(afterFighterDamage.session.transientBattleFills).toBeNull();
 
     const afterEndTurn = readPayload(
-      handleGreenBattleToolCall(root, "end_turn", { actorId: "fighter" }),
+      handleToolCall(root, "end_turn", { actorId: "fighter" }),
     );
     expect(afterEndTurn.result.tag).toBe("resolved");
     expect(afterEndTurn.snapshot.currentActorId).toBe("goblin");
 
     const goblinActs = readPayload(
-      handleGreenBattleToolCall(root, "discover_battle_acts", {}),
+      handleToolCall(root, "discover_battle_acts", {}),
     );
     expect(goblinActs.snapshot.acts).toMatchObject([
       {
@@ -801,11 +798,9 @@ describe("MCP green composition root", () => {
       5,
     );
 
-    const ended = readPayload(
-      handleGreenBattleToolCall(root, "end_battle", {}),
-    );
+    const ended = readPayload(handleToolCall(root, "end_battle", {}));
     expect(ended).toMatchObject({
-      endedBattleId: "battle:mcp-green-full-vertical",
+      endedBattleId: "battle:mcp-full-vertical",
       session: {
         battleState: null,
         transientBattleFills: null,
@@ -821,7 +816,7 @@ describe("MCP green composition root", () => {
     );
 
     const characterList = readPayload(
-      handleGreenCharacterToolCall(root, "list_characters", {}),
+      handleToolCall(root, "list_characters", {}),
     );
     expect(characterList.characters).toEqual([
       expect.objectContaining({
@@ -844,17 +839,17 @@ describe("MCP green composition root", () => {
   });
 
   test("discovers creation holes through the explicit tool path", () => {
-    const root = createGreenMcpCompositionRoot();
-    const draftId = "draft:mcp-green-tool-discover-holes";
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-tool-discover-holes";
     readPayload(
-      handleGreenCharacterToolCall(root, "create_character_draft", {
+      handleToolCall(root, "create_character_draft", {
         draftId,
       }),
     );
     fillThroughTool(root, draftId, 0, initialManifestFills());
 
     const discovered = readPayload(
-      handleGreenCharacterToolCall(root, "discover_creation_holes", {
+      handleToolCall(root, "discover_creation_holes", {
         draftId,
       }),
     );
@@ -873,10 +868,10 @@ describe("MCP green composition root", () => {
   });
 
   test("rejected creation fill leaves the stored draft unchanged", () => {
-    const root = createGreenMcpCompositionRoot();
-    const draftId = "draft:mcp-green-tool-rejected-fill";
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-tool-rejected-fill";
     readPayload(
-      handleGreenCharacterToolCall(root, "create_character_draft", {
+      handleToolCall(root, "create_character_draft", {
         draftId,
       }),
     );
@@ -884,7 +879,7 @@ describe("MCP green composition root", () => {
     expect(before).toBeDefined();
 
     const rejected = readPayload(
-      handleGreenCharacterToolCall(root, "fill_creation_holes", {
+      handleToolCall(root, "fill_creation_holes", {
         draftId,
         expectedRevision: 0,
         fills: [choiceFill("cc:draft:draft.primaryClass", "not_a_class")],
@@ -909,16 +904,16 @@ describe("MCP green composition root", () => {
   });
 
   test("finalization stores no sheet until the draft is ready", () => {
-    const root = createGreenMcpCompositionRoot();
-    const draftId = "draft:mcp-green-tool-incomplete-finalize";
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-tool-incomplete-finalize";
     readPayload(
-      handleGreenCharacterToolCall(root, "create_character_draft", {
+      handleToolCall(root, "create_character_draft", {
         draftId,
       }),
     );
 
     const finalized = readPayload(
-      handleGreenCharacterToolCall(root, "finalize_character", { draftId }),
+      handleToolCall(root, "finalize_character", { draftId }),
     );
 
     expect(finalized.finalization.tag).toBe("incomplete");
@@ -930,21 +925,17 @@ describe("MCP green composition root", () => {
   });
 
   test("rejects reused draft ids for active drafts and finalized sheets", () => {
-    const root = createGreenMcpCompositionRoot();
-    const activeDraftId = "draft:mcp-green-tool-duplicate-active";
+    const root = createMcpCompositionRoot();
+    const activeDraftId = "draft:mcp-tool-duplicate-active";
     readPayload(
-      handleGreenCharacterToolCall(root, "create_character_draft", {
+      handleToolCall(root, "create_character_draft", {
         draftId: activeDraftId,
       }),
     );
 
-    const duplicateActive = handleGreenCharacterToolCall(
-      root,
-      "create_character_draft",
-      {
-        draftId: activeDraftId,
-      },
-    );
+    const duplicateActive = handleToolCall(root, "create_character_draft", {
+      draftId: activeDraftId,
+    });
 
     expect(readPayload(duplicateActive)).toMatchObject({
       details: {
@@ -954,9 +945,9 @@ describe("MCP green composition root", () => {
       },
     });
 
-    const finalizedDraftId = "draft:mcp-green-tool-duplicate-finalized";
+    const finalizedDraftId = "draft:mcp-tool-duplicate-finalized";
     readPayload(
-      handleGreenCharacterToolCall(root, "create_character_draft", {
+      handleToolCall(root, "create_character_draft", {
         draftId: finalizedDraftId,
       }),
     );
@@ -965,18 +956,14 @@ describe("MCP green composition root", () => {
     fillThroughTool(root, finalizedDraftId, 2, manifestPurchaseFills());
     fillThroughTool(root, finalizedDraftId, 3, manifestLoadoutFills());
     readPayload(
-      handleGreenCharacterToolCall(root, "finalize_character", {
+      handleToolCall(root, "finalize_character", {
         draftId: finalizedDraftId,
       }),
     );
 
-    const duplicateFinalized = handleGreenCharacterToolCall(
-      root,
-      "create_character_draft",
-      {
-        draftId: finalizedDraftId,
-      },
-    );
+    const duplicateFinalized = handleToolCall(root, "create_character_draft", {
+      draftId: finalizedDraftId,
+    });
 
     expect(readPayload(duplicateFinalized)).toMatchObject({
       details: {
@@ -994,10 +981,10 @@ describe("MCP green composition root", () => {
   });
 
   test("does not apply Defense Fighting Style when no armor is worn", () => {
-    const root = createGreenMcpCompositionRoot();
+    const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const state = startBattleFromCharacterBuildAndStatBlock({
-      battleId: battleId("battle-green-root-unarmored"),
+      battleId: battleId("battle-root-unarmored"),
       character: {
         combatantId: fighterId,
         characterId: characterId("fighter-character"),
@@ -1028,11 +1015,11 @@ describe("MCP green composition root", () => {
   });
 
   test("rejects character battle init when current HP exceeds build max HP", () => {
-    const root = createGreenMcpCompositionRoot();
+    const root = createMcpCompositionRoot();
 
     expect(() =>
       startBattleFromCharacterBuildAndStatBlock({
-        battleId: battleId("battle-green-root-overmax-hp"),
+        battleId: battleId("battle-root-overmax-hp"),
         character: {
           combatantId: fighterId,
           characterId: characterId("fighter-character"),
@@ -1055,7 +1042,7 @@ describe("MCP green composition root", () => {
 });
 
 function fighterCharacterBuild(
-  unitLibrary: ReturnType<typeof createGreenMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
 ): CharacterBuild {
   const result = finalizeCharacterDraft({
     draft: completeManifestDraft(unitLibrary),
@@ -1069,7 +1056,7 @@ function fighterCharacterBuild(
 }
 
 function createFinalizedFighterSheet(
-  root: ReturnType<typeof createGreenMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpCompositionRoot>,
   draftId: string,
 ): CharacterBuild {
   const build = fighterCharacterBuild(root.unitLibrary);
@@ -1088,9 +1075,9 @@ function createTestDraft(draftId: string): CharacterDraft {
 }
 
 function completeManifestDraft(
-  unitLibrary: ReturnType<typeof createGreenMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
 ): CharacterDraft {
-  const draft = createTestDraft("draft:mcp-green-complete-manifest");
+  const draft = createTestDraft("draft:mcp-complete-manifest");
   const afterInitial = requireAcceptedBatch(
     fillCreationHoles({
       draft,
@@ -1228,13 +1215,13 @@ function manifestLoadoutFills(): readonly CreationFill[] {
 }
 
 function fillThroughTool(
-  root: ReturnType<typeof createGreenMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpCompositionRoot>,
   draftId: string,
   expectedRevision: number,
   fills: readonly CreationFill[],
 ) {
   return readPayload(
-    handleGreenCharacterToolCall(root, "fill_creation_holes", {
+    handleToolCall(root, "fill_creation_holes", {
       draftId,
       expectedRevision,
       fills,
@@ -1243,11 +1230,11 @@ function fillThroughTool(
 }
 
 function createAndFinalizeManifestFighterThroughTools(
-  root: ReturnType<typeof createGreenMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpCompositionRoot>,
   draftId: string,
 ) {
   const created = readPayload(
-    handleGreenCharacterToolCall(root, "create_character_draft", { draftId }),
+    handleToolCall(root, "create_character_draft", { draftId }),
   );
   expect(created.holes.map((hole: CreationHole) => hole.holeId)).toEqual([
     "cc:draft:draft.primaryClass",
@@ -1260,7 +1247,7 @@ function createAndFinalizeManifestFighterThroughTools(
 
   fillThroughTool(root, draftId, 0, initialManifestFills());
   const discoveredChoices = readPayload(
-    handleGreenCharacterToolCall(root, "discover_creation_holes", { draftId }),
+    handleToolCall(root, "discover_creation_holes", { draftId }),
   );
   expect(
     discoveredChoices.holes.map((hole: CreationHole) => hole.holeId),
@@ -1270,13 +1257,11 @@ function createAndFinalizeManifestFighterThroughTools(
   fillThroughTool(root, draftId, 2, manifestPurchaseFills());
   fillThroughTool(root, draftId, 3, manifestLoadoutFills());
 
-  return readPayload(
-    handleGreenCharacterToolCall(root, "finalize_character", { draftId }),
-  );
+  return readPayload(handleToolCall(root, "finalize_character", { draftId }));
 }
 
 function fillBattleHoleThroughTool(
-  root: ReturnType<typeof createGreenMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpCompositionRoot>,
   actorId: string,
   attackName: string,
   fill: {
@@ -1286,7 +1271,7 @@ function fillBattleHoleThroughTool(
   },
 ) {
   return readPayload(
-    handleGreenBattleToolCall(root, "fill_battle_hole", {
+    handleToolCall(root, "fill_battle_hole", {
       actorId,
       attackName,
       fill,
@@ -1294,8 +1279,6 @@ function fillBattleHoleThroughTool(
   );
 }
 
-function readPayload(
-  response: GreenCharacterToolResult | GreenBattleToolResult,
-) {
+function readPayload(response: CharacterToolResult | BattleToolResult) {
   return JSON.parse(response.content[0]?.text ?? "null");
 }

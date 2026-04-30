@@ -315,9 +315,6 @@ importers:
       '@dnd/character-creation-runtime':
         specifier: workspace:*
         version: link:../character-creation-runtime
-      '@dnd/core':
-        specifier: workspace:*
-        version: link:../core
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
@@ -336,9 +333,6 @@ importers:
       effect:
         specifier: ^3.21.0
         version: 3.21.0
-      xstate:
-        specifier: ^5.28.0
-        version: 5.28.0
     devDependencies:
       tsx:
         specifier: ^4.19.2

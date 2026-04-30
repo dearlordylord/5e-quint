@@ -8,21 +8,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import {
-  createGreenMcpCompositionRoot,
-  greenBattleToolDefinitions,
-  greenCharacterToolDefinitions,
-  handleGreenBattleToolCall,
-  handleGreenCharacterToolCall,
-  isGreenBattleToolName,
-  isGreenCharacterToolName,
-} from "./green/index.ts";
-import { errorContent } from "./tool-content.ts";
+  createMcpCompositionRoot,
+  handleToolCall,
+  toolDefinitions,
+} from "./server.ts";
 
-const root = createGreenMcpCompositionRoot();
-const toolDefinitions = [
-  ...greenCharacterToolDefinitions,
-  ...greenBattleToolDefinitions,
-];
+const root = createMcpCompositionRoot();
 
 const server = new Server(
   { name: "dnd-surface-runtime", version: "0.1.0" },
@@ -34,20 +25,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) =>
-  handleToolCall(request.params.name, request.params.arguments),
+  handleToolCall(root, request.params.name, request.params.arguments),
 );
-
-function handleToolCall(name: string, args: unknown) {
-  if (isGreenCharacterToolName(name)) {
-    return handleGreenCharacterToolCall(root, name, args);
-  }
-
-  if (isGreenBattleToolName(name)) {
-    return handleGreenBattleToolCall(root, name, args);
-  }
-
-  return errorContent(`Unknown Surface-runtime MCP tool: ${name}`);
-}
 
 const program = Effect.gen(function* () {
   const transport = new StdioServerTransport();

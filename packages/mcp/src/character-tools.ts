@@ -10,8 +10,8 @@ import {
 import { Hp } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 
-import type { GreenMcpCompositionRoot } from "./composition-root.ts";
-import type { GreenCharacterSession } from "./session-store.ts";
+import type { McpCompositionRoot } from "./composition-root.ts";
+import type { CharacterSession } from "./session-store.ts";
 import {
   createCharacterDraftInputSchema,
   decodeCreateCharacterDraftArgs,
@@ -19,11 +19,11 @@ import {
   decodeFillCreationHolesArgs,
   draftIdInputSchema,
   fillCreationHolesInputSchema,
-  isGreenToolError,
+  isToolError,
 } from "./character-tool-input.ts";
-import { errorContent, jsonContent } from "../tool-content.ts";
+import { errorContent, jsonContent } from "./tool-content.ts";
 
-export const greenCharacterToolDefinitions = [
+export const characterToolDefinitions = [
   {
     name: "create_character_draft",
     description:
@@ -60,35 +60,31 @@ export const greenCharacterToolDefinitions = [
   },
 ] as const;
 
-const GREEN_CHARACTER_TOOL_NAMES = greenCharacterToolDefinitions.map(
+const CHARACTER_TOOL_NAMES = characterToolDefinitions.map(
   (tool) => tool.name,
-) satisfies ReadonlyArray<
-  (typeof greenCharacterToolDefinitions)[number]["name"]
->;
-type GreenCharacterToolName = (typeof GREEN_CHARACTER_TOOL_NAMES)[number];
+) satisfies ReadonlyArray<(typeof characterToolDefinitions)[number]["name"]>;
+type CharacterToolName = (typeof CHARACTER_TOOL_NAMES)[number];
 
-export type GreenCharacterToolResult =
+export type CharacterToolResult =
   | ReturnType<typeof jsonContent>
   | ReturnType<typeof errorContent>;
 
-export function isGreenCharacterToolName(
-  name: string,
-): name is GreenCharacterToolName {
-  return greenCharacterToolDefinitions.some((tool) => tool.name === name);
+export function isCharacterToolName(name: string): name is CharacterToolName {
+  return characterToolDefinitions.some((tool) => tool.name === name);
 }
 
-export function handleGreenCharacterToolCall(
-  root: GreenMcpCompositionRoot,
+export function handleCharacterToolCall(
+  root: McpCompositionRoot,
   name: string,
   args: unknown,
-): GreenCharacterToolResult {
-  if (!isGreenCharacterToolName(name)) {
+): CharacterToolResult {
+  if (!isCharacterToolName(name)) {
     return errorContent(`Unknown Surface-runtime character tool: ${name}`);
   }
 
   if (name === "create_character_draft") {
     const decoded = decodeCreateCharacterDraftArgs(args, name);
-    if (isGreenToolError(decoded)) return decoded;
+    if (isToolError(decoded)) return decoded;
     const draft = createCharacterDraft({
       unitLibrary: root.unitLibrary,
       ...(decoded.draftId == null ? {} : { draftId: decoded.draftId }),
@@ -105,7 +101,7 @@ export function handleGreenCharacterToolCall(
 
   if (name === "fill_creation_holes") {
     const decoded = decodeFillCreationHolesArgs(args, name);
-    if (isGreenToolError(decoded)) return decoded;
+    if (isToolError(decoded)) return decoded;
     const draft = root.sessionStore.drafts.get(decoded.draftId);
     if (draft == null) {
       return unknownDraftContent(decoded.draftId);
@@ -130,7 +126,7 @@ export function handleGreenCharacterToolCall(
 
   if (name === "list_characters") {
     const decoded = decodeEmptyArgs(args, name);
-    if (isGreenToolError(decoded)) return decoded;
+    if (isToolError(decoded)) return decoded;
     return jsonContent({
       characters: Array.from(root.sessionStore.characters.entries()).map(
         ([sourceDraftId, session]) =>
@@ -141,7 +137,7 @@ export function handleGreenCharacterToolCall(
   }
 
   const draftId = decodeDraftIdArg(args, name);
-  if (isGreenToolError(draftId)) return draftId;
+  if (isToolError(draftId)) return draftId;
 
   const draft = root.sessionStore.drafts.get(draftId);
   if (draft == null) {
@@ -198,10 +194,7 @@ function duplicateDraftIdContent(
   });
 }
 
-function creationDraftPayload(
-  root: GreenMcpCompositionRoot,
-  draft: CharacterDraft,
-) {
+function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {
   return {
     draft,
     holes: discoverCreationHoles({
@@ -219,7 +212,7 @@ function creationDraftPayload(
 function characterListRow(
   unitLibrary: UnitCatalog,
   sourceDraftId: CharacterDraftId,
-  session: GreenCharacterSession,
+  session: CharacterSession,
 ) {
   if (session.tag === "available") {
     return {

@@ -74,7 +74,7 @@ export {
   type TwoAndOneBackgroundAbilityScoreIncreaseSelection,
   type UnitChoiceKey,
   type UnitChoiceSource,
-  type UnitLibrary,
+  type UnitCatalog,
   type UnitRef,
 } from "./types.ts";
 export { createCharacterDraft } from "./draft.ts";

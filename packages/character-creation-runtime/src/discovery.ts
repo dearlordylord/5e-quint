@@ -61,7 +61,7 @@ import {
   type CreationChoiceOptionId,
   type CreationHole,
   type CreationHoleSource,
-  type UnitLibrary,
+  type UnitCatalog,
 } from "./types.ts";
 import {
   supportedBackgroundUnitIds,
@@ -92,7 +92,7 @@ const SRD_GAMING_SET_OPTIONS = [
 
 export function discoverCreationHoles(input: {
   readonly draft: CharacterDraft;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   return [
     ...discoverInitialDraftHoles(input),
@@ -103,7 +103,7 @@ export function discoverCreationHoles(input: {
 }
 export function discoverInitialDraftHoles(input: {
   readonly draft: CharacterDraft;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   return INITIAL_CHARACTER_DRAFT_PATHS.flatMap((path) =>
     hasDraftSelection(input.draft.selections, path)
@@ -114,7 +114,7 @@ export function discoverInitialDraftHoles(input: {
 
 export function discoverClassGrantedHoles(input: {
   readonly draft: CharacterDraft;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   const classUnitId = input.draft.selections.primaryClass;
   if (
@@ -162,7 +162,7 @@ export function discoverClassGrantedHoles(input: {
 
 export function discoverBackgroundGrantedHoles(input: {
   readonly draft: CharacterDraft;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   const backgroundUnitId = input.draft.selections.background;
   if (
@@ -268,7 +268,7 @@ export function backgroundToolChoiceSpec(
 
 export function discoverEquipmentHoles(input: {
   readonly draft: CharacterDraft;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   const classUnitId = input.draft.selections.primaryClass;
   if (classUnitId == null || !hasPhaseOneCoinEquipmentPath(input)) {
@@ -327,7 +327,7 @@ export function startingEquipmentChoiceHole(
 
 export function hasPhaseOneCoinEquipmentPath(input: {
   readonly draft: CharacterDraft;
-  readonly unitLibrary: UnitLibrary;
+  readonly unitLibrary: UnitCatalog;
 }): boolean {
   const draft = input.draft;
   const classUnitId = draft.selections.primaryClass;
@@ -570,7 +570,7 @@ export function sameOptionIdMultiset(
 export function discoverLevelOneFighterFeatureHole(
   featureUnitId: UnitRecord["id"],
   draft: CharacterDraft,
-  unitLibrary: UnitLibrary,
+  unitLibrary: UnitCatalog,
 ): readonly CreationHole[] {
   const featureId = requireLevelOneFighterFeatureId(featureUnitId);
 
@@ -603,7 +603,7 @@ function requireLevelOneFighterFeatureId(
 
 function discoverFighterFightingStyleHole(
   draft: CharacterDraft,
-  unitLibrary: UnitLibrary,
+  unitLibrary: UnitCatalog,
 ): readonly CreationHole[] {
   const options = unitLibrary
     .listUnits()
@@ -628,7 +628,7 @@ function discoverFighterFightingStyleHole(
 
 function discoverFighterWeaponMasteryHole(
   draft: CharacterDraft,
-  unitLibrary: UnitLibrary,
+  unitLibrary: UnitCatalog,
 ): readonly CreationHole[] {
   const feature = unitLibrary.requireUnit(FIGHTER_WEAPON_MASTERY_FEATURE_ID);
   const mechanics = feature.kind === "class_feature" ? feature.mechanics : null;
@@ -662,7 +662,7 @@ function discoverFighterWeaponMasteryHole(
 
 export function draftHole(
   path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
-  unitLibrary: UnitLibrary,
+  unitLibrary: UnitCatalog,
 ): CreationHole {
   if (path === "draft.primaryClass") {
     return choiceHole({

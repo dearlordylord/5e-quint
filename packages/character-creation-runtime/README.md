@@ -5,7 +5,7 @@ character draft into a finalized `CharacterBuild` using authored Surface Units.
 
 The package is a character-creation runtime boundary. It does not author classes,
 backgrounds, species, feats, or equipment, and it does not build battle creature
-initialization data. It consumes a `UnitLibrary` built from `@dnd/surface` and
+initialization data. It consumes a `UnitCatalog` built from `@dnd/surface` and
 returns draft state, creation holes, fill results, and finalized build facts for
 callers to store at the session boundary.
 
@@ -29,13 +29,13 @@ not in-play Character Sheet state.
 | complete legal draft plus Surface Unit facts | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
 | finalized `CharacterBuild`                   | application composition outside | battle creature initialization |
 
-`@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or
-`@dnd/core`. Battle initialization from a `CharacterBuild` belongs to the
-composition layer and battle runtime boundary.
+`@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or the
+legacy Core package. Battle initialization from a `CharacterBuild` belongs to
+the composition layer and battle runtime boundary.
 
 ## Runtime Flow
 
-1. Caller builds a Surface `UnitLibrary` and calls `createCharacterDraft`.
+1. Caller builds a Surface `UnitCatalog` and calls `createCharacterDraft`.
 2. Caller passes the draft and Unit library to `discoverCreationHoles`.
 3. Caller submits one batch of fills to `fillCreationHoles`.
 4. If the batch is accepted, the returned draft has a new revision and a new
@@ -78,8 +78,8 @@ Creation Fill, and Unit-backed selection are defined in
 
 Key boundary terms:
 
-- `UnitLibrary` - type alias for the Surface `UnitCatalog`; it avoids an adapter
-  or duplicate catalog state.
+- `UnitCatalog` - the Surface catalog type consumed directly by the runtime; no
+  runtime-owned adapter or duplicate catalog state is kept.
 - `CreationHole` - a fillable requirement in the current draft.
 - `CreationFill` - caller-submitted answer for one hole.
 - `CharacterBuild` - finalized build-only player-character boundary used by later
