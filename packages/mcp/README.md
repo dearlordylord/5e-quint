@@ -10,8 +10,10 @@ may see content catalogs, character sessions, battle sessions, and runtime
 initialization inputs because it is the composition boundary; it must not become
 the owner of character-creation or battle semantics.
 
-The `src/green/` subtree imports Surface authored content boundaries plus the
-character-creation and battle runtimes. Its composition root builds:
+The current implementation modules still live under `src/green/` until CAM20
+renames or internalizes that migration namespace. That subtree imports Surface
+authored content boundaries plus the character-creation and battle runtimes. Its
+composition root builds:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
@@ -99,6 +101,11 @@ Remaining first-vertical gates:
   Disadvantage, reactions, spells, and post-turn lifecycle subjects remain
   outside this first vertical.
 
+Normal package tests cover the Surface-runtime path. The old Core-backed test
+suite under `src/legacy-core/` is excluded from the normal Vitest gate because
+it documents a deletion-marked path whose omitted behavior is governed by the
+Restore Ledger in `plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`.
+
 `BattleResolutionResult` may include display-facing result details for tool
 responses, but `BattleState` remains authoritative. Optional display logs must
 not become the source of combat truth.
@@ -149,4 +156,5 @@ rg '@dnd/core' packages/mcp/src/green packages/character-creation-runtime packag
 
 `src/legacy-core/` contains the old Core-backed MCP host, session router,
 runtime input decoders, scripts, and tests. That directory is deletion-marked,
-not compatibility-supported. Keep Surface-runtime tools out of those modules.
+not compatibility-supported, and it is not part of the normal MCP package test
+gate. Keep Surface-runtime tools out of those modules.

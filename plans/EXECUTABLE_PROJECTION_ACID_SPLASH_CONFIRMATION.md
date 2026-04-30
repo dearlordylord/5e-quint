@@ -1,5 +1,10 @@
 # EPT2 - Acid Splash Spell-Side Unit Confirmation
 
+> Archival note: this document is preserved history for baseline `39f9ab71`.
+> The active Correction Application Migration ledgers Acid Splash projected
+> runtime behavior as omitted from the first Surface-runtime vertical; do not
+> treat projected prepared spell execution as current architecture.
+
 ## Purpose
 
 This file is the EPT2 checked-in confirmation that `acid_splash` is the
@@ -18,19 +23,19 @@ This document records the SRD trace, the authored/traced shape, and why
 
 ## RAW Field Trace
 
-| Authored field | RAW anchor |
-| --- | --- |
-| `mechanics.family = "activation"` | "Evocation Cantrip" |
-| `mechanics.level = 0` | "Cantrip" |
-| `mechanics.school = "evocation"` | "Evocation Cantrip" |
-| `mechanics.castingTime = { kind = "action" }` | "Casting Time: Action" |
-| `mechanics.range = { kind = "point", feet = 60 }` | "Range: 60 feet" and "at a point within range" |
-| `mechanics.components = { v = True, s = True, m = False }` | "Components: V, S" |
-| `mechanics.duration = { kind = "instantaneous" }` | "Duration: Instantaneous" |
-| `save_gate` attachment `area.sphere radiusFeet = 5`, origin `point_within_range` | "a 5-foot-radius Sphere" at "a point within range" |
-| `save_gate.ability = dex`, `dc = caster_spell_save_dc` | "succeed on a Dexterity saving throw" |
-| `onFail = damage acid 1d6` with `threshold_tiers` `L5 -> 2d6`, `L11 -> 3d6`, `L17 -> 4d6` | "take 1d6 Acid damage" and "Cantrip Upgrade" |
-| `onSuccess = { kind = "none" }` | success avoids the damage; no rider is stated |
+| Authored field                                                                            | RAW anchor                                         |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `mechanics.family = "activation"`                                                         | "Evocation Cantrip"                                |
+| `mechanics.level = 0`                                                                     | "Cantrip"                                          |
+| `mechanics.school = "evocation"`                                                          | "Evocation Cantrip"                                |
+| `mechanics.castingTime = { kind = "action" }`                                             | "Casting Time: Action"                             |
+| `mechanics.range = { kind = "point", feet = 60 }`                                         | "Range: 60 feet" and "at a point within range"     |
+| `mechanics.components = { v = True, s = True, m = False }`                                | "Components: V, S"                                 |
+| `mechanics.duration = { kind = "instantaneous" }`                                         | "Duration: Instantaneous"                          |
+| `save_gate` attachment `area.sphere radiusFeet = 5`, origin `point_within_range`          | "a 5-foot-radius Sphere" at "a point within range" |
+| `save_gate.ability = dex`, `dc = caster_spell_save_dc`                                    | "succeed on a Dexterity saving throw"              |
+| `onFail = damage acid 1d6` with `threshold_tiers` `L5 -> 2d6`, `L11 -> 3d6`, `L17 -> 4d6` | "take 1d6 Acid damage" and "Cantrip Upgrade"       |
+| `onSuccess = { kind = "none" }`                                                           | success avoids the damage; no rider is stated      |
 
 No authored field goes beyond the SRD passage.
 

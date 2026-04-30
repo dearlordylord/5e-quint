@@ -1,8 +1,13 @@
 # Design: Executable Projection Tracer Bullet
 
+> Archival note: this design is preserved history for baseline `39f9ab71`.
+> The active Correction Application Migration supersedes the projected
+> executable architecture with Surface-runtime reducers; do not treat this
+> document as current architecture.
+
 ## Status
 
-Design doc for implementation.
+Archived design doc.
 
 This is not a PRD. It assumes the overall goal is already accepted and narrows the architecture, vocabulary, and first tracer-bullet scope.
 
@@ -288,8 +293,16 @@ These are design shapes, not fixed type names.
 ```ts
 type ProjectedSource = {
   readonly unitId: string;
-  readonly unitKind: "spell" | "class_feature" | "monster_ability" | "feat" | "species_trait";
-  readonly mechanicFamily: "activation" | "ongoing_effect" | "triggered_reaction";
+  readonly unitKind:
+    | "spell"
+    | "class_feature"
+    | "monster_ability"
+    | "feat"
+    | "species_trait";
+  readonly mechanicFamily:
+    | "activation"
+    | "ongoing_effect"
+    | "triggered_reaction";
 };
 ```
 
@@ -323,7 +336,10 @@ type ProjectedResolutionNode =
       readonly id: ProjectedResolutionNodeId;
       readonly kind: "attack_roll";
       readonly target: "primary_target" | "secondary_target";
-      readonly attackKind: "weapon_attack" | "ranged_spell_attack" | "melee_spell_attack";
+      readonly attackKind:
+        | "weapon_attack"
+        | "ranged_spell_attack"
+        | "melee_spell_attack";
       readonly onHit: ReadonlyArray<ProjectedResolutionNodeId>;
       readonly onMiss: ReadonlyArray<ProjectedResolutionNodeId>;
     }
@@ -360,15 +376,14 @@ type ProjectedResolutionNode =
 ### Projected Persistent Record
 
 ```ts
-type ProjectedPersistentRecord =
-  | {
-      readonly source: ProjectedSource;
-      readonly kind: "set_base_ac";
-      readonly target: "self" | "chosen_target";
-      readonly base: number;
-      readonly abilityMod: "dex";
-      readonly lifecycle?: ProjectedLifecycle;
-    };
+type ProjectedPersistentRecord = {
+  readonly source: ProjectedSource;
+  readonly kind: "set_base_ac";
+  readonly target: "self" | "chosen_target";
+  readonly base: number;
+  readonly abilityMod: "dex";
+  readonly lifecycle?: ProjectedLifecycle;
+};
 ```
 
 ### Minimal Projected Lifecycle

@@ -1,5 +1,10 @@
 # Executable Projection First Slice Scope
 
+> Archival note: this document is preserved history for baseline `39f9ab71`.
+> The active Correction Application Migration supersedes this first slice with
+> the Surface-runtime Fighter/Goblin vertical; do not treat projected executable
+> vocabulary as current architecture.
+
 ## Purpose
 
 This file freezes the first executable-projection tracer-bullet slice for EPT1.
@@ -80,12 +85,12 @@ Nothing else belongs in the first executable subset.
 
 ### Required mappings inside this slice
 
-| Unit or lane | Required projected executable nodes |
-| --- | --- |
-| `acid_splash` | `save_gate` -> `damage` |
-| `fighter_second_wind` | `direct` -> `heal_hp` |
-| `fighter_action_surge_l2` | `direct` -> `grant_extra_action` |
-| ordinary weapon attacks | `attack_roll` with existing battle-lane damage application |
+| Unit or lane              | Required projected executable nodes                        |
+| ------------------------- | ---------------------------------------------------------- |
+| `acid_splash`             | `save_gate` -> `damage`                                    |
+| `fighter_second_wind`     | `direct` -> `heal_hp`                                      |
+| `fighter_action_surge_l2` | `direct` -> `grant_extra_action`                           |
+| ordinary weapon attacks   | `attack_roll` with existing battle-lane damage application |
 
 `mage_armor` is intentionally not part of the executable subset. It belongs to
 the persistent subset below.
@@ -147,7 +152,7 @@ separate runtime fact channel:
 - the acting creature's Fighter level for `fighter_second_wind`
   - already present on battle creatures through the same owned state shape
 - the acting creature's spell save DC and spell-slot state for `acid_splash`
-    and `mage_armor`
+  and `mage_armor`
   - already derived from the stored sheet in [`character-sheet-derived.ts`](/workspace/typescript/dnd/packages/core/src/character-sheet-derived.ts:218) and [`character-spellcasting.ts`](/workspace/typescript/dnd/packages/core/src/character-spellcasting.ts:74)
 
 These values may be projected or read from owned actor data, but they are not a

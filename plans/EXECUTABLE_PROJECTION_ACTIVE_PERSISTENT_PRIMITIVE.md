@@ -1,5 +1,10 @@
 # Active Projected Persistent Primitive
 
+> Archival note: this document is preserved history for baseline `39f9ab71`.
+> The active Correction Application Migration ledgers projected persistent
+> behavior as omitted from the first Surface-runtime vertical; do not treat
+> projected persistent records as current architecture.
+
 Reference design for EPT6. Defines the minimal primitive that carries
 `ProjectedPersistentRecord` state over time so `Mage Armor` (and future
 persistent records) can be hooked end-to-end without parallel registries.
@@ -42,6 +47,7 @@ type ActiveProjectedPersistent = {
 ```
 
 Rationale:
+
 - No per-instance duration counter. ASSUMPTIONS A4–A5 track durations in
   rounds; Mage Armor's 8-hour narrative ceiling (~4800 rounds) never
   decrements meaningfully in combat. Long-rest / day boundary events clear
@@ -147,7 +153,7 @@ while the creature is wearing armor.
 
 ### 6. Internal battle seam — `DON_ARMOR`
 
-Adds one internal battle transition that both flips armor state *and* walks
+Adds one internal battle transition that both flips armor state _and_ walks
 active persistents. This is an owned runtime seam, not a new public battle
 command surface:
 

@@ -1,5 +1,10 @@
 # EPT3 - Quint Projected Executable And Persistent Subsets
 
+> Archival note: this document is preserved history for baseline `39f9ab71`.
+> The active Correction Application Migration deletes projected executable
+> vocabulary from promoted paths; do not treat these Quint subsets as current
+> runtime authority.
+
 ## Purpose
 
 This file records the closed Quint-side subset for the executable-projection

@@ -1,5 +1,10 @@
 # Executable Projection Compiler
 
+> Archival note: this document is preserved history for baseline `39f9ab71`.
+> The active Correction Application Migration deletes the projected executable
+> compiler vocabulary from promoted paths; do not treat this document as current
+> architecture.
+
 Date: 2026-04-19
 
 Task lineage:

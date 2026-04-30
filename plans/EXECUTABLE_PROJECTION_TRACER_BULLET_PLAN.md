@@ -1,5 +1,10 @@
 # Plan: Executable Projection Tracer Bullet
 
+> Archival note: this plan is preserved history for baseline `39f9ab71`.
+> The active Correction Application Migration deletes the projected executable
+> vocabulary from promoted paths; do not treat this document as current
+> architecture.
+
 > Source design: [DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md](/workspace/typescript/dnd-design-domain-model/DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md)
 
 ## Goal
