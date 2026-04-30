@@ -48,7 +48,7 @@ const StatBlockSummarySchema = Schema.Struct({
   creatureType: Schema.String,
   armorClass: Schema.Number,
   hitPoints: Schema.Number,
-  initiativeModifier: Schema.Number,
+  initiativeModifier: Schema.optionalWith(Schema.Number, { exact: true }),
   attacks: Schema.Array(StatBlockAttackSummarySchema),
   damageVulnerabilities: StringArraySchema,
   damageResistances: StringArraySchema,
@@ -228,7 +228,9 @@ function statBlockSummary(record: StatBlockRecord) {
     creatureType: stringCreatureType(record),
     armorClass: literalNumber(statBlock.ac, `${record.id}.statBlock.ac`),
     hitPoints: literalNumber(statBlock.hp, `${record.id}.statBlock.hp`),
-    initiativeModifier: statBlock.initiativeModifier ?? 0,
+    ...(statBlock.initiativeModifier === undefined
+      ? {}
+      : { initiativeModifier: statBlock.initiativeModifier }),
     attacks: (statBlock.actions?.attacks ?? []).map((attack) =>
       attackSummary(record, attack),
     ),

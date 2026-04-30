@@ -1,4 +1,4 @@
-import { Brand, Match } from "effect";
+import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
 import {
@@ -50,6 +50,7 @@ import type {
   HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
+  ATTACK_ROLL_MODES,
   holeId,
   holeInstanceKey,
   type AttackRollResult,
@@ -60,11 +61,11 @@ import {
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   CONDITIONS as ALL_CONDITIONS,
+  CreatureId,
   Hp,
   Initiative,
   Round,
   type Condition,
-  type CreatureId,
   type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
 } from "@dnd/shared/types";
@@ -82,9 +83,9 @@ import type {
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 
-export type CombatantId = CreatureId & Brand.Brand<"CombatantId">;
-const CombatantId = Brand.nominal<CombatantId>();
-export const combatantId: (value: string) => CombatantId = CombatantId;
+export const CombatantId = CreatureId.pipe(Schema.brand("CombatantId"));
+export type CombatantId = typeof CombatantId.Type;
+export const combatantId: (value: string) => CombatantId = CombatantId.make;
 
 export type BattleId = string & Brand.Brand<"BattleId">;
 const BattleId = Brand.nominal<BattleId>();
@@ -379,29 +380,58 @@ export type BattleSrdAction = (typeof BATTLE_SRD_ACTIONS)[number];
 export const BATTLE_RUNTIME_COMMANDS = ["endTurn"] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
 
-export type BattleSubject =
-  | {
-      readonly tag: "srdAction";
-      readonly actorId: CombatantId;
-      readonly action: "attack";
-      readonly attackName: string;
+const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
+
+export const BattleSubjectSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("srdAction"),
+    actorId: CombatantId,
+    action: Schema.Literal("attack"),
+    attackName: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("srdAction"),
+    actorId: CombatantId,
+    action: Schema.Literal("magic"),
+    spellId: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unitFeature"),
+    actorId: CombatantId,
+    unitId: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("endTurn"),
+  }),
+);
+export type BattleSubject = typeof BattleSubjectSchema.Type;
+
+export function sameBattleSubject(
+  left: BattleSubject,
+  right: BattleSubject,
+): boolean {
+  if (left.tag !== right.tag || left.actorId !== right.actorId) return false;
+  if (left.tag === "srdAction" && right.tag === "srdAction") {
+    if (left.action !== right.action) return false;
+    if (left.action === "attack" && right.action === "attack") {
+      return left.attackName === right.attackName;
     }
-  | {
-      readonly tag: "srdAction";
-      readonly actorId: CombatantId;
-      readonly action: "magic";
-      readonly spellId: SpellRecord["id"];
+    if (left.action === "magic" && right.action === "magic") {
+      return left.spellId === right.spellId;
     }
-  | {
-      readonly tag: "unitFeature";
-      readonly actorId: CombatantId;
-      readonly unitId: UnitRecord["id"];
-    }
-  | {
-      readonly tag: "runtimeCommand";
-      readonly actorId: CombatantId;
-      readonly command: BattleRuntimeCommand;
-    };
+    return false;
+  }
+  if (left.tag === "unitFeature" && right.tag === "unitFeature") {
+    return left.unitId === right.unitId;
+  }
+  if (left.tag === "runtimeCommand" && right.tag === "runtimeCommand") {
+    return left.command === right.command;
+  }
+
+  return false;
+}
 
 export type AvailableBattleAct = {
   readonly subject: BattleSubject;
@@ -452,6 +482,53 @@ export type BattleHole =
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
   | BattleSpellDamageRollHole;
+
+const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("HoleId"),
+);
+const BattleHoleBaseSchema = {
+  holeInstanceKey: Schema.NonEmptyTrimmedString,
+  holeId: BattleHoleIdSchema,
+  label: Schema.optionalWith(Schema.String, { exact: true }),
+} as const;
+
+const BattleRuntimeObjectSchema = Schema.Record({
+  key: Schema.String,
+  value: Schema.Any,
+});
+
+export const BattleHoleSchema = Schema.Union(
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("targetChoice"),
+    choices: Schema.Array(CombatantId),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("attackRoll"),
+    attack: BattleRuntimeObjectSchema,
+    attackBonus: Schema.Number,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("attackRoll"),
+    spell: BattleRuntimeObjectSchema,
+    attackBonus: Schema.Number,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    attack: BattleRuntimeObjectSchema,
+    critical: Schema.Boolean,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    spell: BattleRuntimeObjectSchema,
+    critical: Schema.Boolean,
+  }),
+);
+
 export type BattleFill =
   | Extract<FilledHoleValue, { readonly kind: "attackRoll" | "rolledDice" }>
   | {
@@ -459,6 +536,41 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: CombatantId;
     };
+
+const BattleDieRollResultSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThan(0),
+  Schema.brand("PositiveInteger"),
+  Schema.brand("DieRollResult"),
+);
+const BattleAttackRollResultSchema = Schema.Struct({
+  total: Schema.Number.pipe(Schema.int()),
+  naturalD20: BattleDieRollResultSchema,
+  rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+    exact: true,
+  }),
+});
+const BattleRolledDiceGroupSchema = Schema.Struct({
+  results: Schema.NonEmptyArray(BattleDieRollResultSchema),
+});
+
+export const BattleFillSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("targetChoice"),
+    holeId: BattleHoleIdSchema,
+    value: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackRoll"),
+    holeId: BattleHoleIdSchema,
+    value: BattleAttackRollResultSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("rolledDice"),
+    holeId: BattleHoleIdSchema,
+    value: Schema.NonEmptyArray(BattleRolledDiceGroupSchema),
+  }),
+);
 
 export type BattleResolutionInput = {
   readonly state: BattleState;

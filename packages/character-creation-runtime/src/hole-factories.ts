@@ -1,6 +1,7 @@
 import {
   creationChoiceOptionId,
   creationHoleId,
+  choiceCardinalityMax,
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterDraftPath,
   type CharacterDraftSelections,
@@ -21,14 +22,27 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 
+const BACKGROUND_ASI_ONE_EACH_OPTION_ID = "one_each";
+const BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX = "two_and_one";
+const BACKGROUND_ASI_ABILITIES = [
+  "str",
+  "dex",
+  "con",
+  "int",
+  "wis",
+  "cha",
+] as const satisfies ReadonlyArray<Ability>;
+export type BackgroundAbilityScoreIncreaseOptionIdText =
+  | typeof BACKGROUND_ASI_ONE_EACH_OPTION_ID
+  | `${typeof BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX}:${Ability}:${Ability}`;
+
 export function hasDraftSelection(
   selections: CharacterDraftSelections,
   path: CharacterDraftPath,
 ): boolean {
   return (
     (path === "draft.primaryClass" && selections.primaryClass != null) ||
-    (path === "draft.advancement.initial" &&
-      selections.advancement != null) ||
+    (path === "draft.advancement.initial" && selections.advancement != null) ||
     (path === "draft.background" && selections.background != null) ||
     (path === "draft.species" && selections.species != null) ||
     (path === "draft.abilityScoreGeneration" &&
@@ -71,11 +85,46 @@ export function backgroundAbilityScoreIncreaseOptionId(
   selection: BackgroundAbilityScoreIncreaseSelection,
 ): CreationChoiceOptionId {
   if (selection.kind === "oneEach") {
-    return creationChoiceOptionId("one_each");
+    return creationChoiceOptionId(BACKGROUND_ASI_ONE_EACH_OPTION_ID);
   }
 
-  return creationChoiceOptionId(
-    `two_and_one:${selection.plusTwo}:${selection.plusOne}`,
+  const optionIdText: BackgroundAbilityScoreIncreaseOptionIdText = `${BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX}:${selection.plusTwo}:${selection.plusOne}`;
+  return creationChoiceOptionId(optionIdText);
+}
+
+export function parseBackgroundAbilityScoreIncreaseOptionId(
+  optionId: CreationChoiceOptionId,
+): BackgroundAbilityScoreIncreaseSelection | undefined {
+  if (optionId === BACKGROUND_ASI_ONE_EACH_OPTION_ID) {
+    return { kind: "oneEach" };
+  }
+
+  const parts = optionId.split(":");
+  const plusTwo = parts[1];
+  const plusOne = parts[2];
+  if (
+    parts.length !== 3 ||
+    parts[0] !== BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX ||
+    !isBackgroundAsiAbility(plusTwo) ||
+    !isBackgroundAsiAbility(plusOne) ||
+    plusTwo === plusOne
+  ) {
+    return undefined;
+  }
+
+  // TypeScript cannot infer the mapped union branch from the local plusTwo !==
+  // plusOne check above; the parser has established exactly that invariant.
+  return {
+    kind: "twoAndOne",
+    plusTwo,
+    plusOne,
+  } as BackgroundAbilityScoreIncreaseSelection;
+}
+
+function isBackgroundAsiAbility(value: string | undefined): value is Ability {
+  return (
+    value != null &&
+    BACKGROUND_ASI_ABILITIES.some((ability) => ability === value)
   );
 }
 
@@ -84,9 +133,10 @@ export function choiceHole(input: {
   readonly cardinality: ChoiceCardinality;
   readonly options: readonly CreationChoiceOption[];
 }): CreationHole {
-  if (input.cardinality.count > input.options.length) {
+  const maxCount = choiceCardinalityMax(input.cardinality);
+  if (maxCount > input.options.length) {
     throw new Error(
-      `Choice cardinality ${input.cardinality.count} exceeds option count ${input.options.length} for ${holeIdForSource(input.source)}.`,
+      `Choice cardinality ${maxCount} exceeds option count ${input.options.length} for ${holeIdForSource(input.source)}.`,
     );
   }
 

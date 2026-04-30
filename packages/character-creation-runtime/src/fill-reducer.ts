@@ -6,10 +6,13 @@ import {
   type SelectableStandardLanguage,
 } from "@dnd/shared/game-facts";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
-import type { Ability, UnitRecord } from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
 import { finalizeCharacterDraft } from "./finalization.ts";
-import { selectedChoiceOption } from "./hole-factories.ts";
+import {
+  parseBackgroundAbilityScoreIncreaseOptionId,
+  selectedChoiceOption,
+} from "./hole-factories.ts";
 import {
   supportedAdvancementForOptionId,
   unsupportedHoleSelectionOptionId,
@@ -17,7 +20,6 @@ import {
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
-  SURFACE_ABILITIES,
 } from "./phase1-manifest.ts";
 import {
   creationFillIndex,
@@ -28,7 +30,7 @@ import {
   type CharacterDraft,
   type CharacterDraftPath,
   type CharacterDraftSelections,
-  type ChoiceCount,
+  choiceCardinalityBounds,
   type ChoiceCreationHole,
   type CreationBatchFillInput,
   type CreationBatchFillIssue,
@@ -159,13 +161,13 @@ export function choiceFillIssues(
   optionById: ReadonlyMap<CreationChoiceOptionId, CreationChoiceOption>,
 ): readonly CreationFillIssue[] {
   const optionIds = fill.optionIds;
-  const requiredCount = hole.cardinality.count;
+  const bounds = choiceCardinalityBounds(hole.cardinality);
   const cardinalityIssues = [
-    ...(optionIds.length < requiredCount
-      ? [tooFewChoicesIssue(fill, fillIndex, requiredCount)]
+    ...(optionIds.length < bounds.min
+      ? [tooFewChoicesIssue(fill, fillIndex, bounds.min)]
       : []),
-    ...(optionIds.length > requiredCount
-      ? [tooManyChoicesIssue(fill, fillIndex, requiredCount)]
+    ...(optionIds.length > bounds.max
+      ? [tooManyChoicesIssue(fill, fillIndex, bounds.max)]
       : []),
   ];
   const invalidOptionIds = optionIds.filter(
@@ -509,37 +511,14 @@ export function requireStartingLanguages(
 export function requireBackgroundAbilityScoreIncreaseSelection(
   optionId: CreationChoiceOptionId,
 ): BackgroundAbilityScoreIncreaseSelection {
-  if (optionId === "one_each") {
-    return { kind: "oneEach" };
-  }
-
-  const parts = optionId.split(":");
-  const plusTwo = parts[1];
-  const plusOne = parts[2];
-  if (
-    parts[0] !== "two_and_one" ||
-    !isAbility(plusTwo) ||
-    !isAbility(plusOne) ||
-    plusTwo === plusOne
-  ) {
+  const selection = parseBackgroundAbilityScoreIncreaseOptionId(optionId);
+  if (selection == null) {
     throw new Error(
       `Accepted fill referenced invalid background ability score increase ${optionId}`,
     );
   }
 
-  // TypeScript cannot infer this mapped union branch from the local
-  // plusTwo/plusOne distinctness check above.
-  return {
-    kind: "twoAndOne",
-    plusTwo,
-    plusOne,
-  } as BackgroundAbilityScoreIncreaseSelection;
-}
-
-export function isAbility(value: string | undefined): value is Ability {
-  return (
-    value != null && SURFACE_ABILITIES.some((ability) => ability === value)
-  );
+  return selection;
 }
 
 export function isSelectableStandardLanguage(
@@ -597,7 +576,7 @@ export function invalidAbilityScoresIssue(
 export function tooFewChoicesIssue(
   fill: CreationFill,
   fillIndex: FillIndex,
-  expectedCount: ChoiceCount,
+  expectedCount: number,
 ): CreationFillIssue {
   return {
     tag: "illegalFill",
@@ -611,7 +590,7 @@ export function tooFewChoicesIssue(
 export function tooManyChoicesIssue(
   fill: CreationFill,
   fillIndex: FillIndex,
-  expectedCount: ChoiceCount,
+  expectedCount: number,
 ): CreationFillIssue {
   return {
     tag: "illegalFill",

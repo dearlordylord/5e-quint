@@ -8,9 +8,9 @@ import type { McpCompositionRoot } from "./composition-root.ts";
 import { characterBattleSpellSlots } from "./session-store.ts";
 import {
   decodeStartBattleArgs,
-  StartBattleOutputSchema,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
+import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 

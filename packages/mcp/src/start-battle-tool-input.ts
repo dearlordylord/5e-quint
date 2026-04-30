@@ -27,12 +27,6 @@ const IntegerSchema = Schema.Number.pipe(Schema.int());
 const NonNegativeIntegerSchema = IntegerSchema.pipe(
   Schema.greaterThanOrEqualTo(0),
 );
-export const StartBattleOutputSchema = Schema.Struct({
-  battleState: Schema.Any,
-  snapshot: Schema.Any,
-  session: Schema.Any,
-});
-
 const StartBattleCharacterArgsSchema = Schema.Struct({
   sourceDraftId: Schema.NonEmptyTrimmedString,
   combatantId: Schema.NonEmptyTrimmedString,

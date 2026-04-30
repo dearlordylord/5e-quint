@@ -110,6 +110,12 @@ export const creationChoiceOptionId: (value: string) => CreationChoiceOptionId =
 
 export type ChoiceCount = number & Brand.Brand<"ChoiceCount">;
 const ChoiceCount = Brand.nominal<ChoiceCount>();
+export type ChoiceMinimumCount = NonNegativeIntegerType &
+  Brand.Brand<"ChoiceMinimumCount">;
+const ChoiceMinimumCount = Brand.all(
+  NonNegativeInteger,
+  Brand.nominal<ChoiceMinimumCount>(),
+);
 
 export type DraftRevision = NonNegativeIntegerType &
   Brand.Brand<"DraftRevision">;
@@ -131,10 +137,16 @@ export type HitDieTotal = PositiveIntegerType & Brand.Brand<"HitDieTotal">;
 const HitDieTotal = Brand.all(PositiveInteger, Brand.nominal<HitDieTotal>());
 export const hitDieTotal: (value: number) => HitDieTotal = HitDieTotal;
 
-export type ChoiceCardinality = {
-  readonly tag: "exactly";
-  readonly count: ChoiceCount;
-};
+export type ChoiceCardinality =
+  | {
+      readonly tag: "exactly";
+      readonly count: ChoiceCount;
+    }
+  | {
+      readonly tag: "between";
+      readonly min: ChoiceMinimumCount;
+      readonly max: ChoiceCount;
+    };
 
 export function exactChoiceCardinality(count: number): ChoiceCardinality {
   if (!Number.isInteger(count) || count < 1) {
@@ -142,6 +154,46 @@ export function exactChoiceCardinality(count: number): ChoiceCardinality {
   }
 
   return { tag: "exactly", count: ChoiceCount(count) };
+}
+
+export function boundedChoiceCardinality(input: {
+  readonly min: number;
+  readonly max: number;
+}): ChoiceCardinality {
+  if (
+    !Number.isInteger(input.min) ||
+    !Number.isInteger(input.max) ||
+    input.min < 0 ||
+    input.max < 1 ||
+    input.max < input.min
+  ) {
+    throw new Error(
+      `Choice cardinality bounds must be non-negative minimum and positive maximum integers: ${input.min}..${input.max}`,
+    );
+  }
+
+  if (input.min === input.max) {
+    return exactChoiceCardinality(input.max);
+  }
+
+  return {
+    tag: "between",
+    min: ChoiceMinimumCount(input.min),
+    max: ChoiceCount(input.max),
+  };
+}
+
+export function choiceCardinalityBounds(cardinality: ChoiceCardinality): {
+  readonly min: ChoiceMinimumCount | ChoiceCount;
+  readonly max: ChoiceCount;
+} {
+  return cardinality.tag === "exactly"
+    ? { min: cardinality.count, max: cardinality.count }
+    : { min: cardinality.min, max: cardinality.max };
+}
+
+export function choiceCardinalityMax(cardinality: ChoiceCardinality): number {
+  return choiceCardinalityBounds(cardinality).max;
 }
 
 export type CreationHoleSource =

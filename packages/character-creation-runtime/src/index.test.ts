@@ -289,7 +289,7 @@ describe("character creation hole discovery", () => {
       holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
     ).toMatchObject({
       kind: "choice",
-      cardinality: { tag: "exactly", count: 3 },
+      cardinality: { tag: "between", min: 0, max: 3 },
       options: [
         { optionId: "armor_chain_mail" },
         { optionId: "weapon_longsword" },
@@ -495,7 +495,7 @@ describe("character creation hole discovery", () => {
       holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
     ).toMatchObject({
       kind: "choice",
-      cardinality: { tag: "exactly", count: 3 },
+      cardinality: { tag: "between", min: 0, max: 3 },
     });
     expect(
       holeById(holes, "cc:unit:armor_chain_mail:loadout_armor"),

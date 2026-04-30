@@ -1,10 +1,10 @@
 import {
   discoverBattleActs,
   resolveBattleSubject,
+  sameBattleSubject,
   snapshotBattle,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
 } from "@dnd/battle-runtime";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -31,13 +31,11 @@ import {
   BattleSessionOutputSchema,
   EndBattleOutputSchema,
   SelectStatBlockOutputSchema,
+  StartBattleOutputSchema,
 } from "./battle-tool-output.ts";
 import { battleStateProjection } from "./battle-state-projection.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
-import {
-  StartBattleOutputSchema,
-  startBattleInputSchema,
-} from "./start-battle-tool-input.ts";
+import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 import type { BattleFillSession } from "./session-store.ts";
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
@@ -365,26 +363,4 @@ function pendingBattleFillsContent(
     code: "BATTLE_FILLS_PENDING",
     pendingSubject: pendingFills.subject,
   });
-}
-
-function sameBattleSubject(left: BattleSubject, right: BattleSubject): boolean {
-  if (left.tag !== right.tag || left.actorId !== right.actorId) return false;
-  if (left.tag === "srdAction" && right.tag === "srdAction") {
-    if (left.action !== right.action) return false;
-    if (left.action === "attack" && right.action === "attack") {
-      return left.attackName === right.attackName;
-    }
-    if (left.action === "magic" && right.action === "magic") {
-      return left.spellId === right.spellId;
-    }
-    return false;
-  }
-  if (left.tag === "unitFeature" && right.tag === "unitFeature") {
-    return left.unitId === right.unitId;
-  }
-  if (left.tag === "runtimeCommand" && right.tag === "runtimeCommand") {
-    return left.command === right.command;
-  }
-
-  return false;
 }

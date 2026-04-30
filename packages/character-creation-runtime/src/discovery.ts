@@ -53,6 +53,9 @@ import {
 import {
   creationChoiceOptionId,
   creationHoleId,
+  boundedChoiceCardinality,
+  choiceCardinalityBounds,
+  choiceCardinalityMax,
   exactChoiceCardinality,
   type CharacterChoiceSelection,
   type CharacterDraft,
@@ -359,7 +362,8 @@ export function backgroundToolChoiceSpec(
     Match.exhaustive,
   );
 
-  return spec != null && spec.cardinality.count <= spec.options.length
+  return spec != null &&
+    choiceCardinalityMax(spec.cardinality) <= spec.options.length
     ? spec
     : undefined;
 }
@@ -374,9 +378,10 @@ export function discoverEquipmentHoles(input: {
   }
   const purchaseHole = choiceHole({
     source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
-    cardinality: exactChoiceCardinality(
-      supportedEquipmentPurchaseChoiceCount(),
-    ),
+    cardinality: boundedChoiceCardinality({
+      min: 0,
+      max: supportedEquipmentPurchaseChoiceCount(),
+    }),
     options: supportedPurchasableEquipmentUnitIds().map((unitId) =>
       unitOption(input.unitLibrary.requireUnit(unitId)),
     ),
@@ -534,11 +539,15 @@ export function hasValidEquipmentPurchaseSelectionForHole(
   draft: CharacterDraft,
   hole: CreationHole,
 ): boolean {
+  if (draft.selections.equipment == null) {
+    return false;
+  }
+
   return choiceOptionIdsFitHole(
     hole,
-    draft.selections.equipment?.selectedUnitIds.map((unitId) =>
+    draft.selections.equipment.selectedUnitIds.map((unitId) =>
       creationChoiceOptionId(unitId),
-    ) ?? [],
+    ),
   );
 }
 
@@ -596,9 +605,13 @@ export function choiceOptionIdsFitHole(
   hole: CreationHole,
   optionIds: readonly CreationChoiceOptionId[],
 ): boolean {
+  const bounds =
+    hole.kind === "choice" ? choiceCardinalityBounds(hole.cardinality) : null;
   return (
     hole.kind === "choice" &&
-    optionIds.length === hole.cardinality.count &&
+    bounds != null &&
+    optionIds.length >= bounds.min &&
+    optionIds.length <= bounds.max &&
     !hasDuplicateOptionIds(optionIds) &&
     optionIds.every((optionId) =>
       hole.options.some((option) => option.optionId === optionId),
@@ -611,10 +624,8 @@ export function selectedChoiceOptionMatchesHole(
   selectedOption: CharacterSelectedChoiceOption,
   hole: ChoiceCreationHole,
 ): boolean {
-  return hole.options.some(
-    (option) =>
-      choiceSelectionOptionKey(selectedOption) ===
-      choiceSelectionOptionKey(selectedChoiceOption(option)),
+  return hole.options.some((option) =>
+    sameSelectedChoiceOption(selectedOption, selectedChoiceOption(option)),
   );
 }
 
@@ -645,20 +656,7 @@ export function sameChoiceSelectionMultiset(
   left: readonly CharacterChoiceSelection[],
   right: readonly CharacterChoiceSelection[],
 ): boolean {
-  const rightKeys = right.map(choiceSelectionKey);
-  const leftKeys = left.map(choiceSelectionKey);
-  return sameOptionIdMultiset(leftKeys, rightKeys);
-}
-
-export function choiceSelectionKey(
-  selection: CharacterChoiceSelection,
-): string {
-  const source = `unit:${selection.source.unitId}:${selection.source.choiceKey}`;
-  const options = selection.options
-    .map(choiceSelectionOptionKey)
-    .sort()
-    .join("\u0000");
-  return `${source}\u0001${options}`;
+  return sameMultiset(left, right, sameChoiceSelection);
 }
 
 export function choiceSelectionOptionIds(
@@ -667,21 +665,54 @@ export function choiceSelectionOptionIds(
   return selection.options.map((option) => option.optionId);
 }
 
-export function choiceSelectionOptionKey(
-  option: CharacterSelectedChoiceOption,
-): string {
-  return option.unitRef == null
-    ? option.optionId
-    : `${option.optionId}\u0002${option.unitRef.unitId}`;
+export function sameChoiceSelection(
+  left: CharacterChoiceSelection,
+  right: CharacterChoiceSelection,
+): boolean {
+  return (
+    sameCreationHoleSource(left.source, right.source) &&
+    sameSelectedChoiceOptionMultiset(left.options, right.options)
+  );
+}
+
+export function sameSelectedChoiceOptionMultiset(
+  left: readonly CharacterSelectedChoiceOption[],
+  right: readonly CharacterSelectedChoiceOption[],
+): boolean {
+  return sameMultiset(left, right, sameSelectedChoiceOption);
+}
+
+export function sameSelectedChoiceOption(
+  left: CharacterSelectedChoiceOption,
+  right: CharacterSelectedChoiceOption,
+): boolean {
+  return (
+    left.optionId === right.optionId &&
+    left.unitRef?.unitId === right.unitRef?.unitId
+  );
 }
 
 export function sameOptionIdMultiset(
   left: readonly string[],
   right: readonly string[],
 ): boolean {
+  return sameMultiset(
+    left,
+    right,
+    (leftValue, rightValue) => leftValue === rightValue,
+  );
+}
+
+function sameMultiset<T>(
+  left: readonly T[],
+  right: readonly T[],
+  sameElement: (leftElement: T, rightElement: T) => boolean,
+): boolean {
   const remainingRight = [...right];
-  for (const optionId of left) {
-    const matchIndex = remainingRight.indexOf(optionId);
+  for (const leftElement of left) {
+    const matchIndex = remainingRight.findIndex((rightElement) =>
+      sameElement(leftElement, rightElement),
+    );
     if (matchIndex === -1) {
       return false;
     }
