@@ -44,13 +44,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 1,
       "id": "POST0",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconsider Post-CAM Width Plan After CAM16A"
     },
     {
       "number": 2,
       "id": "POST1",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Research First Width Slice RAW And Corpus"
     },
     {
@@ -124,6 +124,30 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "CAM21",
       "status": "blocked",
       "title": "End-User Vertical Acceptance"
+    },
+    {
+      "number": 15,
+      "id": "POST2",
+      "status": "blocked",
+      "title": "Add First Width Slice Surface Records And Readers"
+    },
+    {
+      "number": 16,
+      "id": "POST3",
+      "status": "blocked",
+      "title": "Widen Character Creation Runtime Support Profile"
+    },
+    {
+      "number": 17,
+      "id": "POST4",
+      "status": "blocked",
+      "title": "Widen Battle Runtime For First Width Slice"
+    },
+    {
+      "number": 18,
+      "id": "POST5",
+      "status": "blocked",
+      "title": "Add Widened MCP User Workflow Coverage"
     }
   ]
 }
@@ -152,8 +176,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | Order | Task                                                             | Status                                        | Depends on         | Blocks                           | Next action                                                                                                                                                                                     | Handoff readiness                                                            |
 | ----- | ---------------------------------------------------------------- | --------------------------------------------- | ------------------ | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 0     | CAM16A - Prepare Character Creation Runtime For Catalog Widening | done                                          | completed baseline | CAM17, POST0                     | Localized Phase 1 support gates, derived build projection from accepted selections, and indexed hole/option validation before MCP exposes the creation runtime.                                 | Completed.                                                                   |
-| 1     | POST0 - Reconsider Post-CAM Width Plan After CAM16A              | ready-for-research                            | CAM16A             | POST1                            | Rewrite the mandatory post-CAM width tasks after CAM16A reveals the support-profile/projection shape; do not leave widening as optional follow-up.                                              | Ready for plan rewrite based on the CAM16A support-profile/projection shape. |
-| 2     | POST1 - Research First Width Slice RAW And Corpus                | blocked                                       | POST0              | future POST implementation tasks | Validate the default Fighter 2 + Wizard 1 + second monster width slice against local RAW/corpus, then produce proactive widening implementation tasks.                                          | Blocker Type: dependency. Blocker Detail: waits on POST0 plan rewrite.       |
+| 1     | POST0 - Reconsider Post-CAM Width Plan After CAM16A              | done                                          | CAM16A             | POST1                            | Rewrote the mandatory post-CAM width queue around CAM16A's support-profile boundary.                                                                                                             | Completed.                                                                   |
+| 2     | POST1 - Research First Width Slice RAW And Corpus                | ready-for-research                            | POST0              | POST2                            | Validate the default Fighter 2 + Wizard 1 + second monster width slice against local RAW/corpus, then revise the concrete POST2-POST5 implementation tasks if the researched slice changes.       | Ready for RAW/corpus research; no implementation before CAM21.               |
 | 3     | CAM17 - Add MCP Character Creation Tools                         | ready-for-implementation-after-light-research | CAM16A             | CAM18A                           | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                 | Ready after MCP green character-tool architecture check.                     |
 | 4     | CAM18A - Add MCP Battle Session Shell                            | blocked                                       | CAM17              | CAM18B                           | Add green MCP tools for selecting a Stat Block, starting battle with explicit Initiative, storing battle session state, and returning battle state/snapshot.                                    | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.      |
 | 5     | CAM18B - Add MCP Fighter Battle Flow                             | blocked                                       | CAM18A             | CAM18C                           | Drive Fighter battle acts through MCP: discover Attack/End Turn, resolve target/attack-roll/damage fills, store returned BattleState, clear transient fills, and End Turn.                      | Blocker Type: dependency. Blocker Detail: waits on battle session shell.     |
@@ -165,7 +189,11 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 11    | CAM19C - Delete Projected Vocabulary From Promoted Path          | blocked                                       | CAM19B             | CAM19D                           | Delete projected executable vocabulary from the promoted MCP/runtime path after legacy isolation, preserving omitted semantics only through Restore Ledger rows.                                | Blocker Type: dependency. Blocker Detail: waits on legacy isolation.         |
 | 12    | CAM19D - Reconcile Post-Deletion Docs And Tests                  | blocked                                       | CAM19C             | CAM20                            | Reconcile docs, tests, Restore Ledger status, and expected failures after isolation/deletion so CAM20 has a concrete promotion handoff.                                                         | Blocker Type: dependency. Blocker Detail: waits on projected cleanup.        |
 | 13    | CAM20 - Green Reconciliation And MCP Promotion                   | blocked                                       | CAM19D             | CAM21                            | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.           | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.    |
-| 14    | CAM21 - End-User Vertical Acceptance                             | blocked                                       | CAM20              | none                             | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP. | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.        |
+| 14    | CAM21 - End-User Vertical Acceptance                             | blocked                                       | CAM20              | POST2                            | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP. | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.        |
+| 15    | POST2 - Add First Width Slice Surface Records And Readers        | blocked                                       | POST1, CAM21       | POST3                            | Add the researched width slice to Surface records/readers: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and the selected non-Goblin-shaped SRD Stat Block.                | Blocker Type: dependency. Blocker Detail: waits on POST1 research and CAM21. |
+| 16    | POST3 - Widen Character Creation Runtime Support Profile         | blocked                                       | POST2              | POST4                            | Extend CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.                  | Blocker Type: dependency. Blocker Detail: waits on Surface width.            |
+| 17    | POST4 - Widen Battle Runtime For First Width Slice               | blocked                                       | POST3              | POST5                            | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Surface-backed acts/resources/spell or monster facts, preserving runtime parity discipline.              | Blocker Type: dependency. Blocker Detail: waits on character runtime width.  |
+| 18    | POST5 - Add Widened MCP User Workflow Coverage                   | blocked                                       | POST4              | none                             | Exercise the widened slice through promoted MCP/user workflows and update Restore Ledger status for restored width rows.                                                                         | Blocker Type: dependency. Blocker Detail: waits on battle runtime width.     |
 
 ## Task Details
 
@@ -227,7 +255,7 @@ Plan Impact:
 
 ### Task 1 - POST0 - Reconsider Post-CAM Width Plan After CAM16A
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: CAM16A
 Blocks: POST1
@@ -246,30 +274,44 @@ Output:
 
 Acceptance:
 
-- POST tasks are rewritten only as planning tasks unless CAM21 is already done; implementation tasks remain blocked behind CAM21, but the plan must make widening the next required body of work after CAM acceptance.
-- The rewritten POST queue must contain concrete implementation tasks, not a vague research backlog or optional exploration bucket.
-- The plan explains how widening should flow through CAM16A's support-profile boundary rather than adding new scattered Phase 1 branches.
-- Any uncertainty that requires RAW/local-corpus review is pushed into POST1 with specific files/topics to inspect.
-- The default width hypothesis remains Fighter 2 + Wizard 1 + second monster unless POST0 records a concrete reason to revise it.
+- POST tasks are rewritten only as planning tasks unless CAM21 is already done;
+  implementation tasks remain blocked behind CAM21, but the plan must make
+  widening the next required body of work after CAM acceptance.
+- The rewritten POST queue contains concrete implementation tasks, not a vague
+  research backlog or optional exploration bucket.
+- Widening must flow through CAM16A's package-private support profile in
+  `packages/character-creation-runtime/src/support-gates.ts`, build projection
+  in `finalization.ts`, and their QNT/docs owners. Do not add scattered
+  Fighter/Soldier/Orc/Wizard branches in discovery, MCP, or battle code when a
+  support-profile entry, Surface reader, or runtime projection is the real
+  boundary.
+- RAW/local-corpus uncertainty is pushed into POST1 with specific files/topics
+  to inspect.
+- Default width decision: retain Fighter 2 + Wizard 1 + one second
+  non-Goblin-shaped SRD monster. POST0 found no CAM16A architecture reason to
+  replace it; POST1 may revise only after local RAW/corpus review records a
+  concrete better pressure case.
 
 Verification:
 
-- Plan-only change; run `git diff --check -- plans/ACTIVE_PLAN.md`.
-- If POST task index/order changes, validate the Ralph task index JSON parses.
+- `git diff --check -- plans/ACTIVE_PLAN.md`
+- Ralph task index JSON parse check.
 
 Plan Impact:
 
-- Unblock POST1. Ensure POST1 produces mandatory widening work. Do not unblock any post-CAM implementation task before CAM21.
+- Status: applied.
+- POST1: unblocked for RAW/corpus research.
+- POST2-POST5: added as concrete mandatory widening implementation tasks,
+  blocked behind CAM21 and the researched POST1 slice.
+- CAM21: now explicitly blocks POST2 so widening is the next required body of
+  work after end-user acceptance.
 
 ### Task 2 - POST1 - Research First Width Slice RAW And Corpus
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: POST0
-Blocks: future POST implementation tasks
-
-Blocker Type: dependency
-Blocker Detail: waits on POST0 plan rewrite.
+Blocks: POST2
 
 Default hypothesis:
 
@@ -282,22 +324,43 @@ Input:
 - POST0 revised task outline.
 - Local RAW corpus in `.references/srd-5.2.1/`.
 - Existing Surface content/readers and Restore Ledger rows.
+- `UBIQUITOUS_LANGUAGE.md`.
 
 Output:
 
 - Researched first-width-slice decision with exact SRD citations.
 - Selected second monster, or a justified replacement if local RAW/corpus shows a better pressure case.
-- Concrete proactive widening implementation task list for Surface records/readers, character creation runtime, battle runtime, MCP, and tests.
+- Revisions to POST2-POST5 if the researched slice changes their concrete
+  implementation scope.
+- A deterministic scenario outline that will later exercise the widened class
+  and monster facts through promoted MCP/user workflows.
 
 Acceptance:
 
-- Re-read local RAW rather than relying on the default hypothesis.
-- Confirm or revise Fighter 2 as the advancement pressure case, including the exact level-2 feature(s) to model.
-- Confirm or revise Wizard 1 as the spellcasting pressure case, including spell slot and prepared-spell legality facts.
-- Select a second monster whose authored facts force at least one new runtime shape beyond Goblin Warrior's current support.
-- Identify one deterministic scenario that exercises the widened class and monster facts without becoming a broad content survey.
-- Produce implementation-ready POST tasks that proactively add this width; do not close POST1 with only notes, recommendations, or a deferred decision.
-- Keep post-CAM implementation tasks blocked until CAM21 unless the owner explicitly changes queue policy.
+- Re-read local RAW rather than relying on the default hypothesis. Minimum
+  topics/files:
+  - `.references/srd-5.2.1/Character-Creation.md` for level-1 creation versus
+    advancement/higher-level start boundaries.
+  - `.references/srd-5.2.1/Classes/Fighter.md` for Fighter 2 and Action Surge.
+  - `.references/srd-5.2.1/Classes/Wizard.md` and relevant
+    `.references/srd-5.2.1/Spells/*` files for Wizard 1 spellcasting,
+    spellbook/preparation, slots, and any selected spell pressure.
+  - `.references/srd-5.2.1/Monsters.md` and any stat-block corpus file holding
+    the candidate second monster.
+  - `UBIQUITOUS_LANGUAGE.md` for project terminology before naming runtime
+    concepts.
+- Confirm or revise Fighter 2 as the advancement pressure case, including the
+  exact level-2 feature(s) to model.
+- Confirm or revise Wizard 1 as the spellcasting pressure case, including spell
+  slot, spellbook, prepared-spell legality, and spell access facts.
+- Select a second monster whose authored facts force at least one new runtime
+  shape beyond Goblin Warrior's current support.
+- Identify one deterministic scenario that exercises the widened class and
+  monster facts without becoming a broad content survey.
+- Revise POST2-POST5 into implementation-ready tasks for the selected slice;
+  do not close POST1 with only notes, recommendations, or a deferred decision.
+- Keep POST2-POST5 blocked until CAM21 unless the owner explicitly changes queue
+  policy.
 
 Verification:
 
@@ -307,7 +370,8 @@ Verification:
 
 Plan Impact:
 
-- Add or revise concrete POST implementation tasks for proactive width, still blocked behind CAM21 by default.
+- Revise POST2-POST5 if RAW/corpus research changes the default slice; keep
+  implementation blocked behind CAM21 by default.
 
 ### Task 3 - CAM17 - Add MCP Character Creation Tools
 
@@ -905,6 +969,213 @@ Plan Impact:
 - If successful, mark the Correction Application Migration accepted for the
   first end-user vertical and record any explicitly deferred post-battle facts
   in the Restore Ledger or a follow-up CAM task.
+
+### Task 15 - POST2 - Add First Width Slice Surface Records And Readers
+
+Status: `blocked`
+
+Depends on: POST1, CAM21
+Blocks: POST3
+
+Blocker Type: dependency
+Blocker Detail: waits on POST1 RAW/corpus research and CAM21 end-user acceptance.
+
+Input:
+
+- POST1 researched first-width-slice decision.
+- Local RAW citations recorded by POST1.
+- Current `@dnd/surface` Unit and Stat Block catalogs/readers.
+- Restore Ledger rows for full character creation width, Wizard creation,
+  Fighter 2/Action Surge, and monster breadth.
+
+Output:
+
+- Surface-authored records and reader support for the selected first width
+  slice. Default until POST1 revises it: Fighter 2 advancement facts, Wizard 1
+  spellcasting creation facts, and one non-Goblin-shaped SRD Stat Block.
+- Reader tests proving the new records are discoverable through existing
+  catalog boundaries without treating 5e-tools or other structured inputs as
+  provenance.
+- Documentation updates for any widened Surface record boundary.
+
+Acceptance:
+
+- Mixed-provenance or mixed-license monster collections remain unrepresentable
+  at the collection boundary.
+- New Surface facts are canonical authored facts or reader projections from
+  authored records, not duplicated runtime state.
+- Surface widening is driven by the POST1 pressure cases and local RAW
+  citations, not by a broad content survey.
+- If the selected second monster needs a new Stat Block shape, the shape is
+  named after the SRD domain fact it models and has a focused reader/regression
+  test.
+
+Verification:
+
+- `pnpm --filter @dnd/surface test`
+- `pnpm --filter @dnd/surface typecheck`
+- RAW traceability check for every newly modeled rule.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock POST3.
+
+### Task 16 - POST3 - Widen Character Creation Runtime Support Profile
+
+Status: `blocked`
+
+Depends on: POST2
+Blocks: POST4
+
+Blocker Type: dependency
+Blocker Detail: waits on first width slice Surface records/readers.
+
+Input:
+
+- POST2 Surface records/readers.
+- CAM16A support-profile architecture in
+  `packages/character-creation-runtime/src/support-gates.ts`.
+- Character build projection and package-local QNT/MBT slices.
+
+Output:
+
+- Character creation runtime support-profile entries for the selected width
+  slice, including supported draft choices, Unit choice families, option ids,
+  purchasable equipment/loadout facts if required, and finalization facts.
+- Finalization/build projection widened from accepted selections and Surface
+  Unit refs, not hard-coded parallel constants.
+- QNT slice/MBT bridge and docs updated for the widened character creation
+  behavior.
+
+Acceptance:
+
+- Legal-but-unsupported options still fail through one support-profile boundary
+  with precise issues.
+- Fighter 2 and Wizard 1 creation/advancement facts, if retained by POST1, are
+  accepted only where the selected Surface facts and support profile make them
+  executable.
+- The remaining Phase 1-specific branches are removed or narrowed to named
+  manifest-only facts; no scattered Wizard/Fighter special cases are added
+  outside the support-profile/projection boundary.
+- CharacterBuild carries only build facts needed by later boundaries and does
+  not gain in-play state such as current HP, expended slots, or temporary HP.
+
+Verification:
+
+- `pnpm --filter @dnd/character-creation-runtime test`
+- `pnpm --filter @dnd/character-creation-runtime typecheck`
+- Tier 1b creature/creation MBT only if reducer/QNT behavior changes require
+  randomized parity; follow MBT runner and zombie-evaluator protocol.
+- RAW traceability check for every newly modeled rule.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock POST4.
+
+### Task 17 - POST4 - Widen Battle Runtime For First Width Slice
+
+Status: `blocked`
+
+Depends on: POST3
+Blocks: POST5
+
+Blocker Type: dependency
+Blocker Detail: waits on character creation runtime width.
+
+Input:
+
+- POST3 widened CharacterBuild facts.
+- POST2 widened Stat Block and Unit records.
+- Current `@dnd/battle-runtime` act discovery/resolution and package-local QNT
+  slice.
+- Restore Ledger rows for spellcasting, Action Surge, Second Wind if pulled into
+  the scenario, and monster breadth.
+
+Output:
+
+- Battle runtime support for the selected first width slice's battle pressure.
+  Default until POST1 revises it: Fighter 2 Action Surge pressure, Wizard 1
+  spell access or selected spell pressure, and the selected second monster's
+  authored combat shape.
+- Surface-backed act/resource/spell/monster facts derived from records and
+  runtime state, not a restored projected-executable IR.
+- Battle runtime docs and QNT/parity artifacts updated for the widened behavior.
+
+Acceptance:
+
+- Runtime behavior remains aligned with the battle authority policy current at
+  CAM21.
+- Action/resources/spell/monster identities are carried by typed selections or
+  authored record refs so selected options cannot drift from executable facts.
+- Any support gate for omitted spell, feature, or monster behavior has runtime
+  consequences and a test; no inert status enum or metadata label is added.
+- No old `CPU*`, `PEA*`, `PPR*`, projected compiler, or projected action bridge
+  vocabulary is restored.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- Tier 1 battle MBT only if battle/QNT behavior changes require parity; follow
+  MBT runner and zombie-evaluator protocol.
+- RAW traceability check for every newly modeled rule.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock POST5.
+
+### Task 18 - POST5 - Add Widened MCP User Workflow Coverage
+
+Status: `blocked`
+
+Depends on: POST4
+Blocks: none
+
+Blocker Type: dependency
+Blocker Detail: waits on battle runtime width.
+
+Input:
+
+- Promoted MCP server path accepted by CAM21.
+- POST2-POST4 widened Surface, character creation runtime, and battle runtime.
+- POST1 deterministic scenario outline.
+- Restore Ledger rows for the restored width.
+
+Output:
+
+- Promoted MCP/user workflow tests for the selected widened slice.
+- User-facing docs updated with the supported widened workflow and any explicit
+  support boundaries that remain.
+- Restore Ledger status updated for rows restored by the first POST width slice.
+
+Acceptance:
+
+- The scenario exercises character creation, battle setup, widened battle
+  behavior, and post-battle read models through user-facing MCP tools.
+- MCP does not duplicate Surface or runtime facts in session state; it stores
+  identities plus authoritative runtime state and projects read models from
+  those boundaries.
+- The workflow proves the first proactive width slice after CAM acceptance; it
+  is not a one-off hidden fixture.
+- Remaining omitted width is explicitly left in the Restore Ledger or new POST
+  follow-up tasks.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test`
+- Relevant runtime package tests for any state handoff touched by the MCP
+  workflow.
+- Source-only check confirms the promoted MCP path has no Core/projected
+  execution dependency.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, mark the first post-CAM width slice restored and add any next
+  width tasks discovered during implementation.
 
 ## Deferred Previous Queue
 
