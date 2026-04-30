@@ -161,6 +161,37 @@ const CreationHoleId = Brand.nominal<CreationHoleId>();
 export const creationHoleId: (value: CreationHoleIdText) => CreationHoleId =
   CreationHoleId;
 
+export function parseCreationHoleId(value: string): CreationHoleId | null {
+  const text = parseCreationHoleIdText(value);
+  return text == null ? null : creationHoleId(text);
+}
+
+function parseCreationHoleIdText(value: string): CreationHoleIdText | null {
+  const draftPrefix = "cc:draft:";
+  if (value.startsWith(draftPrefix)) {
+    const path = value.slice(draftPrefix.length);
+    return CHARACTER_DRAFT_PATHS.some((draftPath) => draftPath === path)
+      ? `cc:draft:${path as CharacterDraftPath}`
+      : null;
+  }
+
+  const unitPrefix = "cc:unit:";
+  if (!value.startsWith(unitPrefix)) return null;
+  const unitHoleText = value.slice(unitPrefix.length);
+  const choiceKeySeparator = unitHoleText.lastIndexOf(":");
+  if (choiceKeySeparator <= 0) return null;
+  const unitId = unitHoleText.slice(0, choiceKeySeparator);
+  const choiceKey = unitHoleText.slice(choiceKeySeparator + 1);
+  if (
+    unitId === "" ||
+    !UNIT_CHOICE_KEYS.some((unitChoiceKey) => unitChoiceKey === choiceKey)
+  ) {
+    return null;
+  }
+
+  return `cc:unit:${unitId}:${choiceKey as UnitChoiceKey}`;
+}
+
 export type UnitRef = {
   readonly unitId: UnitRecord["id"];
 };

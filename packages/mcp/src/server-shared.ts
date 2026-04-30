@@ -16,6 +16,9 @@ import {
   getMonsterStatBlockByStateId,
   statBlockAbilityName,
 } from "@dnd/core/monster-catalog.ts";
+import { errorContent, jsonContent } from "./tool-content.ts";
+
+export { errorContent, jsonContent };
 
 export type DndActor = ActorRefFrom<typeof creatureMachine>;
 export type BattleActor = ActorRefFrom<typeof battleMachine>;
@@ -25,23 +28,6 @@ export type SupportedActionHost =
 
 type DndSnapshot = SnapshotFrom<typeof creatureMachine>;
 type BattleSnapshot = SnapshotFrom<typeof battleMachine>;
-
-export function jsonContent(payload: unknown) {
-  return {
-    content: [
-      { type: "text" as const, text: JSON.stringify(payload, null, 2) },
-    ],
-  };
-}
-
-export function errorContent(message: string, details?: unknown) {
-  return {
-    ...jsonContent(
-      details == null ? { error: message } : { error: message, details },
-    ),
-    isError: true as const,
-  };
-}
 
 export function snapshotFingerprint(snapshot: DndSnapshot): string {
   return JSON.stringify(encodeDndSnapshot(snapshot));

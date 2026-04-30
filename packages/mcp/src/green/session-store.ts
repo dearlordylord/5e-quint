@@ -21,7 +21,7 @@ export type GreenBattleFillSession = {
 
 export type GreenMcpSessionSnapshot = {
   readonly draftIds: readonly CharacterDraftId[];
-  readonly finalizedDraftIds: readonly CharacterDraftId[];
+  readonly sheetDraftIds: readonly CharacterDraftId[];
   readonly selectedStatBlockId: StatBlockId | null;
   readonly battleState: BattleState | null;
   readonly transientBattleFills: GreenBattleFillSession | null;
@@ -29,7 +29,7 @@ export type GreenMcpSessionSnapshot = {
 
 export type GreenMcpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
-  readonly buildsByDraftId: Map<CharacterDraftId, CharacterBuild>;
+  readonly sheets: Map<CharacterDraftId, CharacterBuild>;
   battleState: BattleState | null;
   transientBattleFills: GreenBattleFillSession | null;
   clearSelectedStatBlock(): void;
@@ -42,11 +42,11 @@ export function createGreenMcpSessionStore(
   statBlockCatalog: StatBlockCatalog,
 ): GreenMcpSessionStore {
   const drafts = new Map<CharacterDraftId, CharacterDraft>();
-  const buildsByDraftId = new Map<CharacterDraftId, CharacterBuild>();
+  const sheets = new Map<CharacterDraftId, CharacterBuild>();
   let selectedStatBlockId: StatBlockId | null = null;
   const store: GreenMcpSessionStore = {
     drafts,
-    buildsByDraftId,
+    sheets,
     battleState: null,
     transientBattleFills: null,
     clearSelectedStatBlock(): void {
@@ -65,7 +65,7 @@ export function createGreenMcpSessionStore(
     snapshot(): GreenMcpSessionSnapshot {
       return {
         draftIds: Array.from(drafts.keys()),
-        finalizedDraftIds: Array.from(buildsByDraftId.keys()),
+        sheetDraftIds: Array.from(sheets.keys()),
         selectedStatBlockId,
         battleState: store.battleState,
         transientBattleFills: store.transientBattleFills,

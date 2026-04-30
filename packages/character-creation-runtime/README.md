@@ -47,6 +47,14 @@ Character creation fill semantics are intentionally different from battle
 fills. Creation fills patch durable draft state in atomic batches; battle fills
 are transient replay inputs for one selected battle subject.
 
+The MCP Surface-runtime projection uses the same runtime protocol directly:
+`create_character_draft`, `discover_creation_holes`, `fill_creation_holes`, and
+`finalize_character`. The MCP boundary stores drafts by `CharacterDraftId`,
+passes caller fill batches through `fillCreationHoles`, and stores a finalized
+sheet only after `finalizeCharacterDraft` returns `ready`. A rejected fill batch
+does not mutate the stored draft. MCP does not use presets or direct selection
+patches; callers must answer the holes exposed by this package.
+
 ## Fill Issue Vocabulary
 
 Creation fill issue codes are deliberately local to this package. They validate

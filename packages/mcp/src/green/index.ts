@@ -13,3 +13,9 @@ export {
   type GreenMcpSessionSnapshot,
   type GreenMcpSessionStore,
 } from "./session-store.ts";
+export {
+  greenCharacterToolDefinitions,
+  handleGreenCharacterToolCall,
+  isGreenCharacterToolName,
+  type GreenCharacterToolResult,
+} from "./character-tools.ts";

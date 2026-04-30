@@ -15,9 +15,27 @@ character-creation and battle runtimes. Its composition root builds:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
-- an in-memory session store for character drafts, finalized Character Builds,
+- an in-memory session store for character drafts, finalized character sheets,
   selected Stat Block identity, durable battle state, and transient
   battle fills.
+
+The green character-creation tool boundary exposes these user-facing tools:
+
+- `create_character_draft` creates and stores a new Surface-runtime draft, then
+  returns the current creation holes.
+- `discover_creation_holes` returns the stored draft's current hole frontier,
+  draft revision, and finalization status.
+- `fill_creation_holes` submits one atomic batch of `CreationFill` values
+  against the expected draft revision. Accepted batches replace the stored
+  draft; rejected batches return runtime issues and leave the stored draft
+  unchanged.
+- `finalize_character` finalizes only when the runtime reports the supported
+  minimal Fighter draft is ready. A ready result stores the finalized sheet by
+  source draft id in `sheets` and removes the active draft from `drafts`.
+
+These tools operate on real creation holes. MCP does not offer character
+presets, does not patch draft selections directly, and does not import Core
+character helpers in the Surface-runtime path.
 
 Selected Stat Block state stores only the catalog Stat Block id. The full Stat
 Block record is resolved through the green root's installed `statBlockCatalog`,

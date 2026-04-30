@@ -14,6 +14,7 @@ export {
   creationSessionId,
   draftRevision,
   exactChoiceCardinality,
+  parseCreationHoleId,
   unitChoiceKey,
   type AbilityScoreAssignment,
   type AbilityScoreGenerationSelection,
