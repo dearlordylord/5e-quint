@@ -48,7 +48,6 @@ describe("MCP green composition root", () => {
     expect(selected.id).toBe("stat_block_goblin_warrior");
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
-      sheetDraftIds: [],
       selectedStatBlockId: "stat_block_goblin_warrior",
       battleState: null,
       transientBattleFills: null,
@@ -118,6 +117,7 @@ describe("MCP green composition root", () => {
       "discover_creation_holes",
       "fill_creation_holes",
       "finalize_character",
+      "list_characters",
     ]);
   });
 
@@ -129,6 +129,7 @@ describe("MCP green composition root", () => {
       "discover_battle_acts",
       "fill_battle_hole",
       "end_turn",
+      "end_battle",
     ]);
   });
 
@@ -220,6 +221,67 @@ describe("MCP green composition root", () => {
       read.snapshot.acts.map((act: { label: string }) => act.label),
     ).toEqual(["Attack", "End Turn"]);
     expect(read.battleState.combatants).toHaveLength(2);
+  });
+
+  test("start_battle rejects a second battle while the single battle slot is active", () => {
+    const root = createGreenMcpCompositionRoot();
+    const firstDraftId = "draft:mcp-green-active-battle-first";
+    const secondDraftId = "draft:mcp-green-active-battle-second";
+    createFinalizedFighterSheet(root, firstDraftId);
+    createFinalizedFighterSheet(root, secondDraftId);
+    readPayload(
+      handleGreenBattleToolCall(root, "select_stat_block", {
+        statBlockId: "stat_block_goblin_warrior",
+      }),
+    );
+    readPayload(
+      handleGreenBattleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-green-active-battle-first",
+        sheetDraftId: firstDraftId,
+        characterCombatantId: "fighter",
+        characterId: "character:first-fighter",
+        characterDisplayName: "First Orc Soldier Fighter",
+        characterInitiative: 18,
+        statBlockCombatantId: "goblin",
+        statBlockInitiative: 7,
+      }),
+    );
+    const firstBattleState = root.sessionStore.battleState;
+    expect(firstBattleState).not.toBeNull();
+
+    const rejected = readPayload(
+      handleGreenBattleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-green-active-battle-second",
+        sheetDraftId: secondDraftId,
+        characterCombatantId: "second-fighter",
+        characterId: "character:second-fighter",
+        characterDisplayName: "Second Orc Soldier Fighter",
+        characterInitiative: 16,
+        statBlockCombatantId: "second-goblin",
+        statBlockInitiative: 8,
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "BATTLE_SESSION_ALREADY_ACTIVE",
+        battleId: "battle:mcp-green-active-battle-first",
+      },
+    });
+    expect(root.sessionStore.battleState).toBe(firstBattleState);
+    expect(
+      root.sessionStore.characters.get(characterDraftId(firstDraftId)),
+    ).toMatchObject({
+      tag: "inBattle",
+      battleId: "battle:mcp-green-active-battle-first",
+      characterId: "character:first-fighter",
+    });
+    expect(
+      root.sessionStore.characters.get(characterDraftId(secondDraftId)),
+    ).toMatchObject({
+      tag: "available",
+      currentHp: 12,
+    });
   });
 
   test("discovers and resolves Fighter Attack fills, then ends the Fighter turn", () => {
@@ -530,12 +592,16 @@ describe("MCP green composition root", () => {
       hitPoints: { maximum: 12 },
     });
     expect(root.sessionStore.drafts.has(characterDraftId(draftId))).toBe(false);
-    expect(root.sessionStore.sheets.get(characterDraftId(draftId))).toEqual(
-      finalized.finalization.build,
+    expect(root.sessionStore.characters.get(characterDraftId(draftId))).toEqual(
+      {
+        tag: "available",
+        build: finalized.finalization.build,
+        currentHp: 12,
+      },
     );
     expect(finalized.session).toMatchObject({
       draftIds: [],
-      sheetDraftIds: [draftId],
+      characterIds: [draftId],
     });
   });
 
@@ -558,7 +624,7 @@ describe("MCP green composition root", () => {
     });
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
-      sheetDraftIds: [draftId],
+      characterIds: [draftId],
       battleState: null,
       transientBattleFills: null,
     });
@@ -734,6 +800,47 @@ describe("MCP green composition root", () => {
     expect(root.sessionStore.battleState?.combatants.get(fighterId)?.hp).toBe(
       5,
     );
+
+    const ended = readPayload(
+      handleGreenBattleToolCall(root, "end_battle", {}),
+    );
+    expect(ended).toMatchObject({
+      endedBattleId: "battle:mcp-green-full-vertical",
+      session: {
+        battleState: null,
+        transientBattleFills: null,
+        characterIds: [draftId],
+      },
+    });
+    expect(root.sessionStore.battleState).toBeNull();
+    expect(root.sessionStore.characters.get(characterDraftId(draftId))).toEqual(
+      expect.objectContaining({
+        tag: "available",
+        currentHp: 5,
+      }),
+    );
+
+    const characterList = readPayload(
+      handleGreenCharacterToolCall(root, "list_characters", {}),
+    );
+    expect(characterList.characters).toEqual([
+      expect.objectContaining({
+        sourceDraftId: draftId,
+        status: "available",
+        displayName: "Orc Soldier Fighter",
+        hitPoints: { current: 5, maximum: 12 },
+        build: expect.objectContaining({
+          background: "background_soldier",
+          species: "species_orc",
+        }),
+      }),
+    ]);
+    expect(
+      characterList.characters.some(
+        (character: { readonly displayName: string | null }) =>
+          character.displayName === "Goblin Warrior",
+      ),
+    ).toBe(false);
   });
 
   test("discovers creation holes through the explicit tool path", () => {
@@ -759,7 +866,6 @@ describe("MCP green composition root", () => {
     expect(discovered.finalization.tag).toBe("incomplete");
     expect(discovered.session).toMatchObject({
       draftIds: [draftId],
-      sheetDraftIds: [],
     });
     expect(root.sessionStore.drafts.get(characterDraftId(draftId))).toEqual(
       discovered.draft,
@@ -799,7 +905,7 @@ describe("MCP green composition root", () => {
       before,
     );
     expect(rejected.storedDraft).toEqual(before);
-    expect(root.sessionStore.sheets.size).toBe(0);
+    expect(root.sessionStore.characters.size).toBe(0);
   });
 
   test("finalization stores no sheet until the draft is ready", () => {
@@ -818,7 +924,9 @@ describe("MCP green composition root", () => {
     expect(finalized.finalization.tag).toBe("incomplete");
     expect(finalized.sheet).toBeNull();
     expect(root.sessionStore.drafts.has(characterDraftId(draftId))).toBe(true);
-    expect(root.sessionStore.sheets.has(characterDraftId(draftId))).toBe(false);
+    expect(root.sessionStore.characters.has(characterDraftId(draftId))).toBe(
+      false,
+    );
   });
 
   test("rejects reused draft ids for active drafts and finalized sheets", () => {
@@ -881,7 +989,7 @@ describe("MCP green composition root", () => {
       root.sessionStore.drafts.has(characterDraftId(finalizedDraftId)),
     ).toBe(false);
     expect(
-      root.sessionStore.sheets.has(characterDraftId(finalizedDraftId)),
+      root.sessionStore.characters.has(characterDraftId(finalizedDraftId)),
     ).toBe(true);
   });
 
@@ -965,7 +1073,11 @@ function createFinalizedFighterSheet(
   draftId: string,
 ): CharacterBuild {
   const build = fighterCharacterBuild(root.unitLibrary);
-  root.sessionStore.sheets.set(characterDraftId(draftId), build);
+  root.sessionStore.characters.set(characterDraftId(draftId), {
+    tag: "available",
+    build,
+    currentHp: Hp(build.hitPoints.maximum),
+  });
   return build;
 }
 

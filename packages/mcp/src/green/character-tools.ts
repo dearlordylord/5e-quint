@@ -3,11 +3,15 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
+  type CharacterBuild,
   type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
+import { Hp } from "@dnd/shared/types";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 
 import type { GreenMcpCompositionRoot } from "./composition-root.ts";
+import type { GreenCharacterSession } from "./session-store.ts";
 import {
   createCharacterDraftInputSchema,
   decodeCreateCharacterDraftArgs,
@@ -41,8 +45,18 @@ export const greenCharacterToolDefinitions = [
   {
     name: "finalize_character",
     description:
-      "Finalize a complete supported minimal Fighter draft. A ready finalization stores the resulting sheet by source draft id and removes the active draft.",
+      "Finalize a complete supported minimal Fighter draft. A ready finalization stores the resulting character session by source draft id and removes the active draft.",
     inputSchema: draftIdInputSchema,
+  },
+  {
+    name: "list_characters",
+    description:
+      "List durable character-session records. Monster Stat Blocks and live battle combatants are not character-list rows.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
   },
 ] as const;
 
@@ -82,7 +96,7 @@ export function handleGreenCharacterToolCall(
     if (root.sessionStore.drafts.has(draft.draftId)) {
       return duplicateDraftIdContent(draft.draftId, "activeDraft");
     }
-    if (root.sessionStore.sheets.has(draft.draftId)) {
+    if (root.sessionStore.characters.has(draft.draftId)) {
       return duplicateDraftIdContent(draft.draftId, "finalizedSheet");
     }
     root.sessionStore.drafts.set(draft.draftId, draft);
@@ -114,6 +128,18 @@ export function handleGreenCharacterToolCall(
     });
   }
 
+  if (name === "list_characters") {
+    const decoded = decodeEmptyArgs(args, name);
+    if (isGreenToolError(decoded)) return decoded;
+    return jsonContent({
+      characters: Array.from(root.sessionStore.characters.entries()).map(
+        ([sourceDraftId, session]) =>
+          characterListRow(root.unitLibrary, sourceDraftId, session),
+      ),
+      session: root.sessionStore.snapshot(),
+    });
+  }
+
   const draftId = decodeDraftIdArg(args, name);
   if (isGreenToolError(draftId)) return draftId;
 
@@ -132,7 +158,11 @@ export function handleGreenCharacterToolCall(
       unitLibrary: root.unitLibrary,
     });
     if (finalization.tag === "ready") {
-      root.sessionStore.sheets.set(draftId, finalization.build);
+      root.sessionStore.characters.set(draftId, {
+        tag: "available",
+        build: finalization.build,
+        currentHp: Hp(finalization.build.hitPoints.maximum),
+      });
       root.sessionStore.drafts.delete(draftId);
     }
 
@@ -141,7 +171,7 @@ export function handleGreenCharacterToolCall(
       finalization,
       sheet:
         finalization.tag === "ready"
-          ? root.sessionStore.sheets.get(draftId)
+          ? root.sessionStore.characters.get(draftId)?.build
           : null,
       session: root.sessionStore.snapshot(),
     });
@@ -184,4 +214,61 @@ function creationDraftPayload(
     }),
     session: root.sessionStore.snapshot(),
   };
+}
+
+function characterListRow(
+  unitLibrary: UnitCatalog,
+  sourceDraftId: CharacterDraftId,
+  session: GreenCharacterSession,
+) {
+  if (session.tag === "available") {
+    return {
+      sourceDraftId,
+      status: session.tag,
+      displayName: characterBuildDisplayName(unitLibrary, session.build),
+      build: session.build,
+      hitPoints: {
+        current: session.currentHp,
+        maximum: session.build.hitPoints.maximum,
+      },
+    };
+  }
+
+  return {
+    sourceDraftId,
+    status: session.tag,
+    displayName: null,
+    build: session.build,
+    battleId: session.battleId,
+    characterId: session.characterId,
+  };
+}
+
+function characterBuildDisplayName(
+  unitLibrary: UnitCatalog,
+  build: CharacterBuild,
+): string {
+  const speciesName = unitLibrary.requireUnit(build.species).name;
+  const backgroundName = unitLibrary.requireUnit(build.background).name;
+  const className = build.advancement.entries
+    .map((entry) => unitLibrary.requireUnit(entry.classUnitId).name)
+    .join("/");
+
+  return `${speciesName} ${backgroundName} ${className}`;
+}
+
+function decodeEmptyArgs(args: unknown, toolName: string) {
+  if (
+    typeof args !== "object" ||
+    args === null ||
+    Array.isArray(args) ||
+    Object.keys(args).length > 0
+  ) {
+    return errorContent(`${toolName} expects empty object arguments.`, {
+      code: "INVALID_ARGUMENTS",
+      expected: "empty object",
+    });
+  }
+
+  return {};
 }

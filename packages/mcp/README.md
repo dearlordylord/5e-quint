@@ -16,8 +16,8 @@ character-creation and battle runtimes. Its composition root builds:
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
 - an in-memory session store for character drafts, finalized character sheets,
-  selected Stat Block identity, durable battle state, and transient
-  battle fills.
+  durable post-battle character state, selected Stat Block identity, durable
+  battle state, and transient battle fills.
 
 The green character-creation tool boundary exposes these user-facing tools:
 
@@ -30,8 +30,12 @@ The green character-creation tool boundary exposes these user-facing tools:
   draft; rejected batches return runtime issues and leave the stored draft
   unchanged.
 - `finalize_character` finalizes only when the runtime reports the supported
-  minimal Fighter draft is ready. A ready result stores the finalized sheet by
-  source draft id in `sheets` and removes the active draft from `drafts`.
+  minimal Fighter draft is ready. A ready result stores an available character
+  session by source draft id and removes the active draft from `drafts`. The
+  session owns current HP while the character is outside battle.
+- `list_characters` lists durable character-session rows. It reads only the
+  character-session store, so selected or battled Stat Blocks do not appear as
+  characters.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
@@ -43,7 +47,9 @@ The green battle-session path exposes these user-facing tools:
   catalog and stores only that Stat Block id in the session.
 - `start_battle` starts a battle session from one finalized character sheet and
   the selected Stat Block. The caller supplies the Initiative scores for both
-  combatants.
+  combatants. Starting battle moves the character session into an in-battle
+  variant that has no current HP field; the stored `BattleState` owns HP until
+  battle closeout.
 - `read_battle_state` returns the stored `BattleState` projection and current
   battle snapshot.
 - `discover_battle_acts` returns the current actor's battle acts. The current
@@ -55,6 +61,10 @@ The green battle-session path exposes these user-facing tools:
   transient fills.
 - `end_turn` resolves the End Turn runtime command for the current actor, stores
   the returned `BattleState`, and clears transient battle fills.
+- `end_battle` finalizes the stored battle session, projects positive current
+  HP from character-origin battle combatants back into the durable character
+  session, clears battle state, and leaves monster combatants behind in the
+  closed battle.
 
 The current verified green vertical is Orc Soldier Fighter versus Goblin
 Warrior, entirely through MCP tools:
@@ -68,7 +78,8 @@ Warrior, entirely through MCP tools:
 6. resolve Fighter Longsword Attack target, attack roll, and damage fills;
 7. resolve End Turn;
 8. resolve Goblin Warrior Scimitar or Shortbow Attack target, attack roll, and
-   damage fills.
+   damage fills;
+9. end the battle and list the Orc Soldier Fighter with reduced current HP.
 
 That fixture uses the authored Surface Unit and Stat Block catalogs. It does
 not use character presets, Core projections, duplicated executable stat-block
@@ -78,7 +89,9 @@ Remaining first-vertical gates:
 
 - the green path is still isolated under `src/green/` until the Core-backed MCP
   path is deleted or promoted;
-- post-battle character state handoff is not implemented here;
+- post-battle handoff currently accepts reduced positive character HP. Zero-HP,
+  Death Saving Throw, Stable, dead, rest, and broader adventuring-state handoff
+  facts remain deferred to later runtime width;
 - normal-path user acceptance belongs to the promoted MCP server path, not this
   green fixture;
 - broader character choices, additional Stat Blocks, Multiattack, long-range

@@ -58,8 +58,6 @@ export const startBattleInputSchema = {
     characterId: { type: "string" },
     characterDisplayName: { type: "string" },
     characterInitiative: { type: "integer" },
-    characterCurrentHp: { type: "integer", minimum: 0 },
-    characterTempHp: { type: "integer", minimum: 0 },
     statBlockCombatantId: { type: "string" },
     statBlockInitiative: { type: "integer" },
     statBlockCurrentHp: { type: "integer", minimum: 0 },
@@ -111,6 +109,12 @@ export const endTurnInputSchema = {
   additionalProperties: false,
 } satisfies McpObjectInputSchema;
 
+export const endBattleInputSchema = {
+  type: "object",
+  properties: {},
+  additionalProperties: false,
+} satisfies McpObjectInputSchema;
+
 export type StartBattleToolInput = {
   readonly battleId: BattleId;
   readonly sheetDraftId: CharacterDraftId;
@@ -118,8 +122,6 @@ export type StartBattleToolInput = {
   readonly characterId: CharacterId;
   readonly characterDisplayName: string;
   readonly characterInitiative: InitiativeScore;
-  readonly characterCurrentHp?: HpType;
-  readonly characterTempHp?: HpType;
   readonly statBlockCombatantId: CombatantId;
   readonly statBlockInitiative: InitiativeScore;
   readonly statBlockCurrentHp?: HpType;
@@ -158,8 +160,6 @@ export function decodeStartBattleArgs(
     "characterId",
     "characterDisplayName",
     "characterInitiative",
-    "characterCurrentHp",
-    "characterTempHp",
     "statBlockCombatantId",
     "statBlockInitiative",
     "statBlockCurrentHp",
@@ -190,18 +190,6 @@ export function decodeStartBattleArgs(
   );
   if (isGreenToolError(statBlockInitiative)) return statBlockInitiative;
 
-  const characterCurrentHp = decodeOptionalHpField(
-    record.characterCurrentHp,
-    toolName,
-    "characterCurrentHp",
-  );
-  if (isGreenToolError(characterCurrentHp)) return characterCurrentHp;
-  const characterTempHp = decodeOptionalHpField(
-    record.characterTempHp,
-    toolName,
-    "characterTempHp",
-  );
-  if (isGreenToolError(characterTempHp)) return characterTempHp;
   const statBlockCurrentHp = decodeOptionalHpField(
     record.statBlockCurrentHp,
     toolName,
@@ -222,8 +210,6 @@ export function decodeStartBattleArgs(
     characterId: characterId(requiredString.characterId),
     characterDisplayName: requiredString.characterDisplayName,
     characterInitiative,
-    ...(characterCurrentHp === undefined ? {} : { characterCurrentHp }),
-    ...(characterTempHp === undefined ? {} : { characterTempHp }),
     statBlockCombatantId: combatantId(requiredString.statBlockCombatantId),
     statBlockInitiative,
     ...(statBlockCurrentHp === undefined ? {} : { statBlockCurrentHp }),
@@ -288,6 +274,14 @@ export function decodeEndTurnArgs(
   }
 
   return { actorId: combatantId(record.actorId) };
+}
+
+export function decodeEndBattleArgs(
+  args: unknown,
+  toolName: string,
+): Record<string, never> | GreenToolError {
+  const record = readToolArgsRecord(args, toolName, []);
+  return isGreenToolError(record) ? record : {};
 }
 
 export function isGreenBattleToolError(

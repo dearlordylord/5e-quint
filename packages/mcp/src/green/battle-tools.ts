@@ -5,17 +5,22 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
+  type CharacterId,
 } from "@dnd/battle-runtime";
+import type { CharacterDraftId } from "@dnd/character-creation-runtime";
+import type { Hp } from "@dnd/shared/types";
 
 import type { GreenMcpCompositionRoot } from "./composition-root.ts";
 import {
   decodeDiscoverBattleActsArgs,
+  decodeEndBattleArgs,
   decodeEndTurnArgs,
   decodeFillBattleHoleArgs,
   decodeReadBattleStateArgs,
   decodeSelectStatBlockArgs,
   decodeStartBattleArgs,
   discoverBattleActsInputSchema,
+  endBattleInputSchema,
   endTurnInputSchema,
   fillBattleHoleInputSchema,
   isGreenBattleToolError,
@@ -63,6 +68,12 @@ export const greenBattleToolDefinitions = [
       "Resolve the current actor's End Turn runtime command and store the returned BattleState.",
     inputSchema: endTurnInputSchema,
   },
+  {
+    name: "end_battle",
+    description:
+      "Finalize the stored battle session and hand character-owned post-battle facts, including current HP, back to durable character session state.",
+    inputSchema: endBattleInputSchema,
+  },
 ] as const;
 
 const GREEN_BATTLE_TOOL_NAMES = greenBattleToolDefinitions.map(
@@ -106,15 +117,31 @@ export function handleGreenBattleToolCall(
   if (name === "start_battle") {
     const decoded = decodeStartBattleArgs(args, name);
     if (isGreenBattleToolError(decoded)) return decoded;
-    const sheet = root.sessionStore.sheets.get(decoded.sheetDraftId);
-    if (sheet == null) {
+    const activeBattle = root.sessionStore.battleState;
+    if (activeBattle !== null) {
+      return errorContent("A battle session is already active.", {
+        code: "BATTLE_SESSION_ALREADY_ACTIVE",
+        battleId: activeBattle.battleId,
+      });
+    }
+    const characterSession = root.sessionStore.characters.get(
+      decoded.sheetDraftId,
+    );
+    if (characterSession == null) {
       return errorContent(
-        `Unknown finalized character sheet: ${decoded.sheetDraftId}`,
+        `Unknown finalized character session: ${decoded.sheetDraftId}`,
         {
           code: "UNKNOWN_FINALIZED_CHARACTER_SHEET",
           sheetDraftId: decoded.sheetDraftId,
         },
       );
+    }
+    if (characterSession.tag !== "available") {
+      return errorContent("Character is already assigned to a battle.", {
+        code: "CHARACTER_ALREADY_IN_BATTLE",
+        sheetDraftId: decoded.sheetDraftId,
+        battleId: characterSession.battleId,
+      });
     }
     const statBlock = root.sessionStore.getSelectedStatBlock();
     if (statBlock == null) {
@@ -130,14 +157,9 @@ export function handleGreenBattleToolCall(
           combatantId: decoded.characterCombatantId,
           characterId: decoded.characterId,
           displayName: decoded.characterDisplayName,
-          build: sheet,
+          build: characterSession.build,
           initiative: decoded.characterInitiative,
-          ...(decoded.characterCurrentHp === undefined
-            ? {}
-            : { currentHp: decoded.characterCurrentHp }),
-          ...(decoded.characterTempHp === undefined
-            ? {}
-            : { tempHp: decoded.characterTempHp }),
+          currentHp: characterSession.currentHp,
         },
         statBlockBattleInput: {
           combatantId: decoded.statBlockCombatantId,
@@ -154,6 +176,12 @@ export function handleGreenBattleToolCall(
       });
       root.sessionStore.battleState = state;
       root.sessionStore.transientBattleFills = null;
+      root.sessionStore.characters.set(decoded.sheetDraftId, {
+        tag: "inBattle",
+        build: characterSession.build,
+        battleId: decoded.battleId,
+        characterId: decoded.characterId,
+      });
 
       return jsonContent(battleSessionPayload(root, state));
     } catch (error) {
@@ -237,10 +265,118 @@ export function handleGreenBattleToolCall(
     return jsonContent(battleResolutionPayload(root, result));
   }
 
+  if (name === "end_battle") {
+    const decoded = decodeEndBattleArgs(args, name);
+    if (isGreenBattleToolError(decoded)) return decoded;
+    const state = root.sessionStore.battleState;
+    if (state == null) return noStoredBattleContent();
+    if (root.sessionStore.transientBattleFills !== null) {
+      return errorContent("Cannot end battle with pending battle fills.", {
+        code: "BATTLE_FILLS_PENDING",
+        pendingSubject: root.sessionStore.transientBattleFills.subject,
+      });
+    }
+
+    const handoff = finalizeCharacterSessionsFromBattle(root, state);
+    if (handoff !== null) return handoff;
+    root.sessionStore.battleState = null;
+    root.sessionStore.transientBattleFills = null;
+
+    return jsonContent({
+      endedBattleId: state.battleId,
+      characters: Array.from(root.sessionStore.characters.entries()).map(
+        ([sourceDraftId, session]) => ({
+          sourceDraftId,
+          session,
+        }),
+      ),
+      session: root.sessionStore.snapshot(),
+    });
+  }
+
   const unhandledToolName: never = name;
   return errorContent(
     `Unhandled Surface-runtime battle tool: ${unhandledToolName}`,
   );
+}
+
+function finalizeCharacterSessionsFromBattle(
+  root: GreenMcpCompositionRoot,
+  state: BattleState,
+): ReturnType<typeof errorContent> | null {
+  const updates: {
+    readonly sourceDraftId: CharacterDraftId;
+    readonly currentHp: Hp;
+  }[] = [];
+
+  for (const combatant of state.combatants.values()) {
+    if (combatant.origin.kind !== "character") continue;
+    if (combatant.hp === 0) {
+      return errorContent(
+        "Post-battle handoff for 0 HP characters is outside the first vertical.",
+        {
+          code: "POST_BATTLE_ZERO_HP_DEFERRED",
+          combatantId: combatant.combatantId,
+          characterId: combatant.origin.characterId,
+        },
+      );
+    }
+
+    const sourceDraftId = sourceDraftIdForInBattleCharacter(
+      root,
+      state,
+      combatant.origin.characterId,
+    );
+    if (sourceDraftId === null) {
+      return errorContent("Battle character has no matching session record.", {
+        code: "UNKNOWN_BATTLE_CHARACTER_SESSION",
+        combatantId: combatant.combatantId,
+        characterId: combatant.origin.characterId,
+      });
+    }
+
+    const session = root.sessionStore.characters.get(sourceDraftId);
+    if (session?.tag !== "inBattle") {
+      return errorContent("Battle character session is not in battle.", {
+        code: "CHARACTER_SESSION_NOT_IN_BATTLE",
+        sourceDraftId,
+      });
+    }
+    updates.push({
+      sourceDraftId,
+      currentHp: combatant.hp,
+    });
+  }
+
+  for (const update of updates) {
+    const session = root.sessionStore.characters.get(update.sourceDraftId);
+    if (session?.tag !== "inBattle") continue;
+    root.sessionStore.characters.set(update.sourceDraftId, {
+      tag: "available",
+      build: session.build,
+      currentHp: update.currentHp,
+    });
+  }
+
+  return null;
+}
+
+function sourceDraftIdForInBattleCharacter(
+  root: GreenMcpCompositionRoot,
+  state: BattleState,
+  characterId: CharacterId,
+) {
+  for (const [sourceDraftId, session] of root.sessionStore.characters) {
+    if (
+      session.tag === "inBattle" &&
+      session.battleId === state.battleId &&
+      session.characterId === characterId
+    ) {
+      return sourceDraftId;
+    }
+  }
+
+  return null;
 }
 
 function unknownStatBlockContent(statBlockId: string, error: unknown) {
