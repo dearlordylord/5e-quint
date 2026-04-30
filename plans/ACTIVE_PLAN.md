@@ -145,24 +145,66 @@ The Ralph harness reads this machine-readable index for task order and status. K
     },
     {
       "number": 18,
-      "id": "CAM18",
+      "id": "CAM18A",
       "status": "blocked",
-      "title": "Add MCP Battle Tools And Green Fixture"
+      "title": "Add MCP Battle Session Shell"
     },
     {
       "number": 19,
-      "id": "CAM19",
+      "id": "CAM18B",
       "status": "blocked",
-      "title": "Controlled Core Break And Projected Vocabulary Deletion"
+      "title": "Add MCP Fighter Battle Flow"
     },
     {
       "number": 20,
+      "id": "CAM18C",
+      "status": "blocked",
+      "title": "Add Goblin Warrior Attack Support"
+    },
+    {
+      "number": 21,
+      "id": "CAM18D",
+      "status": "blocked",
+      "title": "Add Full Green Vertical Fixture"
+    },
+    {
+      "number": 22,
+      "id": "CAM18E",
+      "status": "blocked",
+      "title": "Add Post-Battle Character State Handoff"
+    },
+    {
+      "number": 23,
+      "id": "CAM19A",
+      "status": "blocked",
+      "title": "Refresh Core And Projected Deletion Inventory"
+    },
+    {
+      "number": 24,
+      "id": "CAM19B",
+      "status": "blocked",
+      "title": "Isolate Legacy Core MCP Path"
+    },
+    {
+      "number": 25,
+      "id": "CAM19C",
+      "status": "blocked",
+      "title": "Delete Projected Vocabulary From Promoted Path"
+    },
+    {
+      "number": 26,
+      "id": "CAM19D",
+      "status": "blocked",
+      "title": "Reconcile Post-Deletion Docs And Tests"
+    },
+    {
+      "number": 27,
       "id": "CAM20",
       "status": "blocked",
       "title": "Green Reconciliation And MCP Promotion"
     },
     {
-      "number": 21,
+      "number": 28,
       "id": "CAM21",
       "status": "blocked",
       "title": "End-User Vertical Acceptance"
@@ -193,7 +235,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task                                                            | Status                                        | Depends on        | Blocks                               | Next action                                                                                                                                                                                                                                                                                          | Handoff readiness                                                             |
 | ----- | --------------------------------------------------------------- | --------------------------------------------- | ----------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 0     | CAM0 - Phase 0 Audit Pack                                       | done                                          | none              | CAM1..CAM21                          | Landed audit pack and migration plan updates.                                                                                                                                                                                                                                                        | Done in `e8ecbd6b`.                                                           |
+| 0     | CAM0 - Phase 0 Audit Pack                                       | done                                          | none              | CAM1..CAM21, including CAM18*/CAM19* | Landed audit pack and migration plan updates.                                                                                                                                                                                                                                                        | Done in `e8ecbd6b`.                                                           |
 | 1     | CAM1 - Rename Prototype Surface To @dnd/surface                 | done                                          | CAM0              | CAM3, CAM4, CAM5, CAM6, CAM11, CAM16 | Package cutover complete: active imports, workspace dependencies, lockfile, and docs use `@dnd/surface`.                                                                                                                                                                                             | Done in this task.                                                            |
 | 2     | CAM2 - Resolve Correction Action-Economy Drift                  | done                                          | CAM0              | CAM6, CAM11                          | Resolved by `52cf18b5`: Surface action resource sidecars and Correction action-resource handling landed.                                                                                                                                                                                             | Done on current `master`.                                                     |
 | 3     | CAM3 - Add Generic StatBlockRecord Catalog Boundary             | done                                          | CAM1              | CAM5, CAM11, CAM12                   | Generic `StatBlockRecord`, SRD-only stat-block collection, duplicate/provenance validation, and `buildStatBlockCatalog` landed in `@dnd/surface`.                                                                                                                                                    | Done in this task.                                                            |
@@ -203,18 +245,25 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 7     | CAM7 - Implement Creation Hole Discovery For Manifest           | done                                          | CAM5, CAM6        | CAM8, CAM9                           | Hole discovery for the exact Orc Soldier Fighter manifest landed using real Surface records and package-private support gates.                                                                                                                                                                       | Done in this task.                                                            |
 | 8     | CAM8 - Implement Atomic Creation Batch Fill                     | done                                          | CAM7              | CAM9, CAM10, CAM17                   | Atomic batch fill landed with revision checks, duplicate/invalid/wrong-kind/unsupported issues, Standard Array validation, and hole rediscovery after accepted fills.                                                                                                                                | Done in this task.                                                            |
 | 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | done                                          | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Legal Orc Soldier Fighter `CharacterSheet` finalization landed with legality tests and Second Wind resource preservation.                                                                                                                                                                            | Done in this task.                                                            |
-| 10    | CAM10 - Add Character Creation QNT Slice And Parity             | done                                          | CAM9              | CAM17, CAM18                         | Added `character-creation-runtime-slice.qnt` plus deterministic runtime/QNT parity for creation protocol/status behavior: complete Fighter readiness, invalid fills, stale revision, cardinality, and duplicate multi-choice input. Sheet-value parity remains a carry-forward gate before widening. | Done in this task.                                                            |
-| 11    | CAM11 - Create Battle Runtime Skeleton                          | done                                          | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Created `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block creature-init types.                                                                                                                                             | Done in this task.                                                            |
-| 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | done                                          | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Battle initialization from finalized Character Sheet plus generic `StatBlockRecord` landed with derived AC/HP/loadout/action-resource facts and no Core import.                                                                                                                                      | Done in this task.                                                            |
-| 13    | CAM13 - Implement Battle Attack Holes And Replay                | done                                          | CAM12             | CAM14, CAM15, CAM18                  | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                                                                                                                                       | Done in this task.                                                            |
-| 14    | CAM14 - Implement Battle Damage And Zero-HP Policy              | done                                          | CAM13             | CAM15, CAM18                         | Implemented damage application with Temporary HP absorption, HP floor, monster death policy, and Character Sheet zero-HP policy scaffolding.                                                                                                                                                         | Done in this task.                                                            |
-| 15    | CAM15 - Implement End Turn And Battle QNT Slice                 | done                                          | CAM14             | CAM18, CAM19                         | Runtime `endTurn`, initiative advancement, `battle-runtime-slice.qnt`, and deterministic QNT/runtime parity checks landed for hit, miss, damage, action spend, and end turn.                                                                                                                         | Done in this task.                                                            |
-| 16    | CAM16 - Add MCP Green Composition Root                          | done                                          | CAM1, CAM5        | CAM17, CAM18                         | Added isolated MCP green module/root that installs `srdUnitCollection` and `srdStatBlockCollection` and has no `@dnd/core` imports.                                                                                                                                                                  | Done in this task.                                                            |
-| 17    | CAM17 - Add MCP Character Creation Tools                        | ready-for-implementation-after-light-research | CAM10, CAM16      | CAM18                                | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                                                                                                                      | Ready after MCP green character-tool architecture check.                      |
-| 18    | CAM18 - Add MCP Battle Tools And Green Fixture                  | blocked                                       | CAM15, CAM17      | CAM19                                | Add green MCP tools for selecting a Stat Block, start battle, discover battle acts, fill/resolve battle holes, end turn, and one full vertical fixture.                                                                                                                                              | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.       |
-| 19    | CAM19 - Controlled Core Break And Projected Vocabulary Deletion | blocked                                       | CAM18             | CAM20                                | Isolate/delete old Core-backed green-path imports, delete `CPU*`/`PEA*`/`PPR*` projected vocabulary where unreferenced, and ensure every omitted lane is in the Restore Ledger.                                                                                                                      | Blocker Type: dependency. Blocker Detail: waits on passing MCP green fixture. |
-| 20    | CAM20 - Green Reconciliation And MCP Promotion                  | blocked                                       | CAM19             | CAM21                                | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.                                                                                                                | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.     |
-| 21    | CAM21 - End-User Vertical Acceptance                            | blocked                                       | CAM20             | none                                 | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP.                                                                                                      | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.         |
+| 10    | CAM10 - Add Character Creation QNT Slice And Parity             | done                                          | CAM9              | CAM17, CAM18A                        | Added `character-creation-runtime-slice.qnt` plus deterministic runtime/QNT parity for creation protocol/status behavior: complete Fighter readiness, invalid fills, stale revision, cardinality, and duplicate multi-choice input. Sheet-value parity remains a carry-forward gate before widening. | Done in this task.                                                            |
+| 11    | CAM11 - Create Battle Runtime Skeleton                          | done                                          | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18A   | Created `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block creature-init types.                                                                                                                                             | Done in this task.                                                            |
+| 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | done                                          | CAM5, CAM9, CAM11 | CAM13, CAM18A                        | Battle initialization from finalized Character Sheet plus generic `StatBlockRecord` landed with derived AC/HP/loadout/action-resource facts and no Core import.                                                                                                                                      | Done in this task.                                                            |
+| 13    | CAM13 - Implement Battle Attack Holes And Replay                | done                                          | CAM12             | CAM14, CAM15, CAM18A                 | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                                                                                                                                       | Done in this task.                                                            |
+| 14    | CAM14 - Implement Battle Damage And Zero-HP Policy              | done                                          | CAM13             | CAM15, CAM18A                        | Implemented damage application with Temporary HP absorption, HP floor, monster death policy, and Character Sheet zero-HP policy scaffolding.                                                                                                                                                         | Done in this task.                                                            |
+| 15    | CAM15 - Implement End Turn And Battle QNT Slice                 | done                                          | CAM14             | CAM18A                               | Runtime `endTurn`, initiative advancement, `battle-runtime-slice.qnt`, and deterministic QNT/runtime parity checks landed for hit, miss, damage, action spend, and end turn.                                                                                                                         | Done in this task.                                                            |
+| 16    | CAM16 - Add MCP Green Composition Root                          | done                                          | CAM1, CAM5        | CAM17, CAM18A                        | Added isolated MCP green module/root that installs `srdUnitCollection` and `srdStatBlockCollection` and has no `@dnd/core` imports.                                                                                                                                                                  | Done in this task.                                                            |
+| 17    | CAM17 - Add MCP Character Creation Tools                        | ready-for-implementation-after-light-research | CAM10, CAM16      | CAM18A                               | Add green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                                                                                                                      | Ready after MCP green character-tool architecture check.                      |
+| 18    | CAM18A - Add MCP Battle Session Shell                           | blocked                                       | CAM15, CAM17      | CAM18B                               | Add green MCP tools for selecting a Stat Block, starting battle with explicit Initiative, storing battle session state, and returning battle state/snapshot.                                                                                                                                          | Blocker Type: dependency. Blocker Detail: waits on character MCP tools.       |
+| 19    | CAM18B - Add MCP Fighter Battle Flow                            | blocked                                       | CAM18A            | CAM18C                               | Drive Fighter battle acts through MCP: discover Attack/End Turn, resolve target/attack-roll/damage fills, store returned BattleState, clear transient fills, and End Turn.                                                                                                                           | Blocker Type: dependency. Blocker Detail: waits on battle session shell.      |
+| 20    | CAM18C - Add Goblin Warrior Attack Support                      | blocked                                       | CAM18B            | CAM18D                               | Derive Goblin Warrior attacks from authored StatBlockRecord and resolve Goblin Attack through the same battle flow without a second attack IR.                                                                                                                                                       | Blocker Type: dependency. Blocker Detail: waits on Fighter MCP battle flow.   |
+| 21    | CAM18D - Add Full Green Vertical Fixture                        | blocked                                       | CAM18C            | CAM18E                               | Add the full MCP-only green fixture: create/finalize Fighter, select Goblin Warrior, start battle, Fighter attacks, End Turn, and Goblin attacks.                                                                                                                                                    | Blocker Type: dependency. Blocker Detail: waits on both combatant flows.      |
+| 22    | CAM18E - Add Post-Battle Character State Handoff                | blocked                                       | CAM18D            | CAM19A                               | Add explicit end-battle/finalize-battle handoff and character-list read model showing post-battle facts such as reduced current HP.                                                                                                                                                                  | Blocker Type: dependency. Blocker Detail: waits on full green fixture.        |
+| 23    | CAM19A - Refresh Core And Projected Deletion Inventory          | blocked                                       | CAM18E            | CAM19B                               | Inventory current Core/projected/MCP legacy call sites after the full green path and update Restore Ledger coverage before deletion.                                                                                                                                                                 | Blocker Type: dependency. Blocker Detail: waits on post-battle green path.    |
+| 24    | CAM19B - Isolate Legacy Core MCP Path                           | blocked                                       | CAM19A            | CAM19C                               | Move old Core-backed MCP routes/tests into a deletion-marked legacy package/path and keep them out of the promotable MCP entrypoint.                                                                                                                                                                 | Blocker Type: dependency. Blocker Detail: waits on deletion inventory.        |
+| 25    | CAM19C - Delete Projected Vocabulary From Promoted Path         | blocked                                       | CAM19B            | CAM19D                               | Delete projected executable vocabulary from the promoted MCP/runtime path after legacy isolation, preserving omitted semantics only through Restore Ledger rows.                                                                                                                                      | Blocker Type: dependency. Blocker Detail: waits on legacy isolation.          |
+| 26    | CAM19D - Reconcile Post-Deletion Docs And Tests                 | blocked                                       | CAM19C            | CAM20                                | Reconcile docs, tests, Restore Ledger status, and expected failures after isolation/deletion so CAM20 has a concrete promotion handoff.                                                                                                                                                              | Blocker Type: dependency. Blocker Detail: waits on projected cleanup.         |
+| 27    | CAM20 - Green Reconciliation And MCP Promotion                  | blocked                                       | CAM19D            | CAM21                                | Promote the Surface-backed green tools into the normal MCP server path, retire `src/green` as a user-facing namespace, and replace green-specific tests with normal MCP server tests.                                                                                                                | Blocker Type: dependency. Blocker Detail: waits on controlled Core break.     |
+| 28    | CAM21 - End-User Vertical Acceptance                            | blocked                                       | CAM20             | none                                 | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP.                                                                                                      | Blocker Type: dependency. Blocker Detail: waits on promoted MCP path.         |
 
 ## Task Details
 
@@ -222,8 +271,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 Status: `done`
 
-Depends on: none  
-Blocks: CAM1..CAM21
+Depends on: none
+Blocks: CAM1..CAM21, including CAM18*/CAM19*
 
 Input:
 
@@ -257,7 +306,7 @@ Handoff readiness: complete in `e8ecbd6b`.
 
 Status: `done`
 
-Depends on: CAM0  
+Depends on: CAM0
 Blocks: CAM3, CAM4, CAM5, CAM6, CAM11, CAM16
 
 Input:
@@ -298,7 +347,7 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM0  
+Depends on: CAM0
 Blocks: CAM6, CAM11
 
 Input:
@@ -334,7 +383,7 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM1  
+Depends on: CAM1
 Blocks: CAM5, CAM11, CAM12
 
 Next action: none; CAM3 is complete.
@@ -375,7 +424,7 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM1  
+Depends on: CAM1
 Blocks: CAM5, CAM6, CAM7
 
 Next action: none; CAM4 is complete.
@@ -417,7 +466,7 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM3, CAM4  
+Depends on: CAM3, CAM4
 Blocks: CAM7, CAM9, CAM12, CAM16
 
 Next action: landed first-vertical SRD Surface content and catalog imports.
@@ -457,7 +506,7 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM1, CAM2  
+Depends on: CAM1, CAM2
 Blocks: CAM7, CAM8, CAM9, CAM10, CAM17
 
 Next action: run the runtime package architecture check, then create the character creation runtime skeleton.
@@ -495,7 +544,7 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM5, CAM6  
+Depends on: CAM5, CAM6
 Blocks: CAM8, CAM9
 
 Next action: none; CAM7 is complete.
@@ -536,7 +585,7 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM7  
+Depends on: CAM7
 Blocks: CAM9, CAM10, CAM17
 
 Next action: none; CAM8 is complete.
@@ -578,7 +627,7 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM5, CAM8  
+Depends on: CAM5, CAM8
 Blocks: CAM10, CAM12, CAM17
 
 Next action: run the finalization legality and RAW check, then implement legal Fighter sheet finalization.
@@ -616,8 +665,8 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM9  
-Blocks: CAM17, CAM18
+Depends on: CAM9
+Blocks: CAM17, CAM18A
 
 Next action: complete; character-creation QNT slice and deterministic parity checks landed for first-vertical creation protocol/status behavior. Sheet-value parity, including selected Unit refs, remains a carry-forward gate before widening.
 
@@ -652,8 +701,8 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM1, CAM2, CAM3  
-Blocks: CAM12, CAM13, CAM14, CAM15, CAM18
+Depends on: CAM1, CAM2, CAM3
+Blocks: CAM12, CAM13, CAM14, CAM15, CAM18A
 
 Input:
 
@@ -689,8 +738,8 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM5, CAM9, CAM11  
-Blocks: CAM13, CAM18
+Depends on: CAM5, CAM9, CAM11
+Blocks: CAM13, CAM18A
 
 Input:
 
@@ -724,8 +773,8 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM12  
-Blocks: CAM14, CAM15, CAM18
+Depends on: CAM12
+Blocks: CAM14, CAM15, CAM18A
 
 Done in this task.
 
@@ -762,8 +811,8 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM13  
-Blocks: CAM15, CAM18
+Depends on: CAM13
+Blocks: CAM15, CAM18A
 
 Input:
 
@@ -795,8 +844,8 @@ Plan Impact:
 
 Status: `done`
 
-Depends on: CAM14  
-Blocks: CAM18, CAM19
+Depends on: CAM14
+Blocks: CAM18A
 
 Completed after CAM14 damage and zero-HP policy landed.
 
@@ -828,14 +877,14 @@ Verification:
 
 Plan Impact:
 
-- CAM18 remains blocked until CAM17 is done.
+- CAM18A remains blocked until CAM17 is done.
 
 ### Task 16 - CAM16 - Add MCP Green Composition Root
 
 Status: `done`
 
-Depends on: CAM1, CAM5  
-Blocks: CAM17, CAM18
+Depends on: CAM1, CAM5
+Blocks: CAM17, CAM18A
 
 Next action: run the MCP green-root architecture check, then add the isolated green composition root.
 
@@ -872,8 +921,8 @@ Plan Impact:
 
 Status: `ready-for-implementation-after-light-research`
 
-Depends on: CAM10, CAM16  
-Blocks: CAM18
+Depends on: CAM10, CAM16
+Blocks: CAM18A
 
 Next action: run the MCP green character-tool architecture check, then add green character creation tools.
 
@@ -916,16 +965,16 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM18 when CAM15 is done.
+- Unblock CAM18A when CAM15 is done.
 
-### Task 18 - CAM18 - Add MCP Battle Tools And Green Fixture
+### Task 18 - CAM18A - Add MCP Battle Session Shell
 
 Status: `blocked`
 
-Depends on: CAM15, CAM17  
-Blocks: CAM19
+Depends on: CAM15, CAM17
+Blocks: CAM18B
 
-Blocker Type: dependency  
+Blocker Type: dependency
 Blocker Detail: waits on character MCP tools.
 
 Preflight:
@@ -953,28 +1002,32 @@ Preflight:
 Input:
 
 - MCP character tools.
-- Battle runtime through End Turn.
+- Battle runtime through battle initialization and snapshots.
 - MCP green composition root.
-- Authored Goblin Warrior Stat Block attacks.
+- SRD Stat Block catalog with Goblin Warrior.
 
 Output:
 
-- Surface-runtime MCP tools for selecting a Stat Block, start battle with
-  caller-supplied Initiative scores, discover battle acts, fill/resolve battle
-  holes, and end turn.
-- Battle runtime support for the Goblin Warrior's authored Attack options from
-  `StatBlockRecord`, without introducing a second executable Stat Block IR.
-- One full MCP fixture for Orc Soldier Fighter vs Goblin Warrior.
+- Surface-runtime MCP tools for selecting a Stat Block and starting battle with
+  caller-supplied Initiative scores.
+- Green MCP battle session state that stores the returned `BattleState`.
+- Battle state/snapshot read tool for the stored battle.
 
 Acceptance:
 
-- Full vertical runs with MCP only: create character, finalize, select Goblin
-  Warrior, start battle with explicit Initiative scores, Fighter Attack with
-  damage, End Turn, Goblin Warrior Attack with damage.
+- MCP can select Goblin Warrior from the SRD Stat Block catalog without using
+  the old Core monster catalog.
+- MCP can start battle from a finalized Fighter sheet plus selected Goblin
+  Warrior Stat Block.
+- `start_battle` requires caller-supplied Initiative scores; no `10 + modifier`
+  Initiative derivation remains in this path.
+- MCP stores the returned `BattleState` and can return a battle state/snapshot.
+- Character-to-battle initialization is composition-layer work; battle runtime
+  does not import character creation runtime.
+- No attack discovery or resolution is accepted in CAM18A.
 - MCP green path imports no `@dnd/core`.
-- In-progress battle fills are MCP session state, not battle reducer state.
-- Optional `resolutionLog` is display-only and non-authoritative.
-- MCP, battle runtime, and migration docs are updated with the verified green vertical.
+- MCP, battle runtime, and migration docs identify this as a partial battle
+  session shell, not the full green fixture.
 
 Verification:
 
@@ -985,60 +1038,376 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM19.
+- Unblock CAM18B.
 
-### Task 19 - CAM19 - Controlled Core Break And Projected Vocabulary Deletion
+### Task 19 - CAM18B - Add MCP Fighter Battle Flow
 
 Status: `blocked`
 
-Depends on: CAM18  
-Blocks: CAM20
+Depends on: CAM18A
+Blocks: CAM18C
 
-Blocker Type: dependency  
-Blocker Detail: waits on passing MCP green fixture.
+Blocker Type: dependency
+Blocker Detail: waits on battle session shell.
 
 Input:
 
-- Passing MCP green vertical.
+- MCP battle session shell.
+- Battle runtime Attack and End Turn support.
+- Orc Soldier Fighter battle participant from finalized Character Sheet.
+
+Output:
+
+- MCP tools for discovering Fighter battle acts.
+- MCP tools for filling/resolving Fighter Attack target, attack-roll, and
+  damage-result holes.
+- MCP End Turn support that advances initiative from the Fighter to the Goblin.
+- Transient battle fill accumulation in MCP session state, not battle reducer
+  state.
+
+Acceptance:
+
+- MCP can use an existing CAM18A battle session.
+- Fighter is current actor under pinned Initiative scores.
+- MCP discovers Fighter `Attack` and `End Turn`.
+- MCP resolves Fighter Longsword Attack through target, attack-roll, and
+  damage-result fills.
+- On resolution, MCP stores the new `BattleState` and clears accumulated fills.
+- MCP End Turn advances to the Goblin actor.
+- Goblin Warrior attack support is explicitly out of scope for CAM18B.
+- MCP green path imports no `@dnd/core`.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test`
+- `pnpm --filter @dnd/battle-runtime test`
+- Source-only Core import check for the Surface-runtime MCP subtree and runtime
+  packages.
+
+Plan Impact:
+
+- Unblock CAM18C.
+
+### Task 20 - CAM18C - Add Goblin Warrior Attack Support
+
+Status: `blocked`
+
+Depends on: CAM18B
+Blocks: CAM18D
+
+Blocker Type: dependency
+Blocker Detail: waits on Fighter MCP battle flow.
+
+Input:
+
+- MCP battle session shell and Fighter battle flow.
+- Authored Goblin Warrior Stat Block.
+- Battle runtime attack protocol.
+
+Output:
+
+- Battle runtime support for Goblin Warrior authored Attack options from
+  `StatBlockRecord`.
+- MCP support for resolving Goblin Warrior Attack through the same attack flow.
+- No second executable Stat Block IR or attack IR.
+
+Acceptance:
+
+- Goblin Warrior current actor discovers `Attack` only when a supported authored
+  Stat Block attack profile exists.
+- Scimitar and Shortbow cannot be confused; selected attack identity is carried
+  by subject or an explicit replay choice.
+- Attack bonus, damage expression/type, target legality, and supported attack
+  identity are derived from authored `StatBlockRecord`, not duplicated in MCP.
+- Unsupported Goblin riders are absent from discovery or rejected by a named
+  support gate.
+- MCP can resolve Goblin Warrior Attack with target, attack roll, damage fill,
+  HP mutation, action spend, and zero-HP policy.
+- MCP green path imports no `@dnd/core`.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test`
+- `pnpm --filter @dnd/battle-runtime test`
+- Source-only Core import check for the Surface-runtime MCP subtree and runtime
+  packages.
+
+Plan Impact:
+
+- Unblock CAM18D.
+
+### Task 21 - CAM18D - Add Full Green Vertical Fixture
+
+Status: `blocked`
+
+Depends on: CAM18C
+Blocks: CAM18E
+
+Blocker Type: dependency
+Blocker Detail: waits on both combatant flows.
+
+Input:
+
+- MCP character creation tools.
+- MCP battle session shell.
+- Fighter battle flow.
+- Goblin Warrior attack support.
+
+Output:
+
+- One full MCP-only green fixture for Orc Soldier Fighter vs Goblin Warrior.
+- Docs recording the verified green vertical and remaining first-vertical
+  support gates.
+
+Acceptance:
+
+- Full vertical runs with MCP only: create character draft, discover/fill
+  creation holes, finalize Orc Soldier Fighter, select Goblin Warrior, start
+  battle with explicit Initiative scores, Fighter Attack with damage, End Turn,
+  Goblin Warrior Attack with damage.
+- Fixture uses real authored Surface records, not presets or duplicated
+  executable stat-block data.
+- In-progress battle fills are MCP session state, not battle reducer state.
+- Optional `resolutionLog` is display-only and non-authoritative.
+- MCP green path imports no `@dnd/core`.
+- CAM18D remains green-path proof before Core deletion; promoted normal-path
+  user acceptance stays in CAM21.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test`
+- `pnpm --filter @dnd/battle-runtime test`
+- Source-only Core import check for the Surface-runtime MCP subtree and runtime
+  packages.
+
+Plan Impact:
+
+- Unblock CAM18E.
+
+### Task 22 - CAM18E - Add Post-Battle Character State Handoff
+
+Status: `blocked`
+
+Depends on: CAM18D
+Blocks: CAM19A
+
+Blocker Type: dependency
+Blocker Detail: waits on full green fixture.
+
+Input:
+
+- Full green battle fixture.
+- Battle session state with updated HP in `BattleState`.
+- MCP character/session state.
+
+Output:
+
+- Explicit end-battle or finalize-battle operation for the first vertical.
+- Durable post-battle character/session state carrying changed character-owned
+  facts from battle.
+- Character-list/read-model behavior showing post-battle facts.
+
+Acceptance:
+
+- MCP green path can end/finalize a battle for the first vertical.
+- Ending battle projects changed character-owned facts from battle state into
+  one durable character/session representation.
+- Character list reads from that durable state or one documented projection from
+  it.
+- Reduced current HP is visible after battle for the Orc Soldier Fighter.
+- No duplicated HP authority: battle owns in-battle HP; after battle closeout,
+  character/session state owns post-battle HP.
+- Monster combatants do not appear in the character list.
+- First-vertical scope is explicit: reduced positive HP is accepted; broader
+  death-save and zero-HP post-battle facts may be deferred if ledgered.
+
+Verification:
+
+- MCP green test covers create character, start battle, take damage, end battle,
+  and list character with reduced HP.
+- `pnpm --filter @dnd/mcp test`
+- Runtime package tests relevant to any state handoff changed for post-battle
+  character facts.
+
+Plan Impact:
+
+- Unblock CAM19A.
+
+### Task 23 - CAM19A - Refresh Core And Projected Deletion Inventory
+
+Status: `blocked`
+
+Depends on: CAM18E
+Blocks: CAM19B
+
+Blocker Type: dependency
+Blocker Detail: waits on post-battle green path.
+
+Input:
+
+- Passing full green path through post-battle character state.
 - [phase0-core-deletion-restore-audit.md](/workspace/typescript/dnd/plans/phase0-core-deletion-restore-audit.md)
 - Restore Ledger in [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md)
 
 Output:
 
-- Old Core-backed MCP routes/tests isolated into a separate deletion-marked
-  legacy package.
-- `CPU*`, `PEA*`, and `PPR*` projected vocabulary deleted where no longer referenced.
-- Expected failures outside green path are ledgered.
+- Current-HEAD inventory of `@dnd/core`, projected vocabulary, and legacy MCP
+  call sites.
+- Restore Ledger updates for every intentionally omitted or broken lane.
+- Deletion/isolation checklist for CAM19B-CAM19D with exact files, tests, docs,
+  and promoted-path import checks.
 
 Acceptance:
 
-- Green path remains passing.
-- No projected executable vocabulary remains on the green path.
-- Legacy Core-backed MCP code no longer lives in the promoted `@dnd/mcp`
-  Surface-runtime package path; if retained, it lives in a separate
-  deletion-marked package such as `@dnd/mcp-core-legacy`.
-- Every intentionally broken lane has Restore Ledger coverage with `39f9ab71` references.
-- App/Core failures outside green path are expected only when ledgered.
-- Docs that still describe projected executable paths are marked archival, updated to the new runtime path, or linked from Restore Ledger rows as preserved history.
+- Inventory reflects current `HEAD`, not only baseline `39f9ab71`.
+- Inventory is compared against `phase0-core-deletion-restore-audit.md` and
+  marks stale, missing, newly safe-to-delete, and still-legacy items.
+- Restore Ledger covers every intentionally omitted or broken lane before code
+  deletion begins.
+- No production deletion is performed in CAM19A except plan/doc updates.
 
 Verification:
 
-- Refreshed current-HEAD deletion/isolation inventory for projected/Core MCP
-  files before deletion.
-- `rg 'CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime`
-- `pnpm --filter @dnd/mcp test`
-- Runtime package tests.
-- Targeted legacy package/Core tests only if still relevant after isolation.
+- Source inventory commands recorded in the task closeout.
+- `rg '@dnd/core|CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime`
 
 Plan Impact:
 
-- If successful, unblock CAM20 and update [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md) with actual deletion status and any remaining Restore Ledger rows.
+- Unblock CAM19B.
 
-### Task 20 - CAM20 - Green Reconciliation And MCP Promotion
+### Task 24 - CAM19B - Isolate Legacy Core MCP Path
 
 Status: `blocked`
 
-Depends on: CAM19
+Depends on: CAM19A
+Blocks: CAM19C
+
+Blocker Type: dependency
+Blocker Detail: waits on deletion inventory.
+
+Input:
+
+- Current-HEAD deletion/isolation checklist.
+- Passing green MCP path.
+- Restore Ledger coverage for omitted lanes.
+
+Output:
+
+- Old Core-backed MCP source/tests moved under a deletion-marked legacy boundary
+  such as `packages/mcp-core-legacy` or `packages/mcp/src/legacy-core/`.
+- Promotable MCP path has no `@dnd/core` imports.
+- Legacy boundary is not re-exported by the promoted MCP server entrypoint.
+
+Acceptance:
+
+- All old Core-backed MCP routes/tests are outside the promotable MCP path.
+- Green/runtime MCP tools still pass.
+- Legacy package/path is documented as deletion-marked, not
+  compatibility-supported.
+- `rg '@dnd/core' packages/mcp/src packages/character-creation-runtime packages/battle-runtime` has no promoted-path matches, with any legacy-only matches clearly outside that path.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test`
+- Runtime package tests.
+- Source-only Core import check for promoted MCP/runtime paths.
+
+Plan Impact:
+
+- Unblock CAM19C.
+
+### Task 25 - CAM19C - Delete Projected Vocabulary From Promoted Path
+
+Status: `blocked`
+
+Depends on: CAM19B
+Blocks: CAM19D
+
+Blocker Type: dependency
+Blocker Detail: waits on legacy isolation.
+
+Input:
+
+- Legacy Core MCP path isolated.
+- Restore Ledger rows for omitted projected lanes.
+- Passing green MCP path.
+
+Output:
+
+- Projected executable vocabulary deleted from the promoted MCP/runtime path.
+- Any remaining projected files are deleted or reachable only from
+  deletion-marked legacy code with Restore Ledger coverage.
+
+Acceptance:
+
+- `@dnd/character-creation-runtime` and `@dnd/battle-runtime` remain free of
+  projected vocabulary.
+- No green/promoted MCP module imports Core-backed helpers that import projected
+  vocabulary.
+- `PEADirectHealHp` is deleted as projected action vocabulary while Second Wind
+  remains preserved as a level-1 Fighter sheet/resource fact.
+- Mage Armor, Acid Splash, Action Surge, and other omitted projected lanes are
+  ledgered, not smuggled forward as renamed IR.
+- Green MCP fixture and runtime package tests pass.
+
+Verification:
+
+- `rg 'CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime` returns no promoted-path matches.
+- `pnpm --filter @dnd/mcp test`
+- Runtime package tests.
+
+Plan Impact:
+
+- Unblock CAM19D.
+
+### Task 26 - CAM19D - Reconcile Post-Deletion Docs And Tests
+
+Status: `blocked`
+
+Depends on: CAM19C
+Blocks: CAM20
+
+Blocker Type: dependency
+Blocker Detail: waits on projected cleanup.
+
+Input:
+
+- CAM19A-C deletion/isolation results.
+- Restore Ledger.
+- Migration and projected-executable docs.
+
+Output:
+
+- Docs, tests, Restore Ledger status, and expected failures reconciled after
+  deletion.
+- Concrete CAM20 handoff describing what legacy package/files remain, what was
+  deleted, and what Restore Ledger rows still govern omitted behavior.
+
+Acceptance:
+
+- Every currently failing, skipped, deleted, or moved test lane is either
+  green-path required and fixed, or explicitly ledgered as expected breakage.
+- Restore Ledger rows are updated from planned to actual post-deletion status,
+  with `39f9ab71` references preserved.
+- Docs no longer describe projected executable/Core-backed MCP as the active
+  path unless marked archival or linked as preserved history.
+- Green/promoted MCP tests and runtime package tests pass.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test`
+- Runtime package tests.
+- `rg 'CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime` has no green/promoted-path hits.
+
+Plan Impact:
+
+- Unblock CAM20 and update [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md) with actual deletion status and any remaining Restore Ledger rows.
+
+### Task 27 - CAM20 - Green Reconciliation And MCP Promotion
+
+Status: `blocked`
+
+Depends on: CAM19D
 Blocks: CAM21
 
 Blocker Type: dependency
@@ -1046,8 +1415,8 @@ Blocker Detail: waits on controlled Core break.
 
 Input:
 
-- Passing MCP green vertical.
-- CAM19 deletion/isolation results.
+- Passing MCP green vertical through post-battle character state.
+- CAM19A-CAM19D deletion/isolation results.
 - Surface-runtime MCP modules and the deletion-marked legacy MCP package.
 - Phase 5 criteria in [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md).
 
@@ -1073,7 +1442,7 @@ Acceptance:
 
 Verification:
 
-- Normal MCP server tests cover create/finalize character, select Goblin Warrior, start battle, Attack with damage, and End Turn.
+- Normal MCP server tests cover create/finalize character, select Goblin Warrior, start battle, Attack with damage, End Turn, end battle, and post-battle character list.
 - `rg '@dnd/core' packages/mcp/src packages/character-creation-runtime packages/battle-runtime` returns no matches for promoted paths, with any legacy-only matches either deleted or ledgered.
 - `rg 'CPU|PEA|PPR|projected-executable|projected-compiler|projected-action-bridge|projected-persistent' packages/mcp packages/character-creation-runtime packages/battle-runtime` returns no promoted-path matches.
 - MCP/runtime typecheck and focused runtime tests pass.
@@ -1082,7 +1451,7 @@ Plan Impact:
 
 - If successful, unblock CAM21 and update the migration plan and MCP docs to mark green reconciliation complete and remove temporary green-path wording.
 
-### Task 21 - CAM21 - End-User Vertical Acceptance
+### Task 28 - CAM21 - End-User Vertical Acceptance
 
 Status: `blocked`
 
@@ -1096,7 +1465,7 @@ Input:
 
 - Promoted normal MCP server path from CAM20.
 - Character creation tools, battle tools, and persistence/session state from
-  CAM17-CAM20.
+  CAM17 through CAM20, including CAM18*/CAM19* split tasks.
 - The first vertical: Orc Soldier Fighter 1 and Goblin Warrior.
 
 Output:
