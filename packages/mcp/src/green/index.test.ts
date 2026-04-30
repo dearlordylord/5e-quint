@@ -126,6 +126,9 @@ describe("MCP green composition root", () => {
       "select_stat_block",
       "start_battle",
       "read_battle_state",
+      "discover_battle_acts",
+      "fill_battle_hole",
+      "end_turn",
     ]);
   });
 
@@ -213,8 +216,135 @@ describe("MCP green composition root", () => {
         },
       ],
     });
-    expect(read.snapshot.acts).toBeUndefined();
+    expect(
+      read.snapshot.acts.map((act: { label: string }) => act.label),
+    ).toEqual(["Attack", "End Turn"]);
     expect(read.battleState.combatants).toHaveLength(2);
+  });
+
+  test("discovers and resolves Fighter Attack fills, then ends the Fighter turn", () => {
+    const root = createGreenMcpCompositionRoot();
+    const draftId = "draft:mcp-green-fighter-battle-flow";
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleGreenBattleToolCall(root, "select_stat_block", {
+        statBlockId: "stat_block_goblin_warrior",
+      }),
+    );
+    readPayload(
+      handleGreenBattleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-green-fighter-flow",
+        sheetDraftId: draftId,
+        characterCombatantId: "fighter",
+        characterId: "character:fighter",
+        characterDisplayName: "Orc Soldier Fighter",
+        characterInitiative: 18,
+        statBlockCombatantId: "goblin",
+        statBlockInitiative: 7,
+      }),
+    );
+
+    const discovered = readPayload(
+      handleGreenBattleToolCall(root, "discover_battle_acts", {}),
+    );
+    expect(discovered.snapshot).toMatchObject({
+      currentActorId: "fighter",
+      acts: [
+        {
+          label: "Attack",
+          subject: { tag: "srdAction", actorId: "fighter", action: "attack" },
+          initialHoles: [
+            {
+              kind: "targetChoice",
+              holeId: "battle:attack:target",
+              choices: ["goblin"],
+            },
+          ],
+        },
+        {
+          label: "End Turn",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: "fighter",
+            command: "endTurn",
+          },
+        },
+      ],
+    });
+
+    const afterTarget = readPayload(
+      handleGreenBattleToolCall(root, "fill_battle_hole", {
+        actorId: "fighter",
+        fill: {
+          kind: "targetChoice",
+          holeId: "battle:attack:target",
+          value: "goblin",
+        },
+      }),
+    );
+    expect(afterTarget.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "attackRoll", holeId: "battle:attack:roll" }],
+    });
+    expect(afterTarget.session.transientBattleFills).toMatchObject({
+      subject: { tag: "srdAction", actorId: "fighter", action: "attack" },
+      fills: [{ kind: "targetChoice", value: "goblin" }],
+    });
+
+    const afterAttackRoll = readPayload(
+      handleGreenBattleToolCall(root, "fill_battle_hole", {
+        actorId: "fighter",
+        fill: {
+          kind: "attackRoll",
+          holeId: "battle:attack:roll",
+          value: { total: 16, naturalD20: 14 },
+        },
+      }),
+    );
+    expect(afterAttackRoll.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "rolledDice",
+          holeId: "battle:attack:damage-result:1d8+3-slashing",
+          critical: false,
+        },
+      ],
+    });
+    expect(afterAttackRoll.session.transientBattleFills.fills).toHaveLength(2);
+
+    const afterDamage = readPayload(
+      handleGreenBattleToolCall(root, "fill_battle_hole", {
+        actorId: "fighter",
+        fill: {
+          kind: "rolledDice",
+          holeId: "battle:attack:damage-result:1d8+3-slashing",
+          value: [{ results: [5] }],
+        },
+      }),
+    );
+    expect(afterDamage.result.tag).toBe("resolved");
+    expect(afterDamage.battleState.combatants).toEqual([
+      expect.objectContaining({ combatantId: "fighter", hp: 12 }),
+      expect.objectContaining({ combatantId: "goblin", hp: 2 }),
+    ]);
+    expect(
+      afterDamage.snapshot.acts.map((act: { label: string }) => act.label),
+    ).toEqual(["End Turn"]);
+    expect(root.sessionStore.transientBattleFills).toBeNull();
+
+    const afterEndTurn = readPayload(
+      handleGreenBattleToolCall(root, "end_turn", { actorId: "fighter" }),
+    );
+    expect(afterEndTurn.result.tag).toBe("resolved");
+    expect(afterEndTurn.snapshot).toMatchObject({
+      currentActorId: "goblin",
+      combatants: [
+        { combatantId: "fighter", hp: 12 },
+        { combatantId: "goblin", hp: 2 },
+      ],
+    });
+    expect(root.sessionStore.battleState?.combatants.get(goblinId)?.hp).toBe(2);
   });
 
   test("start_battle rejects missing caller-supplied Initiative scores", () => {

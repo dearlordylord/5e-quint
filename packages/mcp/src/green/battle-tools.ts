@@ -1,14 +1,23 @@
 import {
+  resolveBattleSubject,
   snapshotBattle,
   type BattleCreatureState,
+  type BattleResolutionResult,
   type BattleState,
+  type BattleSubject,
 } from "@dnd/battle-runtime";
 
 import type { GreenMcpCompositionRoot } from "./composition-root.ts";
 import {
+  decodeDiscoverBattleActsArgs,
+  decodeEndTurnArgs,
+  decodeFillBattleHoleArgs,
   decodeReadBattleStateArgs,
   decodeSelectStatBlockArgs,
   decodeStartBattleArgs,
+  discoverBattleActsInputSchema,
+  endTurnInputSchema,
+  fillBattleHoleInputSchema,
   isGreenBattleToolError,
   readBattleStateInputSchema,
   selectStatBlockInputSchema,
@@ -33,8 +42,26 @@ export const greenBattleToolDefinitions = [
   {
     name: "read_battle_state",
     description:
-      "Return the stored partial green battle state projection and current battle snapshot. This shell does not accept battle acts yet.",
+      "Return the stored green battle state projection and current battle snapshot, including discoverable battle acts.",
     inputSchema: readBattleStateInputSchema,
+  },
+  {
+    name: "discover_battle_acts",
+    description:
+      "Return the current battle snapshot and available acts for the current combatant. The supported Fighter slice exposes Attack and End Turn.",
+    inputSchema: discoverBattleActsInputSchema,
+  },
+  {
+    name: "fill_battle_hole",
+    description:
+      "Fill one hole for the current actor's Attack replay. MCP stores transient target, attack-roll, and damage-result fills until the battle runtime resolves the Attack.",
+    inputSchema: fillBattleHoleInputSchema,
+  },
+  {
+    name: "end_turn",
+    description:
+      "Resolve the current actor's End Turn runtime command and store the returned BattleState.",
+    inputSchema: endTurnInputSchema,
   },
 ] as const;
 
@@ -137,9 +164,82 @@ export function handleGreenBattleToolCall(
     }
   }
 
-  const decoded = decodeReadBattleStateArgs(args, name);
-  if (isGreenBattleToolError(decoded)) return decoded;
-  return jsonContent(battleSessionPayload(root, root.sessionStore.battleState));
+  if (name === "read_battle_state") {
+    const decoded = decodeReadBattleStateArgs(args, name);
+    if (isGreenBattleToolError(decoded)) return decoded;
+    return jsonContent(
+      battleSessionPayload(root, root.sessionStore.battleState),
+    );
+  }
+
+  if (name === "discover_battle_acts") {
+    const decoded = decodeDiscoverBattleActsArgs(args, name);
+    if (isGreenBattleToolError(decoded)) return decoded;
+    return jsonContent(
+      battleSessionPayload(root, root.sessionStore.battleState),
+    );
+  }
+
+  if (name === "fill_battle_hole") {
+    const decoded = decodeFillBattleHoleArgs(args, name);
+    if (isGreenBattleToolError(decoded)) return decoded;
+    const state = root.sessionStore.battleState;
+    if (state == null) return noStoredBattleContent();
+
+    const subject: BattleSubject = {
+      tag: "srdAction",
+      actorId: decoded.actorId,
+      action: "attack",
+    };
+    const previous = root.sessionStore.transientBattleFills;
+    if (previous !== null && !sameBattleSubject(previous.subject, subject)) {
+      return errorContent("A different battle subject has pending fills.", {
+        code: "BATTLE_FILL_SUBJECT_MISMATCH",
+        pendingSubject: previous.subject,
+        requestedSubject: subject,
+      });
+    }
+
+    const fills = [...(previous?.fills ?? []), decoded.fill];
+    const result = resolveBattleSubject({ state, subject, fills });
+    if (result.tag === "resolved") {
+      root.sessionStore.battleState = result.state;
+      root.sessionStore.transientBattleFills = null;
+      return jsonContent(battleResolutionPayload(root, result));
+    }
+    if (result.tag === "needsHoles") {
+      root.sessionStore.transientBattleFills = { subject, fills };
+      return jsonContent(battleResolutionPayload(root, result));
+    }
+
+    return jsonContent(battleResolutionPayload(root, result));
+  }
+
+  if (name === "end_turn") {
+    const decoded = decodeEndTurnArgs(args, name);
+    if (isGreenBattleToolError(decoded)) return decoded;
+    const state = root.sessionStore.battleState;
+    if (state == null) return noStoredBattleContent();
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: decoded.actorId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (result.tag === "resolved") {
+      root.sessionStore.battleState = result.state;
+      root.sessionStore.transientBattleFills = null;
+    }
+    return jsonContent(battleResolutionPayload(root, result));
+  }
+
+  const unhandledToolName: never = name;
+  return errorContent(
+    `Unhandled Surface-runtime battle tool: ${unhandledToolName}`,
+  );
 }
 
 function unknownStatBlockContent(statBlockId: string, error: unknown) {
@@ -156,14 +256,40 @@ function battleSessionPayload(
 ) {
   return {
     battleState: state === null ? null : battleStateProjection(state),
-    snapshot: state === null ? null : battleShellSnapshot(state),
+    snapshot: state === null ? null : snapshotBattle(state),
     session: root.sessionStore.snapshot(),
   };
 }
 
-function battleShellSnapshot(state: BattleState) {
-  const { acts: _acts, ...snapshot } = snapshotBattle(state);
-  return snapshot;
+function battleResolutionPayload(
+  root: GreenMcpCompositionRoot,
+  result: BattleResolutionResult,
+) {
+  return {
+    result,
+    battleState:
+      result.tag === "resolved" ? battleStateProjection(result.state) : null,
+    snapshot: result.snapshot,
+    session: root.sessionStore.snapshot(),
+  };
+}
+
+function noStoredBattleContent() {
+  return errorContent("No battle session has been started.", {
+    code: "NO_BATTLE_SESSION",
+  });
+}
+
+function sameBattleSubject(left: BattleSubject, right: BattleSubject): boolean {
+  if (left.tag !== right.tag || left.actorId !== right.actorId) return false;
+  if (left.tag === "srdAction" && right.tag === "srdAction") {
+    return left.action === right.action;
+  }
+  if (left.tag === "runtimeCommand" && right.tag === "runtimeCommand") {
+    return left.command === right.command;
+  }
+
+  return false;
 }
 
 function battleStateProjection(state: BattleState) {

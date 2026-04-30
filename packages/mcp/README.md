@@ -37,19 +37,26 @@ These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
 character helpers in the Surface-runtime path.
 
-The green battle-session shell exposes these user-facing tools:
+The green battle-session path exposes these user-facing tools:
 
 - `select_stat_block` selects a Stat Block from the Surface SRD Stat Block
   catalog and stores only that Stat Block id in the session.
-- `start_battle` starts a partial battle session from one finalized character
-  sheet and the selected Stat Block. The caller supplies the Initiative scores
-  for both combatants.
+- `start_battle` starts a battle session from one finalized character sheet and
+  the selected Stat Block. The caller supplies the Initiative scores for both
+  combatants.
 - `read_battle_state` returns the stored `BattleState` projection and current
-  battle shell snapshot without battle act discovery.
+  battle snapshot.
+- `discover_battle_acts` returns the current actor's battle acts. The current
+  Fighter slice exposes the Attack action and the End Turn runtime command.
+- `fill_battle_hole` submits one Attack fill at a time. MCP stores transient
+  target, attack-roll, and damage-result fills until `@dnd/battle-runtime`
+  resolves the Attack, then stores the returned `BattleState` and clears the
+  transient fills.
+- `end_turn` resolves the End Turn runtime command for the current actor, stores
+  the returned `BattleState`, and clears transient battle fills.
 
-This is a partial battle session shell. It initializes and stores the battle,
-but it does not expose attack discovery, attack fills, attack resolution, or
-End Turn through MCP yet.
+The current battle flow supports the Fighter's selected weapon Attack and End
+Turn. Stat Block attacks are intentionally not exposed yet.
 
 Selected Stat Block state stores only the catalog Stat Block id. The full Stat
 Block record is resolved through the green root's installed `statBlockCatalog`,

@@ -3,6 +3,7 @@ import {
   characterId,
   combatantId,
   initiativeScore,
+  type BattleFill,
   type BattleId,
   type CharacterId,
   type CombatantId,
@@ -15,6 +16,7 @@ import {
 import { Hp, type Hp as HpType } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 
+import { decodeBattleFill } from "./battle-fill-input.ts";
 import { errorContent } from "../tool-content.ts";
 
 type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
@@ -72,6 +74,38 @@ export const readBattleStateInputSchema = {
   additionalProperties: false,
 } satisfies McpObjectInputSchema;
 
+export const discoverBattleActsInputSchema = {
+  type: "object",
+  properties: {},
+  additionalProperties: false,
+} satisfies McpObjectInputSchema;
+
+export const fillBattleHoleInputSchema = {
+  type: "object",
+  required: ["actorId", "fill"],
+  properties: {
+    actorId: {
+      type: "string",
+      description: "Current actor combatant id for the Attack action.",
+    },
+    fill: {
+      type: "object",
+      description:
+        "One BattleFill for the current Attack replay: targetChoice, attackRoll, or rolledDice.",
+    },
+  },
+  additionalProperties: false,
+} satisfies McpObjectInputSchema;
+
+export const endTurnInputSchema = {
+  type: "object",
+  required: ["actorId"],
+  properties: {
+    actorId: { type: "string" },
+  },
+  additionalProperties: false,
+} satisfies McpObjectInputSchema;
+
 export type StartBattleToolInput = {
   readonly battleId: BattleId;
   readonly sheetDraftId: CharacterDraftId;
@@ -85,6 +119,14 @@ export type StartBattleToolInput = {
   readonly statBlockInitiative: InitiativeScore;
   readonly statBlockCurrentHp?: HpType;
   readonly statBlockTempHp?: HpType;
+};
+
+export type BattleActorToolInput = {
+  readonly actorId: CombatantId;
+};
+
+export type FillBattleHoleToolInput = BattleActorToolInput & {
+  readonly fill: BattleFill;
 };
 
 export function decodeSelectStatBlockArgs(
@@ -189,6 +231,46 @@ export function decodeReadBattleStateArgs(
 ): Record<string, never> | GreenToolError {
   const record = readToolArgsRecord(args, toolName, []);
   return isGreenToolError(record) ? record : {};
+}
+
+export function decodeDiscoverBattleActsArgs(
+  args: unknown,
+  toolName: string,
+): Record<string, never> | GreenToolError {
+  const record = readToolArgsRecord(args, toolName, []);
+  return isGreenToolError(record) ? record : {};
+}
+
+export function decodeFillBattleHoleArgs(
+  args: unknown,
+  toolName: string,
+): FillBattleHoleToolInput | GreenToolError {
+  const record = readToolArgsRecord(args, toolName, ["actorId", "fill"]);
+  if (isGreenToolError(record)) return record;
+  if (typeof record.actorId !== "string") {
+    return invalidFieldContent(toolName, "actorId", "string");
+  }
+
+  const fill = decodeBattleFill(record.fill, toolName);
+  if (isGreenToolError(fill)) return fill;
+
+  return {
+    actorId: combatantId(record.actorId),
+    fill,
+  };
+}
+
+export function decodeEndTurnArgs(
+  args: unknown,
+  toolName: string,
+): BattleActorToolInput | GreenToolError {
+  const record = readToolArgsRecord(args, toolName, ["actorId"]);
+  if (isGreenToolError(record)) return record;
+  if (typeof record.actorId !== "string") {
+    return invalidFieldContent(toolName, "actorId", "string");
+  }
+
+  return { actorId: combatantId(record.actorId) };
 }
 
 export function isGreenBattleToolError(
