@@ -5,10 +5,10 @@ packages.
 
 ## Surface Runtime Composition
 
-The Surface runtime composition path wires `@dnd/surface`,
-`@dnd/character-creation-runtime`, and `@dnd/battle-runtime` for tool-facing
-workflows. Its implementation lives under `src/green/` while MCP also contains
-the older Core-backed tool path.
+The Surface runtime composition path wires package APIs into tool workflows. MCP
+may see content catalogs, character sessions, battle sessions, and runtime
+initialization inputs because it is the composition boundary; it must not become
+the owner of character-creation or battle semantics.
 
 The `src/green/` subtree imports Surface authored content boundaries plus the
 character-creation and battle runtimes. Its composition root builds:
@@ -25,6 +25,10 @@ so MCP session state cannot drift from the SRD stat-block catalog.
 
 Transient battle fills are MCP session state. They are kept separate from
 `BattleState` so battle replay remains owned by `@dnd/battle-runtime`.
+
+Surface-runtime session state belongs here when it is tool workflow state:
+draft handles, selected content ids, durable battle ids, and transient fills.
+Reducer state and rules behavior remain owned by the runtime packages.
 
 Surface-runtime tools should use their final user-facing tool names. The
 implementation boundary is the module/package registration path, not a `green_`

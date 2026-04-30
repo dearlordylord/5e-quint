@@ -43,10 +43,8 @@ Three-way separation:
   (e.g., `SURFACES_spells.md` cites `RESEARCH_foundry_effect_staging.md`
   for effect staging patterns). Read-only.
 - `packages/surface/` (this package) — **where the surface evolves**. It remains
-  independent from engine packages and has no `@dnd/core` dependency, but it is
-  now an active runtime input for character creation, battle creature
-  initialization, and stat-block catalog lookup.
-  It is not a disposable prototype.
+  independent from engine packages and has no `@dnd/core` dependency. Runtime
+  packages consume it through typed record/catalog boundaries.
 
 ## Runtime Boundary
 
@@ -60,19 +58,14 @@ Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
 
 ## Unit Catalog Boundary
 
-Character-creation and equipment Units for the first runnable vertical are installed
-through `SrdUnitCollection` in `surface/unit-catalog`. Like Stat Blocks, the SRD
-Unit collection admits only `srd-5.2.1` provenance and the catalog rejects
-duplicate Unit ids across installed collections. Catalog lookup returns generic
-`UnitRecord` values; SRD is represented by the collection/provenance boundary,
-not by a runtime-facing record subtype.
+SRD Units are installed through `SrdUnitCollection` in `surface/unit-catalog`.
+Like Stat Blocks, the SRD Unit collection admits only `srd-5.2.1` provenance and
+the catalog rejects duplicate Unit ids across installed collections. Catalog
+lookup returns generic `UnitRecord` values; SRD is represented by the
+collection/provenance boundary, not by a runtime-facing record subtype.
 
-`srdUnitCollection` contains the Orc Soldier Fighter 1 content needed by the
-current runnable vertical: Fighter, Soldier, Orc, the level-1 Fighter feature
-grants, Defense, Savage Attacker, Sap, Orc traits, Chain Mail, Shield,
-Longsword, Spear, Flail, and Shortbow. Runtime packages may derive support gates
-from these records, but the authored content remains provenance-bearing Surface
-data.
+Runtime packages may narrow catalog records through package-private support
+gates, but authored content remains provenance-bearing Surface data.
 
 ## Character-Creation Records
 
@@ -89,22 +82,12 @@ Use `surface/character-creation-readers` to read structural creation facts:
 - `readClassCreationFacts`
 - `readBackgroundCreationFacts`
 - `readSpeciesCreationFacts`
-- `readOrcSpeciesCreationFacts`
 
-For the first Fighter vertical, the RAW sources are local SRD 5.2.1 files:
-`.references/srd-5.2.1/Classes/Fighter.md`,
-`.references/srd-5.2.1/Character-Origins.md`, and
-`.references/srd-5.2.1/Character-Creation.md`. Background records author the
-SRD ability-score increase rule: three eligible abilities, either +2/+1 to two
-different eligible scores or +1 to all three, capped at 20. Starting equipment
-records keep authored item bundles separate from runtime projections, including
-the Soldier bundle's selected Gaming Set, 20 Arrows, Healer's Kit, Quiver,
-Traveler's Clothes, and GP. Item-bundle entries are `unit_ref`s only when the
-referenced item is installed in the Unit collection; noncombat bundle facts that
-are not Unitized yet are `draft_owned_item`s. The minimal Species record is
-currently the Orc aggregate; it keeps Orc creature type, size, speed, and named
-Orc trait grants together so Orc selection cannot be represented as a
-mixed-species bundle of independent traits.
+Character-creation records author SRD legality facts, not runtime projections.
+Examples include class creation facts, background ability-score increase rules,
+starting equipment bundles, and species aggregate facts. Item-bundle entries are
+`unit_ref`s only when the referenced item is installed in the Unit collection;
+noncombat bundle facts that are not Unitized yet are `draft_owned_item`s.
 
 Runtime packages may narrow these records through package-private support gates,
 but `@dnd/surface` exports only structural readers. Do not export `Supported*`
@@ -145,17 +128,11 @@ The tracer is an **interpreter over the authored ADT**. It does not invoke a
 runtime package. It proves the surface types are expressive enough to carry the
 authored record before runtime integration consumes it.
 
-## Per-unit red/green loop
+## Authoring Loop
 
-See [`plans/CONTENT_SURFACE_PROTOTYPE.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_PROTOTYPE.md)
-§"Per-unit red/green loop".
-
-Short version: encode → trace → review mermaid → **green** (next
-unit) or **red** (extend `src/surface/types.ts` + tracer → re-trace).
-
-Each red event is a surface widening. Each widening is motivated by a
-specific RAW pressure case (SRD 5.2.1 clause on a specific unit). No
-speculative atoms; the vocabulary grows one variant at a time.
+Authoring is evidence-driven: encode one record, regenerate its trace, review
+the graph, and widen Surface only when a concrete SRD pressure case requires it.
+No speculative atoms; the vocabulary grows one variant at a time.
 
 ## Relationship to the sub-agent survey corpus
 
@@ -165,9 +142,8 @@ verdicts such as `structural_widening`, `surface_widening`,
 `atom_widening`, `clean`, `dm_agenda`, `refused`, and `invalid`.
 
 Each `surface_widening` / `atom_widening` entry has a `proposal.md`
-with the sub-agent's shape proposal for the needed widening. **This
-is the queue for the red/green loop.** Before authoring a unit in
-`content/`, consult the corresponding `results-srd/<slug>/proposal.md`.
+with the sub-agent's shape proposal for the needed widening. Before authoring a
+unit in `content/`, consult the corresponding `results-srd/<slug>/proposal.md`.
 Don't invent widenings from scratch when a proposal already exists —
 evaluate, accept / refactor / reject, then author.
 
@@ -225,7 +201,7 @@ runtime packages own executable semantics and parity tests.
 
 ## Related docs
 
-- [`plans/CONTENT_SURFACE_PROTOTYPE.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_PROTOTYPE.md) — the red/green loop spec.
+- [`plans/CONTENT_SURFACE_PROTOTYPE.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_PROTOTYPE.md) — historical authoring-loop plan.
 - [`plans/CONTENT_SURFACE_SURVEY.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_SURVEY.md) — the survey pipeline that produced the sub-agent corpus.
 - [`plans/CONTENT_SURFACE_DEFERRED.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DEFERRED.md) — queue of deferred widenings.
 - [`.references/xphb-srd-pairing/INDEX.md`](/workspace/typescript/dnd/.references/xphb-srd-pairing/INDEX.md) — taxonomy research entrypoint.

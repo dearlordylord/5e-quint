@@ -88,8 +88,8 @@ This package supports the first legal character-creation vertical:
 - background ability-score increase;
 - Common plus selected standard languages;
 - structured alignment;
-- Fighter choices needed by the first vertical;
-- purchased equipment/loadout needed by the first battle fixture.
+- class-owned choices needed by the supported vertical;
+- equipment ownership and loadout choices needed by finalization.
 
 Loadout is a runtime projection precondition for the first supported build, not
 an SRD-authored character-creation choice. See `../../ASSUMPTIONS.md` A40.
