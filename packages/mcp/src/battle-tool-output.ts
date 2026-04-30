@@ -67,7 +67,7 @@ const McpSessionSnapshotSchema = Schema.Struct({
   draftIds: Schema.Array(Schema.String),
   sourceDraftIds: Schema.Array(Schema.String),
   selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
-  battleState: Schema.Union(
+  activeBattle: Schema.Union(
     Schema.Struct({
       battleId: Schema.String,
       currentActorId: Schema.String,

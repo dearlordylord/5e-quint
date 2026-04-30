@@ -403,7 +403,7 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("endTurn"),
+    command: Schema.Literal(...BATTLE_RUNTIME_COMMANDS),
   }),
 );
 export type BattleSubject = typeof BattleSubjectSchema.Type;
@@ -412,25 +412,30 @@ export function sameBattleSubject(
   left: BattleSubject,
   right: BattleSubject,
 ): boolean {
-  if (left.tag !== right.tag || left.actorId !== right.actorId) return false;
-  if (left.tag === "srdAction" && right.tag === "srdAction") {
-    if (left.action !== right.action) return false;
-    if (left.action === "attack" && right.action === "attack") {
-      return left.attackName === right.attackName;
-    }
-    if (left.action === "magic" && right.action === "magic") {
-      return left.spellId === right.spellId;
-    }
-    return false;
-  }
-  if (left.tag === "unitFeature" && right.tag === "unitFeature") {
-    return left.unitId === right.unitId;
-  }
-  if (left.tag === "runtimeCommand" && right.tag === "runtimeCommand") {
-    return left.command === right.command;
-  }
+  return battleSubjectKey(left) === battleSubjectKey(right);
+}
 
-  return false;
+function battleSubjectKey(subject: BattleSubject): string {
+  return Match.value(subject).pipe(
+    Match.when({ tag: "srdAction", action: "attack" }, (attack) =>
+      JSON.stringify([
+        attack.tag,
+        attack.actorId,
+        attack.action,
+        attack.attackName,
+      ]),
+    ),
+    Match.when({ tag: "srdAction", action: "magic" }, (magic) =>
+      JSON.stringify([magic.tag, magic.actorId, magic.action, magic.spellId]),
+    ),
+    Match.when({ tag: "unitFeature" }, (feature) =>
+      JSON.stringify([feature.tag, feature.actorId, feature.unitId]),
+    ),
+    Match.when({ tag: "runtimeCommand" }, (command) =>
+      JSON.stringify([command.tag, command.actorId, command.command]),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export type AvailableBattleAct = {
@@ -543,9 +548,15 @@ const BattleDieRollResultSchema = Schema.Number.pipe(
   Schema.brand("PositiveInteger"),
   Schema.brand("DieRollResult"),
 );
+const BattleD20DieRollResultSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(1, 20),
+  Schema.brand("PositiveInteger"),
+  Schema.brand("DieRollResult"),
+);
 const BattleAttackRollResultSchema = Schema.Struct({
   total: Schema.Number.pipe(Schema.int()),
-  naturalD20: BattleDieRollResultSchema,
+  naturalD20: BattleD20DieRollResultSchema,
   rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
     exact: true,
   }),

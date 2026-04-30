@@ -8,21 +8,27 @@ export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
 export type McpOutputSchema = Readonly<Record<string, unknown>>;
 
 export type ToolError = ReturnType<typeof errorContent>;
+export type ToolInputResult<A> = Either.Either<A, ToolError>;
 
 export function decodeToolArgs<A, I>(
   schema: Schema.Schema<A, I, never>,
   args: unknown,
   toolName: string,
-): A | ToolError {
+): ToolInputResult<A> {
   const input = args === undefined ? {} : args;
   const decoded = Schema.decodeUnknownEither(schema, {
     onExcessProperty: "error",
   })(input);
-  if (Either.isRight(decoded)) return decoded.right;
-  return errorContent(`${toolName} expects valid arguments.`, {
-    code: "INVALID_ARGUMENTS",
-    message: decoded.left.message,
-  });
+  return Either.mapLeft(decoded, (error) =>
+    errorContent(`${toolName} expects valid arguments.`, {
+      code: "INVALID_ARGUMENTS",
+      message: error.message,
+    }),
+  );
+}
+
+export function toolInputValue<A>(result: ToolInputResult<A>): A | ToolError {
+  return Either.isRight(result) ? result.right : result.left;
 }
 
 export function mcpObjectJsonSchema<A, I>(

@@ -180,7 +180,7 @@ export type McpSessionSnapshot = {
   readonly draftIds: readonly CharacterDraftId[];
   readonly sourceDraftIds: readonly CharacterDraftId[];
   readonly selectedStatBlockId: StatBlockId | null;
-  readonly battleState: McpBattleSessionSnapshot | null;
+  readonly activeBattle: McpBattleSessionSnapshot | null;
   readonly transientBattleFills: BattleFillSession | null;
 };
 
@@ -230,7 +230,7 @@ export function createMcpSessionStore(
         draftIds: Array.from(drafts.keys()),
         sourceDraftIds,
         selectedStatBlockId,
-        battleState:
+        activeBattle:
           store.battleState === null
             ? null
             : battleSessionSnapshot(store.battleState),

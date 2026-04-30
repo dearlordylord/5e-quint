@@ -6,6 +6,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
 } from "@dnd/battle-runtime";
+import { Either } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
@@ -20,7 +21,6 @@ import {
   endBattleInputSchema,
   endTurnInputSchema,
   fillBattleHoleInputSchema,
-  isBattleToolError,
   readBattleStateInputSchema,
   resolveBattleActInputSchema,
   selectStatBlockInputSchema,
@@ -37,9 +37,12 @@ import { battleStateProjection } from "./battle-state-projection.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 import type { BattleFillSession } from "./session-store.ts";
-import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
+import {
+  mcpOutputJsonSchema,
+  schemaJsonContent,
+  type ToolError,
+} from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
-import type { ToolError } from "./tool-input-helpers.ts";
 
 export const battleToolDefinitions = [
   {
@@ -124,15 +127,15 @@ export function handleBattleToolCall(
 
   if (name === "select_stat_block") {
     const statBlockId = decodeSelectStatBlockArgs(args, name);
-    if (isBattleToolError(statBlockId)) return statBlockId;
+    if (Either.isLeft(statBlockId)) return statBlockId.left;
     try {
-      const selected = root.sessionStore.selectStatBlock(statBlockId);
+      const selected = root.sessionStore.selectStatBlock(statBlockId.right);
       return schemaJsonContent(SelectStatBlockOutputSchema, {
         selectedStatBlock: selected,
         session: root.sessionStore.snapshot(),
       });
     } catch (error) {
-      return unknownStatBlockContent(statBlockId, error);
+      return unknownStatBlockContent(statBlockId.right, error);
     }
   }
 
@@ -142,7 +145,7 @@ export function handleBattleToolCall(
 
   if (name === "read_battle_state") {
     const decoded = decodeReadBattleStateArgs(args, name);
-    if (isBattleToolError(decoded)) return decoded;
+    if (Either.isLeft(decoded)) return decoded.left;
     return schemaJsonContent(
       BattleSessionOutputSchema,
       battleSessionPayload(root, root.sessionStore.battleState),
@@ -151,7 +154,7 @@ export function handleBattleToolCall(
 
   if (name === "discover_battle_acts") {
     const decoded = decodeDiscoverBattleActsArgs(args, name);
-    if (isBattleToolError(decoded)) return decoded;
+    if (Either.isLeft(decoded)) return decoded.left;
     return schemaJsonContent(
       BattleSessionOutputSchema,
       battleSessionPayload(root, root.sessionStore.battleState),
@@ -160,11 +163,11 @@ export function handleBattleToolCall(
 
   if (name === "fill_battle_hole") {
     const decoded = decodeFillBattleHoleArgs(args, name);
-    if (isBattleToolError(decoded)) return decoded;
+    if (Either.isLeft(decoded)) return decoded.left;
     const state = root.sessionStore.battleState;
     if (state == null) return noStoredBattleContent();
 
-    const subject = decoded.subject;
+    const subject = decoded.right.subject;
     const previous = root.sessionStore.transientBattleFills;
     if (previous !== null && !sameBattleSubject(previous.subject, subject)) {
       return errorContent("A different battle subject has pending fills.", {
@@ -174,7 +177,7 @@ export function handleBattleToolCall(
       });
     }
 
-    const fills = [...(previous?.fills ?? []), decoded.fill];
+    const fills = [...(previous?.fills ?? []), decoded.right.fill];
     const result = resolveBattleSubject({ state, subject, fills });
     if (result.tag === "resolved") {
       root.sessionStore.battleState = result.state;
@@ -200,30 +203,30 @@ export function handleBattleToolCall(
 
   if (name === "resolve_battle_act") {
     const decoded = decodeResolveBattleActArgs(args, name);
-    if (isBattleToolError(decoded)) return decoded;
+    if (Either.isLeft(decoded)) return decoded.left;
     const state = activeBattleWithoutPendingFills(
       root,
       "Cannot resolve another act with pending fills.",
     );
-    if (isBattleToolError(state)) return state;
-    const availableAct = discoverBattleActs(state).find((act) =>
-      sameBattleSubject(act.subject, decoded.subject),
+    if (Either.isLeft(state)) return state.left;
+    const availableAct = discoverBattleActs(state.right).find((act) =>
+      sameBattleSubject(act.subject, decoded.right.subject),
     );
     if (availableAct === undefined) {
       return errorContent("Battle act is not currently available.", {
         code: "BATTLE_ACT_NOT_AVAILABLE",
-        subject: decoded.subject,
+        subject: decoded.right.subject,
       });
     }
     if (availableAct.initialHoles.length > 0) {
       return errorContent("Battle act requires hole fills.", {
         code: "BATTLE_ACT_REQUIRES_HOLES",
-        subject: decoded.subject,
+        subject: decoded.right.subject,
       });
     }
     const result = resolveBattleSubject({
-      state,
-      subject: decoded.subject,
+      state: state.right,
+      subject: decoded.right.subject,
       fills: [],
     });
     if (result.tag === "resolved") {
@@ -237,17 +240,17 @@ export function handleBattleToolCall(
 
   if (name === "end_turn") {
     const decoded = decodeEndTurnArgs(args, name);
-    if (isBattleToolError(decoded)) return decoded;
+    if (Either.isLeft(decoded)) return decoded.left;
     const state = activeBattleWithoutPendingFills(
       root,
       "Cannot end turn with pending battle fills.",
     );
-    if (isBattleToolError(state)) return state;
+    if (Either.isLeft(state)) return state.left;
     const result = resolveBattleSubject({
-      state,
+      state: state.right,
       subject: {
         tag: "runtimeCommand",
-        actorId: decoded.actorId,
+        actorId: decoded.right.actorId,
         command: "endTurn",
       },
       fills: [],
@@ -264,20 +267,20 @@ export function handleBattleToolCall(
 
   if (name === "end_battle") {
     const decoded = decodeEndBattleArgs(args, name);
-    if (isBattleToolError(decoded)) return decoded;
+    if (Either.isLeft(decoded)) return decoded.left;
     const state = activeBattleWithoutPendingFills(
       root,
       "Cannot end battle with pending battle fills.",
     );
-    if (isBattleToolError(state)) return state;
+    if (Either.isLeft(state)) return state.left;
 
-    const handoff = finalizeCharacterSessionsFromBattle(root, state);
+    const handoff = finalizeCharacterSessionsFromBattle(root, state.right);
     if (handoff !== null) return handoff;
     root.sessionStore.battleState = null;
     root.sessionStore.transientBattleFills = null;
 
     return schemaJsonContent(EndBattleOutputSchema, {
-      endedBattleId: state.battleId,
+      endedBattleId: state.right.battleId,
       characters: Array.from(root.sessionStore.characters.entries()).map(
         ([sourceDraftId, session]) => ({
           sourceDraftId,
@@ -346,13 +349,13 @@ function noStoredBattleContent() {
 function activeBattleWithoutPendingFills(
   root: McpCompositionRoot,
   pendingMessage: string,
-): BattleState | ToolError {
+): Either.Either<BattleState, ToolError> {
   const state = root.sessionStore.battleState;
-  if (state == null) return noStoredBattleContent();
+  if (state == null) return Either.left(noStoredBattleContent());
   const pendingFills = root.sessionStore.transientBattleFills;
   return pendingFills === null
-    ? state
-    : pendingBattleFillsContent(pendingFills, pendingMessage);
+    ? Either.right(state)
+    : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));
 }
 
 function pendingBattleFillsContent(

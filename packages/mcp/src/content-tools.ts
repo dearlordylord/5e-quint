@@ -7,6 +7,7 @@ import {
   mcpObjectJsonSchema,
   mcpOutputJsonSchema,
   schemaJsonContent,
+  toolInputValue,
 } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 import { isToolError } from "./tool-input-helpers.ts";
@@ -52,6 +53,7 @@ const StatBlockSummarySchema = Schema.Struct({
   attacks: Schema.Array(StatBlockAttackSummarySchema),
   damageVulnerabilities: StringArraySchema,
   damageResistances: StringArraySchema,
+  damageResistanceChoices: StringArraySchema,
   damageImmunities: StringArraySchema,
   conditionImmunities: StringArraySchema,
   provenanceKind: Schema.String,
@@ -119,7 +121,7 @@ export function handleContentToolCall(
   if (!isContentToolName(name)) {
     return errorContent(`Unknown Surface-runtime content tool: ${name}`);
   }
-  const decoded = decodeToolArgs(EmptyArgsSchema, args, name);
+  const decoded = toolInputValue(decodeToolArgs(EmptyArgsSchema, args, name));
   if (isToolError(decoded)) return decoded;
 
   if (name === "describe_mcp_workflow") {
@@ -236,6 +238,7 @@ function statBlockSummary(record: StatBlockRecord) {
     ),
     damageVulnerabilities: damageModifierTypes(statBlock.vulnerabilities),
     damageResistances: damageModifierTypes(statBlock.resistances),
+    damageResistanceChoices: damageResistanceChoices(statBlock.resistances),
     damageImmunities: damageModifierTypes(statBlock.immunities),
     conditionImmunities: conditionModifierTypes(statBlock.immunities),
     provenanceKind: record.provenance.kind,
@@ -303,9 +306,15 @@ function damageModifierTypes(
     return [];
   }
   if ("kind" in value && value.kind === "choose_one_from") {
-    return [...value.options];
+    return [];
   }
   return value.damageTypes === undefined ? [] : [...value.damageTypes];
+}
+
+function damageResistanceChoices(
+  value: StatBlockRecord["statBlock"]["resistances"] | undefined,
+): string[] {
+  return value?.kind === "choose_one_from" ? [...value.options] : [];
 }
 
 function conditionModifierTypes(

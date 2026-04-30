@@ -53,7 +53,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
       selectedStatBlockId: "stat_block_goblin_warrior",
-      battleState: null,
+      activeBattle: null,
       transientBattleFills: null,
     });
     expect(root.sessionStore.getSelectedStatBlock()?.id).toBe(
@@ -111,7 +111,7 @@ describe("MCP server route", () => {
     });
     expect(state.combatants.get(fighterId)?.initiative).toBe(12);
     expect(state.combatants.get(goblinId)?.initiative).toBe(11);
-    expect(root.sessionStore.snapshot().battleState).toEqual({
+    expect(root.sessionStore.snapshot().activeBattle).toEqual({
       battleId: "battle-root",
       currentActorId: fighterId,
     });
@@ -314,7 +314,7 @@ describe("MCP server route", () => {
       },
       session: {
         selectedStatBlockId: "stat_block_goblin_warrior",
-        battleState: {
+        activeBattle: {
           battleId: "battle:mcp-shell",
           currentActorId: "fighter",
         },
@@ -1027,7 +1027,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
       sourceDraftIds: [draftId],
-      battleState: null,
+      activeBattle: null,
       transientBattleFills: null,
     });
 
@@ -1210,7 +1210,7 @@ describe("MCP server route", () => {
     expect(ended).toMatchObject({
       endedBattleId: "battle:mcp-full-vertical",
       session: {
-        battleState: null,
+        activeBattle: null,
         transientBattleFills: null,
         sourceDraftIds: [draftId],
       },

@@ -13,15 +13,14 @@ import {
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import { Hp, type Hp as HpType } from "@dnd/shared/types";
-import { Schema } from "effect";
+import { Either, Schema } from "effect";
 
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
   type McpObjectInputSchema,
-  type ToolError,
+  type ToolInputResult,
 } from "./schema-codec.ts";
-import { isToolError } from "./tool-input-helpers.ts";
 
 const IntegerSchema = Schema.Number.pipe(Schema.int());
 const NonNegativeIntegerSchema = IntegerSchema.pipe(
@@ -75,22 +74,22 @@ export type StartBattleCharacterToolInput = {
 export function decodeStartBattleArgs(
   args: unknown,
   toolName: string,
-): StartBattleToolInput | ToolError {
+): ToolInputResult<StartBattleToolInput> {
   const record = decodeToolArgs(StartBattleToolArgsSchema, args, toolName);
-  if (isToolError(record)) return record;
+  if (Either.isLeft(record)) return Either.left(record.left);
 
-  return {
-    battleId: battleId(record.battleId),
-    characters: decodeCharacters(record.characters),
-    statBlockCombatantId: combatantId(record.statBlockCombatantId),
-    statBlockInitiative: initiativeScore(record.statBlockInitiative),
-    ...(record.statBlockCurrentHp === undefined
+  return Either.right({
+    battleId: battleId(record.right.battleId),
+    characters: decodeCharacters(record.right.characters),
+    statBlockCombatantId: combatantId(record.right.statBlockCombatantId),
+    statBlockInitiative: initiativeScore(record.right.statBlockInitiative),
+    ...(record.right.statBlockCurrentHp === undefined
       ? {}
-      : { statBlockCurrentHp: Hp(record.statBlockCurrentHp) }),
-    ...(record.statBlockTempHp === undefined
+      : { statBlockCurrentHp: Hp(record.right.statBlockCurrentHp) }),
+    ...(record.right.statBlockTempHp === undefined
       ? {}
-      : { statBlockTempHp: Hp(record.statBlockTempHp) }),
-  };
+      : { statBlockTempHp: Hp(record.right.statBlockTempHp) }),
+  });
 }
 
 function decodeCharacters(

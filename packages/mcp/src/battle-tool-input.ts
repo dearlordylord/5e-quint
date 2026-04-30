@@ -7,13 +7,13 @@ import {
   type CombatantId,
 } from "@dnd/battle-runtime";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
-import { JSONSchema, Schema } from "effect";
+import { Either, JSONSchema, Schema } from "effect";
 
-import { isToolError, type ToolError } from "./tool-input-helpers.ts";
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
   type McpObjectInputSchema,
+  type ToolInputResult,
 } from "./schema-codec.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
@@ -76,69 +76,67 @@ export type ResolveBattleActToolInput = {
 export function decodeSelectStatBlockArgs(
   args: unknown,
   toolName: string,
-): StatBlockId | ToolError {
+): ToolInputResult<StatBlockId> {
   const record = decodeToolArgs(SelectStatBlockArgsSchema, args, toolName);
-  if (isToolError(record)) return record;
-  return record.statBlockId;
+  return Either.map(record, (value) => value.statBlockId);
 }
 
 export function decodeReadBattleStateArgs(
   args: unknown,
   toolName: string,
-): Record<string, never> | ToolError {
+): ToolInputResult<Record<string, never>> {
   return decodeEmptyArgs(args, toolName);
 }
 
 export function decodeDiscoverBattleActsArgs(
   args: unknown,
   toolName: string,
-): Record<string, never> | ToolError {
+): ToolInputResult<Record<string, never>> {
   return decodeEmptyArgs(args, toolName);
 }
 
 export function decodeFillBattleHoleArgs(
   args: unknown,
   toolName: string,
-): FillBattleHoleToolInput | ToolError {
+): ToolInputResult<FillBattleHoleToolInput> {
   const record = decodeToolArgs(FillBattleHoleArgsSchema, args, toolName);
-  if (isToolError(record)) return record;
+  if (Either.isLeft(record)) return Either.left(record.left);
 
-  return {
-    subject: record.subject,
-    fill: record.fill,
-  };
+  return Either.right({
+    subject: record.right.subject,
+    fill: record.right.fill,
+  });
 }
 
 export function decodeResolveBattleActArgs(
   args: unknown,
   toolName: string,
-): ResolveBattleActToolInput | ToolError {
+): ToolInputResult<ResolveBattleActToolInput> {
   const record = decodeToolArgs(ResolveBattleActArgsSchema, args, toolName);
-  if (isToolError(record)) return record;
-  return { subject: record.subject };
+  return Either.map(record, (value) => ({ subject: value.subject }));
 }
 
 export function decodeEndTurnArgs(
   args: unknown,
   toolName: string,
-): BattleActorToolInput | ToolError {
+): ToolInputResult<BattleActorToolInput> {
   const record = decodeToolArgs(EndTurnArgsSchema, args, toolName);
-  if (isToolError(record)) return record;
-  return { actorId: combatantId(record.actorId) };
+  return Either.map(record, (value) => ({
+    actorId: combatantId(value.actorId),
+  }));
 }
 
 export function decodeEndBattleArgs(
   args: unknown,
   toolName: string,
-): Record<string, never> | ToolError {
+): ToolInputResult<Record<string, never>> {
   return decodeEmptyArgs(args, toolName);
 }
 
-export function isBattleToolError(value: unknown): value is ToolError {
-  return isToolError(value);
-}
-
-function decodeEmptyArgs(args: unknown, toolName: string) {
+function decodeEmptyArgs(
+  args: unknown,
+  toolName: string,
+): ToolInputResult<Record<string, never>> {
   const decoded = decodeToolArgs(EmptyArgsSchema, args, toolName);
-  return isToolError(decoded) ? decoded : {};
+  return Either.map(decoded, () => ({}));
 }

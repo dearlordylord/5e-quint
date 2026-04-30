@@ -379,7 +379,7 @@ export function discoverEquipmentHoles(input: {
   const purchaseHole = choiceHole({
     source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
     cardinality: boundedChoiceCardinality({
-      min: 0,
+      min: 1,
       max: supportedEquipmentPurchaseChoiceCount(),
     }),
     options: supportedPurchasableEquipmentUnitIds().map((unitId) =>

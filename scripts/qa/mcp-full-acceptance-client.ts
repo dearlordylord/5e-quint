@@ -482,7 +482,7 @@ async function verifyGreenVertical(client: Client) {
 
   const ended = await callTool(client, "end_battle", {});
   assert.equal(get(ended, "endedBattleId"), "battle:stdio-accepted-vertical");
-  assert.equal(get(ended, "session.battleState"), null);
+  assert.equal(get(ended, "session.activeBattle"), null);
 
   const listed = await callTool(client, "list_characters", {});
   assert.equal(get(listed, "characters.0.status"), "available");

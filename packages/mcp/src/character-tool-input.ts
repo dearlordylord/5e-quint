@@ -8,13 +8,14 @@ import {
   type CreationFill,
   type DraftRevision,
 } from "@dnd/character-creation-runtime";
-import { JSONSchema, Schema } from "effect";
+import { Either, JSONSchema, Schema } from "effect";
 
 import { errorContent } from "./tool-content.ts";
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
   type McpObjectInputSchema,
+  type ToolInputResult,
 } from "./schema-codec.ts";
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -103,70 +104,63 @@ export const fillCreationHolesInputSchema = JSONSchema.make(
 ) as unknown as McpObjectInputSchema;
 export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 
-type ToolError = ReturnType<typeof errorContent>;
-
 export function decodeCreateCharacterDraftArgs(
   args: unknown,
   toolName: string,
-): { readonly draftId?: CharacterDraftId } | ToolError {
+): ToolInputResult<{ readonly draftId?: CharacterDraftId }> {
   const record = decodeToolArgs(CreateCharacterDraftArgsSchema, args, toolName);
-  if (isToolError(record)) return record;
-  if (record.draftId === undefined) return {};
-  return { draftId: characterDraftId(record.draftId) };
+  return Either.map(record, (value) =>
+    value.draftId === undefined
+      ? {}
+      : { draftId: characterDraftId(value.draftId) },
+  );
 }
 
 export function decodeDraftIdArg(
   args: unknown,
   toolName: string,
-): CharacterDraftId | ToolError {
+): ToolInputResult<CharacterDraftId> {
   const record = decodeToolArgs(DraftIdArgsSchema, args, toolName);
-  if (isToolError(record)) return record;
-  return characterDraftId(record.draftId);
+  return Either.map(record, (value) => characterDraftId(value.draftId));
 }
 
 export function decodeFillCreationHolesArgs(
   args: unknown,
   toolName: string,
-):
-  | {
-      readonly draftId: CharacterDraftId;
-      readonly expectedRevision: DraftRevision;
-      readonly fills: readonly CreationFill[];
-    }
-  | ToolError {
+): ToolInputResult<{
+  readonly draftId: CharacterDraftId;
+  readonly expectedRevision: DraftRevision;
+  readonly fills: readonly CreationFill[];
+}> {
   const record = decodeToolArgs(FillCreationHolesArgsSchema, args, toolName);
-  if (isToolError(record)) return record;
+  if (Either.isLeft(record)) return Either.left(record.left);
   const fills: CreationFill[] = [];
-  for (const [index, fill] of record.fills.entries()) {
+  for (const [index, fill] of record.right.fills.entries()) {
     const decoded = decodeCreationFill(fill, toolName, index);
-    if (isToolError(decoded)) return decoded;
-    fills.push(decoded);
+    if (Either.isLeft(decoded)) return Either.left(decoded.left);
+    fills.push(decoded.right);
   }
 
-  return {
-    draftId: characterDraftId(record.draftId),
-    expectedRevision: draftRevision(record.expectedRevision),
+  return Either.right({
+    draftId: characterDraftId(record.right.draftId),
+    expectedRevision: draftRevision(record.right.expectedRevision),
     fills,
-  };
-}
-
-export function isToolError(value: unknown): value is ToolError {
-  return isRecord(value) && value.isError === true;
+  });
 }
 
 export function decodeEmptyArgs(
   args: unknown,
   toolName: string,
-): Record<string, never> | ToolError {
+): ToolInputResult<Record<string, never>> {
   const decoded = decodeToolArgs(EmptyArgsSchema, args, toolName);
-  return isToolError(decoded) ? decoded : {};
+  return Either.map(decoded, () => ({}));
 }
 
 function decodeCreationFill(
   value: CreationFillArgs,
   toolName: string,
   index: number,
-): CreationFill | ToolError {
+): ToolInputResult<CreationFill> {
   if (value.kind === "choice") {
     return decodeChoiceFill(value, value.holeId, toolName, index);
   }
@@ -174,7 +168,9 @@ function decodeCreationFill(
     return decodeAbilityScoreFill(value, value.holeId, toolName, index);
   }
 
-  return invalidFieldContent(toolName, `fills[${index}].kind`, "fill kind");
+  return Either.left(
+    invalidFieldContent(toolName, `fills[${index}].kind`, "fill kind"),
+  );
 }
 
 function decodeChoiceFill(
@@ -182,14 +178,13 @@ function decodeChoiceFill(
   holeIdText: string,
   toolName: string,
   index: number,
-): CreationFill | ToolError {
+): ToolInputResult<CreationFill> {
   const holeId = decodeCreationHoleId(holeIdText, toolName, index);
-  if (isToolError(holeId)) return holeId;
-  return {
+  return Either.map(holeId, (decodedHoleId) => ({
     kind: "choice",
-    holeId,
+    holeId: decodedHoleId,
     optionIds: value.optionIds.map(creationChoiceOptionId),
-  };
+  }));
 }
 
 function decodeAbilityScoreFill(
@@ -197,35 +192,32 @@ function decodeAbilityScoreFill(
   holeIdText: string,
   toolName: string,
   index: number,
-): CreationFill | ToolError {
+): ToolInputResult<CreationFill> {
   const holeId = decodeCreationHoleId(holeIdText, toolName, index);
-  if (isToolError(holeId)) return holeId;
-  return {
+  return Either.map(holeId, (decodedHoleId) => ({
     kind: "abilityScores",
-    holeId,
+    holeId: decodedHoleId,
     method: value.method,
     value: value.value,
-  };
+  }));
 }
 
 function decodeCreationHoleId(
   holeIdText: string,
   toolName: string,
   index: number,
-): CreationFill["holeId"] | ToolError {
+): ToolInputResult<CreationFill["holeId"]> {
   const holeId = parseCreationHoleId(holeIdText);
   if (holeId == null) {
-    return invalidFieldContent(
-      toolName,
-      `fills[${index}].holeId`,
-      "creation hole id",
+    return Either.left(
+      invalidFieldContent(
+        toolName,
+        `fills[${index}].holeId`,
+        "creation hole id",
+      ),
     );
   }
-  return holeId;
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return Either.right(holeId);
 }
 
 function invalidFieldContent(

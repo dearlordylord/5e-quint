@@ -8,7 +8,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Schema } from "effect";
+import { Either, Schema } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -26,7 +26,6 @@ import {
   draftIdInputSchema,
   emptyInputSchema,
   fillCreationHolesInputSchema,
-  isToolError,
 } from "./character-tool-input.ts";
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
@@ -115,10 +114,12 @@ export function handleCharacterToolCall(
 
   if (name === "create_character_draft") {
     const decoded = decodeCreateCharacterDraftArgs(args, name);
-    if (isToolError(decoded)) return decoded;
+    if (Either.isLeft(decoded)) return decoded.left;
     const draft = createCharacterDraft({
       unitLibrary: root.unitLibrary,
-      ...(decoded.draftId == null ? {} : { draftId: decoded.draftId }),
+      ...(decoded.right.draftId == null
+        ? {}
+        : { draftId: decoded.right.draftId }),
     });
     if (root.sessionStore.drafts.has(draft.draftId)) {
       return duplicateDraftIdContent(draft.draftId, "activeDraft");
@@ -135,16 +136,17 @@ export function handleCharacterToolCall(
 
   if (name === "fill_creation_holes") {
     const decoded = decodeFillCreationHolesArgs(args, name);
-    if (isToolError(decoded)) return decoded;
-    const draft = root.sessionStore.drafts.get(decoded.draftId);
+    if (Either.isLeft(decoded)) return decoded.left;
+    const input = decoded.right;
+    const draft = root.sessionStore.drafts.get(input.draftId);
     if (draft == null) {
-      return unknownDraftContent(decoded.draftId);
+      return unknownDraftContent(input.draftId);
     }
     const result = fillCreationHoles({
       draft,
       unitLibrary: root.unitLibrary,
-      expectedRevision: decoded.expectedRevision,
-      fills: decoded.fills,
+      expectedRevision: input.expectedRevision,
+      fills: input.fills,
     });
 
     if (result.tag === "accepted") {
@@ -153,14 +155,14 @@ export function handleCharacterToolCall(
 
     return schemaJsonContent(FillCreationHolesOutputSchema, {
       result,
-      storedDraft: root.sessionStore.drafts.get(decoded.draftId),
+      storedDraft: root.sessionStore.drafts.get(input.draftId),
       session: root.sessionStore.snapshot(),
     });
   }
 
   if (name === "list_characters") {
     const decoded = decodeEmptyArgs(args, name);
-    if (isToolError(decoded)) return decoded;
+    if (Either.isLeft(decoded)) return decoded.left;
     return schemaJsonContent(ListCharactersOutputSchema, {
       characters: Array.from(root.sessionStore.characters.entries()).map(
         ([sourceDraftId, session]) =>
@@ -170,8 +172,9 @@ export function handleCharacterToolCall(
     });
   }
 
-  const draftId = decodeDraftIdArg(args, name);
-  if (isToolError(draftId)) return draftId;
+  const decodedDraftId = decodeDraftIdArg(args, name);
+  if (Either.isLeft(decodedDraftId)) return decodedDraftId.left;
+  const draftId = decodedDraftId.right;
 
   const draft = root.sessionStore.drafts.get(draftId);
   if (draft == null) {

@@ -280,7 +280,7 @@ describe("end-user promoted MCP vertical", () => {
     const ended = callTool(root, "end_battle", {});
     expect(ended).toMatchObject({
       endedBattleId: "battle:accepted-vertical",
-      session: { battleState: null, transientBattleFills: null },
+      session: { activeBattle: null, transientBattleFills: null },
     });
 
     const listed = callTool(root, "list_characters", {});
@@ -584,7 +584,7 @@ describe("end-user promoted MCP vertical", () => {
 
     const ended = callTool(root, "end_battle", {});
     expect(ended.session).toMatchObject({
-      battleState: null,
+      activeBattle: null,
       transientBattleFills: null,
       sourceDraftIds: [fighterDraftId, wizardDraftId],
     });
