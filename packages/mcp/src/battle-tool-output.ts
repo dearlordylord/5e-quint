@@ -63,7 +63,7 @@ const BattleSnapshotSchema = Schema.Struct({
   acts: Schema.Array(AvailableBattleActSchema),
   currentTurnResources: JsonObjectSchema,
 });
-const BattleSessionSchema = Schema.Struct({
+const McpSessionSnapshotSchema = Schema.Struct({
   draftIds: Schema.Array(Schema.String),
   sourceDraftIds: Schema.Array(Schema.String),
   selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
@@ -103,30 +103,30 @@ const BattleResolutionResultSchema = Schema.Union(
 
 export const SelectStatBlockOutputSchema = Schema.Struct({
   selectedStatBlock: JsonObjectSchema,
-  session: BattleSessionSchema,
+  session: McpSessionSnapshotSchema,
 });
 
 export const BattleSessionOutputSchema = Schema.Struct({
   battleState: Schema.Union(BattleStateProjectionSchema, Schema.Null),
   snapshot: Schema.Union(BattleSnapshotSchema, Schema.Null),
-  session: BattleSessionSchema,
+  session: McpSessionSnapshotSchema,
 });
 
 export const StartBattleOutputSchema = Schema.Struct({
   battleState: BattleStateProjectionSchema,
   snapshot: BattleSnapshotSchema,
-  session: BattleSessionSchema,
+  session: McpSessionSnapshotSchema,
 });
 
 export const BattleResolutionOutputSchema = Schema.Struct({
   result: BattleResolutionResultSchema,
   battleState: Schema.Union(BattleStateProjectionSchema, Schema.Null),
   snapshot: BattleSnapshotSchema,
-  session: BattleSessionSchema,
+  session: McpSessionSnapshotSchema,
 });
 
 export const EndBattleOutputSchema = Schema.Struct({
   endedBattleId: Schema.String,
   characters: Schema.Array(JsonObjectSchema),
-  session: BattleSessionSchema,
+  session: McpSessionSnapshotSchema,
 });

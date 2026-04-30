@@ -21,20 +21,16 @@ import type {
   StartingEquipmentChoice,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import { ABILITIES } from "@dnd/shared/types";
 
 const BACKGROUND_ASI_ONE_EACH_OPTION_ID = "one_each";
 const BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX = "two_and_one";
-const BACKGROUND_ASI_ABILITIES = [
-  "str",
-  "dex",
-  "con",
-  "int",
-  "wis",
-  "cha",
-] as const satisfies ReadonlyArray<Ability>;
+type BackgroundAbilityScoreTwoAndOneOptionIdText = {
+  readonly [PlusTwo in Ability]: `${typeof BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX}:${PlusTwo}:${Exclude<Ability, PlusTwo>}`;
+}[Ability];
 export type BackgroundAbilityScoreIncreaseOptionIdText =
   | typeof BACKGROUND_ASI_ONE_EACH_OPTION_ID
-  | `${typeof BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX}:${Ability}:${Ability}`;
+  | BackgroundAbilityScoreTwoAndOneOptionIdText;
 
 export function hasDraftSelection(
   selections: CharacterDraftSelections,
@@ -88,7 +84,8 @@ export function backgroundAbilityScoreIncreaseOptionId(
     return creationChoiceOptionId(BACKGROUND_ASI_ONE_EACH_OPTION_ID);
   }
 
-  const optionIdText: BackgroundAbilityScoreIncreaseOptionIdText = `${BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX}:${selection.plusTwo}:${selection.plusOne}`;
+  const optionIdText =
+    `${BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX}:${selection.plusTwo}:${selection.plusOne}` as BackgroundAbilityScoreIncreaseOptionIdText;
   return creationChoiceOptionId(optionIdText);
 }
 
@@ -122,10 +119,7 @@ export function parseBackgroundAbilityScoreIncreaseOptionId(
 }
 
 function isBackgroundAsiAbility(value: string | undefined): value is Ability {
-  return (
-    value != null &&
-    BACKGROUND_ASI_ABILITIES.some((ability) => ability === value)
-  );
+  return value != null && ABILITIES.some((ability) => ability === value);
 }
 
 export function choiceHole(input: {
