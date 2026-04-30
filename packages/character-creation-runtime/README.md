@@ -95,7 +95,13 @@ Loadout is a runtime projection precondition for the first supported build, not
 an SRD-authored character-creation choice. See `../../ASSUMPTIONS.md` A40.
 
 Support gates are package-private runtime narrowings. They must not become
-public Surface classifications or new source rules.
+public Surface classifications or new source rules. The current
+`src/support-gates.ts` support profile owns the Phase 1 class/background/species
+ids, supported Unit choice keys, supported option ids, purchasable equipment,
+loadout choices, and manifest-only finalization facts. Legal Surface options can
+be discovered outside that profile, but fill validation rejects them at this one
+runtime boundary until widening work adds support-profile entries and projection
+logic.
 
 ## State Ownership Rules
 
@@ -111,12 +117,21 @@ Choice holes carry explicit cardinality. Callers submit the selected option set
 in one fill, not as multiple fills for the same hole. Duplicate fills for one
 hole are rejected unless a future hole type explicitly says otherwise.
 
+Batch fill validation indexes the discovered holes and their choice options once
+per mutation. Unknown-hole, duplicate-fill, invalid-choice, and unsupported-choice
+checks all run against that indexed frontier instead of repeatedly scanning the
+hole list. This keeps the validation boundary stable as Surface catalogs gain
+more legal Units and options.
+
 The finalized `CharacterBuild` carries selected Unit refs plus derived build
 facts needed by later boundaries: final ability scores, level-1 Hit Point
 maximum and Hit Die pool, proficiencies, granted feature refs, activation
-resources, and equipment/loadout refs. It does not carry current HP, Temporary
-Hit Points, expended resources, Hit Dice remaining, or battle creature-init
-types.
+resources, and equipment/loadout refs. Supported class-choice features and
+loadout refs are projected from accepted draft selections, not reauthored as
+parallel constants. The remaining Phase 1 finalization gate still rejects any
+complete draft whose selected vertical is not exactly the Orc Soldier Fighter 1
+manifest. `CharacterBuild` does not carry current HP, Temporary Hit Points,
+expended resources, Hit Dice remaining, or battle creature-init types.
 
 Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
 or build state. SRD 5.2.1 says they last until depleted or Long Rest, so a future

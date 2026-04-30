@@ -9,6 +9,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   characterDraftId,
@@ -29,6 +30,11 @@ import {
   type CreationHoleIdText,
   type UnitLibrary,
 } from "./index.ts";
+import { finalizedBuildEquipment } from "./finalization.ts";
+import {
+  CHARACTER_CREATION_SUPPORT_PROFILE,
+  type SupportedLoadoutChoice,
+} from "./support-gates.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -98,6 +104,47 @@ describe("character creation hole discovery", () => {
         ],
       ],
     ]);
+  });
+
+  test("discovers legal catalog width while support gates reject unsupported choices", () => {
+    const widenedUnitLibrary = unitLibraryWithUnrelatedUnits(48);
+    const draft = createCharacterDraft({
+      unitLibrary: widenedUnitLibrary,
+      draftId: characterDraftId("draft:widened-catalog"),
+    });
+    const holes = discoverCreationHoles({
+      draft,
+      unitLibrary: widenedUnitLibrary,
+    });
+
+    expect(optionIds(holeById(holes, "cc:draft:draft.primaryClass"))).toContain(
+      "class_unrelated_0",
+    );
+    expect(optionIds(holeById(holes, "cc:draft:draft.background"))).toContain(
+      "background_unrelated_0",
+    );
+    expect(optionIds(holeById(holes, "cc:draft:draft.species"))).toContain(
+      "species_unrelated_0",
+    );
+
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary: widenedUnitLibrary,
+      expectedRevision: draft.revision,
+      fills: [choiceFill("cc:draft:draft.primaryClass", "class_unrelated_0")],
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          tag: "illegalFill",
+          code: "unsupportedChoice",
+          message:
+            "Unsupported choice class_unrelated_0 for character creation hole: cc:draft:draft.primaryClass",
+        },
+      ],
+    });
   });
 
   test("opens Fighter holes after the class selection", () => {
@@ -1348,6 +1395,162 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test("derives build loadout projection from selected loadout Unit refs", () => {
+    const complete = completeManifestDraft();
+    const projection = finalizedBuildEquipment({
+      ...complete.selections,
+      primaryClass: "class_fighter",
+      advancement: { entries: [{ classUnitId: "class_fighter", level: 1 }] },
+      background: "background_soldier",
+      abilityScoreGeneration: {
+        method: "standardArray",
+        assignedScores: {
+          str: 15,
+          dex: 14,
+          con: 13,
+          int: 8,
+          wis: 10,
+          cha: 12,
+        },
+      },
+      backgroundAbilityScoreIncrease: {
+        kind: "twoAndOne",
+        plusTwo: "str",
+        plusOne: "con",
+      },
+      species: "species_orc",
+      languages: ["Common", "Dwarvish", "Goblin"],
+      alignment: { order: "lawful", morality: "good" },
+      equipment: {
+        selectedUnitIds: [
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ],
+      },
+      choices: complete.selections.choices.map((choice) =>
+        choice.source.unitId === "weapon_longsword" &&
+        choice.source.choiceKey === "loadout_weapon"
+          ? selectedLoadoutChoice(
+              "weapon_longsword",
+              "loadout_weapon",
+              "wielded_one_handed",
+              "weapon_test_selected",
+            )
+          : choice,
+      ),
+    });
+
+    expect(projection.weapon).toEqual({
+      unitId: "weapon_test_selected",
+      grip: "one_handed",
+    });
+  });
+
+  test("finalizes public builds from support-profile-selected loadout Unit refs", () => {
+    const complete = completeManifestDraft();
+    const mutableProfile =
+      CHARACTER_CREATION_SUPPORT_PROFILE as unknown as MutableSupportProfile;
+    const originalPurchaseOptionIds =
+      mutableProfile.unitOptionIdsByChoiceKey.equipment_purchase;
+    const originalPurchasableEquipmentUnitIds =
+      mutableProfile.purchasableEquipmentUnitIds;
+    const originalLoadoutChoices = mutableProfile.loadoutChoices;
+    const originalFinalizedChoiceSelections =
+      mutableProfile.manifest.finalizedChoiceSelections;
+    const originalFinalizedEquipmentUnitIds =
+      mutableProfile.manifest.finalizedEquipmentUnitIds;
+    const spearWeaponLoadout: SupportedLoadoutChoice = {
+      choiceKey: "loadout_weapon",
+      unitId: "weapon_spear",
+      optionId: creationChoiceOptionId("wielded_one_handed"),
+      label: "Wielded one-handed",
+      buildSlot: "weapon",
+      grip: "one_handed",
+    };
+
+    mutableProfile.unitOptionIdsByChoiceKey.equipment_purchase = [
+      creationChoiceOptionId("armor_chain_mail"),
+      creationChoiceOptionId("weapon_spear"),
+      creationChoiceOptionId("equipment_shield"),
+    ];
+    mutableProfile.purchasableEquipmentUnitIds = [
+      "armor_chain_mail",
+      "weapon_spear",
+      "equipment_shield",
+    ];
+    mutableProfile.loadoutChoices = [
+      originalLoadoutChoices[0]!,
+      originalLoadoutChoices[1]!,
+      spearWeaponLoadout,
+    ];
+    mutableProfile.manifest.finalizedChoiceSelections =
+      originalFinalizedChoiceSelections.map((choice) =>
+        choice.source.unitId === "weapon_longsword" &&
+        choice.source.choiceKey === "loadout_weapon"
+          ? selectedLoadoutChoice(
+              "weapon_spear",
+              "loadout_weapon",
+              "wielded_one_handed",
+            )
+          : choice,
+      );
+    mutableProfile.manifest.finalizedEquipmentUnitIds = [
+      "armor_chain_mail",
+      "weapon_spear",
+      "equipment_shield",
+    ];
+
+    try {
+      const draft: CharacterDraft = {
+        ...complete,
+        selections: {
+          ...complete.selections,
+          equipment: {
+            selectedUnitIds: [
+              "armor_chain_mail",
+              "weapon_spear",
+              "equipment_shield",
+            ],
+          },
+          choices: complete.selections.choices.map((choice) =>
+            choice.source.unitId === "weapon_longsword" &&
+            choice.source.choiceKey === "loadout_weapon"
+              ? selectedLoadoutChoice(
+                  "weapon_spear",
+                  "loadout_weapon",
+                  "wielded_one_handed",
+                )
+              : choice,
+          ),
+        },
+      };
+
+      const finalization = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(finalization).toMatchObject({
+        tag: "ready",
+        build: {
+          equipment: {
+            armor: "armor_chain_mail",
+            shield: "equipment_shield",
+            weapon: { unitId: "weapon_spear", grip: "one_handed" },
+          },
+        },
+      });
+    } finally {
+      mutableProfile.unitOptionIdsByChoiceKey.equipment_purchase =
+        originalPurchaseOptionIds;
+      mutableProfile.purchasableEquipmentUnitIds =
+        originalPurchasableEquipmentUnitIds;
+      mutableProfile.loadoutChoices = originalLoadoutChoices;
+      mutableProfile.manifest.finalizedChoiceSelections =
+        originalFinalizedChoiceSelections;
+      mutableProfile.manifest.finalizedEquipmentUnitIds =
+        originalFinalizedEquipmentUnitIds;
+    }
+  });
+
   test("does not finalize incomplete or illegal drafts", () => {
     const incomplete = finalizeCharacterDraft({
       draft: createTestDraft("draft:finalize-incomplete"),
@@ -1377,7 +1580,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized build advancement must be exactly one Fighter level.",
+            "Finalized build advancement must match the supported manifest level.",
         },
       ],
     });
@@ -1449,7 +1652,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized build must carry exactly the phase-1 manifest choices.",
+            "Finalized build must carry exactly the supported manifest choices.",
         },
       ],
     });
@@ -1462,7 +1665,7 @@ describe("character creation finalization", () => {
           tag: "illegalFinalization",
           code: "illegalFinalization",
           message:
-            "Finalized build must carry exactly the phase-1 manifest choices.",
+            "Finalized build must carry exactly the supported manifest choices.",
         },
       ],
     });
@@ -1610,6 +1813,37 @@ function unitLibraryWithLevelOneFighterGrant(
   };
 }
 
+function unitLibraryWithUnrelatedUnits(count: number): UnitLibrary {
+  const fighter = unitLibrary.requireUnit("class_fighter");
+  const soldier = unitLibrary.requireUnit("background_soldier");
+  const orc = unitLibrary.requireUnit("species_orc");
+  const longsword = unitLibrary.requireUnit("weapon_longsword");
+  const unrelatedUnits: UnitRecord[] = Array.from(
+    { length: count },
+    (_, index) =>
+      [
+        { ...fighter, id: `class_unrelated_${index}` },
+        { ...soldier, id: `background_unrelated_${index}` },
+        { ...orc, id: `species_unrelated_${index}` },
+        { ...longsword, id: `weapon_unrelated_${index}` },
+      ] as UnitRecord[],
+  ).flat();
+  const units = [...unitLibrary.listUnits(), ...unrelatedUnits];
+
+  return {
+    ...unitLibrary,
+    listUnits: () => units,
+    requireUnit: (id) => {
+      const unit = units.find((candidate) => candidate.id === id);
+      if (unit == null) {
+        throw new Error(`Missing test Unit: ${id}`);
+      }
+
+      return unit;
+    },
+  };
+}
+
 function initialManifestFills(): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
@@ -1736,6 +1970,17 @@ type RejectedCreationBatch = Extract<
   ReturnType<typeof fillCreationHoles>,
   { readonly tag: "rejected" }
 >;
+type MutableSupportProfile = {
+  unitOptionIdsByChoiceKey: {
+    equipment_purchase: ReturnType<typeof creationChoiceOptionId>[];
+  };
+  purchasableEquipmentUnitIds: UnitRecord["id"][];
+  loadoutChoices: SupportedLoadoutChoice[];
+  manifest: {
+    finalizedChoiceSelections: CharacterChoiceSelection[];
+    finalizedEquipmentUnitIds: UnitRecord["id"][];
+  };
+};
 
 const HOLE_ID_TO_QNT_VARIANT = {
   "cc:draft:draft.primaryClass": "HPrimaryClass",
@@ -2260,6 +2505,7 @@ function selectedLoadoutChoice(
   unitId: string,
   choiceKey: string,
   optionId: string,
+  selectedUnitId: string = unitId,
 ): CharacterChoiceSelection {
   return {
     source: {
@@ -2270,7 +2516,7 @@ function selectedLoadoutChoice(
     options: [
       {
         optionId: creationChoiceOptionId(optionId),
-        unitRef: { unitId },
+        unitRef: { unitId: selectedUnitId },
       },
     ],
   };

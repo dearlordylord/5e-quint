@@ -33,18 +33,6 @@ import {
   FIGHTER_WEAPON_MASTERY_FEATURE_ID,
   INITIAL_CHARACTER_DRAFT_PATHS,
   LEVEL_ONE_FIGHTER_FEATURE_IDS,
-  LOADOUT_ARMOR_CHOICE_KEY,
-  LOADOUT_SHIELD_CHOICE_KEY,
-  LOADOUT_WEAPON_CHOICE_KEY,
-  PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-  PHASE1_LOADOUT_ARMOR_OPTION_ID,
-  PHASE1_LOADOUT_SHIELD_OPTION_ID,
-  PHASE1_LOADOUT_WEAPON_OPTION_ID,
-  PHASE1_SHIELD_UNIT_ID,
-  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-  SUPPORTED_BACKGROUND_UNIT_IDS,
-  SUPPORTED_CLASS_UNIT_IDS,
-  SUPPORTED_PURCHASE_UNIT_IDS,
   type LevelOneFighterFeatureId,
 } from "./phase1-manifest.ts";
 import {
@@ -75,7 +63,13 @@ import {
   type CreationHoleSource,
   type UnitLibrary,
 } from "./types.ts";
-import { unsupportedHoleSelectionOptionId } from "./support-gates.ts";
+import {
+  supportedBackgroundUnitIds,
+  supportedClassUnitIds,
+  supportedLoadoutChoices,
+  supportedPurchasableEquipmentUnitIds,
+  unsupportedHoleSelectionOptionId,
+} from "./support-gates.ts";
 
 const SRD_GAMING_SET_OPTIONS = [
   {
@@ -125,7 +119,7 @@ export function discoverClassGrantedHoles(input: {
   const classUnitId = input.draft.selections.primaryClass;
   if (
     classUnitId == null ||
-    !isSupported(classUnitId, SUPPORTED_CLASS_UNIT_IDS)
+    !isSupported(classUnitId, supportedClassUnitIds())
   ) {
     return [];
   }
@@ -173,7 +167,7 @@ export function discoverBackgroundGrantedHoles(input: {
   const backgroundUnitId = input.draft.selections.background;
   if (
     backgroundUnitId == null ||
-    !isSupported(backgroundUnitId, SUPPORTED_BACKGROUND_UNIT_IDS)
+    !isSupported(backgroundUnitId, supportedBackgroundUnitIds())
   ) {
     return [];
   }
@@ -282,8 +276,10 @@ export function discoverEquipmentHoles(input: {
   }
   const purchaseHole = choiceHole({
     source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
-    cardinality: exactChoiceCardinality(SUPPORTED_PURCHASE_UNIT_IDS.length),
-    options: SUPPORTED_PURCHASE_UNIT_IDS.map((unitId) =>
+    cardinality: exactChoiceCardinality(
+      supportedPurchasableEquipmentUnitIds().length,
+    ),
+    options: supportedPurchasableEquipmentUnitIds().map((unitId) =>
       unitOption(input.unitLibrary.requireUnit(unitId)),
     ),
   });
@@ -294,59 +290,23 @@ export function discoverEquipmentHoles(input: {
 
   return [
     ...unselectedPurchaseHole(input.draft, purchaseHole),
-    ...unselectedLoadoutHole(
-      input.draft,
-      choiceHole({
-        source: unitSource(
-          PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-          LOADOUT_ARMOR_CHOICE_KEY,
-        ),
-        cardinality: EXACTLY_ONE_CHOICE,
-        options: [
-          {
-            optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
-            label: "Worn",
-            unitRef: { unitId: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID },
-          },
-        ],
-      }),
-      PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-      hasValidPurchaseSelection,
-    ),
-    ...unselectedLoadoutHole(
-      input.draft,
-      choiceHole({
-        source: unitSource(PHASE1_SHIELD_UNIT_ID, LOADOUT_SHIELD_CHOICE_KEY),
-        cardinality: EXACTLY_ONE_CHOICE,
-        options: [
-          {
-            optionId: PHASE1_LOADOUT_SHIELD_OPTION_ID,
-            label: "Wielded",
-            unitRef: { unitId: PHASE1_SHIELD_UNIT_ID },
-          },
-        ],
-      }),
-      PHASE1_SHIELD_UNIT_ID,
-      hasValidPurchaseSelection,
-    ),
-    ...unselectedLoadoutHole(
-      input.draft,
-      choiceHole({
-        source: unitSource(
-          PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-          LOADOUT_WEAPON_CHOICE_KEY,
-        ),
-        cardinality: EXACTLY_ONE_CHOICE,
-        options: [
-          {
-            optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
-            label: "Wielded one-handed",
-            unitRef: { unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID },
-          },
-        ],
-      }),
-      PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-      hasValidPurchaseSelection,
+    ...supportedLoadoutChoices().flatMap((loadoutChoice) =>
+      unselectedLoadoutHole(
+        input.draft,
+        choiceHole({
+          source: unitSource(loadoutChoice.unitId, loadoutChoice.choiceKey),
+          cardinality: EXACTLY_ONE_CHOICE,
+          options: [
+            {
+              optionId: loadoutChoice.optionId,
+              label: loadoutChoice.label,
+              unitRef: { unitId: loadoutChoice.unitId },
+            },
+          ],
+        }),
+        loadoutChoice.unitId,
+        hasValidPurchaseSelection,
+      ),
     ),
   ];
 }
@@ -375,8 +335,8 @@ export function hasPhaseOneCoinEquipmentPath(input: {
   if (
     classUnitId == null ||
     backgroundUnitId == null ||
-    !isSupported(classUnitId, SUPPORTED_CLASS_UNIT_IDS) ||
-    !isSupported(backgroundUnitId, SUPPORTED_BACKGROUND_UNIT_IDS)
+    !isSupported(classUnitId, supportedClassUnitIds()) ||
+    !isSupported(backgroundUnitId, supportedBackgroundUnitIds())
   ) {
     return false;
   }

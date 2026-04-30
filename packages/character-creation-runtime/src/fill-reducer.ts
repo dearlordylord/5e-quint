@@ -26,6 +26,7 @@ import {
   type CharacterDraftPath,
   type CharacterDraftSelections,
   type ChoiceCount,
+  type ChoiceCreationHole,
   type CreationBatchFillInput,
   type CreationBatchFillIssue,
   type CreationBatchFillResult,
@@ -41,13 +42,22 @@ import {
   type UnitLibrary,
 } from "./types.ts";
 
+export type CreationHoleIndex = {
+  readonly holesById: ReadonlyMap<CreationHoleId, CreationHole>;
+  readonly choiceOptionsByHoleId: ReadonlyMap<
+    CreationHoleId,
+    ReadonlyMap<CreationChoiceOptionId, CreationChoiceOption>
+  >;
+};
+
 export function fillCreationHoles(
   input: CreationBatchFillInput & {
     readonly unitLibrary: UnitLibrary;
   },
 ): CreationBatchFillResult {
   const holes = discoverCreationHoles(input);
-  const issues = creationFillIssues(input, holes);
+  const holeIndex = indexCreationHoles(holes);
+  const issues = creationFillIssues(input, holeIndex);
   const finalization = finalizeCharacterDraft(input);
   const rejectedIssues = nonEmptyReadonlyArray(issues);
 
@@ -61,7 +71,7 @@ export function fillCreationHoles(
     };
   }
 
-  const nextDraft = applyCreationFills(input.draft, holes, input.fills);
+  const nextDraft = applyCreationFills(input.draft, holeIndex, input.fills);
   const nextInput = { draft: nextDraft, unitLibrary: input.unitLibrary };
 
   return {
@@ -74,7 +84,7 @@ export function fillCreationHoles(
 
 export function creationFillIssues(
   input: CreationBatchFillInput,
-  holes: readonly CreationHole[],
+  holeIndex: CreationHoleIndex,
 ): readonly CreationBatchFillIssue[] {
   const batchIssues =
     input.expectedRevision === input.draft.revision
@@ -85,7 +95,7 @@ export function creationFillIssues(
     ...batchIssues,
     ...input.fills.flatMap((fill, fillIndexValue) => {
       const fillIndex = creationFillIndex(fillIndexValue);
-      const matchingHole = holes.find((hole) => hole.holeId === fill.holeId);
+      const matchingHole = holeIndex.holesById.get(fill.holeId);
       const isDuplicate = input.fills
         .slice(0, fillIndexValue)
         .some((priorFill) => priorFill.holeId === fill.holeId);
@@ -98,7 +108,7 @@ export function creationFillIssues(
         return [unknownHoleIssue(fill, fillIndex)];
       }
 
-      return fillIssuesForHole(fill, fillIndex, matchingHole);
+      return fillIssuesForHole(fill, fillIndex, matchingHole, holeIndex);
     }),
   ];
 }
@@ -107,13 +117,19 @@ export function fillIssuesForHole(
   fill: CreationFill,
   fillIndex: FillIndex,
   hole: CreationHole,
+  holeIndex: CreationHoleIndex = indexCreationHoles([hole]),
 ): readonly CreationFillIssue[] {
   if (!fillKindMatchesHole(fill, hole)) {
     return [wrongFillKindIssue(fill, fillIndex, hole)];
   }
 
   if (hole.kind === "choice" && fill.kind === "choice") {
-    return choiceFillIssues(fill, fillIndex, hole);
+    return choiceFillIssues(
+      fill,
+      fillIndex,
+      hole,
+      requireChoiceOptionIndex(holeIndex, hole),
+    );
   }
 
   if (hole.kind === "abilityScores" && fill.kind === "abilityScores") {
@@ -136,7 +152,8 @@ export function fillKindMatchesHole(
 export function choiceFillIssues(
   fill: ChoiceFill,
   fillIndex: FillIndex,
-  hole: Extract<CreationHole, { readonly kind: "choice" }>,
+  hole: ChoiceCreationHole,
+  optionById: ReadonlyMap<CreationChoiceOptionId, CreationChoiceOption>,
 ): readonly CreationFillIssue[] {
   const optionIds = fill.optionIds;
   const requiredCount = hole.cardinality.count;
@@ -150,8 +167,7 @@ export function choiceFillIssues(
   ];
   const invalidOptionIds = optionIds.filter(
     (optionId, optionIndex) =>
-      optionIds.indexOf(optionId) !== optionIndex ||
-      !hole.options.some((option) => option.optionId === optionId),
+      optionIds.indexOf(optionId) !== optionIndex || !optionById.has(optionId),
   );
 
   if (invalidOptionIds.length > 0) {
@@ -187,12 +203,16 @@ export function abilityScoreFillIssues(
 
 export function applyCreationFills(
   draft: CharacterDraft,
-  holes: readonly CreationHole[],
+  holeIndex: CreationHoleIndex,
   fills: readonly CreationFill[],
 ): CharacterDraft {
   const selections = fills.reduce(
     (selectionsSoFar, fill) =>
-      applyCreationFill(selectionsSoFar, requireHole(holes, fill.holeId), fill),
+      applyCreationFill(
+        selectionsSoFar,
+        requireHole(holeIndex, fill.holeId),
+        fill,
+      ),
     draft.selections,
   );
 
@@ -204,15 +224,49 @@ export function applyCreationFills(
 }
 
 export function requireHole(
-  holes: readonly CreationHole[],
+  holeIndex: CreationHoleIndex,
   holeId: CreationHoleId,
 ): CreationHole {
-  const hole = holes.find((candidate) => candidate.holeId === holeId);
+  const hole = holeIndex.holesById.get(holeId);
   if (hole == null) {
     throw new Error(`Accepted fill referenced missing creation hole ${holeId}`);
   }
 
   return hole;
+}
+
+export function indexCreationHoles(
+  holes: readonly CreationHole[],
+): CreationHoleIndex {
+  const holesById = new Map<CreationHoleId, CreationHole>();
+  const choiceOptionsByHoleId = new Map<
+    CreationHoleId,
+    ReadonlyMap<CreationChoiceOptionId, CreationChoiceOption>
+  >();
+
+  for (const hole of holes) {
+    holesById.set(hole.holeId, hole);
+    if (hole.kind === "choice") {
+      choiceOptionsByHoleId.set(
+        hole.holeId,
+        new Map(hole.options.map((option) => [option.optionId, option])),
+      );
+    }
+  }
+
+  return { holesById, choiceOptionsByHoleId };
+}
+
+export function requireChoiceOptionIndex(
+  holeIndex: CreationHoleIndex,
+  hole: ChoiceCreationHole,
+): ReadonlyMap<CreationChoiceOptionId, CreationChoiceOption> {
+  const optionById = holeIndex.choiceOptionsByHoleId.get(hole.holeId);
+  if (optionById == null) {
+    throw new Error(`Indexed choice options missing for ${hole.holeId}.`);
+  }
+
+  return optionById;
 }
 
 export function applyCreationFill(

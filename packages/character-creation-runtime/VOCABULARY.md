@@ -26,3 +26,14 @@ draft unchanged.
 Unit-backed selection - a character-creation choice whose accepted option
 references a Surface Unit. The draft records the selected Unit reference rather
 than treating the submitted option id as authored truth.
+
+Support Profile - package-private runtime boundary that says which discovered
+Surface-backed draft choices, Unit choice families, option ids, equipment
+purchases, and loadout choices this package can currently finalize. It is not
+authored provenance and not a Surface content classification. Legal choices
+outside the profile can appear in holes, but fills are rejected as unsupported
+until widening work adds support and projection behavior.
+
+Finalization Gate - the remaining Phase 1 readiness check after all holes are
+filled. The gate keeps the only finalizable vertical to Orc Soldier Fighter 1 and
+requires the exact manifest-owned choices before producing a `CharacterBuild`.
