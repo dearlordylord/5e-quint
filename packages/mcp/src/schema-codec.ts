@@ -14,9 +14,10 @@ export function decodeToolArgs<A, I>(
   args: unknown,
   toolName: string,
 ): A | ToolError {
+  const input = args === undefined ? {} : args;
   const decoded = Schema.decodeUnknownEither(schema, {
     onExcessProperty: "error",
-  })(args);
+  })(input);
   if (Either.isRight(decoded)) return decoded.right;
   return errorContent(`${toolName} expects valid arguments.`, {
     code: "INVALID_ARGUMENTS",

@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
@@ -90,7 +91,7 @@ export const contentToolDefinitions = [
   {
     name: "list_supported_units",
     description:
-      "List currently installed Surface Unit ids grouped by kind. Use this to discover class, species, background, spell, weapon, armor, equipment, and feature ids that can appear in creation holes or battle acts.",
+      "List installed Surface Unit ids grouped by kind. This is catalog discovery only; legal choices still come from creation holes and battle acts.",
     inputSchema: emptyInputSchema,
     outputSchema: listSupportedUnitsOutputSchema,
   },
@@ -98,6 +99,9 @@ export const contentToolDefinitions = [
 
 const CONTENT_TOOL_NAMES = contentToolDefinitions.map((tool) => tool.name);
 type ContentToolName = (typeof contentToolDefinitions)[number]["name"];
+type StatBlockAttack = NonNullable<
+  NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
+>[number];
 
 export type ContentToolResult =
   | ReturnType<typeof schemaJsonContent>
@@ -145,7 +149,7 @@ export function handleContentToolCall(
 function workflowGuide() {
   return {
     lifecycle: [
-      "Call list_supported_units or create_character_draft to discover supported character ids.",
+      "Call list_supported_units for catalog ids or create_character_draft to discover currently legal character choices.",
       "Call create_character_draft, then fill only holeIds and optionIds returned in holes.",
       "After every accepted fill_creation_holes call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
@@ -196,15 +200,15 @@ function workflowGuide() {
   };
 }
 
-function groupUnitsByKind(units: readonly Readonly<Record<string, unknown>>[]) {
+function groupUnitsByKind(units: readonly UnitRecord[]) {
   const groups: Record<
     string,
     Array<{ readonly id: string; readonly name: string }>
   > = {};
   for (const unit of units) {
-    const kind = typeof unit.kind === "string" ? unit.kind : "unknown";
+    const kind = unit.kind;
     groups[kind] ??= [];
-    groups[kind].push({ id: String(unit.id), name: String(unit.name) });
+    groups[kind].push({ id: unit.id, name: unit.name });
   }
   return Object.fromEntries(
     Object.entries(groups).map(([kind, values]) => [
@@ -216,70 +220,94 @@ function groupUnitsByKind(units: readonly Readonly<Record<string, unknown>>[]) {
   );
 }
 
-function statBlockSummary(record: Readonly<Record<string, unknown>>) {
-  const statBlock = record.statBlock as Readonly<Record<string, unknown>>;
+function statBlockSummary(record: StatBlockRecord) {
+  const statBlock = record.statBlock;
   return {
-    statBlockId: String(record.id),
-    displayName: String(statBlock.displayName),
-    creatureType: String(statBlock.creatureType),
-    armorClass: literalNumber(statBlock.ac),
-    hitPoints: literalNumber(statBlock.hp),
-    initiativeModifier: Number(statBlock.initiativeModifier),
-    attacks: (
-      (statBlock.actions as { readonly attacks?: readonly unknown[] })
-        .attacks ?? []
-    ).map((attack) => attackSummary(attack)),
+    statBlockId: record.id,
+    displayName: statBlock.displayName,
+    creatureType: stringCreatureType(record),
+    armorClass: literalNumber(statBlock.ac, `${record.id}.statBlock.ac`),
+    hitPoints: literalNumber(statBlock.hp, `${record.id}.statBlock.hp`),
+    initiativeModifier: statBlock.initiativeModifier ?? 0,
+    attacks: (statBlock.actions?.attacks ?? []).map((attack) =>
+      attackSummary(record, attack),
+    ),
     damageVulnerabilities: damageModifierTypes(statBlock.vulnerabilities),
     damageResistances: damageModifierTypes(statBlock.resistances),
     damageImmunities: damageModifierTypes(statBlock.immunities),
     conditionImmunities: conditionModifierTypes(statBlock.immunities),
-    provenanceKind: provenanceField(record.provenance, "kind"),
-    provenanceSection: provenanceField(record.provenance, "section"),
+    provenanceKind: record.provenance.kind,
+    provenanceSection: record.provenance.section,
   };
 }
 
-function attackSummary(attack: unknown) {
-  const record = attack as Readonly<Record<string, unknown>>;
+function attackSummary(statBlock: StatBlockRecord, attack: StatBlockAttack) {
   return {
-    attackName: String(record.name),
-    attackType: String(record.attackType),
-    attackBonus: literalNumber(record.attackBonus),
-    ...(typeof record.reachFeet === "number"
-      ? { reachFeet: record.reachFeet }
+    attackName: attack.name,
+    attackType: attack.attackType,
+    attackBonus: literalNumber(
+      attack.attackBonus,
+      `${statBlock.id}.actions.${attack.name}.attackBonus`,
+    ),
+    ...(typeof attack.reachFeet === "number"
+      ? { reachFeet: attack.reachFeet }
       : {}),
-    ...(isRecord(record.rangeFeet) &&
-    typeof record.rangeFeet.normal === "number"
-      ? { normalRangeFeet: record.rangeFeet.normal }
-      : {}),
-    ...(isRecord(record.rangeFeet) && typeof record.rangeFeet.long === "number"
-      ? { longRangeFeet: record.rangeFeet.long }
-      : {}),
-    onHit: Array.isArray(record.onHit)
-      ? record.onHit.map((effect) => JSON.stringify(effect))
-      : [],
+    ...(attack.rangeFeet === undefined
+      ? {}
+      : { normalRangeFeet: attack.rangeFeet.normal }),
+    ...(attack.rangeFeet === undefined
+      ? {}
+      : { longRangeFeet: attack.rangeFeet.long }),
+    onHit: attack.onHit.map((effect) => JSON.stringify(effect)),
   };
 }
 
-function literalNumber(value: unknown): number {
-  return isRecord(value) && typeof value.value === "number" ? value.value : 0;
+function stringCreatureType(record: StatBlockRecord): string {
+  const { creatureType } = record.statBlock;
+  if (typeof creatureType === "string") {
+    return creatureType;
+  }
+  throw new Error(
+    `Stat Block discovery requires a concrete creatureType: ${record.id}`,
+  );
 }
 
-function damageModifierTypes(value: unknown): string[] {
-  return isRecord(value) && Array.isArray(value.damageTypes)
-    ? value.damageTypes.map(String)
-    : [];
+function literalNumber(
+  value:
+    | StatBlockRecord["statBlock"]["ac"]
+    | StatBlockRecord["statBlock"]["hp"]
+    | NonNullable<
+        NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
+      >[number]["attackBonus"],
+  field: string,
+): number {
+  if (value.kind === "literal") {
+    return value.value;
+  }
+  throw new Error(`Stat Block discovery requires a literal number: ${field}`);
 }
 
-function conditionModifierTypes(value: unknown): string[] {
-  return isRecord(value) && Array.isArray(value.conditions)
-    ? value.conditions.map(String)
-    : [];
+function damageModifierTypes(
+  value:
+    | StatBlockRecord["statBlock"]["vulnerabilities"]
+    | StatBlockRecord["statBlock"]["resistances"]
+    | Pick<
+        NonNullable<StatBlockRecord["statBlock"]["immunities"]>,
+        "damageTypes"
+      >
+    | undefined,
+): string[] {
+  if (value === undefined) {
+    return [];
+  }
+  if ("kind" in value && value.kind === "choose_one_from") {
+    return [...value.options];
+  }
+  return value.damageTypes === undefined ? [] : [...value.damageTypes];
 }
 
-function provenanceField(value: unknown, key: "kind" | "section"): string {
-  return isRecord(value) && typeof value[key] === "string" ? value[key] : "";
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function conditionModifierTypes(
+  value: StatBlockRecord["statBlock"]["immunities"],
+): string[] {
+  return value?.conditions === undefined ? [] : [...value.conditions];
 }

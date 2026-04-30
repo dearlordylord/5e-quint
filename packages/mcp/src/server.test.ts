@@ -227,6 +227,25 @@ describe("MCP server route", () => {
     ]);
   });
 
+  test("accepts omitted arguments for no-arg and optional-arg tools", () => {
+    const root = createMcpCompositionRoot();
+
+    expect(
+      readPayload(handleToolCall(root, "describe_mcp_workflow", undefined)),
+    ).toMatchObject({
+      resultPaths: { battleActs: "snapshot.acts" },
+    });
+
+    expect(
+      readPayload(handleToolCall(root, "create_character_draft", undefined)),
+    ).toMatchObject({
+      draft: { revision: 0 },
+      holes: expect.arrayContaining([
+        expect.objectContaining({ holeId: "cc:draft:draft.primaryClass" }),
+      ]),
+    });
+  });
+
   test("selects Goblin Warrior and starts a stored partial battle shell through tools", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-battle-shell";
@@ -1438,6 +1457,55 @@ describe("MCP server route", () => {
     expect(actor.origin.spellcasting).toMatchObject({
       canCastSpells: false,
       spellSlots: [{ spellLevel: 1, count: 2, expended: 1 }],
+    });
+    expect(
+      discoverBattleActs(state).map((act) => act.subject),
+    ).not.toContainEqual(
+      expect.objectContaining({ tag: "srdAction", action: "magic" }),
+    );
+  });
+
+  test("keeps spell slots but suppresses Magic-action spell acts when shield training blocks casting", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const state = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-root-shield-spellcaster"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Shield Spellcaster",
+        initiative: initiativeScore(12),
+        build: {
+          ...build,
+          armorTraining: [],
+          equipment: {
+            shield: "equipment_shield",
+          },
+          spellcasting: {
+            spellcastingAbility: "int",
+            cantrips: ["ray_of_frost"],
+            spellbook: [{ spellId: "magic_missile", spellLevel: 1 }],
+            preparedSpells: ["magic_missile"],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+            spellcastingFocuses: ["spellbook"],
+          },
+        },
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(10),
+      },
+      unitLibrary: root.unitLibrary,
+    });
+
+    const actor = state.combatants.get(fighterId);
+    expect(actor?.origin.kind).toBe("character");
+    if (actor?.origin.kind !== "character") return;
+    expect(actor.origin.spellcasting).toMatchObject({
+      canCastSpells: false,
     });
     expect(
       discoverBattleActs(state).map((act) => act.subject),

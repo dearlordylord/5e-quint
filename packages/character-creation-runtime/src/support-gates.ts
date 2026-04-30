@@ -103,7 +103,9 @@ export type CharacterCreationSupportProfile = {
   readonly classUnitIds: readonly UnitRecord["id"][];
   readonly backgroundUnitIds: readonly UnitRecord["id"][];
   readonly purchasableEquipmentUnitIds: readonly UnitRecord["id"][];
-  readonly equipmentPurchaseChoiceCount: 3;
+  readonly equipmentPurchaseChoiceCountByClassUnitId: Readonly<
+    Partial<Record<UnitRecord["id"], number>>
+  >;
   readonly coinEquipmentChoiceOptionIdsByUnitId: Partial<
     Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
   >;
@@ -187,7 +189,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   classUnitIds: SUPPORTED_CLASS_UNIT_IDS,
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
-  equipmentPurchaseChoiceCount: 3,
+  equipmentPurchaseChoiceCountByClassUnitId: {
+    [PHASE1_CLASS_FIGHTER_UNIT_ID]: 3,
+    [WIDTH_CLASS_WIZARD_UNIT_ID]: 2,
+  },
   coinEquipmentChoiceOptionIdsByUnitId: {
     [PHASE1_CLASS_FIGHTER_UNIT_ID]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
     [WIDTH_CLASS_WIZARD_UNIT_ID]: [creationChoiceOptionId("option_b")],
@@ -337,8 +342,18 @@ export function supportedPurchasableEquipmentUnitIds(): readonly UnitRecord["id"
   return CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds;
 }
 
-export function supportedEquipmentPurchaseChoiceCount(): number {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.equipmentPurchaseChoiceCount;
+export function supportedEquipmentPurchaseChoiceCount(
+  classUnitId: UnitRecord["id"],
+): number {
+  const counts: Readonly<Partial<Record<UnitRecord["id"], number>>> =
+    CHARACTER_CREATION_SUPPORT_PROFILE.equipmentPurchaseChoiceCountByClassUnitId;
+  const count = counts[classUnitId];
+  if (count == null) {
+    throw new Error(
+      `Missing supported equipment purchase count for class: ${classUnitId}`,
+    );
+  }
+  return count;
 }
 
 export function supportedLoadoutChoices(): readonly SupportedLoadoutChoice[] {

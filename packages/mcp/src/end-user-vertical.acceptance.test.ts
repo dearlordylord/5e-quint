@@ -806,7 +806,6 @@ function createAndFinalizeWizardOne(
         "cc:unit:class_wizard:equipment_purchase",
         "weapon_longsword",
         "weapon_dagger",
-        "equipment_shield",
       ),
     ],
   });
@@ -814,7 +813,6 @@ function createAndFinalizeWizardOne(
     draftId,
     expectedRevision: 4,
     fills: [
-      choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
       choiceFill(
         "cc:unit:weapon_longsword:loadout_weapon",
         "wielded_one_handed",

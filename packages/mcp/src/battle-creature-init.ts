@@ -257,8 +257,15 @@ function spellcastingAllowedByArmorTraining(
   const armor = build.equipment.armor
     ? unitLibrary.requireUnit(build.equipment.armor)
     : undefined;
+  const shield = build.equipment.shield
+    ? unitLibrary.requireUnit(build.equipment.shield)
+    : undefined;
   return (
-    armor?.kind !== "armor" || build.armorTraining.includes(armor.category)
+    (armor?.kind !== "armor" || build.armorTraining.includes(armor.category)) &&
+    (shield?.kind !== "shield" ||
+      build.armorTraining.includes(
+        shield.armorClassProjection.trainingRequired,
+      ))
   );
 }
 
