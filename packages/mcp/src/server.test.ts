@@ -44,7 +44,9 @@ describe("MCP server route", () => {
     );
 
     expect(root.unitLibrary.listUnits().length).toBeGreaterThan(0);
-    expect(root.statBlockCatalog.listStatBlocks()).toHaveLength(1);
+    expect(
+      root.statBlockCatalog.listStatBlocks().map((record) => record.id),
+    ).toEqual(["stat_block_goblin_warrior", "stat_block_skeleton"]);
     expect(selected.id).toBe("stat_block_goblin_warrior");
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
@@ -160,6 +162,7 @@ describe("MCP server route", () => {
       "read_battle_state",
       "discover_battle_acts",
       "fill_battle_hole",
+      "resolve_battle_act",
       "end_turn",
       "end_battle",
     ]);
@@ -371,8 +374,12 @@ describe("MCP server route", () => {
 
     const afterTarget = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        actorId: "fighter",
-        attackName: "Longsword",
+        subject: {
+          tag: "srdAction",
+          actorId: "fighter",
+          action: "attack",
+          attackName: "Longsword",
+        },
         fill: {
           kind: "targetChoice",
           holeId: "battle:attack:target",
@@ -396,8 +403,12 @@ describe("MCP server route", () => {
 
     const afterAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        actorId: "fighter",
-        attackName: "Longsword",
+        subject: {
+          tag: "srdAction",
+          actorId: "fighter",
+          action: "attack",
+          attackName: "Longsword",
+        },
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
@@ -419,8 +430,12 @@ describe("MCP server route", () => {
 
     const afterDamage = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        actorId: "fighter",
-        attackName: "Longsword",
+        subject: {
+          tag: "srdAction",
+          actorId: "fighter",
+          action: "attack",
+          attackName: "Longsword",
+        },
         fill: {
           kind: "rolledDice",
           holeId: "battle:attack:damage-result:1d8+3-slashing",
@@ -485,8 +500,12 @@ describe("MCP server route", () => {
 
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        actorId: "goblin",
-        attackName: "Scimitar",
+        subject: {
+          tag: "srdAction",
+          actorId: "goblin",
+          action: "attack",
+          attackName: "Scimitar",
+        },
         fill: {
           kind: "targetChoice",
           holeId: "battle:attack:target",
@@ -496,8 +515,12 @@ describe("MCP server route", () => {
     );
     const afterGoblinAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        actorId: "goblin",
-        attackName: "Scimitar",
+        subject: {
+          tag: "srdAction",
+          actorId: "goblin",
+          action: "attack",
+          attackName: "Scimitar",
+        },
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
@@ -521,8 +544,12 @@ describe("MCP server route", () => {
 
     const afterGoblinDamage = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        actorId: "goblin",
-        attackName: "Scimitar",
+        subject: {
+          tag: "srdAction",
+          actorId: "goblin",
+          action: "attack",
+          attackName: "Scimitar",
+        },
         fill: {
           kind: "rolledDice",
           holeId: "battle:attack:damage-result:1d6+2-slashing",
@@ -569,6 +596,125 @@ describe("MCP server route", () => {
     expect(root.sessionStore.battleState).toBeNull();
   });
 
+  test("start_battle reports missing additional finalized sheets before runtime start", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-missing-additional-primary";
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleToolCall(root, "select_stat_block", {
+        statBlockId: "stat_block_goblin_warrior",
+      }),
+    );
+
+    const rejected = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-missing-additional",
+        sheetDraftId: draftId,
+        characterCombatantId: "fighter",
+        characterId: "character:fighter",
+        characterDisplayName: "Orc Soldier Fighter",
+        characterInitiative: 18,
+        statBlockCombatantId: "goblin",
+        statBlockInitiative: 7,
+        additionalCharacters: [
+          {
+            sheetDraftId: "draft:mcp-missing-additional-secondary",
+            characterCombatantId: "second-fighter",
+            characterId: "character:second-fighter",
+            characterDisplayName: "Second Orc Soldier Fighter",
+            characterInitiative: 16,
+          },
+        ],
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "UNKNOWN_FINALIZED_CHARACTER_SHEET",
+        sheetDraftId: "draft:mcp-missing-additional-secondary",
+      },
+    });
+    expect(root.sessionStore.battleState).toBeNull();
+  });
+
+  test("start_battle rejects duplicate sheet, character, and combatant ids", () => {
+    const root = createMcpCompositionRoot();
+    const firstDraftId = "draft:mcp-duplicate-first";
+    const secondDraftId = "draft:mcp-duplicate-second";
+    createFinalizedFighterSheet(root, firstDraftId);
+    createFinalizedFighterSheet(root, secondDraftId);
+    readPayload(
+      handleToolCall(root, "select_stat_block", {
+        statBlockId: "stat_block_goblin_warrior",
+      }),
+    );
+
+    const baseStart = {
+      battleId: "battle:mcp-duplicates",
+      sheetDraftId: firstDraftId,
+      characterCombatantId: "fighter",
+      characterId: "character:fighter",
+      characterDisplayName: "Orc Soldier Fighter",
+      characterInitiative: 18,
+      statBlockCombatantId: "goblin",
+      statBlockInitiative: 7,
+    };
+    const secondCharacter = {
+      sheetDraftId: secondDraftId,
+      characterCombatantId: "second-fighter",
+      characterId: "character:second-fighter",
+      characterDisplayName: "Second Orc Soldier Fighter",
+      characterInitiative: 16,
+    };
+
+    expect(
+      readPayload(
+        handleToolCall(root, "start_battle", {
+          ...baseStart,
+          additionalCharacters: [
+            { ...secondCharacter, sheetDraftId: firstDraftId },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "DUPLICATE_BATTLE_CHARACTER_SHEET",
+        sheetDraftId: firstDraftId,
+      },
+    });
+    expect(
+      readPayload(
+        handleToolCall(root, "start_battle", {
+          ...baseStart,
+          additionalCharacters: [
+            { ...secondCharacter, characterId: "character:fighter" },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "DUPLICATE_BATTLE_CHARACTER_ID",
+        characterId: "character:fighter",
+      },
+    });
+    expect(
+      readPayload(
+        handleToolCall(root, "start_battle", {
+          ...baseStart,
+          additionalCharacters: [
+            { ...secondCharacter, characterCombatantId: "goblin" },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "DUPLICATE_BATTLE_COMBATANT_ID",
+        combatantId: "goblin",
+      },
+    });
+    expect(root.sessionStore.battleState).toBeNull();
+  });
+
   test("creates and finalizes the minimal Fighter through stored creation holes", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-tool-complete-fighter";
@@ -593,13 +739,14 @@ describe("MCP server route", () => {
     ]);
 
     fillThroughTool(root, draftId, 0, initialManifestFills());
-    fillThroughTool(root, draftId, 1, manifestChoiceFills());
-    fillThroughTool(root, draftId, 2, manifestPurchaseFills());
-    const loadout = fillThroughTool(root, draftId, 3, manifestLoadoutFills());
+    fillThroughTool(root, draftId, 1, manifestAdvancementFills());
+    fillThroughTool(root, draftId, 2, manifestChoiceFills());
+    fillThroughTool(root, draftId, 3, manifestPurchaseFills());
+    const loadout = fillThroughTool(root, draftId, 4, manifestLoadoutFills());
 
     expect(loadout.result).toMatchObject({
       tag: "accepted",
-      draft: { draftId, revision: 4 },
+      draft: { draftId, revision: 5 },
       holes: [],
       finalization: { tag: "ready" },
     });
@@ -889,7 +1036,7 @@ describe("MCP server route", () => {
 
     expect(discovered.draft).toMatchObject({ draftId, revision: 1 });
     expect(discovered.holes.map((hole: CreationHole) => hole.holeId)).toEqual(
-      manifestChoiceFills().map((fill) => fill.holeId),
+      initialClassHoleIds(),
     );
     expect(discovered.finalization.tag).toBe("incomplete");
     expect(discovered.session).toMatchObject({
@@ -985,9 +1132,10 @@ describe("MCP server route", () => {
       }),
     );
     fillThroughTool(root, finalizedDraftId, 0, initialManifestFills());
-    fillThroughTool(root, finalizedDraftId, 1, manifestChoiceFills());
-    fillThroughTool(root, finalizedDraftId, 2, manifestPurchaseFills());
-    fillThroughTool(root, finalizedDraftId, 3, manifestLoadoutFills());
+    fillThroughTool(root, finalizedDraftId, 1, manifestAdvancementFills());
+    fillThroughTool(root, finalizedDraftId, 2, manifestChoiceFills());
+    fillThroughTool(root, finalizedDraftId, 3, manifestPurchaseFills());
+    fillThroughTool(root, finalizedDraftId, 4, manifestLoadoutFills());
     readPayload(
       handleToolCall(root, "finalize_character", {
         draftId: finalizedDraftId,
@@ -1176,11 +1324,19 @@ function completeManifestDraft(
       fills: initialManifestFills(),
     }),
   );
-  const afterChoices = requireAcceptedBatch(
+  const afterAdvancement = requireAcceptedBatch(
     fillCreationHoles({
       draft: afterInitial,
       unitLibrary,
       expectedRevision: afterInitial.revision,
+      fills: manifestAdvancementFills(),
+    }),
+  );
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterAdvancement,
+      unitLibrary,
+      expectedRevision: afterAdvancement.revision,
       fills: manifestChoiceFills(),
     }),
   );
@@ -1285,6 +1441,12 @@ function manifestChoiceFills(): readonly CreationFill[] {
   ];
 }
 
+function manifestAdvancementFills(): readonly CreationFill[] {
+  return [
+    choiceFill("cc:draft:draft.advancement.initial", "class_fighter:level_1"),
+  ];
+}
+
 function manifestPurchaseFills(): readonly CreationFill[] {
   return [
     choiceFill(
@@ -1341,11 +1503,12 @@ function createAndFinalizeManifestFighterThroughTools(
   );
   expect(
     discoveredChoices.holes.map((hole: CreationHole) => hole.holeId),
-  ).toEqual(manifestChoiceFills().map((fill) => fill.holeId));
+  ).toEqual(initialClassHoleIds());
 
-  fillThroughTool(root, draftId, 1, manifestChoiceFills());
-  fillThroughTool(root, draftId, 2, manifestPurchaseFills());
-  fillThroughTool(root, draftId, 3, manifestLoadoutFills());
+  fillThroughTool(root, draftId, 1, manifestAdvancementFills());
+  fillThroughTool(root, draftId, 2, manifestChoiceFills());
+  fillThroughTool(root, draftId, 3, manifestPurchaseFills());
+  fillThroughTool(root, draftId, 4, manifestLoadoutFills());
 
   return readPayload(handleToolCall(root, "finalize_character", { draftId }));
 }
@@ -1362,8 +1525,12 @@ function fillBattleHoleThroughTool(
 ) {
   return readPayload(
     handleToolCall(root, "fill_battle_hole", {
-      actorId,
-      attackName,
+      subject: {
+        tag: "srdAction",
+        actorId,
+        action: "attack",
+        attackName,
+      },
       fill,
     }),
   );
@@ -1371,4 +1538,11 @@ function fillBattleHoleThroughTool(
 
 function readPayload(response: CharacterToolResult | BattleToolResult) {
   return JSON.parse(response.content[0]?.text ?? "null");
+}
+
+function initialClassHoleIds(): readonly CreationHoleIdText[] {
+  return [
+    ...manifestAdvancementFills().map((fill) => fill.holeId),
+    ...manifestChoiceFills().map((fill) => fill.holeId),
+  ];
 }

@@ -172,14 +172,14 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     ],
     [WIZARD_CANTRIP_CHOICE_KEY]: [
       creationChoiceOptionId("light"),
-      creationChoiceOptionId("mage_hand"),
+      creationChoiceOptionId("fire_bolt"),
       creationChoiceOptionId("ray_of_frost"),
     ],
     [WIZARD_SPELLBOOK_CHOICE_KEY]: [
       creationChoiceOptionId("detect_magic"),
-      creationChoiceOptionId("feather_fall"),
       creationChoiceOptionId("mage_armor"),
       creationChoiceOptionId("magic_missile"),
+      creationChoiceOptionId("shield"),
       creationChoiceOptionId("sleep"),
       creationChoiceOptionId("thunderwave"),
     ],

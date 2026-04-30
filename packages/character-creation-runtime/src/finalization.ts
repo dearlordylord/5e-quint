@@ -6,6 +6,7 @@ import {
   readSpeciesCreationFacts,
   type ClassCreationFacts,
   type UnitReaderResult,
+  type WizardClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
@@ -217,7 +218,10 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
   const classFacts = readClassCreationFacts(
     unitLibrary.requireUnit(selections.primaryClass),
   );
-  if (classFacts.tag !== "readable" || !("spellcasting" in classFacts.value)) {
+  if (
+    classFacts.tag !== "readable" ||
+    !isWizardClassCreationFacts(classFacts.value)
+  ) {
     return true;
   }
 
@@ -719,7 +723,7 @@ export function finalizedBuildSpellcasting(
   classFacts: ClassCreationFacts,
   selections: FinalizedCharacterSelections,
 ): CharacterBuildSpellcasting | undefined {
-  if (!("spellcasting" in classFacts)) {
+  if (!isWizardClassCreationFacts(classFacts)) {
     return undefined;
   }
 
@@ -740,6 +744,12 @@ export function finalizedBuildSpellcasting(
     spellSlots: spellcasting.spellSlotProjection.slots,
     spellcastingFocuses: spellcasting.spellcastingFocuses,
   };
+}
+
+function isWizardClassCreationFacts(
+  facts: ClassCreationFacts,
+): facts is WizardClassCreationFacts {
+  return facts.className === "wizard";
 }
 
 function selectedUnitRefsForChoice(

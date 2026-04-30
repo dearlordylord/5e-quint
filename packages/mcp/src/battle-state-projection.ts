@@ -20,6 +20,27 @@ function battleCreatureStateProjection(combatant: BattleCreatureState) {
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
     originKind: combatant.origin.kind,
+    origin:
+      combatant.origin.kind === "character"
+        ? {
+            kind: "character" as const,
+            characterId: combatant.origin.characterId,
+            resources: combatant.origin.resources.map((resource) => ({
+              unitId: resource.unit.id,
+              usesRemaining: resource.usesRemaining,
+              usedThisTurn: resource.usedThisTurn,
+            })),
+            spellcasting:
+              combatant.origin.spellcasting === undefined
+                ? undefined
+                : {
+                    spellSlots: combatant.origin.spellcasting.spellSlots,
+                  },
+          }
+        : {
+            kind: "statBlock" as const,
+            statBlockId: combatant.origin.statBlock.id,
+          },
     zeroHpLifecycle: combatant.zeroHpLifecycle,
   };
 }

@@ -10,6 +10,7 @@ import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-sc
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
+  type WizardClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import type {
   BackgroundToolProficiency,
@@ -212,7 +213,7 @@ function discoverWizardSpellcastingHoles(
   facts: ReadableClassCreationFacts,
   draft: CharacterDraft,
 ): readonly CreationHole[] {
-  if (!("spellcasting" in facts)) {
+  if (!isWizardClassCreationFacts(facts)) {
     return [];
   }
 
@@ -257,6 +258,12 @@ function discoverWizardSpellcastingHoles(
       }),
     ),
   ];
+}
+
+function isWizardClassCreationFacts(
+  facts: ReadableClassCreationFacts,
+): facts is WizardClassCreationFacts {
+  return facts.className === "wizard";
 }
 
 export function discoverBackgroundGrantedHoles(input: {

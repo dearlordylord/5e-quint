@@ -1529,12 +1529,12 @@ describe("character creation finalization", () => {
 
     expect(result.build.spellcasting).toEqual({
       spellcastingAbility: "int",
-      cantrips: ["light", "mage_hand", "ray_of_frost"],
+      cantrips: ["light", "fire_bolt", "ray_of_frost"],
       spellbook: [
         { spellId: "detect_magic", spellLevel: 1 },
-        { spellId: "feather_fall", spellLevel: 1 },
         { spellId: "mage_armor", spellLevel: 1 },
         { spellId: "magic_missile", spellLevel: 1 },
+        { spellId: "shield", spellLevel: 1 },
         { spellId: "sleep", spellLevel: 1 },
         { spellId: "thunderwave", spellLevel: 1 },
       ],
@@ -1564,12 +1564,12 @@ describe("character creation finalization", () => {
       "equipment_shield",
       "weapon_longsword",
       "light",
-      "mage_hand",
+      "fire_bolt",
       "ray_of_frost",
       "detect_magic",
-      "feather_fall",
       "mage_armor",
       "magic_missile",
+      "shield",
       "sleep",
       "thunderwave",
     ]);
@@ -2267,15 +2267,15 @@ function completeWizardDraft(): CharacterDraft {
         choiceFill(
           "cc:unit:class_wizard:wizard_cantrip_choices",
           "light",
-          "mage_hand",
+          "fire_bolt",
           "ray_of_frost",
         ),
         choiceFill(
           "cc:unit:class_wizard:wizard_spellbook_choices",
           "detect_magic",
-          "feather_fall",
           "mage_armor",
           "magic_missile",
+          "shield",
           "sleep",
           "thunderwave",
         ),

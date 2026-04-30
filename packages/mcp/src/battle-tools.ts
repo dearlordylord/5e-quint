@@ -16,19 +16,20 @@ import {
   decodeEndTurnArgs,
   decodeFillBattleHoleArgs,
   decodeReadBattleStateArgs,
+  decodeResolveBattleActArgs,
   decodeSelectStatBlockArgs,
-  decodeStartBattleArgs,
   discoverBattleActsInputSchema,
   endBattleInputSchema,
   endTurnInputSchema,
   fillBattleHoleInputSchema,
   isBattleToolError,
   readBattleStateInputSchema,
+  resolveBattleActInputSchema,
   selectStatBlockInputSchema,
-  startBattleInputSchema,
 } from "./battle-tool-input.ts";
-import { startBattleFromCharacterBuildAndStatBlock } from "./battle-creature-init.ts";
 import { battleStateProjection } from "./battle-state-projection.ts";
+import { handleStartBattleToolCall } from "./start-battle-tool.ts";
+import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 import { errorContent, jsonContent } from "./tool-content.ts";
 
 export const battleToolDefinitions = [
@@ -41,7 +42,7 @@ export const battleToolDefinitions = [
   {
     name: "start_battle",
     description:
-      "Start the battle session from a finalized Character Build and the selected SRD Stat Block. The caller must provide Initiative scores for both combatants.",
+      "Start the battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every character combatant and the Stat Block combatant.",
     inputSchema: startBattleInputSchema,
   },
   {
@@ -53,14 +54,20 @@ export const battleToolDefinitions = [
   {
     name: "discover_battle_acts",
     description:
-      "Return the current battle snapshot and available acts for the current combatant. Supported character and Stat Block attacks expose Attack subjects with an attackName plus End Turn.",
+      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Fighter 2 Action Surge, Wizard Magic spell subjects, and End Turn.",
     inputSchema: discoverBattleActsInputSchema,
   },
   {
     name: "fill_battle_hole",
     description:
-      "Fill one hole for the current actor's named Attack replay. MCP stores transient target, attack-roll, and damage-result fills until the battle runtime resolves the Attack.",
+      "Fill one hole for a selected battle act subject. MCP stores transient target, attack-roll, and damage-result fills until the battle runtime resolves the act.",
     inputSchema: fillBattleHoleInputSchema,
+  },
+  {
+    name: "resolve_battle_act",
+    description:
+      "Resolve a selected battle act subject that does not need holes, such as Action Surge.",
+    inputSchema: resolveBattleActInputSchema,
   },
   {
     name: "end_turn",
@@ -113,81 +120,7 @@ export function handleBattleToolCall(
   }
 
   if (name === "start_battle") {
-    const decoded = decodeStartBattleArgs(args, name);
-    if (isBattleToolError(decoded)) return decoded;
-    const activeBattle = root.sessionStore.battleState;
-    if (activeBattle !== null) {
-      return errorContent("A battle session is already active.", {
-        code: "BATTLE_SESSION_ALREADY_ACTIVE",
-        battleId: activeBattle.battleId,
-      });
-    }
-    const characterSession = root.sessionStore.characters.get(
-      decoded.sheetDraftId,
-    );
-    if (characterSession == null) {
-      return errorContent(
-        `Unknown finalized character session: ${decoded.sheetDraftId}`,
-        {
-          code: "UNKNOWN_FINALIZED_CHARACTER_SHEET",
-          sheetDraftId: decoded.sheetDraftId,
-        },
-      );
-    }
-    if (characterSession.tag !== "available") {
-      return errorContent("Character is already assigned to a battle.", {
-        code: "CHARACTER_ALREADY_IN_BATTLE",
-        sheetDraftId: decoded.sheetDraftId,
-        battleId: characterSession.battleId,
-      });
-    }
-    const statBlock = root.sessionStore.getSelectedStatBlock();
-    if (statBlock == null) {
-      return errorContent("No Stat Block selected for battle.", {
-        code: "NO_SELECTED_STAT_BLOCK",
-      });
-    }
-
-    try {
-      const state = startBattleFromCharacterBuildAndStatBlock({
-        battleId: decoded.battleId,
-        character: {
-          combatantId: decoded.characterCombatantId,
-          characterId: decoded.characterId,
-          displayName: decoded.characterDisplayName,
-          build: characterSession.build,
-          initiative: decoded.characterInitiative,
-          currentHp: characterSession.currentHp,
-        },
-        statBlockBattleInput: {
-          combatantId: decoded.statBlockCombatantId,
-          statBlock,
-          initiative: decoded.statBlockInitiative,
-          ...(decoded.statBlockCurrentHp === undefined
-            ? {}
-            : { currentHp: decoded.statBlockCurrentHp }),
-          ...(decoded.statBlockTempHp === undefined
-            ? {}
-            : { tempHp: decoded.statBlockTempHp }),
-        },
-        unitLibrary: root.unitLibrary,
-      });
-      root.sessionStore.battleState = state;
-      root.sessionStore.transientBattleFills = null;
-      root.sessionStore.characters.set(decoded.sheetDraftId, {
-        tag: "inBattle",
-        build: characterSession.build,
-        battleId: decoded.battleId,
-        characterId: decoded.characterId,
-      });
-
-      return jsonContent(battleSessionPayload(root, state));
-    } catch (error) {
-      return errorContent("Battle session start failed.", {
-        code: "BATTLE_START_FAILED",
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
+    return handleStartBattleToolCall(root, args);
   }
 
   if (name === "read_battle_state") {
@@ -212,12 +145,7 @@ export function handleBattleToolCall(
     const state = root.sessionStore.battleState;
     if (state == null) return noStoredBattleContent();
 
-    const subject: BattleSubject = {
-      tag: "srdAction",
-      actorId: decoded.actorId,
-      action: "attack",
-      attackName: decoded.attackName,
-    };
+    const subject = decoded.subject;
     const previous = root.sessionStore.transientBattleFills;
     if (previous !== null && !sameBattleSubject(previous.subject, subject)) {
       return errorContent("A different battle subject has pending fills.", {
@@ -239,6 +167,28 @@ export function handleBattleToolCall(
       return jsonContent(battleResolutionPayload(root, result));
     }
 
+    return jsonContent(battleResolutionPayload(root, result));
+  }
+
+  if (name === "resolve_battle_act") {
+    const decoded = decodeResolveBattleActArgs(args, name);
+    if (isBattleToolError(decoded)) return decoded;
+    const state = root.sessionStore.battleState;
+    if (state == null) return noStoredBattleContent();
+    if (root.sessionStore.transientBattleFills !== null) {
+      return errorContent("Cannot resolve another act with pending fills.", {
+        code: "BATTLE_FILLS_PENDING",
+        pendingSubject: root.sessionStore.transientBattleFills.subject,
+      });
+    }
+    const result = resolveBattleSubject({
+      state,
+      subject: decoded.subject,
+      fills: [],
+    });
+    if (result.tag === "resolved") {
+      root.sessionStore.battleState = result.state;
+    }
     return jsonContent(battleResolutionPayload(root, result));
   }
 

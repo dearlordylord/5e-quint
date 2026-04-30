@@ -146,7 +146,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 18,
       "id": "POST5",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Widened MCP User Workflow Coverage"
     }
   ]
@@ -193,7 +193,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 15    | POST2 - Add First Width Slice Surface Records And Readers        | done                                          | POST1, CAM21       | POST3        | Added the researched Surface width slice: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and Skeleton SRD Stat Block vulnerability/immunity shape.                           | Completed; POST3 is unblocked.                                                           |
 | 16    | POST3 - Widen Character Creation Runtime Support Profile         | done                                          | POST2              | POST4        | Extended CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.                 | Completed; POST4 is unblocked.                                                           |
 | 17    | POST4 - Widen Battle Runtime For First Width Slice               | done                                          | POST3              | POST5        | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Surface-backed acts/resources/spell or monster facts, preserving runtime parity discipline.              | Completed; POST5 is unblocked.                                                          |
-| 18    | POST5 - Add Widened MCP User Workflow Coverage                   | ready-for-implementation-after-light-research | POST4              | none         | Exercise the widened slice through promoted MCP/user workflows and update Restore Ledger status for restored width rows.                                                                         | Unblocked by POST4; ready for implementation after light source review.                  |
+| 18    | POST5 - Add Widened MCP User Workflow Coverage                   | done                                          | POST4              | none         | Added promoted MCP workflow coverage for the Fighter 2 + Wizard 1 versus Skeleton width slice and updated Restore Ledger status for restored rows.                                             | Completed.                                                                                |
 
 ## Task Details
 
@@ -1255,7 +1255,7 @@ Plan Impact:
 
 ### Task 18 - POST5 - Add Widened MCP User Workflow Coverage
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: POST4
 Blocks: none
@@ -1305,8 +1305,8 @@ Verification:
 
 Plan Impact:
 
-- If successful, mark the first post-CAM width slice restored and add any next
-  width tasks discovered during implementation.
+- First post-CAM width slice restored in the Restore Ledger. No new durable
+  width task was discovered during implementation.
 
 ## Deferred Previous Queue
 

@@ -1,28 +1,23 @@
 import {
-  battleId,
-  characterId,
   combatantId,
-  initiativeScore,
   type BattleFill,
-  type BattleId,
-  type CharacterId,
+  type BattleSubject,
   type CombatantId,
-  type InitiativeScore,
 } from "@dnd/battle-runtime";
-import {
-  characterDraftId,
-  type CharacterDraftId,
-} from "@dnd/character-creation-runtime";
-import { Hp, type Hp as HpType } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 
 import { decodeBattleFill } from "./battle-fill-input.ts";
-import { errorContent } from "./tool-content.ts";
+import {
+  invalidFieldContent,
+  isRecord,
+  isToolError,
+  readToolArgsRecord,
+  type ToolError,
+} from "./tool-input-helpers.ts";
 
 type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
 };
-type ToolError = ReturnType<typeof errorContent>;
 
 export const selectStatBlockInputSchema = {
   type: "object",
@@ -32,36 +27,6 @@ export const selectStatBlockInputSchema = {
       type: "string",
       description: "SRD Stat Block id from the Surface Stat Block catalog.",
     },
-  },
-  additionalProperties: false,
-} satisfies McpObjectInputSchema;
-
-export const startBattleInputSchema = {
-  type: "object",
-  required: [
-    "battleId",
-    "sheetDraftId",
-    "characterCombatantId",
-    "characterId",
-    "characterDisplayName",
-    "characterInitiative",
-    "statBlockCombatantId",
-    "statBlockInitiative",
-  ],
-  properties: {
-    battleId: { type: "string" },
-    sheetDraftId: {
-      type: "string",
-      description: "Finalized sheet id returned by finalize_character.",
-    },
-    characterCombatantId: { type: "string" },
-    characterId: { type: "string" },
-    characterDisplayName: { type: "string" },
-    characterInitiative: { type: "integer" },
-    statBlockCombatantId: { type: "string" },
-    statBlockInitiative: { type: "integer" },
-    statBlockCurrentHp: { type: "integer", minimum: 0 },
-    statBlockTempHp: { type: "integer", minimum: 0 },
   },
   additionalProperties: false,
 } satisfies McpObjectInputSchema;
@@ -80,21 +45,30 @@ export const discoverBattleActsInputSchema = {
 
 export const fillBattleHoleInputSchema = {
   type: "object",
-  required: ["actorId", "attackName", "fill"],
+  required: ["subject", "fill"],
   properties: {
-    actorId: {
-      type: "string",
-      description: "Current actor combatant id for the Attack action.",
-    },
-    attackName: {
-      type: "string",
+    subject: {
+      type: "object",
       description:
-        "Authored attack name from the selected battle act subject, such as Longsword, Scimitar, or Shortbow.",
+        "Battle act subject returned by discover_battle_acts. Attack subjects use action=attack plus attackName; Magic subjects use action=magic plus spellId.",
     },
     fill: {
       type: "object",
       description:
-        "One BattleFill for the current Attack replay: targetChoice, attackRoll, or rolledDice. attackRoll values may include rollMode: normal, advantage, or disadvantage.",
+        "One BattleFill for the current act replay: targetChoice, attackRoll, or rolledDice. attackRoll values may include rollMode: normal, advantage, or disadvantage.",
+    },
+  },
+  additionalProperties: false,
+} satisfies McpObjectInputSchema;
+
+export const resolveBattleActInputSchema = {
+  type: "object",
+  required: ["subject"],
+  properties: {
+    subject: {
+      type: "object",
+      description:
+        "Battle act subject returned by discover_battle_acts. Used for acts that do not need holes, such as Action Surge.",
     },
   },
   additionalProperties: false,
@@ -115,26 +89,17 @@ export const endBattleInputSchema = {
   additionalProperties: false,
 } satisfies McpObjectInputSchema;
 
-export type StartBattleToolInput = {
-  readonly battleId: BattleId;
-  readonly sheetDraftId: CharacterDraftId;
-  readonly characterCombatantId: CombatantId;
-  readonly characterId: CharacterId;
-  readonly characterDisplayName: string;
-  readonly characterInitiative: InitiativeScore;
-  readonly statBlockCombatantId: CombatantId;
-  readonly statBlockInitiative: InitiativeScore;
-  readonly statBlockCurrentHp?: HpType;
-  readonly statBlockTempHp?: HpType;
-};
-
 export type BattleActorToolInput = {
   readonly actorId: CombatantId;
 };
 
-export type FillBattleHoleToolInput = BattleActorToolInput & {
-  readonly attackName: string;
+export type FillBattleHoleToolInput = {
+  readonly subject: BattleSubject;
   readonly fill: BattleFill;
+};
+
+export type ResolveBattleActToolInput = {
+  readonly subject: BattleSubject;
 };
 
 export function decodeSelectStatBlockArgs(
@@ -147,74 +112,6 @@ export function decodeSelectStatBlockArgs(
     return invalidFieldContent(toolName, "statBlockId", "string");
   }
   return record.statBlockId;
-}
-
-export function decodeStartBattleArgs(
-  args: unknown,
-  toolName: string,
-): StartBattleToolInput | ToolError {
-  const record = readToolArgsRecord(args, toolName, [
-    "battleId",
-    "sheetDraftId",
-    "characterCombatantId",
-    "characterId",
-    "characterDisplayName",
-    "characterInitiative",
-    "statBlockCombatantId",
-    "statBlockInitiative",
-    "statBlockCurrentHp",
-    "statBlockTempHp",
-  ]);
-  if (isToolError(record)) return record;
-
-  const requiredString = decodeRequiredStringFields(record, toolName, [
-    "battleId",
-    "sheetDraftId",
-    "characterCombatantId",
-    "characterId",
-    "characterDisplayName",
-    "statBlockCombatantId",
-  ]);
-  if (isToolError(requiredString)) return requiredString;
-
-  const characterInitiative = decodeInitiativeField(
-    record.characterInitiative,
-    toolName,
-    "characterInitiative",
-  );
-  if (isToolError(characterInitiative)) return characterInitiative;
-  const statBlockInitiative = decodeInitiativeField(
-    record.statBlockInitiative,
-    toolName,
-    "statBlockInitiative",
-  );
-  if (isToolError(statBlockInitiative)) return statBlockInitiative;
-
-  const statBlockCurrentHp = decodeOptionalHpField(
-    record.statBlockCurrentHp,
-    toolName,
-    "statBlockCurrentHp",
-  );
-  if (isToolError(statBlockCurrentHp)) return statBlockCurrentHp;
-  const statBlockTempHp = decodeOptionalHpField(
-    record.statBlockTempHp,
-    toolName,
-    "statBlockTempHp",
-  );
-  if (isToolError(statBlockTempHp)) return statBlockTempHp;
-
-  return {
-    battleId: battleId(requiredString.battleId),
-    sheetDraftId: characterDraftId(requiredString.sheetDraftId),
-    characterCombatantId: combatantId(requiredString.characterCombatantId),
-    characterId: characterId(requiredString.characterId),
-    characterDisplayName: requiredString.characterDisplayName,
-    characterInitiative,
-    statBlockCombatantId: combatantId(requiredString.statBlockCombatantId),
-    statBlockInitiative,
-    ...(statBlockCurrentHp === undefined ? {} : { statBlockCurrentHp }),
-    ...(statBlockTempHp === undefined ? {} : { statBlockTempHp }),
-  };
 }
 
 export function decodeReadBattleStateArgs(
@@ -237,30 +134,27 @@ export function decodeFillBattleHoleArgs(
   args: unknown,
   toolName: string,
 ): FillBattleHoleToolInput | ToolError {
-  const record = readToolArgsRecord(args, toolName, [
-    "actorId",
-    "attackName",
-    "fill",
-  ]);
+  const record = readToolArgsRecord(args, toolName, ["subject", "fill"]);
   if (isToolError(record)) return record;
-  if (typeof record.actorId !== "string") {
-    return invalidFieldContent(toolName, "actorId", "string");
-  }
-  if (
-    typeof record.attackName !== "string" ||
-    record.attackName.trim() === ""
-  ) {
-    return invalidFieldContent(toolName, "attackName", "non-empty string");
-  }
-
+  const subject = decodeBattleSubject(record.subject, toolName, "subject");
+  if (isToolError(subject)) return subject;
   const fill = decodeBattleFill(record.fill, toolName);
   if (isToolError(fill)) return fill;
 
   return {
-    actorId: combatantId(record.actorId),
-    attackName: record.attackName,
+    subject,
     fill,
   };
+}
+
+export function decodeResolveBattleActArgs(
+  args: unknown,
+  toolName: string,
+): ResolveBattleActToolInput | ToolError {
+  const record = readToolArgsRecord(args, toolName, ["subject"]);
+  if (isToolError(record)) return record;
+  const subject = decodeBattleSubject(record.subject, toolName, "subject");
+  return isToolError(subject) ? subject : { subject };
 }
 
 export function decodeEndTurnArgs(
@@ -285,91 +179,86 @@ export function decodeEndBattleArgs(
 }
 
 export function isBattleToolError(value: unknown): value is ToolError {
-  return isRecord(value) && value.isError === true;
+  return isToolError(value);
 }
 
-function decodeRequiredStringFields<const Fields extends readonly string[]>(
+function decodeBattleSubject(
+  value: unknown,
+  toolName: string,
+  field: string,
+): BattleSubject | ToolError {
+  if (!isRecord(value)) {
+    return invalidFieldContent(toolName, field, "BattleSubject object");
+  }
+  const actorId = decodeSubjectActorId(value, toolName, field);
+  if (isToolError(actorId)) return actorId;
+
+  if (value.tag === "unitFeature") {
+    if (typeof value.unitId !== "string" || value.unitId.trim() === "") {
+      return invalidFieldContent(
+        toolName,
+        `${field}.unitId`,
+        "non-empty string",
+      );
+    }
+    return { tag: "unitFeature", actorId, unitId: value.unitId };
+  }
+
+  if (value.tag === "srdAction") {
+    if (value.action === "attack") {
+      if (
+        typeof value.attackName !== "string" ||
+        value.attackName.trim() === ""
+      ) {
+        return invalidFieldContent(
+          toolName,
+          `${field}.attackName`,
+          "non-empty string",
+        );
+      }
+      return {
+        tag: "srdAction",
+        actorId,
+        action: "attack",
+        attackName: value.attackName,
+      };
+    }
+    if (value.action === "magic") {
+      if (typeof value.spellId !== "string" || value.spellId.trim() === "") {
+        return invalidFieldContent(
+          toolName,
+          `${field}.spellId`,
+          "non-empty string",
+        );
+      }
+      return {
+        tag: "srdAction",
+        actorId,
+        action: "magic",
+        spellId: value.spellId,
+      };
+    }
+    return invalidFieldContent(toolName, `${field}.action`, "attack or magic");
+  }
+
+  return invalidFieldContent(
+    toolName,
+    `${field}.tag`,
+    "srdAction or unitFeature",
+  );
+}
+
+function decodeSubjectActorId(
   record: Readonly<Record<string, unknown>>,
   toolName: string,
-  fields: Fields,
-): Readonly<Record<Fields[number], string>> | ToolError {
-  const decoded: Record<string, string> = {};
-  for (const field of fields) {
-    const value = record[field];
-    if (typeof value !== "string") {
-      return invalidFieldContent(toolName, field, "string");
-    }
-    decoded[field] = value;
-  }
-
-  // The loop above writes every requested literal field after proving each
-  // value is a string; TypeScript cannot express that from dynamic keys.
-  return decoded as Readonly<Record<Fields[number], string>>;
-}
-
-function decodeInitiativeField(
-  value: unknown,
-  toolName: string,
   field: string,
-): InitiativeScore | ToolError {
-  if (typeof value !== "number" || !Number.isInteger(value)) {
-    return invalidFieldContent(toolName, field, "integer Initiative score");
+): CombatantId | ToolError {
+  if (typeof record.actorId !== "string" || record.actorId.trim() === "") {
+    return invalidFieldContent(
+      toolName,
+      `${field}.actorId`,
+      "non-empty string",
+    );
   }
-  return initiativeScore(value);
-}
-
-function decodeOptionalHpField(
-  value: unknown,
-  toolName: string,
-  field: string,
-): HpType | undefined | ToolError {
-  if (value === undefined) return undefined;
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
-    return invalidFieldContent(toolName, field, "non-negative integer HP");
-  }
-  return Hp(value);
-}
-
-function readToolArgsRecord(
-  args: unknown,
-  toolName: string,
-  allowedFields: readonly string[],
-): Readonly<Record<string, unknown>> | ToolError {
-  if (!isRecord(args)) {
-    return errorContent(`${toolName} expects object arguments.`, {
-      code: "INVALID_ARGUMENTS",
-      expected: "object",
-    });
-  }
-
-  for (const key of Object.keys(args)) {
-    if (!allowedFields.includes(key)) {
-      return errorContent(`Unexpected ${toolName} field: ${key}`, {
-        code: "UNEXPECTED_FIELD",
-        field: key,
-      });
-    }
-  }
-
-  return args;
-}
-
-function invalidFieldContent(
-  toolName: string,
-  field: string,
-  expected: string,
-) {
-  return errorContent(`Invalid ${toolName} field: ${field}`, {
-    code: "INVALID_FIELD",
-    field,
-    expected,
-  });
-}
-
-function isToolError(value: unknown): value is ToolError {
-  return isRecord(value) && value.isError === true;
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return combatantId(record.actorId);
 }

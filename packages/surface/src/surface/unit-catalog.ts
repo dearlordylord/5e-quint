@@ -14,11 +14,20 @@ import fighterFightingStyleL1Input from "../../content/fighter_fighting_style_l1
 import fighterSecondWindInput from "../../content/fighter_second_wind.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import fighterWeaponMasteryL1Input from "../../content/fighter_weapon_mastery_l1.json";
+import detectMagicInput from "../../content/detect_magic.json";
+import fireBoltInput from "../../content/fire_bolt.json";
+import lightInput from "../../content/light.json";
+import mageArmorInput from "../../content/mage_armor.json";
+import magicMissileInput from "../../content/magic_missile.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import speciesOrcInput from "../../content/species_orc.json";
+import rayOfFrostInput from "../../content/ray_of_frost.json";
+import shieldInput from "../../content/shield.json";
+import sleepInput from "../../content/sleep.json";
+import thunderwaveInput from "../../content/thunderwave.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
 import weaponLongswordInput from "../../content/weapon_longsword.json";
 import weaponShortbowInput from "../../content/weapon_shortbow.json";
@@ -30,6 +39,7 @@ import type {
   Provenance,
   StartingEquipmentChoice,
   UnitRecord,
+  WizardClassRecord,
 } from "./types.ts";
 
 export type SurfaceCollectionProvenance = {
@@ -137,6 +147,15 @@ export const srdUnitCollection = defineSrdUnitCollection({
     orcAdrenalineRushInput,
     orcDarkvisionInput,
     orcRelentlessEnduranceInput,
+    fireBoltInput,
+    lightInput,
+    rayOfFrostInput,
+    detectMagicInput,
+    mageArmorInput,
+    magicMissileInput,
+    shieldInput,
+    sleepInput,
+    thunderwaveInput,
     armorChainMailInput,
     equipmentShieldInput,
     weaponLongswordInput,
@@ -170,6 +189,7 @@ export function buildUnitCatalog(input: {
   for (const collection of input.collections) {
     for (const unit of collection.units) {
       issues.push(...findUnknownStartingEquipmentRefs(unit, records));
+      issues.push(...findUnknownClassSpellRefs(unit, records));
     }
   }
   // Class feature grant refs are intentionally not catalog-validated yet:
@@ -228,6 +248,40 @@ function hasStartingEquipment(unit: UnitRecord): unit is UnitRecord & {
   readonly startingEquipment: readonly StartingEquipmentChoice[];
 } {
   return unit.kind === "class" || unit.kind === "background";
+}
+
+function findUnknownClassSpellRefs(
+  unit: UnitRecord,
+  records: ReadonlyMap<UnitId, UnitRecord>,
+): readonly UnitCatalogBuildIssue[] {
+  if (!isWizardClassRecord(unit)) {
+    return [];
+  }
+
+  const spellcasting = unit.spellcasting;
+  const spellIds = Array.from(
+    new Set([
+      ...spellcasting.cantripAccess.spellIds,
+      ...spellcasting.spellbookAccess.spells.map((spell) => spell.spellId),
+      ...spellcasting.preparedAccess.spellIds,
+    ]),
+  );
+
+  return spellIds.flatMap((spellId) =>
+    records.has(spellId)
+      ? []
+      : [
+          {
+            code: "unknownUnitReference",
+            referringUnitId: unit.id,
+            referencedUnitId: spellId,
+          } satisfies UnitCatalogBuildIssue,
+        ],
+  );
+}
+
+function isWizardClassRecord(unit: UnitRecord): unit is WizardClassRecord {
+  return unit.kind === "class" && unit.className === "wizard";
 }
 
 function validateSrdUnitCollection(

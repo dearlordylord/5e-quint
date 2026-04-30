@@ -52,7 +52,7 @@ let wizard =
           , cantripAccess =
               { kind = "known_cantrips"
               , choose = 3
-              , spellIds = [ "light", "mage_hand", "ray_of_frost" ]
+              , spellIds = [ "light", "fire_bolt", "ray_of_frost" ]
               , changeOn = { kind = "long_rest", count = 1 }
               }
           , spellbookAccess =
@@ -60,9 +60,9 @@ let wizard =
               , choose = 6
               , spells =
                 [ { spellId = "detect_magic", spellLevel = 1 }
-                , { spellId = "feather_fall", spellLevel = 1 }
                 , { spellId = "mage_armor", spellLevel = 1 }
                 , { spellId = "magic_missile", spellLevel = 1 }
+                , { spellId = "shield", spellLevel = 1 }
                 , { spellId = "sleep", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
                 ] : List SpellbookSpell

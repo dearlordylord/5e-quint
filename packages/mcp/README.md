@@ -29,10 +29,12 @@ The Surface-runtime character-creation tool boundary exposes these user-facing t
   against the expected draft revision. Accepted batches replace the stored
   draft; rejected batches return runtime issues and leave the stored draft
   unchanged.
-- `finalize_character` finalizes only when the runtime reports the supported
-  minimal Fighter draft is ready. A ready result stores an available character
-  session by source draft id and removes the active draft from `drafts`. The
-  session owns current HP while the character is outside battle.
+- `finalize_character` finalizes only when the runtime reports a supported
+  Surface-runtime draft is ready. The promoted path currently supports the Orc
+  Soldier Fighter 1/Fighter 2 and Orc Soldier Wizard 1 slice. A ready result
+  stores an available character session by source draft id and removes the
+  active draft from `drafts`. The session owns current HP while the character is
+  outside battle.
 - `list_characters` lists durable character-session rows. It reads only the
   character-session store, so selected or battled Stat Blocks do not appear as
   characters.
@@ -45,20 +47,23 @@ The Surface-runtime battle-session path exposes these user-facing tools:
 
 - `select_stat_block` selects a Stat Block from the Surface SRD Stat Block
   catalog and stores only that Stat Block id in the session.
-- `start_battle` starts a battle session from one finalized character sheet and
-  the selected Stat Block. The caller supplies the Initiative scores for both
-  combatants. Starting battle moves the character session into an in-battle
-  variant that has no current HP field; the stored `BattleState` owns HP until
-  battle closeout.
+- `start_battle` starts a battle session from one or more finalized character
+  sheets and the selected Stat Block. The caller supplies the Initiative scores
+  for every combatant. Starting battle moves each character session into an
+  in-battle variant that has no current HP field; the stored `BattleState` owns
+  HP until battle closeout.
 - `read_battle_state` returns the stored `BattleState` projection and current
   battle snapshot.
-- `discover_battle_acts` returns the current actor's battle acts. The current
-  first-vertical slice exposes the Fighter Attack action, supported Goblin
-  Warrior Stat Block attacks, and the End Turn runtime command.
-- `fill_battle_hole` submits one Attack fill at a time. MCP stores transient
-  target, attack-roll, and damage-result fills until `@dnd/battle-runtime`
-  resolves the Attack, then stores the returned `BattleState` and clears the
-  transient fills.
+- `discover_battle_acts` returns the current actor's battle acts. The promoted
+  slice exposes supported character weapon Attacks, Fighter 2 Action Surge,
+  Wizard `magic_missile` and `ray_of_frost` Magic-action Spell Invocations,
+  supported Goblin Warrior/Skeleton Stat Block attacks, and End Turn.
+- `fill_battle_hole` submits one fill at a time for a selected battle act
+  subject. MCP stores transient target, attack-roll, and damage-result fills
+  until `@dnd/battle-runtime` resolves the act, then stores the returned
+  `BattleState` and clears the transient fills.
+- `resolve_battle_act` resolves selected battle act subjects that need no
+  holes, such as Fighter 2 Action Surge.
 - `end_turn` resolves the End Turn runtime command for the current actor, stores
   the returned `BattleState`, and clears transient battle fills.
 - `end_battle` finalizes the stored battle session, projects positive current
@@ -85,6 +90,19 @@ That fixture uses the authored Surface Unit and Stat Block catalogs. It does
 not use character presets, Core projections, duplicated executable stat-block
 data, or reducer-owned in-progress battle fills.
 
+The first post-acceptance widened workflow is also covered through promoted MCP
+tools. It creates and finalizes an Orc Soldier Fighter 2 and an Orc Soldier
+Wizard 1 through real creation holes, selects the authored SRD Skeleton Stat
+Block, starts battle from both finalized character identities plus the selected
+Stat Block id, applies Skeleton Bludgeoning vulnerability through a Flail hit,
+resolves Fighter Action Surge, casts Wizard `ray_of_frost` as a cantrip without
+spending a Spell Slot, lets Skeleton apply authored Shortsword attack pressure,
+casts prepared `magic_missile` with a level-1 Spell Slot spend, and closes the
+battle back to `list_characters`.
+The supported Wizard creation choices in this slice are catalog-backed SRD
+Spell Definitions; battle start fails at the MCP boundary rather than dropping
+selected spell or feature Unit refs that are not in the Surface catalog.
+
 `list_characters` is the supported post-battle read model for this vertical.
 After `end_battle`, it reads the durable character session directly. Character
 current HP is handed back from the battle-owned character combatant to that
@@ -96,9 +114,10 @@ Remaining first-vertical gates:
 - post-battle handoff currently accepts reduced positive character HP. Zero-HP,
   Death Saving Throw, Stable, dead, rest, and broader adventuring-state handoff
   facts remain deferred to later runtime width;
-- broader character choices, additional Stat Blocks, Multiattack, long-range
-  Disadvantage, reactions, spells, and post-turn lifecycle subjects remain
-  outside this first vertical.
+- broader character choices, monster spellcasting, Multiattack, long-range
+  Disadvantage, reactions, upcast spell slots, persistent spell effects such as
+  Mage Armor, and post-turn lifecycle subjects remain outside this widened
+  slice.
 
 Normal package tests cover the promoted Surface-runtime MCP server route. The
 old Core-backed MCP route has been removed from this package; omitted behavior

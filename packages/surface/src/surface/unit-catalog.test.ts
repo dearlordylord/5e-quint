@@ -29,6 +29,15 @@ const requiredFirstVerticalUnitIds = [
   "orc_adrenaline_rush",
   "orc_darkvision",
   "orc_relentless_endurance",
+  "fire_bolt",
+  "light",
+  "ray_of_frost",
+  "detect_magic",
+  "mage_armor",
+  "magic_missile",
+  "shield",
+  "sleep",
+  "thunderwave",
   "armor_chain_mail",
   "equipment_shield",
   "weapon_longsword",
@@ -322,6 +331,25 @@ describe("SRD Unit catalog boundary", () => {
           code: "unknownUnitReference",
           referringUnitId: "background_soldier",
           referencedUnitId: "missing_equipment",
+        },
+      ],
+    });
+  });
+
+  test("rejects SRD collections with unresolved class spell Unit refs", () => {
+    const malformedCollection = defineSrdUnitCollection({
+      units: srdUnitCollection.units.filter(
+        (unit) => unit.id !== "ray_of_frost",
+      ),
+    });
+
+    expect(buildUnitCatalog({ collections: [malformedCollection] })).toEqual({
+      tag: "invalid",
+      issues: [
+        {
+          code: "unknownUnitReference",
+          referringUnitId: "class_wizard",
+          referencedUnitId: "ray_of_frost",
         },
       ],
     });

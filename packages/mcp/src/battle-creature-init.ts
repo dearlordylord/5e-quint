@@ -61,6 +61,26 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
   });
 }
 
+export function startBattleFromCharacterBuildsAndStatBlock(input: {
+  readonly battleId: BattleId;
+  readonly characters: readonly CharacterBuildCreatureInput[];
+  readonly statBlockBattleInput: StatBlockBattleInitInput;
+  readonly unitLibrary: UnitCatalog;
+}): BattleState {
+  return startBattle({
+    battleId: input.battleId,
+    combatants: [
+      ...input.characters.map((character) =>
+        battleCreatureInitFromCharacterBuild({
+          ...character,
+          unitLibrary: input.unitLibrary,
+        }),
+      ),
+      battleCreatureInitFromStatBlock(input.statBlockBattleInput),
+    ],
+  });
+}
+
 export function battleCreatureInitFromCharacterBuild(
   input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
@@ -157,9 +177,10 @@ function characterArmorClassState(
             },
           ]
         : []),
-      ...characterBuildUnitRefs(build).flatMap((ref) =>
-        armorDefenseBonus(unitLibrary.requireUnit(ref.unitId)),
-      ),
+      ...characterBuildUnitRefs(build).flatMap((ref) => {
+        const unit = unitLibrary.requireUnit(ref.unitId);
+        return armorDefenseBonus(unit);
+      }),
     ],
     armorTraining: new Set(build.armorTraining),
     leftHandUse: shield?.kind === "shield" ? "shield" : "free",
@@ -242,11 +263,10 @@ function characterSpellcasting(
       build.abilityScores[spellcasting.spellcastingAbility],
     ),
     proficiencyBonus: proficiencyBonus(characterLevel(build)),
-    cantrips: spellcasting.cantrips.map((spellId) =>
-      requireSpell(unitLibrary, spellId),
-    ),
-    preparedSpells: spellcasting.preparedSpells.map((spellId) =>
-      requireSpell(unitLibrary, spellId),
+    cantrips: spellRecordsForIds(unitLibrary, spellcasting.cantrips),
+    preparedSpells: spellRecordsForIds(
+      unitLibrary,
+      spellcasting.preparedSpells,
     ),
     spellSlots: spellcasting.spellSlots,
   };
@@ -259,10 +279,15 @@ function characterLevel(build: CharacterBuild): number {
   );
 }
 
-function requireSpell(unitLibrary: UnitCatalog, unitId: UnitRecord["id"]) {
-  const unit = unitLibrary.requireUnit(unitId);
-  if (unit.kind !== "spell") {
-    throw new Error(`Expected spell Unit: ${unitId}`);
-  }
-  return unit satisfies SpellRecord;
+function spellRecordsForIds(
+  unitLibrary: UnitCatalog,
+  unitIds: readonly UnitRecord["id"][],
+): readonly SpellRecord[] {
+  return unitIds.map((unitId) => {
+    const unit = unitLibrary.requireUnit(unitId);
+    if (unit.kind !== "spell") {
+      throw new Error(`Expected spell Unit: ${unitId}`);
+    }
+    return unit;
+  });
 }

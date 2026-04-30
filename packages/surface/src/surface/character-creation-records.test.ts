@@ -101,16 +101,16 @@ describe("character-creation Surface records", () => {
           cantripAccess: {
             choose: 3,
             kind: "known_cantrips",
-            spellIds: ["light", "mage_hand", "ray_of_frost"],
+            spellIds: ["light", "fire_bolt", "ray_of_frost"],
           },
           spellbookAccess: {
             choose: 6,
             kind: "spellbook",
             spells: [
               { spellId: "detect_magic", spellLevel: 1 },
-              { spellId: "feather_fall", spellLevel: 1 },
               { spellId: "mage_armor", spellLevel: 1 },
               { spellId: "magic_missile", spellLevel: 1 },
+              { spellId: "shield", spellLevel: 1 },
               { spellId: "sleep", spellLevel: 1 },
               { spellId: "thunderwave", spellLevel: 1 },
             ],
