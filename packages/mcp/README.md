@@ -87,8 +87,9 @@ data, or reducer-owned in-progress battle fills.
 
 Remaining first-vertical gates:
 
-- the green path is still isolated under `src/green/` until the Core-backed MCP
-  path is deleted or promoted;
+- the Surface-runtime tools are registered by the normal MCP entrypoint, but
+  the implementation modules still live under `src/green/` until CAM20 removes
+  that implementation namespace;
 - post-battle handoff currently accepts reduced positive character HP. Zero-HP,
   Death Saving Throw, Stable, dead, rest, and broader adventuring-state handoff
   facts remain deferred to later runtime width;
@@ -131,11 +132,11 @@ runtimes for tools.
 combatant. MCP must not derive Initiative as `10 + modifier` in the promoted
 Surface runtime path.
 
-`src/green/` is an isolation namespace, not the final MCP API shape. Once the
-Core-backed overlap is deleted or rewritten, these tools should move into the
-normal MCP server path and the green namespace should disappear or become
-internal-only composition helpers. The promotion checklist belongs in the
-migration plans, not in this package contract.
+`src/green/` is an implementation namespace, not the final MCP API shape. The
+normal MCP entrypoint registers these tools directly, and CAM20 should remove
+or internalize the green namespace once the Core-backed overlap is deleted or
+rewritten. The promotion checklist belongs in the migration plans, not in this
+package contract.
 
 No file under `src/green/` may import or re-export from the legacy Core-backed
 MCP modules. Check that boundary with:
@@ -146,6 +147,6 @@ rg '@dnd/core' packages/mcp/src/green packages/character-creation-runtime packag
 
 ## Core-Backed Path
 
-`src/server.ts`, `src/session-router.ts`, `src/character-session.ts`, and
-related modules use the Core-backed engine path. Keep Surface runtime tools out
-of those modules unless the package ownership model is intentionally changed.
+`src/legacy-core/` contains the old Core-backed MCP host, session router,
+runtime input decoders, scripts, and tests. That directory is deletion-marked,
+not compatibility-supported. Keep Surface-runtime tools out of those modules.

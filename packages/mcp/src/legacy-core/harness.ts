@@ -3,8 +3,8 @@ import { execFileSync } from "node:child_process";
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { Effect } from "effect";
 
-import { makeDevMcpClient, runDevScript } from "./dev-client.ts";
-import { extractTextResult } from "./tool-result.ts";
+import { makeDevMcpClient, runDevScript } from "../dev-client.ts";
+import { extractTextResult } from "../tool-result.ts";
 
 function findOtherHarnessWrappers(): ReadonlyArray<number> {
   const output = execFileSync("ps", ["-eo", "pid=,args="], {

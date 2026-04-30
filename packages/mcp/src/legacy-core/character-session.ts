@@ -16,7 +16,10 @@ import {
   characterSheetBattleProjection,
   characterSheetCreatureProjection,
 } from "@dnd/core/character-sheet-derived.ts";
-import { makeSpellLibrary, SRD_SPELLS } from "@dnd/core/features/spell-registry.ts";
+import {
+  makeSpellLibrary,
+  SRD_SPELLS,
+} from "@dnd/core/features/spell-registry.ts";
 
 import {
   advanceCharacterSheetInputSchema,

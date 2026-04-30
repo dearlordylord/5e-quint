@@ -4,9 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "harness": "tsx src/harness.ts",
     "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src && jscpd src --threshold 2 --ignore \"**/*.test.ts\"",
-    "probe:short-rest": "tsx src/probe-short-rest.ts",
     "circular": "madge --extensions ts --circular src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

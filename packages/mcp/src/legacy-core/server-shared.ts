@@ -16,7 +16,7 @@ import {
   getMonsterStatBlockByStateId,
   statBlockAbilityName,
 } from "@dnd/core/monster-catalog.ts";
-import { errorContent, jsonContent } from "./tool-content.ts";
+import { errorContent, jsonContent } from "../tool-content.ts";
 
 export { errorContent, jsonContent };
 

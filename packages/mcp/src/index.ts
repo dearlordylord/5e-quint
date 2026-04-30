@@ -7,13 +7,25 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { createDemoHost, toolDefinitions } from "./server.ts";
-import { createSessionRouter } from "./session-router.ts";
+import {
+  createGreenMcpCompositionRoot,
+  greenBattleToolDefinitions,
+  greenCharacterToolDefinitions,
+  handleGreenBattleToolCall,
+  handleGreenCharacterToolCall,
+  isGreenBattleToolName,
+  isGreenCharacterToolName,
+} from "./green/index.ts";
+import { errorContent } from "./tool-content.ts";
 
-const router = createSessionRouter(createDemoHost());
+const root = createGreenMcpCompositionRoot();
+const toolDefinitions = [
+  ...greenCharacterToolDefinitions,
+  ...greenBattleToolDefinitions,
+];
 
 const server = new Server(
-  { name: "dnd-available-actions", version: "0.1.0" },
+  { name: "dnd-surface-runtime", version: "0.1.0" },
   { capabilities: { tools: {} } },
 );
 
@@ -22,13 +34,25 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) =>
-  router.handleToolCall(request.params.name, request.params.arguments),
+  handleToolCall(request.params.name, request.params.arguments),
 );
+
+function handleToolCall(name: string, args: unknown) {
+  if (isGreenCharacterToolName(name)) {
+    return handleGreenCharacterToolCall(root, name, args);
+  }
+
+  if (isGreenBattleToolName(name)) {
+    return handleGreenBattleToolCall(root, name, args);
+  }
+
+  return errorContent(`Unknown Surface-runtime MCP tool: ${name}`);
+}
 
 const program = Effect.gen(function* () {
   const transport = new StdioServerTransport();
   yield* Effect.promise(() => server.connect(transport));
-  yield* Effect.log("dnd-available-actions MCP server started on stdio");
+  yield* Effect.log("dnd-surface-runtime MCP server started on stdio");
   yield* Effect.never;
 });
 

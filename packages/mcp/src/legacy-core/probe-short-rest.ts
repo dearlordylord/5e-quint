@@ -1,8 +1,8 @@
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { Effect } from "effect";
 
-import { makeDevMcpClient, runDevScript } from "./dev-client.ts";
-import { extractTextResult } from "./tool-result.ts";
+import { makeDevMcpClient, runDevScript } from "../dev-client.ts";
+import { extractTextResult } from "../tool-result.ts";
 
 const main = Effect.gen(function* () {
   const { client } = yield* makeDevMcpClient;
