@@ -2,7 +2,7 @@
 
 ## Question
 
-Implement or resolve `FX013` from `FIXME_RESPONSES.md`.
+Implement or resolve `FX013` from the FX research table.
 
 `FX013` asks whether `CharacterSheet.selections` is the wrong temporal concept. Ten months into a campaign, a reader should not have to ask "selections of what?" when looking at a durable character sheet.
 
@@ -228,7 +228,7 @@ Note: full `@dnd/character-creation-runtime` typecheck/test may currently fail i
 
 ## Acceptance Criteria
 
-- The FIXME at `FX013` is resolved in code.
+- The source marker at `FX013` is resolved in code.
 - `CharacterSheet` no longer has a durable field named `selections`.
 - Durable sheet fields use names that remain meaningful ten months after character creation.
 - Creation workflow state remains in `CharacterDraft` / finalization internals unless a concrete audit/replay field is intentionally introduced.

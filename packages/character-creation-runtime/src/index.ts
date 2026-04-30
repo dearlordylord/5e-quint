@@ -4,8 +4,10 @@ import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
   STANDARD_LANGUAGES,
+  alignmentFromOptionId,
   alignmentLabel,
   alignmentOptionId,
+  parseAlignmentOptionId,
   type Alignment as CharacterAlignment,
   type AlignmentMorality,
   type AlignmentOrder,
@@ -19,11 +21,21 @@ import {
   type AbilityScoreAssignment,
   type SupportedAbilityScoreMethod,
 } from "@dnd/shared-algebras/ability-score-algebra";
-import { hp, type HP } from "@dnd/shared/types";
+import {
+  Index,
+  NonNegativeInteger,
+  PositiveInteger,
+  hp,
+  type HP,
+  type Index as IndexType,
+  type NonNegativeInteger as NonNegativeIntegerType,
+  type PositiveInteger as PositiveIntegerType,
+} from "@dnd/shared/types";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
   readSpeciesCreationFacts,
+  type UnitReaderResult,
 } from "@dnd/surface/surface/character-creation-readers";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
@@ -94,6 +106,26 @@ export const creationChoiceOptionId: (value: string) => CreationChoiceOptionId =
 export type ChoiceCount = number & Brand.Brand<"ChoiceCount">;
 const ChoiceCount = Brand.nominal<ChoiceCount>();
 
+export type DraftRevision = NonNegativeIntegerType &
+  Brand.Brand<"DraftRevision">;
+const DraftRevision = Brand.all(
+  NonNegativeInteger,
+  Brand.nominal<DraftRevision>(),
+);
+export const draftRevision: (value: number) => DraftRevision = DraftRevision;
+
+export type FillIndex = IndexType & Brand.Brand<"FillIndex">;
+const FillIndex = Brand.all(Index, Brand.nominal<FillIndex>());
+const creationFillIndex: (value: number) => FillIndex = FillIndex;
+
+export type HitDieSize = PositiveIntegerType & Brand.Brand<"HitDieSize">;
+const HitDieSize = Brand.all(PositiveInteger, Brand.nominal<HitDieSize>());
+const hitDieSize: (value: number) => HitDieSize = HitDieSize;
+
+export type HitDieTotal = PositiveIntegerType & Brand.Brand<"HitDieTotal">;
+const HitDieTotal = Brand.all(PositiveInteger, Brand.nominal<HitDieTotal>());
+const hitDieTotal: (value: number) => HitDieTotal = HitDieTotal;
+
 export type ChoiceCardinality = {
   readonly tag: "exactly";
   readonly count: ChoiceCount;
@@ -156,6 +188,14 @@ export const CHARACTER_CLASS_LEVELS = [
 ] as const;
 export type CharacterClassLevel = (typeof CHARACTER_CLASS_LEVELS)[number];
 
+function characterClassLevel(value: number): CharacterClassLevel {
+  if (!CHARACTER_CLASS_LEVELS.some((level) => level === value)) {
+    throw new Error(`Character class level must be from 1 through 20: ${value}`);
+  }
+
+  return value as CharacterClassLevel;
+}
+
 export type CharacterAdvancementSelection = {
   readonly entries: NonEmptyReadonlyArray<CharacterAdvancementEntry>;
 };
@@ -186,7 +226,7 @@ export type CharacterDraft = {
   readonly draftId: CharacterDraftId;
   readonly selections: CharacterDraftSelections;
   // Optimistic concurrency token for fill batches against this draft identity.
-  readonly revision: number;
+  readonly revision: DraftRevision;
 };
 
 export type CreationSession = {
@@ -260,7 +300,7 @@ export type CreationFillIssueCode = (typeof CREATION_FILL_ISSUE_CODES)[number];
 export type CreationFillIssue = {
   readonly tag: "illegalFill";
   readonly holeId: CreationHoleId;
-  readonly fillIndex: number;
+  readonly fillIndex: FillIndex;
   readonly code: CreationFillIssueCode;
   readonly message: string;
 };
@@ -293,7 +333,7 @@ export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 export type CreationBatchFillInput = {
   readonly draft: CharacterDraft;
   readonly fills: readonly CreationFill[];
-  readonly expectedRevision: number;
+  readonly expectedRevision: DraftRevision;
 };
 
 export type CreationBatchFillResult =
@@ -311,6 +351,9 @@ export type CreationBatchFillResult =
       readonly finalization: CreationFinalizationResult;
     };
 
+// Finalization-internal boundary: a complete draft snapshot after all
+// creation-session holes have been filled and before durable CharacterBuild
+// facts are derived. Do not store this shape on CharacterBuild.
 type FinalizedCharacterSelections = {
   readonly primaryClass: UnitRecord["id"];
   readonly advancement: CharacterAdvancementSelection;
@@ -341,8 +384,8 @@ export type CharacterBuildHitPoints = {
  */
 export type CharacterBuildHitDiePool = {
   readonly classUnitId: UnitRecord["id"];
-  readonly dieSize: number;
-  readonly total: number;
+  readonly dieSize: HitDieSize;
+  readonly total: HitDieTotal;
 };
 
 export type CharacterBuildProficiencies = {
@@ -356,7 +399,7 @@ export type CharacterBuildFeature =
   | {
       readonly kind: "classFeature";
       readonly unitId: UnitRecord["id"];
-      readonly level: number;
+      readonly level: CharacterClassLevel;
     }
   | {
       readonly kind: "backgroundOriginFeat";
@@ -386,6 +429,9 @@ export type CharacterBuildLoadout = {
   };
 };
 
+// Phase 1 only records the supported default build loadout. The future in-play
+// CharacterSheet owns mutable equipment state if active equipment can change
+// during adventuring.
 export type CharacterBuildEquipment = CharacterBuildLoadout;
 
 // CharacterBuild is the creation output: durable build and identity facts.
@@ -426,11 +472,20 @@ const INITIAL_CHARACTER_DRAFT_PATHS = [
   "draft.alignment",
 ] as const satisfies ReadonlyArray<CharacterDraftPath>;
 
+// Phase 1 is the first supported character-creation vertical from
+// plans/phase1-fighter-manifest.md: an Orc Soldier Fighter using Standard
+// Array, fixed first-slice languages/alignment, level-1 Fighter choices, Chain
+// Mail + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
+// Hole discovery may expose broader legal SRD options, but finalization is
+// intentionally gated to this manifest until the runtime and parity coverage
+// widen.
 const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
 const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
 const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
 const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID = "armor_chain_mail";
 const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
+const PHASE1_WEAPON_SPEAR_UNIT_ID = "weapon_spear";
+const PHASE1_WEAPON_FLAIL_UNIT_ID = "weapon_flail";
 const PHASE1_SHIELD_UNIT_ID = "equipment_shield";
 const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = "defense";
 
@@ -467,10 +522,13 @@ const SUPPORTED_FIGHTER_SKILL_OPTION_IDS = [
 const SUPPORTED_FIGHTING_STYLE_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
+  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_SPEAR_UNIT_ID,
+  PHASE1_WEAPON_FLAIL_UNIT_ID,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const SUPPORTED_WEAPON_MASTERY_OPTION_IDS = [
-  creationChoiceOptionId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
-  creationChoiceOptionId("weapon_spear"),
-  creationChoiceOptionId("weapon_flail"),
+  ...PHASE1_WEAPON_MASTERY_UNIT_IDS.map(creationChoiceOptionId),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 const SUPPORTED_LANGUAGE_OPTION_IDS = [
   creationChoiceOptionId("Dwarvish"),
@@ -482,6 +540,14 @@ const FIGHTER_WEAPON_MASTERY_FEATURE_ID = "fighter_weapon_mastery_l1";
 const PHASE1_CLASS_EQUIPMENT_OPTION_ID = creationChoiceOptionId("option_c");
 const PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID =
   creationChoiceOptionId("option_b");
+const PHASE1_BACKGROUND_TOOL_OPTION_ID = creationChoiceOptionId(
+  "tool_dice_set",
+);
+const PHASE1_LOADOUT_ARMOR_OPTION_ID = creationChoiceOptionId("worn");
+const PHASE1_LOADOUT_SHIELD_OPTION_ID = creationChoiceOptionId("wielded");
+const PHASE1_LOADOUT_WEAPON_OPTION_ID = creationChoiceOptionId(
+  "wielded_one_handed",
+);
 const PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION = {
   kind: "twoAndOne",
   plusTwo: "str",
@@ -537,7 +603,7 @@ export function createCharacterDraft(input: {
     selections: {
       choices: [],
     },
-    revision: 0,
+    revision: draftRevision(0),
   };
 }
 
@@ -737,12 +803,12 @@ function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[]
     unitChoiceSelection(
       FIGHTER_WEAPON_MASTERY_FEATURE_ID,
       FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
-      [PHASE1_WEAPON_LONGSWORD_UNIT_ID, "weapon_spear", "weapon_flail"],
+      PHASE1_WEAPON_MASTERY_UNIT_IDS,
     ),
     choiceSelection(
       PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
       BACKGROUND_TOOL_CHOICE_KEY,
-      [creationChoiceOptionId("tool_dice_set")],
+      [PHASE1_BACKGROUND_TOOL_OPTION_ID],
     ),
     choiceSelection(PHASE1_CLASS_FIGHTER_UNIT_ID, CLASS_EQUIPMENT_CHOICE_KEY, [
       PHASE1_CLASS_EQUIPMENT_OPTION_ID,
@@ -757,7 +823,7 @@ function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[]
       LOADOUT_ARMOR_CHOICE_KEY,
       [
         selectedChoiceOptionRecord(
-          creationChoiceOptionId("worn"),
+          PHASE1_LOADOUT_ARMOR_OPTION_ID,
           PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
         ),
       ],
@@ -767,7 +833,7 @@ function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[]
       LOADOUT_SHIELD_CHOICE_KEY,
       [
         selectedChoiceOptionRecord(
-          creationChoiceOptionId("wielded"),
+          PHASE1_LOADOUT_SHIELD_OPTION_ID,
           PHASE1_SHIELD_UNIT_ID,
         ),
       ],
@@ -777,7 +843,7 @@ function phaseOneManifestChoiceSelections(): readonly CharacterChoiceSelection[]
       LOADOUT_WEAPON_CHOICE_KEY,
       [
         selectedChoiceOptionRecord(
-          creationChoiceOptionId("wielded_one_handed"),
+          PHASE1_LOADOUT_WEAPON_OPTION_ID,
           PHASE1_WEAPON_LONGSWORD_UNIT_ID,
         ),
       ],
@@ -963,7 +1029,7 @@ function buildCharacterBuild(input: {
     ...classFeatureGrants.map((grant) => ({
       kind: "classFeature" as const,
       unitId: grant.unitId,
-      level: grant.level,
+      level: characterClassLevel(grant.level),
     })),
     {
       kind: "backgroundOriginFeat",
@@ -1000,19 +1066,19 @@ function buildCharacterBuild(input: {
       hitDice: [
         {
           classUnitId: selections.primaryClass,
-          dieSize: classFacts.hitPointDie,
-          total: 1,
+          dieSize: hitDieSize(classFacts.hitPointDie),
+          total: hitDieTotal(1),
         },
       ],
     },
     proficiencies: {
       savingThrows: classFacts.savingThrowProficiencies,
       skills: uniqueValues([
-        ...selectedSkillProficiencies(selections),
+        ...finalizedBuildSkillProficiencies(selections),
         ...backgroundFacts.skillProficiencies,
       ]),
       weapon: classFacts.weaponProficiencies,
-      tools: selectedToolProficiencies(selections),
+      tools: finalizedBuildToolProficiencies(selections),
     },
     armorTraining: classFacts.armorTraining,
     features: buildFeatures,
@@ -1047,13 +1113,16 @@ function optionalUnitId(
 }
 
 function requireReadable<T>(
-  result:
-    | { readonly tag: "readable"; readonly value: T }
-    | { readonly tag: "unreadable" },
+  result: UnitReaderResult<T>,
   label: string,
 ): T {
   if (result.tag === "unreadable") {
-    throw new Error(`Cannot finalize unreadable ${label} Unit.`);
+    const issueText = result.issues
+      .map((issue) => issue.message)
+      .join("; ");
+    throw new Error(
+      `Cannot finalize unreadable ${label} Unit: ${issueText}`,
+    );
   }
 
   return result.value;
@@ -1085,7 +1154,7 @@ function abilityModifier(score: number): number {
   return Math.floor((score - 10) / 2);
 }
 
-function selectedSkillProficiencies(
+function finalizedBuildSkillProficiencies(
   selections: FinalizedCharacterSelections,
 ): readonly Skill[] {
   const skillSelection = selections.choices.find((selection) =>
@@ -1103,7 +1172,7 @@ function selectedSkillProficiencies(
       });
 }
 
-function selectedToolProficiencies(
+function finalizedBuildToolProficiencies(
   selections: FinalizedCharacterSelections,
 ): readonly CreationChoiceOptionId[] {
   const toolSelection = selections.choices.find((selection) =>
@@ -1154,10 +1223,11 @@ function creationFillIssues(
 
   return [
     ...batchIssues,
-    ...input.fills.flatMap((fill, fillIndex) => {
+    ...input.fills.flatMap((fill, fillIndexValue) => {
+      const fillIndex = creationFillIndex(fillIndexValue);
       const matchingHole = holes.find((hole) => hole.holeId === fill.holeId);
       const isDuplicate = input.fills
-        .slice(0, fillIndex)
+        .slice(0, fillIndexValue)
         .some((priorFill) => priorFill.holeId === fill.holeId);
 
       if (isDuplicate) {
@@ -1175,7 +1245,7 @@ function creationFillIssues(
 
 function fillIssuesForHole(
   fill: CreationFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
   hole: CreationHole,
 ): readonly CreationFillIssue[] {
   if (!fillKindMatchesHole(fill, hole)) {
@@ -1202,10 +1272,10 @@ function fillKindMatchesHole(fill: CreationFill, hole: CreationHole): boolean {
 
 function choiceFillIssues(
   fill: ChoiceFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
   hole: Extract<CreationHole, { readonly kind: "choice" }>,
 ): readonly CreationFillIssue[] {
-  const optionIds = choiceFillOptionIds(fill);
+  const optionIds = fill.optionIds;
   const requiredCount = hole.cardinality.count;
   const cardinalityIssues = [
     ...(optionIds.length < requiredCount
@@ -1241,15 +1311,9 @@ function choiceFillIssues(
 
 type ChoiceFill = Extract<CreationFill, { readonly kind: "choice" }>;
 
-function choiceFillOptionIds(
-  fill: ChoiceFill,
-): readonly CreationChoiceOptionId[] {
-  return fill.optionIds;
-}
-
 function abilityScoreFillIssues(
   fill: Extract<CreationFill, { readonly kind: "abilityScores" }>,
-  fillIndex: number,
+  fillIndex: FillIndex,
   hole: Extract<CreationHole, { readonly kind: "abilityScores" }>,
 ): readonly CreationFillIssue[] {
   return hole.methods.includes(fill.method) &&
@@ -1272,7 +1336,7 @@ function applyCreationFills(
   return {
     ...draft,
     selections,
-    revision: draft.revision + 1,
+    revision: draftRevision(draft.revision + 1),
   };
 }
 
@@ -1347,7 +1411,7 @@ function applyDraftFill(
   if (path === "draft.languages" && fill.kind === "choice") {
     return {
       ...selections,
-      languages: requireStartingLanguages(choiceFillOptionIds(fill)),
+      languages: requireStartingLanguages(fill.optionIds),
     };
   }
 
@@ -1358,7 +1422,9 @@ function applyDraftFill(
     };
   }
 
-  return selections;
+  throw new Error(
+    `Accepted fill ${fill.holeId} cannot be applied to draft path ${path}.`,
+  );
 }
 
 function applyUnitFill(
@@ -1389,28 +1455,36 @@ function applyUnitFill(
       equipment: {
         selectedUnitIds: requireSelectedUnitIds(
           hole,
-          choiceFillOptionIds(fill),
+          fill.optionIds,
         ),
       },
     };
   }
 
-  const optionIds = fill.kind === "choice" ? choiceFillOptionIds(fill) : [];
+  if (fill.kind !== "choice") {
+    throw new Error(
+      `Accepted fill ${fill.holeId} cannot be applied to unit choice ${source.choiceKey}.`,
+    );
+  }
 
-  return optionIds.length === 0
-    ? selections
-    : {
-        ...selections,
-        choices: [
-          ...selections.choices,
-          {
-            source,
-            options: optionIds.map((optionId) =>
-              selectedChoiceOption(requireAcceptedChoiceOption(hole, optionId)),
-            ),
-          },
-        ],
-      };
+  if (fill.optionIds.length === 0) {
+    throw new Error(
+      `Accepted unit choice fill ${fill.holeId} must carry at least one option.`,
+    );
+  }
+
+  return {
+    ...selections,
+    choices: [
+      ...selections.choices,
+      {
+        source,
+        options: fill.optionIds.map((optionId) =>
+          selectedChoiceOption(requireAcceptedChoiceOption(hole, optionId)),
+        ),
+      },
+    ],
+  };
 }
 
 function selectedChoiceOption(
@@ -1429,7 +1503,7 @@ function requireSelectedUnitIds(
 }
 
 function requireOneOptionId(fill: ChoiceFill): CreationChoiceOptionId {
-  const optionIds = choiceFillOptionIds(fill);
+  const optionIds = fill.optionIds;
   const optionId = optionIds[0];
   if (optionId == null || optionIds.length !== 1) {
     throw new Error(
@@ -1519,9 +1593,16 @@ function supportedDraftOptionIds(
     return [PHASE1_ALIGNMENT_OPTION_ID];
   }
 
+  // Non-initial draft paths are not current support-gate choices. They may
+  // still be filled by Unit-backed holes or typed fills elsewhere.
   return undefined;
 }
 
+// Current support-slice filter, not RAW legality. This is the character
+// creation equivalent of battle-runtime's supportedAttackProfile: legal
+// Surface/RAW choices may be discoverable, but finalization only accepts the
+// subset this reducer can currently project and execute. This should shrink as
+// character creation support widens beyond the Phase 1 manifest.
 function supportedUnitOptionIds(
   choiceKey: UnitChoiceKey,
 ): readonly CreationChoiceOptionId[] {
@@ -1542,7 +1623,7 @@ function supportedUnitOptionIds(
   }
 
   if (choiceKey === BACKGROUND_TOOL_CHOICE_KEY) {
-    return [creationChoiceOptionId("tool_dice_set")];
+    return [PHASE1_BACKGROUND_TOOL_OPTION_ID];
   }
 
   if (choiceKey === CLASS_EQUIPMENT_CHOICE_KEY) {
@@ -1558,31 +1639,32 @@ function supportedUnitOptionIds(
   }
 
   if (choiceKey === LOADOUT_ARMOR_CHOICE_KEY) {
-    return [creationChoiceOptionId("worn")];
+    return [PHASE1_LOADOUT_ARMOR_OPTION_ID];
   }
 
   if (choiceKey === LOADOUT_SHIELD_CHOICE_KEY) {
-    return [creationChoiceOptionId("wielded")];
+    return [PHASE1_LOADOUT_SHIELD_OPTION_ID];
   }
 
   if (choiceKey === LOADOUT_WEAPON_CHOICE_KEY) {
-    return [creationChoiceOptionId("wielded_one_handed")];
+    return [PHASE1_LOADOUT_WEAPON_OPTION_ID];
   }
 
+  // Unknown Unit choice keys are legal Surface content outside this reducer's
+  // current support slice. Treat them as having no supported options here
+  // rather than as RAW-invalid choices.
   return [];
 }
 
 function requireAlignmentSelection(
   optionId: CreationChoiceOptionId,
 ): CharacterAlignment {
-  const alignment = ALIGNMENT_CHOICES.find(
-    (choice) => alignmentOptionId(choice) === optionId,
-  );
-  if (alignment == null) {
+  const alignmentOption = parseAlignmentOptionId(optionId);
+  if (alignmentOption == null) {
     throw new Error(`Accepted fill referenced invalid alignment ${optionId}`);
   }
 
-  return alignment;
+  return alignmentFromOptionId(alignmentOption);
 }
 
 function requireStartingLanguages(
@@ -1599,6 +1681,10 @@ function requireStartingLanguages(
     throw new Error("Accepted fill referenced invalid starting languages.");
   }
 
+  // SRD 5.2.1 Character-Creation.md:52 and :106-108: origin chooses two
+  // languages, and every character knows Common plus those two Standard
+  // Languages. This is the origin language choice, not the character's total
+  // languages forever; classes and other features may add more.
   // TypeScript cannot infer this dependent tuple union from the local
   // selectable-and-distinct checks above; the values are plain strings at runtime.
   return ["Common", first, second] as CharacterStartingLanguages;
@@ -1652,7 +1738,7 @@ function isSelectableStandardLanguage(
 
 function wrongFillKindIssue(
   fill: CreationFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
   hole: CreationHole,
 ): CreationFillIssue {
   return {
@@ -1666,7 +1752,7 @@ function wrongFillKindIssue(
 
 function invalidChoiceIssue(
   fill: CreationFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
   optionId: CreationChoiceOptionId,
 ): CreationFillIssue {
   return {
@@ -1680,7 +1766,7 @@ function invalidChoiceIssue(
 
 function invalidAbilityScoresIssue(
   fill: Extract<CreationFill, { readonly kind: "abilityScores" }>,
-  fillIndex: number,
+  fillIndex: FillIndex,
 ): CreationFillIssue {
   return {
     tag: "illegalFill",
@@ -1694,7 +1780,7 @@ function invalidAbilityScoresIssue(
 
 function tooFewChoicesIssue(
   fill: CreationFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
   expectedCount: ChoiceCount,
 ): CreationFillIssue {
   return {
@@ -1708,7 +1794,7 @@ function tooFewChoicesIssue(
 
 function tooManyChoicesIssue(
   fill: CreationFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
   expectedCount: ChoiceCount,
 ): CreationFillIssue {
   return {
@@ -1722,7 +1808,7 @@ function tooManyChoicesIssue(
 
 function unsupportedChoiceIssue(
   fill: CreationFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
   optionId: CreationChoiceOptionId,
 ): CreationFillIssue {
   return {
@@ -1744,7 +1830,7 @@ function staleRevisionIssue(input: CreationBatchFillInput): CreationBatchIssue {
 
 function duplicateFillIssue(
   fill: CreationFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
 ): CreationFillIssue {
   return {
     tag: "illegalFill",
@@ -1757,7 +1843,7 @@ function duplicateFillIssue(
 
 function unknownHoleIssue(
   fill: CreationFill,
-  fillIndex: number,
+  fillIndex: FillIndex,
 ): CreationFillIssue {
   return {
     tag: "illegalFill",
@@ -1915,7 +2001,7 @@ function backgroundToolChoiceSpec(proficiency: BackgroundToolProficiency):
         cardinality: exactChoiceCardinality(toolChoice.choose),
         options: [
           {
-            optionId: creationChoiceOptionId("tool_dice_set"),
+            optionId: PHASE1_BACKGROUND_TOOL_OPTION_ID,
             label: "Dice Set",
           },
         ],
@@ -1965,7 +2051,7 @@ function discoverEquipmentHoles(input: {
         cardinality: EXACTLY_ONE_CHOICE,
         options: [
           {
-            optionId: creationChoiceOptionId("worn"),
+            optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
             label: "Worn",
             unitRef: { unitId: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID },
           },
@@ -1981,7 +2067,7 @@ function discoverEquipmentHoles(input: {
         cardinality: EXACTLY_ONE_CHOICE,
         options: [
           {
-            optionId: creationChoiceOptionId("wielded"),
+            optionId: PHASE1_LOADOUT_SHIELD_OPTION_ID,
             label: "Wielded",
             unitRef: { unitId: PHASE1_SHIELD_UNIT_ID },
           },
@@ -2000,7 +2086,7 @@ function discoverEquipmentHoles(input: {
         cardinality: EXACTLY_ONE_CHOICE,
         options: [
           {
-            optionId: creationChoiceOptionId("wielded_one_handed"),
+            optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
             label: "Wielded one-handed",
             unitRef: { unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID },
           },
@@ -2295,7 +2381,9 @@ function discoverLevelOneFighterFeatureHole(
     const mechanics =
       feature.kind === "class_feature" ? feature.mechanics : null;
     if (mechanics?.family !== "weapon_mastery_choice") {
-      return [];
+      throw new Error(
+        `Expected ${featureUnitId} to be a weapon mastery choice feature.`,
+      );
     }
 
     const options = unitLibrary
@@ -2317,6 +2405,7 @@ function discoverLevelOneFighterFeatureHole(
     );
   }
 
+  // Not every level-1 Fighter feature opens a choice hole in this support slice.
   return [];
 }
 
@@ -2501,11 +2590,7 @@ function skillOption(skill: Skill): CreationChoiceOption {
   };
 }
 
-function startingEquipmentLabel(choice: {
-  readonly id: string;
-  readonly kind: string;
-  readonly coinsGp?: number;
-}): string {
+function startingEquipmentLabel(choice: StartingEquipmentChoice): string {
   return choice.coinsGp == null
     ? choice.id
     : `${choice.id} (${choice.coinsGp} GP)`;

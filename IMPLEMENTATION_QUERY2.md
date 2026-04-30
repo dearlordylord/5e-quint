@@ -2,7 +2,7 @@
 
 ## Question
 
-Implement or resolve `FX004` from `FIXME_RESPONSES.md`.
+Implement or resolve `FX004` from the FX research table.
 
 `FX004` asks whether character creation hole/fill errors should share vocabulary with battle/combat hole errors, likely in `@dnd/shared-algebras`.
 
@@ -117,7 +117,7 @@ Choose this if creation and battle/runtime holes are only analogous.
 
 Expected edits:
 
-- Remove or replace the FIXME in `packages/character-creation-runtime/src/index.ts`.
+- Remove or replace the source marker in `packages/character-creation-runtime/src/index.ts`.
 - Add a short comment near `CREATION_FILL_ISSUE_CODES` explaining that creation batch validation is local because it validates durable draft mutation, while combat errors validate action resolution/runtime inputs.
 - Optionally rename overly generic local types if needed, e.g. keep `CreationFillIssueCode` clearly creation-owned.
 - Add or adjust tests only if names/behavior change.
@@ -171,7 +171,7 @@ If only comments/types in creation are changed, the focused `src/index.test.ts` 
 
 ## Acceptance Criteria
 
-- The FIXME at `FX004` is resolved in code.
+- The source marker at `FX004` is resolved in code.
 - The final state makes it obvious whether creation issue codes are deliberately local or intentionally shared.
 - No vague shared enum is introduced unless at least two packages actually consume it.
 - Tests for changed behavior or changed type exports are updated.

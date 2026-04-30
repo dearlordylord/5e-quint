@@ -16,6 +16,7 @@ import {
   creationChoiceOptionId,
   creationHoleId,
   discoverCreationHoles,
+  draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
   unitChoiceKey,
@@ -25,6 +26,7 @@ import {
   type CreationFill,
   type CreationFillIssueCode,
   type CreationHole,
+  type DraftRevision,
 } from "./index.ts";
 
 const unitCatalogResult = buildUnitCatalog({
@@ -402,7 +404,7 @@ function createCharacterCreationDriver() {
     }
 
     function submit(
-      expectedRevision: number,
+      expectedRevision: DraftRevision,
       fills: readonly CreationFill[],
     ): void {
       const result = fillCreationHoles({
@@ -434,7 +436,7 @@ function createCharacterCreationDriver() {
       doFillManifestLoadout: () =>
         submit(draft.revision, manifestLoadoutFills(holes)),
       doRejectStaleInitialManifest: () =>
-        submit(999, initialManifestFills(holes)),
+        submit(draftRevision(999), initialManifestFills(holes)),
       doRejectUnsupportedLanguage: () =>
         submit(draft.revision, [
           choiceFill(holes, "HLanguages", ["Dwarvish", "Elvish"]),

@@ -53,6 +53,9 @@ export type Alignment = {
   readonly morality: AlignmentMorality;
 };
 
+export type AlignmentOptionId =
+  `${AlignmentOrder}_${AlignmentMorality}`;
+
 type OrderInitial = {
   readonly lawful: "L";
   readonly neutral: "N";
@@ -116,7 +119,7 @@ export function alignmentLabel(alignment: Alignment): string {
   return `${titleCase(alignment.order)} ${titleCase(alignment.morality)}`;
 }
 
-export function alignmentOptionId(alignment: Alignment): string {
+export function alignmentOptionId(alignment: Alignment): AlignmentOptionId {
   return `${alignment.order}_${alignment.morality}`;
 }
 
@@ -138,6 +141,26 @@ export function alignmentFromAbbreviation(
     throw new Error(`Unknown alignment abbreviation: ${abbreviation}`);
   }
   return alignment;
+}
+
+export function alignmentFromOptionId(
+  optionId: AlignmentOptionId,
+): Alignment {
+  const alignment = ALIGNMENT_CHOICES.find(
+    (choice) => alignmentOptionId(choice) === optionId,
+  );
+  if (alignment == null) {
+    throw new Error(`Unknown alignment option id: ${optionId}`);
+  }
+  return alignment;
+}
+
+export function parseAlignmentOptionId(
+  value: string,
+): AlignmentOptionId | undefined {
+  return ALIGNMENT_CHOICES.some((choice) => alignmentOptionId(choice) === value)
+    ? (value as AlignmentOptionId)
+    : undefined;
 }
 
 /** Base value for recurring game save DC formulas: 8 + modifier + proficiency bonus. */

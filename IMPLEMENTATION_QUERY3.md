@@ -2,7 +2,7 @@
 
 ## Question
 
-Implement or resolve `FX005` from `FIXME_RESPONSES.md`.
+Implement or resolve `FX005` from the FX research table.
 
 `FX005` asks whether `CharacterSheetAbilityScores` should store `base`, `backgroundIncrease`, and `final` side by side, or whether `final` should be derived from the source facts so contradictory sheet states are unrepresentable.
 
@@ -173,7 +173,7 @@ Note: full `@dnd/character-creation-runtime` typecheck/test may currently fail i
 
 ## Acceptance Criteria
 
-- The FIXME at `FX005` is resolved in code.
+- The source marker at `FX005` is resolved in code.
 - `CharacterSheetAbilityScores` or its replacement cannot represent `final` disagreeing with `base + backgroundIncrease`.
 - Durable executable ability scores are clearly separated from creation-time derivation/provenance.
 - Tests are updated to assert the new sheet shape or derivation behavior.

@@ -17,6 +17,7 @@ import {
   creationChoiceOptionId,
   creationHoleId,
   discoverCreationHoles,
+  draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
   unitChoiceKey,
@@ -721,7 +722,7 @@ describe("character creation QNT slice parity", () => {
     const staleRevision = fillCreationHoles({
       draft,
       unitLibrary,
-      expectedRevision: draft.revision + 1,
+      expectedRevision: draftRevision(draft.revision + 1),
       fills: [],
     });
     if (staleRevision.tag !== "rejected") {
@@ -884,6 +885,42 @@ describe("character creation batch fill", () => {
     });
   });
 
+  test("reports every invalid option in a choice fill", () => {
+    const draft = createTestDraft("draft:batch-multiple-invalid-choices");
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.primaryClass",
+          "background_soldier",
+          "species_orc",
+        ),
+      ],
+    });
+
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") {
+      return;
+    }
+
+    expect(result.draft).toBe(draft);
+    expect(result.issues.map((issue) => issue.code)).toEqual([
+      "tooManyChoices",
+      "invalidChoice",
+      "invalidChoice",
+    ]);
+    expect(
+      result.issues
+        .filter((issue) => issue.code === "invalidChoice")
+        .map((issue) => issue.message),
+    ).toEqual([
+      "Invalid choice background_soldier for character creation hole: cc:draft:draft.primaryClass",
+      "Invalid choice species_orc for character creation hole: cc:draft:draft.primaryClass",
+    ]);
+  });
+
   test("accepts Point Buy ability score assignments and records the method", () => {
     const draft = createTestDraft("draft:batch-point-buy-ability-scores");
     const result = fillCreationHoles({
@@ -1012,7 +1049,7 @@ describe("character creation batch fill", () => {
     const result = fillCreationHoles({
       draft,
       unitLibrary,
-      expectedRevision: draft.revision + 1,
+      expectedRevision: draftRevision(draft.revision + 1),
       fills: [choiceFill("cc:draft:draft.primaryClass", "background_soldier")],
     });
 

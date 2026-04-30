@@ -2,7 +2,7 @@
 
 ## Question
 
-Implement or resolve `FX014` from `FIXME_RESPONSES.md`.
+Implement or resolve `FX014` from the FX research table.
 
 `FX014` asks where Temporary Hit Points belong. The important correction is that Temporary Hit Points are not creation/build facts, but they are also not battle-only disposable facts. They persist until depleted or Long Rest, including between battles.
 
@@ -52,10 +52,10 @@ export type CharacterSheet = {
 };
 ```
 
-It has a FIXME near hit points:
+It has a source marker near hit points:
 
 ```ts
-// FIXME temp hit points
+// source marker temp hit points
 readonly hitPoints: CharacterSheetHitPoints;
 ```
 
@@ -90,7 +90,7 @@ Battle projection should eventually consume the in-play `CharacterSheet`, not th
 
 Make the temporal boundary explicit.
 
-Do not add `tempHp` to the current build-only object just to silence the FIXME.
+Do not add `tempHp` to the current build-only object just to silence the source marker.
 
 Instead:
 
@@ -179,7 +179,7 @@ Expected edits:
 - Rename `CreationFinalizationResult` ready branch from `sheet` to `build`, or decide whether keeping `sheet` as a result property is still acceptable. Prefer `build` for clarity.
 - Rename `buildCharacterSheet(...)` to `buildCharacterBuild(...)`, `finalizeCharacterBuild(...)`, or another precise name.
 - Update tests and docs for the new terminology.
-- Replace the `FX014` FIXME with a comment explaining that Temporary Hit Points are in-play `CharacterSheet` state, not build state.
+- Replace the `FX014` source marker with a comment explaining that Temporary Hit Points are in-play `CharacterSheet` state, not build state.
 
 ### Path B: Introduce In-Play CharacterSheet
 
@@ -221,7 +221,7 @@ Note: full `@dnd/character-creation-runtime` typecheck/test may currently fail i
 
 ## Acceptance Criteria
 
-- The FIXME at `FX014` is resolved in code.
+- The source marker at `FX014` is resolved in code.
 - The build-only creation output is no longer misleadingly named as the full in-play `CharacterSheet`.
 - Temporary Hit Points are explicitly documented/modelled as in-play character state that persists until depleted or Long Rest.
 - No `tempHp` field is added to `CharacterBuild`.

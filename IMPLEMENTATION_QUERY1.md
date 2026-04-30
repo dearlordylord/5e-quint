@@ -2,7 +2,7 @@
 
 ## Question
 
-Implement `FX001` and the related initial-roster part of `FX002` from `FIXME_RESPONSES.md`.
+Implement `FX001` and the related initial-roster part of `FX002` from the FX research table.
 
 Short answer on relationship: `FX002` is related to `FX001`. `FX001` asks why `start_battle` only accepts one fighter. `FX002` explains that the tool shape also wrongly bakes in "fighter vs monster" as if those were the battle-domain slots. Treat them together for the `start_battle` initial roster API.
 
