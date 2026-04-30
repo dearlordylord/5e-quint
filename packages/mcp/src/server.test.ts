@@ -22,7 +22,10 @@ import {
   characterSheetBattleProjection,
   characterSheetCreatureProjection,
 } from "@dnd/core/character-sheet-derived.ts";
-import { makeSpellLibrary, SRD_SPELLS } from "@dnd/core/features/spell-registry.ts";
+import {
+  makeSpellLibrary,
+  SRD_SPELLS,
+} from "@dnd/core/features/spell-registry.ts";
 import { preparedBattleSpellAccesses } from "@dnd/core/battle-spell-access.ts";
 import { TABLE_EVENT_WARNING_CODES } from "@dnd/core/available-actions.ts";
 import type { BattleWeaponProfile } from "@dnd/core/types.ts";
@@ -2079,7 +2082,12 @@ describe("MCP server adapter", () => {
       scope: "battle",
       type: "BATTLE_ADD_CREATURE",
       creatures: [
-        { id: "harpy-1", kind: "Monster", statBlockId: "harpy", initiativeRoll: 10 },
+        {
+          id: "harpy-1",
+          kind: "Monster",
+          statBlockId: "harpy",
+          initiativeRoll: 10,
+        },
       ],
     });
 
@@ -3655,8 +3663,7 @@ describe("MCP server adapter", () => {
 
     expect("isError" in response && response.isError).toBe(true);
     expect(readPayload(response)).toEqual({
-      error:
-        "Action scope battle does not match the current creature host.",
+      error: "Action scope battle does not match the current creature host.",
       details: "ACTION_SCOPE_MISMATCH",
     });
   });
@@ -6528,11 +6535,15 @@ describe("SessionRouter", () => {
     });
 
     const started = router.handleToolCall("start_battle", {
-      fighterId: "fighter",
-      monsterId: "goblin-1",
-      fighterInitiativeRoll: 20,
-      monsterInitiativeRoll: 8,
-      useDemoHost: true,
+      participants: [
+        { id: "fighter", source: "activeHost", initiativeRoll: 20 },
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+          initiativeRoll: 8,
+        },
+      ],
     });
 
     expect("isError" in started).toBe(false);
@@ -6603,13 +6614,94 @@ describe("SessionRouter", () => {
     );
   });
 
+  test("start_battle accepts multiple basic raw PC-like participants with per-participant initiative", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      participants: [
+        {
+          id: "duelist-a",
+          source: "basicRaw",
+          kind: "PC",
+          maxHp: 18,
+          baseWalkSpeed: 30,
+          initiativeRoll: 11,
+        },
+        {
+          id: "duelist-b",
+          source: "basicRaw",
+          kind: "PC",
+          maxHp: 16,
+          baseWalkSpeed: 30,
+          initiativeRoll: 18,
+        },
+      ],
+    });
+
+    expect("isError" in started).toBe(false);
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      scope: "battle",
+      activeCreatureId: "duelist-b",
+      initiative: ["duelist-b", "duelist-a"],
+      creatureIds: ["duelist-a", "duelist-b"],
+      creatures: {
+        "duelist-a": expect.objectContaining({
+          hp: 18,
+          creatureKind: "PC",
+        }),
+        "duelist-b": expect.objectContaining({
+          hp: 16,
+          creatureKind: "PC",
+        }),
+      },
+    });
+  });
+
+  test("start_battle accepts multiple monster stat-block participants", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      participants: [
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+          initiativeRoll: 9,
+        },
+        {
+          id: "goblin-2",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+          initiativeRoll: 12,
+        },
+      ],
+    });
+
+    expect("isError" in started).toBe(false);
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      scope: "battle",
+      activeCreatureId: "goblin-2",
+      initiative: ["goblin-2", "goblin-1"],
+      creatureIds: ["goblin-1", "goblin-2"],
+      creatures: {
+        "goblin-1": expect.objectContaining({ creatureKind: "Monster" }),
+        "goblin-2": expect.objectContaining({ creatureKind: "Monster" }),
+      },
+    });
+  });
+
   test("battle get_state reports awaitingStartTurn phase and nextRequiredAction hint before BATTLE_START_TURN", () => {
     const router = createSessionRouter(createDemoHost());
 
     router.handleToolCall("start_battle", {
-      fighterId: "fighter",
-      monsterId: "goblin-1",
-      useDemoHost: true,
+      participants: [
+        { id: "fighter", source: "activeHost" },
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+        },
+      ],
     });
 
     const state = readPayload(router.handleToolCall("get_state", {}));
@@ -6637,11 +6729,15 @@ describe("SessionRouter", () => {
     const router = createSessionRouter(createDemoHost());
 
     const started = router.handleToolCall("start_battle", {
-      fighterId: "fighter",
-      monsterId: "goblin-1",
-      fighterInitiativeRoll: 20,
-      monsterInitiativeRoll: 8,
-      useDemoHost: true,
+      participants: [
+        { id: "fighter", source: "activeHost", initiativeRoll: 20 },
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+          initiativeRoll: 8,
+        },
+      ],
     });
     expect("isError" in started).toBe(false);
 
@@ -6666,7 +6762,7 @@ describe("SessionRouter", () => {
     });
   });
 
-  test("start_battle supports the full fighter vs monster MCP attack workflow without mutating pre-battle session state", () => {
+  test("start_battle supports the mixed-roster MCP attack workflow without mutating pre-battle session state", () => {
     const creatureHost = createDemoHost();
     const router = createSessionRouter(creatureHost, {
       encounterDraft: { participantIds: ["fighter", "goblin-1"] },
@@ -6674,11 +6770,15 @@ describe("SessionRouter", () => {
     });
 
     const started = router.handleToolCall("start_battle", {
-      fighterId: "fighter",
-      monsterId: "goblin-1",
-      fighterInitiativeRoll: 20,
-      monsterInitiativeRoll: 8,
-      useDemoHost: true,
+      participants: [
+        { id: "fighter", source: "activeHost", initiativeRoll: 20 },
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+          initiativeRoll: 8,
+        },
+      ],
     });
 
     expect("isError" in started).toBe(false);
@@ -6777,9 +6877,13 @@ describe("SessionRouter", () => {
     const router = createSessionRouter(createDemoHost());
 
     const started = router.handleToolCall("start_battle", {
-      fighterId: "fighter",
-      monsterId: "goblin-1",
-      monsterStatBlockId: "badGoblin",
+      participants: [
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "badGoblin",
+        },
+      ],
     });
 
     expect("isError" in started && started.isError).toBe(true);
@@ -6791,9 +6895,14 @@ describe("SessionRouter", () => {
     const router = createSessionRouter(createDemoHost());
 
     const started = router.handleToolCall("start_battle", {
-      fighterId: "fighter",
-      monsterId: "fighter",
-      useDemoHost: true,
+      participants: [
+        { id: "fighter", source: "activeHost" },
+        {
+          id: "fighter",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+        },
+      ],
     });
 
     expect("isError" in started && started.isError).toBe(true);
@@ -6804,19 +6913,51 @@ describe("SessionRouter", () => {
     expect(router.getSnapshot().activeScope).toBe("creature");
   });
 
+  test("start_battle rejects duplicate singleton participant sources", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      participants: [
+        { id: "fighter-a", source: "activeHost" },
+        { id: "fighter-b", source: "activeHost" },
+      ],
+    });
+
+    expect("isError" in started && started.isError).toBe(true);
+    expect(readPayload(started)).toEqual({
+      error:
+        "start_battle accepts at most one participant from each singleton authored source.",
+      details: {
+        code: "START_BATTLE_DUPLICATE_SINGLETON_SOURCE",
+        source: "activeHost",
+      },
+    });
+    expect(router.getSnapshot().activeScope).toBe("creature");
+  });
+
   test("start_battle rejects calls once the session is already on a battle host", () => {
     const router = createSessionRouter(createDemoHost());
 
     router.handleToolCall("start_battle", {
-      fighterId: "fighter",
-      monsterId: "goblin-1",
-      useDemoHost: true,
+      participants: [
+        { id: "fighter", source: "activeHost" },
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+        },
+      ],
     });
 
     const restarted = router.handleToolCall("start_battle", {
-      fighterId: "fighter-2",
-      monsterId: "goblin-2",
-      useDemoHost: true,
+      participants: [
+        { id: "fighter-2", source: "activeHost" },
+        {
+          id: "goblin-2",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+        },
+      ],
     });
 
     expect("isError" in restarted && restarted.isError).toBe(true);
@@ -6827,7 +6968,7 @@ describe("SessionRouter", () => {
     });
   });
 
-  test("start_battle defaults to the stored character sheet when no useDemoHost flag is set", () => {
+  test("start_battle projects storedSheet participants from the stored character sheet", () => {
     const router = createSessionRouter(createDemoHost());
 
     router.handleToolCall("create_character_draft", { draft: completeDraft() });
@@ -6836,10 +6977,15 @@ describe("SessionRouter", () => {
     expect(router.getSnapshot().storedCharacterState).toBe("sheet");
 
     const started = router.handleToolCall("start_battle", {
-      fighterId: "hero",
-      monsterId: "goblin-1",
-      fighterInitiativeRoll: 15,
-      monsterInitiativeRoll: 8,
+      participants: [
+        { id: "hero", source: "storedSheet", initiativeRoll: 15 },
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+          initiativeRoll: 8,
+        },
+      ],
     });
     expect("isError" in started).toBe(false);
     expect(router.getSnapshot().activeScope).toBe("battle");
@@ -6855,17 +7001,23 @@ describe("SessionRouter", () => {
     });
   });
 
-  test("start_battle errors without a stored sheet when useDemoHost is not set", () => {
+  test("start_battle errors without a stored sheet for storedSheet participants", () => {
     const router = createSessionRouter(createDemoHost());
 
     const started = router.handleToolCall("start_battle", {
-      fighterId: "hero",
-      monsterId: "goblin-1",
+      participants: [
+        { id: "hero", source: "storedSheet" },
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+        },
+      ],
     });
     expect("isError" in started && started.isError).toBe(true);
     expect(readPayload(started)).toEqual({
       error:
-        "start_battle requires a finalized stored character sheet. Finalize a draft first, or pass useDemoHost:true for the demo Fighter.",
+        "start_battle requires a finalized stored character sheet for storedSheet participants. Finalize a draft first, or use source:activeHost for the demo Fighter.",
       details: {
         code: "START_BATTLE_MISSING_SHEET",
         storedCharacterState: "empty",
@@ -6879,8 +7031,14 @@ describe("SessionRouter", () => {
     router.handleToolCall("create_character_draft", { draft: {} });
 
     const started = router.handleToolCall("start_battle", {
-      fighterId: "hero",
-      monsterId: "goblin-1",
+      participants: [
+        { id: "hero", source: "storedSheet" },
+        {
+          id: "goblin-1",
+          source: "monsterStatBlock",
+          statBlockId: "goblinMinion",
+        },
+      ],
     });
     expect("isError" in started && started.isError).toBe(true);
     expect(readPayload(started).details).toEqual({

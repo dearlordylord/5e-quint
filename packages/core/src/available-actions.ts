@@ -2,6 +2,7 @@ import { Match, Option, Schema } from "effect";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 
 import {
+  BATTLE_SPELL_REACTION_RESOLUTIONS,
   battleSpellAccessById,
   battleSpellAccessId,
   type BattleSpellAccess,
@@ -104,12 +105,15 @@ import type { DndContext, DndEvent } from "#/machine-types.ts";
 import { withinOneSize } from "#/machine-combat.ts";
 import {
   armorClass,
+  ACTIVATION_TIMINGS,
   CONDITIONS,
   CREATURE_KINDS,
   CreatureId,
   DAMAGE_QUALIFIERS,
   DAMAGE_TYPES,
+  difficultyClass,
   SIZES,
+  SPELL_SLOT_LEVELS,
   SpellSlotLevel,
   spellId,
   spellSlotLevel,
@@ -1738,6 +1742,78 @@ const BattleWeaponProfileSchema = Schema.Struct({
   ),
 });
 
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+
+const SpellSlotsSchema = Schema.Array(NonNegativeIntegerSchema).pipe(
+  Schema.itemsCount(SPELL_SLOT_LEVELS),
+);
+
+const SpellSlotStateSchema = Schema.Struct({
+  max: SpellSlotsSchema,
+  current: SpellSlotsSchema,
+}).pipe(
+  Schema.filter((slots) =>
+    slots.current.every((current, index) => current <= slots.max[index]),
+  ),
+);
+
+const PactSlotStateSchema = Schema.Struct({
+  max: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(4),
+  ),
+  current: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+    Schema.lessThanOrEqualTo(4),
+  ),
+  slotLevel: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(5),
+  ),
+}).pipe(Schema.filter((slots) => slots.current <= slots.max));
+
+const BattleSpellAccessProjectionSchema = Schema.Struct({
+  baseLevel: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  activation: Schema.Literal(...ACTIVATION_TIMINGS),
+  requiresVerbal: Schema.Boolean,
+  requiresHandComponent: Schema.Boolean,
+  creatureReactionTrigger: Schema.optional(
+    Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("hitByAttackRoll"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("creatureCastsSpell"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("damagedByCreature"),
+        sourceMustBeVisibleToReactor: Schema.Boolean,
+        maxSourceDistanceFeetFromReactor: Schema.optional(
+          Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+        ),
+      }),
+    ),
+  ),
+  reactionResolution: Schema.Literal(...BATTLE_SPELL_REACTION_RESOLUTIONS),
+});
+
+const PreparedBattleSpellAccessSchema = Schema.Struct({
+  tag: Schema.Literal("prepared"),
+  accessId: Schema.String,
+  projection: BattleSpellAccessProjectionSchema,
+  spellId: Schema.String,
+  spellSaveDC: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  resourcePath: Schema.Struct({
+    kind: Schema.Literal("spellSlotLadder"),
+  }),
+});
+
 const BattleInitRawCreatureConfigSchema = Schema.Struct({
   id: Schema.String,
   maxHp: Schema.Number.pipe(Schema.int(), Schema.positive()),
@@ -1821,6 +1897,9 @@ const BattleInitRawCreatureConfigSchema = Schema.Struct({
   battleBonusActionOptions: Schema.optional(
     Schema.Array(Schema.Literal(...MONSTER_BATTLE_BONUS_ACTION_OPTIONS)),
   ),
+  spellAccesses: Schema.optional(Schema.Array(PreparedBattleSpellAccessSchema)),
+  spellSlots: Schema.optional(SpellSlotStateSchema),
+  pactSlots: Schema.optional(PactSlotStateSchema),
 });
 const BattleInitCatalogCreatureConfigSchema = Schema.Struct({
   id: Schema.String,
@@ -1935,6 +2014,19 @@ export type BattleInitControlCreatureConfig = Schema.Schema.Type<
   typeof BattleInitCreatureConfigSchema
 >;
 
+function toBattleSpellAccess(
+  access: Schema.Schema.Type<typeof PreparedBattleSpellAccessSchema>,
+): BattleSpellAccess {
+  return {
+    tag: access.tag,
+    accessId: battleSpellAccessId(access.accessId),
+    projection: access.projection,
+    spellId: spellId(access.spellId),
+    spellSaveDC: difficultyClass(access.spellSaveDC),
+    resourcePath: access.resourcePath,
+  };
+}
+
 export function controlCommandSchemaForType(
   type: string,
 ): typeof ControlCommandSchema {
@@ -1955,13 +2047,32 @@ export function toBattleInitCreatureConfig(
       surprised: config.surprised,
     });
   }
-  const { baseArmorClass: rawBaseArmorClass, ...rest } = config;
+  const {
+    baseArmorClass: rawBaseArmorClass,
+    spellAccesses: rawSpellAccesses,
+    spellSlots,
+    pactSlots,
+    ...rest
+  } = config;
   return {
     ...rest,
     id: CreatureId(config.id),
     ...(rawBaseArmorClass == null
       ? {}
       : { baseArmorClass: armorClass(rawBaseArmorClass) }),
+    ...(rawSpellAccesses == null
+      ? {}
+      : { spellAccesses: rawSpellAccesses.map(toBattleSpellAccess) }),
+    ...(spellSlots == null
+      ? {}
+      : { slotsMax: spellSlots.max, slotsCurrent: spellSlots.current }),
+    ...(pactSlots == null
+      ? {}
+      : {
+          pactSlotsMax: pactSlots.max,
+          pactSlotsCurrent: pactSlots.current,
+          pactSlotLevel: pactSlots.slotLevel,
+        }),
   };
 }
 

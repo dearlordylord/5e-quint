@@ -53,6 +53,7 @@ draft and preserves siblings via `writeAtPath`, so the picker loop never
 exercises the footgun. Only manual patches do.
 
 **Fix options.**
+
 - Deep-merge `choices` and `equipment` at depth 2 in
   `applyCharacterDraftUpdate`. Sanitizers already run afterward to drop
   invalidated values, so deep-merge is compatible.
@@ -68,17 +69,18 @@ shallow-merge behavior has no callers that would benefit from it.
 
 ### F2. Finalized character is not wired into the battle host
 
-Status: **DONE**. `start_battle` now uses `storedCharacter.sheet` by
-default via `buildStartBattleCommandFromSheet` (new helper in
-`packages/mcp/src/start-battle.ts`) backed by
-`characterSheetBattleProjection`. The legacy demo-Fighter path is gated on
-explicit `useDemoHost: true` input. Missing-sheet and still-draft cases
-return structured errors with `storedCharacterState` in the detail.
+Status: **DONE**. `start_battle` now accepts an explicit participant
+roster. Each participant declares its projection source: `storedSheet`
+uses `storedCharacter.sheet` through `characterSheetBattleProjection`,
+`activeHost` uses the demo Fighter host, `monsterStatBlock` uses the core
+monster catalog, and `basicRaw` accepts a minimal raw PC/Monster config.
+Missing-sheet and still-draft cases return structured errors with
+`storedCharacterState` in the detail.
 
 Severity: high.
 
 **Observation.** `start_battle` consumes the demo Fighter `CreatureActionHost`
-(hardcoded in `createDemoHost`) and produces a battle from *that* creature,
+(hardcoded in `createDemoHost`) and produces a battle from _that_ creature,
 not from `storedCharacter.sheet`. The probe carefully built a character via
 the picker surface, finalized it, and then the battle used a different
 Fighter entirely. For a "create a character and make them fight" flow, this
@@ -90,15 +92,16 @@ stored sheet is the player character (that's what
 creature.
 
 **Fix options.**
+
 - Add a tool `promote_stored_character_to_battle_host` (or fold into
   `start_battle`) that converts `storedCharacter.sheet` into a creature
   actor with its durable state, then runs `BATTLE_INIT` with that
   creature. Use `characterSheetBattleProjection` (already present in
   `@dnd/core`) for the conversion.
-- `start_battle` should require stored sheet state by default, erroring if
-  the stored character is absent or still a draft. The current demo-host
-  behavior can live behind an explicit `useDemoHost: true` flag for
-  tests.
+- `start_battle` should make participant source explicit, erroring if a
+  `storedSheet` participant is requested while the stored character is
+  absent or still a draft. The demo-host behavior should live behind an
+  explicit `source: "activeHost"` participant.
 
 ### F3. Battle `execute_action` runtime inputs are LLM-hostile
 
@@ -129,6 +132,7 @@ does not roll dice, own geometry, or infer visibility. The LLM must
 compute or be told these. That design is fine; the discoverability is not.
 
 **Fix options.**
+
 - `preview_action` already returns `runtime: "battleAttack"` — extend it to
   also return the expected `values` schema (field names, types, whether
   each is a session fact vs. a session-facing roll). The LLM can then
@@ -178,6 +182,7 @@ returns `{action: [], bonusAction: [], reaction: [], free: []}` even though
 `execute_control_command({scope: "battle", type: "BATTLE_START_TURN", ...})`.
 
 **Fix options.**
+
 - Distinguish the two states in the encoded `phase` (e.g.
   `phase: "battleInitialized"` vs `phase: "activeTurn"`), so the LLM can
   tell it still needs to issue a control command.
@@ -205,6 +210,7 @@ explicit link in either response. An LLM must do the mapping by prefix
 intuition ("`missingX` → find picker whose `featureRef` matches X").
 
 **Fix.** Either:
+
 - Add `featureRef?: string` to each `CharacterOpenChoice` in
   `assess_character_draft`, or
 - Add `code?: string` / `codes?: string[]` to each
@@ -218,6 +224,7 @@ loop.
 
 Status: **DONE**. New resolvers in
 `packages/core/src/character-open-choice-payload.ts`:
+
 - `ability_score_generation` — 1-pick over
   `ABILITY_SCORE_GENERATION_MODES`; `lift` builds the tagged variant with
   an empty `assignedScores` map (standard-array/point-buy score
@@ -236,6 +243,7 @@ Status: **DONE**. New resolvers in
 Severity: medium.
 
 **Observation.** These required draft fields have no pickers:
+
 - `abilityScoreGeneration` (mode + assigned scores)
 - `backgroundAbilityScoreIncrease`
 - `languages`
@@ -248,6 +256,7 @@ core types.
 
 **Fix.** Extend `listCharacterFeaturePickers` in
 `packages/core/src/character-open-choice-payload.ts` with resolvers:
+
 - `ability_score_generation` (pickCount = 1, options =
   `["standardArray", "pointBuy", "manual"]`, `lift` transforms to the
   tagged-variant shape). Standard-array assignment can be a follow-up
@@ -307,9 +316,9 @@ All 7 findings landed. Delivery followed the recommended batch order.
 
 - **F1** — deep-merge `choices`/`equipment` in `applyCharacterDraftUpdate`.
 - **F4** — per-creature HP/conditions/deathSaves in battle `get_state`.
-- **F2** — `start_battle` reads stored sheet by default; `useDemoHost`
-  is the escape hatch. `buildStartBattleCommandFromSheet` projects from
-  `characterSheetBattleProjection`.
+- **F2** — `start_battle` consumes an explicit participant roster.
+  `source: "storedSheet"` projects from `characterSheetBattleProjection`;
+  `source: "activeHost"` keeps the demo-host escape hatch.
 - **F6** — `assess_character_draft` and
   `preview_character_draft_update` enrich each open choice with the
   resolving picker's `featureRef`.
