@@ -28,6 +28,7 @@ import rayOfFrostInput from "../../content/ray_of_frost.json";
 import shieldInput from "../../content/shield.json";
 import sleepInput from "../../content/sleep.json";
 import thunderwaveInput from "../../content/thunderwave.json";
+import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
 import weaponLongswordInput from "../../content/weapon_longsword.json";
 import weaponShortbowInput from "../../content/weapon_shortbow.json";
@@ -158,6 +159,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     thunderwaveInput,
     armorChainMailInput,
     equipmentShieldInput,
+    weaponDaggerInput,
     weaponLongswordInput,
     weaponSpearInput,
     weaponFlailInput,

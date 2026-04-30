@@ -56,7 +56,7 @@ The Surface-runtime battle-session path exposes these user-facing tools:
   battle snapshot.
 - `discover_battle_acts` returns the current actor's battle acts. The promoted
   slice exposes supported character weapon Attacks, Fighter 2 Action Surge,
-  Wizard `magic_missile` and `ray_of_frost` Magic-action Spell Invocations,
+  Wizard `magic_missile` and `ray_of_frost` Magic-action spell acts,
   supported Goblin Warrior/Skeleton Stat Block attacks, and End Turn.
 - `fill_battle_hole` submits one fill at a time for a selected battle act
   subject. MCP stores transient target, attack-roll, and damage-result fills
@@ -115,9 +115,9 @@ Remaining first-vertical gates:
   Death Saving Throw, Stable, dead, rest, and broader adventuring-state handoff
   facts remain deferred to later runtime width;
 - broader character choices, monster spellcasting, Multiattack, long-range
-  Disadvantage, reactions, upcast spell slots, persistent spell effects such as
-  Mage Armor, and post-turn lifecycle subjects remain outside this widened
-  slice.
+  Disadvantage, reactions, casting spells with higher-level Spell Slots,
+  persistent spell effects such as Mage Armor, and post-turn lifecycle subjects
+  remain outside this widened slice.
 
 Normal package tests cover the promoted Surface-runtime MCP server route. The
 old Core-backed MCP route has been removed from this package; omitted behavior

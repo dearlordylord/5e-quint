@@ -151,11 +151,14 @@ describe("end-user promoted MCP vertical", () => {
 
     const started = callTool(root, "start_battle", {
       battleId: "battle:accepted-vertical",
-      sheetDraftId: draftId,
-      characterCombatantId: "fighter",
-      characterId: "character:accepted-fighter",
-      characterDisplayName: "Orc Soldier Fighter",
-      characterInitiative: 18,
+      characters: [
+        {
+          sourceDraftId: draftId,
+          combatantId: "fighter",
+          characterId: "character:accepted-fighter",
+          initiative: 18,
+        },
+      ],
       statBlockCombatantId: "goblin",
       statBlockInitiative: 7,
     });
@@ -337,22 +340,22 @@ describe("end-user promoted MCP vertical", () => {
 
     const started = callTool(root, "start_battle", {
       battleId: "battle:post5-width",
-      sheetDraftId: fighterDraftId,
-      characterCombatantId: "fighter",
-      characterId: "character:post5-fighter",
-      characterDisplayName: "Orc Soldier Fighter 2",
-      characterInitiative: 18,
-      statBlockCombatantId: "skeleton",
-      statBlockInitiative: 8,
-      additionalCharacters: [
+      characters: [
         {
-          sheetDraftId: wizardDraftId,
-          characterCombatantId: "wizard",
+          sourceDraftId: fighterDraftId,
+          combatantId: "fighter",
+          characterId: "character:post5-fighter",
+          initiative: 18,
+        },
+        {
+          sourceDraftId: wizardDraftId,
+          combatantId: "wizard",
           characterId: "character:post5-wizard",
-          characterDisplayName: "Orc Soldier Wizard 1",
-          characterInitiative: 14,
+          initiative: 14,
         },
       ],
+      statBlockCombatantId: "skeleton",
+      statBlockInitiative: 8,
     });
     expect(started.snapshot).toMatchObject({
       currentActorId: "fighter",
@@ -583,7 +586,7 @@ describe("end-user promoted MCP vertical", () => {
     expect(ended.session).toMatchObject({
       battleState: null,
       transientBattleFills: null,
-      characterIds: [fighterDraftId, wizardDraftId],
+      sourceDraftIds: [fighterDraftId, wizardDraftId],
     });
 
     const listed = callTool(root, "list_characters", {});
@@ -597,6 +600,7 @@ describe("end-user promoted MCP vertical", () => {
         sourceDraftId: wizardDraftId,
         status: "available",
         hitPoints: { current: 8, maximum: 8 },
+        spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],
       }),
     ]);
   });
@@ -800,8 +804,8 @@ function createAndFinalizeWizardOne(
     fills: [
       choiceFill(
         "cc:unit:class_wizard:equipment_purchase",
-        "armor_chain_mail",
         "weapon_longsword",
+        "weapon_dagger",
         "equipment_shield",
       ),
     ],
@@ -810,7 +814,6 @@ function createAndFinalizeWizardOne(
     draftId,
     expectedRevision: 4,
     fills: [
-      choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
       choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
       choiceFill(
         "cc:unit:weapon_longsword:loadout_weapon",

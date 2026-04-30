@@ -26,6 +26,8 @@ module battleRuntimeSlice {
   //   spend Spell Slots; cantrips do not; spell attacks add Proficiency Bonus;
   //   Magic Missile can put all darts on one target; Ray of Frost reduces Speed
   //   until the start of the caster's next turn.
+  // - Rules-Glossary.md "Armor Training": lacking training for worn armor
+  //   prevents spellcasting while preserving Spell Slot state.
   // - Monsters/Monsters-P-S.md lines 1152-1175 and UBIQUITOUS_LANGUAGE.md:
   //   Skeleton has Bludgeoning vulnerability and Poison damage immunity.
   //
@@ -245,6 +247,9 @@ module battleRuntimeSlice {
       | RayOfFrost => expendedLevelOneSlots
     }
 
+  pure def canDiscoverSpellActs(canCastSpells: bool): bool =
+    canCastSpells
+
   pure def spellAttackModifier(
     spellcastingAbilityModifier: int,
     proficiencyBonus: int,
@@ -353,6 +358,13 @@ module battleRuntimeSlice {
     all {
       assert(expendedSlotsAfterInvocation(MagicMissile, 0) == 1),
       assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
+    }
+  }
+
+  run test_spell_act_discovery_respects_spellcasting_gate = {
+    all {
+      assert(canDiscoverSpellActs(true)),
+      assert(not(canDiscoverSpellActs(false))),
     }
   }
 

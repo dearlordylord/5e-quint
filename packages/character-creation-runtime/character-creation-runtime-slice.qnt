@@ -83,6 +83,7 @@ module characterCreationRuntimeSlice {
     | OSkillSurvival
     | OFightingStyleDefense
     | OWeaponLongsword
+    | OWeaponDagger
     | OWeaponSpear
     | OWeaponFlail
     | OWeaponShortbow
@@ -369,7 +370,7 @@ module characterCreationRuntimeSlice {
     | HBackgroundTool => Set(OToolDiceSet)
     | HClassEquipment => Set(OClassEquipmentPackageA, OClassEquipmentPackageB, OClassEquipmentCoins)
     | HBackgroundEquipment => Set(OBackgroundEquipmentPack, OBackgroundEquipmentCoins)
-    | HEquipmentPurchase => Set(OArmorChainMail, OWeaponLongsword, OWeaponFlail, OEquipmentShield)
+    | HEquipmentPurchase => Set(OArmorChainMail, OWeaponLongsword, OWeaponDagger, OWeaponFlail, OEquipmentShield)
     | HLoadoutArmor => Set(OLoadoutWorn)
     | HLoadoutShield => Set(OLoadoutWielded)
     | HLoadoutWeapon => Set(OLoadoutWieldedOneHanded)

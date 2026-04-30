@@ -293,6 +293,7 @@ describe("character creation hole discovery", () => {
       options: [
         { optionId: "armor_chain_mail" },
         { optionId: "weapon_longsword" },
+        { optionId: "weapon_dagger" },
         { optionId: "weapon_flail" },
         { optionId: "equipment_shield" },
       ],
@@ -1560,7 +1561,6 @@ describe("character creation finalization", () => {
       "orc_adrenaline_rush",
       "orc_darkvision",
       "orc_relentless_endurance",
-      "armor_chain_mail",
       "equipment_shield",
       "weapon_longsword",
       "light",
@@ -2310,8 +2310,8 @@ function completeWizardDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:unit:class_wizard:equipment_purchase",
-          "armor_chain_mail",
           "weapon_longsword",
+          "weapon_dagger",
           "equipment_shield",
         ),
       ],
@@ -2324,7 +2324,6 @@ function completeWizardDraft(): CharacterDraft {
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
         choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
         choiceFill(
           "cc:unit:weapon_longsword:loadout_weapon",

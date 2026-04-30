@@ -1,9 +1,11 @@
 import {
+  discoverBattleActs,
   resolveBattleSubject,
   snapshotBattle,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
+  type CharacterBattleSpellSlotState,
   type CharacterId,
 } from "@dnd/battle-runtime";
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
@@ -30,7 +32,12 @@ import {
 import { battleStateProjection } from "./battle-state-projection.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
+import {
+  availableCharacterSession,
+  type BattleFillSession,
+} from "./session-store.ts";
 import { errorContent, jsonContent } from "./tool-content.ts";
+import type { ToolError } from "./tool-input-helpers.ts";
 
 export const battleToolDefinitions = [
   {
@@ -54,7 +61,7 @@ export const battleToolDefinitions = [
   {
     name: "discover_battle_acts",
     description:
-      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Fighter 2 Action Surge, Wizard Magic spell subjects, and End Turn.",
+      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Fighter 2 Action Surge, Wizard Magic-action spell acts, and End Turn.",
     inputSchema: discoverBattleActsInputSchema,
   },
   {
@@ -173,12 +180,24 @@ export function handleBattleToolCall(
   if (name === "resolve_battle_act") {
     const decoded = decodeResolveBattleActArgs(args, name);
     if (isBattleToolError(decoded)) return decoded;
-    const state = root.sessionStore.battleState;
-    if (state == null) return noStoredBattleContent();
-    if (root.sessionStore.transientBattleFills !== null) {
-      return errorContent("Cannot resolve another act with pending fills.", {
-        code: "BATTLE_FILLS_PENDING",
-        pendingSubject: root.sessionStore.transientBattleFills.subject,
+    const state = activeBattleWithoutPendingFills(
+      root,
+      "Cannot resolve another act with pending fills.",
+    );
+    if (isBattleToolError(state)) return state;
+    const availableAct = discoverBattleActs(state).find((act) =>
+      sameBattleSubject(act.subject, decoded.subject),
+    );
+    if (availableAct === undefined) {
+      return errorContent("Battle act is not currently available.", {
+        code: "BATTLE_ACT_NOT_AVAILABLE",
+        subject: decoded.subject,
+      });
+    }
+    if (availableAct.initialHoles.length > 0) {
+      return errorContent("Battle act requires hole fills.", {
+        code: "BATTLE_ACT_REQUIRES_HOLES",
+        subject: decoded.subject,
       });
     }
     const result = resolveBattleSubject({
@@ -195,8 +214,11 @@ export function handleBattleToolCall(
   if (name === "end_turn") {
     const decoded = decodeEndTurnArgs(args, name);
     if (isBattleToolError(decoded)) return decoded;
-    const state = root.sessionStore.battleState;
-    if (state == null) return noStoredBattleContent();
+    const state = activeBattleWithoutPendingFills(
+      root,
+      "Cannot end turn with pending battle fills.",
+    );
+    if (isBattleToolError(state)) return state;
     const result = resolveBattleSubject({
       state,
       subject: {
@@ -216,14 +238,11 @@ export function handleBattleToolCall(
   if (name === "end_battle") {
     const decoded = decodeEndBattleArgs(args, name);
     if (isBattleToolError(decoded)) return decoded;
-    const state = root.sessionStore.battleState;
-    if (state == null) return noStoredBattleContent();
-    if (root.sessionStore.transientBattleFills !== null) {
-      return errorContent("Cannot end battle with pending battle fills.", {
-        code: "BATTLE_FILLS_PENDING",
-        pendingSubject: root.sessionStore.transientBattleFills.subject,
-      });
-    }
+    const state = activeBattleWithoutPendingFills(
+      root,
+      "Cannot end battle with pending battle fills.",
+    );
+    if (isBattleToolError(state)) return state;
 
     const handoff = finalizeCharacterSessionsFromBattle(root, state);
     if (handoff !== null) return handoff;
@@ -255,6 +274,7 @@ function finalizeCharacterSessionsFromBattle(
   const updates: {
     readonly sourceDraftId: CharacterDraftId;
     readonly currentHp: Hp;
+    readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   }[] = [];
 
   for (const combatant of state.combatants.values()) {
@@ -293,17 +313,23 @@ function finalizeCharacterSessionsFromBattle(
     updates.push({
       sourceDraftId,
       currentHp: combatant.hp,
+      ...(combatant.origin.spellcasting === undefined
+        ? {}
+        : { spellSlots: combatant.origin.spellcasting.spellSlots }),
     });
   }
 
   for (const update of updates) {
     const session = root.sessionStore.characters.get(update.sourceDraftId);
     if (session?.tag !== "inBattle") continue;
-    root.sessionStore.characters.set(update.sourceDraftId, {
-      tag: "available",
-      build: session.build,
-      currentHp: update.currentHp,
-    });
+    root.sessionStore.characters.set(
+      update.sourceDraftId,
+      availableCharacterSession({
+        build: session.build,
+        currentHp: update.currentHp,
+        spellSlots: update.spellSlots,
+      }),
+    );
   }
 
   return null;
@@ -362,6 +388,28 @@ function battleResolutionPayload(
 function noStoredBattleContent() {
   return errorContent("No battle session has been started.", {
     code: "NO_BATTLE_SESSION",
+  });
+}
+
+function activeBattleWithoutPendingFills(
+  root: McpCompositionRoot,
+  pendingMessage: string,
+): BattleState | ToolError {
+  const state = root.sessionStore.battleState;
+  if (state == null) return noStoredBattleContent();
+  const pendingFills = root.sessionStore.transientBattleFills;
+  return pendingFills === null
+    ? state
+    : pendingBattleFillsContent(pendingFills, pendingMessage);
+}
+
+function pendingBattleFillsContent(
+  pendingFills: BattleFillSession,
+  message: string,
+) {
+  return errorContent(message, {
+    code: "BATTLE_FILLS_PENDING",
+    pendingSubject: pendingFills.subject,
   });
 }
 

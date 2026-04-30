@@ -29,7 +29,7 @@ flowchart TD
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
   AttackProfile["supported attack profile<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
   UnitFeature["Unit feature activation<br/>source: retained Surface Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action and spends one use"]
-  SpellInvocation["Spell Invocation<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect"]
+  SpellAct["Magic-action spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
   Snapshot["snapshotBattle(state)<br/>success: JSON-friendly read model<br/>why: callers do not depend on internal Map state"]
@@ -48,7 +48,7 @@ flowchart TD
   Resolve -->|runtimeCommand.endTurn| EndTurn --> State
   Resolve -->|srdAction.attack| AttackProfile --> AttackReplay
   Resolve -->|unitFeature| UnitFeature --> State
-  Resolve -->|srdAction.magic| SpellInvocation --> Damage
+  Resolve -->|srdAction.magic| SpellAct --> Damage
   AttackReplay --> AttackRoll
   AttackReplay --> RuntimeDice
   AttackReplay --> Damage --> State
@@ -57,7 +57,7 @@ flowchart TD
   ActionEconomy --> AttackReplay
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackProfile,AttackReplay,UnitFeature,SpellInvocation,Damage,Snapshot implemented;
+  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackProfile,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
 ```
 
 ## Interpretation Graph
@@ -69,7 +69,7 @@ flowchart TD
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn<br/>invalid: fills are not accepted"]
   Attack["srdAction.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
   UnitFeature["unitFeature Action Surge<br/>success: spend use-count resource and grant non-Magic action<br/>invalid: no use remains or already used this turn"]
-  Magic["srdAction.magic + spellId<br/>success: staged Spell Invocation replay<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
+  Magic["srdAction.magic + spellId<br/>success: staged spell act replay<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
   AttackProfile["supported attack profile<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
   Target["target choice<br/>choices filtered by selected attack reach or normal range and combatant distance<br/>needsHoles until caller selects a legal combatant"]
   Roll["attack roll<br/>needsHoles until caller supplies AttackRollResult"]
@@ -107,7 +107,7 @@ flowchart TD
 - Character-derived Action Surge comes from a retained Surface Unit plus
   runtime use-count state. It grants a Unit-sourced action resource carrying
   the authored non-Magic restriction.
-- Character-derived Wizard Spell Invocations come from retained Spell Records
+- Character-derived Wizard Magic-action spell acts come from retained Spell Records
   plus runtime Spell Slot and active-effect state. Prepared level-1 spells spend
   slots; cantrips do not. `magic_missile` is narrowed by a support gate to all
   repeated darts at one target. `ray_of_frost` requires both its Cold damage and

@@ -40,6 +40,7 @@ const requiredFirstVerticalUnitIds = [
   "thunderwave",
   "armor_chain_mail",
   "equipment_shield",
+  "weapon_dagger",
   "weapon_longsword",
   "weapon_spear",
   "weapon_flail",

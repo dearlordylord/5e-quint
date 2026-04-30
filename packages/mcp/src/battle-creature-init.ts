@@ -3,6 +3,7 @@ import {
   scoreModifier,
   startBattle,
   type CharacterBattleResourceInit,
+  type CharacterBattleSpellSlotState,
   type CharacterWeaponAttackProfile,
   type BattleId,
   type BattleState,
@@ -41,6 +42,7 @@ export type CharacterBuildCreatureInput = {
   readonly initiative: InitiativeScore;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
+  readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
 
 export function startBattleFromCharacterBuildAndStatBlock(input: {
@@ -114,7 +116,11 @@ export function battleCreatureInitFromCharacterBuild(
       ...(input.build.spellcasting === undefined
         ? {}
         : {
-            spellcasting: characterSpellcasting(input.build, input.unitLibrary),
+            spellcasting: characterSpellcasting({
+              build: input.build,
+              unitLibrary: input.unitLibrary,
+              spellSlots: input.spellSlots,
+            }),
           }),
     },
   };
@@ -244,15 +250,29 @@ function characterAttackProfile(
   };
 }
 
-function characterSpellcasting(
+function spellcastingAllowedByArmorTraining(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): NonNullable<
+): boolean {
+  const armor = build.equipment.armor
+    ? unitLibrary.requireUnit(build.equipment.armor)
+    : undefined;
+  return (
+    armor?.kind !== "armor" || build.armorTraining.includes(armor.category)
+  );
+}
+
+function characterSpellcasting(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
+}): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"]
 > {
+  const { build, unitLibrary } = input;
   const spellcasting = build.spellcasting;
   if (spellcasting === undefined) {
     throw new Error("Character build does not have spellcasting.");
@@ -263,12 +283,21 @@ function characterSpellcasting(
       build.abilityScores[spellcasting.spellcastingAbility],
     ),
     proficiencyBonus: proficiencyBonus(characterLevel(build)),
+    canCastSpells: spellcastingAllowedByArmorTraining(build, unitLibrary),
     cantrips: spellRecordsForIds(unitLibrary, spellcasting.cantrips),
     preparedSpells: spellRecordsForIds(
       unitLibrary,
       spellcasting.preparedSpells,
     ),
     spellSlots: spellcasting.spellSlots,
+    ...(input.spellSlots === undefined
+      ? {}
+      : {
+          spellSlotExpenditures: input.spellSlots.map((slot) => ({
+            spellLevel: slot.spellLevel,
+            expended: slot.expended,
+          })),
+        }),
   };
 }
 

@@ -148,19 +148,24 @@ export type CharacterBattleSpellSlotInit = {
   readonly spellLevel: number;
   readonly count: number;
 };
-export type CharacterBattleSpellSlotState = CharacterBattleSpellSlotInit & {
+export type CharacterBattleSpellSlotExpenditureInit = {
+  readonly spellLevel: number;
   readonly expended: number;
 };
+export type CharacterBattleSpellSlotState = CharacterBattleSpellSlotInit &
+  CharacterBattleSpellSlotExpenditureInit;
 export type CharacterBattleSpellcastingInit = {
   readonly spellcastingAbilityModifier: number;
   readonly proficiencyBonus: ProficiencyBonusType;
+  readonly canCastSpells: boolean;
   readonly cantrips: readonly SpellRecord[];
   readonly preparedSpells: readonly SpellRecord[];
   readonly spellSlots: readonly CharacterBattleSpellSlotInit[];
+  readonly spellSlotExpenditures?: readonly CharacterBattleSpellSlotExpenditureInit[];
 };
 export type CharacterBattleSpellcastingState = Omit<
   CharacterBattleSpellcastingInit,
-  "spellSlots"
+  "spellSlots" | "spellSlotExpenditures"
 > & {
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
 };
@@ -248,7 +253,7 @@ type AttackTargetConstraint =
 export type BattleAttackProfile =
   | CharacterWeaponAttackProfile
   | StatBlockAuthoredAttack;
-export type SupportedSpellInvocation =
+export type SupportedSpellAct =
   | {
       readonly kind: "preparedSlotSpell";
       readonly spell: SpellRecord;
@@ -424,7 +429,7 @@ export type BattleSpellAttackRollHole = Extract<
   RuntimeHole,
   { readonly kind: "attackRoll" }
 > & {
-  readonly spell: SupportedSpellInvocation;
+  readonly spell: SupportedSpellAct;
   readonly attackBonus: number;
 };
 export type BattleDamageRollHole = Extract<
@@ -438,7 +443,7 @@ export type BattleSpellDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly spell: SupportedSpellInvocation;
+  readonly spell: SupportedSpellAct;
   readonly critical: boolean;
 };
 export type BattleHole =
@@ -629,7 +634,7 @@ export function discoverBattleActs(
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "magic")
   ) {
-    acts.push(...supportedSpellActs(state, actorId));
+    acts.push(...discoverSupportedSpellActs(state, actorId));
   }
   acts.push({
     subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
@@ -702,7 +707,7 @@ export function resolveBattleSubject(
       resolveAttack(input),
     ),
     Match.when({ tag: "srdAction", action: "magic" }, () =>
-      resolveSpellInvocation(input),
+      resolveSpellAct(input),
     ),
     Match.when({ tag: "unitFeature" }, () => resolveUnitFeature(input)),
     Match.when({ tag: "runtimeCommand", command: "endTurn" }, () =>
@@ -954,12 +959,74 @@ function characterResourceState(
 function characterSpellcastingState(
   input: CharacterBattleSpellcastingInit,
 ): CharacterBattleSpellcastingState {
+  const spellSlotLevels = new Set<number>();
+  for (const slot of input.spellSlots) {
+    if (
+      !Number.isInteger(slot.spellLevel) ||
+      slot.spellLevel < 1 ||
+      slot.spellLevel > 9 ||
+      !Number.isInteger(slot.count) ||
+      slot.count < 0
+    ) {
+      throw new Error(
+        "Spell Slot level must be 1-9 and count must be a non-negative integer.",
+      );
+    }
+    if (spellSlotLevels.has(slot.spellLevel)) {
+      throw new Error("Spell Slot levels must be unique.");
+    }
+    spellSlotLevels.add(slot.spellLevel);
+  }
+
+  const spellSlotExpenditures =
+    input.spellSlotExpenditures ??
+    input.spellSlots.map((slot) => ({
+      spellLevel: slot.spellLevel,
+      expended: 0,
+    }));
+  if (spellSlotExpenditures.length !== input.spellSlots.length) {
+    throw new Error("Spell Slot expenditure state must match slot capacity.");
+  }
+  const expenditureLevels = new Set<number>();
+  for (const expenditure of spellSlotExpenditures) {
+    const capacity = input.spellSlots.find(
+      (slot) => slot.spellLevel === expenditure.spellLevel,
+    );
+    if (
+      capacity === undefined ||
+      expenditureLevels.has(expenditure.spellLevel)
+    ) {
+      throw new Error("Spell Slot expenditure state must match slot capacity.");
+    }
+    expenditureLevels.add(expenditure.spellLevel);
+    if (
+      !Number.isInteger(expenditure.expended) ||
+      expenditure.expended < 0 ||
+      expenditure.expended > capacity.count
+    ) {
+      throw new Error(
+        "Spell Slot expenditure must be an integer between zero and count.",
+      );
+    }
+  }
+
   return {
     spellcastingAbilityModifier: input.spellcastingAbilityModifier,
     proficiencyBonus: input.proficiencyBonus,
+    canCastSpells: input.canCastSpells,
     cantrips: input.cantrips,
     preparedSpells: input.preparedSpells,
-    spellSlots: input.spellSlots.map((slot) => ({ ...slot, expended: 0 })),
+    spellSlots: input.spellSlots.map((slot) => {
+      const expenditure = spellSlotExpenditures.find(
+        (candidate) => candidate.spellLevel === slot.spellLevel,
+      );
+      if (expenditure === undefined) {
+        throw new Error(
+          "Spell Slot expenditure state must match slot capacity.",
+        );
+      }
+      return { ...slot, expended: expenditure.expended };
+    }),
   };
 }
 
@@ -1458,7 +1525,7 @@ function actionSurgeRestriction(unit: UnitRecord | undefined) {
   return effect?.kind === "grant_extra_action" ? effect.restriction : null;
 }
 
-function supportedSpellActs(
+function discoverSupportedSpellActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly AvailableBattleAct[] {
@@ -1466,7 +1533,7 @@ function supportedSpellActs(
   if (actor?.origin.kind !== "character") {
     return [];
   }
-  return supportedSpellInvocations(actor).flatMap((invocation) => {
+  return supportedSpellActs(actor).flatMap((invocation) => {
     if (!spellHasAvailableSpend(actor, invocation)) {
       return [];
     }
@@ -1492,21 +1559,19 @@ function supportedSpellActs(
   });
 }
 
-function resolveSpellInvocation(
-  input: BattleResolutionInput,
-): BattleResolutionResult {
+function resolveSpellAct(input: BattleResolutionInput): BattleResolutionResult {
   if (input.subject.tag !== "srdAction" || input.subject.action !== "magic") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      "Spell Invocation resolution requires a Magic action subject.",
+      "Magic-action spell act resolution requires a Magic action subject.",
     );
   }
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellInvocations(actor).find(
+      ? supportedSpellActs(actor).find(
           (candidate) => candidate.spell.id === subject.spellId,
         )
       : undefined;
@@ -1514,14 +1579,14 @@ function resolveSpellInvocation(
     return invalidResult(
       input.state,
       "unsupportedSurfaceShape",
-      "Spell Invocation requires a supported prepared spell or cantrip.",
+      "Magic-action spell act requires a supported prepared spell or cantrip.",
     );
   }
   if (!spellHasAvailableSpend(actor, invocation)) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Spell Invocation no longer has its required runtime spell resource.",
+      "Magic-action spell act no longer has its required runtime spell resource.",
     );
   }
 
@@ -1880,14 +1945,14 @@ function damageAmountAfterTargetAdjustments(
     : afterResistance;
 }
 
-function supportedSpellInvocations(
+function supportedSpellActs(
   actor: BattleCreatureState,
-): readonly SupportedSpellInvocation[] {
+): readonly SupportedSpellAct[] {
   if (actor.origin.kind !== "character") {
     return [];
   }
   const spellcasting = actor.origin.spellcasting;
-  if (spellcasting === undefined) {
+  if (spellcasting === undefined || !spellcasting.canCastSpells) {
     return [];
   }
 
@@ -1907,7 +1972,7 @@ function supportedSpellInvocations(
 
 function supportedPreparedSlotSpell(
   spell: SpellRecord,
-): readonly SupportedSpellInvocation[] {
+): readonly SupportedSpellAct[] {
   if (spell.id !== "magic_missile" || spell.mechanics.family !== "activation") {
     return [];
   }
@@ -1959,7 +2024,7 @@ function supportedCantripSpellAttack(
   spell: SpellRecord,
   spellcastingAbilityModifier: number,
   proficiencyBonus: ProficiencyBonusType,
-): readonly SupportedSpellInvocation[] {
+): readonly SupportedSpellAct[] {
   if (spell.id !== "ray_of_frost" || spell.mechanics.family !== "activation") {
     return [];
   }
@@ -2046,7 +2111,7 @@ function supportedDamageAmountExpr(amount: {
 
 function spellHasAvailableSpend(
   actor: BattleCreatureState,
-  invocation: SupportedSpellInvocation,
+  invocation: SupportedSpellAct,
 ): boolean {
   if (actor.origin.kind !== "character") {
     return false;
@@ -2065,7 +2130,7 @@ function spellHasAvailableSpend(
 function spellTargetHole(
   state: BattleState,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: SupportedSpellAct,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
@@ -2086,7 +2151,7 @@ function spellTargetIsLegal(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: SupportedSpellAct,
 ): boolean {
   const distanceFeet = combatantDistanceFeet(state, actorId, targetId);
   return distanceFeet !== undefined && distanceFeet <= invocation.rangeFeet;
@@ -2094,7 +2159,7 @@ function spellTargetIsLegal(
 
 function spellAttackRollHole(
   invocation: Extract<
-    SupportedSpellInvocation,
+    SupportedSpellAct,
     { readonly kind: "cantripSpellAttack" }
   >,
 ): BattleSpellAttackRollHole {
@@ -2109,7 +2174,7 @@ function spellAttackRollHole(
 }
 
 function spellDamageHole(
-  invocation: SupportedSpellInvocation,
+  invocation: SupportedSpellAct,
   critical = false,
 ): BattleSpellDamageRollHole {
   const expr = spellDamageExpression(invocation, critical);
@@ -2127,13 +2192,13 @@ function spellDamageHole(
 
 function validateSpellDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  invocation: SupportedSpellInvocation,
+  invocation: SupportedSpellAct,
   critical: boolean,
 ): string | null {
   if (fill.holeId !== spellDamageHole(invocation, critical).holeId) {
     return critical
       ? "Critical hit spell damage must use the critical spell damage hole."
-      : "Spell damage must use the selected Spell Invocation damage hole.";
+      : "Spell damage must use the selected Magic-action spell act damage hole.";
   }
   const validation = validateRolledDiceForDiceExpr(fill.value, {
     dice:
@@ -2148,7 +2213,7 @@ function validateSpellDamageFill(
 function applySpellDamage(
   state: BattleState,
   targetId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: SupportedSpellAct,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   critical: boolean,
 ): BattleState {
@@ -2191,7 +2256,7 @@ function applySpellActiveEffects(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: SupportedSpellAct,
 ): BattleState {
   if (invocation.kind !== "cantripSpellAttack") {
     return state;
@@ -2254,7 +2319,7 @@ function expendSpellSlot(
 }
 
 function spellDamageExpression(
-  invocation: SupportedSpellInvocation,
+  invocation: SupportedSpellAct,
   critical = false,
 ): string {
   const dice =

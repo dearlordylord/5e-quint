@@ -3,7 +3,9 @@ import { snapshotBattle } from "@dnd/battle-runtime";
 import { startBattleFromCharacterBuildsAndStatBlock } from "./battle-creature-init.ts";
 import { battleStateProjection } from "./battle-state-projection.ts";
 import { isBattleToolError } from "./battle-tool-input.ts";
+import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
+import { characterBattleSpellSlots } from "./session-store.ts";
 import {
   decodeStartBattleArgs,
   type StartBattleToolInput,
@@ -36,10 +38,10 @@ export function handleStartBattleToolCall(
   );
   if (missingCharacter !== undefined) {
     return errorContent(
-      `Unknown finalized character session: ${missingCharacter.character.sheetDraftId}`,
+      `Unknown finalized character session: ${missingCharacter.character.sourceDraftId}`,
       {
-        code: "UNKNOWN_FINALIZED_CHARACTER_SHEET",
-        sheetDraftId: missingCharacter.character.sheetDraftId,
+        code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
+        sourceDraftId: missingCharacter.character.sourceDraftId,
       },
     );
   }
@@ -50,7 +52,7 @@ export function handleStartBattleToolCall(
   if (unavailableCharacter?.session?.tag === "inBattle") {
     return errorContent("Character is already assigned to a battle.", {
       code: "CHARACTER_ALREADY_IN_BATTLE",
-      sheetDraftId: unavailableCharacter.character.sheetDraftId,
+      sourceDraftId: unavailableCharacter.character.sourceDraftId,
       battleId: unavailableCharacter.session.battleId,
     });
   }
@@ -72,10 +74,14 @@ export function handleStartBattleToolCall(
         return {
           combatantId: character.combatantId,
           characterId: character.characterId,
-          displayName: character.displayName,
+          displayName: characterBuildDisplayName(
+            root.unitLibrary,
+            session.build,
+          ),
           build: session.build,
           initiative: character.initiative,
           currentHp: session.currentHp,
+          spellSlots: characterBattleSpellSlots(session),
         };
       }),
       statBlockBattleInput: {
@@ -95,7 +101,7 @@ export function handleStartBattleToolCall(
     root.sessionStore.transientBattleFills = null;
     for (const { character, session } of characterSessions) {
       if (session?.tag !== "available") continue;
-      root.sessionStore.characters.set(character.sheetDraftId, {
+      root.sessionStore.characters.set(character.sourceDraftId, {
         tag: "inBattle",
         build: session.build,
         battleId: decoded.battleId,
@@ -120,26 +126,9 @@ function startBattleCharacterSessions(
   root: McpCompositionRoot,
   decoded: StartBattleToolInput,
 ) {
-  const characterInputs = [
-    {
-      sheetDraftId: decoded.sheetDraftId,
-      combatantId: decoded.characterCombatantId,
-      characterId: decoded.characterId,
-      displayName: decoded.characterDisplayName,
-      initiative: decoded.characterInitiative,
-    },
-    ...decoded.additionalCharacters.map((character) => ({
-      sheetDraftId: character.sheetDraftId,
-      combatantId: character.characterCombatantId,
-      characterId: character.characterId,
-      displayName: character.characterDisplayName,
-      initiative: character.characterInitiative,
-    })),
-  ];
-
-  return characterInputs.map((character) => ({
+  return decoded.characters.map((character) => ({
     character,
-    session: root.sessionStore.characters.get(character.sheetDraftId),
+    session: root.sessionStore.characters.get(character.sourceDraftId),
   }));
 }
 
@@ -151,17 +140,14 @@ function duplicateStartBattleInputContent(
   characters: readonly StartBattleCharacterInput[],
   statBlockCombatantId: StartBattleToolInput["statBlockCombatantId"],
 ) {
-  const duplicateSheetDraftId = firstDuplicate(
-    characters.map((character) => character.sheetDraftId),
+  const duplicateSourceDraftId = firstDuplicate(
+    characters.map((character) => character.sourceDraftId),
   );
-  if (duplicateSheetDraftId !== null) {
-    return errorContent(
-      "Duplicate finalized character sheet in battle start.",
-      {
-        code: "DUPLICATE_BATTLE_CHARACTER_SHEET",
-        sheetDraftId: duplicateSheetDraftId,
-      },
-    );
+  if (duplicateSourceDraftId !== null) {
+    return errorContent("Duplicate source draft id in battle start.", {
+      code: "DUPLICATE_BATTLE_SOURCE_DRAFT_ID",
+      sourceDraftId: duplicateSourceDraftId,
+    });
   }
 
   const duplicateCharacterId = firstDuplicate(

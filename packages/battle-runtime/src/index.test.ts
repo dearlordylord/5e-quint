@@ -163,6 +163,85 @@ describe("battle runtime", () => {
     ).toThrow("Battle initialization current HP exceeds max HP.");
   });
 
+  test("startBattle rejects fractional expended Spell Slots", () => {
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-fractional-spell-slot"),
+        combatants: [
+          characterSeed({
+            initiative: 12,
+            spellcasting: {
+              ...wizardSpellcasting(),
+              spellSlotExpenditures: [{ spellLevel: 1, expended: 0.5 }],
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).toThrow(
+      "Spell Slot expenditure must be an integer between zero and count.",
+    );
+  });
+
+  test("startBattle rejects invalid Spell Slot level and count", () => {
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-fractional-spell-slot-count"),
+        combatants: [
+          characterSeed({
+            initiative: 12,
+            spellcasting: {
+              ...wizardSpellcasting(),
+              spellSlots: [{ spellLevel: 1, count: 1.5 }],
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).toThrow(
+      "Spell Slot level must be 1-9 and count must be a non-negative integer.",
+    );
+
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-invalid-spell-slot-level"),
+        combatants: [
+          characterSeed({
+            initiative: 12,
+            spellcasting: {
+              ...wizardSpellcasting(),
+              spellSlots: [{ spellLevel: 10, count: 1 }],
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).toThrow(
+      "Spell Slot level must be 1-9 and count must be a non-negative integer.",
+    );
+  });
+
+  test("startBattle rejects duplicate Spell Slot levels", () => {
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-duplicate-spell-slot-level"),
+        combatants: [
+          characterSeed({
+            initiative: 12,
+            spellcasting: {
+              ...wizardSpellcasting(),
+              spellSlots: [
+                { spellLevel: 1, count: 2 },
+                { spellLevel: 1, count: 1 },
+              ],
+            },
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).toThrow("Spell Slot levels must be unique.");
+  });
+
   test("discoverBattleActs exposes only attack and endTurn for the current actor", () => {
     const acts = discoverBattleActs(
       startBattle({
@@ -1593,7 +1672,7 @@ describe("battle runtime", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
-  test("Wizard Spell Invocations spend slots for prepared level-1 spells but not cantrips", () => {
+  test("Wizard Magic-action spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     expect(
       discoverBattleActs(magicMissileState).map((act) => act.subject),
@@ -2187,7 +2266,7 @@ function runQuintSliceSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("22 passing");
+  expect(quintOutput).toContain("23 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -2766,6 +2845,7 @@ function wizardSpellcasting(): NonNullable<
   return {
     spellcastingAbilityModifier: 3,
     proficiencyBonus: proficiencyBonus(2),
+    canCastSpells: true,
     cantrips: [spellRecord("ray_of_frost")],
     preparedSpells: [spellRecord("magic_missile")],
     spellSlots: [{ spellLevel: 1, count: 2 }],

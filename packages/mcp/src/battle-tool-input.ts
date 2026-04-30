@@ -194,6 +194,12 @@ function decodeBattleSubject(
   if (isToolError(actorId)) return actorId;
 
   if (value.tag === "unitFeature") {
+    const exact = assertExactFields(value, toolName, field, [
+      "tag",
+      "actorId",
+      "unitId",
+    ]);
+    if (isToolError(exact)) return exact;
     if (typeof value.unitId !== "string" || value.unitId.trim() === "") {
       return invalidFieldContent(
         toolName,
@@ -204,8 +210,28 @@ function decodeBattleSubject(
     return { tag: "unitFeature", actorId, unitId: value.unitId };
   }
 
+  if (value.tag === "runtimeCommand") {
+    const exact = assertExactFields(value, toolName, field, [
+      "tag",
+      "actorId",
+      "command",
+    ]);
+    if (isToolError(exact)) return exact;
+    if (value.command !== "endTurn") {
+      return invalidFieldContent(toolName, `${field}.command`, "endTurn");
+    }
+    return { tag: "runtimeCommand", actorId, command: "endTurn" };
+  }
+
   if (value.tag === "srdAction") {
     if (value.action === "attack") {
+      const exact = assertExactFields(value, toolName, field, [
+        "tag",
+        "actorId",
+        "action",
+        "attackName",
+      ]);
+      if (isToolError(exact)) return exact;
       if (
         typeof value.attackName !== "string" ||
         value.attackName.trim() === ""
@@ -224,6 +250,13 @@ function decodeBattleSubject(
       };
     }
     if (value.action === "magic") {
+      const exact = assertExactFields(value, toolName, field, [
+        "tag",
+        "actorId",
+        "action",
+        "spellId",
+      ]);
+      if (isToolError(exact)) return exact;
       if (typeof value.spellId !== "string" || value.spellId.trim() === "") {
         return invalidFieldContent(
           toolName,
@@ -244,8 +277,22 @@ function decodeBattleSubject(
   return invalidFieldContent(
     toolName,
     `${field}.tag`,
-    "srdAction or unitFeature",
+    "srdAction, unitFeature, or runtimeCommand",
   );
+}
+
+function assertExactFields(
+  record: Readonly<Record<string, unknown>>,
+  toolName: string,
+  field: string,
+  allowedFields: readonly string[],
+): ToolError | null {
+  for (const key of Object.keys(record)) {
+    if (!allowedFields.includes(key)) {
+      return invalidFieldContent(toolName, `${field}.${key}`, "no field");
+    }
+  }
+  return null;
 }
 
 function decodeSubjectActorId(

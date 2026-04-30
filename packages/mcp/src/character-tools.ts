@@ -3,15 +3,19 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
-  type CharacterBuild,
   type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 
+import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
-import type { CharacterSession } from "./session-store.ts";
+import {
+  availableCharacterSession,
+  characterBattleSpellSlots,
+  type CharacterSession,
+} from "./session-store.ts";
 import {
   createCharacterDraftInputSchema,
   decodeCreateCharacterDraftArgs,
@@ -45,7 +49,7 @@ export const characterToolDefinitions = [
   {
     name: "finalize_character",
     description:
-      "Finalize a complete supported minimal Fighter draft. A ready finalization stores the resulting character session by source draft id and removes the active draft.",
+      "Finalize a complete supported character draft. A ready finalization stores the resulting character session by source draft id and removes the active draft.",
     inputSchema: draftIdInputSchema,
   },
   {
@@ -93,7 +97,7 @@ export function handleCharacterToolCall(
       return duplicateDraftIdContent(draft.draftId, "activeDraft");
     }
     if (root.sessionStore.characters.has(draft.draftId)) {
-      return duplicateDraftIdContent(draft.draftId, "finalizedSheet");
+      return duplicateDraftIdContent(draft.draftId, "finalizedSession");
     }
     root.sessionStore.drafts.set(draft.draftId, draft);
     return jsonContent(creationDraftPayload(root, draft));
@@ -154,11 +158,13 @@ export function handleCharacterToolCall(
       unitLibrary: root.unitLibrary,
     });
     if (finalization.tag === "ready") {
-      root.sessionStore.characters.set(draftId, {
-        tag: "available",
-        build: finalization.build,
-        currentHp: Hp(finalization.build.hitPoints.maximum),
-      });
+      root.sessionStore.characters.set(
+        draftId,
+        availableCharacterSession({
+          build: finalization.build,
+          currentHp: Hp(finalization.build.hitPoints.maximum),
+        }),
+      );
       root.sessionStore.drafts.delete(draftId);
     }
 
@@ -185,7 +191,7 @@ function unknownDraftContent(draftId: CharacterDraftId) {
 
 function duplicateDraftIdContent(
   draftId: CharacterDraftId,
-  existingOwner: "activeDraft" | "finalizedSheet",
+  existingOwner: "activeDraft" | "finalizedSession",
 ) {
   return errorContent(`Character draft id already exists: ${draftId}`, {
     code: "DUPLICATE_CHARACTER_DRAFT_ID",
@@ -224,6 +230,9 @@ function characterListRow(
         current: session.currentHp,
         maximum: session.build.hitPoints.maximum,
       },
+      ...(characterBattleSpellSlots(session) === undefined
+        ? {}
+        : { spellSlots: characterBattleSpellSlots(session) }),
     };
   }
 
@@ -235,19 +244,6 @@ function characterListRow(
     battleId: session.battleId,
     characterId: session.characterId,
   };
-}
-
-function characterBuildDisplayName(
-  unitLibrary: UnitCatalog,
-  build: CharacterBuild,
-): string {
-  const speciesName = unitLibrary.requireUnit(build.species).name;
-  const backgroundName = unitLibrary.requireUnit(build.background).name;
-  const className = build.advancement.entries
-    .map((entry) => unitLibrary.requireUnit(entry.classUnitId).name)
-    .join("/");
-
-  return `${speciesName} ${backgroundName} ${className}`;
 }
 
 function decodeEmptyArgs(args: unknown, toolName: string) {
