@@ -11,7 +11,7 @@ const REPO_ROOT = "/workspace/typescript/dnd";
 const expectedTools = [
   "describe_mcp_workflow",
   "list_stat_blocks",
-  "list_supported_units",
+  "list_catalog_units",
   "create_character_draft",
   "discover_creation_holes",
   "fill_creation_holes",
@@ -34,7 +34,7 @@ const agentConversationScenarios = [
     agentReads:
       "The agent calls listTools and sees workflow guide, catalog discovery, create/discover/fill/finalize/list character tools plus select/start/read/discover/fill/resolve/end battle tools.",
     agentDecision:
-      "It first calls describe_mcp_workflow, list_supported_units, or list_stat_blocks as needed, then treats returned holes and battle subjects as the source of truth for sequencing.",
+      "It first calls describe_mcp_workflow, list_catalog_units, or list_stat_blocks as needed, then treats returned holes and battle subjects as the source of truth for sequencing.",
     executableCoverage: "verifyToolContract",
     insufficiency:
       "This is now discoverable through MCP. Every tool exposes codec-derived inputSchema and outputSchema, and responses include structuredContent.",
@@ -43,7 +43,7 @@ const agentConversationScenarios = [
     name: "Create a warrior 2nd level",
     userSays: "Create a warrior 2nd level.",
     agentReads:
-      "No tool accepts natural language character goals. The agent can call list_supported_units and see Fighter as class_fighter, but the workflow guide says MCP does not own synonym lists.",
+      "No tool accepts natural language character goals. The agent can call list_catalog_units and see Fighter as class_fighter, but the workflow guide says MCP does not own synonym lists.",
     agentDecision:
       "It should either ask whether 'warrior' means Fighter or proceed only if its product vocabulary maps warrior to Fighter. It then fills primary class, background, species, ability scores, languages, alignment, class advancement, class/background choices, equipment purchase, and loadout using optionIds returned by discover_creation_holes.",
     executableCoverage: "createAndFinalizeFighterTwo",
@@ -274,7 +274,7 @@ async function verifyToolContract(client: Client) {
   assert.ok((get(workflow, "lifecycle") as string[]).length > 0);
   assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
 
-  const units = await callTool(client, "list_supported_units", {});
+  const units = await callTool(client, "list_catalog_units", {});
   assert.ok(
     unitSummaries(units, "class").some((unit) => unit.id === "class_fighter"),
   );
@@ -864,6 +864,7 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
         "cc:unit:class_wizard:equipment_purchase",
         "weapon_longsword",
         "weapon_dagger",
+        "equipment_shield",
       ),
     ],
   });
@@ -871,6 +872,7 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
     draftId,
     expectedRevision: 4,
     fills: [
+      choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
       choiceFill(
         "cc:unit:weapon_longsword:loadout_weapon",
         "wielded_one_handed",

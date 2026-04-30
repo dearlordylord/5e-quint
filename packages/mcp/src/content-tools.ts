@@ -25,7 +25,7 @@ const UnitSummarySchema = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
 });
-const ListSupportedUnitsOutputSchema = Schema.Struct({
+const ListCatalogUnitsOutputSchema = Schema.Struct({
   unitsByKind: Schema.Record({
     key: Schema.String,
     value: Schema.Array(UnitSummarySchema),
@@ -69,8 +69,8 @@ const workflowGuideOutputSchema = mcpOutputJsonSchema(
 const listStatBlocksOutputSchema = mcpOutputJsonSchema(
   ListStatBlocksOutputSchema,
 );
-const listSupportedUnitsOutputSchema = mcpOutputJsonSchema(
-  ListSupportedUnitsOutputSchema,
+const listCatalogUnitsOutputSchema = mcpOutputJsonSchema(
+  ListCatalogUnitsOutputSchema,
 );
 
 export const contentToolDefinitions = [
@@ -89,11 +89,11 @@ export const contentToolDefinitions = [
     outputSchema: listStatBlocksOutputSchema,
   },
   {
-    name: "list_supported_units",
+    name: "list_catalog_units",
     description:
       "List installed Surface Unit ids grouped by kind. This is catalog discovery only; legal choices still come from creation holes and battle acts.",
     inputSchema: emptyInputSchema,
-    outputSchema: listSupportedUnitsOutputSchema,
+    outputSchema: listCatalogUnitsOutputSchema,
   },
 ] as const;
 
@@ -133,8 +133,8 @@ export function handleContentToolCall(
       next: "Call select_stat_block with one of these statBlockId values before start_battle.",
     });
   }
-  if (name === "list_supported_units") {
-    return schemaJsonContent(ListSupportedUnitsOutputSchema, {
+  if (name === "list_catalog_units") {
+    return schemaJsonContent(ListCatalogUnitsOutputSchema, {
       unitsByKind: groupUnitsByKind(root.unitLibrary.listUnits()),
       naturalLanguagePolicy:
         "Map user wording to returned Unit names and ids only when the intent is unambiguous. If a user says 'warrior', ask whether they mean Fighter before filling class_fighter.",
@@ -149,7 +149,7 @@ export function handleContentToolCall(
 function workflowGuide() {
   return {
     lifecycle: [
-      "Call list_supported_units for catalog ids or create_character_draft to discover currently legal character choices.",
+      "Call list_catalog_units for catalog ids or create_character_draft to discover currently legal character choices.",
       "Call create_character_draft, then fill only holeIds and optionIds returned in holes.",
       "After every accepted fill_creation_holes call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",

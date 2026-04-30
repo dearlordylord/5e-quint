@@ -11,6 +11,7 @@ import type {
   BattleSubject,
   CharacterId,
 } from "@dnd/battle-runtime";
+import { snapshotBattle } from "@dnd/battle-runtime";
 import type { Hp } from "@dnd/shared/types";
 import type {
   StatBlockCatalog,
@@ -179,8 +180,13 @@ export type McpSessionSnapshot = {
   readonly draftIds: readonly CharacterDraftId[];
   readonly sourceDraftIds: readonly CharacterDraftId[];
   readonly selectedStatBlockId: StatBlockId | null;
-  readonly battleState: BattleState | null;
+  readonly battleState: McpBattleSessionSnapshot | null;
   readonly transientBattleFills: BattleFillSession | null;
+};
+
+export type McpBattleSessionSnapshot = {
+  readonly battleId: BattleId;
+  readonly currentActorId: ReturnType<typeof snapshotBattle>["currentActorId"];
 };
 
 export type McpSessionStore = {
@@ -224,11 +230,21 @@ export function createMcpSessionStore(
         draftIds: Array.from(drafts.keys()),
         sourceDraftIds,
         selectedStatBlockId,
-        battleState: store.battleState,
+        battleState:
+          store.battleState === null
+            ? null
+            : battleSessionSnapshot(store.battleState),
         transientBattleFills: store.transientBattleFills,
       };
     },
   } satisfies McpSessionStore;
 
   return store;
+}
+
+function battleSessionSnapshot(state: BattleState): McpBattleSessionSnapshot {
+  return {
+    battleId: state.battleId,
+    currentActorId: snapshotBattle(state).currentActorId,
+  };
 }

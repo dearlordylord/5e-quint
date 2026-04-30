@@ -24,7 +24,7 @@ The Surface-runtime character-creation tool boundary exposes these user-facing t
 - `describe_mcp_workflow` returns the agent-facing lifecycle, accepted fill
   examples, result paths, recovery rules, and current slice limits. This tool
   has an Effect Schema-derived output schema and returns structured content.
-- `list_supported_units` lists installed Surface Unit ids grouped by kind for
+- `list_catalog_units` lists installed Surface Unit ids grouped by kind for
   discovery. These ids are catalog facts, not MCP-local support lists; legal
   character choices still come from `discover_creation_holes`.
 - `list_stat_blocks` lists selectable SRD Stat Block ids, display names,

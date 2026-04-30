@@ -111,7 +111,10 @@ describe("MCP server route", () => {
     });
     expect(state.combatants.get(fighterId)?.initiative).toBe(12);
     expect(state.combatants.get(goblinId)?.initiative).toBe(11);
-    expect(root.sessionStore.snapshot().battleState).toBe(state);
+    expect(root.sessionStore.snapshot().battleState).toEqual({
+      battleId: "battle-root",
+      currentActorId: fighterId,
+    });
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
   });
 
@@ -151,7 +154,7 @@ describe("MCP server route", () => {
     expect(contentToolDefinitions.map((tool) => tool.name)).toEqual([
       "describe_mcp_workflow",
       "list_stat_blocks",
-      "list_supported_units",
+      "list_catalog_units",
     ]);
   });
 
@@ -195,7 +198,7 @@ describe("MCP server route", () => {
       },
     });
 
-    const units = readPayload(handleToolCall(root, "list_supported_units", {}));
+    const units = readPayload(handleToolCall(root, "list_catalog_units", {}));
     expect(units.unitsByKind.class).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "class_fighter", name: "Fighter" }),
@@ -311,7 +314,10 @@ describe("MCP server route", () => {
       },
       session: {
         selectedStatBlockId: "stat_block_goblin_warrior",
-        battleState: {},
+        battleState: {
+          battleId: "battle:mcp-shell",
+          currentActorId: "fighter",
+        },
         transientBattleFills: null,
       },
     });
@@ -1465,7 +1471,7 @@ describe("MCP server route", () => {
     );
   });
 
-  test("keeps spell slots but suppresses Magic-action spell acts when shield training blocks casting", () => {
+  test("keeps spell acts when only shield training is missing", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const state = startBattleFromCharacterBuildAndStatBlock({
@@ -1505,11 +1511,9 @@ describe("MCP server route", () => {
     expect(actor?.origin.kind).toBe("character");
     if (actor?.origin.kind !== "character") return;
     expect(actor.origin.spellcasting).toMatchObject({
-      canCastSpells: false,
+      canCastSpells: true,
     });
-    expect(
-      discoverBattleActs(state).map((act) => act.subject),
-    ).not.toContainEqual(
+    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual(
       expect.objectContaining({ tag: "srdAction", action: "magic" }),
     );
   });

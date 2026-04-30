@@ -320,12 +320,23 @@ function battleResolutionPayload(
   result: BattleResolutionResult,
 ) {
   return {
-    result,
+    result: battleResolutionResultPayload(result),
     battleState:
       result.tag === "resolved" ? battleStateProjection(result.state) : null,
     snapshot: result.snapshot,
     session: root.sessionStore.snapshot(),
   };
+}
+
+function battleResolutionResultPayload(result: BattleResolutionResult) {
+  if (result.tag === "resolved") {
+    return {
+      tag: result.tag,
+      snapshot: result.snapshot,
+    };
+  }
+
+  return result;
 }
 
 function noStoredBattleContent() {
