@@ -62,13 +62,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 4,
       "id": "CAM18A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add MCP Battle Session Shell"
     },
     {
       "number": 5,
       "id": "CAM18B",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add MCP Fighter Battle Flow"
     },
     {
@@ -179,8 +179,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 1     | POST0 - Reconsider Post-CAM Width Plan After CAM16A              | done                                          | CAM16A             | POST1        | Rewrote the mandatory post-CAM width queue around CAM16A's support-profile boundary.                                                                                                             | Completed.                                                                  |
 | 2     | POST1 - Research First Width Slice RAW And Corpus                | done                                          | POST0              | POST2        | Confirmed Fighter 2 + Wizard 1 and selected Skeleton as the second SRD Stat Block pressure case, with deterministic scenario and POST2-POST5 scope recorded below.                               | Completed; POST2 remains blocked by CAM21.                                  |
 | 3     | CAM17 - Add MCP Character Creation Tools                         | done                                          | CAM16A             | CAM18A       | Added green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                | Completed.                                                                  |
-| 4     | CAM18A - Add MCP Battle Session Shell                            | ready-for-implementation-after-light-research | CAM17              | CAM18B       | Add green MCP tools for selecting a Stat Block, starting battle with explicit Initiative, storing battle session state, and returning battle state/snapshot.                                     | Ready after MCP green battle-session architecture check.                    |
-| 5     | CAM18B - Add MCP Fighter Battle Flow                             | blocked                                       | CAM18A             | CAM18C       | Drive Fighter battle acts through MCP: discover Attack/End Turn, resolve target/attack-roll/damage fills, store returned BattleState, clear transient fills, and End Turn.                       | Blocker Type: dependency. Blocker Detail: waits on battle session shell.    |
+| 4     | CAM18A - Add MCP Battle Session Shell                            | done                                          | CAM17              | CAM18B       | Added green MCP tools for selecting a Stat Block, starting battle with explicit Initiative, storing battle session state, and returning battle state/snapshot.                                   | Completed.                                                                  |
+| 5     | CAM18B - Add MCP Fighter Battle Flow                             | ready-for-implementation-after-light-research | CAM18A             | CAM18C       | Drive Fighter battle acts through MCP: discover Attack/End Turn, resolve target/attack-roll/damage fills, store returned BattleState, clear transient fills, and End Turn.                       | Ready after MCP green battle-session shell implementation.                  |
 | 6     | CAM18C - Add Goblin Warrior Attack Support                       | blocked                                       | CAM18B             | CAM18D       | Derive Goblin Warrior attacks from authored StatBlockRecord and resolve Goblin Attack through the same battle flow without a second attack IR.                                                   | Blocker Type: dependency. Blocker Detail: waits on Fighter MCP battle flow. |
 | 7     | CAM18D - Add Full Green Vertical Fixture                         | blocked                                       | CAM18C             | CAM18E       | Add the full MCP-only green fixture: create/finalize Fighter, select Goblin Warrior, start battle, Fighter attacks, End Turn, and Goblin attacks.                                                | Blocker Type: dependency. Blocker Detail: waits on both combatant flows.    |
 | 8     | CAM18E - Add Post-Battle Character State Handoff                 | blocked                                       | CAM18D             | CAM19A       | Add explicit end-battle/finalize-battle handoff and character-list read model showing post-battle facts such as reduced current HP.                                                              | Blocker Type: dependency. Blocker Detail: waits on full green fixture.      |
@@ -532,7 +532,7 @@ Plan Impact:
 
 ### Task 4 - CAM18A - Add MCP Battle Session Shell
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM17
 Blocks: CAM18B
@@ -598,17 +598,15 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM18B.
+- Status: applied.
+- CAM18B: unblocked for MCP Fighter battle flow implementation.
 
 ### Task 5 - CAM18B - Add MCP Fighter Battle Flow
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM18A
 Blocks: CAM18C
-
-Blocker Type: dependency
-Blocker Detail: waits on battle session shell.
 
 Input:
 

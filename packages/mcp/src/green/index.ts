@@ -19,3 +19,9 @@ export {
   isGreenCharacterToolName,
   type GreenCharacterToolResult,
 } from "./character-tools.ts";
+export {
+  greenBattleToolDefinitions,
+  handleGreenBattleToolCall,
+  isGreenBattleToolName,
+  type GreenBattleToolResult,
+} from "./battle-tools.ts";

@@ -33,6 +33,11 @@ Callers construct `BattleCreatureInit[]` outside this package, then call
 `startBattle`. Character Build to battle-init mapping and Stat Block catalog
 selection happen before this package is called.
 
+Every `BattleCreatureInit` contains a caller-supplied Initiative score.
+`@dnd/battle-runtime` orders combatants by those scores; it does not roll
+Initiative, choose passive Initiative scores, or derive monster Initiative from
+Stat Block modifiers during battle initialization.
+
 `@dnd/battle-runtime` must not import `@dnd/character-creation-runtime` or Core
 engine packages. Character Build to battle initialization mapping belongs to the
 application composition layer. Stat Block selection and catalog ownership also
@@ -89,8 +94,9 @@ This package supports:
 Initialization:
 
 - start battle from caller-built creature initialization inputs;
-- derive Initiative order, current actor, Hit Points, Armor Class, and zero-HP
-  lifecycle policy.
+- derive Initiative order and current actor from caller-supplied Initiative
+  scores;
+- derive Hit Points, Armor Class, and zero-HP lifecycle policy.
 
 Turn flow:
 

@@ -24,10 +24,13 @@ import { Hp } from "@dnd/shared/types";
 
 import {
   createGreenMcpCompositionRoot,
+  greenBattleToolDefinitions,
   greenCharacterToolDefinitions,
+  handleGreenBattleToolCall,
   handleGreenCharacterToolCall,
   startBattleFromCharacterBuildAndStatBlock,
 } from "./index.ts";
+import type { GreenBattleToolResult } from "./battle-tools.ts";
 import type { GreenCharacterToolResult } from "./character-tools.ts";
 
 const fighterId = combatantId("fighter");
@@ -76,6 +79,7 @@ describe("MCP green composition root", () => {
         statBlock: root.statBlockCatalog.requireStatBlock(
           "stat_block_goblin_warrior",
         ),
+        initiative: initiativeScore(11),
       },
       unitLibrary: root.unitLibrary,
     });
@@ -103,7 +107,7 @@ describe("MCP green composition root", () => {
       ],
     });
     expect(state.combatants.get(fighterId)?.initiative).toBe(12);
-    expect(state.combatants.get(goblinId)?.initiative).toBe(12);
+    expect(state.combatants.get(goblinId)?.initiative).toBe(11);
     expect(root.sessionStore.snapshot().battleState).toBe(state);
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
   });
@@ -115,6 +119,134 @@ describe("MCP green composition root", () => {
       "fill_creation_holes",
       "finalize_character",
     ]);
+  });
+
+  test("registers partial Surface-runtime battle shell tool names", () => {
+    expect(greenBattleToolDefinitions.map((tool) => tool.name)).toEqual([
+      "select_stat_block",
+      "start_battle",
+      "read_battle_state",
+    ]);
+  });
+
+  test("selects Goblin Warrior and starts a stored partial battle shell through tools", () => {
+    const root = createGreenMcpCompositionRoot();
+    const draftId = "draft:mcp-green-battle-shell";
+    createFinalizedFighterSheet(root, draftId);
+
+    const selected = readPayload(
+      handleGreenBattleToolCall(root, "select_stat_block", {
+        statBlockId: "stat_block_goblin_warrior",
+      }),
+    );
+    expect(selected).toMatchObject({
+      selectedStatBlock: {
+        id: "stat_block_goblin_warrior",
+        provenance: { kind: "srd-5.2.1" },
+      },
+      session: { selectedStatBlockId: "stat_block_goblin_warrior" },
+    });
+
+    const started = readPayload(
+      handleGreenBattleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-green-shell",
+        sheetDraftId: draftId,
+        characterCombatantId: "fighter",
+        characterId: "character:fighter",
+        characterDisplayName: "Orc Soldier Fighter",
+        characterInitiative: 18,
+        statBlockCombatantId: "goblin",
+        statBlockInitiative: 7,
+      }),
+    );
+
+    expect(root.sessionStore.battleState).not.toBeNull();
+    expect(
+      root.sessionStore.battleState?.combatants.get(goblinId),
+    ).toMatchObject({
+      displayName: "Goblin Warrior",
+      initiative: 7,
+      hp: 10,
+    });
+    expect(started).toMatchObject({
+      battleState: {
+        battleId: "battle:mcp-green-shell",
+        combatants: [
+          {
+            combatantId: "fighter",
+            originKind: "character",
+            initiative: 18,
+          },
+          {
+            combatantId: "goblin",
+            originKind: "statBlock",
+            initiative: 7,
+          },
+        ],
+      },
+      snapshot: {
+        battleId: "battle:mcp-green-shell",
+        currentActorId: "fighter",
+        turnOrder: ["fighter", "goblin"],
+      },
+      session: {
+        selectedStatBlockId: "stat_block_goblin_warrior",
+        battleState: {},
+        transientBattleFills: null,
+      },
+    });
+
+    const read = readPayload(
+      handleGreenBattleToolCall(root, "read_battle_state", {}),
+    );
+    expect(read.snapshot).toMatchObject({
+      battleId: "battle:mcp-green-shell",
+      currentActorId: "fighter",
+      combatants: [
+        {
+          combatantId: "fighter",
+          displayName: "Orc Soldier Fighter",
+        },
+        {
+          combatantId: "goblin",
+          displayName: "Goblin Warrior",
+        },
+      ],
+    });
+    expect(read.snapshot.acts).toBeUndefined();
+    expect(read.battleState.combatants).toHaveLength(2);
+  });
+
+  test("start_battle rejects missing caller-supplied Initiative scores", () => {
+    const root = createGreenMcpCompositionRoot();
+    const draftId = "draft:mcp-green-battle-shell-missing-initiative";
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleGreenBattleToolCall(root, "select_stat_block", {
+        statBlockId: "stat_block_goblin_warrior",
+      }),
+    );
+
+    const rejected = readPayload(
+      handleGreenBattleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-green-shell-missing-initiative",
+        sheetDraftId: draftId,
+        characterCombatantId: "fighter",
+        characterId: "character:fighter",
+        characterDisplayName: "Orc Soldier Fighter",
+        characterInitiative: 18,
+        statBlockCombatantId: "goblin",
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "INVALID_FIELD",
+        field: "statBlockInitiative",
+        expected: "integer Initiative score",
+      },
+    });
+    expect(root.sessionStore.battleState).toBeNull();
   });
 
   test("creates and finalizes the minimal Fighter through stored creation holes", () => {
@@ -351,6 +483,7 @@ describe("MCP green composition root", () => {
         statBlock: root.statBlockCatalog.requireStatBlock(
           "stat_block_goblin_warrior",
         ),
+        initiative: initiativeScore(10),
       },
       unitLibrary: root.unitLibrary,
     });
@@ -380,6 +513,7 @@ describe("MCP green composition root", () => {
           statBlock: root.statBlockCatalog.requireStatBlock(
             "stat_block_goblin_warrior",
           ),
+          initiative: initiativeScore(10),
         },
         unitLibrary: root.unitLibrary,
       }),
@@ -399,6 +533,15 @@ function fighterCharacterBuild(
   }
 
   return result.build;
+}
+
+function createFinalizedFighterSheet(
+  root: ReturnType<typeof createGreenMcpCompositionRoot>,
+  draftId: string,
+): CharacterBuild {
+  const build = fighterCharacterBuild(root.unitLibrary);
+  root.sessionStore.sheets.set(characterDraftId(draftId), build);
+  return build;
 }
 
 function createTestDraft(draftId: string): CharacterDraft {
@@ -562,6 +705,8 @@ function fillThroughTool(
   );
 }
 
-function readPayload(response: GreenCharacterToolResult) {
+function readPayload(
+  response: GreenCharacterToolResult | GreenBattleToolResult,
+) {
   return JSON.parse(response.content[0]?.text ?? "null");
 }

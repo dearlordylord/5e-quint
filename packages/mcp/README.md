@@ -37,6 +37,20 @@ These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
 character helpers in the Surface-runtime path.
 
+The green battle-session shell exposes these user-facing tools:
+
+- `select_stat_block` selects a Stat Block from the Surface SRD Stat Block
+  catalog and stores only that Stat Block id in the session.
+- `start_battle` starts a partial battle session from one finalized character
+  sheet and the selected Stat Block. The caller supplies the Initiative scores
+  for both combatants.
+- `read_battle_state` returns the stored `BattleState` projection and current
+  battle shell snapshot without battle act discovery.
+
+This is a partial battle session shell. It initializes and stores the battle,
+but it does not expose attack discovery, attack fills, attack resolution, or
+End Turn through MCP yet.
+
 Selected Stat Block state stores only the catalog Stat Block id. The full Stat
 Block record is resolved through the green root's installed `statBlockCatalog`,
 so MCP session state cannot drift from the SRD stat-block catalog.

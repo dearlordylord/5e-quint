@@ -14,7 +14,7 @@ behavior.
 flowchart TD
   CharacterBuild["Character Build + selected Unit refs<br/>owner: composition layer<br/>why: finalized PC facts enter battle without importing character creation"]
   StatBlock["StatBlockRecord<br/>owner: @dnd/surface catalog/composition<br/>why: monster/NPC authored facts enter battle without Core catalogs"]
-  Init["BattleCreatureInit[]<br/>input to startBattle<br/>why: one-time battle initialization boundary<br/>without: battle would import source package state directly"]
+  Init["BattleCreatureInit[]<br/>input to startBattle; includes caller-supplied Initiative scores<br/>why: one-time battle initialization boundary<br/>without: battle would import source package state directly"]
   State["BattleState<br/>data: battle id, initiative, combatants, current-turn resources<br/>why: durable legality/replay input<br/>without: discovery and resolution would not share one combat snapshot"]
   Creature["BattleCreatureState<br/>data: HP, temp HP, AC state, conditions, zero-HP lifecycle, origin<br/>why: shared combat view for Character-derived and Stat Block-derived creatures<br/>without: runtime branches on source objects instead of combat facts"]
   Origin["origin<br/>data: Character or Stat Block origin facts retained for supported act discovery<br/>why: source attribution without a second executable content language<br/>without: battle either loses selected capability facts or imports source package state"]
@@ -84,6 +84,8 @@ flowchart TD
 
 - Public subjects are `srdAction.attack` and `runtimeCommand.endTurn`.
 - Fills are caller/session state, not durable `BattleState`.
+- Initiative scores are caller-supplied in `BattleCreatureInit`; this runtime
+  orders turns from those scores but does not derive them from Stat Blocks.
 - Attack replay uses target, attack-roll, and on-hit damage holes.
 - Stat Block-derived creatures can be initialized and damaged, but Stat Block
   attack actions are not implemented yet.

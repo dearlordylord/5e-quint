@@ -88,10 +88,7 @@ const CharacterId = Brand.nominal<CharacterId>();
 export const characterId: (value: string) => CharacterId = CharacterId;
 
 export type InitiativeScore = Initiative & Brand.Brand<"InitiativeScore">;
-const InitiativeScore = Brand.all(
-  Initiative,
-  Brand.nominal<InitiativeScore>(),
-);
+const InitiativeScore = Brand.all(Initiative, Brand.nominal<InitiativeScore>());
 export const initiativeScore: (value: number) => InitiativeScore =
   InitiativeScore;
 
@@ -146,6 +143,7 @@ export type CharacterBattleCreatureInit = {
 export type StatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
+  readonly initiative: InitiativeScore;
   // defaults to max
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
@@ -638,7 +636,7 @@ export function battleCreatureInitFromStatBlock(
   return {
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
-    initiative: statBlockInitiativeScore(input.statBlock),
+    initiative: input.initiative,
     creatureInit: {
       kind: "statBlock",
       statBlock: input.statBlock,
@@ -652,14 +650,6 @@ export function battleCreatureInitFromStatBlock(
 
 export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);
-}
-
-function statBlockInitiativeScore(statBlock: StatBlockRecord): InitiativeScore {
-  return initiativeScore(
-    10 +
-      (statBlock.statBlock.initiativeModifier ??
-        scoreModifier(statBlock.statBlock.abilityScores.dex)),
-  );
 }
 
 function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
