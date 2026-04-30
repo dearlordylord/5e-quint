@@ -66,8 +66,8 @@ The Surface-runtime battle-session path exposes these user-facing tools:
   session, clears battle state, and leaves monster combatants behind in the
   closed battle.
 
-The current verified Surface-runtime vertical is Orc Soldier Fighter versus Goblin
-Warrior, entirely through MCP tools:
+The accepted first end-user Surface-runtime vertical is Orc Soldier Fighter
+versus Goblin Warrior, entirely through MCP tools:
 
 1. create a character draft;
 2. discover and fill the real creation holes for Orc, Soldier, Fighter, ability
@@ -84,6 +84,12 @@ Warrior, entirely through MCP tools:
 That fixture uses the authored Surface Unit and Stat Block catalogs. It does
 not use character presets, Core projections, duplicated executable stat-block
 data, or reducer-owned in-progress battle fills.
+
+`list_characters` is the supported post-battle read model for this vertical.
+After `end_battle`, it reads the durable character session directly. Character
+current HP is handed back from the battle-owned character combatant to that
+session during closeout; Goblin Warrior remains a closed battle combatant and
+never becomes a character-list row.
 
 Remaining first-vertical gates:
 

@@ -122,13 +122,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 14,
       "id": "CAM21",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "End-User Vertical Acceptance"
     },
     {
       "number": 15,
       "id": "POST2",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add First Width Slice Surface Records And Readers"
     },
     {
@@ -177,7 +177,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | ----- | ---------------------------------------------------------------- | --------------------------------------------- | ------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
 | 0     | CAM16A - Prepare Character Creation Runtime For Catalog Widening | done                                          | completed baseline | CAM17, POST0 | Localized Phase 1 support gates, derived build projection from accepted selections, and indexed hole/option validation before MCP exposes the creation runtime.                                  | Completed.                                                                                |
 | 1     | POST0 - Reconsider Post-CAM Width Plan After CAM16A              | done                                          | CAM16A             | POST1        | Rewrote the mandatory post-CAM width queue around CAM16A's support-profile boundary.                                                                                                             | Completed.                                                                                |
-| 2     | POST1 - Research First Width Slice RAW And Corpus                | done                                          | POST0              | POST2        | Confirmed Fighter 2 + Wizard 1 and selected Skeleton as the second SRD Stat Block pressure case, with deterministic scenario and POST2-POST5 scope recorded below.                               | Completed; POST2 remains blocked by CAM21.                                                |
+| 2     | POST1 - Research First Width Slice RAW And Corpus                | done                                          | POST0              | POST2        | Confirmed Fighter 2 + Wizard 1 and selected Skeleton as the second SRD Stat Block pressure case, with deterministic scenario and POST2-POST5 scope recorded below.                               | Completed; POST2 is unblocked by CAM21.                                                   |
 | 3     | CAM17 - Add MCP Character Creation Tools                         | done                                          | CAM16A             | CAM18A       | Added green MCP tools for create draft, discover holes, fill holes, and finalize minimal Fighter.                                                                                                | Completed.                                                                                |
 | 4     | CAM18A - Add MCP Battle Session Shell                            | done                                          | CAM17              | CAM18B       | Added green MCP tools for selecting a Stat Block, starting battle with explicit Initiative, storing battle session state, and returning battle state/snapshot.                                   | Completed.                                                                                |
 | 5     | CAM18B - Add MCP Fighter Battle Flow                             | done                                          | CAM18A             | CAM18C       | Added MCP Fighter battle act discovery, Attack fill accumulation/resolution, BattleState storage, fill clearing, and End Turn initiative advancement.                                            | Completed.                                                                                |
@@ -189,8 +189,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 11    | CAM19C - Delete Projected Vocabulary From Promoted Path          | done                                          | CAM19B             | CAM19D       | Delete projected executable vocabulary from the promoted MCP/runtime path after legacy isolation, preserving omitted semantics only through Restore Ledger rows.                                 | Completed.                                                                                |
 | 12    | CAM19D - Reconcile Post-Deletion Docs And Tests                  | done                                          | CAM19C             | CAM20        | Reconciled normal MCP test ownership, post-deletion docs, Restore Ledger status, and archival projected-executable docs.                                                                         | Completed; CAM20 has a concrete promotion handoff.                                        |
 | 13    | CAM20 - Green Reconciliation And MCP Promotion                   | done                                          | CAM19D             | CAM21        | Promoted the Surface-backed tools into the normal MCP server path, deleted `src/green` and `src/legacy-core`, and replaced green fixture coverage with normal MCP server tests.                  | Completed; CAM21 is unblocked.                                                           |
-| 14    | CAM21 - End-User Vertical Acceptance                             | ready-for-implementation-after-light-research | CAM20              | POST2        | Verify the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with post-battle facts such as reduced HP.  | Unblocked by CAM20; run the promoted-path source checks before editing.                   |
-| 15    | POST2 - Add First Width Slice Surface Records And Readers        | blocked                                       | POST1, CAM21       | POST3        | Add the researched width slice to Surface records/readers: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and the Skeleton SRD Stat Block with vulnerability/immunity shape. | Blocker Type: dependency. Blocker Detail: POST1 complete; waits on CAM21.                 |
+| 14    | CAM21 - End-User Vertical Acceptance                             | done                                          | CAM20              | POST2        | Accepted the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with reduced positive HP.                 | Completed; deferred zero-HP/death-save/rest handoff facts are ledgered.                  |
+| 15    | POST2 - Add First Width Slice Surface Records And Readers        | ready-for-implementation-after-light-research | POST1, CAM21       | POST3        | Add the researched width slice to Surface records/readers: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and the Skeleton SRD Stat Block with vulnerability/immunity shape. | Unblocked by POST1 and CAM21; ready for implementation after light source review.          |
 | 16    | POST3 - Widen Character Creation Runtime Support Profile         | blocked                                       | POST2              | POST4        | Extend CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.                   | Blocker Type: dependency. Blocker Detail: waits on Surface width.                         |
 | 17    | POST4 - Widen Battle Runtime For First Width Slice               | blocked                                       | POST3              | POST5        | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Surface-backed acts/resources/spell or monster facts, preserving runtime parity discipline.              | Blocker Type: dependency. Blocker Detail: waits on character runtime width.               |
 | 18    | POST5 - Add Widened MCP User Workflow Coverage                   | blocked                                       | POST4              | none         | Exercise the widened slice through promoted MCP/user workflows and update Restore Ledger status for restored width rows.                                                                         | Blocker Type: dependency. Blocker Detail: waits on battle runtime width.                  |
@@ -469,7 +469,7 @@ Plan Impact:
 - Status: applied.
 - POST2: revised to implement Fighter 2, Wizard 1, and Skeleton Surface
   records/readers while reusing existing Orc/Soldier origin Surface records for
-  the Wizard scenario; remains blocked by CAM21.
+  the Wizard scenario; unblocked by CAM21 closeout.
 - POST3: revised to widen character creation for Fighter 2 advancement and
   Wizard 1 spellbook/prepared-spell legality without adding Acolyte background
   runtime support; remains blocked by POST2.
@@ -1001,10 +1001,10 @@ Plan Impact:
 
 ### Task 14 - CAM21 - End-User Vertical Acceptance
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM20
-Blocks: none
+Blocks: POST2
 
 Input:
 
@@ -1055,19 +1055,20 @@ Verification:
 
 Plan Impact:
 
-- If successful, mark the Correction Application Migration accepted for the
-  first end-user vertical and record any explicitly deferred post-battle facts
-  in the Restore Ledger or a follow-up CAM task.
+- Status: applied. The Correction Application Migration is accepted for the
+  first end-user vertical.
+- POST2 is unblocked.
+- Deferred post-battle facts are recorded in the Restore Ledger: zero-HP
+  character closeout, Death Saving Throw counters, Stable/dead status, rest
+  recovery, and broader adventuring-state handoff remain outside the accepted
+  first vertical.
 
 ### Task 15 - POST2 - Add First Width Slice Surface Records And Readers
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: POST1, CAM21
 Blocks: POST3
-
-Blocker Type: dependency
-Blocker Detail: POST1 RAW/corpus research is complete; waits on CAM21 end-user acceptance.
 
 Input:
 
