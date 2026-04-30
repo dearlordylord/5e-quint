@@ -666,7 +666,7 @@ Verification command: $test_command
 Attempt number for this task in this Ralph run: $attempt_no
 Final allowed attempt in this Ralph run: $final_attempt
 
-Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The implementation worktree inputs are not final output. Inspect the available Task $task_no diff(s) and review report(s). In a single-candidate mode (`codex-only` or `claude-only`), the other candidate's paths are placeholders and you should evaluate the live candidate directly against the task brief. Apply the best final implementation for Task $task_no to the main worktree, combining useful parts when appropriate and rejecting broken or off-plan changes. Do not implement later tasks.
+Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The implementation worktree inputs are not final output. Inspect the available Task $task_no diff(s) and review report(s). In a single-candidate mode ('codex-only' or 'claude-only'), the other candidate's paths are placeholders and you should evaluate the live candidate directly against the task brief. Apply the best final implementation for Task $task_no to the main worktree, combining useful parts when appropriate and rejecting broken or off-plan changes. Do not implement later tasks.
 
 Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
@@ -695,7 +695,7 @@ Requirements:
   - an explicit owner/user design decision that Ralph cannot answer itself.
 - Do not use blocked-needs-design for internal bucket-splitting, scoping refinement, family narrowing, or repo research that Ralph can perform on its own. Those cases must stay needs-more-research.
 - Use deferred only when the owner/user has explicitly directed Ralph to park the task for now. Do not use deferred for queue ordering, later-batch parking, or "we should do this later" scheduling.
-- If Final allowed attempt in this Ralph run is true, you must not use `retry-same-task` or `needs-more-research`. On the final allowed attempt, either land the task as `done` or update the plan so the task becomes non-runnable (`blocked` or `deferred`) before you finish.
+- If Final allowed attempt in this Ralph run is true, you must not use 'retry-same-task' or 'needs-more-research'. On the final allowed attempt, either land the task as 'done' or update the plan so the task becomes non-runnable ('blocked' or 'deferred') before you finish.
 - Commit the reconciled Task $task_no result to $output_branch in the main worktree after verification. Use a concise task-scoped commit message. Do not leave tracked changes staged or unstaged; the next task worktrees are created from the updated integration HEAD.
 - For docs-only tasks, prefer the task-specific grep/search checks and git diff --check over broad formatters that churn unrelated Markdown. Do not run broad formatters unless the task explicitly requires formatting.
 - Leave temporary worktree cleanup to the harness.
