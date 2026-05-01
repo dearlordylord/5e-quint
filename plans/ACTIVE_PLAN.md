@@ -346,17 +346,41 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 46,
       "id": "PBA13",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Restore Hide Search And Class Rider Width"
     },
     {
       "number": 47,
       "id": "PBA14",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Restore Turn Roster And Generic Combat Actions"
     },
     {
       "number": 48,
+      "id": "PBA14A",
+      "status": "blocked",
+      "title": "Restore Persistent Stance Class Riders"
+    },
+    {
+      "number": 49,
+      "id": "PBA14B",
+      "status": "blocked",
+      "title": "Restore Attack Rider Procedure Family"
+    },
+    {
+      "number": 50,
+      "id": "PBA14C",
+      "status": "blocked",
+      "title": "Restore Save Damage Replacement Riders"
+    },
+    {
+      "number": 51,
+      "id": "PBA14D",
+      "status": "blocked",
+      "title": "Restore Reaction Roll Damage Modification Riders"
+    },
+    {
+      "number": 52,
       "id": "PBA15",
       "status": "blocked",
       "title": "Plan Broader Battle Widening Queue"
@@ -445,9 +469,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 43    | PBA10 - Restore Movement Positioning And Opportunity Attacks     | done               | PBA9                 | PBA11                               | Restored promoted-runtime movement state/input, movement budget, Opportunity Attack reaction windows, QNT continuation coverage, and MCP movement holes.                                                          | Completed; PBA11 is unblocked.                                                           |
 | 44    | PBA11 - Restore Monster Resource Controls                        | done               | PBA10                | PBA12                               | Restored StatBlockRecord-backed monster recharge, daily-use, and Legendary Action resources with promoted-runtime support gates.                                                                                 | Completed; PBA12 is unblocked.                                                           |
 | 45    | PBA12 - Restore Hand Weapon And Grapple State                    | done               | PBA11                | PBA13                               | Restored hand occupancy, weapon modes, off-hand attacks, Grapple, Escape Grapple, release, and actual-distance grapple movement-cost state.                                                                       | Completed; PBA13 is unblocked.                                                           |
-| 46    | PBA13 - Restore Hide Search And Class Rider Width                | ready-for-implementation-after-light-research | PBA12                | PBA14                               | Restore Hide/Search/hidden discovery plus remaining old class-feature riders as promoted runtime subjects.                                                                                                       | Unblocked by PBA12; requires RAW/light research before implementation.                    |
-| 47    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13                | PBA15                               | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked behind hidden-state/class-rider work.                                             |
-| 48    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14                | future tasks                        | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
+| 46    | PBA13 - Restore Hide Search And Class Rider Width                | done               | PBA12                | PBA14                               | Restored Hide/Search/hidden discovery, attack and Verbal-spell reveal triggers, hidden attack roll modes, MCP hidden projection, and Rogue Cunning Action Hide as a Bonus Action.                                | Completed; PBA14 is unblocked.                                                           |
+| 47    | PBA14 - Restore Turn Roster And Generic Combat Actions           | ready-for-implementation-after-light-research | PBA13                | PBA14A                              | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Unblocked by PBA13; requires RAW/light research before implementation.                    |
+| 48    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14B                              | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
+| 49    | PBA14B - Restore Attack Rider Procedure Family                   | blocked            | PBA14A               | PBA14C                              | Restore reusable attack-rider windows and damage/roll rider data for Sneak Attack plus Rage/Reckless attack interactions.                                                                                        | Blocked behind stance state.                                                              |
+| 50    | PBA14C - Restore Save Damage Replacement Riders                  | blocked            | PBA14B               | PBA14D                              | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                             | Blocked behind attack-rider procedure family.                                             |
+| 51    | PBA14D - Restore Reaction Roll Damage Modification Riders        | blocked            | PBA14C               | PBA15                               | Restore reusable reaction roll/damage modification procedure support for Deflect Attacks, Uncanny Dodge, and Cutting Words.                                                                                      | Blocked behind save-damage replacement riders.                                            |
+| 52    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14D               | future tasks                        | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
 
 ## Task Details
 
@@ -3128,15 +3156,20 @@ Plan Impact:
 
 ### Task 46 - PBA13 - Restore Hide Search And Class Rider Width
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA12
 Blocks: PBA14
 
 Batch: old Core feature-parity restoration.
 
-Next action: restore hidden-state discovery and remaining old class-feature
-riders as promoted runtime subjects.
+Next action: completed. Hide/Search/hidden discovery, hidden attack roll modes,
+attack and Verbal-spell reveal triggers, MCP hidden projection, and Rogue
+Cunning Action Hide are restored in the promoted battle runtime. Rage,
+Reckless Attack, Sneak Attack, Evasion, Deflect Attacks, Uncanny Dodge, and
+Cutting Words remain explicitly support-gated until reusable promoted
+procedure families exist for persistent stances, attack riders, save-damage
+replacement, and reaction roll/damage modification.
 
 Backlog candidate:
 
@@ -3166,14 +3199,14 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA14.
+- Completed; PBA14 is unblocked.
 
 ### Task 47 - PBA14 - Restore Turn Roster And Generic Combat Actions
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA13
-Blocks: PBA15
+Blocks: PBA14A
 
 Batch: old Core feature-parity restoration.
 
@@ -3219,13 +3252,180 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA15.
+- If successful, unblock PBA14A.
 
-### Task 48 - PBA15 - Plan Broader Battle Widening Queue
+### Task 48 - PBA14A - Restore Persistent Stance Class Riders
 
 Status: `blocked`
 
 Depends on: PBA14
+Blocks: PBA14B
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore reusable persistent stance state for class riders such as
+Rage and Reckless Attack as promoted runtime data/procedures.
+
+Backlog candidate:
+
+- Old sources: BA1 "Class-feature battle actions/resources" row; root
+  `battle.qnt` and Core battle-machine Rage/Reckless state and attack
+  interactions.
+- RAW topics: `.references/srd-5.2.1/Classes/Barbarian.md` Rage and Reckless
+  Attack; `UBIQUITOUS_LANGUAGE.md` class feature, attack, damage, advantage,
+  and turn/round terms.
+- New-runtime owner: `@dnd/battle-runtime` stance state, turn/round expiry,
+  attack-roll modifiers, damage modifiers, MCP snapshots, and promoted QNT
+  coverage if stance semantics enter the canonical spec.
+- Acceptance summary: stance facts are parsed from admitted Unit records and
+  stored once in battle state, with Rage/Reckless behavior expressed through
+  reusable stance procedures rather than named reducer branches.
+- Non-goals: every Barbarian feature, subclass Rage variants, old Core class
+  fields, or UI-specific stance controls.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime tests for stance start/expiry and attack/damage
+  interaction.
+- MCP tests if stance subjects or snapshots are user-visible.
+- Promoted QNT/MBT widening if the canonical spec gains stance semantics.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA14B.
+
+### Task 49 - PBA14B - Restore Attack Rider Procedure Family
+
+Status: `blocked`
+
+Depends on: PBA14A
+Blocks: PBA14C
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore reusable attack-rider windows and damage/roll rider data
+for Sneak Attack plus Rage/Reckless attack interactions.
+
+Backlog candidate:
+
+- Old sources: BA1 "Class-feature battle actions/resources" row; root
+  `battle.qnt` and Core battle-machine Sneak Attack, Rage damage, and Reckless
+  attack-roll handling.
+- RAW topics: `.references/srd-5.2.1/Classes/Rogue.md` Sneak Attack and
+  `.references/srd-5.2.1/Classes/Barbarian.md` Rage/Reckless Attack;
+  `Playing-the-Game.md` attack rolls and damage rolls.
+- New-runtime owner: `@dnd/battle-runtime` attack replay/rider holes, damage
+  expression modifiers, once-per-turn usage state, support-gated Unit records,
+  and MCP fill replay.
+- Acceptance summary: attack riders are exposed as typed procedure hooks on
+  supported attacks, with reusable eligibility, usage, roll, and damage
+  semantics rather than named ability branches.
+- Non-goals: every attack-rider feature, subclass riders, old Core event names,
+  or projected executable reducer vocabulary.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime tests for eligible and ineligible rider attacks.
+- MCP tests if rider holes or summaries are user-visible.
+- Promoted QNT/MBT widening if attack-rider semantics enter the canonical spec.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA14C.
+
+### Task 50 - PBA14C - Restore Save Damage Replacement Riders
+
+Status: `blocked`
+
+Depends on: PBA14B
+Blocks: PBA14D
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore reusable save-damage replacement procedure support for
+Evasion-style riders.
+
+Backlog candidate:
+
+- Old sources: BA1 "Class-feature battle actions/resources" row; root
+  `battle.qnt` and Core battle-machine Evasion handling.
+- RAW topics: `.references/srd-5.2.1/Classes/Rogue.md` Evasion,
+  `.references/srd-5.2.1/Classes/Monk.md` Evasion, and `Playing-the-Game.md`
+  saving throws and damage.
+- New-runtime owner: `@dnd/battle-runtime` save-gate damage replay,
+  replacement/reduction hooks, support-gated Unit records, and MCP snapshots.
+- Acceptance summary: save-damage replacement riders attach to reusable
+  save-gate damage procedures and preserve a single source of truth for the
+  save outcome and damage result.
+- Non-goals: every Dexterity-save feature, subclass variants, or broad damage
+  pipeline redesign outside the save-gate boundary.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime tests for failed, successful, and replacement save
+  damage outcomes.
+- MCP tests if replacement facts are user-visible.
+- Promoted QNT/MBT widening if replacement semantics enter the canonical spec.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA14D.
+
+### Task 51 - PBA14D - Restore Reaction Roll Damage Modification Riders
+
+Status: `blocked`
+
+Depends on: PBA14C
+Blocks: PBA15
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore reusable reaction roll/damage modification procedure
+support for Deflect Attacks, Uncanny Dodge, and Cutting Words.
+
+Backlog candidate:
+
+- Old sources: BA1 "Class-feature battle actions/resources" row; root
+  `battle.qnt` and Core battle-machine Deflect, Uncanny Dodge, and Cutting
+  Words handling.
+- RAW topics: `.references/srd-5.2.1/Classes/Monk.md` Deflect Attacks,
+  `.references/srd-5.2.1/Classes/Rogue.md` Uncanny Dodge, and
+  `.references/srd-5.2.1/Classes/Bard.md` Cutting Words; `Playing-the-Game.md`
+  Reaction timing, attack rolls, and damage.
+- New-runtime owner: `@dnd/battle-runtime` reaction windows, roll/damage
+  modification holes, reaction resource spend, support-gated Unit records, and
+  MCP pending-reaction replay.
+- Acceptance summary: reaction modifiers are modeled as reusable interruption
+  procedures that can alter attack rolls or damage once at the correct timing,
+  without named reducer branches.
+- Non-goals: every reaction feature, subclass reactions, or UI-specific
+  reaction prompts beyond MCP/runtime snapshots.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime tests for reaction eligibility, resource spend,
+  modified roll/damage outcomes, and stale/invalid fills.
+- MCP tests if reaction prompts or fills are user-visible.
+- Promoted QNT/MBT widening if reaction modifier semantics enter the canonical
+  spec.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA15.
+
+### Task 52 - PBA15 - Plan Broader Battle Widening Queue
+
+Status: `blocked`
+
+Depends on: PBA14D
 Blocks: future tasks
 
 Batch: broader widening after parity/composition archive and explicit
@@ -3237,7 +3437,7 @@ first feature-parity queue have reached their closeout point.
 Input:
 
 - PBA0-PBA4 archive/protocol/corrector outputs.
-- PBA5-PBA14 feature-parity restoration outcomes and any explicitly deferred
+- PBA5-PBA14D feature-parity restoration outcomes and any explicitly deferred
   owner decisions.
 - Restore Ledger rows that are still intentionally omitted.
 

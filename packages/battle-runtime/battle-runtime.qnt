@@ -74,6 +74,11 @@ module battleRuntime {
   //   held/wielded hand state, Light-property Off-Hand Attack damage modifier
   //   behavior, Grapple links, release, Escape Grapple, Grappled attack-roll
   //   disadvantage, and Grappled movement-cost facts are battle-owned state.
+  // - Rules-Glossary.md lines 542-548 and 858-866 plus
+  //   Playing-the-Game.md lines 590-600: Hide records the check total as the
+  //   Search DC, grants Invisible while hidden, Search can find the hidden
+  //   creature, and making an attack roll or casting a Verbal spell reveals the
+  //   hidden creature.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -99,6 +104,7 @@ module battleRuntime {
     | SavingThrowOutcome
     | GrappleOutcome
     | EscapeGrappleOutcome
+    | AbilityCheck
     | ReactionDecision
     | StatBlockRechargeRoll
 
@@ -125,6 +131,18 @@ module battleRuntime {
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows
 
+  type HiddenDiscoveryDc =
+    | HiddenDc15
+    | HiddenDc16
+    | HiddenDc17
+    | HiddenDc18
+    | HiddenDc19
+    | HiddenDc20
+
+  type HiddenState =
+    | NotHidden
+    | HiddenByDc(HiddenDiscoveryDc)
+
   type Combatant = {
     hp: int,
     maxHp: int,
@@ -141,6 +159,7 @@ module battleRuntime {
     reactionAvailable: bool,
     speed: int,
     movementSpent: int,
+    hidden: HiddenState,
     creatureSize: CreatureSize,
     leftHandUse: HandUse,
     rightHandUse: HandUse,
@@ -172,6 +191,7 @@ module battleRuntime {
     grapple: GrappleState,
     interruptStack: List[PendingReactionFrame],
     fighterGoblinDistance: int,
+    fighterHidePrerequisite: bool,
     goblinRechargeAvailable: bool,
     goblinLegendaryUsesRemaining: int,
     lastTurnActor: LastTurnActor,
@@ -213,6 +233,7 @@ module battleRuntime {
       reactionAvailable: true,
       speed: 30,
       movementSpent: 0,
+      hidden: NotHidden,
       creatureSize: Medium,
       leftHandUse: HFree,
       rightHandUse: HMainWeapon,
@@ -233,6 +254,7 @@ module battleRuntime {
       reactionAvailable: true,
       speed: 30,
       movementSpent: 0,
+      hidden: NotHidden,
       creatureSize: Small,
       leftHandUse: HFree,
       rightHandUse: HFree,
@@ -244,6 +266,7 @@ module battleRuntime {
     grapple: NoGrapple,
     interruptStack: [],
     fighterGoblinDistance: 5,
+    fighterHidePrerequisite: false,
     goblinRechargeAvailable: true,
     goblinLegendaryUsesRemaining: 2,
     lastTurnActor: NoTurnEnded,
@@ -286,6 +309,76 @@ module battleRuntime {
     else if (currentActorCanAttack(state))
       Set(TargetChoice)
     else Set()
+
+  pure def hideHoles(state: BattleState): Set[Hole] =
+    if (
+      currentActor(state) == Fighter and
+      state.actionAvailable and
+      not(state.fighter.unconscious) and
+      state.fighterHidePrerequisite
+    )
+      Set(AbilityCheck)
+    else Set()
+
+  pure def hiddenDiscoveryDcValue(hidden: HiddenDiscoveryDc): int =
+    match hidden {
+      | HiddenDc15 => 15
+      | HiddenDc16 => 16
+      | HiddenDc17 => 17
+      | HiddenDc18 => 18
+      | HiddenDc19 => 19
+      | HiddenDc20 => 20
+    }
+
+  pure def totalToHiddenState(total: int): HiddenState =
+    if (total < 15) NotHidden
+    else if (total == 15) HiddenByDc(HiddenDc15)
+    else if (total == 16) HiddenByDc(HiddenDc16)
+    else if (total == 17) HiddenByDc(HiddenDc17)
+    else if (total == 18) HiddenByDc(HiddenDc18)
+    else if (total == 19) HiddenByDc(HiddenDc19)
+    else HiddenByDc(HiddenDc20)
+
+  pure def fighterIsHidden(state: BattleState): bool =
+    match state.fighter.hidden {
+      | NotHidden => false
+      | HiddenByDc(_) => true
+    }
+
+  pure def hideFighter(state: BattleState, stealthTotal: int): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.actionAvailable and
+      not(state.fighter.unconscious) and
+      state.fighterHidePrerequisite
+    )
+      {
+        ...state,
+        fighter: { ...state.fighter, hidden: totalToHiddenState(stealthTotal) },
+        actionAvailable: false,
+      }
+    else
+      state
+
+  pure def searchGoblinForFighter(state: BattleState, perceptionTotal: int): BattleState =
+    if (currentActor(state) == Goblin and state.actionAvailable)
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          hidden: match state.fighter.hidden {
+            | NotHidden => NotHidden
+            | HiddenByDc(dc) =>
+              if (perceptionTotal >= hiddenDiscoveryDcValue(dc)) NotHidden else state.fighter.hidden
+          },
+        },
+        actionAvailable: false,
+      }
+    else
+      state
+
+  pure def revealFighterHidden(state: BattleState): BattleState =
+    { ...state, fighter: { ...state.fighter, hidden: NotHidden } }
 
   pure def attackReplayHoles(state: BattleState, replay: AttackReplay): Set[Hole] =
     if (not(currentActorCanAttack(state)))
@@ -461,10 +554,13 @@ module battleRuntime {
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
-      { ...state, actionAvailable: false, lightWeaponAttackMade: true }
-    else
-      { ...state, goblin: applyDamage(state.goblin, damageRoll + 3, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
+    else {
+      val revealed = revealFighterHidden(state)
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
+        { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
+      else
+        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
+    }
 
   pure def resolveGoblinAttack(
     state: BattleState,
@@ -504,10 +600,10 @@ module battleRuntime {
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
-      { ...state, actionAvailable: false }
+      { ...revealFighterHidden(state), actionAvailable: false }
     else {
       val damaged = applyDamage(state.goblin, damageRoll, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded)
-      { ...state, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
+      { ...revealFighterHidden(state), goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
     }
 
   pure def concentrationSavingThrowDc(damage: int): int = {
@@ -886,7 +982,31 @@ module battleRuntime {
     }
 
   run test_initial_holes_cover_attack_target = {
-    assert(openHoles(initialState) == Set(TargetChoice))
+    assert(openHoles(initialState).contains(TargetChoice))
+  }
+
+  run test_hide_records_discovery_dc = {
+    val canHide = { ...initialState, fighterHidePrerequisite: true }
+    all {
+      assert(hideHoles(initialState) == Set()),
+      assert(hideHoles(canHide) == Set(AbilityCheck)),
+      assert(hideFighter(initialState, 20).fighter.hidden == NotHidden),
+      assert(fighterIsHidden(hideFighter(canHide, 15))),
+      assert(hideFighter(canHide, 14).fighter.hidden == NotHidden),
+    }
+  }
+
+  run test_search_finds_hidden_fighter = {
+    val hidden = endTurn(hideFighter({ ...initialState, fighterHidePrerequisite: true }, 18))
+    all {
+      assert(searchGoblinForFighter(hidden, 17).fighter.hidden == HiddenByDc(HiddenDc18)),
+      assert(searchGoblinForFighter(hidden, 18).fighter.hidden == NotHidden),
+    }
+  }
+
+  run test_attack_reveals_hidden_fighter = {
+    val hidden = hideFighter({ ...initialState, fighterHidePrerequisite: true }, 18)
+    assert(resolveAttack({ ...hidden, actionAvailable: true }, 1, 1, 4, true).fighter.hidden == NotHidden)
   }
 
   run test_attack_replay_asks_for_attack_roll_after_target = {
@@ -898,7 +1018,7 @@ module battleRuntime {
   }
 
   run test_goblin_turn_opens_stat_block_attack_target_hole = {
-    assert(openHoles(endTurn(initialState)) == Set(TargetChoice))
+    assert(openHoles(endTurn(initialState)).contains(TargetChoice))
   }
 
   run test_goblin_turn_opens_stat_block_recharge_hole_before_attack = {

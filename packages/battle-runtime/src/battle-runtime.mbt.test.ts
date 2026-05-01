@@ -256,6 +256,7 @@ function discoverAttackHoles(
     (candidate) =>
       candidate.subject.tag === subject.tag &&
       candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
       candidate.subject.attackName === "Flail",
   );
   if (act == null) {
@@ -449,6 +450,9 @@ function projectHole(hole: BattleHole): MbtHole {
     }),
     Match.when({ kind: "movement" }, () => {
       throw new Error("Battle runtime MBT does not model movement holes.");
+    }),
+    Match.when({ kind: "abilityCheck" }, () => {
+      throw new Error("Battle runtime MBT does not model ability check holes.");
     }),
     Match.when({ kind: "grappleOutcome" }, () => {
       throw new Error("Battle runtime MBT does not model Grapple holes.");

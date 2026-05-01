@@ -134,6 +134,13 @@ runtime choice rather than patched into state later.
   combatants, and current-turn resources.
 - `BattleCreatureState` - the durable runtime state for one creature in battle.
   It is identified by `CombatantId`.
+- `hidePrerequisites` - GM-adjudicated battle state for whether a combatant is
+  currently Heavily Obscured or behind Three-Quarters/Total Cover and out of
+  enemy line of sight. Hide is not discoverable without this prerequisite.
+- `hidden` - battle-owned Hide state. A successful Hide stores the Dexterity
+  (Stealth) check total as the Search DC. The snapshot projects the Invisible
+  condition while this state is present; it is cleared by Search, making an
+  attack roll, or casting a spell with a Verbal component.
 - `StatBlockMutableResourceState` - durable mutable execution state for
   authored `StatBlockRecord` monster controls: Legendary Action uses remaining,
   X/Day uses remaining, and unavailable Recharge entries. Authored limits and
@@ -191,6 +198,23 @@ Available acts:
 - discover Escape Grapple for a Grappled current actor and Release Grapple for a
   grappler. Release spends no action; Escape spends the action on success or
   failure.
+- discover Hide as a standard action when `hidePrerequisites` records the RAW
+  obscured/cover and line-of-sight prerequisite for the current actor. Hide
+  asks for a Dexterity (Stealth) ability check; totals of at least DC 15 store
+  the check total as hidden discovery DC and project Invisible while hidden.
+- discover Search when a hidden combatant exists. Search asks for the hidden
+  target, then a Wisdom (Perception) ability check against that target's hidden
+  discovery DC, and clears hidden state on success.
+- discover Rogue Cunning Action Hide as a Bonus Action from retained character
+  class level facts when the same Hide prerequisite is present. This is a
+  narrow class-rider subject for the reusable Hide procedure, not a
+  Rogue-specific reducer branch.
+- old Core class riders named in PBA13 remain explicitly support-gated unless
+  they fit an admitted reusable procedure family. Rage, Reckless Attack, Sneak
+  Attack, Evasion, Deflect Attacks, Uncanny Dodge, and Cutting Words are not
+  exposed as promoted Unit feature acts in this slice; their RAW shapes require
+  persistent stance state, attack-rider windows, save-damage replacement, or
+  reaction roll/damage modification families rather than named reducer branches.
 - discover Off-Hand Attack for character combatants holding Light melee weapons
   in both hands. The extra attack spends the Bonus Action and derives weapon
   damage from the off-hand `WeaponRecord`, omitting a positive ability modifier
@@ -218,6 +242,12 @@ Feature and spell resources:
 - Second Wind asks for its `1d10` healing roll, spends the current turn's Bonus
   Action, spends one retained use-count resource, and applies healing through
   the HP clamp boundary using the retained character class level;
+- Hidden state contributes Advantage for the hidden attacker's attack roll and
+  Disadvantage when attacking a hidden target. The hidden attacker is revealed
+  when the attack roll is made, whether the attack hits or misses.
+- Action-time spells with a Verbal component clear the caster's hidden state as
+  soon as casting begins, including staged target/attack/damage hole snapshots
+  and spell-cast Reaction windows.
 - prepared `magic_missile` spends one runtime level-1 Spell Slot. This first
   width slice supports the all-darts-at-one-target targeting branch and exposes
   that restriction in the target hole;
@@ -431,6 +461,9 @@ with an SRD citation or `ASSUMPTIONS.md` entry.
 | Damage and Temporary Hit Points    | SRD 5.2.1 `Playing-the-Game.md` "Damage Rolls", "Hit Points", "Temporary Hit Points"                                                                                                                                                                                                                         | Damage uses character weapon damage plus the attack ability modifier or a supported Stat Block damage expression, applies Temporary Hit Points first, and clamps HP at `0`.                                                                                                                                               |
 | Action Surge                       | SRD 5.2.1 `Classes/Fighter.md` "Level 2: Action Surge"; `UBIQUITOUS_LANGUAGE.md` "Action Surge"                                                                                                                                                                                                              | Grants one additional non-Magic action, spends a retained use-count resource, and enforces once-per-turn use in battle state.                                                                                                                                                                                             |
 | Second Wind                        | SRD 5.2.1 `Classes/Fighter.md` "Level 1: Second Wind"; `Playing-the-Game.md` "Bonus Actions" and "Healing"; `UBIQUITOUS_LANGUAGE.md` "Bonus Action", "Pool", and "Hit Points"                                                                                                                                | Spends a Bonus Action and one retained use-count resource, then restores `1d10 + Fighter level` HP through the runtime HP clamp boundary.                                                                                                                                                                                 |
+| Hide/Search/Hidden                 | SRD 5.2.1 `Rules-Glossary.md` "Hide [Action]" and "Search [Action]"; `Playing-the-Game.md` "Hiding" and "Unseen Attackers and Targets"; `UBIQUITOUS_LANGUAGE.md` "Invisible", "Action", and "Bonus Action"                                                                                                   | Hide is available only when battle state records the RAW obscured/cover and line-of-sight prerequisite, stores the check total as discovery DC, and projects Invisible while hidden; Search clears hidden on a sufficient Wisdom (Perception) check; attack rolls and Verbal spell casts reveal the hidden creature.      |
+| Rogue Cunning Action Hide          | SRD 5.2.1 `Classes/Rogue.md` "Level 2: Cunning Action"; `Playing-the-Game.md` "Bonus Actions"                                                                                                                                                                                                                | A Rogue 2+ character can spend the Bonus Action to use the same Hide procedure when the Hide prerequisite is present.                                                                                                                                                                                                     |
+| Old Core class riders support gate | SRD 5.2.1 `Classes/Barbarian.md` "Rage" / "Reckless Attack"; `Classes/Rogue.md` "Sneak Attack" / "Uncanny Dodge" / "Evasion"; `Classes/Monk.md` "Deflect Attacks" / "Evasion"; `Classes/Bard.md` "Cutting Words"                                                                                             | PBA13 restores only the hidden-state procedure family plus Cunning Action Hide. The named old class riders are deliberately rejected until promoted reusable stance, attack-rider, save-damage, and reaction-modification procedure families exist.                                                                       |
 | Wizard action-time spell acts      | SRD 5.2.1 `Classes/Wizard.md` "Spellcasting"; `Rules-Glossary.md` "Magic [Action]" / "Armor Training"; `Spells/Gaining-and-Casting.md` "Spell Slots" / "Cantrips" / "Attack Rolls"; `Spells/Descriptions-M-P.md` "Magic Missile"; `Spells/Descriptions-Q-R.md` "Ray of Frost"                                | Prepared level-1 `magic_missile` spends a runtime Spell Slot and supports the all-darts-at-one-target branch. Cantrip `ray_of_frost` uses spellcasting ability modifier + Proficiency Bonus for the attack and records its Speed reduction. Untrained worn armor suppresses spell acts without deleting Spell Slot state. |
 | Skeleton damage modifiers          | SRD 5.2.1 `Monsters/Monsters-P-S.md` "Skeleton"; `UBIQUITOUS_LANGUAGE.md` "Damage"                                                                                                                                                                                                                           | Skeleton's Bludgeoning vulnerability and Poison damage immunity modify supported damage before HP mutation.                                                                                                                                                                                                               |
 | Zero-HP lifecycle                  | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points", "Instant Death", "Falling Unconscious", "Death Saving Throws", "Damage at 0 Hit Points", "Stabilizing a Character"; `Rules-Glossary.md` "Stable"; `UBIQUITOUS_LANGUAGE.md` "Death Saving Throw", "Stable", "Instant Death"; `ASSUMPTIONS.md` A12 | Stat Block combatants use `diesAtZeroHp`; Character Build combatants use `usesDeathSavingThrows`. Implemented behavior covers drop to `0` HP, damage at `0` HP, Critical Hit damage at `0` HP, Massive Damage, and start-turn Death Saving Throw rolls through Stable/dead/natural-20 outcomes.                           |

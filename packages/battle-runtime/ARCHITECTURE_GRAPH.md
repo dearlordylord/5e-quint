@@ -54,6 +54,7 @@ flowchart TD
   SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect; Acid Splash save-gate damage applies to failed saves"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
+  Hidden["Hidden state<br/>source: Hide/Search procedure<br/>data: discovery DC<br/>why: battle-owned execution fact for Invisible projection, Search, and reveal triggers"]
   Snapshot["snapshotBattle(state)<br/>success: JSON-friendly read model<br/>why: callers do not depend on internal Map state"]
 
   CharacterBuild --> Init
@@ -77,6 +78,7 @@ flowchart TD
   AttackReplay --> AttackRoll
   AttackReplay --> RuntimeDice
   AttackReplay --> Damage --> State
+  Resolve -->|action.hide / action.search / bonusAction.hide| Hidden --> State
   ArmorClass --> AttackRoll
   ActionEconomy --> Discover
   ActionEconomy --> AttackReplay
@@ -133,6 +135,12 @@ flowchart TD
 - Attack replay uses target, attack-roll, and on-hit damage holes. Target
   choices are filtered from the selected attack's melee reach or normal range
   and the battle's pairwise combatant distances.
+- Hide/Search replay is gated by battle-owned Hide prerequisite state: the GM
+  adjudicated that the actor is Heavily Obscured or behind enough cover and out
+  of enemy line of sight. Successful Hide then records one executable fact, the
+  Hide check total as the Search DC. Snapshots project Invisible from that
+  state. Search, making an attack roll, and casting a spell with a Verbal
+  component clear it.
 - Stat Block-derived creatures can be initialized, damaged, and use supported
   named attacks derived from authored `StatBlockRecord` action sections.
 - Stat Block-derived control resources are initialized from
@@ -167,8 +175,10 @@ flowchart TD
   legal but unsupported. Add reducer state or QNT/MBT behavior only for a
   reusable SRD procedure family, not for catalog breadth.
 - Bonus-action availability is represented in turn resources. Second Wind is
-  the first promoted bonus-action Unit feature subject; broader bonus-action
-  spell, monster, and generic subjects remain future width.
+  the first promoted bonus-action Unit feature subject; Rogue Cunning Action
+  Hide reuses the same prerequisite-gated Hide procedure through a Bonus Action
+  class rider.
+  Broader bonus-action spell, monster, and generic subjects remain future width.
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
   source material, not the target for new promoted behavior.

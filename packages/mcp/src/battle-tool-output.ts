@@ -18,6 +18,7 @@ const BattleCombatantProjectionSchema = Schema.Struct({
   tempHp: Schema.Number,
   reactionAvailable: Schema.Boolean,
   movementSpentFeet: Schema.Number,
+  hidden: Schema.Union(JsonObjectSchema, Schema.Null),
   origin: JsonObjectSchema,
   zeroHpLifecycle: JsonObjectSchema,
 });
@@ -54,6 +55,7 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
   defeated: Schema.Boolean,
   zeroHpLifecycle: JsonObjectSchema,
   conditions: Schema.Array(Schema.String),
+  hidden: Schema.Union(JsonObjectSchema, Schema.Null),
   activeEffects: Schema.Array(JsonObjectSchema),
   reactionAvailable: Schema.Boolean,
 });

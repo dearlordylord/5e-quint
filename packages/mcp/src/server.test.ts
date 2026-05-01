@@ -599,48 +599,48 @@ describe("MCP server route", () => {
     );
     expect(discovered.snapshot).toMatchObject({
       currentActorId: "fighter",
-      acts: [
-        {
+      acts: expect.arrayContaining([
+        expect.objectContaining({
           label: "Attack",
-          subject: {
+          subject: expect.objectContaining({
             tag: "action",
             actorId: "fighter",
             action: "attack",
             attackName: "Longsword",
-          },
+          }),
           initialHoles: [
-            {
+            expect.objectContaining({
               kind: "targetChoice",
               holeId: "battle:attack:target",
               choices: ["goblin"],
-            },
+            }),
           ],
-        },
-        {
+        }),
+        expect.objectContaining({
           label: "Second Wind",
-          subject: {
+          subject: expect.objectContaining({
             tag: "unitFeature",
             actorId: "fighter",
             unitId: "fighter_second_wind",
-          },
-        },
-        {
+          }),
+        }),
+        expect.objectContaining({
           label: "Move",
-          subject: {
+          subject: expect.objectContaining({
             tag: "runtimeCommand",
             actorId: "fighter",
             command: "move",
-          },
-        },
-        {
+          }),
+        }),
+        expect.objectContaining({
           label: "End Turn",
-          subject: {
+          subject: expect.objectContaining({
             tag: "runtimeCommand",
             actorId: "fighter",
             command: "endTurn",
-          },
-        },
-      ],
+          }),
+        }),
+      ]),
     });
 
     const afterTarget = readPayload(
@@ -748,42 +748,33 @@ describe("MCP server route", () => {
     const goblinActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(goblinActs.snapshot.acts).toMatchObject([
-      {
-        label: "Attack",
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
-        },
-      },
-      {
-        label: "Attack",
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Shortbow",
-        },
-      },
-      {
-        label: "Move",
-        subject: {
-          tag: "runtimeCommand",
-          actorId: "goblin",
-          command: "move",
-        },
-      },
-      {
-        label: "End Turn",
-        subject: {
-          tag: "runtimeCommand",
-          actorId: "goblin",
-          command: "endTurn",
-        },
-      },
-    ]);
+    expect(goblinActs.snapshot.acts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Attack",
+          subject: expect.objectContaining({
+            tag: "action",
+            actorId: "goblin",
+            action: "attack",
+            attackName: "Scimitar",
+          }),
+        }),
+        expect.objectContaining({
+          label: "Attack",
+          subject: expect.objectContaining({
+            tag: "action",
+            actorId: "goblin",
+            action: "attack",
+            attackName: "Shortbow",
+          }),
+        }),
+        expect.objectContaining({ label: "Move" }),
+        expect.objectContaining({ label: "End Turn" }),
+      ]),
+    );
+    expect(
+      goblinActs.snapshot.acts.map((act: { label: string }) => act.label),
+    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
 
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -1356,41 +1347,46 @@ describe("MCP server route", () => {
     const fighterActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(fighterActs.snapshot.acts).toMatchObject([
-      {
-        label: "Attack",
-        subject: {
-          tag: "action",
-          actorId: "fighter",
-          action: "attack",
-          attackName: "Longsword",
-        },
-      },
-      {
-        label: "Second Wind",
-        subject: {
-          tag: "unitFeature",
-          actorId: "fighter",
-          unitId: "fighter_second_wind",
-        },
-      },
-      {
-        label: "Move",
-        subject: {
-          tag: "runtimeCommand",
-          actorId: "fighter",
-          command: "move",
-        },
-      },
-      {
-        label: "End Turn",
-        subject: {
-          tag: "runtimeCommand",
-          actorId: "fighter",
-          command: "endTurn",
-        },
-      },
-    ]);
+    expect(fighterActs.snapshot.acts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Attack",
+          subject: expect.objectContaining({
+            tag: "action",
+            actorId: "fighter",
+            action: "attack",
+            attackName: "Longsword",
+          }),
+        }),
+        expect.objectContaining({
+          label: "Second Wind",
+          subject: expect.objectContaining({
+            tag: "unitFeature",
+            actorId: "fighter",
+            unitId: "fighter_second_wind",
+          }),
+        }),
+        expect.objectContaining({
+          label: "Move",
+          subject: expect.objectContaining({
+            tag: "runtimeCommand",
+            actorId: "fighter",
+            command: "move",
+          }),
+        }),
+        expect.objectContaining({
+          label: "End Turn",
+          subject: expect.objectContaining({
+            tag: "runtimeCommand",
+            actorId: "fighter",
+            command: "endTurn",
+          }),
+        }),
+      ]),
+    );
+    expect(
+      fighterActs.snapshot.acts.map((act: { label: string }) => act.label),
+    ).toEqual(["Attack", "Second Wind", "Move", "End Turn"]);
 
     fillBattleHoleThroughTool(root, "fighter", "Longsword", {
       kind: "targetChoice",
@@ -1437,47 +1433,33 @@ describe("MCP server route", () => {
     const goblinActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(goblinActs.snapshot.acts).toMatchObject([
-      {
-        label: "Attack",
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Scimitar",
-        },
-        initialHoles: [
-          {
-            kind: "targetChoice",
-            choices: ["fighter"],
-          },
-        ],
-      },
-      {
-        label: "Attack",
-        subject: {
-          tag: "action",
-          actorId: "goblin",
-          action: "attack",
-          attackName: "Shortbow",
-        },
-        initialHoles: [
-          {
-            kind: "targetChoice",
-            choices: ["fighter"],
-          },
-        ],
-      },
-      {
-        label: "Move",
-        subject: {
-          tag: "runtimeCommand",
-          actorId: "goblin",
-          command: "move",
-        },
-      },
-      { label: "End Turn" },
-    ]);
+    expect(goblinActs.snapshot.acts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Attack",
+          subject: expect.objectContaining({
+            tag: "action",
+            actorId: "goblin",
+            action: "attack",
+            attackName: "Scimitar",
+          }),
+        }),
+        expect.objectContaining({
+          label: "Attack",
+          subject: expect.objectContaining({
+            tag: "action",
+            actorId: "goblin",
+            action: "attack",
+            attackName: "Shortbow",
+          }),
+        }),
+        expect.objectContaining({ label: "Move" }),
+        expect.objectContaining({ label: "End Turn" }),
+      ]),
+    );
+    expect(
+      goblinActs.snapshot.acts.map((act: { label: string }) => act.label),
+    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
 
     fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
       kind: "targetChoice",

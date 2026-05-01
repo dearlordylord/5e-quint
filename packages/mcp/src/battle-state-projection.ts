@@ -43,6 +43,7 @@ function battleCreatureStateProjection(
     tempHp: combatant.tempHp,
     reactionAvailable: combatant.reactionAvailable,
     movementSpentFeet: combatant.movementSpentFeet,
+    hidden: combatant.hidden,
     armorClass: combatant.armorClass,
     activeEffects: combatant.activeEffects,
     concentration: combatant.concentration,

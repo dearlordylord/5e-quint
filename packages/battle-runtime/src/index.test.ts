@@ -26,6 +26,7 @@ import {
   startBattle,
   type BattleFill,
   type BattleHole,
+  type BattleHidePrerequisite,
   type BattleReadiedSpellTrigger,
   type BattleState,
   type BattleSubject,
@@ -787,6 +788,28 @@ describe("battle runtime", () => {
         ],
       }),
     ).not.toMatchObject({ tag: "invalid" });
+
+    const hiddenGoblinTurn: BattleState = {
+      ...goblinTurn,
+      combatants: new Map(goblinTurn.combatants).set(goblinId, {
+        ...goblinTurn.combatants.get(goblinId)!,
+        hidden: { discoveryDc: 16 },
+      }),
+    };
+    const hiddenTarget = requireHole(
+      resolveBattleSubject({ state: hiddenGoblinTurn, subject, fills: [] }),
+      "targetChoice",
+    );
+    const hiddenRoll = requireHole(
+      resolveBattleSubject({
+        state: hiddenGoblinTurn,
+        subject,
+        fills: [targetFill(hiddenTarget, skeletonId)],
+      }),
+      "attackRoll",
+    );
+
+    expect(hiddenRoll).not.toHaveProperty("rollMode");
   });
 
   test("Grappled spell attack rolls have disadvantage against targets other than the grappler", () => {
@@ -863,6 +886,338 @@ describe("battle runtime", () => {
         ],
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+  });
+
+  test("Hide stores discovery DC, grants Invisible while hidden, and Search can find the hidden creature", () => {
+    const state = fighterVsGoblinBattle({
+      hidePrerequisites: hidePrerequisites([
+        [fighterId, { kind: "heavilyObscuredOutOfEnemyLineOfSight" }],
+      ]),
+    });
+    const hideSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "hide",
+    };
+    const hide = findAct(state, hideSubject);
+    const hidden = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: hideSubject,
+        fills: [
+          abilityCheckFill(findHole(hide.initialHoles, "abilityCheck"), 18),
+        ],
+      }),
+    ).state;
+
+    expect(snapshotBattle(hidden).combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hidden: { discoveryDc: 18 },
+          conditions: expect.arrayContaining(["invisible"]),
+        }),
+      ]),
+    );
+
+    const goblinTurn = requireResolved(
+      endTurn({ state: hidden, actorId: fighterId }),
+    ).state;
+    const searchSubject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "search",
+    };
+    const searchTarget = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: searchSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    expect(searchTarget).toMatchObject({ choices: [fighterId] });
+    const searchCheck = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: searchSubject,
+        fills: [targetFill(searchTarget, fighterId)],
+      }),
+      "abilityCheck",
+    );
+    expect(searchCheck).toMatchObject({
+      kind: "abilityCheck",
+      skill: "perception",
+      dc: 18,
+    });
+
+    const found = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: searchSubject,
+        fills: [
+          targetFill(searchTarget, fighterId),
+          abilityCheckFill(searchCheck, 18),
+        ],
+      }),
+    );
+    expect(found.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hidden: null,
+          conditions: expect.not.arrayContaining(["invisible"]),
+        }),
+      ]),
+    );
+  });
+
+  test("Hide is unavailable without the RAW obscured/cover and sight prerequisite", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "hide",
+    };
+
+    expect(
+      discoverBattleActs(state).map((act) => act.subject),
+    ).not.toContainEqual(subject);
+    expect(resolveBattleSubject({ state, subject, fills: [] })).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+  });
+
+  test("hidden attackers have Advantage and reveal when the attack roll is made", () => {
+    const state = fighterVsGoblinBattle();
+    const actor = state.combatants.get(fighterId)!;
+    const hiddenState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...actor,
+        hidden: { discoveryDc: 17 },
+      }),
+    };
+    const target = attackInitialTargetHole(hiddenState);
+    const roll = attackRollHoleAfterTarget(hiddenState, target);
+    expect(roll).toMatchObject({ rollMode: "advantage" });
+
+    const damageHoleResult = resolveBattleSubject({
+      state: hiddenState,
+      subject: fighterAttackSubject(),
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(roll, {
+          total: 20,
+          naturalD20: 17,
+          rollMode: "advantage",
+        }),
+      ],
+    });
+    expect(damageHoleResult).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: fighterId, hidden: null }),
+        ]),
+      },
+    });
+
+    const missed = requireResolved(
+      resolveBattleSubject({
+        state: hiddenState,
+        subject: fighterAttackSubject(),
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, {
+            total: 1,
+            naturalD20: 1,
+            rollMode: "advantage",
+          }),
+        ],
+      }),
+    );
+    expect(missed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: fighterId, hidden: null }),
+      ]),
+    );
+  });
+
+  test("hidden verbal spell attackers reveal through staged no-reaction spell-attack holes", () => {
+    const state = wizardVsSkeletonBattle();
+    const wizard = state.combatants.get(wizardId)!;
+    const hiddenState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...wizard,
+        hidden: { discoveryDc: 17 },
+      }),
+    };
+    const subject = magicSubject("ray_of_frost");
+    const targetHole = requireHole(
+      resolveBattleSubject({ state: hiddenState, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackHoleResult = resolveBattleSubject({
+      state: hiddenState,
+      subject,
+      fills: [targetFill(targetHole, skeletonId)],
+    });
+
+    expect(attackHoleResult).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.not.objectContaining({ rollMode: "advantage" })],
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: wizardId, hidden: null }),
+        ]),
+      },
+    });
+    const attackHole = requireHole(attackHoleResult, "attackRoll");
+    const damageHoleResult = resolveBattleSubject({
+      state: hiddenState,
+      subject,
+      fills: [
+        targetFill(targetHole, skeletonId),
+        attackRollFill(attackHole, { total: 20, naturalD20: 17 }),
+      ],
+    });
+    expect(damageHoleResult).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: wizardId, hidden: null }),
+        ]),
+      },
+    });
+  });
+
+  test("readied verbal spells reveal hidden casters when the spell is cast into readiness", () => {
+    const state = wizardVsSkeletonBattle();
+    const wizard = state.combatants.get(wizardId)!;
+    const hiddenState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...wizard,
+        hidden: { discoveryDc: 17 },
+      }),
+    };
+
+    const readied = resolveBattleSubject({
+      state: hiddenState,
+      subject: {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "ray_of_frost",
+        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+      },
+      fills: [],
+    });
+
+    expect(readied).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: wizardId, hidden: null }),
+        ]),
+      },
+    });
+  });
+
+  test("staged verbal spell damage keeps the caster revealed while requesting Concentration saves", () => {
+    const state = wizardVsSkeletonBattle();
+    const wizard = state.combatants.get(wizardId)!;
+    const skeleton = state.combatants.get(skeletonId)!;
+    const hiddenState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants)
+        .set(wizardId, {
+          ...wizard,
+          hidden: { discoveryDc: 17 },
+        })
+        .set(skeletonId, {
+          ...skeleton,
+          concentration: {
+            sourceSpellId: "mage_armor",
+            effectKind: "spellEffect",
+          },
+        }),
+    };
+    const subject = magicSubject("magic_missile");
+    const target = requireHole(
+      resolveBattleSubject({ state: hiddenState, subject, fills: [] }),
+      "targetChoice",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: hiddenState,
+        subject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "rolledDice",
+    );
+
+    const concentration = resolveBattleSubject({
+      state: hiddenState,
+      subject,
+      fills: [
+        targetFill(target, skeletonId),
+        damageRollFillWithGroups(damage, [[2, 2, 2]]),
+      ],
+    });
+
+    expect(concentration).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "concentrationSavingThrow" }],
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: wizardId, hidden: null }),
+        ]),
+      },
+    });
+  });
+
+  test("Rogue Cunning Action exposes Hide as a Bonus Action", () => {
+    const state = startBattle({
+      battleId: battleId("battle-rogue-cunning-action-hide"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "rogue", level: 2 }],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+      hidePrerequisites: hidePrerequisites([
+        [fighterId, { kind: "coverOutOfEnemyLineOfSight", cover: "total" }],
+      ]),
+    });
+    const subject: BattleSubject = {
+      tag: "bonusAction",
+      actorId: fighterId,
+      action: "hide",
+    };
+    const act = findAct(state, subject);
+
+    const hidden = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          abilityCheckFill(findHole(act.initialHoles, "abilityCheck"), 16),
+        ],
+      }),
+    );
+    expect(hidden.snapshot).toMatchObject({
+      currentTurnResources: { currentHasBonusAction: false },
+      combatants: expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hidden: { discoveryDc: 16 },
+        }),
+      ]),
+    });
   });
 
   test("Off-Hand Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
@@ -1284,6 +1639,81 @@ describe("battle runtime", () => {
     expect(
       completed.state.combatantDistances.get(fighterId)?.get(goblinId),
     ).toBe(10);
+  });
+
+  test("hidden opportunity attackers roll with Advantage and reveal after the attack roll", () => {
+    const base = fighterVsGoblinBattle();
+    const goblin = base.combatants.get(goblinId)!;
+    const state: BattleState = {
+      ...base,
+      combatants: new Map(base.combatants).set(goblinId, {
+        ...goblin,
+        hidden: { discoveryDc: 16 },
+      }),
+    };
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          distanceMovedFeet: 5,
+          destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+        }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    const choice = awaitingReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const startedReaction = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        {
+          kind: "resolve",
+          reactorId: goblinId,
+          choice: {
+            kind: "opportunityAttack",
+            reactorId: goblinId,
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (startedReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
+    }
+    const attackRoll = requireHole(startedReaction, "attackRoll");
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+
+    const missed = requireResolved(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [
+          attackRollFill(attackRoll, {
+            total: 1,
+            naturalD20: 1,
+            rollMode: "advantage",
+          }),
+        ],
+      }),
+    );
+    expect(missed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: goblinId, hidden: null }),
+      ]),
+    );
   });
 
   test("attack resolution rejects an Unconscious current character at 0 HP", () => {
@@ -2982,6 +3412,7 @@ describe("battle runtime", () => {
       discoverBattleActs(goblinTurn).some(
         (act) =>
           act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
           (act.subject.attackName === "Swift Bite" ||
             act.subject.attackName === "Counter Snap"),
       ),
@@ -3062,6 +3493,7 @@ describe("battle runtime", () => {
       discoverBattleActs(spent).some(
         (act) =>
           act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
           act.subject.attackName === "Cinder Breath",
       ),
     ).toBe(false);
@@ -3109,6 +3541,7 @@ describe("battle runtime", () => {
       discoverBattleActs(recharged).some(
         (act) =>
           act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
           act.subject.attackName === "Cinder Breath",
       ),
     ).toBe(true);
@@ -3173,6 +3606,7 @@ describe("battle runtime", () => {
       discoverBattleActs(spent).some(
         (act) =>
           act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
           act.subject.attackName === "Dread Gaze",
       ),
     ).toBe(false);
@@ -3295,6 +3729,7 @@ describe("battle runtime", () => {
     const legendaryAct = discoverBattleActs(state).find(
       (act) =>
         act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
         act.subject.attackName === "Tail Swipe" &&
         act.subject.statBlockSection === "legendaryActions",
     );
@@ -3343,6 +3778,7 @@ describe("battle runtime", () => {
       discoverBattleActs(afterLegendary).some(
         (act) =>
           act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
           act.subject.statBlockSection === "legendaryActions",
       ),
     ).toBe(false);
@@ -3421,6 +3857,7 @@ describe("battle runtime", () => {
       discoverBattleActs(afterDistantFighterActs).some(
         (act) =>
           act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
           act.subject.statBlockSection === "legendaryActions",
       ),
     ).toBe(false);
@@ -3442,6 +3879,7 @@ describe("battle runtime", () => {
       discoverBattleActs(state).some(
         (act) =>
           act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
           act.subject.statBlockSection === "legendaryActions",
       ),
     ).toBe(false);
@@ -3478,6 +3916,7 @@ describe("battle runtime", () => {
       discoverBattleActs(ownTurn).some(
         (act) =>
           act.subject.tag === "action" &&
+          act.subject.action === "attack" &&
           act.subject.statBlockSection === "legendaryActions",
       ),
     ).toBe(false);
@@ -3971,7 +4410,7 @@ describe("battle runtime", () => {
             },
           ],
         },
-        acts: [
+        acts: expect.arrayContaining([
           expect.objectContaining({
             subject: expect.objectContaining({ action: "attack" }),
           }),
@@ -3992,7 +4431,7 @@ describe("battle runtime", () => {
               command: "endTurn",
             },
           }),
-        ],
+        ]),
       },
     });
 
@@ -4278,6 +4717,49 @@ describe("battle runtime", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("old Core class riders remain explicitly support-gated until reusable procedure families exist", () => {
+    const oldClassRiders = [
+      ["barbarian_rage", "Rage"],
+      ["barbarian_reckless_attack", "Reckless Attack"],
+      ["rogue_sneak_attack", "Sneak Attack"],
+      ["rogue_evasion", "Rogue Evasion"],
+      ["monk_deflect_attacks", "Deflect Attacks"],
+      ["rogue_uncanny_dodge", "Uncanny Dodge"],
+      ["bard_cutting_words", "Cutting Words"],
+    ] as const;
+    const state = startBattle({
+      battleId: battleId("battle-old-class-riders-support-gated"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          resources: oldClassRiders.map(([unitId, name]) =>
+            unsupportedClassRiderResource(unitId, name),
+          ),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const discoveredUnitIds = discoverBattleActs(state).flatMap((act) =>
+      act.subject.tag === "unitFeature" ? [act.subject.unitId] : [],
+    );
+    expect(discoveredUnitIds).toEqual([]);
+
+    for (const [unitId] of oldClassRiders) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject: {
+            tag: "unitFeature",
+            actorId: fighterId,
+            unitId,
+          },
+          fills: [],
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    }
   });
 
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
@@ -5670,6 +6152,8 @@ function subjectName(
   subject: BattleSubject,
 ):
   | "attack"
+  | "hide"
+  | "search"
   | "grapple"
   | "escapeGrapple"
   | "offHandAttack"
@@ -5804,7 +6288,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("52 passing");
+  expect(quintOutput).toContain("55 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -5910,6 +6394,7 @@ function renderQntCharacterProjection(
       reactionAvailable: true,
       speed: 30,
       movementSpent: 0,
+      hidden: NotHidden,
       creatureSize: Medium,
       leftHandUse: HFree,
       rightHandUse: HMainWeapon,
@@ -5941,6 +6426,7 @@ function renderQntStateProjection(
         reactionAvailable: true,
         speed: 30,
         movementSpent: 0,
+        hidden: NotHidden,
         creatureSize: Medium,
         leftHandUse: HFree,
         rightHandUse: HMainWeapon,
@@ -5961,6 +6447,7 @@ function renderQntStateProjection(
         reactionAvailable: true,
         speed: 30,
         movementSpent: 0,
+        hidden: NotHidden,
         creatureSize: Small,
         leftHandUse: HFree,
         rightHandUse: HFree,
@@ -5972,6 +6459,7 @@ function renderQntStateProjection(
       grapple: NoGrapple,
       interruptStack: [],
       fighterGoblinDistance: 5,
+      fighterHidePrerequisite: false,
       goblinRechargeAvailable: true,
       goblinLegendaryUsesRemaining: 2,
       lastTurnActor: ${input.lastTurnActor},
@@ -5995,13 +6483,24 @@ function renderQntStillToAct(input: BattleRuntimeParityProjection): string {
   return "[Fighter, Goblin]";
 }
 
-function fighterVsGoblinBattle(): BattleState {
+function hidePrerequisites(
+  entries: readonly (readonly [CombatantId, BattleHidePrerequisite])[],
+): ReadonlyMap<CombatantId, BattleHidePrerequisite> {
+  return new Map(entries);
+}
+
+function fighterVsGoblinBattle(input?: {
+  readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
+}): BattleState {
   return startBattle({
     battleId: battleId("battle-attack"),
     combatants: [
       characterSeed({ initiative: 20 }),
       statBlockCreatureInit({ initiative: 10 }),
     ],
+    ...(input?.hidePrerequisites === undefined
+      ? {}
+      : { hidePrerequisites: input.hidePrerequisites }),
   });
 }
 
@@ -6401,6 +6900,20 @@ function findHole(
   return hole;
 }
 
+function findAct(
+  state: BattleState,
+  subject: BattleSubject,
+): ReturnType<typeof discoverBattleActs>[number] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      JSON.stringify(candidate.subject) === JSON.stringify(subject),
+  );
+  if (act === undefined) {
+    throw new Error(`Expected discovered act ${JSON.stringify(subject)}.`);
+  }
+  return act;
+}
+
 function targetFill(hole: BattleHole, targetId: CombatantId): BattleFill {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
@@ -6409,6 +6922,17 @@ function targetFill(hole: BattleHole, targetId: CombatantId): BattleFill {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+  };
+}
+
+function abilityCheckFill(hole: BattleHole, total: number): BattleFill {
+  if (hole.kind !== "abilityCheck") {
+    throw new Error("Expected abilityCheck hole.");
+  }
+  return {
+    kind: "abilityCheck",
+    holeId: hole.holeId,
+    value: { total },
   };
 }
 
@@ -6982,6 +7506,25 @@ function secondWindResource(input?: {
     ...(input?.usesRemaining === undefined
       ? {}
       : { usesRemaining: input.usesRemaining }),
+  };
+}
+
+function unsupportedClassRiderResource(
+  unitId: string,
+  name: string,
+): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  const unit = unitLibrary.requireUnit("fighter_action_surge");
+  if (unit.kind !== "class_feature" || !("resource" in unit.mechanics)) {
+    throw new Error("Expected class feature resource Unit.");
+  }
+  return {
+    unit: { ...unit, id: unitId, name },
+    resource: unit.mechanics.resource,
   };
 }
 

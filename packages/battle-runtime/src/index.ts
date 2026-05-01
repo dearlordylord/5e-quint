@@ -81,6 +81,7 @@ import {
   type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
 } from "@dnd/shared/types";
+import type { StandardActionKind } from "@dnd/shared/game-facts";
 import type {
   Ability,
   ActivationResource,
@@ -491,6 +492,17 @@ export type BattleGrappleLink = {
   readonly hand: BattleHand;
   readonly targetExemptFromDragCost: boolean;
 };
+export type BattleHiddenState = {
+  readonly discoveryDc: number;
+};
+export type BattleHidePrerequisite =
+  | {
+      readonly kind: "heavilyObscuredOutOfEnemyLineOfSight";
+    }
+  | {
+      readonly kind: "coverOutOfEnemyLineOfSight";
+      readonly cover: "threeQuarters" | "total";
+    };
 export type BattleMovementDistanceUpdate = {
   readonly combatantId: CombatantId;
   readonly feet: number;
@@ -665,6 +677,7 @@ export type BattleCreatureState = {
   readonly conditions: ConditionState;
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly concentration: BattleConcentration | null;
+  readonly hidden: BattleHiddenState | null;
   readonly armorClass: ArmorClassState;
   readonly size: Size;
   readonly zeroHpLifecycle: ZeroHpLifecycle;
@@ -699,6 +712,7 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
+  readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly combatantDistances: ReadonlyMap<
     CombatantId,
     ReadonlyMap<CombatantId, number>
@@ -712,11 +726,13 @@ export type BattleState = {
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
+  "hide",
+  "search",
   "grapple",
   "escapeGrapple",
 ] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
-export const BATTLE_SUBJECT_BONUS_ACTIONS = ["offHandAttack"] as const;
+export const BATTLE_SUBJECT_BONUS_ACTIONS = ["offHandAttack", "hide"] as const;
 export type BattleSubjectBonusAction =
   (typeof BATTLE_SUBJECT_BONUS_ACTIONS)[number];
 
@@ -753,6 +769,11 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
+    action: Schema.Literal("hide", "search"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
     action: Schema.Literal("grapple"),
     attackName: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
     statBlockSection: Schema.optionalWith(
@@ -785,6 +806,11 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     action: Schema.Literal("offHandAttack"),
     attackName: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("bonusAction"),
+    actorId: CombatantId,
+    action: Schema.Literal("hide"),
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
@@ -833,6 +859,21 @@ export const BattleSubjectSchema = Schema.Union(
   }),
 );
 export type BattleSubject = typeof BattleSubjectSchema.Type;
+type ActionHideSubject = {
+  readonly tag: "action";
+  readonly actorId: CombatantId;
+  readonly action: "hide";
+};
+type ActionSearchSubject = {
+  readonly tag: "action";
+  readonly actorId: CombatantId;
+  readonly action: "search";
+};
+type BonusActionHideSubject = {
+  readonly tag: "bonusAction";
+  readonly actorId: CombatantId;
+  readonly action: "hide";
+};
 
 const ACID_SPLASH_POINT_SPHERE_RADIUS_FEET = 5;
 
@@ -854,6 +895,12 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.statBlockSection ?? null,
       ]),
     ),
+    Match.when({ tag: "action", action: "hide" }, (action) =>
+      JSON.stringify([action.tag, action.actorId, action.action]),
+    ),
+    Match.when({ tag: "action", action: "search" }, (action) =>
+      JSON.stringify([action.tag, action.actorId, action.action]),
+    ),
     Match.when({ tag: "action", action: "grapple" }, (action) =>
       JSON.stringify([action.tag, action.actorId, action.action]),
     ),
@@ -867,6 +914,9 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.action,
         attack.attackName,
       ]),
+    ),
+    Match.when({ tag: "bonusAction", action: "hide" }, (action) =>
+      JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when({ tag: "actionSpell" }, (spell) =>
       JSON.stringify([
@@ -1008,6 +1058,15 @@ export type BattleMovementHole = {
   readonly actorId: CombatantId;
   readonly movementBudgetFeet: MovementFeet;
 };
+export type BattleAbilityCheckHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "abilityCheck";
+  readonly label: string;
+  readonly ability: Ability;
+  readonly skill: "stealth" | "perception";
+  readonly dc: number;
+};
 export type BattleGrappleOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -1031,6 +1090,7 @@ export type BattleHole =
   | BattleConcentrationSavingThrowHole
   | BattleReactionDecisionHole
   | BattleMovementHole
+  | BattleAbilityCheckHole
   | BattleGrappleOutcomeHole;
 
 const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
@@ -1205,6 +1265,14 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("abilityCheck"),
+    label: Schema.String,
+    ability: Schema.String,
+    skill: Schema.Literal("stealth", "perception"),
+    dc: Schema.Number,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("grappleOutcome"),
     label: Schema.String,
     actorId: CombatantId,
@@ -1252,6 +1320,13 @@ export type BattleFill =
       readonly kind: "movement";
       readonly holeId: BattleHoleId;
       readonly value: BattleMovementFillValue;
+    }
+  | {
+      readonly kind: "abilityCheck";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly total: number;
+      };
     }
   | {
       readonly kind: "grappleOutcome";
@@ -1379,6 +1454,13 @@ type BattleFillEncoded =
       };
     }
   | {
+      readonly kind: "abilityCheck";
+      readonly holeId: string;
+      readonly value: {
+        readonly total: number;
+      };
+    }
+  | {
       readonly kind: "grappleOutcome";
       readonly holeId: string;
       readonly value: {
@@ -1488,6 +1570,13 @@ export const BattleFillSchema: Schema.Schema<
       }),
     }),
     Schema.Struct({
+      kind: Schema.Literal("abilityCheck"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        total: Schema.Number.pipe(Schema.int()),
+      }),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("grappleOutcome"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
@@ -1519,6 +1608,11 @@ type OffHandAttackBattleResolutionInput = BattleResolutionInputForSubject<
     { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
   >
 >;
+type HideBattleResolutionInput = BattleResolutionInputForSubject<
+  ActionHideSubject | BonusActionHideSubject
+>;
+type SearchBattleResolutionInput =
+  BattleResolutionInputForSubject<ActionSearchSubject>;
 type GrappleBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "grapple" }>
 >;
@@ -1599,6 +1693,7 @@ export type BattleCreatureSnapshot = {
   readonly defeated: boolean;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;
   readonly conditions: readonly Condition[];
+  readonly hidden: BattleHiddenState | null;
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly concentration: BattleConcentration | null;
   readonly reactionAvailable: boolean;
@@ -1655,6 +1750,16 @@ const REACTION_DECISION_HOLE_INSTANCE = holeInstanceKey(
 );
 const MOVEMENT_HOLE_ID = holeId("battle:movement");
 const MOVEMENT_HOLE_INSTANCE = holeInstanceKey("battle:movement");
+const HIDE_ABILITY_CHECK_HOLE_ID = holeId("battle:hide:stealth-check");
+const HIDE_ABILITY_CHECK_HOLE_INSTANCE = holeInstanceKey(
+  "battle:hide:stealth-check",
+);
+const SEARCH_TARGET_HOLE_ID = holeId("battle:search:target");
+const SEARCH_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:search:target");
+const SEARCH_ABILITY_CHECK_HOLE_ID = holeId("battle:search:perception-check");
+const SEARCH_ABILITY_CHECK_HOLE_INSTANCE = holeInstanceKey(
+  "battle:search:perception-check",
+);
 const GRAPPLE_TARGET_HOLE_ID = holeId("battle:grapple:target");
 const GRAPPLE_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:grapple:target");
 const GRAPPLE_OUTCOME_HOLE_ID = holeId("battle:grapple:outcome");
@@ -1672,6 +1777,7 @@ const SECOND_WIND_HEALING_ROLL_HOLE_INSTANCE = holeInstanceKey(
   "battle:unit-feature:second-wind:healing-roll",
 );
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = 5;
+const HIDE_DC = 15;
 
 type SupportedActionSurgeUnitFeature = {
   readonly unit: UnitRecord;
@@ -1692,6 +1798,7 @@ export function startBattle(input: {
   readonly battleId: BattleId;
   readonly combatants: readonly BattleCreatureInit[];
   readonly combatantDistances?: readonly BattleCombatantDistance[];
+  readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
 }): BattleState {
   if (input.combatants.length === 0) {
     throw new Error("startBattle requires at least one combatant.");
@@ -1707,6 +1814,10 @@ export function startBattle(input: {
       battleCreatureStateFromInit(combatant),
     );
   }
+  assertHidePrerequisitesReferenceCombatants(
+    input.hidePrerequisites ?? new Map(),
+    combatants,
+  );
 
   const orderedEntries = input.combatants
     .map((combatant, callerOrder) => ({ combatant, callerOrder }))
@@ -1735,6 +1846,7 @@ export function startBattle(input: {
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
+    hidePrerequisites: new Map(input.hidePrerequisites ?? []),
     combatantDistances: battleCombatantDistances(input),
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
@@ -1787,6 +1899,31 @@ export function discoverBattleActs(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "hide") &&
+    canHideInCurrentCircumstances(state, actorId)
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "hide" },
+      label: "Hide",
+      summary: "Make a Dexterity (Stealth) check to become hidden.",
+      initialHoles: [hideAbilityCheckHole()],
+    });
+  }
+  const hiddenTargets = hiddenSearchTargetChoices(state, actorId);
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "search") &&
+    hiddenTargets.length > 0
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "search" },
+      label: "Search",
+      summary: "Make a Wisdom (Perception) check to find a hidden creature.",
+      initialHoles: [searchTargetHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "attack") &&
     grappleTargetChoices(state, actorId).length > 0
   ) {
@@ -1830,6 +1967,19 @@ export function discoverBattleActs(
       label: "Off-Hand Attack",
       summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
       initialHoles: [attackTargetHole(state, actorId, offHand)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    state.currentTurnResources.currentHasBonusAction &&
+    canUseCunningActionHide(state.combatants.get(actorId)) &&
+    canHideInCurrentCircumstances(state, actorId)
+  ) {
+    acts.push({
+      subject: { tag: "bonusAction", actorId, action: "hide" },
+      label: "Hide",
+      summary: "Use Cunning Action to Hide as a Bonus Action.",
+      initialHoles: [hideAbilityCheckHole()],
     });
   }
   acts.push(...supportedUnitFeatureActs(state, actorId));
@@ -1967,6 +2117,8 @@ function resolveBattleSubjectInternal(
   if (
     input.subject.tag === "action" &&
     (input.subject.action === "attack" ||
+      input.subject.action === "hide" ||
+      input.subject.action === "search" ||
       input.subject.action === "grapple" ||
       input.subject.action === "escapeGrapple") &&
     !combatantCanTakeActions(input.state.combatants.get(actorId))
@@ -1978,13 +2130,10 @@ function resolveBattleSubjectInternal(
     );
   }
 
+  const standardActionKind = standardActionKindForSubject(input.subject);
   if (
-    input.subject.tag === "action" &&
-    (input.subject.action === "attack" ||
-      input.subject.action === "grapple" ||
-      input.subject.action === "escapeGrapple") &&
-    !isLegendaryAttackSubject(input.subject) &&
-    !canSpendAction(input.state.currentTurnResources, "attack")
+    standardActionKind !== null &&
+    !canSpendAction(input.state.currentTurnResources, standardActionKind)
   ) {
     return invalidResult(
       input.state,
@@ -2034,6 +2183,12 @@ function resolveBattleSubjectInternal(
         suppressedReactionTrigger: options.suppressedReactionTrigger,
       }),
     ),
+    Match.when({ tag: "action", action: "hide" }, (subject) =>
+      resolveHide({ ...input, subject: actionHideSubject(subject) }),
+    ),
+    Match.when({ tag: "action", action: "search" }, (subject) =>
+      resolveSearch({ ...input, subject: actionSearchSubject(subject) }),
+    ),
     Match.when({ tag: "action", action: "grapple" }, (subject) =>
       resolveGrapple({ ...input, subject }),
     ),
@@ -2042,6 +2197,9 @@ function resolveBattleSubjectInternal(
     ),
     Match.when({ tag: "bonusAction", action: "offHandAttack" }, (subject) =>
       resolveOffHandAttack({ ...input, subject }),
+    ),
+    Match.when({ tag: "bonusAction", action: "hide" }, (subject) =>
+      resolveHide({ ...input, subject: bonusActionHideSubject(subject) }),
     ),
     Match.when({ tag: "actionSpell" }, (subject) =>
       resolveSpellAct({
@@ -2077,6 +2235,42 @@ function resolveBattleSubjectInternal(
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
 }
 
+function actionHideSubject(subject: {
+  readonly tag: "action";
+  readonly actorId: CombatantId;
+  readonly action: "hide";
+}): ActionHideSubject {
+  return {
+    tag: "action",
+    actorId: subject.actorId,
+    action: "hide",
+  };
+}
+
+function actionSearchSubject(subject: {
+  readonly tag: "action";
+  readonly actorId: CombatantId;
+  readonly action: "search";
+}): ActionSearchSubject {
+  return {
+    tag: "action",
+    actorId: subject.actorId,
+    action: "search",
+  };
+}
+
+function bonusActionHideSubject(subject: {
+  readonly tag: "bonusAction";
+  readonly actorId: CombatantId;
+  readonly action: "hide";
+}): BonusActionHideSubject {
+  return {
+    tag: "bonusAction",
+    actorId: subject.actorId,
+    action: "hide",
+  };
+}
+
 function isReleaseGrappleSubject(
   subject: BattleSubject,
 ): subject is Extract<
@@ -2085,6 +2279,22 @@ function isReleaseGrappleSubject(
 > {
   return (
     subject.tag === "runtimeCommand" && subject.command === "releaseGrapple"
+  );
+}
+
+function standardActionKindForSubject(
+  subject: BattleSubject,
+): StandardActionKind | null {
+  if (subject.tag !== "action" || isLegendaryAttackSubject(subject)) {
+    return null;
+  }
+  return Match.value(subject.action).pipe(
+    Match.when("attack", () => "attack" as const),
+    Match.when("hide", () => "hide" as const),
+    Match.when("search", () => "search" as const),
+    Match.when("grapple", () => "attack" as const),
+    Match.when("escapeGrapple", () => "attack" as const),
+    Match.exhaustive,
   );
 }
 
@@ -2586,6 +2796,7 @@ function battleCreatureStateFromInit(
     conditions: EMPTY_CONDITION_STATE,
     activeEffects: [],
     concentration: null,
+    hidden: null,
     zeroHpLifecycle,
     reactionAvailable: true,
     movementSpentFeet: movementFeet(0),
@@ -2637,6 +2848,17 @@ function battleCreatureStateFromInit(
       resources: statBlockResourceState(creatureInit.statBlock.statBlock),
     },
   });
+}
+
+function assertHidePrerequisitesReferenceCombatants(
+  hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>,
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): void {
+  for (const combatantId of hidePrerequisites.keys()) {
+    if (!combatants.has(combatantId)) {
+      throw new Error("Hide prerequisite references unknown combatant.");
+    }
+  }
 }
 
 function assertCharacterBattleLoadoutMatchesHands(
@@ -2859,7 +3081,12 @@ function combatantSnapshot(
     size: combatant.size,
     defeated: combatant.hp === 0,
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
-    conditions: activeConditions(combatant.conditions, sourceGrapple !== null),
+    conditions: activeConditions(
+      combatant.conditions,
+      sourceGrapple !== null,
+      combatant.hidden !== null,
+    ),
+    hidden: combatant.hidden,
     activeEffects: combatant.activeEffects,
     concentration: combatant.concentration,
     reactionAvailable: combatant.reactionAvailable,
@@ -2960,11 +3187,13 @@ function combatantCanTakeActions(
 function activeConditions(
   state: ConditionState,
   includeGrappled = false,
+  includeHiddenInvisible = false,
 ): readonly Condition[] {
   return ALL_CONDITIONS.filter(
     (condition) =>
       hasCondition(state, condition) ||
-      (condition === "grappled" && includeGrappled),
+      (condition === "grappled" && includeGrappled) ||
+      (condition === "invisible" && includeHiddenInvisible),
   );
 }
 
@@ -3341,7 +3570,7 @@ function resolveAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Attack roll mode does not match the current Grappled attack-roll rule.",
+      "Attack roll mode does not match the current attack-roll rule.",
     );
   }
 
@@ -3349,10 +3578,11 @@ function resolveAttack(
     fillSet.attackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
   );
+  const attackRolledState = revealHidden(input.state, input.subject.actorId);
   const critical = attackRollIsCriticalHit(fillSet.attackRoll);
   if (hit && fillSet.damageRoll == null) {
     const reactionWindow = maybeOpenReactionWindow(
-      input.state,
+      attackRolledState,
       {
         trigger: "attackHit",
         attackerId: input.subject.actorId,
@@ -3368,7 +3598,7 @@ function resolveAttack(
     if (reactionWindow !== null) {
       return reactionWindow;
     }
-    return needsHolesResult(input.state, input.subject, [
+    return needsHolesResult(attackRolledState, input.subject, [
       attackDamageHole(attack, critical, fillSet.attackRoll),
     ]);
   }
@@ -3402,7 +3632,7 @@ function resolveAttack(
     );
     if (concentrationSave !== null) {
       if (fillSet.concentrationSavingThrow === undefined) {
-        return needsHolesResult(input.state, input.subject, [
+        return needsHolesResult(attackRolledState, input.subject, [
           concentrationSave,
         ]);
       }
@@ -3423,7 +3653,7 @@ function resolveAttack(
       );
     }
     const spent = spendAttackAction(
-      applyAttackDamage(input.state, target.combatantId, attack, fillSet),
+      applyAttackDamage(attackRolledState, target.combatantId, attack, fillSet),
       input.subject.actorId,
       attack,
     );
@@ -3452,11 +3682,152 @@ function resolveAttack(
 
   return spendAttackAction(
     hit
-      ? applyAttackDamage(input.state, target.combatantId, attack, fillSet)
-      : input.state,
+      ? applyAttackDamage(
+          attackRolledState,
+          target.combatantId,
+          attack,
+          fillSet,
+        )
+      : attackRolledState,
     input.subject.actorId,
     attack,
   );
+}
+
+function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (actor === undefined || !combatantCanTakeActions(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Hide is no longer available for the current actor.",
+    );
+  }
+  if (input.subject.tag === "bonusAction" && !canUseCunningActionHide(actor)) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Bonus Action Hide requires an admitted Cunning Action class rider.",
+    );
+  }
+  if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Hide requires Heavily Obscured or sufficient cover and being out of enemy line of sight.",
+    );
+  }
+  const check = abilityCheckFill(
+    input.fills,
+    HIDE_ABILITY_CHECK_HOLE_ID,
+    "Hide",
+  );
+  if (check.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", check.message);
+  }
+  if (check.value === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      hideAbilityCheckHole(),
+    ]);
+  }
+
+  const spent =
+    input.subject.tag === "bonusAction"
+      ? spendActivationResource(input.state.currentTurnResources, {
+          kind: "bonusAction",
+        })
+      : spendAction(input.state.currentTurnResources, "hide");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Hide is no longer available for the current actor.",
+    );
+  }
+  const hidden =
+    check.value.value.total >= HIDE_DC
+      ? { discoveryDc: check.value.value.total }
+      : null;
+  const nextActor = { ...actor, hidden };
+  const nextState = normalizeBattleGrapples({
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.subject.actorId,
+      nextActor,
+    ),
+    currentTurnResources: spent.right,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveSearch(
+  input: SearchBattleResolutionInput,
+): BattleResolutionResult {
+  const targetFill = input.fills.find((fill) => fill.kind === "targetChoice");
+  if (targetFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      searchTargetHole(input.state, input.subject.actorId),
+    ]);
+  }
+  if (targetFill.holeId !== SEARCH_TARGET_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Search target fill does not match the requested hole.",
+    );
+  }
+  const target = input.state.combatants.get(targetFill.value);
+  if (
+    target === undefined ||
+    target.combatantId === input.subject.actorId ||
+    target.hidden === null
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Search target must be a hidden combatant in this battle.",
+    );
+  }
+  const check = abilityCheckFill(
+    input.fills.filter((fill) => fill.kind !== "targetChoice"),
+    SEARCH_ABILITY_CHECK_HOLE_ID,
+    "Search",
+  );
+  if (check.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", check.message);
+  }
+  if (check.value === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      searchAbilityCheckHole(target.hidden.discoveryDc),
+    ]);
+  }
+  const spent = spendAction(input.state.currentTurnResources, "search");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Search is no longer available for the current actor.",
+    );
+  }
+  const found = check.value.value.total >= target.hidden.discoveryDc;
+  const nextTarget = found ? { ...target, hidden: null } : target;
+  const nextState = normalizeBattleGrapples({
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      target.combatantId,
+      nextTarget,
+    ),
+    currentTurnResources: spent.right,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveOffHandAttack(
@@ -3532,16 +3903,17 @@ function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Off-Hand Attack roll mode does not match the current Grappled attack-roll rule.",
+      "Off-Hand Attack roll mode does not match the current attack-roll rule.",
     );
   }
   const hit = attackRollHits(
     fillSet.attackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
   );
+  const attackRolledState = revealHidden(input.state, input.subject.actorId);
   const critical = attackRollIsCriticalHit(fillSet.attackRoll);
   if (hit && fillSet.damageRoll == null) {
-    return needsHolesResult(input.state, input.subject, [
+    return needsHolesResult(attackRolledState, input.subject, [
       attackDamageHole(attack, critical, fillSet.attackRoll),
     ]);
   }
@@ -3575,7 +3947,7 @@ function resolveOffHandAttack(
     );
     if (concentrationSave !== null) {
       if (fillSet.concentrationSavingThrow === undefined) {
-        return needsHolesResult(input.state, input.subject, [
+        return needsHolesResult(attackRolledState, input.subject, [
           concentrationSave,
         ]);
       }
@@ -3601,8 +3973,8 @@ function resolveOffHandAttack(
     currentHasBonusAction: false,
   };
   const nextState = hit
-    ? applyAttackDamage(input.state, target.combatantId, attack, fillSet)
-    : input.state;
+    ? applyAttackDamage(attackRolledState, target.combatantId, attack, fillSet)
+    : attackRolledState;
   const state = normalizeBattleGrapples({
     ...nextState,
     currentTurnResources: nextTurnResources,
@@ -3848,6 +4220,59 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     attackRoll,
     concentrationSavingThrow,
     damageRoll,
+  };
+}
+
+function abilityCheckFill(
+  fills: readonly BattleFill[],
+  holeId: BattleHoleId,
+  label: string,
+):
+  | {
+      readonly tag: "ok";
+      readonly value:
+        | Extract<BattleFill, { readonly kind: "abilityCheck" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  let check: Extract<BattleFill, { readonly kind: "abilityCheck" }> | undefined;
+  for (const fill of fills) {
+    if (fill.kind === "abilityCheck" && fill.holeId === holeId) {
+      if (check !== undefined) {
+        return { tag: "invalid", message: `${label} check was filled twice.` };
+      }
+      check = fill;
+      continue;
+    }
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the ${label} replay holes.`,
+    };
+  }
+  return { tag: "ok", value: check };
+}
+
+function hideAbilityCheckHole(): BattleAbilityCheckHole {
+  return {
+    holeInstanceKey: HIDE_ABILITY_CHECK_HOLE_INSTANCE,
+    holeId: HIDE_ABILITY_CHECK_HOLE_ID,
+    kind: "abilityCheck",
+    label: `Hide Dexterity (Stealth) check (DC ${HIDE_DC})`,
+    ability: "dex",
+    skill: "stealth",
+    dc: HIDE_DC,
+  };
+}
+
+function searchAbilityCheckHole(dc: number): BattleAbilityCheckHole {
+  return {
+    holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
+    holeId: SEARCH_ABILITY_CHECK_HOLE_ID,
+    kind: "abilityCheck",
+    label: `Search Wisdom (Perception) check (DC ${dc})`,
+    ability: "wis",
+    skill: "perception",
+    dc,
   };
 }
 
@@ -4307,6 +4732,11 @@ function resolveOpportunityAttackCommand(
       "Opportunity Attack target is fixed by the movement trigger.",
     );
   }
+  const requiredRollMode = requiredAttackRollMode(
+    input.state,
+    subject.reactorId,
+    subject.targetId,
+  );
   if (fillSet.attackRoll == null) {
     if (fillSet.damageRoll != null) {
       return invalidResult(
@@ -4316,7 +4746,7 @@ function resolveOpportunityAttackCommand(
       );
     }
     return needsHolesResult(input.state, input.subject, [
-      attackRollHole(attack),
+      attackRollHole(attack, requiredRollMode),
     ]);
   }
   if (!attackRollResultIsValid(fillSet.attackRoll)) {
@@ -4326,6 +4756,14 @@ function resolveOpportunityAttackCommand(
       "Opportunity Attack roll result is outside the d20 attack-roll protocol.",
     );
   }
+  if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Opportunity Attack roll mode does not match the current attack-roll rule.",
+    );
+  }
+  const attackRolledState = revealHidden(input.state, subject.reactorId);
   const hit = attackRollHits(
     fillSet.attackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
@@ -4341,12 +4779,12 @@ function resolveOpportunityAttackCommand(
   if (!hit) {
     return {
       tag: "resolved",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
+      state: attackRolledState,
+      snapshot: snapshotBattle(attackRolledState),
     };
   }
   if (fillSet.damageRoll == null) {
-    return needsHolesResult(input.state, input.subject, [
+    return needsHolesResult(attackRolledState, input.subject, [
       attackDamageHole(attack, critical, fillSet.attackRoll),
     ]);
   }
@@ -4369,7 +4807,9 @@ function resolveOpportunityAttackCommand(
   const concentrationSave = concentrationSavingThrowHole(target, damageAmount);
   if (concentrationSave !== null) {
     if (fillSet.concentrationSavingThrow === undefined) {
-      return needsHolesResult(input.state, input.subject, [concentrationSave]);
+      return needsHolesResult(attackRolledState, input.subject, [
+        concentrationSave,
+      ]);
     }
     if (fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId) {
       return invalidResult(
@@ -4380,7 +4820,7 @@ function resolveOpportunityAttackCommand(
     }
   }
   const nextState = applyAttackDamage(
-    input.state,
+    attackRolledState,
     subject.targetId,
     attack,
     fillSet,
@@ -5246,6 +5686,12 @@ function discoverSupportedSpellActs(
   );
 }
 
+function spellRequiresVerbal(spell: SpellRecord): boolean {
+  return (
+    spell.mechanics.family === "activation" && spell.mechanics.components.v
+  );
+}
+
 function readiedSpellAct(
   state: BattleState,
   actorId: CombatantId,
@@ -5327,11 +5773,14 @@ function resolveSpellAct(
     );
   }
 
+  const castingState = spellRequiresVerbal(invocation.spell)
+    ? revealHidden(input.state, subject.actorId)
+    : input.state;
   if (
     subject.spellActId !== undefined &&
     isReadiedSpellActId(subject.spellActId)
   ) {
-    return resolveReadySpellAct(input, invocation);
+    return resolveReadySpellAct({ ...input, state: castingState }, invocation);
   }
 
   const fillSet = spellFillSet(input.fills, invocation);
@@ -5340,7 +5789,7 @@ function resolveSpellAct(
   }
   if (invocation.kind === "cantripSaveGateDamage") {
     return resolveSaveGateDamageSpellAct({
-      input,
+      input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
       fillSet,
@@ -5348,8 +5797,8 @@ function resolveSpellAct(
   }
 
   if (fillSet.targetId == null) {
-    return needsHolesResult(input.state, input.subject, [
-      spellTargetHole(input.state, subject.actorId, invocation),
+    return needsHolesResult(castingState, input.subject, [
+      spellTargetHole(castingState, subject.actorId, invocation),
     ]);
   }
   const target = input.state.combatants.get(fillSet.targetId);
@@ -5382,7 +5831,7 @@ function resolveSpellAct(
       );
     }
     const effected = applyPersistentSpellActiveEffect(
-      input.state,
+      castingState,
       subject.actorId,
       target.combatantId,
       invocation,
@@ -5409,7 +5858,7 @@ function resolveSpellAct(
   }
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.state,
+    castingState,
     {
       trigger: "spellCast",
       casterId: subject.actorId,
@@ -5428,12 +5877,12 @@ function resolveSpellAct(
 
   if (invocation.kind === "cantripSpellAttack") {
     const requiredRollMode = requiredAttackRollMode(
-      input.state,
+      castingState,
       subject.actorId,
       target.combatantId,
     );
     if (fillSet.attackRoll == null) {
-      return needsHolesResult(input.state, input.subject, [
+      return needsHolesResult(castingState, input.subject, [
         spellAttackRollHole(invocation, requiredRollMode),
       ]);
     }
@@ -5448,7 +5897,7 @@ function resolveSpellAct(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Spell attack roll mode does not match the current Grappled attack-roll rule.",
+        "Spell attack roll mode does not match the current attack-roll rule.",
       );
     }
     const hit = attackRollHits(
@@ -5457,7 +5906,7 @@ function resolveSpellAct(
     );
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
     if (hit && fillSet.damageRoll == null) {
-      return needsHolesResult(input.state, input.subject, [
+      return needsHolesResult(castingState, input.subject, [
         spellDamageHole(invocation, critical),
       ]);
     }
@@ -5469,7 +5918,7 @@ function resolveSpellAct(
       );
     }
     if (!hit) {
-      return spendMagicAction(input.state);
+      return spendMagicAction(castingState);
     }
   } else if (fillSet.attackRoll != null) {
     return invalidResult(
@@ -5480,7 +5929,7 @@ function resolveSpellAct(
   }
 
   if (fillSet.damageRoll == null) {
-    return needsHolesResult(input.state, input.subject, [
+    return needsHolesResult(castingState, input.subject, [
       spellDamageHole(invocation),
     ]);
   }
@@ -5514,7 +5963,7 @@ function resolveSpellAct(
         );
   if (concentrationSave !== null) {
     if (concentrationFill === undefined) {
-      return needsHolesResult(input.state, input.subject, [concentrationSave]);
+      return needsHolesResult(castingState, input.subject, [concentrationSave]);
     }
     if (fillSet.concentrationSavingThrows.length > 1) {
       return invalidResult(
@@ -5531,7 +5980,7 @@ function resolveSpellAct(
     );
   }
   const damaged = applySpellDamage(
-    input.state,
+    castingState,
     target.combatantId,
     invocation,
     fillSet.damageRoll,
@@ -5731,7 +6180,7 @@ function resolveSpellRelease(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Readied spell attack roll mode does not match the current Grappled attack-roll rule.",
+        "Readied spell attack roll mode does not match the current attack-roll rule.",
       );
     }
     const hit = attackRollHits(
@@ -7389,6 +7838,19 @@ function attackTargetHole(
   };
 }
 
+function searchTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: SEARCH_TARGET_HOLE_ID,
+    holeInstanceKey: SEARCH_TARGET_HOLE_INSTANCE,
+    label: "Hidden creature to Search for",
+    choices: hiddenSearchTargetChoices(state, actorId),
+  };
+}
+
 function grappleTargetHole(
   state: BattleState,
   actorId: CombatantId,
@@ -7438,6 +7900,57 @@ function attackTargetChoices(
 ): readonly CombatantId[] {
   return [...state.combatants.keys()].filter(
     (id) => id !== actorId && attackTargetIsLegal(state, actorId, id, attack),
+  );
+}
+
+function hiddenSearchTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CombatantId[] {
+  return [...state.combatants.values()]
+    .filter(
+      (combatant) =>
+        combatant.combatantId !== actorId && combatant.hidden !== null,
+    )
+    .map((combatant) => combatant.combatantId);
+}
+
+function revealHidden(
+  state: BattleState,
+  combatantId: CombatantId,
+): BattleState {
+  const combatant = state.combatants.get(combatantId);
+  if (combatant === undefined || combatant.hidden === null) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatantId, {
+      ...combatant,
+      hidden: null,
+    }),
+  };
+}
+
+function canUseCunningActionHide(
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return (
+    combatant?.origin.kind === "character" &&
+    (findCharacterClassLevel(combatant.origin.classLevels, "rogue") ?? 0) >= 2
+  );
+}
+
+function canHideInCurrentCircumstances(
+  state: BattleState,
+  combatantId: CombatantId,
+): boolean {
+  const prerequisite = state.hidePrerequisites.get(combatantId);
+  if (prerequisite === undefined) return false;
+  return Match.value(prerequisite).pipe(
+    Match.when({ kind: "heavilyObscuredOutOfEnemyLineOfSight" }, () => true),
+    Match.when({ kind: "coverOutOfEnemyLineOfSight" }, () => true),
+    Match.exhaustive,
   );
 }
 
@@ -7751,11 +8264,19 @@ function requiredAttackRollMode(
   attackerId: CombatantId,
   targetId: CombatantId,
 ): AttackRollMode | undefined {
+  const attacker = state.combatants.get(attackerId);
+  const target = state.combatants.get(targetId);
   const grapple = grappledBy(state, attackerId);
-  if (grapple === undefined || grapple.grapplerId === targetId) {
-    return undefined;
-  }
-  return "disadvantage";
+  const hiddenTargetDisadvantage =
+    target?.hidden !== null && target?.hidden !== undefined;
+  const grappleDisadvantage =
+    grapple !== undefined && grapple.grapplerId !== targetId;
+  const hasAdvantage =
+    attacker?.hidden !== null && attacker?.hidden !== undefined;
+  const hasDisadvantage = hiddenTargetDisadvantage || grappleDisadvantage;
+  if (hasAdvantage && !hasDisadvantage) return "advantage";
+  if (hasDisadvantage && !hasAdvantage) return "disadvantage";
+  return undefined;
 }
 
 function attackRollModeMatches(
