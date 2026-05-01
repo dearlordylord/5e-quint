@@ -1,6 +1,10 @@
 import { Either, JSONSchema, Schema } from "effect";
 
-import { errorContent, jsonContent } from "./tool-content.ts";
+import {
+  errorContent,
+  jsonContent,
+  jsonSerializablePayload,
+} from "./tool-content.ts";
 
 export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
@@ -52,7 +56,7 @@ export function schemaJsonContent<A, I>(
   schema: Schema.Schema<A, I, never>,
   value: A,
 ) {
-  const encoded = Schema.encodeSync(schema)(value);
+  const encoded = jsonSerializablePayload(Schema.encodeSync(schema)(value));
   return {
     ...jsonContent(encoded),
     structuredContent: encoded,
