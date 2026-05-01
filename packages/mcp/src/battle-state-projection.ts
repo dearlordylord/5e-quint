@@ -8,6 +8,13 @@ export function battleStateProjection(state: BattleState) {
       battleCreatureStateProjection,
     ),
     currentTurnResources: state.currentTurnResources,
+    readiedSpells: Array.from(
+      state.readiedSpells,
+      ([casterId, readiedSpell]) => ({
+        casterId,
+        ...readiedSpell,
+      }),
+    ),
   };
 }
 
@@ -19,6 +26,9 @@ function battleCreatureStateProjection(combatant: BattleCreatureState) {
     hp: combatant.hp,
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
+    armorClass: combatant.armorClass,
+    activeEffects: combatant.activeEffects,
+    concentration: combatant.concentration,
     origin:
       combatant.origin.kind === "character"
         ? {

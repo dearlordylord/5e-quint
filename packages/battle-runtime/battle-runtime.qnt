@@ -35,6 +35,11 @@ module battleRuntime {
   // - Spells/Descriptions-M-P.md lines 85-96 and Spells/Descriptions-Q-R.md
   //   lines 41-52: Magic Missile can put all darts on one target; Ray of Frost
   //   reduces Speed until the start of the caster's next turn.
+  // - Spells/Descriptions-M-P.md lines 5-15 and
+  //   Spells/Gaining-and-Casting.md lines 142-149: Mage Armor is a timed
+  //   ongoing spell effect whose target's base AC becomes 13 + Dexterity
+  //   modifier until the spell ends, with typed early end when the target dons
+  //   armor.
   // - Spells/Descriptions-A-D.md lines 13-23, Spells/Gaining-and-Casting.md
   //   lines 187-220, Playing-the-Game.md lines 704-714, and Rules-Glossary.md
   //   lines 854-856: Acid Splash is an Action cantrip that creates a
@@ -58,6 +63,8 @@ module battleRuntime {
 
   type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash
 
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta
+
   type Hole = TargetChoice | AttackRoll | DamageRoll | SavingThrowOutcome
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows
@@ -67,6 +74,9 @@ module battleRuntime {
     maxHp: int,
     tempHp: int,
     ac: int,
+    dexMod: int,
+    activeEffects: Set[ActiveEffect],
+    concentrating: bool,
     unconscious: bool,
     stable: bool,
     deathSuccesses: int,
@@ -86,6 +96,7 @@ module battleRuntime {
     goblin: Combatant,
     actionAvailable: bool,
     bonusActionAvailable: bool,
+    fighterReadiedSpellHeld: bool,
   }
 
   type ActionSurgeResult = {
@@ -112,6 +123,9 @@ module battleRuntime {
       maxHp: 12,
       tempHp: 0,
       ac: 10,
+      dexMod: 0,
+      activeEffects: Set(),
+      concentrating: false,
       unconscious: false,
       stable: false,
       deathSuccesses: 0,
@@ -123,6 +137,9 @@ module battleRuntime {
       maxHp: 10,
       tempHp: 0,
       ac: 15,
+      dexMod: 2,
+      activeEffects: Set(),
+      concentrating: false,
       unconscious: false,
       stable: false,
       deathSuccesses: 0,
@@ -131,6 +148,7 @@ module battleRuntime {
     },
     actionAvailable: true,
     bonusActionAvailable: true,
+    fighterReadiedSpellHeld: false,
   }
 
   // The promoted runtime receives Initiative counts and the caller-resolved
@@ -151,8 +169,17 @@ module battleRuntime {
       (currentActor(state) == Goblin and state.goblin.hp > 0)
     )
 
+  pure def combatantArmorClass(combatant: Combatant): int =
+    activeEffectArmorClass(combatant.ac, combatant.dexMod, combatant.activeEffects)
+
   pure def attackTargetAc(state: BattleState): int =
-    if (currentActor(state) == Fighter) state.goblin.ac else state.fighter.ac
+    if (currentActor(state) == Fighter) combatantArmorClass(state.goblin) else combatantArmorClass(state.fighter)
+
+  pure def activeEffectArmorClass(baseAc: int, dexMod: int, effects: Set[ActiveEffect]): int =
+    if (effects.exists(effect => match effect {
+      | MageArmor => true
+      | RayOfFrostSpeedDelta => false
+    })) 13 + dexMod else baseAc
 
   pure def openHoles(state: BattleState): Set[Hole] =
     if (currentActorCanAttack(state))
@@ -184,13 +211,16 @@ module battleRuntime {
       { round: initiative.round, alreadyActed: acted, stillToAct: remaining }
   }
 
-  pure def endTurn(state: BattleState): BattleState =
+  pure def endTurn(state: BattleState): BattleState = {
+    val advancedInitiative = nextInitiative(state.initiative)
     {
       ...state,
-      initiative: nextInitiative(state.initiative),
+      initiative: advancedInitiative,
       actionAvailable: true,
       bonusActionAvailable: true,
+      fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and advancedInitiative.stillToAct[0] == Fighter) false else state.fighterReadiedSpellHeld,
     }
+  }
 
   pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
     val advanced = endTurn(state)
@@ -217,28 +247,39 @@ module battleRuntime {
     attackTotal: int,
     naturalD20: int,
     damageRoll: int,
+    concentrationSaveSucceeded: bool,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
       state
-    else if (not(attackHits(attackTotal, naturalD20, state.goblin.ac)))
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
       { ...state, actionAvailable: false }
     else
-      { ...state, goblin: applyDamage(state.goblin, damageRoll + 3, if (naturalD20 == 20) 2 else 1), actionAvailable: false }
+      { ...state, goblin: applyDamage(state.goblin, damageRoll + 3, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
 
   pure def resolveGoblinAttack(
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
     damageRoll: int,
+    concentrationSaveSucceeded: bool,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Goblin or state.goblin.hp == 0)
       state
-    else if (not(attackHits(attackTotal, naturalD20, state.fighter.ac)))
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter))))
       { ...state, actionAvailable: false }
     else
-      { ...state, fighter: applyDamage(state.fighter, damageRoll + 2, if (naturalD20 == 20) 2 else 1), actionAvailable: false }
+      { ...state, fighter: applyDamage(state.fighter, damageRoll + 2, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
 
-  pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int): Combatant = {
+  pure def concentrationSavingThrowDc(damage: int): int = {
+    val halfDamage = damage / 2
+    val floor = if (halfDamage < 10) 10 else halfDamage
+    if (floor > 30) 30 else floor
+  }
+
+  pure def breakConcentration(target: Combatant): Combatant =
+    { ...target, concentrating: false, activeEffects: target.activeEffects.exclude(Set(MageArmor)) }
+
+  pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant = {
     val effectiveDamage = if (damage < 0) 0 else damage
     val tempHpAbsorbed = if (target.tempHp < effectiveDamage) target.tempHp else effectiveDamage
     val hpDamage = effectiveDamage - tempHpAbsorbed
@@ -248,15 +289,42 @@ module battleRuntime {
       (if (target.hp <= 0) hpDamage else hpDamage - target.hp) >= target.maxHp
     val damaged = { ...target, hp: nextHp, tempHp: target.tempHp - tempHpAbsorbed }
 
-    if (effectiveDamage <= 0)
-      target
-    else if (target.hp <= 0)
-      if (massiveDamageKills) applyInstantDeath(damaged) else applyDamageAtZeroHp(damaged, deathFailuresAtZeroHp)
-    else if (nextHp > 0)
-      damaged
+    val afterDamage =
+      if (effectiveDamage <= 0)
+        target
+      else if (target.hp <= 0)
+        if (massiveDamageKills) applyInstantDeath(damaged) else applyDamageAtZeroHp(damaged, deathFailuresAtZeroHp)
+      else if (nextHp > 0)
+        damaged
+      else
+        if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
+
+    if (target.concentrating and effectiveDamage > 0 and not(concentrationSaveSucceeded))
+      breakConcentration(afterDamage)
     else
-      if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
+      afterDamage
   }
+
+  pure def applyMageArmor(target: Combatant): Combatant =
+    if (target.activeEffects.contains(MageArmor))
+      target
+    else
+      { ...target, activeEffects: target.activeEffects.union(Set(MageArmor)) }
+
+  pure def targetDonsArmor(target: Combatant): Combatant =
+    { ...target, activeEffects: target.activeEffects.exclude(Set(MageArmor)) }
+
+  pure def readySpell(state: BattleState): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighterReadiedSpellHeld)
+      state
+    else
+      { ...state, fighter: { ...state.fighter, concentrating: true }, actionAvailable: false, fighterReadiedSpellHeld: true }
+
+  pure def releaseReadiedSpell(state: BattleState): BattleState =
+    if (state.fighterReadiedSpellHeld)
+      { ...state, fighter: { ...state.fighter, concentrating: false }, fighterReadiedSpellHeld: false }
+    else
+      state
 
   pure def applyHealing(target: Combatant, healing: int): Combatant = {
     val effectiveHealing = if (healing < 0) 0 else healing
@@ -402,9 +470,10 @@ module battleRuntime {
     target: Combatant,
     failedSavingThrow: bool,
     damageRoll: int,
+    concentrationSaveSucceeded: bool,
   ): Combatant =
     if (failedSavingThrow)
-      applyDamage(target, damageAfterAdjustments(damageRoll, Acid, Set(), Set(), Set()), 1)
+      applyDamage(target, damageAfterAdjustments(damageRoll, Acid, Set(), Set(), Set()), 1, concentrationSaveSucceeded)
     else
       target
 
@@ -413,14 +482,16 @@ module battleRuntime {
     fighterFailedSavingThrow: bool,
     goblinFailedSavingThrow: bool,
     damageRoll: int,
+    fighterConcentrationSaveSucceeded: bool,
+    goblinConcentrationSaveSucceeded: bool,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
       state
     else
       {
         ...state,
-        fighter: acidSplashDamageTarget(state.fighter, fighterFailedSavingThrow, damageRoll),
-        goblin: acidSplashDamageTarget(state.goblin, goblinFailedSavingThrow, damageRoll),
+        fighter: acidSplashDamageTarget(state.fighter, fighterFailedSavingThrow, damageRoll, fighterConcentrationSaveSucceeded),
+        goblin: acidSplashDamageTarget(state.goblin, goblinFailedSavingThrow, damageRoll, goblinConcentrationSaveSucceeded),
         actionAvailable: false,
       }
 
@@ -494,7 +565,7 @@ module battleRuntime {
   }
 
   run test_attack_miss_spends_action_without_damage = {
-    val result = resolveAttack(initialState, 14, 9, 0)
+    val result = resolveAttack(initialState, 14, 9, 0, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 10),
@@ -503,7 +574,7 @@ module battleRuntime {
   }
 
   run test_attack_hit_applies_damage_and_spends_action = {
-    val result = resolveAttack(initialState, 15, 10, 4)
+    val result = resolveAttack(initialState, 15, 10, 4, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 3),
@@ -511,7 +582,7 @@ module battleRuntime {
   }
 
   run test_goblin_attack_hit_applies_stat_block_damage_to_fighter = {
-    val result = resolveGoblinAttack(endTurn(initialState), 20, 18, 5)
+    val result = resolveGoblinAttack(endTurn(initialState), 20, 18, 5, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.fighter.hp == 5),
@@ -587,7 +658,7 @@ module battleRuntime {
   }
 
   run test_acid_splash_damage_applies_only_to_failed_saving_throw_targets = {
-    val result = resolveAcidSplash(initialState, false, true, 4)
+    val result = resolveAcidSplash(initialState, false, true, 4, true, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.fighter.hp == 12),
@@ -596,7 +667,7 @@ module battleRuntime {
   }
 
   run test_critical_hit_applies_doubled_damage_dice = {
-    val result = resolveAttack(initialState, 20, 20, 9)
+    val result = resolveAttack(initialState, 20, 20, 9, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 0),
@@ -604,7 +675,7 @@ module battleRuntime {
   }
 
   run test_temporary_hp_absorbs_damage_before_hp = {
-    val result = resolveAttack(withGoblinHp(initialState, 10, 5), 15, 10, 4)
+    val result = resolveAttack(withGoblinHp(initialState, 10, 5), 15, 10, 4, true)
     all {
       assert(result.goblin.tempHp == 0),
       assert(result.goblin.hp == 8),
@@ -612,7 +683,7 @@ module battleRuntime {
   }
 
   run test_hp_clamps_to_zero_and_monster_dies = {
-    val result = resolveAttack(withGoblinHp(initialState, 3, 0), 15, 10, 8)
+    val result = resolveAttack(withGoblinHp(initialState, 3, 0), 15, 10, 8, true)
     all {
       assert(result.goblin.hp == 0),
       assert(result.goblin.lifecycle == DiesAtZeroHp),
@@ -620,7 +691,7 @@ module battleRuntime {
   }
 
   run test_character_drop_to_zero_uses_death_saving_throw_lifecycle = {
-    val result = applyDamage(withFighterHp(initialState, 3, 0).fighter, 11, 1)
+    val result = applyDamage(withFighterHp(initialState, 3, 0).fighter, 11, 1, true)
     all {
       assert(result.hp == 0),
       assert(result.unconscious),
@@ -630,7 +701,7 @@ module battleRuntime {
   }
 
   run test_massive_damage_kills_character_on_drop_to_zero = {
-    val result = applyDamage(withFighterHp(initialState, 3, 0).fighter, 19, 2)
+    val result = applyDamage(withFighterHp(initialState, 3, 0).fighter, 19, 2, true)
     all {
       assert(result.hp == 0),
       assert(result.unconscious),
@@ -639,7 +710,7 @@ module battleRuntime {
   }
 
   run test_character_damage_at_zero_adds_one_death_failure = {
-    val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 1)
+    val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 1, true)
     all {
       assert(result.hp == 0),
       assert(result.unconscious),
@@ -648,7 +719,7 @@ module battleRuntime {
   }
 
   run test_character_critical_damage_at_zero_adds_two_death_failures = {
-    val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 2)
+    val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 2, true)
     all {
       assert(result.hp == 0),
       assert(result.unconscious),
@@ -657,7 +728,7 @@ module battleRuntime {
   }
 
   run test_massive_damage_at_zero_kills_character = {
-    val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 13, 2)
+    val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 13, 2, true)
     all {
       assert(result.hp == 0),
       assert(result.unconscious),
@@ -716,6 +787,72 @@ module battleRuntime {
       assert(result.initiative.round == 2),
       assert(result.initiative.alreadyActed == []),
       assert(result.initiative.stillToAct == [Fighter, Goblin]),
+    }
+  }
+
+  run test_mage_armor_sets_base_ac_plus_dex = {
+    all {
+      assert(activeEffectArmorClass(10, 2, Set(MageArmor)) == 15),
+      assert(activeEffectArmorClass(10, 2, Set(RayOfFrostSpeedDelta)) == 10),
+    }
+  }
+
+  run test_concentration_damage_dc_is_capped = {
+    all {
+      assert(concentrationSavingThrowDc(24) == 12),
+      assert(concentrationSavingThrowDc(80) == 30),
+    }
+  }
+
+  run test_concentration_breaks_on_failed_damage_save = {
+    val concentrating = { ...initialState.fighter, concentrating: true, activeEffects: Set(MageArmor) }
+    val result = applyDamage(concentrating, 5, 1, false)
+    all {
+      assert(not(result.concentrating)),
+      assert(result.activeEffects == Set()),
+    }
+  }
+
+  run test_attack_action_can_break_target_concentration = {
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
+    val result = resolveAttack(concentratingGoblin, 15, 10, 4, false)
+    all {
+      assert(result.goblin.hp == 3),
+      assert(not(result.goblin.concentrating)),
+      assert(result.goblin.activeEffects == Set()),
+    }
+  }
+
+  run test_goblin_attack_action_can_break_target_concentration = {
+    val concentratingFighter = { ...endTurn(initialState), fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(MageArmor) } }
+    val result = resolveGoblinAttack(concentratingFighter, 20, 18, 5, false)
+    all {
+      assert(result.fighter.hp == 5),
+      assert(not(result.fighter.concentrating)),
+      assert(result.fighter.activeEffects == Set()),
+    }
+  }
+
+  run test_acid_splash_damage_can_break_target_concentration = {
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
+    val result = resolveAcidSplash(concentratingGoblin, false, true, 4, true, false)
+    all {
+      assert(result.goblin.hp == 6),
+      assert(not(result.goblin.concentrating)),
+      assert(result.goblin.activeEffects == Set()),
+    }
+  }
+
+  run test_readied_spell_uses_concentration_until_release_or_next_turn = {
+    val readied = readySpell(initialState)
+    val released = releaseReadiedSpell(readied)
+    val expired = endTurn(endTurn(readied))
+    all {
+      assert(readied.fighter.concentrating),
+      assert(readied.fighterReadiedSpellHeld),
+      assert(not(released.fighter.concentrating)),
+      assert(not(released.fighterReadiedSpellHeld)),
+      assert(not(expired.fighterReadiedSpellHeld)),
     }
   }
 }

@@ -422,6 +422,11 @@ function projectHole(hole: BattleHole): MbtHole {
         "Battle runtime MBT does not model spell saving throw holes.",
       );
     }),
+    Match.when({ kind: "concentrationSavingThrow" }, () => {
+      throw new Error(
+        "Battle runtime MBT does not model concentration saving throw holes.",
+      );
+    }),
     Match.exhaustive,
   );
 }

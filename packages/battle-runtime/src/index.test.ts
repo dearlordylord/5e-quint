@@ -8,12 +8,15 @@ import { describe, expect, test } from "vitest";
 
 import {
   battleId,
+  breakBattleConcentration,
   characterId,
+  concentrationSavingThrowDc,
   combatantId,
   discoverBattleActs,
   endTurn,
   initiativeScore,
   resolveBattleSubject,
+  resolveBattleConcentrationDamage,
   snapshotBattle,
   startBattle,
   type BattleFill,
@@ -23,7 +26,10 @@ import {
   type CombatantId,
   type BattleCreatureInit,
 } from "./index.ts";
-import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  abilityModifier,
+  defaultArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
 import {
   holeId,
   type AttackRollMode,
@@ -38,6 +44,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import magicMissileInput from "../../surface/content/magic_missile.json";
+import mageArmorInput from "../../surface/content/mage_armor.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import acidSplashInput from "../../surface/content/acid_splash.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -55,6 +62,7 @@ const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 const skeletonId = combatantId("skeleton");
 const wizardId = combatantId("wizard");
+const secondWizardId = combatantId("second-wizard");
 const secondSkeletonId = combatantId("second-skeleton");
 const distantFighterId = combatantId("distant-fighter");
 const longRangeFighterId = combatantId("long-range-fighter");
@@ -77,7 +85,7 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const testSpellRecords = new Map(
-  [magicMissileInput, rayOfFrostInput, acidSplashInput]
+  [magicMissileInput, mageArmorInput, rayOfFrostInput, acidSplashInput]
     .map((input) => decodeUnitRecordSync(input))
     .flatMap((unit) => (unit.kind === "spell" ? [[unit.id, unit]] : [])),
 );
@@ -2295,14 +2303,32 @@ describe("battle runtime", () => {
       {
         tag: "actionSpell",
         actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
         spellId: "ray_of_frost",
         spellActId: "cantripSpellAttack:ray_of_frost",
       },
       {
         tag: "actionSpell",
         actorId: wizardId,
+        spellId: "ray_of_frost",
+        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
         spellId: "acid_splash",
         spellActId: "cantripSaveGateDamage:acid_splash",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "acid_splash",
+        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
       },
       { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
     ]);
@@ -2612,8 +2638,476 @@ describe("battle runtime", () => {
         spellId: "magic_missile",
         spellActId: "preparedSlotSpell:magic_missile:slot:1",
       },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+      },
       { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
     ]);
+  });
+
+  test("Mage Armor creates a persistent base AC spell effect with typed early end", () => {
+    const unarmoredDex = {
+      ...defaultArmorClassState(),
+      abilityModifiers: {
+        ...defaultArmorClassState().abilityModifiers,
+        dex: abilityModifier(2),
+      },
+    };
+    const state = startBattle({
+      battleId: battleId("battle-mage-armor"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          armorClass: unarmoredDex,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [
+              spellRecord("magic_missile"),
+              spellRecord("mage_armor"),
+            ],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual({
+      tag: "actionSpell",
+      actorId: wizardId,
+      spellId: "mage_armor",
+      spellActId: "preparedPersistentSpell:mage_armor:slot:1",
+    });
+
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("mage_armor"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    if (target.kind !== "targetChoice") {
+      throw new Error("Expected targetChoice hole.");
+    }
+    expect(target.choices).toEqual([wizardId]);
+    const result = resolveBattleSubject({
+      state,
+      subject: magicSubject("mage_armor"),
+      fills: [targetFill(target, wizardId)],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          {
+            combatantId: wizardId,
+            armorClass: 15,
+            activeEffects: [
+              {
+                kind: "mageArmorBaseArmorClass",
+                sourceSpellId: "mage_armor",
+                sourceCombatantId: wizardId,
+                base: 13,
+                ability: "dex",
+                duration: { kind: "hours", amount: 8 },
+                earlyEnds: [{ kind: "targetDonsArmor" }],
+              },
+            ],
+          },
+          { combatantId: skeletonId },
+        ],
+        currentTurnResources: { actionResources: [] },
+      },
+    });
+    expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(1);
+  });
+
+  test("Mage Armor rejects armored targets before spending resources", () => {
+    const armored = {
+      ...defaultArmorClassState(),
+      base: {
+        kind: "armor" as const,
+        category: "medium" as const,
+        formula: { kind: "medium_dex_max_2" as const, base: 14 },
+      },
+    };
+    const state = startBattle({
+      battleId: battleId("battle-mage-armor-armored-target"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("mage_armor")],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Armored Fighter",
+          initiative: 10,
+          armorClass: armored,
+          attack: null,
+        }),
+      ],
+    });
+
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("mage_armor"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    if (target.kind !== "targetChoice") {
+      throw new Error("Expected targetChoice hole.");
+    }
+
+    expect(target.choices).toEqual([wizardId]);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("mage_armor"),
+        fills: [targetFill(target, fighterId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    expect(state.combatants.get(wizardId)?.origin.kind).toBe("character");
+  });
+
+  test("breaking concentration clears concentration-owned spell effects", () => {
+    const state = wizardVsSkeletonBattle();
+    const wizard = state.combatants.get(wizardId)!;
+    const skeleton = state.combatants.get(skeletonId)!;
+    const concentrating = {
+      ...state,
+      combatants: new Map(state.combatants)
+        .set(wizardId, {
+          ...wizard,
+          concentration: {
+            sourceSpellId: "hold_person",
+            effectKind: "spellEffect",
+          },
+        })
+        .set(skeletonId, {
+          ...skeleton,
+          activeEffects: [
+            {
+              kind: "mageArmorBaseArmorClass",
+              sourceSpellId: "hold_person",
+              sourceCombatantId: wizardId,
+              base: 13,
+              ability: "dex",
+              duration: { kind: "hours", amount: 1 },
+              earlyEnds: [{ kind: "concentrationBroken" }],
+            },
+          ],
+        }),
+    } satisfies BattleState;
+
+    const broken = breakBattleConcentration(concentrating, wizardId);
+
+    expect(snapshotBattle(broken).combatants).toMatchObject([
+      { combatantId: wizardId, concentration: null },
+      { combatantId: skeletonId, activeEffects: [] },
+    ]);
+  });
+
+  test("failed concentration damage save uses the same concentration lifecycle", () => {
+    const state = wizardVsSkeletonBattle();
+    const wizard = state.combatants.get(wizardId)!;
+    const concentrating = {
+      ...state,
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...wizard,
+        concentration: {
+          sourceSpellId: "readied_acid_splash",
+          effectKind: "readiedSpell",
+        },
+      }),
+    } satisfies BattleState;
+
+    expect(concentrationSavingThrowDc(24)).toBe(12);
+    expect(concentrationSavingThrowDc(80)).toBe(30);
+    expect(
+      resolveBattleConcentrationDamage({
+        state: concentrating,
+        combatantId: wizardId,
+        damageAmount: 24,
+        savingThrowSucceeded: true,
+      }).combatants.get(wizardId)?.concentration,
+    ).toEqual({
+      sourceSpellId: "readied_acid_splash",
+      effectKind: "readiedSpell",
+    });
+    expect(
+      resolveBattleConcentrationDamage({
+        state: concentrating,
+        combatantId: wizardId,
+        damageAmount: 24,
+        savingThrowSucceeded: false,
+      }).combatants.get(wizardId)?.concentration,
+    ).toBeNull();
+  });
+
+  test("attack damage requests and consumes a Concentration save for a readied spell", () => {
+    const state = startBattle({
+      battleId: battleId("battle-readied-concentration-damage"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const readySubject = {
+      tag: "actionSpell" as const,
+      actorId: wizardId,
+      spellId: "ray_of_frost",
+      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+    };
+    const readied = resolveBattleSubject({
+      state,
+      subject: readySubject,
+      fills: [],
+    });
+    if (readied.tag !== "resolved") {
+      throw new Error(`Expected resolved Ready Spell, got ${readied.tag}.`);
+    }
+    const goblinTurn = endTurn({ state: readied.state, actorId: wizardId });
+    if (goblinTurn.tag !== "resolved") {
+      throw new Error(`Expected resolved End Turn, got ${goblinTurn.tag}.`);
+    }
+    const target = attackInitialTargetHole(
+      goblinTurn.state,
+      goblinAttackSubject("Scimitar"),
+    );
+    const roll = attackRollHoleAfterTarget(
+      goblinTurn.state,
+      target,
+      goblinAttackSubject("Scimitar"),
+      wizardId,
+    );
+    const damage = attackDamageHoleAfterHit(
+      goblinTurn.state,
+      target,
+      roll,
+      { total: 14, naturalD20: 10 },
+      goblinAttackSubject("Scimitar"),
+      wizardId,
+    );
+    const needsConcentration = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: goblinAttackSubject("Scimitar"),
+      fills: [
+        targetFill(target, wizardId),
+        attackRollFill(roll, { total: 14, naturalD20: 10 }),
+        damageRollFill(damage, 3),
+      ],
+    });
+    const concentration = requireHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+
+    expect(concentration).toMatchObject({
+      kind: "concentrationSavingThrow",
+      combatantId: wizardId,
+      dc: 10,
+      damageAmount: 5,
+    });
+
+    const failed = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: goblinAttackSubject("Scimitar"),
+      fills: [
+        targetFill(target, wizardId),
+        attackRollFill(roll, { total: 14, naturalD20: 10 }),
+        damageRollFill(damage, 3),
+        concentrationSavingThrowFill(concentration, false),
+      ],
+    });
+
+    expect(failed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        readiedSpells: [],
+        combatants: [
+          { combatantId: wizardId, hp: 7, concentration: null },
+          { combatantId: goblinId },
+        ],
+      },
+    });
+  });
+
+  test("readied spell release uses the held spell and ends Concentration", () => {
+    const state = startBattle({
+      battleId: battleId("battle-readied-release"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const readied = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "ray_of_frost",
+        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+      },
+      fills: [],
+    });
+    if (readied.tag !== "resolved") {
+      throw new Error(`Expected resolved Ready Spell, got ${readied.tag}.`);
+    }
+    const goblinTurn = endTurn({ state: readied.state, actorId: wizardId });
+    if (goblinTurn.tag !== "resolved") {
+      throw new Error(`Expected resolved End Turn, got ${goblinTurn.tag}.`);
+    }
+    const releaseSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "releaseReadiedSpell" as const,
+      readiedSpellCasterId: wizardId,
+    };
+    const target = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const released = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: releaseSubject,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+
+    expect(released).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        readiedSpells: [],
+        combatants: [
+          { combatantId: wizardId, concentration: null },
+          {
+            combatantId: goblinId,
+            hp: 6,
+            activeEffects: [{ kind: "speedDelta" }],
+          },
+        ],
+      },
+    });
+  });
+
+  test("readied spells are held per caster", () => {
+    const state = startBattle({
+      battleId: battleId("battle-readied-per-caster"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        characterSeed({
+          combatantId: secondWizardId,
+          displayName: "Second Wizard",
+          initiative: 15,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const firstReadied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        },
+        fills: [],
+      }),
+    ).state;
+    const secondWizardTurn = requireResolved(
+      endTurn({ state: firstReadied, actorId: wizardId }),
+    ).state;
+    const secondReadied = requireResolved(
+      resolveBattleSubject({
+        state: secondWizardTurn,
+        subject: {
+          tag: "actionSpell",
+          actorId: secondWizardId,
+          spellId: "acid_splash",
+          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+        },
+        fills: [],
+      }),
+    ).state;
+
+    expect(snapshotBattle(secondReadied)).toMatchObject({
+      readiedSpells: [{ casterId: wizardId }, { casterId: secondWizardId }],
+      combatants: [
+        {
+          combatantId: wizardId,
+          concentration: { effectKind: "readiedSpell" },
+        },
+        {
+          combatantId: secondWizardId,
+          concentration: { effectKind: "readiedSpell" },
+        },
+        { combatantId: goblinId },
+      ],
+    });
   });
 
   test("Acid Splash save-gate damage applies only to failed Saving Throws", () => {
@@ -2670,6 +3164,7 @@ describe("battle runtime", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
+            { targetId: wizardId, succeeded: true },
             { targetId: skeletonId, succeeded: false },
           ]),
         ],
@@ -2766,6 +3261,85 @@ describe("battle runtime", () => {
           { combatantId: secondSkeletonId, hp: 13 },
         ],
         currentTurnResources: { actionResources: [] },
+      },
+    });
+  });
+
+  test("Acid Splash damage requests and consumes Concentration saves", () => {
+    const baseState = wizardVsSkeletonBattle();
+    const skeleton = baseState.combatants.get(skeletonId);
+    if (skeleton === undefined) {
+      throw new Error("Expected Skeleton in battle.");
+    }
+    const state = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(skeletonId, {
+        ...skeleton,
+        concentration: {
+          sourceSpellId: "mage_armor",
+          effectKind: "spellEffect" as const,
+        },
+      }),
+    };
+    const subject = magicSubject("acid_splash");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: wizardId, succeeded: true },
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    const needsConcentration = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: wizardId, succeeded: true },
+          { targetId: skeletonId, succeeded: false },
+        ]),
+        damageRollFill(damage, 4),
+      ],
+    });
+    const concentration = requireHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+
+    expect(concentration).toMatchObject({
+      combatantId: skeletonId,
+      dc: 10,
+      damageAmount: 4,
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: wizardId, succeeded: true },
+            { targetId: skeletonId, succeeded: false },
+          ]),
+          damageRollFill(damage, 4),
+          concentrationSavingThrowFill(concentration, false),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: skeletonId, hp: 9, concentration: null },
+        ],
       },
     });
   });
@@ -3011,7 +3585,12 @@ function requireResolved(
 
 function subjectName(
   subject: BattleSubject,
-): "attack" | "actionSpell" | "unitFeature" | "endTurn" {
+):
+  | "attack"
+  | "actionSpell"
+  | "unitFeature"
+  | "endTurn"
+  | "releaseReadiedSpell" {
   if (subject.tag === "action") {
     return subject.action;
   }
@@ -3126,7 +3705,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("31 passing");
+  expect(quintOutput).toContain("38 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -3175,31 +3754,31 @@ function renderBattleRuntimeParityModule(input: {
   import battleRuntime.* from "../battle-runtime"
 
   run parity_miss_matches_runtime = {
-    assert(resolveAttack(initialState, 14, 9, 0) == ${renderQntStateProjection(input.miss)})
+    assert(resolveAttack(initialState, 14, 9, 0, true) == ${renderQntStateProjection(input.miss)})
   }
 
   run parity_hit_damage_matches_runtime = {
-    assert(resolveAttack(initialState, 15, 10, 4) == ${renderQntStateProjection(input.hit)})
+    assert(resolveAttack(initialState, 15, 10, 4, true) == ${renderQntStateProjection(input.hit)})
   }
 
   run parity_temporary_hp_matches_runtime = {
-    assert(resolveAttack(withGoblinHp(initialState, 10, 5), 15, 10, 4) == ${renderQntStateProjection(input.tempHp)})
+    assert(resolveAttack(withGoblinHp(initialState, 10, 5), 15, 10, 4, true) == ${renderQntStateProjection(input.tempHp)})
   }
 
   run parity_zero_hp_policy_matches_runtime = {
-    assert(resolveAttack(withGoblinHp(initialState, 3, 0), 15, 10, 8) == ${renderQntStateProjection(input.zeroHp)})
+    assert(resolveAttack(withGoblinHp(initialState, 3, 0), 15, 10, 8, true) == ${renderQntStateProjection(input.zeroHp)})
   }
 
   run parity_character_drop_to_zero_policy_matches_runtime = {
-    assert(applyDamage(withFighterHp(initialState, 3, 0).fighter, 11, 1) == ${renderQntCharacterProjection(input.characterDropToZero)})
+    assert(applyDamage(withFighterHp(initialState, 3, 0).fighter, 11, 1, true) == ${renderQntCharacterProjection(input.characterDropToZero)})
   }
 
   run parity_character_damage_at_zero_policy_matches_runtime = {
-    assert(applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 1) == ${renderQntCharacterProjection(input.characterDamageAtZero)})
+    assert(applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 1, true) == ${renderQntCharacterProjection(input.characterDamageAtZero)})
   }
 
   run parity_character_critical_damage_at_zero_policy_matches_runtime = {
-    assert(applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 2) == ${renderQntCharacterProjection(input.characterCriticalDamageAtZero)})
+    assert(applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 2, true) == ${renderQntCharacterProjection(input.characterCriticalDamageAtZero)})
   }
 
   run parity_fighter_end_turn_matches_runtime = {
@@ -3221,6 +3800,9 @@ function renderQntCharacterProjection(
       maxHp: 12,
       tempHp: ${input.tempHp},
       ac: 10,
+      dexMod: 0,
+      activeEffects: Set(),
+      concentrating: false,
       unconscious: ${input.unconscious},
       stable: false,
       deathSuccesses: 0,
@@ -3243,6 +3825,9 @@ function renderQntStateProjection(
         maxHp: 12,
         tempHp: ${input.fighterTempHp},
         ac: 10,
+        dexMod: 0,
+        activeEffects: Set(),
+        concentrating: false,
         unconscious: ${input.fighterUnconscious},
         stable: false,
         deathSuccesses: 0,
@@ -3254,6 +3839,9 @@ function renderQntStateProjection(
         maxHp: 10,
         tempHp: ${input.goblinTempHp},
         ac: 15,
+        dexMod: 2,
+        activeEffects: Set(),
+        concentrating: false,
         unconscious: false,
         stable: false,
         deathSuccesses: 0,
@@ -3262,6 +3850,7 @@ function renderQntStateProjection(
       },
       actionAvailable: ${input.actionAvailable},
       bonusActionAvailable: ${input.bonusActionAvailable},
+      fighterReadiedSpellHeld: false,
     }`;
 }
 
@@ -3493,7 +4082,11 @@ function requireHole(
   kind: BattleHole["kind"],
 ): BattleHole {
   if (result.tag !== "needsHoles") {
-    throw new Error(`Expected needsHoles, got ${result.tag}.`);
+    throw new Error(
+      `Expected needsHoles, got ${result.tag}${
+        result.tag === "invalid" ? `: ${result.message}` : ""
+      }.`,
+    );
   }
   const hole = result.holes.find((candidate) => candidate.kind === kind);
   if (hole == null) {
@@ -3554,6 +4147,20 @@ function deathSavingThrowFill(hole: BattleHole, roll: number): BattleFill {
     kind: "deathSavingThrow",
     holeId: hole.holeId,
     value: DieRollResult(roll),
+  };
+}
+
+function concentrationSavingThrowFill(
+  hole: BattleHole,
+  succeeded: boolean,
+): BattleFill {
+  if (hole.kind !== "concentrationSavingThrow") {
+    throw new Error("Expected concentrationSavingThrow hole.");
+  }
+  return {
+    kind: "concentrationSavingThrow",
+    holeId: hole.holeId,
+    value: { succeeded },
   };
 }
 
@@ -3634,6 +4241,7 @@ function characterSeed(input: {
   >["classLevels"];
   readonly currentHp?: number;
   readonly tempHp?: number;
+  readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly attack?: ReturnType<typeof testLongswordAttack> | null;
   readonly resources?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -3655,7 +4263,7 @@ function characterSeed(input: {
       classLevels: input.classLevels ?? [
         { className: "fighter", level: input.classLevel ?? 1 },
       ],
-      armorClass: defaultArmorClassState(),
+      armorClass: input.armorClass ?? defaultArmorClassState(),
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(12),
       tempHp: Hp(input.tempHp ?? 0),
@@ -3932,6 +4540,7 @@ function wizardVsSkeletonBattle(input?: {
 
 function wizardSpellcasting(input?: {
   readonly cantrips?: readonly SpellRecord[];
+  readonly preparedSpells?: readonly SpellRecord[];
 }): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -3946,7 +4555,7 @@ function wizardSpellcasting(input?: {
       spellRecord("ray_of_frost"),
       spellRecord("acid_splash"),
     ],
-    preparedSpells: [spellRecord("magic_missile")],
+    preparedSpells: input?.preparedSpells ?? [spellRecord("magic_missile")],
     spellSlots: [{ spellLevel: 1, count: 2 }],
   };
 }
@@ -3989,7 +4598,7 @@ function acidSplashWithRadius(radiusFeet: number): SpellRecord {
 }
 
 function spellRecord(
-  spellId: "magic_missile" | "ray_of_frost" | "acid_splash",
+  spellId: "magic_missile" | "mage_armor" | "ray_of_frost" | "acid_splash",
 ) {
   const unit = testSpellRecords.get(spellId);
   if (unit === undefined) {
@@ -3999,7 +4608,7 @@ function spellRecord(
 }
 
 function magicSubject(
-  spellId: "magic_missile" | "ray_of_frost" | "acid_splash",
+  spellId: "magic_missile" | "mage_armor" | "ray_of_frost" | "acid_splash",
 ): BattleSubject {
   return {
     tag: "actionSpell",
