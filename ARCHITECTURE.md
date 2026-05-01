@@ -89,6 +89,17 @@ Battle runtime details live in `packages/battle-runtime/README.md`.
 Its reducer data-flow map lives in
 `packages/battle-runtime/ARCHITECTURE_GRAPH.md`.
 
+Battle reducer extensibility follows the SRD procedure-family boundary. A new
+authored Unit, Spell Record, feature, monster action, or Stat Block slug is
+data-only when it fits an existing support profile and procedure. If the Surface
+record shape is legal but not yet admitted, widen the owning reader or support
+gate so unsupported shapes fail at one boundary. Add reducer logic or runtime
+state only for a reusable SRD procedure family: a new timing/resource protocol,
+target/save/damage flow, interrupt window, persistent effect, movement
+procedure, or other durable state transition that authored records can select.
+Do not restore projected executable vocabulary or encode one reducer branch per
+authored name.
+
 The shared domain abstraction is **Creature**. In `@dnd/battle-runtime`, the
 durable implementation type is `BattleCreatureState`, identified by
 `CombatantId`. `BattleCreatureInit` is a one-time initialization input and is

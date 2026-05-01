@@ -18,6 +18,15 @@ decision. The first selected integrated candidate is Fighter weapon Attack
 against a Skeleton Stat Block target through `discoverBattleActs`,
 `resolveBattleSubject`, and `snapshotBattle`.
 
+Reducer extension follows SRD procedure families, not authored names. Surface
+records and retained origin data select supported procedures; support gates
+reject unsupported authored shapes before reducer replay. Add reducer state or a
+new `BattleSubject` only for a reusable procedure family such as a timing
+window, resource protocol, target/save flow, interrupt/Reaction flow, persistent
+effect, movement procedure, or other durable transition. Do not add one branch
+per Unit, spell, feature, monster action, or slug, and do not reintroduce
+projected executable vocabulary.
+
 ## System Graph
 
 ```mermaid
@@ -37,6 +46,7 @@ flowchart TD
   FillSession["caller-owned BattleFill[]<br/>data: accumulated answers for a selected subject<br/>why: replay-from-root input<br/>without: partially answered forms become durable battle state"]
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
+  Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
   UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action and spends one use"]
   SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect"]
@@ -56,9 +66,10 @@ flowchart TD
   Subject --> Resolve
   FillSession --> Resolve
   Resolve -->|runtimeCommand.endTurn| EndTurn --> State
-  Resolve -->|action.attack| AttackOption --> AttackReplay
-  Resolve -->|unitFeature| UnitFeature --> State
-  Resolve -->|actionSpell| SpellAct --> Damage
+  Resolve --> Support
+  Support -->|action.attack| AttackOption --> AttackReplay
+  Support -->|unitFeature| UnitFeature --> State
+  Support -->|actionSpell| SpellAct --> Damage
   AttackReplay --> AttackRoll
   AttackReplay --> RuntimeDice
   AttackReplay --> Damage --> State
@@ -67,7 +78,7 @@ flowchart TD
   ActionEconomy --> AttackReplay
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,AttackOption,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
+  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,Support,AttackOption,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
 ```
 
 ## Interpretation Graph
@@ -103,7 +114,9 @@ flowchart TD
 
 - Public subjects are `action.attack` with an authored `attackName`,
   `actionSpell` with a retained Spell Record id, `unitFeature` with a
-  retained Unit id, and `runtimeCommand.endTurn`.
+  retained Unit id, and `runtimeCommand.endTurn`. They select reusable runtime
+  procedures; they are not a projected executable taxonomy and are not one
+  reducer branch per authored slug.
 - Fills are caller/session state, not durable `BattleState`.
 - Initiative scores are caller-supplied in `BattleCreatureInit`; this runtime
   orders turns from those scores but does not derive them from Stat Blocks.
@@ -127,6 +140,10 @@ flowchart TD
 - Unsupported Stat Block attack branches such as Multiattack and unsupported
   conditional on-hit riders are filtered by support gates and are not copied
   into MCP state.
+- New authored abilities are data-only when they fit these implemented
+  procedure families. Widen readers or support gates when the authored shape is
+  legal but unsupported. Add reducer state or QNT/MBT behavior only for a
+  reusable SRD procedure family, not for catalog breadth.
 - Bonus-action availability can be represented in turn resources, but no
   bonus-action subject is exposed yet.
 - The package-local `battle-runtime.qnt` spec constrains this implemented

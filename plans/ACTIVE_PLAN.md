@@ -274,13 +274,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 34,
       "id": "PBA1",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Document Battle Reducer Extensibility Discipline"
     },
     {
       "number": 35,
       "id": "PBA2",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Audit Reducer For Named-Ability Drift"
     },
     {
@@ -433,8 +433,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | done               | BA3, BA7             | BA13                                | Converted old-only features into the ordered post-BA queue: PBA0-PBA4 archive/protocol batch, PBA5-PBA14 feature-parity restoration, then PBA15 broader widening planning.                         | Completed; BA13 is done.                                                                  |
 | 32    | BA13 - Close Battle Authority Reconciliation                     | done               | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and the ordered post-BA backlog is synchronized.                                                                         | Completed; PBA0 is unblocked.                                                            |
 | 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | done               | BA13                 | PBA1                                | Archived the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                             | Completed; PBA1 is unblocked.                                                            |
-| 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | ready-for-research | PBA0                 | PBA2                                | Make the reducer architecture rule explicit: reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                  | Ready; PBA0 archived the parity/composition boundary.                                     |
-| 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | blocked            | PBA1                 | PBA3                                | Search battle-runtime and MCP composition for named-ability or slug-shaped reducer drift and classify each case as support gate, extraction, or future procedure-family widening.                   | Blocked until reducer discipline is documented.                                           |
+| 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | done               | PBA0                 | PBA2                                | Documented that battle reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                                        | Completed; PBA2 is unblocked.                                                            |
+| 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | ready-for-research | PBA1                 | PBA3                                | Search battle-runtime and MCP composition for named-ability or slug-shaped reducer drift and classify each case as support gate, extraction, or future procedure-family widening.                   | Ready; PBA1 documented the reducer extensibility discipline.                              |
 | 36    | PBA3 - Correct First Reducer Extensibility Drift                 | blocked            | PBA2                 | PBA4                                | If PBA2 finds real drift, make the smallest correction that moves named ability logic toward data/readers/procedure families; otherwise close as a no-op with evidence.                              | Blocked until audit identifies whether correction is needed.                              |
 | 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | blocked            | PBA3                 | PBA5                                | Align docs after the watcher/corrector pass, then promote the first BA12 feature-parity backlog candidate to ready work.                                                                            | Blocked until the first extensibility correction/no-op closes.                            |
 | 38    | PBA5 - Restore Death Save Turn Lifecycle                         | blocked            | PBA4                 | PBA6                                | Restore start-turn Death Saving Throw rolls, Stable handoff, and zero-HP closeout through battle/runtime and character-session state.                                                               | Blocked behind PBA0-PBA4.                                                                 |
@@ -2550,7 +2550,7 @@ PBA0 source-only closeout check:
 
 ### Task 34 - PBA1 - Document Battle Reducer Extensibility Discipline
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA0
 Blocks: PBA2
@@ -2584,11 +2584,20 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA2.
+- Status: applied.
+- PBA2: unblocked as the next reducer watcher/corrector research task.
+
+Closeout:
+
+- Documented the reducer procedure-family rule in
+  `packages/battle-runtime/README.md`, `ARCHITECTURE.md`, and
+  `packages/battle-runtime/ARCHITECTURE_GRAPH.md`.
+- Verification used source-only docs checks and two `/simplify` review rounds;
+  no MBT was required for this docs-only task.
 
 ### Task 35 - PBA2 - Audit Reducer For Named-Ability Drift
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA1
 Blocks: PBA3

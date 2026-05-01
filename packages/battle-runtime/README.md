@@ -52,6 +52,49 @@ Do not conflate these boundaries:
 - a creature initialization input is not authored content;
 - a creature initialization input is not durable battle state.
 
+## Reducer Extensibility Discipline
+
+The battle reducer interprets reusable SRD procedure families. It must not grow
+one branch per Unit, spell, feature, monster action, or authored slug. Authored
+content may select a supported procedure and provide that procedure's facts, but
+the reducer owns the procedure's replay, state transition, and durable runtime
+state.
+
+Use this decision rule for every new authored battle ability:
+
+- **Data-only:** add or widen authored Surface data, catalog fixtures, and
+  deterministic contract tests when the ability already fits admitted readers
+  and an implemented procedure family, uses existing hole flow, and needs no new
+  durable runtime state. Examples include another supported one-target Stat
+  Block attack shape or another weapon Attack option whose attack bonus,
+  reach/range, damage dice, and damage type fit the current Attack procedure.
+- **Support-profile or reader change:** update the support boundary when the SRD
+  record can carry the needed facts but the current reader or support gate does
+  not admit that shape yet. Unsupported legal content should fail there with a
+  precise unsupported-shape issue; it should not leak partial behavior into
+  `resolveBattleSubject`.
+- **Reusable procedure family:** add or widen reducer behavior only when the SRD
+  defines a distinct reusable resolution shape: a new timing window, resource
+  spend/reset protocol, target or save procedure, interrupt/Reaction flow,
+  persistent effect lifecycle, movement procedure, or other state transition
+  that multiple authored records can select.
+- **Runtime state widening:** add battle state only when a supported procedure
+  needs durable execution facts that cannot be derived from existing battle state
+  or retained origin records. Do not store derived labels, copied attack scalars,
+  support-status markers, or provenance labels beside their source facts.
+
+When a new procedure family is required, update the type boundary,
+`battle-runtime.qnt`, focused reducer tests, and, for high-risk composed public
+replay, integrated MBT. Catalog breadth remains a deterministic
+table/contract-test problem. QNT/MBT should target procedure-family behavior and
+composition, not one model trace per authored Unit, Spell Record, feature, or
+Stat Block.
+
+Projected executable vocabulary must stay out of this package. If old Core or
+Correction material names a projected action, translate the SRD procedure into
+Surface readers, support gates, battle subjects, holes, and reducer state
+instead of restoring the projected vocabulary.
+
 ## Runtime Flow
 
 1. Caller passes `BattleCreatureInit[]` to `startBattle` and receives a durable
@@ -82,7 +125,8 @@ combat facts, not partially answered hole forms.
   to resolve. It is caller protocol, not Surface authored content, provenance,
   or a complete taxonomy of D&D actions. Current subjects cover an Attack action
   option, an action-time spell cast via the Magic action, Unit feature
-  activation, or the runtime End Turn command.
+  activation, or the runtime End Turn command. Add a subject for a reusable
+  runtime procedure family, not for one named ability.
 - `BattleHole` - a missing runtime input needed to resolve a subject, such as an
   attack target, attack roll, or damage roll.
 - `BattleFill` - caller-provided answer for a `BattleHole`.
