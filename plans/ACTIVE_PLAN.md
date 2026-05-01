@@ -3076,7 +3076,7 @@ Plan Impact:
 
 ### Task 45 - PBA12 - Restore Hand Weapon And Grapple State
 
-Status: `done`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA11
 Blocks: PBA13
