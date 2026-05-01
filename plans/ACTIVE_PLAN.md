@@ -263,6 +263,36 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "BA13",
       "status": "blocked",
       "title": "Close Battle Authority Reconciliation"
+    },
+    {
+      "number": 33,
+      "id": "PBA0",
+      "status": "blocked",
+      "title": "Archive Promoted Quint Parity And Composition Boundary"
+    },
+    {
+      "number": 34,
+      "id": "PBA1",
+      "status": "blocked",
+      "title": "Document Battle Reducer Extensibility Discipline"
+    },
+    {
+      "number": 35,
+      "id": "PBA2",
+      "status": "blocked",
+      "title": "Audit Reducer For Named-Ability Drift"
+    },
+    {
+      "number": 36,
+      "id": "PBA3",
+      "status": "blocked",
+      "title": "Correct First Reducer Extensibility Drift"
+    },
+    {
+      "number": 37,
+      "id": "PBA4",
+      "status": "blocked",
+      "title": "Align Protocol Docs And Start Feature-Parity Queue"
     }
   ]
 }
@@ -334,7 +364,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 29    | BA10 - Define Promoted Runtime MBT Strategy                      | ready-for-research | BA3                  | BA11                                | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.                 | Ready; BA2 already lists candidate integrated MBT frontiers.                              |
 | 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | blocked            | BA8, BA10            | BA13                                | Add one narrow trace-driven QNT/MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                 | Blocked until canonical QNT and MBT strategy are set.                                     |
 | 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | ready-for-research | BA3, BA7             | BA13                                | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                                   | Ready; BA7 supplied the zero-HP lifecycle boundary rows.                                  |
-| 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | none                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until authority, MBT, and backlog work complete.                                  |
+| 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until authority, MBT, and backlog work complete.                                  |
+| 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | blocked            | BA13                 | PBA1                                | Archive the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                               | Blocked until BA closes.                                                                  |
+| 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | blocked            | PBA0                 | PBA2                                | Make the reducer architecture rule explicit: reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                  | Blocked until parity/composition archive exists.                                          |
+| 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | blocked            | PBA1                 | PBA3                                | Search battle-runtime and MCP composition for named-ability or slug-shaped reducer drift and classify each case as support gate, extraction, or future procedure-family widening.                   | Blocked until reducer discipline is documented.                                           |
+| 36    | PBA3 - Correct First Reducer Extensibility Drift                 | blocked            | PBA2                 | PBA4                                | If PBA2 finds real drift, make the smallest correction that moves named ability logic toward data/readers/procedure families; otherwise close as a no-op with evidence.                              | Blocked until audit identifies whether correction is needed.                              |
+| 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | blocked            | PBA3                 | future tasks                        | Align docs after the watcher/corrector pass and append the first old Core feature-parity restoration tasks before any broader widening queue.                                                        | Blocked until the first extensibility correction/no-op closes.                            |
 
 ## Task Details
 
@@ -2149,19 +2184,21 @@ Input:
 
 Output:
 
-- ACTIVE_PLAN is updated with an ordered post-BA follow-up queue appended after
-  BA13 in both the Ralph Task Index and DAG table. The Restore Ledger is
-  supporting provenance/status only; it is not a substitute for actionable
-  ACTIVE_PLAN tasks.
+- ACTIVE_PLAN's ordered post-BA follow-up queue after BA13 is maintained and,
+  if needed, expanded in both the Ralph Task Index and DAG table. The Restore
+  Ledger is supporting provenance/status only; it is not a substitute for
+  actionable ACTIVE_PLAN tasks.
 - The appended queue is split into explicit batches:
-  1. maximum promoted Quint parity + MCP composition archive;
+  1. maximum promoted Quint parity + MCP composition archive, seeded by
+     PBA0-PBA4;
   2. old Core feature-parity restoration as promoted-runtime tasks;
   3. broader widening work that waits on the parity/composition archive and the
      explicit feature-parity queue.
-- Each retained old-only behavior group becomes either a ready/blocked atomic
-  follow-up task or an explicitly deferred item with the owner decision recorded.
-  Each task includes old source references, local RAW topics to read,
-  new-runtime owner, acceptance summary, non-goals, and restore condition.
+- Each retained old-only behavior group becomes either a backlog candidate for
+  PBA4, a blocked post-PBA4 follow-up task, or an explicitly deferred item with
+  the owner decision recorded. Each candidate/task includes old source
+  references, local RAW topics to read, new-runtime owner, acceptance summary,
+  non-goals, and restore condition.
 - Candidate groups should include, if still supported by BA1:
   movement/positioning and opportunity-attack boundary;
   reaction windows and interrupt stack;
@@ -2184,6 +2221,9 @@ Acceptance:
   explicitly decides to pause active work.
 - The first post-BA batch archives maximum promoted Quint parity and composition
   proof before feature-parity restoration or broad widening starts.
+- BA12 does not make old Core feature-parity or broad-widening tasks ready ahead
+  of PBA0-PBA4. PBA4 owns turning BA12's backlog candidates into the first ready
+  feature-parity restoration queue after the architecture watcher/corrector pass.
 - Feature-parity restoration tasks come before broader widening tasks unless an
   owner decision explicitly defers a feature-parity row.
 - Each future task is small enough for one agent or explicitly marked as a
@@ -2210,7 +2250,7 @@ Plan Impact:
 Status: `blocked`
 
 Depends on: BA8, BA9, BA11, BA12
-Blocks: none
+Blocks: PBA0
 
 Next action: perform the final authority closeout.
 
@@ -2218,10 +2258,9 @@ Planner role:
 
 - BA13 is the final Battle Authority Reconciliation task and must act as the
   handoff planner for the next Ralph loop. Before marking BA13 `done`, verify
-  that BA12 appended the post-BA queue after BA13 in the Ralph Task Index and
-  DAG table. If BA12 did not, BA13 must append it instead, using BA12's required
-  ordering: maximum promoted Quint parity + MCP composition archive first, old
-  Core feature-parity restoration second, broader widening third.
+  that the post-BA queue after BA13 is present in the Ralph Task Index and DAG
+  table. PBA0-PBA4 are the required first batch; if BA12 or intervening edits
+  removed or weakened them, BA13 must restore them before closing.
 - Do not leave the next work only in the Restore Ledger. The Restore Ledger may
   preserve evidence and status, but Ralph needs actionable ACTIVE_PLAN tasks.
 
@@ -2233,8 +2272,9 @@ Output:
 - Battle runtime README/architecture docs, QNT location, and package test
   commands agree.
 - Restore Ledger captures old-only behavior not yet widened.
-- ACTIVE_PLAN contains the ordered post-BA queue after BA13, synchronized across
-  the Ralph Task Index, DAG table, and task-detail sections.
+- ACTIVE_PLAN contains the ordered post-BA queue after BA13, including PBA0-PBA4
+  as the first architecture watcher/corrector/docs-updater batch, synchronized
+  across the Ralph Task Index, DAG table, and task-detail sections.
 - Promoted-path dependency check confirms runtime/MCP do not import `@dnd/core`.
 
 Acceptance:
@@ -2266,6 +2306,205 @@ Plan Impact:
 - If successful, Battle Authority Reconciliation is complete. Future old-only
   behavior proceeds through the appended post-BA ACTIVE_PLAN queue. The next
   ready post-BA task becomes the Ralph loop entrypoint.
+
+### Task 33 - PBA0 - Archive Promoted Quint Parity And Composition Boundary
+
+Status: `blocked`
+
+Depends on: BA13
+Blocks: PBA1
+
+Next action: archive the promoted proof/composition boundary before feature
+parity restoration or broad widening starts.
+
+Output:
+
+- A durable planning/archive document defines maximum promoted Quint parity for
+  the current architecture: package-local QNT, integrated promoted-runtime MBT,
+  shared-algebra MBT, deterministic reducer tests, MCP composition tests, and
+  multiple runtime/package composition.
+- The archive states how `@dnd/character-creation-runtime`,
+  `@dnd/battle-runtime`, `@dnd/shared-algebras`, `@dnd/surface`, and
+  `@dnd/mcp` compose without reviving old Core as the active authority.
+- Any remaining proof gaps become explicit follow-up tasks rather than vague
+  parity debt.
+
+Acceptance:
+
+- A new agent can tell which proof layer owns each runtime/package boundary.
+- The archive does not require MBT per authored Unit or Stat Block.
+- Broad widening remains blocked behind this archive and the feature-parity
+  queue.
+
+Verification:
+
+- Source-only docs/planning check.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA1.
+
+### Task 34 - PBA1 - Document Battle Reducer Extensibility Discipline
+
+Status: `blocked`
+
+Depends on: PBA0
+Blocks: PBA2
+
+Next action: make the reducer extensibility rule explicit in the owning docs.
+
+Output:
+
+- `packages/battle-runtime/README.md` states that the battle reducer interprets
+  reusable SRD procedure families, not one branch per Unit, spell, feature,
+  monster action, or slug.
+- `ARCHITECTURE.md` and `packages/battle-runtime/ARCHITECTURE_GRAPH.md` are
+  updated if needed so Surface records/readers, support boundaries, reducer
+  procedure families, and MCP composition agree.
+- The docs define when a new authored ability is data-only, when it requires a
+  support-profile/reader change, and when it justifies a reusable procedure
+  family or runtime state widening.
+
+Acceptance:
+
+- Unsupported authored shapes fail at one support boundary instead of leaking
+  partial behavior into reducer logic.
+- QNT/MBT guidance targets procedure-family behavior and composition; catalog
+  breadth defaults to deterministic table/contract tests.
+- No projected executable vocabulary is reintroduced.
+
+Verification:
+
+- Source-only docs check.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA2.
+
+### Task 35 - PBA2 - Audit Reducer For Named-Ability Drift
+
+Status: `blocked`
+
+Depends on: PBA1
+Blocks: PBA3
+
+Next action: inspect current promoted battle runtime and MCP composition for
+ability-shaped reducer drift.
+
+Input:
+
+- `packages/battle-runtime/src/index.ts`
+- `packages/battle-runtime/README.md`
+- `packages/battle-runtime/ARCHITECTURE_GRAPH.md`
+- `packages/mcp/src/*battle*`
+- Current Surface Unit/StatBlock readers used by battle.
+
+Output:
+
+- An audit section or task-specific note classifies named spell, feature,
+  monster action, Unit slug, Stat Block action, or support-gate references as:
+  acceptable localized support gate; should be extracted into reader/procedure
+  data; or future reusable procedure-family widening.
+- PBA3 scope is narrowed to the smallest correction needed, or explicitly
+  marked no-op if no harmful drift exists.
+
+Acceptance:
+
+- The audit distinguishes data identity from reducer dispatch identity.
+- It does not demand removing all names; names may remain as support gates or
+  authored identity when they are localized and not acting as procedure logic.
+- Any strong connascence found is either localized or assigned to PBA3/future
+  tasks.
+
+Verification:
+
+- Source-only code/docs audit.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA3 with either a concrete correction scope or a
+  no-op closeout path.
+
+### Task 36 - PBA3 - Correct First Reducer Extensibility Drift
+
+Status: `blocked`
+
+Depends on: PBA2
+Blocks: PBA4
+
+Next action: perform the first smallest architecture correction identified by
+PBA2, or close as a documented no-op if PBA2 found no harmful drift.
+
+Scope constraints:
+
+- Do not broaden battle behavior.
+- Do not begin old Core feature-parity restoration here.
+- Prefer moving named ability logic toward Surface readers, support profiles,
+  shared procedure helpers, or typed runtime state over adding adapters.
+
+Acceptance:
+
+- Any changed reducer path still behaves the same for existing supported
+  Fighter/Goblin/Wizard/Skeleton flows.
+- The correction weakens or localizes named-ability/string-literal connascence.
+- Docs changed by PBA1 remain accurate after the correction.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test` if runtime code changes.
+- `pnpm --filter @dnd/battle-runtime typecheck` if runtime code changes.
+- `pnpm --filter @dnd/mcp test` if MCP composition changes.
+- Source-only verification is enough if PBA3 closes as no-op.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA4.
+
+### Task 37 - PBA4 - Align Protocol Docs And Start Feature-Parity Queue
+
+Status: `blocked`
+
+Depends on: PBA3
+Blocks: future tasks
+
+Next action: align the docs after PBA0-PBA3 and append the first feature-parity
+restoration queue.
+
+Output:
+
+- `ACTIVE_PLAN.md` is extended with the first old Core feature-parity
+  restoration tasks after PBA4, synchronized across the Ralph Task Index, DAG
+  table, and task-detail sections.
+- The feature-parity queue is ordered before broader Surface/catalog widening.
+- Any broad widening tasks discovered during PBA0-PBA3 are blocked behind the
+  feature-parity queue or explicitly deferred by owner decision.
+- Owning docs still agree about reducer protocols, QNT/MBT proof layers, and MCP
+  composition.
+
+Acceptance:
+
+- Ralph has a next ready feature-parity task after PBA4 without requiring a new
+  owner prompt.
+- The next tasks preserve the procedure-family reducer discipline from PBA1.
+- Broad widening does not start until maximum parity/composition and first
+  feature-parity restoration tasks are archived in this plan.
+
+Verification:
+
+- Source-only planning/docs check.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, the next appended feature-parity task becomes the Ralph loop
+  entrypoint.
 
 ## Deferred Previous Queue
 
