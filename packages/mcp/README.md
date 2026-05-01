@@ -56,11 +56,12 @@ The battle-session tool boundary exposes these user-facing tools:
 
 - `select_stat_block` selects a Stat Block from the SRD Stat Block
   catalog and stores only that Stat Block id in the session.
-- `start_battle` starts a battle session from one or more finalized character
-  sheets and the selected Stat Block. The caller supplies the Initiative scores
-  for every combatant. Starting battle moves each character session into an
-  in-battle variant that has no current HP field; the stored `BattleState` owns
-  HP until battle closeout.
+- `start_battle` starts a battle session from a non-empty initial combatant
+  roster. A combatant can currently come from an available finalized character
+  session or from an SRD Stat Block id. The caller supplies the Initiative score
+  for every combatant. Starting battle moves each included character session
+  into an in-battle variant that has no current HP field; the stored
+  `BattleState` owns HP until battle closeout.
 - `read_battle_state` returns the stored `BattleState` projection and current
   battle snapshot.
 - `discover_battle_acts` returns the current actor's battle acts. The promoted
@@ -169,8 +170,8 @@ battle creature-init APIs together because its job is wiring runtimes for
 tools.
 
 `start_battle` must receive caller-supplied Initiative scores for every
-combatant. MCP must not derive Initiative as `10 + modifier` in the promoted
-runtime path.
+combatant in `initialCombatants`. MCP must not derive Initiative as
+`10 + modifier` in the promoted runtime path.
 
 No promoted MCP/runtime path may import `@dnd/core`. Check that boundary with:
 

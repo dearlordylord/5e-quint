@@ -332,6 +332,29 @@ export type BattleCombatantDistance = {
   readonly combatantB: CombatantId;
   readonly feet: number;
 };
+export type BattleCombatantDistanceValidationIssue =
+  | {
+      readonly tag: "invalidFeet";
+    }
+  | {
+      readonly tag: "unknownCombatant";
+      readonly combatantA: CombatantId;
+      readonly combatantB: CombatantId;
+    }
+  | {
+      readonly tag: "selfDistance";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly tag: "duplicatePair";
+      readonly combatantA: CombatantId;
+      readonly combatantB: CombatantId;
+    }
+  | {
+      readonly tag: "incompletePairs";
+      readonly expectedPairCount: number;
+      readonly actualPairCount: number;
+    };
 
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
@@ -1006,24 +1029,16 @@ function battleCombatantDistances(input: {
         feet: DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET,
       })),
     );
+  const distanceIssue = validateBattleCombatantDistances({
+    combatantIds,
+    combatantDistances: authoredDistances,
+    requireCompletePairs: input.combatantDistances !== undefined,
+  });
+  if (distanceIssue !== null) {
+    throw new Error(battleCombatantDistanceValidationMessage(distanceIssue));
+  }
 
   for (const distance of authoredDistances) {
-    if (!Number.isInteger(distance.feet) || distance.feet < 0) {
-      throw new Error(
-        "Battle combatant distance must be a non-negative integer.",
-      );
-    }
-    if (
-      !combatantIds.includes(distance.combatantA) ||
-      !combatantIds.includes(distance.combatantB)
-    ) {
-      throw new Error(
-        "Battle combatant distance references an unknown combatant.",
-      );
-    }
-    if (distance.combatantA === distance.combatantB) {
-      throw new Error("Battle combatant distance requires two combatants.");
-    }
     setBattleCombatantDistance(
       distances,
       distance.combatantA,
@@ -1039,6 +1054,98 @@ function battleCombatantDistances(input: {
   }
 
   return distances;
+}
+
+export function validateBattleCombatantDistances(input: {
+  readonly combatantIds: readonly CombatantId[];
+  readonly combatantDistances: readonly BattleCombatantDistance[];
+  readonly requireCompletePairs: boolean;
+}): BattleCombatantDistanceValidationIssue | null {
+  const explicitDistancePairs = new Set<string>();
+
+  for (const distance of input.combatantDistances) {
+    if (!Number.isInteger(distance.feet) || distance.feet < 0) {
+      return { tag: "invalidFeet" };
+    }
+    if (
+      !input.combatantIds.includes(distance.combatantA) ||
+      !input.combatantIds.includes(distance.combatantB)
+    ) {
+      return {
+        tag: "unknownCombatant",
+        combatantA: distance.combatantA,
+        combatantB: distance.combatantB,
+      };
+    }
+    if (distance.combatantA === distance.combatantB) {
+      return {
+        tag: "selfDistance",
+        combatantId: distance.combatantA,
+      };
+    }
+
+    const pairKey = combatantDistancePairKey(
+      distance.combatantA,
+      distance.combatantB,
+    );
+    if (explicitDistancePairs.has(pairKey)) {
+      return {
+        tag: "duplicatePair",
+        combatantA: distance.combatantA,
+        combatantB: distance.combatantB,
+      };
+    }
+    explicitDistancePairs.add(pairKey);
+  }
+
+  if (input.requireCompletePairs) {
+    const expectedPairCount =
+      (input.combatantIds.length * (input.combatantIds.length - 1)) / 2;
+    if (explicitDistancePairs.size !== expectedPairCount) {
+      return {
+        tag: "incompletePairs",
+        expectedPairCount,
+        actualPairCount: explicitDistancePairs.size,
+      };
+    }
+  }
+
+  return null;
+}
+
+function battleCombatantDistanceValidationMessage(
+  issue: BattleCombatantDistanceValidationIssue,
+): string {
+  return Match.value(issue).pipe(
+    Match.when(
+      { tag: "invalidFeet" },
+      () => "Battle combatant distance must be a non-negative integer.",
+    ),
+    Match.when(
+      { tag: "unknownCombatant" },
+      () => "Battle combatant distance references an unknown combatant.",
+    ),
+    Match.when(
+      { tag: "selfDistance" },
+      () => "Battle combatant distance requires two combatants.",
+    ),
+    Match.when(
+      { tag: "duplicatePair" },
+      () => "Duplicate battle combatant distance pair.",
+    ),
+    Match.when(
+      { tag: "incompletePairs" },
+      () => "Battle combatant distances must include every combatant pair.",
+    ),
+    Match.exhaustive,
+  );
+}
+
+function combatantDistancePairKey(
+  combatantA: CombatantId,
+  combatantB: CombatantId,
+): string {
+  return [combatantA, combatantB].sort().join("\u0000");
 }
 
 function setBattleCombatantDistance(
@@ -1755,11 +1862,10 @@ function resolveSpellAct(input: BattleResolutionInput): BattleResolutionResult {
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor).find(
-          (candidate) =>
-            subject.spellActId === undefined
-              ? candidate.spell.id === subject.spellId
-              : supportedSpellActId(candidate) === subject.spellActId,
+      ? supportedSpellActs(actor).find((candidate) =>
+          subject.spellActId === undefined
+            ? candidate.spell.id === subject.spellId
+            : supportedSpellActId(candidate) === subject.spellActId,
         )
       : undefined;
   if (actor?.origin.kind !== "character" || invocation == null) {
@@ -2326,8 +2432,8 @@ function spellTargetHole(
       invocation.kind === "preparedSlotSpell"
         ? `${invocation.spell.name} all-darts target`
         : `${invocation.spell.name} target`,
-    choices: [...state.combatants.keys()].filter(
-      (id) => spellTargetIsLegal(state, actorId, id, invocation),
+    choices: [...state.combatants.keys()].filter((id) =>
+      spellTargetIsLegal(state, actorId, id, invocation),
     ),
   };
 }

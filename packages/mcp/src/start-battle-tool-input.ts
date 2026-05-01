@@ -1,11 +1,9 @@
 import {
   BattleId as BattleIdSchema,
-  characterId,
   combatantId,
   initiativeScore,
   type BattleId,
   type BattleCombatantDistance,
-  type CharacterId,
   type CombatantId,
   type InitiativeScore,
 } from "@dnd/battle-runtime";
@@ -14,6 +12,7 @@ import {
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import { Hp, type Hp as HpType } from "@dnd/shared/types";
+import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Schema } from "effect";
 
 import {
@@ -27,14 +26,51 @@ const IntegerSchema = Schema.Number.pipe(Schema.int());
 const NonNegativeIntegerSchema = IntegerSchema.pipe(
   Schema.greaterThanOrEqualTo(0),
 );
-const StartBattleCharacterArgsSchema = Schema.Struct({
-  sourceDraftId: Schema.NonEmptyTrimmedString,
-  combatantId: Schema.NonEmptyTrimmedString,
-  characterId: Schema.optionalWith(Schema.NonEmptyTrimmedString, {
-    exact: true,
+const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
+  kind: Schema.Literal("characterSession").annotations({
+    description: "Initial combatant source: finalized character session.",
   }),
-  initiative: IntegerSchema,
+  sourceDraftId: Schema.NonEmptyTrimmedString.annotations({
+    description:
+      "sourceDraftId for an available finalized character from list_characters.",
+  }),
+  combatantId: Schema.NonEmptyTrimmedString.annotations({
+    description:
+      "Caller-chosen battle actor id used in turn order, targets, and battle subjects.",
+  }),
+  initiative: IntegerSchema.annotations({
+    description: "Caller-supplied Initiative score.",
+  }),
 });
+const InitialStatBlockCombatantArgsSchema = Schema.Struct({
+  kind: Schema.Literal("statBlock").annotations({
+    description: "Initial combatant source: SRD Stat Block catalog record.",
+  }),
+  statBlockId: Schema.NonEmptyTrimmedString.annotations({
+    description: "SRD Stat Block id from list_stat_blocks.",
+  }),
+  combatantId: Schema.NonEmptyTrimmedString.annotations({
+    description:
+      "Caller-chosen battle actor id used in turn order, targets, and battle subjects.",
+  }),
+  initiative: IntegerSchema.annotations({
+    description: "Caller-supplied Initiative score.",
+  }),
+  currentHp: Schema.optionalWith(NonNegativeIntegerSchema, {
+    exact: true,
+  }).annotations({
+    description: "Optional non-negative current HP override.",
+  }),
+  tempHp: Schema.optionalWith(NonNegativeIntegerSchema, {
+    exact: true,
+  }).annotations({
+    description: "Optional non-negative Temporary Hit Points.",
+  }),
+});
+const InitialBattleCombatantArgsSchema = Schema.Union(
+  InitialCharacterSessionCombatantArgsSchema,
+  InitialStatBlockCombatantArgsSchema,
+);
 const StartBattleCombatantDistanceArgsSchema = Schema.Struct({
   combatantA: Schema.NonEmptyTrimmedString,
   combatantB: Schema.NonEmptyTrimmedString,
@@ -43,19 +79,11 @@ const StartBattleCombatantDistanceArgsSchema = Schema.Struct({
 
 const StartBattleToolArgsSchema = Schema.Struct({
   battleId: BattleIdSchema,
-  characters: Schema.NonEmptyArray(StartBattleCharacterArgsSchema),
-  statBlockCombatantId: Schema.NonEmptyTrimmedString,
-  statBlockInitiative: IntegerSchema,
+  initialCombatants: Schema.NonEmptyArray(InitialBattleCombatantArgsSchema),
   combatantDistances: Schema.optionalWith(
     Schema.Array(StartBattleCombatantDistanceArgsSchema),
     { exact: true },
   ),
-  statBlockCurrentHp: Schema.optionalWith(NonNegativeIntegerSchema, {
-    exact: true,
-  }),
-  statBlockTempHp: Schema.optionalWith(NonNegativeIntegerSchema, {
-    exact: true,
-  }),
 });
 
 type StartBattleToolArgs = Schema.Schema.Type<typeof StartBattleToolArgsSchema>;
@@ -66,22 +94,31 @@ export const startBattleInputSchema = describeStartBattleInputSchema(
 
 export type StartBattleToolInput = {
   readonly battleId: BattleId;
-  readonly characters: readonly [
-    StartBattleCharacterToolInput,
-    ...StartBattleCharacterToolInput[],
+  readonly initialCombatants: readonly [
+    InitialBattleCombatantToolInput,
+    ...InitialBattleCombatantToolInput[],
   ];
-  readonly statBlockCombatantId: CombatantId;
-  readonly statBlockInitiative: InitiativeScore;
   readonly combatantDistances?: readonly BattleCombatantDistance[];
-  readonly statBlockCurrentHp?: HpType;
-  readonly statBlockTempHp?: HpType;
 };
 
-export type StartBattleCharacterToolInput = {
+export type InitialBattleCombatantToolInput =
+  | InitialCharacterSessionCombatantToolInput
+  | InitialStatBlockCombatantToolInput;
+
+export type InitialCharacterSessionCombatantToolInput = {
+  readonly kind: "characterSession";
   readonly sourceDraftId: CharacterDraftId;
   readonly combatantId: CombatantId;
-  readonly characterId?: CharacterId;
   readonly initiative: InitiativeScore;
+};
+
+export type InitialStatBlockCombatantToolInput = {
+  readonly kind: "statBlock";
+  readonly statBlockId: StatBlockId;
+  readonly combatantId: CombatantId;
+  readonly initiative: InitiativeScore;
+  readonly currentHp?: HpType;
+  readonly tempHp?: HpType;
 };
 
 export function decodeStartBattleArgs(
@@ -96,9 +133,7 @@ export function decodeStartBattleArgs(
 
   return Either.right({
     battleId: record.right.battleId,
-    characters: decodeCharacters(record.right.characters),
-    statBlockCombatantId: combatantId(record.right.statBlockCombatantId),
-    statBlockInitiative: initiativeScore(record.right.statBlockInitiative),
+    initialCombatants: decodeInitialCombatants(record.right.initialCombatants),
     ...(record.right.combatantDistances === undefined
       ? {}
       : {
@@ -110,29 +145,37 @@ export function decodeStartBattleArgs(
             }),
           ),
         }),
-    ...(record.right.statBlockCurrentHp === undefined
-      ? {}
-      : { statBlockCurrentHp: Hp(record.right.statBlockCurrentHp) }),
-    ...(record.right.statBlockTempHp === undefined
-      ? {}
-      : { statBlockTempHp: Hp(record.right.statBlockTempHp) }),
   });
 }
 
-function decodeCharacters(
-  value: StartBattleToolArgs["characters"],
-): StartBattleToolInput["characters"] {
-  const decoded = value.map((character) => ({
-    sourceDraftId: characterDraftId(character.sourceDraftId),
-    combatantId: combatantId(character.combatantId),
-    ...(character.characterId === undefined
-      ? {}
-      : { characterId: characterId(character.characterId) }),
-    initiative: initiativeScore(character.initiative),
-  }));
+function decodeInitialCombatants(
+  value: StartBattleToolArgs["initialCombatants"],
+): StartBattleToolInput["initialCombatants"] {
+  const decoded = value.map((combatant): InitialBattleCombatantToolInput => {
+    if (combatant.kind === "characterSession") {
+      return {
+        kind: "characterSession",
+        sourceDraftId: characterDraftId(combatant.sourceDraftId),
+        combatantId: combatantId(combatant.combatantId),
+        initiative: initiativeScore(combatant.initiative),
+      };
+    }
+    return {
+      kind: "statBlock",
+      statBlockId: combatant.statBlockId,
+      combatantId: combatantId(combatant.combatantId),
+      initiative: initiativeScore(combatant.initiative),
+      ...(combatant.currentHp === undefined
+        ? {}
+        : { currentHp: Hp(combatant.currentHp) }),
+      ...(combatant.tempHp === undefined
+        ? {}
+        : { tempHp: Hp(combatant.tempHp) }),
+    };
+  });
   const [first, ...rest] = decoded;
   if (first === undefined) {
-    throw new Error("Start battle character codec returned an empty array.");
+    throw new Error("Start battle combatant codec returned an empty array.");
   }
   return [first, ...rest];
 }
@@ -141,72 +184,25 @@ function describeStartBattleInputSchema(
   schema: McpObjectInputSchema,
 ): McpObjectInputSchema {
   const properties = (schema.properties ?? {}) as Record<string, unknown>;
-  const characters = properties.characters as
-    | { readonly items?: { readonly properties?: Record<string, unknown> } }
-    | undefined;
   return {
     ...schema,
     description:
-      "Start battle after finalize_character and select_stat_block. Provide one or more finalized character sessions plus caller-supplied Initiative for every combatant.",
+      "Start a battle session from an initial combatant roster. Provide caller-supplied Initiative for every combatant.",
     properties: {
       ...properties,
       battleId: {
         ...objectProperty(properties.battleId),
         description: "Caller-chosen durable battle id.",
       },
-      characters: {
-        ...objectProperty(properties.characters),
+      initialCombatants: {
+        ...objectProperty(properties.initialCombatants),
         description:
-          "Non-empty finalized character combatants. sourceDraftId comes from list_characters; combatantId is the battle actor id.",
-        items: {
-          ...(characters?.items ?? {}),
-          properties: {
-            ...(characters?.items?.properties ?? {}),
-            sourceDraftId: {
-              ...objectProperty(characters?.items?.properties?.sourceDraftId),
-              description:
-                "sourceDraftId for an available finalized character from list_characters.",
-            },
-            combatantId: {
-              ...objectProperty(characters?.items?.properties?.combatantId),
-              description:
-                "Caller-chosen battle actor id used in turn order, targets, and battle subjects.",
-            },
-            characterId: {
-              ...objectProperty(characters?.items?.properties?.characterId),
-              description:
-                "Optional legacy field. Battle start uses the durable characterId already stored on the finalized character session.",
-            },
-            initiative: {
-              ...objectProperty(characters?.items?.properties?.initiative),
-              description: "Caller-supplied Initiative score.",
-            },
-          },
-        },
-      },
-      statBlockCombatantId: {
-        ...objectProperty(properties.statBlockCombatantId),
-        description:
-          "Caller-chosen battle actor id for the selected Stat Block.",
-      },
-      statBlockInitiative: {
-        ...objectProperty(properties.statBlockInitiative),
-        description: "Caller-supplied Initiative score for the Stat Block.",
+          "Non-empty initial combatant roster. Each combatant comes from a finalized character session or an SRD Stat Block.",
       },
       combatantDistances: {
         ...objectProperty(properties.combatantDistances),
         description:
           "Optional explicit encounter distances in feet for combatant pairs. Omit only for the runtime's first-vertical default distance model.",
-      },
-      statBlockCurrentHp: {
-        ...objectProperty(properties.statBlockCurrentHp),
-        description:
-          "Optional non-negative current HP override for the selected Stat Block.",
-      },
-      statBlockTempHp: {
-        ...objectProperty(properties.statBlockTempHp),
-        description:
-          "Optional non-negative temporary HP for the selected Stat Block.",
       },
     },
   };

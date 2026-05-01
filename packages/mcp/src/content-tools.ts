@@ -188,7 +188,7 @@ export function handleContentToolCall(
         statBlocks: root.statBlockCatalog
           .listStatBlocks()
           .map((record) => statBlockSummary(record)),
-        next: "Call select_stat_block with one of these statBlockId values before start_battle.",
+        next: "Use these statBlockId values in start_battle statBlock combatants, or call select_stat_block to inspect one record.",
       }),
     ),
     Match.when({ name: contentToolNames.listCatalogUnits }, () =>
@@ -210,8 +210,8 @@ function workflowGuide() {
       "Call create_character_draft, then fill only holeIds and optionIds returned in holes.",
       "After every accepted fill_creation_holes call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
-      "Call list_stat_blocks, then select_stat_block with a returned statBlockId.",
-      "Call start_battle with non-empty characters. sourceDraftId comes from list_characters, combatantId is the battle actor id, and characterId is the durable character identity for handoff.",
+      "Call list_stat_blocks for Stat Block ids. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
+      "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use sourceDraftId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks.",
       "Call discover_battle_acts and copy a returned subject exactly.",
       "If an act has initialHoles, call fill_battle_hole with one fill at a time, reusing the same subject until result.tag is resolved.",
       "If an act has no holes, call resolve_battle_act with the returned subject.",

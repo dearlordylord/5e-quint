@@ -16,7 +16,6 @@ const BattleCombatantProjectionSchema = Schema.Struct({
   hp: Schema.Number,
   maxHp: Schema.Number,
   tempHp: Schema.Number,
-  originKind: Schema.String,
   origin: JsonObjectSchema,
   zeroHpLifecycle: JsonObjectSchema,
 });

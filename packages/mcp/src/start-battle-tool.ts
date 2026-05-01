@@ -1,11 +1,23 @@
-import { snapshotBattle } from "@dnd/battle-runtime";
+import {
+  battleCreatureInitFromStatBlock,
+  snapshotBattle,
+  startBattle,
+  validateBattleCombatantDistances,
+  type BattleCreatureInit,
+  type BattleCombatantDistanceValidationIssue,
+} from "@dnd/battle-runtime";
+import { Match } from "effect";
 
-import { startBattleFromCharacterBuildsAndStatBlock } from "./battle-creature-init.ts";
+import { battleCreatureInitFromCharacterBuild } from "./battle-creature-init.ts";
 import { battleStateProjection } from "./battle-state-projection.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import { characterBattleSpellSlots } from "./session-store.ts";
-import { type StartBattleToolInput } from "./start-battle-tool-input.ts";
+import {
+  type InitialBattleCombatantToolInput,
+  type InitialCharacterSessionCombatantToolInput,
+  type StartBattleToolInput,
+} from "./start-battle-tool-input.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
@@ -22,13 +34,12 @@ export function handleStartBattleToolCall(
     });
   }
 
-  const characterSessions = startBattleCharacterSessions(root, input);
   const duplicateInput = duplicateStartBattleInputContent(
-    characterSessions.map(({ character }) => character),
-    input.statBlockCombatantId,
+    input.initialCombatants,
   );
   if (duplicateInput !== null) return duplicateInput;
 
+  const characterSessions = startBattleCharacterSessions(root, input);
   const missingCharacter = characterSessions.find(
     (entry) => entry.session == null,
   );
@@ -53,45 +64,19 @@ export function handleStartBattleToolCall(
     });
   }
 
-  const statBlock = root.sessionStore.getSelectedStatBlock();
-  if (statBlock == null) {
-    return errorContent("No Stat Block selected for battle.", {
-      code: "NO_SELECTED_STAT_BLOCK",
-    });
+  const distanceInput = validInitialCombatantDistances(input);
+  if (distanceInput !== null) {
+    return distanceInput;
   }
 
   try {
-    const state = startBattleFromCharacterBuildsAndStatBlock({
+    const state = startBattle({
       battleId: input.battleId,
-      characters: characterSessions.map(({ character, session }) => {
-        if (session?.tag !== "available") {
-          throw new Error("Character session is not available.");
-        }
-        return {
-          combatantId: character.combatantId,
-          characterId: session.characterId,
-          displayName: characterBuildDisplayName(
-            root.unitLibrary,
-            session.build,
-          ),
-          build: session.build,
-          initiative: character.initiative,
-          currentHp: session.currentHp,
-          spellSlots: characterBattleSpellSlots(session),
-        };
+      combatants: initialBattleCreatureInits({
+        root,
+        initialCombatants: input.initialCombatants,
+        characterSessions,
       }),
-      statBlockBattleInput: {
-        combatantId: input.statBlockCombatantId,
-        statBlock,
-        initiative: input.statBlockInitiative,
-        ...(input.statBlockCurrentHp === undefined
-          ? {}
-          : { currentHp: input.statBlockCurrentHp }),
-        ...(input.statBlockTempHp === undefined
-          ? {}
-          : { tempHp: input.statBlockTempHp }),
-      },
-      unitLibrary: root.unitLibrary,
       combatantDistances: input.combatantDistances,
     });
     root.sessionStore.battleState = state;
@@ -123,20 +108,18 @@ function startBattleCharacterSessions(
   root: McpCompositionRoot,
   decoded: StartBattleToolInput,
 ) {
-  return decoded.characters.map((character) => ({
-    character,
-    session: root.sessionStore.characters.get(character.sourceDraftId),
-  }));
+  return decoded.initialCombatants
+    .filter(isCharacterSessionCombatant)
+    .map((character) => ({
+      character,
+      session: root.sessionStore.characters.get(character.sourceDraftId),
+    }));
 }
 
-type StartBattleCharacterInput = ReturnType<
-  typeof startBattleCharacterSessions
->[number]["character"];
-
 function duplicateStartBattleInputContent(
-  characters: readonly StartBattleCharacterInput[],
-  statBlockCombatantId: StartBattleToolInput["statBlockCombatantId"],
+  initialCombatants: readonly InitialBattleCombatantToolInput[],
 ) {
+  const characters = initialCombatants.filter(isCharacterSessionCombatant);
   const duplicateSourceDraftId = firstDuplicate(
     characters.map((character) => character.sourceDraftId),
   );
@@ -147,22 +130,9 @@ function duplicateStartBattleInputContent(
     });
   }
 
-  const duplicateCharacterId = firstDuplicate(
-    characters
-      .map((character) => character.characterId)
-      .filter((id): id is NonNullable<typeof id> => id !== undefined),
+  const duplicateCombatantId = firstDuplicate(
+    initialCombatants.map((combatant) => combatant.combatantId),
   );
-  if (duplicateCharacterId !== null) {
-    return errorContent("Duplicate character id in battle start.", {
-      code: "DUPLICATE_BATTLE_CHARACTER_ID",
-      characterId: duplicateCharacterId,
-    });
-  }
-
-  const duplicateCombatantId = firstDuplicate([
-    ...characters.map((character) => character.combatantId),
-    statBlockCombatantId,
-  ]);
   if (duplicateCombatantId !== null) {
     return errorContent("Duplicate combatant id in battle start.", {
       code: "DUPLICATE_BATTLE_COMBATANT_ID",
@@ -171,6 +141,115 @@ function duplicateStartBattleInputContent(
   }
 
   return null;
+}
+
+function validInitialCombatantDistances(input: StartBattleToolInput) {
+  if (input.combatantDistances === undefined) return null;
+
+  const combatantIds = new Set(
+    input.initialCombatants.map((combatant) => combatant.combatantId),
+  );
+  const issue = validateBattleCombatantDistances({
+    combatantIds: [...combatantIds],
+    combatantDistances: input.combatantDistances,
+    requireCompletePairs: true,
+  });
+  return issue === null ? null : distanceIssueContent(issue);
+}
+
+function distanceIssueContent(issue: BattleCombatantDistanceValidationIssue) {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "invalidFeet" }, () =>
+      errorContent("Combatant distance must be a non-negative integer.", {
+        code: "INVALID_BATTLE_DISTANCE_FEET",
+      }),
+    ),
+    Match.when({ tag: "unknownCombatant" }, (unknown) =>
+      errorContent("Combatant distance references an unknown combatant.", {
+        code: "UNKNOWN_BATTLE_DISTANCE_COMBATANT",
+        combatantA: unknown.combatantA,
+        combatantB: unknown.combatantB,
+      }),
+    ),
+    Match.when({ tag: "selfDistance" }, (self) =>
+      errorContent("Combatant distance requires two combatants.", {
+        code: "SELF_BATTLE_DISTANCE",
+        combatantId: self.combatantId,
+      }),
+    ),
+    Match.when({ tag: "duplicatePair" }, (duplicate) =>
+      errorContent("Duplicate combatant distance pair.", {
+        code: "DUPLICATE_BATTLE_DISTANCE_PAIR",
+        combatantA: duplicate.combatantA,
+        combatantB: duplicate.combatantB,
+      }),
+    ),
+    Match.when({ tag: "incompletePairs" }, (incomplete) =>
+      errorContent(
+        "Explicit combatant distances must include every combatant pair.",
+        {
+          code: "INCOMPLETE_BATTLE_DISTANCE_PAIRS",
+          expectedPairCount: incomplete.expectedPairCount,
+          actualPairCount: incomplete.actualPairCount,
+        },
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function initialBattleCreatureInits(input: {
+  readonly root: McpCompositionRoot;
+  readonly initialCombatants: readonly InitialBattleCombatantToolInput[];
+  readonly characterSessions: ReturnType<typeof startBattleCharacterSessions>;
+}): readonly BattleCreatureInit[] {
+  return input.initialCombatants.map((combatant) =>
+    Match.value(combatant).pipe(
+      Match.when({ kind: "characterSession" }, (character) => {
+        const session = input.characterSessions.find(
+          (entry) => entry.character.sourceDraftId === character.sourceDraftId,
+        )?.session;
+        if (session?.tag !== "available") {
+          throw new Error("Character session is not available.");
+        }
+        return battleCreatureInitFromCharacterBuild({
+          combatantId: character.combatantId,
+          characterId: session.characterId,
+          displayName: characterBuildDisplayName(
+            input.root.unitLibrary,
+            session.build,
+          ),
+          build: session.build,
+          initiative: character.initiative,
+          currentHp: session.currentHp,
+          spellSlots: characterBattleSpellSlots(session),
+          unitLibrary: input.root.unitLibrary,
+        });
+      }),
+      Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
+        return battleCreatureInitFromStatBlock({
+          combatantId: statBlockCombatant.combatantId,
+          statBlock: input.root.statBlockCatalog.requireStatBlock(
+            statBlockCombatant.statBlockId,
+          ),
+          initiative: statBlockCombatant.initiative,
+          ...(statBlockCombatant.currentHp === undefined
+            ? {}
+            : { currentHp: statBlockCombatant.currentHp }),
+          ...(statBlockCombatant.tempHp === undefined
+            ? {}
+            : { tempHp: statBlockCombatant.tempHp }),
+        });
+      }),
+      Match.exhaustive,
+    ),
+  );
+}
+
+function isCharacterSessionCombatant(
+  combatant: InitialBattleCombatantToolInput,
+): combatant is InitialCharacterSessionCombatantToolInput {
+  return combatant.kind === "characterSession";
 }
 
 function firstDuplicate<T>(values: readonly T[]): T | null {

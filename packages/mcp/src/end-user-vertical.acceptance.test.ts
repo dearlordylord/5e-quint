@@ -151,16 +151,20 @@ describe("end-user promoted MCP vertical", () => {
 
     const started = callTool(root, "start_battle", {
       battleId: "battle:accepted-vertical",
-      characters: [
+      initialCombatants: [
         {
+          kind: "characterSession",
           sourceDraftId: draftId,
           combatantId: "fighter",
-          characterId: "character:accepted-fighter",
           initiative: 18,
         },
+        {
+          kind: "statBlock",
+          statBlockId: "stat_block_goblin_warrior",
+          combatantId: "goblin",
+          initiative: 7,
+        },
       ],
-      statBlockCombatantId: "goblin",
-      statBlockInitiative: 7,
     });
     expect(started.snapshot).toMatchObject({
       currentActorId: "fighter",
@@ -340,22 +344,26 @@ describe("end-user promoted MCP vertical", () => {
 
     const started = callTool(root, "start_battle", {
       battleId: "battle:post5-width",
-      characters: [
+      initialCombatants: [
         {
+          kind: "characterSession",
           sourceDraftId: fighterDraftId,
           combatantId: "fighter",
-          characterId: "character:post5-fighter",
           initiative: 18,
         },
         {
+          kind: "characterSession",
           sourceDraftId: wizardDraftId,
           combatantId: "wizard",
-          characterId: "character:post5-wizard",
           initiative: 14,
         },
+        {
+          kind: "statBlock",
+          statBlockId: "stat_block_skeleton",
+          combatantId: "skeleton",
+          initiative: 8,
+        },
       ],
-      statBlockCombatantId: "skeleton",
-      statBlockInitiative: 8,
     });
     expect(started.snapshot).toMatchObject({
       currentActorId: "fighter",
@@ -369,15 +377,15 @@ describe("end-user promoted MCP vertical", () => {
     expect(started.battleState.combatants).toEqual([
       expect.objectContaining({
         combatantId: "fighter",
-        originKind: "character",
+        origin: expect.objectContaining({ kind: "character" }),
       }),
       expect.objectContaining({
         combatantId: "wizard",
-        originKind: "character",
+        origin: expect.objectContaining({ kind: "character" }),
       }),
       expect.objectContaining({
         combatantId: "skeleton",
-        originKind: "statBlock",
+        origin: expect.objectContaining({ kind: "statBlock" }),
       }),
     ]);
 

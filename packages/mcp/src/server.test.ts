@@ -270,16 +270,20 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-shell",
-        characters: [
+        initialCombatants: [
           {
+            kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
-            characterId: "character:fighter",
             initiative: 18,
           },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+          },
         ],
-        statBlockCombatantId: "goblin",
-        statBlockInitiative: 7,
       }),
     );
 
@@ -297,12 +301,12 @@ describe("MCP server route", () => {
         combatants: [
           {
             combatantId: "fighter",
-            originKind: "character",
+            origin: { kind: "character" },
             initiative: 18,
           },
           {
             combatantId: "goblin",
-            originKind: "statBlock",
+            origin: { kind: "statBlock" },
             initiative: 7,
           },
         ],
@@ -343,6 +347,52 @@ describe("MCP server route", () => {
     expect(read.battleState.combatants).toHaveLength(2);
   });
 
+  test("starts battle from a character-only initial combatant roster", () => {
+    const root = createMcpCompositionRoot();
+    const firstDraftId = "draft:mcp-character-roster-first";
+    const secondDraftId = "draft:mcp-character-roster-second";
+    createFinalizedFighterSheet(root, firstDraftId);
+    createFinalizedFighterSheet(root, secondDraftId);
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-character-roster",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            sourceDraftId: firstDraftId,
+            combatantId: "first-fighter",
+            initiative: 11,
+          },
+          {
+            kind: "characterSession",
+            sourceDraftId: secondDraftId,
+            combatantId: "second-fighter",
+            initiative: 17,
+          },
+        ],
+      }),
+    );
+
+    expect(started.snapshot).toMatchObject({
+      currentActorId: "second-fighter",
+      turnOrder: ["second-fighter", "first-fighter"],
+    });
+    expect(root.sessionStore.snapshot()).toMatchObject({
+      selectedStatBlockId: null,
+      activeBattle: {
+        battleId: "battle:mcp-character-roster",
+        currentActorId: "second-fighter",
+      },
+    });
+    expect(
+      root.sessionStore.characters.get(characterDraftId(firstDraftId)),
+    ).toMatchObject({ tag: "inBattle" });
+    expect(
+      root.sessionStore.characters.get(characterDraftId(secondDraftId)),
+    ).toMatchObject({ tag: "inBattle" });
+  });
+
   test("start_battle rejects a second battle while the single battle slot is active", () => {
     const root = createMcpCompositionRoot();
     const firstDraftId = "draft:mcp-active-battle-first";
@@ -357,16 +407,20 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-active-battle-first",
-        characters: [
+        initialCombatants: [
           {
+            kind: "characterSession",
             sourceDraftId: firstDraftId,
             combatantId: "fighter",
-            characterId: "character:first-fighter",
             initiative: 18,
           },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+          },
         ],
-        statBlockCombatantId: "goblin",
-        statBlockInitiative: 7,
       }),
     );
     const firstBattleState = root.sessionStore.battleState;
@@ -375,16 +429,20 @@ describe("MCP server route", () => {
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-active-battle-second",
-        characters: [
+        initialCombatants: [
           {
+            kind: "characterSession",
             sourceDraftId: secondDraftId,
             combatantId: "second-fighter",
-            characterId: "character:second-fighter",
             initiative: 16,
           },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "second-goblin",
+            initiative: 8,
+          },
         ],
-        statBlockCombatantId: "second-goblin",
-        statBlockInitiative: 8,
       }),
     );
 
@@ -422,16 +480,20 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-fighter-flow",
-        characters: [
+        initialCombatants: [
           {
+            kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
-            characterId: "character:fighter",
             initiative: 18,
           },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+          },
         ],
-        statBlockCombatantId: "goblin",
-        statBlockInitiative: 7,
       }),
     );
 
@@ -681,15 +743,19 @@ describe("MCP server route", () => {
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-shell-missing-initiative",
-        characters: [
+        initialCombatants: [
           {
+            kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
-            characterId: "character:fighter",
             initiative: 18,
           },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+          },
         ],
-        statBlockCombatantId: "goblin",
       }),
     );
 
@@ -712,15 +778,21 @@ describe("MCP server route", () => {
     );
     const baseStart = {
       battleId: "battle:mcp-start-exact-character-input",
-      statBlockCombatantId: "goblin",
-      statBlockInitiative: 7,
+      initialCombatants: [
+        {
+          kind: "statBlock",
+          statBlockId: "stat_block_goblin_warrior",
+          combatantId: "goblin",
+          initiative: 7,
+        },
+      ],
     };
 
     expect(
       readPayload(
         handleToolCall(root, "start_battle", {
           ...baseStart,
-          characters: [],
+          initialCombatants: [],
         }),
       ),
     ).toMatchObject({
@@ -732,11 +804,11 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "start_battle", {
           ...baseStart,
-          characters: [
+          initialCombatants: [
             {
+              kind: "characterSession",
               sourceDraftId: draftId,
               combatantId: "fighter",
-              characterId: "character:fighter",
               initiative: 18,
               characterDisplayName: "Contradictory Caller Name",
             },
@@ -764,22 +836,26 @@ describe("MCP server route", () => {
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-missing-additional",
-        characters: [
+        initialCombatants: [
           {
+            kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
-            characterId: "character:fighter",
             initiative: 18,
           },
           {
+            kind: "characterSession",
             sourceDraftId: "draft:mcp-missing-additional-secondary",
             combatantId: "second-fighter",
-            characterId: "character:second-fighter",
             initiative: 16,
           },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+          },
         ],
-        statBlockCombatantId: "goblin",
-        statBlockInitiative: 7,
       }),
     );
 
@@ -790,6 +866,95 @@ describe("MCP server route", () => {
       },
     });
     expect(root.sessionStore.battleState).toBeNull();
+  });
+
+  test("start_battle rejects incomplete or duplicate explicit combatant distances", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-invalid-distances";
+    createFinalizedFighterSheet(root, draftId);
+
+    const baseStart = {
+      battleId: "battle:mcp-invalid-distances",
+      initialCombatants: [
+        {
+          kind: "characterSession",
+          sourceDraftId: draftId,
+          combatantId: "fighter",
+          initiative: 18,
+        },
+        {
+          kind: "statBlock",
+          statBlockId: "stat_block_goblin_warrior",
+          combatantId: "goblin",
+          initiative: 7,
+        },
+      ],
+    } as const;
+
+    expect(
+      readPayload(
+        handleToolCall(root, "start_battle", {
+          ...baseStart,
+          combatantDistances: [],
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "INCOMPLETE_BATTLE_DISTANCE_PAIRS" },
+    });
+    expect(
+      readPayload(
+        handleToolCall(root, "start_battle", {
+          ...baseStart,
+          combatantDistances: [
+            { combatantA: "fighter", combatantB: "goblin", feet: 5 },
+            { combatantA: "goblin", combatantB: "fighter", feet: 10 },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "DUPLICATE_BATTLE_DISTANCE_PAIR" },
+    });
+    expect(root.sessionStore.battleState).toBeNull();
+  });
+
+  test("starts battle from multiple Stat Block combatants", () => {
+    const root = createMcpCompositionRoot();
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-stat-block-roster",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "first-goblin",
+            initiative: 11,
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "second-goblin",
+            initiative: 8,
+          },
+        ],
+      }),
+    );
+
+    expect(started.snapshot).toMatchObject({
+      currentActorId: "first-goblin",
+      turnOrder: ["first-goblin", "second-goblin"],
+      combatants: [
+        { combatantId: "first-goblin", displayName: "Goblin Warrior" },
+        { combatantId: "second-goblin", displayName: "Goblin Warrior" },
+      ],
+    });
+    expect(root.sessionStore.snapshot()).toMatchObject({
+      selectedStatBlockId: null,
+      activeBattle: {
+        battleId: "battle:mcp-stat-block-roster",
+        currentActorId: "first-goblin",
+      },
+    });
   });
 
   test("battle act tools reject contradictory subjects and no-hole misuse", () => {
@@ -804,16 +969,20 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-battle-subject-boundary",
-        characters: [
+        initialCombatants: [
           {
+            kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
-            characterId: "character:fighter",
             initiative: 18,
           },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+          },
         ],
-        statBlockCombatantId: "goblin",
-        statBlockInitiative: 7,
       }),
     );
 
@@ -857,7 +1026,7 @@ describe("MCP server route", () => {
     });
   });
 
-  test("start_battle rejects duplicate sheet, character, and combatant ids", () => {
+  test("start_battle rejects duplicate source draft and combatant ids", () => {
     const root = createMcpCompositionRoot();
     const firstDraftId = "draft:mcp-duplicate-first";
     const secondDraftId = "draft:mcp-duplicate-second";
@@ -871,30 +1040,34 @@ describe("MCP server route", () => {
 
     const baseStart = {
       battleId: "battle:mcp-duplicates",
-      characters: [
+      initialCombatants: [
         {
+          kind: "characterSession",
           sourceDraftId: firstDraftId,
           combatantId: "fighter",
-          characterId: "character:fighter",
           initiative: 18,
         },
+        {
+          kind: "statBlock",
+          statBlockId: "stat_block_goblin_warrior",
+          combatantId: "goblin",
+          initiative: 7,
+        },
       ],
-      statBlockCombatantId: "goblin",
-      statBlockInitiative: 7,
     };
     const secondCharacter = {
+      kind: "characterSession",
       sourceDraftId: secondDraftId,
       combatantId: "second-fighter",
-      characterId: "character:second-fighter",
       initiative: 16,
-    };
+    } as const;
 
     expect(
       readPayload(
         handleToolCall(root, "start_battle", {
           ...baseStart,
-          characters: [
-            ...baseStart.characters,
+          initialCombatants: [
+            ...baseStart.initialCombatants,
             { ...secondCharacter, sourceDraftId: firstDraftId },
           ],
         }),
@@ -909,24 +1082,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "start_battle", {
           ...baseStart,
-          characters: [
-            ...baseStart.characters,
-            { ...secondCharacter, characterId: "character:fighter" },
-          ],
-        }),
-      ),
-    ).toMatchObject({
-      details: {
-        code: "DUPLICATE_BATTLE_CHARACTER_ID",
-        characterId: "character:fighter",
-      },
-    });
-    expect(
-      readPayload(
-        handleToolCall(root, "start_battle", {
-          ...baseStart,
-          characters: [
-            ...baseStart.characters,
+          initialCombatants: [
+            ...baseStart.initialCombatants,
             { ...secondCharacter, combatantId: "goblin" },
           ],
         }),
@@ -1048,16 +1205,20 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-full-vertical",
-        characters: [
+        initialCombatants: [
           {
+            kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
-            characterId: "character:fighter",
             initiative: 18,
           },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+          },
         ],
-        statBlockCombatantId: "goblin",
-        statBlockInitiative: 7,
       }),
     );
 

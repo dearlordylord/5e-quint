@@ -170,6 +170,32 @@ describe("battle runtime", () => {
     ).toThrow("Battle initialization current HP exceeds max HP.");
   });
 
+  test("startBattle rejects incomplete or duplicate explicit combatant distances", () => {
+    const combatants = [
+      characterSeed({ initiative: 12 }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ];
+
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-incomplete-distances"),
+        combatants,
+        combatantDistances: [],
+      }),
+    ).toThrow("Battle combatant distances must include every combatant pair.");
+
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-duplicate-distances"),
+        combatants,
+        combatantDistances: [
+          { combatantA: fighterId, combatantB: goblinId, feet: 5 },
+          { combatantA: goblinId, combatantB: fighterId, feet: 10 },
+        ],
+      }),
+    ).toThrow("Duplicate battle combatant distance pair.");
+  });
+
   test("startBattle rejects fractional expended Spell Slots", () => {
     expect(() =>
       startBattle({
@@ -1289,6 +1315,11 @@ describe("battle runtime", () => {
         { combatantA: goblinId, combatantB: longRangeFighterId, feet: 100 },
         { combatantA: fighterId, combatantB: distantFighterId, feet: 10 },
         { combatantA: fighterId, combatantB: longRangeFighterId, feet: 100 },
+        {
+          combatantA: distantFighterId,
+          combatantB: longRangeFighterId,
+          feet: 90,
+        },
       ],
     });
 

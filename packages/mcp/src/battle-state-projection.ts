@@ -19,7 +19,6 @@ function battleCreatureStateProjection(combatant: BattleCreatureState) {
     hp: combatant.hp,
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
-    originKind: combatant.origin.kind,
     origin:
       combatant.origin.kind === "character"
         ? {

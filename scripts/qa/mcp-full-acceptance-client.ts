@@ -88,13 +88,13 @@ const agentConversationScenarios = [
     name: "Start battle with Initiative",
     userSays: "Start battle with these characters and initiative scores.",
     agentReads:
-      "start_battle exposes battleId, non-empty characters, statBlockCombatantId, statBlockInitiative, optional statBlock HP overrides, and per-character sourceDraftId/combatantId/characterId/initiative.",
+      "start_battle exposes battleId, a non-empty initialCombatants roster, optional combatant distances, and per-combatant Initiative.",
     agentDecision:
-      "It uses sourceDraftIds from finalized character sessions, caller-chosen combatantIds for table actors, caller-chosen durable characterIds for battle handoff, and rejects/repairs an empty characters array.",
+      "It uses sourceDraftIds from finalized character sessions, statBlock roster entries with Stat Block ids from list_stat_blocks, caller-chosen combatantIds for table actors, and rejects/repairs an empty initialCombatants array.",
     executableCoverage:
       "verifyToolContract, verifyGreenVertical, verifyWidthVertical",
     insufficiency:
-      "The schema now describes sourceDraftId, combatantId, and characterId, and list_characters exposes a formal outputSchema for sourceDraftId result rows.",
+      "The schema now describes initialCombatants, sourceDraftId, statBlockId, and combatantId entries; list_characters exposes a formal outputSchema for sourceDraftId result rows.",
   },
   {
     name: "Take turns and resolve attacks",
@@ -229,8 +229,9 @@ async function verifyToolContract(client: Client) {
   const startBattleOutputSchemaText = JSON.stringify(
     (startBattle as { readonly outputSchema?: unknown }).outputSchema,
   );
-  assert.match(schemaText, /characters/);
-  assert.match(schemaText, /sourceDraftId comes from list_characters/);
+  assert.match(schemaText, /initialCombatants/);
+  assert.match(schemaText, /For characterSession combatants/);
+  assert.match(schemaText, /statBlockId/);
   assert.doesNotMatch(schemaText, /characterCombatantId/);
   assert.doesNotMatch(schemaText, /additionalCharacters/);
   assert.match(startBattleOutputSchemaText, /battleState/);
@@ -265,9 +266,7 @@ async function verifyToolContract(client: Client) {
 
   await expectToolError(client, "start_battle", {
     battleId: "battle:empty-rejected",
-    characters: [],
-    statBlockCombatantId: "goblin",
-    statBlockInitiative: 10,
+    initialCombatants: [],
   });
 
   const workflow = await callTool(client, "describe_mcp_workflow", {});
@@ -418,16 +417,20 @@ async function verifyGreenVertical(client: Client) {
 
   const started = await callTool(client, "start_battle", {
     battleId: "battle:stdio-accepted-vertical",
-    characters: [
+    initialCombatants: [
       {
+        kind: "characterSession",
         sourceDraftId: draftId,
         combatantId: "fighter",
-        characterId: "character:stdio-accepted-fighter",
         initiative: 18,
       },
+      {
+        kind: "statBlock",
+        statBlockId: "stat_block_goblin_warrior",
+        combatantId: "goblin",
+        initiative: 7,
+      },
     ],
-    statBlockCombatantId: "goblin",
-    statBlockInitiative: 7,
   });
   assert.deepEqual(get(started, "snapshot.turnOrder"), ["fighter", "goblin"]);
   assert.equal(get(started, "snapshot.currentActorId"), "fighter");
@@ -544,22 +547,26 @@ async function verifyWidthVertical(client: Client) {
 
   const started = await callTool(client, "start_battle", {
     battleId: "battle:stdio-post5-width",
-    characters: [
+    initialCombatants: [
       {
+        kind: "characterSession",
         sourceDraftId: fighterDraftId,
         combatantId: "fighter",
-        characterId: "character:stdio-post5-fighter",
         initiative: 18,
       },
       {
+        kind: "characterSession",
         sourceDraftId: wizardDraftId,
         combatantId: "wizard",
-        characterId: "character:stdio-post5-wizard",
         initiative: 14,
       },
+      {
+        kind: "statBlock",
+        statBlockId: "stat_block_skeleton",
+        combatantId: "skeleton",
+        initiative: 8,
+      },
     ],
-    statBlockCombatantId: "skeleton",
-    statBlockInitiative: 8,
   });
   assert.deepEqual(get(started, "snapshot.turnOrder"), [
     "fighter",
