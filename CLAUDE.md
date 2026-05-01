@@ -145,7 +145,7 @@ Things that cause non-obvious errors, not discoverable by reading code.
 
 ## SRD feature parity (CRITICAL)
 
-The Quint spec is a **direct formalization of the SRD** — nothing more, nothing less. `battle.qnt` is the authoritative combat spec; `creature.qnt` is a helper library used by `battle.qnt` and related tests. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
+The Quint specs are a **direct formalization of the SRD** — nothing more, nothing less. `packages/battle-runtime/battle-runtime.qnt` is the canonical promoted spec for Unit/StatBlock-backed `@dnd/battle-runtime` behavior. Root `battle.qnt` remains legacy/Core broad proof and restore source material, not the active authority for promoted battle-runtime work. `creature.qnt` remains a helper library used by root `battle.qnt` and related legacy/Core tests. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
 
 - **Model what the SRD says.** If the SRD doesn't define it, don't model it.
 - **No homebrew, no "reasonable extensions."** If a rule is ambiguous or the formalization requires a choice the SRD doesn't prescribe, document it in `ASSUMPTIONS.md` — don't silently pick an interpretation.
@@ -155,10 +155,10 @@ The Quint spec is a **direct formalization of the SRD** — nothing more, nothin
 
 ## Quint parity (CRITICAL)
 
-`battle-machine.ts` MUST maintain parity with `battle.qnt`; that is the main correctness target for combat behavior. `machine.ts` and `creature.mbt.test.ts` remain valuable for helper/local-projection coverage, but when ownership or semantic-frontier questions arise, `battle.qnt` wins.
+Promoted Unit/StatBlock-backed battle behavior MUST maintain parity with `packages/battle-runtime/battle-runtime.qnt` and the promoted `@dnd/battle-runtime` tests. `battle-machine.ts` and root `battle.qnt` remain a legacy/Core proof-source lane; use them for restore/reference work, not as a competing active authority for promoted battle behavior. `machine.ts` and `creature.mbt.test.ts` remain valuable for helper/local-projection coverage.
 
 - **Never** add logic to an XState machine that diverges from the relevant Quint model without updating the spec first.
-- **Never** "fix" XState behavior that the authoritative Quint model handles differently — update the spec or accept it as spec-level intentional.
+- **Never** "fix" runtime behavior that the relevant authoritative Quint model handles differently — update the spec or accept it as spec-level intentional.
 - **Never** remove or rename context fields that an MBT bridge maps without checking the relevant parity test first.
 - If a simplify/refactor changes behavior, the relevant MBT tests MUST still pass. If they don't, the refactor is wrong.
 

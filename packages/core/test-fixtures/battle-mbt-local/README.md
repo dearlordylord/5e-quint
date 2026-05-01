@@ -21,5 +21,5 @@ cd /workspace/typescript/dnd
 rm -f packages/core/test-fixtures/battle-mbt-local/*.itf.json
 MBT_TRACE_DIR=/workspace/typescript/dnd/packages/core/test-fixtures/battle-mbt-local \
 QUINT_SEED=0x6f8de156 \
-RUN_LEGACY_CORE_BATTLE_MBT=1 pnpm --filter @dnd/core exec vitest run src/battle-machine.mbt.test.ts
+RUN_LEGACY_CORE_BATTLE_MBT=1 pnpm --filter @dnd/core exec vitest run src/battle-projection.mbt.test.ts
 ```

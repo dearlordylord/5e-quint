@@ -25,4 +25,4 @@ the spell, feature, or monster rule that actually owns the behavior.
 
 - Extract Redirect Attack ownership first. It is the clearest monster-specific leak and already has an SRD-backed TODO in code.
 - Then split generic hit-reaction discovery/resolution from rule-specific eligibility and mutation logic.
-- Keep `battle.qnt` and `battle-machine.ts` parity as the correctness boundary while moving ownership.
+- Keep root `battle.qnt` and `battle-machine.ts` parity only for legacy/Core proof-source work while moving ownership; promoted battle behavior follows `packages/battle-runtime/battle-runtime.qnt` and `@dnd/battle-runtime`.
