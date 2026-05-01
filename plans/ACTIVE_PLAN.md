@@ -4,9 +4,24 @@ Date: 2026-04-29
 
 This is the single active planning queue.
 
-Active batch: Correction Application Migration.
+Active batch: Battle Authority Reconciliation.
 
-Batch goal: replace the old Core/projected-executable vertical with a Surface/Unit-driven character-creation runtime, battle runtime, and MCP green path. The first runnable vertical is the Orc Soldier Fighter 1 from [phase1-fighter-manifest.md](/workspace/typescript/dnd/plans/phase1-fighter-manifest.md) versus the Goblin Warrior Stat Block, through real creation holes, battle Attack with damage, and End Turn.
+Completed Correction Application Migration goal: replace the old
+Core/projected-executable vertical with a Surface/Unit-driven character-creation
+runtime, battle runtime, and promoted MCP path. The first runnable vertical is
+the Orc Soldier Fighter 1 from
+[phase1-fighter-manifest.md](/workspace/typescript/dnd/plans/phase1-fighter-manifest.md)
+versus the Goblin Warrior Stat Block, through real creation holes, battle
+Attack with damage, and End Turn. The first post-CAM width slice adds Fighter
+2, Wizard 1, and Skeleton pressure.
+
+Current Battle Authority Reconciliation goal: resolve the temporary split between
+root `battle.qnt`/Core battle MBT and
+`@dnd/battle-runtime`/`battle-runtime-slice.qnt`. The intended direction is
+that the promoted Unit/StatBlock-backed battle runtime becomes the active
+battle authority for new work. Old Core battle behavior and its wider MBT are
+valuable restore/proof source material, but missing old-only features are
+widening work, not a reason to keep two active authorities.
 
 Primary planning documents:
 
@@ -17,7 +32,7 @@ Primary planning documents:
 - [phase0-core-deletion-restore-audit.md](/workspace/typescript/dnd/plans/phase0-core-deletion-restore-audit.md)
 - [CORRECTION_APPLICATION_VOCABULARY.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_VOCABULARY.md)
 
-Previous active queue status: the Executable Projection Tracer Bullet and Content-Surface Taxonomy Convergence queue is deferred by owner direction on 2026-04-29. Its in-progress/ready/blocked work is superseded for now by the Correction Application Migration. Preserve old domain knowledge through the Restore Ledger in [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md), not by continuing projected-executable tasks.
+Previous active queue status: the Executable Projection Tracer Bullet and Content-Surface Taxonomy Convergence queue is deferred by owner direction on 2026-04-29. Its in-progress/ready/blocked work was superseded by the Correction Application Migration. Preserve old domain knowledge through the Restore Ledger in [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md), not by continuing projected-executable tasks.
 
 ## Status Vocabulary
 
@@ -148,6 +163,90 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "POST5",
       "status": "done",
       "title": "Add Widened MCP User Workflow Coverage"
+    },
+    {
+      "number": 19,
+      "id": "BA0",
+      "status": "ready-for-research",
+      "title": "Define Battle Authority Policy"
+    },
+    {
+      "number": 20,
+      "id": "BA1",
+      "status": "blocked",
+      "title": "Inventory Old Battle Authority Surface"
+    },
+    {
+      "number": 21,
+      "id": "BA2",
+      "status": "blocked",
+      "title": "Inventory Promoted Runtime Proof Coverage"
+    },
+    {
+      "number": 22,
+      "id": "BA3",
+      "status": "blocked",
+      "title": "Replan Authority Slices From Inventories"
+    },
+    {
+      "number": 23,
+      "id": "BA4",
+      "status": "blocked",
+      "title": "Reconcile Attack Damage HP Overlap"
+    },
+    {
+      "number": 24,
+      "id": "BA5",
+      "status": "blocked",
+      "title": "Reconcile Initiative Turn Action Economy Overlap"
+    },
+    {
+      "number": 25,
+      "id": "BA6",
+      "status": "blocked",
+      "title": "Reconcile Promoted Width Overlap"
+    },
+    {
+      "number": 26,
+      "id": "BA7",
+      "status": "blocked",
+      "title": "Reconcile Zero HP Lifecycle Boundary"
+    },
+    {
+      "number": 27,
+      "id": "BA8",
+      "status": "blocked",
+      "title": "Choose Canonical Battle QNT Layout"
+    },
+    {
+      "number": 28,
+      "id": "BA9",
+      "status": "blocked",
+      "title": "Quarantine Legacy Core Battle MBT"
+    },
+    {
+      "number": 29,
+      "id": "BA10",
+      "status": "blocked",
+      "title": "Define Promoted Runtime MBT Strategy"
+    },
+    {
+      "number": 30,
+      "id": "BA11",
+      "status": "blocked",
+      "title": "Add First Promoted Integrated Battle MBT"
+    },
+    {
+      "number": 31,
+      "id": "BA12",
+      "status": "blocked",
+      "title": "Convert Old-Only Battle Behavior To Width Backlog"
+    },
+    {
+      "number": 32,
+      "id": "BA13",
+      "status": "blocked",
+      "title": "Close Battle Authority Reconciliation"
     }
   ]
 }
@@ -194,6 +293,20 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 16    | POST3 - Widen Character Creation Runtime Support Profile         | done   | POST2              | POST4        | Extended CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.              | Completed; POST4 is unblocked.                                                            |
 | 17    | POST4 - Widen Battle Runtime For First Width Slice               | done   | POST3              | POST5        | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Unit, spell, and monster facts, preserving runtime parity discipline.                                  | Completed; POST5 is unblocked.                                                            |
 | 18    | POST5 - Add Widened MCP User Workflow Coverage                   | done   | POST4              | none         | Added promoted MCP workflow coverage for the Fighter 2 + Wizard 1 versus Skeleton width slice and updated Restore Ledger status for restored rows.                                            | Completed.                                                                                |
+| 19    | BA0 - Define Battle Authority Policy                             | ready-for-research | POST5 | BA1, BA2 | Document the one-authority direction before inventory work: promoted Unit/StatBlock-backed battle runtime is future authority; old Core battle is restore/proof source material.              | Ready; docs/research only.                                                                |
+| 20    | BA1 - Inventory Old Battle Authority Surface                     | blocked | BA0 | BA3 | Classify root `battle.qnt`, Core battle MBT, and old battle-machine feature areas into overlap, old-only widening, obsolete Core/projected artifact, or still-needed proof source material.   | Blocked until BA0 fixes policy vocabulary.                                                |
+| 21    | BA2 - Inventory Promoted Runtime Proof Coverage                  | blocked | BA0 | BA3 | Map current `@dnd/battle-runtime`, `battle-runtime-slice.qnt`, deterministic tests, shared-algebra MBT, and MCP tests to implemented behavior and proof gaps.                                  | Blocked until BA0 fixes policy vocabulary.                                                |
+| 22    | BA3 - Replan Authority Slices From Inventories                   | blocked | BA1, BA2 | BA4, BA5, BA6, BA7, BA8, BA10, BA12 | Revise this BA task list from BA1/BA2 findings before implementation; split or merge overlap tasks if the inventories show different seams.                                                   | Blocked until both inventories are recorded.                                              |
+| 23    | BA4 - Reconcile Attack Damage HP Overlap                         | blocked | BA3 | BA8 | Resolve overlapping semantics for supported Attack target/roll/damage, criticals, Temporary HP, HP clamp, damage modifiers, and current death-at-zero consequences.                           | Blocked until BA3 confirms exact overlap.                                                 |
+| 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | blocked | BA3 | BA8 | Resolve overlapping semantics for Initiative order, round/turn advancement, End Turn command modeling, action-resource spend/reset, and current actor legality.                                | Blocked until BA3 confirms exact overlap.                                                 |
+| 25    | BA6 - Reconcile Promoted Width Overlap                           | blocked | BA3 | BA8 | Resolve overlap or divergence for already-promoted width: Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers.           | Blocked until BA3 confirms exact overlap.                                                 |
+| 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | blocked | BA3 | BA8, BA12 | Separate implemented zero-HP authority from old-only death-save/rest/adventuring behavior; record follow-up width tasks for missing lifecycle behavior.                                        | Blocked until BA3 confirms old/new boundary.                                              |
+| 27    | BA8 - Choose Canonical Battle QNT Layout                         | blocked | BA4, BA5, BA6, BA7 | BA9, BA11, BA13 | Implement the spec ownership decision: promote/move/rename package-local QNT or explicitly retire/quarantine root `battle.qnt` as legacy reference.                                           | Blocked until overlap slices settle current behavior.                                     |
+| 28    | BA9 - Quarantine Legacy Core Battle MBT                          | blocked | BA8 | BA13 | Update test/docs ownership so old Core battle MBT is not treated as promoted verification while preserving it as reference material where useful.                                              | Blocked until canonical QNT layout is decided.                                           |
+| 29    | BA10 - Define Promoted Runtime MBT Strategy                      | blocked | BA3 | BA11 | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.           | Blocked until inventories reveal proof gaps.                                              |
+| 30    | BA11 - Add First Promoted Integrated Battle MBT                  | blocked | BA8, BA10 | BA13 | Add one narrow integrated MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                  | Blocked until canonical QNT and MBT strategy are set.                                     |
+| 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog          | blocked | BA3, BA7 | BA13 | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                               | Blocked until inventories and zero-HP boundary are known.                                |
+| 32    | BA13 - Close Battle Authority Reconciliation                     | blocked | BA8, BA9, BA11, BA12 | none | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                            | Blocked until authority, MBT, and backlog work complete.                                  |
 
 ## Task Details
 
@@ -1306,6 +1419,653 @@ Plan Impact:
 
 - First post-CAM width slice restored in the Restore Ledger. No new durable
   width task was discovered during implementation.
+
+### Task 19 - BA0 - Define Battle Authority Policy
+
+Status: `ready-for-research`
+
+Depends on: POST5
+Blocks: BA1, BA2
+
+Next action: read the current authority language in this file,
+[CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md),
+[packages/battle-runtime/README.md](/workspace/typescript/dnd/packages/battle-runtime/README.md),
+[packages/battle-runtime/ARCHITECTURE_GRAPH.md](/workspace/typescript/dnd/packages/battle-runtime/ARCHITECTURE_GRAPH.md), and
+[packages/surface-runtime-correction/MBT_TO_REDUCER_GRAPH.md](/workspace/typescript/dnd/packages/surface-runtime-correction/MBT_TO_REDUCER_GRAPH.md), then make the policy wording consistent.
+
+Input:
+
+- Current promoted `@dnd/battle-runtime` architecture docs.
+- Root `battle.qnt` authority wording and Core MBT references.
+- Restore Ledger rows in
+  [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md).
+
+Output:
+
+- Docs state one intended direction: promoted `@dnd/battle-runtime` is the
+  active battle authority for new Unit/StatBlock-backed work.
+- Old `battle.qnt` and Core battle MBT are described as legacy/broad
+  reference and proof source material until reconciled, not as the place to add
+  new promoted behavior.
+- Missing old-only behavior is explicitly named as future width/restoration,
+  not evidence that old Core remains canonical.
+
+Acceptance:
+
+- No reducer, QNT behavior, or test behavior changes.
+- No old Core feature is silently declared obsolete; old-only behavior remains
+  either ledgered or slated for BA1 classification.
+- The policy distinguishes semantic authority, feature breadth, proof depth,
+  and content encoding.
+- BA1 and BA2 are unblocked.
+
+Verification:
+
+- Source-only check for authority wording in battle runtime docs and migration
+  plan.
+- `/simplify` convergence may be a single review round if the diff is docs-only
+  and under roughly 20 lines; otherwise minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock BA1 and BA2.
+
+### Task 20 - BA1 - Inventory Old Battle Authority Surface
+
+Status: `blocked`
+
+Depends on: BA0
+Blocks: BA3
+
+Next action: classify old Core/root battle authority without implementing
+anything.
+
+Input:
+
+- [battle.qnt](/workspace/typescript/dnd/battle.qnt)
+- [packages/core/src/battle-machine.mbt.test.ts](/workspace/typescript/dnd/packages/core/src/battle-machine.mbt.test.ts)
+- [packages/core/src/battle-projection.mbt.test.ts](/workspace/typescript/dnd/packages/core/src/battle-projection.mbt.test.ts)
+- Core battle-machine source files and Restore Ledger baseline references.
+- Local SRD corpus and `UBIQUITOUS_LANGUAGE.md` for naming categories only;
+  this task does not model new rules.
+
+Output:
+
+- A durable inventory table, either in this task section or a linked
+  `plans/battle-authority-inventory.md`, with columns:
+  old behavior area, old files/spec functions, RAW/ASSUMPTIONS anchor when
+  obvious, promoted runtime status, classification, and proposed next owner.
+- Classification values:
+  `overlap-must-match`, `partial-overlap`, `old-only-width`,
+  `obsolete-core-artifact`, `proof-source-only`, `needs-owner-decision`.
+- Minimum coverage:
+  Attack/damage/HP, Initiative/turn flow, action economy, zero-HP/death saves,
+  spells, reactions, movement/positioning, monster controls,
+  class-feature battle actions, persistent effects/concentration, hand/weapon
+  state, hidden/Search/Hide, grappling, bonus actions, and old projected
+  execution vocabulary.
+
+Acceptance:
+
+- No implementation changes.
+- Inventory is specific enough that BA3 can split or revise downstream tasks
+  without re-reading the entire old battle stack.
+- Old-only features are not mixed into overlap tasks unless promoted runtime
+  already implements their behavior.
+- Any `needs-owner-decision` row includes the exact question and candidate
+  options.
+
+Verification:
+
+- `rg`/source-only evidence recorded for the old files inspected.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 review rounds unless the output is only a
+  generated inventory document with no plan changes beyond linking it.
+
+Plan Impact:
+
+- BA3 must consume this inventory and may revise BA4-BA13.
+
+### Task 21 - BA2 - Inventory Promoted Runtime Proof Coverage
+
+Status: `blocked`
+
+Depends on: BA0
+Blocks: BA3
+
+Next action: map what the promoted runtime already implements and proves.
+
+Input:
+
+- [packages/battle-runtime/src/index.ts](/workspace/typescript/dnd/packages/battle-runtime/src/index.ts)
+- [packages/battle-runtime/src/index.test.ts](/workspace/typescript/dnd/packages/battle-runtime/src/index.test.ts)
+- [packages/battle-runtime/battle-runtime-slice.qnt](/workspace/typescript/dnd/packages/battle-runtime/battle-runtime-slice.qnt)
+- Shared-algebra MBT docs/tests under `packages/shared-algebras` and
+  `packages/surface-runtime-correction`.
+- Promoted MCP workflow tests that exercise battle runtime behavior.
+
+Output:
+
+- A proof-coverage map, either in this task section or a linked
+  `plans/battle-runtime-proof-coverage.md`, with columns:
+  promoted behavior, runtime owner, QNT coverage, deterministic test coverage,
+  shared-algebra MBT coverage, MCP/user workflow coverage, and proof gap.
+- Explicitly mark whether a gap applies to already-implemented behavior or to
+  future width.
+
+Acceptance:
+
+- No behavior widening.
+- The map distinguishes modular algebra MBT from integrated battle-runtime MBT.
+- BA10 can use the output to choose the first integrated MBT candidate without
+  rediscovering current coverage.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test` only if the task edits test docs in
+  a way that could affect test commands; otherwise source-only.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 review rounds unless the output is only a
+  generated inventory document with no plan changes beyond linking it.
+
+Plan Impact:
+
+- BA3 must consume this coverage map and may revise BA4-BA13.
+
+### Task 22 - BA3 - Replan Authority Slices From Inventories
+
+Status: `blocked`
+
+Depends on: BA1, BA2
+Blocks: BA4, BA5, BA6, BA7, BA8, BA10, BA12
+
+Next action: update this BA queue from the BA1/BA2 facts before any overlap
+implementation starts.
+
+Input:
+
+- BA1 old authority inventory.
+- BA2 promoted runtime proof-coverage map.
+- Current Restore Ledger rows.
+
+Output:
+
+- Revised BA task list if the inventories show that the initial task split is
+  wrong.
+- Explicit task changes recorded in this file:
+  keep, split, merge, reorder, block, unblock, defer, or add.
+- Confirmed overlap task scopes for BA4-BA7.
+- Confirmed proof/canonical-layout tasks for BA8-BA11.
+- Confirmed old-only width backlog conversion scope for BA12.
+
+Acceptance:
+
+- The plan does not require an implementation agent to inspect all of
+  `battle.qnt` before starting BA4.
+- Every downstream BA task has a bounded scope and clear non-goals.
+- Any newly discovered large area becomes its own task rather than expanding an
+  existing one past one-agent size.
+
+Verification:
+
+- Source-only planning check.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds because this task changes the plan
+  shape.
+
+Plan Impact:
+
+- If successful, unblock BA4, BA5, BA6, BA7, BA8, BA10, and BA12 according to
+  the revised dependencies.
+
+### Task 23 - BA4 - Reconcile Attack Damage HP Overlap
+
+Status: `blocked`
+
+Depends on: BA3
+Blocks: BA8
+
+Next action: reconcile only already-promoted Attack/damage/HP semantics that
+BA3 classifies as overlap.
+
+Preflight:
+
+- Read relevant SRD 5.2.1 passages in `.references/srd-5.2.1/` for Attack,
+  Attack Rolls, Damage Rolls, Hit Points, Temporary Hit Points, Critical Hits,
+  Damage Resistance/Immunity/Vulnerability, and Dropping to 0 Hit Points.
+- Check `UBIQUITOUS_LANGUAGE.md`.
+- Do not add new attacks, new action families, or old-only riders in this task.
+
+Output:
+
+- Existing promoted runtime/QNT/tests either match old overlap semantics or
+  document intentional divergence with SRD/ASSUMPTIONS support.
+- Focused deterministic tests or QNT assertions for any promoted behavior that
+  was implemented but under-specified.
+- Docs updated if the authority wording or support gate changed.
+
+Acceptance:
+
+- Covers target legality only to the extent already supported by the promoted
+  runtime's current reach/normal-range distance facts.
+- Covers attack roll hit/miss/natural 1/natural 20, Critical Hit dice, weapon
+  and Stat Block damage currently supported, Temporary HP, HP clamp, and
+  supported damage modifiers.
+- Does not port movement, opportunity attacks, reactions, nonlethal knockout,
+  broad spell damage, or unsupported conditional riders.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- Tier 1 battle MBT only if this task changes root `battle.qnt` or a bridge
+  that requires parity validation; otherwise do not run battle MBT.
+- RAW traceability check for touched modeled rules.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- BA8 remains blocked until BA5-BA7 also complete or BA3 revises the gate.
+
+### Task 24 - BA5 - Reconcile Initiative Turn Action Economy Overlap
+
+Status: `blocked`
+
+Depends on: BA3
+Blocks: BA8
+
+Next action: reconcile only already-promoted Initiative, turn, and action
+resource semantics that BA3 classifies as overlap.
+
+Preflight:
+
+- Read SRD 5.2.1 Initiative, rounds/turns, Actions, Bonus Actions, and any
+  ASSUMPTIONS entry for End Turn.
+- Check `UBIQUITOUS_LANGUAGE.md`.
+
+Output:
+
+- Promoted runtime/QNT/tests state the canonical semantics for Initiative
+  order, current actor, End Turn, resource reset, wrong-actor rejection, and
+  action spend/reset.
+- Any divergence from old `battle.qnt` is categorized as bug, assumption, or
+  legacy-only behavior.
+
+Acceptance:
+
+- End Turn remains a runtime command, not a rules Action.
+- Action-resource state remains typed/structured; no duplicate scalar action
+  quota is introduced.
+- Bonus-action storage may remain present without exposing new bonus-action
+  subjects.
+- No new feature action is added here except test/docs coverage for already
+  implemented resources.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- RAW traceability check for touched modeled rules.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- BA8 remains blocked until BA4, BA6, and BA7 also complete or BA3 revises the
+  gate.
+
+### Task 25 - BA6 - Reconcile Promoted Width Overlap
+
+Status: `blocked`
+
+Depends on: BA3
+Blocks: BA8
+
+Next action: reconcile promoted first-width behavior that overlaps old Core
+concepts but was not part of the original Fighter/Goblin phase-1 slice.
+
+Preflight:
+
+- Read local SRD passages for Fighter Action Surge, Wizard Spellcasting, Spell
+  Slots, Cantrips, Magic Missile, Ray of Frost, Armor Training, and Skeleton
+  Stat Block damage modifiers.
+- Check `UBIQUITOUS_LANGUAGE.md`.
+
+Output:
+
+- Existing Action Surge, Wizard spell-act, armor-training spell gate, and
+  Skeleton damage-modifier behavior either matches old overlap semantics or has
+  documented intentional divergence.
+- Support gates remain executable and typed; no inert status markers.
+
+Acceptance:
+
+- Does not broaden Wizard spell catalog, add upcasting, rituals,
+  concentration, reactions, broad persistent effects, or monster controls.
+- Does not restore projected executable vocabulary.
+- Keeps spell access/runtime slot state distinction: Character Build owns
+  starting access/capacity, battle owns expended slots/effects.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- `pnpm --filter @dnd/mcp test` if MCP workflow projections change.
+- RAW traceability check for touched modeled rules.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- BA8 remains blocked until BA4, BA5, and BA7 also complete or BA3 revises the
+  gate.
+
+### Task 26 - BA7 - Reconcile Zero HP Lifecycle Boundary
+
+Status: `blocked`
+
+Depends on: BA3
+Blocks: BA8, BA12
+
+Next action: separate implemented zero-HP authority from old-only death-save,
+rest, and adventuring-state behavior.
+
+Preflight:
+
+- Read SRD 5.2.1 Dropping to 0 Hit Points, Death Saving Throws, Damage at 0 HP,
+  Instant Death, Stabilizing a Creature, and relevant rest/recovery passages if
+  touched.
+- Check `UBIQUITOUS_LANGUAGE.md` and ASSUMPTIONS.md A12.
+
+Output:
+
+- Promoted runtime docs/QNT/tests clearly state current authority for:
+  Stat Block `diesAtZeroHp`, Character Build `usesDeathSavingThrows`, drop to
+  zero, damage at zero, critical damage at zero, and massive damage.
+- Old-only lifecycle features are converted to BA12 backlog rows rather than
+  smuggled into this task.
+
+Acceptance:
+
+- No post-battle durable character-state widening unless BA3 explicitly splits
+  and promotes that work into this task.
+- Start-turn death-save rolls, Stable/dead durable handoff, rest recovery, and
+  broader adventuring-state storage remain old-only width unless explicitly
+  implemented by a separate task.
+- The boundary is represented by typed lifecycle policy, not provenance labels.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- RAW traceability check for touched modeled rules.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- Feed BA12 with lifecycle width rows. BA8 remains blocked until BA4-BA6 also
+  complete or BA3 revises the gate.
+
+### Task 27 - BA8 - Choose Canonical Battle QNT Layout
+
+Status: `blocked`
+
+Depends on: BA4, BA5, BA6, BA7
+Blocks: BA9, BA11, BA13
+
+Next action: implement the spec ownership decision now that overlap behavior is
+reconciled.
+
+Decision options:
+
+- Promote package-local `battle-runtime-slice.qnt` as the canonical spec for
+  `@dnd/battle-runtime`, keeping it package-local but updating docs/tests to
+  stop calling root `battle.qnt` the promoted authority.
+- Move/rename the package-local spec into a canonical path and update imports,
+  docs, and test commands.
+- Retire/quarantine root `battle.qnt` as legacy Core reference with explicit
+  restore/proof status.
+
+Acceptance:
+
+- A new agent can answer "which QNT spec governs promoted battle runtime
+  behavior?" from docs and test names without reading historical plans.
+- Root `battle.qnt`, if retained, is not described as the active authority for
+  promoted Unit/StatBlock-backed runtime behavior.
+- No modeled behavior changes unless they are mechanical consequences of file
+  moves/import updates.
+- Verification commands use `pnpm`, and any MBT command follows the project MBT
+  protocol.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- Promoted-path source check for accidental `@dnd/core` dependency.
+- Battle MBT only if old/root MBT files are edited in a way that requires
+  validation; otherwise do not run it.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock BA9 and BA11. BA13 remains blocked until BA9, BA11,
+  and BA12 complete.
+
+### Task 28 - BA9 - Quarantine Legacy Core Battle MBT
+
+Status: `blocked`
+
+Depends on: BA8
+Blocks: BA13
+
+Next action: align old Core battle MBT status with the canonical QNT layout.
+
+Input:
+
+- BA8 canonical layout decision.
+- Old Core MBT tests and fixture docs.
+- Restore Ledger rows for old-only behavior.
+
+Output:
+
+- Test names, docs, or package scripts no longer imply old Core battle MBT is
+  the promoted runtime's required verification gate.
+- Old Core MBT remains available as reference/proof corpus unless BA8 explicitly
+  chose deletion.
+- Any disabled or legacy-only checks have Restore Ledger coverage.
+
+Acceptance:
+
+- Promoted runtime verification is not blocked by old Core hard-coded width.
+- Old MBT seed/replay documentation remains accurate if retained.
+- No loss of old behavior references without Restore Ledger coverage.
+
+Verification:
+
+- Source-only check unless package scripts/tests are changed.
+- If old MBT commands are changed, follow MBT zombie-evaluator protocol and use
+  the cheapest relevant run.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- BA13 remains blocked until BA11 and BA12 also complete.
+
+### Task 29 - BA10 - Define Promoted Runtime MBT Strategy
+
+Status: `blocked`
+
+Depends on: BA3
+Blocks: BA11
+
+Next action: choose how promoted battle runtime proof should scale.
+
+Input:
+
+- BA2 proof-coverage map.
+- BA3 revised task split.
+- `packages/surface-runtime-correction/MBT_TO_REDUCER_GRAPH.md`.
+- Battle runtime reducer and QNT docs.
+
+Output:
+
+- Updated proof strategy stating:
+  small/shared algebra MBT remains modular;
+  broad Surface/Unit/StatBlock catalog coverage defaults to table-driven
+  contract tests;
+  integrated battle-runtime MBT is reserved for selected high-risk verticals;
+  Surface projection MBT is a separate decision, not implicit in battle MBT.
+- First integrated MBT candidate selected for BA11 from already-implemented
+  behavior.
+
+Acceptance:
+
+- Does not rebuild old giant Core MBT by default.
+- Does not require per-authored-Unit MBT for ordinary catalog entries.
+- Selects a candidate with meaningful reducer interaction, not a pure algebra
+  already covered elsewhere.
+
+Verification:
+
+- Source-only docs/planning check.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock BA11 after BA8 is also complete.
+
+### Task 30 - BA11 - Add First Promoted Integrated Battle MBT
+
+Status: `blocked`
+
+Depends on: BA8, BA10
+Blocks: BA13
+
+Next action: add one narrow integrated MBT for an existing promoted runtime
+vertical chosen by BA10.
+
+Scope constraints:
+
+- No new battle feature width.
+- MBT should exercise public promoted runtime behavior, not a private helper
+  already proven by a shared-algebra MBT.
+- Keep the state space intentionally small; prefer one or two combatants and a
+  bounded trace shape.
+
+Acceptance:
+
+- The MBT driver and QNT spec use the canonical layout chosen by BA8.
+- The selected behavior is also covered by deterministic tests; MBT adds trace
+  confidence rather than replacing ordinary tests.
+- The run command is documented and fits Tier 1-style development feedback.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- If the new MBT uses battle-like Quint evaluation, follow the MBT run
+  observation protocol and run only the new narrow test.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- BA13 remains blocked until BA9 and BA12 also complete.
+
+### Task 31 - BA12 - Convert Old-Only Battle Behavior To Width Backlog
+
+Status: `blocked`
+
+Depends on: BA3, BA7
+Blocks: BA13
+
+Next action: turn old-only behavior into future atomic width tasks without
+implementing it.
+
+Input:
+
+- BA1 inventory rows classified as `old-only-width`,
+  `partial-overlap` leftovers, or `needs-owner-decision`.
+- BA7 zero-HP lifecycle boundary rows.
+- Restore Ledger.
+
+Output:
+
+- Restore Ledger and/or ACTIVE_PLAN follow-up queue updated with atomic future
+  width tasks. Each task includes old source references, local RAW topics to
+  read, new-runtime owner, acceptance summary, and non-goals.
+- Candidate groups should include, if still supported by BA1:
+  movement/positioning and opportunity-attack boundary;
+  reaction windows and interrupt stack;
+  start-turn Death Saving Throw rolls and stable/dead handoff;
+  Second Wind and bonus-action feature actions;
+  Acid Splash/save-gate damage spells;
+  Mage Armor/persistent AC override;
+  concentration and readied spell lifecycle;
+  monster recharge/daily/legendary controls;
+  grappling/hand-use and weapon-state breadth;
+  Hide/Search/hidden discovery and class feature riders.
+
+Acceptance:
+
+- Old-only behavior is not left as vague "later parity".
+- Each future width task is small enough for one agent or explicitly marked as
+  a research/replan precursor.
+- No projected executable IR is restored as a future task target; restore
+  semantics through UnitRecords, StatBlockRecords, shared algebras, or battle
+  runtime state.
+
+Verification:
+
+- Source-only planning check.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds because this changes future queue
+  shape.
+
+Plan Impact:
+
+- BA13 remains blocked until BA8, BA9, and BA11 also complete.
+
+### Task 32 - BA13 - Close Battle Authority Reconciliation
+
+Status: `blocked`
+
+Depends on: BA8, BA9, BA11, BA12
+Blocks: none
+
+Next action: perform the final authority closeout.
+
+Output:
+
+- This file and
+  [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md)
+  state that the single promoted battle authority has been restored.
+- Battle runtime README/architecture docs, QNT location, and package test
+  commands agree.
+- Restore Ledger captures old-only behavior not yet widened.
+- Promoted-path dependency check confirms runtime/MCP do not import `@dnd/core`.
+
+Acceptance:
+
+- There is no active documentation path claiming both root `battle.qnt` and
+  `battle-runtime-slice.qnt` are simultaneous authorities for promoted battle
+  behavior.
+- A new battle feature task can start from one canonical runtime/spec boundary.
+- Old Core MBT is either quarantined reference material or explicitly deleted
+  with ledger coverage.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- `pnpm --filter @dnd/mcp test`
+- Promoted-path source check for `@dnd/core`, `CPU*`, `PEA*`, `PPR*`, and
+  projected executable vocabulary.
+- Run only the canonical promoted battle MBT/checks selected by BA10/BA11.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, Battle Authority Reconciliation is complete. Future old-only
+  behavior proceeds as normal width tasks from BA12.
 
 ## Deferred Previous Queue
 
