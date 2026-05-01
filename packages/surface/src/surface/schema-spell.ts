@@ -2430,6 +2430,7 @@ export const CreatureNamedAttackRollSchema = Schema.Struct({
   ),
   onHit: nonEmpty(EffectAtomSchema),
   multiattackCount: optionalExact(StatBlockValueSchema),
+  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
 });
 
 export const CreatureNamedSaveGateSchema = Schema.Struct({
@@ -2440,6 +2441,7 @@ export const CreatureNamedSaveGateSchema = Schema.Struct({
   onFail: EffectAtomSchema,
   onSuccess: SaveSuccessOutcomeSchema,
   multiattackCount: optionalExact(StatBlockValueSchema),
+  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
 });
 
 export const CreatureNamedSupportSchema = Schema.Struct({
@@ -2448,6 +2450,7 @@ export const CreatureNamedSupportSchema = Schema.Struct({
   rangeFeet: optionalExact(Schema.Number),
   effect: EffectAtomSchema,
   multiattackCount: optionalExact(StatBlockValueSchema),
+  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
 });
 
 export const CreatureNamedMultiattackSchema = Schema.Struct({
@@ -2463,6 +2466,7 @@ export const CreatureNamedMultiattackSchema = Schema.Struct({
 export const CreatureNamedActionOptionSchema = Schema.Struct({
   name: Schema.String,
   options: nonEmpty(StandardActionKindSchema),
+  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
 });
 
 export const CreatureActionsSchema = Schema.Struct({
@@ -2471,6 +2475,23 @@ export const CreatureActionsSchema = Schema.Struct({
   saves: optionalExact(nonEmpty(CreatureNamedSaveGateSchema)),
   supports: optionalExact(nonEmpty(CreatureNamedSupportSchema)),
   actionOptions: optionalExact(nonEmpty(CreatureNamedActionOptionSchema)),
+});
+
+export const CreatureLimitedUseSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("daily"),
+    uses: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("recharge"),
+    minimumRoll: Schema.Number.pipe(Schema.int(), Schema.between(2, 6)),
+  }),
+  Schema.Struct({ kind: Schema.Literal("recharge_after_rest") }),
+);
+
+export const CreatureLegendaryActionsSchema = Schema.Struct({
+  uses: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  actions: CreatureActionsSchema,
 });
 
 export const CreatureTraitEffectSchema = Schema.Union(
@@ -2533,6 +2554,7 @@ export const CreatureStatBlockSchema = Schema.Struct({
   actions: optionalExact(CreatureActionsSchema),
   bonusActions: optionalExact(CreatureActionsSchema),
   reactions: optionalExact(CreatureActionsSchema),
+  legendaryActions: optionalExact(CreatureLegendaryActionsSchema),
   traits: optionalExact(nonEmpty(CreatureTraitSchema)),
 });
 

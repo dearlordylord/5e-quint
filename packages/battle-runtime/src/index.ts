@@ -81,6 +81,8 @@ import {
 import type {
   Ability,
   ActivationResource,
+  CreatureActions,
+  CreatureLimitedUse,
   CreatureNamedAttackRoll,
   DamageType,
   DcSource,
@@ -260,6 +262,52 @@ type SupportedCreatureNamedAttackRoll = Omit<
 export type StatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
   readonly attack: SupportedCreatureNamedAttackRoll;
+  readonly part: StatBlockPartKey;
+};
+export type StatBlockPartSection =
+  | "actions"
+  | "bonusActions"
+  | "reactions"
+  | "legendaryActions";
+export type StatBlockPartKey = {
+  readonly section: StatBlockPartSection;
+  readonly name: string;
+};
+export type StatBlockLimitedUseSnapshot =
+  | {
+      readonly key: StatBlockPartKey;
+      readonly kind: "daily";
+      readonly usesMax: number;
+      readonly usesRemaining: number;
+    }
+  | {
+      readonly key: StatBlockPartKey;
+      readonly kind: "recharge";
+      readonly minimumRoll: number;
+      readonly available: boolean;
+    }
+  | {
+      readonly key: StatBlockPartKey;
+      readonly kind: "recharge_after_rest";
+      readonly available: boolean;
+    };
+export type StatBlockLegendaryActionResourceSnapshot = {
+  readonly usesMax: number;
+  readonly usesRemaining: number;
+};
+export type StatBlockResourceSnapshot = {
+  readonly legendaryActions: StatBlockLegendaryActionResourceSnapshot | null;
+  readonly limitedUses: readonly StatBlockLimitedUseSnapshot[];
+};
+export type StatBlockDailyUseState = {
+  readonly key: StatBlockPartKey;
+  readonly usesRemaining: number;
+};
+export type StatBlockMutableResourceState = {
+  readonly legendaryActionUsesRemaining: number;
+  readonly dailyUses: readonly StatBlockDailyUseState[];
+  readonly unavailableRechargeParts: readonly StatBlockPartKey[];
+  readonly unavailableRestRechargeParts: readonly StatBlockPartKey[];
 };
 type StatBlockAttackDamage = {
   readonly expr: DiceExpr;
@@ -611,7 +659,13 @@ export type BattleCreatureState = {
     | {
         readonly kind: "statBlock";
         readonly statBlock: StatBlockRecord;
+        readonly resources: StatBlockMutableResourceState;
       };
+};
+
+export type LegendaryActionWindow = {
+  readonly afterTurnActorId: CombatantId;
+  readonly consumed: boolean;
 };
 
 export type BattleState = {
@@ -625,6 +679,7 @@ export type BattleState = {
   readonly currentTurnResources: BattleTurnResources;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
   readonly interruptStack: readonly BattleReactionFrame[];
+  readonly legendaryActionWindow: LegendaryActionWindow | null;
 };
 
 export const BATTLE_SUBJECT_ACTIONS = ["attack"] as const;
@@ -649,6 +704,15 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     action: Schema.Literal("attack"),
     attackName: BattleSubjectTextSchema,
+    statBlockSection: Schema.optionalWith(
+      Schema.Literal(
+        "actions",
+        "bonusActions",
+        "reactions",
+        "legendaryActions",
+      ),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
@@ -709,6 +773,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.actorId,
         attack.action,
         attack.attackName,
+        attack.statBlockSection ?? null,
       ]),
     ),
     Match.when({ tag: "actionSpell" }, (spell) =>
@@ -811,6 +876,18 @@ export type BattleDeathSavingThrowHole = {
   readonly label: string;
   readonly combatantId: CombatantId;
 };
+export type BattleStatBlockRechargeRollHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "statBlockRechargeRoll";
+  readonly label: string;
+  readonly combatantId: CombatantId;
+  readonly rechargeTargets: readonly StatBlockPartKey[];
+};
+export type BattleStatBlockRechargeRollResult = {
+  readonly target: StatBlockPartKey;
+  readonly roll: DieRollResult;
+};
 export type BattleConcentrationSavingThrowHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -845,6 +922,7 @@ export type BattleHole =
   | BattleSpellSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole
+  | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
   | BattleReactionDecisionHole
   | BattleMovementHole;
@@ -983,6 +1061,13 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("statBlockRechargeRoll"),
+    label: Schema.String,
+    combatantId: CombatantId,
+    rechargeTargets: Schema.Array(BattleRuntimeObjectSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("concentrationSavingThrow"),
     label: Schema.String,
     combatantId: CombatantId,
@@ -1021,6 +1106,11 @@ export type BattleFill =
       readonly kind: "deathSavingThrow";
       readonly holeId: BattleHoleId;
       readonly value: DieRollResult;
+    }
+  | {
+      readonly kind: "statBlockRechargeRoll";
+      readonly holeId: BattleHoleId;
+      readonly value: readonly BattleStatBlockRechargeRollResult[];
     }
   | {
       readonly kind: "concentrationSavingThrow";
@@ -1104,6 +1194,17 @@ type BattleFillEncoded =
       readonly value: number;
     }
   | {
+      readonly kind: "statBlockRechargeRoll";
+      readonly holeId: string;
+      readonly value: readonly {
+        readonly target: {
+          readonly section: StatBlockPartSection;
+          readonly name: string;
+        };
+        readonly roll: number;
+      }[];
+    }
+  | {
       readonly kind: "concentrationSavingThrow";
       readonly holeId: string;
       readonly value: {
@@ -1181,6 +1282,24 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("deathSavingThrow"),
       holeId: BattleHoleIdSchema,
       value: BattleD20DieRollResultSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("statBlockRechargeRoll"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Array(
+        Schema.Struct({
+          target: Schema.Struct({
+            section: Schema.Literal(
+              "actions",
+              "bonusActions",
+              "reactions",
+              "legendaryActions",
+            ),
+            name: Schema.String,
+          }),
+          roll: BattleDieRollResultSchema,
+        }),
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("concentrationSavingThrow"),
@@ -1320,6 +1439,7 @@ export type BattleCreatureSnapshot = {
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly concentration: BattleConcentration | null;
   readonly reactionAvailable: boolean;
+  readonly statBlockResources?: StatBlockResourceSnapshot;
   readonly movement: {
     readonly speedFeet: MovementFeet;
     readonly spentFeet: MovementFeet;
@@ -1351,6 +1471,12 @@ const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
 const DEATH_SAVING_THROW_HOLE_ID = holeId("battle:end-turn:death-saving-throw");
 const DEATH_SAVING_THROW_HOLE_INSTANCE = holeInstanceKey(
   "battle:end-turn:death-saving-throw",
+);
+const STAT_BLOCK_RECHARGE_ROLL_HOLE_ID = holeId(
+  "battle:end-turn:stat-block-recharge-roll",
+);
+const STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE = holeInstanceKey(
+  "battle:end-turn:stat-block-recharge-roll",
 );
 const CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX =
   "battle:concentration:saving-throw";
@@ -1436,6 +1562,7 @@ export function startBattle(input: {
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
     interruptStack: [],
+    legendaryActionWindow: null,
   };
 }
 
@@ -1448,7 +1575,10 @@ export function discoverBattleActs(
   }
 
   const acts: AvailableBattleAct[] = [];
-  const attackActionOptions = attackActionOptionsForActor(state, actorId);
+  const attackActionOptions = attackActionOptionsForActor(
+    state,
+    actorId,
+  ).filter(attackActionOptionIsOrdinaryAttackAction);
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "attack") &&
@@ -1468,6 +1598,7 @@ export function discoverBattleActs(
                   actorId,
                   action: "attack" as const,
                   attackName: attackActionOptionName(attack),
+                  ...statBlockSubjectPart(attack),
                 },
                 label: "Attack",
                 summary: `Take the Attack action with ${attackActionOptionName(attack)}.`,
@@ -1516,6 +1647,7 @@ export function discoverBattleActs(
       initialHoles: readiedSpellInitialHoles(state, casterId, readiedSpell),
     })),
   );
+  acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
 }
@@ -1564,11 +1696,24 @@ function resolveBattleSubjectInternal(
   }
 
   const actorId = battleSubjectActorId(input.subject);
-  if (actorId !== currentActorId(input.state)) {
+  if (
+    actorId !== currentActorId(input.state) &&
+    !isLegendaryAttackSubject(input.subject)
+  ) {
     return invalidResult(
       input.state,
       "wrongActor",
       "Subject actor is not the current actor.",
+    );
+  }
+  if (
+    isLegendaryAttackSubject(input.subject) &&
+    !statBlockLegendaryActionWindowIsOpen(input.state, actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Legendary Actions are available only after another creature's turn ends.",
     );
   }
 
@@ -1595,6 +1740,7 @@ function resolveBattleSubjectInternal(
   if (
     input.subject.tag === "action" &&
     input.subject.action === "attack" &&
+    !isLegendaryAttackSubject(input.subject) &&
     !canSpendAction(input.state.currentTurnResources, "attack")
   ) {
     return invalidResult(
@@ -1626,7 +1772,7 @@ function resolveBattleSubjectInternal(
     );
   }
 
-  return Match.value(input.subject).pipe(
+  const result = Match.value(input.subject).pipe(
     Match.when({ tag: "action", action: "attack" }, (subject) =>
       resolveAttack({
         ...input,
@@ -1661,6 +1807,23 @@ function resolveBattleSubjectInternal(
     ),
     Match.exhaustive,
   );
+  return consumeOrCloseLegendaryActionWindow(input.subject, result);
+}
+
+function consumeOrCloseLegendaryActionWindow(
+  subject: BattleSubject,
+  result: BattleResolutionResult,
+): BattleResolutionResult {
+  if (result.tag !== "resolved") return result;
+  if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
+    return result;
+  }
+  const state = isLegendaryAttackSubject(subject)
+    ? consumeLegendaryActionWindow(result.state)
+    : closeLegendaryActionWindow(result.state);
+  return state === result.state
+    ? result
+    : { ...result, state, snapshot: snapshotBattle(state) };
 }
 
 export function openBattleReactionWindow(input: {
@@ -2187,6 +2350,7 @@ function battleCreatureStateFromInit(
     origin: {
       kind: "statBlock",
       statBlock: creatureInit.statBlock,
+      resources: statBlockResourceState(creatureInit.statBlock.statBlock),
     },
   });
 }
@@ -2362,6 +2526,14 @@ function combatantSnapshot(
     activeEffects: combatant.activeEffects,
     concentration: combatant.concentration,
     reactionAvailable: combatant.reactionAvailable,
+    ...(combatant.origin.kind === "statBlock"
+      ? {
+          statBlockResources: statBlockResourceSnapshot(
+            combatant.origin.statBlock.statBlock,
+            combatant.origin.resources,
+          ),
+        }
+      : {}),
     movement: battleMovementBudget(combatant),
   };
 }
@@ -2451,6 +2623,44 @@ function activeConditions(state: ConditionState): readonly Condition[] {
 
 function battleSubjectActorId(subject: BattleSubject): CombatantId {
   return subject.actorId;
+}
+
+function isLegendaryAttackSubject(subject: BattleSubject): boolean {
+  return (
+    subject.tag === "action" &&
+    subject.action === "attack" &&
+    subject.statBlockSection === "legendaryActions"
+  );
+}
+
+function statBlockLegendaryActionWindowIsOpen(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  return (
+    state.legendaryActionWindow !== null &&
+    !state.legendaryActionWindow.consumed &&
+    actorId !== state.legendaryActionWindow.afterTurnActorId &&
+    actorId !== currentActorId(state)
+  );
+}
+
+function closeLegendaryActionWindow(state: BattleState): BattleState {
+  return state.legendaryActionWindow === null
+    ? state
+    : { ...state, legendaryActionWindow: null };
+}
+
+function consumeLegendaryActionWindow(state: BattleState): BattleState {
+  return state.legendaryActionWindow === null
+    ? state
+    : {
+        ...state,
+        legendaryActionWindow: {
+          ...state.legendaryActionWindow,
+          consumed: true,
+        },
+      };
 }
 
 function parseCharacterBattleClassLevels(
@@ -2809,6 +3019,8 @@ function resolveAttack(
     }
     const spent = spendAttackAction(
       applyAttackDamage(input.state, target.combatantId, attack, fillSet),
+      input.subject.actorId,
+      attack,
     );
     if (spent.tag === "invalid") {
       return spent;
@@ -2837,6 +3049,8 @@ function resolveAttack(
     hit
       ? applyAttackDamage(input.state, target.combatantId, attack, fillSet)
       : input.state,
+    input.subject.actorId,
+    attack,
   );
 }
 
@@ -2973,7 +3187,25 @@ function attackRollIsCriticalHit(roll: AttackRollResult): boolean {
 
 function spendAttackAction(
   state: BattleState,
+  actorId: CombatantId,
+  attack: SupportedAttackActionOption,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (
+    attack.kind === "statBlockAttack" &&
+    attack.part.section === "legendaryActions"
+  ) {
+    const nextState = spendStatBlockAttackResources({
+      state,
+      actorId,
+      attack,
+    });
+    return {
+      tag: "resolved",
+      state: nextState,
+      snapshot: snapshotBattle(nextState),
+    };
+  }
+
   const spent = spendAction(state.currentTurnResources, "attack");
   if (Either.isLeft(spent)) {
     return invalidResult(
@@ -2983,7 +3215,11 @@ function spendAttackAction(
     );
   }
 
-  const nextState = { ...state, currentTurnResources: spent.right };
+  const nextState = spendStatBlockAttackResources({
+    state: { ...state, currentTurnResources: spent.right },
+    actorId,
+    attack,
+  });
   return {
     tag: "resolved",
     state: nextState,
@@ -2994,6 +3230,7 @@ function spendAttackAction(
 function resolveEndTurn(
   state: BattleState,
   deathSavingThrowRoll?: DieRollResult,
+  statBlockRechargeRolls?: readonly BattleStatBlockRechargeRollResult[],
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   const initiative = nextInitiative(state.initiative);
   const nextActorId = currentActing(initiative);
@@ -3034,12 +3271,24 @@ function resolveEndTurn(
     combatantsAfterExpiredReadiedSpells,
     nextActorId,
   );
+  const combatantsAfterRecharge =
+    statBlockRechargeRolls === undefined
+      ? combatantsAfterStartEffects
+      : processStatBlockRechargeRolls(
+          combatantsAfterStartEffects,
+          nextActorId,
+          statBlockRechargeRolls,
+        );
   const nextState = {
     ...state,
     initiative,
-    combatants: combatantsAfterStartEffects,
+    combatants: combatantsAfterRecharge,
     currentTurnResources: resetTurnActionEconomy(state.currentTurnResources),
     readiedSpells,
+    legendaryActionWindow: {
+      afterTurnActorId: currentActorId(state),
+      consumed: false,
+    },
   };
 
   return {
@@ -3075,25 +3324,36 @@ function resolveEndTurnCommand(
   const nextActorId = currentActing(initiative);
   const nextActor = input.state.combatants.get(nextActorId);
   const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
-  if (needsDeathSavingThrow && input.fills.length === 0) {
+  const rechargeHole = statBlockRechargeRollHole(nextActor);
+  const expectedHoleCount =
+    (needsDeathSavingThrow ? 1 : 0) + (rechargeHole === null ? 0 : 1);
+  if (expectedHoleCount > 0 && input.fills.length === 0) {
     return {
       tag: "needsHoles",
       state: input.state,
       subject: input.subject,
-      holes: [deathSavingThrowHole(nextActorId)],
+      holes: [
+        ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
+        ...(rechargeHole === null ? [] : [rechargeHole]),
+      ],
       snapshot: snapshotBattle(input.state),
     };
   }
 
-  if (input.fills.length > 1) {
+  if (input.fills.length > expectedHoleCount) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn accepts at most one Death Saving Throw fill.",
+      "End Turn received too many fills for start-turn requirements.",
     );
   }
 
-  const [deathSavingThrowFill] = input.fills;
+  const deathSavingThrowFill = input.fills.find(
+    (fill) => fill.kind === "deathSavingThrow",
+  );
+  const rechargeRollFill = input.fills.find(
+    (fill) => fill.kind === "statBlockRechargeRoll",
+  );
   if (
     (needsDeathSavingThrow &&
       deathSavingThrowFill?.kind !== "deathSavingThrow") ||
@@ -3108,6 +3368,19 @@ function resolveEndTurnCommand(
     );
   }
   if (
+    (rechargeHole !== null &&
+      rechargeRollFill?.kind !== "statBlockRechargeRoll") ||
+    (rechargeHole === null && rechargeRollFill !== undefined)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      rechargeHole !== null
+        ? "End Turn requires a Stat Block Recharge roll fill for the next actor."
+        : "End Turn does not accept a Stat Block Recharge roll fill.",
+    );
+  }
+  if (
     deathSavingThrowFill?.kind === "deathSavingThrow" &&
     deathSavingThrowFill.holeId !== DEATH_SAVING_THROW_HOLE_ID
   ) {
@@ -3117,13 +3390,57 @@ function resolveEndTurnCommand(
       "Death Saving Throw fill does not match the requested hole.",
     );
   }
+  if (
+    rechargeRollFill?.kind === "statBlockRechargeRoll" &&
+    rechargeRollFill.holeId !== STAT_BLOCK_RECHARGE_ROLL_HOLE_ID
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Stat Block Recharge roll fill does not match the requested hole.",
+    );
+  }
+  if (
+    rechargeRollFill?.kind === "statBlockRechargeRoll" &&
+    !statBlockRechargeRollFillMatchesHole(rechargeRollFill.value, rechargeHole)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Stat Block Recharge roll fill must provide one d6 result for each requested target.",
+    );
+  }
 
   return resolveEndTurn(
     input.state,
     deathSavingThrowFill?.kind === "deathSavingThrow"
       ? deathSavingThrowFill.value
       : undefined,
+    rechargeRollFill?.kind === "statBlockRechargeRoll"
+      ? rechargeRollFill.value
+      : undefined,
   );
+}
+
+function statBlockRechargeRollFillMatchesHole(
+  value: readonly BattleStatBlockRechargeRollResult[],
+  rechargeHole: BattleStatBlockRechargeRollHole | null,
+): boolean {
+  if (rechargeHole === null) return value.length === 0;
+  if (value.length !== rechargeHole.rechargeTargets.length) return false;
+
+  const matchedTargetIndexes = new Set<number>();
+  for (const result of value) {
+    if (result.roll < 1 || result.roll > 6) return false;
+    const targetIndex = rechargeHole.rechargeTargets.findIndex(
+      (target, index) =>
+        !matchedTargetIndexes.has(index) &&
+        sameStatBlockPartKey(target, result.target),
+    );
+    if (targetIndex === -1) return false;
+    matchedTargetIndexes.add(targetIndex);
+  }
+  return true;
 }
 
 function resolveMoveCommand(
@@ -3521,10 +3838,23 @@ function resolveReleaseReadiedSpellCommand(
 function resetStartOfTurnCombatant(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
-  return {
+  const resetCombatant = {
     ...combatant,
     reactionAvailable: true,
     movementSpentFeet: movementFeet(0),
+  };
+  if (resetCombatant.origin.kind !== "statBlock") {
+    return resetCombatant;
+  }
+  return {
+    ...resetCombatant,
+    origin: {
+      ...resetCombatant.origin,
+      resources: refreshStatBlockStartTurnResources(
+        resetCombatant.origin.resources,
+        resetCombatant.origin.statBlock.statBlock,
+      ),
+    },
   };
 }
 
@@ -3545,6 +3875,48 @@ function resetPerTurnCharacterResources(
       })),
     },
   };
+}
+
+function discoverLegendaryActionActs(
+  state: BattleState,
+): readonly AvailableBattleAct[] {
+  return [...state.combatants].flatMap(([actorId, actor]) => {
+    if (
+      !statBlockLegendaryActionWindowIsOpen(state, actorId) ||
+      actor.origin.kind !== "statBlock" ||
+      !combatantCanTakeActions(actor) ||
+      actor.origin.resources.legendaryActionUsesRemaining <= 0
+    ) {
+      return [];
+    }
+    return attackActionOptionsForActor(state, actorId)
+      .filter(
+        (attack) =>
+          attack.kind === "statBlockAttack" &&
+          attack.part.section === "legendaryActions",
+      )
+      .flatMap((attack) => {
+        const targetHole = attackTargetHole(state, actorId, attack);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "action" as const,
+                  actorId,
+                  action: "attack" as const,
+                  attackName: attackActionOptionName(attack),
+                  statBlockSection: "legendaryActions" as const,
+                },
+                label: "Legendary Action",
+                summary: `Take the Legendary Action ${attackActionOptionName(
+                  attack,
+                )}.`,
+                initialHoles: [targetHole],
+              },
+            ];
+      });
+  });
 }
 
 function supportedUnitFeatureActs(
@@ -5234,6 +5606,66 @@ function deathSavingThrowHole(
   };
 }
 
+function statBlockRechargeRollHole(
+  combatant: BattleCreatureState | undefined,
+): BattleStatBlockRechargeRollHole | null {
+  if (combatant?.origin.kind !== "statBlock") return null;
+  const rechargeTargets = unavailableRechargeTargets(
+    combatant.origin.statBlock.statBlock,
+    combatant.origin.resources,
+  );
+  if (rechargeTargets.length === 0) return null;
+  return {
+    kind: "statBlockRechargeRoll",
+    holeInstanceKey: STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
+    holeId: STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
+    label: "Stat Block Recharge roll",
+    combatantId: combatant.combatantId,
+    rechargeTargets,
+  };
+}
+
+function unavailableRechargeTargets(
+  statBlock: StatBlockRecord["statBlock"],
+  resources: StatBlockMutableResourceState,
+): readonly StatBlockPartKey[] {
+  return resources.unavailableRechargeParts.filter(
+    (key) => statBlockLimitedUseForPart(statBlock, key)?.kind === "recharge",
+  );
+}
+
+function processStatBlockRechargeRolls(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  rolls: readonly BattleStatBlockRechargeRollResult[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const combatant = combatants.get(actorId);
+  if (combatant?.origin.kind !== "statBlock") return combatants;
+  const statBlock = combatant.origin.statBlock.statBlock;
+  const nextResources = {
+    ...combatant.origin.resources,
+    unavailableRechargeParts:
+      combatant.origin.resources.unavailableRechargeParts.filter((key) => {
+        const limitedUse = statBlockLimitedUseForPart(statBlock, key);
+        const result = rolls.find((roll) =>
+          sameStatBlockPartKey(roll.target, key),
+        );
+        return (
+          limitedUse?.kind !== "recharge" ||
+          result === undefined ||
+          result.roll < limitedUse.minimumRoll
+        );
+      }),
+  };
+  return new Map(combatants).set(actorId, {
+    ...combatant,
+    origin: {
+      ...combatant.origin,
+      resources: nextResources,
+    },
+  });
+}
+
 function concentrationSavingThrowHole(
   combatant: BattleCreatureState,
   damageAmount: number,
@@ -6316,7 +6748,9 @@ function attackActionOptionForSubject(
   >,
 ): SupportedAttackActionOption | undefined {
   return attackActionOptionsForActor(state, subject.actorId).find(
-    (attack) => attackActionOptionName(attack) === subject.attackName,
+    (attack) =>
+      attackActionOptionName(attack) === subject.attackName &&
+      statBlockSectionMatchesSubject(attack, subject.statBlockSection),
   );
 }
 
@@ -6330,11 +6764,13 @@ function attackActionOptionsForActor(
   }
 
   if (actor?.origin.kind === "statBlock") {
-    return (
-      actor.origin.statBlock.statBlock.actions?.attacks?.flatMap((attack) => {
-        const option = supportedStatBlockAttackActionOption(attack);
-        return option == null ? [] : [option];
-      }) ?? []
+    const origin = actor.origin;
+    return statBlockAttackActionOptions(origin.statBlock).filter((option) =>
+      statBlockAttackResourceAvailable(
+        origin.statBlock.statBlock,
+        origin.resources,
+        option,
+      ),
     );
   }
 
@@ -6343,6 +6779,7 @@ function attackActionOptionsForActor(
 
 function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
+  part: StatBlockPartKey,
 ): StatBlockAttackActionOption | null {
   if (!isSupportedCreatureNamedAttackRoll(attack)) {
     return null;
@@ -6351,7 +6788,44 @@ function supportedStatBlockAttackActionOption(
   return {
     kind: "statBlockAttack",
     attack,
+    part,
   };
+}
+
+function statBlockAttackActionOptions(
+  statBlock: StatBlockRecord,
+): readonly StatBlockAttackActionOption[] {
+  const actionAttacks = statBlockActionSectionAttackOptions(
+    "actions",
+    statBlock.statBlock.actions,
+  );
+  const legendaryAttacks = statBlockActionSectionAttackOptions(
+    "legendaryActions",
+    statBlock.statBlock.legendaryActions?.actions,
+  );
+
+  return [...actionAttacks, ...legendaryAttacks];
+}
+
+function attackActionOptionIsOrdinaryAttackAction(
+  attack: SupportedAttackActionOption,
+): boolean {
+  return attack.kind !== "statBlockAttack" || attack.part.section === "actions";
+}
+
+function statBlockActionSectionAttackOptions(
+  section: StatBlockPartSection,
+  actions: CreatureActions | undefined,
+): readonly StatBlockAttackActionOption[] {
+  return (
+    actions?.attacks?.flatMap((attack) => {
+      const option = supportedStatBlockAttackActionOption(attack, {
+        section,
+        name: attack.name,
+      });
+      return option == null ? [] : [option];
+    }) ?? []
+  );
 }
 
 function isSupportedCreatureNamedAttackRoll(
@@ -6363,6 +6837,363 @@ function isSupportedCreatureNamedAttackRoll(
     supportedStatBlockAttackDamage(attack) !== null &&
     supportedStatBlockAttackTargetConstraint(attack) !== null
   );
+}
+
+function statBlockResourceState(
+  statBlock: StatBlockRecord["statBlock"],
+): StatBlockMutableResourceState {
+  const limitedUses = statBlockLimitedUseInitialStates(statBlock);
+  assertUniqueStatBlockPartKeys(
+    limitedUses.dailyUses.map((state) => state.key),
+  );
+  assertUniqueStatBlockPartKeys(limitedUses.rechargeParts);
+  assertUniqueStatBlockPartKeys(limitedUses.restRechargeParts);
+  return {
+    legendaryActionUsesRemaining: statBlock.legendaryActions?.uses ?? 0,
+    dailyUses: limitedUses.dailyUses,
+    unavailableRechargeParts: [],
+    unavailableRestRechargeParts: [],
+  };
+}
+
+function statBlockLimitedUseInitialStates(
+  statBlock: StatBlockRecord["statBlock"],
+): {
+  readonly dailyUses: readonly StatBlockDailyUseState[];
+  readonly rechargeParts: readonly StatBlockPartKey[];
+  readonly restRechargeParts: readonly StatBlockPartKey[];
+} {
+  const states = statBlockAuthoredLimitedUses(statBlock);
+  return {
+    dailyUses: states.flatMap((state) =>
+      state.kind === "daily"
+        ? [{ key: state.key, usesRemaining: state.uses }]
+        : [],
+    ),
+    rechargeParts: states.flatMap((state) =>
+      state.kind === "recharge" ? [state.key] : [],
+    ),
+    restRechargeParts: states.flatMap((state) =>
+      state.kind === "recharge_after_rest" ? [state.key] : [],
+    ),
+  };
+}
+
+function statBlockAuthoredLimitedUses(
+  statBlock: StatBlockRecord["statBlock"],
+): readonly StatBlockAuthoredLimitedUse[] {
+  return [
+    ...statBlockActionSectionLimitedUseInitialStates(
+      "actions",
+      statBlock.actions,
+    ),
+    ...statBlockActionSectionLimitedUseInitialStates(
+      "bonusActions",
+      statBlock.bonusActions,
+    ),
+    ...statBlockActionSectionLimitedUseInitialStates(
+      "reactions",
+      statBlock.reactions,
+    ),
+    ...statBlockActionSectionLimitedUseInitialStates(
+      "legendaryActions",
+      statBlock.legendaryActions?.actions,
+    ),
+  ];
+}
+
+type StatBlockAuthoredLimitedUse = CreatureLimitedUse & {
+  readonly key: StatBlockPartKey;
+};
+
+function statBlockActionSectionLimitedUseInitialStates(
+  section: StatBlockPartSection,
+  actions: CreatureActions | undefined,
+): readonly StatBlockAuthoredLimitedUse[] {
+  const attacks =
+    actions?.attacks?.flatMap((attack) =>
+      statBlockAuthoredLimitedUse(
+        { section, name: attack.name },
+        attack.limitedUse,
+      ),
+    ) ?? [];
+  const saves =
+    actions?.saves?.flatMap((save) =>
+      statBlockAuthoredLimitedUse(
+        { section, name: save.name },
+        save.limitedUse,
+      ),
+    ) ?? [];
+  const supports =
+    actions?.supports?.flatMap((support) =>
+      statBlockAuthoredLimitedUse(
+        { section, name: support.name },
+        support.limitedUse,
+      ),
+    ) ?? [];
+  const actionOptions =
+    actions?.actionOptions?.flatMap((option) =>
+      statBlockAuthoredLimitedUse(
+        { section, name: option.name },
+        option.limitedUse,
+      ),
+    ) ?? [];
+
+  return [...attacks, ...saves, ...supports, ...actionOptions];
+}
+
+function statBlockAuthoredLimitedUse(
+  key: StatBlockPartKey,
+  limitedUse: CreatureLimitedUse | undefined,
+): readonly StatBlockAuthoredLimitedUse[] {
+  if (limitedUse === undefined) return [];
+  return [{ ...limitedUse, key }];
+}
+
+function statBlockResourceSnapshot(
+  statBlock: StatBlockRecord["statBlock"],
+  resources: StatBlockMutableResourceState,
+): StatBlockResourceSnapshot {
+  const authoredLimitedUses = statBlockLimitedUseInitialStates(statBlock);
+  return {
+    legendaryActions:
+      statBlock.legendaryActions === undefined
+        ? null
+        : {
+            usesMax: statBlock.legendaryActions.uses,
+            usesRemaining: resources.legendaryActionUsesRemaining,
+          },
+    limitedUses: [
+      ...authoredLimitedUses.dailyUses
+        .map((daily) => {
+          const authored = statBlockLimitedUseForPart(statBlock, daily.key);
+          if (authored?.kind !== "daily") return null;
+          return {
+            key: daily.key,
+            kind: "daily" as const,
+            usesMax: authored.uses,
+            usesRemaining: daily.usesRemaining,
+          };
+        })
+        .filter(
+          (
+            state,
+          ): state is Extract<
+            StatBlockLimitedUseSnapshot,
+            { readonly kind: "daily" }
+          > => state !== null,
+        ),
+      ...authoredLimitedUses.rechargeParts.map((key) => {
+        const authored = statBlockLimitedUseForPart(statBlock, key);
+        if (authored?.kind !== "recharge") {
+          throw new Error(
+            "Recharge resource key must reference Recharge authored use.",
+          );
+        }
+        return {
+          key,
+          kind: "recharge" as const,
+          minimumRoll: authored.minimumRoll,
+          available: !resources.unavailableRechargeParts.some((part) =>
+            sameStatBlockPartKey(part, key),
+          ),
+        };
+      }),
+      ...authoredLimitedUses.restRechargeParts.map((key) => ({
+        key,
+        kind: "recharge_after_rest" as const,
+        available: !resources.unavailableRestRechargeParts.some((part) =>
+          sameStatBlockPartKey(part, key),
+        ),
+      })),
+    ],
+  };
+}
+
+function statBlockLimitedUseForPart(
+  statBlock: StatBlockRecord["statBlock"],
+  key: StatBlockPartKey,
+): CreatureLimitedUse | undefined {
+  return statBlockAuthoredLimitedUses(statBlock).find((limitedUse) =>
+    sameStatBlockPartKey(limitedUse.key, key),
+  );
+}
+
+function refreshStatBlockStartTurnResources(
+  resources: StatBlockMutableResourceState,
+  statBlock: StatBlockRecord["statBlock"],
+): StatBlockMutableResourceState {
+  return {
+    ...resources,
+    legendaryActionUsesRemaining: statBlock.legendaryActions?.uses ?? 0,
+  };
+}
+
+function statBlockAttackResourceAvailable(
+  statBlock: StatBlockRecord["statBlock"],
+  resources: StatBlockMutableResourceState,
+  attack: StatBlockAttackActionOption,
+): boolean {
+  return (
+    statBlockPartLimitedUseAvailable(statBlock, resources, attack.part) &&
+    (attack.part.section !== "legendaryActions" ||
+      resources.legendaryActionUsesRemaining > 0)
+  );
+}
+
+function statBlockPartLimitedUseAvailable(
+  statBlock: StatBlockRecord["statBlock"],
+  resources: StatBlockMutableResourceState,
+  key: StatBlockPartKey,
+): boolean {
+  const limitedUse = statBlockLimitedUseForPart(statBlock, key);
+  if (limitedUse === undefined) return true;
+  return Match.value(limitedUse).pipe(
+    Match.when(
+      { kind: "daily" },
+      () =>
+        (resources.dailyUses.find((state) =>
+          sameStatBlockPartKey(state.key, key),
+        )?.usesRemaining ?? 0) > 0,
+    ),
+    Match.when(
+      { kind: "recharge" },
+      () =>
+        !resources.unavailableRechargeParts.some((part) =>
+          sameStatBlockPartKey(part, key),
+        ),
+    ),
+    Match.when(
+      { kind: "recharge_after_rest" },
+      () =>
+        !resources.unavailableRestRechargeParts.some((part) =>
+          sameStatBlockPartKey(part, key),
+        ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spendStatBlockAttackResources(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+}): BattleState {
+  if (input.attack.kind !== "statBlockAttack") {
+    return input.state;
+  }
+  const actor = input.state.combatants.get(input.actorId);
+  if (actor?.origin.kind !== "statBlock") {
+    return input.state;
+  }
+
+  const resources = spendStatBlockPartResources(
+    actor.origin.statBlock.statBlock,
+    actor.origin.resources,
+    input.attack.part,
+  );
+  const combatants = new Map(input.state.combatants);
+  combatants.set(input.actorId, {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources,
+    },
+  });
+  return { ...input.state, combatants };
+}
+
+function spendStatBlockPartResources(
+  statBlock: StatBlockRecord["statBlock"],
+  resources: StatBlockMutableResourceState,
+  key: StatBlockPartKey,
+): StatBlockMutableResourceState {
+  const limitedUse = statBlockLimitedUseForPart(statBlock, key);
+  return {
+    legendaryActionUsesRemaining:
+      key.section === "legendaryActions"
+        ? Math.max(0, resources.legendaryActionUsesRemaining - 1)
+        : resources.legendaryActionUsesRemaining,
+    dailyUses:
+      limitedUse?.kind === "daily"
+        ? resources.dailyUses.map((state) =>
+            sameStatBlockPartKey(state.key, key)
+              ? {
+                  ...state,
+                  usesRemaining: Math.max(0, state.usesRemaining - 1),
+                }
+              : state,
+          )
+        : resources.dailyUses,
+    unavailableRechargeParts:
+      limitedUse?.kind === "recharge" &&
+      !resources.unavailableRechargeParts.some((part) =>
+        sameStatBlockPartKey(part, key),
+      )
+        ? [...resources.unavailableRechargeParts, key]
+        : resources.unavailableRechargeParts,
+    unavailableRestRechargeParts:
+      limitedUse?.kind === "recharge_after_rest" &&
+      !resources.unavailableRestRechargeParts.some((part) =>
+        sameStatBlockPartKey(part, key),
+      )
+        ? [...resources.unavailableRestRechargeParts, key]
+        : resources.unavailableRestRechargeParts,
+  };
+}
+
+function statBlockSectionMatchesSubject(
+  attack: SupportedAttackActionOption,
+  section: StatBlockPartSection | undefined,
+): boolean {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, () => section === undefined),
+    Match.when(
+      { kind: "statBlockAttack" },
+      (option) => option.part.section === (section ?? "actions"),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function statBlockSubjectPart(attack: SupportedAttackActionOption): {
+  readonly statBlockSection?: StatBlockPartSection;
+} {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, () => ({})),
+    Match.when({ kind: "statBlockAttack" }, (option) =>
+      option.part.section === "actions"
+        ? {}
+        : { statBlockSection: option.part.section },
+    ),
+    Match.exhaustive,
+  );
+}
+
+function sameStatBlockPartKey(
+  left: StatBlockPartKey,
+  right: StatBlockPartKey,
+): boolean {
+  return left.section === right.section && left.name === right.name;
+}
+
+function assertUniqueStatBlockPartKeys(
+  keys: readonly StatBlockPartKey[],
+): void {
+  const seen = new Set<string>();
+  for (const key of keys) {
+    const encoded = statBlockPartKeyString(key);
+    if (seen.has(encoded)) {
+      throw new Error(
+        `Duplicate limited-use Stat Block part: ${key.section}/${key.name}`,
+      );
+    }
+    seen.add(encoded);
+  }
+}
+
+function statBlockPartKeyString(key: StatBlockPartKey): string {
+  return `${key.section}\u0000${key.name}`;
 }
 
 function supportedStatBlockAttackDamage(

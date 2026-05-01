@@ -2374,6 +2374,589 @@ describe("battle runtime", () => {
     ]);
   });
 
+  test("Stat Block limited-use resources are initialized from authored monster controls", () => {
+    const state = startBattle({
+      battleId: battleId("battle-monster-resource-init"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({
+          initiative: 10,
+          statBlock: monsterResourceStatBlock(),
+        }),
+      ],
+    });
+
+    expect(state.combatants.get(goblinId)?.origin).toMatchObject({
+      kind: "statBlock",
+      resources: {
+        legendaryActionUsesRemaining: 2,
+        dailyUses: [
+          {
+            key: { section: "actions", name: "Dread Gaze" },
+            usesRemaining: 1,
+          },
+        ],
+        unavailableRechargeParts: [],
+        unavailableRestRechargeParts: [],
+      },
+    });
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: goblinId,
+        statBlockResources: {
+          legendaryActions: { usesMax: 2, usesRemaining: 2 },
+          limitedUses: expect.arrayContaining([
+            {
+              key: { section: "actions", name: "Cinder Breath" },
+              kind: "recharge",
+              minimumRoll: 5,
+              available: true,
+            },
+            {
+              key: { section: "actions", name: "Dread Gaze" },
+              kind: "daily",
+              usesMax: 1,
+              usesRemaining: 1,
+            },
+          ]),
+        },
+      }),
+    );
+  });
+
+  test("Stat Block Bonus Action and Reaction attacks do not enter the Attack action lane", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattle({
+          battleId: battleId("battle-monster-unsupported-sections"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock:
+                monsterResourceStatBlockWithUnsupportedAttackSections(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+
+    expect(
+      discoverBattleActs(goblinTurn).some(
+        (act) =>
+          act.subject.tag === "action" &&
+          (act.subject.attackName === "Swift Bite" ||
+            act.subject.attackName === "Counter Snap"),
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Swift Bite",
+          statBlockSection: "bonusActions",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Counter Snap",
+          statBlockSection: "reactions",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+  });
+
+  test("Recharge attacks spend availability and use a start-turn d6 roll to return", () => {
+    const firstGoblinTurn = requireResolved(
+      endTurn({
+        state: startBattle({
+          battleId: battleId("battle-monster-recharge"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterResourceStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject = monsterAttackSubject("Cinder Breath");
+    const targetHole = attackInitialTargetHole(firstGoblinTurn, subject);
+    const rollHole = attackRollHoleAfterTarget(
+      firstGoblinTurn,
+      targetHole,
+      subject,
+      fighterId,
+    );
+    const damageHole = attackDamageHoleAfterHit(
+      firstGoblinTurn,
+      targetHole,
+      rollHole,
+      { total: 20, naturalD20: 12 },
+      subject,
+      fighterId,
+    );
+    const spent = requireResolved(
+      resolveBattleSubject({
+        state: firstGoblinTurn,
+        subject,
+        fills: [
+          targetFill(targetHole, fighterId),
+          attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+          damageRollFillWithGroups(damageHole, [[3]]),
+        ],
+      }),
+    ).state;
+
+    expect(
+      discoverBattleActs(spent).some(
+        (act) =>
+          act.subject.tag === "action" &&
+          act.subject.attackName === "Cinder Breath",
+      ),
+    ).toBe(false);
+
+    const fighterTurn = requireResolved(
+      endTurn({ state: spent, actorId: goblinId }),
+    ).state;
+    const rechargeRequest = endTurn({ state: fighterTurn, actorId: fighterId });
+    expect(rechargeRequest).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "statBlockRechargeRoll",
+          rechargeTargets: [{ section: "actions", name: "Cinder Breath" }],
+        },
+      ],
+    });
+    if (rechargeRequest.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${rechargeRequest.tag}.`);
+    }
+    const recharged = requireResolved(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "endTurn",
+        },
+        fills: [
+          {
+            kind: "statBlockRechargeRoll",
+            holeId: rechargeRequest.holes[0].holeId,
+            value: [
+              {
+                target: { section: "actions", name: "Cinder Breath" },
+                roll: DieRollResult(5),
+              },
+            ],
+          },
+        ],
+      }),
+    ).state;
+
+    expect(
+      discoverBattleActs(recharged).some(
+        (act) =>
+          act.subject.tag === "action" &&
+          act.subject.attackName === "Cinder Breath",
+      ),
+    ).toBe(true);
+  });
+
+  test("Daily Stat Block attacks spend uses and are hidden when depleted", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattle({
+          battleId: battleId("battle-monster-daily"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterResourceStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject = monsterAttackSubject("Dread Gaze");
+    const targetHole = attackInitialTargetHole(goblinTurn, subject);
+    const rollHole = attackRollHoleAfterTarget(
+      goblinTurn,
+      targetHole,
+      subject,
+      fighterId,
+    );
+    const damageHole = attackDamageHoleAfterHit(
+      goblinTurn,
+      targetHole,
+      rollHole,
+      { total: 20, naturalD20: 12 },
+      subject,
+      fighterId,
+    );
+    const spent = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [
+          targetFill(targetHole, fighterId),
+          attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+          damageRollFillWithGroups(damageHole, [[3]]),
+        ],
+      }),
+    ).state;
+
+    expect(spent.combatants.get(goblinId)?.origin).toMatchObject({
+      kind: "statBlock",
+      resources: {
+        dailyUses: [
+          {
+            key: { section: "actions", name: "Dread Gaze" },
+            usesRemaining: 0,
+          },
+        ],
+      },
+    });
+    expect(
+      discoverBattleActs(spent).some(
+        (act) =>
+          act.subject.tag === "action" &&
+          act.subject.attackName === "Dread Gaze",
+      ),
+    ).toBe(false);
+  });
+
+  test("Recharge rolls are independent for each unavailable Stat Block part", () => {
+    const state = startBattle({
+      battleId: battleId("battle-monster-multi-recharge"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({
+          initiative: 10,
+          statBlock: monsterResourceStatBlockWithTwoRechargeActions(),
+        }),
+      ],
+    });
+    const goblin = state.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin.");
+    }
+    const spentState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(goblinId, {
+        ...goblin,
+        origin: {
+          ...goblin.origin,
+          resources: {
+            ...goblin.origin.resources,
+            unavailableRechargeParts: [
+              { section: "actions", name: "Cinder Breath" },
+              { section: "actions", name: "Ash Cloud" },
+            ],
+          },
+        },
+      }),
+    };
+
+    const rechargeRequest = endTurn({ state: spentState, actorId: fighterId });
+    expect(rechargeRequest).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "statBlockRechargeRoll",
+          rechargeTargets: [
+            { section: "actions", name: "Cinder Breath" },
+            { section: "actions", name: "Ash Cloud" },
+          ],
+        },
+      ],
+    });
+    if (rechargeRequest.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${rechargeRequest.tag}.`);
+    }
+
+    const recharged = requireResolved(
+      resolveBattleSubject({
+        state: spentState,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "endTurn",
+        },
+        fills: [
+          {
+            kind: "statBlockRechargeRoll",
+            holeId: rechargeRequest.holes[0].holeId,
+            value: [
+              {
+                target: { section: "actions", name: "Cinder Breath" },
+                roll: DieRollResult(4),
+              },
+              {
+                target: { section: "actions", name: "Ash Cloud" },
+                roll: DieRollResult(6),
+              },
+            ],
+          },
+        ],
+      }),
+    ).state;
+
+    const rechargedGoblin = recharged.combatants.get(goblinId);
+    if (rechargedGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected recharged Stat Block goblin.");
+    }
+    expect(
+      rechargedGoblin.origin.resources.unavailableRechargeParts,
+    ).toContainEqual({ section: "actions", name: "Cinder Breath" });
+    expect(
+      rechargedGoblin.origin.resources.unavailableRechargeParts,
+    ).not.toContainEqual({ section: "actions", name: "Ash Cloud" });
+  });
+
+  test("Legendary Action attacks are Stat Block acts after another creature's turn", () => {
+    const state = requireResolved(
+      endTurn({
+        state: startBattle({
+          battleId: battleId("battle-monster-legendary"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            characterSeed({
+              combatantId: distantFighterId,
+              displayName: "Distant Fighter",
+              initiative: 15,
+            }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterResourceStatBlock(),
+            }),
+          ],
+          combatantDistances: [
+            { combatantA: fighterId, combatantB: goblinId, feet: 5 },
+            { combatantA: distantFighterId, combatantB: goblinId, feet: 5 },
+            { combatantA: fighterId, combatantB: distantFighterId, feet: 5 },
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const legendaryAct = discoverBattleActs(state).find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.attackName === "Tail Swipe" &&
+        act.subject.statBlockSection === "legendaryActions",
+    );
+    if (legendaryAct === undefined) {
+      throw new Error("Expected Tail Swipe Legendary Action act.");
+    }
+    const subject = legendaryAct.subject as Extract<
+      BattleSubject,
+      { readonly tag: "action" }
+    >;
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(
+      state,
+      targetHole,
+      subject,
+      fighterId,
+    );
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 20, naturalD20: 12 },
+      subject,
+      fighterId,
+    );
+    const afterLegendary = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(targetHole, fighterId),
+          attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+          damageRollFillWithGroups(damageHole, [[2]]),
+        ],
+      }),
+    ).state;
+
+    expect(afterLegendary.currentTurnResources).toEqual(
+      state.currentTurnResources,
+    );
+    expect(afterLegendary.combatants.get(goblinId)?.origin).toMatchObject({
+      kind: "statBlock",
+      resources: { legendaryActionUsesRemaining: 1 },
+    });
+    expect(
+      discoverBattleActs(afterLegendary).some(
+        (act) =>
+          act.subject.tag === "action" &&
+          act.subject.statBlockSection === "legendaryActions",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: afterLegendary,
+        subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+  });
+
+  test("Legendary Action window closes when the next actor proceeds", () => {
+    const state = requireResolved(
+      endTurn({
+        state: startBattle({
+          battleId: battleId("battle-monster-legendary-window-close"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            characterSeed({
+              combatantId: distantFighterId,
+              displayName: "Distant Fighter",
+              initiative: 15,
+            }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterResourceStatBlock(),
+            }),
+          ],
+          combatantDistances: [
+            { combatantA: fighterId, combatantB: goblinId, feet: 5 },
+            { combatantA: distantFighterId, combatantB: goblinId, feet: 5 },
+            { combatantA: fighterId, combatantB: distantFighterId, feet: 5 },
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const distantSubject: BattleSubject = {
+      tag: "action",
+      actorId: distantFighterId,
+      action: "attack",
+      attackName: "Longsword",
+    };
+    const targetHole = attackInitialTargetHole(state, distantSubject);
+    const rollHole = attackRollHoleAfterTarget(
+      state,
+      targetHole,
+      distantSubject,
+      goblinId,
+    );
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 20, naturalD20: 12 },
+      distantSubject,
+      goblinId,
+    );
+    const afterDistantFighterActs = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: distantSubject,
+        fills: [
+          targetFill(targetHole, goblinId),
+          attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+          damageRollFillWithGroups(damageHole, [[2]]),
+        ],
+      }),
+    ).state;
+
+    expect(
+      discoverBattleActs(afterDistantFighterActs).some(
+        (act) =>
+          act.subject.tag === "action" &&
+          act.subject.statBlockSection === "legendaryActions",
+      ),
+    ).toBe(false);
+  });
+
+  test("Legendary Action attacks are not exposed before an eligible turn-end window", () => {
+    const state = startBattle({
+      battleId: battleId("battle-monster-legendary-negative-initial"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({
+          initiative: 10,
+          statBlock: monsterResourceStatBlock(),
+        }),
+      ],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (act) =>
+          act.subject.tag === "action" &&
+          act.subject.statBlockSection === "legendaryActions",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: monsterAttackSubject("Tail Swipe", "legendaryActions"),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+  });
+
+  test("Legendary Action attacks are not exposed on the monster's own current turn", () => {
+    const ownTurn = requireResolved(
+      endTurn({
+        state: startBattle({
+          battleId: battleId("battle-monster-legendary-negative-own-turn"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterResourceStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+
+    expect(
+      discoverBattleActs(ownTurn).some(
+        (act) =>
+          act.subject.tag === "action" &&
+          act.subject.statBlockSection === "legendaryActions",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: ownTurn,
+        subject: monsterAttackSubject("Tail Swipe", "legendaryActions"),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+  });
+
   test("Goblin Warrior Scimitar attack derives roll bonus and damage from the Stat Block", () => {
     const state = goblinTurnBattle();
     const subject = goblinAttackSubject("Scimitar");
@@ -4575,6 +5158,7 @@ type BattleRuntimeParityProjection = {
   readonly goblinDead: boolean;
   readonly actionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
+  readonly lastTurnActor: "NoTurnEnded" | "LastTurnFighter" | "LastTurnGoblin";
 };
 
 type CharacterZeroHpParityProjection = {
@@ -4621,6 +5205,12 @@ function snapshotProjection(
       (resource) => resource.kind === "action",
     ),
     bonusActionAvailable: snapshot.currentTurnResources.currentHasBonusAction,
+    lastTurnActor:
+      result.state.legendaryActionWindow === null
+        ? "NoTurnEnded"
+        : result.state.legendaryActionWindow.afterTurnActorId === fighterId
+          ? "LastTurnFighter"
+          : "LastTurnGoblin",
   };
 }
 
@@ -4665,7 +5255,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("44 passing");
+  expect(quintOutput).toContain("48 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -4822,6 +5412,10 @@ function renderQntStateProjection(
       fighterReadiedSpellHeld: false,
       interruptStack: [],
       fighterGoblinDistance: 5,
+      goblinRechargeAvailable: true,
+      goblinLegendaryUsesRemaining: 2,
+      lastTurnActor: ${input.lastTurnActor},
+      legendaryActionWindowConsumed: false,
     }`;
 }
 
@@ -5020,6 +5614,19 @@ function goblinAttackSubject(
     actorId: goblinId,
     action: "attack",
     attackName,
+  };
+}
+
+function monsterAttackSubject(
+  attackName: "Cinder Breath" | "Dread Gaze" | "Tail Swipe",
+  statBlockSection: "actions" | "legendaryActions" = "actions",
+): Extract<BattleSubject, { readonly tag: "action" }> {
+  return {
+    tag: "action",
+    actorId: goblinId,
+    action: "attack",
+    attackName,
+    ...(statBlockSection === "actions" ? {} : { statBlockSection }),
   };
 }
 
@@ -5489,6 +6096,111 @@ function statBlockCreatureInit(input: {
 
 function statBlockRecord(): StatBlockRecord {
   return statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+}
+
+function monsterResourceStatBlock(): StatBlockRecord {
+  const base = statBlockRecord();
+  const scimitar = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Scimitar",
+  );
+  if (scimitar === undefined) {
+    throw new Error("Expected Goblin Warrior Scimitar fixture.");
+  }
+  return {
+    ...base,
+    id: "stat_block_resource_test_monster",
+    name: "Resource Test Monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Resource Test Monster",
+      actions: {
+        attacks: [
+          {
+            ...scimitar,
+            name: "Cinder Breath",
+            limitedUse: { kind: "recharge", minimumRoll: 5 },
+          },
+          {
+            ...scimitar,
+            name: "Dread Gaze",
+            limitedUse: { kind: "daily", uses: 1 },
+          },
+        ],
+      },
+      legendaryActions: {
+        uses: 2,
+        actions: {
+          attacks: [
+            {
+              ...scimitar,
+              name: "Tail Swipe",
+            },
+          ],
+        },
+      },
+    },
+  };
+}
+
+function monsterResourceStatBlockWithUnsupportedAttackSections(): StatBlockRecord {
+  const base = monsterResourceStatBlock();
+  const cinderBreath = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Cinder Breath",
+  );
+  if (cinderBreath === undefined) {
+    throw new Error("Expected Cinder Breath fixture.");
+  }
+  return {
+    ...base,
+    id: "stat_block_unsupported_attack_sections_test_monster",
+    statBlock: {
+      ...base.statBlock,
+      bonusActions: {
+        attacks: [
+          {
+            ...cinderBreath,
+            name: "Swift Bite",
+          },
+        ],
+      },
+      reactions: {
+        attacks: [
+          {
+            ...cinderBreath,
+            name: "Counter Snap",
+          },
+        ],
+      },
+    },
+  };
+}
+
+function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecord {
+  const base = monsterResourceStatBlock();
+  const cinderBreath = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Cinder Breath",
+  );
+  if (cinderBreath === undefined) {
+    throw new Error("Expected Cinder Breath fixture.");
+  }
+  return {
+    ...base,
+    id: "stat_block_two_recharge_test_monster",
+    statBlock: {
+      ...base.statBlock,
+      actions: {
+        ...base.statBlock.actions,
+        attacks: [
+          ...(base.statBlock.actions?.attacks ?? []),
+          {
+            ...cinderBreath,
+            name: "Ash Cloud",
+            limitedUse: { kind: "recharge", minimumRoll: 6 },
+          },
+        ],
+      },
+    },
+  };
 }
 
 function skeletonCreatureInit(input: {

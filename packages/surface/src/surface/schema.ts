@@ -22,6 +22,8 @@ export {
   CastingTimeSchema,
   ComponentsSchema,
   CreatureActionsSchema,
+  CreatureLegendaryActionsSchema,
+  CreatureLimitedUseSchema,
   CreatureNamedActionOptionSchema,
   CreatureControlSchema,
   CreatureDismissalSchema,

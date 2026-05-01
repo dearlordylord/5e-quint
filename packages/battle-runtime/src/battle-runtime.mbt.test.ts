@@ -33,7 +33,11 @@ import {
   type CombatantId,
 } from "./index.ts";
 
-type MbtHole = "TargetChoice" | "AttackRoll" | "DamageRoll";
+type MbtHole =
+  | "TargetChoice"
+  | "AttackRoll"
+  | "DamageRoll"
+  | "StatBlockRechargeRoll";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject";
 
@@ -419,6 +423,9 @@ function projectHole(hole: BattleHole): MbtHole {
     Match.when({ kind: "deathSavingThrow" }, () => {
       throw new Error("Battle runtime MBT does not model death-save holes.");
     }),
+    Match.when({ kind: "statBlockRechargeRoll" }, () => {
+      return "StatBlockRechargeRoll" as const;
+    }),
     Match.when({ kind: "savingThrowOutcome" }, () => {
       throw new Error(
         "Battle runtime MBT does not model spell saving throw holes.",
@@ -441,7 +448,12 @@ function projectHole(hole: BattleHole): MbtHole {
 
 function holeName(raw: unknown): MbtHole {
   const tag = quintVariantTag(raw);
-  if (tag === "TargetChoice" || tag === "AttackRoll" || tag === "DamageRoll") {
+  if (
+    tag === "TargetChoice" ||
+    tag === "AttackRoll" ||
+    tag === "DamageRoll" ||
+    tag === "StatBlockRechargeRoll"
+  ) {
     return tag;
   }
 

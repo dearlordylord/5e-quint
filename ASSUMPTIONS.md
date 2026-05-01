@@ -195,11 +195,11 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 ## A21: Recharge rolls as event arguments
 
-**Assumption:** Recharge d6 rolls are nondeterministic values generated at the start of a monster's turn, not pre-computed or automatic. A single roll value is used for all unavailable recharge abilities on that turn.
+**Assumption:** Recharge d6 rolls are nondeterministic values generated at the start of a monster's turn, not pre-computed or automatic. The promoted StatBlockRecord runtime asks for one d6 result per unavailable Recharge stat block part, keyed by that part, so multiple Recharge controls cannot accidentally share a roll.
 
-**Rules basis (SRD 5.2.1 Monsters > Limited Usage, "Recharge X–Y"):** "At the start of each of the monster's turns, roll 1d6." The roll is per-ability in the SRD, but using a single nondet value simplifies the spec's state space. Since the spec currently models at most one recharge ability per monster, this is equivalent.
+**Rules basis (SRD 5.2.1 Monsters > Limited Usage, "Recharge X–Y"):** "At the start of each of the monster's turns, roll 1d6." The roll is per stat block part in the SRD.
 
-**Changes:** `creature.qnt`: `doStartTurn` monster path adds `nondet rechargeRollVal = 1.to(6).oneOf()` and builds `RechargeRollEvent` for each unavailable ability. `pProcessRechargeRolls` checks each roll against the ability's `rechargeMin`.
+**Changes:** `creature.qnt`: `doStartTurn` monster path adds `nondet rechargeRollVal = 1.to(6).oneOf()` and builds `RechargeRollEvent` for each unavailable ability. `pProcessRechargeRolls` checks each roll against the ability's `rechargeMin`. `packages/battle-runtime`: `BattleStatBlockRechargeRollHole` lists the unavailable authored parts, and the corresponding fill supplies one keyed d6 result for each part.
 
 ## A22: Resource refresh timing
 

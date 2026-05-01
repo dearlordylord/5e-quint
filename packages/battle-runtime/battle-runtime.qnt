@@ -64,6 +64,11 @@ module battleRuntime {
   //   other spatial costs are caller-authored Movement costs at this runtime
   //   boundary; leaving melee Reach opens an Opportunity Attack Reaction
   //   window before the distance mutation is committed.
+  // - Monsters/Overview.md lines 253-265 and ASSUMPTIONS.md A21-A24: Stat
+  //   Block monster controls own Legendary Action uses and limited-use
+  //   resources. This spec models the promoted resource boundary with a
+  //   representative Goblin recharge part and Legendary Action use pool;
+  //   TypeScript carries the authored StatBlockRecord catalog breadth.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -78,9 +83,17 @@ module battleRuntime {
 
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta
 
-  type Hole = TargetChoice | AttackRoll | DamageRoll | SavingThrowOutcome | ReactionDecision
+  type Hole =
+    | TargetChoice
+    | AttackRoll
+    | DamageRoll
+    | SavingThrowOutcome
+    | ReactionDecision
+    | StatBlockRechargeRoll
 
   type ReactionTrigger = AttackHit | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
+
+  type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
 
   // Continuations carry the replay lane interrupted by a Reaction window. This
   // package-local QNT keeps representative deterministic fills for those lanes;
@@ -134,6 +147,10 @@ module battleRuntime {
     fighterReadiedSpellHeld: bool,
     interruptStack: List[PendingReactionFrame],
     fighterGoblinDistance: int,
+    goblinRechargeAvailable: bool,
+    goblinLegendaryUsesRemaining: int,
+    lastTurnActor: LastTurnActor,
+    legendaryActionWindowConsumed: bool,
   }
 
   type ActionSurgeResult = {
@@ -194,6 +211,10 @@ module battleRuntime {
     fighterReadiedSpellHeld: false,
     interruptStack: [],
     fighterGoblinDistance: 5,
+    goblinRechargeAvailable: true,
+    goblinLegendaryUsesRemaining: 2,
+    lastTurnActor: NoTurnEnded,
+    legendaryActionWindowConsumed: false,
   }
 
   // The promoted runtime receives Initiative counts and the caller-resolved
@@ -227,7 +248,9 @@ module battleRuntime {
     })) 13 + dexMod else baseAc
 
   pure def openHoles(state: BattleState): Set[Hole] =
-    if (currentActorCanAttack(state))
+    if (currentActor(state) == Goblin and not(state.goblinRechargeAvailable))
+      Set(StatBlockRechargeRoll)
+    else if (currentActorCanAttack(state))
       Set(TargetChoice)
     else Set()
 
@@ -258,16 +281,42 @@ module battleRuntime {
 
   pure def endTurn(state: BattleState): BattleState = {
     val advancedInitiative = nextInitiative(state.initiative)
+    val nextActor = advancedInitiative.stillToAct[0]
     {
       ...state,
       initiative: advancedInitiative,
       actionAvailable: true,
       bonusActionAvailable: true,
-      fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and advancedInitiative.stillToAct[0] == Fighter) false else state.fighterReadiedSpellHeld,
-      fighter: if (advancedInitiative.stillToAct[0] == Fighter) { ...state.fighter, reactionAvailable: true, movementSpent: 0 } else state.fighter,
-      goblin: if (advancedInitiative.stillToAct[0] == Goblin) { ...state.goblin, reactionAvailable: true, movementSpent: 0 } else state.goblin,
+      fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and nextActor == Fighter) false else state.fighterReadiedSpellHeld,
+      fighter: if (nextActor == Fighter) { ...state.fighter, reactionAvailable: true, movementSpent: 0 } else state.fighter,
+      goblin: if (nextActor == Goblin) { ...state.goblin, reactionAvailable: true, movementSpent: 0 } else state.goblin,
+      goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else state.goblinLegendaryUsesRemaining,
+      lastTurnActor: if (currentActor(state) == Fighter) LastTurnFighter else LastTurnGoblin,
+      legendaryActionWindowConsumed: false,
     }
   }
+
+  pure def endTurnWithGoblinRechargeRoll(state: BattleState, roll: int): BattleState = {
+    val advanced = endTurn(state)
+    if (currentActor(advanced) == Goblin and not(advanced.goblinRechargeAvailable))
+      { ...advanced, goblinRechargeAvailable: roll >= 5 }
+    else
+      advanced
+  }
+
+  pure def goblinLegendaryActionWindowOpen(state: BattleState): bool =
+    state.lastTurnActor == LastTurnFighter and currentActor(state) != Goblin and not(state.legendaryActionWindowConsumed)
+
+  pure def goblinCanUseLegendaryAction(state: BattleState): bool =
+    state.goblin.hp > 0 and
+    goblinLegendaryActionWindowOpen(state) and
+    state.goblinLegendaryUsesRemaining > 0
+
+  pure def useGoblinLegendaryAction(state: BattleState): BattleState =
+    if (goblinCanUseLegendaryAction(state))
+      { ...state, goblinLegendaryUsesRemaining: state.goblinLegendaryUsesRemaining - 1, legendaryActionWindowConsumed: true }
+    else
+      state
 
   pure def openReactionWindow(state: BattleState, frame: PendingReactionFrame): BattleState =
     { ...state, interruptStack: state.interruptStack.append(frame) }
@@ -744,6 +793,42 @@ module battleRuntime {
 
   run test_goblin_turn_opens_stat_block_attack_target_hole = {
     assert(openHoles(endTurn(initialState)) == Set(TargetChoice))
+  }
+
+  run test_goblin_turn_opens_stat_block_recharge_hole_before_attack = {
+    val spentRecharge = { ...initialState, goblinRechargeAvailable: false }
+    assert(openHoles(endTurn(spentRecharge)) == Set(StatBlockRechargeRoll))
+  }
+
+  run test_goblin_recharge_roll_restores_available_part_on_success = {
+    val spentRecharge = { ...initialState, goblinRechargeAvailable: false }
+    val failed = endTurnWithGoblinRechargeRoll(spentRecharge, 4)
+    val succeeded = endTurnWithGoblinRechargeRoll(spentRecharge, 5)
+    all {
+      assert(not(failed.goblinRechargeAvailable)),
+      assert(succeeded.goblinRechargeAvailable),
+    }
+  }
+
+  run test_legendary_action_window_excludes_initial_and_own_turn = {
+    val goblinTurn = endTurn(initialState)
+    all {
+      assert(not(goblinCanUseLegendaryAction(initialState))),
+      assert(not(goblinCanUseLegendaryAction(goblinTurn))),
+    }
+  }
+
+  run test_legendary_action_window_after_another_non_current_turn = {
+    val afterFighterTurnWithThirdActor = endTurn({
+      ...initialState,
+      initiative: { round: 1, alreadyActed: [], stillToAct: [Fighter, Fighter, Goblin] },
+    })
+    val spent = useGoblinLegendaryAction(afterFighterTurnWithThirdActor)
+    all {
+      assert(goblinCanUseLegendaryAction(afterFighterTurnWithThirdActor)),
+      assert(spent.goblinLegendaryUsesRemaining == 1),
+      assert(not(goblinCanUseLegendaryAction(spent))),
+    }
   }
 
   run test_caller_ordered_initiative_tie_selects_first_supplied_actor = {

@@ -37,6 +37,7 @@ flowchart TD
   State["BattleState<br/>data: battle id, initiative, combatants, pairwise distances, current-turn resources<br/>why: durable legality/replay input<br/>without: discovery and resolution would not share one combat snapshot"]
   Creature["BattleCreatureState<br/>data: HP, temp HP, AC state, conditions, zero-HP lifecycle, origin<br/>why: shared combat view for Character-derived and Stat Block-derived creatures<br/>without: runtime branches on source objects instead of combat facts"]
   Origin["origin<br/>data: Character or Stat Block origin facts retained for supported act discovery<br/>why: source attribution without a second executable content language<br/>without: battle either loses selected capability facts or imports source package state"]
+  MonsterResources["StatBlockMutableResourceState<br/>source: mutable execution facts for authored StatBlockRecord controls<br/>data: remaining X/Day uses, unavailable Recharge parts, Legendary Action uses remaining<br/>why: monster resources are execution state, not Unit facts"]
   ArmorClass["ArmorClassState helpers<br/>input: combatant.armorClass<br/>success: current Armor Class<br/>why: attack rolls compare against derived AC without storing a duplicate scalar"]
   ActionEconomy["action-economy-algebra<br/>input: BattleTurnResources<br/>success: can spend/spend/reset action resources<br/>why: one turn-resource model; no scalar action quota"]
   AttackRoll["attack-roll-algebra<br/>input: AttackRollResult + Armor Class<br/>success: SRD natural 1/20 and AC hit fact<br/>why: one d20 attack-roll adjudication path"]
@@ -48,6 +49,7 @@ flowchart TD
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
   Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
+  MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals"]
   SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect; Acid Splash save-gate damage applies to failed saves"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
@@ -58,6 +60,7 @@ flowchart TD
   StatBlock --> Init
   Init --> State --> Creature
   Creature --> Origin
+  Origin --> MonsterResources
   Creature --> ArmorClass
   State --> ActionEconomy
   State --> Discover --> Subject
@@ -68,6 +71,7 @@ flowchart TD
   Resolve -->|runtimeCommand.endTurn| EndTurn --> State
   Resolve --> Support
   Support -->|action.attack| AttackOption --> AttackReplay
+  MonsterResources --> MonsterControl --> AttackReplay
   Support -->|unitFeature| UnitFeature --> State
   Support -->|actionSpell| SpellAct --> Damage
   AttackReplay --> AttackRoll
@@ -78,7 +82,7 @@ flowchart TD
   ActionEconomy --> AttackReplay
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class CharacterBuild,StatBlock,Init,State,Creature,Origin,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,Support,AttackOption,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
+  class CharacterBuild,StatBlock,Init,State,Creature,Origin,MonsterResources,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,Support,AttackOption,MonsterControl,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
 ```
 
 ## Interpretation Graph
@@ -130,7 +134,13 @@ flowchart TD
   choices are filtered from the selected attack's melee reach or normal range
   and the battle's pairwise combatant distances.
 - Stat Block-derived creatures can be initialized, damaged, and use supported
-  named attacks derived from `StatBlockRecord.actions.attacks`.
+  named attacks derived from authored `StatBlockRecord` action sections.
+- Stat Block-derived control resources are initialized from
+  `StatBlockRecord` limited-use and Legendary Action fields. Mutable X/Day,
+  Recharge, and Legendary Action execution facts live in
+  `StatBlockMutableResourceState`; authored limits and thresholds are derived
+  from the retained `StatBlockRecord` when needed. No monster control resource
+  is inferred from UnitRecord facts.
 - Character-derived attacks come from a supported weapon Attack action option
   assembled at the composition boundary.
 - Character-derived Action Surge comes from a retained Unit admitted by the

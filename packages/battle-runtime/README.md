@@ -134,6 +134,11 @@ runtime choice rather than patched into state later.
   combatants, and current-turn resources.
 - `BattleCreatureState` - the durable runtime state for one creature in battle.
   It is identified by `CombatantId`.
+- `StatBlockMutableResourceState` - durable mutable execution state for
+  authored `StatBlockRecord` monster controls: Legendary Action uses remaining,
+  X/Day uses remaining, and unavailable Recharge entries. Authored limits and
+  thresholds stay on the retained Stat Block and are projected only at runtime
+  boundaries that need them.
 - `BattleSubject` - the replay key for one discovered act that a caller wants
   to resolve. It is caller protocol, not Surface authored content, provenance,
   or a complete taxonomy of D&D actions. Current subjects cover an Attack action
@@ -177,6 +182,10 @@ Available acts:
 - discover Attack for supported character weapon attacks and supported
   Stat Block named attacks when the current actor can take actions and at least
   one target is legal for the selected attack's melee reach or normal range.
+- discover supported Stat Block Legendary Action attacks after another
+  creature's turn ends for monsters that can act, have remaining Legendary
+  Action uses, and have a legal target. These spend only monster Legendary
+  Action resources, not the current turn action.
 - discover Action Surge from the retained Unit resource only after the shared
   Action Surge support parser admits the Unit's activation mechanics shape, it
   has a remaining use, and it has not been used this turn;
@@ -208,6 +217,17 @@ Feature and spell resources:
   one selected target failed, and apply the rolled damage only to failed targets
   without spending a Spell Slot.
 
+Monster resources:
+
+- Stat Block limited-use state is initialized from authored `StatBlockRecord`
+  action parts, not from UnitRecord facts or inferred monster names;
+- X/Day parts track remaining uses in battle state;
+- Recharge parts start available, become unavailable when used, request a d6
+  roll at the start of that monster's turn while unavailable, and become
+  available again when the roll meets the authored minimum;
+- Legendary Action uses are initialized from the Stat Block, spend on supported
+  Legendary Action attacks, and refresh at the start of the monster's turn.
+
 Attack and damage:
 
 - replay Attack through target, attack-roll, and damage holes;
@@ -222,6 +242,11 @@ Attack and damage:
 - apply supported Stat Block damage immunities, resistances, and vulnerabilities
   before HP mutation. The first widened monster pressure is Skeleton's
   Bludgeoning vulnerability and Poison damage immunity.
+- Stat Block limited-use and Legendary Action resources are read from retained
+  `StatBlockRecord` control fields. Only mutable execution facts are stored on
+  battle state; authored limits and thresholds are derived from the Stat Block
+  for legality checks and snapshots. No monster control resource is inferred
+  from UnitRecord facts.
 
 Zero-HP lifecycle:
 
@@ -251,8 +276,9 @@ provenance labels or a parallel post-battle state model.
 Not modeled in this package yet: Stat Block Multiattack, ranged attacks beyond
 normal range with Disadvantage, Stat Block bonus-action options, unsupported
 conditional attack riders, Magic Missile split-target replay, broad spell
-effects beyond the first Wizard pressure spells, reactions, broad bonus-action
-subjects beyond Second Wind, nonlethal melee knockout, and the zero-HP lifecycle
+effects beyond the first Wizard pressure spells, broad reactions beyond the
+restored interrupt/readied/OA lanes, broad bonus-action subjects beyond Second
+Wind, nonlethal melee knockout, and the zero-HP lifecycle
 width listed above.
 
 ## Width Overlap Reconciliation
