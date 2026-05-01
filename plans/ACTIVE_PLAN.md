@@ -185,31 +185,31 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 22,
       "id": "BA3",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replan Authority Slices From Inventories"
     },
     {
       "number": 23,
       "id": "BA4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Reconcile Attack Damage HP Overlap"
     },
     {
       "number": 24,
       "id": "BA5",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Reconcile Initiative Turn Action Economy Overlap"
     },
     {
       "number": 25,
       "id": "BA6",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Reconcile Promoted Width Overlap"
     },
     {
       "number": 26,
       "id": "BA7",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Reconcile Zero HP Lifecycle Boundary"
     },
     {
@@ -227,7 +227,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 29,
       "id": "BA10",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Define Promoted Runtime MBT Strategy"
     },
     {
@@ -296,14 +296,14 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 19    | BA0 - Define Battle Authority Policy                             | done               | POST5                | BA1, BA2                            | Documented the one-authority direction: promoted Unit/StatBlock-backed battle runtime is the active semantic authority for new work; old Core battle is legacy/broad restore/proof source material. | Completed; BA1 and BA2 are unblocked.                                                     |
 | 20    | BA1 - Inventory Old Battle Authority Surface                     | done               | BA0                  | BA3                                 | Classified root `battle.qnt`, Core battle MBT, and old battle-machine feature areas into overlap, old-only widening, obsolete Core/projected artifact, and proof-source material.                   | Completed; BA3 remains blocked until BA2 also completes.                                  |
 | 21    | BA2 - Inventory Promoted Runtime Proof Coverage                  | done               | BA0                  | BA3                                 | Recorded the promoted runtime proof-coverage map in `plans/battle-runtime-proof-coverage.md`, separating deterministic/runtime/QNT-slice/shared-algebra MBT/MCP coverage from integrated MBT gaps. | Completed; BA3 is unblocked.                                                             |
-| 22    | BA3 - Replan Authority Slices From Inventories                   | ready-for-research | BA1, BA2             | BA4, BA5, BA6, BA7, BA8, BA10, BA12 | Revise this BA task list from BA1/BA2 findings before implementation; split or merge overlap tasks if the inventories show different seams.                                                         | Ready; both inventories are recorded.                                                     |
-| 23    | BA4 - Reconcile Attack Damage HP Overlap                         | blocked            | BA3                  | BA8                                 | Resolve overlapping semantics for supported Attack target/roll/damage, criticals, Temporary HP, HP clamp, damage modifiers, and current death-at-zero consequences.                                 | Blocked until BA3 confirms exact overlap.                                                 |
-| 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | blocked            | BA3                  | BA8                                 | Resolve overlapping semantics for Initiative order, round/turn advancement, End Turn command modeling, action-resource spend/reset, and current actor legality.                                     | Blocked until BA3 confirms exact overlap.                                                 |
-| 25    | BA6 - Reconcile Promoted Width Overlap                           | blocked            | BA3                  | BA8                                 | Resolve overlap or divergence for already-promoted width: Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers.                 | Blocked until BA3 confirms exact overlap.                                                 |
-| 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | blocked            | BA3                  | BA8, BA12                           | Separate implemented zero-HP authority from old-only death-save/rest/adventuring behavior; record follow-up width tasks for missing lifecycle behavior.                                             | Blocked until BA3 confirms old/new boundary.                                              |
+| 22    | BA3 - Replan Authority Slices From Inventories                   | done               | BA1, BA2             | BA4, BA5, BA6, BA7, BA8, BA10, BA12 | Consumed BA1/BA2/Restore Ledger facts and kept the BA queue split: four bounded overlap slices, one proof-strategy slice, later QNT layout/quarantine, and old-only backlog conversion.             | Completed; BA4-BA7 and BA10 are unblocked.                                                |
+| 23    | BA4 - Reconcile Attack Damage HP Overlap                         | ready-for-implementation-after-light-research | BA3                  | BA8                                 | Resolve only already-promoted Attack target/roll/damage, criticals, Temporary HP, HP clamp, and supported damage modifiers; stop at the zero-HP lifecycle handoff owned by BA7.                       | Ready; do not inspect all of root `battle.qnt`, use BA1 row references.                   |
+| 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | ready-for-implementation-after-light-research | BA3                  | BA8                                 | Resolve only already-promoted Initiative order, round/turn advancement, End Turn command modeling, action-resource spend/reset, and current actor/action gating.                                    | Ready; old Dash/Dodge/Disengage/Ready catalog breadth is BA12 scope.                      |
+| 25    | BA6 - Reconcile Promoted Width Overlap                           | ready-for-implementation-after-light-research | BA3                  | BA8                                 | Resolve only already-promoted Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers.                                            | Ready; broad spell, persistent-effect, and monster-control width is BA12 scope.           |
+| 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | ready-for-implementation-after-light-research | BA3                  | BA8, BA12                           | Own all zero-HP lifecycle semantics: drop to 0 HP, damage at 0 HP, critical damage at 0 HP, massive damage, and action gating; separate these from old-only recovery/adventuring behavior.          | Ready; feeds BA12 but does not implement backlog width.                                   |
 | 27    | BA8 - Choose Canonical Battle QNT Layout                         | blocked            | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Implement the spec ownership decision: promote/move/rename package-local QNT or explicitly retire/quarantine root `battle.qnt` as legacy reference.                                                 | Blocked until overlap slices settle current behavior.                                     |
 | 28    | BA9 - Quarantine Legacy Core Battle MBT                          | blocked            | BA8                  | BA13                                | Update test/docs ownership so old Core battle MBT is not treated as promoted verification while preserving it as reference material where useful.                                                   | Blocked until canonical QNT layout is decided.                                            |
-| 29    | BA10 - Define Promoted Runtime MBT Strategy                      | blocked            | BA3                  | BA11                                | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.                 | Blocked until inventories reveal proof gaps.                                              |
+| 29    | BA10 - Define Promoted Runtime MBT Strategy                      | ready-for-research | BA3                  | BA11                                | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.                 | Ready; BA2 already lists candidate integrated MBT frontiers.                              |
 | 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | blocked            | BA8, BA10            | BA13                                | Add one narrow trace-driven QNT/MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                 | Blocked until canonical QNT and MBT strategy are set.                                     |
 | 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | blocked            | BA3, BA7             | BA13                                | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                                   | Blocked until inventories and zero-HP boundary are known.                                 |
 | 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | none                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until authority, MBT, and backlog work complete.                                  |
@@ -1601,13 +1601,13 @@ Plan Impact:
 
 ### Task 22 - BA3 - Replan Authority Slices From Inventories
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: BA1, BA2
 Blocks: BA4, BA5, BA6, BA7, BA8, BA10, BA12
 
-Next action: update this BA queue from the BA1/BA2 facts before any overlap
-implementation starts.
+Next action: completed. Downstream agents should use the bounded scopes below
+instead of re-reading all of root `battle.qnt`.
 
 Input:
 
@@ -1617,13 +1617,39 @@ Input:
 
 Output:
 
-- Revised BA task list if the inventories show that the initial task split is
-  wrong.
-- Explicit task changes recorded in this file:
-  keep, split, merge, reorder, block, unblock, defer, or add.
-- Confirmed overlap task scopes for BA4-BA7.
-- Confirmed proof/canonical-layout tasks for BA8-BA11.
-- Confirmed old-only width backlog conversion scope for BA12.
+- Revised BA task list from the inventory facts:
+  - keep BA4-BA7 as separate overlap slices, with old-only breadth excluded;
+  - keep BA8 after BA4-BA7 because canonical QNT layout should follow settled
+    current behavior;
+  - keep BA9 after BA8 because legacy MBT quarantine depends on the layout
+    decision;
+  - unblock BA10 now because BA2 already identifies integrated proof gaps and
+    candidate frontiers;
+  - keep BA11 after BA8 and BA10 because it needs both canonical layout and
+    proof strategy;
+  - keep BA12 after BA7 because zero-HP lifecycle rows need BA7's boundary
+    output before becoming atomic backlog work;
+  - add no new BA tasks because all large old-only areas fit BA12 backlog
+    conversion rather than overlap implementation.
+- Explicit task changes:
+  - BA4: unblock; keep scope to promoted Attack/damage/HP overlap only.
+  - BA5: unblock; keep scope to promoted Initiative/turn/action-resource
+    overlap only.
+  - BA6: unblock; keep scope to promoted first-width overlap only.
+  - BA7: unblock; own all current zero-HP lifecycle interpretation and backlog
+    handoff.
+  - BA8: leave blocked by BA4-BA7; no implementation before overlap settles.
+  - BA9: leave blocked by BA8.
+  - BA10: unblock for source-only MBT strategy planning.
+  - BA11: leave blocked by BA8 and BA10.
+  - BA12: leave blocked by BA7, with BA3 dependency now satisfied.
+  - BA13: leave blocked.
+- Confirmed overlap task scopes for BA4-BA7 are recorded in their task
+  sections.
+- Confirmed proof/canonical-layout tasks for BA8-BA11 are recorded in their task
+  sections.
+- Confirmed old-only width backlog conversion scope for BA12 is recorded in its
+  task section.
 
 Acceptance:
 
@@ -1638,16 +1664,39 @@ Verification:
 - Source-only planning check.
 - No battle MBT runs.
 - `/simplify` convergence, minimum 2 rounds because this task changes the plan
-  shape.
+  shape:
+  - Round 1 checked BA1 old-authority rows against BA4-BA7 and moved old-only
+    reactions, movement/OA, broad actions, broad spells, monster controls,
+    hand/weapon state, Hide/Search, Grapple, persistent effects, and projected
+    vocabulary to BA12 instead of overlap tasks.
+  - Round 2 checked BA2 proof gaps against BA8-BA11 and kept proof strategy
+    separate from canonical QNT layout and first integrated MBT implementation.
 
 Plan Impact:
 
-- If successful, unblock BA4, BA5, BA6, BA7, BA8, BA10, and BA12 according to
-  the revised dependencies.
+- Status: applied.
+- BA4: unblocked for implementation after light RAW/source research.
+- BA5: unblocked for implementation after light RAW/source research.
+- BA6: unblocked for implementation after light RAW/source research.
+- BA7: unblocked for implementation after light RAW/source research.
+- BA8: left blocked until BA4, BA5, BA6, and BA7 complete.
+- BA9: left blocked until BA8 completes.
+- BA10: unblocked for source-only proof-strategy research.
+- BA11: left blocked until BA8 and BA10 complete.
+- BA12: revised only by dependency state; BA3 is satisfied, but BA12 remains
+  blocked until BA7 supplies the zero-HP lifecycle boundary rows.
+- BA13: left blocked.
+- Observations: no new owner-decision task is needed. Reaction windows, old
+  action catalog breadth, movement/OA/traversal, broad spells, monster
+  controls, non-promoted class features, concentration/persistent effects,
+  hand/off-hand/component state, Hide/Search, Grapple, bonus-action subjects,
+  and projected-vocabulary semantics are old-only width/backlog material, not
+  overlap reconciliation.
+- Required plan edits: none beyond this applied BA3 replan.
 
 ### Task 23 - BA4 - Reconcile Attack Damage HP Overlap
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: BA3
 Blocks: BA8
@@ -1655,11 +1704,26 @@ Blocks: BA8
 Next action: reconcile only already-promoted Attack/damage/HP semantics that
 BA3 classifies as overlap.
 
+BA3 confirmed scope:
+
+- Include supported target legality only for current reach/normal-range
+  distance facts, Attack Roll hit/miss, natural 1/natural 20, Critical Hit
+  dice, weapon and Stat Block damage currently exposed, Temporary HP, HP clamp,
+  and supported damage resistance/immunity/vulnerability. BA4 may verify that
+  HP mutation reaches or remains at 0 HP, but it does not adjudicate any
+  zero-HP lifecycle consequence after that handoff.
+- Exclude old reaction windows, after-damage reactions, movement/OA/traversal,
+  nonlethal knockout, qualified physical bypass unless already represented by
+  promoted Stat Block facts, broad spell damage, hand/off-hand/component state,
+  unsupported conditional riders, and all zero-HP lifecycle semantics owned by
+  BA7. These flow to BA12 if restored.
+
 Preflight:
 
 - Read relevant SRD 5.2.1 passages in `.references/srd-5.2.1/` for Attack,
   Attack Rolls, Damage Rolls, Hit Points, Temporary Hit Points, Critical Hits,
-  Damage Resistance/Immunity/Vulnerability, and Dropping to 0 Hit Points.
+  and Damage Resistance/Immunity/Vulnerability. BA7 owns Dropping to 0 Hit
+  Points and all zero-HP lifecycle interpretation.
 - Check `UBIQUITOUS_LANGUAGE.md`.
 - Do not add new attacks, new action families, or old-only riders in this task.
 
@@ -1679,7 +1743,8 @@ Acceptance:
   and Stat Block damage currently supported, Temporary HP, HP clamp, and
   supported damage modifiers.
 - Does not port movement, opportunity attacks, reactions, nonlethal knockout,
-  broad spell damage, or unsupported conditional riders.
+  broad spell damage, unsupported conditional riders, or zero-HP lifecycle
+  semantics owned by BA7.
 
 Verification:
 
@@ -1696,13 +1761,22 @@ Plan Impact:
 
 ### Task 24 - BA5 - Reconcile Initiative Turn Action Economy Overlap
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: BA3
 Blocks: BA8
 
 Next action: reconcile only already-promoted Initiative, turn, and action
 resource semantics that BA3 classifies as overlap.
+
+BA3 confirmed scope:
+
+- Include caller-supplied Initiative ordering, current actor, End Turn, round
+  wrap, turn-resource reset, wrong-actor rejection, action spend/reset, and
+  current actor/action gating for promoted subjects.
+- Exclude old Dash, Dodge, Disengage, Ready, Help, Stand from Prone, old
+  bonus-action subjects, mid-battle add/remove, and old generic action catalog
+  breadth. These flow to BA12 if restored.
 
 Preflight:
 
@@ -1742,13 +1816,25 @@ Plan Impact:
 
 ### Task 25 - BA6 - Reconcile Promoted Width Overlap
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: BA3
 Blocks: BA8
 
 Next action: reconcile promoted first-width behavior that overlaps old Core
 concepts but was not part of the original Fighter/Goblin phase-1 slice.
+
+BA3 confirmed scope:
+
+- Include already-promoted Action Surge, Wizard action-time spell discovery,
+  armor-training spell gate, Magic action spend, `magic_missile`,
+  `ray_of_frost`, Skeleton Stat Block attacks, and Skeleton damage
+  vulnerability/immunity.
+- Exclude broad Wizard spell catalog, upcasting, rituals, concentration,
+  readied spells, persistent AC/effects such as Mage Armor, reactions, generic
+  save/AoE spells, split-target Magic Missile, monster recharge/daily/legendary
+  controls, and projected executable vocabulary. These flow to BA12 if
+  restored.
 
 Preflight:
 
@@ -1787,13 +1873,25 @@ Plan Impact:
 
 ### Task 26 - BA7 - Reconcile Zero HP Lifecycle Boundary
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: BA3
 Blocks: BA8, BA12
 
 Next action: separate implemented zero-HP authority from old-only death-save,
 rest, and adventuring-state behavior.
+
+BA3 confirmed scope:
+
+- Include the already-promoted typed lifecycle policy for Stat Blocks and
+  Characters: `diesAtZeroHp`, `usesDeathSavingThrows`, drop to 0 HP, damage at
+  0 HP, critical damage at 0 HP, massive damage, and action gating for 0-HP
+  combatants. BA7 is the sole owner for interpreting the zero-HP consequences
+  of HP mutation; BA4 owns only the preceding attack/damage/HP mutation facts.
+- Exclude start-turn Death Saving Throw rolls, Stable/dead durable handoff,
+  rest recovery, broader adventuring-state storage, and zero-HP post-battle
+  character handoff. BA7 should feed these rows to BA12 rather than implement
+  them.
 
 Preflight:
 
@@ -1918,7 +2016,7 @@ Plan Impact:
 
 ### Task 29 - BA10 - Define Promoted Runtime MBT Strategy
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: BA3
 Blocks: BA11
