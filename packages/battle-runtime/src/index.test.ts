@@ -455,6 +455,7 @@ describe("battle runtime", () => {
       fills: [
         movementFill(hole, {
           movementCostFeet: 10,
+          distanceMovedFeet: 10,
           destinationDistances: [{ combatantId: goblinId, feet: 4 }],
         }),
       ],
@@ -505,6 +506,7 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 35,
+            distanceMovedFeet: 35,
             destinationDistances: [{ combatantId: goblinId, feet: 40 }],
           }),
         ],
@@ -673,6 +675,7 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 1,
+            distanceMovedFeet: 1,
             destinationDistances: [{ combatantId: goblinId, feet: 4 }],
           }),
         ],
@@ -686,6 +689,7 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 2,
+            distanceMovedFeet: 1,
             destinationDistances: [{ combatantId: goblinId, feet: 4 }],
           }),
         ],
@@ -698,7 +702,8 @@ describe("battle runtime", () => {
         subject,
         fills: [
           movementFill(hole, {
-            movementCostFeet: 1,
+            movementCostFeet: 5,
+            distanceMovedFeet: 5,
             destinationDistances: [{ combatantId: goblinId, feet: 5 }],
           }),
         ],
@@ -711,7 +716,8 @@ describe("battle runtime", () => {
         subject,
         fills: [
           movementFill(hole, {
-            movementCostFeet: 2,
+            movementCostFeet: 10,
+            distanceMovedFeet: 5,
             destinationDistances: [{ combatantId: goblinId, feet: 5 }],
           }),
         ],
@@ -1057,6 +1063,7 @@ describe("battle runtime", () => {
       fills: [
         movementFill(hole, {
           movementCostFeet: 5,
+          distanceMovedFeet: 5,
           destinationDistances: [{ combatantId: goblinId, feet: 10 }],
         }),
       ],
@@ -1105,6 +1112,7 @@ describe("battle runtime", () => {
     );
     const staleSuppressionFill = movementFill(hole, {
       movementCostFeet: 5,
+      distanceMovedFeet: 5,
       destinationDistances: [{ combatantId: goblinId, feet: 10 }],
       provokesOpportunityAttacks: false,
     } as Extract<BattleFill, { readonly kind: "movement" }>["value"]);
@@ -1144,6 +1152,7 @@ describe("battle runtime", () => {
       fills: [
         movementFill(hole, {
           movementCostFeet: 5,
+          distanceMovedFeet: 5,
           destinationDistances: [{ combatantId: goblinId, feet: 10 }],
         }),
       ],
@@ -1201,6 +1210,7 @@ describe("battle runtime", () => {
       fills: [
         movementFill(moveHole, {
           movementCostFeet: 5,
+          distanceMovedFeet: 5,
           destinationDistances: [{ combatantId: goblinId, feet: 10 }],
         }),
       ],

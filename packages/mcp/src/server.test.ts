@@ -422,6 +422,7 @@ describe("MCP server route", () => {
           holeId: "battle:movement",
           value: {
             movementCostFeet: 10,
+            distanceMovedFeet: 10,
             destinationDistances: [{ combatantId: "goblin", feet: 4 }],
           },
         },

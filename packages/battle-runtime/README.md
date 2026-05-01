@@ -185,6 +185,9 @@ Available acts:
 - discover Grapple for supported character combatants with a free hand and a
   legal adjacent target. The battle state stores the Grapple link, escape DC,
   occupied hand, and drag-cost exemption derived from creature Sizes.
+- movement fills carry both the Movement cost paid and the actual distance
+  moved. Grappled Movable extra cost is derived from actual distance moved, not
+  from the change in pairwise distance to the dragged target.
 - discover Escape Grapple for a Grappled current actor and Release Grapple for a
   grappler. Release spends no action; Escape spends the action on success or
   failure.

@@ -497,6 +497,7 @@ export type BattleMovementDistanceUpdate = {
 };
 export type BattleMovementFillValue = {
   readonly movementCostFeet: number;
+  readonly distanceMovedFeet: number;
   readonly destinationDistances: readonly BattleMovementDistanceUpdate[];
 };
 type BattleResolvedMovement = {
@@ -1370,6 +1371,7 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly movementCostFeet: number;
+        readonly distanceMovedFeet: number;
         readonly destinationDistances: readonly {
           readonly combatantId: string;
           readonly feet: number;
@@ -1476,6 +1478,7 @@ export const BattleFillSchema: Schema.Schema<
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         movementCostFeet: Schema.Number.pipe(Schema.int()),
+        distanceMovedFeet: Schema.Number.pipe(Schema.int()),
         destinationDistances: Schema.Array(
           Schema.Struct({
             combatantId: CombatantId,
@@ -4416,10 +4419,28 @@ function parseBattleMovement(
   if (!combatantCanMoveInState(state, moverId)) {
     return { tag: "invalid", message: "Current combatant cannot move." };
   }
-  if (fill.value.movementCostFeet <= 0) {
+  if (
+    fill.value.movementCostFeet <= 0 ||
+    !Number.isInteger(fill.value.movementCostFeet)
+  ) {
     return {
       tag: "invalid",
       message: "Movement cost must be a positive integer.",
+    };
+  }
+  if (
+    fill.value.distanceMovedFeet <= 0 ||
+    !Number.isInteger(fill.value.distanceMovedFeet)
+  ) {
+    return {
+      tag: "invalid",
+      message: "Distance moved must be a positive integer.",
+    };
+  }
+  if (fill.value.distanceMovedFeet > fill.value.movementCostFeet) {
+    return {
+      tag: "invalid",
+      message: "Distance moved cannot exceed Movement cost.",
     };
   }
   const budget = battleMovementBudget(mover, state.grapples).remainingFeet;
@@ -4497,31 +4518,7 @@ function validateGrappleMovementCost(
   );
   if (nonExemptDraggedTargets.length === 0) return null;
 
-  const currentDistances = nonExemptDraggedTargets
-    .map((grapple) => combatantDistanceFeet(state, moverId, grapple.targetId))
-    .filter((distance): distance is number => distance !== undefined);
-  const destinationDistances = nonExemptDraggedTargets
-    .map(
-      (grapple) =>
-        fill.value.destinationDistances.find(
-          (distance) => distance.combatantId === grapple.targetId,
-        )?.feet,
-    )
-    .filter((distance): distance is number => distance !== undefined);
-  if (currentDistances.length !== nonExemptDraggedTargets.length) {
-    return "Grapple movement requires current distance to every dragged target.";
-  }
-  if (destinationDistances.length !== nonExemptDraggedTargets.length) {
-    return "Grapple movement requires destination distance for every dragged target.";
-  }
-
-  const dragDistanceFeet = Math.max(
-    ...currentDistances.map((currentDistance, index) =>
-      Math.abs(currentDistance - destinationDistances[index]!),
-    ),
-    0,
-  );
-  const requiredCostFeet = Math.max(2, dragDistanceFeet * 2);
+  const requiredCostFeet = fill.value.distanceMovedFeet * 2;
   if (fill.value.movementCostFeet < requiredCostFeet) {
     return "Dragging a grappled target costs 1 extra foot per foot moved.";
   }

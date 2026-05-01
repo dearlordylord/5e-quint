@@ -114,7 +114,7 @@ module battleRuntime {
     | ResumeSpell
     | ResumeSaveGateDamage
     | ResumeAfterDamage
-    | ResumeMovement({ movementCost: int, destinationDistance: int })
+    | ResumeMovement({ movementCost: int, distanceMoved: int, destinationDistance: int })
 
   type PendingReactionFrame = {
     trigger: ReactionTrigger,
@@ -429,7 +429,7 @@ module battleRuntime {
       | ResumeSpell => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
-      | ResumeMovement(movement) => applyFighterMovement(state, movement.movementCost, movement.destinationDistance)
+      | ResumeMovement(movement) => applyFighterMovement(state, movement.movementCost, movement.distanceMoved, movement.destinationDistance)
     }
 
   pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
@@ -569,9 +569,6 @@ module battleRuntime {
   pure def movementRemaining(combatant: Combatant): int =
     if (combatant.speed - combatant.movementSpent < 0) 0 else combatant.speed - combatant.movementSpent
 
-  pure def absInt(value: int): int =
-    if (value < 0) -value else value
-
   pure def fighterGoblinGrappleExists(state: BattleState): bool =
     match state.grapple {
       | NoGrapple => false
@@ -584,17 +581,19 @@ module battleRuntime {
       | FighterGrapplesGoblin(link) => link.targetDragCostExempt
     }
 
-  pure def grappleDragMovementCostSatisfied(state: BattleState, movementCost: int, destinationDistance: int): bool =
+  pure def grappleDragMovementCostSatisfied(state: BattleState, movementCost: int, distanceMoved: int): bool =
     not(fighterGoblinGrappleExists(state)) or
     fighterGoblinGrappleTargetDragCostExempt(state) or
-    movementCost >= if (absInt(destinationDistance - state.fighterGoblinDistance) == 0) 2 else 2 * absInt(destinationDistance - state.fighterGoblinDistance)
+    movementCost >= 2 * distanceMoved
 
-  pure def fighterCanMove(state: BattleState, movementCost: int, destinationDistance: int): bool =
+  pure def fighterCanMove(state: BattleState, movementCost: int, distanceMoved: int): bool =
     currentActor(state) == Fighter and
     not(state.fighter.unconscious) and
     movementCost > 0 and
+    distanceMoved > 0 and
+    distanceMoved <= movementCost and
     movementCost <= movementRemaining(state.fighter) and
-    grappleDragMovementCostSatisfied(state, movementCost, destinationDistance)
+    grappleDragMovementCostSatisfied(state, movementCost, distanceMoved)
 
   pure def fighterCanGrappleGoblin(state: BattleState): bool =
     currentActor(state) == Fighter and
@@ -654,8 +653,8 @@ module battleRuntime {
     state.fighterGoblinDistance <= 5 and
     destinationDistance > 5
 
-  pure def applyFighterMovement(state: BattleState, movementCost: int, destinationDistance: int): BattleState =
-    if (fighterCanMove(state, movementCost, destinationDistance))
+  pure def applyFighterMovement(state: BattleState, movementCost: int, distanceMoved: int, destinationDistance: int): BattleState =
+    if (fighterCanMove(state, movementCost, distanceMoved))
       {
         ...state,
         fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + movementCost },
@@ -664,18 +663,18 @@ module battleRuntime {
     else
       state
 
-  pure def moveFighter(state: BattleState, movementCost: int, destinationDistance: int): BattleState =
-    if (not(fighterCanMove(state, movementCost, destinationDistance)))
+  pure def moveFighter(state: BattleState, movementCost: int, distanceMoved: int, destinationDistance: int): BattleState =
+    if (not(fighterCanMove(state, movementCost, distanceMoved)))
       state
     else if (goblinCanOpportunityAttack(state, destinationDistance))
       openReactionWindow(state, {
         trigger: OpportunityAttack,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
-        continuation: ResumeMovement({ movementCost: movementCost, destinationDistance: destinationDistance }),
+        continuation: ResumeMovement({ movementCost: movementCost, distanceMoved: distanceMoved, destinationDistance: destinationDistance }),
       })
     else
-      applyFighterMovement(state, movementCost, destinationDistance)
+      applyFighterMovement(state, movementCost, distanceMoved, destinationDistance)
 
   pure def applyHealing(target: Combatant, healing: int): Combatant = {
     val effectiveHealing = if (healing < 0) 0 else healing
@@ -1244,7 +1243,7 @@ module battleRuntime {
   }
 
   run test_movement_spends_budget_and_updates_distance = {
-    val moved = moveFighter(initialState, 10, 4)
+    val moved = moveFighter(initialState, 10, 10, 4)
     all {
       assert(moved.fighter.movementSpent == 10),
       assert(moved.fighterGoblinDistance == 4),
@@ -1253,7 +1252,7 @@ module battleRuntime {
   }
 
   run test_movement_over_budget_is_rejected = {
-    assert(moveFighter(initialState, 35, 40) == initialState)
+    assert(moveFighter(initialState, 35, 35, 40) == initialState)
   }
 
   run test_grapple_release_and_escape_update_link_state = {
@@ -1290,21 +1289,21 @@ module battleRuntime {
 
   run test_grapple_drag_cost_is_enforced = {
     val grappled = grappleFighterGoblin(initialState, true)
-    val underpaid = moveFighter(grappled, 1, 4)
-    val paid = moveFighter(grappled, 2, 4)
-    val underpaidSameDistance = moveFighter(grappled, 1, 5)
-    val paidSameDistance = moveFighter(grappled, 2, 5)
+    val underpaid = moveFighter(grappled, 1, 1, 4)
+    val paid = moveFighter(grappled, 2, 1, 4)
+    val underpaidSameDistance = moveFighter(grappled, 5, 5, 5)
+    val paidSameDistance = moveFighter(grappled, 10, 5, 5)
     all {
       assert(underpaid == grappled),
       assert(paid.fighter.movementSpent == 2),
       assert(paid.fighterGoblinDistance == 4),
       assert(underpaidSameDistance == grappled),
-      assert(paidSameDistance.fighter.movementSpent == 2),
+      assert(paidSameDistance.fighter.movementSpent == 10),
     }
   }
 
   run test_movement_leaving_reach_opens_opportunity_attack_window_before_position_commit = {
-    val awaiting = moveFighter(initialState, 5, 10)
+    val awaiting = moveFighter(initialState, 5, 5, 10)
     all {
       assert(awaiting.fighter.movementSpent == 0),
       assert(awaiting.fighterGoblinDistance == 5),
@@ -1315,7 +1314,7 @@ module battleRuntime {
   }
 
   run test_declined_opportunity_attack_resumes_movement = {
-    val awaiting = moveFighter(initialState, 5, 10)
+    val awaiting = moveFighter(initialState, 5, 5, 10)
     val resumed = declineReactionAndResume(awaiting, Goblin)
     all {
       assert(resumed.interruptStack == []),
@@ -1326,7 +1325,7 @@ module battleRuntime {
   }
 
   run test_resolved_opportunity_attack_spends_reaction_damages_then_resumes_movement = {
-    val awaiting = moveFighter(initialState, 5, 10)
+    val awaiting = moveFighter(initialState, 5, 5, 10)
     val resolved = resolveReaction(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
