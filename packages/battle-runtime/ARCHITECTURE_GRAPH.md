@@ -132,9 +132,11 @@ flowchart TD
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
   source material, not the target for new promoted behavior.
-- The first integrated promoted MBT target is the public weapon Attack reducer
-  path against Skeleton. It is intentionally narrower than the old Core MBT and
-  does not require MBT for every authored Unit or Stat Block.
+- The first integrated promoted MBT is
+  `src/battle-runtime.mbt.test.ts` plus `battle-runtime.mbt.qnt`. It targets the
+  public weapon Attack reducer path against Skeleton, is intentionally narrower
+  than the old Core MBT, and does not require MBT for every authored Unit or
+  Stat Block.
 
 ## Relationship To Surface Runtime Correction
 

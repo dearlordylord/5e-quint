@@ -249,7 +249,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 30,
       "id": "BA11",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add First Promoted Integrated Battle QNT MBT"
     },
     {
@@ -362,9 +362,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 27    | BA8 - Choose Canonical Battle QNT Layout                         | done               | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Promoted `packages/battle-runtime/battle-runtime.qnt` as the canonical package-local QNT spec and documented root `battle.qnt` as legacy/Core proof and restore material.                           | Completed; BA9 and BA11 are unblocked.                                                    |
 | 28    | BA9 - Quarantine Legacy Core Battle MBT                          | done               | BA8                  | BA13                                | Old Core battle MBT is opt-in legacy/Core proof-source material and no longer a promoted runtime verification gate.                                                                                 | Completed; BA13 remains blocked until BA11 and BA12 complete.                             |
 | 29    | BA10 - Define Promoted Runtime MBT Strategy                      | done               | BA3                  | BA11                                | Selected the promoted MBT strategy in `plans/promoted-battle-runtime-mbt-strategy.md`: shared algebra MBT stays modular, catalog width defaults to table-driven contract tests, and integrated MBT is selective. | Completed; BA11 is unblocked because BA8 and BA10 are complete.                          |
-| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | ready-for-implementation-after-light-research | BA8, BA10            | BA13                                | Add the selected narrow trace-driven promoted battle-runtime MBT for Fighter weapon Attack against a Skeleton Stat Block target; do not widen battle behavior in this task.                         | Ready; BA10 selected the Fighter weapon Attack vs Skeleton integrated MBT candidate.      |
+| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | done               | BA8, BA10            | BA13                                | Added the selected narrow trace-driven promoted battle-runtime MBT for Fighter weapon Attack against a Skeleton Stat Block target without widening battle behavior.                                  | Completed; BA13 remains blocked until BA12 completes.                                    |
 | 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | ready-for-research | BA3, BA7             | BA13                                | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                                   | Ready; BA7 supplied the zero-HP lifecycle boundary rows.                                  |
-| 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until BA11 promoted MBT and BA12 old-only backlog work complete.                  |
+| 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until BA12 old-only backlog work completes.                                      |
 | 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | blocked            | BA13                 | PBA1                                | Archive the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                               | Blocked until BA closes.                                                                  |
 | 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | blocked            | PBA0                 | PBA2                                | Make the reducer architecture rule explicit: reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                  | Blocked until parity/composition archive exists.                                          |
 | 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | blocked            | PBA1                 | PBA3                                | Search battle-runtime and MCP composition for named-ability or slug-shaped reducer drift and classify each case as support gate, extraction, or future procedure-family widening.                   | Blocked until reducer discipline is documented.                                           |
@@ -2153,7 +2153,7 @@ Plan Impact:
 
 ### Task 30 - BA11 - Add First Promoted Integrated Battle QNT MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: BA8, BA10
 Blocks: BA13
@@ -2190,7 +2190,7 @@ Verification:
 
 Plan Impact:
 
-- BA13 remains blocked until BA9 and BA12 also complete.
+- BA13 remains blocked until BA12 completes.
 
 ### Task 31 - BA12 - Convert Old-Only Battle Behavior To Width Backlog
 

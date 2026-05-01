@@ -336,12 +336,18 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `src/index.ts` - public API and reducer implementation.
 - `src/index.test.ts` - deterministic reducer tests and package-local Quint
   spec checks.
+- `src/battle-runtime.mbt.test.ts` - narrow integrated promoted MBT bridge
+  that replays Fighter weapon Attack traces against a Skeleton Stat Block
+  target through public reducer APIs.
 - `battle-runtime.qnt` - canonical package-local spec for the implemented
   subset.
+- `battle-runtime.mbt.qnt` - package-local randomized model for the selected
+  integrated promoted MBT path.
 
 Useful checks:
 
 ```sh
 pnpm --filter @dnd/battle-runtime typecheck
 pnpm --filter @dnd/battle-runtime test
+MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime.mbt.test.ts
 ```
