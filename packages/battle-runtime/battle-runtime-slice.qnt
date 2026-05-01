@@ -23,14 +23,17 @@ module battleRuntimeSlice {
   // - Classes/Fighter.md lines 76-80: Action Surge grants one additional action
   //   except Magic, spends one use per Short or Long Rest, and is limited to
   //   once per turn.
-  // - Spells/Gaining-and-Casting.md lines 40-65 and 178-182, Classes/Wizard.md
-  //   lines 56-82, Spells/Descriptions-M-P.md lines 86-96, and
-  //   Spells/Descriptions-Q-R.md lines 41-52: prepared level-1 Wizard spells
-  //   spend Spell Slots; cantrips do not; spell attacks add Proficiency Bonus;
-  //   Magic Missile can put all darts on one target; Ray of Frost reduces Speed
-  //   until the start of the caster's next turn.
-  // - Rules-Glossary.md "Armor Training": lacking training for worn armor
-  //   prevents spellcasting while preserving Spell Slot state.
+  // - Spells/Gaining-and-Casting.md lines 3-65 and 92-96, Rules-Glossary.md
+  //   lines 698-702, and Classes/Wizard.md lines 56-82: prepared level-1
+  //   Wizard spells spend Spell Slots; cantrips do not.
+  // - Spells/Gaining-and-Casting.md lines 176-182 and Playing-the-Game.md
+  //   lines 219-222: spell attacks add Proficiency Bonus.
+  // - Spells/Descriptions-M-P.md lines 85-96 and Spells/Descriptions-Q-R.md
+  //   lines 41-52: Magic Missile can put all darts on one target; Ray of Frost
+  //   reduces Speed until the start of the caster's next turn.
+  // - Spells/Gaining-and-Casting.md lines 36-38 and Rules-Glossary.md lines
+  //   98-100: lacking training for worn armor prevents spellcasting while
+  //   preserving Spell Slot state.
   // - Monsters/Monsters-P-S.md lines 1152-1175 and UBIQUITOUS_LANGUAGE.md:
   //   Skeleton has Bludgeoning vulnerability and Poison damage immunity.
   //

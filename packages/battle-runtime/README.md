@@ -182,6 +182,48 @@ subjects, nonlethal melee knockout, and the zero-HP lifecycle width listed
 above. The action-resource state can represent bonus-action availability; this
 package does not yet expose a bonus-action battle subject.
 
+## Width Overlap Reconciliation
+
+The first promoted width slice overlaps several old Core battle concepts. The
+runtime keeps the overlap executable through typed Surface records, Character
+Build facts, and battle-owned state instead of restoring the old projected
+executable vocabulary.
+
+- Action Surge matches the old Core rule shape for Fighter level 2: a Unit
+  resource grants one additional action that excludes Magic, spends one
+  Short/Long Rest use, and is once per turn. The promoted runtime encodes the
+  extra action as a restricted `RuntimeActionResource`, not a scalar action
+  counter plus pending flag.
+- Wizard action-time spells match the old Core distinction between prepared
+  level-1 spells that spend Spell Slots and cantrips that do not for the
+  implemented `magic_missile` and `ray_of_frost` lane. The promoted runtime
+  intentionally does not restore old broad save-spell, reaction, ritual,
+  concentration, upcast, or one-slot-per-turn coverage in this slice.
+- The armor-training spell gate matches the SRD/Core consequence that worn armor
+  without matching Armor Training prevents spellcasting. The gate is executable:
+  composition sets `canCastSpells`, spell act discovery checks it, and runtime
+  Spell Slot expenditure state is preserved rather than cleared. Missing shield
+  training alone does not block spellcasting.
+- Skeleton Stat Block damage modifiers match old Core damage modifier order for
+  supported paths: immunity first, then resistance, then vulnerability.
+  Skeleton's Bludgeoning vulnerability and Poison damage immunity are read from
+  the retained `StatBlockRecord` at the HP mutation boundary. Exhaustion and
+  Poisoned condition immunities remain authored Stat Block facts, but
+  condition-application lanes for those facts are not restored here.
+
+Traceability for this overlap comes from local SRD 5.2.1 text: Fighter Action
+Surge (`Classes/Fighter.md:76-80`), Wizard Spellcasting
+(`Classes/Wizard.md:56-82`), spell access and slots
+(`Spells/Gaining-and-Casting.md:3-65`), armor casting restrictions
+(`Spells/Gaining-and-Casting.md:36-38` and `Rules-Glossary.md:98-100`),
+Magic-action spell casting (`Spells/Gaining-and-Casting.md:92-96` and
+`Rules-Glossary.md:698-702`), spell attack modifiers
+(`Spells/Gaining-and-Casting.md:176-182` and `Playing-the-Game.md:219-222`),
+Magic Missile
+(`Spells/Descriptions-M-P.md:85-96`), Ray of Frost
+(`Spells/Descriptions-Q-R.md:41-52`), and Skeleton
+(`Monsters/Monsters-P-S.md:1152-1175`).
+
 ## State Ownership Rules
 
 Battle state stores durable combat facts and origin references needed to

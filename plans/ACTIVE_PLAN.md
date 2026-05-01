@@ -219,7 +219,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 25,
       "id": "BA6",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Reconcile Promoted Width Overlap"
     },
     {
@@ -231,7 +231,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 27,
       "id": "BA8",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Choose Canonical Battle QNT Layout"
     },
     {
@@ -327,9 +327,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 22    | BA3 - Replan Authority Slices From Inventories                   | done               | BA1, BA2             | BA4, BA5, BA6, BA7, BA8, BA10, BA12 | Consumed BA1/BA2/Restore Ledger facts and kept the BA queue split: four bounded overlap slices, one proof-strategy slice, later QNT layout/quarantine, and old-only backlog conversion.             | Completed; BA4-BA7 and BA10 are unblocked.                                                |
 | 23    | BA4 - Reconcile Attack Damage HP Overlap                         | done               | BA3                  | BA8                                 | Reconciled already-promoted Attack target/roll/damage, criticals, Temporary HP, HP clamp, and supported damage modifiers; stopped at the zero-HP lifecycle handoff owned by BA7.                       | Completed; BA8 remains blocked until BA5-BA7 complete.                                   |
 | 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | done               | BA3                  | BA8                                 | Reconciled already-promoted Initiative ordering, current actor, End Turn command modeling, action-resource spend/reset, wrong-actor rejection, and current actor/action gating.                     | Completed; BA8 remains blocked until BA6 and BA7 complete.                               |
-| 25    | BA6 - Reconcile Promoted Width Overlap                           | ready-for-implementation-after-light-research | BA3                  | BA8                                 | Resolve only already-promoted Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers.                                            | Ready; broad spell, persistent-effect, and monster-control width is BA12 scope.           |
+| 25    | BA6 - Reconcile Promoted Width Overlap                           | done               | BA3                  | BA8                                 | Reconciled already-promoted Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers without restoring projected executable vocabulary. | Completed; BA8 is unblocked because BA4-BA7 are complete.                                |
 | 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | done               | BA3                  | BA8, BA12                           | Documented the promoted zero-HP lifecycle boundary and fed BA12 explicit old-only lifecycle width rows without widening durable character state.                                                     | Completed; BA8 remains blocked until BA6 also completes, and BA12 is unblocked.          |
-| 27    | BA8 - Choose Canonical Battle QNT Layout                         | blocked            | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Implement the spec ownership decision: promote/move/rename package-local QNT or explicitly retire/quarantine root `battle.qnt` as legacy reference.                                                 | Blocked until overlap slices settle current behavior.                                     |
+| 27    | BA8 - Choose Canonical Battle QNT Layout                         | ready-for-implementation-after-light-research | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Implement the spec ownership decision: promote/move/rename package-local QNT or explicitly retire/quarantine root `battle.qnt` as legacy reference.                                                 | Ready; all overlap reconciliation dependencies are complete.                              |
 | 28    | BA9 - Quarantine Legacy Core Battle MBT                          | blocked            | BA8                  | BA13                                | Update test/docs ownership so old Core battle MBT is not treated as promoted verification while preserving it as reference material where useful.                                                   | Blocked until canonical QNT layout is decided.                                            |
 | 29    | BA10 - Define Promoted Runtime MBT Strategy                      | ready-for-research | BA3                  | BA11                                | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.                 | Ready; BA2 already lists candidate integrated MBT frontiers.                              |
 | 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | blocked            | BA8, BA10            | BA13                                | Add one narrow trace-driven QNT/MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                 | Blocked until canonical QNT and MBT strategy are set.                                     |
@@ -1843,13 +1843,13 @@ Plan Impact:
 
 ### Task 25 - BA6 - Reconcile Promoted Width Overlap
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: BA3
 Blocks: BA8
 
-Next action: reconcile promoted first-width behavior that overlaps old Core
-concepts but was not part of the original Fighter/Goblin phase-1 slice.
+Next action: completed; promoted first-width behavior that overlaps old Core
+concepts is reconciled without broadening beyond the BA3 scope.
 
 BA3 confirmed scope:
 
@@ -1895,8 +1895,7 @@ Verification:
 
 Plan Impact:
 
-- BA8 remains blocked until BA4, BA5, and BA7 also complete or BA3 revises the
-  gate.
+- BA8 is unblocked because BA4, BA5, BA6, and BA7 are complete.
 
 ### Task 26 - BA7 - Reconcile Zero HP Lifecycle Boundary
 
@@ -1959,7 +1958,7 @@ Plan Impact:
 
 ### Task 27 - BA8 - Choose Canonical Battle QNT Layout
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: BA4, BA5, BA6, BA7
 Blocks: BA9, BA11, BA13
