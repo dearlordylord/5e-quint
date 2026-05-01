@@ -59,7 +59,22 @@ Coverage is deliberately split:
 
 ## Integrated MBT Boundary For BA10
 
-BA10 should treat the current proof stack as follows:
+BA10 resolved this boundary in
+[promoted-battle-runtime-mbt-strategy.md](./promoted-battle-runtime-mbt-strategy.md).
+The proof stack stays layered: small/shared algebra MBT remains modular,
+package-local `.qnt` self-tests remain useful but are not the long-term proof
+shape for composed battle-runtime behavior, broad Surface/Unit/StatBlock
+catalog coverage defaults to table-driven contract tests, integrated
+battle-runtime QNT/MBT is reserved for selected high-risk verticals, and
+Surface projection MBT remains a separate future decision.
+
+The selected BA11 candidate is a narrow integrated promoted battle-runtime MBT
+for Fighter weapon Attack against a Skeleton Stat Block target. It graduates the
+public weapon-attack reducer path from deterministic `.qnt` assertions toward
+trace-driven parity without rebuilding old Core battle MBT or requiring
+per-authored-Unit MBT for ordinary catalog entries.
+
+The current proof stack should be treated as follows:
 
 - Modular algebra MBT already proves selected reusable primitives:
   Initiative, action economy, armor class, conditions, death-save counters, and
@@ -68,20 +83,15 @@ BA10 should treat the current proof stack as follows:
 - `battle-runtime.qnt` is the canonical package-local deterministic reference
   with self-tests and generated parity assertions. It is useful for
   expected-state facts, but it is not a trace-generating integrated MBT.
-- The highest-value first integrated promoted-runtime MBT candidates are
-  already-implemented behavior with public discovery/replay state:
-  1. Character weapon Attack against a Stat Block target, including target
-     choice, attack roll, damage roll, action spend, HP mutation, and zero-HP
-     policy.
-  2. Action Surge, including Unit-feature discovery, no-hole resolution,
-     restricted extra action, and once-per-turn/use-count state.
-  3. Magic Missile, including actionSpell discovery, target/damage holes, Magic
-     action spend, and Spell Slot expenditure.
-  4. Skeleton vulnerability in the weapon Attack candidate if BA10 wants the
-     first integrated MBT to cover promoted width as well as the original green
-     attack path.
+- The selected first integrated promoted-runtime MBT candidate is Fighter weapon
+  Attack against Skeleton, including public act discovery, target choice, attack
+  roll, damage roll, action spend, Skeleton Bludgeoning vulnerability when the
+  chosen weapon deals Bludgeoning damage, HP mutation, and snapshot projection.
+- Later integrated candidates should be selected only when trace generation adds
+  value. Good implemented follow-ups are Action Surge, Magic Missile, and Ray of
+  Frost.
 
-The first candidate is the narrowest bridge from the old broad battle proof
+The selected candidate is the narrowest bridge from the old broad battle proof
 world to the promoted runtime because it exercises the public
 `discoverBattleActs -> resolveBattleSubject -> snapshotBattle` loop while
 touching algebras that are not currently MBT-covered as a composition:
@@ -90,8 +100,9 @@ mutation, and zero-HP lifecycle.
 
 ## Verification Notes
 
-This task added an inventory document only. No runtime behavior, tests, QNT, or
-tool command definitions changed. No battle MBT was run.
+BA2 added the inventory document. BA10 updated the integrated MBT boundary and
+selected the first promoted-runtime MBT candidate. No runtime behavior, tests,
+QNT, or tool command definitions changed. No battle MBT was run.
 
 Recommended command if later edits touch battle-runtime tests or docs in a way
 that affects commands:

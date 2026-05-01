@@ -243,13 +243,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 29,
       "id": "BA10",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Define Promoted Runtime MBT Strategy"
     },
     {
       "number": 30,
       "id": "BA11",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add First Promoted Integrated Battle QNT MBT"
     },
     {
@@ -359,10 +359,10 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | done               | BA3                  | BA8                                 | Reconciled already-promoted Initiative ordering, current actor, End Turn command modeling, action-resource spend/reset, wrong-actor rejection, and current actor/action gating.                     | Completed; BA8 remains blocked until BA6 and BA7 complete.                               |
 | 25    | BA6 - Reconcile Promoted Width Overlap                           | done               | BA3                  | BA8                                 | Reconciled already-promoted Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers without restoring projected executable vocabulary. | Completed; BA8 is unblocked because BA4-BA7 are complete.                                |
 | 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | done               | BA3                  | BA8, BA12                           | Documented the promoted zero-HP lifecycle boundary and fed BA12 explicit old-only lifecycle width rows without widening durable character state.                                                     | Completed; BA8 remains blocked until BA6 also completes, and BA12 is unblocked.          |
-| 27    | BA8 - Choose Canonical Battle QNT Layout                         | done               | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Promoted `packages/battle-runtime/battle-runtime.qnt` as the canonical package-local QNT spec and documented root `battle.qnt` as legacy/Core proof and restore material.                           | Completed; BA9 is unblocked, and BA11 still needs BA10.                                  |
+| 27    | BA8 - Choose Canonical Battle QNT Layout                         | done               | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Promoted `packages/battle-runtime/battle-runtime.qnt` as the canonical package-local QNT spec and documented root `battle.qnt` as legacy/Core proof and restore material.                           | Completed; BA9 and BA11 are unblocked.                                                    |
 | 28    | BA9 - Quarantine Legacy Core Battle MBT                          | ready-for-implementation-after-light-research | BA8                  | BA13                                | Update test/docs ownership so old Core battle MBT is not treated as promoted verification while preserving it as reference material where useful.                                                   | Ready; canonical QNT layout is decided.                                                   |
-| 29    | BA10 - Define Promoted Runtime MBT Strategy                      | ready-for-research | BA3                  | BA11                                | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.                 | Ready; BA2 already lists candidate integrated MBT frontiers.                              |
-| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | blocked            | BA8, BA10            | BA13                                | Add one narrow trace-driven QNT/MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                 | Blocked until BA10 selects the promoted MBT strategy.                                     |
+| 29    | BA10 - Define Promoted Runtime MBT Strategy                      | done               | BA3                  | BA11                                | Selected the promoted MBT strategy in `plans/promoted-battle-runtime-mbt-strategy.md`: shared algebra MBT stays modular, catalog width defaults to table-driven contract tests, and integrated MBT is selective. | Completed; BA11 is unblocked because BA8 and BA10 are complete.                          |
+| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | ready-for-implementation-after-light-research | BA8, BA10            | BA13                                | Add the selected narrow trace-driven promoted battle-runtime MBT for Fighter weapon Attack against a Skeleton Stat Block target; do not widen battle behavior in this task.                         | Ready; BA10 selected the Fighter weapon Attack vs Skeleton integrated MBT candidate.      |
 | 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | ready-for-research | BA3, BA7             | BA13                                | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                                   | Ready; BA7 supplied the zero-HP lifecycle boundary rows.                                  |
 | 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until authority, MBT, and backlog work complete.                                  |
 | 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | blocked            | BA13                 | PBA1                                | Archive the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                               | Blocked until BA closes.                                                                  |
@@ -2094,12 +2094,13 @@ Plan Impact:
 
 ### Task 29 - BA10 - Define Promoted Runtime MBT Strategy
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: BA3
 Blocks: BA11
 
-Next action: choose how promoted battle runtime proof should scale.
+Next action: completed. The promoted battle-runtime MBT strategy is recorded in
+`plans/promoted-battle-runtime-mbt-strategy.md`.
 
 Input:
 
@@ -2110,7 +2111,8 @@ Input:
 
 Output:
 
-- Updated proof strategy stating:
+- Updated proof strategy in
+  `plans/promoted-battle-runtime-mbt-strategy.md` stating:
   small/shared algebra MBT remains modular;
   package-local `.qnt` self-tests are useful but not sufficient as the long-term
   proof shape for composed battle-runtime behavior;
@@ -2120,7 +2122,9 @@ Output:
   verticals where trace generation adds value;
   Surface projection MBT is a separate decision, not implicit in battle MBT.
 - First integrated QNT/MBT candidate selected for BA11 from
-  already-implemented behavior.
+  already-implemented behavior: Fighter weapon Attack against a Skeleton Stat
+  Block target through public `discoverBattleActs`, `resolveBattleSubject`, and
+  `snapshotBattle`.
 
 Acceptance:
 
@@ -2133,23 +2137,30 @@ Acceptance:
 
 Verification:
 
-- Source-only docs/planning check.
+- Source-only docs/planning check: cross-checked the strategy against BA2's
+  proof-coverage map, the Surface Runtime Correction MBT graph, and the
+  battle-runtime README/architecture docs.
 - No battle MBT runs.
-- `/simplify` convergence, minimum 2 rounds.
+- `/simplify` convergence recorded: round 1 fixed the missing verification
+  record noted during review; round 2 found no further task-scope
+  simplification, duplication, or plan-handoff changes.
 
 Plan Impact:
 
-- If successful, unblock BA11 after BA8 is also complete.
+- Status: applied.
+- BA11: unblocked because BA8 and BA10 are complete; implement the selected
+  Fighter weapon Attack vs Skeleton integrated MBT candidate.
 
 ### Task 30 - BA11 - Add First Promoted Integrated Battle QNT MBT
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: BA8, BA10
 Blocks: BA13
 
-Next action: add one narrow trace-driven QNT/MBT for an existing promoted runtime
-vertical chosen by BA10.
+Next action: add one narrow trace-driven QNT/MBT for Fighter weapon Attack
+against a Skeleton Stat Block target, following
+`plans/promoted-battle-runtime-mbt-strategy.md`.
 
 Scope constraints:
 

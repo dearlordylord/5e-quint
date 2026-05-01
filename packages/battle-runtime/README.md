@@ -260,6 +260,28 @@ restore source material. They are not the place to add new promoted runtime
 behavior. Missing old-only behavior is future width/restoration work, not
 evidence that old Core remains canonical.
 
+## Proof Strategy
+
+Promoted battle-runtime proof is intentionally layered:
+
+- small reusable reducer algebras stay covered by modular Quint MBT in the
+  shared algebra packages;
+- `battle-runtime.qnt` stays the package-local deterministic reference for the
+  implemented runtime subset, but self-tests and generated assertions are not
+  enough for long-term composed reducer proof;
+- broad Surface, Unit, Spell, and Stat Block catalog coverage defaults to
+  table-driven contract tests, not one MBT per authored record;
+- integrated battle-runtime QNT/MBT is reserved for selected high-risk verticals
+  where public discovery, replay holes, reducer state, and snapshots interact;
+- Surface projection MBT is a separate future decision and is not implied by
+  adding battle-runtime MBT.
+
+The current integrated MBT strategy is recorded in
+[`plans/promoted-battle-runtime-mbt-strategy.md`](../../plans/promoted-battle-runtime-mbt-strategy.md).
+The first selected candidate is Fighter weapon Attack against a Skeleton
+Stat Block target through public `discoverBattleActs`, `resolveBattleSubject`,
+and `snapshotBattle`.
+
 Keep four facts separate when changing battle behavior:
 
 - semantic authority: promoted `@dnd/battle-runtime`;

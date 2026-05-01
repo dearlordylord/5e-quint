@@ -10,6 +10,14 @@ package-local spec. The legacy Correction graph, old root `battle.qnt`, and Core
 battle MBT remain useful breadth/proof source material, not active promoted
 runtime authorities.
 
+The promoted MBT strategy is selective. Shared reducer algebras remain covered
+by modular MBT, broad Surface/Unit/StatBlock catalog coverage defaults to
+table-driven contract tests, and integrated battle-runtime MBT is reserved for
+high-risk public reducer verticals. Surface projection MBT is a separate
+decision. The first selected integrated candidate is Fighter weapon Attack
+against a Skeleton Stat Block target through `discoverBattleActs`,
+`resolveBattleSubject`, and `snapshotBattle`.
+
 ## System Graph
 
 ```mermaid
@@ -124,6 +132,9 @@ flowchart TD
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
   source material, not the target for new promoted behavior.
+- The first integrated promoted MBT target is the public weapon Attack reducer
+  path against Skeleton. It is intentionally narrower than the old Core MBT and
+  does not require MBT for every authored Unit or Stat Block.
 
 ## Relationship To Surface Runtime Correction
 
