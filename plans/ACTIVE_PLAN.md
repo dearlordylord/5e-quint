@@ -234,7 +234,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "number": 30,
       "id": "BA11",
       "status": "blocked",
-      "title": "Add First Promoted Integrated Battle MBT"
+      "title": "Add First Promoted Integrated Battle QNT MBT"
     },
     {
       "number": 31,
@@ -304,7 +304,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 27    | BA8 - Choose Canonical Battle QNT Layout                         | blocked | BA4, BA5, BA6, BA7 | BA9, BA11, BA13 | Implement the spec ownership decision: promote/move/rename package-local QNT or explicitly retire/quarantine root `battle.qnt` as legacy reference.                                           | Blocked until overlap slices settle current behavior.                                     |
 | 28    | BA9 - Quarantine Legacy Core Battle MBT                          | blocked | BA8 | BA13 | Update test/docs ownership so old Core battle MBT is not treated as promoted verification while preserving it as reference material where useful.                                              | Blocked until canonical QNT layout is decided.                                           |
 | 29    | BA10 - Define Promoted Runtime MBT Strategy                      | blocked | BA3 | BA11 | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.           | Blocked until inventories reveal proof gaps.                                              |
-| 30    | BA11 - Add First Promoted Integrated Battle MBT                  | blocked | BA8, BA10 | BA13 | Add one narrow integrated MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                  | Blocked until canonical QNT and MBT strategy are set.                                     |
+| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | blocked | BA8, BA10 | BA13 | Add one narrow trace-driven QNT/MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                             | Blocked until canonical QNT and MBT strategy are set.                                     |
 | 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog          | blocked | BA3, BA7 | BA13 | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                               | Blocked until inventories and zero-HP boundary are known.                                |
 | 32    | BA13 - Close Battle Authority Reconciliation                     | blocked | BA8, BA9, BA11, BA12 | none | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                            | Blocked until authority, MBT, and backlog work complete.                                  |
 
@@ -1909,17 +1909,22 @@ Output:
 
 - Updated proof strategy stating:
   small/shared algebra MBT remains modular;
+  package-local `.qnt` self-tests are useful but not sufficient as the long-term
+  proof shape for composed battle-runtime behavior;
   broad Surface/Unit/StatBlock catalog coverage defaults to table-driven
   contract tests;
-  integrated battle-runtime MBT is reserved for selected high-risk verticals;
+  integrated battle-runtime QNT/MBT is reserved for selected high-risk
+  verticals where trace generation adds value;
   Surface projection MBT is a separate decision, not implicit in battle MBT.
-- First integrated MBT candidate selected for BA11 from already-implemented
-  behavior.
+- First integrated QNT/MBT candidate selected for BA11 from
+  already-implemented behavior.
 
 Acceptance:
 
 - Does not rebuild old giant Core MBT by default.
 - Does not require per-authored-Unit MBT for ordinary catalog entries.
+- Explicitly graduates at least one promoted reducer path from `.qnt`
+  assertion/self-test style toward trace-driven parity.
 - Selects a candidate with meaningful reducer interaction, not a pure algebra
   already covered elsewhere.
 
@@ -1933,27 +1938,30 @@ Plan Impact:
 
 - If successful, unblock BA11 after BA8 is also complete.
 
-### Task 30 - BA11 - Add First Promoted Integrated Battle MBT
+### Task 30 - BA11 - Add First Promoted Integrated Battle QNT MBT
 
 Status: `blocked`
 
 Depends on: BA8, BA10
 Blocks: BA13
 
-Next action: add one narrow integrated MBT for an existing promoted runtime
+Next action: add one narrow trace-driven QNT/MBT for an existing promoted runtime
 vertical chosen by BA10.
 
 Scope constraints:
 
 - No new battle feature width.
-- MBT should exercise public promoted runtime behavior, not a private helper
-  already proven by a shared-algebra MBT.
+- QNT/MBT should exercise public promoted runtime behavior, not a private
+  helper already proven by a shared-algebra MBT.
 - Keep the state space intentionally small; prefer one or two combatants and a
   bounded trace shape.
 
 Acceptance:
 
 - The MBT driver and QNT spec use the canonical layout chosen by BA8.
+- The QNT spec has an `init`/`step` shape suitable for trace generation against
+  the promoted TypeScript reducer; it is not only a collection of `run`
+  assertions.
 - The selected behavior is also covered by deterministic tests; MBT adds trace
   confidence rather than replacing ordinary tests.
 - The run command is documented and fits Tier 1-style development feedback.
