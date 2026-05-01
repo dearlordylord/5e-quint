@@ -9,7 +9,8 @@
     "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src && jscpd src --threshold 2 --ignore \"**/*.test.ts,**/*.mbt.test.ts,**/spell-registry.ts,**/mbt-shared.ts,**/monster-catalog-centaurs.ts,**/monster-catalog-goblins.ts,**/monster-catalog-pseudodragons.ts,**/monster-catalog-humanoids.ts,**/monster-catalog-expanded.ts\"",
     "circular": "madge --extensions ts --circular src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:legacy-battle-mbt": "RUN_LEGACY_CORE_BATTLE_MBT=1 vitest run src/battle-machine.mbt.test.ts src/battle-projection.mbt.test.ts"
   },
   "dependencies": {
     "@dnd/shared": "workspace:*",

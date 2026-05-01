@@ -1,6 +1,9 @@
 /**
- * Battle Projection MBT — generates traces from battle.qnt and replays
+ * Legacy Core Battle Projection MBT — generates traces from battle.qnt and replays
  * per-creature state against existing creatureMachine XState actors.
+ *
+ * Proof-source material for the legacy Core lane. It is opt-in and is not a
+ * promoted @dnd/battle-runtime verification gate.
  *
  */
 import * as fs from "node:fs";
@@ -13,10 +16,7 @@ import { createActor } from "xstate";
 import { z } from "zod";
 
 import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts";
-import {
-  freshCaster,
-  freshCreature,
-} from "#/battle-machine-creature.ts";
+import { freshCaster, freshCreature } from "#/battle-machine-creature.ts";
 import type { BattleCreatureState as RuntimeBattleCreatureState } from "#/battle-machine-types.ts";
 import {
   canDeflectAttacks,
@@ -25,20 +25,16 @@ import {
 import { canUncannyDodge } from "#/features/class-rogue.ts";
 import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import { getBattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
-import {
-  finalizeResolution,
-  resolveAction,
-} from "#/available-actions.ts";
+import { finalizeResolution, resolveAction } from "#/available-actions.ts";
 import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import {
   killZombieEvaluators,
   registerEvaluatorCleanup,
 } from "#/mbt-cleanup.ts";
+import { shouldRunLegacyCoreBattleMbt } from "#/mbt-config.ts";
 import { resolveGrapple, targetTwoSizesSmaller } from "#/machine-combat.ts";
-import {
-  battleCurrentArmorClass,
-} from "#/projected-persistent.ts";
+import { battleCurrentArmorClass } from "#/projected-persistent.ts";
 import {
   compareNormalizedStates,
   computeRechargedAbilities,
@@ -2705,7 +2701,11 @@ const battleStateCheck = stateCheck(
 // Test harness (B14.5)
 // ============================================================
 
-describe("Battle Projection MBT", () => {
+const describeLegacyCoreBattleMbt = shouldRunLegacyCoreBattleMbt()
+  ? describe
+  : describe.skip;
+
+describeLegacyCoreBattleMbt("Legacy Core Battle Projection MBT", () => {
   // Kill zombie evaluators before starting and after finishing.
   // Zombies from prior runs at 100% CPU cause 40x slowdowns (Finding 12).
   beforeAll(() => {
@@ -2723,9 +2723,10 @@ describe("Battle Projection MBT", () => {
   const mbtBackend = (process.env["MBT_BACKEND"] ?? "typescript") as
     | "typescript"
     | "rust";
-  // Local projection MBT defaults to replaying a checked-in battle trace.
-  // This keeps `pnpm test` stable; live randomized battle generation belongs in
-  // CI/fuzz runs or explicit MBT_REPLAY_DIR / QUINT_SEED overrides.
+  // Local projection MBT defaults to replaying a checked-in battle trace when
+  // the legacy Core battle MBT is explicitly requested. Live randomized battle
+  // generation belongs in CI/fuzz runs or explicit MBT_REPLAY_DIR /
+  // QUINT_SEED overrides.
   const defaultLocalSeed = isCi ? undefined : "0x6f8de156";
   const defaultLocalReplayDir = path.resolve(
     import.meta.dirname,

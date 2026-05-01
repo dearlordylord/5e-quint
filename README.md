@@ -57,28 +57,31 @@ The React UI is a debugging tool — you send events by hand. A game would send 
 
 **QA pipeline** (`scripts/qa/`) — community Q&A turned into Quint test assertions by LLM. See [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
 
-## Running it
+## Running It
 
 ```sh
 quint test dndTest.qnt          # Quint spec tests
-cd app && npm install && npm test  # XState + MBT tests (needs Quint Rust evaluator)
-cd app && npm run dev              # React UI
+pnpm quality                    # workspace lint, circular checks, and typecheck
+pnpm test                       # workspace package tests
+pnpm dev                        # React UI
 ```
 
-## MBT fuzzer
+## Legacy Core MBT
 
-MBT tests are nondeterministic — each seed generates different traces through the state space. The fuzzer explores seeds continuously, saving failures for reproduction:
+Root `battle.qnt` and the Core battle MBT are legacy/Core broad proof and
+restore material. They are not the promoted `@dnd/battle-runtime` verification
+gate. Run them explicitly when restoring or comparing old Core behavior:
 
 ```sh
-./scripts/mbt-fuzz.sh          # run forever (Ctrl+C to stop)
-./scripts/mbt-fuzz.sh 100      # run 100 seeds
-MBT_TRACES=200 ./scripts/mbt-fuzz.sh  # deeper per seed
+pnpm --filter @dnd/core test:legacy-battle-mbt
 ```
 
-Failures are saved as structured JSONL in `mbt-failures.jsonl` with the seed, trace/step index, action, and full expected/actual state. Reproduce any failure:
+Legacy battle MBT traces are nondeterministic when live generation is used:
+each seed generates different traces through the old Core battle state space.
+Failures include a seed for reproduction:
 
 ```sh
-QUINT_SEED=0xdeadbeef npx vitest run -t "replays Quint"
+RUN_LEGACY_CORE_BATTLE_MBT=1 QUINT_SEED=0xdeadbeef pnpm --filter @dnd/core exec vitest run src/battle-projection.mbt.test.ts
 ```
 
 ## SRD parity

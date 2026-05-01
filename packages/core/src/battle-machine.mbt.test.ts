@@ -1,8 +1,9 @@
 /**
- * Battle Machine MBT — battle-level state comparison against battleMachine.
+ * Legacy Core Battle Machine MBT — battle-level state comparison against battleMachine.
  * One createActor(battleMachine), each Quint action maps to one actor.send() call.
  *
- * Complements battle-projection.mbt.test.ts (per-creature projection against creatureMachine).
+ * Proof-source material for the legacy Core lane. It is opt-in and is not a
+ * promoted @dnd/battle-runtime verification gate.
  */
 import * as path from "node:path";
 
@@ -17,6 +18,7 @@ import { battleMachine } from "#/battle-machine.ts";
 import {
   getBattleMbtRunShape,
   getMbtBackend,
+  shouldRunLegacyCoreBattleMbt,
   withDefaultLocalBattleSeed,
 } from "#/mbt-config.ts";
 import type {
@@ -1477,7 +1479,11 @@ const battleMachineStateCheck = stateCheck(
 // Test harness
 // ============================================================
 
-describe("Battle Machine MBT", () => {
+const describeLegacyCoreBattleMbt = shouldRunLegacyCoreBattleMbt()
+  ? describe
+  : describe.skip;
+
+describeLegacyCoreBattleMbt("Legacy Core Battle Machine MBT", () => {
   beforeAll(() => {
     killZombieEvaluators();
     registerEvaluatorCleanup();

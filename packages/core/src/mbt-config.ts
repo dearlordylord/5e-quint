@@ -1,7 +1,7 @@
 /**
  * Shared MBT runtime policy for local test runs vs CI/fuzz runs.
  *
- * Local `pnpm test` needs bounded, deterministic MBT smoke coverage.
+ * Local legacy Core battle MBT needs bounded, deterministic smoke coverage.
  * CI/fuzz runs are responsible for broader random-seed exploration and should
  * override these defaults explicitly via environment variables.
  */
@@ -18,6 +18,11 @@ export interface MbtCreatureRunShape {
 }
 
 const DEFAULT_LOCAL_BATTLE_SEED = "0x6f8de156";
+const LEGACY_CORE_BATTLE_MBT_ENV = "RUN_LEGACY_CORE_BATTLE_MBT";
+
+export function shouldRunLegacyCoreBattleMbt(): boolean {
+  return process.env[LEGACY_CORE_BATTLE_MBT_ENV] === "1";
+}
 
 export function isCiEnv(): boolean {
   return process.env["CI"] === "true";
