@@ -340,13 +340,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 45,
       "id": "PBA12",
-      "status": "done",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Restore Hand Weapon And Grapple State"
     },
     {
       "number": 46,
       "id": "PBA13",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "blocked",
       "title": "Restore Hide Search And Class Rider Width"
     },
     {
@@ -444,8 +444,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 42    | PBA9 - Restore Reaction Windows And Interrupt Stack              | done               | PBA8                 | PBA10                               | Restored reusable reaction windows, reaction resources, interrupt-stack continuation, readied-spell release, and MCP pending-state replay.                                                                        | Completed; PBA10 is unblocked.                                                           |
 | 43    | PBA10 - Restore Movement Positioning And Opportunity Attacks     | done               | PBA9                 | PBA11                               | Restored promoted-runtime movement state/input, movement budget, Opportunity Attack reaction windows, QNT continuation coverage, and MCP movement holes.                                                          | Completed; PBA11 is unblocked.                                                           |
 | 44    | PBA11 - Restore Monster Resource Controls                        | done               | PBA10                | PBA12                               | Restored StatBlockRecord-backed monster recharge, daily-use, and Legendary Action resources with promoted-runtime support gates.                                                                                 | Completed; PBA12 is unblocked.                                                           |
-| 45    | PBA12 - Restore Hand Weapon And Grapple State                    | done               | PBA11                | PBA13                               | Restored hand occupancy, weapon modes, off-hand attacks, Grapple, Escape Grapple, release, and grapple movement-cost state.                                                                                      | Completed; PBA13 is unblocked.                                                           |
-| 46    | PBA13 - Restore Hide Search And Class Rider Width                | ready-for-implementation-after-light-research | PBA12                | PBA14                               | Restore Hide/Search/hidden discovery plus remaining old class-feature riders as promoted runtime subjects.                                                                                                       | Ready; perform the listed hidden-state/class-rider RAW and ownership checks before editing. |
+| 45    | PBA12 - Restore Hand Weapon And Grapple State                    | ready-for-implementation-after-light-research | PBA11                | PBA13                               | Restore hand occupancy, weapon modes, off-hand attacks, Grapple, Escape Grapple, release, and grapple movement-cost state.                                                                                       | Reopened after `e22a653c`: grapple drag cost still depends on pairwise distance delta instead of actual moved/dragged distance. |
+| 46    | PBA13 - Restore Hide Search And Class Rider Width                | blocked            | PBA12                | PBA14                               | Restore Hide/Search/hidden discovery plus remaining old class-feature riders as promoted runtime subjects.                                                                                                       | Blocked behind corrected hand/weapon/grapple work.                                       |
 | 47    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13                | PBA15                               | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked behind hidden-state/class-rider work.                                             |
 | 48    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14                | future tasks                        | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
 
@@ -3083,7 +3083,14 @@ Blocks: PBA13
 
 Batch: old Core feature-parity restoration.
 
-Completed: restored hand occupancy, weapon-mode state, off-hand attacks, and
+Next action: repair the partially landed hand/grapple implementation from
+`e22a653c` before PBA12 can close. In particular, model grapple drag movement
+cost from actual moved/dragged distance, not from the change in pairwise
+distance between grappler and target. The regression to prove is: with current
+fighter-goblin distance 5 and destination fighter-goblin distance 5, a
+5-foot drag paid as `movementCostFeet: 5` is invalid, while the correctly paid
+`movementCostFeet: 10` case is resolved. Then finish restoring hand occupancy,
+weapon-mode state, off-hand attacks, and
 Grapple/Escape Grapple/release lifecycle.
 
 Backlog candidate:
@@ -3121,7 +3128,7 @@ Plan Impact:
 
 ### Task 46 - PBA13 - Restore Hide Search And Class Rider Width
 
-Status: `ready-for-implementation-after-light-research`
+Status: `blocked`
 
 Depends on: PBA12
 Blocks: PBA14
