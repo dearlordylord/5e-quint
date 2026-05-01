@@ -87,9 +87,11 @@ export const CombatantId = CreatureId.pipe(Schema.brand("CombatantId"));
 export type CombatantId = typeof CombatantId.Type;
 export const combatantId: (value: string) => CombatantId = CombatantId.make;
 
-export type BattleId = string & Brand.Brand<"BattleId">;
-const BattleId = Brand.nominal<BattleId>();
-export const battleId: (value: string) => BattleId = BattleId;
+export const BattleId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleId"),
+);
+export type BattleId = typeof BattleId.Type;
+export const battleId: (value: string) => BattleId = BattleId.make;
 
 export type CharacterId = string & Brand.Brand<"CharacterId">;
 const CharacterId = Brand.nominal<CharacterId>();

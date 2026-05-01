@@ -1,5 +1,5 @@
 import {
-  battleId,
+  BattleId as BattleIdSchema,
   characterId,
   combatantId,
   initiativeScore,
@@ -34,7 +34,7 @@ const StartBattleCharacterArgsSchema = Schema.Struct({
 });
 
 const StartBattleToolArgsSchema = Schema.Struct({
-  battleId: Schema.NonEmptyTrimmedString,
+  battleId: BattleIdSchema,
   characters: Schema.NonEmptyArray(StartBattleCharacterArgsSchema),
   statBlockCombatantId: Schema.NonEmptyTrimmedString,
   statBlockInitiative: IntegerSchema,
@@ -82,7 +82,7 @@ export function decodeStartBattleArgs(
   if (Either.isLeft(record)) return Either.left(record.left);
 
   return Either.right({
-    battleId: battleId(record.right.battleId),
+    battleId: record.right.battleId,
     characters: decodeCharacters(record.right.characters),
     statBlockCombatantId: combatantId(record.right.statBlockCombatantId),
     statBlockInitiative: initiativeScore(record.right.statBlockInitiative),

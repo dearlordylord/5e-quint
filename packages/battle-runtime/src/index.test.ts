@@ -74,6 +74,13 @@ const testSpellRecords = new Map(
 );
 
 describe("battle runtime", () => {
+  test("battle ids must be non-empty trimmed strings", () => {
+    expect(() => battleId("")).toThrow();
+    expect(() => battleId("   ")).toThrow();
+    expect(() => battleId(" battle-1 ")).toThrow();
+    expect(battleId("battle-1")).toBe("battle-1");
+  });
+
   test("initiative scores must be integers", () => {
     expect(() => initiativeScore(12.5)).toThrow();
   });
