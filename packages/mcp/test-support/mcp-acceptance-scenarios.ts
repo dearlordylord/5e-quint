@@ -47,13 +47,13 @@ const agentConversationScenarios = [
       "The ambiguity is now explicit: a cold agent knows it should ask before mapping 'warrior' to Fighter.",
   },
   {
-    name: "Create the first green character",
+    name: "Create the baseline character",
     userSays: "Create the Orc Soldier Fighter we support.",
     agentReads:
       "create_character_draft returns initial holes and finalization status. discover_creation_holes returns concrete holeId and optionId values after each accepted batch.",
     agentDecision:
       "It fills only currently returned holes, tracks expectedRevision from the draft, and calls finalize_character only after finalization reports ready or no holes remain.",
-    executableCoverage: "verifyGreenVertical",
+    executableCoverage: "verifyBaselineVertical",
     insufficiency:
       "The input schema now exposes the fill union shapes. Cardinality and option meaning still correctly come from the returned runtime hole payload.",
   },
@@ -76,7 +76,7 @@ const agentConversationScenarios = [
       "select_stat_block requires a statBlockId string and returns the selected record if the id exists.",
     agentDecision:
       "It calls select_stat_block with stat_block_goblin_warrior or stat_block_skeleton, then verifies the returned displayName/provenance before starting battle.",
-    executableCoverage: "verifyGreenVertical and verifyWidthVertical",
+    executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
     insufficiency:
       "Stat Block ids are now discoverable through list_stat_blocks.",
   },
@@ -88,7 +88,7 @@ const agentConversationScenarios = [
     agentDecision:
       "It uses sourceDraftIds from finalized character sessions, statBlock roster entries with Stat Block ids from list_stat_blocks, caller-chosen combatantIds for table actors, and rejects/repairs an empty initialCombatants array.",
     executableCoverage:
-      "verifyToolContract, verifyGreenVertical, verifyWidthVertical",
+      "verifyToolContract, verifyBaselineVertical, verifyWidthVertical",
     insufficiency:
       "The schema now describes initialCombatants, sourceDraftId, statBlockId, and combatantId entries; list_characters exposes a formal outputSchema for sourceDraftId result rows.",
   },
@@ -99,7 +99,7 @@ const agentConversationScenarios = [
       "discover_battle_acts returns the current actor, turn order, acts, subjects, and initial holes. fill_battle_hole requires the exact subject returned by discovery and one fill at a time.",
     agentDecision:
       "It chooses an available act, copies its subject exactly, fills targetChoice, then attackRoll, then rolledDice using the holeIds requested by the runtime. If the result says needsHoles, it continues the same subject; if resolved, it rediscovers or ends turn.",
-    executableCoverage: "verifyGreenVertical and verifyWidthVertical",
+    executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
     insufficiency:
       "Battle fill shapes are now schema-discoverable. The MCP still intentionally does not roll dice, so the agent needs user-provided rolls, an external roller, or a future dice tool.",
   },
@@ -132,7 +132,7 @@ const agentConversationScenarios = [
       "end_battle takes empty args and returns endedBattleId, character sessions, and session snapshot. list_characters returns available characters with current HP and spellSlots.",
     agentDecision:
       "It calls end_battle only when no transient fills are pending, then list_characters to show durable HP and Spell Slot expenditure handoff.",
-    executableCoverage: "verifyGreenVertical and verifyWidthVertical",
+    executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
     insufficiency:
       "Post-battle handoff currently rejects 0 HP characters; the first vertical cannot finish a battle where a character is at 0 HP.",
   },
@@ -143,7 +143,7 @@ const agentConversationScenarios = [
       "MCP rejects stale/unavailable subjects, different-subject fills while pending fills exist, empty character starts, unknown draft ids, duplicate ids, and end_turn/end_battle during pending fills.",
     agentDecision:
       "It reads the error code, rediscovers current holes or battle acts, then retries with the current revision/subject instead of replaying stale input.",
-    executableCoverage: "verifyToolContract and verifyGreenVertical",
+    executableCoverage: "verifyToolContract and verifyBaselineVertical",
     insufficiency:
       "Errors are structured enough to recover, but there is no single 'what should I do next?' field in every response.",
   },
@@ -252,7 +252,7 @@ export async function verifyToolContract(client: Client) {
   );
 }
 
-export async function verifyGreenVertical(client: Client) {
+export async function verifyBaselineVertical(client: Client) {
   const draftId = "draft:stdio-accepted-orc-soldier-fighter";
   const created = await callTool(client, "create_character_draft", { draftId });
   assert.deepEqual(holeIds(created), [

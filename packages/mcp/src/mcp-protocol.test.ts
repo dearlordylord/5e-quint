@@ -4,7 +4,7 @@ import { describe, test } from "vitest";
 
 import {
   verifyAgentConversationScenarios,
-  verifyGreenVertical,
+  verifyBaselineVertical,
   verifyToolContract,
   verifyWidthVertical,
 } from "../test-support/mcp-acceptance-scenarios.ts";
@@ -29,7 +29,7 @@ describe("MCP protocol server", () => {
       await client.connect(clientTransport);
 
       await verifyToolContract(client);
-      await verifyGreenVertical(client);
+      await verifyBaselineVertical(client);
       await verifyWidthVertical(client);
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
