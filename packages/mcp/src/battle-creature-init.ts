@@ -4,6 +4,7 @@ import {
   startBattle,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
+  type CharacterZeroHpLifecycleInit,
   type CharacterWeaponAttackActionOption,
   type BattleId,
   type BattleState,
@@ -42,6 +43,7 @@ export type CharacterBuildCreatureInput = {
   readonly initiative: InitiativeScore;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
+  readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
 
@@ -94,6 +96,9 @@ export function battleCreatureInitFromCharacterBuild(
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
+      ...(input.zeroHpLifecycle === undefined
+        ? {}
+        : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout: input.build.equipment,
       attack: characterAttackActionOption(input.build, input.unitLibrary),
       resources: characterBattleResources(input.build, input.unitLibrary),

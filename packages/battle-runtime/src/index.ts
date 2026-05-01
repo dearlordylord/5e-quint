@@ -26,10 +26,13 @@ import {
   EMPTY_CONDITION_STATE,
   hasCondition,
   isIncapacitated,
+  removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import {
   addDeathFailures,
   resetDeathSaveRuntimeState,
+  resolveDeathSavingThrow,
+  validDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import type {
   ActionEconomyState,
@@ -66,6 +69,7 @@ import {
   Initiative,
   Round,
   type Condition,
+  type DieRollResult,
   type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
 } from "@dnd/shared/types";
@@ -112,12 +116,15 @@ export type ZeroHpLifecycle =
   | {
       // Character Build runtime policy. The battle reducer owns drop-to-zero,
       // damage-at-zero, critical damage-at-zero, and massive-damage consequences.
-      // Start-turn death-save rolls and post-battle durable handoff are later
-      // width, not part of this reducer branch.
+      // Start-turn death-save rolls and post-battle durable handoff preserve
+      // this lifecycle across the battle/session boundary.
       readonly policy: "usesDeathSavingThrows";
       readonly deathSaves: DeathSaveRuntimeState;
     };
-export type ZeroHpLifecyclePolicy = ZeroHpLifecycle["policy"];
+export type CharacterZeroHpLifecycleInit = Extract<
+  ZeroHpLifecycle,
+  { readonly policy: "usesDeathSavingThrows" }
+>;
 
 export type BattleWeaponDamage = Extract<
   WeaponDamage,
@@ -305,6 +312,7 @@ export type CharacterBattleCreatureInit = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly zeroHpLifecyclePolicy: "usesDeathSavingThrows";
+  readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly attack: CharacterWeaponAttackActionOption | null;
   readonly resources?: readonly CharacterBattleResourceInit[];
@@ -524,12 +532,20 @@ export type BattleSpellDamageRollHole = Extract<
   readonly spell: SupportedSpellAct;
   readonly critical: boolean;
 };
+export type BattleDeathSavingThrowHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "deathSavingThrow";
+  readonly label: string;
+  readonly combatantId: CombatantId;
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleAttackRollHole
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
-  | BattleSpellDamageRollHole;
+  | BattleSpellDamageRollHole
+  | BattleDeathSavingThrowHole;
 
 const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("HoleId"),
@@ -616,6 +632,12 @@ export const BattleHoleSchema = Schema.Union(
     spell: SupportedSpellActSchema,
     critical: Schema.Boolean,
   }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("deathSavingThrow"),
+    label: Schema.String,
+    combatantId: CombatantId,
+  }),
 );
 
 export type BattleFill =
@@ -624,6 +646,11 @@ export type BattleFill =
       readonly kind: "targetChoice";
       readonly holeId: BattleHoleId;
       readonly value: CombatantId;
+    }
+  | {
+      readonly kind: "deathSavingThrow";
+      readonly holeId: BattleHoleId;
+      readonly value: DieRollResult;
     };
 
 const BattleDieRollResultSchema = Schema.Number.pipe(
@@ -664,6 +691,11 @@ export const BattleFillSchema = Schema.Union(
     kind: Schema.Literal("rolledDice"),
     holeId: BattleHoleIdSchema,
     value: Schema.NonEmptyArray(BattleRolledDiceGroupSchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("deathSavingThrow"),
+    holeId: BattleHoleIdSchema,
+    value: BattleD20DieRollResultSchema,
   }),
 );
 
@@ -763,6 +795,10 @@ const ATTACK_TARGET_HOLE_ID = holeId("battle:attack:target");
 const ATTACK_ROLL_HOLE_ID = holeId("battle:attack:roll");
 const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:attack:target");
 const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
+const DEATH_SAVING_THROW_HOLE_ID = holeId("battle:end-turn:death-saving-throw");
+const DEATH_SAVING_THROW_HOLE_INSTANCE = holeInstanceKey(
+  "battle:end-turn:death-saving-throw",
+);
 const ACTION_SURGE_UNIT_ID = "fighter_action_surge";
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = 5;
 
@@ -964,7 +1000,7 @@ export function resolveBattleSubject(
 export function endTurn(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-}): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+}): BattleResolutionResult {
   const result = resolveBattleSubject({
     state: input.state,
     subject: {
@@ -974,10 +1010,6 @@ export function endTurn(input: {
     },
     fills: [],
   });
-
-  if (result.tag === "needsHoles") {
-    throw new Error("endTurn unexpectedly requested holes.");
-  }
 
   return result;
 }
@@ -1004,6 +1036,7 @@ function battleCreatureStateFromInit(
 ): BattleCreatureState {
   const creatureInit = input.creatureInit;
   assertCurrentHpWithinMaxHp(creatureInit);
+  const zeroHpLifecycle = initialZeroHpLifecycle(creatureInit);
   const base = {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -1013,7 +1046,7 @@ function battleCreatureStateFromInit(
     tempHp: creatureInit.tempHp,
     conditions: EMPTY_CONDITION_STATE,
     activeEffects: [],
-    zeroHpLifecycle: initialZeroHpLifecycle(creatureInit.zeroHpLifecyclePolicy),
+    zeroHpLifecycle,
   };
 
   if (creatureInit.kind === "character") {
@@ -1223,16 +1256,32 @@ function combatantSnapshot(
 }
 
 function initialZeroHpLifecycle(
-  policy: ZeroHpLifecyclePolicy,
+  creatureInit: BattleCreatureInit["creatureInit"],
 ): ZeroHpLifecycle {
-  return Match.value(policy).pipe(
-    Match.when("diesAtZeroHp", () => ({
+  return Match.value(creatureInit).pipe(
+    Match.when({ kind: "statBlock" }, () => ({
       policy: "diesAtZeroHp" as const,
     })),
-    Match.when("usesDeathSavingThrows", () => ({
-      policy: "usesDeathSavingThrows" as const,
-      deathSaves: resetDeathSaveRuntimeState(),
-    })),
+    Match.when({ kind: "character" }, (characterInit) => {
+      const zeroHpLifecycle = characterInit.zeroHpLifecycle ?? {
+        policy: "usesDeathSavingThrows" as const,
+        deathSaves: resetDeathSaveRuntimeState(),
+      };
+      if (Number(characterInit.currentHp) > 0) {
+        if (characterInit.zeroHpLifecycle !== undefined) {
+          throw new Error(
+            "Positive-HP character battle initialization cannot carry zero-HP lifecycle state.",
+          );
+        }
+        return zeroHpLifecycle;
+      }
+      if (!validDeathSaveRuntimeState(zeroHpLifecycle.deathSaves)) {
+        throw new Error(
+          "Character battle initialization zero-HP lifecycle is invalid.",
+        );
+      }
+      return zeroHpLifecycle;
+    }),
     Match.exhaustive,
   );
 }
@@ -1645,6 +1694,7 @@ function spendAttackAction(
 
 function resolveEndTurn(
   state: BattleState,
+  deathSavingThrowRoll?: DieRollResult,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   const initiative = nextInitiative(state.initiative);
   const nextActorId = currentActing(initiative);
@@ -1657,10 +1707,18 @@ function resolveEndTurn(
         : combatant,
     );
   }
+  const afterDeathSavingThrow =
+    deathSavingThrowRoll === undefined
+      ? combatants
+      : applyStartTurnDeathSavingThrow(
+          combatants,
+          nextActorId,
+          deathSavingThrowRoll,
+        );
   const nextState = {
     ...state,
     initiative,
-    combatants: expireStartOfTurnEffects(combatants, nextActorId),
+    combatants: expireStartOfTurnEffects(afterDeathSavingThrow, nextActorId),
     currentTurnResources: resetTurnActionEconomy(state.currentTurnResources),
   };
 
@@ -1690,16 +1748,59 @@ function expireStartOfTurnEffects(
 
 function resolveEndTurnCommand(
   input: BattleResolutionInput,
-): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (input.fills.length > 0) {
+): BattleResolutionResult {
+  const initiative = nextInitiative(input.state.initiative);
+  const nextActorId = currentActing(initiative);
+  const nextActor = input.state.combatants.get(nextActorId);
+  const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
+  if (needsDeathSavingThrow && input.fills.length === 0) {
+    return {
+      tag: "needsHoles",
+      subject: input.subject,
+      holes: [deathSavingThrowHole(nextActorId)],
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+
+  if (input.fills.length > 1) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn does not accept battle fills.",
+      "End Turn accepts at most one Death Saving Throw fill.",
     );
   }
 
-  return resolveEndTurn(input.state);
+  const [deathSavingThrowFill] = input.fills;
+  if (
+    (needsDeathSavingThrow &&
+      deathSavingThrowFill?.kind !== "deathSavingThrow") ||
+    (!needsDeathSavingThrow && deathSavingThrowFill !== undefined)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      needsDeathSavingThrow
+        ? "End Turn requires a Death Saving Throw fill for the next actor."
+        : "End Turn does not accept battle fills.",
+    );
+  }
+  if (
+    deathSavingThrowFill?.kind === "deathSavingThrow" &&
+    deathSavingThrowFill.holeId !== DEATH_SAVING_THROW_HOLE_ID
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Death Saving Throw fill does not match the requested hole.",
+    );
+  }
+
+  return resolveEndTurn(
+    input.state,
+    deathSavingThrowFill?.kind === "deathSavingThrow"
+      ? deathSavingThrowFill.value
+      : undefined,
+  );
 }
 
 function resetPerTurnCharacterResources(
@@ -2150,15 +2251,19 @@ function applyInitialZeroHpLifecycle(
     return combatant;
   }
 
-  return applyDropToZeroHpLifecycle(combatant);
+  return Match.value(combatant.zeroHpLifecycle).pipe(
+    Match.when({ policy: "diesAtZeroHp" }, () => combatant),
+    Match.when({ policy: "usesDeathSavingThrows" }, () => ({
+      ...combatant,
+      conditions: applyCondition(combatant.conditions, "unconscious"),
+    })),
+    Match.exhaustive,
+  );
 }
 
 function applyDropToZeroHpLifecycle(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
-  // SRD boundary: only the immediate zero-HP consequence is applied here.
-  // Later turn-start Death Saving Throw rolls, Stable recovery, and post-battle
-  // character handoff are deliberately outside this battle-runtime spec.
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
@@ -2192,6 +2297,64 @@ function applyDamageAtZeroHp(
     })),
     Match.exhaustive,
   );
+}
+
+function startTurnDeathSavingThrowRequired(
+  combatant: BattleCreatureState | undefined,
+): combatant is BattleCreatureState & {
+  readonly zeroHpLifecycle: Extract<
+    ZeroHpLifecycle,
+    { readonly policy: "usesDeathSavingThrows" }
+  >;
+} {
+  return (
+    combatant !== undefined &&
+    Number(combatant.hp) === 0 &&
+    combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
+    !combatant.zeroHpLifecycle.deathSaves.stable &&
+    !combatant.zeroHpLifecycle.deathSaves.dead
+  );
+}
+
+function applyStartTurnDeathSavingThrow(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  roll: DieRollResult,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const combatant = combatants.get(actorId);
+  if (!startTurnDeathSavingThrowRequired(combatant)) {
+    return combatants;
+  }
+
+  const deathSaves = resolveDeathSavingThrow(
+    combatant.zeroHpLifecycle.deathSaves,
+    Number(roll),
+  );
+  const nextCombatant = {
+    ...combatant,
+    hp: deathSaves.hpRegained ? Hp(1) : combatant.hp,
+    conditions: deathSaves.hpRegained
+      ? removeCondition(combatant.conditions, "unconscious")
+      : combatant.conditions,
+    zeroHpLifecycle: {
+      ...combatant.zeroHpLifecycle,
+      deathSaves,
+    },
+  };
+
+  return new Map(combatants).set(actorId, nextCombatant);
+}
+
+function deathSavingThrowHole(
+  actorId: CombatantId,
+): BattleDeathSavingThrowHole {
+  return {
+    kind: "deathSavingThrow",
+    holeInstanceKey: DEATH_SAVING_THROW_HOLE_INSTANCE,
+    holeId: DEATH_SAVING_THROW_HOLE_ID,
+    label: "Death Saving Throw",
+    combatantId: actorId,
+  };
 }
 
 function applyInstantDeath(

@@ -16,6 +16,7 @@ import type { McpCompositionRoot } from "./composition-root.ts";
 import {
   availableCharacterSession,
   characterBattleSpellSlots,
+  characterSessionCurrentHp,
   type CharacterSession,
 } from "./session-store.ts";
 import {
@@ -121,6 +122,7 @@ const CharacterSessionRowSchema = Schema.Union(
     hitPoints: Schema.Struct({
       current: Schema.Number,
       maximum: Schema.Number,
+      state: JsonObjectSchema,
     }),
     spellSlots: Schema.optionalWith(Schema.Array(JsonObjectSchema), {
       exact: true,
@@ -367,8 +369,9 @@ function characterListRow(
       displayName: characterBuildDisplayName(unitLibrary, session.build),
       build: session.build,
       hitPoints: {
-        current: session.currentHp,
+        current: characterSessionCurrentHp(session),
         maximum: session.build.hitPoints.maximum,
+        state: session.hitPoints,
       },
       ...(characterBattleSpellSlots(session) === undefined
         ? {}

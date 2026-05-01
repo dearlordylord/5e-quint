@@ -293,7 +293,7 @@ describe("end-user promoted MCP vertical", () => {
         sourceDraftId: draftId,
         status: "available",
         displayName: "Orc Soldier Fighter",
-        hitPoints: { current: 5, maximum: 12 },
+        hitPoints: expect.objectContaining({ current: 5, maximum: 12 }),
         build: expect.objectContaining({
           background: "background_soldier",
           species: "species_orc",
@@ -602,13 +602,13 @@ describe("end-user promoted MCP vertical", () => {
       expect.objectContaining({
         sourceDraftId: fighterDraftId,
         status: "available",
-        hitPoints: { current: 16, maximum: 20 },
+        hitPoints: expect.objectContaining({ current: 16, maximum: 20 }),
       }),
       expect.objectContaining({
         sourceDraftId: wizardDraftId,
         characterId: wizardDraftId,
         status: "available",
-        hitPoints: { current: 8, maximum: 8 },
+        hitPoints: expect.objectContaining({ current: 8, maximum: 8 }),
         spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],
       }),
     ]);

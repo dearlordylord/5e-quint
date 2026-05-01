@@ -216,7 +216,8 @@ function workflowGuide() {
       "If an act has initialHoles, call fill_battle_hole with one fill at a time, reusing the same subject until result.tag is resolved.",
       "If an act has no holes, call resolve_battle_act with the returned subject.",
       "Call end_turn only when no transientBattleFills are pending.",
-      "Call end_battle only when no transientBattleFills are pending, then list_characters for durable HP and Spell Slot handoff.",
+      "If end_turn asks for a Death Saving Throw hole, fill that pending subject before taking other battle actions.",
+      "Call end_battle only when no transientBattleFills are pending, then list_characters for durable HP, zero-HP lifecycle, and Spell Slot handoff.",
     ],
     resultPaths: {
       creationHoles: "holes",
@@ -252,7 +253,7 @@ function workflowGuide() {
     limits: [
       "The current slice supports Orc Soldier Fighter 1, Orc Soldier Fighter 2, Orc Soldier Wizard 1, Goblin Warrior, and Skeleton workflows.",
       "MCP does not roll dice. Use user-provided or external dice results.",
-      "Post-battle handoff for 0 HP characters is still outside this slice.",
+      "Rest and revival workflows remain outside this slice after typed zero-HP character closeout.",
     ],
   };
 }

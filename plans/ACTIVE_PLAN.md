@@ -298,13 +298,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 38,
       "id": "PBA5",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Restore Death Save Turn Lifecycle"
     },
     {
       "number": 39,
       "id": "PBA6",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Restore Second Wind And Bonus-Action Subjects"
     },
     {
@@ -437,8 +437,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | done               | PBA1                 | PBA3                                | Audited battle-runtime and MCP composition for named-ability reducer drift; found Action Surge support-gate drift and recorded the evidence in `plans/pba2-named-ability-drift-audit.md`.                        | Completed; PBA3 is unblocked to centralize Action Surge support-gate parsing.             |
 | 36    | PBA3 - Correct First Reducer Extensibility Drift                 | done               | PBA2                 | PBA4                                | Centralized Action Surge support-gate parsing so discovery and resolution share one executable admitted Unit feature shape.                                                                                      | Completed; PBA4 is unblocked.                                                            |
 | 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | done               | PBA3                 | PBA5                                | Completed. Protocol docs still agree after PBA0-PBA3, and the first BA12 feature-parity backlog candidate is promoted to ready work.                                                                             | Completed; PBA5 is unblocked.                                                            |
-| 38    | PBA5 - Restore Death Save Turn Lifecycle                         | ready-for-research | PBA4                 | PBA6                                | Restore start-turn Death Saving Throw rolls, Stable handoff, and zero-HP closeout through battle/runtime and character-session state.                                                                            | Ready; PBA4 completed the protocol-doc and queue alignment gate.                           |
-| 39    | PBA6 - Restore Second Wind And Bonus-Action Subjects             | blocked            | PBA5                 | PBA7                                | Restore UnitRecord-backed Second Wind and the reusable Bonus Action subject/resource protocol without projected executable reducers.                                                                             | Blocked behind zero-HP feature-parity work.                                               |
+| 38    | PBA5 - Restore Death Save Turn Lifecycle                         | done               | PBA4                 | PBA6                                | Restored start-turn Death Saving Throw rolls, Stable handoff, and zero-HP closeout through battle/runtime and character-session state.                                                                            | Completed; PBA6 is unblocked.                                                            |
+| 39    | PBA6 - Restore Second Wind And Bonus-Action Subjects             | ready-for-implementation-after-light-research | PBA5                 | PBA7                                | Restore UnitRecord-backed Second Wind and the reusable Bonus Action subject/resource protocol without projected executable reducers.                                                                             | Ready; perform the listed RAW/action-resource checks before editing.                       |
 | 40    | PBA7 - Restore Save-Gate Damage Spell Procedure                  | blocked            | PBA6                 | PBA8                                | Restore Acid Splash-style save-gate damage spell acts as UnitRecord-backed spell holes and shared save/damage procedures.                                                                                        | Blocked behind bonus-action feature subject work.                                         |
 | 41    | PBA8 - Restore Persistent Spell Effects And Concentration        | blocked            | PBA7                 | PBA9                                | Restore Mage Armor/persistent AC override, concentration, and readied spell lifecycle through runtime state and spell-effect procedures.                                                                         | Blocked behind save-gate spell procedure work.                                            |
 | 42    | PBA9 - Restore Reaction Windows And Interrupt Stack              | blocked            | PBA8                 | PBA10                               | Restore reusable reaction windows and interrupt stack behavior for attacks, spells, saves, and after-damage effects.                                                                                             | Blocked behind persistent effect/concentration work.                                      |
@@ -2777,14 +2777,14 @@ PBA4 source-only closeout check:
 
 ### Task 38 - PBA5 - Restore Death Save Turn Lifecycle
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA4
 Blocks: PBA6
 
 Batch: old Core feature-parity restoration.
 
-Next action: research and restore the first zero-HP lifecycle width slice.
+Completed: restored the first zero-HP lifecycle width slice.
 
 Backlog candidate:
 
@@ -2817,11 +2817,11 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA6.
+- PBA6 is unblocked.
 
 ### Task 39 - PBA6 - Restore Second Wind And Bonus-Action Subjects
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA5
 Blocks: PBA7

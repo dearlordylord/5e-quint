@@ -119,11 +119,19 @@ current HP is handed back from the battle-owned character combatant to that
 session during closeout; Goblin Warrior remains a closed battle combatant and
 never becomes a character-list row.
 
+Zero-HP handoff:
+
+- `end_battle` persists Character-session HP as either positive HP or typed
+  zero-HP lifecycle state. The zero-HP branch distinguishes unstable Death
+  Saving Throw counters, Stable recovery after `1d4` hours, and dead state.
+- Battle runtime remains the HP mutation authority during combat. The character
+  session stores the closeout fact needed for `list_characters`, rest/recovery,
+  or revival workflows; it does not keep a second combat HP total.
+
 Remaining first-vertical gates:
 
-- post-battle handoff currently accepts reduced positive character HP. Zero-HP,
-  Death Saving Throw, Stable, dead, rest, and broader adventuring-state handoff
-  facts remain deferred to later runtime width;
+- broader rest/revival workflows remain deferred beyond the typed closeout
+  state;
 - broader character choices, monster spellcasting, Multiattack, long-range
   Disadvantage, reactions, casting spells with higher-level Spell Slots,
   persistent spell effects such as Mage Armor, and post-turn lifecycle subjects

@@ -9,10 +9,15 @@ import type {
   CharacterBattleSpellSlotState,
   BattleState,
   BattleSubject,
+  CharacterZeroHpLifecycleInit,
   CharacterId,
 } from "@dnd/battle-runtime";
 import { snapshotBattle } from "@dnd/battle-runtime";
-import type { Hp } from "@dnd/shared/types";
+import { Hp, type Hp as HpType } from "@dnd/shared/types";
+import type {
+  DeathSaveCount,
+  DeathSaves,
+} from "@dnd/shared-algebras/death-saves-algebra";
 import type {
   StatBlockCatalog,
   StatBlockId,
@@ -32,15 +37,61 @@ export type AvailableCharacterSession =
       readonly tag: "available";
       readonly characterId: CharacterId;
       readonly build: SpellcastingCharacterBuild;
-      readonly currentHp: Hp;
+      readonly hitPoints: CharacterSessionHitPoints;
       readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
     }
   | {
       readonly tag: "available";
       readonly characterId: CharacterId;
       readonly build: NonSpellcastingCharacterBuild;
-      readonly currentHp: Hp;
+      readonly hitPoints: CharacterSessionHitPoints;
       readonly spellSlots?: never;
+    };
+
+export type CharacterSessionHitPoints =
+  | {
+      readonly tag: "positive";
+      readonly currentHp: HpType;
+    }
+  | {
+      readonly tag: "zero";
+      readonly lifecycle: CharacterSessionZeroHpLifecycle;
+    };
+
+type CharacterSessionPendingDeathSaveCount = Exclude<DeathSaveCount, 3>;
+type CharacterSessionPendingDeathSaves = {
+  readonly successes: CharacterSessionPendingDeathSaveCount;
+  readonly failures: CharacterSessionPendingDeathSaveCount;
+};
+type CharacterSessionDeadDeathSaves = {
+  readonly successes: CharacterSessionPendingDeathSaveCount;
+  readonly failures: 3;
+};
+type CharacterSessionStableZeroHpLifecycle = {
+  readonly tag: "stable";
+  readonly recovery: { readonly kind: "regains1HpAfter1d4Hours" };
+};
+
+export type CharacterSessionZeroHpLifecycle =
+  | {
+      readonly tag: "unstable";
+      readonly deathSaves: CharacterSessionPendingDeathSaves;
+    }
+  | CharacterSessionStableZeroHpLifecycle
+  | {
+      readonly tag: "dead";
+      readonly deathSaves: CharacterSessionDeadDeathSaves;
+    };
+
+export type CharacterSessionZeroHpLifecycleInput =
+  | {
+      readonly tag: "unstable";
+      readonly deathSaves: DeathSaves;
+    }
+  | CharacterSessionStableZeroHpLifecycle
+  | {
+      readonly tag: "dead";
+      readonly deathSaves: DeathSaves;
     };
 
 export type CharacterSpellSlotExpenditure = {
@@ -53,7 +104,8 @@ export type CharacterSpellSlotExpenditure = {
 export type AvailableCharacterSessionInput = {
   readonly characterId: CharacterId;
   readonly build: CharacterBuild;
-  readonly currentHp: Hp;
+  readonly currentHp: HpType;
+  readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
 
@@ -70,7 +122,7 @@ export function availableCharacterSession(
       tag: "available",
       characterId: input.characterId,
       build: input.build,
-      currentHp: input.currentHp,
+      hitPoints: characterSessionHitPoints(input),
     };
   }
 
@@ -83,7 +135,7 @@ export function availableCharacterSession(
     tag: "available",
     characterId: input.characterId,
     build,
-    currentHp: input.currentHp,
+    hitPoints: characterSessionHitPoints(input),
     spellSlotExpenditures: spellSlotExpendituresFromInput({
       characterId: input.characterId,
       build,
@@ -91,6 +143,96 @@ export function availableCharacterSession(
       spellSlots: input.spellSlots,
     }),
   };
+}
+
+export function characterSessionCurrentHp(
+  session: AvailableCharacterSession,
+): HpType {
+  return session.hitPoints.tag === "positive"
+    ? session.hitPoints.currentHp
+    : Hp(0);
+}
+
+export function characterBattleZeroHpLifecycle(
+  session: AvailableCharacterSession,
+): CharacterZeroHpLifecycleInit | undefined {
+  if (session.hitPoints.tag === "positive") return undefined;
+  const lifecycle = session.hitPoints.lifecycle;
+  if (lifecycle.tag === "stable") {
+    return {
+      policy: "usesDeathSavingThrows",
+      deathSaves: {
+        deathSaves: { successes: 0, failures: 0 },
+        stable: true,
+        dead: false,
+        hpRegained: false,
+      },
+    };
+  }
+  if (lifecycle.tag === "dead") {
+    return {
+      policy: "usesDeathSavingThrows",
+      deathSaves: {
+        deathSaves: lifecycle.deathSaves,
+        stable: false,
+        dead: true,
+        hpRegained: false,
+      },
+    };
+  }
+  return {
+    policy: "usesDeathSavingThrows",
+    deathSaves: {
+      deathSaves: lifecycle.deathSaves,
+      stable: false,
+      dead: false,
+      hpRegained: false,
+    },
+  };
+}
+
+function characterSessionHitPoints(
+  input: Pick<AvailableCharacterSessionInput, "currentHp" | "zeroHpLifecycle">,
+): CharacterSessionHitPoints {
+  if (Number(input.currentHp) > 0) {
+    if (input.zeroHpLifecycle !== undefined) {
+      throw new Error(
+        "Positive-HP character session cannot carry zero-HP state.",
+      );
+    }
+    return { tag: "positive", currentHp: input.currentHp };
+  }
+  return {
+    tag: "zero",
+    lifecycle: canonicalZeroHpLifecycle(
+      input.zeroHpLifecycle ?? {
+        tag: "unstable",
+        deathSaves: { successes: 0, failures: 0 },
+      },
+    ),
+  };
+}
+
+function canonicalZeroHpLifecycle(
+  lifecycle: CharacterSessionZeroHpLifecycleInput,
+): CharacterSessionZeroHpLifecycle {
+  if (lifecycle.tag === "stable") return lifecycle;
+  if (lifecycle.tag === "dead") {
+    const { successes, failures } = lifecycle.deathSaves;
+    if (successes === 3 || failures !== 3) {
+      throw new Error(
+        "Dead character session requires exactly three death save failures.",
+      );
+    }
+    return { tag: "dead", deathSaves: { successes, failures } };
+  }
+  const { successes, failures } = lifecycle.deathSaves;
+  if (successes === 3 || failures === 3) {
+    throw new Error(
+      "Unstable character session cannot carry terminal death save counts.",
+    );
+  }
+  return { tag: "unstable", deathSaves: { successes, failures } };
 }
 
 export function characterBattleSpellSlots(

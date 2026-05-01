@@ -17,9 +17,10 @@ module battleRuntime {
   //   monsters use Monster Death at 0 HP; Character Build combatants use the
   //   Death Saving Throw lifecycle, including instant death from massive
   //   damage. This spec covers the immediate HP-mutation boundary: drop to
-  //   0 HP, damage at 0 HP, Critical Hit damage at 0 HP, and Massive Damage.
-  //   Start-turn Death Saving Throw rolls, Stable recovery/handoff, and
-  //   post-battle character closeout are future width, not part of this spec.
+  //   0 HP, damage at 0 HP, Critical Hit damage at 0 HP, Massive Damage, and
+  //   start-turn Death Saving Throw rolls through Stable/dead/natural-20
+  //   outcomes. Stable 1d4-hour recovery and post-battle character closeout
+  //   are represented in TypeScript session state, not in this battle spec.
   // - Classes/Fighter.md lines 76-80: Action Surge grants one additional action
   //   except Magic, spends one use per Short or Long Rest, and is limited to
   //   once per turn.
@@ -58,6 +59,8 @@ module battleRuntime {
     tempHp: int,
     ac: int,
     unconscious: bool,
+    stable: bool,
+    deathSuccesses: int,
     deathFailures: int,
     lifecycle: ZeroHpLifecycle,
   }
@@ -96,6 +99,8 @@ module battleRuntime {
       tempHp: 0,
       ac: 10,
       unconscious: false,
+      stable: false,
+      deathSuccesses: 0,
       deathFailures: 0,
       lifecycle: UsesDeathSavingThrows,
     },
@@ -105,6 +110,8 @@ module battleRuntime {
       tempHp: 0,
       ac: 15,
       unconscious: false,
+      stable: false,
+      deathSuccesses: 0,
       deathFailures: 0,
       lifecycle: DiesAtZeroHp,
     },
@@ -170,6 +177,15 @@ module battleRuntime {
       actionAvailable: true,
       bonusActionAvailable: true,
     }
+
+  pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
+    val advanced = endTurn(state)
+
+    if (currentActor(advanced) == Fighter)
+      { ...advanced, fighter: applyStartTurnDeathSave(advanced.fighter, deathSaveRoll) }
+    else
+      advanced
+  }
 
   pure def attackHits(total: int, naturalD20: int, armorClass: int): bool =
     if (naturalD20 == 1) false
@@ -310,7 +326,7 @@ module battleRuntime {
   pure def applyDropToZeroHp(target: Combatant): Combatant =
     match target.lifecycle {
       | DiesAtZeroHp => target
-      | UsesDeathSavingThrows => { ...target, unconscious: true, deathFailures: 0 }
+      | UsesDeathSavingThrows => { ...target, unconscious: true, stable: false, deathSuccesses: 0, deathFailures: 0 }
     }
 
   pure def applyDamageAtZeroHp(target: Combatant, deathFailuresAtZeroHp: int): Combatant =
@@ -318,6 +334,7 @@ module battleRuntime {
       | DiesAtZeroHp => target
       | UsesDeathSavingThrows => {
           ...target,
+          stable: false,
           unconscious: true,
           deathFailures: if (target.deathFailures + deathFailuresAtZeroHp > 3) 3 else target.deathFailures + deathFailuresAtZeroHp,
         }
@@ -326,7 +343,24 @@ module battleRuntime {
   pure def applyInstantDeath(target: Combatant): Combatant =
     match target.lifecycle {
       | DiesAtZeroHp => target
-      | UsesDeathSavingThrows => { ...target, unconscious: true, deathFailures: 3 }
+      | UsesDeathSavingThrows => { ...target, unconscious: true, stable: false, deathFailures: 3 }
+    }
+
+  pure def applyStartTurnDeathSave(target: Combatant, deathSaveRoll: int): Combatant =
+    if (target.lifecycle != UsesDeathSavingThrows or target.hp != 0 or target.stable or target.deathFailures >= 3)
+      target
+    else if (deathSaveRoll == 20)
+      { ...target, hp: 1, unconscious: false, stable: false, deathSuccesses: 0, deathFailures: 0 }
+    else if (deathSaveRoll == 1)
+      applyDamageAtZeroHp(target, 2)
+    else if (deathSaveRoll >= 10) {
+      val successes = if (target.deathSuccesses + 1 > 3) 3 else target.deathSuccesses + 1
+      if (successes >= 3)
+        { ...target, stable: true, deathSuccesses: 0, deathFailures: 0 }
+      else
+        { ...target, deathSuccesses: successes }
+    } else {
+      applyDamageAtZeroHp(target, 1)
     }
 
   run test_initial_holes_cover_attack_target = {
@@ -498,6 +532,40 @@ module battleRuntime {
       assert(result.hp == 0),
       assert(result.unconscious),
       assert(result.deathFailures == 3),
+    }
+  }
+
+  run test_start_turn_death_save_failure_adds_one_failure = {
+    val result = endTurnWithDeathSave(withFighterHp(endTurn(initialState), 0, 0), 5)
+    all {
+      assert(currentActor(result) == Fighter),
+      assert(result.fighter.hp == 0),
+      assert(result.fighter.unconscious),
+      assert(result.fighter.deathFailures == 1),
+    }
+  }
+
+  run test_start_turn_death_save_success_three_stabilizes = {
+    val fighter = { ...withFighterHp(initialState, 0, 0).fighter, unconscious: true, deathSuccesses: 2, deathFailures: 1 }
+    val result = endTurnWithDeathSave({ ...endTurn(initialState), fighter: fighter }, 10)
+    all {
+      assert(result.fighter.hp == 0),
+      assert(result.fighter.unconscious),
+      assert(result.fighter.stable),
+      assert(result.fighter.deathSuccesses == 0),
+      assert(result.fighter.deathFailures == 0),
+    }
+  }
+
+  run test_start_turn_death_save_natural_twenty_restores_one_hp = {
+    val fighter = { ...withFighterHp(initialState, 0, 0).fighter, deathSuccesses: 1, deathFailures: 2 }
+    val result = endTurnWithDeathSave({ ...endTurn(initialState), fighter: fighter }, 20)
+    all {
+      assert(result.fighter.hp == 1),
+      assert(not(result.fighter.unconscious)),
+      assert(not(result.fighter.stable)),
+      assert(result.fighter.deathSuccesses == 0),
+      assert(result.fighter.deathFailures == 0),
     }
   }
 

@@ -3,6 +3,7 @@ import {
   resolveBattleSubject,
   sameBattleSubject,
   snapshotBattle,
+  type BattleFill,
   type BattleResolutionResult,
   type BattleState,
 } from "@dnd/battle-runtime";
@@ -157,22 +158,7 @@ export function handleBattleToolCall(
 
       const fills = [...(previous?.fills ?? []), matched.args.fill];
       const result = resolveBattleSubject({ state, subject, fills });
-      if (result.tag === "resolved") {
-        root.sessionStore.battleState = result.state;
-        root.sessionStore.transientBattleFills = null;
-        return schemaJsonContent(
-          BattleResolutionOutputSchema,
-          battleResolutionPayload(root, result),
-        );
-      }
-      if (result.tag === "needsHoles") {
-        root.sessionStore.transientBattleFills = { subject, fills };
-        return schemaJsonContent(
-          BattleResolutionOutputSchema,
-          battleResolutionPayload(root, result),
-        );
-      }
-
+      storeBattleResolution(root, result, fills);
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -204,9 +190,7 @@ export function handleBattleToolCall(
         subject: matched.args.subject,
         fills: [],
       });
-      if (result.tag === "resolved") {
-        root.sessionStore.battleState = result.state;
-      }
+      storeBattleResolution(root, result, []);
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -227,10 +211,7 @@ export function handleBattleToolCall(
         },
         fills: [],
       });
-      if (result.tag === "resolved") {
-        root.sessionStore.battleState = result.state;
-        root.sessionStore.transientBattleFills = null;
-      }
+      storeBattleResolution(root, result, []);
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -261,6 +242,24 @@ export function handleBattleToolCall(
     }),
     Match.exhaustive,
   );
+}
+
+function storeBattleResolution(
+  root: McpCompositionRoot,
+  result: BattleResolutionResult,
+  fills: readonly BattleFill[],
+): void {
+  if (result.tag === "resolved") {
+    root.sessionStore.battleState = result.state;
+    root.sessionStore.transientBattleFills = null;
+    return;
+  }
+  if (result.tag === "needsHoles") {
+    root.sessionStore.transientBattleFills = {
+      subject: result.subject,
+      fills,
+    };
+  }
 }
 
 function unknownStatBlockContent(statBlockId: string, error: unknown) {

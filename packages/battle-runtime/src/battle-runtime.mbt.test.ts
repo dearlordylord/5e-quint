@@ -413,6 +413,9 @@ function projectHole(hole: BattleHole): MbtHole {
       }
       return "DamageRoll" as const;
     }),
+    Match.when({ kind: "deathSavingThrow" }, () => {
+      throw new Error("Battle runtime MBT does not model death-save holes.");
+    }),
     Match.exhaustive,
   );
 }

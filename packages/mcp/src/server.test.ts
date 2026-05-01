@@ -7,6 +7,7 @@ import {
   discoverBattleActs,
   initiativeScore,
   snapshotBattle,
+  type BattleState,
 } from "@dnd/battle-runtime";
 import {
   characterDraftId,
@@ -464,7 +465,7 @@ describe("MCP server route", () => {
       root.sessionStore.characters.get(characterDraftId(secondDraftId)),
     ).toMatchObject({
       tag: "available",
-      currentHp: 12,
+      hitPoints: { tag: "positive", currentHp: 12 },
     });
   });
 
@@ -1156,7 +1157,7 @@ describe("MCP server route", () => {
         tag: "available",
         characterId: draftId,
         build: finalized.finalization.build,
-        currentHp: 12,
+        hitPoints: { tag: "positive", currentHp: 12 },
       },
     );
     expect(finalized.session).toMatchObject({
@@ -1381,7 +1382,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(characterDraftId(draftId))).toEqual(
       expect.objectContaining({
         tag: "available",
-        currentHp: 5,
+        hitPoints: { tag: "positive", currentHp: 5 },
       }),
     );
 
@@ -1393,7 +1394,7 @@ describe("MCP server route", () => {
         sourceDraftId: draftId,
         status: "available",
         displayName: "Orc Soldier Fighter",
-        hitPoints: { current: 5, maximum: 12 },
+        hitPoints: expect.objectContaining({ current: 5, maximum: 12 }),
         build: expect.objectContaining({
           background: "background_soldier",
           species: "species_orc",
@@ -1406,6 +1407,330 @@ describe("MCP server route", () => {
           character.displayName === "Goblin Warrior",
       ),
     ).toBe(false);
+  });
+
+  test("ends battle with a Stable zero-HP character session lifecycle", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-stable-zero-hp-closeout";
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-stable-zero-hp-closeout",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            sourceDraftId: draftId,
+            combatantId: "fighter",
+            initiative: 12,
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 10,
+          },
+        ],
+      }),
+    );
+    const battleState = root.sessionStore.battleState;
+    const fighter = battleState?.combatants.get(fighterId);
+    if (
+      battleState === null ||
+      fighter === undefined ||
+      fighter.zeroHpLifecycle.policy !== "usesDeathSavingThrows"
+    ) {
+      throw new Error("Expected in-battle Fighter character combatant.");
+    }
+    root.sessionStore.battleState = {
+      ...battleState,
+      combatants: new Map(battleState.combatants).set(fighterId, {
+        ...fighter,
+        hp: Hp(0),
+        zeroHpLifecycle: {
+          ...fighter.zeroHpLifecycle,
+          deathSaves: {
+            deathSaves: { successes: 0, failures: 0 },
+            stable: true,
+            dead: false,
+            hpRegained: false,
+          },
+        },
+      }),
+    } satisfies BattleState;
+
+    const ended = readPayload(handleToolCall(root, "end_battle", {}));
+
+    expect(ended.session).toMatchObject({
+      activeBattle: null,
+      transientBattleFills: null,
+    });
+    expect(root.sessionStore.characters.get(characterDraftId(draftId))).toEqual(
+      expect.objectContaining({
+        tag: "available",
+        hitPoints: {
+          tag: "zero",
+          lifecycle: {
+            tag: "stable",
+            recovery: { kind: "regains1HpAfter1d4Hours" },
+          },
+        },
+      }),
+    );
+    expect(readPayload(handleToolCall(root, "list_characters", {}))).toEqual(
+      expect.objectContaining({
+        characters: [
+          expect.objectContaining({
+            sourceDraftId: draftId,
+            hitPoints: expect.objectContaining({
+              current: 0,
+              maximum: 12,
+              state: {
+                tag: "zero",
+                lifecycle: {
+                  tag: "stable",
+                  recovery: { kind: "regains1HpAfter1d4Hours" },
+                },
+              },
+            }),
+          }),
+        ],
+      }),
+    );
+  });
+
+  test("starts battle from a Stable zero-HP character session without resetting death saves", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-stable-zero-hp-start";
+    const build = createFinalizedFighterSheet(root, draftId);
+    root.sessionStore.characters.set(
+      characterDraftId(draftId),
+      availableCharacterSession({
+        characterId: characterId(draftId),
+        build,
+        currentHp: Hp(0),
+        zeroHpLifecycle: {
+          tag: "stable",
+          recovery: { kind: "regains1HpAfter1d4Hours" },
+        },
+      }),
+    );
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-stable-zero-hp-start",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 12,
+          },
+          {
+            kind: "characterSession",
+            sourceDraftId: draftId,
+            combatantId: "fighter",
+            initiative: 10,
+          },
+        ],
+      }),
+    );
+
+    expect(started.snapshot.combatants).toEqual([
+      expect.objectContaining({ combatantId: "goblin" }),
+      expect.objectContaining({
+        combatantId: "fighter",
+        hp: 0,
+        conditions: expect.arrayContaining(["unconscious"]),
+        zeroHpLifecycle: {
+          policy: "usesDeathSavingThrows",
+          deathSaves: { successes: 0, failures: 0 },
+          stable: true,
+          dead: false,
+        },
+      }),
+    ]);
+
+    const afterGoblinTurn = readPayload(
+      handleToolCall(root, "end_turn", { actorId: "goblin" }),
+    );
+    expect(afterGoblinTurn.result.tag).toBe("resolved");
+    expect(afterGoblinTurn.snapshot.currentActorId).toBe("fighter");
+  });
+
+  test("starts battle from a dead zero-HP character session without reviving it", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-dead-zero-hp-start";
+    const build = createFinalizedFighterSheet(root, draftId);
+    root.sessionStore.characters.set(
+      characterDraftId(draftId),
+      availableCharacterSession({
+        characterId: characterId(draftId),
+        build,
+        currentHp: Hp(0),
+        zeroHpLifecycle: {
+          tag: "dead",
+          deathSaves: { successes: 0, failures: 3 },
+        },
+      }),
+    );
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-dead-zero-hp-start",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 12,
+          },
+          {
+            kind: "characterSession",
+            sourceDraftId: draftId,
+            combatantId: "fighter",
+            initiative: 10,
+          },
+        ],
+      }),
+    );
+
+    expect(started.snapshot.combatants).toEqual([
+      expect.objectContaining({ combatantId: "goblin" }),
+      expect.objectContaining({
+        combatantId: "fighter",
+        hp: 0,
+        conditions: expect.arrayContaining(["unconscious"]),
+        zeroHpLifecycle: {
+          policy: "usesDeathSavingThrows",
+          deathSaves: { successes: 0, failures: 3 },
+          stable: false,
+          dead: true,
+        },
+      }),
+    ]);
+
+    const afterGoblinTurn = readPayload(
+      handleToolCall(root, "end_turn", { actorId: "goblin" }),
+    );
+    expect(afterGoblinTurn.result.tag).toBe("resolved");
+    expect(afterGoblinTurn.snapshot.currentActorId).toBe("fighter");
+    expect(afterGoblinTurn.snapshot.combatants).toEqual([
+      expect.objectContaining({ combatantId: "goblin" }),
+      expect.objectContaining({
+        combatantId: "fighter",
+        hp: 0,
+        zeroHpLifecycle: expect.objectContaining({ dead: true }),
+      }),
+    ]);
+  });
+
+  test("rejects non-canonical zero-HP character session lifecycles", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const sessionInput = {
+      characterId: characterId("character:zero-hp-boundary"),
+      build,
+      currentHp: Hp(0),
+    };
+
+    expect(() =>
+      availableCharacterSession({
+        ...sessionInput,
+        zeroHpLifecycle: {
+          tag: "unstable",
+          deathSaves: { successes: 3, failures: 0 },
+        },
+      }),
+    ).toThrow(
+      "Unstable character session cannot carry terminal death save counts.",
+    );
+    expect(() =>
+      availableCharacterSession({
+        ...sessionInput,
+        zeroHpLifecycle: {
+          tag: "unstable",
+          deathSaves: { successes: 0, failures: 3 },
+        },
+      }),
+    ).toThrow(
+      "Unstable character session cannot carry terminal death save counts.",
+    );
+    expect(() =>
+      availableCharacterSession({
+        ...sessionInput,
+        zeroHpLifecycle: {
+          tag: "dead",
+          deathSaves: { successes: 0, failures: 2 },
+        },
+      }),
+    ).toThrow(
+      "Dead character session requires exactly three death save failures.",
+    );
+  });
+
+  test("ends battle with a dead zero-HP character session lifecycle", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-dead-zero-hp-closeout";
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-dead-zero-hp-closeout",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            sourceDraftId: draftId,
+            combatantId: "fighter",
+            initiative: 12,
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 10,
+          },
+        ],
+      }),
+    );
+    const battleState = root.sessionStore.battleState;
+    const fighter = battleState?.combatants.get(fighterId);
+    if (
+      battleState === null ||
+      fighter === undefined ||
+      fighter.zeroHpLifecycle.policy !== "usesDeathSavingThrows"
+    ) {
+      throw new Error("Expected in-battle Fighter character combatant.");
+    }
+    root.sessionStore.battleState = {
+      ...battleState,
+      combatants: new Map(battleState.combatants).set(fighterId, {
+        ...fighter,
+        hp: Hp(0),
+        zeroHpLifecycle: {
+          ...fighter.zeroHpLifecycle,
+          deathSaves: {
+            deathSaves: { successes: 0, failures: 3 },
+            stable: false,
+            dead: true,
+            hpRegained: false,
+          },
+        },
+      }),
+    } satisfies BattleState;
+
+    readPayload(handleToolCall(root, "end_battle", {}));
+
+    expect(root.sessionStore.characters.get(characterDraftId(draftId))).toEqual(
+      expect.objectContaining({
+        tag: "available",
+        hitPoints: {
+          tag: "zero",
+          lifecycle: {
+            tag: "dead",
+            deathSaves: { successes: 0, failures: 3 },
+          },
+        },
+      }),
+    );
   });
 
   test("discovers creation holes through the explicit tool path", () => {
@@ -1628,9 +1953,7 @@ describe("MCP server route", () => {
     });
     expect(
       discoverBattleActs(state).map((act) => act.subject),
-    ).not.toContainEqual(
-      expect.objectContaining({ tag: "actionSpell" }),
-    );
+    ).not.toContainEqual(expect.objectContaining({ tag: "actionSpell" }));
   });
 
   test("keeps spell acts when only shield training is missing", () => {

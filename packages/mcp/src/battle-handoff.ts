@@ -1,5 +1,6 @@
 import type {
   BattleState,
+  BattleCreatureState,
   CharacterBattleSpellSlotState,
   CharacterId,
 } from "@dnd/battle-runtime";
@@ -7,7 +8,10 @@ import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type { Hp } from "@dnd/shared/types";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
-import { availableCharacterSession } from "./session-store.ts";
+import {
+  availableCharacterSession,
+  type CharacterSessionZeroHpLifecycleInput,
+} from "./session-store.ts";
 import { errorContent } from "./tool-content.ts";
 
 export function finalizeCharacterSessionsFromBattle(
@@ -17,21 +21,12 @@ export function finalizeCharacterSessionsFromBattle(
   const updates: {
     readonly sourceDraftId: CharacterDraftId;
     readonly currentHp: Hp;
+    readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
     readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   }[] = [];
 
   for (const combatant of state.combatants.values()) {
     if (combatant.origin.kind !== "character") continue;
-    if (combatant.hp === 0) {
-      return errorContent(
-        "Post-battle handoff for 0 HP characters is outside the first vertical.",
-        {
-          code: "POST_BATTLE_ZERO_HP_DEFERRED",
-          combatantId: combatant.combatantId,
-          characterId: combatant.origin.characterId,
-        },
-      );
-    }
 
     const sourceDraftId = sourceDraftIdForInBattleCharacter(
       root,
@@ -56,6 +51,9 @@ export function finalizeCharacterSessionsFromBattle(
     updates.push({
       sourceDraftId,
       currentHp: combatant.hp,
+      ...(combatant.hp === 0
+        ? { zeroHpLifecycle: characterZeroHpLifecycleFromBattle(combatant) }
+        : {}),
       ...(combatant.origin.spellcasting === undefined
         ? {}
         : { spellSlots: combatant.origin.spellcasting.spellSlots }),
@@ -71,12 +69,34 @@ export function finalizeCharacterSessionsFromBattle(
         characterId: session.characterId,
         build: session.build,
         currentHp: update.currentHp,
+        zeroHpLifecycle: update.zeroHpLifecycle,
         spellSlots: update.spellSlots,
       }),
     );
   }
 
   return null;
+}
+
+function characterZeroHpLifecycleFromBattle(
+  combatant: BattleCreatureState,
+): CharacterSessionZeroHpLifecycleInput {
+  if (combatant.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
+    throw new Error(
+      "Character combatant must use Death Saving Throw lifecycle.",
+    );
+  }
+  const lifecycle = combatant.zeroHpLifecycle.deathSaves;
+  if (lifecycle.dead) {
+    return { tag: "dead", deathSaves: lifecycle.deathSaves };
+  }
+  if (lifecycle.stable) {
+    return {
+      tag: "stable",
+      recovery: { kind: "regains1HpAfter1d4Hours" },
+    };
+  }
+  return { tag: "unstable", deathSaves: lifecycle.deathSaves };
 }
 
 function sourceDraftIdForInBattleCharacter(

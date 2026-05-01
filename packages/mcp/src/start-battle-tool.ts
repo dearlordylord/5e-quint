@@ -12,7 +12,11 @@ import { battleCreatureInitFromCharacterBuild } from "./battle-creature-init.ts"
 import { battleStateProjection } from "./battle-state-projection.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
-import { characterBattleSpellSlots } from "./session-store.ts";
+import {
+  characterBattleSpellSlots,
+  characterBattleZeroHpLifecycle,
+  characterSessionCurrentHp,
+} from "./session-store.ts";
 import {
   type InitialBattleCombatantToolInput,
   type InitialCharacterSessionCombatantToolInput,
@@ -221,7 +225,8 @@ function initialBattleCreatureInits(input: {
           ),
           build: session.build,
           initiative: character.initiative,
-          currentHp: session.currentHp,
+          currentHp: characterSessionCurrentHp(session),
+          zeroHpLifecycle: characterBattleZeroHpLifecycle(session),
           spellSlots: characterBattleSpellSlots(session),
           unitLibrary: input.root.unitLibrary,
         });

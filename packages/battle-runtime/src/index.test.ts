@@ -1186,6 +1186,175 @@ describe("battle runtime", () => {
     });
   });
 
+  test("End Turn asks for a Death Saving Throw when the next actor starts at 0 HP", () => {
+    const targetCharacterId = combatantId("target-character");
+    const state = startBattle({
+      battleId: battleId("battle-character-start-turn-death-save"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+        }),
+      ],
+    });
+
+    const result = endTurn({ state, actorId: fighterId });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      subject: {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "endTurn",
+      },
+      holes: [
+        {
+          kind: "deathSavingThrow",
+          label: "Death Saving Throw",
+          combatantId: targetCharacterId,
+        },
+      ],
+    });
+  });
+
+  test("End Turn consumes a failed Death Saving Throw for the next actor", () => {
+    const targetCharacterId = combatantId("target-character");
+    const state = startBattle({
+      battleId: battleId("battle-character-start-turn-death-save-fail"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+        }),
+      ],
+    });
+    const needsRoll = endTurn({ state, actorId: fighterId });
+    const deathSaveHole = requireHole(needsRoll, "deathSavingThrow");
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "endTurn",
+      },
+      fills: [deathSavingThrowFill(deathSaveHole, 5)],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentActorId: targetCharacterId,
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 0,
+            conditions: expect.arrayContaining(["unconscious", "prone"]),
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 1 },
+              stable: false,
+              dead: false,
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  test("Death Saving Throw success three makes the next actor Stable", () => {
+    const targetCharacterId = combatantId("target-character");
+    const state = characterWithDeathSaveCounters({
+      combatantId: targetCharacterId,
+      successes: 2,
+      failures: 1,
+    });
+    const needsRoll = endTurn({ state, actorId: fighterId });
+    const deathSaveHole = requireHole(needsRoll, "deathSavingThrow");
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "endTurn",
+      },
+      fills: [deathSavingThrowFill(deathSaveHole, 10)],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentActorId: targetCharacterId,
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 0,
+            conditions: expect.arrayContaining(["unconscious", "prone"]),
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 0 },
+              stable: true,
+              dead: false,
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  test("Death Saving Throw natural 20 restores 1 HP and ends Unconscious", () => {
+    const targetCharacterId = combatantId("target-character");
+    const state = characterWithDeathSaveCounters({
+      combatantId: targetCharacterId,
+      successes: 1,
+      failures: 2,
+    });
+    const needsRoll = endTurn({ state, actorId: fighterId });
+    const deathSaveHole = requireHole(needsRoll, "deathSavingThrow");
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "endTurn",
+      },
+      fills: [deathSavingThrowFill(deathSaveHole, 20)],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentActorId: targetCharacterId,
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 1,
+            conditions: ["prone"],
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 0 },
+              stable: false,
+              dead: false,
+            },
+          },
+        ],
+      },
+    });
+  });
+
   test("snapshotBattle projects current acts from the supplied state", () => {
     const state = {
       ...startBattle({
@@ -2514,7 +2683,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("25 passing");
+  expect(quintOutput).toContain("28 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -2610,6 +2779,8 @@ function renderQntCharacterProjection(
       tempHp: ${input.tempHp},
       ac: 10,
       unconscious: ${input.unconscious},
+      stable: false,
+      deathSuccesses: 0,
       deathFailures: ${input.deathFailures},
       lifecycle: UsesDeathSavingThrows,
     }`;
@@ -2630,6 +2801,8 @@ function renderQntStateProjection(
         tempHp: ${input.fighterTempHp},
         ac: 10,
         unconscious: ${input.fighterUnconscious},
+        stable: false,
+        deathSuccesses: 0,
         deathFailures: ${input.fighterDeathFailures},
         lifecycle: UsesDeathSavingThrows,
       },
@@ -2639,6 +2812,8 @@ function renderQntStateProjection(
         tempHp: ${input.goblinTempHp},
         ac: 15,
         unconscious: false,
+        stable: false,
+        deathSuccesses: 0,
         deathFailures: 0,
         lifecycle: DiesAtZeroHp,
       },
@@ -2824,6 +2999,52 @@ function criticalAttackDamageResult(
   });
 }
 
+function characterWithDeathSaveCounters(input: {
+  readonly combatantId: CombatantId;
+  readonly successes: 0 | 1 | 2;
+  readonly failures: 0 | 1 | 2;
+}): BattleState {
+  const state = startBattle({
+    battleId: battleId("battle-character-start-turn-death-save-counters"),
+    combatants: [
+      characterSeed({ initiative: 20 }),
+      characterSeed({
+        combatantId: input.combatantId,
+        displayName: "Target Fighter",
+        initiative: 10,
+        currentHp: 0,
+        attack: null,
+      }),
+    ],
+  });
+  const combatant = state.combatants.get(input.combatantId);
+  if (
+    combatant === undefined ||
+    combatant.zeroHpLifecycle.policy !== "usesDeathSavingThrows"
+  ) {
+    throw new Error("Expected target character with death-save lifecycle.");
+  }
+
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(input.combatantId, {
+      ...combatant,
+      zeroHpLifecycle: {
+        ...combatant.zeroHpLifecycle,
+        deathSaves: {
+          deathSaves: {
+            successes: input.successes,
+            failures: input.failures,
+          },
+          stable: false,
+          dead: false,
+          hpRegained: false,
+        },
+      },
+    }),
+  };
+}
+
 function requireHole(
   result: ReturnType<typeof resolveBattleSubject>,
   kind: BattleHole["kind"],
@@ -2868,6 +3089,17 @@ function attackRollFill(
       naturalD20: DieRollResult(value.naturalD20),
       ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
     },
+  };
+}
+
+function deathSavingThrowFill(hole: BattleHole, roll: number): BattleFill {
+  if (hole.kind !== "deathSavingThrow") {
+    throw new Error("Expected deathSavingThrow hole.");
+  }
+  return {
+    kind: "deathSavingThrow",
+    holeId: hole.holeId,
+    value: DieRollResult(roll),
   };
 }
 
