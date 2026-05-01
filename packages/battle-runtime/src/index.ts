@@ -779,9 +779,14 @@ export function startBattle(input: {
     );
   }
 
-  const orderedEntries = [...input.combatants]
-    .sort((left, right) => right.initiative - left.initiative)
-    .map((combatant) => ({
+  const orderedEntries = input.combatants
+    .map((combatant, callerOrder) => ({ combatant, callerOrder }))
+    .sort(
+      (left, right) =>
+        right.combatant.initiative - left.combatant.initiative ||
+        left.callerOrder - right.callerOrder,
+    )
+    .map(({ combatant }) => ({
       creature: combatant.combatantId,
       initiative: combatant.initiative,
     }));
@@ -1629,15 +1634,21 @@ function spendAttackAction(
 function resolveEndTurn(
   state: BattleState,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const initiative = nextInitiative(state.initiative);
+  const nextActorId = currentActing(initiative);
   const combatants = new Map<CombatantId, BattleCreatureState>();
   for (const [id, combatant] of state.combatants) {
-    combatants.set(id, resetPerTurnCharacterResources(combatant));
+    combatants.set(
+      id,
+      id === nextActorId
+        ? resetPerTurnCharacterResources(combatant)
+        : combatant,
+    );
   }
-  const initiative = nextInitiative(state.initiative);
   const nextState = {
     ...state,
     initiative,
-    combatants: expireStartOfTurnEffects(combatants, currentActing(initiative)),
+    combatants: expireStartOfTurnEffects(combatants, nextActorId),
     currentTurnResources: resetTurnActionEconomy(state.currentTurnResources),
   };
 

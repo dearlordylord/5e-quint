@@ -107,6 +107,14 @@ module battleRuntimeSlice {
     bonusActionAvailable: true,
   }
 
+  // The promoted runtime receives Initiative counts and the caller-resolved
+  // order for tied counts at the boundary. The slice treats that order as
+  // authoritative once battle starts.
+  pure val callerOrderedTieInitialState: BattleState = {
+    ...initialState,
+    initiative: { round: 1, alreadyActed: [], stillToAct: [Goblin, Fighter] },
+  }
+
   pure def currentActor(state: BattleState): Actor =
     state.initiative.stillToAct[0]
 
@@ -330,6 +338,15 @@ module battleRuntimeSlice {
 
   run test_goblin_turn_opens_stat_block_attack_target_hole = {
     assert(openHoles(endTurn(initialState)) == Set(TargetChoice))
+  }
+
+  run test_caller_ordered_initiative_tie_selects_first_supplied_actor = {
+    all {
+      assert(currentActor(callerOrderedTieInitialState) == Goblin),
+      assert(
+        endTurn(endTurn(callerOrderedTieInitialState)).initiative.stillToAct == [Goblin, Fighter]
+      ),
+    }
   }
 
   run test_goblin_attack_replay_uses_fighter_armor_class = {

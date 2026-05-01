@@ -36,7 +36,9 @@ selection happen before this package is called.
 Every `BattleCreatureInit` contains a caller-supplied Initiative score.
 `@dnd/battle-runtime` orders combatants by those scores; it does not roll
 Initiative, choose passive Initiative scores, or derive monster Initiative from
-Stat Block modifiers during battle initialization.
+Stat Block modifiers during battle initialization. If multiple combatants have
+the same Initiative score, the caller supplies the tie decision by ordering tied
+inputs in `BattleCreatureInit[]`; the runtime preserves that order.
 
 `@dnd/battle-runtime` must not import `@dnd/character-creation-runtime` or Core
 engine packages. Character Build to battle initialization mapping belongs to the
@@ -98,12 +100,14 @@ Initialization:
 
 - start battle from caller-built creature initialization inputs;
 - derive Initiative order and current actor from caller-supplied Initiative
-  scores;
+  scores, preserving caller order for tied scores;
 - derive Hit Points, Armor Class, and zero-HP lifecycle policy.
 
 Turn flow:
 
 - track per-turn action resources through `@dnd/shared-algebras`;
+- reset the next actor's turn action resources when End Turn advances
+  Initiative;
 - expose End Turn as a runtime command, not an Action.
 
 Available acts:
@@ -215,7 +219,7 @@ with an SRD citation or `ASSUMPTIONS.md` entry.
 
 | Runtime behavior                   | Source                                                                                                                                                                                                                                                                        | Notes                                                                                                                                                                                                                                                                                                                     |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Initiative order and current actor | SRD 5.2.1 `Playing-the-Game.md` "Combat" / "Initiative"; `UBIQUITOUS_LANGUAGE.md` "Initiative"                                                                                                                                                                                | Combat is organized into rounds and turns. Initiative determines turn order.                                                                                                                                                                                                                                              |
+| Initiative order and current actor | SRD 5.2.1 `Playing-the-Game.md` "Combat" / "Initiative"; `UBIQUITOUS_LANGUAGE.md` "Initiative"                                                                                                                                                                                | Combat is organized into rounds and turns. Initiative determines turn order. Tied Initiative order is caller-supplied because the SRD assigns tie decisions to the GM or players before runtime execution.                                                                                                                |
 | Stat Block initialization          | SRD 5.2.1 `Rules-Glossary.md` "Stat Block"                                                                                                                                                                                                                                    | Monster AC, Initiative, and HP entries are Stat Block facts consumed at initialization.                                                                                                                                                                                                                                   |
 | Character initialization           | SRD 5.2.1 `Character-Creation.md`; Character Build produced by `@dnd/character-creation-runtime`                                                                                                                                                                              | This runtime consumes finalized build facts; it does not recalculate character-creation legality.                                                                                                                                                                                                                         |
 | Armor Class                        | SRD 5.2.1 `Playing-the-Game.md` "Armor Class"; `Equipment.md` "Armor"                                                                                                                                                                                                         | Armor and Shield facts are resolved before battle initialization.                                                                                                                                                                                                                                                         |
@@ -229,6 +233,21 @@ with an SRD citation or `ASSUMPTIONS.md` entry.
 | Skeleton damage modifiers          | SRD 5.2.1 `Monsters/Monsters-P-S.md` "Skeleton"; `UBIQUITOUS_LANGUAGE.md` "Damage"                                                                                                                                                                                            | Skeleton's Bludgeoning vulnerability and Poison damage immunity modify supported damage before HP mutation.                                                                                                                                                                                                               |
 | Zero-HP lifecycle                  | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points"; `ASSUMPTIONS.md` A12                                                                                                                                                                                              | Stat Block monsters die at `0` HP. Character Build participants use the death-save lifecycle.                                                                                                                                                                                                                             |
 | Incapacitated action gating        | SRD 5.2.1 `Rules-Glossary.md` "Incapacitated [Condition]" and "Unconscious [Condition]"                                                                                                                                                                                       | Incapacitated prevents actions; Unconscious includes Incapacitated.                                                                                                                                                                                                                                                       |
+
+## Old Authority Divergence
+
+For BA5 action-economy overlap, promoted runtime divergence from old root
+`battle.qnt` is categorized as follows:
+
+- **Assumption/runtime boundary:** old root `battle.qnt` can model rolling and
+  sorting Initiative internally; this runtime starts after the caller has rolled
+  Initiative and resolved ties, then preserves that caller-supplied order.
+- **Legacy-only behavior:** old Dash, Dodge, Disengage, Ready, Help, Stand from
+  Prone, mid-battle add/remove, and bonus-action subjects are not exposed here.
+  They remain future width/restoration scope, not BA5 behavior.
+- **Canonical promoted behavior:** End Turn is a runtime command, not a rules
+  Action; action resources remain structured `RuntimeActionResource[]`, and the
+  package does not introduce a duplicate scalar action quota.
 
 ## Files And Verification
 

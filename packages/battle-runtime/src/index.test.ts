@@ -148,6 +148,21 @@ describe("battle runtime", () => {
     });
   });
 
+  test("startBattle preserves caller-supplied order among tied Initiative scores", () => {
+    const state = startBattle({
+      battleId: battleId("battle-tied-initiative"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 12 }),
+        characterSeed({ initiative: 12 }),
+      ],
+    });
+
+    expect(snapshotBattle(state)).toMatchObject({
+      currentActorId: goblinId,
+      turnOrder: [goblinId, fighterId],
+    });
+  });
+
   test("startBattle rejects current HP above max HP", () => {
     expect(() =>
       startBattle({
@@ -1218,6 +1233,21 @@ describe("battle runtime", () => {
     });
   });
 
+  test("endTurn rejects a non-current actor", () => {
+    const state = fighterVsGoblinBattle();
+
+    const result = endTurn({ state, actorId: goblinId });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "wrongActor",
+      snapshot: {
+        currentActorId: fighterId,
+        round: 1,
+      },
+    });
+  });
+
   test("Goblin Warrior discovers authored Scimitar and Shortbow attacks", () => {
     const afterFighter = endTurn({
       state: fighterVsGoblinBattle(),
@@ -1755,6 +1785,20 @@ describe("battle runtime", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const afterFighter = requireResolved(
+      endTurn({ state: surged.state, actorId: fighterId }),
+    );
+    expect(afterFighter.state.combatants.get(fighterId)?.origin).toMatchObject({
+      resources: [expect.objectContaining({ usedThisTurn: true })],
+    });
+
+    const afterGoblin = requireResolved(
+      endTurn({ state: afterFighter.state, actorId: goblinId }),
+    );
+    expect(afterGoblin.state.combatants.get(fighterId)?.origin).toMatchObject({
+      resources: [expect.objectContaining({ usedThisTurn: false })],
+    });
 
     const defeatedActorState = {
       ...startBattle({
@@ -2428,7 +2472,7 @@ function runQuintSliceSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("24 passing");
+  expect(quintOutput).toContain("25 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
