@@ -32,6 +32,7 @@ import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
 import weaponLongswordInput from "../../content/weapon_longsword.json";
 import weaponShortbowInput from "../../content/weapon_shortbow.json";
+import weaponShortswordInput from "../../content/weapon_shortsword.json";
 import weaponSpearInput from "../../content/weapon_spear.json";
 import wizardArcaneRecoveryInput from "../../content/wizard_arcane_recovery.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
@@ -166,6 +167,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     weaponSpearInput,
     weaponFlailInput,
     weaponShortbowInput,
+    weaponShortswordInput,
   ].map((unit) => assertSrd521Unit(decodeUnitRecordSync(unit))),
 });
 

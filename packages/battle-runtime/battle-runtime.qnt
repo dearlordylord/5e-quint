@@ -69,6 +69,11 @@ module battleRuntime {
   //   resources. This spec models the promoted resource boundary with a
   //   representative Goblin recharge part and Legendary Action use pool;
   //   TypeScript carries the authored StatBlockRecord catalog breadth.
+  // - Rules-Glossary.md lines 102-106, 496-514, and 1074 plus
+  //   Equipment.md lines 54-56 and ASSUMPTIONS.md A8/A37: the promoted
+  //   held/wielded hand state, Light-property Off-Hand Attack damage modifier
+  //   behavior, Grapple links, release, Escape Grapple, Grappled attack-roll
+  //   disadvantage, and Grappled movement-cost facts are battle-owned state.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -83,11 +88,17 @@ module battleRuntime {
 
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta
 
+  type CreatureSize = Tiny | Small | Medium | Large | Huge | Gargantuan
+
+  type HandUse = HFree | HMainWeapon | HOffWeapon | HShield | HGrapple
+
   type Hole =
     | TargetChoice
     | AttackRoll
     | DamageRoll
     | SavingThrowOutcome
+    | GrappleOutcome
+    | EscapeGrappleOutcome
     | ReactionDecision
     | StatBlockRechargeRoll
 
@@ -130,7 +141,19 @@ module battleRuntime {
     reactionAvailable: bool,
     speed: int,
     movementSpent: int,
+    creatureSize: CreatureSize,
+    leftHandUse: HandUse,
+    rightHandUse: HandUse,
   }
+
+  type GrappleLink = {
+    escapeDc: int,
+    targetDragCostExempt: bool,
+  }
+
+  type GrappleState =
+    | NoGrapple
+    | FighterGrapplesGoblin(GrappleLink)
 
   type Initiative = {
     round: int,
@@ -144,7 +167,9 @@ module battleRuntime {
     goblin: Combatant,
     actionAvailable: bool,
     bonusActionAvailable: bool,
+    lightWeaponAttackMade: bool,
     fighterReadiedSpellHeld: bool,
+    grapple: GrappleState,
     interruptStack: List[PendingReactionFrame],
     fighterGoblinDistance: int,
     goblinRechargeAvailable: bool,
@@ -188,6 +213,9 @@ module battleRuntime {
       reactionAvailable: true,
       speed: 30,
       movementSpent: 0,
+      creatureSize: Medium,
+      leftHandUse: HFree,
+      rightHandUse: HMainWeapon,
     },
     goblin: {
       hp: 10,
@@ -205,10 +233,15 @@ module battleRuntime {
       reactionAvailable: true,
       speed: 30,
       movementSpent: 0,
+      creatureSize: Small,
+      leftHandUse: HFree,
+      rightHandUse: HFree,
     },
     actionAvailable: true,
     bonusActionAvailable: true,
+    lightWeaponAttackMade: false,
     fighterReadiedSpellHeld: false,
+    grapple: NoGrapple,
     interruptStack: [],
     fighterGoblinDistance: 5,
     goblinRechargeAvailable: true,
@@ -287,6 +320,7 @@ module battleRuntime {
       initiative: advancedInitiative,
       actionAvailable: true,
       bonusActionAvailable: true,
+      lightWeaponAttackMade: false,
       fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and nextActor == Fighter) false else state.fighterReadiedSpellHeld,
       fighter: if (nextActor == Fighter) { ...state.fighter, reactionAvailable: true, movementSpent: 0 } else state.fighter,
       goblin: if (nextActor == Goblin) { ...state.goblin, reactionAvailable: true, movementSpent: 0 } else state.goblin,
@@ -428,9 +462,9 @@ module battleRuntime {
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
-      { ...state, actionAvailable: false }
+      { ...state, actionAvailable: false, lightWeaponAttackMade: true }
     else
-      { ...state, goblin: applyDamage(state.goblin, damageRoll + 3, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+      { ...state, goblin: applyDamage(state.goblin, damageRoll + 3, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
 
   pure def resolveGoblinAttack(
     state: BattleState,
@@ -535,11 +569,84 @@ module battleRuntime {
   pure def movementRemaining(combatant: Combatant): int =
     if (combatant.speed - combatant.movementSpent < 0) 0 else combatant.speed - combatant.movementSpent
 
-  pure def fighterCanMove(state: BattleState, movementCost: int): bool =
+  pure def absInt(value: int): int =
+    if (value < 0) -value else value
+
+  pure def fighterGoblinGrappleExists(state: BattleState): bool =
+    match state.grapple {
+      | NoGrapple => false
+      | FighterGrapplesGoblin(_) => true
+    }
+
+  pure def fighterGoblinGrappleTargetDragCostExempt(state: BattleState): bool =
+    match state.grapple {
+      | NoGrapple => false
+      | FighterGrapplesGoblin(link) => link.targetDragCostExempt
+    }
+
+  pure def grappleDragMovementCostSatisfied(state: BattleState, movementCost: int, destinationDistance: int): bool =
+    not(fighterGoblinGrappleExists(state)) or
+    fighterGoblinGrappleTargetDragCostExempt(state) or
+    movementCost >= if (absInt(destinationDistance - state.fighterGoblinDistance) == 0) 2 else 2 * absInt(destinationDistance - state.fighterGoblinDistance)
+
+  pure def fighterCanMove(state: BattleState, movementCost: int, destinationDistance: int): bool =
     currentActor(state) == Fighter and
     not(state.fighter.unconscious) and
     movementCost > 0 and
-    movementCost <= movementRemaining(state.fighter)
+    movementCost <= movementRemaining(state.fighter) and
+    grappleDragMovementCostSatisfied(state, movementCost, destinationDistance)
+
+  pure def fighterCanGrappleGoblin(state: BattleState): bool =
+    currentActor(state) == Fighter and
+    state.actionAvailable and
+    not(state.fighter.unconscious) and
+    not(fighterGoblinGrappleExists(state)) and
+    state.fighterGoblinDistance <= 5 and
+    state.fighter.leftHandUse == HFree
+
+  pure def grappleFighterGoblin(state: BattleState, targetFailedSave: bool): BattleState =
+    if (not(fighterCanGrappleGoblin(state)))
+      state
+    else if (targetFailedSave)
+      {
+        ...state,
+        actionAvailable: false,
+        fighter: { ...state.fighter, leftHandUse: HGrapple },
+        grapple: FighterGrapplesGoblin({ escapeDc: 13, targetDragCostExempt: false }),
+      }
+    else
+      { ...state, actionAvailable: false }
+
+  pure def releaseFighterGrapple(state: BattleState): BattleState =
+    if (fighterGoblinGrappleExists(state))
+      {
+        ...state,
+        fighter: { ...state.fighter, leftHandUse: HFree },
+        grapple: NoGrapple,
+      }
+    else
+      state
+
+  pure def escapeFighterGrapple(state: BattleState, escapeSucceeded: bool): BattleState =
+    if (currentActor(state) == Goblin and state.actionAvailable and fighterGoblinGrappleExists(state))
+      if (escapeSucceeded)
+        { ...releaseFighterGrapple(state), actionAvailable: false }
+      else
+        { ...state, actionAvailable: false }
+    else
+      state
+
+  pure def goblinAttackRequiresDisadvantage(state: BattleState, targetIsFighter: bool): bool =
+    fighterGoblinGrappleExists(state) and not(targetIsFighter)
+
+  pure def offHandAttackFighter(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int): BattleState =
+    if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
+      if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin)))
+        { ...state, goblin: applyDamage(state.goblin, damageRoll, if (naturalD20 == 20) 2 else 1, false), bonusActionAvailable: false }
+      else
+        { ...state, bonusActionAvailable: false }
+    else
+      state
 
   pure def goblinCanOpportunityAttack(state: BattleState, destinationDistance: int): bool =
     state.goblin.hp > 0 and
@@ -548,7 +655,7 @@ module battleRuntime {
     destinationDistance > 5
 
   pure def applyFighterMovement(state: BattleState, movementCost: int, destinationDistance: int): BattleState =
-    if (fighterCanMove(state, movementCost))
+    if (fighterCanMove(state, movementCost, destinationDistance))
       {
         ...state,
         fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + movementCost },
@@ -558,7 +665,7 @@ module battleRuntime {
       state
 
   pure def moveFighter(state: BattleState, movementCost: int, destinationDistance: int): BattleState =
-    if (not(fighterCanMove(state, movementCost)))
+    if (not(fighterCanMove(state, movementCost, destinationDistance)))
       state
     else if (goblinCanOpportunityAttack(state, destinationDistance))
       openReactionWindow(state, {
@@ -1147,6 +1254,53 @@ module battleRuntime {
 
   run test_movement_over_budget_is_rejected = {
     assert(moveFighter(initialState, 35, 40) == initialState)
+  }
+
+  run test_grapple_release_and_escape_update_link_state = {
+    val grappled = grappleFighterGoblin(initialState, true)
+    val released = releaseFighterGrapple(grappled)
+    val escaped = escapeFighterGrapple(endTurn(grappled), true)
+    all {
+      assert(fighterGoblinGrappleExists(grappled)),
+      assert(grappled.fighter.leftHandUse == HGrapple),
+      assert(not(fighterGoblinGrappleExists(released))),
+      assert(not(fighterGoblinGrappleExists(escaped))),
+    }
+  }
+
+  run test_off_hand_requires_prior_light_attack_and_spends_bonus_action = {
+    val rejected = offHandAttackFighter(initialState, 15, 10, 4)
+    val afterAttack = resolveAttack(initialState, 1, 1, 4, false)
+    val offHand = offHandAttackFighter(afterAttack, 15, 10, 4)
+    all {
+      assert(rejected == initialState),
+      assert(afterAttack.lightWeaponAttackMade),
+      assert(not(offHand.bonusActionAvailable)),
+      assert(offHand.goblin.hp == 6),
+    }
+  }
+
+  run test_grappled_attack_disadvantage_excludes_the_grappler = {
+    val grappled = endTurn(grappleFighterGoblin(initialState, true))
+    all {
+      assert(not(goblinAttackRequiresDisadvantage(grappled, true))),
+      assert(goblinAttackRequiresDisadvantage(grappled, false)),
+    }
+  }
+
+  run test_grapple_drag_cost_is_enforced = {
+    val grappled = grappleFighterGoblin(initialState, true)
+    val underpaid = moveFighter(grappled, 1, 4)
+    val paid = moveFighter(grappled, 2, 4)
+    val underpaidSameDistance = moveFighter(grappled, 1, 5)
+    val paidSameDistance = moveFighter(grappled, 2, 5)
+    all {
+      assert(underpaid == grappled),
+      assert(paid.fighter.movementSpent == 2),
+      assert(paid.fighterGoblinDistance == 4),
+      assert(underpaidSameDistance == grappled),
+      assert(paidSameDistance.fighter.movementSpent == 2),
+    }
   }
 
   run test_movement_leaving_reach_opens_opportunity_attack_window_before_position_commit = {

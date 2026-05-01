@@ -390,6 +390,7 @@ describe("battle runtime", () => {
         action: "attack",
         attackName: "Longsword",
       },
+      { tag: "action", actorId: fighterId, action: "grapple" },
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
@@ -511,6 +512,531 @@ describe("battle runtime", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
+    });
+  });
+
+  test("battle state projects held hands and Grapple occupies a free hand", () => {
+    const state = fighterVsGoblinBattle();
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: fighterId,
+        hands: { left: "free", right: "mainWeapon" },
+      }),
+    );
+
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "grapple",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "grappleOutcome",
+    );
+    const grappled = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          grappleOutcomeFill(outcome, false),
+        ],
+      }),
+    );
+
+    expect(grappled.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hands: { left: "grapple", right: "mainWeapon" },
+          grappling: [
+            expect.objectContaining({
+              grapplerId: fighterId,
+              targetId: goblinId,
+              targetExemptFromDragCost: false,
+            }),
+          ],
+        }),
+        expect.objectContaining({
+          combatantId: goblinId,
+          conditions: expect.arrayContaining(["grappled"]),
+          grappledBy: expect.objectContaining({ grapplerId: fighterId }),
+          movement: expect.objectContaining({ speedFeet: 0 }),
+        }),
+      ]),
+    );
+  });
+
+  test("release and Escape Grapple end the typed grapple link", () => {
+    const state = fighterVsGoblinBattle();
+    const grappled = fighterGrapplesGoblin(state);
+
+    const released = requireResolved(
+      resolveBattleSubject({
+        state: grappled.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "releaseGrapple",
+          targetId: goblinId,
+        },
+        fills: [],
+      }),
+    );
+    expect(released.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hands: { left: "free", right: "mainWeapon" },
+          grappling: [],
+        }),
+        expect.objectContaining({
+          combatantId: goblinId,
+          conditions: expect.not.arrayContaining(["grappled"]),
+          grappledBy: null,
+        }),
+      ]),
+    );
+
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled.state, actorId: fighterId }),
+    ).state;
+    expect(
+      discoverBattleActs(goblinTurn).map((act) => act.subject),
+    ).toContainEqual({
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "releaseGrapple",
+      targetId: goblinId,
+    });
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "releaseGrapple",
+          targetId: goblinId,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "escapeGrapple",
+    };
+    const escape = requireHole(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+      "grappleOutcome",
+    );
+    const escaped = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [grappleOutcomeFill(escape, true)],
+      }),
+    );
+    expect(escaped.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: fighterId, grappling: [] }),
+        expect.objectContaining({ combatantId: goblinId, grappledBy: null }),
+      ]),
+    );
+  });
+
+  test("grapple drag movement must pay the Grappled Movable extra cost", () => {
+    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle());
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state: grappled.state, subject, fills: [] }),
+      "movement",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: grappled.state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 1,
+            destinationDistances: [{ combatantId: goblinId, feet: 4 }],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    expect(
+      resolveBattleSubject({
+        state: grappled.state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 2,
+            destinationDistances: [{ combatantId: goblinId, feet: 4 }],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+
+    expect(
+      resolveBattleSubject({
+        state: grappled.state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 1,
+            destinationDistances: [{ combatantId: goblinId, feet: 5 }],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    expect(
+      resolveBattleSubject({
+        state: grappled.state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 2,
+            destinationDistances: [{ combatantId: goblinId, feet: 5 }],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+  });
+
+  test("Grappled attack rolls have disadvantage against targets other than the grappler", () => {
+    const state = startBattle({
+      battleId: battleId("battle-grappled-attack-disadvantage"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Skeleton",
+          initiative: 5,
+        }),
+      ],
+    });
+    const grappled = fighterGrapplesGoblin(state).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Scimitar",
+      statBlockSection: "actions",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "attackRoll",
+    );
+
+    expect(roll).toMatchObject({ rollMode: "disadvantage" });
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(roll, {
+            total: 15,
+            naturalD20: 10,
+            rollMode: "disadvantage",
+          }),
+        ],
+      }),
+    ).not.toMatchObject({ tag: "invalid" });
+  });
+
+  test("Grappled spell attack rolls have disadvantage against targets other than the grappler", () => {
+    const state = startBattle({
+      battleId: battleId("battle-grappled-spell-attack-disadvantage"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 10,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "grapple",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, wizardId)],
+      }),
+      "grappleOutcome",
+    );
+    const grappled = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, wizardId),
+          grappleOutcomeFill(outcome, false),
+        ],
+      }),
+    ).state;
+    const wizardTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const spellSubject = magicSubject("ray_of_frost");
+    const spellTarget = requireHole(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: spellSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: spellSubject,
+        fills: [targetFill(spellTarget, skeletonId)],
+      }),
+      "attackRoll",
+    );
+
+    expect(roll).toMatchObject({ rollMode: "disadvantage" });
+    expect(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: spellSubject,
+        fills: [
+          targetFill(spellTarget, skeletonId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+  });
+
+  test("Off-Hand Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
+    const state = startBattle({
+      battleId: battleId("battle-off-hand"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: testShortswordAttack(),
+          offHandAttack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: "main:weapon_shortsword",
+              unitId: "weapon_shortsword",
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: "off:weapon_dagger",
+              unitId: "weapon_dagger",
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "bonusAction",
+      actorId: fighterId,
+      action: "offHandAttack",
+      attackName: "Dagger",
+    };
+
+    expect(
+      discoverBattleActs(state).map((act) => act.subject),
+    ).not.toContainEqual(subject);
+    expect(resolveBattleSubject({ state, subject, fills: [] })).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Shortsword",
+    };
+    const attackTarget = requireHole(
+      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(attackTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterQualifyingAttack = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, goblinId),
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+
+    const target = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({
+      label: "Dagger damage (1d4-piercing)",
+    });
+    expect(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+          damageRollFill(damage, 4),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentTurnResources: { currentHasBonusAction: false },
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 6 }),
+        ]),
+      },
+    });
+  });
+
+  test("Off-Hand Attack distinguishes held weapon identity from weapon kind", () => {
+    const state = startBattle({
+      battleId: battleId("battle-off-hand-two-daggers"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: testDaggerAttack(),
+          offHandAttack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: "main:dagger-1",
+              unitId: "weapon_dagger",
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: "off:dagger-2",
+              unitId: "weapon_dagger",
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Dagger",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterMainDagger = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+
+    expect(
+      discoverBattleActs(afterMainDagger).map((act) => act.subject),
+    ).toContainEqual({
+      tag: "bonusAction",
+      actorId: fighterId,
+      action: "offHandAttack",
+      attackName: "Dagger",
     });
   });
 
@@ -3440,6 +3966,9 @@ describe("battle runtime", () => {
             subject: expect.objectContaining({ action: "attack" }),
           }),
           expect.objectContaining({
+            subject: expect.objectContaining({ action: "grapple" }),
+          }),
+          expect.objectContaining({
             subject: {
               tag: "runtimeCommand",
               actorId: fighterId,
@@ -3684,6 +4213,7 @@ describe("battle runtime", () => {
           action: "attack",
           attackName: "Longsword",
         },
+        { tag: "action", actorId: fighterId, action: "grapple" },
         { tag: "runtimeCommand", actorId: fighterId, command: "move" },
         { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
       ],
@@ -3745,6 +4275,7 @@ describe("battle runtime", () => {
     expect(
       discoverBattleActs(magicMissileState).map((act) => act.subject),
     ).toEqual([
+      { tag: "action", actorId: wizardId, action: "grapple" },
       {
         tag: "actionSpell",
         actorId: wizardId,
@@ -4150,6 +4681,7 @@ describe("battle runtime", () => {
     expect(
       discoverBattleActs(unsupportedState).map((act) => act.subject),
     ).toEqual([
+      { tag: "action", actorId: wizardId, action: "grapple" },
       {
         tag: "actionSpell",
         actorId: wizardId,
@@ -5128,13 +5660,20 @@ function subjectName(
   subject: BattleSubject,
 ):
   | "attack"
+  | "grapple"
+  | "escapeGrapple"
+  | "offHandAttack"
   | "actionSpell"
   | "unitFeature"
   | "endTurn"
   | "move"
+  | "releaseGrapple"
   | "releaseReadiedSpell"
   | "opportunityAttack" {
   if (subject.tag === "action") {
+    return subject.action;
+  }
+  if (subject.tag === "bonusAction") {
     return subject.action;
   }
   if (subject.tag === "actionSpell") {
@@ -5255,7 +5794,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("48 passing");
+  expect(quintOutput).toContain("52 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -5361,6 +5900,9 @@ function renderQntCharacterProjection(
       reactionAvailable: true,
       speed: 30,
       movementSpent: 0,
+      creatureSize: Medium,
+      leftHandUse: HFree,
+      rightHandUse: HMainWeapon,
     }`;
 }
 
@@ -5389,6 +5931,9 @@ function renderQntStateProjection(
         reactionAvailable: true,
         speed: 30,
         movementSpent: 0,
+        creatureSize: Medium,
+        leftHandUse: HFree,
+        rightHandUse: HMainWeapon,
       },
       goblin: {
         hp: ${input.goblinHp},
@@ -5406,10 +5951,15 @@ function renderQntStateProjection(
         reactionAvailable: true,
         speed: 30,
         movementSpent: 0,
+        creatureSize: Small,
+        leftHandUse: HFree,
+        rightHandUse: HFree,
       },
       actionAvailable: ${input.actionAvailable},
       bonusActionAvailable: ${input.bonusActionAvailable},
+      lightWeaponAttackMade: ${input.actionAvailable ? "false" : "true"},
       fighterReadiedSpellHeld: false,
+      grapple: NoGrapple,
       interruptStack: [],
       fighterGoblinDistance: 5,
       goblinRechargeAvailable: true,
@@ -5443,6 +5993,38 @@ function fighterVsGoblinBattle(): BattleState {
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
+}
+
+function fighterGrapplesGoblin(
+  state: BattleState,
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "resolved" }
+> {
+  const subject: BattleSubject = {
+    tag: "action",
+    actorId: fighterId,
+    action: "grapple",
+  };
+  const target = requireHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const outcome = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(target, goblinId)],
+    }),
+    "grappleOutcome",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(target, goblinId), grappleOutcomeFill(outcome, false)],
+    }),
+  );
 }
 
 function fighterTurnWithReadiedRay(
@@ -5895,6 +6477,20 @@ function movementFill(
   };
 }
 
+function grappleOutcomeFill(
+  hole: BattleHole,
+  succeeded: boolean,
+): Extract<BattleFill, { readonly kind: "grappleOutcome" }> {
+  if (hole.kind !== "grappleOutcome") {
+    throw new Error("Expected grappleOutcome hole.");
+  }
+  return {
+    kind: "grappleOutcome",
+    holeId: hole.holeId,
+    value: { succeeded },
+  };
+}
+
 function savingThrowOutcomeFill(
   hole: BattleHole,
   outcomes: readonly {
@@ -5973,7 +6569,12 @@ function characterSeed(input: {
   readonly currentHp?: number;
   readonly tempHp?: number;
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
+  readonly selectedLoadout?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["selectedLoadout"];
   readonly attack?: ReturnType<typeof testLongswordAttack> | null;
+  readonly offHandAttack?: NonNullable<ReturnType<typeof testLongswordAttack>>;
   readonly resources?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -5983,6 +6584,19 @@ function characterSeed(input: {
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {
+  const attack =
+    input.attack === undefined ? testLongswordAttack() : input.attack;
+  const selectedLoadout =
+    input.selectedLoadout ??
+    (attack === null
+      ? {}
+      : {
+          weapon: {
+            itemId: "main:weapon_longsword",
+            unitId: "weapon_longsword",
+            grip: "one_handed" as const,
+          },
+        });
   return {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
@@ -5994,21 +6608,42 @@ function characterSeed(input: {
       classLevels: input.classLevels ?? [
         { className: "fighter", level: input.classLevel ?? 1 },
       ],
-      armorClass: input.armorClass ?? defaultArmorClassState(),
+      armorClass:
+        input.armorClass ?? armorClassStateForLoadout(selectedLoadout),
+      size: "medium",
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(12),
       tempHp: Hp(input.tempHp ?? 0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
-      selectedLoadout: {
-        weapon: { unitId: "weapon_longsword", grip: "one_handed" },
-      },
-      attack: input.attack === undefined ? testLongswordAttack() : input.attack,
+      selectedLoadout,
+      attack,
+      ...(input.offHandAttack === undefined
+        ? {}
+        : { offHandAttack: input.offHandAttack }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
       ...(input.spellcasting === undefined
         ? {}
         : { spellcasting: input.spellcasting }),
     },
+  };
+}
+
+function armorClassStateForLoadout(
+  loadout: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["selectedLoadout"],
+): ReturnType<typeof defaultArmorClassState> {
+  return {
+    ...defaultArmorClassState(),
+    leftHandUse:
+      loadout.shield === undefined
+        ? loadout.offHandWeapon === undefined
+          ? "free"
+          : "offWeapon"
+        : "shield",
+    rightHandUse: loadout.weapon === undefined ? "free" : "mainWeapon",
   };
 }
 
@@ -6019,6 +6654,44 @@ function testLongswordAttack(): Extract<
   const weapon = unitLibrary.requireUnit("weapon_longsword");
   if (weapon.kind !== "weapon") {
     throw new Error("Expected Longsword weapon Unit.");
+  }
+
+  return {
+    kind: "weapon",
+    weapon,
+    ability: "str",
+    abilityModifier: 3,
+  };
+}
+
+function testDaggerAttack(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const weapon = unitLibrary.requireUnit("weapon_dagger");
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Dagger weapon Unit.");
+  }
+
+  return {
+    kind: "weapon",
+    weapon,
+    ability: "str",
+    abilityModifier: 3,
+  };
+}
+
+function testShortswordAttack(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const weapon = unitLibrary.requireUnit("weapon_shortsword");
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Shortsword weapon Unit.");
   }
 
   return {

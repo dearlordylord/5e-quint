@@ -59,6 +59,7 @@ import {
   holeId,
   holeInstanceKey,
   type AttackRollResult,
+  type AttackRollMode,
   type FilledHoleValue,
   type RolledDiceGroup,
   type RuntimeHole,
@@ -72,8 +73,10 @@ import {
   Initiative,
   Round,
   movementFeet,
+  proficiencyBonus,
   type Condition,
   type DieRollResult,
+  type HandUse,
   type MovementFeet,
   type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
@@ -92,6 +95,7 @@ import type {
   StatBlockValue,
   ActionRestriction,
   ClassName,
+  Size,
   UnitRecord,
   WeaponDamage,
   WeaponRecord,
@@ -148,8 +152,13 @@ export type CharacterBattleLoadoutRef = {
   readonly armor?: UnitRecord["id"];
   readonly shield?: UnitRecord["id"];
   readonly weapon?: {
+    readonly itemId: string;
     readonly unitId: UnitRecord["id"];
-    readonly grip: "one_handed";
+    readonly grip: "one_handed" | "two_handed";
+  };
+  readonly offHandWeapon?: {
+    readonly itemId: string;
+    readonly unitId: UnitRecord["id"];
   };
 };
 export type BattleWalkSpeed = {
@@ -169,6 +178,7 @@ export type CharacterWeaponAttackActionOption = {
   readonly weapon: WeaponRecord;
   readonly ability: Ability;
   readonly abilityModifier: number;
+  readonly damageAbilityModifier?: number;
 };
 export type CharacterBattleResourceInit = {
   readonly unit: UnitRecord;
@@ -472,6 +482,15 @@ type AttackTargetConstraint =
       readonly kind: "rangedRange";
       readonly normalFeet: number;
     };
+export type BattleHand = "left" | "right";
+export type BattleGrappleLink = {
+  readonly grapplerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly escapeDc: number;
+  readonly reachFeet: number;
+  readonly hand: BattleHand;
+  readonly targetExemptFromDragCost: boolean;
+};
 export type BattleMovementDistanceUpdate = {
   readonly combatantId: CombatantId;
   readonly feet: number;
@@ -557,6 +576,7 @@ export type CharacterBattleCreatureInit = {
   readonly characterUnitRefs: readonly BattleUnitRef[];
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
   readonly armorClass: ArmorClassState;
+  readonly size: Size;
   readonly speed: BattleWalkSpeed;
   readonly currentHp: Hp;
   readonly maxHp: Hp;
@@ -565,6 +585,7 @@ export type CharacterBattleCreatureInit = {
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly attack: CharacterWeaponAttackActionOption | null;
+  readonly offHandAttack?: CharacterWeaponAttackActionOption | undefined;
   readonly resources?: readonly CharacterBattleResourceInit[];
   readonly spellcasting?: CharacterBattleSpellcastingInit;
 };
@@ -628,6 +649,9 @@ export type BattleCombatantDistanceValidationIssue =
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
+  readonly lightWeaponAttackMade?: {
+    readonly weaponItemId: string;
+  };
 };
 
 export type BattleCreatureState = {
@@ -641,6 +665,7 @@ export type BattleCreatureState = {
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly concentration: BattleConcentration | null;
   readonly armorClass: ArmorClassState;
+  readonly size: Size;
   readonly zeroHpLifecycle: ZeroHpLifecycle;
   readonly reactionAvailable: boolean;
   readonly movementSpentFeet: MovementFeet;
@@ -653,6 +678,7 @@ export type BattleCreatureState = {
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly speed: BattleWalkSpeed;
         readonly attack: CharacterWeaponAttackActionOption | null;
+        readonly offHandAttack?: CharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
         readonly spellcasting?: CharacterBattleSpellcastingState;
       }
@@ -678,17 +704,26 @@ export type BattleState = {
   >;
   readonly currentTurnResources: BattleTurnResources;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
+  readonly grapples: readonly BattleGrappleLink[];
   readonly interruptStack: readonly BattleReactionFrame[];
   readonly legendaryActionWindow: LegendaryActionWindow | null;
 };
 
-export const BATTLE_SUBJECT_ACTIONS = ["attack"] as const;
+export const BATTLE_SUBJECT_ACTIONS = [
+  "attack",
+  "grapple",
+  "escapeGrapple",
+] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
+export const BATTLE_SUBJECT_BONUS_ACTIONS = ["offHandAttack"] as const;
+export type BattleSubjectBonusAction =
+  (typeof BATTLE_SUBJECT_BONUS_ACTIONS)[number];
 
 export const BATTLE_RUNTIME_COMMANDS = [
   "endTurn",
   "move",
   "releaseReadiedSpell",
+  "releaseGrapple",
   "opportunityAttack",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
@@ -713,6 +748,42 @@ export const BattleSubjectSchema = Schema.Union(
       ),
       { exact: true },
     ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("grapple"),
+    attackName: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
+    statBlockSection: Schema.optionalWith(
+      Schema.Literal(
+        "actions",
+        "bonusActions",
+        "reactions",
+        "legendaryActions",
+      ),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("escapeGrapple"),
+    attackName: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
+    statBlockSection: Schema.optionalWith(
+      Schema.Literal(
+        "actions",
+        "bonusActions",
+        "reactions",
+        "legendaryActions",
+      ),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("bonusAction"),
+    actorId: CombatantId,
+    action: Schema.Literal("offHandAttack"),
+    attackName: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
@@ -748,6 +819,12 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
+    command: Schema.Literal("releaseGrapple"),
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
     command: Schema.Literal("opportunityAttack"),
     reactorId: CombatantId,
     targetId: CombatantId,
@@ -776,6 +853,20 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.statBlockSection ?? null,
       ]),
     ),
+    Match.when({ tag: "action", action: "grapple" }, (action) =>
+      JSON.stringify([action.tag, action.actorId, action.action]),
+    ),
+    Match.when({ tag: "action", action: "escapeGrapple" }, (action) =>
+      JSON.stringify([action.tag, action.actorId, action.action]),
+    ),
+    Match.when({ tag: "bonusAction", action: "offHandAttack" }, (attack) =>
+      JSON.stringify([
+        attack.tag,
+        attack.actorId,
+        attack.action,
+        attack.attackName,
+      ]),
+    ),
     Match.when({ tag: "actionSpell" }, (spell) =>
       JSON.stringify([
         spell.tag,
@@ -793,6 +884,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         command.actorId,
         command.command,
         "readiedSpellCasterId" in command ? command.readiedSpellCasterId : null,
+        "targetId" in command ? command.targetId : null,
         "reactorId" in command ? command.reactorId : null,
         "targetId" in command ? command.targetId : null,
         "attackName" in command ? command.attackName : null,
@@ -823,6 +915,7 @@ export type BattleAttackRollHole = Extract<
 > & {
   readonly attack: SupportedAttackActionOption;
   readonly attackBonus: number;
+  readonly rollMode?: AttackRollMode;
 };
 export type BattleSpellAttackRollHole = Extract<
   RuntimeHole,
@@ -830,6 +923,7 @@ export type BattleSpellAttackRollHole = Extract<
 > & {
   readonly spell: SupportedSpellAct;
   readonly attackBonus: number;
+  readonly rollMode?: AttackRollMode;
 };
 export type BattleDamageRollHole = Extract<
   RuntimeHole,
@@ -913,6 +1007,16 @@ export type BattleMovementHole = {
   readonly actorId: CombatantId;
   readonly movementBudgetFeet: MovementFeet;
 };
+export type BattleGrappleOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "grappleOutcome";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly dc: number;
+  readonly mode: "grappleSave" | "escapeCheck";
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleAttackRollHole
@@ -925,7 +1029,8 @@ export type BattleHole =
   | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
   | BattleReactionDecisionHole
-  | BattleMovementHole;
+  | BattleMovementHole
+  | BattleGrappleOutcomeHole;
 
 const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("HoleId"),
@@ -946,6 +1051,9 @@ const SupportedAttackActionOptionSchema = Schema.Union(
     weapon: BattleRuntimeObjectSchema,
     ability: Schema.String,
     abilityModifier: Schema.Number,
+    damageAbilityModifier: Schema.optionalWith(Schema.Number, {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     kind: Schema.Literal("statBlockAttack"),
@@ -1015,12 +1123,18 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("attackRoll"),
     attack: SupportedAttackActionOptionSchema,
     attackBonus: Schema.Number,
+    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackRoll"),
     spell: SupportedSpellActSchema,
     attackBonus: Schema.Number,
+    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1088,6 +1202,15 @@ export const BattleHoleSchema = Schema.Union(
     actorId: CombatantId,
     movementBudgetFeet: Schema.Number,
   }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("grappleOutcome"),
+    label: Schema.String,
+    actorId: CombatantId,
+    targetId: CombatantId,
+    dc: Schema.Number,
+    mode: Schema.Literal("grappleSave", "escapeCheck"),
+  }),
 );
 
 export type BattleFill =
@@ -1128,6 +1251,13 @@ export type BattleFill =
       readonly kind: "movement";
       readonly holeId: BattleHoleId;
       readonly value: BattleMovementFillValue;
+    }
+  | {
+      readonly kind: "grappleOutcome";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly succeeded: boolean;
+      };
     };
 
 const BattleDieRollResultSchema = Schema.Number.pipe(
@@ -1245,6 +1375,13 @@ type BattleFillEncoded =
           readonly feet: number;
         }[];
       };
+    }
+  | {
+      readonly kind: "grappleOutcome";
+      readonly holeId: string;
+      readonly value: {
+        readonly succeeded: boolean;
+      };
     };
 
 export const BattleFillSchema: Schema.Schema<
@@ -1347,6 +1484,13 @@ export const BattleFillSchema: Schema.Schema<
         ),
       }),
     }),
+    Schema.Struct({
+      kind: Schema.Literal("grappleOutcome"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        succeeded: Schema.Boolean,
+      }),
+    }),
   ),
 ).annotations({ identifier: "BattleFill" });
 
@@ -1366,6 +1510,21 @@ type AttackBattleResolutionInput = BattleResolutionInputForSubject<
 > & {
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
 };
+type OffHandAttackBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<
+    BattleSubject,
+    { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
+  >
+>;
+type GrappleBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<BattleSubject, { readonly tag: "action"; readonly action: "grapple" }>
+>;
+type EscapeGrappleBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "escapeGrapple" }
+  >
+>;
 type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
 > & {
@@ -1433,12 +1592,19 @@ export type BattleCreatureSnapshot = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly armorClass: ArmorClass;
+  readonly size: Size;
   readonly defeated: boolean;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;
   readonly conditions: readonly Condition[];
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly concentration: BattleConcentration | null;
   readonly reactionAvailable: boolean;
+  readonly hands: {
+    readonly left: HandUse;
+    readonly right: HandUse;
+  };
+  readonly grappling: readonly BattleGrappleLink[];
+  readonly grappledBy: BattleGrappleLink | null;
   readonly statBlockResources?: StatBlockResourceSnapshot;
   readonly movement: {
     readonly speedFeet: MovementFeet;
@@ -1486,6 +1652,14 @@ const REACTION_DECISION_HOLE_INSTANCE = holeInstanceKey(
 );
 const MOVEMENT_HOLE_ID = holeId("battle:movement");
 const MOVEMENT_HOLE_INSTANCE = holeInstanceKey("battle:movement");
+const GRAPPLE_TARGET_HOLE_ID = holeId("battle:grapple:target");
+const GRAPPLE_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:grapple:target");
+const GRAPPLE_OUTCOME_HOLE_ID = holeId("battle:grapple:outcome");
+const GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey("battle:grapple:outcome");
+const ESCAPE_GRAPPLE_OUTCOME_HOLE_ID = holeId("battle:escape-grapple:outcome");
+const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
+  "battle:escape-grapple:outcome",
+);
 const ACTION_SURGE_UNIT_ID = "fighter_action_surge";
 const SECOND_WIND_UNIT_ID = "fighter_second_wind";
 const SECOND_WIND_HEALING_ROLL_HOLE_ID = holeId(
@@ -1561,6 +1735,7 @@ export function startBattle(input: {
     combatantDistances: battleCombatantDistances(input),
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
+    grapples: [],
     interruptStack: [],
     legendaryActionWindow: null,
   };
@@ -1569,12 +1744,11 @@ export function startBattle(input: {
 export function discoverBattleActs(
   state: BattleState,
 ): readonly AvailableBattleAct[] {
+  const acts: AvailableBattleAct[] = [...releaseGrappleActs(state)];
   const actorId = currentActorId(state);
   if (!state.combatants.has(actorId)) {
-    return [];
+    return acts;
   }
-
-  const acts: AvailableBattleAct[] = [];
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -1608,6 +1782,53 @@ export function discoverBattleActs(
       }),
     );
   }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "attack") &&
+    grappleTargetChoices(state, actorId).length > 0
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "grapple" },
+      label: "Grapple",
+      summary: "Replace one attack with an Unarmed Strike Grapple.",
+      initialHoles: [grappleTargetHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "attack") &&
+    grappledBy(state, actorId) !== undefined
+  ) {
+    const grapple = grappledBy(state, actorId);
+    if (grapple !== undefined) {
+      acts.push({
+        subject: { tag: "action", actorId, action: "escapeGrapple" },
+        label: "Escape Grapple",
+        summary: "Use an action to attempt to end the Grappled condition.",
+        initialHoles: [escapeGrappleOutcomeHole(grapple, actorId)],
+      });
+    }
+  }
+  const offHand = offHandAttackActionOptionForActor(state, actorId);
+  if (
+    offHand !== undefined &&
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    state.currentTurnResources.currentHasBonusAction &&
+    offHandAttackPrerequisiteMet(state, actorId, offHand) &&
+    attackTargetChoices(state, actorId, offHand).length > 0
+  ) {
+    acts.push({
+      subject: {
+        tag: "bonusAction",
+        actorId,
+        action: "offHandAttack",
+        attackName: attackActionOptionName(offHand),
+      },
+      label: "Off-Hand Attack",
+      summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
+      initialHoles: [attackTargetHole(state, actorId, offHand)],
+    });
+  }
   acts.push(...supportedUnitFeatureActs(state, actorId));
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
@@ -1617,7 +1838,7 @@ export function discoverBattleActs(
   }
   const movementHoleForActor = movementHole(state, actorId);
   if (
-    combatantCanMove(state.combatants.get(actorId)) &&
+    combatantCanMoveInState(state, actorId) &&
     state.combatants.size > 1 &&
     Number(movementHoleForActor.movementBudgetFeet) > 0
   ) {
@@ -1650,6 +1871,20 @@ export function discoverBattleActs(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function releaseGrappleActs(state: BattleState): readonly AvailableBattleAct[] {
+  return state.grapples.map((grapple) => ({
+    subject: {
+      tag: "runtimeCommand" as const,
+      actorId: grapple.grapplerId,
+      command: "releaseGrapple" as const,
+      targetId: grapple.targetId,
+    },
+    label: "Release Grapple",
+    summary: "Release a grappled target without spending an action.",
+    initialHoles: [],
+  }));
 }
 
 export function resolveBattleSubject(
@@ -1698,7 +1933,8 @@ function resolveBattleSubjectInternal(
   const actorId = battleSubjectActorId(input.subject);
   if (
     actorId !== currentActorId(input.state) &&
-    !isLegendaryAttackSubject(input.subject)
+    !isLegendaryAttackSubject(input.subject) &&
+    !isReleaseGrappleSubject(input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -1727,7 +1963,9 @@ function resolveBattleSubjectInternal(
 
   if (
     input.subject.tag === "action" &&
-    input.subject.action === "attack" &&
+    (input.subject.action === "attack" ||
+      input.subject.action === "grapple" ||
+      input.subject.action === "escapeGrapple") &&
     !combatantCanTakeActions(input.state.combatants.get(actorId))
   ) {
     return invalidResult(
@@ -1739,7 +1977,9 @@ function resolveBattleSubjectInternal(
 
   if (
     input.subject.tag === "action" &&
-    input.subject.action === "attack" &&
+    (input.subject.action === "attack" ||
+      input.subject.action === "grapple" ||
+      input.subject.action === "escapeGrapple") &&
     !isLegendaryAttackSubject(input.subject) &&
     !canSpendAction(input.state.currentTurnResources, "attack")
   ) {
@@ -1747,6 +1987,17 @@ function resolveBattleSubjectInternal(
       input.state,
       "staleSubject",
       "Attack is no longer available for the current actor.",
+    );
+  }
+  if (
+    input.subject.tag === "bonusAction" &&
+    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
+      !input.state.currentTurnResources.currentHasBonusAction)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action is no longer available for the current actor.",
     );
   }
   if (
@@ -1780,6 +2031,15 @@ function resolveBattleSubjectInternal(
         suppressedReactionTrigger: options.suppressedReactionTrigger,
       }),
     ),
+    Match.when({ tag: "action", action: "grapple" }, (subject) =>
+      resolveGrapple({ ...input, subject }),
+    ),
+    Match.when({ tag: "action", action: "escapeGrapple" }, (subject) =>
+      resolveEscapeGrapple({ ...input, subject }),
+    ),
+    Match.when({ tag: "bonusAction", action: "offHandAttack" }, (subject) =>
+      resolveOffHandAttack({ ...input, subject }),
+    ),
     Match.when({ tag: "actionSpell" }, (subject) =>
       resolveSpellAct({
         ...input,
@@ -1802,12 +2062,27 @@ function resolveBattleSubjectInternal(
       }),
     ),
     Match.when(
+      { tag: "runtimeCommand", command: "releaseGrapple" },
+      (subject) => resolveReleaseGrappleCommand({ ...input, subject }),
+    ),
+    Match.when(
       { tag: "runtimeCommand", command: "opportunityAttack" },
       (subject) => resolveOpportunityAttackCommand({ ...input, subject }),
     ),
     Match.exhaustive,
   );
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
+}
+
+function isReleaseGrappleSubject(
+  subject: BattleSubject,
+): subject is Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "releaseGrapple" }
+> {
+  return (
+    subject.tag === "runtimeCommand" && subject.command === "releaseGrapple"
+  );
 }
 
 function consumeOrCloseLegendaryActionWindow(
@@ -2097,7 +2372,7 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
     turnOrder,
     combatants: turnOrder.flatMap((id) => {
       const combatant = state.combatants.get(id);
-      return combatant == null ? [] : [combatantSnapshot(combatant)];
+      return combatant == null ? [] : [combatantSnapshot(state, combatant)];
     }),
     acts: discoverBattleActs(state),
     currentTurnResources: state.currentTurnResources,
@@ -2317,9 +2592,11 @@ function battleCreatureStateFromInit(
     const classLevels = parseCharacterBattleClassLevels(
       creatureInit.classLevels,
     );
+    assertCharacterBattleLoadoutMatchesHands(creatureInit);
     return applyInitialZeroHpLifecycle({
       ...base,
       armorClass: creatureInit.armorClass,
+      size: creatureInit.size,
       origin: {
         kind: "character",
         characterId: creatureInit.characterId,
@@ -2328,6 +2605,9 @@ function battleCreatureStateFromInit(
         selectedLoadout: creatureInit.selectedLoadout,
         speed: creatureInit.speed,
         attack: creatureInit.attack,
+        ...(creatureInit.offHandAttack === undefined
+          ? {}
+          : { offHandAttack: creatureInit.offHandAttack }),
         resources: (creatureInit.resources ?? []).map((resource) =>
           characterResourceState(resource, classLevels),
         ),
@@ -2347,12 +2627,60 @@ function battleCreatureStateFromInit(
     armorClass: statBlockArmorClassState(
       literalStatBlockNumber(creatureInit.statBlock.statBlock.ac),
     ),
+    size: literalCreatureSize(creatureInit.statBlock.statBlock.size),
     origin: {
       kind: "statBlock",
       statBlock: creatureInit.statBlock,
       resources: statBlockResourceState(creatureInit.statBlock.statBlock),
     },
   });
+}
+
+function assertCharacterBattleLoadoutMatchesHands(
+  creatureInit: CharacterBattleCreatureInit,
+): void {
+  const shield = creatureInit.selectedLoadout.shield;
+  const weapon = creatureInit.selectedLoadout.weapon;
+  const offHandWeapon = creatureInit.selectedLoadout.offHandWeapon;
+  if (shield !== undefined && offHandWeapon !== undefined) {
+    throw new Error(
+      "Character battle loadout cannot wield shield and off-hand weapon.",
+    );
+  }
+  if (
+    weapon?.grip === "two_handed" &&
+    (shield !== undefined || offHandWeapon !== undefined)
+  ) {
+    throw new Error("Two-handed weapon grip requires both hands free.");
+  }
+  const expectedLeftHandUse: HandUse =
+    shield === undefined
+      ? offHandWeapon === undefined
+        ? "free"
+        : "offWeapon"
+      : "shield";
+  const expectedRightHandUse: HandUse =
+    weapon === undefined ? "free" : "mainWeapon";
+  if (
+    creatureInit.armorClass.leftHandUse !== expectedLeftHandUse ||
+    creatureInit.armorClass.rightHandUse !== expectedRightHandUse
+  ) {
+    throw new Error(
+      "Character battle loadout must match armor-class hand state.",
+    );
+  }
+  if (weapon?.grip === "two_handed") {
+    return;
+  }
+}
+
+function literalCreatureSize(
+  creatureSize: StatBlockRecord["statBlock"]["size"],
+): Size {
+  if (typeof creatureSize !== "string") {
+    throw new Error("Battle runtime requires a concrete creature Size.");
+  }
+  return creatureSize;
 }
 
 function battleCombatantDistances(input: {
@@ -2510,8 +2838,13 @@ function currentActorId(state: BattleState): CombatantId {
 }
 
 function combatantSnapshot(
+  state: BattleState,
   combatant: BattleCreatureState,
 ): BattleCreatureSnapshot {
+  const grappling = state.grapples.filter(
+    (grapple) => grapple.grapplerId === combatant.combatantId,
+  );
+  const sourceGrapple = grappledBy(state, combatant.combatantId) ?? null;
   return {
     combatantId: combatant.combatantId,
     displayName: combatant.displayName,
@@ -2520,12 +2853,16 @@ function combatantSnapshot(
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
     armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
+    size: combatant.size,
     defeated: combatant.hp === 0,
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
-    conditions: activeConditions(combatant.conditions),
+    conditions: activeConditions(combatant.conditions, sourceGrapple !== null),
     activeEffects: combatant.activeEffects,
     concentration: combatant.concentration,
     reactionAvailable: combatant.reactionAvailable,
+    hands: combatantHandUses(combatant, state.grapples),
+    grappling,
+    grappledBy: sourceGrapple,
     ...(combatant.origin.kind === "statBlock"
       ? {
           statBlockResources: statBlockResourceSnapshot(
@@ -2534,7 +2871,7 @@ function combatantSnapshot(
           ),
         }
       : {}),
-    movement: battleMovementBudget(combatant),
+    movement: battleMovementBudget(combatant, state.grapples),
   };
 }
 
@@ -2617,8 +2954,54 @@ function combatantCanTakeActions(
   );
 }
 
-function activeConditions(state: ConditionState): readonly Condition[] {
-  return ALL_CONDITIONS.filter((condition) => hasCondition(state, condition));
+function activeConditions(
+  state: ConditionState,
+  includeGrappled = false,
+): readonly Condition[] {
+  return ALL_CONDITIONS.filter(
+    (condition) =>
+      hasCondition(state, condition) ||
+      (condition === "grappled" && includeGrappled),
+  );
+}
+
+function grappledBy(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleGrappleLink | undefined {
+  return state.grapples.find((grapple) => grapple.targetId === targetId);
+}
+
+function combatantHandUses(
+  combatant: BattleCreatureState,
+  grapples: readonly BattleGrappleLink[],
+): { readonly left: HandUse; readonly right: HandUse } {
+  return {
+    left: handUseForOccupancy(
+      combatant.armorClass.leftHandUse,
+      grapples.some(
+        (grapple) =>
+          grapple.grapplerId === combatant.combatantId &&
+          grapple.hand === "left",
+      ),
+    ),
+    right: handUseForOccupancy(
+      combatant.armorClass.rightHandUse,
+      grapples.some(
+        (grapple) =>
+          grapple.grapplerId === combatant.combatantId &&
+          grapple.hand === "right",
+      ),
+    ),
+  };
+}
+
+function handUseForOccupancy(
+  occupancy: HandUse,
+  occupiedByGrapple: boolean,
+): HandUse {
+  if (occupiedByGrapple) return "grapple";
+  return occupancy;
 }
 
 function battleSubjectActorId(subject: BattleSubject): CombatantId {
@@ -2928,7 +3311,14 @@ function resolveAttack(
       );
     }
     return needsHolesResult(input.state, input.subject, [
-      attackRollHole(attack),
+      attackRollHole(
+        attack,
+        requiredAttackRollMode(
+          input.state,
+          input.subject.actorId,
+          target.combatantId,
+        ),
+      ),
     ]);
   }
 
@@ -2937,6 +3327,18 @@ function resolveAttack(
       input.state,
       "invalidFill",
       "Attack roll result is outside the d20 attack-roll protocol.",
+    );
+  }
+  const requiredRollMode = requiredAttackRollMode(
+    input.state,
+    input.subject.actorId,
+    target.combatantId,
+  );
+  if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack roll mode does not match the current Grappled attack-roll rule.",
     );
   }
 
@@ -3054,6 +3456,307 @@ function resolveAttack(
   );
 }
 
+function resolveOffHandAttack(
+  input: OffHandAttackBattleResolutionInput,
+): BattleResolutionResult {
+  const attack = offHandAttackActionOptionForActor(
+    input.state,
+    input.subject.actorId,
+  );
+  if (
+    attack == null ||
+    attackActionOptionName(attack) !== input.subject.attackName ||
+    !offHandAttackPrerequisiteMet(input.state, input.subject.actorId, attack)
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Off-Hand Attack requires a prior Attack action attack with a different Light weapon.",
+    );
+  }
+
+  const fillSet = attackFillSet(input.fills);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (fillSet.targetId == null) {
+    return needsHolesResult(input.state, input.subject, [
+      attackTargetHole(input.state, input.subject.actorId, attack),
+    ]);
+  }
+  const target = input.state.combatants.get(fillSet.targetId);
+  if (
+    target == null ||
+    target.combatantId === input.subject.actorId ||
+    !attackTargetIsLegal(
+      input.state,
+      input.subject.actorId,
+      target.combatantId,
+      attack,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Off-Hand Attack target is outside the selected attack's supported target constraint.",
+    );
+  }
+  if (fillSet.attackRoll == null) {
+    return needsHolesResult(input.state, input.subject, [
+      attackRollHole(
+        attack,
+        requiredAttackRollMode(
+          input.state,
+          input.subject.actorId,
+          target.combatantId,
+        ),
+      ),
+    ]);
+  }
+  if (!attackRollResultIsValid(fillSet.attackRoll)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Off-Hand Attack roll result is outside the d20 attack-roll protocol.",
+    );
+  }
+  const requiredRollMode = requiredAttackRollMode(
+    input.state,
+    input.subject.actorId,
+    target.combatantId,
+  );
+  if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Off-Hand Attack roll mode does not match the current Grappled attack-roll rule.",
+    );
+  }
+  const hit = attackRollHits(
+    fillSet.attackRoll,
+    currentArmorClass(activeEffectArmorClass(target)),
+  );
+  const critical = attackRollIsCriticalHit(fillSet.attackRoll);
+  if (hit && fillSet.damageRoll == null) {
+    return needsHolesResult(input.state, input.subject, [
+      attackDamageHole(attack, critical, fillSet.attackRoll),
+    ]);
+  }
+  if (!hit && fillSet.damageRoll != null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Off-Hand Attack damage can only be filled after a hit.",
+    );
+  }
+  if (hit && fillSet.damageRoll != null) {
+    const damageValidation = validateAttackDamageFill(
+      fillSet.damageRoll,
+      attack,
+      critical,
+      fillSet.attackRoll,
+    );
+    if (damageValidation !== null) {
+      return invalidResult(input.state, "invalidFill", damageValidation);
+    }
+    const damageAmount = attackDamageAmount(
+      target,
+      attack,
+      fillSet.damageRoll,
+      critical,
+      fillSet.attackRoll,
+    );
+    const concentrationSave = concentrationSavingThrowHole(
+      target,
+      damageAmount,
+    );
+    if (concentrationSave !== null) {
+      if (fillSet.concentrationSavingThrow === undefined) {
+        return needsHolesResult(input.state, input.subject, [
+          concentrationSave,
+        ]);
+      }
+      if (
+        fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId
+      ) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Concentration Saving Throw fill does not match the damaged target.",
+        );
+      }
+    } else if (fillSet.concentrationSavingThrow !== undefined) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+      );
+    }
+  }
+  const nextTurnResources = {
+    ...input.state.currentTurnResources,
+    currentHasBonusAction: false,
+  };
+  const nextState = hit
+    ? applyAttackDamage(input.state, target.combatantId, attack, fillSet)
+    : input.state;
+  const state = normalizeBattleGrapples({
+    ...nextState,
+    currentTurnResources: nextTurnResources,
+  });
+  return { tag: "resolved", state, snapshot: snapshotBattle(state) };
+}
+
+function resolveGrapple(
+  input: GrappleBattleResolutionInput,
+): BattleResolutionResult {
+  const fillSet = grappleFillSet(input.fills);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (fillSet.targetId === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      grappleTargetHole(input.state, input.subject.actorId),
+    ]);
+  }
+  const targetFill = input.fills.find((fill) => fill.kind === "targetChoice");
+  if (targetFill?.holeId !== GRAPPLE_TARGET_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Grapple target fill does not match the requested hole.",
+    );
+  }
+  const link = grappleLinkForTarget(
+    input.state,
+    input.subject.actorId,
+    fillSet.targetId,
+  );
+  if (link.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", link.message);
+  }
+  if (fillSet.outcome === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      grappleOutcomeHole(link.link),
+    ]);
+  }
+  if (fillSet.outcome.holeId !== GRAPPLE_OUTCOME_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Grapple outcome fill does not match the requested hole.",
+    );
+  }
+  const spent = spendAction(input.state.currentTurnResources, "attack");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Grapple is no longer available for the current actor.",
+    );
+  }
+  const nextState = normalizeBattleGrapples({
+    ...input.state,
+    currentTurnResources: spent.right,
+    grapples: fillSet.outcome.value.succeeded
+      ? input.state.grapples
+      : [...input.state.grapples, link.link],
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveEscapeGrapple(
+  input: EscapeGrappleBattleResolutionInput,
+): BattleResolutionResult {
+  const grapple = grappledBy(input.state, input.subject.actorId);
+  if (grapple === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "No Grapple is available to escape.",
+    );
+  }
+  const fillSet = grappleFillSet(input.fills);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (fillSet.targetId !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Escape Grapple does not use a target fill.",
+    );
+  }
+  if (fillSet.outcome === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      escapeGrappleOutcomeHole(grapple, input.subject.actorId),
+    ]);
+  }
+  if (fillSet.outcome.holeId !== ESCAPE_GRAPPLE_OUTCOME_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Escape Grapple outcome fill does not match the requested hole.",
+    );
+  }
+  const spent = spendAction(input.state.currentTurnResources, "attack");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Escape Grapple is no longer available for the current actor.",
+    );
+  }
+  const nextState = normalizeBattleGrapples({
+    ...input.state,
+    currentTurnResources: spent.right,
+    grapples: fillSet.outcome.value.succeeded
+      ? input.state.grapples.filter((candidate) => candidate !== grapple)
+      : input.state.grapples,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveReleaseGrappleCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      { readonly tag: "runtimeCommand"; readonly command: "releaseGrapple" }
+    >
+  >,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Release Grapple does not use fills.",
+    );
+  }
+  const nextState = normalizeBattleGrapples({
+    ...input.state,
+    grapples: input.state.grapples.filter(
+      (grapple) =>
+        !(
+          grapple.grapplerId === input.subject.actorId &&
+          grapple.targetId === input.subject.targetId
+        ),
+    ),
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function assertCurrentHpWithinMaxHp(
   creatureInit: BattleCreatureInit["creatureInit"],
 ): void {
@@ -3072,6 +3775,15 @@ type AttackFillSet =
         | undefined;
       readonly damageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+type GrappleFillSet =
+  | {
+      readonly tag: "ok";
+      readonly targetId: CombatantId | undefined;
+      readonly outcome:
+        | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
         | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
@@ -3134,6 +3846,37 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     concentrationSavingThrow,
     damageRoll,
   };
+}
+
+function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
+  let targetId: CombatantId | undefined;
+  let outcome:
+    | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
+    | undefined;
+  for (const fill of fills) {
+    if (fill.kind === "targetChoice") {
+      if (targetId !== undefined) {
+        return { tag: "invalid", message: "Grapple target was filled twice." };
+      }
+      targetId = fill.value;
+      continue;
+    }
+    if (fill.kind === "grappleOutcome") {
+      if (outcome !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Grapple outcome was filled twice.",
+        };
+      }
+      outcome = fill;
+      continue;
+    }
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the Grapple replay holes.`,
+    };
+  }
+  return { tag: "ok", targetId, outcome };
 }
 
 function validateAttackDamageFill(
@@ -3215,8 +3958,18 @@ function spendAttackAction(
     );
   }
 
+  const nextTurnResources =
+    attack.kind === "weapon" && isLightMeleeWeapon(attack.weapon)
+      ? {
+          ...spent.right,
+          lightWeaponAttackMade: {
+            weaponItemId: heldWeaponItemIdForAttack(state, actorId, attack),
+          },
+        }
+      : spent.right;
+
   const nextState = spendStatBlockAttackResources({
-    state: { ...state, currentTurnResources: spent.right },
+    state: { ...state, currentTurnResources: nextTurnResources },
     actorId,
     attack,
   });
@@ -3283,7 +4036,7 @@ function resolveEndTurn(
     ...state,
     initiative,
     combatants: combatantsAfterRecharge,
-    currentTurnResources: resetTurnActionEconomy(state.currentTurnResources),
+    currentTurnResources: resetBattleTurnResources(state.currentTurnResources),
     readiedSpells,
     legendaryActionWindow: {
       afterTurnActorId: currentActorId(state),
@@ -3315,6 +4068,14 @@ function expireStartOfTurnEffects(
       },
     ]),
   );
+}
+
+function resetBattleTurnResources(
+  resources: BattleTurnResources,
+): BattleTurnResources {
+  const { lightWeaponAttackMade: _lightWeaponAttackMade, ...base } =
+    resetTurnActionEconomy(resources);
+  return base;
 }
 
 function resolveEndTurnCommand(
@@ -3639,7 +4400,8 @@ function movementHole(
     holeId: MOVEMENT_HOLE_ID,
     label: "Movement",
     actorId,
-    movementBudgetFeet: battleMovementBudget(actor).remainingFeet,
+    movementBudgetFeet: battleMovementBudget(actor, state.grapples)
+      .remainingFeet,
   };
 }
 
@@ -3651,7 +4413,7 @@ function parseBattleMovement(
   | { readonly tag: "ok"; readonly movement: BattleResolvedMovement }
   | { readonly tag: "invalid"; readonly message: string } {
   const mover = state.combatants.get(moverId);
-  if (!combatantCanMove(mover)) {
+  if (!combatantCanMoveInState(state, moverId)) {
     return { tag: "invalid", message: "Current combatant cannot move." };
   }
   if (fill.value.movementCostFeet <= 0) {
@@ -3660,12 +4422,16 @@ function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
-  const budget = battleMovementBudget(mover).remainingFeet;
+  const budget = battleMovementBudget(mover, state.grapples).remainingFeet;
   if (fill.value.movementCostFeet > Number(budget)) {
     return {
       tag: "invalid",
       message: "Movement cost exceeds the combatant's remaining Movement.",
     };
+  }
+  const grappleMovementCost = validateGrappleMovementCost(state, moverId, fill);
+  if (grappleMovementCost !== null) {
+    return { tag: "invalid", message: grappleMovementCost };
   }
   const expectedIds = [...state.combatants.keys()].filter(
     (id) => id !== moverId,
@@ -3720,12 +4486,59 @@ function parseBattleMovement(
   };
 }
 
+function validateGrappleMovementCost(
+  state: BattleState,
+  moverId: CombatantId,
+  fill: Extract<BattleFill, { readonly kind: "movement" }>,
+): string | null {
+  const nonExemptDraggedTargets = state.grapples.filter(
+    (grapple) =>
+      grapple.grapplerId === moverId && !grapple.targetExemptFromDragCost,
+  );
+  if (nonExemptDraggedTargets.length === 0) return null;
+
+  const currentDistances = nonExemptDraggedTargets
+    .map((grapple) => combatantDistanceFeet(state, moverId, grapple.targetId))
+    .filter((distance): distance is number => distance !== undefined);
+  const destinationDistances = nonExemptDraggedTargets
+    .map(
+      (grapple) =>
+        fill.value.destinationDistances.find(
+          (distance) => distance.combatantId === grapple.targetId,
+        )?.feet,
+    )
+    .filter((distance): distance is number => distance !== undefined);
+  if (currentDistances.length !== nonExemptDraggedTargets.length) {
+    return "Grapple movement requires current distance to every dragged target.";
+  }
+  if (destinationDistances.length !== nonExemptDraggedTargets.length) {
+    return "Grapple movement requires destination distance for every dragged target.";
+  }
+
+  const dragDistanceFeet = Math.max(
+    ...currentDistances.map((currentDistance, index) =>
+      Math.abs(currentDistance - destinationDistances[index]!),
+    ),
+    0,
+  );
+  const requiredCostFeet = Math.max(2, dragDistanceFeet * 2);
+  if (fill.value.movementCostFeet < requiredCostFeet) {
+    return "Dragging a grappled target costs 1 extra foot per foot moved.";
+  }
+  return null;
+}
+
 function applyBattleMovement(
   state: BattleState,
   movement: BattleResolvedMovement,
 ): BattleState {
   const mover = state.combatants.get(movement.moverId);
-  if (!combatantCanMove(mover)) return state;
+  if (
+    mover === undefined ||
+    !combatantCanMoveInState(state, movement.moverId)
+  ) {
+    return state;
+  }
   const combatants = new Map(state.combatants).set(movement.moverId, {
     ...mover,
     movementSpentFeet: movementFeet(
@@ -3747,7 +4560,35 @@ function applyBattleMovement(
       destination.feet,
     );
   }
-  return { ...state, combatants, combatantDistances: distances };
+  return normalizeBattleGrapples({
+    ...state,
+    combatants,
+    combatantDistances: distances,
+  });
+}
+
+function normalizeBattleGrapples(state: BattleState): BattleState {
+  const grapples = state.grapples.filter((grapple) => {
+    const grappler = state.combatants.get(grapple.grapplerId);
+    const target = state.combatants.get(grapple.targetId);
+    const distance = combatantDistanceFeet(
+      state,
+      grapple.grapplerId,
+      grapple.targetId,
+    );
+    return (
+      grappler !== undefined &&
+      target !== undefined &&
+      !isIncapacitated(grappler.conditions) &&
+      !zeroHpLifecycleIsTerminal(grappler) &&
+      !zeroHpLifecycleIsTerminal(target) &&
+      distance !== undefined &&
+      distance <= grapple.reachFeet
+    );
+  });
+  return grapples.length === state.grapples.length
+    ? state
+    : { ...state, grapples };
 }
 
 function cloneCombatantDistances(
@@ -4589,9 +5430,14 @@ function resolveSpellAct(
   }
 
   if (invocation.kind === "cantripSpellAttack") {
+    const requiredRollMode = requiredAttackRollMode(
+      input.state,
+      subject.actorId,
+      target.combatantId,
+    );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(input.state, input.subject, [
-        spellAttackRollHole(invocation),
+        spellAttackRollHole(invocation, requiredRollMode),
       ]);
     }
     if (!attackRollResultIsValid(fillSet.attackRoll)) {
@@ -4599,6 +5445,13 @@ function resolveSpellAct(
         input.state,
         "invalidFill",
         "Spell attack roll result is outside the d20 attack-roll protocol.",
+      );
+    }
+    if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Spell attack roll mode does not match the current Grappled attack-roll rule.",
       );
     }
     const hit = attackRollHits(
@@ -4860,9 +5713,14 @@ function resolveSpellRelease(
     );
   }
   if (invocation.kind === "cantripSpellAttack") {
+    const requiredRollMode = requiredAttackRollMode(
+      input.state,
+      input.subject.actorId,
+      target.combatantId,
+    );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(input.state, input.subject, [
-        spellAttackRollHole(invocation),
+        spellAttackRollHole(invocation, requiredRollMode),
       ]);
     }
     if (!attackRollResultIsValid(fillSet.attackRoll)) {
@@ -4870,6 +5728,13 @@ function resolveSpellRelease(
         input.state,
         "invalidFill",
         "Spell attack roll result is outside the d20 attack-roll protocol.",
+      );
+    }
+    if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Readied spell attack roll mode does not match the current Grappled attack-roll rule.",
       );
     }
     const hit = attackRollHits(
@@ -5406,10 +6271,12 @@ function applyAttackDamage(
     ...state,
     combatants,
   };
-  return fillSet.concentrationSavingThrow?.value.succeeded === false ||
+  const concentrated =
+    fillSet.concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
-    ? breakBattleConcentration(nextState, targetId)
-    : nextState;
+      ? breakBattleConcentration(nextState, targetId)
+      : nextState;
+  return normalizeBattleGrapples(concentrated);
 }
 
 type BattleDamageContext = {
@@ -6204,6 +7071,7 @@ function spellAttackRollHole(
     SupportedSpellAct,
     { readonly kind: "cantripSpellAttack" }
   >,
+  rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
   return {
     kind: "attackRoll",
@@ -6212,6 +7080,7 @@ function spellAttackRollHole(
     label: `${invocation.spell.name} spell attack roll`,
     spell: invocation,
     attackBonus: invocation.attackBonus,
+    ...(rollMode === undefined ? {} : { rollMode }),
   };
 }
 
@@ -6523,6 +7392,48 @@ function attackTargetHole(
   };
 }
 
+function grappleTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: GRAPPLE_TARGET_HOLE_ID,
+    holeInstanceKey: GRAPPLE_TARGET_HOLE_INSTANCE,
+    label: "Grapple target",
+    choices: grappleTargetChoices(state, actorId),
+  };
+}
+
+function grappleOutcomeHole(link: BattleGrappleLink): BattleGrappleOutcomeHole {
+  return {
+    kind: "grappleOutcome",
+    holeId: GRAPPLE_OUTCOME_HOLE_ID,
+    holeInstanceKey: GRAPPLE_OUTCOME_HOLE_INSTANCE,
+    label: "Grapple saving throw",
+    actorId: link.grapplerId,
+    targetId: link.targetId,
+    dc: link.escapeDc,
+    mode: "grappleSave",
+  };
+}
+
+function escapeGrappleOutcomeHole(
+  link: BattleGrappleLink,
+  actorId: CombatantId,
+): BattleGrappleOutcomeHole {
+  return {
+    kind: "grappleOutcome",
+    holeId: ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
+    holeInstanceKey: ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE,
+    label: "Escape Grapple ability check",
+    actorId,
+    targetId: link.grapplerId,
+    dc: link.escapeDc,
+    mode: "escapeCheck",
+  };
+}
+
 function attackTargetChoices(
   state: BattleState,
   actorId: CombatantId,
@@ -6533,7 +7444,24 @@ function attackTargetChoices(
   );
 }
 
-function battleMovementBudget(combatant: BattleCreatureState | undefined): {
+function grappleTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CombatantId[] {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return [];
+  }
+  return [...state.combatants.keys()].filter((targetId) => {
+    const link = grappleLinkForTarget(state, actorId, targetId);
+    return link.tag === "ok";
+  });
+}
+
+function battleMovementBudget(
+  combatant: BattleCreatureState | undefined,
+  grapples: readonly BattleGrappleLink[] = [],
+): {
   readonly speedFeet: MovementFeet;
   readonly spentFeet: MovementFeet;
   readonly remainingFeet: MovementFeet;
@@ -6545,7 +7473,10 @@ function battleMovementBudget(combatant: BattleCreatureState | undefined): {
       remainingFeet: movementFeet(0),
     };
   }
-  const speedFeet = effectiveWalkSpeed(combatant);
+  const speedFeet = effectiveWalkSpeed(
+    combatant,
+    grapples.some((grapple) => grapple.targetId === combatant.combatantId),
+  );
   const remainingFeet = movementFeet(
     Math.max(0, Number(speedFeet) - Number(combatant.movementSpentFeet)),
   );
@@ -6556,9 +7487,12 @@ function battleMovementBudget(combatant: BattleCreatureState | undefined): {
   };
 }
 
-function effectiveWalkSpeed(combatant: BattleCreatureState): MovementFeet {
+function effectiveWalkSpeed(
+  combatant: BattleCreatureState,
+  isGrappled = false,
+): MovementFeet {
   if (
-    hasCondition(combatant.conditions, "grappled") ||
+    isGrappled ||
     hasCondition(combatant.conditions, "paralyzed") ||
     hasCondition(combatant.conditions, "petrified") ||
     hasCondition(combatant.conditions, "restrained") ||
@@ -6584,13 +7518,15 @@ function baseWalkSpeed(combatant: BattleCreatureState): number {
   return walkSpeed?.feet.kind === "literal" ? walkSpeed.feet.value : 0;
 }
 
-function combatantCanMove(
-  combatant: BattleCreatureState | undefined,
-): combatant is BattleCreatureState {
+function combatantCanMoveInState(
+  state: BattleState,
+  combatantId: CombatantId,
+): boolean {
+  const combatant = state.combatants.get(combatantId);
   return (
     combatant !== undefined &&
     !zeroHpLifecycleIsTerminal(combatant) &&
-    Number(battleMovementBudget(combatant).remainingFeet) > 0
+    Number(battleMovementBudget(combatant, state.grapples).remainingFeet) > 0
   );
 }
 
@@ -6685,6 +7621,110 @@ function attackTargetIsLegal(
   );
 }
 
+function grappleLinkForTarget(
+  state: BattleState,
+  grapplerId: CombatantId,
+  targetId: CombatantId,
+):
+  | { readonly tag: "ok"; readonly link: BattleGrappleLink }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const grappler = state.combatants.get(grapplerId);
+  const target = state.combatants.get(targetId);
+  if (
+    grappler === undefined ||
+    target === undefined ||
+    grapplerId === targetId
+  ) {
+    return {
+      tag: "invalid",
+      message: "Grapple target must be another combatant in this battle.",
+    };
+  }
+  if (grappledBy(state, targetId) !== undefined) {
+    return { tag: "invalid", message: "Grapple target is already Grappled." };
+  }
+  const hand = firstFreeHand(grappler, state.grapples);
+  if (hand === undefined) {
+    return { tag: "invalid", message: "Grapple requires a free hand." };
+  }
+  const distanceFeet = combatantDistanceFeet(state, grapplerId, targetId);
+  if (distanceFeet === undefined || distanceFeet > 5) {
+    return { tag: "invalid", message: "Grapple target must be within 5 feet." };
+  }
+  if (!targetIsNoMoreThanOneSizeLarger(grappler.size, target.size)) {
+    return {
+      tag: "invalid",
+      message: "Grapple target cannot be more than one size larger.",
+    };
+  }
+  return {
+    tag: "ok",
+    link: {
+      grapplerId,
+      targetId,
+      escapeDc: grappleEscapeDc(grappler),
+      reachFeet: 5,
+      hand,
+      targetExemptFromDragCost: grappleDragCostExempt(
+        grappler.size,
+        target.size,
+      ),
+    },
+  };
+}
+
+function firstFreeHand(
+  combatant: BattleCreatureState,
+  grapples: readonly BattleGrappleLink[],
+): BattleHand | undefined {
+  const hands = combatantHandUses(combatant, grapples);
+  if (hands.left === "free") return "left";
+  if (hands.right === "free") return "right";
+  return undefined;
+}
+
+function grappleEscapeDc(grappler: BattleCreatureState): number {
+  return 8 + strengthModifier(grappler) + combatantProficiencyBonus(grappler);
+}
+
+function strengthModifier(combatant: BattleCreatureState): number {
+  if (combatant.origin.kind === "statBlock") {
+    return Math.floor(
+      (combatant.origin.statBlock.statBlock.abilityScores.str - 10) / 2,
+    );
+  }
+  return Number(combatant.armorClass.abilityModifiers.str);
+}
+
+function combatantProficiencyBonus(combatant: BattleCreatureState): number {
+  if (combatant.origin.kind === "statBlock") return 2;
+  const level = combatant.origin.classLevels.reduce(
+    (total, classLevel) => total + Number(classLevel.level),
+    0,
+  );
+  return Number(proficiencyBonus(Math.floor((level - 1) / 4) + 2));
+}
+
+const SIZE_RANKS: Readonly<Record<Size, number>> = {
+  tiny: 0,
+  small: 1,
+  medium: 2,
+  large: 3,
+  huge: 4,
+  gargantuan: 5,
+};
+
+function targetIsNoMoreThanOneSizeLarger(
+  grappler: Size,
+  target: Size,
+): boolean {
+  return SIZE_RANKS[target] - SIZE_RANKS[grappler] <= 1;
+}
+
+function grappleDragCostExempt(grappler: Size, target: Size): boolean {
+  return target === "tiny" || SIZE_RANKS[grappler] - SIZE_RANKS[target] >= 2;
+}
+
 function combatantDistanceFeet(
   state: BattleState,
   actorId: CombatantId,
@@ -6695,6 +7735,7 @@ function combatantDistanceFeet(
 
 function attackRollHole(
   attack: SupportedAttackActionOption,
+  rollMode?: AttackRollMode,
 ): BattleAttackRollHole {
   const name = attackActionOptionName(attack);
   return {
@@ -6704,7 +7745,27 @@ function attackRollHole(
     label: `${name} attack roll`,
     attack,
     attackBonus: attackBonus(attack),
+    ...(rollMode === undefined ? {} : { rollMode }),
   };
+}
+
+function requiredAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+): AttackRollMode | undefined {
+  const grapple = grappledBy(state, attackerId);
+  if (grapple === undefined || grapple.grapplerId === targetId) {
+    return undefined;
+  }
+  return "disadvantage";
+}
+
+function attackRollModeMatches(
+  roll: AttackRollResult,
+  requiredMode: AttackRollMode | undefined,
+): boolean {
+  return requiredMode === undefined || roll.rollMode === requiredMode;
 }
 
 function attackDamageHole(
@@ -6775,6 +7836,77 @@ function attackActionOptionsForActor(
   }
 
   return [];
+}
+
+function offHandAttackActionOptionForActor(
+  state: BattleState,
+  actorId: CombatantId,
+): CharacterWeaponAttackActionOption | undefined {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  const main = actor.origin.attack;
+  const offHand = actor.origin.offHandAttack;
+  if (main === null || offHand === undefined) return undefined;
+  if (!isLightMeleeWeapon(main.weapon) || !isLightMeleeWeapon(offHand.weapon)) {
+    return undefined;
+  }
+  return {
+    ...offHand,
+    damageAbilityModifier:
+      offHand.abilityModifier < 0 ? offHand.abilityModifier : 0,
+  };
+}
+
+function offHandAttackPrerequisiteMet(
+  state: BattleState,
+  actorId: CombatantId,
+  offHand: CharacterWeaponAttackActionOption,
+): boolean {
+  const offHandItemId = offHandWeaponItemIdForActor(state, actorId, offHand);
+  if (offHandItemId === undefined) return false;
+  const priorLightAttack = state.currentTurnResources.lightWeaponAttackMade;
+  return (
+    priorLightAttack !== undefined &&
+    priorLightAttack.weaponItemId !== offHandItemId
+  );
+}
+
+function heldWeaponItemIdForAttack(
+  state: BattleState,
+  actorId: CombatantId,
+  attack: CharacterWeaponAttackActionOption,
+): string {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") return attack.weapon.id;
+  if (actor.origin.attack?.weapon.id === attack.weapon.id) {
+    return actor.origin.selectedLoadout.weapon?.itemId ?? attack.weapon.id;
+  }
+  if (actor.origin.offHandAttack?.weapon.id === attack.weapon.id) {
+    return (
+      actor.origin.selectedLoadout.offHandWeapon?.itemId ?? attack.weapon.id
+    );
+  }
+  return attack.weapon.id;
+}
+
+function offHandWeaponItemIdForActor(
+  state: BattleState,
+  actorId: CombatantId,
+  offHand: CharacterWeaponAttackActionOption,
+): string | undefined {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  return actor.origin.selectedLoadout.offHandWeapon?.unitId ===
+    offHand.weapon.id
+    ? actor.origin.selectedLoadout.offHandWeapon.itemId
+    : undefined;
+}
+
+function isLightMeleeWeapon(weapon: WeaponRecord): boolean {
+  return (
+    weapon.usage === "melee" &&
+    (weapon.properties ?? []).some((property) => property.kind === "light")
+  );
 }
 
 function supportedStatBlockAttackActionOption(
@@ -7454,7 +8586,8 @@ function attackDamageModifier(attack: SupportedAttackActionOption): number {
   return Match.value(attack).pipe(
     Match.when(
       { kind: "weapon" },
-      (weaponAttack) => weaponAttack.abilityModifier,
+      (weaponAttack) =>
+        weaponAttack.damageAbilityModifier ?? weaponAttack.abilityModifier,
     ),
     Match.when(
       { kind: "statBlockAttack" },

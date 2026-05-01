@@ -299,14 +299,22 @@ function fighterCreatureInit(input: {
       characterId: characterId("fighter-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
-      armorClass: defaultArmorClassState(),
+      armorClass: {
+        ...defaultArmorClassState(),
+        rightHandUse: "mainWeapon",
+      },
+      size: "medium",
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(12),
       maxHp: Hp(12),
       tempHp: Hp(0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
       selectedLoadout: {
-        weapon: { unitId: "weapon_flail", grip: "one_handed" },
+        weapon: {
+          itemId: "main:weapon_flail",
+          unitId: "weapon_flail",
+          grip: "one_handed",
+        },
       },
       attack: flailAttack(),
     },
@@ -441,6 +449,9 @@ function projectHole(hole: BattleHole): MbtHole {
     }),
     Match.when({ kind: "movement" }, () => {
       throw new Error("Battle runtime MBT does not model movement holes.");
+    }),
+    Match.when({ kind: "grappleOutcome" }, () => {
+      throw new Error("Battle runtime MBT does not model Grapple holes.");
     }),
     Match.exhaustive,
   );

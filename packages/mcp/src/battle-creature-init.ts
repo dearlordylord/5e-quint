@@ -77,6 +77,10 @@ export function battleCreatureInitFromCharacterBuild(
   const maxHp = Hp(input.build.hitPoints.maximum);
   const characterUnitRefs = characterBuildUnitRefs(input.build);
   const currentHp = input.currentHp ?? maxHp;
+  const offHandAttack = characterOffHandAttackActionOption(
+    input.build,
+    input.unitLibrary,
+  );
   if (currentHp > maxHp) {
     throw new Error(
       "Character battle initialization current HP exceeds max HP.",
@@ -93,6 +97,7 @@ export function battleCreatureInitFromCharacterBuild(
       characterUnitRefs,
       classLevels: characterBattleClassLevels(input.build, input.unitLibrary),
       armorClass: characterArmorClassState(input.build, input.unitLibrary),
+      size: characterBattleSize(input.build, input.unitLibrary),
       speed: characterBattleWalkSpeed(input.build, input.unitLibrary),
       currentHp,
       maxHp,
@@ -103,6 +108,7 @@ export function battleCreatureInitFromCharacterBuild(
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout: input.build.equipment,
       attack: characterAttackActionOption(input.build, input.unitLibrary),
+      ...(offHandAttack === undefined ? {} : { offHandAttack }),
       resources: characterBattleResources(input.build, input.unitLibrary),
       ...(input.build.spellcasting === undefined
         ? {}
@@ -126,6 +132,14 @@ function characterBattleWalkSpeed(
     throw new Error(`Expected species Unit: ${build.species}`);
   }
   return { walkFeet: movementFeet(species.speed.walkFeet) };
+}
+
+function characterBattleSize(build: CharacterBuild, unitLibrary: UnitCatalog) {
+  const species = unitLibrary.requireUnit(build.species);
+  if (species.kind !== "species") {
+    throw new Error(`Expected species Unit: ${build.species}`);
+  }
+  return species.size.size;
 }
 
 function characterBattleClassLevels(
@@ -207,7 +221,12 @@ function characterArmorClassState(
       }),
     ],
     armorTraining: new Set(build.armorTraining),
-    leftHandUse: shield?.kind === "shield" ? "shield" : "free",
+    leftHandUse:
+      shield?.kind === "shield"
+        ? "shield"
+        : loadout.offHandWeapon == null
+          ? "free"
+          : "offWeapon",
     rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
   };
 }
@@ -250,12 +269,35 @@ function characterAttackActionOption(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): CharacterWeaponAttackActionOption | null {
-  const selectedWeapon = build.equipment.weapon;
+  const selectedWeapon = build.equipment.weapon?.unitId;
   if (selectedWeapon == null) {
     return null;
   }
 
-  const unit = unitLibrary.requireUnit(selectedWeapon.unitId);
+  return characterWeaponAttackActionOption(selectedWeapon, build, unitLibrary);
+}
+
+function characterOffHandAttackActionOption(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): CharacterWeaponAttackActionOption | undefined {
+  const selectedWeapon = build.equipment.offHandWeapon?.unitId;
+  if (selectedWeapon == null) {
+    return undefined;
+  }
+
+  return (
+    characterWeaponAttackActionOption(selectedWeapon, build, unitLibrary) ??
+    undefined
+  );
+}
+
+function characterWeaponAttackActionOption(
+  unitId: UnitRecord["id"],
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): CharacterWeaponAttackActionOption | null {
+  const unit = unitLibrary.requireUnit(unitId);
   if (unit.kind !== "weapon" || unit.damage.kind !== "dice") {
     return null;
   }

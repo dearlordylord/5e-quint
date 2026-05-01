@@ -151,6 +151,43 @@ describe("MCP server route", () => {
     );
   });
 
+  test("starts battle from a CharacterBuild with two Light weapons for the off-hand runtime path", () => {
+    const root = createMcpCompositionRoot();
+    const state = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-root-off-hand"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Orc Soldier Fighter",
+        build: fighterTwoLightWeaponBuild(root.unitLibrary),
+        initiative: initiativeScore(12),
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+      },
+      unitLibrary: root.unitLibrary,
+    });
+
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: fighterId,
+        hands: { left: "offWeapon", right: "mainWeapon" },
+      }),
+    );
+    expect(
+      discoverBattleActs(state).map((act) => act.subject),
+    ).not.toContainEqual({
+      tag: "bonusAction",
+      actorId: fighterId,
+      action: "offHandAttack",
+      attackName: "Dagger",
+    });
+  });
+
   test("registers agent-facing content discovery tool names", () => {
     expect(contentToolDefinitions.map((tool) => tool.name)).toEqual([
       "describe_mcp_workflow",
@@ -1996,7 +2033,11 @@ describe("MCP server route", () => {
           ...build,
           equipment: {
             shield: "equipment_shield",
-            weapon: { unitId: "weapon_longsword", grip: "one_handed" },
+            weapon: {
+              itemId: "main:weapon_longsword",
+              unitId: "weapon_longsword",
+              grip: "one_handed",
+            },
           },
         },
       },
@@ -2499,6 +2540,26 @@ function fighterTwoCharacterBuild(
   }
 
   return result.build;
+}
+
+function fighterTwoLightWeaponBuild(
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+): CharacterBuild {
+  return {
+    ...fighterCharacterBuild(unitLibrary),
+    equipment: {
+      armor: "armor_chain_mail",
+      weapon: {
+        itemId: "main:weapon_shortsword",
+        unitId: "weapon_shortsword",
+        grip: "one_handed",
+      },
+      offHandWeapon: {
+        itemId: "off:weapon_dagger",
+        unitId: "weapon_dagger",
+      },
+    },
+  };
 }
 
 function createFinalizedFighterSheet(

@@ -146,7 +146,7 @@ runtime choice rather than patched into state later.
   activation, or the runtime End Turn command. Add a subject for a reusable
   runtime procedure family, not for one named ability.
 - `BattleHole` - a missing runtime input needed to resolve a subject, such as an
-  attack target, attack roll, or damage roll.
+  attack target, attack roll, damage roll, or Grapple/Escape outcome.
 - `BattleFill` - caller-provided answer for a `BattleHole`.
 - `interruptStack` - durable Reaction-window state. The top frame carries the
   trigger, eligible reactors, admitted reaction choices, and the interrupted
@@ -182,6 +182,16 @@ Available acts:
 - discover Attack for supported character weapon attacks and supported
   Stat Block named attacks when the current actor can take actions and at least
   one target is legal for the selected attack's melee reach or normal range.
+- discover Grapple for supported character combatants with a free hand and a
+  legal adjacent target. The battle state stores the Grapple link, escape DC,
+  occupied hand, and drag-cost exemption derived from creature Sizes.
+- discover Escape Grapple for a Grappled current actor and Release Grapple for a
+  grappler. Release spends no action; Escape spends the action on success or
+  failure.
+- discover Off-Hand Attack for character combatants holding Light melee weapons
+  in both hands. The extra attack spends the Bonus Action and derives weapon
+  damage from the off-hand `WeaponRecord`, omitting a positive ability modifier
+  from damage per the Light property.
 - discover supported Stat Block Legendary Action attacks after another
   creature's turn ends for monsters that can act, have remaining Legendary
   Action uses, and have a legal target. These spend only monster Legendary

@@ -557,8 +557,13 @@ export type CharacterBuildLoadout = {
   readonly armor?: UnitRecord["id"];
   readonly shield?: UnitRecord["id"];
   readonly weapon?: {
+    readonly itemId: string;
     readonly unitId: UnitRecord["id"];
     readonly grip: "one_handed";
+  };
+  readonly offHandWeapon?: {
+    readonly itemId: string;
+    readonly unitId: UnitRecord["id"];
   };
 };
 

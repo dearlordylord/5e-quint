@@ -671,6 +671,7 @@ export function characterBuildUnitRefs(
     ...optionalUnitId(build.equipment.armor),
     ...optionalUnitId(build.equipment.shield),
     ...optionalUnitId(build.equipment.weapon?.unitId),
+    ...optionalUnitId(build.equipment.offHandWeapon?.unitId),
     ...(build.spellcasting?.cantrips ?? []),
     ...(build.spellcasting?.spellbook.map((spell) => spell.spellId) ?? []),
     ...(build.spellcasting?.preparedSpells ?? []),
@@ -716,6 +717,7 @@ export function finalizedBuildEquipment(
       return {
         ...equipment,
         weapon: {
+          itemId: `main:${selectedUnitId}`,
           unitId: selectedUnitId,
           grip: loadoutChoice.grip,
         },

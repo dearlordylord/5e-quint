@@ -1443,7 +1443,11 @@ describe("character creation finalization", () => {
     expect(result.build.equipment).toEqual({
       armor: "armor_chain_mail",
       shield: "equipment_shield",
-      weapon: { unitId: "weapon_longsword", grip: "one_handed" },
+      weapon: {
+        itemId: "main:weapon_longsword",
+        unitId: "weapon_longsword",
+        grip: "one_handed",
+      },
     });
     expect(result.build.resources).toEqual([
       {
@@ -1634,6 +1638,7 @@ describe("character creation finalization", () => {
     });
 
     expect(projection.weapon).toEqual({
+      itemId: "main:weapon_test_selected",
       unitId: "weapon_test_selected",
       grip: "one_handed",
     });
@@ -1706,7 +1711,11 @@ describe("character creation finalization", () => {
           equipment: {
             armor: "armor_chain_mail",
             shield: "equipment_shield",
-            weapon: { unitId: "weapon_spear", grip: "one_handed" },
+            weapon: {
+              itemId: "main:weapon_spear",
+              unitId: "weapon_spear",
+              grip: "one_handed",
+            },
           },
         },
       });
