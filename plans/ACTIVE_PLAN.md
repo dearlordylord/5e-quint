@@ -255,13 +255,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 31,
       "id": "BA12",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Convert Old-Only Battle Behavior To Width Backlog"
     },
     {
       "number": 32,
       "id": "BA13",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Close Battle Authority Reconciliation"
     },
     {
@@ -293,6 +293,72 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "PBA4",
       "status": "blocked",
       "title": "Align Protocol Docs And Start Feature-Parity Queue"
+    },
+    {
+      "number": 38,
+      "id": "PBA5",
+      "status": "blocked",
+      "title": "Restore Death Save Turn Lifecycle"
+    },
+    {
+      "number": 39,
+      "id": "PBA6",
+      "status": "blocked",
+      "title": "Restore Second Wind And Bonus-Action Subjects"
+    },
+    {
+      "number": 40,
+      "id": "PBA7",
+      "status": "blocked",
+      "title": "Restore Save-Gate Damage Spell Procedure"
+    },
+    {
+      "number": 41,
+      "id": "PBA8",
+      "status": "blocked",
+      "title": "Restore Persistent Spell Effects And Concentration"
+    },
+    {
+      "number": 42,
+      "id": "PBA9",
+      "status": "blocked",
+      "title": "Restore Reaction Windows And Interrupt Stack"
+    },
+    {
+      "number": 43,
+      "id": "PBA10",
+      "status": "blocked",
+      "title": "Restore Movement Positioning And Opportunity Attacks"
+    },
+    {
+      "number": 44,
+      "id": "PBA11",
+      "status": "blocked",
+      "title": "Restore Monster Resource Controls"
+    },
+    {
+      "number": 45,
+      "id": "PBA12",
+      "status": "blocked",
+      "title": "Restore Hand Weapon And Grapple State"
+    },
+    {
+      "number": 46,
+      "id": "PBA13",
+      "status": "blocked",
+      "title": "Restore Hide Search And Class Rider Width"
+    },
+    {
+      "number": 47,
+      "id": "PBA14",
+      "status": "blocked",
+      "title": "Restore Turn Roster And Generic Combat Actions"
+    },
+    {
+      "number": 48,
+      "id": "PBA15",
+      "status": "blocked",
+      "title": "Plan Broader Battle Widening Queue"
     }
   ]
 }
@@ -363,13 +429,24 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 28    | BA9 - Quarantine Legacy Core Battle MBT                          | done               | BA8                  | BA13                                | Old Core battle MBT is opt-in legacy/Core proof-source material and no longer a promoted runtime verification gate.                                                                                 | Completed; BA13 remains blocked until BA11 and BA12 complete.                             |
 | 29    | BA10 - Define Promoted Runtime MBT Strategy                      | done               | BA3                  | BA11                                | Selected the promoted MBT strategy in `plans/promoted-battle-runtime-mbt-strategy.md`: shared algebra MBT stays modular, catalog width defaults to table-driven contract tests, and integrated MBT is selective. | Completed; BA11 is unblocked because BA8 and BA10 are complete.                          |
 | 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | done               | BA8, BA10            | BA13                                | Added the selected narrow trace-driven promoted battle-runtime MBT for Fighter weapon Attack against a Skeleton Stat Block target without widening battle behavior.                                  | Completed; BA13 remains blocked until BA12 completes.                                    |
-| 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | ready-for-research | BA3, BA7             | BA13                                | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                                   | Ready; BA7 supplied the zero-HP lifecycle boundary rows.                                  |
-| 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until BA12 old-only backlog work completes.                                      |
+| 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | done               | BA3, BA7             | BA13                                | Converted old-only features into the ordered post-BA queue: PBA0-PBA4 archive/protocol batch, PBA5-PBA14 feature-parity restoration, then PBA15 broader widening planning.                         | Completed; BA13 is unblocked.                                                            |
+| 32    | BA13 - Close Battle Authority Reconciliation                     | ready-for-research | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and the ordered post-BA backlog is synchronized.                                                                         | Ready; BA12 supplied the post-BA queue.                                                   |
 | 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | blocked            | BA13                 | PBA1                                | Archive the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                               | Blocked until BA closes.                                                                  |
 | 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | blocked            | PBA0                 | PBA2                                | Make the reducer architecture rule explicit: reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                  | Blocked until parity/composition archive exists.                                          |
 | 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | blocked            | PBA1                 | PBA3                                | Search battle-runtime and MCP composition for named-ability or slug-shaped reducer drift and classify each case as support gate, extraction, or future procedure-family widening.                   | Blocked until reducer discipline is documented.                                           |
 | 36    | PBA3 - Correct First Reducer Extensibility Drift                 | blocked            | PBA2                 | PBA4                                | If PBA2 finds real drift, make the smallest correction that moves named ability logic toward data/readers/procedure families; otherwise close as a no-op with evidence.                              | Blocked until audit identifies whether correction is needed.                              |
-| 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | blocked            | PBA3                 | future tasks                        | Align docs after the watcher/corrector pass and append the first old Core feature-parity restoration tasks before any broader widening queue.                                                        | Blocked until the first extensibility correction/no-op closes.                            |
+| 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | blocked            | PBA3                 | PBA5                                | Align docs after the watcher/corrector pass, then promote the first BA12 feature-parity backlog candidate to ready work.                                                                            | Blocked until the first extensibility correction/no-op closes.                            |
+| 38    | PBA5 - Restore Death Save Turn Lifecycle                         | blocked            | PBA4                 | PBA6                                | Restore start-turn Death Saving Throw rolls, Stable handoff, and zero-HP closeout through battle/runtime and character-session state.                                                               | Blocked behind PBA0-PBA4.                                                                 |
+| 39    | PBA6 - Restore Second Wind And Bonus-Action Subjects             | blocked            | PBA5                 | PBA7                                | Restore UnitRecord-backed Second Wind and the reusable Bonus Action subject/resource protocol without projected executable reducers.                                                                 | Blocked behind zero-HP feature-parity work.                                               |
+| 40    | PBA7 - Restore Save-Gate Damage Spell Procedure                  | blocked            | PBA6                 | PBA8                                | Restore Acid Splash-style save-gate damage spell acts as UnitRecord-backed spell holes and shared save/damage procedures.                                                                           | Blocked behind bonus-action feature subject work.                                         |
+| 41    | PBA8 - Restore Persistent Spell Effects And Concentration        | blocked            | PBA7                 | PBA9                                | Restore Mage Armor/persistent AC override, concentration, and readied spell lifecycle through runtime state and spell-effect procedures.                                                            | Blocked behind save-gate spell procedure work.                                            |
+| 42    | PBA9 - Restore Reaction Windows And Interrupt Stack              | blocked            | PBA8                 | PBA10                               | Restore reusable reaction windows and interrupt stack behavior for attacks, spells, saves, and after-damage effects.                                                                                | Blocked behind persistent effect/concentration work.                                      |
+| 43    | PBA10 - Restore Movement Positioning And Opportunity Attacks     | blocked            | PBA9                 | PBA11                               | Restore movement/position mutation, traversal, and Opportunity Attack boundaries with explicit spatial ownership.                                                                                   | Blocked behind reaction-window work.                                                      |
+| 44    | PBA11 - Restore Monster Resource Controls                        | blocked            | PBA10                | PBA12                               | Restore StatBlockRecord-backed monster recharge, daily, legendary, and generic monster save/traversal controls.                                                                                    | Blocked behind movement/OA work.                                                          |
+| 45    | PBA12 - Restore Hand Weapon And Grapple State                    | blocked            | PBA11                | PBA13                               | Restore hand occupancy, weapon modes, off-hand attacks, Grapple, Escape Grapple, release, and grapple movement-cost state.                                                                          | Blocked behind monster control work.                                                      |
+| 46    | PBA13 - Restore Hide Search And Class Rider Width                | blocked            | PBA12                | PBA14                               | Restore Hide/Search/hidden discovery plus remaining old class-feature riders as promoted runtime subjects.                                                                                          | Blocked behind hand/weapon/grapple work.                                                  |
+| 47    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13                | PBA15                               | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                               | Blocked behind hidden-state/class-rider work.                                             |
+| 48    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14                | future tasks                        | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                               | Blocked until feature-parity queue reaches its first closeout point.                      |
 
 ## Task Details
 
@@ -2194,13 +2271,13 @@ Plan Impact:
 
 ### Task 31 - BA12 - Convert Old-Only Battle Behavior To Width Backlog
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: BA3, BA7
 Blocks: BA13
 
-Next action: turn old-only behavior into future atomic width tasks without
-implementing it.
+Next action: completed. Old-only behavior is now represented by ordered
+post-BA backlog tasks rather than vague Restore Ledger debt.
 
 Input:
 
@@ -2268,18 +2345,49 @@ Verification:
 
 Plan Impact:
 
-- BA13 remains blocked until BA8, BA9, and BA11 also complete, but BA13 must
-  verify that the appended post-BA queue is present and ordered before closing
-  Battle Authority Reconciliation.
+- Status: applied.
+- BA13: unblocked for final authority closeout because BA8, BA9, BA11, and
+  BA12 are complete.
+- PBA4: revised to block PBA5 and promote the first BA12 backlog candidate only
+  after PBA0-PBA3 archive/protocol/corrector work completes.
+- PBA5-PBA14: added as blocked old Core feature-parity restoration tasks in
+  promoted-runtime terms, ordered before broader widening.
+- PBA15: added as the broader widening replan task, blocked behind the explicit
+  feature-parity queue.
+- Observations: no candidate restores projected executable IR. Restore semantics
+  flow through UnitRecords, StatBlockRecords, shared algebras, battle runtime
+  state, or character-session handoff state.
+- Required plan edits: none beyond this BA12 closeout.
+
+BA12 source-only planning check:
+
+- Batch 1 is PBA0-PBA4: archive maximum promoted Quint parity and MCP/runtime
+  composition, document reducer extensibility discipline, audit/correct drift,
+  and then promote the first feature-parity candidate.
+- Batch 2 is PBA5-PBA14: old Core feature-parity restoration through promoted
+  runtime tasks. These are all blocked behind PBA4 so none become ready before
+  the architecture watcher/corrector pass.
+- Batch 3 is PBA15: broader battle widening planning after the explicit
+  feature-parity queue reaches its first closeout point.
+- `/simplify` round 1 checked BA1 inventory and BA7 lifecycle rows against the
+  appended task list. Movement/OA, reactions, death saves, Second Wind, Acid
+  Splash, Mage Armor, concentration/readied spells, monster controls,
+  hand/weapon/grapple, Hide/Search, class riders, mid-battle add/remove, and
+  generic combat actions all have explicit owners.
+- `/simplify` round 2 checked ordering and invalid restoration targets. The
+  queue keeps feature parity before broad widening, leaves no feature task ready
+  before PBA0-PBA4, and rejects `CPU*`/`PEA*`/`PPR*` projected IR as task
+  targets.
 
 ### Task 32 - BA13 - Close Battle Authority Reconciliation
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: BA8, BA9, BA11, BA12
 Blocks: PBA0
 
-Next action: perform the final authority closeout.
+Next action: perform the final authority closeout and verify the post-BA queue
+is still synchronized.
 
 Planner role:
 
@@ -2498,16 +2606,17 @@ Plan Impact:
 Status: `blocked`
 
 Depends on: PBA3
-Blocks: future tasks
+Blocks: PBA5
 
-Next action: align the docs after PBA0-PBA3 and append the first feature-parity
-restoration queue.
+Next action: align the docs after PBA0-PBA3 and promote PBA5, or revise the
+feature-parity queue with an explicit owner decision if PBA0-PBA3 changes the
+architecture constraints.
 
 Output:
 
-- `ACTIVE_PLAN.md` is extended with the first old Core feature-parity
-  restoration tasks after PBA4, synchronized across the Ralph Task Index, DAG
-  table, and task-detail sections.
+- `ACTIVE_PLAN.md` retains the BA12-appended old Core feature-parity backlog
+  after PBA4, synchronized across the Ralph Task Index, DAG table, and
+  task-detail sections.
 - The feature-parity queue is ordered before broader Surface/catalog widening.
 - Any broad widening tasks discovered during PBA0-PBA3 are blocked behind the
   feature-parity queue or explicitly deferred by owner decision.
@@ -2532,6 +2641,491 @@ Plan Impact:
 
 - If successful, the next appended feature-parity task becomes the Ralph loop
   entrypoint.
+
+### Task 38 - PBA5 - Restore Death Save Turn Lifecycle
+
+Status: `blocked`
+
+Depends on: PBA4
+Blocks: PBA6
+
+Batch: old Core feature-parity restoration.
+
+Next action: research and restore the first zero-HP lifecycle width slice.
+
+Backlog candidate:
+
+- Old sources: `plans/battle-authority-inventory.md` "Zero-HP lifecycle,
+  death saves, healing from 0, monster death" and "BA7 Zero-HP Boundary Rows";
+  root `battle.qnt` `bStartTurn`, `applyDamage`, `bHeal`, and old Core
+  zero-HP tests.
+- RAW topics: `.references/srd-5.2.1/Playing-the-Game.md` Dropping to 0 Hit
+  Points, Death Saving Throws, Stabilizing a Character, Character Demise; Short
+  Rest and Long Rest glossary topics; `UBIQUITOUS_LANGUAGE.md` Death Saving
+  Throw, Stable, Hit Points; `ASSUMPTIONS.md` A12.
+- New-runtime owner: `@dnd/battle-runtime` for combat turn-start resolution and
+  HP-mutation lifecycle state; character-session/MCP closeout for durable
+  post-battle zero-HP, Stable/dead, and rest handoff.
+- Acceptance summary: turn-start can ask for or consume Death Saving Throw
+  rolls; Stable/dead handoff is typed; post-battle closeout persists character
+  lifecycle facts without duplicating battle runtime HP authority.
+- Non-goals: broad rest/adventuring runtime, revival magic, monster-death
+  variants beyond the current lifecycle policy.
+- Restore condition: battle/runtime and character-session state support
+  zero-HP/death-save/rest facts without conflating them with attack damage or
+  provenance labels.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime and MCP tests for restored lifecycle handoff.
+- No battle MBT unless the task adds a promoted QNT/MBT slice.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA6.
+
+### Task 39 - PBA6 - Restore Second Wind And Bonus-Action Subjects
+
+Status: `blocked`
+
+Depends on: PBA5
+Blocks: PBA7
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore UnitRecord-backed Second Wind and the reusable Bonus Action
+subject/resource protocol.
+
+Backlog candidate:
+
+- Old sources: Restore Ledger "Second Wind battle action lane";
+  `git show 39f9ab71:packages/core/src/projected-creature-action-reducer.ts`;
+  `git show 39f9ab71:packages/core/src/projected-action-context.ts`; BA1
+  "Class-feature battle actions/resources" and "Bonus actions" rows.
+- RAW topics: `.references/srd-5.2.1/Classes/Fighter.md` Second Wind;
+  `.references/srd-5.2.1/Rules-Glossary.md` Bonus Action;
+  `.references/srd-5.2.1/Playing-the-Game.md` action economy;
+  `UBIQUITOUS_LANGUAGE.md` Resource and Hit Points.
+- New-runtime owner: `@dnd/battle-runtime` Unit feature subject discovery,
+  action-resource spend/reset, healing procedure, and MCP act resolution.
+- Acceptance summary: Second Wind appears as a supported no-projected-IR
+  UnitRecord feature act, spends Bonus Action and its feature resource, heals
+  through the runtime HP boundary, and is rejected when the actor cannot act.
+- Non-goals: broad class feature catalog, old projected action reducers,
+  non-Fighter riders.
+- Restore condition: runtime supports UnitRecord-backed class feature action
+  holes and Bonus Action subjects structurally.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- `pnpm --filter @dnd/battle-runtime test`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- `pnpm --filter @dnd/mcp test` if MCP tools change.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA7.
+
+### Task 40 - PBA7 - Restore Save-Gate Damage Spell Procedure
+
+Status: `blocked`
+
+Depends on: PBA6
+Blocks: PBA8
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore Acid Splash-style save-gate damage spells as promoted
+runtime spell procedures.
+
+Backlog candidate:
+
+- Old sources: Restore Ledger "Projected prepared spell / Acid Splash lane";
+  `plans/phase0-core-deletion-restore-audit.md` Acid Splash rows;
+  BA1 "Spell access, spell slots, Magic action spells" row.
+- RAW topics: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Acid Splash;
+  `.references/srd-5.2.1/Spells/Gaining-and-Casting.md` casting, spell slots,
+  saving throws, and casting time; `UBIQUITOUS_LANGUAGE.md` Spell Definition,
+  Spell Access, Spell Invocation, Spell Effect, Saving Throw, Damage.
+- New-runtime owner: `@dnd/battle-runtime` spell act holes, save procedure,
+  damage procedure, slot/cantrip resource handling, and MCP fill/replay.
+- Acceptance summary: save-gate damage is expressed as reusable spell procedure
+  data and holes; selected targets roll/accept saves; damage applies only on
+  failed saves as RAW requires for the selected spell.
+- Non-goals: projected prepared spell bridge, broad AoE geometry, upcasting,
+  reaction spells, full spell catalog.
+- Restore condition: UnitRecord-backed spell act holes exist for save-gate
+  damage without `PEA*` projected action vocabulary.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime spell tests and MCP replay tests if exposed.
+- No battle MBT unless a promoted QNT slice is intentionally widened.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA8.
+
+### Task 41 - PBA8 - Restore Persistent Spell Effects And Concentration
+
+Status: `blocked`
+
+Depends on: PBA7
+Blocks: PBA9
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore persistent spell-effect lifecycle with Mage Armor and
+concentration as the first pressure cases.
+
+Backlog candidate:
+
+- Old sources: Restore Ledger "Mage Armor projected persistent lane"; BA1
+  "Persistent effects and concentration lifecycle" row; root `battle.qnt`
+  `ActiveEffect`, `breakConcentrationAndPropagate`,
+  `advanceStartEffectsForOwner`, `resolveConcentration`,
+  `bConcentrationCheck`, and readied spell functions.
+- RAW topics: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Mage Armor;
+  `.references/srd-5.2.1/Spells/Gaining-and-Casting.md` Duration,
+  Concentration, and Ready Spell timing; `UBIQUITOUS_LANGUAGE.md` Spell Effect.
+- New-runtime owner: `@dnd/battle-runtime` active effect state, AC projection
+  boundary, concentration checks/breakage, readied spell lifecycle, and MCP
+  snapshots.
+- Acceptance summary: Mage Armor can set a base AC override with a typed early
+  end; concentration is tracked and broken by the modeled RAW triggers; readied
+  spell concentration uses the same lifecycle instead of a parallel state.
+- Non-goals: all persistent spells, all AC formula variants, projected
+  persistent records, app UI visualization.
+- Restore condition: runtime supports UnitRecord-backed persistent
+  effects/lifecycle and concentration without `PPR*` records.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Battle-runtime tests for active effects, AC projection, and concentration.
+- QNT/MBT widening only if the task changes promoted spec behavior.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA9.
+
+### Task 42 - PBA9 - Restore Reaction Windows And Interrupt Stack
+
+Status: `blocked`
+
+Depends on: PBA8
+Blocks: PBA10
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore reusable reaction windows and interrupt-stack semantics.
+
+Backlog candidate:
+
+- Old sources: BA1 "Reactions and interrupt windows" row; root `battle.qnt`
+  `ReactionDecision`, `PendingInterrupt`, `BPAwaitingReaction`, hit/damage,
+  spell/save, and after-damage reaction actions; Core event surface in
+  `battle-machine-events.ts`.
+- RAW topics: `.references/srd-5.2.1/Playing-the-Game.md` Reaction and
+  Opportunity Attack timing; `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+  reaction casting-time anchor; `UBIQUITOUS_LANGUAGE.md` Reaction.
+- New-runtime owner: `@dnd/battle-runtime` interrupt stack, reaction-resource
+  spend/reset, reaction decision holes, and MCP pending-state replay.
+- Acceptance summary: attack, spell, save, and after-damage procedures can open
+  typed reaction windows; declining or resolving a reaction resumes the
+  interrupted procedure without caller sequencing conventions.
+- Non-goals: every reaction feature/spell, Opportunity Attack movement
+  geometry, old Core event names.
+- Restore condition: runtime has reusable interrupt-window machinery that
+  feature/spell tasks can reuse.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused runtime tests for open/decline/resolve/resume reaction windows.
+- Integrated MBT only if selected by the promoted MBT strategy.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA10.
+
+### Task 43 - PBA10 - Restore Movement Positioning And Opportunity Attacks
+
+Status: `blocked`
+
+Depends on: PBA9
+Blocks: PBA11
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore movement/positioning and Opportunity Attack boundaries.
+
+Backlog candidate:
+
+- Old sources: BA1 "Movement, positioning, Opportunity Attacks, traversal" row;
+  root `battle.qnt` `MovementCtx`, `TraversalMovementCtx`, `bMove`,
+  `bMovementOADecline`, `bMovementOAAttack`, `bResolveTraversalStep`; Core
+  `battle-machine-actions-movement.ts`.
+- RAW topics: `.references/srd-5.2.1/Playing-the-Game.md` movement/position,
+  Speed, Difficult Terrain, and Opportunity Attacks; `ASSUMPTIONS.md` spatial
+  and grapple movement-cost notes; `UBIQUITOUS_LANGUAGE.md` Speed and Reach.
+- New-runtime owner: `@dnd/battle-runtime` spatial input/state boundary,
+  movement budget, traversal procedure, OA trigger integration, and MCP
+  movement holes.
+- Acceptance summary: runtime can mutate position through a typed movement
+  subject, derive legal movement budget, open OA windows through PBA9 machinery,
+  and preserve existing attack range legality.
+- Non-goals: tactical grid UI, full terrain catalog, broad movement modes,
+  Grapple movement costs beyond the later PBA12 handoff.
+- Restore condition: battle runtime has a spatial input/state boundary and a
+  movement QNT/runtime slice.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused movement/OA runtime tests; promoted QNT slice if movement becomes
+  canonical behavior.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA11.
+
+### Task 44 - PBA11 - Restore Monster Resource Controls
+
+Status: `blocked`
+
+Depends on: PBA10
+Blocks: PBA12
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore StatBlockRecord-backed monster recharge, daily, legendary,
+and generic monster-control procedures.
+
+Backlog candidate:
+
+- Old sources: BA1 "Monster controls" row; root `battle.qnt`
+  `MonsterResourceState`, `mkMonster`, `bUseLegendaryAction`,
+  `bLegendaryAttack`, traversal/resource helpers; Core `monster-types.ts`.
+- RAW topics: `.references/srd-5.2.1/Monsters/Overview.md` stat-block actions
+  and special traits; relevant monster stat-block files for selected pressure
+  cases; `ASSUMPTIONS.md` Multiattack/Legendary notes; `UBIQUITOUS_LANGUAGE.md`
+  Stat Block.
+- New-runtime owner: `@dnd/battle-runtime` StatBlockRecord readers, monster
+  resource state, recharge/daily/legendary support gates, and MCP monster acts.
+- Acceptance summary: supported StatBlockRecord controls expose typed acts and
+  resource/recharge state; ordinary Goblin/Skeleton attacks keep working; no
+  monster control is inferred from UnitRecord facts.
+- Non-goals: broad monster catalog import, monster spellcasting, old monster
+  type adapters.
+- Restore condition: monster Stat Block projection uses distinct authored
+  StatBlockRecord boundaries for control resources.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Battle-runtime tests for selected monster control pressure cases.
+- MCP tests if exposed through tools.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA12.
+
+### Task 45 - PBA12 - Restore Hand Weapon And Grapple State
+
+Status: `blocked`
+
+Depends on: PBA11
+Blocks: PBA13
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore hand occupancy, weapon-mode state, off-hand attacks, and
+Grapple/Escape Grapple/release lifecycle.
+
+Backlog candidate:
+
+- Old sources: BA1 "Hand/weapon state" and "Grappling" rows; root `battle.qnt`
+  `HandUse`, hand helpers, `bOffHandAttack`, component hand prep,
+  `grappledBy`, `grapplingTarget`, `linkBattleGrapple`,
+  `normalizeBattleGrapples`, `bGrapple`, `bReleaseGrapple`,
+  `bEscapeGrapple`.
+- RAW topics: `.references/srd-5.2.1/Playing-the-Game.md` Attack action,
+  Grapple, moving a grappled creature, and equipment interaction; relevant
+  equipment weapon properties; `UBIQUITOUS_LANGUAGE.md` Free Hand, Holding,
+  Wielding, Two-Weapon Fighting, Grapple; `ASSUMPTIONS.md` Two-Weapon and
+  Grapple notes.
+- New-runtime owner: `@dnd/battle-runtime` held/wielded state, weapon-mode
+  procedure data, free-hand requirements, grapple links, and MCP action holes.
+- Acceptance summary: hand occupancy and grapple relationships are typed battle
+  state; off-hand and grapple actions use reusable procedures; weapon damage
+  facts stay derived from Surface/Unit records.
+- Non-goals: full equipment inventory UI, every weapon property, projected
+  component-prep vocabulary.
+- Restore condition: runtime models hand/weapon/grapple state without
+  duplicating authored weapon facts.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused runtime tests for hand occupancy, off-hand attack, Grapple,
+  release, and Escape Grapple.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA13.
+
+### Task 46 - PBA13 - Restore Hide Search And Class Rider Width
+
+Status: `blocked`
+
+Depends on: PBA12
+Blocks: PBA14
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore hidden-state discovery and remaining old class-feature
+riders as promoted runtime subjects.
+
+Backlog candidate:
+
+- Old sources: BA1 "Hidden, Search, Hide, unseen attacker interaction" and
+  "Class-feature battle actions/resources" rows; root `battle.qnt` `bHide`,
+  `bBonusHide`, `bSearch`, verbal spell reveal, attack reveal paths, Rage,
+  Reckless, Sneak Attack, Evasion, Deflect, Uncanny Dodge, Cutting Words.
+- RAW topics: `.references/srd-5.2.1/Playing-the-Game.md` Hide, Search,
+  Unseen Attackers, action table; relevant class files for selected riders;
+  `UBIQUITOUS_LANGUAGE.md` Hidden and class/resource terms.
+- New-runtime owner: `@dnd/battle-runtime` hidden state, discovery DCs,
+  reveal triggers, reusable class-rider procedure families, and MCP snapshots.
+- Acceptance summary: Hide/Search/hidden discovery works through typed state and
+  act holes; class riders are restored only when they can be expressed as
+  reusable procedure-family data or explicit support-gated Unit feature acts.
+- Non-goals: broad stealth environment model, every class/subclass feature,
+  old per-class Core fields as runtime architecture.
+- Restore condition: runtime supports hidden-state and class-rider width without
+  named-ability reducer drift.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Runtime tests for selected hidden-state and class-rider cases.
+- MCP tests if user-visible tools expose the subjects.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA14.
+
+### Task 47 - PBA14 - Restore Turn Roster And Generic Combat Actions
+
+Status: `blocked`
+
+Depends on: PBA13
+Blocks: PBA15
+
+Batch: old Core feature-parity restoration.
+
+Next action: restore mid-battle roster changes and the old generic combat
+action subjects as promoted runtime behavior.
+
+Backlog candidate:
+
+- Old sources: BA1 "Initiative and turn order" and "Ready, Help, Dodge, Dash,
+  Disengage, Stand from Prone, generic combat actions" rows; root `battle.qnt`
+  `bAddCreature`, `bRemoveCreature`, `bDash`, `bDisengage`, `bDodge`, `bReady`,
+  `bReadyRelease`, `bReadySpell`, `bHelpAttack`, and Core Stand from Prone
+  routing in `battle-machine.ts`.
+- RAW topics: `.references/srd-5.2.1/Playing-the-Game.md` Initiative, Combat
+  Round, Turns, action table, movement, Prone, Help, Ready, Dodge, Dash,
+  Disengage, and Reaction timing; `ASSUMPTIONS.md` mid-combat arrivals and
+  Attack-opportunity notes; `UBIQUITOUS_LANGUAGE.md` Action, Reaction, Speed,
+  Prone, Initiative.
+- New-runtime owner: `@dnd/battle-runtime` battle roster/initiative state,
+  turn-resource procedures, generic combat-action subjects, Ready pending
+  state, Help/Dodge defensive state, movement-budget interaction, and MCP
+  command/fill replay.
+- Acceptance summary: mid-battle add/remove mutates the promoted roster without
+  corrupting current turn order; Dash, Dodge, Disengage, Ready, Help, Stand from
+  Prone, and any retained generic action subject consume the correct resources
+  and expose typed state/hole effects for later procedures.
+- Non-goals: tactical grid UI, broad movement catalog beyond the PBA10 spatial
+  boundary, every Help target variant, old Core event names, projected action
+  reducers.
+- Restore condition: promoted runtime owns roster mutation and generic
+  combat-action procedure state directly, with no Restore Ledger-only debt for
+  BA1 rows 40 or 53.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime tests for add/remove turn-order effects and each
+  restored generic combat action subject.
+- MCP tests if commands/fills expose roster or action subjects.
+- Promoted QNT/MBT widening only if the task adds those semantics to the
+  canonical battle-runtime spec.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA15.
+
+### Task 48 - PBA15 - Plan Broader Battle Widening Queue
+
+Status: `blocked`
+
+Depends on: PBA14
+Blocks: future tasks
+
+Batch: broader widening after parity/composition archive and explicit
+feature-parity queue.
+
+Next action: replan broader battle widening only after the post-BA archive and
+first feature-parity queue have reached their closeout point.
+
+Input:
+
+- PBA0-PBA4 archive/protocol/corrector outputs.
+- PBA5-PBA14 feature-parity restoration outcomes and any explicitly deferred
+  owner decisions.
+- Restore Ledger rows that are still intentionally omitted.
+
+Output:
+
+- New ordered ACTIVE_PLAN tasks for broader Surface/catalog, MCP workflow, app
+  battle UI, trace/snapshot, or additional monster/spell/class widening.
+- Explicit deferrals for any old-only group the owner chooses not to restore.
+
+Acceptance:
+
+- Broad widening does not start until maximum promoted parity/composition is
+  archived and the feature-parity queue is explicit.
+- New tasks preserve the promoted battle authority and reducer procedure-family
+  discipline.
+- The Restore Ledger remains provenance/status evidence, not the only work
+  queue.
+
+Verification:
+
+- Source-only planning check.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, append the next concrete broad-widening tasks and unblock the
+  first one.
 
 ## Deferred Previous Queue
 
