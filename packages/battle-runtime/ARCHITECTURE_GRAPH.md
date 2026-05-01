@@ -49,7 +49,7 @@ flowchart TD
   Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
   UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals"]
-  SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect"]
+  SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect; Acid Splash save-gate damage applies to failed saves"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
   Snapshot["snapshotBattle(state)<br/>success: JSON-friendly read model<br/>why: callers do not depend on internal Map state"]
@@ -138,7 +138,9 @@ flowchart TD
   plus runtime Spell Slot and active-effect state. Prepared level-1 spells spend
   slots; cantrips do not. `magic_missile` is narrowed by a support gate to all
   repeated darts at one target. `ray_of_frost` requires both its Cold damage and
-  Speed-reduction rider before discovery.
+  Speed-reduction rider before discovery. Save-gate damage cantrips such as
+  `acid_splash` use a Saving Throw outcome hole that selects in-range targets;
+  damage is requested and applied only for failed outcomes.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Unsupported Stat Block attack branches such as Multiattack and unsupported

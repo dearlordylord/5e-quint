@@ -80,6 +80,7 @@ import type {
   ActivationResource,
   CreatureNamedAttackRoll,
   DamageType,
+  DcSource,
   DiceExpr,
   SpellRecord,
   StatBlockRecord,
@@ -312,6 +313,21 @@ export type SupportedSpellAct =
       readonly speedReduction: {
         readonly deltaFeet: number;
       };
+    }
+  | {
+      readonly kind: "cantripSaveGateDamage";
+      readonly spell: SpellRecord;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly area: {
+        readonly kind: "pointOriginSphere";
+        readonly radiusFeet: number;
+      };
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: number;
     };
 
 export type CharacterBattleCreatureInit = {
@@ -468,6 +484,8 @@ export const BattleSubjectSchema = Schema.Union(
 );
 export type BattleSubject = typeof BattleSubjectSchema.Type;
 
+const ACID_SPLASH_POINT_SPHERE_RADIUS_FEET = 5;
+
 export function sameBattleSubject(
   left: BattleSubject,
   right: BattleSubject,
@@ -545,6 +563,24 @@ export type BattleSpellDamageRollHole = Extract<
   readonly spell: SupportedSpellAct;
   readonly critical: boolean;
 };
+export type BattleSavingThrowOutcome = {
+  readonly targetId: CombatantId;
+  readonly succeeded: boolean;
+};
+export type BattleSpellAreaChoice = {
+  readonly originAnchorId: CombatantId;
+  readonly affectedTargetIds: readonly CombatantId[];
+};
+export type BattleSpellSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly spell: SupportedSpellAct;
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly BattleSpellAreaChoice[];
+};
 export type BattleUnitFeatureRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -564,6 +600,7 @@ export type BattleHole =
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
+  | BattleSpellSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole;
 
@@ -620,6 +657,21 @@ const SupportedSpellActSchema = Schema.Union(
       deltaFeet: Schema.Number,
     }),
   }),
+  Schema.Struct({
+    kind: Schema.Literal("cantripSaveGateDamage"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.String,
+    dc: BattleRuntimeObjectSchema,
+    area: Schema.Struct({
+      kind: Schema.Literal("pointOriginSphere"),
+      radiusFeet: Schema.Number,
+    }),
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: Schema.String,
+    }),
+    rangeFeet: Schema.Number,
+  }),
 );
 
 export const BattleHoleSchema = Schema.Union(
@@ -654,6 +706,20 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    spell: SupportedSpellActSchema,
+    ability: Schema.String,
+    dc: BattleRuntimeObjectSchema,
+    areaChoices: Schema.Array(
+      Schema.Struct({
+        originAnchorId: CombatantId,
+        affectedTargetIds: Schema.Array(CombatantId),
+      }),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     unitFeature: BattleRuntimeObjectSchema,
   }),
@@ -667,6 +733,11 @@ export const BattleHoleSchema = Schema.Union(
 
 export type BattleFill =
   | Extract<FilledHoleValue, { readonly kind: "attackRoll" | "rolledDice" }>
+  | {
+      readonly kind: "savingThrowOutcome";
+      readonly holeId: BattleHoleId;
+      readonly value: readonly BattleSavingThrowOutcome[];
+    }
   | {
       readonly kind: "targetChoice";
       readonly holeId: BattleHoleId;
@@ -711,6 +782,16 @@ export const BattleFillSchema = Schema.Union(
     kind: Schema.Literal("attackRoll"),
     holeId: BattleHoleIdSchema,
     value: BattleAttackRollResultSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("savingThrowOutcome"),
+    holeId: BattleHoleIdSchema,
+    value: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        succeeded: Schema.Boolean,
+      }),
+    ),
   }),
   Schema.Struct({
     kind: Schema.Literal("rolledDice"),
@@ -2341,30 +2422,54 @@ function discoverSupportedSpellActs(
   if (actor?.origin.kind !== "character") {
     return [];
   }
-  return supportedSpellActs(actor).flatMap((invocation) => {
-    if (!spellHasAvailableSpend(actor, invocation)) {
-      return [];
-    }
-    const targetHole = spellTargetHole(state, actorId, invocation);
-    return targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              spellId: invocation.spell.id,
-              spellActId: supportedSpellActId(invocation),
+  return supportedSpellActs(actor).flatMap(
+    (invocation): readonly AvailableBattleAct[] => {
+      if (!spellHasAvailableSpend(actor, invocation)) {
+        return [];
+      }
+      if (invocation.kind === "cantripSaveGateDamage") {
+        const savingThrowHole = spellSavingThrowOutcomeHole(
+          state,
+          actorId,
+          invocation,
+        );
+        return savingThrowHole.areaChoices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "actionSpell" as const,
+                  actorId,
+                  spellId: invocation.spell.id,
+                  spellActId: supportedSpellActId(invocation),
+                },
+                label: invocation.spell.name,
+                summary: `Cast ${invocation.spell.name} as a cantrip; creatures in one ${invocation.area.radiusFeet}-foot point-origin Sphere make ${invocation.ability.toUpperCase()} Saving Throws.`,
+                initialHoles: [savingThrowHole],
+              },
+            ];
+      }
+      const targetHole = spellTargetHole(state, actorId, invocation);
+      return targetHole.choices.length === 0
+        ? []
+        : [
+            {
+              subject: {
+                tag: "actionSpell" as const,
+                actorId,
+                spellId: invocation.spell.id,
+                spellActId: supportedSpellActId(invocation),
+              },
+              label: invocation.spell.name,
+              summary:
+                invocation.kind === "preparedSlotSpell"
+                  ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot, with all darts at one target.`
+                  : `Cast ${invocation.spell.name} as a cantrip.`,
+              initialHoles: [targetHole],
             },
-            label: invocation.spell.name,
-            summary:
-              invocation.kind === "preparedSlotSpell"
-                ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot, with all darts at one target.`
-                : `Cast ${invocation.spell.name} as a cantrip.`,
-            initialHoles: [targetHole],
-          },
-        ];
-  });
+          ];
+    },
+  );
 }
 
 function resolveSpellAct(
@@ -2395,10 +2500,19 @@ function resolveSpellAct(
     );
   }
 
-  const fillSet = attackFillSet(input.fills);
+  const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  if (invocation.kind === "cantripSaveGateDamage") {
+    return resolveSaveGateDamageSpellAct({
+      input,
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+
   if (fillSet.targetId == null) {
     return needsHolesResult(input.state, input.subject, [
       spellTargetHole(input.state, subject.actorId, invocation),
@@ -2511,6 +2625,221 @@ function resolveSpellAct(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+type SpellFillSet =
+  | {
+      readonly tag: "ok";
+      readonly targetId: CombatantId | undefined;
+      readonly attackRoll: AttackRollResult | undefined;
+      readonly savingThrowOutcomes:
+        | readonly BattleSavingThrowOutcome[]
+        | undefined;
+      readonly damageRoll:
+        | Extract<BattleFill, { readonly kind: "rolledDice" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function spellFillSet(
+  fills: readonly BattleFill[],
+  invocation: SupportedSpellAct,
+): SpellFillSet {
+  let targetId: CombatantId | undefined;
+  let attackRoll: AttackRollResult | undefined;
+  let savingThrowOutcomes: readonly BattleSavingThrowOutcome[] | undefined;
+  let damageRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  for (const fill of fills) {
+    if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
+      if (targetId !== undefined) {
+        return { tag: "invalid", message: "Spell target was filled twice." };
+      }
+      targetId = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "attackRoll" && fill.holeId === ATTACK_ROLL_HOLE_ID) {
+      if (attackRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell attack roll was filled twice.",
+        };
+      }
+      attackRoll = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "savingThrowOutcome") {
+      if (invocation.kind !== "cantripSaveGateDamage") {
+        return {
+          tag: "invalid",
+          message: "Spell saving throw outcomes do not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellSavingThrowOutcomeHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell saving throw outcomes must use the selected spell act outcome hole.",
+        };
+      }
+      if (savingThrowOutcomes !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell saving throw outcomes were filled twice.",
+        };
+      }
+      savingThrowOutcomes = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "rolledDice") {
+      if (damageRoll !== undefined) {
+        return { tag: "invalid", message: "Spell damage was filled twice." };
+      }
+      damageRoll = fill;
+      continue;
+    }
+
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the spell replay holes.`,
+    };
+  }
+
+  return { tag: "ok", targetId, attackRoll, savingThrowOutcomes, damageRoll };
+}
+
+function resolveSaveGateDamageSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "cantripSaveGateDamage" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.targetId !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Save-gate damage spells use saving throw outcome fills, not a single-target fill.",
+    );
+  }
+  if (input.fillSet.attackRoll !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Save-gate damage spells do not use an attack roll.",
+    );
+  }
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    savingThrowHole,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+
+  const failedTargets = input.fillSet.savingThrowOutcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  if (failedTargets.length === 0) {
+    if (input.fillSet.damageRoll !== undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Save-gate spell damage can only be filled when at least one target failed its Saving Throw.",
+      );
+    }
+    return spendMagicAction(input.input.state);
+  }
+
+  if (input.fillSet.damageRoll == null) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDamageHole(input.invocation),
+    ]);
+  }
+  const damageRoll = input.fillSet.damageRoll;
+  const damageValidation = validateSpellDamageFill(
+    damageRoll,
+    input.invocation,
+    false,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(input.input.state, "invalidFill", damageValidation);
+  }
+
+  const damaged = failedTargets.reduce(
+    (state, targetId) =>
+      applySpellDamage(state, targetId, input.invocation, damageRoll, false),
+    input.input.state,
+  );
+  const spent = spendAction(damaged.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+  const nextState = { ...damaged, currentTurnResources: spent.right };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function validateSavingThrowOutcomes(
+  outcomes: readonly BattleSavingThrowOutcome[],
+  hole: BattleSpellSavingThrowOutcomeHole,
+): string | null {
+  if (outcomes.length === 0) {
+    return "Save-gate spell must include at least one affected target Saving Throw outcome.";
+  }
+  const seenTargets = new Set<CombatantId>();
+  for (const outcome of outcomes) {
+    const targetId = outcome.targetId;
+    if (seenTargets.has(targetId)) {
+      return "Save-gate spell Saving Throw outcomes must not duplicate targets.";
+    }
+    seenTargets.add(targetId);
+  }
+  const matchesOneArea = hole.areaChoices.some((choice) =>
+    sameCombatantIdSet(seenTargets, choice.affectedTargetIds),
+  );
+  if (!matchesOneArea) {
+    return "Save-gate spell Saving Throw outcomes must exactly match one legal point-origin Sphere area.";
+  }
+  return null;
+}
+
+function sameCombatantIdSet(
+  actual: ReadonlySet<CombatantId>,
+  expected: readonly CombatantId[],
+): boolean {
+  return (
+    actual.size === expected.length &&
+    expected.every((targetId) => actual.has(targetId))
+  );
 }
 
 function spendMagicAction(
@@ -2887,6 +3216,9 @@ function supportedSpellActs(
         spellcasting.proficiencyBonus,
       ),
     ),
+    ...spellcasting.cantrips.flatMap((spell) =>
+      supportedCantripSaveGateDamage(spell),
+    ),
   ];
 }
 
@@ -2996,6 +3328,55 @@ function supportedCantripSpellAttack(
   ];
 }
 
+function supportedCantripSaveGateDamage(
+  spell: SpellRecord,
+): readonly SupportedSpellAct[] {
+  if (spell.mechanics.family !== "activation") {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "area" ||
+    phase.attachment.value.origin.kind !== "point_within_range" ||
+    phase.attachment.value.shape.kind !== "sphere" ||
+    phase.attachment.value.shape.radiusFeet !==
+      ACID_SPLASH_POINT_SPHERE_RADIUS_FEET ||
+    phase.onSuccess.kind !== "none" ||
+    phase.onFail.kind !== "damage" ||
+    typeof phase.onFail.damageType !== "string"
+  ) {
+    return [];
+  }
+  const damageExpr = supportedDamageAmountExpr(phase.onFail.amount);
+  if (damageExpr == null) {
+    return [];
+  }
+
+  return [
+    {
+      kind: "cantripSaveGateDamage",
+      spell,
+      ability: phase.ability,
+      dc: phase.dc,
+      area: {
+        kind: "pointOriginSphere",
+        radiusFeet: phase.attachment.value.shape.radiusFeet,
+      },
+      damage: {
+        expr: damageExpr,
+        damageType: phase.onFail.damageType,
+      },
+      rangeFeet: spell.mechanics.range.feet,
+    },
+  ];
+}
+
 function supportedAllDartsAtOneTargetCount(selection: {
   readonly mode: string;
   readonly repeatsAllowed?: boolean;
@@ -3036,7 +3417,10 @@ function spellHasAvailableSpend(
   if (actor.origin.kind !== "character") {
     return false;
   }
-  if (invocation.kind === "cantripSpellAttack") {
+  if (
+    invocation.kind === "cantripSpellAttack" ||
+    invocation.kind === "cantripSaveGateDamage"
+  ) {
     return true;
   }
   return (
@@ -3078,9 +3462,22 @@ function spellTargetIsLegal(
 }
 
 function supportedSpellActId(invocation: SupportedSpellAct): string {
-  return invocation.kind === "preparedSlotSpell"
-    ? `${invocation.kind}:${invocation.spell.id}:slot:${invocation.slotLevel}`
-    : `${invocation.kind}:${invocation.spell.id}`;
+  return Match.value(invocation).pipe(
+    Match.when(
+      { kind: "preparedSlotSpell" },
+      (slotSpell) =>
+        `${slotSpell.kind}:${slotSpell.spell.id}:slot:${slotSpell.slotLevel}`,
+    ),
+    Match.when(
+      { kind: "cantripSpellAttack" },
+      (cantrip) => `${cantrip.kind}:${cantrip.spell.id}`,
+    ),
+    Match.when(
+      { kind: "cantripSaveGateDamage" },
+      (cantrip) => `${cantrip.kind}:${cantrip.spell.id}`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function spellAttackRollHole(
@@ -3116,6 +3513,71 @@ function spellDamageHole(
   };
 }
 
+function spellSavingThrowOutcomeHoleId(
+  invocation: SupportedSpellAct,
+): BattleHoleId {
+  return holeId(`battle:spell:saving-throw-outcome:${invocation.spell.id}`);
+}
+
+function spellSavingThrowOutcomeHole(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "cantripSaveGateDamage" }
+  >,
+): BattleSpellSavingThrowOutcomeHole {
+  const holeInstance = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
+  const areaChoices = spellPointSphereAreaChoices(state, actorId, invocation);
+  return {
+    kind: "savingThrowOutcome",
+    holeId: spellSavingThrowOutcomeHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(holeInstance),
+    label: `${invocation.spell.name} point-origin Sphere Saving Throw outcomes`,
+    spell: invocation,
+    ability: invocation.ability,
+    dc: invocation.dc,
+    areaChoices,
+  };
+}
+
+function spellPointSphereAreaChoices(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "cantripSaveGateDamage" }
+  >,
+): readonly BattleSpellAreaChoice[] {
+  return [...state.combatants.keys()]
+    .filter((originAnchorId) =>
+      spellTargetIsLegal(state, actorId, originAnchorId, invocation),
+    )
+    .map((originAnchorId) => ({
+      originAnchorId,
+      affectedTargetIds: combatantsWithinFeet(
+        state,
+        originAnchorId,
+        invocation.area.radiusFeet,
+      ),
+    }))
+    .filter((choice) => choice.affectedTargetIds.length > 0);
+}
+
+function combatantsWithinFeet(
+  state: BattleState,
+  originAnchorId: CombatantId,
+  radiusFeet: number,
+): readonly CombatantId[] {
+  return [...state.combatants.keys()].filter((targetId) => {
+    const distanceFeet =
+      originAnchorId === targetId
+        ? 0
+        : combatantDistanceFeet(state, originAnchorId, targetId);
+    return distanceFeet !== undefined && distanceFeet <= radiusFeet;
+  });
+}
+
 function validateSpellDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: SupportedSpellAct,
@@ -3130,7 +3592,8 @@ function validateSpellDamageFill(
     dice:
       invocation.kind === "preparedSlotSpell"
         ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
-        : invocation.damage.expr.dice * (critical ? 2 : 1),
+        : invocation.damage.expr.dice *
+          (invocation.kind === "cantripSpellAttack" && critical ? 2 : 1),
     dieSize: invocation.damage.expr.dieSize,
   });
   return validation?.reason ?? null;
@@ -3257,7 +3720,8 @@ function spellDamageExpression(
   const dice =
     invocation.kind === "preparedSlotSpell"
       ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
-      : invocation.damage.expr.dice * (critical ? 2 : 1);
+      : invocation.damage.expr.dice *
+        (invocation.kind === "cantripSpellAttack" && critical ? 2 : 1);
   const flat =
     (invocation.damage.expr.flat ?? 0) *
     (invocation.kind === "preparedSlotSpell"

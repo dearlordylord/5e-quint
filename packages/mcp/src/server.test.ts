@@ -2019,6 +2019,118 @@ describe("MCP server route", () => {
     );
   });
 
+  test("replays Acid Splash save-gate damage through MCP battle fills", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const state = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-root-acid-splash"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Acid Splash Spellcaster",
+        initiative: initiativeScore(12),
+        build: {
+          ...build,
+          armorTraining: [],
+          equipment: {
+            shield: "equipment_shield",
+          },
+          spellcasting: {
+            spellcastingAbility: "int",
+            cantrips: ["acid_splash"],
+            spellbook: [{ spellId: "magic_missile", spellLevel: 1 }],
+            preparedSpells: ["magic_missile"],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+            spellcastingFocuses: ["spellbook"],
+          },
+        },
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(10),
+      },
+      combatantDistances: [
+        { combatantA: fighterId, combatantB: goblinId, feet: 30 },
+      ],
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.battleState = state;
+    root.sessionStore.transientBattleFills = null;
+
+    const subject = {
+      tag: "actionSpell",
+      actorId: "fighter",
+      spellId: "acid_splash",
+      spellActId: "cantripSaveGateDamage:acid_splash",
+    };
+    const discovered = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    expect(discovered.snapshot.acts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject,
+          initialHoles: [
+            expect.objectContaining({
+              kind: "savingThrowOutcome",
+              areaChoices: expect.arrayContaining([
+                {
+                  originAnchorId: "goblin",
+                  affectedTargetIds: ["goblin"],
+                },
+              ]),
+            }),
+          ],
+        }),
+      ]),
+    );
+
+    const afterSavingThrow = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject,
+        fill: {
+          kind: "savingThrowOutcome",
+          holeId: "battle:spell:saving-throw-outcome:acid_splash",
+          value: [{ targetId: "goblin", succeeded: false }],
+        },
+      }),
+    );
+    expect(afterSavingThrow.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "rolledDice",
+          holeId: "battle:spell:damage-result:acid_splash:1d6-acid",
+        },
+      ],
+    });
+
+    const afterDamage = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject,
+        fill: {
+          kind: "rolledDice",
+          holeId: "battle:spell:damage-result:acid_splash:1d6-acid",
+          value: [{ results: [4] }],
+        },
+      }),
+    );
+    expect(afterDamage.result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: "fighter", hp: 12 },
+          { combatantId: "goblin", hp: 6 },
+        ],
+        currentTurnResources: { actionResources: [] },
+      },
+    });
+    expect(root.sessionStore.transientBattleFills).toBeNull();
+  });
+
   test("rejects available character sessions with non-canonical Spell Slot state", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);

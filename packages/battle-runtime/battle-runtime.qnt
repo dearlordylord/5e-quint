@@ -35,6 +35,12 @@ module battleRuntime {
   // - Spells/Descriptions-M-P.md lines 85-96 and Spells/Descriptions-Q-R.md
   //   lines 41-52: Magic Missile can put all darts on one target; Ray of Frost
   //   reduces Speed until the start of the caster's next turn.
+  // - Spells/Descriptions-A-D.md lines 13-23, Spells/Gaining-and-Casting.md
+  //   lines 187-220, Playing-the-Game.md lines 704-714, and Rules-Glossary.md
+  //   lines 854-856: Acid Splash is an Action cantrip that creates a
+  //   5-foot-radius Sphere at a point within 60 feet; each creature in the
+  //   Sphere makes a Dexterity Saving Throw and takes Acid damage only on a
+  //   failed save.
   // - Spells/Gaining-and-Casting.md lines 36-38 and Rules-Glossary.md lines
   //   98-100: lacking training for worn armor prevents spellcasting while
   //   preserving Spell Slot state.
@@ -48,11 +54,11 @@ module battleRuntime {
 
   type Actor = Fighter | Goblin
 
-  type DamageType = Bludgeoning | Poison | Force | Cold | Slashing | Piercing
+  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
 
-  type SpellInvocation = MagicMissile | RayOfFrost
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash
 
-  type Hole = TargetChoice | AttackRoll | DamageRoll
+  type Hole = TargetChoice | AttackRoll | DamageRoll | SavingThrowOutcome
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows
 
@@ -352,6 +358,7 @@ module battleRuntime {
     match invocation {
       | MagicMissile => expendedLevelOneSlots + 1
       | RayOfFrost => expendedLevelOneSlots
+      | AcidSplash => expendedLevelOneSlots
     }
 
   pure def canDiscoverSpellActs(canCastSpells: bool): bool =
@@ -376,6 +383,46 @@ module battleRuntime {
     caster: Actor,
   ): bool =
     hit and currentActor != caster
+
+  pure def acidSplashReplayHoles(
+    canCastSpells: bool,
+    savingThrowOutcomesFilled: bool,
+    anyFailedSavingThrow: bool,
+  ): Set[Hole] =
+    if (not(canCastSpells))
+      Set()
+    else if (not(savingThrowOutcomesFilled))
+      Set(SavingThrowOutcome)
+    else if (anyFailedSavingThrow)
+      Set(DamageRoll)
+    else
+      Set()
+
+  pure def acidSplashDamageTarget(
+    target: Combatant,
+    failedSavingThrow: bool,
+    damageRoll: int,
+  ): Combatant =
+    if (failedSavingThrow)
+      applyDamage(target, damageAfterAdjustments(damageRoll, Acid, Set(), Set(), Set()), 1)
+    else
+      target
+
+  pure def resolveAcidSplash(
+    state: BattleState,
+    fighterFailedSavingThrow: bool,
+    goblinFailedSavingThrow: bool,
+    damageRoll: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
+      state
+    else
+      {
+        ...state,
+        fighter: acidSplashDamageTarget(state.fighter, fighterFailedSavingThrow, damageRoll),
+        goblin: acidSplashDamageTarget(state.goblin, goblinFailedSavingThrow, damageRoll),
+        actionAvailable: false,
+      }
 
   pure def applyDropToZeroHp(target: Combatant): Combatant =
     match target.lifecycle {
@@ -510,6 +557,7 @@ module battleRuntime {
     all {
       assert(expendedSlotsAfterInvocation(MagicMissile, 0) == 1),
       assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
+      assert(expendedSlotsAfterInvocation(AcidSplash, 0) == 0),
     }
   }
 
@@ -526,6 +574,24 @@ module battleRuntime {
       assert(magicMissileAllDartsDamage(3, 3, 1) == 6),
       assert(rayOfFrostSpeedEffectActive(true, Goblin, Fighter)),
       assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
+    }
+  }
+
+  run test_acid_splash_replay_asks_for_saving_throw_outcomes_then_damage_on_failure = {
+    all {
+      assert(acidSplashReplayHoles(true, false, false) == Set(SavingThrowOutcome)),
+      assert(acidSplashReplayHoles(true, true, true) == Set(DamageRoll)),
+      assert(acidSplashReplayHoles(true, true, false) == Set()),
+      assert(acidSplashReplayHoles(false, false, false) == Set()),
+    }
+  }
+
+  run test_acid_splash_damage_applies_only_to_failed_saving_throw_targets = {
+    val result = resolveAcidSplash(initialState, false, true, 4)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.fighter.hp == 12),
+      assert(result.goblin.hp == 6),
     }
   }
 

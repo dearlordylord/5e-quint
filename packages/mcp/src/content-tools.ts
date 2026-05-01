@@ -238,6 +238,8 @@ function workflowGuide() {
         '{"kind":"targetChoice","holeId":"copy from result.holes[] or initialHoles[]","value":"target combatantId"}',
       attackRollFill:
         '{"kind":"attackRoll","holeId":"copy from result.holes[] or initialHoles[]","value":{"total":16,"naturalD20":14,"rollMode":"normal | advantage | disadvantage optional"}}',
+      savingThrowOutcomeFill:
+        '{"kind":"savingThrowOutcome","holeId":"copy from result.holes[] or initialHoles[]","value":[{"targetId":"copy every affected target from one areaChoices[].affectedTargetIds","succeeded":false}]}',
       rolledDiceFill:
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
     },

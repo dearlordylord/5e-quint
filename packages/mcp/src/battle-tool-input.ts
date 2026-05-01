@@ -35,7 +35,7 @@ const FillBattleHoleArgsSchema = Schema.Struct({
   }),
   fill: BattleFillSchema.annotations({
     description:
-      "One BattleFill for the current act replay: targetChoice, attackRoll, deathSavingThrow, or rolledDice.",
+      "One BattleFill for the current act replay: targetChoice, attackRoll, savingThrowOutcome, deathSavingThrow, or rolledDice.",
   }),
 });
 const ResolveBattleActArgsSchema = Schema.Struct({

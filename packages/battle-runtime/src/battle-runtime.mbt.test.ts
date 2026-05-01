@@ -417,6 +417,11 @@ function projectHole(hole: BattleHole): MbtHole {
     Match.when({ kind: "deathSavingThrow" }, () => {
       throw new Error("Battle runtime MBT does not model death-save holes.");
     }),
+    Match.when({ kind: "savingThrowOutcome" }, () => {
+      throw new Error(
+        "Battle runtime MBT does not model spell saving throw holes.",
+      );
+    }),
     Match.exhaustive,
   );
 }

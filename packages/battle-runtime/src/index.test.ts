@@ -24,7 +24,10 @@ import {
   type BattleCreatureInit,
 } from "./index.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  holeId,
+  type AttackRollMode,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { DieRollResult, Hp, proficiencyBonus } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
@@ -36,6 +39,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
+import acidSplashInput from "../../surface/content/acid_splash.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   SpellRecord,
@@ -51,6 +55,7 @@ const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 const skeletonId = combatantId("skeleton");
 const wizardId = combatantId("wizard");
+const secondSkeletonId = combatantId("second-skeleton");
 const distantFighterId = combatantId("distant-fighter");
 const longRangeFighterId = combatantId("long-range-fighter");
 type BattleFillableHole = Pick<BattleHole, "kind" | "holeId">;
@@ -72,7 +77,7 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const testSpellRecords = new Map(
-  [magicMissileInput, rayOfFrostInput]
+  [magicMissileInput, rayOfFrostInput, acidSplashInput]
     .map((input) => decodeUnitRecordSync(input))
     .flatMap((unit) => (unit.kind === "spell" ? [[unit.id, unit]] : [])),
 );
@@ -2293,6 +2298,12 @@ describe("battle runtime", () => {
         spellId: "ray_of_frost",
         spellActId: "cantripSpellAttack:ray_of_frost",
       },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "acid_splash",
+        spellActId: "cantripSaveGateDamage:acid_splash",
+      },
       { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
     ]);
 
@@ -2319,6 +2330,19 @@ describe("battle runtime", () => {
     expect(magicMissileDamage).toMatchObject({
       label: "Magic Missile damage (3d4+3-force)",
     });
+    expect(
+      resolveBattleSubject({
+        state: magicMissileState,
+        subject: magicSubject("magic_missile"),
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: holeId("battle:spell:saving-throw-outcome:magic_missile"),
+            value: [{ targetId: skeletonId, succeeded: false }],
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
 
     const magicMissile = resolveBattleSubject({
       state: magicMissileState,
@@ -2560,6 +2584,190 @@ describe("battle runtime", () => {
       },
     });
     expect(expendedLevelOneSlots(requireResolved(rayMiss), wizardId)).toBe(0);
+  });
+
+  test("Acid Splash support is gated to the authored 5-foot point-origin Sphere", () => {
+    const unsupportedState = startBattle({
+      battleId: battleId("battle-acid-splash-unsupported-area"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [acidSplashWithRadius(10)],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    expect(
+      discoverBattleActs(unsupportedState).map((act) => act.subject),
+    ).toEqual([
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "preparedSlotSpell:magic_missile:slot:1",
+      },
+      { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
+    ]);
+  });
+
+  test("Acid Splash save-gate damage applies only to failed Saving Throws", () => {
+    const state = wizardVsSkeletonBattle({
+      extraCombatants: [
+        statBlockCreatureInit({
+          combatantId: secondSkeletonId,
+          displayName: "Second Skeleton",
+          initiative: 8,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        }),
+      ],
+      combatantDistances: [
+        { combatantA: wizardId, combatantB: skeletonId, feet: 30 },
+        {
+          combatantA: wizardId,
+          combatantB: secondSkeletonId,
+          feet: 60,
+        },
+        {
+          combatantA: skeletonId,
+          combatantB: secondSkeletonId,
+          feet: 5,
+        },
+      ],
+    });
+    const subject = magicSubject("acid_splash");
+    const savingThrows = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(savingThrows).toMatchObject({
+      label: "Acid Splash point-origin Sphere Saving Throw outcomes",
+      ability: "dex",
+      dc: { kind: "caster_spell_save_dc" },
+      areaChoices: expect.arrayContaining([
+        {
+          originAnchorId: wizardId,
+          affectedTargetIds: [wizardId],
+        },
+        {
+          originAnchorId: skeletonId,
+          affectedTargetIds: [skeletonId, secondSkeletonId],
+        },
+      ]),
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Save-gate spell Saving Throw outcomes must exactly match one legal point-origin Sphere area.",
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: wizardId, succeeded: false },
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Save-gate spell Saving Throw outcomes must exactly match one legal point-origin Sphere area.",
+    });
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: secondSkeletonId,
+              succeeded: true,
+            },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Acid Splash damage (1d6-acid)",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: skeletonId, succeeded: false },
+          {
+            targetId: secondSkeletonId,
+            succeeded: true,
+          },
+        ]),
+        damageRollFill(damage, 4),
+      ],
+    });
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 9 },
+          { combatantId: secondSkeletonId, hp: 13 },
+        ],
+        currentTurnResources: { actionResources: [] },
+      },
+    });
+    expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
+
+    const allSucceeded = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: skeletonId, succeeded: true },
+          {
+            targetId: secondSkeletonId,
+            succeeded: true,
+          },
+        ]),
+      ],
+    });
+    expect(allSucceeded).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: skeletonId, hp: 13 },
+          { combatantId: secondSkeletonId, hp: 13 },
+        ],
+        currentTurnResources: { actionResources: [] },
+      },
+    });
   });
 
   test("endTurn advances to a new round after the last actor acts", () => {
@@ -2918,7 +3126,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("29 passing");
+  expect(quintOutput).toContain("31 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -3349,6 +3557,23 @@ function deathSavingThrowFill(hole: BattleHole, roll: number): BattleFill {
   };
 }
 
+function savingThrowOutcomeFill(
+  hole: BattleHole,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): BattleFill {
+  if (hole.kind !== "savingThrowOutcome") {
+    throw new Error("Expected savingThrowOutcome hole.");
+  }
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: outcomes,
+  };
+}
+
 function damageRollFill(
   hole: BattleFillableHole,
   dieResult: number,
@@ -3500,19 +3725,29 @@ function testPoisonWeaponAttack(): NonNullable<
 }
 
 function statBlockCreatureInit(input: {
+  readonly combatantId?: CombatantId;
+  readonly displayName?: string;
+  readonly statBlock?: StatBlockRecord;
   readonly initiative: number;
   readonly currentHp?: number;
   readonly tempHp?: number;
 }): BattleCreatureInit {
+  const statBlock = input.statBlock ?? statBlockRecord();
+  if (statBlock.statBlock.hp.kind !== "literal") {
+    throw new Error(
+      "Battle runtime test Stat Block fixture must use literal HP.",
+    );
+  }
+  const maxHp = statBlock.statBlock.hp.value;
   return {
-    combatantId: goblinId,
-    displayName: "Goblin Warrior",
+    combatantId: input.combatantId ?? goblinId,
+    displayName: input.displayName ?? statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: statBlockRecord(),
-      currentHp: Hp(input.currentHp ?? 10),
-      maxHp: Hp(10),
+      statBlock,
+      currentHp: Hp(input.currentHp ?? maxHp),
+      maxHp: Hp(maxHp),
       tempHp: Hp(input.tempHp ?? 0),
       zeroHpLifecyclePolicy: "diesAtZeroHp",
     },
@@ -3668,7 +3903,14 @@ function secondWindWithAdditionalDirectEffect(): UnitRecord {
   };
 }
 
-function wizardVsSkeletonBattle(): BattleState {
+function wizardVsSkeletonBattle(input?: {
+  readonly extraCombatants?: readonly BattleCreatureInit[];
+  readonly combatantDistances?: readonly {
+    readonly combatantA: CombatantId;
+    readonly combatantB: CombatantId;
+    readonly feet: number;
+  }[];
+}): BattleState {
   return startBattle({
     battleId: battleId("battle-wizard-skeleton"),
     combatants: [
@@ -3680,11 +3922,17 @@ function wizardVsSkeletonBattle(): BattleState {
         spellcasting: wizardSpellcasting(),
       }),
       skeletonCreatureInit({ initiative: 10 }),
+      ...(input?.extraCombatants ?? []),
     ],
+    ...(input?.combatantDistances === undefined
+      ? {}
+      : { combatantDistances: input.combatantDistances }),
   });
 }
 
-function wizardSpellcasting(): NonNullable<
+function wizardSpellcasting(input?: {
+  readonly cantrips?: readonly SpellRecord[];
+}): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -3694,13 +3942,55 @@ function wizardSpellcasting(): NonNullable<
     spellcastingAbilityModifier: 3,
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
-    cantrips: [spellRecord("ray_of_frost")],
+    cantrips: input?.cantrips ?? [
+      spellRecord("ray_of_frost"),
+      spellRecord("acid_splash"),
+    ],
     preparedSpells: [spellRecord("magic_missile")],
     spellSlots: [{ spellLevel: 1, count: 2 }],
   };
 }
 
-function spellRecord(spellId: "magic_missile" | "ray_of_frost") {
+function acidSplashWithRadius(radiusFeet: number): SpellRecord {
+  const spell = spellRecord("acid_splash");
+  if (spell.mechanics.family !== "activation") {
+    throw new Error("Expected Acid Splash activation spell.");
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase?.kind !== "save_gate" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "area" ||
+    phase.attachment.value.shape.kind !== "sphere"
+  ) {
+    throw new Error("Expected Acid Splash point-origin Sphere phase.");
+  }
+  return {
+    ...spell,
+    mechanics: {
+      ...spell.mechanics,
+      phases: [
+        {
+          ...phase,
+          attachment: {
+            ...phase.attachment,
+            value: {
+              ...phase.attachment.value,
+              shape: {
+                ...phase.attachment.value.shape,
+                radiusFeet,
+              },
+            },
+          },
+        },
+      ],
+    },
+  };
+}
+
+function spellRecord(
+  spellId: "magic_missile" | "ray_of_frost" | "acid_splash",
+) {
   const unit = testSpellRecords.get(spellId);
   if (unit === undefined) {
     throw new Error(`Expected ${spellId} spell Unit.`);
@@ -3709,7 +3999,7 @@ function spellRecord(spellId: "magic_missile" | "ray_of_frost") {
 }
 
 function magicSubject(
-  spellId: "magic_missile" | "ray_of_frost",
+  spellId: "magic_missile" | "ray_of_frost" | "acid_splash",
 ): BattleSubject {
   return {
     tag: "actionSpell",

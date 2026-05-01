@@ -35,6 +35,7 @@ import weaponShortbowInput from "../../content/weapon_shortbow.json";
 import weaponSpearInput from "../../content/weapon_spear.json";
 import wizardArcaneRecoveryInput from "../../content/wizard_arcane_recovery.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
+import acidSplashInput from "../../content/acid_splash.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
   Provenance,
@@ -148,6 +149,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     orcAdrenalineRushInput,
     orcDarkvisionInput,
     orcRelentlessEnduranceInput,
+    acidSplashInput,
     fireBoltInput,
     lightInput,
     rayOfFrostInput,

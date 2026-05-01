@@ -185,7 +185,11 @@ Feature and spell resources:
 - cantrip `ray_of_frost` uses a Spell Attack modifier of spellcasting ability
   modifier plus Proficiency Bonus, applies Cold damage on a hit, and records the
   `-10` Speed effect until the start of the caster's next turn without spending
-  a Spell Slot.
+  a Spell Slot;
+- cantrip save-gate damage spells such as `acid_splash` ask for selected target
+  Saving Throw outcomes in one replay hole, ask for damage only when at least
+  one selected target failed, and apply the rolled damage only to failed targets
+  without spending a Spell Slot.
 
 Attack and damage:
 
