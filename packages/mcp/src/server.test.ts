@@ -344,8 +344,66 @@ describe("MCP server route", () => {
     });
     expect(
       read.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Second Wind", "End Turn"]);
+    ).toEqual(["Attack", "Second Wind", "Move", "End Turn"]);
     expect(read.battleState.combatants).toHaveLength(2);
+  });
+
+  test("fills a promoted battle movement hole through MCP", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-battle-movement";
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleToolCall(root, "select_stat_block", {
+        statBlockId: "stat_block_goblin_warrior",
+      }),
+    );
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-movement",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            sourceDraftId: draftId,
+            combatantId: "fighter",
+            initiative: 18,
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+          },
+        ],
+      }),
+    );
+
+    const moved = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: { tag: "runtimeCommand", actorId: "fighter", command: "move" },
+        fill: {
+          kind: "movement",
+          holeId: "battle:movement",
+          value: {
+            movementCostFeet: 10,
+            destinationDistances: [{ combatantId: "goblin", feet: 4 }],
+          },
+        },
+      }),
+    );
+
+    expect(moved.result.tag).toBe("resolved");
+    expect(moved.battleState.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: "fighter",
+        movementSpentFeet: 10,
+      }),
+    );
+    expect(moved.battleState.combatantDistances).toEqual(
+      expect.arrayContaining([
+        { from: "fighter", to: "goblin", feet: 4 },
+        { from: "goblin", to: "fighter", feet: 4 },
+      ]),
+    );
   });
 
   test("starts battle from a character-only initial combatant roster", () => {
@@ -529,6 +587,14 @@ describe("MCP server route", () => {
           },
         },
         {
+          label: "Move",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: "fighter",
+            command: "move",
+          },
+        },
+        {
           label: "End Turn",
           subject: {
             tag: "runtimeCommand",
@@ -625,7 +691,7 @@ describe("MCP server route", () => {
     ]);
     expect(
       afterDamage.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Second Wind", "End Turn"]);
+    ).toEqual(["Second Wind", "Move", "End Turn"]);
     expect(root.sessionStore.transientBattleFills).toBeNull();
 
     const afterEndTurn = readPayload(
@@ -661,6 +727,14 @@ describe("MCP server route", () => {
           actorId: "goblin",
           action: "attack",
           attackName: "Shortbow",
+        },
+      },
+      {
+        label: "Move",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "goblin",
+          command: "move",
         },
       },
       {
@@ -1263,6 +1337,14 @@ describe("MCP server route", () => {
         },
       },
       {
+        label: "Move",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "fighter",
+          command: "move",
+        },
+      },
+      {
         label: "End Turn",
         subject: {
           tag: "runtimeCommand",
@@ -1347,6 +1429,14 @@ describe("MCP server route", () => {
             choices: ["fighter"],
           },
         ],
+      },
+      {
+        label: "Move",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "goblin",
+          command: "move",
+        },
       },
       { label: "End Turn" },
     ]);

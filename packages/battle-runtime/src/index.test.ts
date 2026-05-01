@@ -10,7 +10,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   BattleFillSchema,
-  BATTLE_REACTION_TRIGGERS,
+  BATTLE_READIED_SPELL_TRIGGERS,
   battleId,
   breakBattleConcentration,
   characterId,
@@ -26,7 +26,7 @@ import {
   startBattle,
   type BattleFill,
   type BattleHole,
-  type BattleReactionTrigger,
+  type BattleReadiedSpellTrigger,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -40,7 +40,12 @@ import {
   holeId,
   type AttackRollMode,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { DieRollResult, Hp, proficiencyBonus } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  movementFeet,
+  proficiencyBonus,
+} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -367,7 +372,7 @@ describe("battle runtime", () => {
     );
   });
 
-  test("discoverBattleActs exposes only attack and endTurn for the current actor", () => {
+  test("discoverBattleActs exposes attack, movement, and endTurn for the current actor", () => {
     const acts = discoverBattleActs(
       startBattle({
         battleId: battleId("battle-1"),
@@ -385,6 +390,7 @@ describe("battle runtime", () => {
         action: "attack",
         attackName: "Longsword",
       },
+      { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
     expect(acts[0]?.initialHoles).toMatchObject([
@@ -423,6 +429,325 @@ describe("battle runtime", () => {
     expect(acts.map((act) => act.subject)).toEqual([
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
+  });
+
+  test("movement replay spends Movement and updates combatant distances", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+
+    expect(hole).toMatchObject({
+      kind: "movement",
+      movementBudgetFeet: 30,
+    });
+
+    const moved = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        movementFill(hole, {
+          movementCostFeet: 10,
+          destinationDistances: [{ combatantId: goblinId, feet: 4 }],
+        }),
+      ],
+    });
+
+    expect(moved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: fighterId,
+            movement: {
+              speedFeet: 30,
+              spentFeet: 10,
+              remainingFeet: 20,
+            },
+          }),
+        ]),
+      },
+    });
+    if (moved.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${moved.tag}.`);
+    }
+    expect(moved.state.combatantDistances.get(fighterId)?.get(goblinId)).toBe(
+      4,
+    );
+    expect(moved.state.combatantDistances.get(goblinId)?.get(fighterId)).toBe(
+      4,
+    );
+  });
+
+  test("movement cost cannot exceed the derived remaining Movement budget", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 35,
+            destinationDistances: [{ combatantId: goblinId, feet: 40 }],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
+  test("movement out of melee reach opens an Opportunity Attack window before distance changes", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        movementFill(hole, {
+          movementCostFeet: 5,
+          destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+        }),
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "opportunityAttack" }],
+      snapshot: {
+        pendingReaction: {
+          frame: {
+            choices: [
+              {
+                kind: "opportunityAttack",
+                reactorId: goblinId,
+                subject: {
+                  command: "opportunityAttack",
+                  reactorId: goblinId,
+                  targetId: fighterId,
+                  attackName: "Scimitar",
+                },
+              },
+            ],
+          },
+        },
+      },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    expect(
+      awaitingReaction.state.combatantDistances.get(fighterId)?.get(goblinId),
+    ).toBe(5);
+  });
+
+  test("stale movement fill data cannot suppress an Opportunity Attack", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const staleSuppressionFill = movementFill(hole, {
+      movementCostFeet: 5,
+      destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+      provokesOpportunityAttacks: false,
+    } as Extract<BattleFill, { readonly kind: "movement" }>["value"]);
+
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [staleSuppressionFill],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "opportunityAttack" }],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    expect(
+      awaitingReaction.state.combatantDistances.get(fighterId)?.get(goblinId),
+    ).toBe(5);
+  });
+
+  test("declining an Opportunity Attack resumes the interrupted movement", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        movementFill(hole, {
+          movementCostFeet: 5,
+          destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+        }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+
+    const declined = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: goblinId },
+      ),
+    });
+
+    if (declined.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${declined.tag}.`);
+    }
+    expect(declined.snapshot.pendingReaction).toBeNull();
+    expect(declined.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          movement: expect.objectContaining({
+            spentFeet: 5,
+            remainingFeet: 25,
+          }),
+        }),
+        expect.objectContaining({
+          combatantId: goblinId,
+          reactionAvailable: true,
+        }),
+      ]),
+    );
+    expect(
+      declined.state.combatantDistances.get(fighterId)?.get(goblinId),
+    ).toBe(10);
+  });
+
+  test("resolving an Opportunity Attack spends reaction, applies damage, then resumes movement", () => {
+    const state = fighterVsGoblinBattle();
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+        }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    const choice = awaitingReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const startedReaction = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        {
+          kind: "resolve",
+          reactorId: goblinId,
+          choice: {
+            kind: "opportunityAttack",
+            reactorId: goblinId,
+            fills: [],
+          },
+        },
+      ),
+    });
+    expect(startedReaction).toMatchObject({
+      tag: "needsHoles",
+      subject: choice.subject,
+      holes: [{ kind: "attackRoll" }],
+    });
+    if (startedReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
+    }
+
+    const attackRoll = findHole(startedReaction.holes, "attackRoll");
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [attackRollFill(attackRoll, { total: 20, naturalD20: 18 })],
+      }),
+      "rolledDice",
+    );
+    const completed = resolveBattleSubject({
+      state: startedReaction.state,
+      subject: choice.subject,
+      fills: [
+        attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+
+    if (completed.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${completed.tag}.`);
+    }
+    expect(completed.snapshot.pendingReaction).toBeNull();
+    expect(completed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hp: 6,
+          movement: expect.objectContaining({
+            spentFeet: 5,
+            remainingFeet: 25,
+          }),
+        }),
+        expect.objectContaining({
+          combatantId: goblinId,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+    expect(
+      completed.state.combatantDistances.get(fighterId)?.get(goblinId),
+    ).toBe(10);
   });
 
   test("attack resolution rejects an Unconscious current character at 0 HP", () => {
@@ -990,7 +1315,7 @@ describe("battle runtime", () => {
   });
 
   test("Ready stores the runtime-selected trigger without test-only state surgery", () => {
-    for (const trigger of BATTLE_REACTION_TRIGGERS) {
+    for (const trigger of BATTLE_READIED_SPELL_TRIGGERS) {
       const state = wizardVsSkeletonBattle();
       const readied = resolveBattleSubject({
         state,
@@ -1971,7 +2296,7 @@ describe("battle runtime", () => {
 
     expect(
       snapshotBattle(state).acts.map((act) => subjectName(act.subject)),
-    ).toEqual(["endTurn"]);
+    ).toEqual(["move", "endTurn"]);
   });
 
   test("endTurn advances to the next Initiative actor and refreshes turn resources", () => {
@@ -2044,6 +2369,7 @@ describe("battle runtime", () => {
         action: "attack",
         attackName: "Shortbow",
       },
+      { tag: "runtimeCommand", actorId: goblinId, command: "move" },
       { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
     ]);
   });
@@ -2498,6 +2824,7 @@ describe("battle runtime", () => {
         actorId: fighterId,
         unitId: "fighter_action_surge",
       },
+      { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
 
@@ -2528,6 +2855,13 @@ describe("battle runtime", () => {
         acts: [
           expect.objectContaining({
             subject: expect.objectContaining({ action: "attack" }),
+          }),
+          expect.objectContaining({
+            subject: {
+              tag: "runtimeCommand",
+              actorId: fighterId,
+              command: "move",
+            },
           }),
           expect.objectContaining({
             subject: {
@@ -2625,6 +2959,7 @@ describe("battle runtime", () => {
     } satisfies BattleState;
 
     expect(discoverBattleActs(state).map((act) => act.subject)).toEqual([
+      { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
     expect(
@@ -2766,6 +3101,7 @@ describe("battle runtime", () => {
           action: "attack",
           attackName: "Longsword",
         },
+        { tag: "runtimeCommand", actorId: fighterId, command: "move" },
         { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
       ],
     );
@@ -2928,6 +3264,7 @@ describe("battle runtime", () => {
         spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
         readyTrigger: "afterDamage",
       },
+      { tag: "runtimeCommand", actorId: wizardId, command: "move" },
       { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
     ]);
 
@@ -3264,6 +3601,7 @@ describe("battle runtime", () => {
         spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
         readyTrigger: "afterDamage",
       },
+      { tag: "runtimeCommand", actorId: wizardId, command: "move" },
       { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
     ]);
   });
@@ -4210,7 +4548,9 @@ function subjectName(
   | "actionSpell"
   | "unitFeature"
   | "endTurn"
-  | "releaseReadiedSpell" {
+  | "move"
+  | "releaseReadiedSpell"
+  | "opportunityAttack" {
   if (subject.tag === "action") {
     return subject.action;
   }
@@ -4325,7 +4665,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("39 passing");
+  expect(quintOutput).toContain("44 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -4429,6 +4769,8 @@ function renderQntCharacterProjection(
       deathFailures: ${input.deathFailures},
       lifecycle: UsesDeathSavingThrows,
       reactionAvailable: true,
+      speed: 30,
+      movementSpent: 0,
     }`;
 }
 
@@ -4455,6 +4797,8 @@ function renderQntStateProjection(
         deathFailures: ${input.fighterDeathFailures},
         lifecycle: UsesDeathSavingThrows,
         reactionAvailable: true,
+        speed: 30,
+        movementSpent: 0,
       },
       goblin: {
         hp: ${input.goblinHp},
@@ -4470,11 +4814,14 @@ function renderQntStateProjection(
         deathFailures: 0,
         lifecycle: DiesAtZeroHp,
         reactionAvailable: true,
+        speed: 30,
+        movementSpent: 0,
       },
       actionAvailable: ${input.actionAvailable},
       bonusActionAvailable: ${input.bonusActionAvailable},
       fighterReadiedSpellHeld: false,
       interruptStack: [],
+      fighterGoblinDistance: 5,
     }`;
 }
 
@@ -4505,7 +4852,7 @@ function fighterVsGoblinBattle(): BattleState {
 }
 
 function fighterTurnWithReadiedRay(
-  trigger: BattleReactionTrigger,
+  trigger: BattleReadiedSpellTrigger,
 ): BattleState {
   const wizardReady = resolveBattleSubject({
     state: startBattle({
@@ -4599,7 +4946,9 @@ function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
   ).state;
 }
 
-function wizardTurnWithReadiedRay(trigger: BattleReactionTrigger): BattleState {
+function wizardTurnWithReadiedRay(
+  trigger: BattleReadiedSpellTrigger,
+): BattleState {
   const base = wizardVsSkeletonBattle();
   const wizardReady = resolveBattleSubject({
     state: base,
@@ -4925,6 +5274,20 @@ function reactionDecisionFill(
   };
 }
 
+function movementFill(
+  hole: BattleHole,
+  value: Extract<BattleFill, { readonly kind: "movement" }>["value"],
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected movement hole.");
+  }
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
 function savingThrowOutcomeFill(
   hole: BattleHole,
   outcomes: readonly {
@@ -5025,6 +5388,7 @@ function characterSeed(input: {
         { className: "fighter", level: input.classLevel ?? 1 },
       ],
       armorClass: input.armorClass ?? defaultArmorClassState(),
+      speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(12),
       tempHp: Hp(input.tempHp ?? 0),

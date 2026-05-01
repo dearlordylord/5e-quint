@@ -401,7 +401,7 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(read, "snapshot.currentActorId"), "fighter");
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
-    ["Attack", "Second Wind", "End Turn"],
+    ["Attack", "Second Wind", "Move", "End Turn"],
   );
 
   await callTool(client, "fill_battle_hole", {
@@ -428,7 +428,7 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(endedFighterTurn, "snapshot.currentActorId"), "goblin");
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
-    ["Attack", "Attack", "End Turn"],
+    ["Attack", "Attack", "Move", "End Turn"],
   );
 
   await callTool(client, "fill_battle_hole", {
@@ -541,7 +541,7 @@ export async function verifyWidthVertical(client: Client) {
 
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
-    ["Attack", "Second Wind", "Action Surge", "End Turn"],
+    ["Attack", "Second Wind", "Action Surge", "Move", "End Turn"],
   );
 
   await callTool(client, "fill_battle_hole", {

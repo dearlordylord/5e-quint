@@ -5,7 +5,7 @@ import { Match } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import { DieRollResult, Hp } from "@dnd/shared/types";
+import { DieRollResult, Hp, movementFeet } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -296,6 +296,7 @@ function fighterCreatureInit(input: {
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
       armorClass: defaultArmorClassState(),
+      speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(12),
       maxHp: Hp(12),
       tempHp: Hp(0),
@@ -430,6 +431,9 @@ function projectHole(hole: BattleHole): MbtHole {
     }),
     Match.when({ kind: "reactionDecision" }, () => {
       throw new Error("Battle runtime MBT does not model reaction holes.");
+    }),
+    Match.when({ kind: "movement" }, () => {
+      throw new Error("Battle runtime MBT does not model movement holes.");
     }),
     Match.exhaustive,
   );

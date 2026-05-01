@@ -17,8 +17,14 @@ const BattleCombatantProjectionSchema = Schema.Struct({
   maxHp: Schema.Number,
   tempHp: Schema.Number,
   reactionAvailable: Schema.Boolean,
+  movementSpentFeet: Schema.Number,
   origin: JsonObjectSchema,
   zeroHpLifecycle: JsonObjectSchema,
+});
+const BattleDistanceProjectionSchema = Schema.Struct({
+  from: Schema.String,
+  to: Schema.String,
+  feet: Schema.Number,
 });
 const InitiativeEntrySchema = Schema.Struct({
   creature: Schema.String,
@@ -33,6 +39,7 @@ const BattleStateProjectionSchema = Schema.Struct({
   battleId: Schema.String,
   initiative: InitiativeStackSchema,
   combatants: Schema.Array(BattleCombatantProjectionSchema),
+  combatantDistances: Schema.Array(BattleDistanceProjectionSchema),
   currentTurnResources: JsonObjectSchema,
   pendingReaction: Schema.Union(JsonObjectSchema, Schema.Null),
 });

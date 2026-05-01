@@ -8,6 +8,9 @@ export function battleStateProjection(state: BattleState) {
     combatants: Array.from(state.combatants.values()).map(
       battleCreatureStateProjection,
     ),
+    combatantDistances: Array.from(state.combatantDistances, ([from, peers]) =>
+      Array.from(peers, ([to, feet]) => ({ from, to, feet })),
+    ).flat(),
     currentTurnResources: state.currentTurnResources,
     pendingReaction: snapshotBattle(state).pendingReaction,
     readiedSpells: Array.from(
@@ -29,6 +32,7 @@ function battleCreatureStateProjection(combatant: BattleCreatureState) {
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
     reactionAvailable: combatant.reactionAvailable,
+    movementSpentFeet: combatant.movementSpentFeet,
     armorClass: combatant.armorClass,
     activeEffects: combatant.activeEffects,
     concentration: combatant.concentration,

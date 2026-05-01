@@ -25,7 +25,7 @@ import {
   zeroAbilityModifiers,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import { Hp, proficiencyBonus } from "@dnd/shared/types";
+import { Hp, movementFeet, proficiencyBonus } from "@dnd/shared/types";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match } from "effect";
@@ -93,6 +93,7 @@ export function battleCreatureInitFromCharacterBuild(
       characterUnitRefs,
       classLevels: characterBattleClassLevels(input.build, input.unitLibrary),
       armorClass: characterArmorClassState(input.build, input.unitLibrary),
+      speed: characterBattleWalkSpeed(input.build, input.unitLibrary),
       currentHp,
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
@@ -114,6 +115,17 @@ export function battleCreatureInitFromCharacterBuild(
           }),
     },
   };
+}
+
+function characterBattleWalkSpeed(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+) {
+  const species = unitLibrary.requireUnit(build.species);
+  if (species.kind !== "species") {
+    throw new Error(`Expected species Unit: ${build.species}`);
+  }
+  return { walkFeet: movementFeet(species.speed.walkFeet) };
 }
 
 function characterBattleClassLevels(

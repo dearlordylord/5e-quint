@@ -58,6 +58,12 @@ module battleRuntime {
   //   spell-authored triggers. The promoted runtime models the reusable
   //   interrupt window/continuation protocol here; individual reaction
   //   features and spells are restored by later width tasks.
+  // - Playing-the-Game.md lines 533-551, Rules-Glossary.md lines 395-397,
+  //   738-740, 904-910, and UBIQUITOUS_LANGUAGE.md: Movement spends a
+  //   per-turn movement budget derived from Speed; Difficult Terrain and
+  //   other spatial costs are caller-authored Movement costs at this runtime
+  //   boundary; leaving melee Reach opens an Opportunity Attack Reaction
+  //   window before the distance mutation is committed.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -74,12 +80,17 @@ module battleRuntime {
 
   type Hole = TargetChoice | AttackRoll | DamageRoll | SavingThrowOutcome | ReactionDecision
 
-  type ReactionTrigger = AttackHit | SpellCast | SaveFailed | AfterDamage
+  type ReactionTrigger = AttackHit | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
 
   // Continuations carry the replay lane interrupted by a Reaction window. This
   // package-local QNT keeps representative deterministic fills for those lanes;
   // TypeScript carries the caller-provided fills in the runtime frame.
-  type ReactionContinuation = ResumeAttack | ResumeSpell | ResumeSaveGateDamage | ResumeAfterDamage
+  type ReactionContinuation =
+    | ResumeAttack
+    | ResumeSpell
+    | ResumeSaveGateDamage
+    | ResumeAfterDamage
+    | ResumeMovement({ movementCost: int, destinationDistance: int })
 
   type PendingReactionFrame = {
     trigger: ReactionTrigger,
@@ -104,6 +115,8 @@ module battleRuntime {
     deathFailures: int,
     lifecycle: ZeroHpLifecycle,
     reactionAvailable: bool,
+    speed: int,
+    movementSpent: int,
   }
 
   type Initiative = {
@@ -120,6 +133,7 @@ module battleRuntime {
     bonusActionAvailable: bool,
     fighterReadiedSpellHeld: bool,
     interruptStack: List[PendingReactionFrame],
+    fighterGoblinDistance: int,
   }
 
   type ActionSurgeResult = {
@@ -155,6 +169,8 @@ module battleRuntime {
       deathFailures: 0,
       lifecycle: UsesDeathSavingThrows,
       reactionAvailable: true,
+      speed: 30,
+      movementSpent: 0,
     },
     goblin: {
       hp: 10,
@@ -170,11 +186,14 @@ module battleRuntime {
       deathFailures: 0,
       lifecycle: DiesAtZeroHp,
       reactionAvailable: true,
+      speed: 30,
+      movementSpent: 0,
     },
     actionAvailable: true,
     bonusActionAvailable: true,
     fighterReadiedSpellHeld: false,
     interruptStack: [],
+    fighterGoblinDistance: 5,
   }
 
   // The promoted runtime receives Initiative counts and the caller-resolved
@@ -245,8 +264,8 @@ module battleRuntime {
       actionAvailable: true,
       bonusActionAvailable: true,
       fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and advancedInitiative.stillToAct[0] == Fighter) false else state.fighterReadiedSpellHeld,
-      fighter: if (advancedInitiative.stillToAct[0] == Fighter) { ...state.fighter, reactionAvailable: true } else state.fighter,
-      goblin: if (advancedInitiative.stillToAct[0] == Goblin) { ...state.goblin, reactionAvailable: true } else state.goblin,
+      fighter: if (advancedInitiative.stillToAct[0] == Fighter) { ...state.fighter, reactionAvailable: true, movementSpent: 0 } else state.fighter,
+      goblin: if (advancedInitiative.stillToAct[0] == Goblin) { ...state.goblin, reactionAvailable: true, movementSpent: 0 } else state.goblin,
     }
   }
 
@@ -287,6 +306,18 @@ module battleRuntime {
     }
   }
 
+  pure def declineReactionAndResume(state: BattleState, reactor: Actor): BattleState =
+    if (state.interruptStack.length() == 0)
+      state
+    else {
+      val frame = state.interruptStack[state.interruptStack.length() - 1]
+      val afterDecision = declineReaction(state, reactor)
+      if (afterDecision.interruptStack.length() < state.interruptStack.length())
+        resumeReactionContinuation(afterDecision, frame.continuation)
+      else
+        afterDecision
+    }
+
   pure def resolveReaction(state: BattleState, reactor: Actor): BattleState =
     if (state.interruptStack.length() == 0 or not(reactorCanReact(state, reactor)))
       state
@@ -296,7 +327,11 @@ module battleRuntime {
       if (not(validReactor))
         state
       else {
-        val afterReactionProcedure = releaseReadiedSpell(spendReaction(state, reactor))
+        val afterReactionProcedure =
+          match frame.trigger {
+            | OpportunityAttack => resolveGoblinOpportunityAttack(spendReaction(state, reactor), 20, 18, 4, true)
+            | _ => releaseReadiedSpell(spendReaction(state, reactor))
+          }
         val afterDecision = declineReaction(afterReactionProcedure, reactor)
         if (afterDecision.interruptStack.length() < state.interruptStack.length())
           resumeReactionContinuation(afterDecision, frame.continuation)
@@ -311,6 +346,7 @@ module battleRuntime {
       | ResumeSpell => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
+      | ResumeMovement(movement) => applyFighterMovement(state, movement.movementCost, movement.destinationDistance)
     }
 
   pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
@@ -360,6 +396,20 @@ module battleRuntime {
       { ...state, actionAvailable: false }
     else
       { ...state, fighter: applyDamage(state.fighter, damageRoll + 2, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+
+  pure def resolveGoblinOpportunityAttack(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (state.goblin.hp == 0)
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter))))
+      state
+    else
+      { ...state, fighter: applyDamage(state.fighter, damageRoll + 2, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded) }
 
   pure def resolveRayOfFrost(
     state: BattleState,
@@ -432,6 +482,44 @@ module battleRuntime {
       { ...state, fighter: { ...state.fighter, concentrating: false }, fighterReadiedSpellHeld: false }
     else
       state
+
+  pure def movementRemaining(combatant: Combatant): int =
+    if (combatant.speed - combatant.movementSpent < 0) 0 else combatant.speed - combatant.movementSpent
+
+  pure def fighterCanMove(state: BattleState, movementCost: int): bool =
+    currentActor(state) == Fighter and
+    not(state.fighter.unconscious) and
+    movementCost > 0 and
+    movementCost <= movementRemaining(state.fighter)
+
+  pure def goblinCanOpportunityAttack(state: BattleState, destinationDistance: int): bool =
+    state.goblin.hp > 0 and
+    state.goblin.reactionAvailable and
+    state.fighterGoblinDistance <= 5 and
+    destinationDistance > 5
+
+  pure def applyFighterMovement(state: BattleState, movementCost: int, destinationDistance: int): BattleState =
+    if (fighterCanMove(state, movementCost))
+      {
+        ...state,
+        fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + movementCost },
+        fighterGoblinDistance: destinationDistance,
+      }
+    else
+      state
+
+  pure def moveFighter(state: BattleState, movementCost: int, destinationDistance: int): BattleState =
+    if (not(fighterCanMove(state, movementCost)))
+      state
+    else if (goblinCanOpportunityAttack(state, destinationDistance))
+      openReactionWindow(state, {
+        trigger: OpportunityAttack,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeMovement({ movementCost: movementCost, destinationDistance: destinationDistance }),
+      })
+    else
+      applyFighterMovement(state, movementCost, destinationDistance)
 
   pure def applyHealing(target: Combatant, healing: int): Combatant = {
     val effectiveHealing = if (healing < 0) 0 else healing
@@ -960,6 +1048,53 @@ module battleRuntime {
       assert(not(released.fighter.concentrating)),
       assert(not(released.fighterReadiedSpellHeld)),
       assert(not(expired.fighterReadiedSpellHeld)),
+    }
+  }
+
+  run test_movement_spends_budget_and_updates_distance = {
+    val moved = moveFighter(initialState, 10, 4)
+    all {
+      assert(moved.fighter.movementSpent == 10),
+      assert(moved.fighterGoblinDistance == 4),
+      assert(movementRemaining(moved.fighter) == 20),
+    }
+  }
+
+  run test_movement_over_budget_is_rejected = {
+    assert(moveFighter(initialState, 35, 40) == initialState)
+  }
+
+  run test_movement_leaving_reach_opens_opportunity_attack_window_before_position_commit = {
+    val awaiting = moveFighter(initialState, 5, 10)
+    all {
+      assert(awaiting.fighter.movementSpent == 0),
+      assert(awaiting.fighterGoblinDistance == 5),
+      assert(awaiting.interruptStack.length() == 1),
+      assert(awaiting.interruptStack[0].trigger == OpportunityAttack),
+      assert(awaiting.interruptStack[0].eligibleReactors == Set(Goblin)),
+    }
+  }
+
+  run test_declined_opportunity_attack_resumes_movement = {
+    val awaiting = moveFighter(initialState, 5, 10)
+    val resumed = declineReactionAndResume(awaiting, Goblin)
+    all {
+      assert(resumed.interruptStack == []),
+      assert(resumed.fighter.movementSpent == 5),
+      assert(resumed.fighterGoblinDistance == 10),
+      assert(resumed.goblin.reactionAvailable),
+    }
+  }
+
+  run test_resolved_opportunity_attack_spends_reaction_damages_then_resumes_movement = {
+    val awaiting = moveFighter(initialState, 5, 10)
+    val resolved = resolveReaction(awaiting, Goblin)
+    all {
+      assert(resolved.interruptStack == []),
+      assert(resolved.goblin.reactionAvailable == false),
+      assert(resolved.fighter.hp == 6),
+      assert(resolved.fighter.movementSpent == 5),
+      assert(resolved.fighterGoblinDistance == 10),
     }
   }
 

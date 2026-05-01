@@ -178,6 +178,7 @@ describe("end-user promoted MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Second Wind",
+      "Move",
       "End Turn",
     ]);
 
@@ -234,6 +235,7 @@ describe("end-user promoted MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Attack",
+      "Move",
       "End Turn",
     ]);
 
@@ -395,6 +397,7 @@ describe("end-user promoted MCP vertical", () => {
       "Attack",
       "Second Wind",
       "Action Surge",
+      "Move",
       "End Turn",
     ]);
 
@@ -440,7 +443,12 @@ describe("end-user promoted MCP vertical", () => {
         }),
       ]),
     );
-    expect(actionLabels(surged)).toEqual(["Attack", "Second Wind", "End Turn"]);
+    expect(actionLabels(surged)).toEqual([
+      "Attack",
+      "Second Wind",
+      "Move",
+      "End Turn",
+    ]);
 
     fillBattleSubject(root, attackSubject("fighter", "Flail"), {
       kind: "targetChoice",

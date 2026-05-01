@@ -71,8 +71,10 @@ import {
   Hp,
   Initiative,
   Round,
+  movementFeet,
   type Condition,
   type DieRollResult,
+  type MovementFeet,
   type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
 } from "@dnd/shared/types";
@@ -147,6 +149,9 @@ export type CharacterBattleLoadoutRef = {
     readonly unitId: UnitRecord["id"];
     readonly grip: "one_handed";
   };
+};
+export type BattleWalkSpeed = {
+  readonly walkFeet: MovementFeet;
 };
 export type CharacterBattleClassLevelInit = {
   readonly className: ClassName;
@@ -297,7 +302,7 @@ export type BattleConcentration = {
 };
 export type BattleReadiedSpell = {
   readonly invocation: SupportedDamageSpellAct;
-  readonly trigger: BattleReactionTrigger;
+  readonly trigger: BattleReadiedSpellTrigger;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
 export const BATTLE_REACTION_TRIGGERS = [
@@ -305,8 +310,17 @@ export const BATTLE_REACTION_TRIGGERS = [
   "spellCast",
   "saveFailed",
   "afterDamage",
+  "opportunityAttack",
 ] as const;
 export type BattleReactionTrigger = (typeof BATTLE_REACTION_TRIGGERS)[number];
+export const BATTLE_READIED_SPELL_TRIGGERS = [
+  "attackHit",
+  "spellCast",
+  "saveFailed",
+  "afterDamage",
+] as const satisfies ReadonlyArray<BattleReactionTrigger>;
+export type BattleReadiedSpellTrigger =
+  (typeof BATTLE_READIED_SPELL_TRIGGERS)[number];
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
@@ -316,21 +330,36 @@ export type BattleInterruptedProcedure =
   | {
       readonly kind: "resolved";
       readonly subject: BattleSubject;
+    }
+  | {
+      readonly kind: "movement";
+      readonly subject: BattleSubject;
+      readonly movement: BattleResolvedMovement;
     };
 export type BattleReactionProcedureChoice = {
-  readonly kind: "releaseReadiedSpell";
   readonly reactorId: CombatantId;
-  readonly readiedSpellCasterId: CombatantId;
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "runtimeCommand"; readonly command: "releaseReadiedSpell" }
-  >;
-};
+  readonly subject: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>;
+} & (
+  | {
+      readonly kind: "releaseReadiedSpell";
+      readonly readiedSpellCasterId: CombatantId;
+    }
+  | {
+      readonly kind: "opportunityAttack";
+    }
+);
 export type BattleReactionProcedureSelection = {
-  readonly kind: "releaseReadiedSpell";
-  readonly readiedSpellCasterId: CombatantId;
   readonly fills: readonly BattleFill[];
-};
+} & (
+  | {
+      readonly kind: "releaseReadiedSpell";
+      readonly readiedSpellCasterId: CombatantId;
+    }
+  | {
+      readonly kind: "opportunityAttack";
+      readonly reactorId: CombatantId;
+    }
+);
 type BattleActiveReactionProcedure = {
   readonly reactorId: CombatantId;
   readonly subject: BattleReactionProcedureChoice["subject"];
@@ -365,6 +394,11 @@ export type BattleReactionFrame =
       readonly damageSourceId: CombatantId;
       readonly damagedId: CombatantId;
       readonly damageAmount: number;
+    })
+  | (BattleReactionFrameBase & {
+      readonly trigger: "opportunityAttack";
+      readonly moverId: CombatantId;
+      readonly reactorIds: readonly CombatantId[];
     });
 type BattleReactionFrameInput = BattleReactionFrame extends infer T
   ? T extends BattleReactionFrame
@@ -390,6 +424,19 @@ type AttackTargetConstraint =
       readonly kind: "rangedRange";
       readonly normalFeet: number;
     };
+export type BattleMovementDistanceUpdate = {
+  readonly combatantId: CombatantId;
+  readonly feet: number;
+};
+export type BattleMovementFillValue = {
+  readonly movementCostFeet: number;
+  readonly destinationDistances: readonly BattleMovementDistanceUpdate[];
+};
+type BattleResolvedMovement = {
+  readonly moverId: CombatantId;
+  readonly movementCostFeet: MovementFeet;
+  readonly destinationDistances: readonly BattleMovementDistanceUpdate[];
+};
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 // RAW attacks: spell attacks, Opportunity Attacks, Bonus Action attacks, and
@@ -462,6 +509,7 @@ export type CharacterBattleCreatureInit = {
   readonly characterUnitRefs: readonly BattleUnitRef[];
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
   readonly armorClass: ArmorClassState;
+  readonly speed: BattleWalkSpeed;
   readonly currentHp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
@@ -547,6 +595,7 @@ export type BattleCreatureState = {
   readonly armorClass: ArmorClassState;
   readonly zeroHpLifecycle: ZeroHpLifecycle;
   readonly reactionAvailable: boolean;
+  readonly movementSpentFeet: MovementFeet;
   readonly origin:
     | {
         readonly kind: "character";
@@ -554,6 +603,7 @@ export type BattleCreatureState = {
         readonly characterUnitRefs: readonly BattleUnitRef[];
         readonly classLevels: readonly CharacterBattleClassLevel[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
+        readonly speed: BattleWalkSpeed;
         readonly attack: CharacterWeaponAttackActionOption | null;
         readonly resources: readonly CharacterBattleResourceState[];
         readonly spellcasting?: CharacterBattleSpellcastingState;
@@ -582,7 +632,9 @@ export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
 export const BATTLE_RUNTIME_COMMANDS = [
   "endTurn",
+  "move",
   "releaseReadiedSpell",
+  "opportunityAttack",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
 
@@ -604,7 +656,7 @@ export const BattleSubjectSchema = Schema.Union(
     spellId: BattleSubjectTextSchema,
     spellActId: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
     readyTrigger: Schema.optionalWith(
-      Schema.Literal(...BATTLE_REACTION_TRIGGERS),
+      Schema.Literal(...BATTLE_READIED_SPELL_TRIGGERS),
       { exact: true },
     ),
   }),
@@ -621,8 +673,21 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
+    command: Schema.Literal("move"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
     command: Schema.Literal("releaseReadiedSpell"),
     readiedSpellCasterId: CombatantId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("opportunityAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+    attackName: BattleSubjectTextSchema,
   }),
 );
 export type BattleSubject = typeof BattleSubjectSchema.Type;
@@ -663,6 +728,9 @@ function battleSubjectKey(subject: BattleSubject): string {
         command.actorId,
         command.command,
         "readiedSpellCasterId" in command ? command.readiedSpellCasterId : null,
+        "reactorId" in command ? command.reactorId : null,
+        "targetId" in command ? command.targetId : null,
+        "attackName" in command ? command.attackName : null,
       ]),
     ),
     Match.exhaustive,
@@ -760,6 +828,14 @@ export type BattleReactionDecisionHole = {
   readonly trigger: BattleReactionTrigger;
   readonly eligibleReactors: readonly CombatantId[];
 };
+export type BattleMovementHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "movement";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly movementBudgetFeet: MovementFeet;
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleAttackRollHole
@@ -770,7 +846,8 @@ export type BattleHole =
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole
   | BattleConcentrationSavingThrowHole
-  | BattleReactionDecisionHole;
+  | BattleReactionDecisionHole
+  | BattleMovementHole;
 
 const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("HoleId"),
@@ -919,6 +996,13 @@ export const BattleHoleSchema = Schema.Union(
     trigger: Schema.Literal(...BATTLE_REACTION_TRIGGERS),
     eligibleReactors: Schema.Array(CombatantId),
   }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("movement"),
+    label: Schema.String,
+    actorId: CombatantId,
+    movementBudgetFeet: Schema.Number,
+  }),
 );
 
 export type BattleFill =
@@ -949,6 +1033,11 @@ export type BattleFill =
       readonly kind: "reactionDecision";
       readonly holeId: BattleHoleId;
       readonly value: BattleReactionDecision;
+    }
+  | {
+      readonly kind: "movement";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleMovementFillValue;
     };
 
 const BattleDieRollResultSchema = Schema.Number.pipe(
@@ -1032,12 +1121,29 @@ type BattleFillEncoded =
         | {
             readonly kind: "resolve";
             readonly reactorId: string;
-            readonly choice: {
-              readonly kind: "releaseReadiedSpell";
-              readonly readiedSpellCasterId: string;
-              readonly fills: readonly BattleFillEncoded[];
-            };
+            readonly choice:
+              | {
+                  readonly kind: "releaseReadiedSpell";
+                  readonly readiedSpellCasterId: string;
+                  readonly fills: readonly BattleFillEncoded[];
+                }
+              | {
+                  readonly kind: "opportunityAttack";
+                  readonly reactorId: string;
+                  readonly fills: readonly BattleFillEncoded[];
+                };
           };
+    }
+  | {
+      readonly kind: "movement";
+      readonly holeId: string;
+      readonly value: {
+        readonly movementCostFeet: number;
+        readonly destinationDistances: readonly {
+          readonly combatantId: string;
+          readonly feet: number;
+        }[];
+      };
     };
 
 export const BattleFillSchema: Schema.Schema<
@@ -1094,13 +1200,33 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           kind: Schema.Literal("resolve"),
           reactorId: CombatantId,
-          choice: Schema.Struct({
-            kind: Schema.Literal("releaseReadiedSpell"),
-            readiedSpellCasterId: CombatantId,
-            fills: Schema.Array(BattleFillSchema),
-          }),
+          choice: Schema.Union(
+            Schema.Struct({
+              kind: Schema.Literal("releaseReadiedSpell"),
+              readiedSpellCasterId: CombatantId,
+              fills: Schema.Array(BattleFillSchema),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("opportunityAttack"),
+              reactorId: CombatantId,
+              fills: Schema.Array(BattleFillSchema),
+            }),
+          ),
         }),
       ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("movement"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        movementCostFeet: Schema.Number.pipe(Schema.int()),
+        destinationDistances: Schema.Array(
+          Schema.Struct({
+            combatantId: CombatantId,
+            feet: Schema.Number.pipe(Schema.int()),
+          }),
+        ),
+      }),
     }),
   ),
 ).annotations({ identifier: "BattleFill" });
@@ -1194,6 +1320,11 @@ export type BattleCreatureSnapshot = {
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly concentration: BattleConcentration | null;
   readonly reactionAvailable: boolean;
+  readonly movement: {
+    readonly speedFeet: MovementFeet;
+    readonly spentFeet: MovementFeet;
+    readonly remainingFeet: MovementFeet;
+  };
 };
 
 export type BattleCreatureZeroHpLifecycleSnapshot =
@@ -1227,6 +1358,8 @@ const REACTION_DECISION_HOLE_ID = holeId("battle:reaction:decision");
 const REACTION_DECISION_HOLE_INSTANCE = holeInstanceKey(
   "battle:reaction:decision",
 );
+const MOVEMENT_HOLE_ID = holeId("battle:movement");
+const MOVEMENT_HOLE_INSTANCE = holeInstanceKey("battle:movement");
 const ACTION_SURGE_UNIT_ID = "fighter_action_surge";
 const SECOND_WIND_UNIT_ID = "fighter_second_wind";
 const SECOND_WIND_HEALING_ROLL_HOLE_ID = holeId(
@@ -1350,6 +1483,19 @@ export function discoverBattleActs(
     canSpendAction(state.currentTurnResources, "magic")
   ) {
     acts.push(...discoverSupportedSpellActs(state, actorId));
+  }
+  const movementHoleForActor = movementHole(state, actorId);
+  if (
+    combatantCanMove(state.combatants.get(actorId)) &&
+    state.combatants.size > 1 &&
+    Number(movementHoleForActor.movementBudgetFeet) > 0
+  ) {
+    acts.push({
+      subject: { tag: "runtimeCommand", actorId, command: "move" },
+      label: "Move",
+      summary: "Spend Movement and update combatant distances.",
+      initialHoles: [movementHoleForActor],
+    });
   }
   acts.push({
     subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
@@ -1501,10 +1647,17 @@ function resolveBattleSubjectInternal(
     Match.when({ tag: "runtimeCommand", command: "endTurn" }, () =>
       resolveEndTurnCommand(input),
     ),
+    Match.when({ tag: "runtimeCommand", command: "move" }, () =>
+      resolveMoveCommand(input),
+    ),
     Match.when({ tag: "runtimeCommand", command: "releaseReadiedSpell" }, () =>
       resolveReleaseReadiedSpellCommand(input, {
         suppressedReactionTrigger: options.suppressedReactionTrigger,
       }),
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "opportunityAttack" },
+      (subject) => resolveOpportunityAttackCommand({ ...input, subject }),
     ),
     Match.exhaustive,
   );
@@ -1654,7 +1807,11 @@ function admittedReactionChoice(
       (choice) =>
         choice.kind === decision.choice.kind &&
         choice.reactorId === decision.reactorId &&
-        choice.readiedSpellCasterId === decision.choice.readiedSpellCasterId,
+        (choice.kind === "releaseReadiedSpell"
+          ? decision.choice.kind === "releaseReadiedSpell" &&
+            choice.readiedSpellCasterId === decision.choice.readiedSpellCasterId
+          : decision.choice.kind === "opportunityAttack" &&
+            choice.reactorId === decision.choice.reactorId),
     ) ?? null
   );
 }
@@ -1729,6 +1886,14 @@ function resumeInterruptedProcedure(
       tag: "resolved",
       state,
       snapshot: snapshotBattle(state),
+    };
+  }
+  if (continuation.kind === "movement") {
+    const nextState = applyBattleMovement(state, continuation.movement);
+    return {
+      tag: "resolved",
+      state: nextState,
+      snapshot: snapshotBattle(nextState),
     };
   }
 
@@ -1817,6 +1982,7 @@ function reactionTriggerLabel(trigger: BattleReactionTrigger): string {
     Match.when("spellCast", () => "Spell cast"),
     Match.when("saveFailed", () => "Failed save"),
     Match.when("afterDamage", () => "After damage"),
+    Match.when("opportunityAttack", () => "Opportunity Attack"),
     Match.exhaustive,
   );
 }
@@ -1836,7 +2002,7 @@ function maybeOpenReactionWindow(
   if (frame.trigger === suppressedReactionTrigger) {
     return null;
   }
-  const choices = readiedSpellReactionChoices(state, frame.trigger);
+  const choices = reactionChoices(state, frame);
   if (choices.length === 0) {
     return null;
   }
@@ -1868,6 +2034,10 @@ function maybeOpenReactionWindow(
       ...triggerFrame,
       ...frameCommon,
     })),
+    Match.when({ trigger: "opportunityAttack" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...frameCommon,
+    })),
     Match.exhaustive,
   );
   const nextState = openBattleReactionWindow({ state, frame: nextFrame });
@@ -1885,25 +2055,74 @@ function readiedSpellReactionChoices(
   state: BattleState,
   trigger: BattleReactionTrigger,
 ): readonly BattleReactionProcedureChoice[] {
-  return [...state.readiedSpells].flatMap(([casterId, readiedSpell]) => {
-    const reactor = state.combatants.get(casterId);
-    if (
-      readiedSpell.trigger !== trigger ||
-      reactor === undefined ||
-      !reactor.reactionAvailable
-    ) {
+  const readiedChoices = [...state.readiedSpells].flatMap(
+    ([casterId, readiedSpell]) => {
+      const reactor = state.combatants.get(casterId);
+      if (
+        readiedSpell.trigger !== trigger ||
+        reactor === undefined ||
+        !reactor.reactionAvailable
+      ) {
+        return [];
+      }
+      return [
+        {
+          kind: "releaseReadiedSpell" as const,
+          reactorId: casterId,
+          readiedSpellCasterId: casterId,
+          subject: {
+            tag: "runtimeCommand" as const,
+            actorId: currentActorId(state),
+            command: "releaseReadiedSpell" as const,
+            readiedSpellCasterId: casterId,
+          },
+        },
+      ];
+    },
+  );
+  return readiedChoices;
+}
+
+function reactionChoices(
+  state: BattleState,
+  frame: BattleReactionFrameInput,
+): readonly BattleReactionProcedureChoice[] {
+  const readiedChoices = readiedSpellReactionChoices(state, frame.trigger);
+  return frame.trigger === "opportunityAttack"
+    ? [
+        ...readiedChoices,
+        ...opportunityAttackReactionChoices(
+          state,
+          frame.moverId,
+          frame.reactorIds,
+        ),
+      ]
+    : readiedChoices;
+}
+
+function opportunityAttackReactionChoices(
+  state: BattleState,
+  moverId: CombatantId,
+  reactorIds: readonly CombatantId[],
+): readonly BattleReactionProcedureChoice[] {
+  return reactorIds.flatMap((reactorId) => {
+    const reactor = state.combatants.get(reactorId);
+    if (reactor === undefined) {
       return [];
     }
+    const attack = opportunityAttackOptionForReactor(state, reactorId, moverId);
+    if (attack === undefined) return [];
     return [
       {
-        kind: "releaseReadiedSpell" as const,
-        reactorId: casterId,
-        readiedSpellCasterId: casterId,
+        kind: "opportunityAttack" as const,
+        reactorId,
         subject: {
           tag: "runtimeCommand" as const,
           actorId: currentActorId(state),
-          command: "releaseReadiedSpell" as const,
-          readiedSpellCasterId: casterId,
+          command: "opportunityAttack" as const,
+          reactorId,
+          targetId: moverId,
+          attackName: attackActionOptionName(attack),
         },
       },
     ];
@@ -1928,6 +2147,7 @@ function battleCreatureStateFromInit(
     concentration: null,
     zeroHpLifecycle,
     reactionAvailable: true,
+    movementSpentFeet: movementFeet(0),
   };
 
   if (creatureInit.kind === "character") {
@@ -1943,6 +2163,7 @@ function battleCreatureStateFromInit(
         characterUnitRefs: creatureInit.characterUnitRefs,
         classLevels,
         selectedLoadout: creatureInit.selectedLoadout,
+        speed: creatureInit.speed,
         attack: creatureInit.attack,
         resources: (creatureInit.resources ?? []).map((resource) =>
           characterResourceState(resource, classLevels),
@@ -2141,6 +2362,7 @@ function combatantSnapshot(
     activeEffects: combatant.activeEffects,
     concentration: combatant.concentration,
     reactionAvailable: combatant.reactionAvailable,
+    movement: battleMovementBudget(combatant),
   };
 }
 
@@ -2904,6 +3126,319 @@ function resolveEndTurnCommand(
   );
 }
 
+function resolveMoveCommand(
+  input: BattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length === 0) {
+    return needsHolesResult(input.state, input.subject, [
+      movementHole(input.state, input.subject.actorId),
+    ]);
+  }
+  if (input.fills.length > 1 || input.fills[0]?.kind !== "movement") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Move requires exactly one Movement fill.",
+    );
+  }
+  const fill = input.fills[0];
+  if (fill.holeId !== MOVEMENT_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movement fill does not match the requested hole.",
+    );
+  }
+  const movement = parseBattleMovement(
+    input.state,
+    input.subject.actorId,
+    fill,
+  );
+  if (movement.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", movement.message);
+  }
+  const reactors = opportunityAttackReactorsForMovement(
+    input.state,
+    movement.movement,
+  );
+  if (reactors.length > 0) {
+    const reactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "opportunityAttack",
+        moverId: input.subject.actorId,
+        reactorIds: reactors,
+        continuation: {
+          kind: "movement",
+          subject: input.subject,
+          movement: movement.movement,
+        },
+      },
+      undefined,
+    );
+    if (reactionWindow !== null) return reactionWindow;
+  }
+  const nextState = applyBattleMovement(input.state, movement.movement);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveOpportunityAttackCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
+    >
+  >,
+): BattleResolutionResult {
+  const subject = input.subject;
+  const target = input.state.combatants.get(subject.targetId);
+  const attack = opportunityAttackOptionForReactor(
+    input.state,
+    subject.reactorId,
+    subject.targetId,
+  );
+  if (target === undefined || attack === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Opportunity Attack is no longer available.",
+    );
+  }
+  if (attackActionOptionName(attack) !== subject.attackName) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Opportunity Attack requires the selected melee attack option.",
+    );
+  }
+  const fillSet = attackFillSet(input.fills);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (fillSet.targetId !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Opportunity Attack target is fixed by the movement trigger.",
+    );
+  }
+  if (fillSet.attackRoll == null) {
+    if (fillSet.damageRoll != null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Opportunity Attack roll must be filled before damage.",
+      );
+    }
+    return needsHolesResult(input.state, input.subject, [
+      attackRollHole(attack),
+    ]);
+  }
+  if (!attackRollResultIsValid(fillSet.attackRoll)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Opportunity Attack roll result is outside the d20 attack-roll protocol.",
+    );
+  }
+  const hit = attackRollHits(
+    fillSet.attackRoll,
+    currentArmorClass(activeEffectArmorClass(target)),
+  );
+  const critical = attackRollIsCriticalHit(fillSet.attackRoll);
+  if (!hit && fillSet.damageRoll != null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Opportunity Attack damage can only be filled after a hit.",
+    );
+  }
+  if (!hit) {
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  if (fillSet.damageRoll == null) {
+    return needsHolesResult(input.state, input.subject, [
+      attackDamageHole(attack, critical, fillSet.attackRoll),
+    ]);
+  }
+  const damageValidation = validateAttackDamageFill(
+    fillSet.damageRoll,
+    attack,
+    critical,
+    fillSet.attackRoll,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", damageValidation);
+  }
+  const damageAmount = attackDamageAmount(
+    target,
+    attack,
+    fillSet.damageRoll,
+    critical,
+    fillSet.attackRoll,
+  );
+  const concentrationSave = concentrationSavingThrowHole(target, damageAmount);
+  if (concentrationSave !== null) {
+    if (fillSet.concentrationSavingThrow === undefined) {
+      return needsHolesResult(input.state, input.subject, [concentrationSave]);
+    }
+    if (fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Concentration Saving Throw fill does not match the damaged target.",
+      );
+    }
+  }
+  const nextState = applyAttackDamage(
+    input.state,
+    subject.targetId,
+    attack,
+    fillSet,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function movementHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleMovementHole {
+  const actor = state.combatants.get(actorId);
+  return {
+    kind: "movement",
+    holeInstanceKey: MOVEMENT_HOLE_INSTANCE,
+    holeId: MOVEMENT_HOLE_ID,
+    label: "Movement",
+    actorId,
+    movementBudgetFeet: battleMovementBudget(actor).remainingFeet,
+  };
+}
+
+function parseBattleMovement(
+  state: BattleState,
+  moverId: CombatantId,
+  fill: Extract<BattleFill, { readonly kind: "movement" }>,
+):
+  | { readonly tag: "ok"; readonly movement: BattleResolvedMovement }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const mover = state.combatants.get(moverId);
+  if (!combatantCanMove(mover)) {
+    return { tag: "invalid", message: "Current combatant cannot move." };
+  }
+  if (fill.value.movementCostFeet <= 0) {
+    return {
+      tag: "invalid",
+      message: "Movement cost must be a positive integer.",
+    };
+  }
+  const budget = battleMovementBudget(mover).remainingFeet;
+  if (fill.value.movementCostFeet > Number(budget)) {
+    return {
+      tag: "invalid",
+      message: "Movement cost exceeds the combatant's remaining Movement.",
+    };
+  }
+  const expectedIds = [...state.combatants.keys()].filter(
+    (id) => id !== moverId,
+  );
+  const seen = new Set<CombatantId>();
+  for (const distance of fill.value.destinationDistances) {
+    if (distance.combatantId === moverId) {
+      return {
+        tag: "invalid",
+        message: "Movement destination distances cannot target the mover.",
+      };
+    }
+    if (!state.combatants.has(distance.combatantId)) {
+      return {
+        tag: "invalid",
+        message:
+          "Movement destination distance references an unknown combatant.",
+      };
+    }
+    if (seen.has(distance.combatantId)) {
+      return {
+        tag: "invalid",
+        message: "Movement destination distance repeats a combatant.",
+      };
+    }
+    if (distance.feet < 0 || !Number.isInteger(distance.feet)) {
+      return {
+        tag: "invalid",
+        message:
+          "Movement destination distances must be non-negative integers.",
+      };
+    }
+    seen.add(distance.combatantId);
+  }
+  if (
+    expectedIds.length !== seen.size ||
+    !expectedIds.every((id) => seen.has(id))
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Movement destination distances must include every other combatant.",
+    };
+  }
+  return {
+    tag: "ok",
+    movement: {
+      moverId,
+      movementCostFeet: movementFeet(fill.value.movementCostFeet),
+      destinationDistances: fill.value.destinationDistances,
+    },
+  };
+}
+
+function applyBattleMovement(
+  state: BattleState,
+  movement: BattleResolvedMovement,
+): BattleState {
+  const mover = state.combatants.get(movement.moverId);
+  if (!combatantCanMove(mover)) return state;
+  const combatants = new Map(state.combatants).set(movement.moverId, {
+    ...mover,
+    movementSpentFeet: movementFeet(
+      Number(mover.movementSpentFeet) + Number(movement.movementCostFeet),
+    ),
+  });
+  const distances = cloneCombatantDistances(state.combatantDistances);
+  for (const destination of movement.destinationDistances) {
+    setBattleCombatantDistance(
+      distances,
+      movement.moverId,
+      destination.combatantId,
+      destination.feet,
+    );
+    setBattleCombatantDistance(
+      distances,
+      destination.combatantId,
+      movement.moverId,
+      destination.feet,
+    );
+  }
+  return { ...state, combatants, combatantDistances: distances };
+}
+
+function cloneCombatantDistances(
+  distances: BattleState["combatantDistances"],
+): Map<CombatantId, Map<CombatantId, number>> {
+  return new Map([...distances].map(([id, peers]) => [id, new Map(peers)]));
+}
+
 function readiedSpellInitialHoles(
   state: BattleState,
   casterId: CombatantId,
@@ -2989,6 +3524,7 @@ function resetStartOfTurnCombatant(
   return {
     ...combatant,
     reactionAvailable: true,
+    movementSpentFeet: movementFeet(0),
   };
 }
 
@@ -3511,7 +4047,7 @@ function readiedSpellAct(
   ) {
     return [];
   }
-  return BATTLE_REACTION_TRIGGERS.map((trigger) => ({
+  return BATTLE_READIED_SPELL_TRIGGERS.map((trigger) => ({
     subject: {
       tag: "actionSpell" as const,
       actorId,
@@ -5563,6 +6099,134 @@ function attackTargetChoices(
   return [...state.combatants.keys()].filter(
     (id) => id !== actorId && attackTargetIsLegal(state, actorId, id, attack),
   );
+}
+
+function battleMovementBudget(combatant: BattleCreatureState | undefined): {
+  readonly speedFeet: MovementFeet;
+  readonly spentFeet: MovementFeet;
+  readonly remainingFeet: MovementFeet;
+} {
+  if (combatant === undefined) {
+    return {
+      speedFeet: movementFeet(0),
+      spentFeet: movementFeet(0),
+      remainingFeet: movementFeet(0),
+    };
+  }
+  const speedFeet = effectiveWalkSpeed(combatant);
+  const remainingFeet = movementFeet(
+    Math.max(0, Number(speedFeet) - Number(combatant.movementSpentFeet)),
+  );
+  return {
+    speedFeet,
+    spentFeet: combatant.movementSpentFeet,
+    remainingFeet,
+  };
+}
+
+function effectiveWalkSpeed(combatant: BattleCreatureState): MovementFeet {
+  if (
+    hasCondition(combatant.conditions, "grappled") ||
+    hasCondition(combatant.conditions, "paralyzed") ||
+    hasCondition(combatant.conditions, "petrified") ||
+    hasCondition(combatant.conditions, "restrained") ||
+    hasCondition(combatant.conditions, "stunned") ||
+    hasCondition(combatant.conditions, "unconscious")
+  ) {
+    return movementFeet(0);
+  }
+  const base = baseWalkSpeed(combatant);
+  const delta = combatant.activeEffects
+    .filter((effect) => effect.kind === "speedDelta")
+    .reduce((total, effect) => total + effect.deltaFeet, 0);
+  return movementFeet(base + delta);
+}
+
+function baseWalkSpeed(combatant: BattleCreatureState): number {
+  if (combatant.origin.kind === "character") {
+    return Number(combatant.origin.speed.walkFeet);
+  }
+  const walkSpeed = combatant.origin.statBlock.statBlock.speeds.find(
+    (speed) => speed.kind === "walk" && speed.feet.kind === "literal",
+  );
+  return walkSpeed?.feet.kind === "literal" ? walkSpeed.feet.value : 0;
+}
+
+function combatantCanMove(
+  combatant: BattleCreatureState | undefined,
+): combatant is BattleCreatureState {
+  return (
+    combatant !== undefined &&
+    !zeroHpLifecycleIsTerminal(combatant) &&
+    Number(battleMovementBudget(combatant).remainingFeet) > 0
+  );
+}
+
+function opportunityAttackReactorsForMovement(
+  state: BattleState,
+  movement: BattleResolvedMovement,
+): readonly CombatantId[] {
+  const destinationById = new Map(
+    movement.destinationDistances.map((distance) => [
+      distance.combatantId,
+      distance.feet,
+    ]),
+  );
+  return [...state.combatants.keys()].filter((reactorId) => {
+    const oldDistance = combatantDistanceFeet(
+      state,
+      reactorId,
+      movement.moverId,
+    );
+    const newDistance = destinationById.get(reactorId);
+    const reach = opportunityAttackReachFeet(
+      state,
+      reactorId,
+      movement.moverId,
+    );
+    return (
+      oldDistance !== undefined &&
+      newDistance !== undefined &&
+      reach !== undefined &&
+      oldDistance <= reach &&
+      newDistance > reach
+    );
+  });
+}
+
+function opportunityAttackOptionForReactor(
+  state: BattleState,
+  reactorId: CombatantId,
+  targetId: CombatantId,
+): SupportedAttackActionOption | undefined {
+  return attackActionOptionsForActor(state, reactorId).find((attack) => {
+    const constraint = attackTargetConstraint(attack);
+    return (
+      constraint.kind === "meleeReach" &&
+      attackTargetIsLegal(state, reactorId, targetId, attack)
+    );
+  });
+}
+
+function opportunityAttackReachFeet(
+  state: BattleState,
+  reactorId: CombatantId,
+  targetId: CombatantId,
+): number | undefined {
+  const reactor = state.combatants.get(reactorId);
+  if (
+    reactor === undefined ||
+    reactorId === targetId ||
+    !reactor.reactionAvailable ||
+    hasCondition(reactor.conditions, "blinded") ||
+    !combatantCanTakeActions(reactor)
+  ) {
+    return undefined;
+  }
+  const attack = opportunityAttackOptionForReactor(state, reactorId, targetId);
+  if (attack === undefined) return undefined;
+  const constraint = attackTargetConstraint(attack);
+  return constraint.kind === "meleeReach" ? constraint.reachFeet : undefined;
 }
 
 function attackTargetIsLegal(
