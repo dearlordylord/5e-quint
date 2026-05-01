@@ -17,7 +17,7 @@ import type { Provenance, StatBlockRecord } from "./types.ts";
  * record family rather than becoming a Unit.
  */
 
-export type SurfaceCollectionProvenance = {
+export type Srd521CollectionProvenance = {
   readonly kind: "srd-5.2.1";
 };
 
@@ -33,7 +33,7 @@ export type Srd521StatBlock = StatBlockRecord & {
 
 export type SrdStatBlockCollection = {
   readonly kind: "srdStatBlockCollection";
-  readonly provenance: SurfaceCollectionProvenance;
+  readonly provenance: Srd521CollectionProvenance;
   readonly statBlocks: readonly Srd521StatBlock[];
 };
 
@@ -51,7 +51,7 @@ export type StatBlockCatalogBuildIssue =
   | {
       readonly code: "mixedProvenance";
       readonly collectionKind: SrdStatBlockCollection["kind"];
-      readonly expected: SurfaceCollectionProvenance;
+      readonly expected: Srd521CollectionProvenance;
       readonly actual: Provenance;
       readonly statBlockId: StatBlockId;
     };

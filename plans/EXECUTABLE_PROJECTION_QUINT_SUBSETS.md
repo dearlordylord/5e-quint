@@ -129,16 +129,16 @@ Required preserved authored facts:
   `4` at level 10
 - reset cadence is `partial_short_full_long` with `shortRestRefill = 1`
 
-### `fighter_action_surge_l2`
+### `fighter_action_surge`
 
 Authored source:
-[packages/surface/content/fighter_action_surge_l2.json](/workspace/typescript/dnd/packages/surface/content/fighter_action_surge_l2.json)
+[packages/surface/content/fighter_action_surge.json](/workspace/typescript/dnd/packages/surface/content/fighter_action_surge.json)
 
 Compiler target:
 
 - `ProjectedExecutableAction`
 - variant `PEADirectGrantExtraAction`
-- `source = { unitId: "fighter_action_surge_l2", unitKind: PUKClassFeature, unitName: "Action Surge" }`
+- `source = { unitId: "fighter_action_surge", unitKind: PUKClassFeature, unitName: "Action Surge" }`
 - `activationCost = PACFree`
 - `resourceGate = PRGUseCount(...)`
 - `usageLimit = PULOncePerTurn`

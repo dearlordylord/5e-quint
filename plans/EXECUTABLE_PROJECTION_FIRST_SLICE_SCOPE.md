@@ -2,7 +2,7 @@
 
 > Archival note: this document is preserved history for baseline `39f9ab71`.
 > The active Correction Application Migration supersedes this first slice with
-> the Surface-runtime Fighter/Goblin vertical; do not treat projected executable
+> the promoted Fighter/Goblin MCP/runtime vertical; do not treat projected executable
 > vocabulary as current architecture.
 
 ## Purpose
@@ -39,7 +39,7 @@ Rules and terminology checked against:
 The first tracer-bullet scenario is exactly:
 
 - one mage with access to `acid_splash` and `mage_armor`
-- one Fighter 2 with access to `fighter_second_wind` and `fighter_action_surge_l2`
+- one Fighter 2 with access to `fighter_second_wind` and `fighter_action_surge`
 - one goblin opponent and one bugbear opponent through the owned monster path
 - normal combat turn flow, including turn starts and turn ends
 
@@ -54,7 +54,7 @@ MCP battle flow.
 - `acid_splash`
 - `mage_armor`
 - `fighter_second_wind`
-- `fighter_action_surge_l2`
+- `fighter_action_surge`
 
 These are the only authored content units in scope for EPT1.
 
@@ -89,7 +89,7 @@ Nothing else belongs in the first executable subset.
 | ------------------------- | ---------------------------------------------------------- |
 | `acid_splash`             | `save_gate` -> `damage`                                    |
 | `fighter_second_wind`     | `direct` -> `heal_hp`                                      |
-| `fighter_action_surge_l2` | `direct` -> `grant_extra_action`                           |
+| `fighter_action_surge` | `direct` -> `grant_extra_action`                           |
 | ordinary weapon attacks   | `attack_roll` with existing battle-lane damage application |
 
 `mage_armor` is intentionally not part of the executable subset. It belongs to
@@ -165,7 +165,7 @@ The first slice may rely on only these action-economy and usage primitives:
 - `Action` casting time for `acid_splash`
 - `Action` casting time for `mage_armor`
 - `Bonus Action` activation cost for `fighter_second_wind`
-- `free` activation cost for `fighter_action_surge_l2`
+- `free` activation cost for `fighter_action_surge`
 - one additional action with the explicit restriction that it cannot be the
   `Magic` action
 - ordinary turn start and turn end boundaries
@@ -177,11 +177,11 @@ The first slice may rely on only these resource and quota shapes:
   then `3` at Fighter level `4`, then `4` at Fighter level `10`
 - `fighter_second_wind.resetCadence.kind = partial_short_full_long` with
   `shortRestRefill = 1`
-- `fighter_action_surge_l2.resource.kind = use_count`
-- `fighter_action_surge_l2.resource.cap.kind = threshold_tiers` with base `1`,
+- `fighter_action_surge.resource.kind = use_count`
+- `fighter_action_surge.resource.cap.kind = threshold_tiers` with base `1`,
   then `2` at Fighter level `17`
-- `fighter_action_surge_l2.resetCadence.kind = short_or_long_rest`
-- `fighter_action_surge_l2.usageLimit.kind = once_per_turn`
+- `fighter_action_surge.resetCadence.kind = short_or_long_rest`
+- `fighter_action_surge.usageLimit.kind = once_per_turn`
 - `mage_armor` uses the existing spell-slot resource path
 - `acid_splash` uses no spell-slot resource path because it is a cantrip
 
@@ -226,7 +226,7 @@ RAW traceability checked:
   [Descriptions-M-P.md:5](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md:5)
 - `fighter_second_wind` action, healing, and reset shape traced to
   [Fighter.md:62](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Fighter.md:62)
-- `fighter_action_surge_l2` extra-action and recharge shape traced to
+- `fighter_action_surge` extra-action and recharge shape traced to
   [Fighter.md:76](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Fighter.md:76)
 - turn boundaries traced to
   [Playing-the-Game.md:501](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:501)

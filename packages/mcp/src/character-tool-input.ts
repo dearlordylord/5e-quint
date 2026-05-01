@@ -8,13 +8,12 @@ import {
   type CreationFill,
   type DraftRevision,
 } from "@dnd/character-creation-runtime";
-import { Either, JSONSchema, Match, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import { errorContent } from "./tool-content.ts";
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
-  type McpObjectInputSchema,
   type ToolInputResult,
 } from "./schema-codec.ts";
 
@@ -144,15 +143,13 @@ export type CharacterToolCall =
       readonly args: EmptyToolInput;
     };
 
-export const draftIdInputSchema = JSONSchema.make(
-  DraftIdArgsSchema,
-) as unknown as McpObjectInputSchema;
-export const createCharacterDraftInputSchema = JSONSchema.make(
+export const draftIdInputSchema = mcpObjectJsonSchema(DraftIdArgsSchema);
+export const createCharacterDraftInputSchema = mcpObjectJsonSchema(
   CreateCharacterDraftArgsSchema,
-) as unknown as McpObjectInputSchema;
-export const fillCreationHolesInputSchema = JSONSchema.make(
+);
+export const fillCreationHolesInputSchema = mcpObjectJsonSchema(
   FillCreationHolesArgsSchema,
-) as unknown as McpObjectInputSchema;
+);
 export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 
 export function decodeCharacterToolCall(input: {

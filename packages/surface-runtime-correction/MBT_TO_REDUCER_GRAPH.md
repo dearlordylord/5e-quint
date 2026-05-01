@@ -26,7 +26,7 @@ The death-save, armor-class, and action-economy algebras used to live inside `su
 Ownership rule:
 
 - move reusable algebra to `@dnd/shared-algebras`;
-- move Surface-backed battle lifecycle/action semantics to `@dnd/battle-runtime`
+- move battle lifecycle/action semantics to `@dnd/battle-runtime`
   when they become canonical runtime behavior for the new battle path;
 - keep `@dnd/core` ownership scoped to the legacy/broad Core lane until that
   lane is deleted, rewritten, or explicitly preserved;
@@ -199,7 +199,7 @@ The key action-economy status is similar. The algebra supports action resources 
 
 Armor-class math is MBT-covered and used for unit attack AC comparison. Surface
 armor/equipment projection into `ArmorClassState` does not exist in this
-package. The new Surface-backed battle path owns that projection at
+package. The new battle runtime path owns that projection at
 `@dnd/battle-runtime` or its MCP composition boundary. That belongs to the open
 Surface/MBT boundary discussion: first decide the Surface fact projection
 contract, then decide whether that contract needs ordinary tests, MBT, or both.
@@ -241,7 +241,7 @@ That gives two current MBT layers plus one open design question:
 ```mermaid
 flowchart TD
   Small["Small algebra MBT<br/>projected facts -> reducer algebra"]
-  Integrated["Narrow integrated reducer MBT<br/>one Surface-backed act -> public reducer flow -> state transition"]
+  Integrated["Narrow integrated reducer MBT<br/>one Unit-backed act -> public reducer flow -> state transition"]
   SurfaceQuestion["OPEN QUESTION<br/>whether Surface fact projection needs MBT"]
   Avoid["Do not build<br/>all Surface content x all battle states"]
 
@@ -284,7 +284,7 @@ flowchart TD
   Vocabulary["Surface vocabulary coverage<br/>one fixture per vocabulary construct"]
   UnitContracts["Authored-unit contract tests<br/>decode/support/project/frontier"]
   Small["Small algebra MBT<br/>reducer facts -> reducer algebra"]
-  Integrated["Selected integrated MBT<br/>high-risk Surface-backed flows"]
+  Integrated["Selected integrated MBT<br/>high-risk Unit-backed flows"]
 
   Vocabulary --> UnitContracts
   UnitContracts --> Integrated
@@ -302,7 +302,7 @@ Possible examples:
 - `cure_wounds` covers direct `heal_hp`, target choice, healing dice, spell slot cost, and death-save/lifecycle healing.
 - `fireball` covers `save_gate`, area attachment, saving throw outcomes, and damage application in the reducer-boundary tests; it remains a candidate for selected integrated MBT if this flow becomes a proof target.
 - `chromatic_orb` should cover damage-type choice and continuation/frontier behavior until supported.
-- `fighter_action_surge_l2` covers `grant_extra_action` as a restricted action resource that excludes Magic, cannot be activated twice in the same turn, and spends/restores its creature-scoped current use count.
+- `fighter_action_surge` covers `grant_extra_action` as a restricted action resource that excludes Magic, cannot be activated twice in the same turn, and spends/restores its creature-scoped current use count.
 
 Open decision:
 
@@ -323,13 +323,13 @@ flowchart TD
   Future["Potential next slice:<br/>Surface fire_bolt UnitRecord<br/>target + attack roll + damage holes<br/>AC comparison<br/>action spend<br/>HP/death lifecycle"]
 ```
 
-This split is deliberate for state explosion. The small algebras are composable and independently checkable. The public reducer tests make sure those same modules are used in discovery and resolution. If integrated reducer MBT is added, it should cover one narrow vertical Surface-backed reducer slice rather than all combat at once.
+This split is deliberate for state explosion. The small algebras are composable and independently checkable. The public reducer tests make sure those same modules are used in discovery and resolution. If integrated reducer MBT is added, it should cover one narrow vertical Unit-backed reducer slice rather than all combat at once.
 
 ## Missing Work List
 
 Missing entirely:
 
-- Integrated reducer MBT for a real Surface-backed act.
+- Integrated reducer MBT for a real Unit-backed act.
 - Decision on whether Surface fact projection should have MBT, ordinary tests, or both.
 - Core `Attack` adjudication and state mutation.
 - Upcast slots and shared or scaled use-count pools.
@@ -345,7 +345,7 @@ Implemented but not fully utilized by MBT:
 Implemented but not fully utilized by main reducer logic:
 
 - Bonus-action spending is implemented in the sub-reducer; discovery of bonus-action unit acts is not wired yet. Free activation costs are modeled as no action-economy spend.
-- Armor algebra is ready to receive projected armor/equipment reducer facts; core use waits for core's Surface-backed armor/equipment projection path, and the Surface-to-armor projection contract is undecided and not implemented.
+- Armor algebra is ready to receive projected armor/equipment reducer facts; core use waits for core's armor/equipment projection path, and the Surface-to-armor projection contract is undecided and not implemented.
 - Death-save counter algebra is ready for start-turn death-save rolls; the public reducer has no start-turn death-save act/window yet.
 
 Likely wire soon:
@@ -357,5 +357,5 @@ Likely wire later:
 
 - Bonus-action unit discovery. The sub-reducer can spend the resource, but useful discovery depends on more supported Surface units.
 - Shared resource-payment adoption in core. The current primitive should grow toward multi-cost validation and atomic spend.
-- Surface armor/equipment projection. The armor reducer shape exists, but core adoption waits for core to have Surface-backed armor/equipment facts, and the projection contract from authored Surface equipment facts still needs design.
+- Surface armor/equipment projection. The armor reducer shape exists, but core adoption waits for core to have armor/equipment facts, and the projection contract from authored Surface equipment facts still needs design.
 - Upcasts and shared or scaled use-count pools. These depend on broader Surface resource semantics.

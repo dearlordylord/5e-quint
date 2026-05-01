@@ -1,7 +1,7 @@
 # @dnd/character-creation-runtime
 
 `@dnd/character-creation-runtime` owns the reducer that turns a mutable
-character draft into a finalized `CharacterBuild` using authored Surface Units.
+character draft into a finalized `CharacterBuild` using authored Units.
 
 The package is a character-creation runtime boundary. It does not author classes,
 backgrounds, species, feats, or equipment, and it does not build battle creature
@@ -24,9 +24,9 @@ not in-play Character Sheet state.
 
 | Source outside runtime                       | Runtime operation               | Runtime output                 |
 | -------------------------------------------- | ------------------------------- | ------------------------------ |
-| Surface Unit library                         | `discoverCreationHoles`         | fillable `CreationHole[]`      |
+| Unit catalog                                 | `discoverCreationHoles`         | fillable `CreationHole[]`      |
 | caller-submitted batch of `CreationFill`s    | `fillCreationHoles`             | accepted/rejected draft update |
-| complete legal draft plus Surface Unit facts | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
+| complete legal draft plus Unit facts         | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
 | finalized `CharacterBuild`                   | application composition outside | battle creature initialization |
 
 `@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or the
@@ -47,7 +47,7 @@ Character creation fill semantics are intentionally different from battle
 fills. Creation fills patch durable draft state in atomic batches; battle fills
 are transient replay inputs for one selected battle subject.
 
-The MCP Surface-runtime projection uses the same runtime protocol directly:
+MCP uses the same runtime protocol directly:
 `create_character_draft`, `discover_creation_holes`, `fill_creation_holes`, and
 `finalize_character`. The MCP boundary stores drafts by `CharacterDraftId`,
 passes caller fill batches through `fillCreationHoles`, and stores a finalized
@@ -120,7 +120,7 @@ holes use stable ids such as `cc:unit:<unit id>:<choice key>`. Hole ids are
 semantic addresses, not array positions.
 
 Accepted option ids are protocol choices. When a selected option references a
-Surface Unit, the draft records the Unit reference rather than treating the
+Unit, the draft records the Unit reference rather than treating the
 submitted option id as authored truth.
 
 Choice holes carry explicit cardinality. Callers submit the selected option set
@@ -138,7 +138,7 @@ facts needed by later boundaries: final ability scores, Hit Point maximum and
 Hit Die pool, proficiencies, granted feature refs, activation resources,
 starting Wizard Spell Access and Spell Slot capacity, and equipment/loadout
 refs. Supported class-choice features, Wizard spellcasting facts, and loadout
-refs are projected from accepted draft selections and Surface Unit readers, not
+refs are projected from accepted draft selections and Unit readers, not
 reauthored as parallel constants. The remaining finalization gate rejects
 complete drafts whose selected class level, origin facts, choices, or equipment
 are outside the support profile. `CharacterBuild` does not carry current HP,

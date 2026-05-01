@@ -383,7 +383,7 @@ describe("reducer boundaries", () => {
   it("discoverAvailableActs surfaces action surge as a unit-backed act", () => {
     expect(
       discoverAvailableActs(
-        twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        twoCreatureStateWithActingUnit("fighter_action_surge"),
       ),
     ).toEqual([
       {
@@ -417,7 +417,7 @@ describe("reducer boundaries", () => {
         subject: {
           tag: "unit",
           actorId: "A" as CreatureId,
-          unitId: "fighter_action_surge_l2",
+          unitId: "fighter_action_surge",
         },
         label: "Action Surge",
         summary: expect.stringContaining("push yourself beyond"),
@@ -429,9 +429,9 @@ describe("reducer boundaries", () => {
   it("discoverAvailableActs does not expose action surge after it was used this turn", () => {
     expect(
       discoverAvailableActs({
-        ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        ...twoCreatureStateWithActingUnit("fighter_action_surge"),
         unitActivationsThisTurn: new Set([
-          unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"),
+          unitResourceKey("A" as CreatureId, "fighter_action_surge"),
         ]),
       }),
     ).toEqual([
@@ -468,9 +468,9 @@ describe("reducer boundaries", () => {
   it("discoverAvailableActs does not expose action surge after its use count was expended", () => {
     expect(
       discoverAvailableActs({
-        ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        ...twoCreatureStateWithActingUnit("fighter_action_surge"),
         expendedUnitUseCounts: new Map([
-          [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+          [unitResourceKey("A" as CreatureId, "fighter_action_surge"), 1],
         ]),
       }),
     ).toEqual([
@@ -513,7 +513,7 @@ describe("reducer boundaries", () => {
             kind: "action",
             source: "unit",
             sourceOwnerId: "A" as CreatureId,
-            sourceUnitId: "fighter_action_surge_l2",
+            sourceUnitId: "fighter_action_surge",
             restriction: { kind: "exclude", actions: ["magic"] },
           },
         ],
@@ -577,7 +577,7 @@ describe("reducer boundaries", () => {
       {
         ...emptyState(),
         unitActivationsThisTurn: new Set([
-          unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"),
+          unitResourceKey("A" as CreatureId, "fighter_action_surge"),
         ]),
       },
       {
@@ -1803,7 +1803,7 @@ describe("reducer boundaries", () => {
       ),
     ).toEqual({
       tag: "invalid",
-      reason: "no action available for unit",
+      reason: "no action resource available",
     });
   });
 
@@ -1832,7 +1832,7 @@ describe("reducer boundaries", () => {
       ),
     ).toEqual({
       tag: "invalid",
-      reason: "no action available for unit",
+      reason: "no action resource available",
     });
   });
 
@@ -2041,14 +2041,14 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles resolves action surge as a restricted action resource", () => {
     const result = resolveSubjectHoles(
       {
-        ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        ...twoCreatureStateWithActingUnit("fighter_action_surge"),
         actionResources: [],
       },
       {
         subject: {
           tag: "unit",
           actorId: "A" as CreatureId,
-          unitId: "fighter_action_surge_l2",
+          unitId: "fighter_action_surge",
         },
         filledHoleValues: [],
       },
@@ -2061,18 +2061,18 @@ describe("reducer boundaries", () => {
           kind: "action",
           source: "unit",
           sourceOwnerId: "A" as CreatureId,
-          sourceUnitId: "fighter_action_surge_l2",
+          sourceUnitId: "fighter_action_surge",
           restriction: { kind: "exclude", actions: ["magic"] },
         },
       ]);
       expect(result.state.unitActivationsThisTurn).toEqual(
         new Set([
-          unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"),
+          unitResourceKey("A" as CreatureId, "fighter_action_surge"),
         ]),
       );
       expect(result.state.expendedUnitUseCounts).toEqual(
         new Map([
-          [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+          [unitResourceKey("A" as CreatureId, "fighter_action_surge"), 1],
         ]),
       );
     }
@@ -2082,16 +2082,16 @@ describe("reducer boundaries", () => {
     expect(
       resolveSubjectHoles(
         {
-          ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+          ...twoCreatureStateWithActingUnit("fighter_action_surge"),
           expendedUnitUseCounts: new Map([
-            [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+            [unitResourceKey("A" as CreatureId, "fighter_action_surge"), 1],
           ]),
         },
         {
           subject: {
             tag: "unit",
             actorId: "A" as CreatureId,
-            unitId: "fighter_action_surge_l2",
+            unitId: "fighter_action_surge",
           },
           filledHoleValues: [],
         },
@@ -2103,7 +2103,7 @@ describe("reducer boundaries", () => {
   });
 
   it("resolveSubjectHoles keeps action surge use counts owned by creature", () => {
-    const actionSurge = loadSupportedUnit("fighter_action_surge_l2");
+    const actionSurge = loadSupportedUnit("fighter_action_surge");
     const result = resolveSubjectHoles(
       {
         ...singleActingCreatureState(
@@ -2112,14 +2112,14 @@ describe("reducer boundaries", () => {
         ),
         actionResources: [],
         expendedUnitUseCounts: new Map([
-          [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
+          [unitResourceKey("A" as CreatureId, "fighter_action_surge"), 1],
         ]),
       },
       {
         subject: {
           tag: "unit",
           actorId: "B" as CreatureId,
-          unitId: "fighter_action_surge_l2",
+          unitId: "fighter_action_surge",
         },
         filledHoleValues: [],
       },
@@ -2129,8 +2129,8 @@ describe("reducer boundaries", () => {
     if (result.tag === "resolved") {
       expect(result.state.expendedUnitUseCounts).toEqual(
         new Map([
-          [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
-          [unitResourceKey("B" as CreatureId, "fighter_action_surge_l2"), 1],
+          [unitResourceKey("A" as CreatureId, "fighter_action_surge"), 1],
+          [unitResourceKey("B" as CreatureId, "fighter_action_surge"), 1],
         ]),
       );
     }
@@ -2140,8 +2140,8 @@ describe("reducer boundaries", () => {
     const state: State = {
       ...twoCreatureState(),
       expendedUnitUseCounts: new Map([
-        [unitResourceKey("A" as CreatureId, "fighter_action_surge_l2"), 1],
-        [unitResourceKey("B" as CreatureId, "fighter_action_surge_l2"), 1],
+        [unitResourceKey("A" as CreatureId, "fighter_action_surge"), 1],
+        [unitResourceKey("B" as CreatureId, "fighter_action_surge"), 1],
       ]),
     };
 
@@ -2150,7 +2150,7 @@ describe("reducer boundaries", () => {
         .expendedUnitUseCounts,
     ).toEqual(
       new Map([
-        [unitResourceKey("B" as CreatureId, "fighter_action_surge_l2"), 1],
+        [unitResourceKey("B" as CreatureId, "fighter_action_surge"), 1],
       ]),
     );
   });
@@ -2159,13 +2159,13 @@ describe("reducer boundaries", () => {
     expect(
       resolveSubjectHoles(
         {
-          ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+          ...twoCreatureStateWithActingUnit("fighter_action_surge"),
           actionResources: [
             {
               kind: "action",
               source: "unit",
               sourceOwnerId: "A" as CreatureId,
-              sourceUnitId: "fighter_action_surge_l2",
+              sourceUnitId: "fighter_action_surge",
               restriction: { kind: "exclude", actions: ["magic"] },
             },
           ],
@@ -2174,28 +2174,28 @@ describe("reducer boundaries", () => {
           subject: {
             tag: "unit",
             actorId: "A" as CreatureId,
-            unitId: "fighter_action_surge_l2",
+            unitId: "fighter_action_surge",
           },
           filledHoleValues: [],
         },
       ),
     ).toEqual({
       tag: "invalid",
-      reason: "unit action resource already granted",
+      reason: "unit-granted action resource already granted",
     });
   });
 
   it("resolveSubjectHoles rejects action surge again after its granted action is spent this turn", () => {
     const surged = resolveSubjectHoles(
       {
-        ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        ...twoCreatureStateWithActingUnit("fighter_action_surge"),
         actionResources: [],
       },
       {
         subject: {
           tag: "unit",
           actorId: "A" as CreatureId,
-          unitId: "fighter_action_surge_l2",
+          unitId: "fighter_action_surge",
         },
         filledHoleValues: [],
       },
@@ -2228,7 +2228,7 @@ describe("reducer boundaries", () => {
         subject: {
           tag: "unit",
           actorId: "A" as CreatureId,
-          unitId: "fighter_action_surge_l2",
+          unitId: "fighter_action_surge",
         },
         filledHoleValues: [],
       }),
@@ -2248,7 +2248,7 @@ describe("reducer boundaries", () => {
               kind: "action",
               source: "unit",
               sourceOwnerId: "A" as CreatureId,
-              sourceUnitId: "fighter_action_surge_l2",
+              sourceUnitId: "fighter_action_surge",
               restriction: { kind: "exclude", actions: ["magic"] },
             },
           ],
@@ -2264,7 +2264,7 @@ describe("reducer boundaries", () => {
       ),
     ).toEqual({
       tag: "invalid",
-      reason: "no action available for unit",
+      reason: "no action resource available",
     });
   });
 

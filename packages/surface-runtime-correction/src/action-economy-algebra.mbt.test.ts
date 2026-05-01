@@ -28,7 +28,7 @@ function restrictedUnitResources(
     kind: "action" as const,
     source: "unit" as const,
     sourceOwnerId: ownerA,
-    sourceUnitId: "fighter_action_surge_l2_a",
+    sourceUnitId: "fighter_action_surge_a",
     restriction: {
       kind: "exclude" as const,
       actions: ["magic"] as const,
@@ -38,7 +38,7 @@ function restrictedUnitResources(
     kind: "action" as const,
     source: "unit" as const,
     sourceOwnerId: ownerB,
-    sourceUnitId: "fighter_action_surge_l2_b",
+    sourceUnitId: "fighter_action_surge_b",
     restriction: {
       kind: "exclude" as const,
       actions: ["magic"] as const,
@@ -116,7 +116,7 @@ function createActionEconomyDriver() {
       },
       doGrantRestrictedUnitActionA: () => {
         state = expectRight(
-          grantUnitActionResource(state, ownerA, "fighter_action_surge_l2_a", {
+          grantUnitActionResource(state, ownerA, "fighter_action_surge_a", {
             kind: "exclude",
             actions: ["magic"],
           }),
@@ -124,7 +124,7 @@ function createActionEconomyDriver() {
       },
       doGrantRestrictedUnitActionB: () => {
         state = expectRight(
-          grantUnitActionResource(state, ownerB, "fighter_action_surge_l2_b", {
+          grantUnitActionResource(state, ownerB, "fighter_action_surge_b", {
             kind: "exclude",
             actions: ["magic"],
           }),

@@ -471,7 +471,7 @@ function requireUnitActionResourceNotAlreadyGranted(
   unit: CurrentSliceSupportedActivationUnit,
 ): Either.Either<void, ResolutionInvalid> {
   return hasUnitActionResource(state, actorId, unit.id)
-    ? Either.left(invalid("unit action resource already granted"))
+    ? Either.left(invalid("unit-granted action resource already granted"))
     : Either.right(undefined);
 }
 

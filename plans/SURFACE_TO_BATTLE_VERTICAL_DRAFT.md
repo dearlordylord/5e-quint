@@ -9,10 +9,10 @@ This file is not the scratchpad. The evolving working diagrams live in
 
 ```mermaid
 flowchart TD
-  A["Rules Sources"] --> B["Authored"]
+  A["Rules Sources"] --> B["Authored records"]
   A --> C["Surface / DSL"]
 
-  B --> D["Runtime typed value"]
+  B --> D["Decoded authored record"]
   C --> D
 
   D --> E["Character reducer"]
@@ -53,9 +53,9 @@ flowchart TD
 
   subgraph CONTENT["Authored And Surface"]
     direction TB
-    AUTHORED["Authored units"]
+    AUTHORED["Authored records"]
     SURFACE["Surface / DSL"]
-    RUNTIME["Runtime typed value<br/>validated against schema"]
+    RUNTIME["Decoded authored record<br/>validated against schema"]
   end
 
   subgraph REDUCERS["Reducers"]
@@ -79,8 +79,8 @@ flowchart TD
   AUTHORED -->|Applied and parsed| RUNTIME
   SURFACE -->|Defines schema for| RUNTIME
 
-  SURFACE -->|Shared language for| REDUCERS
-  RUNTIME -->|Input to| REDUCERS
+  SURFACE -->|Defines typed boundaries for| REDUCERS
+  RUNTIME -->|Projected by runtime package into| REDUCERS
 
   TEST -->|Thru MBT adapter| REDUCERS
   REDUCERS -->|Prompts| TABLE
@@ -89,8 +89,8 @@ flowchart TD
   STATE -->|Feeds next reduction| REDUCERS
 
   SOURCES_NOTE["Rules sources provide provenance.<br/>They are not runtime code."]
-  AUTHORED_NOTE["Authored units carry provenance<br/>and use Surface as schema.<br/>Authored content is not runtime state<br/>except in tests and fixtures."]
-  RUNTIME_NOTE["Reducers should consume hydrated,<br/>validated runtime values,<br/>not raw authored content."]
+  AUTHORED_NOTE["Authored records carry provenance<br/>and use Surface as schema.<br/>Authored content is not runtime state<br/>or executable IR."]
+  RUNTIME_NOTE["Runtime packages own projections,<br/>support gates, and executable semantics."]
 
   SOURCES_NOTE -. comment .-> SOURCES
   AUTHORED_NOTE -. comment .-> AUTHORED
@@ -101,12 +101,11 @@ flowchart TD
 
 ## Stable Conclusions
 
-- `Surface` is the shared language and schema. It exists in both Quint and TS.
+- `Surface` is the shared authored-content language and schema.
 - `Authored` content is not runtime state. It is source material that conforms to `Surface`.
-- `Runtime typed value` is the honest bridge between `Authored` and reducers.
+- Decoded authored records are the validated inputs from which runtime packages derive reducer facts.
 - Reducers should consume:
-  - `Surface` as language
-  - hydrated runtime values as input
+  - runtime-owned execution facts derived from decoded authored records
 - Table choices are part of reducer execution, not part of authored content.
 - Provenance must stay distinct from structured input and from runtime projection.
 - The landed correction slice now has an explicit prompt contract:

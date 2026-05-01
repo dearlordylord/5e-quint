@@ -38,7 +38,7 @@ describe("reducer action economy", () => {
 
   it("spends restricted unit actions before turn actions", () => {
     const surged = expectRight(
-      grantUnitActionResource(ready, ownerA, "fighter_action_surge_l2", {
+      grantUnitActionResource(ready, ownerA, "fighter_action_surge", {
         kind: "exclude",
         actions: ["magic"],
       }),
@@ -56,7 +56,7 @@ describe("reducer action economy", () => {
       grantUnitActionResource(
         { ...ready, actionResources: [] },
         ownerA,
-        "fighter_action_surge_l2",
+        "fighter_action_surge",
         {
           kind: "exclude",
           actions: ["magic"],
@@ -70,7 +70,7 @@ describe("reducer action economy", () => {
 
   it("rejects duplicate unit action resources from the same unit", () => {
     const surged = expectRight(
-      grantUnitActionResource(ready, ownerA, "fighter_action_surge_l2", {
+      grantUnitActionResource(ready, ownerA, "fighter_action_surge", {
         kind: "exclude",
         actions: ["magic"],
       }),
@@ -79,25 +79,27 @@ describe("reducer action economy", () => {
     const result = grantUnitActionResource(
       surged,
       ownerA,
-      "fighter_action_surge_l2",
+      "fighter_action_surge",
       {
         kind: "exclude",
         actions: ["magic"],
       },
     );
 
-    expect(result).toEqual(Either.left("unit action resource already granted"));
+    expect(result).toEqual(
+      Either.left("unit-granted action resource already granted"),
+    );
   });
 
   it("allows the same unit id to grant resources for different owners", () => {
     const ownerASurged = expectRight(
-      grantUnitActionResource(ready, ownerA, "fighter_action_surge_l2", {
+      grantUnitActionResource(ready, ownerA, "fighter_action_surge", {
         kind: "exclude",
         actions: ["magic"],
       }),
     );
     const bothSurged = expectRight(
-      grantUnitActionResource(ownerASurged, ownerB, "fighter_action_surge_l2", {
+      grantUnitActionResource(ownerASurged, ownerB, "fighter_action_surge", {
         kind: "exclude",
         actions: ["magic"],
       }),
@@ -145,7 +147,7 @@ describe("reducer action economy", () => {
             kind: "action",
             source: "unit",
             sourceOwnerId: ownerA,
-            sourceUnitId: "fighter_action_surge_l2",
+            sourceUnitId: "fighter_action_surge",
             restriction: { kind: "exclude", actions: ["magic"] },
           },
         ],

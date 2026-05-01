@@ -37,7 +37,7 @@ Battle/combat has different error surfaces:
   - `RUNTIME_INPUT_MISMATCH`
   - `INVALID_RUNTIME_INPUT`
 - `packages/battle-runtime/src/index.ts`
-  - battle resolution invalid results such as `invalidFill`, `unsupportedSurfaceShape`, etc.
+  - battle resolution invalid results such as `invalidFill`, `unsupportedActProfile`, etc.
 - `packages/shared-algebras/src/runtime-hole-algebra.ts`
   - shared runtime hole/fill *shape* types, but no shared fill-error vocabulary.
 - `packages/shared-algebras/src/validation-algebra.ts`

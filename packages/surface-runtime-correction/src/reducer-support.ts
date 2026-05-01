@@ -8,6 +8,7 @@ import type {
   DamageTypeRef,
   EffectAtom,
   UnitRecord,
+  UseCountCap,
 } from "@dnd/surface/surface/types";
 
 type DamageEffect = Extract<EffectAtom, { readonly kind: "damage" }>;
@@ -102,7 +103,13 @@ type CurrentSliceSupportedGrantExtraActionUnit =
       readonly activationCost: { readonly kind: "free" };
       readonly resource: {
         readonly kind: "use_count";
-        readonly cap: { readonly kind: "fixed"; readonly uses: 1 };
+        readonly cap:
+          | { readonly kind: "fixed"; readonly uses: 1 }
+          | {
+              readonly kind: "threshold_tiers";
+              readonly axis: "class";
+              readonly base: 1;
+            };
       };
       readonly resetCadence: { readonly kind: "short_or_long_rest" };
       readonly usageLimit: { readonly kind: "once_per_turn" };
@@ -259,11 +266,24 @@ function currentSliceSupportsGrantExtraActionResourceSemantics(
     unit.acquiredAtLevel === 2 &&
     unit.mechanics.activationCost.kind === "free" &&
     unit.mechanics.resource.kind === "use_count" &&
-    cap.kind === "fixed" &&
-    cap.uses === 1 &&
+    currentSliceSupportsActionSurgeBaseUseCap(cap) &&
     unit.mechanics.resetCadence.kind === "short_or_long_rest" &&
     unit.mechanics.usageLimit?.kind === "once_per_turn"
   );
+}
+
+function currentSliceSupportsActionSurgeBaseUseCap(
+  cap: UseCountCap,
+): boolean {
+  if (cap.kind === "fixed") {
+    return cap.uses === 1;
+  }
+
+  if (cap.kind === "threshold_tiers") {
+    return cap.axis === "class" && cap.base === 1;
+  }
+
+  return false;
 }
 
 function supportedAttackRollPhase(

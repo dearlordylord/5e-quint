@@ -25,11 +25,11 @@ applied in atomic batches by `fillCreationHoles`; a rejected batch leaves the
 draft unchanged.
 
 Unit-backed selection - a character-creation choice whose accepted option
-references a Surface Unit. The draft records the selected Unit reference rather
+references a Unit. The draft records the selected Unit reference rather
 than treating the submitted option id as authored truth.
 
 Support Profile - package-private runtime boundary that says which discovered
-Surface-backed draft choices, Unit choice families, option ids, equipment
+Unit-backed draft choices, Unit choice families, option ids, equipment
 purchases, and loadout choices this package can currently finalize. It is not
 authored provenance and not a Surface content classification. Legal choices
 outside the profile can appear in holes, but fills are rejected as unsupported

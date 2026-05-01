@@ -38,7 +38,7 @@ The important architectural idea is this:
 flowchart TD
   Caller["Caller / UI / session boundary<br/>owns persistence and expectedRevision"]
   Draft["CharacterDraft<br/>draftId, selections, revision"]
-  Catalog["UnitCatalog<br/>Surface UnitCatalog"]
+  Catalog["UnitCatalog<br/>authored Unit catalog"]
   Runtime["character-creation-runtime/src/*"]
   SurfaceReaders["Surface readers<br/>readClassCreationFacts<br/>readBackgroundCreationFacts<br/>readSpeciesCreationFacts"]
   SharedAlgebra["shared-algebras<br/>isValidAbilityScoreAssignment"]

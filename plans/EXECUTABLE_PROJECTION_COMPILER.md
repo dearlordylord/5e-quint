@@ -48,7 +48,7 @@ Architectural note:
 
 The important bar is shape-driven reduction, not simply "surface data enters
 core." The live compiler no longer knows `acid_splash`, `mage_armor`,
-`fighter_second_wind`, or `fighter_action_surge_l2` as semantic selectors.
+`fighter_second_wind`, or `fighter_action_surge` as semantic selectors.
 Those units remain the first slice only because the surrounding bridge code
 chooses to compile those authored records.
 

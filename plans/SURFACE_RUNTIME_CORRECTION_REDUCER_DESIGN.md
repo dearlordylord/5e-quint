@@ -281,7 +281,7 @@ Units:
 - `fire_bolt`
 - `fireball`
 - `cure_wounds`
-- `fighter_action_surge_l2`
+- `fighter_action_surge`
 
 Those are enough to pressure the first slice without pretending the whole
 language is done.
@@ -422,6 +422,6 @@ Support only:
 - `fire_bolt`
 - `fireball`
 - `cure_wounds`
-- `fighter_action_surge_l2`
+- `fighter_action_surge`
 
 Fail fast on everything else.

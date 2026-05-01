@@ -34,9 +34,9 @@ export type ActivationResourceCost =
 export type SupportedSurfaceCastingTimeKind = "action" | "bonus_action";
 
 export type ActionEconomySpendError =
-  | "no action available for unit"
-  | "no bonus action available for unit"
-  | "unit action resource already granted"
+  | "no action resource available"
+  | "no bonus action available"
+  | "unit-granted action resource already granted"
   | "unsupported unit activation cost"
   | "unsupported unit casting time"
   | "unsupported unit activation resource cost";
@@ -186,7 +186,7 @@ export function spendAction<T extends ActionEconomyState>(
     action,
   );
   if (actionResourceIndex === null) {
-    return Either.left("no action available for unit");
+    return Either.left("no action resource available");
   }
 
   // TODO: If multiple compatible action resources are available and spending
@@ -213,7 +213,7 @@ export function spendActivationResource<T extends ActionEconomyState>(
   }
 
   if (!state.currentHasBonusAction) {
-    return Either.left("no bonus action available for unit");
+    return Either.left("no bonus action available");
   }
 
   return Either.right({
@@ -242,7 +242,7 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
   restriction: ActionRestriction,
 ): Either.Either<T, ActionEconomySpendError> {
   if (hasUnitActionResource(state, sourceOwnerId, sourceUnitId)) {
-    return Either.left("unit action resource already granted");
+    return Either.left("unit-granted action resource already granted");
   }
 
   return Either.right({

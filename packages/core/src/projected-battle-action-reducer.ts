@@ -14,7 +14,7 @@ import {
 import { byTag } from "#/battle-machine-helpers.ts";
 import type { ProjectedInterpreterTransition } from "#/projected-mechanic-interpreter-types.ts";
 import { decodeClassFeatureRecordSync } from "@dnd/surface/surface/schema";
-import actionSurgeSurface from "../../surface/content/fighter_action_surge_l2.json";
+import actionSurgeSurface from "../../surface/content/fighter_action_surge.json";
 
 const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(
   decodeClassFeatureRecordSync(actionSurgeSurface),

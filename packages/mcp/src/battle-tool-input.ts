@@ -7,12 +7,11 @@ import {
   type CombatantId,
 } from "@dnd/battle-runtime";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
-import { Either, JSONSchema, Match, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
-  type McpObjectInputSchema,
   type ToolInputResult,
 } from "./schema-codec.ts";
 import {
@@ -47,21 +46,19 @@ const ResolveBattleActArgsSchema = Schema.Struct({
 });
 const EndTurnArgsSchema = Schema.Struct({ actorId: CombatantIdTextSchema });
 
-export const selectStatBlockInputSchema = JSONSchema.make(
+export const selectStatBlockInputSchema = mcpObjectJsonSchema(
   SelectStatBlockArgsSchema,
-) as unknown as McpObjectInputSchema;
+);
 export const readBattleStateInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 export const discoverBattleActsInputSchema =
   mcpObjectJsonSchema(EmptyArgsSchema);
-export const fillBattleHoleInputSchema = JSONSchema.make(
+export const fillBattleHoleInputSchema = mcpObjectJsonSchema(
   FillBattleHoleArgsSchema,
-) as unknown as McpObjectInputSchema;
-export const resolveBattleActInputSchema = JSONSchema.make(
+);
+export const resolveBattleActInputSchema = mcpObjectJsonSchema(
   ResolveBattleActArgsSchema,
-) as unknown as McpObjectInputSchema;
-export const endTurnInputSchema = JSONSchema.make(
-  EndTurnArgsSchema,
-) as unknown as McpObjectInputSchema;
+);
+export const endTurnInputSchema = mcpObjectJsonSchema(EndTurnArgsSchema);
 export const endBattleInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 
 export const battleToolNames = {

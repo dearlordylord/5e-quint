@@ -2,7 +2,7 @@
 
 > Archival note: this document is preserved history for baseline `39f9ab71`.
 > The active Correction Application Migration ledgers Acid Splash projected
-> runtime behavior as omitted from the first Surface-runtime vertical; do not
+> runtime behavior as omitted from the first MCP/runtime vertical; do not
 > treat projected prepared spell execution as current architecture.
 
 ## Purpose

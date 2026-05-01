@@ -5,7 +5,7 @@ Notes from audit:
 
 - This draft uses `packages/surface-runtime-correction/VOCABULARY.md`, `ARCHITECTURE_GRAPH.md`, `MBT_TO_REDUCER_GRAPH.md`, and current reducer source.
 - Phase 0 artifacts are present as `plans/phase1-fighter-manifest.md` and `plans/phase0-surface-unit-availability.md`. This draft follows their selected Orc Soldier Fighter / Goblin Warrior vertical and Surface package decision.
-- Core files were read only to identify old facts and handoff shapes. The new green path must not preserve Core package boundaries.
+- Core files were read only to identify old facts and handoff shapes. The promoted runtime path must not preserve Core package boundaries.
 - Review passes applied: RAW/SRD consistency, ubiquitous language, and architecture/depth. The tightened points are the explicit SRD Stat Block catalog boundary, Phase 1-only battle subjects, and stronger domain identities for holes, choices, creature initialization inputs, and snapshot projections.
 
 ## Dependency Graph
@@ -38,29 +38,29 @@ Target dependency direction:
 @dnd/surface
   <- @dnd/battle-runtime
 
-@dnd/character-creation-runtime <- @dnd/mcp green-path composition
-@dnd/battle-runtime             <- @dnd/mcp green-path composition
-@dnd/surface                    <- @dnd/mcp green-path composition
+@dnd/character-creation-runtime <- @dnd/mcp runtime composition
+@dnd/battle-runtime             <- @dnd/mcp runtime composition
+@dnd/surface                    <- @dnd/mcp runtime composition
 ```
 
-Allowed green-path imports:
+Allowed MCP runtime imports:
 
 - `@dnd/character-creation-runtime` may import `@dnd/surface`, `@dnd/shared`, and `@dnd/shared-algebras` exports whose interfaces match creation runtime facts.
 - `@dnd/battle-runtime` may import `@dnd/surface`, `@dnd/shared`, and `@dnd/shared-algebras`.
-- `@dnd/mcp` green-path tools may import `@dnd/surface`, `@dnd/character-creation-runtime`, and `@dnd/battle-runtime`.
+- `@dnd/mcp` runtime tools may import `@dnd/surface`, `@dnd/character-creation-runtime`, and `@dnd/battle-runtime`.
 
-Forbidden green-path imports:
+Forbidden MCP runtime imports:
 
 - `@dnd/character-creation-runtime` must not import `@dnd/core`.
 - `@dnd/battle-runtime` must not import `@dnd/core`.
-- MCP green-path files must not import `@dnd/core`.
+- MCP runtime files must not import `@dnd/core`.
 - `@dnd/surface` must not import either runtime package.
 - `@dnd/surface` must not import `@dnd/shared-algebras`; if an algebra needs Surface vocabulary, the dependency points from `@dnd/shared-algebras` to `@dnd/surface`, not the reverse.
 - `@dnd/surface` must not depend on provenance-specific runtime behavior.
 
 `@dnd/shared-algebras` is a package-level dependency, not a partial import boundary. Its current package may depend on Surface because `armor-class-algebra` intentionally speaks Surface armor/equipment vocabulary. New runtime packages should import algebra exports by named subpath and should not treat `@dnd/shared-algebras` as a content-language facade. If a new algebra would force broad Surface projection semantics into both runtimes, keep that projection local to the owning runtime instead.
 
-Package strategy recommendation: rename/promote `@dnd/surface` to `@dnd/surface`, following `plans/phase0-surface-unit-availability.md`. This is a greenfield stack with no external consumers, so preserving a prototype package name through a facade adds ambiguity without compatibility value. Green-path imports and active project docs should only use `@dnd/surface`.
+Package strategy recommendation: use `@dnd/surface` directly as the active package. This is a greenfield stack with no external consumers, so preserving a prototype package name through a facade adds ambiguity without compatibility value. Runtime imports and active project docs should only use `@dnd/surface`.
 
 ## `@dnd/surface` API
 
@@ -104,7 +104,7 @@ Structural readers should parse authored Surface once and return narrowed types.
 export type SurfaceReadIssueCode =
   | "unsupportedUnitKind"
   | "missingRequiredField"
-  | "unsupportedSurfaceShape"
+  | "unsupportedRecordShape"
   | "provenanceMismatch";
 
 export type SurfaceReadIssue = {
@@ -151,7 +151,7 @@ Phase 1 needs minimum authored class, background, and species aggregate records 
 Collection/library boundary:
 
 ```ts
-export type SurfaceCollectionProvenance = {
+export type Srd521CollectionProvenance = {
   readonly kind: "srd-5.2.1";
 };
 
@@ -164,7 +164,7 @@ export type SrdUnitRecord = UnitRecord & {
 
 export type SrdUnitCollection = {
   readonly kind: "srdUnitCollection";
-  readonly provenance: SurfaceCollectionProvenance;
+  readonly provenance: Srd521CollectionProvenance;
   readonly units: readonly SrdUnitRecord[];
 };
 
@@ -178,7 +178,7 @@ export type UnitLibraryBuildIssue =
   | { readonly code: "duplicateUnitId"; readonly unitId: UnitRecord["id"] }
   | {
       readonly code: "mixedProvenance";
-      readonly expected: SurfaceCollectionProvenance;
+      readonly expected: Srd521CollectionProvenance;
       readonly actual: Provenance;
     }
   | {
@@ -230,7 +230,7 @@ export type StatBlockRecord = {
 
 export type SrdStatBlockCollection = {
   readonly kind: "srdStatBlockCollection";
-  readonly provenance: SurfaceCollectionProvenance;
+  readonly provenance: Srd521CollectionProvenance;
   readonly statBlocks: readonly (StatBlockRecord & {
     readonly provenance: {
       readonly kind: "srd-5.2.1";
@@ -249,7 +249,7 @@ export type StatBlockCatalogBuildIssue =
   | {
       readonly code: "mixedProvenance";
       readonly collectionKind: SrdStatBlockCollection["kind"];
-      readonly expected: SurfaceCollectionProvenance;
+      readonly expected: Srd521CollectionProvenance;
       readonly actual: Provenance;
       readonly statBlockId: StatBlockId;
     };
@@ -691,7 +691,7 @@ export type BattleInvalidReasonCode =
   | "missingCombatant"
   | "invalidFill"
   | "unsupportedSubject"
-  | "unsupportedSurfaceShape";
+  | "unsupportedActProfile";
 
 export type BattleResolutionResult =
   | {
@@ -779,7 +779,7 @@ Events/traces:
 
 ## MCP Green Path
 
-The green path should be isolated into files with no `@dnd/core` imports. Existing Core-backed MCP tools may remain outside the green path during controlled breakage and should be listed in the Restore Ledger.
+The MCP runtime path should be isolated into files with no `@dnd/core` imports. Existing Core-backed MCP tools may remain outside the runtime path during controlled breakage and should be listed in the Restore Ledger.
 
 Tool sequence:
 
@@ -837,11 +837,11 @@ MCP composition root owns:
 
 Green-path isolation requirements:
 
-- Put new green tools in a dedicated MCP module subtree, for example `packages/mcp/src/green/`, with no imports from existing Core-backed server modules.
-- The green subtree must not import `@dnd/core` directly or indirectly. Add a package script or focused test that fails on `@dnd/core` imports under the green subtree.
-- Existing Core-backed MCP tools may keep the package-level `@dnd/core` dependency during controlled breakage, but no green file may re-export from legacy MCP modules that import Core.
+- Put new runtime tools in a dedicated MCP module subtree during migration, with no imports from existing Core-backed server modules.
+- The runtime subtree must not import `@dnd/core` directly or indirectly. Add a package script or focused test that fails on `@dnd/core` imports under that subtree.
+- Existing Core-backed MCP tools may keep the package-level `@dnd/core` dependency during controlled breakage, but no runtime file may re-export from legacy MCP modules that import Core.
 - CAM19 moves Core-backed MCP routes/tests into a separate deletion-marked
-  package before the Surface runtime tools become the normal `@dnd/mcp` route.
+  package before the promoted MCP tools become the normal `@dnd/mcp` route.
 
 ## RAW Traceability Checkpoints
 
@@ -911,8 +911,8 @@ Slice authority statement:
 
 ## Questions For Owner
 
-1. Should `@dnd/surface` be a hard package rename or a facade over `@dnd/surface` during Phase 1?
-   - Recommended answer: hard rename/promote, matching `plans/phase0-surface-unit-availability.md`. The project has no external consumers, and a facade would create a second package boundary before the green runtime stabilizes. Update docs in the same migration so active docs name `@dnd/surface`.
+1. Should active docs keep any prototype Surface package naming?
+   - Recommended answer: no. The active package is `@dnd/surface`; historical prototype naming should stay only in explicitly archived documents.
 
 2. Should phase-1 battle expose `resolutionLog` for MCP responses?
    - Recommended answer: yes, but as a non-authoritative display projection returned from resolution. Do not make traces/events a Phase 1 state contract.

@@ -104,7 +104,7 @@ describe("projected executable contract", () => {
     const action: ProjectedExecutableAction = {
       tag: "PEADirectGrantExtraAction",
       source: {
-        unitId: "fighter_action_surge_l2",
+        unitId: "fighter_action_surge",
         unitKind: "PUKClassFeature",
         unitName: "Action Surge",
       },

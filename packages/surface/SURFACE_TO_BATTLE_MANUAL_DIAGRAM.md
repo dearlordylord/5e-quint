@@ -31,7 +31,7 @@ flowchart TD
 
   subgraph CONTENT["Authored And Surface"]
     direction TB
-    AUTHORED["Authored dhall and json units"]
+    AUTHORED["Authored Dhall and JSON records"]
     SURFACE["Common language extraction\nSurface / DSL"]
   end
 
@@ -43,9 +43,9 @@ flowchart TD
 
   TABLE_CHOICES["Table Choices"]
 
-  AUTHORED_NOTE["Specific Units use Surface<br/>building blocks to describe<br/>feature logic, for example fireball.<br/>This uses Authored language<br/>and carries provenance.<br/>SRD authored is allowed<br/>in the main repo but not in runtime<br/>except for tests.<br/>PHB and other licensed authored content<br/>is not allowed in the main repo,<br/>though tests may use renamed<br/>or adjusted fakes.<br/>Uses Surface as its schema."]
-  SURFACE_NOTE["Development-time common language extraction.<br/>This must converge and stabilize.<br/>Changes here prompt source-code changes.<br/>It is a schema.<br/>Runtime works with the schema,<br/>not with Authored content directly."]
-  CONTENT_NOTE["They, mixed, represent<br/>the requirements, choices,<br/>and other runtime-necessary facts.<br/>Most Units are still not complete<br/>without interpretation,<br/>user choices such as spell-slot choice,<br/>or table information such as roll results."]
+  AUTHORED_NOTE["Authored records use Surface<br/>building blocks to describe<br/>rules content, for example fireball<br/>or a monster Stat Block.<br/>Authored records carry provenance.<br/>SRD authored content is allowed<br/>in the main repo.<br/>PHB and other licensed authored content<br/>is not allowed in the main repo,<br/>though tests may use renamed<br/>or adjusted fakes.<br/>Uses Surface as its schema."]
+  SURFACE_NOTE["Common language extraction.<br/>This must converge and stabilize.<br/>Changes here prompt source-code changes.<br/>It is a schema, not executable IR.<br/>Runtime packages consume typed<br/>authored-record boundaries and own<br/>their executable semantics."]
+  CONTENT_NOTE["Authored records and Surface schema,<br/>together, represent requirements,<br/>choices, and other runtime-needed facts.<br/>Most records are still not complete<br/>without runtime interpretation,<br/>user choices such as spell-slot choice,<br/>or table information such as roll results."]
   CHARACTER_NOTE["Character includes character creation,<br/>level ups, and character-owned features,<br/>for example class features."]
 
   AUTHORED_NOTE -. comment .-> AUTHORED
@@ -60,36 +60,36 @@ flowchart TD
   OTHER_BOOKS -->|Extracted| AUTHORED
   OTHER_BOOKS -->|Extracted| SURFACE
   SURFACE -->|Is schema for| AUTHORED
-  SURFACE -->|Known by| REDUCERS
-  AUTHORED -->|Consumable by| REDUCERS
+  SURFACE -->|Defines typed boundaries for| REDUCERS
+  AUTHORED -->|Read by package-specific projection| REDUCERS
   REDUCERS -->|Prompts| TABLE_CHOICES
   TABLE_CHOICES -->|Informs| REDUCERS
 
   class RAW_NOTE,LICENSED_NOTE,SOURCES_NOTE,AUTHORED_NOTE,SURFACE_NOTE,CONTENT_NOTE note
 ```
 
-## Unit Hydration Process
+## Authored Record Consumption
 
 ```mermaid
 flowchart TD
   classDef note fill:#f7f7f7,stroke:#999,stroke-dasharray: 4 4,color:#222,font-size:12px;
 
-  subgraph HYDRATION["Unit hydration process"]
+  subgraph HYDRATION["Authored record consumption"]
     direction TB
-    HYDRATION_SURFACE["Surface<br/>Fully static and includes<br/>the whole DSL.<br/>Is a static definition<br/>both in Quint and TS"]
-    HYDRATION_VALUE["Runtime typed value<br/>conformed to schema"]
+    HYDRATION_SURFACE["Surface<br/>Static authored-content schema<br/>and closed vocabulary"]
+    HYDRATION_VALUE["Decoded authored record<br/>validated against schema"]
     HYDRATION_REDUCERS["Character creation reducer<br/>Battle reducer"]
-    HYDRATION_TEST["Test-time, Quint provides<br/>randomized Table choices<br/>and Authored SRD Units"]
+    HYDRATION_TEST["Test-time, Quint provides<br/>randomized Table choices<br/>and authored SRD records"]
     HYDRATION_TABLE["Table choices"]
     HYDRATION_STATE["New state"]
   end
 
-  HYDRATION_SURFACE -->|After authored JSON is applied,<br/>parsed with Effect-schema| HYDRATION_VALUE
-  HYDRATION_VALUE -->|Goes to reducers prompted by table choices,<br/>for example level up,<br/>casting spell,<br/>or using class feature| HYDRATION_REDUCERS
+  HYDRATION_SURFACE -->|Authored JSON is parsed<br/>with Effect Schema| HYDRATION_VALUE
+  HYDRATION_VALUE -->|Runtime package derives<br/>its own execution facts| HYDRATION_REDUCERS
   HYDRATION_TEST -->|Thru MBT adapter| HYDRATION_REDUCERS
   HYDRATION_REDUCERS -->|May prompt the table for choices,<br/>for example cast level,<br/>battle visibility,<br/>distances,<br/>targets| HYDRATION_TABLE
   HYDRATION_TABLE -->|Informs| HYDRATION_REDUCERS
-  HYDRATION_REDUCERS -->|Fully hydrated,<br/>reducers execute effects,<br/>reducers know which effects they want| HYDRATION_STATE
+  HYDRATION_REDUCERS -->|Reducer-owned execution<br/>produces durable state| HYDRATION_STATE
   HYDRATION_STATE -->|Feeds next reduction| HYDRATION_REDUCERS
 ```
 
@@ -108,9 +108,9 @@ flowchart TD
 
   subgraph MERGED_CONTENT["Authored And Surface"]
     direction TB
-    MERGED_AUTHORED["Authored dhall and json units"]
+    MERGED_AUTHORED["Authored Dhall and JSON records"]
     MERGED_SURFACE["Surface / DSL"]
-    MERGED_RUNTIME["Runtime typed value<br/>validated against schema"]
+    MERGED_RUNTIME["Decoded authored record<br/>validated against schema"]
   end
 
   subgraph MERGED_REDUCERS["Reducers"]
@@ -131,10 +131,10 @@ flowchart TD
   MERGED_OTHER -->|Extracted| MERGED_SURFACE
 
   MERGED_SURFACE -->|Is schema for| MERGED_AUTHORED
-  MERGED_AUTHORED -->|Applied and parsed<br/>with Effect schema| MERGED_RUNTIME
+  MERGED_AUTHORED -->|Parsed<br/>with Effect schema| MERGED_RUNTIME
   MERGED_SURFACE -->|Defines schema for| MERGED_RUNTIME
-  MERGED_SURFACE -->|Shared language for| MERGED_REDUCERS
-  MERGED_RUNTIME -->|Input to| MERGED_REDUCERS
+  MERGED_SURFACE -->|Defines typed boundaries for| MERGED_REDUCERS
+  MERGED_RUNTIME -->|Projected by runtime package into| MERGED_REDUCERS
 
   MERGED_TEST -->|Thru MBT adapter| MERGED_REDUCERS
   MERGED_REDUCERS -->|Prompts| MERGED_TABLE
@@ -143,9 +143,9 @@ flowchart TD
   MERGED_STATE -->|Feeds next reduction| MERGED_REDUCERS
 
   MERGED_SOURCES_NOTE["Rules sources provide provenance.<br/>Only SRD-derived authored content is allowed<br/>in the main repo.<br/>None of these source corpora are runtime code."]
-  MERGED_AUTHORED_NOTE["Authored units carry provenance<br/>and use Surface as schema.<br/>Authored content is not runtime state<br/>except in tests and MBT fixtures."]
-  MERGED_RUNTIME_NOTE["Runtime typed values are the hydrated,<br/>validated form reducers should consume,<br/>rather than raw authored content."]
-  MERGED_TEST_NOTE["The MBT lane injects randomized table choices<br/>and authored SRD units into reducers<br/>through the adapter."]
+  MERGED_AUTHORED_NOTE["Authored records carry provenance<br/>and use Surface as schema.<br/>Authored content is not runtime state<br/>or executable IR."]
+  MERGED_RUNTIME_NOTE["Decoded records are validated authored content.<br/>Runtime packages own projections,<br/>support gates, and executable semantics."]
+  MERGED_TEST_NOTE["The MBT lane injects randomized table choices<br/>and authored SRD records into reducers<br/>through the adapter."]
 
   MERGED_SOURCES_NOTE -. comment .-> MERGED_SOURCES
   MERGED_AUTHORED_NOTE -. comment .-> MERGED_AUTHORED

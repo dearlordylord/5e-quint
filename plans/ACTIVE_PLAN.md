@@ -188,11 +188,11 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 10    | CAM19B - Isolate Legacy Core MCP Path                            | done   | CAM19A             | CAM19C       | Move old Core-backed MCP routes/tests into a deletion-marked legacy package/path and keep them out of the promotable MCP entrypoint.                                                          | Completed; legacy Core-backed MCP path is isolated under `packages/mcp/src/legacy-core/`. |
 | 11    | CAM19C - Delete Projected Vocabulary From Promoted Path          | done   | CAM19B             | CAM19D       | Delete projected executable vocabulary from the promoted MCP/runtime path after legacy isolation, preserving omitted semantics only through Restore Ledger rows.                              | Completed.                                                                                |
 | 12    | CAM19D - Reconcile Post-Deletion Docs And Tests                  | done   | CAM19C             | CAM20        | Reconciled normal MCP test ownership, post-deletion docs, Restore Ledger status, and archival projected-executable docs.                                                                      | Completed; CAM20 has a concrete promotion handoff.                                        |
-| 13    | CAM20 - Green Reconciliation And MCP Promotion                   | done   | CAM19D             | CAM21        | Promoted the Surface-backed tools into the normal MCP server path, deleted `src/green` and `src/legacy-core`, and replaced green fixture coverage with normal MCP server tests.               | Completed; CAM21 is unblocked.                                                            |
+| 13    | CAM20 - Green Reconciliation And MCP Promotion                   | done   | CAM19D             | CAM21        | Promoted the runtime tools into the normal MCP server path, deleted `src/green` and `src/legacy-core`, and replaced green fixture coverage with normal MCP server tests.                       | Completed; CAM21 is unblocked.                                                            |
 | 14    | CAM21 - End-User Vertical Acceptance                             | done   | CAM20              | POST2        | Accepted the promoted user workflow end to end: create character, start battle, add Goblin Warrior, run battle, end battle, and see the character list with reduced positive HP.              | Completed; deferred zero-HP/death-save/rest handoff facts are ledgered.                   |
 | 15    | POST2 - Add First Width Slice Surface Records And Readers        | done   | POST1, CAM21       | POST3        | Added the researched Surface width slice: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and Skeleton SRD Stat Block vulnerability/immunity shape.                        | Completed; POST3 is unblocked.                                                            |
 | 16    | POST3 - Widen Character Creation Runtime Support Profile         | done   | POST2              | POST4        | Extended CAM16A's support profile, projections, QNT slice, and docs so the researched class/species/background/spellcasting choices finalize without scattered Phase 1 branches.              | Completed; POST4 is unblocked.                                                            |
-| 17    | POST4 - Widen Battle Runtime For First Width Slice               | done   | POST3              | POST5        | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Surface-backed acts/resources/spell or monster facts, preserving runtime parity discipline.           | Completed; POST5 is unblocked.                                                            |
+| 17    | POST4 - Widen Battle Runtime For First Width Slice               | done   | POST3              | POST5        | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Unit, spell, and monster facts, preserving runtime parity discipline.                                  | Completed; POST5 is unblocked.                                                            |
 | 18    | POST5 - Add Widened MCP User Workflow Coverage                   | done   | POST4              | none         | Added promoted MCP workflow coverage for the Fighter 2 + Wizard 1 versus Skeleton width slice and updated Restore Ledger status for restored rows.                                            | Completed.                                                                                |
 
 ## Task Details
@@ -493,7 +493,7 @@ Preflight:
 - CAM17 should not widen battle support. Keep the Core-free green-path boundary
   intact: `@dnd/character-creation-runtime`, `@dnd/battle-runtime`, and
   `packages/mcp/src/green/` must not import `@dnd/core`.
-- Use final user-facing tool names inside the temporary Surface-runtime MCP
+- Use final user-facing tool names inside the temporary MCP
   registration boundary. Do not prefix tool names with `green_`; isolation comes
   from the module/package boundary until CAM20 promotion, not from user-visible
   vocabulary.
@@ -505,7 +505,7 @@ Input:
 
 Output:
 
-- Surface-runtime MCP tools for create character draft, discover creation holes, fill creation holes, and finalize supported characters.
+- MCP tools for create character draft, discover creation holes, fill creation holes, and finalize supported characters.
 
 Acceptance:
 
@@ -522,7 +522,7 @@ Verification:
 - MCP test that successful finalization removes the draft from `drafts` and
   stores the sheet in `sheets`.
 - `pnpm --filter @dnd/mcp test`
-- Source-only Core import check for the Surface-runtime MCP subtree and runtime
+- Source-only Core import check for the MCP subtree and runtime
   packages.
 
 Plan Impact:
@@ -568,7 +568,7 @@ Input:
 
 Output:
 
-- Surface-runtime MCP tools for selecting a Stat Block and starting battle with
+- MCP tools for selecting a Stat Block and starting battle with
   caller-supplied Initiative scores.
 - Green MCP battle session state that stores the returned `BattleState`.
 - Battle state/snapshot read tool for the stored battle.
@@ -593,7 +593,7 @@ Verification:
 
 - `pnpm --filter @dnd/mcp test`
 - `pnpm --filter @dnd/battle-runtime test`
-- Source-only Core import check for the Surface-runtime MCP subtree and runtime
+- Source-only Core import check for the MCP subtree and runtime
   packages.
 
 Plan Impact:
@@ -639,7 +639,7 @@ Verification:
 
 - `pnpm --filter @dnd/mcp test`
 - `pnpm --filter @dnd/battle-runtime test`
-- Source-only Core import check for the Surface-runtime MCP subtree and runtime
+- Source-only Core import check for the MCP subtree and runtime
   packages.
 
 Plan Impact:
@@ -685,7 +685,7 @@ Verification:
 
 - `pnpm --filter @dnd/mcp test`
 - `pnpm --filter @dnd/battle-runtime test`
-- Source-only Core import check for the Surface-runtime MCP subtree and runtime
+- Source-only Core import check for the MCP subtree and runtime
   packages.
 
 Plan Impact:
@@ -732,7 +732,7 @@ Verification:
 
 - `pnpm --filter @dnd/mcp test`
 - `pnpm --filter @dnd/battle-runtime test`
-- Source-only Core import check for the Surface-runtime MCP subtree and runtime
+- Source-only Core import check for the MCP subtree and runtime
   packages.
 
 Plan Impact:
@@ -956,19 +956,19 @@ Depends on: CAM19D
 Blocks: CAM21
 
 Preflight: completed. The promotion/import blast-radius check found the
-Surface-runtime MCP modules and legacy Core-backed MCP path were isolated as
+MCP runtime modules and legacy Core-backed MCP path were isolated as
 expected before promotion.
 
 Input:
 
 - Passing MCP green vertical through post-battle character state.
 - CAM19A-CAM19D deletion/isolation results.
-- Surface-runtime MCP modules and the deletion-marked legacy MCP package.
+- MCP runtime modules and the deletion-marked legacy MCP package.
 - Phase 5 criteria in [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md).
 
 Output:
 
-- Surface-backed tools promoted into the normal MCP server/router entrypoint.
+- Runtime tools promoted into the normal MCP server/router entrypoint.
 - `packages/mcp/src/green/` deleted or reduced to internal composition helpers with no user-facing green namespace.
 - Deletion-marked legacy MCP package removed, or kept only with explicit Restore
   Ledger coverage outside the promoted MCP route.
@@ -980,7 +980,7 @@ Acceptance:
 - `packages/mcp/src/server.ts` or its replacement no longer routes the vertical through Core/projected vocabulary.
 - No user-facing MCP tool requires importing from `packages/mcp/src/green`.
 - `src/green/` is deleted, or remaining files are internal helpers without "green" API naming.
-- MCP docs describe the promoted Surface runtime path, not a green path as the active user workflow.
+- MCP docs describe the promoted runtime path, not a green path as the active user workflow.
 - Restore Ledger still covers omitted behavior that has not been rebuilt.
 - Temporary catalog/support-gate language is reconciled: `UnitLibrary` aliases
   and package-private `unsupported*` issue vocabulary are either removed or kept
@@ -996,7 +996,7 @@ Verification:
 Plan Impact:
 
 - Completed. CAM21 is unblocked, and the migration plan plus MCP docs now
-  describe the promoted Surface-runtime MCP path instead of an active green
+  describe the promoted MCP runtime path instead of an active green
   path.
 
 ### Task 14 - CAM21 - End-User Vertical Acceptance
@@ -1084,9 +1084,8 @@ Output:
   slice: Fighter 2 advancement facts, Wizard 1 spellcasting creation facts, and
   the Skeleton SRD Stat Block.
 - Fighter Surface records/readers connect `class_fighter` level-2 grants to the
-  existing Action Surge authored feature and a Tactical Mind sheet feature fact;
-  reconcile the duplicate `fighter_action_surge` / `fighter_action_surge_l2`
-  authored records into one canonical Unit id before widening readers.
+  canonical Action Surge authored feature and a Tactical Mind sheet feature
+  fact before widening readers.
 - Wizard Surface records/readers add a `class_wizard` creation record and the
   level-1 spellcasting ownership facts needed for 3 cantrips, a six-spell
   spellbook, 4 prepared spells selected from that spellbook, two level-1 Spell
@@ -1215,7 +1214,7 @@ Output:
   This means Fighter 2 Action Surge pressure, Wizard 1 prepared-spell/cantrip
   Magic-action spell act pressure for the deterministic spells selected by POST1, and
   Skeleton's authored combat shape including vulnerability/immunity facts.
-- Surface-backed act/resource/spell/monster facts derived from records and
+- Unit/resource/spell/monster facts derived from records and
   runtime state, not a restored projected-executable IR.
 - Battle runtime docs and QNT/parity artifacts updated for the widened behavior.
 

@@ -2,7 +2,7 @@
 
 > Archival note: this design is preserved history for baseline `39f9ab71`.
 > The active Correction Application Migration supersedes the projected
-> executable architecture with Surface-runtime reducers; do not treat this
+> executable architecture with the current runtime reducers; do not treat this
 > document as current architecture.
 
 ## Status

@@ -43,7 +43,7 @@ import type {
   WizardClassRecord,
 } from "./types.ts";
 
-export type SurfaceCollectionProvenance = {
+export type Srd521CollectionProvenance = {
   readonly kind: "srd-5.2.1";
 };
 
@@ -59,7 +59,7 @@ export type Srd521Unit = UnitRecord & {
 
 export type SrdUnitCollection = {
   readonly kind: "srdUnitCollection";
-  readonly provenance: SurfaceCollectionProvenance;
+  readonly provenance: Srd521CollectionProvenance;
   readonly units: readonly Srd521Unit[];
 };
 
@@ -77,7 +77,7 @@ export type UnitCatalogBuildIssue =
   | {
       readonly code: "mixedProvenance";
       readonly collectionKind: SrdUnitCollection["kind"];
-      readonly expected: SurfaceCollectionProvenance;
+      readonly expected: Srd521CollectionProvenance;
       readonly actual: Provenance;
       readonly unitId: UnitId;
     }

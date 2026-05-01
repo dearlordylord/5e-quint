@@ -3,9 +3,9 @@
 `@dnd/mcp` exposes tool-facing composition and session wiring for the runtime
 packages.
 
-## Surface Runtime Composition
+## Runtime Composition
 
-The Surface runtime composition path wires package APIs into tool workflows. MCP
+The MCP composition path wires package APIs into tool workflows. MCP
 may see content catalogs, character sessions, battle sessions, and runtime
 initialization inputs because it is the composition boundary; it must not become
 the owner of character-creation or battle semantics.
@@ -19,18 +19,18 @@ the character-creation and battle runtimes. Its composition root builds:
   durable post-battle character state, selected Stat Block identity, durable
   battle state, and transient battle fills.
 
-The Surface-runtime character-creation tool boundary exposes these user-facing tools:
+The character-creation tool boundary exposes these user-facing tools:
 
 - `describe_mcp_workflow` returns the agent-facing lifecycle, accepted fill
   examples, result paths, recovery rules, and current slice limits. This tool
   has an Effect Schema-derived output schema and returns structured content.
-- `list_catalog_units` lists installed Surface Unit ids grouped by kind for
+- `list_catalog_units` lists installed Unit ids grouped by kind for
   discovery. These ids are catalog facts, not MCP-local support lists; legal
   character choices still come from `discover_creation_holes`.
 - `list_stat_blocks` lists selectable SRD Stat Block ids, display names,
   attacks, defenses, damage modifiers, and provenance for `select_stat_block`.
 
-- `create_character_draft` creates and stores a new Surface-runtime draft, then
+- `create_character_draft` creates and stores a new character draft, then
   returns the current creation holes.
 - `discover_creation_holes` returns the stored draft's current hole frontier,
   draft revision, and finalization status.
@@ -39,7 +39,7 @@ The Surface-runtime character-creation tool boundary exposes these user-facing t
   draft; rejected batches return runtime issues and leave the stored draft
   unchanged.
 - `finalize_character` finalizes only when the runtime reports a supported
-  Surface-runtime draft is ready. The promoted path currently supports the Orc
+  character draft is ready. The promoted path currently supports the Orc
   Soldier Fighter 1/Fighter 2 and Orc Soldier Wizard 1 slice. A ready result
   stores an available character session by source draft id and removes the
   active draft from `drafts`. The session owns current HP while the character is
@@ -50,11 +50,11 @@ The Surface-runtime character-creation tool boundary exposes these user-facing t
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
-character helpers in the Surface-runtime path.
+character helpers in the promoted runtime path.
 
-The Surface-runtime battle-session path exposes these user-facing tools:
+The battle-session tool boundary exposes these user-facing tools:
 
-- `select_stat_block` selects a Stat Block from the Surface SRD Stat Block
+- `select_stat_block` selects a Stat Block from the SRD Stat Block
   catalog and stores only that Stat Block id in the session.
 - `start_battle` starts a battle session from one or more finalized character
   sheets and the selected Stat Block. The caller supplies the Initiative scores
@@ -80,7 +80,7 @@ The Surface-runtime battle-session path exposes these user-facing tools:
   session, clears battle state, and leaves monster combatants behind in the
   closed battle.
 
-The accepted first end-user Surface-runtime vertical is Orc Soldier Fighter
+The accepted first end-user MCP vertical is Orc Soldier Fighter
 versus Goblin Warrior, entirely through MCP tools:
 
 1. create a character draft;
@@ -95,7 +95,7 @@ versus Goblin Warrior, entirely through MCP tools:
    damage fills;
 9. end the battle and list the Orc Soldier Fighter with reduced current HP.
 
-That fixture uses the authored Surface Unit and Stat Block catalogs. It does
+That fixture uses the authored Unit and Stat Block catalogs. It does
 not use character presets, Core projections, duplicated executable stat-block
 data, or reducer-owned in-progress battle fills.
 
@@ -128,7 +128,7 @@ Remaining first-vertical gates:
   persistent spell effects such as Mage Armor, and post-turn lifecycle subjects
   remain outside this widened slice.
 
-Normal package tests cover the promoted Surface-runtime MCP server route. The
+Normal package tests cover the promoted MCP server route. The
 old Core-backed MCP route has been removed from this package; omitted behavior
 is governed by the Restore Ledger in
 `plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`.
@@ -144,11 +144,11 @@ so MCP session state cannot drift from the SRD stat-block catalog.
 Transient battle fills are MCP session state. They are kept separate from
 `BattleState` so battle replay remains owned by `@dnd/battle-runtime`.
 
-Surface-runtime session state belongs here when it is tool workflow state:
+MCP session state belongs here when it is tool workflow state:
 draft handles, selected content ids, durable battle ids, and transient fills.
 Reducer state and rules behavior remain owned by the runtime packages.
 
-Surface-runtime tools should use their final user-facing tool names. The
+MCP tools should use their final user-facing tool names. The
 implementation boundary is the module/package registration path, not a
 migration-prefixed tool name.
 
@@ -160,7 +160,7 @@ through their output schemas.
 
 This package also owns cross-runtime composition helpers. Character Build to
 creature-init mapping lives in `src/battle-creature-init.ts`, where finalized
-character facts and Surface Unit lookups are projected into battle-owned
+character facts and Unit lookups are projected into battle-owned
 initialization data before calling `startBattle`. This keeps character
 draft/session concepts out of `@dnd/battle-runtime` without introducing a new
 intermediate language. This is package ownership, not a domain term:
@@ -170,7 +170,7 @@ tools.
 
 `start_battle` must receive caller-supplied Initiative scores for every
 combatant. MCP must not derive Initiative as `10 + modifier` in the promoted
-Surface runtime path.
+runtime path.
 
 No promoted MCP/runtime path may import `@dnd/core`. Check that boundary with:
 

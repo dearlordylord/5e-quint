@@ -37,7 +37,7 @@ an implemented correction flow for:
 - prompt discovery from battle state
 - complete prompt answers only
 - prompt resolution that can either resolve immediately or open a follow-up prompt
-- pure battle reduction for `attack`, `endTurn`, `cure_wounds`, `fireball`, and `fighter_action_surge_l2`
+- pure battle reduction for `attack`, `endTurn`, `cure_wounds`, `fireball`, and `fighter_action_surge`
 
 The remaining work for this document is to stay honest about the landed shape so
 the Quint follow-up is based on discovered reality rather than earlier
@@ -522,7 +522,7 @@ Units:
 - `fire_bolt`
 - `fireball`
 - `cure_wounds`
-- `fighter_action_surge_l2`
+- `fighter_action_surge`
 
 Explicitly out of scope for the first slice:
 

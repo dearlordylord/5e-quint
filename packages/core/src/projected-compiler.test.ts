@@ -116,13 +116,13 @@ describe("projected compiler", () => {
 
   it("compiles Action Surge by direct-effect shape", () => {
     const actionSurge = loadSurfaceUnit<ClassFeatureRecord>(
-      "fighter_action_surge_l2",
+      "fighter_action_surge",
     );
 
     expect(compileProjectedExecutable(actionSurge)).toEqual({
       tag: "PEADirectGrantExtraAction",
       source: {
-        unitId: "fighter_action_surge_l2",
+        unitId: "fighter_action_surge",
         unitKind: "PUKClassFeature",
         unitName: "Action Surge",
       },
@@ -302,7 +302,7 @@ describe("projected compiler shape-driven widening", () => {
 
   it("still rejects Action Surge when the shape leaves the supported direct-self projection subset", () => {
     const actionSurge = loadSurfaceUnit<ClassFeatureRecord>(
-      "fighter_action_surge_l2",
+      "fighter_action_surge",
     );
     if (actionSurge.mechanics.family !== "activation")
       throw new Error("unexpected action surge");

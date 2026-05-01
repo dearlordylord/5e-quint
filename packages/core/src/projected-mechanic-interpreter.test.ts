@@ -11,7 +11,7 @@ import {
   type ProjectedExecutionRuntime,
 } from "#/projected-mechanic-interpreter.ts";
 import acidSplashSurface from "../../surface/content/acid_splash.json";
-import actionSurgeSurface from "../../surface/content/fighter_action_surge_l2.json";
+import actionSurgeSurface from "../../surface/content/fighter_action_surge.json";
 import secondWindSurface from "../../surface/content/fighter_second_wind.json";
 
 const ACID_SPLASH_PROJECTED_ACTION = compileProjectedExecutable(

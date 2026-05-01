@@ -43,7 +43,7 @@ describe("projectPhaseHoles", () => {
   it("returns an empty list for a holeless activation phase", () => {
     expect(
       projectPhaseHoles(
-        activationPhase("fighter_action_surge_l2", 0),
+        activationPhase("fighter_action_surge", 0),
         holeStepKey("activation:0"),
       ),
     ).toEqual([]);

@@ -6,7 +6,7 @@ acts, resolving fills for those acts, and producing snapshots for callers.
 
 The package is a runtime boundary, not an authored-content package. It consumes
 battle initialization data built by a composition layer from Character Builds,
-Surface Units, and Surface Stat Blocks. It may retain resolved Surface records
+Units, and Stat Blocks. It may retain resolved Surface records
 or Unit refs as battle origin data, but it does not create a second executable
 content language.
 
@@ -26,7 +26,7 @@ behavior from inputs that callers provide.
 
 | Source outside battle                          | Composition output            | Battle-owned state    |
 | ---------------------------------------------- | ----------------------------- | --------------------- |
-| Character Build plus selected Surface Units    | `CharacterBattleCreatureInit` | `BattleCreatureState` |
+| Character Build plus selected Units            | `CharacterBattleCreatureInit` | `BattleCreatureState` |
 | Surface `StatBlockRecord` for a monster or NPC | `StatBlockBattleCreatureInit` | `BattleCreatureState` |
 
 Callers construct `BattleCreatureInit[]` outside this package, then call
@@ -110,7 +110,7 @@ Available acts:
 - discover Attack for supported character weapon attacks and supported
   Stat Block named attacks when the current actor can take actions and at least
   one target is legal for the selected attack's melee reach or normal range.
-- discover Action Surge from the retained Surface Unit resource when it has a
+- discover Action Surge from the retained Unit resource when it has a
   remaining use and has not been used this turn;
 - discover supported Wizard Magic-action spell acts from retained Spell Records
   and runtime Spell Slot state, unless worn armor lacks required Armor

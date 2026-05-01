@@ -2,7 +2,7 @@
 
 > Archival note: this document is preserved history for baseline `39f9ab71`.
 > The active Correction Application Migration ledgers projected persistent
-> behavior as omitted from the first Surface-runtime vertical; do not treat
+> behavior as omitted from the first MCP/runtime vertical; do not treat
 > projected persistent records as current architecture.
 
 Reference design for EPT6. Defines the minimal primitive that carries

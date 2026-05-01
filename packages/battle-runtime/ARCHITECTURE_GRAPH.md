@@ -28,7 +28,7 @@ flowchart TD
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
   AttackProfile["supported attack profile<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
-  UnitFeature["Unit feature activation<br/>source: retained Surface Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action and spends one use"]
+  UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action and spends one use"]
   SpellAct["Magic-action spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
@@ -104,7 +104,7 @@ flowchart TD
   named attacks derived from `StatBlockRecord.actions.attacks`.
 - Character-derived attacks come from a supported weapon attack profile
   assembled at the composition boundary.
-- Character-derived Action Surge comes from a retained Surface Unit plus
+- Character-derived Action Surge comes from a retained Unit plus
   runtime use-count state. It grants a Unit-sourced action resource carrying
   the authored non-Magic restriction.
 - Character-derived Wizard Magic-action spell acts come from retained Spell Records

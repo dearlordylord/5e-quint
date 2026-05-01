@@ -1,7 +1,7 @@
 # Surface Runtime Correction Vocabulary
 
 Status: package-local vocabulary for `@dnd/surface-runtime-correction`. New
-Surface-backed battle and character-creation terms live in their owning runtime
+Surface-authored battle and character-creation terms live in their owning runtime
 package docs.
 
 acts - executable branches in the reducer protocol. We say `acts` here to avoid

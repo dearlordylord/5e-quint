@@ -80,7 +80,7 @@ drafts, holes, batch fills, finalization, and the finalized `CharacterBuild`.
 Character-creation terms live in
 `packages/character-creation-runtime/VOCABULARY.md`.
 
-`@dnd/battle-runtime` owns the Surface-backed battle reducer state:
+`@dnd/battle-runtime` owns the battle reducer state:
 `BattleState`, `BattleCreatureState`, battle subjects, replay-from-root holes
 and fills, snapshots, and the package-local battle QNT slice. It consumes
 battle-owned creature initialization inputs; it does not import character
@@ -108,7 +108,7 @@ own Units merely because Stat Blocks may reuse shared Surface sub-shapes.
 
 `@dnd/mcp` is the tool-facing composition package.
 
-The Surface runtime path composes:
+The promoted MCP runtime path composes:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
@@ -126,7 +126,7 @@ MCP package details live in `packages/mcp/README.md`.
 
 Quint specs are correctness references for runtime behavior. `battle.qnt`
 remains the canonical broad combat spec. Package-local QNT files constrain
-reducer packages while the Surface runtime path is being brought up:
+reducer packages while the promoted runtime path is being brought up:
 
 - `battle.qnt` remains the broad Core combat authority for the Core lane.
 - `packages/battle-runtime/battle-runtime-slice.qnt` is a parity slice for the
@@ -134,7 +134,7 @@ reducer packages while the Surface runtime path is being brought up:
 - `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
   constrains character-creation reducer behavior.
 
-Before the Surface-backed battle path is promoted, the package-local battle
+Before the battle runtime path is promoted, the package-local battle
 slice must be merged into, replace, or otherwise reconcile with the broad battle
 spec, and docs/tests must name one canonical combat authority.
 
@@ -147,7 +147,7 @@ Runtime correctness mechanisms depend on the package shape:
 
 ## Dependency Direction
 
-The Surface-backed runtime path uses this dependency direction:
+The promoted runtime path uses this dependency direction:
 
 ```text
 @dnd/shared
@@ -163,7 +163,7 @@ The Surface-backed runtime path uses this dependency direction:
 ```
 
 `@dnd/character-creation-runtime`, `@dnd/battle-runtime`, and the promoted
-Surface runtime MCP path must not depend on `@dnd/core`. Core-specific feature
+MCP runtime path must not depend on `@dnd/core`. Core-specific feature
 helpers and projected vocabulary belong to the Core lane until they are deleted,
 rewritten, or explicitly ledgered for restoration.
 

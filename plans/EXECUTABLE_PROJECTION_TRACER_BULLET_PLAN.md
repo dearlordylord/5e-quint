@@ -109,7 +109,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 
 ---
 
-## Task 2: Confirm The Existing `acid_splash` Surface Unit As First Spell Pressure Case
+## Task 2: Confirm The Existing `acid_splash` Unit As First Spell Pressure Case
 
 **Input**
 
@@ -147,7 +147,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
   - `acid_splash`
   - `mage_armor`
   - `fighter_second_wind`
-  - `fighter_action_surge_l2`
+  - `fighter_action_surge`
 - existing Quint semantics in `battle.qnt` and `creature.qnt`
 
 **Output**
@@ -233,7 +233,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
   - `acid_splash`
   - `mage_armor`
   - `fighter_second_wind`
-  - `fighter_action_surge_l2`
+  - `fighter_action_surge`
 - Compilation fails closed for unsupported patterns rather than silently dropping semantics.
 - Projected records preserve source identity.
 - Recompiling the same authored input produces byte-for-byte equivalent projected output for the in-scope fixtures, modulo stable ordering rules if needed.

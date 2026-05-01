@@ -19,7 +19,7 @@ One-liner: **this package holds what we've SHIPPED; `scripts/content-surface-sur
 ## Goal (read this first)
 
 This package is **where the taxonomy actually lives and evolves**. It is the
-active authored-content and provenance boundary for the Surface-backed runtime
+active authored-content and provenance boundary for the promoted runtime
 path. The vocabulary emerged from research in `.references/xphb-srd-pairing/`
 and continues to be shaped by real authoring pressure from SRD 5.2.1 and PHB
 2024 content.
@@ -124,7 +124,7 @@ pnpm typecheck
 
 ## What it does
 
-1. Reads `content/<slug>.json` — a unit authored against the closed
+1. Reads `content/<slug>.json` — an authored content record encoded against the closed
    atom vocabulary in `src/surface/types.ts`.
 2. Walks the ADT via `src/interpreter/tracer.ts`, recording every
    surface atom referenced.
@@ -156,7 +156,7 @@ Don't invent widenings from scratch when a proposal already exists —
 evaluate, accept / refactor / reject, then author.
 
 See `plans/CONTENT_SURFACE_DEFERRED.md` for the current queue of
-deferred widenings drawn from authored units + the sub-agent corpus.
+deferred widenings drawn from authored records + the sub-agent corpus.
 
 As authored records land in this package, their outcomes should be reflected
 back into the survey corpus as ground-truth verdicts before the corpus is used
@@ -204,7 +204,7 @@ runtime packages own executable semantics and parity tests.
 - `src/interpreter/mermaid.ts` — mermaid renderer.
 - `src/run.ts` — CLI entry.
 - `content/<slug>.dhall` — authored source.
-- `content/<slug>.json` — compiled runtime artifact.
+- `content/<slug>.json` — compiled authored JSON consumed by package code.
 - `content/<slug>.trace.md` — regenerable trace output.
 
 ## Related docs
