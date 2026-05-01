@@ -4,7 +4,7 @@ Date: 2026-04-29
 
 This is the single active planning queue.
 
-Active batch: Battle Authority Reconciliation.
+Active batch: Post-BA architecture watcher/corrector.
 
 Completed Correction Application Migration goal: replace the old
 Core/projected-executable vertical with a Surface/Unit-driven character-creation
@@ -15,13 +15,13 @@ versus the Goblin Warrior Stat Block, through real creation holes, battle
 Attack with damage, and End Turn. The first post-CAM width slice adds Fighter
 2, Wizard 1, and Skeleton pressure.
 
-Current Battle Authority Reconciliation goal: resolve the temporary split between
+Completed Battle Authority Reconciliation goal: the temporary split between
 root `battle.qnt`/Core battle MBT and
-`@dnd/battle-runtime`/`battle-runtime.qnt`. The intended direction is
-that the promoted Unit/StatBlock-backed battle runtime becomes the active
-battle authority for new work. Old Core battle behavior and its wider MBT are
-valuable restore/proof source material, but missing old-only features are
-widening work, not a reason to keep two active authorities.
+`@dnd/battle-runtime`/`battle-runtime.qnt` is closed. The promoted
+Unit/StatBlock-backed battle runtime is the active battle authority for new
+work. Old Core battle behavior and its wider MBT remain valuable restore/proof
+source material, but missing old-only features are widening work, not a reason
+to keep two active authorities.
 
 Post-BA planning intent: the Battle Authority Reconciliation batch must not end
 with only a Restore Ledger. Its final planner step must append the next ordered
@@ -261,13 +261,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 32,
       "id": "BA13",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Battle Authority Reconciliation"
     },
     {
       "number": 33,
       "id": "PBA0",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Archive Promoted Quint Parity And Composition Boundary"
     },
     {
@@ -426,12 +426,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 25    | BA6 - Reconcile Promoted Width Overlap                           | done               | BA3                  | BA8                                 | Reconciled already-promoted Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers without restoring projected executable vocabulary. | Completed; BA8 is unblocked because BA4-BA7 are complete.                                |
 | 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | done               | BA3                  | BA8, BA12                           | Documented the promoted zero-HP lifecycle boundary and fed BA12 explicit old-only lifecycle width rows without widening durable character state.                                                     | Completed; BA8 remains blocked until BA6 also completes, and BA12 is unblocked.          |
 | 27    | BA8 - Choose Canonical Battle QNT Layout                         | done               | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Promoted `packages/battle-runtime/battle-runtime.qnt` as the canonical package-local QNT spec and documented root `battle.qnt` as legacy/Core proof and restore material.                           | Completed; BA9 and BA11 are unblocked.                                                    |
-| 28    | BA9 - Quarantine Legacy Core Battle MBT                          | done               | BA8                  | BA13                                | Old Core battle MBT is opt-in legacy/Core proof-source material and no longer a promoted runtime verification gate.                                                                                 | Completed; BA13 remains blocked until BA11 and BA12 complete.                             |
+| 28    | BA9 - Quarantine Legacy Core Battle MBT                          | done               | BA8                  | BA13                                | Old Core battle MBT is opt-in legacy/Core proof-source material and no longer a promoted runtime verification gate.                                                                                 | Completed; BA13 is done.                                                                  |
 | 29    | BA10 - Define Promoted Runtime MBT Strategy                      | done               | BA3                  | BA11                                | Selected the promoted MBT strategy in `plans/promoted-battle-runtime-mbt-strategy.md`: shared algebra MBT stays modular, catalog width defaults to table-driven contract tests, and integrated MBT is selective. | Completed; BA11 is unblocked because BA8 and BA10 are complete.                          |
-| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | done               | BA8, BA10            | BA13                                | Added the selected narrow trace-driven promoted battle-runtime MBT for Fighter weapon Attack against a Skeleton Stat Block target without widening battle behavior.                                  | Completed; BA13 remains blocked until BA12 completes.                                    |
-| 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | done               | BA3, BA7             | BA13                                | Converted old-only features into the ordered post-BA queue: PBA0-PBA4 archive/protocol batch, PBA5-PBA14 feature-parity restoration, then PBA15 broader widening planning.                         | Completed; BA13 is unblocked.                                                            |
-| 32    | BA13 - Close Battle Authority Reconciliation                     | ready-for-research | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and the ordered post-BA backlog is synchronized.                                                                         | Ready; BA12 supplied the post-BA queue.                                                   |
-| 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | blocked            | BA13                 | PBA1                                | Archive the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                               | Blocked until BA closes.                                                                  |
+| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | done               | BA8, BA10            | BA13                                | Added the selected narrow trace-driven promoted battle-runtime MBT for Fighter weapon Attack against a Skeleton Stat Block target without widening battle behavior.                                  | Completed; BA13 is done.                                                                  |
+| 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | done               | BA3, BA7             | BA13                                | Converted old-only features into the ordered post-BA queue: PBA0-PBA4 archive/protocol batch, PBA5-PBA14 feature-parity restoration, then PBA15 broader widening planning.                         | Completed; BA13 is done.                                                                  |
+| 32    | BA13 - Close Battle Authority Reconciliation                     | done               | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and the ordered post-BA backlog is synchronized.                                                                         | Completed; PBA0 is unblocked.                                                            |
+| 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | ready-for-research | BA13                 | PBA1                                | Archive the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                               | Ready; BA13 closed the Battle Authority Reconciliation batch.                             |
 | 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | blocked            | PBA0                 | PBA2                                | Make the reducer architecture rule explicit: reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                  | Blocked until parity/composition archive exists.                                          |
 | 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | blocked            | PBA1                 | PBA3                                | Search battle-runtime and MCP composition for named-ability or slug-shaped reducer drift and classify each case as support gate, extraction, or future procedure-family widening.                   | Blocked until reducer discipline is documented.                                           |
 | 36    | PBA3 - Correct First Reducer Extensibility Drift                 | blocked            | PBA2                 | PBA4                                | If PBA2 finds real drift, make the smallest correction that moves named ability logic toward data/readers/procedure families; otherwise close as a no-op with evidence.                              | Blocked until audit identifies whether correction is needed.                              |
@@ -1618,7 +1618,7 @@ Plan Impact:
 - Observations: old-only behavior remains ledgered or BA1 classification scope;
   old Core MBT is proof/reference material, not a competing promoted behavior
   owner.
-- Required plan edits: none.
+- Required further plan edits: none.
 
 ### Task 20 - BA1 - Inventory Old Battle Authority Surface
 
@@ -2381,13 +2381,13 @@ BA12 source-only planning check:
 
 ### Task 32 - BA13 - Close Battle Authority Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: BA8, BA9, BA11, BA12
 Blocks: PBA0
 
-Next action: perform the final authority closeout and verify the post-BA queue
-is still synchronized.
+Next action: completed. The final authority closeout verified the post-BA queue
+is synchronized and made PBA0 the next ready Ralph task.
 
 Planner role:
 
@@ -2438,13 +2438,47 @@ Verification:
 
 Plan Impact:
 
-- If successful, Battle Authority Reconciliation is complete. Future old-only
-  behavior proceeds through the appended post-BA ACTIVE_PLAN queue. The next
-  ready post-BA task becomes the Ralph loop entrypoint.
+- Status: applied.
+- PBA0: unblocked as the next Ralph loop entrypoint for the post-BA
+  architecture watcher/corrector batch.
+- PBA1-PBA4: left blocked in order behind PBA0-PBA3 so archive/protocol/audit
+  work stays ahead of feature-parity restoration.
+- PBA5-PBA15: left blocked behind the explicit PBA4/PBA14 gates.
+- Observations: Battle Authority Reconciliation is complete. The active
+  promoted battle authority is `@dnd/battle-runtime` plus
+  `packages/battle-runtime/battle-runtime.qnt`; old root `battle.qnt` and Core
+  battle MBT remain legacy/Core proof and restore source material. The
+  post-BA queue is present in the Ralph Task Index, DAG table, and task-detail
+  sections, with PBA0-PBA4 as the first batch.
+- Required plan edits: none.
+
+BA13 source-only closeout check:
+
+- `packages/battle-runtime/README.md`,
+  `packages/battle-runtime/ARCHITECTURE_GRAPH.md`, and
+  `packages/battle-runtime/battle-runtime.qnt` agree that package-local
+  `battle-runtime.qnt` is the canonical promoted battle spec.
+- Old Core battle MBT is documented as quarantined legacy/Core proof-source
+  material, not a promoted runtime gate.
+- The Restore Ledger in `plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`
+  retains old-only behavior not yet widened, including death-save lifecycle,
+  reactions, movement/OA, monster controls, hand/weapon/grapple state,
+  projected spell/persistent lanes, and other Core-only feature breadth.
+- Promoted-path source checks found no `@dnd/core` imports in
+  `packages/mcp/src`, `packages/character-creation-runtime`, or
+  `packages/battle-runtime`, and no `CPU*`, `PEA*`, `PPR*`, or projected
+  executable vocabulary in promoted runtime source.
+- `/simplify` round 1 checked authority wording across battle-runtime README,
+  architecture docs, QNT comments, MCP README, and the migration plan. No active
+  doc path claims root `battle.qnt` and `battle-runtime.qnt` are simultaneous
+  promoted authorities.
+- `/simplify` round 2 checked queue synchronization. PBA0-PBA4 are present in
+  the Ralph Task Index, DAG table, and task details, and only PBA0 is ready
+  after BA13.
 
 ### Task 33 - PBA0 - Archive Promoted Quint Parity And Composition Boundary
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: BA13
 Blocks: PBA1

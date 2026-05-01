@@ -459,12 +459,13 @@ Required before marking this plan complete:
 5. Typecheck passes for the runtime packages and MCP.
 6. Circular dependency check passes for new package graph.
 7. Promoted-path dependency check proves neither runtime package nor MCP tools import `@dnd/core`.
-8. Before completion, restore a single battle authority. This is now tracked by
-   the BA0-BA13 Battle Authority Reconciliation queue in
-   `plans/ACTIVE_PLAN.md`: promote `battle-runtime.qnt`, replace/retire the old
-   authority and update project documentation, or record
-   each intentional divergence from old `battle.qnt` with an SRD 5.2.1 citation
-   or ASSUMPTIONS.md entry.
+8. Completed by BA13: the single promoted battle authority is restored. New
+   promoted Unit/StatBlock-backed battle work starts from
+   `@dnd/battle-runtime` and its package-local canonical
+   `packages/battle-runtime/battle-runtime.qnt` spec. Old root `battle.qnt` and
+   Core battle MBT are legacy/Core proof and restore source material, not active
+   promoted runtime gates. Old-only behavior remains captured in the Restore
+   Ledger and proceeds through the post-BA queue in `plans/ACTIVE_PLAN.md`.
 9. Command-level verification is added once packages exist, using `pnpm` only. Battle MBT must follow the repo MBT run protocol, including zombie evaluator checks before the run. Typecheck scope must include MCP and the new runtime packages.
 10. Documentation stays synchronized with code changes. Tasks that change reducer behavior, shared algebras, action resources, hole/fill semantics, Surface record boundaries, or runtime package architecture must update the docs owned by the changed package in the same change. Battle runtime changes update `packages/battle-runtime/README.md` and `packages/battle-runtime/ARCHITECTURE_GRAPH.md`; character-creation changes update `packages/character-creation-runtime/README.md` and package vocabulary; shared algebra changes update `packages/shared-algebras` docs or package-local MBT docs. `packages/surface-runtime-correction/*` docs are legacy source material unless the task intentionally edits that package.
 11. `/simplify` convergence: minimum two rounds after implementation, continuing until no important fixes remain.
