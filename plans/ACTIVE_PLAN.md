@@ -47,6 +47,7 @@ Primary planning documents:
 - [phase0-runtime-boundary-api.md](/workspace/typescript/dnd/plans/phase0-runtime-boundary-api.md)
 - [phase0-core-deletion-restore-audit.md](/workspace/typescript/dnd/plans/phase0-core-deletion-restore-audit.md)
 - [CORRECTION_APPLICATION_VOCABULARY.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_VOCABULARY.md)
+- [promoted-quint-parity-composition-archive.md](/workspace/typescript/dnd/plans/promoted-quint-parity-composition-archive.md)
 
 Previous active queue status: the Executable Projection Tracer Bullet and Content-Surface Taxonomy Convergence queue is deferred by owner direction on 2026-04-29. Its in-progress/ready/blocked work was superseded by the Correction Application Migration. Preserve old domain knowledge through the Restore Ledger in [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md), not by continuing projected-executable tasks.
 
@@ -267,13 +268,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 33,
       "id": "PBA0",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Archive Promoted Quint Parity And Composition Boundary"
     },
     {
       "number": 34,
       "id": "PBA1",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Document Battle Reducer Extensibility Discipline"
     },
     {
@@ -431,8 +432,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | done               | BA8, BA10            | BA13                                | Added the selected narrow trace-driven promoted battle-runtime MBT for Fighter weapon Attack against a Skeleton Stat Block target without widening battle behavior.                                  | Completed; BA13 is done.                                                                  |
 | 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | done               | BA3, BA7             | BA13                                | Converted old-only features into the ordered post-BA queue: PBA0-PBA4 archive/protocol batch, PBA5-PBA14 feature-parity restoration, then PBA15 broader widening planning.                         | Completed; BA13 is done.                                                                  |
 | 32    | BA13 - Close Battle Authority Reconciliation                     | done               | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and the ordered post-BA backlog is synchronized.                                                                         | Completed; PBA0 is unblocked.                                                            |
-| 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | ready-for-research | BA13                 | PBA1                                | Archive the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                               | Ready; BA13 closed the Battle Authority Reconciliation batch.                             |
-| 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | blocked            | PBA0                 | PBA2                                | Make the reducer architecture rule explicit: reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                  | Blocked until parity/composition archive exists.                                          |
+| 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | done               | BA13                 | PBA1                                | Archived the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                             | Completed; PBA1 is unblocked.                                                            |
+| 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | ready-for-research | PBA0                 | PBA2                                | Make the reducer architecture rule explicit: reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                  | Ready; PBA0 archived the parity/composition boundary.                                     |
 | 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | blocked            | PBA1                 | PBA3                                | Search battle-runtime and MCP composition for named-ability or slug-shaped reducer drift and classify each case as support gate, extraction, or future procedure-family widening.                   | Blocked until reducer discipline is documented.                                           |
 | 36    | PBA3 - Correct First Reducer Extensibility Drift                 | blocked            | PBA2                 | PBA4                                | If PBA2 finds real drift, make the smallest correction that moves named ability logic toward data/readers/procedure families; otherwise close as a no-op with evidence.                              | Blocked until audit identifies whether correction is needed.                              |
 | 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | blocked            | PBA3                 | PBA5                                | Align docs after the watcher/corrector pass, then promote the first BA12 feature-parity backlog candidate to ready work.                                                                            | Blocked until the first extensibility correction/no-op closes.                            |
@@ -2478,13 +2479,14 @@ BA13 source-only closeout check:
 
 ### Task 33 - PBA0 - Archive Promoted Quint Parity And Composition Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: BA13
 Blocks: PBA1
 
-Next action: archive the promoted proof/composition boundary before feature
-parity restoration or broad widening starts.
+Next action: completed. The promoted proof/composition boundary is archived in
+[promoted-quint-parity-composition-archive.md](/workspace/typescript/dnd/plans/promoted-quint-parity-composition-archive.md)
+before feature parity restoration or broad widening starts.
 
 Output:
 
@@ -2513,11 +2515,42 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA1.
+- Status: applied.
+- PBA1: unblocked as the next architecture watcher/corrector task.
+- PBA2-PBA4: left blocked in order behind PBA1-PBA3.
+- PBA5-PBA15: left blocked behind the explicit feature-parity and broader
+  widening gates.
+- Observations: maximum promoted parity is now layered by package boundary:
+  Surface catalog/reader contracts, shared-algebra MBT, character-creation
+  package-local QNT/MBT, battle-runtime package-local QNT plus selective
+  integrated MBT, MCP deterministic composition tests, and multiple-runtime
+  contract tests. Ordinary authored Unit/Spell/Stat Block width does not require
+  MBT per record.
+- Required follow-up plan edits: none.
+
+PBA0 source-only closeout check:
+
+- The new archive states how `@dnd/character-creation-runtime`,
+  `@dnd/battle-runtime`, `@dnd/shared-algebras`, `@dnd/surface`, and
+  `@dnd/mcp` compose without reviving old Core as active authority.
+- Remaining proof gaps are assigned to PBA1-PBA15 or to the existing
+  `battle-runtime-proof-coverage.md` owner table instead of being left as vague
+  parity debt.
+- RAW/ubiquitous-language check: no new D&D rule behavior was modeled. The
+  archive was checked against `UBIQUITOUS_LANGUAGE.md` for Initiative, action
+  lifecycle, resource, HP/death, damage, Surface/Unit, and spell ownership
+  terminology.
+- No battle MBT was run.
+- `/simplify` round 1 checked duplicated authority claims and collapsed the
+  archive around package ownership, proof layers, and follow-up owners.
+- `/simplify` round 2 checked for accidental per-authored-record MBT
+  requirements and old Core authority wording. The archive keeps old Core as
+  reference material and leaves ordinary catalog width to deterministic
+  contract tests.
 
 ### Task 34 - PBA1 - Document Battle Reducer Extensibility Discipline
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA0
 Blocks: PBA2
