@@ -4,7 +4,7 @@ import {
   startBattle,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
-  type CharacterWeaponAttackProfile,
+  type CharacterWeaponAttackActionOption,
   type BattleId,
   type BattleState,
   type CharacterId,
@@ -95,7 +95,7 @@ export function battleCreatureInitFromCharacterBuild(
       tempHp: input.tempHp ?? Hp(0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
       selectedLoadout: input.build.equipment,
-      attack: characterAttackProfile(input.build, input.unitLibrary),
+      attack: characterAttackActionOption(input.build, input.unitLibrary),
       resources: characterBattleResources(input.build, input.unitLibrary),
       ...(input.build.spellcasting === undefined
         ? {}
@@ -212,10 +212,10 @@ function armorDefenseBonus(unit: UnitRecord): ArmorClassState["bonuses"] {
   ];
 }
 
-function characterAttackProfile(
+function characterAttackActionOption(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): CharacterWeaponAttackProfile | null {
+): CharacterWeaponAttackActionOption | null {
   const selectedWeapon = build.equipment.weapon;
   if (selectedWeapon == null) {
     return null;

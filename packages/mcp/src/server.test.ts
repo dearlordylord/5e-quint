@@ -506,7 +506,7 @@ describe("MCP server route", () => {
         {
           label: "Attack",
           subject: {
-            tag: "srdAction",
+            tag: "action",
             actorId: "fighter",
             action: "attack",
             attackName: "Longsword",
@@ -533,7 +533,7 @@ describe("MCP server route", () => {
     const afterTarget = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "fighter",
           action: "attack",
           attackName: "Longsword",
@@ -551,7 +551,7 @@ describe("MCP server route", () => {
     });
     expect(afterTarget.session.transientBattleFills).toMatchObject({
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: "fighter",
         action: "attack",
         attackName: "Longsword",
@@ -570,7 +570,7 @@ describe("MCP server route", () => {
     const afterAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "fighter",
           action: "attack",
           attackName: "Longsword",
@@ -597,7 +597,7 @@ describe("MCP server route", () => {
     const afterDamage = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "fighter",
           action: "attack",
           attackName: "Longsword",
@@ -639,7 +639,7 @@ describe("MCP server route", () => {
       {
         label: "Attack",
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "goblin",
           action: "attack",
           attackName: "Scimitar",
@@ -648,7 +648,7 @@ describe("MCP server route", () => {
       {
         label: "Attack",
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "goblin",
           action: "attack",
           attackName: "Shortbow",
@@ -667,7 +667,7 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "goblin",
           action: "attack",
           attackName: "Scimitar",
@@ -682,7 +682,7 @@ describe("MCP server route", () => {
     const afterGoblinAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "goblin",
           action: "attack",
           attackName: "Scimitar",
@@ -711,7 +711,7 @@ describe("MCP server route", () => {
     const afterGoblinDamage = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "goblin",
           action: "attack",
           attackName: "Scimitar",
@@ -990,7 +990,7 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "fill_battle_hole", {
           subject: {
-            tag: "srdAction",
+            tag: "action",
             actorId: "fighter",
             action: "attack",
             attackName: "Longsword",
@@ -1012,7 +1012,7 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "resolve_battle_act", {
           subject: {
-            tag: "srdAction",
+            tag: "action",
             actorId: "fighter",
             action: "attack",
             attackName: "Longsword",
@@ -1239,7 +1239,7 @@ describe("MCP server route", () => {
       {
         label: "Attack",
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "fighter",
           action: "attack",
           attackName: "Longsword",
@@ -1304,7 +1304,7 @@ describe("MCP server route", () => {
       {
         label: "Attack",
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "goblin",
           action: "attack",
           attackName: "Scimitar",
@@ -1319,7 +1319,7 @@ describe("MCP server route", () => {
       {
         label: "Attack",
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: "goblin",
           action: "attack",
           attackName: "Shortbow",
@@ -1585,7 +1585,7 @@ describe("MCP server route", () => {
     });
   });
 
-  test("keeps spell slots but suppresses Magic-action spell acts when armor training blocks casting", () => {
+  test("keeps spell slots but suppresses action-time spell acts when armor training blocks casting", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const state = startBattleFromCharacterBuildAndStatBlock({
@@ -1629,7 +1629,7 @@ describe("MCP server route", () => {
     expect(
       discoverBattleActs(state).map((act) => act.subject),
     ).not.toContainEqual(
-      expect.objectContaining({ tag: "srdAction", action: "magic" }),
+      expect.objectContaining({ tag: "actionSpell" }),
     );
   });
 
@@ -1676,7 +1676,7 @@ describe("MCP server route", () => {
       canCastSpells: true,
     });
     expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual(
-      expect.objectContaining({ tag: "srdAction", action: "magic" }),
+      expect.objectContaining({ tag: "actionSpell" }),
     );
   });
 
@@ -2062,7 +2062,7 @@ function fillBattleHoleThroughTool(
   return readPayload(
     handleToolCall(root, "fill_battle_hole", {
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId,
         action: "attack",
         attackName,

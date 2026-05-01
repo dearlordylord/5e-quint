@@ -150,7 +150,7 @@ Battle runtime uses replay-from-root over a chosen subject and accumulated fille
 Phase 1 battle subjects:
 
 - runtime battle act `attack`, exposing the SRD Attack action;
-- runtime/modeling battle act `endTurn` per ASSUMPTIONS.md A2, not an SRD Action.
+- runtime/modeling battle act `endTurn` per ASSUMPTIONS.md A2, not a rules Action.
 
 Phase 1 battle holes:
 
@@ -187,7 +187,7 @@ completed weapon hits sum rolled damage dice plus the attack ability modifier,
 apply Temporary HP before HP, clamp HP at 0, and branch through the combatant's
 typed zero-HP lifecycle. CAM18 widens that same Attack replay protocol to the
 Goblin Warrior's authored Stat Block attacks. The runtime must derive supported
-Goblin attack profiles from `StatBlockRecord` without introducing a second
+Goblin Attack action options from `StatBlockRecord` without introducing a second
 executable Stat Block IR; unsupported authored riders, such as conditional
 bonus damage that depends on Advantage, remain absent or rejected by a named
 support gate until widened. Death policy follows ASSUMPTIONS.md A12 for

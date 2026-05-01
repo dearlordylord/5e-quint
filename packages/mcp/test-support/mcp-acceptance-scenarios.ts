@@ -118,7 +118,7 @@ const agentConversationScenarios = [
     name: "Cast cantrips and slotted spells",
     userSays: "Cast Ray of Frost, then Magic Missile.",
     agentReads:
-      "discover_battle_acts returns Magic-action subjects for wizard spells. Ray of Frost uses targetChoice and attackRoll; Magic Missile uses targetChoice and rolledDice.",
+      "discover_battle_acts returns action-time spell subjects for wizard spells. Ray of Frost uses targetChoice and attackRoll; Magic Missile uses targetChoice and rolledDice.",
     agentDecision:
       "It resolves Ray of Frost and verifies spellSlots remain unspent, then resolves Magic Missile and verifies one level-1 slot is expended.",
     executableCoverage: "verifyWidthVertical",
@@ -926,7 +926,7 @@ function attackSubject(actorId: string, attackName: string) {
 }
 
 function magicSubject(actorId: string, spellId: string) {
-  return { tag: "action", actorId, action: "magic", spellId };
+  return { tag: "actionSpell", actorId, spellId };
 }
 
 function targetFill(value: string) {

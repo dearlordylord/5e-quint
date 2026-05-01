@@ -634,9 +634,15 @@ Subjects:
 ```ts
 export type BattleSubject =
   | {
-      readonly tag: "srdAction";
+      readonly tag: "action";
       readonly actorId: CombatantId;
       readonly action: "attack";
+    }
+  | {
+      readonly tag: "actionSpell";
+      readonly actorId: CombatantId;
+      readonly spellId: string;
+      readonly spellActId?: string;
     }
   | {
       readonly tag: "runtimeCommand";
@@ -645,14 +651,16 @@ export type BattleSubject =
     };
 ```
 
-Phase 1 subjects are only `srdAction.attack` and `runtimeCommand.endTurn`.
-`endTurn` is a runtime command, not an SRD Action. CAM18 widens
-`srdAction.attack` so the current actor may be either the finalized Fighter or
-the Goblin Warrior when a supported attack profile can be derived from that
+Phase 1 subjects are only `action.attack` and `runtimeCommand.endTurn`.
+`endTurn` is a runtime command, not an Action. CAM18 widens
+`action.attack` so the current actor may be either the finalized Fighter or
+the Goblin Warrior when a supported Attack action option can be derived from that
 actor's origin. Do not introduce a separate `monsterStatBlockAction` subject for
-Goblin attacks; the SRD action is still Attack. If multiple supported attack
-profiles are available for one actor, the subject or first replay hole must
+Goblin attacks; the rules action is still Attack. If multiple supported attack
+Attack action options are available for one actor, the subject or first replay hole must
 carry the selected attack identity so Scimitar and Shortbow cannot be confused.
+POST4 adds `actionSpell` for action-time spells that consume the Magic action;
+Bonus Action and Reaction spell subjects must be separate future variants.
 Stat Block creature-init ownership is visible through
 `StatBlockBattleCreatureInit` and `StatBlockCatalog`; unsupported authored
 Stat Block actions must not appear in discovery.
@@ -662,7 +670,7 @@ from `@dnd/shared-algebras/runtime-hole-algebra`, but the battle public
 hole/fill union must stay as narrow as the implemented battle protocol. The
 phase-1 protocol exposes only Attack target, Attack Roll, and damage roll
 holes/fills for supported character weapon and Goblin Warrior Stat Block attack
-profiles. End Turn is a runtime command and must not accept fills. Later tasks
+options. End Turn is a runtime command and must not accept fills. Later tasks
 should add only battle-owned variants that are actually discoverable and
 resolvable. Do not expose Correction's Surface/Unit/effect execution holes
 through `@dnd/battle-runtime`.
@@ -691,7 +699,7 @@ export type BattleInvalidReasonCode =
   | "missingCombatant"
   | "invalidFill"
   | "unsupportedSubject"
-  | "unsupportedActProfile";
+  | "unsupportedActOption";
 
 export type BattleResolutionResult =
   | {
@@ -922,7 +930,7 @@ Slice authority statement:
 
 4. Should battle `monsterStatBlockAction` be in the public subject union before monster action resolution is implemented?
    - Answer after CAM18 planning: no separate `monsterStatBlockAction`. Goblin
-     Warrior uses the same `srdAction.attack` subject once Stat Block attack
+     Warrior uses the same `action.attack` subject once Stat Block attack
      discovery/resolution is implemented.
 
 5. Should MCP keep transient battle fills in memory only, or persist them alongside sessions?

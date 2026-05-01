@@ -670,7 +670,7 @@ Output:
 Acceptance:
 
 - Goblin Warrior current actor discovers `Attack` only when a supported authored
-  Stat Block attack profile exists.
+  Stat Block Attack action option exists.
 - Scimitar and Shortbow cannot be confused; selected attack identity is carried
   by subject or an explicit replay choice.
 - Attack bonus, damage expression/type, target legality, and supported attack

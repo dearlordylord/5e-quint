@@ -182,7 +182,7 @@ describe("end-user promoted MCP vertical", () => {
 
     callTool(root, "fill_battle_hole", {
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: "fighter",
         action: "attack",
         attackName: "Longsword",
@@ -195,7 +195,7 @@ describe("end-user promoted MCP vertical", () => {
     });
     callTool(root, "fill_battle_hole", {
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: "fighter",
         action: "attack",
         attackName: "Longsword",
@@ -208,7 +208,7 @@ describe("end-user promoted MCP vertical", () => {
     });
     const fighterDamage = callTool(root, "fill_battle_hole", {
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: "fighter",
         action: "attack",
         attackName: "Longsword",
@@ -238,7 +238,7 @@ describe("end-user promoted MCP vertical", () => {
 
     callTool(root, "fill_battle_hole", {
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: "goblin",
         action: "attack",
         attackName: "Scimitar",
@@ -251,7 +251,7 @@ describe("end-user promoted MCP vertical", () => {
     });
     callTool(root, "fill_battle_hole", {
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: "goblin",
         action: "attack",
         attackName: "Scimitar",
@@ -264,7 +264,7 @@ describe("end-user promoted MCP vertical", () => {
     });
     const goblinDamage = callTool(root, "fill_battle_hole", {
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: "goblin",
         action: "attack",
         attackName: "Scimitar",
@@ -834,11 +834,11 @@ function createAndFinalizeWizardOne(
 }
 
 function attackSubject(actorId: string, attackName: string) {
-  return { tag: "srdAction", actorId, action: "attack", attackName };
+  return { tag: "action", actorId, action: "attack", attackName };
 }
 
 function magicSubject(actorId: string, spellId: string) {
-  return { tag: "srdAction", actorId, action: "magic", spellId };
+  return { tag: "actionSpell", actorId, spellId };
 }
 
 function fillBattleSubject(

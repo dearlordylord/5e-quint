@@ -6,7 +6,7 @@ module battleRuntimeSlice {
   //   by Initiative order, and the Initiative order remains fixed round to round.
   // - Playing-the-Game.md lines 501-513: a turn can include one action, and
   //   doing nothing is a legal turn choice. ASSUMPTIONS.md A2 records the repo
-  //   modeling choice that End Turn is a runtime transition, not an SRD Action.
+  //   modeling choice that End Turn is a runtime transition, not a rules Action.
   // - Playing-the-Game.md lines 582-589 and 700-703: an Attack chooses a
   //   target, resolves an attack roll, rolls damage on a hit, and rolls the
   //   attack's damage dice twice on a Critical Hit.

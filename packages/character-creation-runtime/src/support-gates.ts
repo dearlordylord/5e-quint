@@ -291,7 +291,7 @@ function isSupportedDraftChoicePath(
 }
 
 // Current support-slice filter, not RAW legality. This is the character
-// creation equivalent of battle-runtime's supportedAttackProfile: legal
+// creation equivalent of battle-runtime's Attack action option support gate: legal
 // SRD-legal catalog choices may be discoverable, but finalization only accepts the
 // subset this reducer can currently project and execute. This should shrink as
 // character creation support widens beyond the current profile.

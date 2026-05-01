@@ -130,7 +130,7 @@ export type CharacterBattleLoadoutRef = {
   };
 };
 
-export type CharacterWeaponAttackProfile = {
+export type CharacterWeaponAttackActionOption = {
   readonly kind: "weapon";
   readonly weapon: WeaponRecord;
   readonly ability: Ability;
@@ -225,7 +225,7 @@ type SupportedCreatureNamedAttackRoll = Omit<
         readonly rangeFeet: { readonly normal: number; readonly long: number };
       }
   );
-export type StatBlockAuthoredAttack = {
+export type StatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
   readonly attack: SupportedCreatureNamedAttackRoll;
 };
@@ -253,9 +253,13 @@ type AttackTargetConstraint =
       readonly kind: "rangedRange";
       readonly normalFeet: number;
     };
-export type BattleAttackProfile =
-  | CharacterWeaponAttackProfile
-  | StatBlockAuthoredAttack;
+// SupportedAttackActionOption is a currently executable option for spending an
+// immediate attack made as part of the Attack action. It is narrower than all
+// RAW attacks: spell attacks, Opportunity Attacks, Bonus Action attacks, and
+// Reaction attacks live in their own timing/resource lanes.
+export type SupportedAttackActionOption =
+  | CharacterWeaponAttackActionOption
+  | StatBlockAttackActionOption;
 export type SupportedSpellAct =
   | {
       readonly kind: "preparedSlotSpell";
@@ -295,7 +299,7 @@ export type CharacterBattleCreatureInit = {
   readonly tempHp: Hp;
   readonly zeroHpLifecyclePolicy: "usesDeathSavingThrows";
   readonly selectedLoadout: CharacterBattleLoadoutRef;
-  readonly attack: CharacterWeaponAttackProfile | null;
+  readonly attack: CharacterWeaponAttackActionOption | null;
   readonly resources?: readonly CharacterBattleResourceInit[];
   readonly spellcasting?: CharacterBattleSpellcastingInit;
 };
@@ -378,7 +382,7 @@ export type BattleCreatureState = {
         readonly characterId: CharacterId;
         readonly characterUnitRefs: readonly BattleUnitRef[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
-        readonly attack: CharacterWeaponAttackProfile | null;
+        readonly attack: CharacterWeaponAttackActionOption | null;
         readonly resources: readonly CharacterBattleResourceState[];
         readonly spellcasting?: CharacterBattleSpellcastingState;
       }
@@ -399,25 +403,27 @@ export type BattleState = {
   readonly currentTurnResources: BattleTurnResources;
 };
 
-export const BATTLE_SRD_ACTIONS = ["attack", "magic"] as const;
-export type BattleSrdAction = (typeof BATTLE_SRD_ACTIONS)[number];
+export const BATTLE_SUBJECT_ACTIONS = ["attack"] as const;
+export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
 export const BATTLE_RUNTIME_COMMANDS = ["endTurn"] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
 
 const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
 
+// BattleSubject is a replay key returned by discoverBattleActs and copied back
+// by callers. It identifies one discovered runtime act; it is not Surface
+// authored content, provenance, or a complete taxonomy of D&D actions.
 export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
-    tag: Schema.Literal("srdAction"),
+    tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("attack"),
     attackName: BattleSubjectTextSchema,
   }),
   Schema.Struct({
-    tag: Schema.Literal("srdAction"),
+    tag: Schema.Literal("actionSpell"),
     actorId: CombatantId,
-    action: Schema.Literal("magic"),
     spellId: BattleSubjectTextSchema,
     spellActId: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
   }),
@@ -443,7 +449,7 @@ export function sameBattleSubject(
 
 function battleSubjectKey(subject: BattleSubject): string {
   return Match.value(subject).pipe(
-    Match.when({ tag: "srdAction", action: "attack" }, (attack) =>
+    Match.when({ tag: "action", action: "attack" }, (attack) =>
       JSON.stringify([
         attack.tag,
         attack.actorId,
@@ -451,12 +457,11 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.attackName,
       ]),
     ),
-    Match.when({ tag: "srdAction", action: "magic" }, (magic) =>
+    Match.when({ tag: "actionSpell" }, (spell) =>
       JSON.stringify([
-        magic.tag,
-        magic.actorId,
-        magic.action,
-        magic.spellActId ?? magic.spellId,
+        spell.tag,
+        spell.actorId,
+        spell.spellActId ?? spell.spellId,
       ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>
@@ -488,7 +493,7 @@ export type BattleAttackRollHole = Extract<
   RuntimeHole,
   { readonly kind: "attackRoll" }
 > & {
-  readonly attack: BattleAttackProfile;
+  readonly attack: SupportedAttackActionOption;
   readonly attackBonus: number;
 };
 export type BattleSpellAttackRollHole = Extract<
@@ -502,7 +507,7 @@ export type BattleDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly attack: BattleAttackProfile;
+  readonly attack: SupportedAttackActionOption;
   readonly critical: boolean;
 };
 export type BattleSpellDamageRollHole = Extract<
@@ -532,7 +537,7 @@ const BattleRuntimeObjectSchema = Schema.Record({
   key: Schema.String,
   value: Schema.Any,
 });
-const BattleAttackProfileSchema = Schema.Union(
+const SupportedAttackActionOptionSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("weapon"),
     weapon: BattleRuntimeObjectSchema,
@@ -583,7 +588,7 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackRoll"),
-    attack: BattleAttackProfileSchema,
+    attack: SupportedAttackActionOptionSchema,
     attackBonus: Schema.Number,
   }),
   Schema.Struct({
@@ -595,7 +600,7 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    attack: BattleAttackProfileSchema,
+    attack: SupportedAttackActionOptionSchema,
     critical: Schema.Boolean,
   }),
   Schema.Struct({
@@ -667,7 +672,7 @@ export const BATTLE_INVALID_REASON_CODES = [
   "missingCombatant",
   "invalidFill",
   "unsupportedSubject",
-  "unsupportedActProfile",
+  "unsupportedActOption",
 ] as const;
 export type BattleInvalidReasonCode =
   (typeof BATTLE_INVALID_REASON_CODES)[number];
@@ -795,29 +800,29 @@ export function discoverBattleActs(
   }
 
   const acts: AvailableBattleAct[] = [];
-  const supportedAttacks = supportedAttackProfiles(state, actorId);
+  const attackActionOptions = attackActionOptionsForActor(state, actorId);
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "attack") &&
-    supportedAttacks.some(
+    attackActionOptions.some(
       (attack) => attackTargetChoices(state, actorId, attack).length > 0,
     )
   ) {
     acts.push(
-      ...supportedAttacks.flatMap((attack) => {
+      ...attackActionOptions.flatMap((attack) => {
         const targetHole = attackTargetHole(state, actorId, attack);
         return targetHole.choices.length === 0
           ? []
           : [
               {
                 subject: {
-                  tag: "srdAction" as const,
+                  tag: "action" as const,
                   actorId,
                   action: "attack" as const,
-                  attackName: attackProfileName(attack),
+                  attackName: attackActionOptionName(attack),
                 },
                 label: "Attack",
-                summary: `Take the Attack action with ${attackProfileName(attack)}.`,
+                summary: `Take the Attack action with ${attackActionOptionName(attack)}.`,
                 initialHoles: [targetHole],
               },
             ];
@@ -862,7 +867,7 @@ export function resolveBattleSubject(
   }
 
   if (
-    input.subject.tag === "srdAction" &&
+    input.subject.tag === "action" &&
     input.subject.action === "attack" &&
     !combatantCanTakeActions(input.state.combatants.get(actorId))
   ) {
@@ -874,7 +879,7 @@ export function resolveBattleSubject(
   }
 
   if (
-    input.subject.tag === "srdAction" &&
+    input.subject.tag === "action" &&
     input.subject.action === "attack" &&
     !canSpendAction(input.state.currentTurnResources, "attack")
   ) {
@@ -885,8 +890,7 @@ export function resolveBattleSubject(
     );
   }
   if (
-    input.subject.tag === "srdAction" &&
-    input.subject.action === "magic" &&
+    input.subject.tag === "actionSpell" &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
       !canSpendAction(input.state.currentTurnResources, "magic"))
   ) {
@@ -909,12 +913,10 @@ export function resolveBattleSubject(
   }
 
   return Match.value(input.subject).pipe(
-    Match.when({ tag: "srdAction", action: "attack" }, () =>
+    Match.when({ tag: "action", action: "attack" }, () =>
       resolveAttack(input),
     ),
-    Match.when({ tag: "srdAction", action: "magic" }, () =>
-      resolveSpellAct(input),
-    ),
+    Match.when({ tag: "actionSpell" }, () => resolveSpellAct(input)),
     Match.when({ tag: "unitFeature" }, () => resolveUnitFeature(input)),
     Match.when({ tag: "runtimeCommand", command: "endTurn" }, () =>
       resolveEndTurnCommand(input),
@@ -1366,21 +1368,21 @@ export function scoreModifier(score: number): number {
 }
 
 function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
-  if (input.subject.tag !== "srdAction" || input.subject.action !== "attack") {
+  if (input.subject.tag !== "action" || input.subject.action !== "attack") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      "Attack resolution requires an SRD Attack subject.",
+      "Attack resolution requires an Attack action subject.",
     );
   }
   const subject = input.subject;
 
-  const attack = supportedAttackProfile(input.state, subject);
+  const attack = attackActionOptionForSubject(input.state, subject);
   if (attack == null) {
     return invalidResult(
       input.state,
-      "unsupportedActProfile",
-      "Attack resolution requires a supported attack profile.",
+      "unsupportedActOption",
+      "Attack resolution requires a supported Attack action option.",
     );
   }
 
@@ -1543,7 +1545,7 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
 
 function validateAttackDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll: AttackRollResult,
 ): string | null {
@@ -1563,7 +1565,7 @@ function validateAttackDamageFill(
 
 function validateRolledDiceForWeaponAttack(
   groups: ReadonlyArray<RolledDiceGroup>,
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll: AttackRollResult,
 ): string | null {
@@ -1833,9 +1835,8 @@ function discoverSupportedSpellActs(
       : [
           {
             subject: {
-              tag: "srdAction" as const,
+              tag: "actionSpell" as const,
               actorId,
-              action: "magic" as const,
               spellId: invocation.spell.id,
               spellActId: supportedSpellActId(invocation),
             },
@@ -1851,11 +1852,11 @@ function discoverSupportedSpellActs(
 }
 
 function resolveSpellAct(input: BattleResolutionInput): BattleResolutionResult {
-  if (input.subject.tag !== "srdAction" || input.subject.action !== "magic") {
+  if (input.subject.tag !== "actionSpell") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      "Magic-action spell act resolution requires a Magic action subject.",
+      "Action-time spell act resolution requires an actionSpell subject.",
     );
   }
   const subject = input.subject;
@@ -1871,15 +1872,15 @@ function resolveSpellAct(input: BattleResolutionInput): BattleResolutionResult {
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
       input.state,
-      "unsupportedActProfile",
-      "Magic-action spell act requires a supported prepared spell or cantrip.",
+      "unsupportedActOption",
+      "Action-time spell act requires a supported prepared spell or cantrip.",
     );
   }
   if (!spellHasAvailableSpend(actor, invocation)) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Magic-action spell act no longer has its required runtime spell resource.",
+      "Action-time spell act no longer has its required runtime spell resource.",
     );
   }
 
@@ -2024,7 +2025,7 @@ function spendMagicAction(
 function applyAttackDamage(
   state: BattleState,
   targetId: CombatantId,
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
 ): BattleState {
   if (fillSet.damageRoll == null) {
@@ -2184,7 +2185,7 @@ function zeroHpLifecycleIsTerminal(combatant: BattleCreatureState): boolean {
 
 function attackDamageAmount(
   target: BattleCreatureState,
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   critical: boolean,
   attackRoll?: AttackRollResult,
@@ -2496,7 +2497,7 @@ function validateSpellDamageFill(
   if (fill.holeId !== spellDamageHole(invocation, critical).holeId) {
     return critical
       ? "Critical hit spell damage must use the critical spell damage hole."
-      : "Spell damage must use the selected Magic-action spell act damage hole.";
+      : "Spell damage must use the selected action-time spell act damage hole.";
   }
   const validation = validateRolledDiceForDiceExpr(fill.value, {
     dice:
@@ -2654,7 +2655,7 @@ function needsHolesResult(
 function attackTargetHole(
   state: BattleState,
   actorId: CombatantId,
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
@@ -2668,7 +2669,7 @@ function attackTargetHole(
 function attackTargetChoices(
   state: BattleState,
   actorId: CombatantId,
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
 ): readonly CombatantId[] {
   return [...state.combatants.keys()].filter(
     (id) => id !== actorId && attackTargetIsLegal(state, actorId, id, attack),
@@ -2679,7 +2680,7 @@ function attackTargetIsLegal(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
 ): boolean {
   const distanceFeet = combatantDistanceFeet(state, actorId, targetId);
   if (distanceFeet == null) {
@@ -2707,8 +2708,8 @@ function combatantDistanceFeet(
   return state.combatantDistances.get(actorId)?.get(targetId);
 }
 
-function attackRollHole(attack: BattleAttackProfile): BattleAttackRollHole {
-  const name = attackProfileName(attack);
+function attackRollHole(attack: SupportedAttackActionOption): BattleAttackRollHole {
+  const name = attackActionOptionName(attack);
   return {
     kind: "attackRoll",
     holeId: ATTACK_ROLL_HOLE_ID,
@@ -2720,12 +2721,12 @@ function attackRollHole(attack: BattleAttackProfile): BattleAttackRollHole {
 }
 
 function attackDamageHole(
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(attack, critical, attackRoll);
-  const name = attackProfileName(attack);
+  const name = attackActionOptionName(attack);
   return {
     kind: "rolledDice",
     holeId: attackDamageHoleId(attack, critical, attackRoll),
@@ -2739,7 +2740,7 @@ function attackDamageHole(
 }
 
 function attackDamageHoleId(
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
 ): BattleHoleId {
@@ -2752,22 +2753,22 @@ function attackDamageHoleId(
   );
 }
 
-function supportedAttackProfile(
+function attackActionOptionForSubject(
   state: BattleState,
   subject: Extract<
     BattleSubject,
-    { readonly tag: "srdAction"; readonly action: "attack" }
+    { readonly tag: "action"; readonly action: "attack" }
   >,
-): BattleAttackProfile | undefined {
-  return supportedAttackProfiles(state, subject.actorId).find(
-    (attack) => attackProfileName(attack) === subject.attackName,
+): SupportedAttackActionOption | undefined {
+  return attackActionOptionsForActor(state, subject.actorId).find(
+    (attack) => attackActionOptionName(attack) === subject.attackName,
   );
 }
 
-function supportedAttackProfiles(
+function attackActionOptionsForActor(
   state: BattleState,
   actorId: CombatantId,
-): readonly BattleAttackProfile[] {
+): readonly SupportedAttackActionOption[] {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind === "character") {
     return actor.origin.attack == null ? [] : [actor.origin.attack];
@@ -2776,8 +2777,8 @@ function supportedAttackProfiles(
   if (actor?.origin.kind === "statBlock") {
     return (
       actor.origin.statBlock.statBlock.actions?.attacks?.flatMap((attack) => {
-        const profile = supportedStatBlockAttackProfile(attack);
-        return profile == null ? [] : [profile];
+        const option = supportedStatBlockAttackActionOption(attack);
+        return option == null ? [] : [option];
       }) ?? []
     );
   }
@@ -2785,9 +2786,9 @@ function supportedAttackProfiles(
   return [];
 }
 
-function supportedStatBlockAttackProfile(
+function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
-): StatBlockAuthoredAttack | null {
+): StatBlockAttackActionOption | null {
   if (!isSupportedCreatureNamedAttackRoll(attack)) {
     return null;
   }
@@ -2904,30 +2905,30 @@ function supportedStatBlockAttackTargetConstraint(
 }
 
 function statBlockAttackDamage(
-  attack: StatBlockAuthoredAttack,
+  attack: StatBlockAttackActionOption,
 ): StatBlockAttackDamage {
   return supportedStatBlockAttackDamage(attack.attack);
 }
 
 function statBlockAttackTargetConstraint(
-  attack: StatBlockAuthoredAttack,
+  attack: StatBlockAttackActionOption,
 ): AttackTargetConstraint {
   return supportedStatBlockAttackTargetConstraint(attack.attack);
 }
 
-function statBlockAttackBonus(attack: StatBlockAuthoredAttack): number {
+function statBlockAttackBonus(attack: StatBlockAttackActionOption): number {
   return attack.attack.attackBonus.value;
 }
 
 function attackTargetConstraint(
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
 ): AttackTargetConstraint {
   return Match.value(attack).pipe(
-    Match.when({ kind: "statBlockAttack" }, (profile) =>
-      statBlockAttackTargetConstraint(profile),
+    Match.when({ kind: "statBlockAttack" }, (option) =>
+      statBlockAttackTargetConstraint(option),
     ),
-    Match.when({ kind: "weapon" }, (profile) =>
-      weaponTargetConstraint(profile.weapon),
+    Match.when({ kind: "weapon" }, (option) =>
+      weaponTargetConstraint(option.weapon),
     ),
     Match.exhaustive,
   );
@@ -2966,7 +2967,7 @@ function selectedWeaponDamage(weapon: WeaponRecord): BattleWeaponDamage {
   return weapon.damage;
 }
 
-function attackProfileName(attack: BattleAttackProfile): string {
+function attackActionOptionName(attack: SupportedAttackActionOption): string {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) => weaponAttack.weapon.name),
     Match.when(
@@ -2977,7 +2978,7 @@ function attackProfileName(attack: BattleAttackProfile): string {
   );
 }
 
-function attackDamage(attack: BattleAttackProfile): {
+function attackDamage(attack: SupportedAttackActionOption): {
   readonly dice: number;
   readonly dieSize: number;
   readonly flat?: number;
@@ -3006,7 +3007,7 @@ type AttackDamageComponent = {
 };
 
 function attackDamageComponents(
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll?: AttackRollResult,
 ): readonly AttackDamageComponent[] {
@@ -3063,7 +3064,7 @@ function attackDamageComponents(
   );
 }
 
-function attackDamageModifier(attack: BattleAttackProfile): number {
+function attackDamageModifier(attack: SupportedAttackActionOption): number {
   return Match.value(attack).pipe(
     Match.when(
       { kind: "weapon" },
@@ -3078,7 +3079,7 @@ function attackDamageModifier(attack: BattleAttackProfile): number {
   );
 }
 
-function attackBonus(attack: BattleAttackProfile): number {
+function attackBonus(attack: SupportedAttackActionOption): number {
   return Match.value(attack).pipe(
     Match.when(
       { kind: "weapon" },
@@ -3092,7 +3093,7 @@ function attackBonus(attack: BattleAttackProfile): number {
 }
 
 function weaponAttackDamageExpression(
-  attack: BattleAttackProfile,
+  attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
 ): string {

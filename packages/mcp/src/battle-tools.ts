@@ -66,7 +66,7 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.discoverBattleActs,
     description:
-      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Fighter 2 Action Surge, Wizard Magic-action spell acts, and End Turn.",
+      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Fighter 2 Action Surge, Wizard action-time spell acts, and End Turn.",
     inputSchema: discoverBattleActsInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
   },

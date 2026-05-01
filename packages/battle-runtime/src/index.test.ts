@@ -288,7 +288,7 @@ describe("battle runtime", () => {
 
     expect(acts.map((act) => act.subject)).toEqual([
       {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -345,7 +345,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -381,7 +381,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -407,7 +407,7 @@ describe("battle runtime", () => {
       resolveBattleSubject({
         state,
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: fighterId,
           action: "attack",
           attackName: "Longsword",
@@ -420,7 +420,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -440,7 +440,7 @@ describe("battle runtime", () => {
       resolveBattleSubject({
         state,
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: fighterId,
           action: "attack",
           attackName: "Longsword",
@@ -453,7 +453,7 @@ describe("battle runtime", () => {
       resolveBattleSubject({
         state,
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: fighterId,
           action: "attack",
           attackName: "Longsword",
@@ -466,7 +466,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -506,7 +506,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -539,7 +539,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -564,7 +564,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -596,7 +596,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -626,7 +626,7 @@ describe("battle runtime", () => {
       resolveBattleSubject({
         state,
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: fighterId,
           action: "attack",
           attackName: "Longsword",
@@ -642,7 +642,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -668,7 +668,7 @@ describe("battle runtime", () => {
       resolveBattleSubject({
         state,
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: fighterId,
           action: "attack",
           attackName: "Longsword",
@@ -684,7 +684,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -715,7 +715,7 @@ describe("battle runtime", () => {
       resolveBattleSubject({
         state,
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: fighterId,
           action: "attack",
           attackName: "Longsword",
@@ -731,7 +731,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -766,7 +766,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -795,7 +795,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: goblinId,
         action: "attack",
         attackName: "Scimitar",
@@ -817,7 +817,7 @@ describe("battle runtime", () => {
       resolveBattleSubject({
         state,
         subject: {
-          tag: "srdAction",
+          tag: "action",
           actorId: fighterId,
           action: "attack",
           attackName: "Longsword",
@@ -833,7 +833,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -874,7 +874,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -912,7 +912,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -963,7 +963,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -1022,7 +1022,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -1078,7 +1078,7 @@ describe("battle runtime", () => {
     const result = resolveBattleSubject({
       state,
       subject: {
-        tag: "srdAction",
+        tag: "action",
         actorId: fighterId,
         action: "attack",
         attackName: "Longsword",
@@ -1231,13 +1231,13 @@ describe("battle runtime", () => {
 
     expect(acts.map((act) => act.subject)).toEqual([
       {
-        tag: "srdAction",
+        tag: "action",
         actorId: goblinId,
         action: "attack",
         attackName: "Scimitar",
       },
       {
-        tag: "srdAction",
+        tag: "action",
         actorId: goblinId,
         action: "attack",
         attackName: "Shortbow",
@@ -1693,8 +1693,7 @@ describe("battle runtime", () => {
     }
     expect(
       surged.snapshot.acts.some(
-        (act) =>
-          act.subject.tag === "srdAction" && act.subject.action === "magic",
+        (act) => act.subject.tag === "actionSpell",
       ),
     ).toBe(false);
     expect(
@@ -1739,22 +1738,20 @@ describe("battle runtime", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
-  test("Wizard Magic-action spell acts spend slots for prepared level-1 spells but not cantrips", () => {
+  test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     expect(
       discoverBattleActs(magicMissileState).map((act) => act.subject),
     ).toEqual([
       {
-        tag: "srdAction",
+        tag: "actionSpell",
         actorId: wizardId,
-        action: "magic",
         spellId: "magic_missile",
         spellActId: "preparedSlotSpell:magic_missile:slot:1",
       },
       {
-        tag: "srdAction",
+        tag: "actionSpell",
         actorId: wizardId,
-        action: "magic",
         spellId: "ray_of_frost",
         spellActId: "cantripSpellAttack:ray_of_frost",
       },
@@ -2055,7 +2052,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("endTurn rejects fills because it is a runtime command, not an SRD Action hole protocol", () => {
+  test("endTurn rejects fills because it is a runtime command, not an Action hole protocol", () => {
     const state = fighterVsGoblinBattle();
     const targetHole = attackInitialTargetHole(state);
 
@@ -2195,7 +2192,7 @@ function resolveAttackFixture(input: {
   return resolveBattleSubject({
     state,
     subject: {
-      tag: "srdAction",
+      tag: "action",
       actorId: fighterId,
       action: "attack",
       attackName: "Longsword",
@@ -2236,7 +2233,7 @@ function resolveCharacterAttackFixture(input: {
   return resolveBattleSubject({
     state,
     subject: {
-      tag: "srdAction",
+      tag: "action",
       actorId: fighterId,
       action: "attack",
       attackName: "Longsword",
@@ -2268,9 +2265,12 @@ function requireResolved(
 
 function subjectName(
   subject: BattleSubject,
-): "attack" | "magic" | "unitFeature" | "endTurn" {
-  if (subject.tag === "srdAction") {
+): "attack" | "actionSpell" | "unitFeature" | "endTurn" {
+  if (subject.tag === "action") {
     return subject.action;
+  }
+  if (subject.tag === "actionSpell") {
+    return "actionSpell";
   }
   if (subject.tag === "unitFeature") {
     return "unitFeature";
@@ -2566,9 +2566,9 @@ function goblinTurnBattle(
 
 function fighterAttackSubject(
   attackName: string = "Longsword",
-): Extract<BattleSubject, { readonly tag: "srdAction" }> {
+): Extract<BattleSubject, { readonly tag: "action" }> {
   return {
-    tag: "srdAction",
+    tag: "action",
     actorId: fighterId,
     action: "attack",
     attackName,
@@ -2577,9 +2577,9 @@ function fighterAttackSubject(
 
 function goblinAttackSubject(
   attackName: "Scimitar" | "Shortbow",
-): Extract<BattleSubject, { readonly tag: "srdAction" }> {
+): Extract<BattleSubject, { readonly tag: "action" }> {
   return {
-    tag: "srdAction",
+    tag: "action",
     actorId: goblinId,
     action: "attack",
     attackName,
@@ -2590,7 +2590,7 @@ function attackInitialTargetHole(
   state: BattleState,
   subject: Extract<
     BattleSubject,
-    { readonly tag: "srdAction" }
+    { readonly tag: "action" }
   > = fighterAttackSubject(),
 ): BattleHole {
   return requireHole(
@@ -2608,7 +2608,7 @@ function attackRollHoleAfterTarget(
   targetHole: BattleHole,
   subject: Extract<
     BattleSubject,
-    { readonly tag: "srdAction" }
+    { readonly tag: "action" }
   > = fighterAttackSubject(),
   targetId: CombatantId = targetHole.kind === "targetChoice"
     ? (targetHole.choices[0] ?? goblinId)
@@ -2641,7 +2641,7 @@ function attackDamageHoleAfterHit(
   },
   subject: Extract<
     BattleSubject,
-    { readonly tag: "srdAction" }
+    { readonly tag: "action" }
   > = fighterAttackSubject(),
   targetId: CombatantId = targetHole.kind === "targetChoice"
     ? (targetHole.choices[0] ?? goblinId)
@@ -2677,7 +2677,7 @@ function criticalAttackDamageResult(
   return resolveBattleSubject({
     state,
     subject: {
-      tag: "srdAction",
+      tag: "action",
       actorId: fighterId,
       action: "attack",
       attackName: "Longsword",
@@ -2978,9 +2978,8 @@ function magicSubject(
   spellId: "magic_missile" | "ray_of_frost",
 ): BattleSubject {
   return {
-    tag: "srdAction",
+    tag: "actionSpell",
     actorId: wizardId,
-    action: "magic",
     spellId,
   };
 }
