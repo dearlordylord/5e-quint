@@ -173,7 +173,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 20,
       "id": "BA1",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Inventory Old Battle Authority Surface"
     },
     {
@@ -294,7 +294,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 17    | POST4 - Widen Battle Runtime For First Width Slice               | done               | POST3                | POST5                               | Add battle-runtime support for the researched Fighter 2/Wizard/monster pressure through Unit, spell, and monster facts, preserving runtime parity discipline.                                       | Completed; POST5 is unblocked.                                                            |
 | 18    | POST5 - Add Widened MCP User Workflow Coverage                   | done               | POST4                | none                                | Added promoted MCP workflow coverage for the Fighter 2 + Wizard 1 versus Skeleton width slice and updated Restore Ledger status for restored rows.                                                  | Completed.                                                                                |
 | 19    | BA0 - Define Battle Authority Policy                             | done               | POST5                | BA1, BA2                            | Documented the one-authority direction: promoted Unit/StatBlock-backed battle runtime is the active semantic authority for new work; old Core battle is legacy/broad restore/proof source material. | Completed; BA1 and BA2 are unblocked.                                                     |
-| 20    | BA1 - Inventory Old Battle Authority Surface                     | ready-for-research | BA0                  | BA3                                 | Classify root `battle.qnt`, Core battle MBT, and old battle-machine feature areas into overlap, old-only widening, obsolete Core/projected artifact, or still-needed proof source material.         | Ready; BA0 fixed policy vocabulary.                                                       |
+| 20    | BA1 - Inventory Old Battle Authority Surface                     | done               | BA0                  | BA3                                 | Classified root `battle.qnt`, Core battle MBT, and old battle-machine feature areas into overlap, old-only widening, obsolete Core/projected artifact, and proof-source material.                   | Completed; BA3 remains blocked until BA2 also completes.                                  |
 | 21    | BA2 - Inventory Promoted Runtime Proof Coverage                  | ready-for-research | BA0                  | BA3                                 | Map current `@dnd/battle-runtime`, `battle-runtime-slice.qnt`, deterministic tests, shared-algebra MBT, and MCP tests to implemented behavior and proof gaps.                                       | Ready; BA0 fixed policy vocabulary.                                                       |
 | 22    | BA3 - Replan Authority Slices From Inventories                   | blocked            | BA1, BA2             | BA4, BA5, BA6, BA7, BA8, BA10, BA12 | Revise this BA task list from BA1/BA2 findings before implementation; split or merge overlap tasks if the inventories show different seams.                                                         | Blocked until both inventories are recorded.                                              |
 | 23    | BA4 - Reconcile Attack Damage HP Overlap                         | blocked            | BA3                  | BA8                                 | Resolve overlapping semantics for supported Attack target/roll/damage, criticals, Temporary HP, HP clamp, damage modifiers, and current death-at-zero consequences.                                 | Blocked until BA3 confirms exact overlap.                                                 |
@@ -1482,13 +1482,12 @@ Plan Impact:
 
 ### Task 20 - BA1 - Inventory Old Battle Authority Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: BA0
 Blocks: BA3
 
-Next action: classify old Core/root battle authority without implementing
-anything.
+Next action: BA3 consumes the old authority inventory after BA2 also completes.
 
 Input:
 
@@ -1501,8 +1500,8 @@ Input:
 
 Output:
 
-- A durable inventory table, either in this task section or a linked
-  `plans/battle-authority-inventory.md`, with columns:
+- Durable inventory table in
+  [battle-authority-inventory.md](/workspace/typescript/dnd/plans/battle-authority-inventory.md), with columns:
   old behavior area, old files/spec functions, RAW/ASSUMPTIONS anchor when
   obvious, promoted runtime status, classification, and proposed next owner.
 - Classification values:
@@ -1527,14 +1526,27 @@ Acceptance:
 
 Verification:
 
-- `rg`/source-only evidence recorded for the old files inspected.
+- `rg`/source-only evidence recorded in
+  [battle-authority-inventory.md](/workspace/typescript/dnd/plans/battle-authority-inventory.md).
 - No battle MBT runs.
-- `/simplify` convergence, minimum 2 review rounds unless the output is only a
-  generated inventory document with no plan changes beyond linking it.
+- `/simplify` convergence: two source-only review rounds recorded in
+  [battle-authority-inventory.md](/workspace/typescript/dnd/plans/battle-authority-inventory.md).
 
 Plan Impact:
 
-- BA3 must consume this inventory and may revise BA4-BA13.
+- Status: applied.
+- BA3: remains blocked until BA2 is complete; must consume this inventory and
+  may revise BA4-BA13.
+- BA4: left unchanged, but inventory recommends keeping Attack/HP overlap
+  narrow and not mixing in old reaction-window breadth.
+- BA5: left unchanged, but inventory recommends keeping action-economy overlap
+  narrow and converting old Dash/Dodge/Disengage/Ready catalog breadth through
+  BA12 unless BA3 revises the split.
+- BA12: left unchanged, but inventory feeds old-only rows for reactions,
+  movement/OA/traversal, monster controls, non-promoted class features,
+  concentration/persistent effects, hand/off-hand state, Hide/Search, Grapple,
+  bonus-action subjects, and projected-vocabulary semantics.
+- Required plan edits: none beyond this BA1 closeout.
 
 ### Task 21 - BA2 - Inventory Promoted Runtime Proof Coverage
 
