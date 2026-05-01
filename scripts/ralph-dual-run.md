@@ -95,6 +95,15 @@ Every implementer, reviewer, and decider prompt requires a `Plan Impact` section
 
 The decider owns plan reconciliation. If either implementation or review reports plan impact, the decider must update the source plan file in the same task commit or explicitly explain why no plan update was needed. The harness treats a decider report without `Plan Impact` as a fatal harness error because the loop can no longer safely continue.
 
+When a task lands by narrowing its original scope, the decider must preserve the
+excluded still-desired work as executable plan tasks. It is not enough to write
+that work "remains support-gated", "is deferred", or "belongs to a later
+family" in prose. If the work should still happen, the decider must add or
+revise concrete tasks in the Ralph Task Index, DAG table, and task-detail
+sections, with dependencies/statuses that make the remaining surface visible to
+future chooser runs. Prose may explain why the split is correct; tasks preserve
+the queue.
+
 Rejected tasks are not terminal. The decider should classify every task result with a `Task Disposition` section:
 
 - `done`
@@ -152,6 +161,19 @@ Before editing the plan, the decider must pass a new-information gate in its fin
 The harness treats attempt-numbered rejection notes or "next attempt must..." guidance in `plans/ACTIVE_PLAN.md` as a fatal decider error. Durable requirements belong in the plan. Attempt scar tissue does not.
 
 This is the key difference between a normal task rejection and a fatal harness failure. Rejection is part of the loop. Fatal harness failure is loss of a trustworthy repo or plan state.
+
+## Wrapping Up A Live Run
+
+When an operator wants to stop a long Ralph loop, let the active task reach a
+clean boundary first: accepted/committed, explicitly rejected with plan status
+updated, or clearly failed. Then stop the harness before it launches the next
+task. Do not interrupt an implementer/reviewer/decider in the middle of a normal
+handoff unless the next commit would damage the plan or repo state.
+
+If the decider is about to commit a result that narrows scope but drops
+still-desired work into prose instead of executable tasks, interrupt the run,
+repair the source plan in the launcher worktree, verify the plan/index
+consistency, and commit the corrected closeout manually.
 
 ## Usage
 

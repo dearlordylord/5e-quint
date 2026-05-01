@@ -677,6 +677,7 @@ Requirements:
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
 - Inspect both implementations and both reviews for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes, parser-error reminders, or "next attempt must..." guidance to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
+- Preserve task surface as executable tasks, not only status prose. If you accept a task by narrowing or splitting its original scope, any excluded still-desired work must be added or revised as concrete follow-up tasks in $plan_file before you commit. A note that work "remains support-gated", "is deferred", or "belongs to a later family" is not sufficient unless the corresponding Ralph Task Index, DAG table, and task-detail entries already keep that work visible and dependency-ordered.
 - Before editing $plan_file, answer a New Information Gate in the decider final:
   - What new fact was learned?
   - Why was it not already implied by the current plan text?

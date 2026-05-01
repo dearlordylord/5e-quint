@@ -405,6 +405,10 @@ The Ralph harness reads this machine-readable index for task order and status. K
 - Newly spawned tasks should make dependency order executable: prefer a blocked
   task with concrete dependencies over prose that says "later"; ensure at least
   one new task is ready when the next batch is supposed to start immediately.
+- If a task is accepted by narrowing scope, preserve any excluded still-desired
+  work as concrete follow-up tasks. A support-gate or later-family note is not
+  enough unless the Ralph Task Index, DAG table, and task-detail sections also
+  keep that work present and dependency-ordered.
 - Keep `Ralph Task Index` synchronized with task sections when changing task order, ID, title, or status.
 - Every task closeout must include `Plan Impact`:
   - `Status: none` when no future planning changes are needed;
