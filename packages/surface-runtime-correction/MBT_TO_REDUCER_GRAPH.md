@@ -27,12 +27,15 @@ Ownership rule:
 
 - move reusable algebra to `@dnd/shared-algebras`;
 - move battle lifecycle/action semantics to `@dnd/battle-runtime`
-  when they become canonical runtime behavior for the new battle path;
+  when they become promoted Unit/StatBlock-backed runtime behavior;
 - keep `@dnd/core` ownership scoped to the legacy/broad Core lane until that
   lane is deleted, rewritten, or explicitly preserved;
 - keep Surface projection glue near the Surface/correction runtime.
 
-MBT is evidence about behavior, not ownership. Passing MBT does not make a module canonical; canonical status is decided by where the repo wants that rule to live and which callers should depend on it.
+MBT is evidence about behavior, not ownership. Passing MBT does not make a
+module canonical; promoted `@dnd/battle-runtime` is the active semantic
+authority for new Unit/StatBlock-backed battle work, while old Core MBT is
+broad proof/reference material until BA reconciliation classifies it.
 
 ## Entry Points
 

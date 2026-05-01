@@ -4,9 +4,10 @@ This is a data-flow map of the `@dnd/battle-runtime` reducer. It owns the
 battle protocol for package callers: initialize combatants, discover battle
 subjects, replay caller fills, resolve state transitions, and expose snapshots.
 
-The legacy Correction graph remains useful source material for future Unit
-activation work, but this graph is the package-owned map for battle runtime
-behavior.
+The promoted `@dnd/battle-runtime` is the active semantic authority for new
+Unit/StatBlock-backed battle behavior. The legacy Correction graph, old root
+`battle.qnt`, and Core battle MBT remain useful breadth/proof source material
+until BA reconciliation classifies or restores them.
 
 ## System Graph
 
@@ -119,8 +120,9 @@ flowchart TD
   into MCP state.
 - Bonus-action availability can be represented in turn resources, but no
   bonus-action subject is exposed yet.
-- The package-local QNT slice constrains this implemented subset; `battle.qnt`
-  remains the broad combat authority until reconciliation.
+- The package-local QNT slice constrains this implemented subset. Old
+  `battle.qnt` remains broad legacy proof/reference material until
+  reconciliation, not the target for new promoted behavior.
 
 ## Relationship To Surface Runtime Correction
 
@@ -128,4 +130,5 @@ flowchart TD
 Correction reducer: Unit subjects, cantrip discovery, save-gate effects,
 healing, extra-action grants, spell-slot/use-count gates, and other Unit
 activation machinery. Those concepts are source material for future battle
-runtime growth, not current `@dnd/battle-runtime` architecture.
+runtime width/restoration, not evidence that legacy Correction or Core remains
+canonical for promoted battle behavior.

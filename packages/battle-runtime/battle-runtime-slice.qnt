@@ -32,9 +32,10 @@ module battleRuntimeSlice {
   //   Skeleton has Bludgeoning vulnerability and Poison damage immunity.
   //
   // This slice is the package-local parity reference for implemented
-  // @dnd/battle-runtime behavior. The root battle.qnt remains the broader
-  // combat authority until the package-local slice is reconciled into the
-  // canonical battle spec.
+  // @dnd/battle-runtime behavior. Old root battle.qnt remains legacy/broad
+  // proof/reference material until BA reconciliation classifies, restores,
+  // merges, or quarantines it; it is not the place to add new promoted
+  // runtime behavior.
 
   type Actor = Fighter | Goblin
 
