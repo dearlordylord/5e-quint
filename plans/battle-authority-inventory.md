@@ -70,3 +70,22 @@ No inventory row requires a rules-content decision before BA3, but BA3 should ma
 Round 1 source-only review: split broad rows where promoted runtime has a narrow overlap but old Core has additional width, especially Attack reactions, movement/OA, and zero-HP start-turn death saves.
 
 Round 2 source-only review: checked for old-only features accidentally assigned to overlap tasks. Remaining overlap rows are limited to behavior the promoted runtime already implements; old-only breadth is assigned to BA12 or proof/quarantine owners.
+
+## BA7 Zero-HP Boundary Rows For BA12
+
+BA7 keeps the promoted overlap boundary at typed zero-HP lifecycle policy:
+`diesAtZeroHp` for Stat Block combatants and `usesDeathSavingThrows` for
+Character Build combatants. The promoted runtime owns immediate HP-mutation
+consequences only: dropping to `0` HP, damage while already at `0` HP, Critical
+Hit damage while already at `0` HP, Massive Damage, and action gating caused by
+the resulting Unconscious/dead state.
+
+Rows BA12 should convert into future width tasks instead of treating as BA7
+implementation scope:
+
+| Future width row                                 | Baseline references                                                                                                                                 | RAW topics to read                                                                                                                                                                | Restore condition                                                                                                                                                                      |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Start-turn Death Saving Throw rolls              | `battle.qnt` `bStartTurn`/death-save branch; old Core start-turn tests; `packages/battle-runtime/README.md` zero-HP lifecycle omission              | `.references/srd-5.2.1/Playing-the-Game.md` "Death Saving Throws"; `UBIQUITOUS_LANGUAGE.md` "Death Saving Throw"; `ASSUMPTIONS.md` A3 timing note                                 | Battle runtime exposes a turn-start resolution path that asks for or consumes Death Saving Throw rolls without conflating them with attack damage.                                     |
+| Stable handoff and recovery                      | `battle.qnt` `pStabilize`/stable recovery helpers; old Core machine damage track; Restore Ledger post-battle adventuring-state row                  | `.references/srd-5.2.1/Playing-the-Game.md` "Stabilizing a Character"; `Rules-Glossary.md` "Stable"; `UBIQUITOUS_LANGUAGE.md` "Stable"                                            | Battle runtime and character-session state model Stable as a typed lifecycle state with explicit recovery timing, not as a condition or provenance label.                              |
+| Durable zero-HP/dead character closeout          | `plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md` Restore Ledger "Post-battle adventuring-state handoff"; MCP `end_battle` positive-HP handoff tests | `.references/srd-5.2.1/Playing-the-Game.md` "Character Demise", "Falling Unconscious", "Death Saving Throws"; `ASSUMPTIONS.md` A12                                                | Post-battle handoff can persist character-owned zero-HP, Death Saving Throw counters, Stable/dead state, and later rest/revival consequences without duplicating battle runtime state. |
+| Rest/adventuring recovery from zero-HP lifecycle | Restore Ledger post-battle adventuring-state row; old Core rest/recovery lanes                                                                      | `.references/srd-5.2.1/Rules-Glossary.md` "Short Rest" and "Long Rest"; `.references/srd-5.2.1/Playing-the-Game.md` "Healing"; `UBIQUITOUS_LANGUAGE.md` "Short Rest", "Long Rest" | Character-session/adventuring runtime owns rest recovery and HP restoration after battle closeout, while battle runtime remains the HP-mutation authority during combat.               |

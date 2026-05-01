@@ -209,7 +209,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 26,
       "id": "BA7",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Reconcile Zero HP Lifecycle Boundary"
     },
     {
@@ -239,7 +239,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 31,
       "id": "BA12",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Convert Old-Only Battle Behavior To Width Backlog"
     },
     {
@@ -300,12 +300,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 23    | BA4 - Reconcile Attack Damage HP Overlap                         | done               | BA3                  | BA8                                 | Reconciled already-promoted Attack target/roll/damage, criticals, Temporary HP, HP clamp, and supported damage modifiers; stopped at the zero-HP lifecycle handoff owned by BA7.                       | Completed; BA8 remains blocked until BA5-BA7 complete.                                   |
 | 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | done               | BA3                  | BA8                                 | Reconciled already-promoted Initiative ordering, current actor, End Turn command modeling, action-resource spend/reset, wrong-actor rejection, and current actor/action gating.                     | Completed; BA8 remains blocked until BA6 and BA7 complete.                               |
 | 25    | BA6 - Reconcile Promoted Width Overlap                           | ready-for-implementation-after-light-research | BA3                  | BA8                                 | Resolve only already-promoted Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers.                                            | Ready; broad spell, persistent-effect, and monster-control width is BA12 scope.           |
-| 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | ready-for-implementation-after-light-research | BA3                  | BA8, BA12                           | Own all zero-HP lifecycle semantics: drop to 0 HP, damage at 0 HP, critical damage at 0 HP, massive damage, and action gating; separate these from old-only recovery/adventuring behavior.          | Ready; feeds BA12 but does not implement backlog width.                                   |
+| 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | done               | BA3                  | BA8, BA12                           | Documented the promoted zero-HP lifecycle boundary and fed BA12 explicit old-only lifecycle width rows without widening durable character state.                                                     | Completed; BA8 remains blocked until BA6 also completes, and BA12 is unblocked.          |
 | 27    | BA8 - Choose Canonical Battle QNT Layout                         | blocked            | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Implement the spec ownership decision: promote/move/rename package-local QNT or explicitly retire/quarantine root `battle.qnt` as legacy reference.                                                 | Blocked until overlap slices settle current behavior.                                     |
 | 28    | BA9 - Quarantine Legacy Core Battle MBT                          | blocked            | BA8                  | BA13                                | Update test/docs ownership so old Core battle MBT is not treated as promoted verification while preserving it as reference material where useful.                                                   | Blocked until canonical QNT layout is decided.                                            |
 | 29    | BA10 - Define Promoted Runtime MBT Strategy                      | ready-for-research | BA3                  | BA11                                | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.                 | Ready; BA2 already lists candidate integrated MBT frontiers.                              |
 | 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | blocked            | BA8, BA10            | BA13                                | Add one narrow trace-driven QNT/MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                 | Blocked until canonical QNT and MBT strategy are set.                                     |
-| 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | blocked            | BA3, BA7             | BA13                                | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                                   | Blocked until inventories and zero-HP boundary are known.                                 |
+| 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | ready-for-research | BA3, BA7             | BA13                                | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                                   | Ready; BA7 supplied the zero-HP lifecycle boundary rows.                                  |
 | 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | none                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until authority, MBT, and backlog work complete.                                  |
 
 ## Task Details
@@ -1872,13 +1872,13 @@ Plan Impact:
 
 ### Task 26 - BA7 - Reconcile Zero HP Lifecycle Boundary
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: BA3
 Blocks: BA8, BA12
 
-Next action: separate implemented zero-HP authority from old-only death-save,
-rest, and adventuring-state behavior.
+Next action: completed. Promoted zero-HP lifecycle authority is documented, and
+old-only death-save, rest, and adventuring-state behavior is fed to BA12.
 
 BA3 confirmed scope:
 
@@ -1925,8 +1925,9 @@ Verification:
 
 Plan Impact:
 
-- Feed BA12 with lifecycle width rows. BA8 remains blocked until BA4-BA6 also
-  complete or BA3 revises the gate.
+- BA12 is unblocked for source-only backlog conversion with BA7 lifecycle width
+  rows in `plans/battle-authority-inventory.md`.
+- BA8 remains blocked until BA6 also completes.
 
 ### Task 27 - BA8 - Choose Canonical Battle QNT Layout
 
@@ -2104,7 +2105,7 @@ Plan Impact:
 
 ### Task 31 - BA12 - Convert Old-Only Battle Behavior To Width Backlog
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: BA3, BA7
 Blocks: BA13

@@ -104,9 +104,15 @@ export const initiativeScore: (value: number) => InitiativeScore =
 
 export type ZeroHpLifecycle =
   | {
+      // Stat Block runtime policy. SRD Monster Death makes 0 HP terminal for
+      // this battle combatant; this is not a provenance label.
       readonly policy: "diesAtZeroHp";
     }
   | {
+      // Character Build runtime policy. The battle reducer owns drop-to-zero,
+      // damage-at-zero, critical damage-at-zero, and massive-damage consequences.
+      // Start-turn death-save rolls and post-battle durable handoff are later
+      // width, not part of this reducer branch.
       readonly policy: "usesDeathSavingThrows";
       readonly deathSaves: DeathSaveRuntimeState;
     };
@@ -2133,6 +2139,9 @@ function applyInitialZeroHpLifecycle(
 function applyDropToZeroHpLifecycle(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
+  // SRD boundary: only the immediate zero-HP consequence is applied here.
+  // Later turn-start Death Saving Throw rolls, Stable recovery, and post-battle
+  // character handoff are deliberately outside this battle-runtime slice.
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({

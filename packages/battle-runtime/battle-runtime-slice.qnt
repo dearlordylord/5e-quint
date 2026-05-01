@@ -16,7 +16,10 @@ module battleRuntimeSlice {
   // - Playing-the-Game.md lines 748-780 and ASSUMPTIONS.md A12: Stat Block
   //   monsters use Monster Death at 0 HP; Character Build combatants use the
   //   Death Saving Throw lifecycle, including instant death from massive
-  //   damage.
+  //   damage. This slice covers the immediate HP-mutation boundary: drop to
+  //   0 HP, damage at 0 HP, Critical Hit damage at 0 HP, and Massive Damage.
+  //   Start-turn Death Saving Throw rolls, Stable recovery/handoff, and
+  //   post-battle character closeout are future width, not part of this slice.
   // - Classes/Fighter.md lines 76-80: Action Surge grants one additional action
   //   except Magic, spends one use per Short or Long Rest, and is limited to
   //   once per turn.
