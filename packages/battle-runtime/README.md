@@ -160,8 +160,9 @@ Available acts:
 - discover Attack for supported character weapon attacks and supported
   Stat Block named attacks when the current actor can take actions and at least
   one target is legal for the selected attack's melee reach or normal range.
-- discover Action Surge from the retained Unit resource when it has a
-  remaining use and has not been used this turn;
+- discover Action Surge from the retained Unit resource only after the shared
+  Action Surge support parser admits the Unit's activation mechanics shape, it
+  has a remaining use, and it has not been used this turn;
 - discover supported Wizard action-time spell acts from retained Spell Records
   and runtime Spell Slot state, unless worn armor lacks required Armor
   Training. These acts consume the Magic action; Bonus Action and Reaction
@@ -235,9 +236,11 @@ executable vocabulary.
 
 - Action Surge matches the old Core rule shape for Fighter level 2: a Unit
   resource grants one additional action that excludes Magic, spends one
-  Short/Long Rest use, and is once per turn. The promoted runtime encodes the
-  extra action as a restricted `RuntimeActionResource`, not a scalar action
-  counter plus pending flag.
+  Short/Long Rest use, and is once per turn. Discovery and resolution share one
+  support parser for the admitted single-phase, single-effect Surface
+  activation shape. The promoted runtime encodes the extra action as a
+  restricted `RuntimeActionResource`, not a scalar action counter plus pending
+  flag.
 - Wizard action-time spells match the old Core distinction between prepared
   level-1 spells that spend Spell Slots and cantrips that do not for the
   implemented `magic_missile` and `ray_of_frost` lane. The promoted runtime

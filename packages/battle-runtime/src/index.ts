@@ -78,6 +78,7 @@ import type {
   SpellRecord,
   StatBlockRecord,
   StatBlockValue,
+  ActionRestriction,
   UnitRecord,
   WeaponDamage,
   WeaponRecord,
@@ -764,6 +765,11 @@ const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:attack:target");
 const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
 const ACTION_SURGE_UNIT_ID = "fighter_action_surge";
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = 5;
+
+type SupportedActionSurgeUnitFeature = {
+  readonly unit: UnitRecord;
+  readonly restriction: ActionRestriction;
+};
 
 export function startBattle(input: {
   readonly battleId: BattleId;
@@ -1724,24 +1730,25 @@ function supportedUnitFeatureActs(
     return [];
   }
 
-  return actor.origin.resources.flatMap((resource) =>
-    resource.unit.id === ACTION_SURGE_UNIT_ID &&
-    resource.usesRemaining > 0 &&
-    !resource.usedThisTurn
+  return actor.origin.resources.flatMap((resource) => {
+    const actionSurge = parseSupportedActionSurgeUnitFeature(resource.unit);
+    return actionSurge !== null &&
+      resource.usesRemaining > 0 &&
+      !resource.usedThisTurn
       ? [
           {
             subject: {
               tag: "unitFeature" as const,
               actorId,
-              unitId: resource.unit.id,
+              unitId: actionSurge.unit.id,
             },
-            label: resource.unit.name,
+            label: actionSurge.unit.name,
             summary: "Grant one additional non-Magic action this turn.",
             initialHoles: [],
           },
         ]
-      : [],
-  );
+      : [];
+  });
 }
 
 function resolveUnitFeature(
@@ -1763,11 +1770,11 @@ function resolveUnitFeature(
           (candidate) => candidate.unit.id === subject.unitId,
         )
       : undefined;
-  const restriction = actionSurgeRestriction(resource?.unit);
+  const actionSurge = parseSupportedActionSurgeUnitFeature(resource?.unit);
   if (
     actor?.origin.kind !== "character" ||
     resource == null ||
-    restriction == null ||
+    actionSurge == null ||
     resource.usesRemaining <= 0 ||
     resource.usedThisTurn
   ) {
@@ -1782,7 +1789,7 @@ function resolveUnitFeature(
     input.state.currentTurnResources,
     subject.actorId,
     subject.unitId,
-    restriction,
+    actionSurge.restriction,
   );
   if (Either.isLeft(granted)) {
     return invalidResult(
@@ -1819,7 +1826,9 @@ function resolveUnitFeature(
   };
 }
 
-function actionSurgeRestriction(unit: UnitRecord | undefined) {
+function parseSupportedActionSurgeUnitFeature(
+  unit: UnitRecord | undefined,
+): SupportedActionSurgeUnitFeature | null {
   if (unit?.id !== ACTION_SURGE_UNIT_ID || unit.kind !== "class_feature") {
     return null;
   }
@@ -1833,12 +1842,20 @@ function actionSurgeRestriction(unit: UnitRecord | undefined) {
   ) {
     return null;
   }
+  if (mechanics.phases.length !== 1) {
+    return null;
+  }
   const phase = mechanics.phases[0];
   if (phase?.kind !== "direct") {
     return null;
   }
-  const effect = phase.effects?.[0];
-  return effect?.kind === "grant_extra_action" ? effect.restriction : null;
+  if (phase.effects?.length !== 1) {
+    return null;
+  }
+  const effect = phase.effects[0];
+  return effect.kind === "grant_extra_action"
+    ? { unit, restriction: effect.restriction }
+    : null;
 }
 
 function discoverSupportedSpellActs(

@@ -127,9 +127,9 @@ flowchart TD
   named attacks derived from `StatBlockRecord.actions.attacks`.
 - Character-derived attacks come from a supported weapon Attack action option
   assembled at the composition boundary.
-- Character-derived Action Surge comes from a retained Unit plus
-  runtime use-count state. It grants a Unit-sourced action resource carrying
-  the authored non-Magic restriction.
+- Character-derived Action Surge comes from a retained Unit admitted by the
+  shared Action Surge support parser plus runtime use-count state. It grants a
+  Unit-sourced action resource carrying the authored non-Magic restriction.
 - Character-derived Wizard action-time spell acts come from retained Spell Records
   plus runtime Spell Slot and active-effect state. Prepared level-1 spells spend
   slots; cantrips do not. `magic_missile` is narrowed by a support gate to all

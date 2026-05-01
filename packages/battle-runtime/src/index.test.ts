@@ -37,7 +37,11 @@ import {
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
+import type {
+  SpellRecord,
+  StatBlockRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 
 const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
 const battleRuntimeSpecPath = fileURLToPath(
@@ -1830,6 +1834,44 @@ describe("battle runtime", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
+  test("Action Surge discovery and resolution share the supported Unit feature shape", () => {
+    const state = {
+      ...startBattle({
+        battleId: battleId("battle-action-surge-unsupported-shape"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            resources: [
+              actionSurgeResource({
+                unit: actionSurgeWithAdditionalDirectEffect(),
+              }),
+            ],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+      currentTurnResources: {
+        actionResources: [],
+        currentHasBonusAction: true,
+      },
+    } satisfies BattleState;
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual([
+      { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
+    ]);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "fighter_action_surge",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     expect(
@@ -3050,17 +3092,42 @@ function resistantSkeletonCreatureInit(input: {
   };
 }
 
-function actionSurgeResource(): NonNullable<
+function actionSurgeResource(input?: {
+  readonly unit?: UnitRecord;
+}): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
-  const unit = unitLibrary.requireUnit("fighter_action_surge");
+  const unit = input?.unit ?? unitLibrary.requireUnit("fighter_action_surge");
   if (unit.kind !== "class_feature" || !("resource" in unit.mechanics)) {
     throw new Error("Expected Action Surge resource Unit.");
   }
   return { unit, resource: unit.mechanics.resource };
+}
+
+function actionSurgeWithAdditionalDirectEffect(): UnitRecord {
+  const unit = unitLibrary.requireUnit("fighter_action_surge");
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "activation") {
+    throw new Error("Expected Action Surge activation Unit.");
+  }
+  const phase = unit.mechanics.phases[0];
+  if (phase?.kind !== "direct" || phase.effects === undefined) {
+    throw new Error("Expected Action Surge direct phase.");
+  }
+  return {
+    ...unit,
+    mechanics: {
+      ...unit.mechanics,
+      phases: [
+        {
+          ...phase,
+          effects: [...phase.effects, phase.effects[0]],
+        },
+      ],
+    },
+  };
 }
 
 function wizardVsSkeletonBattle(): BattleState {

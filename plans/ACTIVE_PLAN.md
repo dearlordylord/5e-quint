@@ -286,13 +286,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 36,
       "id": "PBA3",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Correct First Reducer Extensibility Drift"
     },
     {
       "number": 37,
       "id": "PBA4",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Align Protocol Docs And Start Feature-Parity Queue"
     },
     {
@@ -435,8 +435,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | done               | BA13                 | PBA1                                | Archived the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                                           | Completed; PBA1 is unblocked.                                                             |
 | 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | done               | PBA0                 | PBA2                                | Documented that battle reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                                                     | Completed; PBA2 is unblocked.                                                             |
 | 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | done               | PBA1                 | PBA3                                | Audited battle-runtime and MCP composition for named-ability reducer drift; found Action Surge support-gate drift and recorded the evidence in `plans/pba2-named-ability-drift-audit.md`.                        | Completed; PBA3 is unblocked to centralize Action Surge support-gate parsing.             |
-| 36    | PBA3 - Correct First Reducer Extensibility Drift                 | ready-for-research | PBA2                 | PBA4                                | Centralize Action Surge support-gate parsing so discovery and resolution share one executable admitted Unit feature shape.                                                                                       | Ready; PBA2 assigned the first reducer extensibility correction.                          |
-| 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | blocked            | PBA3                 | PBA5                                | Align docs after the watcher/corrector pass, then promote the first BA12 feature-parity backlog candidate to ready work.                                                                                         | Blocked until the Action Surge support-gate correction closes.                            |
+| 36    | PBA3 - Correct First Reducer Extensibility Drift                 | done               | PBA2                 | PBA4                                | Centralized Action Surge support-gate parsing so discovery and resolution share one executable admitted Unit feature shape.                                                                                      | Completed; PBA4 is unblocked.                                                            |
+| 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | ready-for-research | PBA3                 | PBA5                                | Align docs after the watcher/corrector pass, then promote the first BA12 feature-parity backlog candidate to ready work.                                                                                         | Ready; PBA3 completed the Action Surge support-gate correction.                           |
 | 38    | PBA5 - Restore Death Save Turn Lifecycle                         | blocked            | PBA4                 | PBA6                                | Restore start-turn Death Saving Throw rolls, Stable handoff, and zero-HP closeout through battle/runtime and character-session state.                                                                            | Blocked behind PBA0-PBA4.                                                                 |
 | 39    | PBA6 - Restore Second Wind And Bonus-Action Subjects             | blocked            | PBA5                 | PBA7                                | Restore UnitRecord-backed Second Wind and the reusable Bonus Action subject/resource protocol without projected executable reducers.                                                                             | Blocked behind zero-HP feature-parity work.                                               |
 | 40    | PBA7 - Restore Save-Gate Damage Spell Procedure                  | blocked            | PBA6                 | PBA8                                | Restore Acid Splash-style save-gate damage spell acts as UnitRecord-backed spell holes and shared save/damage procedures.                                                                                        | Blocked behind bonus-action feature subject work.                                         |
@@ -2661,13 +2661,13 @@ PBA2 source-only closeout check:
 
 ### Task 36 - PBA3 - Correct First Reducer Extensibility Drift
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA2
 Blocks: PBA4
 
-Next action: centralize Action Surge support-gate parsing so discovery and
-resolution share one executable admitted Unit feature shape.
+Next action: completed; Action Surge support-gate parsing is centralized so
+discovery and resolution share one executable admitted Unit feature shape.
 
 Scope constraints:
 
@@ -2700,11 +2700,11 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA4.
+- PBA4 is unblocked.
 
 ### Task 37 - PBA4 - Align Protocol Docs And Start Feature-Parity Queue
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA3
 Blocks: PBA5
