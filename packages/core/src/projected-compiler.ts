@@ -480,13 +480,12 @@ function compileEarlyEnd(
 }
 
 function compileProjectedSpell(unit: SpellRecord): CompiledProjectedUnit {
-  require(unit.kind ===
-    "spell", unit.id, 'projected spell compiler requires kind "spell"');
-  return Match.value(unit.mechanics.family).pipe(
-    Match.when("activation", () => {
-      const compiled = compileActivationSaveGateDamageSpell(
-        unit as ActivationSpellRecord,
-      );
+  return Match.value(unit.mechanics).pipe(
+    Match.when({ family: "activation" }, (mechanics) => {
+      const compiled = compileActivationSaveGateDamageSpell({
+        ...unit,
+        mechanics,
+      });
       if (compiled == null) {
         unsupported(
           unit.id,
@@ -495,8 +494,8 @@ function compileProjectedSpell(unit: SpellRecord): CompiledProjectedUnit {
       }
       return { tag: "CPUExecutable" as const, value: compiled };
     }),
-    Match.when("ongoing_effect", () => {
-      const compiled = compilePassiveSetBaseAc(unit as OngoingSpellRecord);
+    Match.when({ family: "ongoing_effect" }, (mechanics) => {
+      const compiled = compilePassiveSetBaseAc({ ...unit, mechanics });
       if (compiled == null) {
         unsupported(
           unit.id,
@@ -517,22 +516,30 @@ function compileProjectedSpell(unit: SpellRecord): CompiledProjectedUnit {
 function compileProjectedClassFeature(
   unit: ClassFeatureRecord,
 ): CompiledProjectedUnit {
-  require(unit.mechanics.family ===
-    "activation", unit.id, 'projected class-feature compiler currently supports only "activation"');
-  const compiled = compileDirectFeature(unit as ActivationClassFeatureRecord);
-  if (compiled == null) {
-    unsupported(unit.id, "class-feature shape is out of projected scope");
-  }
-  return { tag: "CPUExecutable" as const, value: compiled };
+  return Match.value(unit.mechanics).pipe(
+    Match.when({ family: "activation" }, (mechanics) => {
+      const compiled = compileDirectFeature({ ...unit, mechanics });
+      if (compiled == null) {
+        unsupported(unit.id, "class-feature shape is out of projected scope");
+      }
+      return { tag: "CPUExecutable" as const, value: compiled };
+    }),
+    Match.orElse(() =>
+      unsupported(
+        unit.id,
+        `class-feature family "${unit.mechanics.family}" is out of projected scope`,
+      ),
+    ),
+  );
 }
 
 export function compileProjectedUnit(
   unit: ProjectableSurfaceUnit,
 ): CompiledProjectedUnit {
-  return Match.value(unit.kind).pipe(
-    Match.when("spell", () => compileProjectedSpell(unit as SpellRecord)),
-    Match.when("class_feature", () =>
-      compileProjectedClassFeature(unit as ClassFeatureRecord),
+  return Match.value(unit).pipe(
+    Match.when({ kind: "spell" }, (spell) => compileProjectedSpell(spell)),
+    Match.when({ kind: "class_feature" }, (feature) =>
+      compileProjectedClassFeature(feature),
     ),
     Match.orElse(() =>
       unsupported(unit.id, `unit kind "${unit.kind}" is out of scope`),

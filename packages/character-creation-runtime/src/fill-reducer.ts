@@ -28,7 +28,6 @@ import {
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterAlignment,
   type CharacterDraft,
-  type CharacterDraftPath,
   type CharacterDraftSelections,
   choiceCardinalityBounds,
   type ChoiceCreationHole,
@@ -53,6 +52,14 @@ export type CreationHoleIndex = {
     CreationHoleId,
     ReadonlyMap<CreationChoiceOptionId, CreationChoiceOption>
   >;
+};
+
+type DraftSourcedCreationHole = CreationHole & {
+  readonly source: Extract<CreationHoleSource, { readonly tag: "draft" }>;
+};
+
+type UnitSourcedCreationHole = CreationHole & {
+  readonly source: Extract<CreationHoleSource, { readonly tag: "unit" }>;
 };
 
 export function fillCreationHoles(
@@ -279,19 +286,20 @@ export function applyCreationFill(
   hole: CreationHole,
   fill: CreationFill,
 ): CharacterDraftSelections {
-  if (hole.source.tag === "draft") {
-    return applyDraftFill(selections, hole, hole.source.path, fill);
+  const source = hole.source;
+  if (source.tag === "draft") {
+    return applyDraftFill(selections, { ...hole, source }, fill);
   }
 
-  return applyUnitFill(selections, hole, hole.source, fill);
+  return applyUnitFill(selections, { ...hole, source }, fill);
 }
 
 export function applyDraftFill(
   selections: CharacterDraftSelections,
-  hole: CreationHole,
-  path: CharacterDraftPath,
+  hole: DraftSourcedCreationHole,
   fill: CreationFill,
 ): CharacterDraftSelections {
+  const path = hole.source.path;
   if (path === "draft.primaryClass" && fill.kind === "choice") {
     const classUnitId = requireSelectedUnitId(hole, requireOneOptionId(fill));
     return {
@@ -366,10 +374,10 @@ export function applyDraftFill(
 
 export function applyUnitFill(
   selections: CharacterDraftSelections,
-  hole: CreationHole,
-  source: Extract<CreationHoleSource, { readonly tag: "unit" }>,
+  hole: UnitSourcedCreationHole,
   fill: CreationFill,
 ): CharacterDraftSelections {
+  const source = hole.source;
   if (
     source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY &&
     fill.kind === "choice"

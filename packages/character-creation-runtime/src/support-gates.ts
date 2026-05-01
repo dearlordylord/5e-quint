@@ -60,6 +60,10 @@ import type {
 import { creationChoiceOptionId } from "./types.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
+type DraftSourcedCreationHole = CreationHole & {
+  readonly source: Extract<CreationHole["source"], { readonly tag: "draft" }>;
+};
+
 export type SupportedLoadoutChoice =
   | {
       readonly choiceKey: typeof LOADOUT_ARMOR_CHOICE_KEY;
@@ -253,20 +257,17 @@ export function unsupportedHoleSelectionOptionId(
 export function supportedHoleOptionIds(
   hole: CreationHole,
 ): readonly CreationChoiceOptionId[] | undefined {
-  if (hole.source.tag === "draft") {
-    return supportedDraftOptionIds(hole);
+  const source = hole.source;
+  if (source.tag === "draft") {
+    return supportedDraftOptionIds({ ...hole, source });
   }
 
-  return supportedUnitOptionIdsForSource(hole.source);
+  return supportedUnitOptionIdsForSource(source);
 }
 
 export function supportedDraftOptionIds(
-  hole: CreationHole,
+  hole: DraftSourcedCreationHole,
 ): readonly CreationChoiceOptionId[] | undefined {
-  if (hole.source.tag !== "draft") {
-    throw new Error("Expected draft-sourced character creation hole.");
-  }
-
   if (isSupportedDraftChoicePath(hole.source.path)) {
     return CHARACTER_CREATION_SUPPORT_PROFILE.draftOptionIdsByPath[
       hole.source.path

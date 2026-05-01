@@ -3360,6 +3360,32 @@ export type BattleResolutionRuntimeInputs =
       readonly values: { readonly damage: number };
     };
 
+type BattleFinalizationInput = {
+  [TRuntime in BattleResolutionRequest["runtime"]]: {
+    readonly request: Extract<
+      BattleResolutionRequest,
+      { readonly runtime: TRuntime }
+    >;
+    readonly runtimeInputs: Extract<
+      BattleResolutionRuntimeInputs,
+      { readonly runtime: TRuntime }
+    >;
+  };
+}[BattleResolutionRequest["runtime"]];
+
+type FinalizationInput = {
+  [TRuntime in ResolutionRequest["runtime"]]: {
+    readonly request: Extract<
+      ResolutionRequest,
+      { readonly runtime: TRuntime }
+    >;
+    readonly runtimeInputs: Extract<
+      ResolutionRuntimeInputs,
+      { readonly runtime: TRuntime }
+    >;
+  };
+}[ResolutionRequest["runtime"]];
+
 export type ActionResolutionErrorCode =
   | "ACTION_NOT_AVAILABLE"
   | "ACTION_NOT_SUPPORTED"
@@ -6082,503 +6108,431 @@ export function finalizeBattleResolution(
   runtimeInputs: BattleResolutionRuntimeInputs,
   context: BattleContext,
 ): FinalizedBattleAction {
-  if (request.runtime === "none") {
-    if (runtimeInputs.runtime !== "none")
-      return battleRuntimeMismatch("none", runtimeInputs.runtime);
-    return { ok: true, event: request.event, outcome: request.outcome };
-  }
+  const parsed = battleFinalizationInput(request, runtimeInputs);
+  if ("ok" in parsed) return parsed;
 
-  return Match.value(request).pipe(
-    Match.when({ runtime: "battleAttack" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "battleAttack") {
-        return battleRuntimeMismatch("battleAttack", runtimeInputs.runtime);
-      }
-      if (
-        request.token.type !== "BATTLE_ATTACK" &&
-        request.token.type !== "BATTLE_OFF_HAND_ATTACK" &&
-        request.token.type !== "BATTLE_LEGENDARY_ATTACK"
-      ) {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_SUPPORTED",
-            message: `Battle-attack runtime cannot finalize ${request.token.type}.`,
-          },
-        };
-      }
-      const actor = context.creatures.get(CreatureId(request.token.actorId));
-      if (actor == null) {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_AVAILABLE",
-            message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
-          },
-        };
-      }
-      const weapon =
-        request.token.type === "BATTLE_ATTACK"
-          ? (actor.mainHandWeapon ?? UNARMED_STRIKE_PROFILE)
-          : request.token.type === "BATTLE_OFF_HAND_ATTACK"
-            ? actor.offHandWeapon
-            : (() => {
-                const statBlock = getMonsterStatBlockByStateId(
-                  actor.monsterStatBlockId,
-                );
-                const legendary =
-                  statBlock == null
-                    ? null
-                    : statBlockLegendaryAction(
-                        statBlock,
-                        request.token.abilityId,
-                      );
-                if (
-                  statBlock == null ||
-                  legendary == null ||
-                  legendary.kind !== "legendaryAction" ||
-                  legendary.attackId == null
-                ) {
-                  return null;
-                }
-                return statBlockAttackBattleProfile(
-                  statBlock,
-                  legendary.attackId,
-                );
-              })();
-      if (weapon == null) {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_AVAILABLE",
-            message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
-          },
-        };
-      }
-      const {
-        attackRoll,
-        targetAc,
-        weaponDamage,
-        attackerWithin5ft,
-        attackerWithin60ft,
-        hostileWithin5ft,
-        targetCanSeeAttacker,
-        attackerCanSeeTarget,
-        frightSourceInLOS,
-        hasAllyAdjacentToTarget,
-        hitReactionCandidates,
-      } = runtimeInputs.values;
-      if (attackRoll < 1 || attackRoll > 20) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Battle attack roll must be between 1 and 20.",
-          },
-        };
-      }
-      if (targetAc < 0) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Battle target AC must be non-negative.",
-          },
-        };
-      }
-      if (actor.mainHandWeapon == null && !attackerWithin5ft) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message:
-              "Unarmed strike runtime must confirm the target is within 5 feet.",
-          },
-        };
-      }
-      if (weaponDamage < 0) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Battle weapon damage must be non-negative.",
-          },
-        };
-      }
-      if (!attackerWithin5ft && attackerWithin60ft === undefined) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message:
-              "Battle attack runtime must include attackerWithin60ft when attackerWithin5ft is false.",
-          },
-        };
-      }
-      const isMelee = canBattleAttackUseMeleeLane(weapon, attackerWithin5ft);
-      const targetCreature = context.creatures.get(
-        CreatureId(request.token.targetId),
-      );
-      const actualTargetAc =
-        targetCreature == null
-          ? armorClass(targetAc)
-          : battleCurrentArmorClass(targetCreature);
-      const commonEvent = {
-        targetId: CreatureId(request.token.targetId),
-        attackRoll,
-        crit: attackRoll >= actor.critRange,
-        tAc: actualTargetAc,
-        knockOut: request.token.knockOut,
-        attackerWithin5ft,
-        ...(attackerWithin60ft !== undefined ? { attackerWithin60ft } : {}),
-        hostileWithin5ft,
-        targetCanSeeAttacker,
-        attackerCanSeeTarget,
-        frightSourceInLOS,
-        hasAllyAdjacentToTarget,
-        saDmg: 0,
-        hitReactionCandidates: new Set(
-          hitReactionCandidates.map((id) => CreatureId(id)),
-        ),
-      };
-      return {
-        ok: true,
-        event:
-          request.token.type === "BATTLE_ATTACK"
-            ? {
-                type: "BATTLE_ATTACK",
-                ...commonEvent,
-                diceCount: weapon.diceCount ?? 1,
-                dieSize: weapon.damageDie ?? 0,
-                dmg: weaponDamage,
-                dt: weapon.damageType,
-                damageQualifiers: weapon.damageQualifiers ?? new Set(),
-                isMelee,
-                weaponProperties: weapon.properties,
-                isFinesse: weapon.properties.has("finesse"),
-              }
-            : request.token.type === "BATTLE_OFF_HAND_ATTACK"
-              ? {
-                  type: "BATTLE_OFF_HAND_ATTACK",
-                  ...commonEvent,
-                  dmg: weaponDamage,
-                }
-              : {
-                  type: "BATTLE_LEGENDARY_ATTACK",
-                  monsterId: CreatureId(request.token.actorId),
-                  abilityId: request.token.abilityId,
-                  laTarget: CreatureId(request.token.targetId),
-                  laAtkRoll: attackRoll,
-                  laDmg: weaponDamage,
-                  laDt: weapon.damageType,
-                  damageQualifiers: weapon.damageQualifiers ?? new Set(),
-                  laCrit: attackRoll >= actor.critRange,
-                  laTgtAc: actualTargetAc,
-                  knockOut: request.token.knockOut,
-                  isMelee,
-                  weaponProperties: weapon.properties,
-                  isFinesse: weapon.properties.has("finesse"),
-                  attackerWithin5ft,
-                  ...(attackerWithin60ft !== undefined
-                    ? { attackerWithin60ft }
-                    : {}),
-                  hostileWithin5ft,
-                  targetCanSeeAttacker,
-                  attackerCanSeeTarget,
-                  frightSourceInLOS,
-                  hasAllyAdjacentToTarget,
-                  saDmg: 0,
-                  hitReactionCandidates: new Set(
-                    hitReactionCandidates.map((id) => CreatureId(id)),
-                  ),
-                },
-        outcome: request.outcome,
-      };
-    }),
-    Match.when({ runtime: "battleGrapple" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "battleGrapple") {
-        return battleRuntimeMismatch("battleGrapple", runtimeInputs.runtime);
-      }
-      if (request.token.type !== "BATTLE_GRAPPLE") {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_SUPPORTED",
-            message: `Battle-grapple runtime cannot finalize ${request.token.type}.`,
-          },
-        };
-      }
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_GRAPPLE",
-          targetId: CreatureId(request.token.targetId),
-          targetSaveFailed: runtimeInputs.values.targetSaveFailed,
-        },
-        outcome: request.outcome,
-      };
-    }),
-    Match.when({ runtime: "battleSaveSpell" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "battleSaveSpell") {
-        return battleRuntimeMismatch("battleSaveSpell", runtimeInputs.runtime);
-      }
-      if (request.token.type !== "BATTLE_CAST_SAVE_SPELL") {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_SUPPORTED",
-            message: `Save-spell runtime cannot finalize ${request.token.type}.`,
-          },
-        };
-      }
-      const { saveRoll, saveRollB } = runtimeInputs.values;
-      if (saveRoll < 1 || saveRoll > 20) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Battle save-spell primary save roll must be 1-20.",
-          },
-        };
-      }
-      if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Battle save-spell secondary save roll must be 1-20.",
-          },
-        };
-      }
-      const actor = context.creatures.get(CreatureId(request.token.actorId));
-      const payload =
-        actor == null
-          ? null
-          : currentReadyableSpellPayload(
-              actor,
-              request.token.accessId ?? "",
-              request.token.slotLevel,
-            );
-      if (payload == null) {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_AVAILABLE",
-            message: `${request.token.type} ${request.token.spellId} is not currently available for ${request.token.actorId} in this battle state.`,
-          },
-        };
-      }
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_CAST_SAVE_SPELL",
-          targetId: CreatureId(request.token.targetId),
-          saveDC: payload.release.saveDC,
-          saveRoll,
-          ...(saveRollB != null ? { saveRollB } : {}),
-          dmgOnFail: payload.release.damageOnFail,
-          halfOnSave: payload.release.halfOnSuccess,
-          dt: payload.release.damageType,
-          cond: payload.release.conditionOnFail,
-          applyCond: payload.release.applyCondition,
-          saveAbility: payload.release.saveAbility,
-          ...(request.token.accessId == null
-            ? {}
-            : { accessId: battleSpellAccessId(request.token.accessId) }),
-          slotLvl: payload.slotLevel,
-          spellId: spellId(request.token.spellId),
-          ritual: false,
-        },
-        outcome: request.outcome,
-      };
-    }),
-    Match.when({ runtime: "battleMove" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "battleMove") {
-        return battleRuntimeMismatch("battleMove", runtimeInputs.runtime);
-      }
-      if (request.token.type !== "BATTLE_MOVE") {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_SUPPORTED",
-            message: `Battle-move runtime cannot finalize ${request.token.type}.`,
-          },
-        };
-      }
-      const { provocationKind, threatened } = runtimeInputs.values;
-      const creatureIds = new Set([...context.creatures.keys()].map(String));
-      const unknownThreatener = threatened.find((id) => !creatureIds.has(id));
-      if (unknownThreatener != null) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: `Battle-move threatened creature ${unknownThreatener} is not a participant in this battle.`,
-          },
-        };
-      }
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_MOVE",
-          provocationKind,
-          threatened: new Set(threatened.map((id) => CreatureId(id))),
-        },
-        outcome: request.outcome,
-      };
-    }),
-    Match.when({ runtime: "readyAttack" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "readyAttack") {
-        return battleRuntimeMismatch("readyAttack", runtimeInputs.runtime);
-      }
-      if (request.token.type !== "BATTLE_READY_RELEASE") {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_SUPPORTED",
-            message: `Ready-attack runtime cannot finalize ${request.token.type}.`,
-          },
-        };
-      }
-      const actor = context.creatures.get(CreatureId(request.token.actorId));
-      const attackRoll = runtimeInputs.values.atkRoll;
-      const damage = runtimeInputs.values.dmg;
-      const targetAc = runtimeInputs.values.tgtAc;
-      if (attackRoll < 1 || attackRoll > 20) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Ready attack roll must be between 1 and 20.",
-          },
-        };
-      }
-      if (damage < 0) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Ready attack damage must be non-negative.",
-          },
-        };
-      }
-      const targetCreature = context.creatures.get(
-        CreatureId(request.token.targetId),
-      );
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_READY_RELEASE",
-          releaserId: CreatureId(request.token.actorId),
-          targetId: CreatureId(request.token.targetId),
-          atkRoll: attackRoll,
-          dmg: damage,
-          dt: actor?.mainHandWeapon?.damageType ?? "slashing",
-          damageQualifiers:
-            actor?.mainHandWeapon?.damageQualifiers ?? new Set(),
-          crit: runtimeInputs.values.crit,
-          tgtAc:
-            targetCreature == null
-              ? armorClass(targetAc)
-              : battleCurrentArmorClass(targetCreature),
-          knockOut: runtimeInputs.values.knockOut,
-          isMelee: actor?.mainHandWeapon?.isMelee ?? true,
-          weaponProperties: actor?.mainHandWeapon?.properties ?? new Set(),
-          attackerWithin5ft: true,
-          attackerWithin60ft: true,
-          hostileWithin5ft: false,
-          targetCanSeeAttacker: true,
-          attackerCanSeeTarget: true,
-          frightSourceInLOS: false,
-          hasAllyAdjacentToTarget: false,
-          saDmg: 0,
-          hitReactionCandidates: new Set(),
-        },
-        outcome: request.outcome,
-      };
-    }),
-    Match.when({ runtime: "monsterSaveEffect" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "monsterSaveEffect") {
-        return battleRuntimeMismatch(
-          "monsterSaveEffect",
-          runtimeInputs.runtime,
-        );
-      }
-      if (request.token.type !== "BATTLE_MONSTER_SAVE_EFFECT") {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_SUPPORTED",
-            message: `Monster save-effect runtime cannot finalize ${request.token.type}.`,
-          },
-        };
-      }
-      const actor = context.creatures.get(CreatureId(request.token.actorId));
-      const statBlock = getMonsterStatBlockByStateId(actor?.monsterStatBlockId);
-      const ability =
-        statBlock == null
-          ? null
-          : statBlockSaveEffectAction(statBlock, request.token.abilityId);
-      if (actor == null || ability == null) {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_AVAILABLE",
-            message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
-          },
-        };
-      }
-      const { saveRoll, saveRollB, actorCanSeeTarget } = runtimeInputs.values;
-      if (saveRoll < 1 || saveRoll > 20) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message:
-              "Monster save-effect primary roll must be between 1 and 20.",
-          },
-        };
-      }
-      if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message:
-              "Monster save-effect secondary roll must be between 1 and 20.",
-          },
-        };
-      }
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_MONSTER_SAVE_EFFECT",
-          abilityId: request.token.abilityId,
-          targetId: CreatureId(request.token.targetId),
-          saveRoll,
-          ...(saveRollB != null ? { saveRollB } : {}),
-          actorCanSeeTarget,
-        },
-        outcome: request.outcome,
-      };
-    }),
+  return Match.value(parsed).pipe(
+    Match.when({ request: { runtime: "none" } }, ({ request }) => ({
+      ok: true as const,
+      event: request.event,
+      outcome: request.outcome,
+    })),
     Match.when(
-      { runtime: "monsterTraversalMovement" },
-      (): FinalizedBattleAction => {
-        if (runtimeInputs.runtime !== "monsterTraversalMovement") {
-          return battleRuntimeMismatch(
-            "monsterTraversalMovement",
-            runtimeInputs.runtime,
-          );
-        }
-        if (request.token.type !== "BATTLE_MONSTER_TRAVERSAL") {
+      { request: { runtime: "battleAttack" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const actor = context.creatures.get(CreatureId(request.token.actorId));
+        if (actor == null) {
           return {
             ok: false,
             error: {
-              code: "ACTION_NOT_SUPPORTED",
-              message: `Monster traversal runtime cannot finalize ${request.token.type}.`,
+              code: "ACTION_NOT_AVAILABLE",
+              message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
             },
           };
         }
+        const weapon =
+          request.token.type === "BATTLE_ATTACK"
+            ? (actor.mainHandWeapon ?? UNARMED_STRIKE_PROFILE)
+            : request.token.type === "BATTLE_OFF_HAND_ATTACK"
+              ? actor.offHandWeapon
+              : (() => {
+                  const statBlock = getMonsterStatBlockByStateId(
+                    actor.monsterStatBlockId,
+                  );
+                  const legendary =
+                    statBlock == null
+                      ? null
+                      : statBlockLegendaryAction(
+                          statBlock,
+                          request.token.abilityId,
+                        );
+                  if (
+                    statBlock == null ||
+                    legendary == null ||
+                    legendary.kind !== "legendaryAction" ||
+                    legendary.attackId == null
+                  ) {
+                    return null;
+                  }
+                  return statBlockAttackBattleProfile(
+                    statBlock,
+                    legendary.attackId,
+                  );
+                })();
+        if (weapon == null) {
+          return {
+            ok: false,
+            error: {
+              code: "ACTION_NOT_AVAILABLE",
+              message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
+            },
+          };
+        }
+        const {
+          attackRoll,
+          targetAc,
+          weaponDamage,
+          attackerWithin5ft,
+          attackerWithin60ft,
+          hostileWithin5ft,
+          targetCanSeeAttacker,
+          attackerCanSeeTarget,
+          frightSourceInLOS,
+          hasAllyAdjacentToTarget,
+          hitReactionCandidates,
+        } = runtimeInputs.values;
+        if (attackRoll < 1 || attackRoll > 20) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Battle attack roll must be between 1 and 20.",
+            },
+          };
+        }
+        if (targetAc < 0) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Battle target AC must be non-negative.",
+            },
+          };
+        }
+        if (actor.mainHandWeapon == null && !attackerWithin5ft) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message:
+                "Unarmed strike runtime must confirm the target is within 5 feet.",
+            },
+          };
+        }
+        if (weaponDamage < 0) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Battle weapon damage must be non-negative.",
+            },
+          };
+        }
+        if (!attackerWithin5ft && attackerWithin60ft === undefined) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message:
+                "Battle attack runtime must include attackerWithin60ft when attackerWithin5ft is false.",
+            },
+          };
+        }
+        const isMelee = canBattleAttackUseMeleeLane(weapon, attackerWithin5ft);
+        const targetCreature = context.creatures.get(
+          CreatureId(request.token.targetId),
+        );
+        const actualTargetAc =
+          targetCreature == null
+            ? armorClass(targetAc)
+            : battleCurrentArmorClass(targetCreature);
+        const commonEvent = {
+          targetId: CreatureId(request.token.targetId),
+          attackRoll,
+          crit: attackRoll >= actor.critRange,
+          tAc: actualTargetAc,
+          knockOut: request.token.knockOut,
+          attackerWithin5ft,
+          ...(attackerWithin60ft !== undefined ? { attackerWithin60ft } : {}),
+          hostileWithin5ft,
+          targetCanSeeAttacker,
+          attackerCanSeeTarget,
+          frightSourceInLOS,
+          hasAllyAdjacentToTarget,
+          saDmg: 0,
+          hitReactionCandidates: new Set(
+            hitReactionCandidates.map((id) => CreatureId(id)),
+          ),
+        };
+        return {
+          ok: true,
+          event:
+            request.token.type === "BATTLE_ATTACK"
+              ? {
+                  type: "BATTLE_ATTACK",
+                  ...commonEvent,
+                  diceCount: weapon.diceCount ?? 1,
+                  dieSize: weapon.damageDie ?? 0,
+                  dmg: weaponDamage,
+                  dt: weapon.damageType,
+                  damageQualifiers: weapon.damageQualifiers ?? new Set(),
+                  isMelee,
+                  weaponProperties: weapon.properties,
+                  isFinesse: weapon.properties.has("finesse"),
+                }
+              : request.token.type === "BATTLE_OFF_HAND_ATTACK"
+                ? {
+                    type: "BATTLE_OFF_HAND_ATTACK",
+                    ...commonEvent,
+                    dmg: weaponDamage,
+                  }
+                : {
+                    type: "BATTLE_LEGENDARY_ATTACK",
+                    monsterId: CreatureId(request.token.actorId),
+                    abilityId: request.token.abilityId,
+                    laTarget: CreatureId(request.token.targetId),
+                    laAtkRoll: attackRoll,
+                    laDmg: weaponDamage,
+                    laDt: weapon.damageType,
+                    damageQualifiers: weapon.damageQualifiers ?? new Set(),
+                    laCrit: attackRoll >= actor.critRange,
+                    laTgtAc: actualTargetAc,
+                    knockOut: request.token.knockOut,
+                    isMelee,
+                    weaponProperties: weapon.properties,
+                    isFinesse: weapon.properties.has("finesse"),
+                    attackerWithin5ft,
+                    ...(attackerWithin60ft !== undefined
+                      ? { attackerWithin60ft }
+                      : {}),
+                    hostileWithin5ft,
+                    targetCanSeeAttacker,
+                    attackerCanSeeTarget,
+                    frightSourceInLOS,
+                    hasAllyAdjacentToTarget,
+                    saDmg: 0,
+                    hitReactionCandidates: new Set(
+                      hitReactionCandidates.map((id) => CreatureId(id)),
+                    ),
+                  },
+          outcome: request.outcome,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "battleGrapple" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        return {
+          ok: true,
+          event: {
+            type: "BATTLE_GRAPPLE",
+            targetId: CreatureId(request.token.targetId),
+            targetSaveFailed: runtimeInputs.values.targetSaveFailed,
+          },
+          outcome: request.outcome,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "battleSaveSpell" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const { saveRoll, saveRollB } = runtimeInputs.values;
+        if (saveRoll < 1 || saveRoll > 20) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Battle save-spell primary save roll must be 1-20.",
+            },
+          };
+        }
+        if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Battle save-spell secondary save roll must be 1-20.",
+            },
+          };
+        }
+        const actor = context.creatures.get(CreatureId(request.token.actorId));
+        const payload =
+          actor == null
+            ? null
+            : currentReadyableSpellPayload(
+                actor,
+                request.token.accessId ?? "",
+                request.token.slotLevel,
+              );
+        if (payload == null) {
+          return {
+            ok: false,
+            error: {
+              code: "ACTION_NOT_AVAILABLE",
+              message: `${request.token.type} ${request.token.spellId} is not currently available for ${request.token.actorId} in this battle state.`,
+            },
+          };
+        }
+        return {
+          ok: true,
+          event: {
+            type: "BATTLE_CAST_SAVE_SPELL",
+            targetId: CreatureId(request.token.targetId),
+            saveDC: payload.release.saveDC,
+            saveRoll,
+            ...(saveRollB != null ? { saveRollB } : {}),
+            dmgOnFail: payload.release.damageOnFail,
+            halfOnSave: payload.release.halfOnSuccess,
+            dt: payload.release.damageType,
+            cond: payload.release.conditionOnFail,
+            applyCond: payload.release.applyCondition,
+            saveAbility: payload.release.saveAbility,
+            ...(request.token.accessId == null
+              ? {}
+              : { accessId: battleSpellAccessId(request.token.accessId) }),
+            slotLvl: payload.slotLevel,
+            spellId: spellId(request.token.spellId),
+            ritual: false,
+          },
+          outcome: request.outcome,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "battleMove" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const { provocationKind, threatened } = runtimeInputs.values;
+        const creatureIds = new Set([...context.creatures.keys()].map(String));
+        const unknownThreatener = threatened.find((id) => !creatureIds.has(id));
+        if (unknownThreatener != null) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: `Battle-move threatened creature ${unknownThreatener} is not a participant in this battle.`,
+            },
+          };
+        }
+        return {
+          ok: true,
+          event: {
+            type: "BATTLE_MOVE",
+            provocationKind,
+            threatened: new Set(threatened.map((id) => CreatureId(id))),
+          },
+          outcome: request.outcome,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "readyAttack" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const actor = context.creatures.get(CreatureId(request.token.actorId));
+        const attackRoll = runtimeInputs.values.atkRoll;
+        const damage = runtimeInputs.values.dmg;
+        const targetAc = runtimeInputs.values.tgtAc;
+        if (attackRoll < 1 || attackRoll > 20) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Ready attack roll must be between 1 and 20.",
+            },
+          };
+        }
+        if (damage < 0) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Ready attack damage must be non-negative.",
+            },
+          };
+        }
+        const targetCreature = context.creatures.get(
+          CreatureId(request.token.targetId),
+        );
+        return {
+          ok: true,
+          event: {
+            type: "BATTLE_READY_RELEASE",
+            releaserId: CreatureId(request.token.actorId),
+            targetId: CreatureId(request.token.targetId),
+            atkRoll: attackRoll,
+            dmg: damage,
+            dt: actor?.mainHandWeapon?.damageType ?? "slashing",
+            damageQualifiers:
+              actor?.mainHandWeapon?.damageQualifiers ?? new Set(),
+            crit: runtimeInputs.values.crit,
+            tgtAc:
+              targetCreature == null
+                ? armorClass(targetAc)
+                : battleCurrentArmorClass(targetCreature),
+            knockOut: runtimeInputs.values.knockOut,
+            isMelee: actor?.mainHandWeapon?.isMelee ?? true,
+            weaponProperties: actor?.mainHandWeapon?.properties ?? new Set(),
+            attackerWithin5ft: true,
+            attackerWithin60ft: true,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            saDmg: 0,
+            hitReactionCandidates: new Set(),
+          },
+          outcome: request.outcome,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "monsterSaveEffect" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const actor = context.creatures.get(CreatureId(request.token.actorId));
+        const statBlock = getMonsterStatBlockByStateId(
+          actor?.monsterStatBlockId,
+        );
+        const ability =
+          statBlock == null
+            ? null
+            : statBlockSaveEffectAction(statBlock, request.token.abilityId);
+        if (actor == null || ability == null) {
+          return {
+            ok: false,
+            error: {
+              code: "ACTION_NOT_AVAILABLE",
+              message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
+            },
+          };
+        }
+        const { saveRoll, saveRollB, actorCanSeeTarget } = runtimeInputs.values;
+        if (saveRoll < 1 || saveRoll > 20) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message:
+                "Monster save-effect primary roll must be between 1 and 20.",
+            },
+          };
+        }
+        if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message:
+                "Monster save-effect secondary roll must be between 1 and 20.",
+            },
+          };
+        }
+        return {
+          ok: true,
+          event: {
+            type: "BATTLE_MONSTER_SAVE_EFFECT",
+            abilityId: request.token.abilityId,
+            targetId: CreatureId(request.token.targetId),
+            saveRoll,
+            ...(saveRollB != null ? { saveRollB } : {}),
+            actorCanSeeTarget,
+          },
+          outcome: request.outcome,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "monsterTraversalMovement" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
         const actor = context.creatures.get(CreatureId(request.token.actorId));
         const statBlock = getMonsterStatBlockByStateId(
           actor?.monsterStatBlockId,
@@ -6680,68 +6634,48 @@ export function finalizeBattleResolution(
         };
       },
     ),
-    Match.when({ runtime: "readySpellRelease" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "readySpellRelease") {
-        return battleRuntimeMismatch(
-          "readySpellRelease",
-          runtimeInputs.runtime,
-        );
-      }
-      if (request.token.type !== "BATTLE_READY_SPELL_RELEASE") {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_SUPPORTED",
-            message: `Ready-spell runtime cannot finalize ${request.token.type}.`,
-          },
-        };
-      }
-      const saveRoll = runtimeInputs.values.saveRoll;
-      const saveRollB = runtimeInputs.values.saveRollB;
-      if (saveRoll < 1 || saveRoll > 20) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Ready spell save roll must be between 1 and 20.",
-          },
-        };
-      }
-      if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message:
-              "Ready spell secondary save roll must be between 1 and 20.",
-          },
-        };
-      }
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_READY_SPELL_RELEASE",
-          releaserId: CreatureId(request.token.actorId),
-          saveRoll,
-          ...(saveRollB != null ? { saveRollB } : {}),
-        },
-        outcome: request.outcome,
-      };
-    }),
     Match.when(
-      { runtime: "counterspell" },
-      (counterspellRequest): FinalizedBattleAction => {
-        if (runtimeInputs.runtime !== "counterspell")
-          return battleRuntimeMismatch("counterspell", runtimeInputs.runtime);
-        if (counterspellRequest.token.type !== "CAST_COUNTERSPELL") {
+      { request: { runtime: "readySpellRelease" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const saveRoll = runtimeInputs.values.saveRoll;
+        const saveRollB = runtimeInputs.values.saveRollB;
+        if (saveRoll < 1 || saveRoll > 20) {
           return {
             ok: false,
             error: {
-              code: "ACTION_NOT_SUPPORTED",
-              message: `Counterspell runtime cannot finalize ${counterspellRequest.token.type}.`,
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Ready spell save roll must be between 1 and 20.",
             },
           };
         }
+        if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message:
+                "Ready spell secondary save roll must be between 1 and 20.",
+            },
+          };
+        }
+        return {
+          ok: true,
+          event: {
+            type: "BATTLE_READY_SPELL_RELEASE",
+            releaserId: CreatureId(request.token.actorId),
+            saveRoll,
+            ...(saveRollB != null ? { saveRollB } : {}),
+          },
+          outcome: request.outcome,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "counterspell" } },
+      ({
+        request: counterspellRequest,
+        runtimeInputs,
+      }): FinalizedBattleAction => {
         return {
           ok: true,
           event: {
@@ -6764,176 +6698,170 @@ export function finalizeBattleResolution(
         };
       },
     ),
-    Match.when({ runtime: "cuttingWords" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "cuttingWords")
-        return battleRuntimeMismatch("cuttingWords", runtimeInputs.runtime);
-      const bardLevel =
-        context.creatures.get(CreatureId(request.token.actorId))?.bardLevel ??
-        0;
-      const maxReduction = bardicInspirationDie(bardLevel);
-      const reduction = runtimeInputs.values.reduction;
-      if (reduction < 1 || reduction > maxReduction) {
+    Match.when(
+      { request: { runtime: "cuttingWords" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const bardLevel =
+          context.creatures.get(CreatureId(request.token.actorId))?.bardLevel ??
+          0;
+        const maxReduction = bardicInspirationDie(bardLevel);
+        const reduction = runtimeInputs.values.reduction;
+        if (reduction < 1 || reduction > maxReduction) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: `Cutting Words reduction must be between 1 and ${maxReduction}.`,
+            },
+          };
+        }
         return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: `Cutting Words reduction must be between 1 and ${maxReduction}.`,
+          ok: true,
+          event: {
+            type: "BATTLE_RESOLVE_HIT_REACTION",
+            reactorId: CreatureId(request.token.actorId),
+            decision: { tag: "RCuttingWords", reduction },
           },
+          outcome: `${request.outcome} (${reduction})`,
         };
-      }
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_RESOLVE_HIT_REACTION",
-          reactorId: CreatureId(request.token.actorId),
-          decision: { tag: "RCuttingWords", reduction },
-        },
-        outcome: `${request.outcome} (${reduction})`,
-      };
-    }),
-    Match.when({ runtime: "deflectAttacks" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "deflectAttacks") {
-        return battleRuntimeMismatch("deflectAttacks", runtimeInputs.runtime);
-      }
-      const reactor = context.creatures.get(CreatureId(request.token.actorId));
-      const d10Roll = runtimeInputs.values.d10Roll;
-      if (d10Roll < 1 || d10Roll > 10) {
+      },
+    ),
+    Match.when(
+      { request: { runtime: "deflectAttacks" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const reactor = context.creatures.get(
+          CreatureId(request.token.actorId),
+        );
+        const d10Roll = runtimeInputs.values.d10Roll;
+        if (d10Roll < 1 || d10Roll > 10) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Deflect Attacks d10 roll must be between 1 and 10.",
+            },
+          };
+        }
+        const amount = deflectAttacksReduction(
+          d10Roll,
+          reactor?.dexMod ?? 0,
+          reactor?.monkLevel ?? 0,
+        );
         return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Deflect Attacks d10 roll must be between 1 and 10.",
+          ok: true,
+          event: {
+            type: "BATTLE_RESOLVE_DMG_REACTION",
+            reactorId: CreatureId(request.token.actorId),
+            decision: { tag: "RDeflectAttacks", amount },
           },
+          outcome: `${request.outcome} (${amount})`,
         };
-      }
-      const amount = deflectAttacksReduction(
-        d10Roll,
-        reactor?.dexMod ?? 0,
-        reactor?.monkLevel ?? 0,
-      );
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_RESOLVE_DMG_REACTION",
-          reactorId: CreatureId(request.token.actorId),
-          decision: { tag: "RDeflectAttacks", amount },
-        },
-        outcome: `${request.outcome} (${amount})`,
-      };
-    }),
-    Match.when({ runtime: "hellishRebuke" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "hellishRebuke") {
-        return battleRuntimeMismatch("hellishRebuke", runtimeInputs.runtime);
-      }
-      if (request.token.type !== "CAST_HELLISH_REBUKE") {
+      },
+    ),
+    Match.when(
+      { request: { runtime: "hellishRebuke" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const damage = runtimeInputs.values.damage;
+        if (damage < 0) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Hellish Rebuke damage must be non-negative.",
+            },
+          };
+        }
         return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_SUPPORTED",
-            message: `Hellish Rebuke runtime cannot finalize ${request.token.type}.`,
+          ok: true,
+          event: {
+            type: "BATTLE_AFTER_DAMAGE_SPELL_REACTION",
+            reactorId: CreatureId(request.token.actorId),
+            ...(request.token.accessId == null
+              ? {}
+              : { accessId: battleSpellAccessId(request.token.accessId) }),
+            reactionDmg: damage,
+            reactionSaved: runtimeInputs.values.saveSucceeded,
+            reactionDt: "fire",
           },
+          outcome: request.outcome,
         };
-      }
-      const damage = runtimeInputs.values.damage;
-      if (damage < 0) {
+      },
+    ),
+    Match.when(
+      { request: { runtime: "retaliation" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const { attackRoll, damage, critical } = runtimeInputs.values;
+        if (attackRoll < 1 || attackRoll > 20) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Retaliation attack roll must be between 1 and 20.",
+            },
+          };
+        }
+        if (damage < 0) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Retaliation damage must be non-negative.",
+            },
+          };
+        }
+        const actor = context.creatures.get(CreatureId(request.token.actorId));
         return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Hellish Rebuke damage must be non-negative.",
+          ok: true,
+          event: {
+            type: "BATTLE_AFTER_DAMAGE_RETALIATION",
+            reactorId: CreatureId(request.token.actorId),
+            retAtkRoll: attackRoll,
+            retDmg: damage,
+            retDt: actor?.mainHandWeapon?.damageType ?? "slashing",
+            retCrit: critical,
           },
+          outcome: request.outcome,
         };
-      }
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_AFTER_DAMAGE_SPELL_REACTION",
-          reactorId: CreatureId(request.token.actorId),
-          ...(request.token.accessId == null
-            ? {}
-            : { accessId: battleSpellAccessId(request.token.accessId) }),
-          reactionDmg: damage,
-          reactionSaved: runtimeInputs.values.saveSucceeded,
-          reactionDt: "fire",
-        },
-        outcome: request.outcome,
-      };
-    }),
-    Match.when({ runtime: "retaliation" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "retaliation") {
-        return battleRuntimeMismatch("retaliation", runtimeInputs.runtime);
-      }
-      const { attackRoll, damage, critical } = runtimeInputs.values;
-      if (attackRoll < 1 || attackRoll > 20) {
+      },
+    ),
+    Match.when(
+      { request: { runtime: "fireShield" } },
+      ({ request, runtimeInputs }): FinalizedBattleAction => {
+        const actor = context.creatures.get(CreatureId(request.token.actorId));
+        const payload = actor?.activeEffects.find(
+          (effect) => effect.reactivePayload?.trigger === "meleeHitWithin5ft",
+        )?.reactivePayload;
+        if (payload == null) {
+          return {
+            ok: false,
+            error: {
+              code: "ACTION_NOT_AVAILABLE",
+              message: "Fire Shield has no active reactive payload.",
+            },
+          };
+        }
+        const damage = runtimeInputs.values.damage;
+        if (damage < 0) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message: "Fire Shield damage must be non-negative.",
+            },
+          };
+        }
         return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Retaliation attack roll must be between 1 and 20.",
+          ok: true,
+          event: {
+            type: "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT",
+            reactorId: CreatureId(request.token.actorId),
+            reactionDmg: damage,
+            reactionDt: payload.damageType,
           },
+          outcome: request.outcome,
         };
-      }
-      if (damage < 0) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Retaliation damage must be non-negative.",
-          },
-        };
-      }
-      const actor = context.creatures.get(CreatureId(request.token.actorId));
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_AFTER_DAMAGE_RETALIATION",
-          reactorId: CreatureId(request.token.actorId),
-          retAtkRoll: attackRoll,
-          retDmg: damage,
-          retDt: actor?.mainHandWeapon?.damageType ?? "slashing",
-          retCrit: critical,
-        },
-        outcome: request.outcome,
-      };
-    }),
-    Match.when({ runtime: "fireShield" }, (): FinalizedBattleAction => {
-      if (runtimeInputs.runtime !== "fireShield") {
-        return battleRuntimeMismatch("fireShield", runtimeInputs.runtime);
-      }
-      const actor = context.creatures.get(CreatureId(request.token.actorId));
-      const payload = actor?.activeEffects.find(
-        (effect) => effect.reactivePayload?.trigger === "meleeHitWithin5ft",
-      )?.reactivePayload;
-      if (payload == null) {
-        return {
-          ok: false,
-          error: {
-            code: "ACTION_NOT_AVAILABLE",
-            message: "Fire Shield has no active reactive payload.",
-          },
-        };
-      }
-      const damage = runtimeInputs.values.damage;
-      if (damage < 0) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message: "Fire Shield damage must be non-negative.",
-          },
-        };
-      }
-      return {
-        ok: true,
-        event: {
-          type: "BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT",
-          reactorId: CreatureId(request.token.actorId),
-          reactionDmg: damage,
-          reactionDt: payload.damageType,
-        },
-        outcome: request.outcome,
-      };
-    }),
+      },
+    ),
     Match.exhaustive,
   );
 }
@@ -6984,6 +6912,30 @@ function battleRuntimeMismatch(
       message: `Expected ${expected} runtime inputs, received ${actual}.`,
     },
   };
+}
+
+function battleFinalizationInput(
+  request: BattleResolutionRequest,
+  runtimeInputs: BattleResolutionRuntimeInputs,
+): BattleFinalizationInput | FinalizedBattleAction {
+  if (request.runtime !== runtimeInputs.runtime) {
+    return battleRuntimeMismatch(request.runtime, runtimeInputs.runtime);
+  }
+
+  // TypeScript cannot infer this correlated union from the runtime equality check.
+  return { request, runtimeInputs } as BattleFinalizationInput;
+}
+
+function finalizationInput(
+  request: ResolutionRequest,
+  runtimeInputs: ResolutionRuntimeInputs,
+): FinalizationInput | FinalizedAction {
+  if (request.runtime !== runtimeInputs.runtime) {
+    return runtimeMismatch(request.runtime, runtimeInputs.runtime);
+  }
+
+  // TypeScript cannot infer this correlated union from the runtime equality check.
+  return { request, runtimeInputs } as FinalizationInput;
 }
 
 function availableTokenForType(
@@ -7546,47 +7498,40 @@ export function finalizeResolution(
   runtimeInputs: ResolutionRuntimeInputs,
   context: DndContext,
 ): FinalizedAction {
-  return Match.value(request).pipe(
+  const parsed = finalizationInput(request, runtimeInputs);
+  if ("ok" in parsed) return parsed;
+
+  return Match.value(parsed).pipe(
     Match.when(
-      { runtime: "none" },
-      (resolved): FinalizedAction =>
-        runtimeInputs.runtime === "none"
-          ? {
-              ok: true as const,
-              event: resolved.event,
-              outcome: resolved.outcome,
-            }
-          : runtimeMismatch("none", runtimeInputs.runtime),
-    ),
-    Match.when({ runtime: "startTurn" }, (resolved): FinalizedAction => {
-      if (runtimeInputs.runtime !== "startTurn")
-        return runtimeMismatch("startTurn", runtimeInputs.runtime);
-      return {
+      { request: { runtime: "none" } },
+      ({ request }): FinalizedAction => ({
         ok: true as const,
-        event: {
-          ...runtimeInputs.values,
-          type: "START_TURN" as const,
-        },
-        outcome: resolved.outcome,
-      };
-    }),
-    Match.when({ runtime: "actionSurge" }, (): FinalizedAction => {
-      if (runtimeInputs.runtime !== "actionSurge")
-        return runtimeMismatch("actionSurge", runtimeInputs.runtime);
+        event: request.event,
+        outcome: request.outcome,
+      }),
+    ),
+    Match.when(
+      { request: { runtime: "startTurn" } },
+      ({ request: resolved, runtimeInputs }): FinalizedAction => {
+        return {
+          ok: true as const,
+          event: {
+            ...runtimeInputs.values,
+            type: "START_TURN" as const,
+          },
+          outcome: resolved.outcome,
+        };
+      },
+    ),
+    Match.when({ request: { runtime: "actionSurge" } }, (): FinalizedAction => {
       return {
         ok: true,
         ...finalizeProjectedActionSurge(context),
       };
     }),
     Match.when(
-      { runtime: "projectedPreparedSpell" },
-      (resolved): FinalizedAction => {
-        if (runtimeInputs.runtime !== "projectedPreparedSpell") {
-          return runtimeMismatch(
-            "projectedPreparedSpell",
-            runtimeInputs.runtime,
-          );
-        }
+      { request: { runtime: "projectedPreparedSpell" } },
+      ({ request: resolved, runtimeInputs }): FinalizedAction => {
         try {
           return {
             ok: true,
@@ -7610,198 +7555,212 @@ export function finalizeResolution(
         }
       },
     ),
-    Match.when({ runtime: "tacticalMind" }, (): FinalizedAction => {
-      if (runtimeInputs.runtime !== "tacticalMind")
-        return runtimeMismatch("tacticalMind", runtimeInputs.runtime);
-      return {
-        ok: true as const,
-        event: {
-          type: "USE_TACTICAL_MIND" as const,
-          boostedCheckSucceeds: runtimeInputs.values.boostedCheckSucceeds,
-        },
-        outcome: runtimeInputs.values.boostedCheckSucceeds
-          ? "Tactical Mind turned the failed ability check into a success"
-          : "Tactical Mind failed to turn the ability check into a success, so Second Wind was not expended",
-      };
-    }),
-    Match.when({ runtime: "wholenessOfBody" }, (): FinalizedAction => {
-      if (runtimeInputs.runtime !== "wholenessOfBody")
-        return runtimeMismatch("wholenessOfBody", runtimeInputs.runtime);
-      const monkLevel = context.classStates.monk?.level ?? 0;
-      const maxDie = pMartialArtsDie(monkLevel);
-      const wisMod = context.classStates.monk?.wholenessMax ?? 0;
-      const minHeal = Math.max(1, 1 + wisMod);
-      const maxHeal = Math.max(1, maxDie + wisMod);
-      if (
-        runtimeInputs.values.healRoll < minHeal ||
-        runtimeInputs.values.healRoll > maxHeal
-      ) {
+    Match.when(
+      { request: { runtime: "tacticalMind" } },
+      ({ runtimeInputs }): FinalizedAction => {
         return {
-          ok: false as const,
-          error: {
-            code: "INVALID_RUNTIME_INPUT" as const,
-            message: `Wholeness of Body heal amount must be between ${minHeal} and ${maxHeal}, received ${runtimeInputs.values.healRoll}.`,
+          ok: true as const,
+          event: {
+            type: "USE_TACTICAL_MIND" as const,
+            boostedCheckSucceeds: runtimeInputs.values.boostedCheckSucceeds,
           },
+          outcome: runtimeInputs.values.boostedCheckSucceeds
+            ? "Tactical Mind turned the failed ability check into a success"
+            : "Tactical Mind failed to turn the ability check into a success, so Second Wind was not expended",
         };
-      }
-      return {
-        ok: true as const,
-        event: {
-          type: "WHOLENESS_OF_BODY" as const,
-          healRoll: runtimeInputs.values.healRoll,
-        },
-        outcome: `Healed ${runtimeInputs.values.healRoll} HP with Wholeness of Body`,
-      };
-    }),
-    Match.when({ runtime: "uncannyMetabolism" }, (): FinalizedAction => {
-      if (runtimeInputs.runtime !== "uncannyMetabolism")
-        return runtimeMismatch("uncannyMetabolism", runtimeInputs.runtime);
-      const monkLevel = context.classStates.monk?.level ?? 0;
-      const maxDie = pMartialArtsDie(monkLevel);
-      if (
-        runtimeInputs.values.healRoll < 1 ||
-        runtimeInputs.values.healRoll > maxDie
-      ) {
-        return {
-          ok: false as const,
-          error: {
-            code: "INVALID_RUNTIME_INPUT" as const,
-            message: `Uncanny Metabolism die roll must be between 1 and ${maxDie}, received ${runtimeInputs.values.healRoll}.`,
-          },
-        };
-      }
-      return {
-        ok: true as const,
-        event: {
-          type: "UNCANNY_METABOLISM" as const,
-          healRoll: runtimeInputs.values.healRoll,
-        },
-        outcome: `Regained all Focus Points and healed 1d${maxDie}(${runtimeInputs.values.healRoll}) + ${monkLevel} = ${
-          runtimeInputs.values.healRoll + monkLevel
-        } HP`,
-      };
-    }),
-    Match.when({ runtime: "secondWind" }, (): FinalizedAction => {
-      if (runtimeInputs.runtime !== "secondWind")
-        return runtimeMismatch("secondWind", runtimeInputs.runtime);
-      return {
-        ok: true,
-        ...finalizeProjectedSecondWind(context, runtimeInputs.values.d10Roll),
-      };
-    }),
-    Match.when({ runtime: "tireless" }, (): FinalizedAction => {
-      if (runtimeInputs.runtime !== "tireless")
-        return runtimeMismatch("tireless", runtimeInputs.runtime);
-      if (runtimeInputs.values.d8Roll < 1 || runtimeInputs.values.d8Roll > 8) {
-        return {
-          ok: false as const,
-          error: {
-            code: "INVALID_RUNTIME_INPUT" as const,
-            message: `Tireless d8 roll must be between 1 and 8, received ${runtimeInputs.values.d8Roll}.`,
-          },
-        };
-      }
-      const wisComponent = context.classStates.ranger?.tirelessMax ?? 0;
-      const tempHp = tirelessTempHp(runtimeInputs.values.d8Roll, wisComponent);
-      return {
-        ok: true as const,
-        event: {
-          type: "USE_TIRELESS" as const,
-          d8Roll: runtimeInputs.values.d8Roll,
-        },
-        outcome: `Gained 1d8(${runtimeInputs.values.d8Roll}) + ${Math.max(1, wisComponent)} = ${tempHp} temporary HP`,
-      };
-    }),
-    Match.when({ runtime: "peerlessSkill" }, (): FinalizedAction => {
-      if (runtimeInputs.runtime !== "peerlessSkill")
-        return runtimeMismatch("peerlessSkill", runtimeInputs.runtime);
-      const mode =
-        context.pendingResolution?.kind === "peerlessSkill"
-          ? context.pendingResolution.mode
-          : "abilityCheck";
-      return {
-        ok: true as const,
-        event: {
-          type: "USE_PEERLESS_SKILL" as const,
-          success: runtimeInputs.values.success,
-        },
-        outcome: runtimeInputs.values.success
-          ? `Peerless Skill turned the failed ${mode === "attackRoll" ? "attack roll" : "ability check"} into a success`
-          : `Peerless Skill failed to turn the ${mode === "attackRoll" ? "attack roll" : "ability check"} into a success, so Bardic Inspiration was not expended`,
-      };
-    }),
-    Match.when({ runtime: "relentlessRage" }, (): FinalizedAction => {
-      if (runtimeInputs.runtime !== "relentlessRage")
-        return runtimeMismatch("relentlessRage", runtimeInputs.runtime);
-      const barbarianLevel = context.classStates.barbarian?.level ?? 0;
-      return {
-        ok: true as const,
-        event: {
-          type: "USE_RELENTLESS_RAGE" as const,
-          conSaveSucceeded: runtimeInputs.values.conSaveSucceeded,
-        },
-        outcome: runtimeInputs.values.conSaveSucceeded
-          ? `Relentless Rage succeeded; HP becomes ${2 * barbarianLevel}`
-          : "Relentless Rage failed; HP remains 0",
-      };
-    }),
-    Match.when({ runtime: "shortRest" }, (resolved): FinalizedAction => {
-      if (runtimeInputs.runtime !== "shortRest")
-        return runtimeMismatch("shortRest", runtimeInputs.runtime);
-      if (
-        runtimeInputs.values.hdRolls.length !==
-        resolved.token.spendHitDice.length
-      ) {
-        return {
-          ok: false as const,
-          error: {
-            code: "INVALID_RUNTIME_INPUT" as const,
-            message: `Short Rest expected ${resolved.token.spendHitDice.length} hit-die roll(s), received ${runtimeInputs.values.hdRolls.length}.`,
-          },
-        };
-      }
-      for (const [
-        index,
-        expectedClassName,
-      ] of resolved.token.spendHitDice.entries()) {
-        const actual = runtimeInputs.values.hdRolls[index];
-        const dieSize = classHitDie(expectedClassName);
-        if (actual == null || actual.className !== expectedClassName) {
+      },
+    ),
+    Match.when(
+      { request: { runtime: "wholenessOfBody" } },
+      ({ runtimeInputs }): FinalizedAction => {
+        const monkLevel = context.classStates.monk?.level ?? 0;
+        const maxDie = pMartialArtsDie(monkLevel);
+        const wisMod = context.classStates.monk?.wholenessMax ?? 0;
+        const minHeal = Math.max(1, 1 + wisMod);
+        const maxHeal = Math.max(1, maxDie + wisMod);
+        if (
+          runtimeInputs.values.healRoll < minHeal ||
+          runtimeInputs.values.healRoll > maxHeal
+        ) {
           return {
             ok: false as const,
             error: {
               code: "INVALID_RUNTIME_INPUT" as const,
-              message: `Short Rest roll ${index + 1} must be for ${expectedClassName}, received ${actual?.className ?? "missing"}.`,
+              message: `Wholeness of Body heal amount must be between ${minHeal} and ${maxHeal}, received ${runtimeInputs.values.healRoll}.`,
             },
           };
         }
-        if (actual.roll < 1 || actual.roll > dieSize) {
+        return {
+          ok: true as const,
+          event: {
+            type: "WHOLENESS_OF_BODY" as const,
+            healRoll: runtimeInputs.values.healRoll,
+          },
+          outcome: `Healed ${runtimeInputs.values.healRoll} HP with Wholeness of Body`,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "uncannyMetabolism" } },
+      ({ runtimeInputs }): FinalizedAction => {
+        const monkLevel = context.classStates.monk?.level ?? 0;
+        const maxDie = pMartialArtsDie(monkLevel);
+        if (
+          runtimeInputs.values.healRoll < 1 ||
+          runtimeInputs.values.healRoll > maxDie
+        ) {
           return {
             ok: false as const,
             error: {
               code: "INVALID_RUNTIME_INPUT" as const,
-              message: `Short Rest roll ${index + 1} for ${expectedClassName} must be between 1 and ${dieSize}, received ${actual.roll}.`,
+              message: `Uncanny Metabolism die roll must be between 1 and ${maxDie}, received ${runtimeInputs.values.healRoll}.`,
             },
           };
         }
-      }
-      return {
-        ok: true as const,
-        event: {
-          type: "SHORT_REST" as const,
-          hdRolls: runtimeInputs.values.hdRolls,
-        },
-        outcome:
-          resolved.token.spendHitDice.length === 0
-            ? resolved.outcome
-            : `Spent hit dice in order: ${runtimeInputs.values.hdRolls
-                .map(
-                  ({ className, roll }) =>
-                    `${className} d${classHitDie(className)}(${roll})`,
-                )
-                .join(", ")}`,
-      };
-    }),
+        return {
+          ok: true as const,
+          event: {
+            type: "UNCANNY_METABOLISM" as const,
+            healRoll: runtimeInputs.values.healRoll,
+          },
+          outcome: `Regained all Focus Points and healed 1d${maxDie}(${runtimeInputs.values.healRoll}) + ${monkLevel} = ${
+            runtimeInputs.values.healRoll + monkLevel
+          } HP`,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "secondWind" } },
+      ({ runtimeInputs }): FinalizedAction => {
+        return {
+          ok: true,
+          ...finalizeProjectedSecondWind(context, runtimeInputs.values.d10Roll),
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "tireless" } },
+      ({ runtimeInputs }): FinalizedAction => {
+        if (
+          runtimeInputs.values.d8Roll < 1 ||
+          runtimeInputs.values.d8Roll > 8
+        ) {
+          return {
+            ok: false as const,
+            error: {
+              code: "INVALID_RUNTIME_INPUT" as const,
+              message: `Tireless d8 roll must be between 1 and 8, received ${runtimeInputs.values.d8Roll}.`,
+            },
+          };
+        }
+        const wisComponent = context.classStates.ranger?.tirelessMax ?? 0;
+        const tempHp = tirelessTempHp(
+          runtimeInputs.values.d8Roll,
+          wisComponent,
+        );
+        return {
+          ok: true as const,
+          event: {
+            type: "USE_TIRELESS" as const,
+            d8Roll: runtimeInputs.values.d8Roll,
+          },
+          outcome: `Gained 1d8(${runtimeInputs.values.d8Roll}) + ${Math.max(1, wisComponent)} = ${tempHp} temporary HP`,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "peerlessSkill" } },
+      ({ runtimeInputs }): FinalizedAction => {
+        const mode =
+          context.pendingResolution?.kind === "peerlessSkill"
+            ? context.pendingResolution.mode
+            : "abilityCheck";
+        return {
+          ok: true as const,
+          event: {
+            type: "USE_PEERLESS_SKILL" as const,
+            success: runtimeInputs.values.success,
+          },
+          outcome: runtimeInputs.values.success
+            ? `Peerless Skill turned the failed ${mode === "attackRoll" ? "attack roll" : "ability check"} into a success`
+            : `Peerless Skill failed to turn the ${mode === "attackRoll" ? "attack roll" : "ability check"} into a success, so Bardic Inspiration was not expended`,
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "relentlessRage" } },
+      ({ runtimeInputs }): FinalizedAction => {
+        const barbarianLevel = context.classStates.barbarian?.level ?? 0;
+        return {
+          ok: true as const,
+          event: {
+            type: "USE_RELENTLESS_RAGE" as const,
+            conSaveSucceeded: runtimeInputs.values.conSaveSucceeded,
+          },
+          outcome: runtimeInputs.values.conSaveSucceeded
+            ? `Relentless Rage succeeded; HP becomes ${2 * barbarianLevel}`
+            : "Relentless Rage failed; HP remains 0",
+        };
+      },
+    ),
+    Match.when(
+      { request: { runtime: "shortRest" } },
+      ({ request: resolved, runtimeInputs }): FinalizedAction => {
+        if (
+          runtimeInputs.values.hdRolls.length !==
+          resolved.token.spendHitDice.length
+        ) {
+          return {
+            ok: false as const,
+            error: {
+              code: "INVALID_RUNTIME_INPUT" as const,
+              message: `Short Rest expected ${resolved.token.spendHitDice.length} hit-die roll(s), received ${runtimeInputs.values.hdRolls.length}.`,
+            },
+          };
+        }
+        for (const [
+          index,
+          expectedClassName,
+        ] of resolved.token.spendHitDice.entries()) {
+          const actual = runtimeInputs.values.hdRolls[index];
+          const dieSize = classHitDie(expectedClassName);
+          if (actual == null || actual.className !== expectedClassName) {
+            return {
+              ok: false as const,
+              error: {
+                code: "INVALID_RUNTIME_INPUT" as const,
+                message: `Short Rest roll ${index + 1} must be for ${expectedClassName}, received ${actual?.className ?? "missing"}.`,
+              },
+            };
+          }
+          if (actual.roll < 1 || actual.roll > dieSize) {
+            return {
+              ok: false as const,
+              error: {
+                code: "INVALID_RUNTIME_INPUT" as const,
+                message: `Short Rest roll ${index + 1} for ${expectedClassName} must be between 1 and ${dieSize}, received ${actual.roll}.`,
+              },
+            };
+          }
+        }
+        return {
+          ok: true as const,
+          event: {
+            type: "SHORT_REST" as const,
+            hdRolls: runtimeInputs.values.hdRolls,
+          },
+          outcome:
+            resolved.token.spendHitDice.length === 0
+              ? resolved.outcome
+              : `Spent hit dice in order: ${runtimeInputs.values.hdRolls
+                  .map(
+                    ({ className, roll }) =>
+                      `${className} d${classHitDie(className)}(${roll})`,
+                  )
+                  .join(", ")}`,
+        };
+      },
+    ),
     Match.exhaustive,
   );
 }

@@ -665,6 +665,21 @@ export type BattleResolutionInput = {
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
 };
+type BattleResolutionInputForSubject<TSubject extends BattleSubject> = Omit<
+  BattleResolutionInput,
+  "subject"
+> & {
+  readonly subject: TSubject;
+};
+type AttackBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
+>;
+type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<BattleSubject, { readonly tag: "actionSpell" }>
+>;
+type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<BattleSubject, { readonly tag: "unitFeature" }>
+>;
 
 export const BATTLE_INVALID_REASON_CODES = [
   "staleSubject",
@@ -913,11 +928,15 @@ export function resolveBattleSubject(
   }
 
   return Match.value(input.subject).pipe(
-    Match.when({ tag: "action", action: "attack" }, () =>
-      resolveAttack(input),
+    Match.when({ tag: "action", action: "attack" }, (subject) =>
+      resolveAttack({ ...input, subject }),
     ),
-    Match.when({ tag: "actionSpell" }, () => resolveSpellAct(input)),
-    Match.when({ tag: "unitFeature" }, () => resolveUnitFeature(input)),
+    Match.when({ tag: "actionSpell" }, (subject) =>
+      resolveSpellAct({ ...input, subject }),
+    ),
+    Match.when({ tag: "unitFeature" }, (subject) =>
+      resolveUnitFeature({ ...input, subject }),
+    ),
     Match.when({ tag: "runtimeCommand", command: "endTurn" }, () =>
       resolveEndTurnCommand(input),
     ),
@@ -1367,14 +1386,9 @@ export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);
 }
 
-function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
-  if (input.subject.tag !== "action" || input.subject.action !== "attack") {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Attack resolution requires an Attack action subject.",
-    );
-  }
+function resolveAttack(
+  input: AttackBattleResolutionInput,
+): BattleResolutionResult {
   const subject = input.subject;
 
   const attack = attackActionOptionForSubject(input.state, subject);
@@ -1714,15 +1728,8 @@ function supportedUnitFeatureActs(
 }
 
 function resolveUnitFeature(
-  input: BattleResolutionInput,
+  input: UnitFeatureBattleResolutionInput,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (input.subject.tag !== "unitFeature") {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Unit feature resolution requires a Unit feature subject.",
-    );
-  }
   const subject = input.subject;
   if (input.fills.length > 0) {
     return invalidResult(
@@ -1851,14 +1858,9 @@ function discoverSupportedSpellActs(
   });
 }
 
-function resolveSpellAct(input: BattleResolutionInput): BattleResolutionResult {
-  if (input.subject.tag !== "actionSpell") {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Action-time spell act resolution requires an actionSpell subject.",
-    );
-  }
+function resolveSpellAct(
+  input: ActionSpellBattleResolutionInput,
+): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
@@ -2708,7 +2710,9 @@ function combatantDistanceFeet(
   return state.combatantDistances.get(actorId)?.get(targetId);
 }
 
-function attackRollHole(attack: SupportedAttackActionOption): BattleAttackRollHole {
+function attackRollHole(
+  attack: SupportedAttackActionOption,
+): BattleAttackRollHole {
   const name = attackActionOptionName(attack);
   return {
     kind: "attackRoll",
