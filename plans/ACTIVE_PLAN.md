@@ -179,13 +179,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 21,
       "id": "BA2",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Inventory Promoted Runtime Proof Coverage"
     },
     {
       "number": 22,
       "id": "BA3",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replan Authority Slices From Inventories"
     },
     {
@@ -295,8 +295,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 18    | POST5 - Add Widened MCP User Workflow Coverage                   | done               | POST4                | none                                | Added promoted MCP workflow coverage for the Fighter 2 + Wizard 1 versus Skeleton width slice and updated Restore Ledger status for restored rows.                                                  | Completed.                                                                                |
 | 19    | BA0 - Define Battle Authority Policy                             | done               | POST5                | BA1, BA2                            | Documented the one-authority direction: promoted Unit/StatBlock-backed battle runtime is the active semantic authority for new work; old Core battle is legacy/broad restore/proof source material. | Completed; BA1 and BA2 are unblocked.                                                     |
 | 20    | BA1 - Inventory Old Battle Authority Surface                     | done               | BA0                  | BA3                                 | Classified root `battle.qnt`, Core battle MBT, and old battle-machine feature areas into overlap, old-only widening, obsolete Core/projected artifact, and proof-source material.                   | Completed; BA3 remains blocked until BA2 also completes.                                  |
-| 21    | BA2 - Inventory Promoted Runtime Proof Coverage                  | ready-for-research | BA0                  | BA3                                 | Map current `@dnd/battle-runtime`, `battle-runtime-slice.qnt`, deterministic tests, shared-algebra MBT, and MCP tests to implemented behavior and proof gaps.                                       | Ready; BA0 fixed policy vocabulary.                                                       |
-| 22    | BA3 - Replan Authority Slices From Inventories                   | blocked            | BA1, BA2             | BA4, BA5, BA6, BA7, BA8, BA10, BA12 | Revise this BA task list from BA1/BA2 findings before implementation; split or merge overlap tasks if the inventories show different seams.                                                         | Blocked until both inventories are recorded.                                              |
+| 21    | BA2 - Inventory Promoted Runtime Proof Coverage                  | done               | BA0                  | BA3                                 | Recorded the promoted runtime proof-coverage map in `plans/battle-runtime-proof-coverage.md`, separating deterministic/runtime/QNT-slice/shared-algebra MBT/MCP coverage from integrated MBT gaps. | Completed; BA3 is unblocked.                                                             |
+| 22    | BA3 - Replan Authority Slices From Inventories                   | ready-for-research | BA1, BA2             | BA4, BA5, BA6, BA7, BA8, BA10, BA12 | Revise this BA task list from BA1/BA2 findings before implementation; split or merge overlap tasks if the inventories show different seams.                                                         | Ready; both inventories are recorded.                                                     |
 | 23    | BA4 - Reconcile Attack Damage HP Overlap                         | blocked            | BA3                  | BA8                                 | Resolve overlapping semantics for supported Attack target/roll/damage, criticals, Temporary HP, HP clamp, damage modifiers, and current death-at-zero consequences.                                 | Blocked until BA3 confirms exact overlap.                                                 |
 | 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | blocked            | BA3                  | BA8                                 | Resolve overlapping semantics for Initiative order, round/turn advancement, End Turn command modeling, action-resource spend/reset, and current actor legality.                                     | Blocked until BA3 confirms exact overlap.                                                 |
 | 25    | BA6 - Reconcile Promoted Width Overlap                           | blocked            | BA3                  | BA8                                 | Resolve overlap or divergence for already-promoted width: Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers.                 | Blocked until BA3 confirms exact overlap.                                                 |
@@ -1550,12 +1550,13 @@ Plan Impact:
 
 ### Task 21 - BA2 - Inventory Promoted Runtime Proof Coverage
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: BA0
 Blocks: BA3
 
-Next action: map what the promoted runtime already implements and proves.
+Next action: completed in
+[battle-runtime-proof-coverage.md](/workspace/typescript/dnd/plans/battle-runtime-proof-coverage.md).
 
 Input:
 
@@ -1592,11 +1593,15 @@ Verification:
 
 Plan Impact:
 
-- BA3 must consume this coverage map and may revise BA4-BA13.
+- Status: applied.
+- BA3: unblocked for replan research now that both BA1 and BA2 inventories are
+  recorded.
+- BA4-BA13: left blocked; BA3 must consume the coverage map and may revise
+  their scopes.
 
 ### Task 22 - BA3 - Replan Authority Slices From Inventories
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: BA1, BA2
 Blocks: BA4, BA5, BA6, BA7, BA8, BA10, BA12
