@@ -218,12 +218,35 @@ module battleRuntimeSlice {
   pure def damageAfterAdjustments(
     damage: int,
     damageType: DamageType,
+    resistances: Set[DamageType],
     vulnerabilities: Set[DamageType],
     immunities: Set[DamageType],
   ): int =
     if (immunities.contains(damageType)) 0
-    else if (vulnerabilities.contains(damageType)) damage * 2
-    else damage
+    else {
+      val afterResistance =
+        if (resistances.contains(damageType)) damage / 2 else damage
+
+      if (vulnerabilities.contains(damageType))
+        afterResistance * 2
+      else
+        afterResistance
+    }
+
+  pure def sameTypeDamageAfterAdjustments(
+    damageParts: List[int],
+    damageType: DamageType,
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType],
+  ): int =
+    damageAfterAdjustments(
+      damageParts.foldl(0, (total, damage) => total + damage),
+      damageType,
+      resistances,
+      vulnerabilities,
+      immunities,
+    )
 
   pure def grantActionSurge(
     state: BattleState,
@@ -340,9 +363,17 @@ module battleRuntimeSlice {
 
   run test_skeleton_damage_adjustments_apply_vulnerability_and_immunity = {
     all {
-      assert(damageAfterAdjustments(5, Bludgeoning, Set(Bludgeoning), Set(Poison)) == 10),
-      assert(damageAfterAdjustments(5, Poison, Set(Bludgeoning), Set(Poison)) == 0),
+      assert(
+        damageAfterAdjustments(5, Bludgeoning, Set(), Set(Bludgeoning), Set(Poison)) == 10
+      ),
+      assert(damageAfterAdjustments(5, Poison, Set(), Set(Bludgeoning), Set(Poison)) == 0),
     }
+  }
+
+  run test_same_type_damage_adjustments_apply_resistance_after_combining_parts = {
+    assert(
+      sameTypeDamageAfterAdjustments([3, 1], Slashing, Set(Slashing), Set(), Set()) == 2
+    )
   }
 
   run test_action_surge_grants_one_extra_action_and_spends_use = {

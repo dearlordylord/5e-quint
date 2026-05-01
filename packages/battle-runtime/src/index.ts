@@ -2193,26 +2193,46 @@ function attackDamageAmount(
   attackRoll?: AttackRollResult,
 ): number {
   const components = attackDamageComponents(attack, critical, attackRoll);
-  return damageRoll.value.reduce((total, group, index) => {
-    const component = components[index];
-    if (component === undefined) {
-      return total;
-    }
-    const diceTotal = group.results.reduce(
-      (groupTotal, dieResult) => groupTotal + Number(dieResult),
-      0,
-    );
-    const unadjusted =
-      diceTotal + (index === 0 ? attackDamageModifier(attack) : 0);
-    return (
-      total +
-      damageAmountAfterTargetAdjustments(
-        target,
-        unadjusted,
-        component.damageType,
-      )
-    );
-  }, 0);
+  const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
+    (totals, group, index) => {
+      const component = components[index];
+      if (component === undefined) {
+        return totals;
+      }
+      const diceTotal = group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      );
+      const unadjusted =
+        diceTotal + (index === 0 ? attackDamageModifier(attack) : 0);
+      return addDamageAmountForType(totals, component.damageType, unadjusted);
+    },
+    new Map(),
+  );
+
+  return damageAmountByTypeAfterTargetAdjustments(target, damageByType);
+}
+
+function addDamageAmountForType(
+  totals: ReadonlyMap<DamageType, number>,
+  damageType: DamageType,
+  amount: number,
+): ReadonlyMap<DamageType, number> {
+  return new Map(totals).set(
+    damageType,
+    (totals.get(damageType) ?? 0) + amount,
+  );
+}
+
+function damageAmountByTypeAfterTargetAdjustments(
+  target: BattleCreatureState,
+  damageByType: ReadonlyMap<DamageType, number>,
+): number {
+  return [...damageByType].reduce(
+    (total, [damageType, amount]) =>
+      total + damageAmountAfterTargetAdjustments(target, amount, damageType),
+    0,
+  );
 }
 
 function damageAmountAfterTargetAdjustments(

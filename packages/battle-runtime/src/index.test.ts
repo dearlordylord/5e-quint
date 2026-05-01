@@ -1485,6 +1485,56 @@ describe("battle runtime", () => {
     });
   });
 
+  test("same-type Stat Block attack damage applies Resistance once after combining components", () => {
+    const state = startBattle({
+      battleId: battleId("battle-combined-resistance-damage"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        resistantSkeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = goblinAttackSubject("Scimitar");
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(
+      state,
+      targetHole,
+      subject,
+      skeletonId,
+    );
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 18, naturalD20: 14, rollMode: "advantage" },
+      subject,
+      skeletonId,
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, skeletonId),
+        attackRollFill(rollHole, {
+          total: 18,
+          naturalD20: 14,
+          rollMode: "advantage",
+        }),
+        damageRollFillWithGroups(damageHole, [[1], [1]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: goblinId },
+          { combatantId: skeletonId, hp: 11 },
+        ],
+      },
+    });
+  });
+
   test("Goblin Warrior attack resolves through HP mutation, action spend, and zero-HP policy", () => {
     const state = goblinTurnBattle({ fighterHp: 6 });
     const subject = goblinAttackSubject("Shortbow");
@@ -1692,9 +1742,7 @@ describe("battle runtime", () => {
       throw new Error(`Expected resolved Action Surge, got ${surged.tag}.`);
     }
     expect(
-      surged.snapshot.acts.some(
-        (act) => act.subject.tag === "actionSpell",
-      ),
+      surged.snapshot.acts.some((act) => act.subject.tag === "actionSpell"),
     ).toBe(false);
     expect(
       resolveBattleSubject({
@@ -2380,7 +2428,7 @@ function runQuintSliceSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("23 passing");
+  expect(quintOutput).toContain("24 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -2913,6 +2961,43 @@ function skeletonCreatureInit(input: {
     creatureInit: {
       kind: "statBlock",
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      currentHp: Hp(13),
+      maxHp: Hp(13),
+      tempHp: Hp(0),
+      zeroHpLifecyclePolicy: "diesAtZeroHp",
+    },
+  };
+}
+
+function resistantSkeletonCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  const {
+    vulnerabilities: _vulnerabilities,
+    immunities: _immunities,
+    ...statBlockWithoutDamageModifiers
+  } = skeleton.statBlock;
+  return {
+    combatantId: skeletonId,
+    displayName: "Slashing Resistant Skeleton",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "statBlock",
+      statBlock: {
+        id: "stat_block_slashing_resistant_skeleton",
+        kind: "statBlock",
+        name: "Slashing Resistant Skeleton",
+        provenance: {
+          kind: "xphb",
+          section: "battle-runtime test fixture",
+        },
+        statBlock: {
+          ...statBlockWithoutDamageModifiers,
+          displayName: "Slashing Resistant Skeleton",
+          resistances: { kind: "fixed", damageTypes: ["slashing"] },
+        },
+      },
       currentHp: Hp(13),
       maxHp: Hp(13),
       tempHp: Hp(0),

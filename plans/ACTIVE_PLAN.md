@@ -191,7 +191,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 23,
       "id": "BA4",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Reconcile Attack Damage HP Overlap"
     },
     {
@@ -297,7 +297,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 20    | BA1 - Inventory Old Battle Authority Surface                     | done               | BA0                  | BA3                                 | Classified root `battle.qnt`, Core battle MBT, and old battle-machine feature areas into overlap, old-only widening, obsolete Core/projected artifact, and proof-source material.                   | Completed; BA3 remains blocked until BA2 also completes.                                  |
 | 21    | BA2 - Inventory Promoted Runtime Proof Coverage                  | done               | BA0                  | BA3                                 | Recorded the promoted runtime proof-coverage map in `plans/battle-runtime-proof-coverage.md`, separating deterministic/runtime/QNT-slice/shared-algebra MBT/MCP coverage from integrated MBT gaps. | Completed; BA3 is unblocked.                                                             |
 | 22    | BA3 - Replan Authority Slices From Inventories                   | done               | BA1, BA2             | BA4, BA5, BA6, BA7, BA8, BA10, BA12 | Consumed BA1/BA2/Restore Ledger facts and kept the BA queue split: four bounded overlap slices, one proof-strategy slice, later QNT layout/quarantine, and old-only backlog conversion.             | Completed; BA4-BA7 and BA10 are unblocked.                                                |
-| 23    | BA4 - Reconcile Attack Damage HP Overlap                         | ready-for-implementation-after-light-research | BA3                  | BA8                                 | Resolve only already-promoted Attack target/roll/damage, criticals, Temporary HP, HP clamp, and supported damage modifiers; stop at the zero-HP lifecycle handoff owned by BA7.                       | Ready; do not inspect all of root `battle.qnt`, use BA1 row references.                   |
+| 23    | BA4 - Reconcile Attack Damage HP Overlap                         | done               | BA3                  | BA8                                 | Reconciled already-promoted Attack target/roll/damage, criticals, Temporary HP, HP clamp, and supported damage modifiers; stopped at the zero-HP lifecycle handoff owned by BA7.                       | Completed; BA8 remains blocked until BA5-BA7 complete.                                   |
 | 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | ready-for-implementation-after-light-research | BA3                  | BA8                                 | Resolve only already-promoted Initiative order, round/turn advancement, End Turn command modeling, action-resource spend/reset, and current actor/action gating.                                    | Ready; old Dash/Dodge/Disengage/Ready catalog breadth is BA12 scope.                      |
 | 25    | BA6 - Reconcile Promoted Width Overlap                           | ready-for-implementation-after-light-research | BA3                  | BA8                                 | Resolve only already-promoted Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers.                                            | Ready; broad spell, persistent-effect, and monster-control width is BA12 scope.           |
 | 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | ready-for-implementation-after-light-research | BA3                  | BA8, BA12                           | Own all zero-HP lifecycle semantics: drop to 0 HP, damage at 0 HP, critical damage at 0 HP, massive damage, and action gating; separate these from old-only recovery/adventuring behavior.          | Ready; feeds BA12 but does not implement backlog width.                                   |
@@ -1696,7 +1696,7 @@ Plan Impact:
 
 ### Task 23 - BA4 - Reconcile Attack Damage HP Overlap
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: BA3
 Blocks: BA8
