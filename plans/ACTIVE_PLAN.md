@@ -17,7 +17,7 @@ Attack with damage, and End Turn. The first post-CAM width slice adds Fighter
 
 Current Battle Authority Reconciliation goal: resolve the temporary split between
 root `battle.qnt`/Core battle MBT and
-`@dnd/battle-runtime`/`battle-runtime-slice.qnt`. The intended direction is
+`@dnd/battle-runtime`/`battle-runtime.qnt`. The intended direction is
 that the promoted Unit/StatBlock-backed battle runtime becomes the active
 battle authority for new work. Old Core battle behavior and its wider MBT are
 valuable restore/proof source material, but missing old-only features are
@@ -231,13 +231,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 27,
       "id": "BA8",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Choose Canonical Battle QNT Layout"
     },
     {
       "number": 28,
       "id": "BA9",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Quarantine Legacy Core Battle MBT"
     },
     {
@@ -359,10 +359,10 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 24    | BA5 - Reconcile Initiative Turn Action Economy Overlap           | done               | BA3                  | BA8                                 | Reconciled already-promoted Initiative ordering, current actor, End Turn command modeling, action-resource spend/reset, wrong-actor rejection, and current actor/action gating.                     | Completed; BA8 remains blocked until BA6 and BA7 complete.                               |
 | 25    | BA6 - Reconcile Promoted Width Overlap                           | done               | BA3                  | BA8                                 | Reconciled already-promoted Action Surge, Wizard `magic_missile`/`ray_of_frost`, armor-training spell gate, and Skeleton Stat Block damage modifiers without restoring projected executable vocabulary. | Completed; BA8 is unblocked because BA4-BA7 are complete.                                |
 | 26    | BA7 - Reconcile Zero HP Lifecycle Boundary                       | done               | BA3                  | BA8, BA12                           | Documented the promoted zero-HP lifecycle boundary and fed BA12 explicit old-only lifecycle width rows without widening durable character state.                                                     | Completed; BA8 remains blocked until BA6 also completes, and BA12 is unblocked.          |
-| 27    | BA8 - Choose Canonical Battle QNT Layout                         | ready-for-implementation-after-light-research | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Implement the spec ownership decision: promote/move/rename package-local QNT or explicitly retire/quarantine root `battle.qnt` as legacy reference.                                                 | Ready; all overlap reconciliation dependencies are complete.                              |
-| 28    | BA9 - Quarantine Legacy Core Battle MBT                          | blocked            | BA8                  | BA13                                | Update test/docs ownership so old Core battle MBT is not treated as promoted verification while preserving it as reference material where useful.                                                   | Blocked until canonical QNT layout is decided.                                            |
+| 27    | BA8 - Choose Canonical Battle QNT Layout                         | done               | BA4, BA5, BA6, BA7   | BA9, BA11, BA13                     | Promoted `packages/battle-runtime/battle-runtime.qnt` as the canonical package-local QNT spec and documented root `battle.qnt` as legacy/Core proof and restore material.                           | Completed; BA9 is unblocked, and BA11 still needs BA10.                                  |
+| 28    | BA9 - Quarantine Legacy Core Battle MBT                          | ready-for-implementation-after-light-research | BA8                  | BA13                                | Update test/docs ownership so old Core battle MBT is not treated as promoted verification while preserving it as reference material where useful.                                                   | Ready; canonical QNT layout is decided.                                                   |
 | 29    | BA10 - Define Promoted Runtime MBT Strategy                      | ready-for-research | BA3                  | BA11                                | Decide modular-vs-integrated MBT policy for the promoted runtime: shared algebra MBT, selected integrated battle-runtime MBT, and table tests for broad Surface/StatBlock coverage.                 | Ready; BA2 already lists candidate integrated MBT frontiers.                              |
-| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | blocked            | BA8, BA10            | BA13                                | Add one narrow trace-driven QNT/MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                 | Blocked until canonical QNT and MBT strategy are set.                                     |
+| 30    | BA11 - Add First Promoted Integrated Battle QNT MBT              | blocked            | BA8, BA10            | BA13                                | Add one narrow trace-driven QNT/MBT against the promoted battle runtime for an existing behavior slice selected by BA10; do not widen battle behavior in this task.                                 | Blocked until BA10 selects the promoted MBT strategy.                                     |
 | 31    | BA12 - Convert Old-Only Battle Behavior To Width Backlog         | ready-for-research | BA3, BA7             | BA13                                | Convert old-only features into atomic future width tasks with RAW/source references and restore conditions; do not implement those features here.                                                   | Ready; BA7 supplied the zero-HP lifecycle boundary rows.                                  |
 | 32    | BA13 - Close Battle Authority Reconciliation                     | blocked            | BA8, BA9, BA11, BA12 | PBA0                                | Final docs/checks proving the repo has one active promoted battle authority and a clear backlog for old-only width.                                                                                 | Blocked until authority, MBT, and backlog work complete.                                  |
 | 33    | PBA0 - Archive Promoted Quint Parity And Composition Boundary    | blocked            | BA13                 | PBA1                                | Archive the promoted QNT/MBT proof story and MCP composition boundary before any feature-parity restoration or broad widening starts.                                                               | Blocked until BA closes.                                                                  |
@@ -1529,7 +1529,7 @@ Verification:
 - `/simplify` convergence may be a single review round if the diff is docs-only
   and under roughly 20 lines; otherwise minimum 2 rounds.
 - `/simplify` convergence recorded in task closeout: round 1 fixed the stale
-  `battle-runtime-slice.qnt` authority comment; round 2 found no further
+  `battle-runtime.qnt` authority comment; round 2 found no further
   authority-policy inconsistencies in the touched docs.
 
 Plan Impact:
@@ -1625,7 +1625,7 @@ Input:
 
 - [packages/battle-runtime/src/index.ts](/workspace/typescript/dnd/packages/battle-runtime/src/index.ts)
 - [packages/battle-runtime/src/index.test.ts](/workspace/typescript/dnd/packages/battle-runtime/src/index.test.ts)
-- [packages/battle-runtime/battle-runtime-slice.qnt](/workspace/typescript/dnd/packages/battle-runtime/battle-runtime-slice.qnt)
+- [packages/battle-runtime/battle-runtime.qnt](/workspace/typescript/dnd/packages/battle-runtime/battle-runtime.qnt)
 - Shared-algebra MBT docs/tests under `packages/shared-algebras` and
   `packages/surface-runtime-correction`.
 - Promoted MCP workflow tests that exercise battle runtime behavior.
@@ -1993,17 +1993,20 @@ Plan Impact:
 
 ### Task 27 - BA8 - Choose Canonical Battle QNT Layout
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: BA4, BA5, BA6, BA7
 Blocks: BA9, BA11, BA13
 
-Next action: implement the spec ownership decision now that overlap behavior is
-reconciled.
+Completed: promoted `packages/battle-runtime/battle-runtime.qnt` as the
+canonical package-local spec for implemented `@dnd/battle-runtime` behavior.
+Root `battle.qnt` is retained as legacy/Core broad proof and restore source
+material, not as the active authority for promoted Unit/StatBlock-backed battle
+behavior.
 
 Decision options:
 
-- Promote package-local `battle-runtime-slice.qnt` as the canonical spec for
+- Promote package-local `battle-runtime.qnt` as the canonical spec for
   `@dnd/battle-runtime`, keeping it package-local but updating docs/tests to
   stop calling root `battle.qnt` the promoted authority.
 - Move/rename the package-local spec into a canonical path and update imports,
@@ -2031,14 +2034,27 @@ Verification:
   validation; otherwise do not run it.
 - `/simplify` convergence, minimum 2 rounds.
 
+Completed verification:
+
+- `pnpm --filter @dnd/battle-runtime test` and
+  `pnpm --filter @dnd/battle-runtime typecheck` pass.
+- Promoted-path source check found no accidental `@dnd/core` dependency.
+- Battle MBT was not run because old/root MBT files were not substantively
+  edited.
+- `/simplify` convergence recorded: round 1 fixed the tracked QNT rename and
+  BA8/BA9 plan-status handoff; round 2 found no further canonical-layout or
+  task-graph inconsistencies.
+
 Plan Impact:
 
-- If successful, unblock BA9 and BA11. BA13 remains blocked until BA9, BA11,
-  and BA12 complete.
+- BA9 is unblocked for legacy Core battle MBT quarantine.
+- BA11 remains blocked until BA10 completes the promoted runtime MBT strategy;
+  BA8 no longer blocks it.
+- BA13 remains blocked until BA9, BA11, and BA12 complete.
 
 ### Task 28 - BA9 - Quarantine Legacy Core Battle MBT
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: BA8
 Blocks: BA13
@@ -2280,7 +2296,7 @@ Output:
 Acceptance:
 
 - There is no active documentation path claiming both root `battle.qnt` and
-  `battle-runtime-slice.qnt` are simultaneous authorities for promoted battle
+  `battle-runtime.qnt` are simultaneous authorities for promoted battle
   behavior.
 - A new battle feature task can start from one canonical runtime/spec boundary.
 - Old Core MBT is either quarantined reference material or explicitly deleted

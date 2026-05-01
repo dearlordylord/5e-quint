@@ -5,9 +5,10 @@ battle protocol for package callers: initialize combatants, discover battle
 subjects, replay caller fills, resolve state transitions, and expose snapshots.
 
 The promoted `@dnd/battle-runtime` is the active semantic authority for new
-Unit/StatBlock-backed battle behavior. The legacy Correction graph, old root
-`battle.qnt`, and Core battle MBT remain useful breadth/proof source material
-until BA reconciliation classifies or restores them.
+Unit/StatBlock-backed battle behavior. `battle-runtime.qnt` is its canonical
+package-local spec. The legacy Correction graph, old root `battle.qnt`, and Core
+battle MBT remain useful breadth/proof source material, not active promoted
+runtime authorities.
 
 ## System Graph
 
@@ -120,9 +121,9 @@ flowchart TD
   into MCP state.
 - Bonus-action availability can be represented in turn resources, but no
   bonus-action subject is exposed yet.
-- The package-local QNT slice constrains this implemented subset. Old
-  `battle.qnt` remains broad legacy proof/reference material until
-  reconciliation, not the target for new promoted behavior.
+- The package-local `battle-runtime.qnt` spec constrains this implemented
+  subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
+  source material, not the target for new promoted behavior.
 
 ## Relationship To Surface Runtime Correction
 

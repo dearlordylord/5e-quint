@@ -252,13 +252,13 @@ Zero-HP lifecycle is a typed union on each `BattleCreatureState`.
 ## Parity
 
 `@dnd/battle-runtime` is the active semantic authority for new promoted
-Unit/StatBlock-backed battle work. `battle-runtime-slice.qnt` is the
-package-local parity slice for this runtime's implemented subset.
+Unit/StatBlock-backed battle work. `battle-runtime.qnt` is the canonical
+package-local spec for this runtime's implemented subset.
 
-Old root `battle.qnt` and Core battle MBT remain legacy/broad proof and restore
-source material until BA reconciliation decides their final layout. They are not
-the place to add new promoted runtime behavior. Missing old-only behavior is
-future width/restoration work, not evidence that old Core remains canonical.
+Old root `battle.qnt` and Core battle MBT are legacy/Core broad proof and
+restore source material. They are not the place to add new promoted runtime
+behavior. Missing old-only behavior is future width/restoration work, not
+evidence that old Core remains canonical.
 
 Keep four facts separate when changing battle behavior:
 
@@ -266,12 +266,12 @@ Keep four facts separate when changing battle behavior:
 - feature breadth: old Core may still cover behavior this runtime has not
   restored yet;
 - proof depth: old Core MBT is useful evidence, while promoted behavior is
-  checked here by reducer tests and `battle-runtime-slice.qnt`;
+  checked here by reducer tests and `battle-runtime.qnt`;
 - content encoding: Surface `UnitRecord` and `StatBlockRecord` remain authored
   content, not runtime state or provenance labels.
 
 When changing promoted battle behavior, update `src/index.ts`, focused reducer
-tests, and `battle-runtime-slice.qnt` together. Use old `battle.qnt`/Core MBT as
+tests, and `battle-runtime.qnt` together. Use old `battle.qnt`/Core MBT as
 reference material, and record any intentional divergence from shared behavior
 with an SRD citation or `ASSUMPTIONS.md` entry.
 
@@ -313,8 +313,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 
 - `src/index.ts` - public API and reducer implementation.
 - `src/index.test.ts` - deterministic reducer tests and package-local Quint
-  slice checks.
-- `battle-runtime-slice.qnt` - local parity slice for the implemented subset.
+  spec checks.
+- `battle-runtime.qnt` - canonical package-local spec for the implemented
+  subset.
 
 Useful checks:
 

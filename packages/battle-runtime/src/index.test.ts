@@ -40,8 +40,8 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 
 const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
-const battleRuntimeSlicePath = fileURLToPath(
-  new URL("../battle-runtime-slice.qnt", import.meta.url),
+const battleRuntimeSpecPath = fileURLToPath(
+  new URL("../battle-runtime.qnt", import.meta.url),
 );
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
@@ -2168,11 +2168,11 @@ describe("battle runtime", () => {
     });
   });
 
-  test("battle runtime QNT slice self-tests pass", () => {
-    runQuintSliceSelfTests();
+  test("canonical battle runtime QNT self-tests pass", () => {
+    runCanonicalBattleRuntimeQntSelfTests();
   });
 
-  test("battle runtime QNT slice matches runtime fixture outcomes", () => {
+  test("canonical battle runtime QNT matches runtime fixture outcomes", () => {
     const miss = resolveAttackFixture({
       attackRoll: { total: 14, naturalD20: 9 },
     });
@@ -2457,7 +2457,7 @@ function characterProjection(
   };
 }
 
-function runQuintSliceSelfTests(): void {
+function runCanonicalBattleRuntimeQntSelfTests(): void {
   const quintOutput = execFileSync(
     "pnpm",
     [
@@ -2466,7 +2466,7 @@ function runQuintSliceSelfTests(): void {
       "test",
       "--backend",
       "typescript",
-      battleRuntimeSlicePath,
+      battleRuntimeSpecPath,
       "--match",
       "test_",
     ],
@@ -2518,7 +2518,7 @@ function renderBattleRuntimeParityModule(input: {
   readonly afterGoblinEndTurn: BattleRuntimeParityProjection;
 }): string {
   return `module battleRuntimeParity {
-  import battleRuntimeSlice.* from "../battle-runtime-slice"
+  import battleRuntime.* from "../battle-runtime"
 
   run parity_miss_matches_runtime = {
     assert(resolveAttack(initialState, 14, 9, 0) == ${renderQntStateProjection(input.miss)})

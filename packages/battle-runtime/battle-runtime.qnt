@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
-module battleRuntimeSlice {
-  // SRD traceability for this phase-1 battle runtime slice:
+module battleRuntime {
+  // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
   //   by Initiative order, and the Initiative order remains fixed round to round.
   // - Playing-the-Game.md lines 501-513: a turn can include one action, and
@@ -16,10 +16,10 @@ module battleRuntimeSlice {
   // - Playing-the-Game.md lines 748-780 and ASSUMPTIONS.md A12: Stat Block
   //   monsters use Monster Death at 0 HP; Character Build combatants use the
   //   Death Saving Throw lifecycle, including instant death from massive
-  //   damage. This slice covers the immediate HP-mutation boundary: drop to
+  //   damage. This spec covers the immediate HP-mutation boundary: drop to
   //   0 HP, damage at 0 HP, Critical Hit damage at 0 HP, and Massive Damage.
   //   Start-turn Death Saving Throw rolls, Stable recovery/handoff, and
-  //   post-battle character closeout are future width, not part of this slice.
+  //   post-battle character closeout are future width, not part of this spec.
   // - Classes/Fighter.md lines 76-80: Action Surge grants one additional action
   //   except Magic, spends one use per Short or Long Rest, and is limited to
   //   once per turn.
@@ -37,11 +37,10 @@ module battleRuntimeSlice {
   // - Monsters/Monsters-P-S.md lines 1152-1175 and UBIQUITOUS_LANGUAGE.md:
   //   Skeleton has Bludgeoning vulnerability and Poison damage immunity.
   //
-  // This slice is the package-local parity reference for implemented
-  // @dnd/battle-runtime behavior. Old root battle.qnt remains legacy/broad
-  // proof/reference material until BA reconciliation classifies, restores,
-  // merges, or quarantines it; it is not the place to add new promoted
-  // runtime behavior.
+  // This is the canonical package-local spec for implemented
+  // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
+  // proof and restore source material; it is not the place to add new
+  // promoted runtime behavior.
 
   type Actor = Fighter | Goblin
 
@@ -114,7 +113,7 @@ module battleRuntimeSlice {
   }
 
   // The promoted runtime receives Initiative counts and the caller-resolved
-  // order for tied counts at the boundary. The slice treats that order as
+  // order for tied counts at the boundary. The spec treats that order as
   // authoritative once battle starts.
   pure val callerOrderedTieInitialState: BattleState = {
     ...initialState,

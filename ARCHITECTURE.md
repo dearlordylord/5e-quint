@@ -38,7 +38,7 @@ Local SRD corpus + ASSUMPTIONS.md + UBIQUITOUS_LANGUAGE.md
 | - drafts, holes, fills          |      | - battle state           |
 | - final CharacterBuild          |      | - battle subjects        |
 | - package-local QNT slice       |      | - holes/fills/replay     |
-+-------------------------------+      | - package-local QNT slice|
++-------------------------------+      | - package-local QNT spec |
         |                              +--------------------------+
         | CharacterBuild + selected Unit refs       ^
         +-------------------------------------------+
@@ -82,7 +82,7 @@ Character-creation terms live in
 
 `@dnd/battle-runtime` owns the battle reducer state:
 `BattleState`, `BattleCreatureState`, battle subjects, replay-from-root holes
-and fills, snapshots, and the package-local battle QNT slice. It consumes
+and fills, snapshots, and the package-local battle QNT spec. It consumes
 battle-owned creature initialization inputs; it does not import character
 creation runtime state.
 Battle runtime details live in `packages/battle-runtime/README.md`.
@@ -124,24 +124,26 @@ MCP package details live in `packages/mcp/README.md`.
 
 ## Quint And Parity
 
-Quint specs are correctness references for runtime behavior. `battle.qnt`
-remains the canonical broad combat spec. Package-local QNT files constrain
-reducer packages while the promoted runtime path is being brought up:
+Quint specs are correctness references for runtime behavior. For promoted
+Unit/StatBlock-backed battle behavior, `@dnd/battle-runtime` is the active
+semantic authority and `packages/battle-runtime/battle-runtime.qnt` is its
+canonical package-local spec:
 
-- `battle.qnt` remains the broad Core combat authority for the Core lane.
-- `packages/battle-runtime/battle-runtime-slice.qnt` is a parity slice for the
-  implemented `@dnd/battle-runtime` subset.
+- Root `battle.qnt` remains legacy/Core broad proof and restore source material.
+  It is not the active authority for new promoted runtime behavior.
+- `packages/battle-runtime/battle-runtime.qnt` is the canonical package-local
+  spec for the implemented `@dnd/battle-runtime` subset.
 - `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
   constrains character-creation reducer behavior.
 
-Before the battle runtime path is promoted, the package-local battle
-slice must be merged into, replace, or otherwise reconcile with the broad battle
-spec, and docs/tests must name one canonical combat authority.
+Docs and tests must name this package-local battle spec when checking promoted
+battle behavior. Old Core battle MBT may still be used as legacy proof material
+for future restoration work, but not as a promoted-runtime gate.
 
 Runtime correctness mechanisms depend on the package shape:
 
 - Core state-machine lanes use MBT trace replay against broad Quint specs.
-- Reducer packages use package-local QNT slices plus deterministic parity tests.
+- Reducer packages use package-local QNT specs plus deterministic parity tests.
 - Shared algebras use focused unit tests and, where present, package-local QNT or
   MBT coverage.
 

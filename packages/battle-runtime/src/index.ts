@@ -2141,7 +2141,7 @@ function applyDropToZeroHpLifecycle(
 ): BattleCreatureState {
   // SRD boundary: only the immediate zero-HP consequence is applied here.
   // Later turn-start Death Saving Throw rolls, Stable recovery, and post-battle
-  // character handoff are deliberately outside this battle-runtime slice.
+  // character handoff are deliberately outside this battle-runtime spec.
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({

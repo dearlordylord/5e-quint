@@ -884,7 +884,7 @@ discovery.
 
 It may import or mirror old `character-creation.qnt` concepts where that reduces duplication, but phase-1 authority for the new runtime package belongs to the slice. Old Core character creation remains authority only for old Core lanes until those lanes are deleted, disabled, or restored through the new runtime.
 
-`packages/battle-runtime/battle-runtime-slice.qnt` owns:
+`packages/battle-runtime/battle-runtime.qnt` owns:
 
 - combatants, initiative/current actor, and end turn;
 - action-resource availability for Attack and End Turn;
@@ -909,13 +909,16 @@ Ubiquitous-language review requirements:
 - Use "Stat Block" for authored monster records. Do not rename them as Monster Units.
 - Keep Correction reducer vocabulary (`act`, `subject`, `runtime hole`, `filled hole value`, `hole resolution`, `hole refilling`) when describing the reducer protocol.
 
-Slice authority statement:
+Battle QNT authority statement:
 
-- During Phase 1/2, `battle-runtime-slice.qnt` is the package-local parity
-  reference for implemented `@dnd/battle-runtime` behavior.
-- Existing `battle.qnt` remains authoritative for old Core lanes until those lanes are disabled or deleted and entered in the Restore Ledger.
-- Any behavior shared by `battle-runtime-slice.qnt` and `battle.qnt` must match or be recorded as an explicit tracked divergence.
-- Before the migration is declared complete, the repo must return to one named battle authority by merging/replacing the slice and updating MBT gates.
+- `battle-runtime.qnt` is the package-local canonical spec for implemented
+  `@dnd/battle-runtime` behavior.
+- Existing `battle.qnt` remains legacy/Core broad proof and restore source
+  material for old Core lanes.
+- Any behavior shared by `battle-runtime.qnt` and `battle.qnt` must match or be
+  recorded as an explicit tracked divergence.
+- BA9 owns quarantining old Core battle MBT so it is not treated as a promoted
+  verification gate.
 
 ## Questions For Owner
 

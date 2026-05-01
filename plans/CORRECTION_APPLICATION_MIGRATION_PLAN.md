@@ -43,7 +43,7 @@ Target packages:
 | `@dnd/shared`                     | Surface-free shared scalar/domain types that genuinely need to cross runtime package boundaries.                                                      |
 | `@dnd/shared-algebras`            | Reusable non-executable reducer algebras shared by runtime packages, such as damage or hole/fill mechanics when they encode no Unit/effect semantics. |
 | `@dnd/character-creation-runtime` | Minimal level-1 Fighter creation reducer: draft holes, batch fills, validation, and finalization to `CharacterSheet`.                                 |
-| `@dnd/battle-runtime`             | Minimal battle reducer: battle state, subjects, battle holes, fills, Attack with damage, End Turn, local QNT slice and deterministic parity tests.    |
+| `@dnd/battle-runtime`             | Minimal battle reducer: battle state, subjects, battle holes, fills, Attack with damage, End Turn, package-local QNT spec and deterministic parity tests. |
 | future `@dnd/srd-units`           | SRD-only authored Unit collection. Do not create in phase 1 unless imports force it.                                                                  |
 
 Core-free runtime packages must have this dependency direction only:
@@ -203,7 +203,7 @@ explicitly widened.
 Create local reducer-shaped QNT specs next to their runtime packages:
 
 - `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
-- `packages/battle-runtime/battle-runtime-slice.qnt`
+- `packages/battle-runtime/battle-runtime.qnt`
 
 Character creation QNT should model the phase-1 hole/fill reducer protocol and import/reuse broad `character-creation.qnt` concepts where practical. It may be a small composition/algebra spec rather than a fork of all character semantics.
 
@@ -218,18 +218,18 @@ Battle QNT should model only the first MCP/runtime vertical:
 - HP damage with Temporary HP absorption and clamp;
 - minimal death policy.
 
-These QNT specs are temporary seeds, not throwaways. The battle slice must eventually become, merge into, or replace old `battle.qnt`, and documentation must be updated so the repo has one battle authority again.
+These QNT specs are temporary seeds, not throwaways. The battle spec must
+eventually become, merge into, or replace old `battle.qnt`, and documentation
+must be updated so the repo has one battle authority again.
 
 During Phase 1/2, promoted `@dnd/battle-runtime` is the active semantic
-authority for new Unit/StatBlock-backed battle work, and
-`battle-runtime-slice.qnt` is its package-local parity reference. Existing root
-`battle.qnt` and Core battle MBT remain legacy/broad proof and restore source
-material until BA reconciliation classifies, restores, merges, or quarantines
-them. Missing old-only behavior is future width/restoration work, not evidence
-that old Core remains canonical. Any behavior shared by both specs must either
-match or have an explicit tracked divergence. Before closing reconciliation,
-merge/replace the slice or retire/quarantine the old authority and update the
-old MBT gate accordingly.
+authority for new Unit/StatBlock-backed battle work. BA8 promoted
+`packages/battle-runtime/battle-runtime.qnt` as its canonical package-local
+spec. Existing root `battle.qnt` and Core battle MBT remain legacy/Core broad
+proof and restore source material. Missing old-only behavior is future
+width/restoration work, not evidence that old Core remains canonical. Any
+behavior shared by both specs must either match or have an explicit tracked
+divergence. BA9 owns quarantining the old MBT gate accordingly.
 
 ## Phase 0: Audit And Preconditions
 
@@ -283,7 +283,7 @@ Unit family.
 4. Implement discover acts for Attack and End Turn.
 5. Implement Attack target/roll/damage replay.
 6. Implement End Turn and initiative advancement.
-7. Add `battle-runtime-slice.qnt`.
+7. Add `battle-runtime.qnt`.
 8. Add MBT/parity against the runtime reducer.
 9. Add deterministic reducer tests for hit, miss, Temporary HP absorption, action spend, and end turn.
 
@@ -433,7 +433,7 @@ rather than being represented by projected-executable vocabulary.
 | Level advancement and higher-level starts   | `git show 39f9ab71:packages/core/src/character-advancement.ts`; `git show 39f9ab71:packages/core/src/character-sheet-advancement.ts`                                                                                                                                                  | Old advancement lanes are omitted from the promoted gate                                                                                                                           | None in phase 1; explicit non-goal                                                                                                           | Ordered advancement replay, subclass/feat/ASI timing, multiclass prerequisites                                                                              | First MCP/runtime vertical is level-1 Fighter only                                                                                                                                      | `@dnd/character-creation-runtime` adds advancement reducer/QNT                                                                                                |
 | Spellcasting and Mage/Wizard creation       | `git show 39f9ab71:packages/core/src/character-spellcasting.ts`; `git show 39f9ab71:packages/core/src/battle-spell-access.ts`                                                                                                                                                         | Old broad spellcasting/app spell paths are omitted from the promoted gate                                                                                                          | POST5 MCP workflow covers Wizard 1 spell access, `ray_of_frost` cantrip casting with no slot spend, and `magic_missile` slot spend           | Spell definition/access/invocation/effect distinction; prepared choices as character-owned facts                                                            | First width slice restores only selected Wizard 1 spells; upcasting, rituals, persistent effects, reactions, and broad spell catalog remain omitted                                     | UnitRecord-backed spell access holes and battle spell act holes cover broader spell families                                                                  |
 | Old `available-actions.ts` breadth          | `git show 39f9ab71:packages/core/src/available-actions.ts`                                                                                                                                                                                                                            | Old action preview/finalize lanes are omitted from the promoted gate                                                                                                               | Runtime act discovery/resolution tests                                                                                                       | Discover/preview/finalize user-action workflows                                                                                                             | New runtime owns only promoted Attack/End Turn                                                                                                                                          | Runtime action protocol covers omitted action families structurally                                                                                           |
-| Old Core battle MBT                         | `git show 39f9ab71:packages/core/src/battle-machine.mbt.test.ts`; `git show 39f9ab71:packages/core/src/battle-projection.mbt.test.ts`; `battle.qnt`                                                                                                                                   | Old Core battle MBT is outside the promoted gate                                                                                                                                   | `@dnd/battle-runtime` slice QNT/parity checks                                                                                                | Formal battle parity discipline, safety invariants, and broad reference traces                                                                              | Promoted `@dnd/battle-runtime` is the active semantic authority for new Unit/StatBlock-backed work; old-only behavior is BA inventory/restoration scope, not a competing canonical lane | `battle-runtime-slice.qnt` merges into/replaces old `battle.qnt`, or old Core MBT is quarantined as legacy reference and docs/tests name one battle authority |
+| Old Core battle MBT                         | `git show 39f9ab71:packages/core/src/battle-machine.mbt.test.ts`; `git show 39f9ab71:packages/core/src/battle-projection.mbt.test.ts`; `battle.qnt`                                                                                                                                   | Old Core battle MBT is outside the promoted gate                                                                                                                                   | `@dnd/battle-runtime` canonical QNT/parity checks                                                                                            | Formal battle parity discipline, safety invariants, and broad reference traces                                                                              | Promoted `@dnd/battle-runtime` is the active semantic authority for new Unit/StatBlock-backed work; old-only behavior is BA inventory/restoration scope, not a competing canonical lane | Old Core MBT is quarantined as legacy reference and docs/tests name `battle-runtime.qnt` as the promoted battle spec |
 | Old MCP Core-backed tools                   | `git show 39f9ab71:packages/mcp/src/server.ts`; `git show 39f9ab71:packages/mcp/src/server-control.ts`; `git show 39f9ab71:packages/mcp/src/start-battle.ts`                                                                                                                          | Core-backed MCP tools are deleted from the promoted package                                                                                                                        | Promoted MCP server vertical fixture                                                                                                         | Server-side stored workflows and tool ergonomics                                                                                                            | Promoted MCP tools now prove the replacement path                                                                                                                                       | MCP tools are rebuilt over Unit library, character runtime, and battle runtime                                                                                |
 | Post-battle adventuring-state handoff       | `git show 39f9ab71:packages/core/src/machine-types.ts`; `git show 39f9ab71:packages/core/src/machine-startturn.ts`; `git show 39f9ab71:packages/core/src/machine-states.ts`; `UBIQUITOUS_LANGUAGE.md` Death Saving Throw, Stable, and Hit Points rows                                 | Zero-HP character closeout, Death Saving Throw counters, Stable/dead state, rest recovery, and broader adventuring-state handoff are omitted from the promoted MCP acceptance gate | Promoted MCP server vertical fixture covers reduced positive character HP after `end_battle`                                                 | Character-owned post-battle consequences beyond positive HP, including Death Saving Throw counters, Stable/dead status, and rest/adventuring recovery state | CAM21 accepts only the first vertical's reduced positive HP handoff; these facts require a broader adventuring-state boundary before durable character storage owns them                | Battle/runtime and character-session closeout support zero-HP/death-save/rest facts without duplicating runtime state                                         |
 | App simulator and trace visualizers         | `git show 39f9ab71:packages/app/src/components/App.tsx`; `git show 39f9ab71:packages/app/src/components/trace-visualizer/TraceVisualizer.tsx`                                                                                                                                         | Old app routes are omitted from the promoted MCP/runtime gate                                                                                                                      | Promoted MCP server vertical fixture                                                                                                         | Debug and trace review workflows                                                                                                                            | MCP runtime path is the priority                                                                                                                                                        | New runtime exposes stable snapshots/traces                                                                                                                   |
@@ -461,8 +461,8 @@ Required before marking this plan complete:
 7. Promoted-path dependency check proves neither runtime package nor MCP tools import `@dnd/core`.
 8. Before completion, restore a single battle authority. This is now tracked by
    the BA0-BA13 Battle Authority Reconciliation queue in
-   `plans/ACTIVE_PLAN.md`: either merge/promote `battle-runtime-slice.qnt`,
-   replace/retire the old authority and update project documentation, or record
+   `plans/ACTIVE_PLAN.md`: promote `battle-runtime.qnt`, replace/retire the old
+   authority and update project documentation, or record
    each intentional divergence from old `battle.qnt` with an SRD 5.2.1 citation
    or ASSUMPTIONS.md entry.
 9. Command-level verification is added once packages exist, using `pnpm` only. Battle MBT must follow the repo MBT run protocol, including zombie evaluator checks before the run. Typecheck scope must include MCP and the new runtime packages.
