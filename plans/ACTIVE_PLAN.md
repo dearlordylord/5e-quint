@@ -23,6 +23,22 @@ battle authority for new work. Old Core battle behavior and its wider MBT are
 valuable restore/proof source material, but missing old-only features are
 widening work, not a reason to keep two active authorities.
 
+Post-BA planning intent: the Battle Authority Reconciliation batch must not end
+with only a Restore Ledger. Its final planner step must append the next ordered
+work queue to this file, after the BA tasks, and synchronize that queue into the
+Ralph Task Index and DAG table so the Ralph loop picks up the next ready task
+immediately. The next queue should be organized in this order:
+
+1. Archive maximum promoted Quint parity and composition proof first. This means
+   making the promoted QNT/MBT proof story and MCP composition boundary explicit
+   enough that new agents can see how multiple runtime machines/packages compose
+   without reviving the old Core authority.
+2. Then schedule old Core feature-parity restoration as atomic promoted-runtime
+   tasks, using old Core/root QNT only as source/proof material.
+3. Then schedule broader widening work. Do not start broad Surface/catalog
+   widening from this queue until the maximum parity/composition archive is
+   complete and the feature-parity restoration queue is explicit.
+
 Primary planning documents:
 
 - [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md)
@@ -256,6 +272,18 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 - Start with the highest-priority task in the DAG table whose status is `ready-for-implementation-after-light-research` or `ready-for-research`.
 - Treat the task loop as bidirectional: the plan scopes the task, and task discoveries may update the plan.
+- Treat this file as a dynamic queue, not a finite checklist. Planning/research
+  tasks may spawn follow-up implementation, verification, parity, or widening
+  tasks when that is the honest output of the work. Append spawned tasks to the
+  end of the Ralph Task Index, DAG table, and task-detail sections in the same
+  plan edit that records the discovery.
+- A batch-ending task must either append the next ordered batch or record an
+  explicit owner decision that no further active work is currently desired. Do
+  not let the Ralph loop fall off the end of the plan merely because evidence
+  was written to a ledger or archival document.
+- Newly spawned tasks should make dependency order executable: prefer a blocked
+  task with concrete dependencies over prose that says "later"; ensure at least
+  one new task is ready when the next batch is supposed to start immediately.
 - Keep `Ralph Task Index` synchronized with task sections when changing task order, ID, title, or status.
 - Every task closeout must include `Plan Impact`:
   - `Status: none` when no future planning changes are needed;
@@ -2122,9 +2150,19 @@ Input:
 
 Output:
 
-- Restore Ledger and/or ACTIVE_PLAN follow-up queue updated with atomic future
-  width tasks. Each task includes old source references, local RAW topics to
-  read, new-runtime owner, acceptance summary, and non-goals.
+- ACTIVE_PLAN is updated with an ordered post-BA follow-up queue appended after
+  BA13 in both the Ralph Task Index and DAG table. The Restore Ledger is
+  supporting provenance/status only; it is not a substitute for actionable
+  ACTIVE_PLAN tasks.
+- The appended queue is split into explicit batches:
+  1. maximum promoted Quint parity + MCP composition archive;
+  2. old Core feature-parity restoration as promoted-runtime tasks;
+  3. broader widening work that waits on the parity/composition archive and the
+     explicit feature-parity queue.
+- Each retained old-only behavior group becomes either a ready/blocked atomic
+  follow-up task or an explicitly deferred item with the owner decision recorded.
+  Each task includes old source references, local RAW topics to read,
+  new-runtime owner, acceptance summary, non-goals, and restore condition.
 - Candidate groups should include, if still supported by BA1:
   movement/positioning and opportunity-attack boundary;
   reaction windows and interrupt stack;
@@ -2140,8 +2178,17 @@ Output:
 Acceptance:
 
 - Old-only behavior is not left as vague "later parity".
-- Each future width task is small enough for one agent or explicitly marked as
-  a research/replan precursor.
+- After BA13 completes, the Ralph loop has a next actionable task from the
+  appended post-BA queue without requiring a Restore Ledger inspection.
+- The appended post-BA queue contains at least one `ready-for-research` or
+  `ready-for-implementation-after-light-research` task, unless the owner
+  explicitly decides to pause active work.
+- The first post-BA batch archives maximum promoted Quint parity and composition
+  proof before feature-parity restoration or broad widening starts.
+- Feature-parity restoration tasks come before broader widening tasks unless an
+  owner decision explicitly defers a feature-parity row.
+- Each future task is small enough for one agent or explicitly marked as a
+  research/replan precursor.
 - No projected executable IR is restored as a future task target; restore
   semantics through UnitRecords, StatBlockRecords, shared algebras, or battle
   runtime state.
@@ -2155,7 +2202,9 @@ Verification:
 
 Plan Impact:
 
-- BA13 remains blocked until BA8, BA9, and BA11 also complete.
+- BA13 remains blocked until BA8, BA9, and BA11 also complete, but BA13 must
+  verify that the appended post-BA queue is present and ordered before closing
+  Battle Authority Reconciliation.
 
 ### Task 32 - BA13 - Close Battle Authority Reconciliation
 
@@ -2166,6 +2215,17 @@ Blocks: none
 
 Next action: perform the final authority closeout.
 
+Planner role:
+
+- BA13 is the final Battle Authority Reconciliation task and must act as the
+  handoff planner for the next Ralph loop. Before marking BA13 `done`, verify
+  that BA12 appended the post-BA queue after BA13 in the Ralph Task Index and
+  DAG table. If BA12 did not, BA13 must append it instead, using BA12's required
+  ordering: maximum promoted Quint parity + MCP composition archive first, old
+  Core feature-parity restoration second, broader widening third.
+- Do not leave the next work only in the Restore Ledger. The Restore Ledger may
+  preserve evidence and status, but Ralph needs actionable ACTIVE_PLAN tasks.
+
 Output:
 
 - This file and
@@ -2174,6 +2234,8 @@ Output:
 - Battle runtime README/architecture docs, QNT location, and package test
   commands agree.
 - Restore Ledger captures old-only behavior not yet widened.
+- ACTIVE_PLAN contains the ordered post-BA queue after BA13, synchronized across
+  the Ralph Task Index, DAG table, and task-detail sections.
 - Promoted-path dependency check confirms runtime/MCP do not import `@dnd/core`.
 
 Acceptance:
@@ -2184,6 +2246,11 @@ Acceptance:
 - A new battle feature task can start from one canonical runtime/spec boundary.
 - Old Core MBT is either quarantined reference material or explicitly deleted
   with ledger coverage.
+- The first ready post-BA task is visible to the Coding Loop Handoff Rules
+  without reading historical plans or Restore Ledger rows.
+- The post-BA queue has enough initial tasks for Ralph to continue without a
+  new owner prompt; later planning tasks may continue spawning additional tasks
+  as the queue develops.
 
 Verification:
 
@@ -2198,7 +2265,8 @@ Verification:
 Plan Impact:
 
 - If successful, Battle Authority Reconciliation is complete. Future old-only
-  behavior proceeds as normal width tasks from BA12.
+  behavior proceeds through the appended post-BA ACTIVE_PLAN queue. The next
+  ready post-BA task becomes the Ralph loop entrypoint.
 
 ## Deferred Previous Queue
 
