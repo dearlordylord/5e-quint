@@ -108,6 +108,7 @@ function createBattleRuntimeDriver() {
         return;
       }
       if (result.tag === "needsHoles") {
+        state = result.state;
         holes = result.holes;
         lastInvalidReason = "";
         return;
@@ -426,6 +427,9 @@ function projectHole(hole: BattleHole): MbtHole {
       throw new Error(
         "Battle runtime MBT does not model concentration saving throw holes.",
       );
+    }),
+    Match.when({ kind: "reactionDecision" }, () => {
+      throw new Error("Battle runtime MBT does not model reaction holes.");
     }),
     Match.exhaustive,
   );

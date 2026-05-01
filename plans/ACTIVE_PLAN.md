@@ -322,13 +322,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 42,
       "id": "PBA9",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Restore Reaction Windows And Interrupt Stack"
     },
     {
       "number": 43,
       "id": "PBA10",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Restore Movement Positioning And Opportunity Attacks"
     },
     {
@@ -441,8 +441,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 39    | PBA6 - Restore Second Wind And Bonus-Action Subjects             | done               | PBA5                 | PBA7                                | Restored UnitRecord-backed Second Wind and the reusable Bonus Action subject/resource protocol without projected executable reducers.                                                                             | Completed; PBA7 is unblocked.                                                            |
 | 40    | PBA7 - Restore Save-Gate Damage Spell Procedure                  | done               | PBA6                 | PBA8                                | Restored Acid Splash-style save-gate damage spell acts as UnitRecord-backed spell holes and shared save/damage procedures.                                                                                       | Completed; PBA8 is unblocked.                                                            |
 | 41    | PBA8 - Restore Persistent Spell Effects And Concentration        | done               | PBA7                 | PBA9                                | Restored Mage Armor/persistent AC override, concentration, and readied spell lifecycle through runtime state and spell-effect procedures.                                                                         | Completed; PBA9 is unblocked.                                                            |
-| 42    | PBA9 - Restore Reaction Windows And Interrupt Stack              | ready-for-implementation-after-light-research | PBA8                 | PBA10                               | Restore reusable reaction windows and interrupt stack behavior for attacks, spells, saves, and after-damage effects.                                                                                             | Ready; perform the listed RAW/reaction-window checks before editing.                      |
-| 43    | PBA10 - Restore Movement Positioning And Opportunity Attacks     | blocked            | PBA9                 | PBA11                               | Restore movement/position mutation, traversal, and Opportunity Attack boundaries with explicit spatial ownership.                                                                                                | Blocked behind reaction-window work.                                                      |
+| 42    | PBA9 - Restore Reaction Windows And Interrupt Stack              | done               | PBA8                 | PBA10                               | Restored reusable reaction windows, reaction resources, interrupt-stack continuation, readied-spell release, and MCP pending-state replay.                                                                        | Completed; PBA10 is unblocked.                                                           |
+| 43    | PBA10 - Restore Movement Positioning And Opportunity Attacks     | ready-for-implementation-after-light-research | PBA9                 | PBA11                               | Restore movement/position mutation, traversal, and Opportunity Attack boundaries with explicit spatial ownership.                                                                                                | Ready; perform the listed movement/OA RAW and ownership checks before editing.            |
 | 44    | PBA11 - Restore Monster Resource Controls                        | blocked            | PBA10                | PBA12                               | Restore StatBlockRecord-backed monster recharge, daily, legendary, and generic monster save/traversal controls.                                                                                                  | Blocked behind movement/OA work.                                                          |
 | 45    | PBA12 - Restore Hand Weapon And Grapple State                    | blocked            | PBA11                | PBA13                               | Restore hand occupancy, weapon modes, off-hand attacks, Grapple, Escape Grapple, release, and grapple movement-cost state.                                                                                       | Blocked behind monster control work.                                                      |
 | 46    | PBA13 - Restore Hide Search And Class Rider Width                | blocked            | PBA12                | PBA14                               | Restore Hide/Search/hidden discovery plus remaining old class-feature riders as promoted runtime subjects.                                                                                                       | Blocked behind hand/weapon/grapple work.                                                  |
@@ -2951,14 +2951,14 @@ Plan Impact:
 
 ### Task 42 - PBA9 - Restore Reaction Windows And Interrupt Stack
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA8
 Blocks: PBA10
 
 Batch: old Core feature-parity restoration.
 
-Next action: restore reusable reaction windows and interrupt-stack semantics.
+Next action: completed; PBA10 is unblocked.
 
 Backlog candidate:
 
@@ -2992,7 +2992,7 @@ Plan Impact:
 
 ### Task 43 - PBA10 - Restore Movement Positioning And Opportunity Attacks
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA9
 Blocks: PBA11

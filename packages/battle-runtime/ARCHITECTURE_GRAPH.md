@@ -118,6 +118,12 @@ flowchart TD
   procedures; they are not a projected executable taxonomy and are not one
   reducer branch per authored slug.
 - Fills are caller/session state, not durable `BattleState`.
+- Reaction decisions are durable state transitions. A `needsHoles` result may
+  return a `BattleState` with an `interruptStack`; MCP and other callers must
+  store that state before filling the `reactionDecision` hole or any holes for
+  the selected reaction procedure. The frame carries its own interrupted
+  continuation so callers do not manually resume attacks, spells, saves, or
+  after-damage procedures.
 - Initiative scores are caller-supplied in `BattleCreatureInit`; this runtime
   orders turns from those scores but does not derive them from Stat Blocks.
 - Attack replay uses target, attack-roll, and on-hit damage holes. Target

@@ -1,5 +1,6 @@
 import {
   discoverBattleActs,
+  resolveBattleReaction,
   resolveBattleSubject,
   sameBattleSubject,
   snapshotBattle,
@@ -157,8 +158,15 @@ export function handleBattleToolCall(
       }
 
       const fills = [...(previous?.fills ?? []), matched.args.fill];
-      const result = resolveBattleSubject({ state, subject, fills });
-      storeBattleResolution(root, result, fills);
+      const result =
+        matched.args.fill.kind === "reactionDecision"
+          ? resolveBattleReaction({ state, fill: matched.args.fill })
+          : resolveBattleSubject({ state, subject, fills });
+      storeBattleResolution(
+        root,
+        result,
+        matched.args.fill.kind === "reactionDecision" ? [] : fills,
+      );
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -255,6 +263,7 @@ function storeBattleResolution(
     return;
   }
   if (result.tag === "needsHoles") {
+    root.sessionStore.battleState = result.state;
     root.sessionStore.transientBattleFills = {
       subject: result.subject,
       fills,
@@ -288,7 +297,7 @@ function battleResolutionPayload(
   return {
     result: battleResolutionResultPayload(result),
     battleState:
-      result.tag === "resolved" ? battleStateProjection(result.state) : null,
+      result.tag === "invalid" ? null : battleStateProjection(result.state),
     snapshot: result.snapshot,
     session: root.sessionStore.snapshot(),
   };
@@ -298,6 +307,14 @@ function battleResolutionResultPayload(result: BattleResolutionResult) {
   if (result.tag === "resolved") {
     return {
       tag: result.tag,
+      snapshot: result.snapshot,
+    };
+  }
+  if (result.tag === "needsHoles") {
+    return {
+      tag: result.tag,
+      subject: result.subject,
+      holes: result.holes,
       snapshot: result.snapshot,
     };
   }

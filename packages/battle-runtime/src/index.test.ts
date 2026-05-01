@@ -4,9 +4,13 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import {
+  BattleFillSchema,
+  BATTLE_REACTION_TRIGGERS,
   battleId,
   breakBattleConcentration,
   characterId,
@@ -16,11 +20,13 @@ import {
   endTurn,
   initiativeScore,
   resolveBattleSubject,
+  resolveBattleReaction,
   resolveBattleConcentrationDamage,
   snapshotBattle,
   startBattle,
   type BattleFill,
   type BattleHole,
+  type BattleReactionTrigger,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -582,6 +588,532 @@ describe("battle runtime", () => {
         },
       },
     });
+  });
+
+  test("attack hit procedures open a typed reaction window and resume after decline", () => {
+    const state = fighterTurnWithReadiedRay("attackHit");
+    const subject = fighterAttackSubject();
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const fills = [
+      targetFill(targetHole, goblinId),
+      attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+    ];
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+
+    expect(awaitingReaction.snapshot.pendingReaction).toMatchObject({
+      decisionHole: {
+        kind: "reactionDecision",
+        trigger: "attackHit",
+        eligibleReactors: [wizardId],
+      },
+      stackDepth: 1,
+    });
+    expect(
+      resolveBattleSubject({ state: awaitingReaction.state, subject, fills }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+
+    const declined = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: wizardId },
+      ),
+    });
+
+    expect(declined).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: {
+        pendingReaction: null,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: wizardId,
+            reactionAvailable: true,
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("resolved reactions execute the admitted readied-spell procedure before resuming attack replay", () => {
+    const state = fighterTurnWithReadiedRay("attackHit");
+    const subject = fighterAttackSubject();
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const fills = [
+      targetFill(targetHole, goblinId),
+      attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+    ];
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    const choice = awaitingReaction.snapshot.pendingReaction!.frame.choices[0]!;
+
+    const resolved = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        {
+          kind: "resolve",
+          reactorId: wizardId,
+          choice: {
+            kind: "releaseReadiedSpell",
+            readiedSpellCasterId: wizardId,
+            fills: [],
+          },
+        },
+      ),
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "needsHoles",
+      subject: choice.subject,
+      holes: [{ kind: "targetChoice" }],
+      snapshot: {
+        pendingReaction: {
+          frame: {
+            activeReaction: {
+              reactorId: wizardId,
+            },
+          },
+        },
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: wizardId,
+            reactionAvailable: false,
+          }),
+        ]),
+      },
+    });
+    if (resolved.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${resolved.tag}.`);
+    }
+    const reactionTarget = findHole(resolved.holes, "targetChoice");
+    const reactionAttack = requireHole(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: choice.subject,
+        fills: [targetFill(reactionTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const reactionDamage = requireHole(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: choice.subject,
+        fills: [
+          targetFill(reactionTarget, goblinId),
+          attackRollFill(reactionAttack, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const resumed = resolveBattleSubject({
+      state: resolved.state,
+      subject: choice.subject,
+      fills: [
+        targetFill(reactionTarget, goblinId),
+        attackRollFill(reactionAttack, { total: 15, naturalD20: 10 }),
+        damageRollFill(reactionDamage, 4),
+      ],
+    });
+
+    expect(resumed).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: {
+        pendingReaction: null,
+        readiedSpells: [],
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: wizardId,
+            reactionAvailable: false,
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("nested reaction windows resume a released readied save spell before the interrupted attack", () => {
+    const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+    const subject = fighterAttackSubject();
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const awaitingAttackReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+      ],
+    });
+    if (awaitingAttackReaction.tag !== "needsHoles") {
+      throw new Error(
+        `Expected attack reaction window, got ${awaitingAttackReaction.tag}.`,
+      );
+    }
+    const releaseChoice =
+      awaitingAttackReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const released = resolveBattleReaction({
+      state: awaitingAttackReaction.state,
+      fill: reactionDecisionFill(
+        awaitingAttackReaction.snapshot.pendingReaction!.decisionHole,
+        {
+          kind: "resolve",
+          reactorId: wizardId,
+          choice: {
+            kind: "releaseReadiedSpell",
+            readiedSpellCasterId: wizardId,
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (released.tag !== "needsHoles") {
+      throw new Error(`Expected released spell holes, got ${released.tag}.`);
+    }
+    const saveHole = findHole(released.holes, "savingThrowOutcome");
+    if (saveHole.kind !== "savingThrowOutcome") {
+      throw new Error("Expected Saving Throw outcome hole.");
+    }
+    const failedOutcomes = saveHole.areaChoices[0]!.affectedTargetIds.map(
+      (targetId) => ({ targetId, succeeded: false }),
+    );
+    const nestedReaction = resolveBattleSubject({
+      state: released.state,
+      subject: releaseChoice.subject,
+      fills: [savingThrowOutcomeFill(saveHole, failedOutcomes)],
+    });
+
+    expect(nestedReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "saveFailed" }],
+      snapshot: {
+        pendingReaction: {
+          stackDepth: 2,
+          frame: {
+            trigger: "saveFailed",
+            choices: [
+              expect.objectContaining({ readiedSpellCasterId: secondWizardId }),
+            ],
+          },
+        },
+      },
+    });
+    if (nestedReaction.tag !== "needsHoles") {
+      throw new Error(`Expected nested reaction, got ${nestedReaction.tag}.`);
+    }
+
+    const declinedNested = resolveBattleReaction({
+      state: nestedReaction.state,
+      fill: reactionDecisionFill(
+        nestedReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: secondWizardId },
+      ),
+    });
+
+    expect(declinedNested).toMatchObject({
+      tag: "needsHoles",
+      subject: releaseChoice.subject,
+      holes: [{ kind: "rolledDice" }],
+      snapshot: {
+        pendingReaction: {
+          stackDepth: 1,
+          frame: {
+            activeReaction: { reactorId: wizardId },
+          },
+        },
+      },
+    });
+    if (declinedNested.tag !== "needsHoles") {
+      throw new Error(
+        `Expected released spell damage hole, got ${declinedNested.tag}.`,
+      );
+    }
+
+    const spellDamage = findHole(declinedNested.holes, "rolledDice");
+    const afterSpellDamage = resolveBattleSubject({
+      state: declinedNested.state,
+      subject: releaseChoice.subject,
+      fills: [
+        savingThrowOutcomeFill(saveHole, failedOutcomes),
+        damageRollFill(spellDamage, 4),
+      ],
+    });
+    const resumedAttack =
+      afterSpellDamage.tag === "needsHoles" &&
+      afterSpellDamage.holes.every(
+        (hole) => hole.kind === "concentrationSavingThrow",
+      )
+        ? resolveBattleSubject({
+            state: declinedNested.state,
+            subject: releaseChoice.subject,
+            fills: [
+              savingThrowOutcomeFill(saveHole, failedOutcomes),
+              damageRollFill(spellDamage, 4),
+              ...afterSpellDamage.holes.map((hole) =>
+                concentrationSavingThrowFill(hole, true),
+              ),
+            ],
+          })
+        : afterSpellDamage;
+
+    expect(resumedAttack).toMatchObject({
+      tag: "needsHoles",
+      subject,
+      holes: [{ kind: "rolledDice" }],
+      snapshot: {
+        pendingReaction: null,
+        readiedSpells: [{ casterId: secondWizardId }],
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: wizardId,
+            reactionAvailable: false,
+            concentration: null,
+          }),
+          expect.objectContaining({
+            combatantId: secondWizardId,
+            reactionAvailable: true,
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("spell cast procedures open typed reaction windows", () => {
+    const state = wizardTurnWithReadiedRay("spellCast");
+    const subject = magicSubject("magic_missile");
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(target, skeletonId)],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      snapshot: {
+        pendingReaction: {
+          frame: { trigger: "spellCast" },
+        },
+      },
+    });
+  });
+
+  test("save-failed and after-damage spell procedures open typed reaction windows", () => {
+    const saveState = wizardTurnWithReadiedRay("saveFailed");
+    const subject = magicSubject("acid_splash");
+    const saveHole = requireHole(
+      resolveBattleSubject({ state: saveState, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    if (saveHole.kind !== "savingThrowOutcome") {
+      throw new Error("Expected Saving Throw outcome hole.");
+    }
+    const saveOutcomes = saveHole.areaChoices[0]!.affectedTargetIds.map(
+      (targetId) => ({ targetId, succeeded: false }),
+    );
+    const failedSave = resolveBattleSubject({
+      state: saveState,
+      subject,
+      fills: [savingThrowOutcomeFill(saveHole, saveOutcomes)],
+    });
+    expect(failedSave).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "saveFailed" }],
+    });
+
+    const damageState = wizardTurnWithReadiedRay("afterDamage");
+    const damageSaveHole = requireHole(
+      resolveBattleSubject({ state: damageState, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    if (damageSaveHole.kind !== "savingThrowOutcome") {
+      throw new Error("Expected Saving Throw outcome hole.");
+    }
+    const damageOutcomes = damageSaveHole.areaChoices[0]!.affectedTargetIds.map(
+      (targetId) => ({ targetId, succeeded: false }),
+    );
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state: damageState,
+        subject,
+        fills: [savingThrowOutcomeFill(damageSaveHole, damageOutcomes)],
+      }),
+      "rolledDice",
+    );
+    const maybeConcentration = resolveBattleSubject({
+      state: damageState,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(damageSaveHole, damageOutcomes),
+        damageRollFill(damageHole, 4),
+      ],
+    });
+    const afterDamage =
+      maybeConcentration.tag === "needsHoles" &&
+      maybeConcentration.holes[0]?.kind === "concentrationSavingThrow"
+        ? resolveBattleSubject({
+            state: damageState,
+            subject,
+            fills: [
+              savingThrowOutcomeFill(damageSaveHole, damageOutcomes),
+              damageRollFill(damageHole, 4),
+              concentrationSavingThrowFill(maybeConcentration.holes[0], true),
+            ],
+          })
+        : maybeConcentration;
+    expect(afterDamage).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+    });
+  });
+
+  test("Ready stores the runtime-selected trigger without test-only state surgery", () => {
+    for (const trigger of BATTLE_REACTION_TRIGGERS) {
+      const state = wizardVsSkeletonBattle();
+      const readied = resolveBattleSubject({
+        state,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: trigger,
+        },
+        fills: [],
+      });
+
+      expect(readied).toMatchObject({ tag: "resolved" });
+      if (readied.tag !== "resolved") {
+        throw new Error(`Expected resolved Ready Spell, got ${readied.tag}.`);
+      }
+      expect(readied.state.readiedSpells.get(wizardId)?.trigger).toBe(trigger);
+    }
+  });
+
+  test("Ready trigger selection is rejected for non-Ready spell subjects", () => {
+    expect(
+      resolveBattleSubject({
+        state: wizardVsSkeletonBattle(),
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "cantripSpellAttack:ray_of_frost",
+          readyTrigger: "afterDamage",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedSubject",
+    });
+  });
+
+  test("after-damage reactions observe the post-damage battle state", () => {
+    const state = fighterTurnWithReadiedRay("afterDamage");
+    const subject = fighterAttackSubject();
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 4),
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 3 }),
+        ]),
+        currentTurnResources: { actionResources: [] },
+      },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+
+    const choice = awaitingReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const resolved = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        {
+          kind: "resolve",
+          reactorId: wizardId,
+          choice: {
+            kind: "releaseReadiedSpell",
+            readiedSpellCasterId: wizardId,
+            fills: [],
+          },
+        },
+      ),
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "needsHoles",
+      subject: choice.subject,
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 3 }),
+        ]),
+      },
+    });
+  });
+
+  test("reaction decision schema parses nested reaction procedure fills", () => {
+    const decoded = Schema.decodeUnknownEither(BattleFillSchema)({
+      kind: "reactionDecision",
+      holeId: "battle:reaction:decision",
+      value: {
+        kind: "resolve",
+        reactorId: "wizard",
+        choice: {
+          kind: "releaseReadiedSpell",
+          readiedSpellCasterId: "wizard",
+          fills: [
+            {
+              kind: "notARealFill",
+              holeId: "battle:spell:target",
+              value: "goblin",
+            },
+          ],
+        },
+      },
+    });
+
+    expect(Either.isLeft(decoded)).toBe(true);
   });
 
   test("attack miss spends the action without asking for weapon damage", () => {
@@ -2305,6 +2837,28 @@ describe("battle runtime", () => {
         actorId: wizardId,
         spellId: "magic_missile",
         spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+        readyTrigger: "attackHit",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+        readyTrigger: "spellCast",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+        readyTrigger: "saveFailed",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+        readyTrigger: "afterDamage",
       },
       {
         tag: "actionSpell",
@@ -2317,6 +2871,28 @@ describe("battle runtime", () => {
         actorId: wizardId,
         spellId: "ray_of_frost",
         spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        readyTrigger: "attackHit",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "ray_of_frost",
+        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        readyTrigger: "spellCast",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "ray_of_frost",
+        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        readyTrigger: "saveFailed",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "ray_of_frost",
+        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        readyTrigger: "afterDamage",
       },
       {
         tag: "actionSpell",
@@ -2329,6 +2905,28 @@ describe("battle runtime", () => {
         actorId: wizardId,
         spellId: "acid_splash",
         spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+        readyTrigger: "attackHit",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "acid_splash",
+        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+        readyTrigger: "spellCast",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "acid_splash",
+        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+        readyTrigger: "saveFailed",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "acid_splash",
+        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+        readyTrigger: "afterDamage",
       },
       { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
     ]);
@@ -2643,6 +3241,28 @@ describe("battle runtime", () => {
         actorId: wizardId,
         spellId: "magic_missile",
         spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+        readyTrigger: "attackHit",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+        readyTrigger: "spellCast",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+        readyTrigger: "saveFailed",
+      },
+      {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "magic_missile",
+        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+        readyTrigger: "afterDamage",
       },
       { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
     ]);
@@ -3705,7 +4325,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("38 passing");
+  expect(quintOutput).toContain("39 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -3808,6 +4428,7 @@ function renderQntCharacterProjection(
       deathSuccesses: 0,
       deathFailures: ${input.deathFailures},
       lifecycle: UsesDeathSavingThrows,
+      reactionAvailable: true,
     }`;
 }
 
@@ -3833,6 +4454,7 @@ function renderQntStateProjection(
         deathSuccesses: 0,
         deathFailures: ${input.fighterDeathFailures},
         lifecycle: UsesDeathSavingThrows,
+        reactionAvailable: true,
       },
       goblin: {
         hp: ${input.goblinHp},
@@ -3847,10 +4469,12 @@ function renderQntStateProjection(
         deathSuccesses: 0,
         deathFailures: 0,
         lifecycle: DiesAtZeroHp,
+        reactionAvailable: true,
       },
       actionAvailable: ${input.actionAvailable},
       bonusActionAvailable: ${input.bonusActionAvailable},
       fighterReadiedSpellHeld: false,
+      interruptStack: [],
     }`;
 }
 
@@ -3878,6 +4502,129 @@ function fighterVsGoblinBattle(): BattleState {
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
+}
+
+function fighterTurnWithReadiedRay(
+  trigger: BattleReactionTrigger,
+): BattleState {
+  const wizardReady = resolveBattleSubject({
+    state: startBattle({
+      battleId: battleId(`battle-readied-${trigger}`),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 30,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    }),
+    subject: {
+      tag: "actionSpell",
+      actorId: wizardId,
+      spellId: "ray_of_frost",
+      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+      readyTrigger: trigger,
+    },
+    fills: [],
+  });
+  if (wizardReady.tag !== "resolved") {
+    throw new Error(`Expected resolved Ready Spell, got ${wizardReady.tag}.`);
+  }
+  if (wizardReady.state.readiedSpells.get(wizardId) === undefined) {
+    throw new Error("Expected Wizard to hold a readied spell.");
+  }
+  const fighterTurn = endTurn({ state: wizardReady.state, actorId: wizardId });
+  if (fighterTurn.tag !== "resolved") {
+    throw new Error(`Expected resolved End Turn, got ${fighterTurn.tag}.`);
+  }
+  return fighterTurn.state;
+}
+
+function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
+  const firstReady = requireResolved(
+    resolveBattleSubject({
+      state: startBattle({
+        battleId: battleId("battle-nested-readied-reactions"),
+        combatants: [
+          characterSeed({
+            combatantId: wizardId,
+            displayName: "Wizard",
+            initiative: 40,
+            attack: null,
+            spellcasting: wizardSpellcasting(),
+          }),
+          characterSeed({
+            combatantId: secondWizardId,
+            displayName: "Second Wizard",
+            initiative: 30,
+            attack: null,
+            spellcasting: wizardSpellcasting(),
+          }),
+          characterSeed({ initiative: 20 }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+      subject: {
+        tag: "actionSpell",
+        actorId: wizardId,
+        spellId: "acid_splash",
+        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+        readyTrigger: "attackHit",
+      },
+      fills: [],
+    }),
+  ).state;
+  const secondWizardTurn = requireResolved(
+    endTurn({ state: firstReady, actorId: wizardId }),
+  ).state;
+  const secondReady = requireResolved(
+    resolveBattleSubject({
+      state: secondWizardTurn,
+      subject: {
+        tag: "actionSpell",
+        actorId: secondWizardId,
+        spellId: "ray_of_frost",
+        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        readyTrigger: "saveFailed",
+      },
+      fills: [],
+    }),
+  ).state;
+  return requireResolved(
+    endTurn({ state: secondReady, actorId: secondWizardId }),
+  ).state;
+}
+
+function wizardTurnWithReadiedRay(trigger: BattleReactionTrigger): BattleState {
+  const base = wizardVsSkeletonBattle();
+  const wizardReady = resolveBattleSubject({
+    state: base,
+    subject: {
+      tag: "actionSpell",
+      actorId: wizardId,
+      spellId: "ray_of_frost",
+      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+      readyTrigger: trigger,
+    },
+    fills: [],
+  });
+  if (wizardReady.tag !== "resolved") {
+    throw new Error(`Expected resolved Ready Spell, got ${wizardReady.tag}.`);
+  }
+  const readied = wizardReady.state.readiedSpells.get(wizardId);
+  const concentratingWizard = wizardReady.state.combatants.get(wizardId);
+  if (readied === undefined || concentratingWizard === undefined) {
+    throw new Error("Expected Wizard to hold a readied spell.");
+  }
+  return {
+    ...base,
+    combatants: new Map(base.combatants).set(wizardId, concentratingWizard),
+    readiedSpells: new Map([[wizardId, readied]]),
+  };
 }
 
 function goblinTurnBattle(
@@ -4161,6 +4908,20 @@ function concentrationSavingThrowFill(
     kind: "concentrationSavingThrow",
     holeId: hole.holeId,
     value: { succeeded },
+  };
+}
+
+function reactionDecisionFill(
+  hole: BattleHole,
+  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
+  if (hole.kind !== "reactionDecision") {
+    throw new Error("Expected reactionDecision hole.");
+  }
+  return {
+    kind: "reactionDecision",
+    holeId: hole.holeId,
+    value,
   };
 }
 

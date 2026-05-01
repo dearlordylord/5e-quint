@@ -297,8 +297,93 @@ export type BattleConcentration = {
 };
 export type BattleReadiedSpell = {
   readonly invocation: SupportedDamageSpellAct;
+  readonly trigger: BattleReactionTrigger;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
+export const BATTLE_REACTION_TRIGGERS = [
+  "attackHit",
+  "spellCast",
+  "saveFailed",
+  "afterDamage",
+] as const;
+export type BattleReactionTrigger = (typeof BATTLE_REACTION_TRIGGERS)[number];
+export type BattleInterruptedProcedure =
+  | {
+      readonly kind: "replay";
+      readonly subject: BattleSubject;
+      readonly fills: readonly BattleFill[];
+    }
+  | {
+      readonly kind: "resolved";
+      readonly subject: BattleSubject;
+    };
+export type BattleReactionProcedureChoice = {
+  readonly kind: "releaseReadiedSpell";
+  readonly reactorId: CombatantId;
+  readonly readiedSpellCasterId: CombatantId;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "releaseReadiedSpell" }
+  >;
+};
+export type BattleReactionProcedureSelection = {
+  readonly kind: "releaseReadiedSpell";
+  readonly readiedSpellCasterId: CombatantId;
+  readonly fills: readonly BattleFill[];
+};
+type BattleActiveReactionProcedure = {
+  readonly reactorId: CombatantId;
+  readonly subject: BattleReactionProcedureChoice["subject"];
+  readonly fills: readonly BattleFill[];
+  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+};
+type BattleReactionFrameBase = {
+  readonly eligibleReactors: readonly CombatantId[];
+  readonly offeredReactors: readonly CombatantId[];
+  readonly choices: readonly BattleReactionProcedureChoice[];
+  readonly activeReaction?: BattleActiveReactionProcedure;
+  readonly continuation: BattleInterruptedProcedure;
+};
+export type BattleReactionFrame =
+  | (BattleReactionFrameBase & {
+      readonly trigger: "attackHit";
+      readonly attackerId: CombatantId;
+      readonly targetId: CombatantId;
+    })
+  | (BattleReactionFrameBase & {
+      readonly trigger: "spellCast";
+      readonly casterId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+    })
+  | (BattleReactionFrameBase & {
+      readonly trigger: "saveFailed";
+      readonly targetId: CombatantId;
+      readonly sourceSpellId?: SpellRecord["id"];
+    })
+  | (BattleReactionFrameBase & {
+      readonly trigger: "afterDamage";
+      readonly damageSourceId: CombatantId;
+      readonly damagedId: CombatantId;
+      readonly damageAmount: number;
+    });
+type BattleReactionFrameInput = BattleReactionFrame extends infer T
+  ? T extends BattleReactionFrame
+    ? Omit<
+        T,
+        "eligibleReactors" | "offeredReactors" | "choices" | "activeReaction"
+      >
+    : never
+  : never;
+export type BattleReactionDecision =
+  | {
+      readonly kind: "decline";
+      readonly reactorId: CombatantId;
+    }
+  | {
+      readonly kind: "resolve";
+      readonly reactorId: CombatantId;
+      readonly choice: BattleReactionProcedureSelection;
+    };
 type AttackTargetConstraint =
   | { readonly kind: "meleeReach"; readonly reachFeet: number }
   | {
@@ -461,6 +546,7 @@ export type BattleCreatureState = {
   readonly concentration: BattleConcentration | null;
   readonly armorClass: ArmorClassState;
   readonly zeroHpLifecycle: ZeroHpLifecycle;
+  readonly reactionAvailable: boolean;
   readonly origin:
     | {
         readonly kind: "character";
@@ -488,6 +574,7 @@ export type BattleState = {
   >;
   readonly currentTurnResources: BattleTurnResources;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
+  readonly interruptStack: readonly BattleReactionFrame[];
 };
 
 export const BATTLE_SUBJECT_ACTIONS = ["attack"] as const;
@@ -516,6 +603,10 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     spellId: BattleSubjectTextSchema,
     spellActId: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
+    readyTrigger: Schema.optionalWith(
+      Schema.Literal(...BATTLE_REACTION_TRIGGERS),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     tag: Schema.Literal("unitFeature"),
@@ -560,6 +651,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         spell.tag,
         spell.actorId,
         spell.spellActId ?? spell.spellId,
+        spell.readyTrigger ?? null,
       ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>
@@ -660,6 +752,14 @@ export type BattleConcentrationSavingThrowHole = {
   readonly dc: number;
   readonly damageAmount: number;
 };
+export type BattleReactionDecisionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "reactionDecision";
+  readonly label: string;
+  readonly trigger: BattleReactionTrigger;
+  readonly eligibleReactors: readonly CombatantId[];
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleAttackRollHole
@@ -669,7 +769,8 @@ export type BattleHole =
   | BattleSpellSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole
-  | BattleConcentrationSavingThrowHole;
+  | BattleConcentrationSavingThrowHole
+  | BattleReactionDecisionHole;
 
 const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("HoleId"),
@@ -811,6 +912,13 @@ export const BattleHoleSchema = Schema.Union(
     dc: Schema.Number,
     damageAmount: Schema.Number,
   }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("reactionDecision"),
+    label: Schema.String,
+    trigger: Schema.Literal(...BATTLE_REACTION_TRIGGERS),
+    eligibleReactors: Schema.Array(CombatantId),
+  }),
 );
 
 export type BattleFill =
@@ -836,6 +944,11 @@ export type BattleFill =
       readonly value: {
         readonly succeeded: boolean;
       };
+    }
+  | {
+      readonly kind: "reactionDecision";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleReactionDecision;
     };
 
 const BattleDieRollResultSchema = Schema.Number.pipe(
@@ -861,45 +974,136 @@ const BattleRolledDiceGroupSchema = Schema.Struct({
   results: Schema.NonEmptyArray(BattleDieRollResultSchema),
 });
 
-export const BattleFillSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("targetChoice"),
-    holeId: BattleHoleIdSchema,
-    value: CombatantId,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("attackRoll"),
-    holeId: BattleHoleIdSchema,
-    value: BattleAttackRollResultSchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("savingThrowOutcome"),
-    holeId: BattleHoleIdSchema,
-    value: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
+type BattleFillEncoded =
+  | {
+      readonly kind: "targetChoice";
+      readonly holeId: string;
+      readonly value: string;
+    }
+  | {
+      readonly kind: "attackRoll";
+      readonly holeId: string;
+      readonly value: {
+        readonly total: number;
+        readonly naturalD20: number;
+        readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
+      };
+    }
+  | {
+      readonly kind: "savingThrowOutcome";
+      readonly holeId: string;
+      readonly value: readonly {
+        readonly targetId: string;
+        readonly succeeded: boolean;
+      }[];
+    }
+  | {
+      readonly kind: "rolledDice";
+      readonly holeId: string;
+      readonly value: readonly [
+        {
+          readonly results: readonly [number, ...number[]];
+        },
+        ...{
+          readonly results: readonly [number, ...number[]];
+        }[],
+      ];
+    }
+  | {
+      readonly kind: "deathSavingThrow";
+      readonly holeId: string;
+      readonly value: number;
+    }
+  | {
+      readonly kind: "concentrationSavingThrow";
+      readonly holeId: string;
+      readonly value: {
+        readonly succeeded: boolean;
+      };
+    }
+  | {
+      readonly kind: "reactionDecision";
+      readonly holeId: string;
+      readonly value:
+        | {
+            readonly kind: "decline";
+            readonly reactorId: string;
+          }
+        | {
+            readonly kind: "resolve";
+            readonly reactorId: string;
+            readonly choice: {
+              readonly kind: "releaseReadiedSpell";
+              readonly readiedSpellCasterId: string;
+              readonly fills: readonly BattleFillEncoded[];
+            };
+          };
+    };
+
+export const BattleFillSchema: Schema.Schema<
+  BattleFill,
+  BattleFillEncoded,
+  never
+> = Schema.suspend(() =>
+  Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("targetChoice"),
+      holeId: BattleHoleIdSchema,
+      value: CombatantId,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("attackRoll"),
+      holeId: BattleHoleIdSchema,
+      value: BattleAttackRollResultSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("savingThrowOutcome"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Array(
+        Schema.Struct({
+          targetId: CombatantId,
+          succeeded: Schema.Boolean,
+        }),
+      ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("rolledDice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.NonEmptyArray(BattleRolledDiceGroupSchema),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("deathSavingThrow"),
+      holeId: BattleHoleIdSchema,
+      value: BattleD20DieRollResultSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("concentrationSavingThrow"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
         succeeded: Schema.Boolean,
       }),
-    ),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("rolledDice"),
-    holeId: BattleHoleIdSchema,
-    value: Schema.NonEmptyArray(BattleRolledDiceGroupSchema),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("deathSavingThrow"),
-    holeId: BattleHoleIdSchema,
-    value: BattleD20DieRollResultSchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("concentrationSavingThrow"),
-    holeId: BattleHoleIdSchema,
-    value: Schema.Struct({
-      succeeded: Schema.Boolean,
     }),
-  }),
-);
+    Schema.Struct({
+      kind: Schema.Literal("reactionDecision"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("decline"),
+          reactorId: CombatantId,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("resolve"),
+          reactorId: CombatantId,
+          choice: Schema.Struct({
+            kind: Schema.Literal("releaseReadiedSpell"),
+            readiedSpellCasterId: CombatantId,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+        }),
+      ),
+    }),
+  ),
+).annotations({ identifier: "BattleFill" });
 
 export type BattleResolutionInput = {
   readonly state: BattleState;
@@ -914,10 +1118,15 @@ type BattleResolutionInputForSubject<TSubject extends BattleSubject> = Omit<
 };
 type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
->;
+> & {
+  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+};
 type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
->;
+> & {
+  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly reactionContinuationSubject?: BattleSubject | undefined;
+};
 type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "unitFeature" }>
 >;
@@ -941,6 +1150,7 @@ export type BattleResolutionResult =
     }
   | {
       readonly tag: "needsHoles";
+      readonly state: BattleState;
       readonly subject: BattleSubject;
       readonly holes: readonly BattleHole[];
       readonly snapshot: BattleSnapshot;
@@ -963,6 +1173,11 @@ export type BattleSnapshot = {
   readonly readiedSpells: readonly (BattleReadiedSpell & {
     readonly casterId: CombatantId;
   })[];
+  readonly pendingReaction: {
+    readonly frame: BattleReactionFrame;
+    readonly decisionHole: BattleReactionDecisionHole;
+    readonly stackDepth: number;
+  } | null;
 };
 
 export type BattleCreatureSnapshot = {
@@ -978,6 +1193,7 @@ export type BattleCreatureSnapshot = {
   readonly conditions: readonly Condition[];
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly concentration: BattleConcentration | null;
+  readonly reactionAvailable: boolean;
 };
 
 export type BattleCreatureZeroHpLifecycleSnapshot =
@@ -1007,6 +1223,10 @@ const DEATH_SAVING_THROW_HOLE_INSTANCE = holeInstanceKey(
 );
 const CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX =
   "battle:concentration:saving-throw";
+const REACTION_DECISION_HOLE_ID = holeId("battle:reaction:decision");
+const REACTION_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:reaction:decision",
+);
 const ACTION_SURGE_UNIT_ID = "fighter_action_surge";
 const SECOND_WIND_UNIT_ID = "fighter_second_wind";
 const SECOND_WIND_HEALING_ROLL_HOLE_ID = holeId(
@@ -1082,6 +1302,7 @@ export function startBattle(input: {
     combatantDistances: battleCombatantDistances(input),
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
+    interruptStack: [],
   };
 }
 
@@ -1156,6 +1377,46 @@ export function discoverBattleActs(
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
+  return resolveBattleSubjectInternal(input, {});
+}
+
+function resolveBattleSubjectInternal(
+  input: BattleResolutionInput,
+  options: {
+    readonly replayingInterruptedProcedure?: boolean;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger;
+  },
+): BattleResolutionResult {
+  if (
+    input.state.interruptStack.length > 0 &&
+    options.replayingInterruptedProcedure !== true
+  ) {
+    const activeFrame = currentReactionFrame(input.state);
+    const activeReaction = activeFrame?.activeReaction;
+    if (
+      activeReaction !== undefined &&
+      sameBattleSubject(input.subject, activeReaction.subject)
+    ) {
+      const reactionResult = resolveBattleSubjectInternal(input, {
+        replayingInterruptedProcedure: true,
+        ...(activeReaction.suppressedReactionTrigger === undefined
+          ? {}
+          : {
+              suppressedReactionTrigger:
+                activeReaction.suppressedReactionTrigger,
+            }),
+      });
+      return reactionResult.tag === "resolved"
+        ? completeActiveReactionProcedure(reactionResult.state)
+        : reactionResult;
+    }
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "A pending Reaction window must be resolved before the interrupted procedure can continue.",
+    );
+  }
+
   const actorId = battleSubjectActorId(input.subject);
   if (actorId !== currentActorId(input.state)) {
     return invalidResult(
@@ -1221,10 +1482,18 @@ export function resolveBattleSubject(
 
   return Match.value(input.subject).pipe(
     Match.when({ tag: "action", action: "attack" }, (subject) =>
-      resolveAttack({ ...input, subject }),
+      resolveAttack({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      }),
     ),
     Match.when({ tag: "actionSpell" }, (subject) =>
-      resolveSpellAct({ ...input, subject }),
+      resolveSpellAct({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      }),
     ),
     Match.when({ tag: "unitFeature" }, (subject) =>
       resolveUnitFeature({ ...input, subject }),
@@ -1233,9 +1502,243 @@ export function resolveBattleSubject(
       resolveEndTurnCommand(input),
     ),
     Match.when({ tag: "runtimeCommand", command: "releaseReadiedSpell" }, () =>
-      resolveReleaseReadiedSpellCommand(input),
+      resolveReleaseReadiedSpellCommand(input, {
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      }),
     ),
     Match.exhaustive,
+  );
+}
+
+export function openBattleReactionWindow(input: {
+  readonly state: BattleState;
+  readonly frame: BattleReactionFrame;
+}): BattleState {
+  return {
+    ...input.state,
+    interruptStack: [...input.state.interruptStack, input.frame],
+  };
+}
+
+export function resolveBattleReaction(input: {
+  readonly state: BattleState;
+  readonly fill: Extract<BattleFill, { readonly kind: "reactionDecision" }>;
+}): BattleResolutionResult {
+  const frame = currentReactionFrame(input.state);
+  if (frame === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "No Reaction window is pending.",
+    );
+  }
+  if (input.fill.holeId !== REACTION_DECISION_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Reaction decision fill does not match the pending Reaction window.",
+    );
+  }
+
+  const reactor = input.state.combatants.get(input.fill.value.reactorId);
+  if (
+    reactor === undefined ||
+    !unofferedEligibleReactors(frame).includes(input.fill.value.reactorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Reaction decision reactor is not eligible for the pending Reaction window.",
+    );
+  }
+
+  if (input.fill.value.kind === "resolve" && !reactor.reactionAvailable) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Selected reactor has no Reaction available.",
+    );
+  }
+
+  if (input.fill.value.kind === "resolve") {
+    const choice = admittedReactionChoice(frame, input.fill.value);
+    if (choice === null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Reaction choice is not admitted for the pending Reaction window.",
+      );
+    }
+    const activeFrame = {
+      ...frame,
+      activeReaction: {
+        reactorId: input.fill.value.reactorId,
+        subject: choice.subject,
+        fills: input.fill.value.choice.fills,
+      },
+    };
+    const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
+    const activeState = spendReaction(
+      {
+        ...input.state,
+        interruptStack: [...stackWithoutCurrent, activeFrame],
+      },
+      input.fill.value.reactorId,
+    );
+    const reactionResult = resolveBattleSubjectInternal(
+      {
+        state: activeState,
+        subject: choice.subject,
+        fills: input.fill.value.choice.fills,
+      },
+      { replayingInterruptedProcedure: true },
+    );
+    return reactionResult.tag === "resolved"
+      ? completeActiveReactionProcedure(reactionResult.state)
+      : reactionResult;
+  }
+
+  const updatedFrame = {
+    ...frame,
+    offeredReactors: [...frame.offeredReactors, input.fill.value.reactorId],
+  };
+  const remainingReactors = unofferedEligibleReactors(updatedFrame);
+  const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
+  const closedState =
+    remainingReactors.length === 0
+      ? {
+          ...input.state,
+          interruptStack: stackWithoutCurrent,
+        }
+      : {
+          ...input.state,
+          interruptStack: [...stackWithoutCurrent, updatedFrame],
+        };
+  const nextState =
+    remainingReactors.length === 0
+      ? suppressReactionTriggerForActiveReaction(closedState, frame.trigger)
+      : closedState;
+
+  return remainingReactors.length === 0
+    ? resumeInterruptedProcedure(nextState, frame.continuation, frame.trigger)
+    : {
+        tag: "resolved",
+        state: nextState,
+        snapshot: snapshotBattle(nextState),
+      };
+}
+
+function spendReaction(
+  state: BattleState,
+  reactorId: CombatantId,
+): BattleState {
+  const reactor = state.combatants.get(reactorId);
+  if (reactor === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(reactorId, {
+      ...reactor,
+      reactionAvailable: false,
+    }),
+  };
+}
+
+function admittedReactionChoice(
+  frame: BattleReactionFrame,
+  decision: Extract<BattleReactionDecision, { readonly kind: "resolve" }>,
+): BattleReactionProcedureChoice | null {
+  return (
+    frame.choices.find(
+      (choice) =>
+        choice.kind === decision.choice.kind &&
+        choice.reactorId === decision.reactorId &&
+        choice.readiedSpellCasterId === decision.choice.readiedSpellCasterId,
+    ) ?? null
+  );
+}
+
+function completeActiveReactionProcedure(
+  state: BattleState,
+): BattleResolutionResult {
+  const frame = currentReactionFrame(state);
+  const activeReaction = frame?.activeReaction;
+  if (frame === null || activeReaction === undefined) {
+    return invalidResult(
+      state,
+      "staleSubject",
+      "No active Reaction procedure is pending completion.",
+    );
+  }
+  const { activeReaction: _completedReaction, ...inactiveFrame } = frame;
+  const completedFrame: BattleReactionFrame = {
+    ...inactiveFrame,
+    offeredReactors: [...frame.offeredReactors, activeReaction.reactorId],
+  };
+  const remainingReactors = unofferedEligibleReactors(completedFrame);
+  const stackWithoutCurrent = state.interruptStack.slice(0, -1);
+  const closedState =
+    remainingReactors.length === 0
+      ? { ...state, interruptStack: stackWithoutCurrent }
+      : { ...state, interruptStack: [...stackWithoutCurrent, completedFrame] };
+  const nextState =
+    remainingReactors.length === 0
+      ? suppressReactionTriggerForActiveReaction(closedState, frame.trigger)
+      : closedState;
+
+  return remainingReactors.length === 0
+    ? resumeInterruptedProcedure(nextState, frame.continuation, frame.trigger)
+    : {
+        tag: "resolved",
+        state: nextState,
+        snapshot: snapshotBattle(nextState),
+      };
+}
+
+function suppressReactionTriggerForActiveReaction(
+  state: BattleState,
+  suppressedReactionTrigger: BattleReactionTrigger,
+): BattleState {
+  const frame = currentReactionFrame(state);
+  if (frame?.activeReaction === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    interruptStack: [
+      ...state.interruptStack.slice(0, -1),
+      {
+        ...frame,
+        activeReaction: {
+          ...frame.activeReaction,
+          suppressedReactionTrigger,
+        },
+      },
+    ],
+  };
+}
+
+function resumeInterruptedProcedure(
+  state: BattleState,
+  continuation: BattleInterruptedProcedure,
+  suppressedReactionTrigger: BattleReactionTrigger,
+): BattleResolutionResult {
+  if (continuation.kind === "resolved") {
+    return {
+      tag: "resolved",
+      state,
+      snapshot: snapshotBattle(state),
+    };
+  }
+
+  return resolveBattleSubjectInternal(
+    {
+      state,
+      subject: continuation.subject,
+      fills: continuation.fills,
+    },
+    { replayingInterruptedProcedure: true, suppressedReactionTrigger },
   );
 }
 
@@ -1274,7 +1777,137 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       casterId,
       ...readiedSpell,
     })),
+    pendingReaction: pendingReactionSnapshot(state),
   };
+}
+
+function pendingReactionSnapshot(
+  state: BattleState,
+): BattleSnapshot["pendingReaction"] {
+  const frame = currentReactionFrame(state);
+  return frame === null
+    ? null
+    : {
+        frame,
+        decisionHole: reactionDecisionHole(frame),
+        stackDepth: state.interruptStack.length,
+      };
+}
+
+function currentReactionFrame(state: BattleState): BattleReactionFrame | null {
+  return state.interruptStack[state.interruptStack.length - 1] ?? null;
+}
+
+function reactionDecisionHole(
+  frame: BattleReactionFrame,
+): BattleReactionDecisionHole {
+  return {
+    holeInstanceKey: REACTION_DECISION_HOLE_INSTANCE,
+    holeId: REACTION_DECISION_HOLE_ID,
+    kind: "reactionDecision",
+    label: `${reactionTriggerLabel(frame.trigger)} reaction decision`,
+    trigger: frame.trigger,
+    eligibleReactors: unofferedEligibleReactors(frame),
+  };
+}
+
+function reactionTriggerLabel(trigger: BattleReactionTrigger): string {
+  return Match.value(trigger).pipe(
+    Match.when("attackHit", () => "Attack hit"),
+    Match.when("spellCast", () => "Spell cast"),
+    Match.when("saveFailed", () => "Failed save"),
+    Match.when("afterDamage", () => "After damage"),
+    Match.exhaustive,
+  );
+}
+
+function unofferedEligibleReactors(
+  frame: BattleReactionFrame,
+): readonly CombatantId[] {
+  const offered = new Set(frame.offeredReactors);
+  return frame.eligibleReactors.filter((reactorId) => !offered.has(reactorId));
+}
+
+function maybeOpenReactionWindow(
+  state: BattleState,
+  frame: BattleReactionFrameInput,
+  suppressedReactionTrigger: BattleReactionTrigger | undefined,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  if (frame.trigger === suppressedReactionTrigger) {
+    return null;
+  }
+  const choices = readiedSpellReactionChoices(state, frame.trigger);
+  if (choices.length === 0) {
+    return null;
+  }
+  const eligibleReactors = [
+    ...new Set(choices.map((choice) => choice.reactorId)),
+  ];
+  const frameCommon = {
+    eligibleReactors,
+    offeredReactors: [],
+    choices,
+  } satisfies Pick<
+    BattleReactionFrame,
+    "eligibleReactors" | "offeredReactors" | "choices"
+  >;
+  const nextFrame: BattleReactionFrame = Match.value(frame).pipe(
+    Match.when({ trigger: "attackHit" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...frameCommon,
+    })),
+    Match.when({ trigger: "spellCast" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...frameCommon,
+    })),
+    Match.when({ trigger: "saveFailed" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...frameCommon,
+    })),
+    Match.when({ trigger: "afterDamage" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...frameCommon,
+    })),
+    Match.exhaustive,
+  );
+  const nextState = openBattleReactionWindow({ state, frame: nextFrame });
+  const decisionHole = reactionDecisionHole(nextFrame);
+  return {
+    tag: "needsHoles",
+    state: nextState,
+    subject: frame.continuation.subject,
+    holes: [decisionHole],
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function readiedSpellReactionChoices(
+  state: BattleState,
+  trigger: BattleReactionTrigger,
+): readonly BattleReactionProcedureChoice[] {
+  return [...state.readiedSpells].flatMap(([casterId, readiedSpell]) => {
+    const reactor = state.combatants.get(casterId);
+    if (
+      readiedSpell.trigger !== trigger ||
+      reactor === undefined ||
+      !reactor.reactionAvailable
+    ) {
+      return [];
+    }
+    return [
+      {
+        kind: "releaseReadiedSpell" as const,
+        reactorId: casterId,
+        readiedSpellCasterId: casterId,
+        subject: {
+          tag: "runtimeCommand" as const,
+          actorId: currentActorId(state),
+          command: "releaseReadiedSpell" as const,
+          readiedSpellCasterId: casterId,
+        },
+      },
+    ];
+  });
 }
 
 function battleCreatureStateFromInit(
@@ -1294,6 +1927,7 @@ function battleCreatureStateFromInit(
     activeEffects: [],
     concentration: null,
     zeroHpLifecycle,
+    reactionAvailable: true,
   };
 
   if (creatureInit.kind === "character") {
@@ -1506,6 +2140,7 @@ function combatantSnapshot(
     conditions: activeConditions(combatant.conditions),
     activeEffects: combatant.activeEffects,
     concentration: combatant.concentration,
+    reactionAvailable: combatant.reactionAvailable,
   };
 }
 
@@ -1879,6 +2514,23 @@ function resolveAttack(
   );
   const critical = attackRollIsCriticalHit(fillSet.attackRoll);
   if (hit && fillSet.damageRoll == null) {
+    const reactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "attackHit",
+        attackerId: input.subject.actorId,
+        targetId: target.combatantId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
     return needsHolesResult(input.state, input.subject, [
       attackDamageHole(attack, critical, fillSet.attackRoll),
     ]);
@@ -1933,6 +2585,30 @@ function resolveAttack(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
+    const spent = spendAttackAction(
+      applyAttackDamage(input.state, target.combatantId, attack, fillSet),
+    );
+    if (spent.tag === "invalid") {
+      return spent;
+    }
+    const reactionWindow = maybeOpenReactionWindow(
+      spent.state,
+      {
+        trigger: "afterDamage",
+        damageSourceId: input.subject.actorId,
+        damagedId: target.combatantId,
+        damageAmount,
+        continuation: {
+          kind: "resolved",
+          subject: input.subject,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
+    return spent;
   }
 
   return spendAttackAction(
@@ -2104,7 +2780,7 @@ function resolveEndTurn(
     combatants.set(
       id,
       id === nextActorId
-        ? resetPerTurnCharacterResources(combatant)
+        ? resetStartOfTurnCombatant(resetPerTurnCharacterResources(combatant))
         : combatant,
     );
   }
@@ -2180,6 +2856,7 @@ function resolveEndTurnCommand(
   if (needsDeathSavingThrow && input.fills.length === 0) {
     return {
       tag: "needsHoles",
+      state: input.state,
       subject: input.subject,
       holes: [deathSavingThrowHole(nextActorId)],
       snapshot: snapshotBattle(input.state),
@@ -2239,6 +2916,9 @@ function readiedSpellInitialHoles(
 
 function resolveReleaseReadiedSpellCommand(
   input: BattleResolutionInput,
+  options: {
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
 ): BattleResolutionResult {
   if (input.subject.tag !== "runtimeCommand") {
     return invalidResult(
@@ -2279,6 +2959,8 @@ function resolveReleaseReadiedSpellCommand(
       state: input.state,
       subject: releaseSubject,
       fills: input.fills,
+      suppressedReactionTrigger: options.suppressedReactionTrigger,
+      reactionContinuationSubject: input.subject,
     },
     readied.invocation,
   );
@@ -2298,6 +2980,15 @@ function resolveReleaseReadiedSpellCommand(
     tag: "resolved",
     state: withoutReadied,
     snapshot: snapshotBattle(withoutReadied),
+  };
+}
+
+function resetStartOfTurnCombatant(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
+  return {
+    ...combatant,
+    reactionAvailable: true,
   };
 }
 
@@ -2820,19 +3511,18 @@ function readiedSpellAct(
   ) {
     return [];
   }
-  return [
-    {
-      subject: {
-        tag: "actionSpell" as const,
-        actorId,
-        spellId: invocation.spell.id,
-        spellActId: readiedSpellActId(invocation),
-      },
-      label: `Ready ${invocation.spell.name}`,
-      summary: `Ready ${invocation.spell.name}; holding the spell requires Concentration until the start of your next turn.`,
-      initialHoles: [],
+  return BATTLE_REACTION_TRIGGERS.map((trigger) => ({
+    subject: {
+      tag: "actionSpell" as const,
+      actorId,
+      spellId: invocation.spell.id,
+      spellActId: readiedSpellActId(invocation),
+      readyTrigger: trigger,
     },
-  ];
+    label: `Ready ${invocation.spell.name}`,
+    summary: `Ready ${invocation.spell.name} for ${reactionTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
+    initialHoles: [],
+  }));
 }
 
 function readiedSpellActId(invocation: SupportedDamageSpellAct): string {
@@ -2876,6 +3566,18 @@ function resolveSpellAct(
       input.state,
       "staleSubject",
       "Action-time spell act no longer has its required runtime spell resource.",
+    );
+  }
+
+  if (
+    subject.readyTrigger !== undefined &&
+    (subject.spellActId === undefined ||
+      !isReadiedSpellActId(subject.spellActId))
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Ready trigger selection is only valid for a Ready spell act.",
     );
   }
 
@@ -2958,6 +3660,24 @@ function resolveSpellAct(
       state: nextState,
       snapshot: snapshotBattle(nextState),
     };
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.state,
+    {
+      trigger: "spellCast",
+      casterId: subject.actorId,
+      spellId: invocation.spell.id,
+      continuation: {
+        kind: "replay",
+        subject: input.subject,
+        fills: input.fills,
+      },
+    },
+    input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
   }
 
   if (invocation.kind === "cantripSpellAttack") {
@@ -3052,7 +3772,6 @@ function resolveSpellAct(
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
-
   const damaged = applySpellDamage(
     input.state,
     target.combatantId,
@@ -3080,6 +3799,24 @@ function resolveSpellAct(
       ? expendSpellSlot(effected, subject.actorId, invocation.slotLevel)
       : effected;
   const nextState = { ...slotted, currentTurnResources: spent.right };
+  const afterDamageReactionWindow = maybeOpenReactionWindow(
+    nextState,
+    {
+      trigger: "afterDamage",
+      damageSourceId: subject.actorId,
+      damagedId: target.combatantId,
+      damageAmount: spellDamageAmount,
+      continuation: {
+        kind: "resolved",
+        subject: input.subject,
+      },
+    },
+    input.suppressedReactionTrigger,
+  );
+  if (afterDamageReactionWindow !== null) {
+    return afterDamageReactionWindow;
+  }
+
   return {
     tag: "resolved",
     state: nextState,
@@ -3144,6 +3881,7 @@ function resolveReadySpellAct(
       input.subject.actorId,
       {
         invocation,
+        trigger: input.subject.readyTrigger ?? "spellCast",
         expiresAt: {
           kind: "startOfTurn" as const,
           combatantId: input.subject.actorId,
@@ -3527,6 +4265,26 @@ function resolveSaveGateDamageSpellAct(input: {
   const failedTargets = input.fillSet.savingThrowOutcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
   if (failedTargets.length === 0) {
     if (input.fillSet.damageRoll !== undefined) {
       return invalidResult(
@@ -3594,7 +4352,6 @@ function resolveSaveGateDamageSpellAct(input: {
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
-
   const concentrationSaveByTargetId = new Map(
     concentrationSaves.map((concentrationSave) => [
       concentrationSave.combatantId,
@@ -3625,6 +4382,28 @@ function resolveSaveGateDamageSpellAct(input: {
     );
   }
   const nextState = { ...damaged, currentTurnResources: spent.right };
+  const afterDamageReactionWindow = maybeOpenReactionWindow(
+    nextState,
+    {
+      trigger: "afterDamage",
+      damageSourceId: input.actorId,
+      damagedId: failedTargets[0]!,
+      damageAmount: spellDamageAmountForTarget(
+        input.input.state.combatants.get(failedTargets[0]!)!,
+        input.invocation,
+        damageRoll,
+      ),
+      continuation: {
+        kind: "resolved",
+        subject: input.input.subject,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (afterDamageReactionWindow !== null) {
+    return afterDamageReactionWindow;
+  }
+
   return {
     tag: "resolved",
     state: nextState,
@@ -4755,6 +5534,7 @@ function needsHolesResult(
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   return {
     tag: "needsHoles",
+    state,
     subject,
     holes,
     snapshot: snapshotBattle(state),

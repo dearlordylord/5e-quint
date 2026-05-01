@@ -51,6 +51,13 @@ module battleRuntime {
   //   preserving Spell Slot state.
   // - Monsters/Monsters-P-S.md lines 1152-1175 and UBIQUITOUS_LANGUAGE.md:
   //   Skeleton has Bludgeoning vulnerability and Poison damage immunity.
+  // - Playing-the-Game.md lines 326-332 and
+  //   Spells/Gaining-and-Casting.md lines 92-100: a Reaction is an instant
+  //   response to a trigger, can interrupt another creature's turn, is usable
+  //   once until the start of the reactor's next turn, and reaction spells use
+  //   spell-authored triggers. The promoted runtime models the reusable
+  //   interrupt window/continuation protocol here; individual reaction
+  //   features and spells are restored by later width tasks.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -65,7 +72,21 @@ module battleRuntime {
 
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta
 
-  type Hole = TargetChoice | AttackRoll | DamageRoll | SavingThrowOutcome
+  type Hole = TargetChoice | AttackRoll | DamageRoll | SavingThrowOutcome | ReactionDecision
+
+  type ReactionTrigger = AttackHit | SpellCast | SaveFailed | AfterDamage
+
+  // Continuations carry the replay lane interrupted by a Reaction window. This
+  // package-local QNT keeps representative deterministic fills for those lanes;
+  // TypeScript carries the caller-provided fills in the runtime frame.
+  type ReactionContinuation = ResumeAttack | ResumeSpell | ResumeSaveGateDamage | ResumeAfterDamage
+
+  type PendingReactionFrame = {
+    trigger: ReactionTrigger,
+    eligibleReactors: Set[Actor],
+    offeredReactors: Set[Actor],
+    continuation: ReactionContinuation,
+  }
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows
 
@@ -82,6 +103,7 @@ module battleRuntime {
     deathSuccesses: int,
     deathFailures: int,
     lifecycle: ZeroHpLifecycle,
+    reactionAvailable: bool,
   }
 
   type Initiative = {
@@ -97,6 +119,7 @@ module battleRuntime {
     actionAvailable: bool,
     bonusActionAvailable: bool,
     fighterReadiedSpellHeld: bool,
+    interruptStack: List[PendingReactionFrame],
   }
 
   type ActionSurgeResult = {
@@ -131,6 +154,7 @@ module battleRuntime {
       deathSuccesses: 0,
       deathFailures: 0,
       lifecycle: UsesDeathSavingThrows,
+      reactionAvailable: true,
     },
     goblin: {
       hp: 10,
@@ -145,10 +169,12 @@ module battleRuntime {
       deathSuccesses: 0,
       deathFailures: 0,
       lifecycle: DiesAtZeroHp,
+      reactionAvailable: true,
     },
     actionAvailable: true,
     bonusActionAvailable: true,
     fighterReadiedSpellHeld: false,
+    interruptStack: [],
   }
 
   // The promoted runtime receives Initiative counts and the caller-resolved
@@ -219,8 +245,73 @@ module battleRuntime {
       actionAvailable: true,
       bonusActionAvailable: true,
       fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and advancedInitiative.stillToAct[0] == Fighter) false else state.fighterReadiedSpellHeld,
+      fighter: if (advancedInitiative.stillToAct[0] == Fighter) { ...state.fighter, reactionAvailable: true } else state.fighter,
+      goblin: if (advancedInitiative.stillToAct[0] == Goblin) { ...state.goblin, reactionAvailable: true } else state.goblin,
     }
   }
+
+  pure def openReactionWindow(state: BattleState, frame: PendingReactionFrame): BattleState =
+    { ...state, interruptStack: state.interruptStack.append(frame) }
+
+  pure def reactionFrameComplete(frame: PendingReactionFrame): bool =
+    frame.eligibleReactors == frame.offeredReactors
+
+  pure def reactorCanReact(state: BattleState, reactor: Actor): bool =
+    match reactor {
+      | Fighter => state.fighter.reactionAvailable
+      | Goblin => state.goblin.reactionAvailable
+    }
+
+  pure def spendReaction(state: BattleState, reactor: Actor): BattleState =
+    match reactor {
+      | Fighter => { ...state, fighter: { ...state.fighter, reactionAvailable: false } }
+      | Goblin => { ...state, goblin: { ...state.goblin, reactionAvailable: false } }
+    }
+
+  pure def declineReaction(state: BattleState, reactor: Actor): BattleState = {
+    if (state.interruptStack.length() == 0)
+      state
+    else {
+      val frame = state.interruptStack[state.interruptStack.length() - 1]
+      val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
+      if (not(validReactor))
+        state
+      else {
+        val updatedFrame = { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
+        val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
+        if (reactionFrameComplete(updatedFrame))
+          { ...state, interruptStack: rest }
+        else
+          { ...state, interruptStack: rest.append(updatedFrame) }
+      }
+    }
+  }
+
+  pure def resolveReaction(state: BattleState, reactor: Actor): BattleState =
+    if (state.interruptStack.length() == 0 or not(reactorCanReact(state, reactor)))
+      state
+    else {
+      val frame = state.interruptStack[state.interruptStack.length() - 1]
+      val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
+      if (not(validReactor))
+        state
+      else {
+        val afterReactionProcedure = releaseReadiedSpell(spendReaction(state, reactor))
+        val afterDecision = declineReaction(afterReactionProcedure, reactor)
+        if (afterDecision.interruptStack.length() < state.interruptStack.length())
+          resumeReactionContinuation(afterDecision, frame.continuation)
+        else
+          afterDecision
+      }
+    }
+
+  pure def resumeReactionContinuation(state: BattleState, continuation: ReactionContinuation): BattleState =
+    match continuation {
+      | ResumeAttack => resolveAttack(state, 15, 10, 4, true)
+      | ResumeSpell => resolveRayOfFrost(state, 15, 10, 4, true)
+      | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
+      | ResumeAfterDamage => state
+    }
 
   pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
     val advanced = endTurn(state)
@@ -269,6 +360,22 @@ module battleRuntime {
       { ...state, actionAvailable: false }
     else
       { ...state, fighter: applyDamage(state.fighter, damageRoll + 2, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+
+  pure def resolveRayOfFrost(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
+      { ...state, actionAvailable: false }
+    else {
+      val damaged = applyDamage(state.goblin, damageRoll, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded)
+      { ...state, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
+    }
 
   pure def concentrationSavingThrowDc(damage: int): int = {
     val halfDamage = damage / 2
@@ -853,6 +960,25 @@ module battleRuntime {
       assert(not(released.fighter.concentrating)),
       assert(not(released.fighterReadiedSpellHeld)),
       assert(not(expired.fighterReadiedSpellHeld)),
+    }
+  }
+
+  run test_resolved_reaction_releases_readied_spell_and_resumes_attack_continuation = {
+    val readied = { ...readySpell(initialState), actionAvailable: true }
+    val awaitingReaction = openReactionWindow(readied, {
+      trigger: AttackHit,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeAttack,
+    })
+    val resolved = resolveReaction(awaitingReaction, Fighter)
+    all {
+      assert(not(resolved.fighterReadiedSpellHeld)),
+      assert(not(resolved.fighter.concentrating)),
+      assert(not(resolved.fighter.reactionAvailable)),
+      assert(resolved.goblin.hp == 3),
+      assert(not(resolved.actionAvailable)),
+      assert(resolved.interruptStack == []),
     }
   }
 }

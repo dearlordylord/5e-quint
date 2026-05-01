@@ -34,6 +34,7 @@ const FillBattleHoleArgsSchema = Schema.Struct({
       "Battle act subject returned by discover_battle_acts. Copy it exactly.",
   }),
   fill: BattleFillSchema.annotations({
+    identifier: "BattleFill",
     description:
       "One BattleFill for the current act replay: targetChoice, attackRoll, savingThrowOutcome, deathSavingThrow, or rolledDice.",
   }),

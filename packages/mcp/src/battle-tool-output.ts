@@ -16,6 +16,7 @@ const BattleCombatantProjectionSchema = Schema.Struct({
   hp: Schema.Number,
   maxHp: Schema.Number,
   tempHp: Schema.Number,
+  reactionAvailable: Schema.Boolean,
   origin: JsonObjectSchema,
   zeroHpLifecycle: JsonObjectSchema,
 });
@@ -33,6 +34,7 @@ const BattleStateProjectionSchema = Schema.Struct({
   initiative: InitiativeStackSchema,
   combatants: Schema.Array(BattleCombatantProjectionSchema),
   currentTurnResources: JsonObjectSchema,
+  pendingReaction: Schema.Union(JsonObjectSchema, Schema.Null),
 });
 const BattleCreatureSnapshotSchema = Schema.Struct({
   combatantId: Schema.String,
@@ -46,6 +48,7 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
   zeroHpLifecycle: JsonObjectSchema,
   conditions: Schema.Array(Schema.String),
   activeEffects: Schema.Array(JsonObjectSchema),
+  reactionAvailable: Schema.Boolean,
 });
 const AvailableBattleActSchema = Schema.Struct({
   subject: BattleSubjectSchema,
@@ -61,6 +64,7 @@ const BattleSnapshotSchema = Schema.Struct({
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
   acts: Schema.Array(AvailableBattleActSchema),
   currentTurnResources: JsonObjectSchema,
+  pendingReaction: Schema.Union(JsonObjectSchema, Schema.Null),
 });
 const McpSessionSnapshotSchema = Schema.Struct({
   draftIds: Schema.Array(Schema.String),

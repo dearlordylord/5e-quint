@@ -2131,6 +2131,140 @@ describe("MCP server route", () => {
     expect(root.sessionStore.transientBattleFills).toBeNull();
   });
 
+  test("preserves pending reaction state while MCP replays a readied spell procedure", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const state = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-root-reaction-replay"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Readied Spell Fighter",
+        initiative: initiativeScore(12),
+        build: {
+          ...build,
+          armorTraining: [],
+          equipment: { shield: "equipment_shield" },
+          spellcasting: {
+            spellcastingAbility: "int",
+            cantrips: ["ray_of_frost"],
+            spellbook: [{ spellId: "magic_missile", spellLevel: 1 }],
+            preparedSpells: ["magic_missile"],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+            spellcastingFocuses: ["spellbook"],
+          },
+        },
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(10),
+      },
+      combatantDistances: [
+        { combatantA: fighterId, combatantB: goblinId, feet: 30 },
+      ],
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.battleState = state;
+    root.sessionStore.transientBattleFills = null;
+
+    readPayload(
+      handleToolCall(root, "resolve_battle_act", {
+        subject: {
+          tag: "actionSpell",
+          actorId: "fighter",
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: "attackHit",
+        },
+      }),
+    );
+    const readiedState = root.sessionStore.battleState;
+    if (readiedState?.readiedSpells.get(fighterId) === undefined) {
+      throw new Error("Expected Fighter to hold a readied spell.");
+    }
+    readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
+
+    const goblinAttack = {
+      tag: "action" as const,
+      actorId: "goblin",
+      action: "attack" as const,
+      attackName: "Shortbow",
+    };
+    readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: goblinAttack,
+        fill: {
+          kind: "targetChoice",
+          holeId: "battle:attack:target",
+          value: "fighter",
+        },
+      }),
+    );
+    const afterAttackRoll = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: goblinAttack,
+        fill: {
+          kind: "attackRoll",
+          holeId: "battle:attack:roll",
+          value: { total: 20, naturalD20: 18 },
+        },
+      }),
+    );
+    expect(afterAttackRoll).toMatchObject({
+      result: {
+        tag: "needsHoles",
+        holes: [{ kind: "reactionDecision", trigger: "attackHit" }],
+      },
+      battleState: {
+        pendingReaction: { frame: { trigger: "attackHit" } },
+      },
+    });
+
+    const afterReactionDecision = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: goblinAttack,
+        fill: {
+          kind: "reactionDecision",
+          holeId: "battle:reaction:decision",
+          value: {
+            kind: "resolve",
+            reactorId: "fighter",
+            choice: {
+              kind: "releaseReadiedSpell",
+              readiedSpellCasterId: "fighter",
+              fills: [],
+            },
+          },
+        },
+      }),
+    );
+    expect(afterReactionDecision).toMatchObject({
+      result: {
+        tag: "needsHoles",
+        subject: {
+          tag: "runtimeCommand",
+          command: "releaseReadiedSpell",
+          readiedSpellCasterId: "fighter",
+        },
+        holes: [{ kind: "targetChoice" }],
+      },
+      battleState: {
+        pendingReaction: {
+          frame: { activeReaction: { reactorId: "fighter" } },
+        },
+      },
+    });
+    expect(root.sessionStore.battleState?.interruptStack).toHaveLength(1);
+    expect(afterReactionDecision.session.transientBattleFills).toMatchObject({
+      subject: {
+        command: "releaseReadiedSpell",
+      },
+    });
+  });
+
   test("rejects available character sessions with non-canonical Spell Slot state", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);

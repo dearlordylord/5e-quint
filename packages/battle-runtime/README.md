@@ -105,7 +105,7 @@ instead of restoring the projected vocabulary.
    `resolveBattleSubject({ state, subject, fills })`.
 4. If the result is `needsHoles`, the caller renders those holes, stores the
    submitted fills outside `BattleState`, and calls `resolveBattleSubject` again
-   with the same durable state plus the accumulated fills.
+   with the returned durable state plus the accumulated fills.
 5. If the result is `resolved`, the caller replaces the durable state with the
    returned `state`. If the result is `invalid`, the caller does not commit a new
    battle state.
@@ -114,6 +114,19 @@ instead of restoring the projected vocabulary.
 durable battle state before attempting the selected subject. Because callers
 resubmit all accumulated fills on each attempt, `BattleState` stores durable
 combat facts, not partially answered hole forms.
+
+Reaction windows are the exception that proves the state handoff rule. Attack,
+spell-cast, failed-save, and after-damage procedures can return a
+`reactionDecision` hole with an updated `BattleState` containing the
+`interruptStack`. Callers must store that returned state before resolving or
+declining the Reaction. A resolved Reaction chooses one admitted procedure, such
+as releasing a readied spell, spends the reactor's Reaction, replays that
+procedure through its own holes if needed, and then resumes the interrupted
+subject without caller-side sequencing conventions.
+
+Ready spell acts carry the selected supported trigger on the subject as
+`readyTrigger`; the stored `BattleReadiedSpell.trigger` is derived from that
+runtime choice rather than patched into state later.
 
 ## Terms
 
@@ -130,6 +143,10 @@ combat facts, not partially answered hole forms.
 - `BattleHole` - a missing runtime input needed to resolve a subject, such as an
   attack target, attack roll, or damage roll.
 - `BattleFill` - caller-provided answer for a `BattleHole`.
+- `interruptStack` - durable Reaction-window state. The top frame carries the
+  trigger, eligible reactors, admitted reaction choices, and the interrupted
+  continuation to resume after all reactors decline or the chosen Reaction
+  procedure completes.
 - `origin` - the Character or Stat Block origin data retained on a
   `BattleCreatureState`. Origin is not provenance. Provenance is the canonical
   rules/content source claimed by authored Surface records.

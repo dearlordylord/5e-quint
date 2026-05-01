@@ -1,3 +1,4 @@
+import { snapshotBattle } from "@dnd/battle-runtime";
 import type { BattleCreatureState, BattleState } from "@dnd/battle-runtime";
 
 export function battleStateProjection(state: BattleState) {
@@ -8,6 +9,7 @@ export function battleStateProjection(state: BattleState) {
       battleCreatureStateProjection,
     ),
     currentTurnResources: state.currentTurnResources,
+    pendingReaction: snapshotBattle(state).pendingReaction,
     readiedSpells: Array.from(
       state.readiedSpells,
       ([casterId, readiedSpell]) => ({
@@ -26,6 +28,7 @@ function battleCreatureStateProjection(combatant: BattleCreatureState) {
     hp: combatant.hp,
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
+    reactionAvailable: combatant.reactionAvailable,
     armorClass: combatant.armorClass,
     activeEffects: combatant.activeEffects,
     concentration: combatant.concentration,
