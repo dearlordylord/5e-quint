@@ -410,15 +410,22 @@ export type CreationBatchIssue = {
 
 export const CREATION_FINALIZATION_ISSUE_CODES = [
   "illegalFinalization",
+  "unsupportedFinalization",
 ] as const;
 export type CreationFinalizationIssueCode =
   (typeof CREATION_FINALIZATION_ISSUE_CODES)[number];
 
-export type CreationFinalizationIssue = {
-  readonly tag: "illegalFinalization";
-  readonly code: CreationFinalizationIssueCode;
-  readonly message: string;
-};
+export type CreationFinalizationIssue =
+  | {
+      readonly tag: "illegalFinalization";
+      readonly code: "illegalFinalization";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "unsupportedFinalization";
+      readonly code: "unsupportedFinalization";
+      readonly message: string;
+    };
 
 export type CreationBatchFillIssue = CreationFillIssue | CreationBatchIssue;
 export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];

@@ -30,16 +30,16 @@ export function decodeToolArgs<A, I>(
 export function mcpObjectJsonSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
 ): McpObjectInputSchema {
-  const generated = jsonSchemaFromCodec(schema) as Record<string, unknown>;
+  const generated = parseMcpObjectInputSchema(
+    jsonSchemaFromCodec(schema),
+    "Effect JSON schema",
+  );
   return {
     ...generated,
     type: "object",
-    properties:
-      typeof generated.properties === "object" && generated.properties !== null
-        ? generated.properties
-        : {},
+    properties: isJsonObject(generated.properties) ? generated.properties : {},
     additionalProperties: false,
-  } as McpObjectInputSchema;
+  };
 }
 
 export function mcpOutputJsonSchema<A, I>(
@@ -62,7 +62,46 @@ export function schemaJsonContent<A, I>(
 function jsonSchemaFromCodec<A, I>(
   schema: Schema.Schema<A, I, never>,
 ): McpOutputSchema {
-  return stripSchemaIds(JSONSchema.make(schema)) as McpOutputSchema;
+  return parseMcpOutputSchema(
+    stripSchemaIds(JSONSchema.make(schema)),
+    "Effect JSON schema",
+  );
+}
+
+function parseMcpOutputSchema(value: unknown, label: string): McpOutputSchema {
+  if (isJsonObject(value)) return value;
+  throw new Error(`${label} must generate a JSON object schema.`);
+}
+
+function parseMcpObjectInputSchema(
+  value: unknown,
+  label: string,
+): McpObjectInputSchema {
+  const schema = parseMcpOutputSchema(value, label);
+  if (schema.type === "object") return { ...schema, type: "object" };
+  const objectSchema = objectSchemaBranch(schema);
+  if (objectSchema !== undefined) {
+    const { anyOf: _anyOf, ...schemaAnnotations } = schema;
+    return { ...schemaAnnotations, ...objectSchema, type: "object" };
+  }
+  throw new Error(`${label} must generate an MCP object input schema.`);
+}
+
+function isJsonObject(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function objectSchemaBranch(
+  schema: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> | undefined {
+  const anyOf = schema.anyOf;
+  if (!Array.isArray(anyOf)) return undefined;
+  return anyOf.find(
+    (entry): entry is Readonly<Record<string, unknown>> =>
+      isJsonObject(entry) && entry.type === "object",
+  );
 }
 
 function stripSchemaIds(value: unknown): unknown {

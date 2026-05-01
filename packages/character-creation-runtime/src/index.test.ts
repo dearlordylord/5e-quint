@@ -1745,8 +1745,8 @@ describe("character creation finalization", () => {
       tag: "invalid",
       issues: [
         {
-          tag: "illegalFinalization",
-          code: "illegalFinalization",
+          tag: "unsupportedFinalization",
+          code: "unsupportedFinalization",
           message:
             "Finalized build advancement must match a supported class level.",
         },
@@ -1817,8 +1817,8 @@ describe("character creation finalization", () => {
       tag: "invalid",
       issues: [
         {
-          tag: "illegalFinalization",
-          code: "illegalFinalization",
+          tag: "unsupportedFinalization",
+          code: "unsupportedFinalization",
           message:
             "Finalized build must carry exactly the supported choices for the selected class level.",
         },
@@ -1830,8 +1830,8 @@ describe("character creation finalization", () => {
       tag: "invalid",
       issues: [
         {
-          tag: "illegalFinalization",
-          code: "illegalFinalization",
+          tag: "unsupportedFinalization",
+          code: "unsupportedFinalization",
           message:
             "Finalized build must carry exactly the supported choices for the selected class level.",
         },

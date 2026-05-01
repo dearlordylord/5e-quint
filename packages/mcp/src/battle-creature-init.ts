@@ -50,6 +50,9 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
   readonly character: CharacterBuildCreatureInput;
   readonly statBlockBattleInput: StatBlockBattleInitInput;
   readonly unitLibrary: UnitCatalog;
+  readonly combatantDistances?: Parameters<
+    typeof startBattle
+  >[0]["combatantDistances"];
 }): BattleState {
   return startBattle({
     battleId: input.battleId,
@@ -60,6 +63,7 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
       }),
       battleCreatureInitFromStatBlock(input.statBlockBattleInput),
     ],
+    combatantDistances: input.combatantDistances,
   });
 }
 
@@ -68,6 +72,9 @@ export function startBattleFromCharacterBuildsAndStatBlock(input: {
   readonly characters: readonly CharacterBuildCreatureInput[];
   readonly statBlockBattleInput: StatBlockBattleInitInput;
   readonly unitLibrary: UnitCatalog;
+  readonly combatantDistances?: Parameters<
+    typeof startBattle
+  >[0]["combatantDistances"];
 }): BattleState {
   return startBattle({
     battleId: input.battleId,
@@ -80,6 +87,7 @@ export function startBattleFromCharacterBuildsAndStatBlock(input: {
       ),
       battleCreatureInitFromStatBlock(input.statBlockBattleInput),
     ],
+    combatantDistances: input.combatantDistances,
   });
 }
 

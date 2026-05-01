@@ -4,6 +4,7 @@ import {
   combatantId,
   initiativeScore,
   type BattleId,
+  type BattleCombatantDistance,
   type CharacterId,
   type CombatantId,
   type InitiativeScore,
@@ -29,8 +30,15 @@ const NonNegativeIntegerSchema = IntegerSchema.pipe(
 const StartBattleCharacterArgsSchema = Schema.Struct({
   sourceDraftId: Schema.NonEmptyTrimmedString,
   combatantId: Schema.NonEmptyTrimmedString,
-  characterId: Schema.NonEmptyTrimmedString,
+  characterId: Schema.optionalWith(Schema.NonEmptyTrimmedString, {
+    exact: true,
+  }),
   initiative: IntegerSchema,
+});
+const StartBattleCombatantDistanceArgsSchema = Schema.Struct({
+  combatantA: Schema.NonEmptyTrimmedString,
+  combatantB: Schema.NonEmptyTrimmedString,
+  feet: NonNegativeIntegerSchema,
 });
 
 const StartBattleToolArgsSchema = Schema.Struct({
@@ -38,6 +46,10 @@ const StartBattleToolArgsSchema = Schema.Struct({
   characters: Schema.NonEmptyArray(StartBattleCharacterArgsSchema),
   statBlockCombatantId: Schema.NonEmptyTrimmedString,
   statBlockInitiative: IntegerSchema,
+  combatantDistances: Schema.optionalWith(
+    Schema.Array(StartBattleCombatantDistanceArgsSchema),
+    { exact: true },
+  ),
   statBlockCurrentHp: Schema.optionalWith(NonNegativeIntegerSchema, {
     exact: true,
   }),
@@ -60,6 +72,7 @@ export type StartBattleToolInput = {
   ];
   readonly statBlockCombatantId: CombatantId;
   readonly statBlockInitiative: InitiativeScore;
+  readonly combatantDistances?: readonly BattleCombatantDistance[];
   readonly statBlockCurrentHp?: HpType;
   readonly statBlockTempHp?: HpType;
 };
@@ -67,7 +80,7 @@ export type StartBattleToolInput = {
 export type StartBattleCharacterToolInput = {
   readonly sourceDraftId: CharacterDraftId;
   readonly combatantId: CombatantId;
-  readonly characterId: CharacterId;
+  readonly characterId?: CharacterId;
   readonly initiative: InitiativeScore;
 };
 
@@ -86,6 +99,17 @@ export function decodeStartBattleArgs(
     characters: decodeCharacters(record.right.characters),
     statBlockCombatantId: combatantId(record.right.statBlockCombatantId),
     statBlockInitiative: initiativeScore(record.right.statBlockInitiative),
+    ...(record.right.combatantDistances === undefined
+      ? {}
+      : {
+          combatantDistances: record.right.combatantDistances.map(
+            (distance) => ({
+              combatantA: combatantId(distance.combatantA),
+              combatantB: combatantId(distance.combatantB),
+              feet: distance.feet,
+            }),
+          ),
+        }),
     ...(record.right.statBlockCurrentHp === undefined
       ? {}
       : { statBlockCurrentHp: Hp(record.right.statBlockCurrentHp) }),
@@ -101,7 +125,9 @@ function decodeCharacters(
   const decoded = value.map((character) => ({
     sourceDraftId: characterDraftId(character.sourceDraftId),
     combatantId: combatantId(character.combatantId),
-    characterId: characterId(character.characterId),
+    ...(character.characterId === undefined
+      ? {}
+      : { characterId: characterId(character.characterId) }),
     initiative: initiativeScore(character.initiative),
   }));
   const [first, ...rest] = decoded;
@@ -131,7 +157,7 @@ function describeStartBattleInputSchema(
       characters: {
         ...objectProperty(properties.characters),
         description:
-          "Non-empty finalized character combatants. sourceDraftId comes from list_characters; combatantId is the battle actor id; characterId is the durable identity used for post-battle handoff.",
+          "Non-empty finalized character combatants. sourceDraftId comes from list_characters; combatantId is the battle actor id.",
         items: {
           ...(characters?.items ?? {}),
           properties: {
@@ -149,7 +175,7 @@ function describeStartBattleInputSchema(
             characterId: {
               ...objectProperty(characters?.items?.properties?.characterId),
               description:
-                "Caller-chosen durable character identity stored in battle and used for post-battle handoff.",
+                "Optional legacy field. Battle start uses the durable characterId already stored on the finalized character session.",
             },
             initiative: {
               ...objectProperty(characters?.items?.properties?.initiative),
@@ -166,6 +192,11 @@ function describeStartBattleInputSchema(
       statBlockInitiative: {
         ...objectProperty(properties.statBlockInitiative),
         description: "Caller-supplied Initiative score for the Stat Block.",
+      },
+      combatantDistances: {
+        ...objectProperty(properties.combatantDistances),
+        description:
+          "Optional explicit encounter distances in feet for combatant pairs. Omit only for the runtime's first-vertical default distance model.",
       },
       statBlockCurrentHp: {
         ...objectProperty(properties.statBlockCurrentHp),

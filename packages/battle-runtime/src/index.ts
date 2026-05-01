@@ -396,6 +396,7 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     action: Schema.Literal("magic"),
     spellId: BattleSubjectTextSchema,
+    spellActId: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("unitFeature"),
@@ -428,7 +429,12 @@ function battleSubjectKey(subject: BattleSubject): string {
       ]),
     ),
     Match.when({ tag: "srdAction", action: "magic" }, (magic) =>
-      JSON.stringify([magic.tag, magic.actorId, magic.action, magic.spellId]),
+      JSON.stringify([
+        magic.tag,
+        magic.actorId,
+        magic.action,
+        magic.spellActId ?? magic.spellId,
+      ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>
       JSON.stringify([feature.tag, feature.actorId, feature.unitId]),
@@ -503,6 +509,47 @@ const BattleRuntimeObjectSchema = Schema.Record({
   key: Schema.String,
   value: Schema.Any,
 });
+const BattleAttackProfileSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("weapon"),
+    weapon: BattleRuntimeObjectSchema,
+    ability: Schema.String,
+    abilityModifier: Schema.Number,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("statBlockAttack"),
+    attack: BattleRuntimeObjectSchema,
+  }),
+);
+const SupportedSpellActSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("preparedSlotSpell"),
+    spell: BattleRuntimeObjectSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("allRepeatedEffectsAtOneTarget"),
+      repeatedEffectCount: Schema.Number,
+    }),
+    slotLevel: Schema.Number,
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: Schema.String,
+    }),
+    rangeFeet: Schema.Number,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("cantripSpellAttack"),
+    spell: BattleRuntimeObjectSchema,
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: Schema.String,
+    }),
+    rangeFeet: Schema.Number,
+    attackBonus: Schema.Number,
+    speedReduction: Schema.Struct({
+      deltaFeet: Schema.Number,
+    }),
+  }),
+);
 
 export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
@@ -513,25 +560,25 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackRoll"),
-    attack: BattleRuntimeObjectSchema,
+    attack: BattleAttackProfileSchema,
     attackBonus: Schema.Number,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackRoll"),
-    spell: BattleRuntimeObjectSchema,
+    spell: SupportedSpellActSchema,
     attackBonus: Schema.Number,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    attack: BattleRuntimeObjectSchema,
+    attack: BattleAttackProfileSchema,
     critical: Schema.Boolean,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    spell: BattleRuntimeObjectSchema,
+    spell: SupportedSpellActSchema,
     critical: Schema.Boolean,
   }),
 );
@@ -597,7 +644,7 @@ export const BATTLE_INVALID_REASON_CODES = [
   "missingCombatant",
   "invalidFill",
   "unsupportedSubject",
-  "unsupportedSurfaceShape",
+  "unsupportedActProfile",
 ] as const;
 export type BattleInvalidReasonCode =
   (typeof BATTLE_INVALID_REASON_CODES)[number];
@@ -824,6 +871,17 @@ export function resolveBattleSubject(
       input.state,
       "staleSubject",
       "Magic action is no longer available for the current actor.",
+    );
+  }
+
+  if (
+    input.subject.tag === "unitFeature" &&
+    !combatantCanTakeActions(input.state.combatants.get(actorId))
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Unit feature is no longer available for the current actor.",
     );
   }
 
@@ -1214,7 +1272,7 @@ function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
   if (attack == null) {
     return invalidResult(
       input.state,
-      "unsupportedSurfaceShape",
+      "unsupportedActProfile",
       "Attack resolution requires a supported attack profile.",
     );
   }
@@ -1672,6 +1730,7 @@ function discoverSupportedSpellActs(
               actorId,
               action: "magic" as const,
               spellId: invocation.spell.id,
+              spellActId: supportedSpellActId(invocation),
             },
             label: invocation.spell.name,
             summary:
@@ -1697,13 +1756,16 @@ function resolveSpellAct(input: BattleResolutionInput): BattleResolutionResult {
   const invocation =
     actor?.origin.kind === "character"
       ? supportedSpellActs(actor).find(
-          (candidate) => candidate.spell.id === subject.spellId,
+          (candidate) =>
+            subject.spellActId === undefined
+              ? candidate.spell.id === subject.spellId
+              : supportedSpellActId(candidate) === subject.spellActId,
         )
       : undefined;
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
       input.state,
-      "unsupportedSurfaceShape",
+      "unsupportedActProfile",
       "Magic-action spell act requires a supported prepared spell or cantrip.",
     );
   }
@@ -1727,7 +1789,6 @@ function resolveSpellAct(input: BattleResolutionInput): BattleResolutionResult {
   const target = input.state.combatants.get(fillSet.targetId);
   if (
     target == null ||
-    target.combatantId === input.subject.actorId ||
     !spellTargetIsLegal(
       input.state,
       subject.actorId,
@@ -1738,7 +1799,7 @@ function resolveSpellAct(input: BattleResolutionInput): BattleResolutionResult {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Spell target must be another combatant within the selected spell's supported range.",
+      "Spell target must be a combatant within the selected spell's supported range.",
     );
   }
 
@@ -2266,8 +2327,7 @@ function spellTargetHole(
         ? `${invocation.spell.name} all-darts target`
         : `${invocation.spell.name} target`,
     choices: [...state.combatants.keys()].filter(
-      (id) =>
-        id !== actorId && spellTargetIsLegal(state, actorId, id, invocation),
+      (id) => spellTargetIsLegal(state, actorId, id, invocation),
     ),
   };
 }
@@ -2278,8 +2338,15 @@ function spellTargetIsLegal(
   targetId: CombatantId,
   invocation: SupportedSpellAct,
 ): boolean {
-  const distanceFeet = combatantDistanceFeet(state, actorId, targetId);
+  const distanceFeet =
+    actorId === targetId ? 0 : combatantDistanceFeet(state, actorId, targetId);
   return distanceFeet !== undefined && distanceFeet <= invocation.rangeFeet;
+}
+
+function supportedSpellActId(invocation: SupportedSpellAct): string {
+  return invocation.kind === "preparedSlotSpell"
+    ? `${invocation.kind}:${invocation.spell.id}:slot:${invocation.slotLevel}`
+    : `${invocation.kind}:${invocation.spell.id}`;
 }
 
 function spellAttackRollHole(
@@ -2396,7 +2463,13 @@ function applySpellActiveEffects(
     combatants: new Map(state.combatants).set(targetId, {
       ...target,
       activeEffects: [
-        ...target.activeEffects,
+        ...target.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "speedDelta" &&
+              effect.sourceSpellId === invocation.spell.id
+            ),
+        ),
         {
           kind: "speedDelta",
           sourceSpellId: invocation.spell.id,

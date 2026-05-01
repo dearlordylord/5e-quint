@@ -1677,6 +1677,35 @@ describe("battle runtime", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const defeatedActorState = {
+      ...startBattle({
+        battleId: battleId("battle-action-surge-defeated-actor"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            currentHp: 0,
+            resources: [actionSurgeResource()],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+      currentTurnResources: {
+        actionResources: [],
+        currentHasBonusAction: true,
+      },
+    } satisfies BattleState;
+    expect(
+      resolveBattleSubject({
+        state: defeatedActorState,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "fighter_action_surge",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("Wizard Magic-action spell acts spend slots for prepared level-1 spells but not cantrips", () => {
@@ -1689,12 +1718,14 @@ describe("battle runtime", () => {
         actorId: wizardId,
         action: "magic",
         spellId: "magic_missile",
+        spellActId: "preparedSlotSpell:magic_missile:slot:1",
       },
       {
         tag: "srdAction",
         actorId: wizardId,
         action: "magic",
         spellId: "ray_of_frost",
+        spellActId: "cantripSpellAttack:ray_of_frost",
       },
       { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
     ]);
@@ -1709,7 +1740,7 @@ describe("battle runtime", () => {
     );
     expect(magicMissileTarget).toMatchObject({
       label: "Magic Missile all-darts target",
-      choices: [skeletonId],
+      choices: [wizardId, skeletonId],
     });
     const magicMissileDamage = requireHole(
       resolveBattleSubject({
@@ -1811,6 +1842,51 @@ describe("battle runtime", () => {
       },
     });
     expect(expendedLevelOneSlots(requireResolved(ray), wizardId)).toBe(0);
+
+    const stackedRayState = {
+      ...rayState,
+      combatants: new Map(rayState.combatants).set(skeletonId, {
+        ...rayState.combatants.get(skeletonId)!,
+        activeEffects: [
+          {
+            kind: "speedDelta",
+            sourceSpellId: "ray_of_frost",
+            sourceCombatantId: combatantId("other-wizard"),
+            deltaFeet: -10,
+            expiresAt: {
+              kind: "startOfTurn",
+              combatantId: combatantId("other-wizard"),
+            },
+          },
+        ],
+      }),
+    } satisfies BattleState;
+    const refreshedRay = resolveBattleSubject({
+      state: stackedRayState,
+      subject: magicSubject("ray_of_frost"),
+      fills: [
+        targetFill(rayTarget, skeletonId),
+        attackRollFill(rayRoll, { total: 14, naturalD20: 10 }),
+        damageRollFill(rayDamage, 4),
+      ],
+    });
+    expect(refreshedRay).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          {
+            combatantId: skeletonId,
+            activeEffects: [
+              expect.objectContaining({
+                sourceSpellId: "ray_of_frost",
+                sourceCombatantId: wizardId,
+              }),
+            ],
+          },
+        ],
+      },
+    });
 
     const criticalRayState = wizardVsSkeletonBattle();
     const criticalRayTarget = requireHole(

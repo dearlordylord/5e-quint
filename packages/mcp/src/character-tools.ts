@@ -1,3 +1,4 @@
+import { characterId } from "@dnd/battle-runtime";
 import {
   createCharacterDraft,
   discoverCreationHoles,
@@ -30,26 +31,145 @@ import {
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 
+const JsonObjectSchema = Schema.Record({
+  key: Schema.String,
+  value: Schema.Any,
+});
+const McpSessionSnapshotSchema = Schema.Struct({
+  draftIds: Schema.Array(Schema.String),
+  sourceDraftIds: Schema.Array(Schema.String),
+  selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
+  activeBattle: Schema.Union(
+    Schema.Struct({
+      battleId: Schema.String,
+      currentActorId: Schema.String,
+    }),
+    Schema.Null,
+  ),
+  transientBattleFills: Schema.Union(JsonObjectSchema, Schema.Null),
+});
+const CreationHoleSourceSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("draft"),
+    path: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unit"),
+    unitId: Schema.String,
+    choiceKey: Schema.String,
+  }),
+);
+const CreationChoiceOptionSchema = Schema.Struct({
+  optionId: Schema.String,
+  label: Schema.String,
+  unitRef: Schema.optionalWith(Schema.Struct({ unitId: Schema.String }), {
+    exact: true,
+  }),
+});
+const ChoiceCardinalitySchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("exactly"),
+    count: Schema.Number,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("between"),
+    min: Schema.Number,
+    max: Schema.Number,
+  }),
+);
+const CreationHoleSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("choice"),
+    holeId: Schema.String,
+    source: CreationHoleSourceSchema,
+    cardinality: ChoiceCardinalitySchema,
+    options: Schema.Array(CreationChoiceOptionSchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("abilityScores"),
+    holeId: Schema.String,
+    source: CreationHoleSourceSchema,
+    methods: Schema.Array(Schema.String),
+  }),
+);
+const CreationFinalizationIssueSchema = Schema.Struct({
+  tag: Schema.String,
+  code: Schema.String,
+  message: Schema.String,
+});
+const CreationFinalizationSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("ready"),
+    build: JsonObjectSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("incomplete"),
+    holes: Schema.NonEmptyArray(CreationHoleSchema),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("invalid"),
+    issues: Schema.NonEmptyArray(CreationFinalizationIssueSchema),
+  }),
+);
+const CharacterSessionRowSchema = Schema.Union(
+  Schema.Struct({
+    sourceDraftId: Schema.String,
+    characterId: Schema.String,
+    status: Schema.Literal("available"),
+    displayName: Schema.String,
+    build: JsonObjectSchema,
+    hitPoints: Schema.Struct({
+      current: Schema.Number,
+      maximum: Schema.Number,
+    }),
+    spellSlots: Schema.optionalWith(Schema.Array(JsonObjectSchema), {
+      exact: true,
+    }),
+  }),
+  Schema.Struct({
+    sourceDraftId: Schema.String,
+    status: Schema.Literal("inBattle"),
+    displayName: Schema.Null,
+    build: JsonObjectSchema,
+    battleId: Schema.String,
+    characterId: Schema.String,
+  }),
+);
+const CreationFillResultSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("accepted"),
+    draft: JsonObjectSchema,
+    holes: Schema.Array(CreationHoleSchema),
+    finalization: CreationFinalizationSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("rejected"),
+    draft: JsonObjectSchema,
+    holes: Schema.Array(CreationHoleSchema),
+    issues: Schema.NonEmptyArray(JsonObjectSchema),
+    finalization: CreationFinalizationSchema,
+  }),
+);
 const CreationDraftOutputSchema = Schema.Struct({
-  draft: Schema.Any,
-  holes: Schema.Any,
-  finalization: Schema.Any,
-  session: Schema.Any,
+  draft: JsonObjectSchema,
+  holes: Schema.Array(CreationHoleSchema),
+  finalization: CreationFinalizationSchema,
+  session: McpSessionSnapshotSchema,
 });
 const FillCreationHolesOutputSchema = Schema.Struct({
-  result: Schema.Any,
-  storedDraft: Schema.Any,
-  session: Schema.Any,
+  result: CreationFillResultSchema,
+  storedDraft: JsonObjectSchema,
+  session: McpSessionSnapshotSchema,
 });
 const FinalizeCharacterOutputSchema = Schema.Struct({
   draftId: Schema.String,
-  finalization: Schema.Any,
-  sheet: Schema.Any,
-  session: Schema.Any,
+  finalization: CreationFinalizationSchema,
+  sheet: Schema.Union(JsonObjectSchema, Schema.Null),
+  session: McpSessionSnapshotSchema,
 });
 const ListCharactersOutputSchema = Schema.Struct({
-  characters: Schema.Array(Schema.Any),
-  session: Schema.Any,
+  characters: Schema.Array(CharacterSessionRowSchema),
+  session: McpSessionSnapshotSchema,
 });
 
 export const characterToolDefinitions = [
@@ -152,7 +272,8 @@ export function handleCharacterToolCall(
 
       return schemaJsonContent(FillCreationHolesOutputSchema, {
         result,
-        storedDraft: root.sessionStore.drafts.get(input.draftId),
+        storedDraft:
+          root.sessionStore.drafts.get(input.draftId) ?? result.draft,
         session: root.sessionStore.snapshot(),
       });
     }),
@@ -169,6 +290,7 @@ export function handleCharacterToolCall(
         root.sessionStore.characters.set(
           draftId,
           availableCharacterSession({
+            characterId: characterId(draftId),
             build: finalization.build,
             currentHp: Hp(finalization.build.hitPoints.maximum),
           }),
@@ -181,7 +303,7 @@ export function handleCharacterToolCall(
         finalization,
         sheet:
           finalization.tag === "ready"
-            ? root.sessionStore.characters.get(draftId)?.build
+            ? (root.sessionStore.characters.get(draftId)?.build ?? null)
             : null,
         session: root.sessionStore.snapshot(),
       });
@@ -240,6 +362,7 @@ function characterListRow(
   if (session.tag === "available") {
     return {
       sourceDraftId,
+      characterId: session.characterId,
       status: session.tag,
       displayName: characterBuildDisplayName(unitLibrary, session.build),
       build: session.build,

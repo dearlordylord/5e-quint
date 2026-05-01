@@ -69,7 +69,7 @@ export function handleStartBattleToolCall(
         }
         return {
           combatantId: character.combatantId,
-          characterId: character.characterId,
+          characterId: session.characterId,
           displayName: characterBuildDisplayName(
             root.unitLibrary,
             session.build,
@@ -92,6 +92,7 @@ export function handleStartBattleToolCall(
           : { tempHp: input.statBlockTempHp }),
       },
       unitLibrary: root.unitLibrary,
+      combatantDistances: input.combatantDistances,
     });
     root.sessionStore.battleState = state;
     root.sessionStore.transientBattleFills = null;
@@ -101,7 +102,7 @@ export function handleStartBattleToolCall(
         tag: "inBattle",
         build: session.build,
         battleId: input.battleId,
-        characterId: character.characterId,
+        characterId: session.characterId,
       });
     }
 
@@ -147,7 +148,9 @@ function duplicateStartBattleInputContent(
   }
 
   const duplicateCharacterId = firstDuplicate(
-    characters.map((character) => character.characterId),
+    characters
+      .map((character) => character.characterId)
+      .filter((id): id is NonNullable<typeof id> => id !== undefined),
   );
   if (duplicateCharacterId !== null) {
     return errorContent("Duplicate character id in battle start.", {

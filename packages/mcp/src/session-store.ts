@@ -30,12 +30,14 @@ type NonSpellcastingCharacterBuild = CharacterBuild & {
 export type AvailableCharacterSession =
   | {
       readonly tag: "available";
+      readonly characterId: CharacterId;
       readonly build: SpellcastingCharacterBuild;
       readonly currentHp: Hp;
       readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
     }
   | {
       readonly tag: "available";
+      readonly characterId: CharacterId;
       readonly build: NonSpellcastingCharacterBuild;
       readonly currentHp: Hp;
       readonly spellSlots?: never;
@@ -49,6 +51,7 @@ export type CharacterSpellSlotExpenditure = {
 };
 
 export type AvailableCharacterSessionInput = {
+  readonly characterId: CharacterId;
   readonly build: CharacterBuild;
   readonly currentHp: Hp;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
@@ -65,6 +68,7 @@ export function availableCharacterSession(
     }
     return {
       tag: "available",
+      characterId: input.characterId,
       build: input.build,
       currentHp: input.currentHp,
     };
@@ -77,9 +81,11 @@ export function availableCharacterSession(
 
   return {
     tag: "available",
+    characterId: input.characterId,
     build,
     currentHp: input.currentHp,
     spellSlotExpenditures: spellSlotExpendituresFromInput({
+      characterId: input.characterId,
       build,
       currentHp: input.currentHp,
       spellSlots: input.spellSlots,

@@ -158,7 +158,7 @@ describe("MCP server route", () => {
     ]);
   });
 
-  test("registers final user-facing Surface-runtime character tool names", () => {
+  test("registers final user-facing character tool names", () => {
     expect(characterToolDefinitions.map((tool) => tool.name)).toEqual([
       "create_character_draft",
       "discover_creation_holes",
@@ -168,7 +168,7 @@ describe("MCP server route", () => {
     ]);
   });
 
-  test("registers partial Surface-runtime battle shell tool names", () => {
+  test("registers battle tool names", () => {
     expect(battleToolDefinitions.map((tool) => tool.name)).toEqual([
       "select_stat_block",
       "start_battle",
@@ -400,7 +400,7 @@ describe("MCP server route", () => {
     ).toMatchObject({
       tag: "inBattle",
       battleId: "battle:mcp-active-battle-first",
-      characterId: "character:first-fighter",
+      characterId: firstDraftId,
     });
     expect(
       root.sessionStore.characters.get(characterDraftId(secondDraftId)),
@@ -997,6 +997,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(characterDraftId(draftId))).toEqual(
       {
         tag: "available",
+        characterId: draftId,
         build: finalized.finalization.build,
         currentHp: 12,
       },
@@ -1535,6 +1536,7 @@ describe("MCP server route", () => {
 
     expect(() =>
       availableCharacterSession({
+        characterId: characterId("character:spell-slot-duplicate-levels"),
         build: spellcastingBuild,
         currentHp: Hp(spellcastingBuild.hitPoints.maximum),
         spellSlots: [
@@ -1545,6 +1547,7 @@ describe("MCP server route", () => {
     ).toThrow("Spell Slot state must match build capacity exactly.");
     expect(() =>
       availableCharacterSession({
+        characterId: characterId("character:spell-slot-mismatched-capacity"),
         build: {
           ...spellcastingBuild,
           spellcasting: {
@@ -1670,6 +1673,7 @@ function createFinalizedFighterSheet(
   root.sessionStore.characters.set(
     characterDraftId(draftId),
     availableCharacterSession({
+      characterId: characterId(draftId),
       build,
       currentHp: Hp(build.hitPoints.maximum),
     }),

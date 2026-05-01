@@ -1064,16 +1064,47 @@ async function closeTransportBestEffort(transport: StdioClientTransport) {
 }
 
 function dndMcpServerPids() {
-  const output = execFileSync("ps", ["-eo", "pid=,command="], {
+  const output = execFileSync("ps", ["-eo", "pid=,ppid=,command="], {
     encoding: "utf8",
   });
-  return output
+  const processes = output
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => /\bsrc\/index\.ts\b/.test(line))
-    .filter((line) => /tsx|node/.test(line))
-    .map((line) => Number(line.split(/\s+/, 1)[0]))
-    .filter((pid) => Number.isInteger(pid) && pid > 0 && pid !== process.pid);
+    .map((line) => {
+      const [pidText, ppidText, ...commandParts] = line.split(/\s+/);
+      return {
+        pid: Number(pidText),
+        ppid: Number(ppidText),
+        command: commandParts.join(" "),
+      };
+    })
+    .filter(
+      (entry) =>
+        Number.isInteger(entry.pid) &&
+        entry.pid > 0 &&
+        entry.pid !== process.pid,
+    );
+  const roots = new Set(
+    processes
+      .filter((entry) => dndMcpServerRootCommand(entry.command))
+      .map((entry) => entry.pid),
+  );
+  const pids = new Set(roots);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const entry of processes) {
+      if (pids.has(entry.ppid) && !pids.has(entry.pid)) {
+        pids.add(entry.pid);
+        changed = true;
+      }
+    }
+  }
+  return [...pids];
+}
+
+function dndMcpServerRootCommand(command: string) {
+  return /\bpnpm\b/.test(command) && /--filter\s+@dnd\/mcp\s+dev/.test(command);
 }
 
 function killDndMcpServerPids(preexistingPids: readonly number[]) {

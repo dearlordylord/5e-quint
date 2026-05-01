@@ -300,7 +300,7 @@ export function expectedValueIssue(
   condition: boolean,
   message: string,
 ): readonly CreationFinalizationIssue[] {
-  return condition ? [] : [illegalFinalizationIssue(message)];
+  return condition ? [] : [unsupportedFinalizationIssue(message)];
 }
 
 export function illegalFinalizationIssue(
@@ -309,6 +309,16 @@ export function illegalFinalizationIssue(
   return {
     tag: "illegalFinalization",
     code: "illegalFinalization",
+    message,
+  };
+}
+
+export function unsupportedFinalizationIssue(
+  message: string,
+): CreationFinalizationIssue {
+  return {
+    tag: "unsupportedFinalization",
+    code: "unsupportedFinalization",
     message,
   };
 }

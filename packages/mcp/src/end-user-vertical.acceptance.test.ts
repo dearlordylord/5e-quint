@@ -489,14 +489,14 @@ describe("end-user promoted MCP vertical", () => {
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
         combatantId: "wizard",
-        origin: {
+        origin: expect.objectContaining({
           kind: "character",
-          characterId: "character:post5-wizard",
+          characterId: wizardDraftId,
           resources: [],
           spellcasting: {
             spellSlots: [{ count: 2, expended: 0, spellLevel: 1 }],
           },
-        },
+        }),
       }),
       expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
     ]);
@@ -570,14 +570,14 @@ describe("end-user promoted MCP vertical", () => {
       expect.objectContaining({ combatantId: "fighter", hp: 16 }),
       expect.objectContaining({
         combatantId: "wizard",
-        origin: {
+        origin: expect.objectContaining({
           kind: "character",
-          characterId: "character:post5-wizard",
+          characterId: wizardDraftId,
           resources: [],
           spellcasting: {
             spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],
           },
-        },
+        }),
       }),
       expect.objectContaining({ combatantId: "skeleton", hp: 0 }),
     ]);
@@ -598,6 +598,7 @@ describe("end-user promoted MCP vertical", () => {
       }),
       expect.objectContaining({
         sourceDraftId: wizardDraftId,
+        characterId: wizardDraftId,
         status: "available",
         hitPoints: { current: 8, maximum: 8 },
         spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],

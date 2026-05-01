@@ -68,6 +68,7 @@ export function finalizeCharacterSessionsFromBattle(
     root.sessionStore.characters.set(
       update.sourceDraftId,
       availableCharacterSession({
+        characterId: session.characterId,
         build: session.build,
         currentHp: update.currentHp,
         spellSlots: update.spellSlots,
