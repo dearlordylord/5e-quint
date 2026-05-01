@@ -4,7 +4,7 @@ Date: 2026-04-29
 
 This is the single active planning queue.
 
-Active batch: Post-BA architecture watcher/corrector.
+Active batch: Post-BA feature-parity restoration.
 
 Completed Correction Application Migration goal: replace the old
 Core/projected-executable vertical with a Surface/Unit-driven character-creation
@@ -292,13 +292,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 37,
       "id": "PBA4",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Align Protocol Docs And Start Feature-Parity Queue"
     },
     {
       "number": 38,
       "id": "PBA5",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Restore Death Save Turn Lifecycle"
     },
     {
@@ -436,8 +436,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 34    | PBA1 - Document Battle Reducer Extensibility Discipline          | done               | PBA0                 | PBA2                                | Documented that battle reducers interpret reusable SRD procedure families, not one branch per Unit, spell, feature, monster action, or slug.                                                                     | Completed; PBA2 is unblocked.                                                             |
 | 35    | PBA2 - Audit Reducer For Named-Ability Drift                     | done               | PBA1                 | PBA3                                | Audited battle-runtime and MCP composition for named-ability reducer drift; found Action Surge support-gate drift and recorded the evidence in `plans/pba2-named-ability-drift-audit.md`.                        | Completed; PBA3 is unblocked to centralize Action Surge support-gate parsing.             |
 | 36    | PBA3 - Correct First Reducer Extensibility Drift                 | done               | PBA2                 | PBA4                                | Centralized Action Surge support-gate parsing so discovery and resolution share one executable admitted Unit feature shape.                                                                                      | Completed; PBA4 is unblocked.                                                            |
-| 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | ready-for-research | PBA3                 | PBA5                                | Align docs after the watcher/corrector pass, then promote the first BA12 feature-parity backlog candidate to ready work.                                                                                         | Ready; PBA3 completed the Action Surge support-gate correction.                           |
-| 38    | PBA5 - Restore Death Save Turn Lifecycle                         | blocked            | PBA4                 | PBA6                                | Restore start-turn Death Saving Throw rolls, Stable handoff, and zero-HP closeout through battle/runtime and character-session state.                                                                            | Blocked behind PBA0-PBA4.                                                                 |
+| 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | done               | PBA3                 | PBA5                                | Completed. Protocol docs still agree after PBA0-PBA3, and the first BA12 feature-parity backlog candidate is promoted to ready work.                                                                             | Completed; PBA5 is unblocked.                                                            |
+| 38    | PBA5 - Restore Death Save Turn Lifecycle                         | ready-for-research | PBA4                 | PBA6                                | Restore start-turn Death Saving Throw rolls, Stable handoff, and zero-HP closeout through battle/runtime and character-session state.                                                                            | Ready; PBA4 completed the protocol-doc and queue alignment gate.                           |
 | 39    | PBA6 - Restore Second Wind And Bonus-Action Subjects             | blocked            | PBA5                 | PBA7                                | Restore UnitRecord-backed Second Wind and the reusable Bonus Action subject/resource protocol without projected executable reducers.                                                                             | Blocked behind zero-HP feature-parity work.                                               |
 | 40    | PBA7 - Restore Save-Gate Damage Spell Procedure                  | blocked            | PBA6                 | PBA8                                | Restore Acid Splash-style save-gate damage spell acts as UnitRecord-backed spell holes and shared save/damage procedures.                                                                                        | Blocked behind bonus-action feature subject work.                                         |
 | 41    | PBA8 - Restore Persistent Spell Effects And Concentration        | blocked            | PBA7                 | PBA9                                | Restore Mage Armor/persistent AC override, concentration, and readied spell lifecycle through runtime state and spell-effect procedures.                                                                         | Blocked behind save-gate spell procedure work.                                            |
@@ -2704,14 +2704,13 @@ Plan Impact:
 
 ### Task 37 - PBA4 - Align Protocol Docs And Start Feature-Parity Queue
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA3
 Blocks: PBA5
 
-Next action: align the docs after PBA0-PBA3 and promote PBA5, or revise the
-feature-parity queue with an explicit owner decision if PBA0-PBA3 changes the
-architecture constraints.
+Next action: completed. PBA0-PBA3 did not change the architecture constraints,
+so PBA5 is promoted as the next feature-parity restoration task.
 
 Output:
 
@@ -2740,12 +2739,45 @@ Verification:
 
 Plan Impact:
 
-- If successful, the next appended feature-parity task becomes the Ralph loop
-  entrypoint.
+- Status: applied.
+- PBA5: unblocked as the Ralph loop entrypoint for the old Core feature-parity
+  restoration queue.
+- PBA6-PBA14: left blocked behind the ordered feature-parity chain.
+- PBA15: left blocked behind PBA14 so broader Surface/catalog widening still
+  waits until the feature-parity queue reaches its closeout point.
+- Observations: PBA0-PBA3 left the documented protocol stack coherent:
+  `@dnd/battle-runtime` reducers still extend by reusable SRD procedure
+  families, package-local QNT/MBT remains the promoted proof boundary, and MCP
+  remains a composition/session boundary rather than a rules owner. No broad
+  widening tasks discovered during PBA0-PBA3 need to bypass the feature-parity
+  queue.
+- Required plan edits: none beyond this PBA4 closeout.
+
+PBA4 source-only closeout check:
+
+- The BA12-appended queue remains synchronized across the Ralph Task Index, DAG
+  table, and task-detail sections: PBA5-PBA14 are the old Core feature-parity
+  restoration queue, followed by PBA15 for broader widening planning.
+- `packages/battle-runtime/README.md`,
+  `packages/battle-runtime/ARCHITECTURE_GRAPH.md`,
+  `packages/mcp/README.md`,
+  `plans/promoted-quint-parity-composition-archive.md`, and
+  `plans/promoted-battle-runtime-mbt-strategy.md` agree on reducer
+  procedure-family discipline, package-local QNT/MBT proof layers, and MCP
+  composition ownership.
+- RAW/ubiquitous-language check: no new D&D rule behavior was modeled. The
+  next task's existing PBA5 RAW checklist still points to local SRD 5.2.1 text
+  and `UBIQUITOUS_LANGUAGE.md` before any death-save lifecycle implementation.
+- No battle MBT was run.
+- `/simplify` round 1 checked queue ordering and doc ownership after PBA3. No
+  broad widening item was ready ahead of PBA5.
+- `/simplify` round 2 rechecked synchronization across the machine-readable
+  index, DAG table, and task details. PBA5 is the only ready feature-parity
+  task after PBA4.
 
 ### Task 38 - PBA5 - Restore Death Save Turn Lifecycle
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA4
 Blocks: PBA6
