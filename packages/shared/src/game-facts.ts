@@ -53,6 +53,23 @@ export type Alignment = {
   readonly morality: AlignmentMorality;
 };
 
+export const STANDARD_ACTION_KINDS = [
+  "attack",
+  "dash",
+  "disengage",
+  "dodge",
+  "help",
+  "hide",
+  "influence",
+  "magic",
+  "ready",
+  "search",
+  "study",
+  "utilize",
+] as const;
+export type StandardActionKind = (typeof STANDARD_ACTION_KINDS)[number];
+export type SrdActionKind = StandardActionKind;
+
 export type AlignmentOptionId =
   `${AlignmentOrder}_${AlignmentMorality}`;
 

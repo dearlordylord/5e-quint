@@ -254,6 +254,9 @@ export function interpretSubject(
         ? Either.left(invalid("no action available for attack"))
         : Either.right({ ...act, tag: "coreAttack" as const });
     }),
+    Match.when({ tag: "srdAction" }, (srdAction) =>
+      Either.left(invalid(`unsupported SRD action: ${srdAction.action}`)),
+    ),
     Match.when({ tag: "runtimeCommand", command: "endTurn" }, () =>
       Either.right(endTurnAct(subject.actorId)),
     ),

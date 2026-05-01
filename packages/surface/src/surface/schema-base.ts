@@ -1,6 +1,9 @@
 import { Schema } from "effect";
+import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 
 import { exactOptional } from "./schema-helpers.ts";
+
+export { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 
 // EXPLANATION: base closed vocabulary shared across spell and non-spell
 // surface families. Keep this file non-recursive so later families can import
@@ -94,21 +97,6 @@ export const ContainerStorageProfileSchema = Schema.Struct({
   ),
   extradimensional: exactOptional(Schema.Literal(true)),
 });
-
-export const STANDARD_ACTION_KINDS = [
-  "attack",
-  "dash",
-  "disengage",
-  "dodge",
-  "help",
-  "hide",
-  "influence",
-  "magic",
-  "ready",
-  "search",
-  "study",
-  "utilize",
-] as const;
 
 export const StandardActionKindSchema = Schema.Literal(
   ...STANDARD_ACTION_KINDS,

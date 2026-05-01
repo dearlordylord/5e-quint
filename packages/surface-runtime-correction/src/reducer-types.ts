@@ -1,4 +1,5 @@
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { SrdActionKind } from "@dnd/shared/game-facts";
 import type { CreatureId } from "@dnd/shared/types";
 import type { State } from "#/reducer-state.ts";
 import type {
@@ -29,9 +30,12 @@ export type {
 
 export type Subject =
   | {
+      // Core SRD Action subject. The closed action vocabulary is the SRD
+      // standard Action set from @dnd/shared. This variant is not an authored
+      // Surface Unit or a reducer-only runtime command.
       readonly tag: "srdAction";
       readonly actorId: CreatureId;
-      readonly action: "attack";
+      readonly action: SrdActionKind;
     }
   | {
       readonly tag: "runtimeCommand";

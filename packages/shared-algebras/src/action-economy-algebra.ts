@@ -1,10 +1,12 @@
 import { Either, Match } from "effect";
 import type {
   ActionRestriction,
-  StandardActionKind,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { STANDARD_ACTION_KINDS } from "@dnd/surface/surface/schema";
+import {
+  STANDARD_ACTION_KINDS,
+  type StandardActionKind,
+} from "@dnd/shared/game-facts";
 import type { CreatureId } from "@dnd/shared/types";
 
 const STANDARD_ACTION_KIND_SET: ReadonlySet<string> = new Set(
