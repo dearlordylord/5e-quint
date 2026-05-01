@@ -163,6 +163,9 @@ Available acts:
 - discover Action Surge from the retained Unit resource only after the shared
   Action Surge support parser admits the Unit's activation mechanics shape, it
   has a remaining use, and it has not been used this turn;
+- discover Second Wind from the retained Unit resource only after the support
+  parser admits the direct self-healing Bonus Action shape, it has a remaining
+  use, and the current turn still has its Bonus Action;
 - discover supported Wizard action-time spell acts from retained Spell Records
   and runtime Spell Slot state, unless worn armor lacks required Armor
   Training. These acts consume the Magic action; Bonus Action and Reaction
@@ -173,6 +176,9 @@ Feature and spell resources:
 - Action Surge grants a Unit-sourced action resource with the authored Surface
   restriction that excludes Magic, spends one Short/Long Rest use, and records
   the once-per-turn use in battle state;
+- Second Wind asks for its `1d10` healing roll, spends the current turn's Bonus
+  Action, spends one retained use-count resource, and applies healing through
+  the HP clamp boundary using the retained character class level;
 - prepared `magic_missile` spends one runtime level-1 Spell Slot. This first
   width slice supports the all-darts-at-one-target targeting branch and exposes
   that restriction in the target hole;
@@ -224,10 +230,9 @@ provenance labels or a parallel post-battle state model.
 Not modeled in this package yet: Stat Block Multiattack, ranged attacks beyond
 normal range with Disadvantage, Stat Block bonus-action options, unsupported
 conditional attack riders, Magic Missile split-target replay, broad spell
-effects beyond the first Wizard pressure spells, reactions, bonus-action
-subjects, nonlethal melee knockout, and the zero-HP lifecycle width listed
-above. The action-resource state can represent bonus-action availability; this
-package does not yet expose a bonus-action battle subject.
+effects beyond the first Wizard pressure spells, reactions, broad bonus-action
+subjects beyond Second Wind, nonlethal melee knockout, and the zero-HP lifecycle
+width listed above.
 
 ## Width Overlap Reconciliation
 
@@ -243,6 +248,11 @@ executable vocabulary.
   activation shape. The promoted runtime encodes the extra action as a
   restricted `RuntimeActionResource`, not a scalar action counter plus pending
   flag.
+- Second Wind matches the old Core healing lane without restoring projected
+  executable vocabulary: the retained Unit selects the direct self-healing
+  Bonus Action procedure, the runtime asks for the `1d10` roll, spends one
+  feature use and the turn Bonus Action, and heals through the same HP boundary
+  used by damage and death-save recovery.
 - Wizard action-time spells match the old Core distinction between prepared
   level-1 spells that spend Spell Slots and cantrips that do not for the
   implemented `magic_missile` and `ray_of_frost` lane. The promoted runtime
@@ -360,6 +370,7 @@ with an SRD citation or `ASSUMPTIONS.md` entry.
 | Stat Block named attacks           | SRD 5.2.1 `Monsters/Monsters-E-G.md` "Goblin Warrior"; `Playing-the-Game.md` "Making an Attack"                                                                                                                                                                                                              | Supported Stat Block attacks derive attack bonus, reach or normal range, base on-hit damage, and the Goblin Warrior advantage bonus from the authored `StatBlockRecord`.                                                                                                                                                  |
 | Damage and Temporary Hit Points    | SRD 5.2.1 `Playing-the-Game.md` "Damage Rolls", "Hit Points", "Temporary Hit Points"                                                                                                                                                                                                                         | Damage uses character weapon damage plus the attack ability modifier or a supported Stat Block damage expression, applies Temporary Hit Points first, and clamps HP at `0`.                                                                                                                                               |
 | Action Surge                       | SRD 5.2.1 `Classes/Fighter.md` "Level 2: Action Surge"; `UBIQUITOUS_LANGUAGE.md` "Action Surge"                                                                                                                                                                                                              | Grants one additional non-Magic action, spends a retained use-count resource, and enforces once-per-turn use in battle state.                                                                                                                                                                                             |
+| Second Wind                        | SRD 5.2.1 `Classes/Fighter.md` "Level 1: Second Wind"; `Playing-the-Game.md` "Bonus Actions" and "Healing"; `UBIQUITOUS_LANGUAGE.md` "Bonus Action", "Pool", and "Hit Points"                                                                                                                                | Spends a Bonus Action and one retained use-count resource, then restores `1d10 + Fighter level` HP through the runtime HP clamp boundary.                                                                                                                                                                                 |
 | Wizard action-time spell acts      | SRD 5.2.1 `Classes/Wizard.md` "Spellcasting"; `Rules-Glossary.md` "Magic [Action]" / "Armor Training"; `Spells/Gaining-and-Casting.md` "Spell Slots" / "Cantrips" / "Attack Rolls"; `Spells/Descriptions-M-P.md` "Magic Missile"; `Spells/Descriptions-Q-R.md` "Ray of Frost"                                | Prepared level-1 `magic_missile` spends a runtime Spell Slot and supports the all-darts-at-one-target branch. Cantrip `ray_of_frost` uses spellcasting ability modifier + Proficiency Bonus for the attack and records its Speed reduction. Untrained worn armor suppresses spell acts without deleting Spell Slot state. |
 | Skeleton damage modifiers          | SRD 5.2.1 `Monsters/Monsters-P-S.md` "Skeleton"; `UBIQUITOUS_LANGUAGE.md` "Damage"                                                                                                                                                                                                                           | Skeleton's Bludgeoning vulnerability and Poison damage immunity modify supported damage before HP mutation.                                                                                                                                                                                                               |
 | Zero-HP lifecycle                  | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points", "Instant Death", "Falling Unconscious", "Death Saving Throws", "Damage at 0 Hit Points", "Stabilizing a Character"; `Rules-Glossary.md` "Stable"; `UBIQUITOUS_LANGUAGE.md` "Death Saving Throw", "Stable", "Instant Death"; `ASSUMPTIONS.md` A12 | Stat Block combatants use `diesAtZeroHp`; Character Build combatants use `usesDeathSavingThrows`. Implemented behavior covers drop to `0` HP, damage at `0` HP, Critical Hit damage at `0` HP, Massive Damage, and start-turn Death Saving Throw rolls through Stable/dead/natural-20 outcomes.                           |

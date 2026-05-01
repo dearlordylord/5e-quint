@@ -24,6 +24,9 @@ module battleRuntime {
   // - Classes/Fighter.md lines 76-80: Action Surge grants one additional action
   //   except Magic, spends one use per Short or Long Rest, and is limited to
   //   once per turn.
+  // - Classes/Fighter.md lines 64-68, Playing-the-Game.md lines 318-324 and
+  //   740-746: Second Wind spends a Bonus Action and one Short/Long Rest
+  //   feature use to restore 1d10 + Fighter level HP, clamped by maximum HP.
   // - Spells/Gaining-and-Casting.md lines 3-65 and 92-96, Rules-Glossary.md
   //   lines 698-702, and Classes/Wizard.md lines 56-82: prepared level-1
   //   Wizard spells spend Spell Slots; cantrips do not.
@@ -83,6 +86,11 @@ module battleRuntime {
     state: BattleState,
     usesRemaining: int,
     usedThisTurn: bool,
+  }
+
+  type SecondWindResult = {
+    state: BattleState,
+    usesRemaining: int,
   }
 
   type AttackReplay =
@@ -244,6 +252,29 @@ module battleRuntime {
       if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
   }
 
+  pure def applyHealing(target: Combatant, healing: int): Combatant = {
+    val effectiveHealing = if (healing < 0) 0 else healing
+    val nextHp =
+      if (target.hp + effectiveHealing > target.maxHp)
+        target.maxHp
+      else
+        target.hp + effectiveHealing
+
+    if (target.deathFailures >= 3 or effectiveHealing <= 0)
+      target
+    else if (target.hp == 0 and nextHp > 0)
+      {
+        ...target,
+        hp: nextHp,
+        unconscious: false,
+        stable: false,
+        deathSuccesses: 0,
+        deathFailures: 0,
+      }
+    else
+      { ...target, hp: nextHp }
+  }
+
   pure def damageAfterAdjustments(
     damage: int,
     damageType: DamageType,
@@ -290,6 +321,29 @@ module battleRuntime {
       }
     else
       { state: state, usesRemaining: usesRemaining, usedThisTurn: usedThisTurn }
+
+  pure def resolveSecondWind(
+    state: BattleState,
+    usesRemaining: int,
+    healingRoll: int,
+    fighterLevel: int,
+  ): SecondWindResult =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      usesRemaining > 0 and
+      not(state.fighter.unconscious)
+    )
+      {
+        state: {
+          ...state,
+          fighter: applyHealing(state.fighter, healingRoll + fighterLevel),
+          bonusActionAvailable: false,
+        },
+        usesRemaining: usesRemaining - 1,
+      }
+    else
+      { state: state, usesRemaining: usesRemaining }
 
   pure def expendedSlotsAfterInvocation(
     invocation: SpellInvocation,
@@ -439,6 +493,16 @@ module battleRuntime {
       assert(result.usesRemaining == 0),
       assert(result.usedThisTurn),
       assert(grantActionSurge(result.state, result.usesRemaining, result.usedThisTurn) == result),
+    }
+  }
+
+  run test_second_wind_spends_bonus_action_use_and_heals = {
+    val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 } }
+    val result = resolveSecondWind(wounded, 2, 6, 2)
+    all {
+      assert(result.state.fighter.hp == 12),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(result.usesRemaining == 1),
     }
   }
 

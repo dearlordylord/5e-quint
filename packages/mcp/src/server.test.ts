@@ -344,7 +344,7 @@ describe("MCP server route", () => {
     });
     expect(
       read.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "End Turn"]);
+    ).toEqual(["Attack", "Second Wind", "End Turn"]);
     expect(read.battleState.combatants).toHaveLength(2);
   });
 
@@ -521,6 +521,14 @@ describe("MCP server route", () => {
           ],
         },
         {
+          label: "Second Wind",
+          subject: {
+            tag: "unitFeature",
+            actorId: "fighter",
+            unitId: "fighter_second_wind",
+          },
+        },
+        {
           label: "End Turn",
           subject: {
             tag: "runtimeCommand",
@@ -617,7 +625,7 @@ describe("MCP server route", () => {
     ]);
     expect(
       afterDamage.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["End Turn"]);
+    ).toEqual(["Second Wind", "End Turn"]);
     expect(root.sessionStore.transientBattleFills).toBeNull();
 
     const afterEndTurn = readPayload(
@@ -1244,6 +1252,14 @@ describe("MCP server route", () => {
           actorId: "fighter",
           action: "attack",
           attackName: "Longsword",
+        },
+      },
+      {
+        label: "Second Wind",
+        subject: {
+          tag: "unitFeature",
+          actorId: "fighter",
+          unitId: "fighter_second_wind",
         },
       },
       {

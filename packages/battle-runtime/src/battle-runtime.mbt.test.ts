@@ -293,6 +293,7 @@ function fighterCreatureInit(input: {
       kind: "character",
       characterId: characterId("fighter-character"),
       characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 1 }],
       armorClass: defaultArmorClassState(),
       currentHp: Hp(12),
       maxHp: Hp(12),

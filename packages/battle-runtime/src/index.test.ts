@@ -294,6 +294,60 @@ describe("battle runtime", () => {
     ).toThrow("Spell Slot levels must be unique.");
   });
 
+  test("startBattle rejects class levels outside the character class-level domain", () => {
+    for (const [battle, classLevel] of [
+      ["battle-zero-class-level", 0],
+      ["battle-fractional-class-level", 1.5],
+      ["battle-above-class-level-cap", 21],
+    ] as const) {
+      expect(() =>
+        startBattle({
+          battleId: battleId(battle),
+          combatants: [
+            characterSeed({ initiative: 12, classLevel }),
+            statBlockCreatureInit({ initiative: 10 }),
+          ],
+        }),
+      ).toThrow("Character class levels must be integers from 1 to 20.");
+    }
+  });
+
+  test("startBattle rejects duplicate character class levels", () => {
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-duplicate-character-class-level"),
+        combatants: [
+          characterSeed({
+            initiative: 12,
+            classLevels: [
+              { className: "fighter", level: 1 },
+              { className: "fighter", level: 2 },
+            ],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).toThrow("Character class levels must not duplicate classes.");
+  });
+
+  test("startBattle rejects class-feature resources without an owning class level", () => {
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-second-wind-without-fighter-level"),
+        combatants: [
+          characterSeed({
+            initiative: 12,
+            classLevels: [],
+            resources: [secondWindResource()],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).toThrow(
+      "Character class feature resource requires a fighter class level.",
+    );
+  });
+
   test("discoverBattleActs exposes only attack and endTurn for the current actor", () => {
     const acts = discoverBattleActs(
       startBattle({
@@ -2041,6 +2095,187 @@ describe("battle runtime", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
+  test("Second Wind spends a Bonus Action and feature use to heal through the HP boundary", () => {
+    const state = startBattle({
+      battleId: battleId("battle-second-wind"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 2,
+          currentHp: 4,
+          resources: [secondWindResource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const secondWindAct = discoverBattleActs(state).find(
+      (act) =>
+        act.subject.tag === "unitFeature" &&
+        act.subject.unitId === "fighter_second_wind",
+    );
+    expect(secondWindAct).toMatchObject({
+      subject: {
+        tag: "unitFeature",
+        actorId: fighterId,
+        unitId: "fighter_second_wind",
+      },
+      label: "Second Wind",
+      initialHoles: [
+        { kind: "rolledDice", label: "Second Wind healing (1d10)" },
+      ],
+    });
+
+    if (secondWindAct === undefined) {
+      throw new Error("Expected Second Wind act.");
+    }
+    const result = resolveBattleSubject({
+      state,
+      subject: secondWindAct.subject,
+      fills: [
+        damageRollFill(findHole(secondWindAct.initialHoles, "rolledDice"), 8),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentTurnResources: {
+          currentHasBonusAction: false,
+        },
+        combatants: [
+          {
+            combatantId: fighterId,
+            hp: 12,
+          },
+          { combatantId: goblinId },
+        ],
+      },
+    });
+    if (result.tag !== "resolved") {
+      throw new Error(`Expected resolved Second Wind, got ${result.tag}.`);
+    }
+    expect(result.state.combatants.get(fighterId)?.origin).toMatchObject({
+      resources: [
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: "fighter_second_wind" }),
+          usesRemaining: 1,
+        }),
+      ],
+    });
+    expect(
+      discoverBattleActs(result.state).some(
+        (act) =>
+          act.subject.tag === "unitFeature" &&
+          act.subject.unitId === "fighter_second_wind",
+      ),
+    ).toBe(false);
+  });
+
+  test("Second Wind is rejected without action capacity, resource uses, or the supported Unit shape", () => {
+    const noBonusActionState = {
+      ...startBattle({
+        battleId: battleId("battle-second-wind-no-bonus-action"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            currentHp: 4,
+            resources: [secondWindResource()],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+      currentTurnResources: {
+        actionResources: [{ kind: "action", source: "turn" }],
+        currentHasBonusAction: false,
+      },
+    } satisfies BattleState;
+    expect(
+      resolveBattleSubject({
+        state: noBonusActionState,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "fighter_second_wind",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const depletedState = startBattle({
+      battleId: battleId("battle-second-wind-depleted"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          currentHp: 4,
+          resources: [secondWindResource({ usesRemaining: 0 })],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(discoverBattleActs(depletedState).map((act) => act.subject)).toEqual(
+      [
+        {
+          tag: "action",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
+        { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
+      ],
+    );
+
+    const unsupportedState = startBattle({
+      battleId: battleId("battle-second-wind-unsupported-shape"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          currentHp: 4,
+          resources: [
+            secondWindResource({
+              unit: secondWindWithAdditionalDirectEffect(),
+            }),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(
+      resolveBattleSubject({
+        state: unsupportedState,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "fighter_second_wind",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const defeatedActorState = startBattle({
+      battleId: battleId("battle-second-wind-defeated-actor"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          currentHp: 0,
+          resources: [secondWindResource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(
+      resolveBattleSubject({
+        state: defeatedActorState,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "fighter_second_wind",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     expect(
@@ -2683,7 +2918,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("28 passing");
+  expect(quintOutput).toContain("29 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -3059,6 +3294,17 @@ function requireHole(
   return hole;
 }
 
+function findHole(
+  holes: readonly BattleHole[],
+  kind: BattleHole["kind"],
+): BattleHole {
+  const hole = holes.find((candidate) => candidate.kind === kind);
+  if (hole == null) {
+    throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
+}
+
 function targetFill(hole: BattleHole, targetId: CombatantId): BattleFill {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
@@ -3156,6 +3402,11 @@ function characterSeed(input: {
   readonly combatantId?: CombatantId;
   readonly displayName?: string;
   readonly initiative: number;
+  readonly classLevel?: number;
+  readonly classLevels?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"];
   readonly currentHp?: number;
   readonly tempHp?: number;
   readonly attack?: ReturnType<typeof testLongswordAttack> | null;
@@ -3176,6 +3427,9 @@ function characterSeed(input: {
       kind: "character",
       characterId: characterId("fighter-character"),
       characterUnitRefs: [],
+      classLevels: input.classLevels ?? [
+        { className: "fighter", level: input.classLevel ?? 1 },
+      ],
       armorClass: defaultArmorClassState(),
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(12),
@@ -3326,6 +3580,7 @@ function resistantSkeletonCreatureInit(input: {
 
 function actionSurgeResource(input?: {
   readonly unit?: UnitRecord;
+  readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -3336,7 +3591,35 @@ function actionSurgeResource(input?: {
   if (unit.kind !== "class_feature" || !("resource" in unit.mechanics)) {
     throw new Error("Expected Action Surge resource Unit.");
   }
-  return { unit, resource: unit.mechanics.resource };
+  return {
+    unit,
+    resource: unit.mechanics.resource,
+    ...(input?.usesRemaining === undefined
+      ? {}
+      : { usesRemaining: input.usesRemaining }),
+  };
+}
+
+function secondWindResource(input?: {
+  readonly unit?: UnitRecord;
+  readonly usesRemaining?: number;
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  const unit = input?.unit ?? unitLibrary.requireUnit("fighter_second_wind");
+  if (unit.kind !== "class_feature" || !("resource" in unit.mechanics)) {
+    throw new Error("Expected Second Wind resource Unit.");
+  }
+  return {
+    unit,
+    resource: unit.mechanics.resource,
+    ...(input?.usesRemaining === undefined
+      ? {}
+      : { usesRemaining: input.usesRemaining }),
+  };
 }
 
 function actionSurgeWithAdditionalDirectEffect(): UnitRecord {
@@ -3347,6 +3630,29 @@ function actionSurgeWithAdditionalDirectEffect(): UnitRecord {
   const phase = unit.mechanics.phases[0];
   if (phase?.kind !== "direct" || phase.effects === undefined) {
     throw new Error("Expected Action Surge direct phase.");
+  }
+  return {
+    ...unit,
+    mechanics: {
+      ...unit.mechanics,
+      phases: [
+        {
+          ...phase,
+          effects: [...phase.effects, phase.effects[0]],
+        },
+      ],
+    },
+  };
+}
+
+function secondWindWithAdditionalDirectEffect(): UnitRecord {
+  const unit = unitLibrary.requireUnit("fighter_second_wind");
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "activation") {
+    throw new Error("Expected Second Wind activation Unit.");
+  }
+  const phase = unit.mechanics.phases[0];
+  if (phase?.kind !== "direct" || phase.effects === undefined) {
+    throw new Error("Expected Second Wind direct phase.");
   }
   return {
     ...unit,

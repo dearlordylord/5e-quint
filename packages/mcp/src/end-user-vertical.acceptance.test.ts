@@ -177,6 +177,7 @@ describe("end-user promoted MCP vertical", () => {
 
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
+      "Second Wind",
       "End Turn",
     ]);
 
@@ -392,6 +393,7 @@ describe("end-user promoted MCP vertical", () => {
     const fighterActs = callTool(root, "discover_battle_acts", {});
     expect(actionLabels(fighterActs)).toEqual([
       "Attack",
+      "Second Wind",
       "Action Surge",
       "End Turn",
     ]);
@@ -438,7 +440,7 @@ describe("end-user promoted MCP vertical", () => {
         }),
       ]),
     );
-    expect(actionLabels(surged)).toEqual(["Attack", "End Turn"]);
+    expect(actionLabels(surged)).toEqual(["Attack", "Second Wind", "End Turn"]);
 
     fillBattleSubject(root, attackSubject("fighter", "Flail"), {
       kind: "targetChoice",
@@ -553,6 +555,24 @@ describe("end-user promoted MCP vertical", () => {
     ).toMatchObject({
       currentActorId: "fighter",
     });
+
+    fillBattleSubject(
+      root,
+      unitFeatureSubject("fighter", "fighter_second_wind"),
+      {
+        kind: "rolledDice",
+        holeId: "battle:unit-feature:second-wind:healing-roll",
+        value: [{ results: [2] }],
+      },
+    );
+    expect(
+      callTool(root, "read_battle_state", {}).battleState.combatants,
+    ).toEqual([
+      expect.objectContaining({ combatantId: "fighter", hp: 20 }),
+      expect.objectContaining({ combatantId: "wizard", hp: 8 }),
+      expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
+    ]);
+
     expect(
       callTool(root, "end_turn", { actorId: "fighter" }).snapshot,
     ).toMatchObject({
@@ -575,7 +595,7 @@ describe("end-user promoted MCP vertical", () => {
     );
     expect(afterMagicMissile.result.tag).toBe("resolved");
     expect(afterMagicMissile.battleState.combatants).toEqual([
-      expect.objectContaining({ combatantId: "fighter", hp: 16 }),
+      expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
         combatantId: "wizard",
         origin: expect.objectContaining({
@@ -602,7 +622,7 @@ describe("end-user promoted MCP vertical", () => {
       expect.objectContaining({
         sourceDraftId: fighterDraftId,
         status: "available",
-        hitPoints: expect.objectContaining({ current: 16, maximum: 20 }),
+        hitPoints: expect.objectContaining({ current: 20, maximum: 20 }),
       }),
       expect.objectContaining({
         sourceDraftId: wizardDraftId,
@@ -841,9 +861,16 @@ function magicSubject(actorId: string, spellId: string) {
   return { tag: "actionSpell", actorId, spellId };
 }
 
+function unitFeatureSubject(actorId: string, unitId: string) {
+  return { tag: "unitFeature", actorId, unitId };
+}
+
 function fillBattleSubject(
   root: ReturnType<typeof createMcpCompositionRoot>,
-  subject: ReturnType<typeof attackSubject> | ReturnType<typeof magicSubject>,
+  subject:
+    | ReturnType<typeof attackSubject>
+    | ReturnType<typeof magicSubject>
+    | ReturnType<typeof unitFeatureSubject>,
   fill: {
     readonly kind: "targetChoice" | "attackRoll" | "rolledDice";
     readonly holeId: string;

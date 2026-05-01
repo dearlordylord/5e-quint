@@ -304,13 +304,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 39,
       "id": "PBA6",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Restore Second Wind And Bonus-Action Subjects"
     },
     {
       "number": 40,
       "id": "PBA7",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Restore Save-Gate Damage Spell Procedure"
     },
     {
@@ -438,8 +438,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 36    | PBA3 - Correct First Reducer Extensibility Drift                 | done               | PBA2                 | PBA4                                | Centralized Action Surge support-gate parsing so discovery and resolution share one executable admitted Unit feature shape.                                                                                      | Completed; PBA4 is unblocked.                                                            |
 | 37    | PBA4 - Align Protocol Docs And Start Feature-Parity Queue        | done               | PBA3                 | PBA5                                | Completed. Protocol docs still agree after PBA0-PBA3, and the first BA12 feature-parity backlog candidate is promoted to ready work.                                                                             | Completed; PBA5 is unblocked.                                                            |
 | 38    | PBA5 - Restore Death Save Turn Lifecycle                         | done               | PBA4                 | PBA6                                | Restored start-turn Death Saving Throw rolls, Stable handoff, and zero-HP closeout through battle/runtime and character-session state.                                                                            | Completed; PBA6 is unblocked.                                                            |
-| 39    | PBA6 - Restore Second Wind And Bonus-Action Subjects             | ready-for-implementation-after-light-research | PBA5                 | PBA7                                | Restore UnitRecord-backed Second Wind and the reusable Bonus Action subject/resource protocol without projected executable reducers.                                                                             | Ready; perform the listed RAW/action-resource checks before editing.                       |
-| 40    | PBA7 - Restore Save-Gate Damage Spell Procedure                  | blocked            | PBA6                 | PBA8                                | Restore Acid Splash-style save-gate damage spell acts as UnitRecord-backed spell holes and shared save/damage procedures.                                                                                        | Blocked behind bonus-action feature subject work.                                         |
+| 39    | PBA6 - Restore Second Wind And Bonus-Action Subjects             | done               | PBA5                 | PBA7                                | Restored UnitRecord-backed Second Wind and the reusable Bonus Action subject/resource protocol without projected executable reducers.                                                                             | Completed; PBA7 is unblocked.                                                            |
+| 40    | PBA7 - Restore Save-Gate Damage Spell Procedure                  | ready-for-implementation-after-light-research | PBA6                 | PBA8                                | Restore Acid Splash-style save-gate damage spell acts as UnitRecord-backed spell holes and shared save/damage procedures.                                                                                        | Ready; perform the listed RAW/save-gate spell checks before editing.                      |
 | 41    | PBA8 - Restore Persistent Spell Effects And Concentration        | blocked            | PBA7                 | PBA9                                | Restore Mage Armor/persistent AC override, concentration, and readied spell lifecycle through runtime state and spell-effect procedures.                                                                         | Blocked behind save-gate spell procedure work.                                            |
 | 42    | PBA9 - Restore Reaction Windows And Interrupt Stack              | blocked            | PBA8                 | PBA10                               | Restore reusable reaction windows and interrupt stack behavior for attacks, spells, saves, and after-damage effects.                                                                                             | Blocked behind persistent effect/concentration work.                                      |
 | 43    | PBA10 - Restore Movement Positioning And Opportunity Attacks     | blocked            | PBA9                 | PBA11                               | Restore movement/position mutation, traversal, and Opportunity Attack boundaries with explicit spatial ownership.                                                                                                | Blocked behind reaction-window work.                                                      |
@@ -2821,7 +2821,7 @@ Plan Impact:
 
 ### Task 39 - PBA6 - Restore Second Wind And Bonus-Action Subjects
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA5
 Blocks: PBA7
@@ -2861,11 +2861,11 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA7.
+- Completed; PBA7 is unblocked.
 
 ### Task 40 - PBA7 - Restore Save-Gate Damage Spell Procedure
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA6
 Blocks: PBA8

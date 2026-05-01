@@ -91,6 +91,7 @@ export function battleCreatureInitFromCharacterBuild(
       kind: "character",
       characterId: input.characterId,
       characterUnitRefs,
+      classLevels: characterBattleClassLevels(input.build, input.unitLibrary),
       armorClass: characterArmorClassState(input.build, input.unitLibrary),
       currentHp,
       maxHp,
@@ -113,6 +114,22 @@ export function battleCreatureInitFromCharacterBuild(
           }),
     },
   };
+}
+
+function characterBattleClassLevels(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["classLevels"] {
+  return build.advancement.entries.map((entry) => {
+    const unit = unitLibrary.requireUnit(entry.classUnitId);
+    if (unit.kind !== "class") {
+      throw new Error(`Expected class Unit: ${entry.classUnitId}`);
+    }
+    return { className: unit.className, level: entry.level };
+  });
 }
 
 function characterBattleResources(

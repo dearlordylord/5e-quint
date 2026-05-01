@@ -67,14 +67,14 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.discoverBattleActs,
     description:
-      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Fighter 2 Action Surge, Wizard action-time spell acts, and End Turn.",
+      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Fighter Second Wind, Fighter 2 Action Surge, Wizard action-time spell acts, and End Turn.",
     inputSchema: discoverBattleActsInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
   },
   {
     name: battleToolNames.fillBattleHole,
     description:
-      "Fill one hole for a selected battle act subject. MCP stores transient target, attack-roll, and damage-result fills until the battle runtime resolves the act.",
+      "Fill one hole for a selected battle act subject. MCP stores transient target, attack-roll, damage-result, and feature-roll fills until the battle runtime resolves the act.",
     inputSchema: fillBattleHoleInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
   },

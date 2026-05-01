@@ -6,6 +6,7 @@ import {
   grantUnitActionResource,
   resetTurnActionEconomy,
   spendAction,
+  spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   attackRollHits,
@@ -64,6 +65,7 @@ import {
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   CONDITIONS as ALL_CONDITIONS,
+  ClassLevel,
   CreatureId,
   Hp,
   Initiative,
@@ -83,6 +85,7 @@ import type {
   StatBlockRecord,
   StatBlockValue,
   ActionRestriction,
+  ClassName,
   UnitRecord,
   WeaponDamage,
   WeaponRecord,
@@ -142,6 +145,14 @@ export type CharacterBattleLoadoutRef = {
     readonly unitId: UnitRecord["id"];
     readonly grip: "one_handed";
   };
+};
+export type CharacterBattleClassLevelInit = {
+  readonly className: ClassName;
+  readonly level: number;
+};
+export type CharacterBattleClassLevel = {
+  readonly className: ClassName;
+  readonly level: ClassLevel;
 };
 
 export type CharacterWeaponAttackActionOption = {
@@ -307,6 +318,7 @@ export type CharacterBattleCreatureInit = {
   readonly kind: "character";
   readonly characterId: CharacterId;
   readonly characterUnitRefs: readonly BattleUnitRef[];
+  readonly classLevels: readonly CharacterBattleClassLevelInit[];
   readonly armorClass: ArmorClassState;
   readonly currentHp: Hp;
   readonly maxHp: Hp;
@@ -396,6 +408,7 @@ export type BattleCreatureState = {
         readonly kind: "character";
         readonly characterId: CharacterId;
         readonly characterUnitRefs: readonly BattleUnitRef[];
+        readonly classLevels: readonly CharacterBattleClassLevel[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly attack: CharacterWeaponAttackActionOption | null;
         readonly resources: readonly CharacterBattleResourceState[];
@@ -532,6 +545,12 @@ export type BattleSpellDamageRollHole = Extract<
   readonly spell: SupportedSpellAct;
   readonly critical: boolean;
 };
+export type BattleUnitFeatureRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly unitFeature: SupportedSecondWindUnitFeature;
+};
 export type BattleDeathSavingThrowHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -545,6 +564,7 @@ export type BattleHole =
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
+  | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole;
 
 const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
@@ -631,6 +651,11 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("rolledDice"),
     spell: SupportedSpellActSchema,
     critical: Schema.Boolean,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    unitFeature: BattleRuntimeObjectSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -800,11 +825,28 @@ const DEATH_SAVING_THROW_HOLE_INSTANCE = holeInstanceKey(
   "battle:end-turn:death-saving-throw",
 );
 const ACTION_SURGE_UNIT_ID = "fighter_action_surge";
+const SECOND_WIND_UNIT_ID = "fighter_second_wind";
+const SECOND_WIND_HEALING_ROLL_HOLE_ID = holeId(
+  "battle:unit-feature:second-wind:healing-roll",
+);
+const SECOND_WIND_HEALING_ROLL_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:second-wind:healing-roll",
+);
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = 5;
 
 type SupportedActionSurgeUnitFeature = {
   readonly unit: UnitRecord;
   readonly restriction: ActionRestriction;
+};
+type SupportedSecondWindUnitFeature = {
+  readonly unit: UnitRecord;
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flatBase: number;
+  readonly flatPerLevel: number;
+  readonly startingAtLevel: number;
+  readonly className: ClassName;
+  readonly classLevel: ClassLevel;
 };
 
 export function startBattle(input: {
@@ -1050,6 +1092,9 @@ function battleCreatureStateFromInit(
   };
 
   if (creatureInit.kind === "character") {
+    const classLevels = parseCharacterBattleClassLevels(
+      creatureInit.classLevels,
+    );
     return applyInitialZeroHpLifecycle({
       ...base,
       armorClass: creatureInit.armorClass,
@@ -1057,9 +1102,12 @@ function battleCreatureStateFromInit(
         kind: "character",
         characterId: creatureInit.characterId,
         characterUnitRefs: creatureInit.characterUnitRefs,
+        classLevels,
         selectedLoadout: creatureInit.selectedLoadout,
         attack: creatureInit.attack,
-        resources: (creatureInit.resources ?? []).map(characterResourceState),
+        resources: (creatureInit.resources ?? []).map((resource) =>
+          characterResourceState(resource, classLevels),
+        ),
         ...(creatureInit.spellcasting === undefined
           ? {}
           : {
@@ -1322,13 +1370,43 @@ function battleSubjectActorId(subject: BattleSubject): CombatantId {
   return subject.actorId;
 }
 
+function parseCharacterBattleClassLevels(
+  classLevels: readonly CharacterBattleClassLevelInit[],
+): readonly CharacterBattleClassLevel[] {
+  const seenClassNames = new Set<ClassName>();
+  return classLevels.map((classLevel) => {
+    if (
+      !Number.isInteger(classLevel.level) ||
+      classLevel.level < 1 ||
+      classLevel.level > 20
+    ) {
+      throw new Error("Character class levels must be integers from 1 to 20.");
+    }
+    if (seenClassNames.has(classLevel.className)) {
+      throw new Error("Character class levels must not duplicate classes.");
+    }
+    seenClassNames.add(classLevel.className);
+    return {
+      className: classLevel.className,
+      level: ClassLevel.make(classLevel.level),
+    };
+  });
+}
+
 function characterResourceState(
   input: CharacterBattleResourceInit,
+  classLevels: readonly CharacterBattleClassLevel[],
 ): CharacterBattleResourceState {
+  const unitClassLevel =
+    input.unit.kind === "class_feature"
+      ? requireCharacterClassLevel(classLevels, input.unit.className)
+      : undefined;
   return {
     unit: input.unit,
     resource: input.resource,
-    usesRemaining: input.usesRemaining ?? supportedUseCountCap(input.resource),
+    usesRemaining:
+      input.usesRemaining ??
+      supportedUseCountCapForLevel(input.resource, unitClassLevel ?? 1),
     usedThisTurn: false,
   };
 }
@@ -1407,7 +1485,10 @@ function characterSpellcastingState(
   };
 }
 
-function supportedUseCountCap(resource: ActivationResource): number {
+function supportedUseCountCapForLevel(
+  resource: ActivationResource,
+  level: number,
+): number {
   if (
     resource.kind !== "use_count" ||
     resource.cap.kind !== "threshold_tiers"
@@ -1417,7 +1498,10 @@ function supportedUseCountCap(resource: ActivationResource): number {
     );
   }
 
-  return resource.cap.base;
+  return resource.cap.tiers.reduce(
+    (cap, tier) => (level >= tier.atLevel ? tier.value : cap),
+    resource.cap.base,
+  );
 }
 
 function literalStatBlockNumber(value: StatBlockValue): number {
@@ -1831,21 +1915,45 @@ function supportedUnitFeatureActs(
     return [];
   }
 
+  const classLevels = actor.origin.classLevels;
   return actor.origin.resources.flatMap((resource) => {
     const actionSurge = parseSupportedActionSurgeUnitFeature(resource.unit);
-    return actionSurge !== null &&
+    if (
+      actionSurge !== null &&
       resource.usesRemaining > 0 &&
       !resource.usedThisTurn
+    ) {
+      return [
+        {
+          subject: {
+            tag: "unitFeature" as const,
+            actorId,
+            unitId: actionSurge.unit.id,
+          },
+          label: actionSurge.unit.name,
+          summary: "Grant one additional non-Magic action this turn.",
+          initialHoles: [],
+        },
+      ];
+    }
+
+    const secondWind = parseSupportedSecondWindUnitFeature(
+      resource.unit,
+      classLevels,
+    );
+    return secondWind !== null &&
+      resource.usesRemaining > 0 &&
+      state.currentTurnResources.currentHasBonusAction
       ? [
           {
             subject: {
               tag: "unitFeature" as const,
               actorId,
-              unitId: actionSurge.unit.id,
+              unitId: secondWind.unit.id,
             },
-            label: actionSurge.unit.name,
-            summary: "Grant one additional non-Magic action this turn.",
-            initialHoles: [],
+            label: secondWind.unit.name,
+            summary: "Spend a Bonus Action and one use to regain Hit Points.",
+            initialHoles: [secondWindHealingRollHole(secondWind)],
           },
         ]
       : [];
@@ -1854,16 +1962,8 @@ function supportedUnitFeatureActs(
 
 function resolveUnitFeature(
   input: UnitFeatureBattleResolutionInput,
-): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+): BattleResolutionResult {
   const subject = input.subject;
-  if (input.fills.length > 0) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Action Surge does not accept battle fills.",
-    );
-  }
-
   const actor = input.state.combatants.get(subject.actorId);
   const resource =
     actor?.origin.kind === "character"
@@ -1872,10 +1972,54 @@ function resolveUnitFeature(
         )
       : undefined;
   const actionSurge = parseSupportedActionSurgeUnitFeature(resource?.unit);
+  const secondWind =
+    actor?.origin.kind === "character"
+      ? parseSupportedSecondWindUnitFeature(
+          resource?.unit,
+          actor.origin.classLevels,
+        )
+      : null;
+
+  if (actionSurge !== null) {
+    return resolveActionSurgeUnitFeature(input, actor, resource, actionSurge);
+  }
+
+  if (secondWind !== null) {
+    return resolveSecondWindUnitFeature(input, actor, resource, secondWind);
+  }
+
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Unsupported Unit feature does not accept battle fills.",
+    );
+  }
+
+  return invalidResult(
+    input.state,
+    "staleSubject",
+    "Unit feature is no longer available for the current actor.",
+  );
+}
+
+function resolveActionSurgeUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: BattleCreatureState | undefined,
+  resource: CharacterBattleResourceState | undefined,
+  actionSurge: SupportedActionSurgeUnitFeature,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Action Surge does not accept battle fills.",
+    );
+  }
+
   if (
     actor?.origin.kind !== "character" ||
     resource == null ||
-    actionSurge == null ||
     resource.usesRemaining <= 0 ||
     resource.usedThisTurn
   ) {
@@ -1888,8 +2032,8 @@ function resolveUnitFeature(
 
   const granted = grantUnitActionResource(
     input.state.currentTurnResources,
-    subject.actorId,
-    subject.unitId,
+    input.subject.actorId,
+    input.subject.unitId,
     actionSurge.restriction,
   );
   if (Either.isLeft(granted)) {
@@ -1905,7 +2049,7 @@ function resolveUnitFeature(
     origin: {
       ...actor.origin,
       resources: actor.origin.resources.map((candidate) =>
-        candidate.unit.id === subject.unitId
+        candidate.unit.id === input.subject.unitId
           ? {
               ...candidate,
               usesRemaining: candidate.usesRemaining - 1,
@@ -1917,8 +2061,80 @@ function resolveUnitFeature(
   };
   const nextState = {
     ...input.state,
-    combatants: new Map(input.state.combatants).set(subject.actorId, nextActor),
+    combatants: new Map(input.state.combatants).set(
+      input.subject.actorId,
+      nextActor,
+    ),
     currentTurnResources: granted.right,
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveSecondWindUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: BattleCreatureState | undefined,
+  resource: CharacterBattleResourceState | undefined,
+  secondWind: SupportedSecondWindUnitFeature,
+): BattleResolutionResult {
+  if (
+    actor?.origin.kind !== "character" ||
+    resource == null ||
+    resource.usesRemaining <= 0 ||
+    !input.state.currentTurnResources.currentHasBonusAction
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Second Wind is no longer available for the current actor.",
+    );
+  }
+
+  const healingRoll = secondWindHealingRollFill(input.fills, secondWind);
+  if (healingRoll.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", healingRoll.message);
+  }
+  if (healingRoll.value === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      secondWindHealingRollHole(secondWind),
+    ]);
+  }
+
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Second Wind is no longer available for the current actor.",
+    );
+  }
+
+  const nextActor = applyHpHealing(
+    {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        resources: actor.origin.resources.map((candidate) =>
+          candidate.unit.id === input.subject.unitId
+            ? { ...candidate, usesRemaining: candidate.usesRemaining - 1 }
+            : candidate,
+        ),
+      },
+    },
+    secondWindHealingAmount(secondWind, healingRoll.value),
+  );
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.subject.actorId,
+      nextActor,
+    ),
+    currentTurnResources: spent.right,
   };
   return {
     tag: "resolved",
@@ -1957,6 +2173,164 @@ function parseSupportedActionSurgeUnitFeature(
   return effect.kind === "grant_extra_action"
     ? { unit, restriction: effect.restriction }
     : null;
+}
+
+type UnitFeatureRolledDiceFill =
+  | {
+      readonly tag: "ok";
+      readonly value:
+        | Extract<BattleFill, { readonly kind: "rolledDice" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function secondWindHealingRollFill(
+  fills: readonly BattleFill[],
+  secondWind: SupportedSecondWindUnitFeature,
+): UnitFeatureRolledDiceFill {
+  let healingRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  for (const fill of fills) {
+    if (
+      fill.kind === "rolledDice" &&
+      fill.holeId === SECOND_WIND_HEALING_ROLL_HOLE_ID
+    ) {
+      if (healingRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Second Wind healing roll was filled twice.",
+        };
+      }
+      healingRoll = fill;
+      continue;
+    }
+
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the Second Wind replay holes.`,
+    };
+  }
+
+  if (healingRoll === undefined) {
+    return { tag: "ok", value: undefined };
+  }
+
+  const validation = validateRolledDiceForDiceExpr(healingRoll.value, {
+    dice: secondWind.dice,
+    dieSize: secondWind.dieSize,
+  });
+  return validation == null
+    ? { tag: "ok", value: healingRoll }
+    : { tag: "invalid", message: validation.reason };
+}
+
+function secondWindHealingRollHole(
+  secondWind: SupportedSecondWindUnitFeature,
+): BattleUnitFeatureRollHole {
+  return {
+    kind: "rolledDice",
+    holeId: SECOND_WIND_HEALING_ROLL_HOLE_ID,
+    holeInstanceKey: SECOND_WIND_HEALING_ROLL_HOLE_INSTANCE,
+    label: `${secondWind.unit.name} healing (${secondWind.dice}d${secondWind.dieSize})`,
+    unitFeature: secondWind,
+  };
+}
+
+function secondWindHealingAmount(
+  secondWind: SupportedSecondWindUnitFeature,
+  healingRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): number {
+  const diceTotal = healingRoll.value.reduce(
+    (total, group) =>
+      total +
+      group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      ),
+    0,
+  );
+  return (
+    diceTotal +
+    secondWind.flatBase +
+    Math.max(0, secondWind.classLevel - secondWind.startingAtLevel) *
+      secondWind.flatPerLevel
+  );
+}
+
+function findCharacterClassLevel(
+  classLevels: readonly CharacterBattleClassLevel[],
+  className: ClassName,
+): ClassLevel | undefined {
+  return classLevels.find((classLevel) => classLevel.className === className)
+    ?.level;
+}
+
+function requireCharacterClassLevel(
+  classLevels: readonly CharacterBattleClassLevel[],
+  className: ClassName,
+): ClassLevel {
+  const classLevel = findCharacterClassLevel(classLevels, className);
+  if (classLevel === undefined) {
+    throw new Error(
+      `Character class feature resource requires a ${className} class level.`,
+    );
+  }
+  return classLevel;
+}
+
+function parseSupportedSecondWindUnitFeature(
+  unit: UnitRecord | undefined,
+  classLevels: readonly CharacterBattleClassLevel[],
+): SupportedSecondWindUnitFeature | null {
+  if (unit?.id !== SECOND_WIND_UNIT_ID || unit.kind !== "class_feature") {
+    return null;
+  }
+  const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (classLevel === undefined) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "activation" ||
+    mechanics.activationCost.kind !== "bonus_action" ||
+    mechanics.resource.kind !== "use_count" ||
+    mechanics.resetCadence.kind !== "partial_short_full_long" ||
+    mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = mechanics.phases[0];
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    phase.effects?.length !== 1
+  ) {
+    return null;
+  }
+  const effect = phase.effects[0];
+  if (
+    effect?.kind !== "heal_hp" ||
+    effect.target !== "self" ||
+    effect.amount.kind !== "linear_per_level" ||
+    effect.amount.axis !== "class" ||
+    effect.amount.perLevel.dice !== undefined ||
+    effect.amount.perLevel.dieSize !== undefined ||
+    effect.amount.base.dice === undefined ||
+    effect.amount.base.dieSize === undefined
+  ) {
+    return null;
+  }
+  return {
+    unit,
+    dice: effect.amount.base.dice,
+    dieSize: effect.amount.base.dieSize,
+    flatBase: effect.amount.base.flat ?? 0,
+    flatPerLevel: effect.amount.perLevel.flat ?? 0,
+    startingAtLevel: effect.amount.startingAtLevel,
+    className: unit.className,
+    classLevel,
+  };
 }
 
 function discoverSupportedSpellActs(
@@ -2242,6 +2616,37 @@ function applyHpDamage(
   return massiveDamageKills
     ? applyInstantDeath(damaged)
     : applyDropToZeroHpLifecycle(damaged);
+}
+
+function applyHpHealing(
+  combatant: BattleCreatureState,
+  healingAmount: number,
+): BattleCreatureState {
+  const effectiveHealing = Math.max(0, Math.floor(healingAmount));
+  if (effectiveHealing <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
+    return combatant;
+  }
+
+  const currentHp = Number(combatant.hp);
+  const nextHp = Hp(
+    Math.min(Number(combatant.maxHp), currentHp + effectiveHealing),
+  );
+  if (currentHp <= 0 && Number(nextHp) > 0) {
+    return {
+      ...combatant,
+      hp: nextHp,
+      conditions: removeCondition(combatant.conditions, "unconscious"),
+      zeroHpLifecycle:
+        combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows"
+          ? {
+              ...combatant.zeroHpLifecycle,
+              deathSaves: resetDeathSaveRuntimeState(),
+            }
+          : combatant.zeroHpLifecycle,
+    };
+  }
+
+  return { ...combatant, hp: nextHp };
 }
 
 function applyInitialZeroHpLifecycle(

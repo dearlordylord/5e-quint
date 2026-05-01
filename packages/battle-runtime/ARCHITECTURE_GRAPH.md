@@ -48,7 +48,7 @@ flowchart TD
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
   Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
-  UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action and spends one use"]
+  UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals"]
   SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
@@ -89,7 +89,7 @@ flowchart TD
   CurrentActor["actorId === currentActing(state.initiative)<br/>success: continue<br/>failure: invalid wrongActor<br/>why: subject legality is turn-local"]
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn<br/>invalid: fills are not accepted"]
   Attack["action.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
-  UnitFeature["unitFeature Action Surge<br/>success: spend use-count resource and grant non-Magic action<br/>invalid: no use remains or already used this turn"]
+  UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
   Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
   AttackOption["supported Attack action option<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
   Target["target choice<br/>choices filtered by selected attack reach or normal range and combatant distance<br/>needsHoles until caller selects a legal combatant"]
@@ -130,6 +130,10 @@ flowchart TD
 - Character-derived Action Surge comes from a retained Unit admitted by the
   shared Action Surge support parser plus runtime use-count state. It grants a
   Unit-sourced action resource carrying the authored non-Magic restriction.
+- Character-derived Second Wind comes from a retained Unit admitted by the
+  support parser for direct self-healing Bonus Action features. It asks for the
+  healing roll, spends the turn Bonus Action and retained use-count resource,
+  and applies HP healing through the battle HP boundary.
 - Character-derived Wizard action-time spell acts come from retained Spell Records
   plus runtime Spell Slot and active-effect state. Prepared level-1 spells spend
   slots; cantrips do not. `magic_missile` is narrowed by a support gate to all
@@ -144,8 +148,9 @@ flowchart TD
   procedure families. Widen readers or support gates when the authored shape is
   legal but unsupported. Add reducer state or QNT/MBT behavior only for a
   reusable SRD procedure family, not for catalog breadth.
-- Bonus-action availability can be represented in turn resources, but no
-  bonus-action subject is exposed yet.
+- Bonus-action availability is represented in turn resources. Second Wind is
+  the first promoted bonus-action Unit feature subject; broader bonus-action
+  spell, monster, and generic subjects remain future width.
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
   source material, not the target for new promoted behavior.
