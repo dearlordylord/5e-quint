@@ -1,4 +1,5 @@
 *.pdf
+.env
 TWEETS.md
 CODEX_REVIEW.md
 LESSONS.md

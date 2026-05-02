@@ -79,6 +79,26 @@ require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "missing required command: $1"
 }
 
+load_openrouter_key_from_dotenv() {
+  local dotenv_path="$repo_root/.env"
+  local loaded_key=""
+
+  [[ -n "${OPENROUTER_API_KEY:-}" ]] && return 0
+  [[ -f "$dotenv_path" ]] || return 0
+
+  loaded_key="$({
+    set -a
+    # shellcheck disable=SC1090
+    source "$dotenv_path" >/dev/null 2>&1
+    printf '%s' "${OPENROUTER_API_KEY:-}"
+  })"
+
+  if [[ -n "$loaded_key" ]]; then
+    export OPENROUTER_API_KEY="$loaded_key"
+    log "loaded OPENROUTER_API_KEY from .env"
+  fi
+}
+
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -n "$repo_root" ]] || die "must be run inside a git repository"
 cd "$repo_root"
@@ -229,6 +249,8 @@ require_cmd claude
 require_cmd codex
 require_cmd node
 require_cmd pnpm
+
+load_openrouter_key_from_dotenv
 
 if [[ "$codex_only" == true && "$claude_only" == true ]]; then
   die "--codex-only and --claude-only are mutually exclusive"

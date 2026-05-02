@@ -19,6 +19,8 @@
 Runtime logs, prompts, review reports, chooser outputs, and diffs are written under ignored `.ralph/runs/<run-id>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
 
+If `OPENROUTER_API_KEY` is not already exported in the shell, the harness loads it from repo-root `.env` before launching agents.
+
 Ralph is quiet by default: Codex/Claude stdout and stderr are persisted to the
 per-attempt log files instead of streamed through the supervisor terminal. This
 keeps live run observation from copying full model transcripts into the
