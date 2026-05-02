@@ -3644,6 +3644,21 @@ Plan Impact:
 - If successful, unblock PBA13G with the elapsed-time brands available for the
   broader primitive-domain migration.
 
+Current Attempt Notes:
+
+- Next implementation must inventory and migrate the known production duration
+  paths before editing behavior: `packages/core/src/features/class-sorcerer.ts`
+  `extendedSpellDurationMinutes`, core prepared-spell `durationTurns` and active
+  effects, battle-runtime Mage Armor `{ kind: "hours" }`, Surface
+  `hours`/`elapsed_hours` schemas and tracer labels, and UI-authored
+  `durationTurns` in `packages/app/src/components/EventPanel.tsx`.
+- Do not drop concentration max-duration expiry while separating elapsed-time
+  durations from initiative-bound start/end-of-turn active effects. Preserve the
+  existing executable expiry behavior or first remodel the owning spec/runtime
+  boundary with focused tests that prove the SRD maximum duration still expires.
+- Treat Ralph fuzz-script stub diffs as harness noise unless a candidate changes
+  them beyond the standard hard-fail replacement.
+
 ### Task 53 - PBA13G - Replace Bare Domain Primitives With Owned Types
 
 Status: `blocked`
