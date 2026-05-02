@@ -1,5 +1,5 @@
 import type { Option } from "effect";
-import type { InitiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { BoundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { InitiativeStack } from "@dnd/shared-algebras/initiative-algebra";
 import type { ReadiedSpellParams } from "#/battle-ready-types.ts";
 import type {
@@ -258,7 +258,7 @@ export type BattleSaveTriggerKind = MonsterSaveTriggerKind | "none";
 
 export interface SaveFailureConditionDuration {
   readonly effectId: string;
-  readonly roundsRemaining: InitiativeDurationRounds;
+  readonly boundaryCrossingsRemaining: BoundaryCrossingsRemaining;
   readonly expiresAt: ExpiryPhase;
   readonly expiryOwnerId?: CreatureId;
 }
@@ -319,7 +319,7 @@ export interface ConcentrationCtx {
   readonly caster: CreatureId;
   readonly target: CreatureId;
   readonly spellId: SpellId;
-  readonly duration: InitiativeDurationRounds;
+  readonly duration: BoundaryCrossingsRemaining;
   readonly conditionOnFail: Condition;
   readonly applyCondition: boolean;
 }

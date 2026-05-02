@@ -195,22 +195,13 @@ export const DurationUpcastTierSchema = Schema.Struct({
 export const ReadonlyNonEmptyArrayDurationUpcastTierSchema =
   Schema.NonEmptyArray(DurationUpcastTierSchema);
 
-export const InitiativeDurationValueSchema = Schema.Struct({
-  unit: Schema.Literal("round"),
+export const TimeSpanDurationValueSchema = Schema.Struct({
+  unit: Schema.Literal("round", "minute", "hour", "day"),
   amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
   upcastTiers: exactOptional(ReadonlyNonEmptyArrayDurationUpcastTierSchema),
 });
 
-export const ElapsedTimeDurationValueSchema = Schema.Struct({
-  unit: Schema.Literal("minute", "hour", "day"),
-  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
-  upcastTiers: exactOptional(ReadonlyNonEmptyArrayDurationUpcastTierSchema),
-});
-
-export const DurationValueSchema = Schema.Union(
-  InitiativeDurationValueSchema,
-  ElapsedTimeDurationValueSchema,
-);
+export const DurationValueSchema = TimeSpanDurationValueSchema;
 
 export const SkillSchema = Schema.Literal(
   "acrobatics",

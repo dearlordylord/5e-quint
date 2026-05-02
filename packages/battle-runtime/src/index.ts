@@ -42,7 +42,7 @@ import {
 } from "@dnd/shared-algebras/death-saves-algebra";
 import {
   elapsedTimeTicksFromHours,
-  elapsedTimeTicksFromSurfaceDuration,
+  elapsedTimeTicksFromTimeSpanDuration,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   ActionEconomyState,
@@ -8450,18 +8450,18 @@ function supportedPreparedPersistentSpellProfile(
   if (spell.mechanics.family !== "ongoing_effect") {
     return [];
   }
+  if (spell.mechanics.duration.kind !== "timed") {
+    return [];
+  }
   const operation = spell.mechanics.operations[0];
-  const durationTicks = elapsedTimeTicksFromSurfaceDuration(
-    spell.mechanics.duration.kind === "timed"
-      ? spell.mechanics.duration.value
-      : { unit: "unsupported", amount: 0 },
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.value,
   );
   const mageArmorDurationTicks = elapsedTimeTicksFromHours(8);
   if (
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "timed" ||
     Either.isLeft(durationTicks) ||
     Either.isLeft(mageArmorDurationTicks) ||
     Number(durationTicks.right) !== Number(mageArmorDurationTicks.right) ||

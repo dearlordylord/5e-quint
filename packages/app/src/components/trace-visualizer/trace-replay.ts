@@ -50,7 +50,11 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     hitPointDiceRemaining: Object.values(c.hitDiceRemaining).reduce((a, b) => a + b, 0),
     activeEffects: [...c.activeEffects]
       .sort((a, b) => a.spellId.localeCompare(b.spellId))
-      .map((ae) => ({ spellId: ae.spellId, roundsRemaining: ae.roundsRemaining, expiresAt: ae.expiresAt })),
+      .map((ae) => ({
+        spellId: ae.spellId,
+        boundaryCrossingsRemaining: ae.boundaryCrossingsRemaining,
+        expiresAt: ae.expiresAt
+      })),
     movementRemaining: c.movementRemaining,
     effectiveSpeed: c.effectiveSpeed,
     actionsRemaining: c.actionsRemaining,

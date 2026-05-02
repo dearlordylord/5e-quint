@@ -642,7 +642,7 @@ module battle {
   // Context for a save-based spell targeting one creature.
   type SaveFailureConditionDuration = {
     effectId: str,
-    roundsRemaining: int,
+    boundaryCrossingsRemaining: int,
     expiresAt: ExpiryPhase,
     expiryOwnerId: CreatureId,
   }
@@ -658,7 +658,7 @@ module battle {
   /// Runtime-empty sentinel for "no condition duration is attached to this save".
   val EMPTY_SAVE_FAILURE_CONDITION_DURATION: SaveFailureConditionDuration = {
     effectId: "",
-    roundsRemaining: 0,
+    boundaryCrossingsRemaining: 1,
     expiresAt: AtEndOfTurn,
     expiryOwnerId: "",
   }
@@ -1280,14 +1280,15 @@ module battle {
       Set()
 
   pure def effectExpiryOwner(holderId: CreatureId, effect: ActiveEffect): CreatureId =
-    if (effect.spellId == RAY_OF_FROST_SPELL_ID) effect.casterId
+    if (effect.expiryOwnerId != "") effect.expiryOwnerId
+    else if (effect.spellId == RAY_OF_FROST_SPELL_ID) effect.casterId
     else holderId
 
   pure def blocksOpportunityAttacks(effects: Set[ActiveEffect]): bool =
-    effects.exists(e => e.spellId == SHOCKING_GRASP_SPELL_ID and e.roundsRemaining > 0)
+    effects.exists(e => e.spellId == SHOCKING_GRASP_SPELL_ID and e.boundaryCrossingsRemaining > 0)
 
   pure def speedDeltaFromEffects(effects: Set[ActiveEffect]): int =
-    if (effects.exists(e => e.spellId == RAY_OF_FROST_SPELL_ID and e.roundsRemaining > 0)) -10
+    if (effects.exists(e => e.spellId == RAY_OF_FROST_SPELL_ID and e.boundaryCrossingsRemaining > 0)) -10
     else 0
 
   pure def battleEffectiveSpeed(c: Combatant): int = {
@@ -1445,12 +1446,16 @@ module battle {
   ): (CreatureId -> Combatant) =
     cs.keys().fold(cs, (acc, holderId) =>
       val cb = acc.get(holderId)
-      val advanced = cb.creature.activeEffects.map(e =>
-        if (effectExpiryOwner(holderId, e) == ownerId)
-          e.with("roundsRemaining", e.roundsRemaining - 1)
-        else e
+      val ownedStartEffects = cb.creature.activeEffects.filter(e =>
+        effectExpiryOwner(holderId, e) == ownerId and e.expiresAt == AtStartOfTurn
       )
-      val expired = pExpiredAtPhase(advanced, AtStartOfTurn)
+      val expired = ownedStartEffects.filter(e => e.boundaryCrossingsRemaining <= 1)
+      val advancedOwned = ownedStartEffects
+        .filter(e => e.boundaryCrossingsRemaining > 1)
+        .map(e =>
+          e.with("boundaryCrossingsRemaining", e.boundaryCrossingsRemaining - 1)
+        )
+      val advanced = cb.creature.activeEffects.exclude(ownedStartEffects).union(advancedOwned)
       val cleared = advanced.exclude(expired)
       val slots1 = pAutoBreakExpiredConcentration(cb.slots, cleared)
       val creature1 = removeConditionsForEffects(cb.creature.with("activeEffects", cleared), expired)
@@ -2759,17 +2764,15 @@ module battle {
           if (currentTarget.creature.dead) {
             { creatures: damaged.creatures, phase: damaged.phase }
           } else {
-            val nextEffects = pAddEffectWithConditionalConditions(
+            val nextEffects = pAddEffectWithConditionalConditionsAndExpiryOwner(
               currentTarget.creature.activeEffects,
               ctx.conditionDurationOnFail.effectId,
-              ctx.conditionDurationOnFail.roundsRemaining,
+              ctx.conditionDurationOnFail.boundaryCrossingsRemaining,
               ctx.conditionDurationOnFail.expiresAt,
               ctx.caster,
+              ctx.conditionDurationOnFail.expiryOwnerId,
               Set(ctx.conditionOnFail),
               conditionalGrantedConditions,
-              Set(),
-              Set(),
-              Set(),
             )
             val conditioned = conditionalGrantedConditions.fold(
               pApplyCondition(
@@ -2789,17 +2792,15 @@ module battle {
           if (currentTarget.creature.dead) {
             { creatures: cs, phase: returnToPhase(returnTo) }
           } else {
-            val nextEffects = pAddEffectWithConditionalConditions(
+            val nextEffects = pAddEffectWithConditionalConditionsAndExpiryOwner(
               currentTarget.creature.activeEffects,
               ctx.conditionDurationOnFail.effectId,
-              ctx.conditionDurationOnFail.roundsRemaining,
+              ctx.conditionDurationOnFail.boundaryCrossingsRemaining,
               ctx.conditionDurationOnFail.expiresAt,
               ctx.caster,
+              ctx.conditionDurationOnFail.expiryOwnerId,
               Set(ctx.conditionOnFail),
               conditionalGrantedConditions,
-              Set(),
-              Set(),
-              Set(),
             )
             val conditioned = conditionalGrantedConditions.fold(
               pApplyCondition(
@@ -3250,7 +3251,7 @@ module battle {
       val cs2 = if (ritual) cs1 else expendSlot(cs1, activeId, slotLvl)
       val concCtx: ConcentrationCtx = {
         caster: activeId, target: targetId,
-        spellId: spellId, duration: duration,
+        spellId: spellId, duration: duration + 1,
         conditionOnFail: cond, applyCondition: applyCond,
       }
       val spellCtx: SpellCastCtx = {

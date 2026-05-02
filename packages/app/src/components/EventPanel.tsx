@@ -10,7 +10,7 @@ import {
   spellSlotLevel,
   tempHp
 } from "@dnd/core/types.ts"
-import { elapsedTimeTicksFromMinutes, initiativeRoundsFromElapsedTimeTicks } from "@dnd/shared/elapsed-time"
+import { boundaryCrossingsRemaining, elapsedTimeTicksFromMinutes } from "@dnd/shared/elapsed-time"
 import * as Either from "effect/Either"
 import { type FormEvent, useState } from "react"
 
@@ -20,12 +20,12 @@ const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
 const DEFAULT_AMOUNT = 5
 const DEFAULT_D20 = 10
-const DEFAULT_CONCENTRATION_DURATION_ROUNDS = (() => {
+const DEFAULT_CONCENTRATION_BOUNDARY_CROSSINGS = (() => {
   const ticks = elapsedTimeTicksFromMinutes(1)
   if (Either.isLeft(ticks)) {
     throw new Error("Invalid default concentration duration.")
   }
-  return initiativeRoundsFromElapsedTimeTicks(ticks.right)
+  return boundaryCrossingsRemaining(Number(ticks.right) + 1)
 })()
 
 const prevent = (fn: () => void) => (e: FormEvent) => {
@@ -244,7 +244,7 @@ export function EventPanel({
                 send({
                   type: "START_CONCENTRATION",
                   spellId: mkSpellId(spellId),
-                  durationRounds: DEFAULT_CONCENTRATION_DURATION_ROUNDS,
+                  boundaryCrossings: DEFAULT_CONCENTRATION_BOUNDARY_CROSSINGS,
                   expiresAt: "end",
                   casterId: CreatureId("")
                 })

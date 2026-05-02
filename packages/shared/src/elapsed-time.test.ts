@@ -4,11 +4,12 @@ import { describe, expect, test } from "vitest";
 import {
   elapsedTimeTicksFromHours,
   elapsedTimeTicksFromMinutes,
-  elapsedTimeTicksFromSurfaceDuration,
+  elapsedTimeTicksFromTimeSpanDuration,
   ELAPSED_TIME_TICKS_PER_HOUR,
   ELAPSED_TIME_TICKS_PER_MINUTE,
-  formatElapsedTimeDuration,
-  initiativeRoundsFromElapsedTimeTicks,
+  formatElapsedTimeTicks,
+  formatTimeSpanDuration,
+  timeSpanDuration,
 } from "./elapsed-time.ts";
 
 function requireRight<T, E>(value: Either.Either<T, E>): T {
@@ -29,27 +30,31 @@ describe("elapsed time algebra", () => {
     expect(Number(requireRight(elapsedTimeTicksFromHours(8)))).toBe(4_800);
   });
 
-  test("projects elapsed ticks into initiative duration rounds explicitly", () => {
-    const ticks = requireRight(elapsedTimeTicksFromMinutes(1));
+  test("keeps authored time-span units canonical", () => {
+    const duration = requireRight(
+      timeSpanDuration({ unit: "minute", amount: 1 }),
+    );
 
-    expect(Number(initiativeRoundsFromElapsedTimeTicks(ticks))).toBe(10);
+    expect(duration.unit).toBe("minute");
+    expect(Number(duration.amount)).toBe(1);
+    expect(formatTimeSpanDuration(duration)).toBe("1 minute");
   });
 
   test("rejects fractional and unsupported elapsed-time values", () => {
     expect(Either.isLeft(elapsedTimeTicksFromMinutes(1.5))).toBe(true);
     expect(
       Either.isLeft(
-        elapsedTimeTicksFromSurfaceDuration({ unit: "second", amount: 6 }),
+        elapsedTimeTicksFromTimeSpanDuration({ unit: "second", amount: 6 }),
       ),
     ).toBe(true);
   });
 
   test("formats the largest exact elapsed-time unit", () => {
     expect(
-      formatElapsedTimeDuration(requireRight(elapsedTimeTicksFromMinutes(10))),
+      formatElapsedTimeTicks(requireRight(elapsedTimeTicksFromMinutes(10))),
     ).toBe("10 minutes");
     expect(
-      formatElapsedTimeDuration(requireRight(elapsedTimeTicksFromHours(8))),
+      formatElapsedTimeTicks(requireRight(elapsedTimeTicksFromHours(8))),
     ).toBe("8 hours");
   });
 });
