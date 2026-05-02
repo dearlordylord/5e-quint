@@ -1710,6 +1710,12 @@ export type BattleCreatureSnapshot = {
     readonly remainingFeet: MovementFeet;
   };
 };
+type CharacterBattleCreatureState = BattleCreatureState & {
+  readonly origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "character" }
+  >;
+};
 
 export type BattleCreatureZeroHpLifecycleSnapshot =
   | {
@@ -5250,32 +5256,41 @@ function supportedUnitFeatureActs(
   });
 }
 
+function isCharacterBattleCreatureState(
+  actor: BattleCreatureState | undefined,
+): actor is CharacterBattleCreatureState {
+  return actor?.origin.kind === "character";
+}
+
 function resolveUnitFeature(
   input: UnitFeatureBattleResolutionInput,
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  const resource =
-    actor?.origin.kind === "character"
-      ? actor.origin.resources.find(
-          (candidate) => candidate.unit.id === subject.unitId,
-        )
-      : undefined;
-  const actionSurge = parseSupportedActionSurgeUnitFeature(resource?.unit);
-  const secondWind =
-    actor?.origin.kind === "character"
-      ? parseSupportedSecondWindUnitFeature(
-          resource?.unit,
-          actor.origin.classLevels,
-        )
-      : null;
+  if (isCharacterBattleCreatureState(actor)) {
+    const resource = actor.origin.resources.find(
+      (candidate) => candidate.unit.id === subject.unitId,
+    );
 
-  if (actionSurge !== null) {
-    return resolveActionSurgeUnitFeature(input, actor, resource, actionSurge);
-  }
+    if (resource !== undefined) {
+      const actionSurge = parseSupportedActionSurgeUnitFeature(resource.unit);
+      if (actionSurge !== null) {
+        return resolveActionSurgeUnitFeature(
+          input,
+          actor,
+          resource,
+          actionSurge,
+        );
+      }
 
-  if (secondWind !== null) {
-    return resolveSecondWindUnitFeature(input, actor, resource, secondWind);
+      const secondWind = parseSupportedSecondWindUnitFeature(
+        resource.unit,
+        actor.origin.classLevels,
+      );
+      if (secondWind !== null) {
+        return resolveSecondWindUnitFeature(input, actor, resource, secondWind);
+      }
+    }
   }
 
   if (input.fills.length > 0) {
@@ -5295,8 +5310,8 @@ function resolveUnitFeature(
 
 function resolveActionSurgeUnitFeature(
   input: UnitFeatureBattleResolutionInput,
-  actor: BattleCreatureState | undefined,
-  resource: CharacterBattleResourceState | undefined,
+  actor: CharacterBattleCreatureState,
+  resource: CharacterBattleResourceState,
   actionSurge: SupportedActionSurgeUnitFeature,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   if (input.fills.length > 0) {
@@ -5307,12 +5322,7 @@ function resolveActionSurgeUnitFeature(
     );
   }
 
-  if (
-    actor?.origin.kind !== "character" ||
-    resource == null ||
-    resource.usesRemaining <= 0 ||
-    resource.usedThisTurn
-  ) {
+  if (resource.usesRemaining <= 0 || resource.usedThisTurn) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -5366,13 +5376,11 @@ function resolveActionSurgeUnitFeature(
 
 function resolveSecondWindUnitFeature(
   input: UnitFeatureBattleResolutionInput,
-  actor: BattleCreatureState | undefined,
-  resource: CharacterBattleResourceState | undefined,
+  actor: CharacterBattleCreatureState,
+  resource: CharacterBattleResourceState,
   secondWind: SupportedSecondWindUnitFeature,
 ): BattleResolutionResult {
   if (
-    actor?.origin.kind !== "character" ||
-    resource == null ||
     resource.usesRemaining <= 0 ||
     !input.state.currentTurnResources.currentHasBonusAction
   ) {
@@ -5434,9 +5442,9 @@ function resolveSecondWindUnitFeature(
 }
 
 function parseSupportedActionSurgeUnitFeature(
-  unit: UnitRecord | undefined,
+  unit: UnitRecord,
 ): SupportedActionSurgeUnitFeature | null {
-  if (unit?.id !== ACTION_SURGE_UNIT_ID || unit.kind !== "class_feature") {
+  if (unit.id !== ACTION_SURGE_UNIT_ID || unit.kind !== "class_feature") {
     return null;
   }
   const mechanics = unit.mechanics;
@@ -5570,10 +5578,10 @@ function requireCharacterClassLevel(
 }
 
 function parseSupportedSecondWindUnitFeature(
-  unit: UnitRecord | undefined,
+  unit: UnitRecord,
   classLevels: readonly CharacterBattleClassLevel[],
 ): SupportedSecondWindUnitFeature | null {
-  if (unit?.id !== SECOND_WIND_UNIT_ID || unit.kind !== "class_feature") {
+  if (unit.id !== SECOND_WIND_UNIT_ID || unit.kind !== "class_feature") {
     return null;
   }
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
