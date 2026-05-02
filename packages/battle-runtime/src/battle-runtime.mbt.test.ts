@@ -5,7 +5,12 @@ import { Match } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import { DieRollResult, Hp, movementFeet } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  abilityModifier,
+  movementFeet,
+} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -336,7 +341,7 @@ function flailAttack(): NonNullable<
     kind: "weapon",
     weapon,
     ability: "str",
-    abilityModifier: 3,
+    abilityModifier: abilityModifier(3),
   };
 }
 

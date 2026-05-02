@@ -26,7 +26,14 @@ import {
   zeroAbilityModifiers,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import { Hp, movementFeet, proficiencyBonus } from "@dnd/shared/types";
+import {
+  Hp,
+  abilityModifier as battleAbilityModifier,
+  movementFeet,
+  proficiencyBonus,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match } from "effect";
@@ -368,7 +375,9 @@ function characterWeaponAttackActionOption(
     kind: "weapon",
     weapon: unit,
     ability: "str",
-    abilityModifier: scoreModifier(build.abilityScores.str),
+    abilityModifier: battleAbilityModifier(
+      scoreModifier(build.abilityScores.str),
+    ),
   };
 }
 
@@ -401,8 +410,8 @@ function characterSpellcasting(input: {
   }
 
   return {
-    spellcastingAbilityModifier: scoreModifier(
-      build.abilityScores[spellcasting.spellcastingAbility],
+    spellcastingAbilityModifier: battleAbilityModifier(
+      scoreModifier(build.abilityScores[spellcasting.spellcastingAbility]),
     ),
     proficiencyBonus: proficiencyBonus(characterLevel(build)),
     canCastSpells: spellcastingAllowedByArmorTraining(build, unitLibrary),
@@ -411,7 +420,10 @@ function characterSpellcasting(input: {
       unitLibrary,
       spellcasting.preparedSpells,
     ),
-    spellSlots: spellcasting.spellSlots,
+    spellSlots: spellcasting.spellSlots.map((slot) => ({
+      spellLevel: spellSlotLevel(slot.spellLevel),
+      count: resourceCount(slot.count),
+    })),
     ...(input.spellSlots === undefined
       ? {}
       : {

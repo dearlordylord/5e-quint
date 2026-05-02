@@ -11,7 +11,7 @@ import {
   characterDraftId,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
-import { Hp, type Hp as HpType } from "@dnd/shared/types";
+import { Hp, movementFeet, type Hp as HpType } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Schema } from "effect";
 
@@ -141,7 +141,7 @@ export function decodeStartBattleArgs(
             (distance) => ({
               combatantA: combatantId(distance.combatantA),
               combatantB: combatantId(distance.combatantB),
-              feet: distance.feet,
+              feet: movementFeet(distance.feet),
             }),
           ),
         }),

@@ -330,6 +330,15 @@ export function movementFeet(n: number): MovementFeet {
   return MovementFeet.make(Math.max(0, Math.floor(n)));
 }
 
+export const MovementDeltaFeet = Schema.Number.pipe(
+  Schema.int(),
+  Schema.brand("MovementDeltaFeet"),
+);
+export type MovementDeltaFeet = typeof MovementDeltaFeet.Type;
+export function movementDeltaFeet(n: number): MovementDeltaFeet {
+  return MovementDeltaFeet.make(Math.floor(n));
+}
+
 export const ClassLevel = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
@@ -381,6 +390,15 @@ export const AbilityModifier = Schema.Number.pipe(
 export type AbilityModifier = typeof AbilityModifier.Type;
 export function abilityModifier(n: number): AbilityModifier {
   return AbilityModifier.make(Math.floor(n));
+}
+
+export const AttackBonus = Schema.Number.pipe(
+  Schema.int(),
+  Schema.brand("AttackBonus"),
+);
+export type AttackBonus = typeof AttackBonus.Type;
+export function attackBonus(n: number): AttackBonus {
+  return AttackBonus.make(Math.floor(n));
 }
 
 /** SRD ability score to modifier: floor((score - 10) / 2). */

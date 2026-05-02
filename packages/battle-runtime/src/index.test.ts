@@ -44,8 +44,11 @@ import {
   type AttackRollMode,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
+  abilityModifier as battleAbilityModifier,
+  difficultyClass,
   DieRollResult,
   Hp,
+  movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
@@ -243,8 +246,16 @@ describe("battle runtime", () => {
         battleId: battleId("battle-duplicate-distances"),
         combatants,
         combatantDistances: [
-          { combatantA: fighterId, combatantB: goblinId, feet: 5 },
-          { combatantA: goblinId, combatantB: fighterId, feet: 10 },
+          {
+            combatantA: fighterId,
+            combatantB: goblinId,
+            feet: movementFeet(5),
+          },
+          {
+            combatantA: goblinId,
+            combatantB: fighterId,
+            feet: movementFeet(10),
+          },
         ],
       }),
     ).toThrow("Duplicate battle combatant distance pair.");
@@ -803,7 +814,7 @@ describe("battle runtime", () => {
       ...goblinTurn,
       combatants: new Map(goblinTurn.combatants).set(goblinId, {
         ...goblinTurn.combatants.get(goblinId)!,
-        hidden: { discoveryDc: 16 },
+        hidden: { discoveryDc: difficultyClass(16) },
       }),
     };
     const hiddenTarget = requireHole(
@@ -924,7 +935,7 @@ describe("battle runtime", () => {
       expect.arrayContaining([
         expect.objectContaining({
           combatantId: fighterId,
-          hidden: { discoveryDc: 18 },
+          hidden: { discoveryDc: difficultyClass(18) },
           conditions: expect.arrayContaining(["invisible"]),
         }),
       ]),
@@ -1006,7 +1017,7 @@ describe("battle runtime", () => {
       ...state,
       combatants: new Map(state.combatants).set(fighterId, {
         ...actor,
-        hidden: { discoveryDc: 17 },
+        hidden: { discoveryDc: difficultyClass(17) },
       }),
     };
     const target = attackInitialTargetHole(hiddenState);
@@ -1062,7 +1073,7 @@ describe("battle runtime", () => {
       ...state,
       combatants: new Map(state.combatants).set(wizardId, {
         ...wizard,
-        hidden: { discoveryDc: 17 },
+        hidden: { discoveryDc: difficultyClass(17) },
       }),
     };
     const subject = magicSubject("ray_of_frost");
@@ -1111,7 +1122,7 @@ describe("battle runtime", () => {
       ...state,
       combatants: new Map(state.combatants).set(wizardId, {
         ...wizard,
-        hidden: { discoveryDc: 17 },
+        hidden: { discoveryDc: difficultyClass(17) },
       }),
     };
 
@@ -1145,7 +1156,7 @@ describe("battle runtime", () => {
       combatants: new Map(state.combatants)
         .set(wizardId, {
           ...wizard,
-          hidden: { discoveryDc: 17 },
+          hidden: { discoveryDc: difficultyClass(17) },
         })
         .set(skeletonId, {
           ...skeleton,
@@ -1196,10 +1207,12 @@ describe("battle runtime", () => {
         characterSeed({
           initiative: 20,
           classLevels: [{ className: "fighter", level: 1 }],
-          characterUnitRefs: [{
-            unitId: "class_rogue",
-            supportProfiles: BATTLE_UNIT_SUPPORT_PROFILES,
-          }],
+          characterUnitRefs: [
+            {
+              unitId: "class_rogue",
+              supportProfiles: BATTLE_UNIT_SUPPORT_PROFILES,
+            },
+          ],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
@@ -1228,7 +1241,7 @@ describe("battle runtime", () => {
       combatants: expect.arrayContaining([
         expect.objectContaining({
           combatantId: fighterId,
-          hidden: { discoveryDc: 16 },
+          hidden: { discoveryDc: difficultyClass(16) },
         }),
       ]),
     });
@@ -1479,12 +1492,13 @@ describe("battle runtime", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
       "movement",
     );
-    const staleSuppressionFill = movementFill(hole, {
+    const staleMovementValue = {
       movementCostFeet: 5,
       distanceMovedFeet: 5,
       destinationDistances: [{ combatantId: goblinId, feet: 10 }],
       provokesOpportunityAttacks: false,
-    } as Extract<BattleFill, { readonly kind: "movement" }>["value"]);
+    };
+    const staleSuppressionFill = movementFill(hole, staleMovementValue);
 
     const awaitingReaction = resolveBattleSubject({
       state,
@@ -1662,7 +1676,7 @@ describe("battle runtime", () => {
       ...base,
       combatants: new Map(base.combatants).set(goblinId, {
         ...goblin,
-        hidden: { discoveryDc: 16 },
+        hidden: { discoveryDc: difficultyClass(16) },
       }),
     };
     const moveSubject: BattleSubject = {
@@ -3732,9 +3746,21 @@ describe("battle runtime", () => {
             }),
           ],
           combatantDistances: [
-            { combatantA: fighterId, combatantB: goblinId, feet: 5 },
-            { combatantA: distantFighterId, combatantB: goblinId, feet: 5 },
-            { combatantA: fighterId, combatantB: distantFighterId, feet: 5 },
+            {
+              combatantA: fighterId,
+              combatantB: goblinId,
+              feet: movementFeet(5),
+            },
+            {
+              combatantA: distantFighterId,
+              combatantB: goblinId,
+              feet: movementFeet(5),
+            },
+            {
+              combatantA: fighterId,
+              combatantB: distantFighterId,
+              feet: movementFeet(5),
+            },
           ],
         }),
         actorId: fighterId,
@@ -3826,9 +3852,21 @@ describe("battle runtime", () => {
             }),
           ],
           combatantDistances: [
-            { combatantA: fighterId, combatantB: goblinId, feet: 5 },
-            { combatantA: distantFighterId, combatantB: goblinId, feet: 5 },
-            { combatantA: fighterId, combatantB: distantFighterId, feet: 5 },
+            {
+              combatantA: fighterId,
+              combatantB: goblinId,
+              feet: movementFeet(5),
+            },
+            {
+              combatantA: distantFighterId,
+              combatantB: goblinId,
+              feet: movementFeet(5),
+            },
+            {
+              combatantA: fighterId,
+              combatantB: distantFighterId,
+              feet: movementFeet(5),
+            },
           ],
         }),
         actorId: fighterId,
@@ -4010,15 +4048,31 @@ describe("battle runtime", () => {
         }),
       ],
       combatantDistances: [
-        { combatantA: goblinId, combatantB: fighterId, feet: 5 },
-        { combatantA: goblinId, combatantB: distantFighterId, feet: 10 },
-        { combatantA: goblinId, combatantB: longRangeFighterId, feet: 100 },
-        { combatantA: fighterId, combatantB: distantFighterId, feet: 10 },
-        { combatantA: fighterId, combatantB: longRangeFighterId, feet: 100 },
+        { combatantA: goblinId, combatantB: fighterId, feet: movementFeet(5) },
+        {
+          combatantA: goblinId,
+          combatantB: distantFighterId,
+          feet: movementFeet(10),
+        },
+        {
+          combatantA: goblinId,
+          combatantB: longRangeFighterId,
+          feet: movementFeet(100),
+        },
+        {
+          combatantA: fighterId,
+          combatantB: distantFighterId,
+          feet: movementFeet(10),
+        },
+        {
+          combatantA: fighterId,
+          combatantB: longRangeFighterId,
+          feet: movementFeet(100),
+        },
         {
           combatantA: distantFighterId,
           combatantB: longRangeFighterId,
-          feet: 90,
+          feet: movementFeet(90),
         },
       ],
     });
@@ -5001,7 +5055,7 @@ describe("battle runtime", () => {
                 kind: "speedDelta",
                 sourceSpellId: "ray_of_frost",
                 sourceCombatantId: wizardId,
-                deltaFeet: -10,
+                deltaFeet: movementDeltaFeet(-10),
                 expiresAt: {
                   kind: "startOfTurn",
                   combatantId: wizardId,
@@ -5023,7 +5077,7 @@ describe("battle runtime", () => {
             kind: "speedDelta",
             sourceSpellId: "ray_of_frost",
             sourceCombatantId: combatantId("other-wizard"),
-            deltaFeet: -10,
+            deltaFeet: movementDeltaFeet(-10),
             expiresAt: {
               kind: "startOfTurn",
               combatantId: combatantId("other-wizard"),
@@ -7057,7 +7111,14 @@ function reactionDecisionFill(
 
 function movementFill(
   hole: BattleHole,
-  value: Extract<BattleFill, { readonly kind: "movement" }>["value"],
+  value: {
+    readonly movementCostFeet: number;
+    readonly distanceMovedFeet: number;
+    readonly destinationDistances: readonly {
+      readonly combatantId: CombatantId;
+      readonly feet: number;
+    }[];
+  },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
     throw new Error("Expected movement hole.");
@@ -7065,7 +7126,14 @@ function movementFill(
   return {
     kind: "movement",
     holeId: hole.holeId,
-    value,
+    value: {
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      distanceMovedFeet: movementFeet(value.distanceMovedFeet),
+      destinationDistances: value.destinationDistances.map((distance) => ({
+        combatantId: distance.combatantId,
+        feet: movementFeet(distance.feet),
+      })),
+    },
   };
 }
 
@@ -7255,7 +7323,7 @@ function testLongswordAttack(): Extract<
     kind: "weapon",
     weapon,
     ability: "str",
-    abilityModifier: 3,
+    abilityModifier: battleAbilityModifier(3),
   };
 }
 
@@ -7274,7 +7342,7 @@ function testDaggerAttack(): NonNullable<
     kind: "weapon",
     weapon,
     ability: "str",
-    abilityModifier: 3,
+    abilityModifier: battleAbilityModifier(3),
   };
 }
 
@@ -7293,7 +7361,7 @@ function testShortswordAttack(): NonNullable<
     kind: "weapon",
     weapon,
     ability: "str",
-    abilityModifier: 3,
+    abilityModifier: battleAbilityModifier(3),
   };
 }
 
@@ -7312,7 +7380,7 @@ function testLightHammerAttack(): NonNullable<
     kind: "weapon",
     weapon,
     ability: "str",
-    abilityModifier: 3,
+    abilityModifier: battleAbilityModifier(3),
   };
 }
 
@@ -7655,7 +7723,13 @@ function wizardVsSkeletonBattle(input?: {
     ],
     ...(input?.combatantDistances === undefined
       ? {}
-      : { combatantDistances: input.combatantDistances }),
+      : {
+          combatantDistances: input.combatantDistances.map((distance) => ({
+            combatantA: distance.combatantA,
+            combatantB: distance.combatantB,
+            feet: movementFeet(distance.feet),
+          })),
+        }),
   });
 }
 

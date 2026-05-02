@@ -397,13 +397,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 53,
       "id": "PBA13G",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace Bare Domain Primitives With Owned Types"
     },
     {
       "number": 54,
       "id": "PBA14",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Restore Turn Roster And Generic Combat Actions"
     },
     {
@@ -441,6 +441,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "PBA15",
       "status": "blocked",
       "title": "Plan Broader Battle Widening Queue"
+    },
+    {
+      "number": 61,
+      "id": "PBA15A",
+      "status": "blocked",
+      "title": "Migrate Surface And Character-Creation Domain Primitives"
     }
   ]
 }
@@ -537,14 +543,15 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 50    | PBA13D - Audit Character Creation Authored-Id Dispatch           | done               | PBA13C               | PBA13E                             | Audited character-creation support/finalization authored-id dispatch and migrated finalization choice support checks to source-shaped holes derived from Surface readers plus support profiles.                     | Completed in Task 50 run; PBA13E is now unblocked.                                       |
 | 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | done               | PBA13D               | PBA13F                             | Added a repo-local authored-id dispatch boundary check with explicit allowlists, integrated it into quality gating, and documented support-profile-first widening rules in owning runtime READMEs.                 | Completed in Task 51 run; PBA13F is unblocked and PBA14+ remain blocked on PBA13F/PBA13G. |
 | 52    | PBA13F - Introduce Canonical Elapsed-Time Algebra                | done               | PBA13E               | PBA13G                             | Added shared elapsed-time ticks/initiative-round brands and migrated Surface duration parsing/projection, Core active-effect/concentration fields, battle-runtime persistent spell duration, and UI duration authoring. | Completed in Task 52 run; PBA13G is unblocked.                                            |
-| 53    | PBA13G - Replace Bare Domain Primitives With Owned Types         | ready-for-research | PBA13F               | PBA14                              | Audit and migrate production runtime/domain signatures away from bare `string`, `number`, and `boolean` where shared or package-owned domain types should carry meaning.                                          | Unblocked by PBA13F; must place types at the proper abstraction layer.                     |
-| 54    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13G               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked until emergency architecture cleanup is complete.                                 |
+| 53    | PBA13G - Replace Bare Domain Primitives With Owned Types         | done               | PBA13F               | PBA14                              | Audit and migrate production runtime/domain signatures away from bare `string`, `number`, and `boolean` where shared or package-owned domain types should carry meaning.                                          | Completed in Task 53 run; promoted battle-runtime primitive debt is settled and PBA15A owns deferred Surface/character-creation primitive migration. |
+| 54    | PBA14 - Restore Turn Roster And Generic Combat Actions           | ready-for-research | PBA13G               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Unblocked by PBA13G; start with RAW/source research before rules edits.                    |
 | 55    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14A1                            | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
 | 56    | PBA14A1 - Restore Authored Critical Range Attack Hook            | blocked            | PBA14A               | PBA14B                             | Restore Unit-authored critical-range attack hooks through Surface support profiles and battle-runtime attack adjudication, without naming Champion or other authored ids in production support code.              | Blocked behind stance state; unblocks broader attack-rider procedure work.                |
 | 57    | PBA14B - Restore Attack Rider Procedure Family                   | blocked            | PBA14A1              | PBA14C                             | Restore reusable attack-rider windows and damage/roll rider data for Sneak Attack plus Rage/Reckless-style interactions through support profiles, not named ability branches.                                    | Blocked behind authored critical-range attack hook restoration.                           |
 | 58    | PBA14C - Restore Save Damage Replacement Riders                  | blocked            | PBA14B               | PBA14D                             | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                             | Blocked behind attack-rider procedure family.                                             |
 | 59    | PBA14D - Restore Reaction Roll Damage Modification Riders        | blocked            | PBA14C               | PBA15                              | Restore reusable reaction roll/damage modification procedure support for Deflect Attacks, Uncanny Dodge, and Cutting Words-style riders through support profiles.                                                 | Blocked behind save-damage replacement riders.                                            |
-| 60    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14D               | future tasks                       | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
+| 60    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14D               | PBA15A                             | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
+| 61    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked           | PBA15                | future tasks                       | Replace remaining Surface-authored and character-creation-runtime durable domain primitives with owned shared, Surface, or package-local types after the promoted battle feature-parity queue.                    | Blocked behind PBA15 so broader Surface/catalog migration is ordered after feature parity. |
 
 ## Task Details
 
@@ -3651,7 +3658,7 @@ Completion:
 
 ### Task 53 - PBA13G - Replace Bare Domain Primitives With Owned Types
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA13F
 Blocks: PBA14
@@ -3660,6 +3667,17 @@ Batch: emergency architecture correction before further feature-parity work.
 
 Next action: audit production runtime/domain types and replace bare primitives
 with domain-owned types where review rules require it.
+
+Closeout:
+
+- Promoted battle-runtime support profiles, spell acts, movement/range/distance
+  values, resource counts, DCs, attack bonuses, damage amounts, and replay
+  stack depth now use owned shared or package-local types.
+- MCP/start-battle boundaries parse raw external distance and spell-slot values
+  into runtime domain types before durable battle use.
+- Surface-authored and character-creation-runtime primitive migration remains
+  outside the promoted-runtime emergency path and is assigned to PBA15A.
+- No new SRD rule behavior was modeled by this task.
 
 Policy:
 
@@ -3738,7 +3756,7 @@ Plan Impact:
 
 ### Task 54 - PBA14 - Restore Turn Roster And Generic Combat Actions
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA13G
 Blocks: PBA14A
@@ -4017,7 +4035,7 @@ Plan Impact:
 Status: `blocked`
 
 Depends on: PBA14D
-Blocks: future tasks
+Blocks: PBA15A
 
 Batch: broader widening after parity/composition archive and explicit
 feature-parity queue.
@@ -4030,6 +4048,8 @@ Input:
 - PBA0-PBA4 archive/protocol/corrector outputs.
 - PBA5-PBA14D feature-parity restoration outcomes and any explicitly deferred
   owner decisions.
+- PBA13G primitive inventory, especially deferred Surface-authored and
+  character-creation-runtime primitive-domain migration.
 - Restore Ledger rows that are still intentionally omitted.
 - The `@dnd/battle-runtime` README "Not modeled in this package yet" list and
   any package-local proof caveats that remain after PBA14D, including:
@@ -4077,6 +4097,67 @@ Plan Impact:
 
 - If successful, append the next concrete broad-widening tasks and unblock the
   first one.
+
+### Task 61 - PBA15A - Migrate Surface And Character-Creation Domain Primitives
+
+Status: `blocked`
+
+Depends on: PBA15
+Blocks: future tasks
+
+Batch: broader widening after parity/composition archive and explicit
+feature-parity queue.
+
+Next action: migrate remaining durable Surface-authored and
+character-creation-runtime domain primitives to owned shared, Surface, or
+package-local types after PBA15 has ordered the broader widening queue.
+
+Input:
+
+- PBA13G primitive inventory in
+  [packages/battle-runtime/PRIMITIVE_INVENTORY.md](/workspace/typescript/dnd/packages/battle-runtime/PRIMITIVE_INVENTORY.md).
+- Surface schema and reader numeric fields such as Stat Block reach/range,
+  attack bonus values, limited-use counts, and authored numeric facts that
+  survive parsing as durable content facts.
+- Character-creation-runtime support gates, finalization outputs, and validation
+  types that retain durable domain meaning as bare primitives after boundary
+  parsing.
+- Existing shared brands in `@dnd/shared` and any package-local domain types
+  introduced by PBA13G.
+
+Output:
+
+- Surface-owned or shared domain types for durable authored content facts where
+  bare primitives still carry domain meaning.
+- Character-creation-runtime package-local or shared domain types for durable
+  post-parse support/finalization facts.
+- Boundary parsers updated so raw external JSON stays representable only at the
+  boundary and parsed domain values flow inward.
+- Inventory update documenting remaining acceptable primitives and any owner
+  rationale for deferral.
+
+Acceptance:
+
+- No remaining changed Surface or character-creation-runtime production type
+  uses `string`, `number`, or `boolean` for durable domain values when an owned
+  type or literal union should carry the meaning.
+- No Surface-authored provenance, structured input, or runtime projection facts
+  are collapsed into one field or type.
+- No new type is placed outside its true owner just to avoid imports.
+
+Verification:
+
+- Source-only primitive inventory with `rg` evidence covering Surface and
+  character-creation-runtime production paths.
+- Focused typechecks/tests for touched Surface and character-creation-runtime
+  packages.
+- No battle MBT runs unless promoted battle-runtime QNT/MBT mappings change.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, clear the remaining broad primitive-domain debt discovered by
+  PBA13G before later Surface/catalog widening tasks consume those types.
 
 ## Deferred Previous Queue
 

@@ -72,17 +72,31 @@ import {
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   CONDITIONS as ALL_CONDITIONS,
+  AbilityModifier,
+  AttackBonus,
   ClassLevel,
   CreatureId,
+  DamageAmount,
+  DifficultyClass,
   Hp,
   Initiative,
+  MovementDeltaFeet,
+  MovementFeet,
+  ResourceCount,
   Round,
+  SpellSlotLevel,
+  abilityModifier,
+  attackBonus,
+  damageAmount as toDamageAmount,
+  difficultyClass,
+  movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
+  resourceCount,
+  spellSlotLevel,
   type Condition,
   type DieRollResult,
   type HandUse,
-  type MovementFeet,
   type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
 } from "@dnd/shared/types";
@@ -125,6 +139,13 @@ export type InitiativeScore = Initiative & Brand.Brand<"InitiativeScore">;
 const InitiativeScore = Brand.all(Initiative, Brand.nominal<InitiativeScore>());
 export const initiativeScore: (value: number) => InitiativeScore =
   InitiativeScore;
+
+export const BattleReplayStackDepth = ResourceCount.pipe(
+  Schema.brand("BattleReplayStackDepth"),
+);
+export type BattleReplayStackDepth = typeof BattleReplayStackDepth.Type;
+export const battleReplayStackDepth: (value: number) => BattleReplayStackDepth =
+  BattleReplayStackDepth.make;
 
 export type ZeroHpLifecycle =
   | {
@@ -188,8 +209,8 @@ export type CharacterWeaponAttackActionOption = {
   readonly kind: "weapon";
   readonly weapon: WeaponRecord;
   readonly ability: Ability;
-  readonly abilityModifier: number;
-  readonly damageAbilityModifier?: number;
+  readonly abilityModifier: AbilityModifier;
+  readonly damageAbilityModifier?: AbilityModifier;
 };
 export type CharacterBattleResourceInit = {
   readonly unit: UnitRecord;
@@ -199,7 +220,7 @@ export type CharacterBattleResourceInit = {
 export type CharacterBattleResourceState = {
   readonly unit: UnitRecord;
   readonly resource: ActivationResource;
-  readonly usesRemaining: number;
+  readonly usesRemaining: ResourceCount;
   readonly usedThisTurn: boolean;
 };
 export type CharacterBattleSpellSlotInit = {
@@ -210,8 +231,11 @@ export type CharacterBattleSpellSlotExpenditureInit = {
   readonly spellLevel: number;
   readonly expended: number;
 };
-export type CharacterBattleSpellSlotState = CharacterBattleSpellSlotInit &
-  CharacterBattleSpellSlotExpenditureInit;
+export type CharacterBattleSpellSlotState = {
+  readonly spellLevel: SpellSlotLevel;
+  readonly count: ResourceCount;
+  readonly expended: ResourceCount;
+};
 export type CharacterBattleSpellcastingInit = {
   readonly spellcastingAbilityModifier: number;
   readonly proficiencyBonus: ProficiencyBonusType;
@@ -223,8 +247,9 @@ export type CharacterBattleSpellcastingInit = {
 };
 export type CharacterBattleSpellcastingState = Omit<
   CharacterBattleSpellcastingInit,
-  "spellSlots" | "spellSlotExpenditures"
+  "spellcastingAbilityModifier" | "spellSlots" | "spellSlotExpenditures"
 > & {
+  readonly spellcastingAbilityModifier: AbilityModifier;
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
 };
 type LiteralStatBlockValue = Extract<
@@ -298,8 +323,8 @@ export type StatBlockLimitedUseSnapshot =
   | {
       readonly key: StatBlockPartKey;
       readonly kind: "daily";
-      readonly usesMax: number;
-      readonly usesRemaining: number;
+      readonly usesMax: ResourceCount;
+      readonly usesRemaining: ResourceCount;
     }
   | {
       readonly key: StatBlockPartKey;
@@ -313,8 +338,8 @@ export type StatBlockLimitedUseSnapshot =
       readonly available: boolean;
     };
 export type StatBlockLegendaryActionResourceSnapshot = {
-  readonly usesMax: number;
-  readonly usesRemaining: number;
+  readonly usesMax: ResourceCount;
+  readonly usesRemaining: ResourceCount;
 };
 export type StatBlockResourceSnapshot = {
   readonly legendaryActions: StatBlockLegendaryActionResourceSnapshot | null;
@@ -322,10 +347,10 @@ export type StatBlockResourceSnapshot = {
 };
 export type StatBlockDailyUseState = {
   readonly key: StatBlockPartKey;
-  readonly usesRemaining: number;
+  readonly usesRemaining: ResourceCount;
 };
 export type StatBlockMutableResourceState = {
-  readonly legendaryActionUsesRemaining: number;
+  readonly legendaryActionUsesRemaining: ResourceCount;
   readonly dailyUses: readonly StatBlockDailyUseState[];
   readonly unavailableRechargeParts: readonly StatBlockPartKey[];
   readonly unavailableRestRechargeParts: readonly StatBlockPartKey[];
@@ -352,7 +377,7 @@ type BattleSpellEffectBase = {
 export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "speedDelta";
-      readonly deltaFeet: number;
+      readonly deltaFeet: MovementDeltaFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -459,7 +484,7 @@ export type BattleReactionFrame =
       readonly trigger: "afterDamage";
       readonly damageSourceId: CombatantId;
       readonly damagedId: CombatantId;
-      readonly damageAmount: number;
+      readonly damageAmount: DamageAmount;
     })
   | (BattleReactionFrameBase & {
       readonly trigger: "opportunityAttack";
@@ -485,22 +510,22 @@ export type BattleReactionDecision =
       readonly choice: BattleReactionProcedureSelection;
     };
 type AttackTargetConstraint =
-  | { readonly kind: "meleeReach"; readonly reachFeet: number }
+  | { readonly kind: "meleeReach"; readonly reachFeet: MovementFeet }
   | {
       readonly kind: "rangedRange";
-      readonly normalFeet: number;
+      readonly normalFeet: MovementFeet;
     };
 export type BattleHand = "left" | "right";
 export type BattleGrappleLink = {
   readonly grapplerId: CombatantId;
   readonly targetId: CombatantId;
-  readonly escapeDc: number;
-  readonly reachFeet: number;
+  readonly escapeDc: DifficultyClass;
+  readonly reachFeet: MovementFeet;
   readonly hand: BattleHand;
   readonly targetExemptFromDragCost: boolean;
 };
 export type BattleHiddenState = {
-  readonly discoveryDc: number;
+  readonly discoveryDc: DifficultyClass;
 };
 export type BattleHidePrerequisite =
   | {
@@ -512,11 +537,11 @@ export type BattleHidePrerequisite =
     };
 export type BattleMovementDistanceUpdate = {
   readonly combatantId: CombatantId;
-  readonly feet: number;
+  readonly feet: MovementFeet;
 };
 export type BattleMovementFillValue = {
-  readonly movementCostFeet: number;
-  readonly distanceMovedFeet: number;
+  readonly movementCostFeet: MovementFeet;
+  readonly distanceMovedFeet: MovementFeet;
   readonly destinationDistances: readonly BattleMovementDistanceUpdate[];
 };
 type BattleResolvedMovement = {
@@ -539,12 +564,12 @@ export type SupportedSpellAct =
         readonly kind: "allRepeatedEffectsAtOneTarget";
         readonly repeatedEffectCount: number;
       };
-      readonly slotLevel: number;
+      readonly slotLevel: SpellSlotLevel;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
       };
-      readonly rangeFeet: number;
+      readonly rangeFeet: MovementFeet;
     }
   | {
       readonly kind: "cantripSpellAttack";
@@ -553,10 +578,10 @@ export type SupportedSpellAct =
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
       };
-      readonly rangeFeet: number;
-      readonly attackBonus: number;
+      readonly rangeFeet: MovementFeet;
+      readonly attackBonus: AttackBonus;
       readonly speedReduction: {
-        readonly deltaFeet: number;
+        readonly deltaFeet: MovementDeltaFeet;
       };
     }
   | {
@@ -566,19 +591,19 @@ export type SupportedSpellAct =
       readonly dc: DcSource;
       readonly area: {
         readonly kind: "pointOriginSphere";
-        readonly radiusFeet: number;
+        readonly radiusFeet: MovementFeet;
       };
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
       };
-      readonly rangeFeet: number;
+      readonly rangeFeet: MovementFeet;
     }
   | {
       readonly kind: "preparedPersistentSpell";
       readonly spell: SpellRecord;
-      readonly slotLevel: number;
-      readonly rangeFeet: number;
+      readonly slotLevel: SpellSlotLevel;
+      readonly rangeFeet: MovementFeet;
       readonly activeEffect: Extract<
         BattleActiveEffect,
         { readonly kind: "spellBaseArmorClass" }
@@ -640,7 +665,7 @@ export type BattleCreatureInit = {
 export type BattleCombatantDistance = {
   readonly combatantA: CombatantId;
   readonly combatantB: CombatantId;
-  readonly feet: number;
+  readonly feet: MovementFeet;
 };
 export type BattleCombatantDistanceValidationIssue =
   | {
@@ -722,7 +747,7 @@ export type BattleState = {
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly combatantDistances: ReadonlyMap<
     CombatantId,
-    ReadonlyMap<CombatantId, number>
+    ReadonlyMap<CombatantId, MovementFeet>
   >;
   readonly currentTurnResources: BattleTurnResources;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
@@ -882,7 +907,7 @@ type BonusActionHideSubject = {
   readonly action: "hide";
 };
 
-const SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET = 5;
+const SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET = movementFeet(5);
 
 export function sameBattleSubject(
   left: BattleSubject,
@@ -972,7 +997,7 @@ export type BattleAttackRollHole = Extract<
   { readonly kind: "attackRoll" }
 > & {
   readonly attack: SupportedAttackActionOption;
-  readonly attackBonus: number;
+  readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
 };
 export type BattleSpellAttackRollHole = Extract<
@@ -980,7 +1005,7 @@ export type BattleSpellAttackRollHole = Extract<
   { readonly kind: "attackRoll" }
 > & {
   readonly spell: SupportedSpellAct;
-  readonly attackBonus: number;
+  readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
 };
 export type BattleDamageRollHole = Extract<
@@ -1049,8 +1074,8 @@ export type BattleConcentrationSavingThrowHole = {
   readonly kind: "concentrationSavingThrow";
   readonly label: string;
   readonly combatantId: CombatantId;
-  readonly dc: number;
-  readonly damageAmount: number;
+  readonly dc: DifficultyClass;
+  readonly damageAmount: DamageAmount;
 };
 export type BattleReactionDecisionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -1075,7 +1100,7 @@ export type BattleAbilityCheckHole = {
   readonly label: string;
   readonly ability: Ability;
   readonly skill: "stealth" | "perception";
-  readonly dc: number;
+  readonly dc: DifficultyClass;
 };
 export type BattleGrappleOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -1084,7 +1109,7 @@ export type BattleGrappleOutcomeHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
-  readonly dc: number;
+  readonly dc: DifficultyClass;
   readonly mode: "grappleSave" | "escapeCheck";
 };
 export type BattleHole =
@@ -1121,8 +1146,8 @@ const SupportedAttackActionOptionSchema = Schema.Union(
     kind: Schema.Literal("weapon"),
     weapon: BattleRuntimeObjectSchema,
     ability: Schema.String,
-    abilityModifier: Schema.Number,
-    damageAbilityModifier: Schema.optionalWith(Schema.Number, {
+    abilityModifier: AbilityModifier,
+    damageAbilityModifier: Schema.optionalWith(AbilityModifier, {
       exact: true,
     }),
   }),
@@ -1139,12 +1164,12 @@ const SupportedSpellActSchema = Schema.Union(
       kind: Schema.Literal("allRepeatedEffectsAtOneTarget"),
       repeatedEffectCount: Schema.Number,
     }),
-    slotLevel: Schema.Number,
+    slotLevel: SpellSlotLevel,
     damage: Schema.Struct({
       expr: BattleRuntimeObjectSchema,
       damageType: Schema.String,
     }),
-    rangeFeet: Schema.Number,
+    rangeFeet: MovementFeet,
   }),
   Schema.Struct({
     kind: Schema.Literal("cantripSpellAttack"),
@@ -1153,10 +1178,10 @@ const SupportedSpellActSchema = Schema.Union(
       expr: BattleRuntimeObjectSchema,
       damageType: Schema.String,
     }),
-    rangeFeet: Schema.Number,
-    attackBonus: Schema.Number,
+    rangeFeet: MovementFeet,
+    attackBonus: AttackBonus,
     speedReduction: Schema.Struct({
-      deltaFeet: Schema.Number,
+      deltaFeet: MovementDeltaFeet,
     }),
   }),
   Schema.Struct({
@@ -1166,19 +1191,19 @@ const SupportedSpellActSchema = Schema.Union(
     dc: BattleRuntimeObjectSchema,
     area: Schema.Struct({
       kind: Schema.Literal("pointOriginSphere"),
-      radiusFeet: Schema.Number,
+      radiusFeet: MovementFeet,
     }),
     damage: Schema.Struct({
       expr: BattleRuntimeObjectSchema,
       damageType: Schema.String,
     }),
-    rangeFeet: Schema.Number,
+    rangeFeet: MovementFeet,
   }),
   Schema.Struct({
     kind: Schema.Literal("preparedPersistentSpell"),
     spell: BattleRuntimeObjectSchema,
-    slotLevel: Schema.Number,
-    rangeFeet: Schema.Number,
+    slotLevel: SpellSlotLevel,
+    rangeFeet: MovementFeet,
     activeEffect: BattleRuntimeObjectSchema,
   }),
 );
@@ -1193,7 +1218,7 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackRoll"),
     attack: SupportedAttackActionOptionSchema,
-    attackBonus: Schema.Number,
+    attackBonus: AttackBonus,
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
     }),
@@ -1202,7 +1227,7 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackRoll"),
     spell: SupportedSpellActSchema,
-    attackBonus: Schema.Number,
+    attackBonus: AttackBonus,
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
     }),
@@ -1256,8 +1281,8 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("concentrationSavingThrow"),
     label: Schema.String,
     combatantId: CombatantId,
-    dc: Schema.Number,
-    damageAmount: Schema.Number,
+    dc: DifficultyClass,
+    damageAmount: DamageAmount,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1271,7 +1296,7 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("movement"),
     label: Schema.String,
     actorId: CombatantId,
-    movementBudgetFeet: Schema.Number,
+    movementBudgetFeet: MovementFeet,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1279,7 +1304,7 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     ability: Schema.String,
     skill: Schema.Literal("stealth", "perception"),
-    dc: Schema.Number,
+    dc: DifficultyClass,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1287,7 +1312,7 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     actorId: CombatantId,
     targetId: CombatantId,
-    dc: Schema.Number,
+    dc: DifficultyClass,
     mode: Schema.Literal("grappleSave", "escapeCheck"),
   }),
 );
@@ -1569,12 +1594,12 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("movement"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
-        movementCostFeet: Schema.Number.pipe(Schema.int()),
-        distanceMovedFeet: Schema.Number.pipe(Schema.int()),
+        movementCostFeet: MovementFeet,
+        distanceMovedFeet: MovementFeet,
         destinationDistances: Schema.Array(
           Schema.Struct({
             combatantId: CombatantId,
-            feet: Schema.Number.pipe(Schema.int()),
+            feet: MovementFeet,
           }),
         ),
       }),
@@ -1687,7 +1712,7 @@ export type BattleSnapshot = {
   readonly pendingReaction: {
     readonly frame: BattleReactionFrame;
     readonly decisionHole: BattleReactionDecisionHole;
-    readonly stackDepth: number;
+    readonly stackDepth: BattleReplayStackDepth;
   } | null;
 };
 
@@ -1784,8 +1809,8 @@ const ESCAPE_GRAPPLE_OUTCOME_HOLE_ID = holeId("battle:escape-grapple:outcome");
 const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
   "battle:escape-grapple:outcome",
 );
-const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = 5;
-const HIDE_DC = 15;
+const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = movementFeet(5);
+const HIDE_DC = difficultyClass(15);
 
 type SupportedUnitFeatureProfile =
   | {
@@ -2617,7 +2642,7 @@ function pendingReactionSnapshot(
     : {
         frame,
         decisionHole: reactionDecisionHole(frame),
-        stackDepth: state.interruptStack.length,
+        stackDepth: battleReplayStackDepth(state.interruptStack.length),
       };
 }
 
@@ -2923,7 +2948,7 @@ function battleCombatantDistances(input: {
   readonly combatants: readonly BattleCreatureInit[];
   readonly combatantDistances?: readonly BattleCombatantDistance[];
 }): BattleState["combatantDistances"] {
-  const distances = new Map<CombatantId, Map<CombatantId, number>>();
+  const distances = new Map<CombatantId, Map<CombatantId, MovementFeet>>();
   const combatantIds = input.combatants.map(
     (combatant) => combatant.combatantId,
   );
@@ -3056,10 +3081,10 @@ function combatantDistancePairKey(
 }
 
 function setBattleCombatantDistance(
-  distances: Map<CombatantId, Map<CombatantId, number>>,
+  distances: Map<CombatantId, Map<CombatantId, MovementFeet>>,
   from: CombatantId,
   to: CombatantId,
-  feet: number,
+  feet: MovementFeet,
 ): void {
   const existing = distances.get(from);
   if (existing == null) {
@@ -3324,8 +3349,9 @@ function characterResourceState(
     unit: input.unit,
     resource: input.resource,
     usesRemaining:
-      input.usesRemaining ??
-      supportedUseCountCapForLevel(input.resource, unitClassLevel ?? 1),
+      input.usesRemaining === undefined
+        ? supportedUseCountCapForLevel(input.resource, unitClassLevel ?? 1)
+        : resourceCount(input.usesRemaining),
     usedThisTurn: false,
   };
 }
@@ -3356,7 +3382,7 @@ function characterSpellcastingState(
     input.spellSlotExpenditures ??
     input.spellSlots.map((slot) => ({
       spellLevel: slot.spellLevel,
-      expended: 0,
+      expended: resourceCount(0),
     }));
   if (spellSlotExpenditures.length !== input.spellSlots.length) {
     throw new Error("Spell Slot expenditure state must match slot capacity.");
@@ -3385,7 +3411,9 @@ function characterSpellcastingState(
   }
 
   return {
-    spellcastingAbilityModifier: input.spellcastingAbilityModifier,
+    spellcastingAbilityModifier: abilityModifier(
+      input.spellcastingAbilityModifier,
+    ),
     proficiencyBonus: input.proficiencyBonus,
     canCastSpells: input.canCastSpells,
     cantrips: input.cantrips,
@@ -3399,7 +3427,11 @@ function characterSpellcastingState(
           "Spell Slot expenditure state must match slot capacity.",
         );
       }
-      return { ...slot, expended: expenditure.expended };
+      return {
+        spellLevel: spellSlotLevel(slot.spellLevel),
+        count: resourceCount(slot.count),
+        expended: resourceCount(expenditure.expended),
+      };
     }),
   };
 }
@@ -3407,7 +3439,7 @@ function characterSpellcastingState(
 function supportedUseCountCapForLevel(
   resource: ActivationResource,
   level: number,
-): number {
+): ResourceCount {
   if (
     resource.kind !== "use_count" ||
     resource.cap.kind !== "threshold_tiers"
@@ -3417,9 +3449,11 @@ function supportedUseCountCapForLevel(
     );
   }
 
-  return resource.cap.tiers.reduce(
-    (cap, tier) => (level >= tier.atLevel ? tier.value : cap),
-    resource.cap.base,
+  return resourceCount(
+    resource.cap.tiers.reduce(
+      (cap, tier) => (level >= tier.atLevel ? tier.value : cap),
+      resource.cap.base,
+    ),
   );
 }
 
@@ -3473,8 +3507,12 @@ export function breakBattleConcentration(
   };
 }
 
-export function concentrationSavingThrowDc(damageAmount: number): number {
-  return Math.min(30, Math.max(10, Math.floor(Math.max(0, damageAmount) / 2)));
+export function concentrationSavingThrowDc(
+  damageAmount: number,
+): DifficultyClass {
+  return difficultyClass(
+    Math.min(30, Math.max(10, Math.floor(Math.max(0, damageAmount) / 2))),
+  );
 }
 
 export function resolveBattleConcentrationDamage(input: {
@@ -3682,7 +3720,7 @@ function resolveAttack(
         trigger: "afterDamage",
         damageSourceId: input.subject.actorId,
         damagedId: target.combatantId,
-        damageAmount,
+        damageAmount: toDamageAmount(damageAmount),
         continuation: {
           kind: "resolved",
           subject: input.subject,
@@ -3765,7 +3803,7 @@ function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
   }
   const hidden =
     check.value.value.total >= HIDE_DC
-      ? { discoveryDc: check.value.value.total }
+      ? { discoveryDc: difficultyClass(check.value.value.total) }
       : null;
   const nextActor = { ...actor, hidden };
   const nextState = normalizeBattleGrapples({
@@ -4283,7 +4321,7 @@ function hideAbilityCheckHole(): BattleAbilityCheckHole {
   };
 }
 
-function searchAbilityCheckHole(dc: number): BattleAbilityCheckHole {
+function searchAbilityCheckHole(dc: DifficultyClass): BattleAbilityCheckHole {
   return {
     holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: SEARCH_ABILITY_CHECK_HOLE_ID,
@@ -5049,7 +5087,7 @@ function normalizeBattleGrapples(state: BattleState): BattleState {
 
 function cloneCombatantDistances(
   distances: BattleState["combatantDistances"],
-): Map<CombatantId, Map<CombatantId, number>> {
+): Map<CombatantId, Map<CombatantId, MovementFeet>> {
   return new Map([...distances].map(([id, peers]) => [id, new Map(peers)]));
 }
 
@@ -5371,7 +5409,7 @@ function resolveExtraActionGrantUnitFeature(
         candidate.unit.id === input.subject.unitId
           ? {
               ...candidate,
-              usesRemaining: candidate.usesRemaining - 1,
+              usesRemaining: resourceCount(Number(candidate.usesRemaining) - 1),
               usedThisTurn: true,
             }
           : candidate,
@@ -5441,7 +5479,12 @@ function resolveSelfBonusActionHealingUnitFeature(
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
           candidate.unit.id === input.subject.unitId
-            ? { ...candidate, usesRemaining: candidate.usesRemaining - 1 }
+            ? {
+                ...candidate,
+                usesRemaining: resourceCount(
+                  Number(candidate.usesRemaining) - 1,
+                ),
+              }
             : candidate,
         ),
       },
@@ -6107,7 +6150,7 @@ function resolveSpellAct(
       trigger: "afterDamage",
       damageSourceId: subject.actorId,
       damagedId: target.combatantId,
-      damageAmount: spellDamageAmount,
+      damageAmount: toDamageAmount(spellDamageAmount),
       continuation: {
         kind: "resolved",
         subject: input.subject,
@@ -6702,10 +6745,12 @@ function resolveSaveGateDamageSpellAct(input: {
       trigger: "afterDamage",
       damageSourceId: input.actorId,
       damagedId: failedTargets[0]!,
-      damageAmount: spellDamageAmountForTarget(
-        input.input.state.combatants.get(failedTargets[0]!)!,
-        input.invocation,
-        damageRoll,
+      damageAmount: toDamageAmount(
+        spellDamageAmountForTarget(
+          input.input.state.combatants.get(failedTargets[0]!)!,
+          input.invocation,
+          damageRoll,
+        ),
       ),
       continuation: {
         kind: "resolved",
@@ -7090,7 +7135,7 @@ function concentrationSavingThrowHole(
     label: "Concentration Constitution Saving Throw",
     combatantId: combatant.combatantId,
     dc: concentrationSavingThrowDc(effectiveDamage),
-    damageAmount: effectiveDamage,
+    damageAmount: toDamageAmount(effectiveDamage),
   };
 }
 
@@ -7320,12 +7365,12 @@ function supportedPreparedSlotSpellProfile(
             kind: "allRepeatedEffectsAtOneTarget",
             repeatedEffectCount,
           },
-          slotLevel: 1,
+          slotLevel: spellSlotLevel(1),
           damage: {
             expr: damageExpr,
             damageType: effect.damageType,
           },
-          rangeFeet: spell.mechanics.range.feet,
+          rangeFeet: movementFeet(spell.mechanics.range.feet),
         },
       ]
     : [];
@@ -7365,8 +7410,8 @@ function supportedPreparedPersistentSpellProfile(
     {
       kind: "preparedPersistentSpell",
       spell,
-      slotLevel: 1,
-      rangeFeet: 5,
+      slotLevel: spellSlotLevel(1),
+      rangeFeet: movementFeet(5),
       activeEffect: {
         kind: "spellBaseArmorClass",
         sourceSpellId: spell.id,
@@ -7382,7 +7427,7 @@ function supportedPreparedPersistentSpellProfile(
 
 function supportedCantripSpellAttackProfile(
   spell: SpellRecord,
-  spellcastingAbilityModifier: number,
+  spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly SupportedSpellAct[] {
   if (spell.mechanics.family !== "activation") {
@@ -7427,10 +7472,12 @@ function supportedCantripSpellAttackProfile(
         expr: damageExpr,
         damageType: damageEffect.damageType,
       },
-      rangeFeet: spell.mechanics.range.feet,
-      attackBonus: spellcastingAbilityModifier + proficiencyBonus,
+      rangeFeet: movementFeet(spell.mechanics.range.feet),
+      attackBonus: attackBonus(
+        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+      ),
       speedReduction: {
-        deltaFeet: speedEffect.delta,
+        deltaFeet: movementDeltaFeet(speedEffect.delta),
       },
     },
   ];
@@ -7474,13 +7521,13 @@ function supportedCantripSaveGateDamageProfile(
       dc: phase.dc,
       area: {
         kind: "pointOriginSphere",
-        radiusFeet: phase.attachment.value.shape.radiusFeet,
+        radiusFeet: movementFeet(phase.attachment.value.shape.radiusFeet),
       },
       damage: {
         expr: damageExpr,
         damageType: phase.onFail.damageType,
       },
-      rangeFeet: spell.mechanics.range.feet,
+      rangeFeet: movementFeet(spell.mechanics.range.feet),
     },
   ];
 }
@@ -7697,7 +7744,7 @@ function spellPointSphereAreaChoices(
 function combatantsWithinFeet(
   state: BattleState,
   originAnchorId: CombatantId,
-  radiusFeet: number,
+  radiusFeet: MovementFeet,
 ): readonly CombatantId[] {
   return [...state.combatants.keys()].filter((targetId) => {
     const distanceFeet =
@@ -7861,7 +7908,7 @@ function applyPersistentSpellActiveEffect(
 function expendSpellSlot(
   state: BattleState,
   actorId: CombatantId,
-  spellLevel: number,
+  spellLevel: SpellSlotLevel,
 ): BattleState {
   const actor = state.combatants.get(actorId);
   if (
@@ -7880,7 +7927,7 @@ function expendSpellSlot(
           ...actor.origin.spellcasting,
           spellSlots: actor.origin.spellcasting.spellSlots.map((slot) =>
             slot.spellLevel === spellLevel && slot.expended < slot.count
-              ? { ...slot, expended: slot.expended + 1 }
+              ? { ...slot, expended: resourceCount(Number(slot.expended) + 1) }
               : slot,
           ),
         },
@@ -8274,7 +8321,7 @@ function grappleLinkForTarget(
       grapplerId,
       targetId,
       escapeDc: grappleEscapeDc(grappler),
-      reachFeet: 5,
+      reachFeet: movementFeet(5),
       hand,
       targetExemptFromDragCost: grappleDragCostExempt(
         grappler.size,
@@ -8294,8 +8341,10 @@ function firstFreeHand(
   return undefined;
 }
 
-function grappleEscapeDc(grappler: BattleCreatureState): number {
-  return 8 + strengthModifier(grappler) + combatantProficiencyBonus(grappler);
+function grappleEscapeDc(grappler: BattleCreatureState): DifficultyClass {
+  return difficultyClass(
+    8 + strengthModifier(grappler) + combatantProficiencyBonus(grappler),
+  );
 }
 
 function strengthModifier(combatant: BattleCreatureState): number {
@@ -8355,7 +8404,7 @@ function attackRollHole(
     holeInstanceKey: ATTACK_ROLL_HOLE_INSTANCE,
     label: `${name} attack roll`,
     attack,
-    attackBonus: attackBonus(attack),
+    attackBonus: attackActionBonus(attack),
     ...(rollMode === undefined ? {} : { rollMode }),
   };
 }
@@ -8472,7 +8521,9 @@ function offHandAttackActionOptionForActor(
   return {
     ...offHand,
     damageAbilityModifier:
-      offHand.abilityModifier < 0 ? offHand.abilityModifier : 0,
+      offHand.abilityModifier < 0
+        ? offHand.abilityModifier
+        : abilityModifier(0),
   };
 }
 
@@ -8600,7 +8651,9 @@ function statBlockResourceState(
   assertUniqueStatBlockPartKeys(limitedUses.rechargeParts);
   assertUniqueStatBlockPartKeys(limitedUses.restRechargeParts);
   return {
-    legendaryActionUsesRemaining: statBlock.legendaryActions?.uses ?? 0,
+    legendaryActionUsesRemaining: resourceCount(
+      statBlock.legendaryActions?.uses ?? 0,
+    ),
     dailyUses: limitedUses.dailyUses,
     unavailableRechargeParts: [],
     unavailableRestRechargeParts: [],
@@ -8618,7 +8671,7 @@ function statBlockLimitedUseInitialStates(
   return {
     dailyUses: states.flatMap((state) =>
       state.kind === "daily"
-        ? [{ key: state.key, usesRemaining: state.uses }]
+        ? [{ key: state.key, usesRemaining: resourceCount(state.uses) }]
         : [],
     ),
     rechargeParts: states.flatMap((state) =>
@@ -8711,7 +8764,7 @@ function statBlockResourceSnapshot(
       statBlock.legendaryActions === undefined
         ? null
         : {
-            usesMax: statBlock.legendaryActions.uses,
+            usesMax: resourceCount(statBlock.legendaryActions.uses),
             usesRemaining: resources.legendaryActionUsesRemaining,
           },
     limitedUses: [
@@ -8722,7 +8775,7 @@ function statBlockResourceSnapshot(
           return {
             key: daily.key,
             kind: "daily" as const,
-            usesMax: authored.uses,
+            usesMax: resourceCount(authored.uses),
             usesRemaining: daily.usesRemaining,
           };
         })
@@ -8776,7 +8829,9 @@ function refreshStatBlockStartTurnResources(
 ): StatBlockMutableResourceState {
   return {
     ...resources,
-    legendaryActionUsesRemaining: statBlock.legendaryActions?.uses ?? 0,
+    legendaryActionUsesRemaining: resourceCount(
+      statBlock.legendaryActions?.uses ?? 0,
+    ),
   };
 }
 
@@ -8863,7 +8918,7 @@ function spendStatBlockPartResources(
   return {
     legendaryActionUsesRemaining:
       key.section === "legendaryActions"
-        ? Math.max(0, resources.legendaryActionUsesRemaining - 1)
+        ? resourceCount(Number(resources.legendaryActionUsesRemaining) - 1)
         : resources.legendaryActionUsesRemaining,
     dailyUses:
       limitedUse?.kind === "daily"
@@ -8871,7 +8926,7 @@ function spendStatBlockPartResources(
             sameStatBlockPartKey(state.key, key)
               ? {
                   ...state,
-                  usesRemaining: Math.max(0, state.usesRemaining - 1),
+                  usesRemaining: resourceCount(Number(state.usesRemaining) - 1),
                 }
               : state,
           )
@@ -9029,12 +9084,12 @@ function supportedStatBlockAttackTargetConstraint(
   attack: CreatureNamedAttackRoll,
 ): AttackTargetConstraint | null {
   if (attack.attackType === "melee" && attack.reachFeet !== undefined) {
-    return { kind: "meleeReach", reachFeet: attack.reachFeet };
+    return { kind: "meleeReach", reachFeet: movementFeet(attack.reachFeet) };
   }
   if (attack.attackType === "ranged" && attack.rangeFeet !== undefined) {
     return {
       kind: "rangedRange",
-      normalFeet: attack.rangeFeet.normal,
+      normalFeet: movementFeet(attack.rangeFeet.normal),
     };
   }
 
@@ -9053,8 +9108,10 @@ function statBlockAttackTargetConstraint(
   return supportedStatBlockAttackTargetConstraint(attack.attack);
 }
 
-function statBlockAttackBonus(attack: StatBlockAttackActionOption): number {
-  return attack.attack.attackBonus.value;
+function statBlockAttackBonus(
+  attack: StatBlockAttackActionOption,
+): AttackBonus {
+  return attackBonus(attack.attack.attackBonus.value);
 }
 
 function attackTargetConstraint(
@@ -9084,15 +9141,15 @@ function weaponTargetConstraint(weapon: WeaponRecord): AttackTargetConstraint {
     }
     return {
       kind: "rangedRange",
-      normalFeet: range.normal,
+      normalFeet: movementFeet(range.normal),
     };
   }
 
   return {
     kind: "meleeReach",
     reachFeet: properties.some((property) => property.kind === "reach")
-      ? 10
-      : 5,
+      ? movementFeet(10)
+      : movementFeet(5),
   };
 }
 
@@ -9203,10 +9260,10 @@ function attackDamageComponents(
 
 function attackDamageModifier(attack: SupportedAttackActionOption): number {
   return Match.value(attack).pipe(
-    Match.when(
-      { kind: "weapon" },
-      (weaponAttack) =>
+    Match.when({ kind: "weapon" }, (weaponAttack) =>
+      Number(
         weaponAttack.damageAbilityModifier ?? weaponAttack.abilityModifier,
+      ),
     ),
     Match.when(
       { kind: "statBlockAttack" },
@@ -9217,11 +9274,10 @@ function attackDamageModifier(attack: SupportedAttackActionOption): number {
   );
 }
 
-function attackBonus(attack: SupportedAttackActionOption): number {
+function attackActionBonus(attack: SupportedAttackActionOption): AttackBonus {
   return Match.value(attack).pipe(
-    Match.when(
-      { kind: "weapon" },
-      (weaponAttack) => weaponAttack.abilityModifier,
+    Match.when({ kind: "weapon" }, (weaponAttack) =>
+      attackBonus(weaponAttack.abilityModifier),
     ),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) =>
       statBlockAttackBonus(statBlockAttack),

@@ -22,7 +22,12 @@ import {
   type CreationHole,
   type CreationHoleIdText,
 } from "@dnd/character-creation-runtime";
-import { Hp } from "@dnd/shared/types";
+import {
+  Hp,
+  movementFeet,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 
 import {
   battleToolDefinitions,
@@ -2062,7 +2067,13 @@ describe("MCP server route", () => {
             spellcastingFocuses: ["spellbook"],
           },
         },
-        spellSlots: [{ spellLevel: 1, count: 2, expended: 1 }],
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(1),
+          },
+        ],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -2167,7 +2178,7 @@ describe("MCP server route", () => {
         initiative: initiativeScore(10),
       },
       combatantDistances: [
-        { combatantA: fighterId, combatantB: goblinId, feet: 30 },
+        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(30) },
       ],
       unitLibrary: root.unitLibrary,
     });
@@ -2277,7 +2288,7 @@ describe("MCP server route", () => {
         initiative: initiativeScore(10),
       },
       combatantDistances: [
-        { combatantA: fighterId, combatantB: goblinId, feet: 30 },
+        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(30) },
       ],
       unitLibrary: root.unitLibrary,
     });
@@ -2400,8 +2411,16 @@ describe("MCP server route", () => {
         build: spellcastingBuild,
         currentHp: Hp(spellcastingBuild.hitPoints.maximum),
         spellSlots: [
-          { spellLevel: 1, count: 2, expended: 0 },
-          { spellLevel: 1, count: 2, expended: 0 },
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
         ],
       }),
     ).toThrow("Spell Slot state must match build capacity exactly.");
@@ -2420,8 +2439,16 @@ describe("MCP server route", () => {
         },
         currentHp: Hp(spellcastingBuild.hitPoints.maximum),
         spellSlots: [
-          { spellLevel: 1, count: 2, expended: 0 },
-          { spellLevel: 1, count: 2, expended: 0 },
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
         ],
       }),
     ).toThrow("Spell Slot state must not duplicate spell levels.");
