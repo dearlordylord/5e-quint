@@ -110,6 +110,45 @@ in tests are acceptable because those tests verify catalog or workflow coverage;
 private licensed/non-SRD examples must use renamed synthetic records that are
 obviously fake.
 
+### Authored-Id Dispatch Enforcement
+
+Task PBA13E adds a repo-local guard:
+
+`pnpm check:authored-id-dispatch`
+
+The command runs `scripts/check-authored-id-dispatch-boundary.cjs` and derives
+the forbidden authored-id set from `packages/surface/content/*.json` by
+collecting top-level record `id` values and nested authored reference fields
+ending in `Id` (excluding protocol-only `holeId`). It then fails when those
+authored ids are used as semantic dispatch in production source outside
+explicit boundary allowlists. This keeps enforcement durable as new
+Unit/Spell/Stat Block ids are added.
+
+Allowed boundaries:
+
+- catalog boundary (`@dnd/surface` catalog/schema files),
+- composition/user-selection boundary (`@dnd/mcp` explicit identity-retention
+  files only, not the whole package),
+- tests/fixtures,
+- legacy Core quarantine (`@dnd/core`, `@dnd/surface-runtime-correction`),
+- character-creation support-profile boundary files.
+
+Reducer support and resolution files in `@dnd/battle-runtime` are intentionally
+not allowlisted. Adding authored-name branches there must fail this check.
+
+When widening support for a new SRD record, do this instead of adding a named-id
+branch:
+
+1. Extend a support-profile parser shape/tag to admit the new Surface mechanics.
+2. Thread the parsed profile through discovery and resolution.
+3. Add/update contract tests that prove the profile path for the new record.
+4. Keep any authored ids only as retained identity on subjects/snapshots/resource
+   keys, not as semantic switches.
+
+If a new package/file needs allowlisting, update
+`scripts/check-authored-id-dispatch-boundary.cjs` with a narrow path rule and a
+boundary reason. Do not add broad wildcards.
+
 ### Support-profile Boundary
 
 `@dnd/battle-runtime` admits authored Surface records through support profiles:

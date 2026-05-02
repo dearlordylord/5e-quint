@@ -150,6 +150,23 @@ choice-hole families from Surface readers plus the support profile and validate
 selected choices against those hole shapes, instead of branching on
 hard-coded authored feature ids in finalization logic.
 
+### Authored-Id Dispatch Enforcement
+
+Task PBA13E adds a repo-local guard:
+
+`pnpm check:authored-id-dispatch`
+
+The guard derives forbidden authored ids from `packages/surface/content/*.json` by collecting top-level record `id` values and nested authored reference fields ending in `Id` (excluding protocol-only `holeId`), then fails when those ids appear as semantic dispatch in production source outside explicit boundary allowlists. This package keeps a narrow allowlist for `src/phase1-manifest.ts` and `src/support-gates.ts` because those files own the current support-profile boundary for admitted Unit ids and option ids.
+
+Do not add authored-id semantic branches to `discovery.ts`, `fill-reducer.ts`, or `finalization.ts`. Those modules must derive runtime behavior from Surface reader shapes and support-profile entries, then pass narrowed values forward.
+
+When widening support:
+
+1. Add support-profile entries in `support-gates.ts` (and manifest constants only when needed).
+2. Keep discovery/finalization logic shape-driven over choice-hole families.
+3. Add focused tests proving the widened profile path.
+4. Keep authored ids as retained identity facts only, never as downstream semantic dispatch switches.
+
 Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
 or build state. SRD 5.2.1 says they last until depleted or Long Rest, so a future
 in-play `CharacterSheet` should persist them between battles and clear them at
