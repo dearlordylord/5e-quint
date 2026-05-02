@@ -3515,12 +3515,25 @@ Input:
 - PBA5-PBA14D feature-parity restoration outcomes and any explicitly deferred
   owner decisions.
 - Restore Ledger rows that are still intentionally omitted.
+- The `@dnd/battle-runtime` README "Not modeled in this package yet" list and
+  any package-local proof caveats that remain after PBA14D, including:
+  Stat Block Multiattack; ranged attacks beyond normal range with Disadvantage;
+  Stat Block bonus-action options; unsupported conditional attack riders;
+  Magic Missile split-target replay; broad spell effects beyond the first Wizard
+  pressure spells; broad reactions beyond the restored interrupt/readied/OA
+  lanes; broad bonus-action subjects beyond Second Wind; nonlethal melee
+  knockout; remaining zero-HP lifecycle width; and any promoted
+  battle-runtime/QNT/MBT proof gap such as death-save holes not being modeled by
+  the integrated battle-runtime MBT.
 
 Output:
 
 - New ordered ACTIVE_PLAN tasks for broader Surface/catalog, MCP workflow, app
   battle UI, trace/snapshot, or additional monster/spell/class widening.
 - Explicit deferrals for any old-only group the owner chooses not to restore.
+- Every still-true "not modeled" or "not covered by promoted MBT" item is either
+  converted into a concrete successor task, tied to an existing successor task,
+  or explicitly deferred with owner rationale.
 - Any remaining actionable Core/source evidence or proof-gap evidence must be
   copied into successor tasks or canonical docs, not left in temporary research
   artifacts.
@@ -3533,6 +3546,9 @@ Acceptance:
   discipline.
 - The Restore Ledger remains provenance/status evidence, not the only work
   queue.
+- The `@dnd/battle-runtime` README "Not modeled in this package yet" list is
+  reconciled against the successor queue so package docs and ACTIVE_PLAN do not
+  diverge.
 - No future work depends on deleted temporary BA/PBA research artifacts.
 
 Verification:
