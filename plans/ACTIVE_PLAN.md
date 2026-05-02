@@ -361,37 +361,37 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 47,
       "id": "PBA13A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Inventory Production Authored-Id Semantic Dispatch"
     },
     {
       "number": 48,
       "id": "PBA13B",
-      "status": "blocked",
+      "status": "done",
       "title": "Design Battle Support Profiles Without Authored Id Dispatch"
     },
     {
       "number": 49,
       "id": "PBA13C",
-      "status": "blocked",
+      "status": "done",
       "title": "Migrate Battle Runtime To Support Profiles"
     },
     {
       "number": 50,
       "id": "PBA13D",
-      "status": "blocked",
+      "status": "done",
       "title": "Audit Character Creation Authored-Id Dispatch"
     },
     {
       "number": 51,
       "id": "PBA13E",
-      "status": "blocked",
+      "status": "done",
       "title": "Enforce Authored-Id Dispatch Boundary"
     },
     {
       "number": 52,
       "id": "PBA13F",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Introduce Canonical Elapsed-Time Algebra"
     },
     {
@@ -531,12 +531,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 44    | PBA11 - Restore Monster Resource Controls                        | done               | PBA10                | PBA12                               | Restored StatBlockRecord-backed monster recharge, daily-use, and Legendary Action resources with promoted-runtime support gates.                                                                                 | Completed; PBA12 is unblocked.                                                           |
 | 45    | PBA12 - Restore Hand Weapon And Grapple State                    | done               | PBA11                | PBA13                               | Restored hand occupancy, weapon modes, off-hand attacks, Grapple, Escape Grapple, release, and actual-distance grapple movement-cost state.                                                                       | Completed; PBA13 is unblocked.                                                           |
 | 46    | PBA13 - Restore Hide Search And Class Rider Width                | done               | PBA12                | PBA13A                              | Restored Hide/Search/hidden discovery, attack and Verbal-spell reveal triggers, hidden attack roll modes, MCP hidden projection, and Rogue Cunning Action Hide as a Bonus Action.                                | Completed; emergency authored-id dispatch audit is now the next unblocked task.           |
-| 47    | PBA13A - Inventory Production Authored-Id Semantic Dispatch      | ready-for-research | PBA13                | PBA13B                             | Inventory production code that uses concrete authored ids/names/slugs to choose runtime semantics, separating allowed catalog/composition/test identity from violations.                                         | Ready; source-only research, no MBT.                                                      |
-| 48    | PBA13B - Design Battle Support Profiles Without Authored Id Dispatch | blocked         | PBA13A               | PBA13C                             | Define the generic battle support-profile model for Unit features, spells, Stat Block actions, and class riders so support is selected by Surface mechanics shape, not authored ids.                             | Blocked until the inventory identifies the current violation set.                         |
-| 49    | PBA13C - Migrate Battle Runtime To Support Profiles              | blocked            | PBA13B               | PBA13D                             | Replace battle-runtime named authored-content support types/constants with profile parsers and generic hole/subject data while preserving existing behavior.                                                       | Blocked behind profile design.                                                            |
-| 50    | PBA13D - Audit Character Creation Authored-Id Dispatch           | blocked            | PBA13C               | PBA13E                             | Audit and, if needed, replan/migrate character-creation production support gates that use concrete Unit ids or choice keys as semantic dispatch instead of Surface support profiles.                              | Blocked until battle-runtime policy migration establishes the pattern.                    |
-| 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | blocked            | PBA13D               | PBA13F                             | Add durable docs/checks that prevent production reducers from reintroducing concrete authored ids as semantic switches outside allowed catalog/composition/test boundaries.                                        | Blocked until battle and character-creation inventories are resolved.                     |
-| 52    | PBA13F - Introduce Canonical Elapsed-Time Algebra                | blocked            | PBA13E               | PBA13G                             | Add one shared algebra for elapsed hours, minutes, and atomic duration ticks, then migrate app/runtime duration code to use it instead of ad hoc local shapes.                                                    | Blocked until support-profile enforcement lands; must preserve turn-boundary timers separately. |
+| 47    | PBA13A - Inventory Production Authored-Id Semantic Dispatch      | done               | PBA13                | PBA13B                             | Inventoried production code that uses concrete authored ids/names/slugs to choose runtime semantics, separating allowed catalog/composition/test identity from violations.                                         | Completed in Ralph artifact; PBA13B consumed the battle-runtime violation set.            |
+| 48    | PBA13B - Design Battle Support Profiles Without Authored Id Dispatch | done            | PBA13A               | PBA13C                             | Defined the generic battle support-profile model for Unit features, spells, Stat Block actions, and class riders so support is selected by Surface mechanics shape, not authored ids.                             | Completed manually from Ralph salvage; PBA13C is unblocked for implementation.            |
+| 49    | PBA13C - Migrate Battle Runtime To Support Profiles              | done               | PBA13B               | PBA13D                             | Migrated battle-runtime production support and resolution from authored-id semantic dispatch to generic support profiles while preserving supported workflows.                                                      | Completed in Task 49 run; PBA13D is now unblocked for audit work.                        |
+| 50    | PBA13D - Audit Character Creation Authored-Id Dispatch           | done               | PBA13C               | PBA13E                             | Audited character-creation support/finalization authored-id dispatch and migrated finalization choice support checks to source-shaped holes derived from Surface readers plus support profiles.                     | Completed in Task 50 run; PBA13E is now unblocked.                                       |
+| 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | done               | PBA13D               | PBA13F                             | Added a repo-local authored-id dispatch boundary check with explicit allowlists, integrated it into quality gating, and documented support-profile-first widening rules in owning runtime READMEs.                 | Completed in Task 51 run; PBA13F is unblocked and PBA14+ remain blocked on PBA13F/PBA13G. |
+| 52    | PBA13F - Introduce Canonical Elapsed-Time Algebra                | ready-for-research | PBA13E               | PBA13G                             | Add one shared algebra for elapsed hours, minutes, and atomic duration ticks, then migrate app/runtime duration code to use it instead of ad hoc local shapes.                                                    | Unblocked by PBA13E; must preserve turn-boundary timers separately.                        |
 | 53    | PBA13G - Replace Bare Domain Primitives With Owned Types         | blocked            | PBA13F               | PBA14                              | Audit and migrate production runtime/domain signatures away from bare `string`, `number`, and `boolean` where shared or package-owned domain types should carry meaning.                                          | Blocked until elapsed-time brands are available; must place types at the proper abstraction layer. |
 | 54    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13G               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked until emergency architecture cleanup is complete.                                 |
 | 55    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14A1                            | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
@@ -3277,7 +3277,7 @@ Plan Impact:
 
 ### Task 47 - PBA13A - Inventory Production Authored-Id Semantic Dispatch
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA13
 Blocks: PBA13B
@@ -3331,11 +3331,18 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA13B and keep PBA14 blocked.
+- Completed in Ralph artifact
+  `.ralph/runs/20260502T041119Z/task-47/attempt-1/artifacts/task-47-authored-id-audit.txt`.
+  The battle-runtime production violations assigned forward were
+  `fighter_action_surge`, `fighter_second_wind`, `magic_missile`,
+  `ray_of_frost`, `acid_splash`, and `mage_armor`; tests, fixtures,
+  catalog imports, and composition/user-selection identity remain allowed.
+  PBA13B consumed this set and PBA14 remains blocked behind downstream
+  support-profile migration/enforcement.
 
 ### Task 48 - PBA13B - Design Battle Support Profiles Without Authored Id Dispatch
 
-Status: `blocked`
+Status: `done`
 
 Depends on: PBA13A
 Blocks: PBA13C
@@ -3391,11 +3398,14 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA13C.
+- Completed manually from Ralph salvage. The support-profile boundary is now
+  documented in `packages/battle-runtime/README.md`, including the API shape,
+  migration map for the current battle-runtime authored-id violations, and named
+  type decisions. PBA13C is unblocked for implementation.
 
 ### Task 49 - PBA13C - Migrate Battle Runtime To Support Profiles
 
-Status: `blocked`
+Status: `done`
 
 Depends on: PBA13B
 Blocks: PBA13D
@@ -3441,20 +3451,20 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA13D.
+- Completed in Task 49 run: battle-runtime now uses generic support profiles for support admission and semantic branching, and PBA13D is unblocked.
 
 ### Task 50 - PBA13D - Audit Character Creation Authored-Id Dispatch
 
-Status: `blocked`
+Status: `done`
 
 Depends on: PBA13C
 Blocks: PBA13E
 
 Batch: emergency architecture correction before further feature-parity work.
 
-Next action: audit character-creation runtime support gates and manifests for
-the same authored-id semantic-dispatch problem, then either migrate them or add
-precise successor tasks if the migration is larger than one agent task.
+Completed action: audited character-creation runtime authored-id dispatch and
+migrated finalization support checks to source-shaped hole matching derived
+from Surface readers plus support-profile gates.
 
 Scope:
 
@@ -3486,7 +3496,8 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA13E.
+- Completed in Task 50 run: finalization no longer branches on hard-coded
+  fighter feature ids for supported choice validation; PBA13E is unblocked.
 - Phase-1 manifest lock remains active until explicit Phase-1 exit criteria are
   met:
   1. inventory Core + correction character-creation shapes and classify each as
@@ -3501,15 +3512,15 @@ Plan Impact:
 
 ### Task 51 - PBA13E - Enforce Authored-Id Dispatch Boundary
 
-Status: `blocked`
+Status: `done`
 
 Depends on: PBA13D
 Blocks: PBA13F
 
 Batch: emergency architecture correction before further feature-parity work.
 
-Next action: add durable enforcement so production reducers cannot reintroduce
-concrete authored ids as semantic switches.
+Completed action: added durable enforcement so production reducers cannot
+reintroduce concrete authored ids as semantic switches.
 
 Output:
 
@@ -3541,11 +3552,17 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA13F.
+- Completed in Task 51 run:
+  - added `scripts/check-authored-id-dispatch-boundary.cjs` as a repo-local authored-id dispatch boundary guard,
+  - hardened guard coverage so imported dispatch containers and `.get(...)` map dispatch are also caught,
+  - wired `pnpm check:authored-id-dispatch` into root `package.json` and `pnpm quality`,
+  - documented allowlisted boundaries and support-profile widening flow in `packages/battle-runtime/README.md` and `packages/character-creation-runtime/README.md`.
+  PBA13F is now unblocked and moves to `ready-for-research`; PBA14 and later
+  class-rider tasks remain blocked by PBA13F/PBA13G.
 
 ### Task 52 - PBA13F - Introduce Canonical Elapsed-Time Algebra
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA13E
 Blocks: PBA13G
