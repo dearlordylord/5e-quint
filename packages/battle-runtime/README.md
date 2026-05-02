@@ -110,6 +110,100 @@ in tests are acceptable because those tests verify catalog or workflow coverage;
 private licensed/non-SRD examples must use renamed synthetic records that are
 obviously fake.
 
+### Authored-Id Dispatch Enforcement
+
+Task PBA13E adds a repo-local guard:
+
+`pnpm check:authored-id-dispatch`
+
+The command runs `scripts/check-authored-id-dispatch-boundary.cjs` and derives
+the forbidden authored-id set from `packages/surface/content/*.json` by
+collecting top-level record `id` values and nested authored reference fields
+ending in `Id` (excluding protocol-only `holeId`). It then fails when those
+authored ids are used as semantic dispatch in production source outside
+explicit boundary allowlists. This keeps enforcement durable as new
+Unit/Spell/Stat Block ids are added.
+
+Allowed boundaries:
+
+- catalog boundary (`@dnd/surface` catalog/schema files),
+- composition/user-selection boundary (`@dnd/mcp` explicit identity-retention
+  files only, not the whole package),
+- tests/fixtures,
+- legacy Core quarantine (`@dnd/core`, `@dnd/surface-runtime-correction`),
+- character-creation support-profile boundary files.
+
+Reducer support and resolution files in `@dnd/battle-runtime` are intentionally
+not allowlisted. Adding authored-name branches there must fail this check.
+
+When widening support for a new SRD record, do this instead of adding a named-id
+branch:
+
+1. Extend a support-profile parser shape/tag to admit the new Surface mechanics.
+2. Thread the parsed profile through discovery and resolution.
+3. Add/update contract tests that prove the profile path for the new record.
+4. Keep any authored ids only as retained identity on subjects/snapshots/resource
+   keys, not as semantic switches.
+
+If a new package/file needs allowlisting, update
+`scripts/check-authored-id-dispatch-boundary.cjs` with a narrow path rule and a
+boundary reason. Do not add broad wildcards.
+
+### Support-profile Boundary
+
+`@dnd/battle-runtime` admits authored Surface records through support profiles:
+small, procedure-facing parser outputs that prove the record shape matches an
+implemented battle procedure. Profiles are not a new executable authored-content
+language. They retain the original Surface record/id for labels, subjects,
+resource keys, snapshots, and traceability, but reducer branch selection must use
+the parsed profile tag and structure.
+
+The support-profile parser surface should cover these profile families:
+
+- `UnitProfile.extraActionGrant`: a Unit activation that grants a non-Magic extra
+  action with retained resource/use-count semantics.
+- `UnitProfile.selfBonusActionHealing`: a Bonus Action, self-targeting healing
+  Unit activation with retained use-count resource and class-level scaling.
+- `SpellProfile.preparedSlotSpell`: an action-cast, slot-spent, one-target
+  repeated automatic damage spell profile.
+- `SpellProfile.cantripSpellAttack`: an action-cast cantrip spell attack damage
+  profile, with supported rider effects carried as profile data.
+- `SpellProfile.cantripSaveGateDamage`: an action-cast area save-gate damage
+  cantrip profile.
+- `SpellProfile.preparedPersistentSpell`: a prepared persistent effect profile,
+  such as a timed touch AC effect.
+- `MonsterProfile.statBlockNamedAttack`: a Stat Block named attack profile with
+  attack bonus, reach or range, damage expression, and any supported resource
+  control.
+- `MonsterProfile.statBlockLimitedUseControl`: Stat Block limited-use and
+  Recharge control profile.
+- `ReactionProfile.reactionWindowProvider`: a procedure that opens a legal
+  reaction decision window.
+
+Discovery and resolution must share the same parsed profile value. If discovery
+parses a Unit, Spell, or Stat Block part into a profile, resolution must re-parse
+or carry the narrowed profile through the selected subject path instead of
+duplicating authored-id checks.
+
+Migration map from the PBA13A authored-id violation set:
+
+- `fighter_action_surge` maps to `UnitProfile.extraActionGrant`.
+- `fighter_second_wind` maps to `UnitProfile.selfBonusActionHealing`.
+- `magic_missile` maps to `SpellProfile.preparedSlotSpell`.
+- `ray_of_frost` maps to `SpellProfile.cantripSpellAttack`.
+- `acid_splash` maps to `SpellProfile.cantripSaveGateDamage`.
+- `mage_armor` maps to `SpellProfile.preparedPersistentSpell`.
+
+Named-type decisions:
+
+- Replace `SupportedActionSurgeUnitFeature` and
+  `SupportedSecondWindUnitFeature` with a unified
+  `SupportedUnitFeatureProfile` parser output during the PBA13C migration.
+- Treat existing `SupportedSpellAct` variants as spell support profiles, but do
+  not admit spells by checking concrete spell ids.
+- Keep Stat Block attack/resource support as profile parsing over
+  `StatBlockRecord` parts; never branch on monster ids or names for semantics.
+
 ## Runtime Flow
 
 1. Caller passes `BattleCreatureInit[]` to `startBattle` and receives a durable

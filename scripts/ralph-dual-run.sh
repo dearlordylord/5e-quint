@@ -44,6 +44,8 @@ Options:
 Environment:
   RALPH_CLAUDE_MODEL      Optional model passed to claude --model.
   RALPH_CODEX_MODEL       Optional model passed to codex exec --model.
+  RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
+                          Default is quiet: persist logs to files only.
 EOF
 }
 
@@ -58,7 +60,15 @@ log() {
 
 contains_attempt_specific_plan_notes() {
   local path="$1"
-  rg -n '^[[:space:]-]*Attempt [0-9]+|^[[:space:]-]*next attempt must\b' "$path" >/dev/null 2>&1
+  rg -n '^[[:space:]-]*Attempt [0-9]+' "$path" >/dev/null 2>&1
+}
+
+# Retry guidance is durable, attempt-agnostic task steering for the next rerun.
+task_body_has_retry_guidance() {
+  local path="$1"
+  local start_line="$2"
+  local end_line="$3"
+  sed -n "${start_line},${end_line}p" "$path" | rg -q '^[[:space:]]*(Retry Guidance:|### Retry Guidance\b)'
 }
 
 note() {
@@ -75,6 +85,26 @@ quote_cmd() {
 
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "missing required command: $1"
+}
+
+load_openrouter_key_from_dotenv() {
+  local dotenv_path="$repo_root/.env"
+  local loaded_key=""
+
+  [[ -n "${OPENROUTER_API_KEY:-}" ]] && return 0
+  [[ -f "$dotenv_path" ]] || return 0
+
+  loaded_key="$({
+    set -a
+    # shellcheck disable=SC1090
+    source "$dotenv_path" >/dev/null 2>&1
+    printf '%s' "${OPENROUTER_API_KEY:-}"
+  })"
+
+  if [[ -n "$loaded_key" ]]; then
+    export OPENROUTER_API_KEY="$loaded_key"
+    log "loaded OPENROUTER_API_KEY from .env"
+  fi
 }
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
@@ -227,6 +257,8 @@ require_cmd claude
 require_cmd codex
 require_cmd node
 require_cmd pnpm
+
+load_openrouter_key_from_dotenv
 
 if [[ "$codex_only" == true && "$claude_only" == true ]]; then
   die "--codex-only and --claude-only are mutually exclusive"
@@ -684,13 +716,17 @@ Requirements:
 - Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat those script diffs as harness noise, not task-owned changes, unless a candidate went beyond the standard stub content.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
-- Inspect both implementations and both reviews for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes, parser-error reminders, or "next attempt must..." guidance to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
+- Inspect both implementations and both reviews for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes or parser-error reminders to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
 - Preserve task surface as executable tasks, not only status prose. If you accept a task by narrowing or splitting its original scope, any excluded still-desired work must be added or revised as concrete follow-up tasks in $plan_file before you commit. A note that work "remains support-gated", "is deferred", or "belongs to a later family" is not sufficient unless the corresponding Ralph Task Index, DAG table, and task-detail entries already keep that work visible and dependency-ordered.
 - Before editing $plan_file, answer a New Information Gate in the decider final:
   - What new fact was learned?
   - Why was it not already implied by the current plan text?
   - Why is it durable enough to remain correct after run-local artifacts are deleted?
-- If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied; otherwise leave the plan stable and rely on the task body plus run-local artifacts for the rerun.
+- If the task stays runnable (
+  - retry-same-task
+  - needs-more-research
+  ), add or update a concise `Retry Guidance:` section in the current task body in $plan_file. Keep it attempt-agnostic, actionable, and focused on what the next implementer round should change.
+- If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied, except for required attempt-agnostic `Retry Guidance:` updates on runnable reruns.
 - Every decider result must classify the task disposition as exactly one of:
   - done
   - retry-same-task
@@ -855,6 +891,7 @@ run_codex() {
   local prompt="$2"
   local log_file="$3"
   local output_file="$4"
+  local status=0
   local -a args=(exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
 
   if [[ -n "$codex_model" ]]; then
@@ -862,7 +899,22 @@ run_codex() {
   fi
 
   log "codex: $(quote_cmd codex "${args[@]}" -)"
-  codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
+  set +e
+  if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
+    codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
+    status=${PIPESTATUS[0]}
+  else
+    codex "${args[@]}" - <"$prompt" >"$log_file" 2>&1
+    status=$?
+  fi
+  set -e
+
+  if [[ "$status" -ne 0 ]]; then
+    log "codex exited $status; full log: $log_file"
+  else
+    log "codex completed; final: $output_file log: $log_file"
+  fi
+  return "$status"
 }
 
 run_claude() {
@@ -1493,12 +1545,24 @@ run_task_attempt() {
         append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-final-attempt-rerun" "-" "final attempt left task runnable"
         return 2
       fi
+      if ! task_body_has_retry_guidance "$plan_snapshot" "$_ref_task_start" "$_ref_task_end"; then
+        printf 'task %s attempt %s left task runnable without Retry Guidance in the task body\n' "$task_no" "$attempt_no" >"$last_error_file"
+        note "task" "fatal-missing-retry-guidance task=$task_no attempt=$attempt_no disposition=$decider_disposition"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-retry-guidance" "-" "runnable task missing retry guidance"
+        return 2
+      fi
       ;;
     needs-more-research)
       if [[ "$final_attempt" == "true" ]]; then
         printf 'task %s attempt %s used needs-more-research on the final allowed attempt\n' "$task_no" "$attempt_no" >"$last_error_file"
         note "task" "fatal-final-attempt-rerun task=$task_no attempt=$attempt_no disposition=$decider_disposition"
         append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-final-attempt-rerun" "-" "final attempt left task research-runnable"
+        return 2
+      fi
+      if ! task_body_has_retry_guidance "$plan_snapshot" "$_ref_task_start" "$_ref_task_end"; then
+        printf 'task %s attempt %s left task runnable without Retry Guidance in the task body\n' "$task_no" "$attempt_no" >"$last_error_file"
+        note "task" "fatal-missing-retry-guidance task=$task_no attempt=$attempt_no disposition=$decider_disposition"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-retry-guidance" "-" "runnable task missing retry guidance"
         return 2
       fi
       ;;

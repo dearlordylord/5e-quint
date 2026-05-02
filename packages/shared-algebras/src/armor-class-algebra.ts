@@ -53,7 +53,7 @@ export type ArmorClassBaseSource =
         | "default_unarmored"
         | "barbarian_unarmored_defense"
         | "monk_unarmored_defense"
-        | "mage_armor";
+        | "spell_base_plus_ability";
     }
   | {
       readonly kind: "armor";

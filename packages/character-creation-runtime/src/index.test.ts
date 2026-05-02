@@ -13,6 +13,8 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   characterDraftId,
+  exactChoiceCardinality,
+  boundedChoiceCardinality,
   characterBuildUnitRefs,
   createCharacterDraft,
   creationChoiceOptionId,
@@ -30,7 +32,10 @@ import {
   type CreationHoleIdText,
   type UnitCatalog,
 } from "./index.ts";
-import { finalizedBuildEquipment } from "./finalization.ts";
+import {
+  finalizedBuildEquipment,
+  supportedChoiceHolesBySource,
+} from "./finalization.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   type SupportedLoadoutChoice,
@@ -1726,6 +1731,115 @@ describe("character creation finalization", () => {
         originalPurchasableEquipmentUnitIds;
       mutableProfile.loadoutChoices = originalLoadoutChoices;
     }
+  });
+
+  test("merges duplicate supported choice-hole sources instead of overwriting", () => {
+    const merged = supportedChoiceHolesBySource([
+      {
+        kind: "choice",
+        holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+        source: {
+          tag: "unit",
+          unitId: "weapon_longsword",
+          choiceKey: unitChoiceKey("loadout_weapon"),
+        },
+        cardinality: exactChoiceCardinality(1),
+        options: [
+          {
+            optionId: creationChoiceOptionId("wielded_one_handed"),
+            label: "Wielded one-handed",
+            unitRef: { unitId: "weapon_longsword" },
+          },
+        ],
+      },
+      {
+        kind: "choice",
+        holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+        source: {
+          tag: "unit",
+          unitId: "weapon_longsword",
+          choiceKey: unitChoiceKey("loadout_weapon"),
+        },
+        cardinality: exactChoiceCardinality(1),
+        options: [
+          {
+            optionId: creationChoiceOptionId("wielded_one_handed"),
+            label: "Wielded one-handed",
+            unitRef: { unitId: "weapon_longsword" },
+          },
+          {
+            optionId: creationChoiceOptionId("wielded_two_handed"),
+            label: "Wielded two-handed",
+            unitRef: { unitId: "weapon_longsword" },
+          },
+        ],
+      },
+    ]);
+
+    const mergedHole = merged.get("weapon_longsword:loadout_weapon");
+    expect(mergedHole).toMatchObject({
+      kind: "choice",
+      source: {
+        tag: "unit",
+        unitId: "weapon_longsword",
+        choiceKey: "loadout_weapon",
+      },
+    });
+    expect(mergedHole?.options).toEqual([
+      {
+        optionId: "wielded_one_handed",
+        label: "Wielded one-handed",
+        unitRef: { unitId: "weapon_longsword" },
+      },
+      {
+        optionId: "wielded_two_handed",
+        label: "Wielded two-handed",
+        unitRef: { unitId: "weapon_longsword" },
+      },
+    ]);
+  });
+
+  test("throws when duplicate supported choice-hole sources disagree on cardinality", () => {
+    expect(() =>
+      supportedChoiceHolesBySource([
+        {
+          kind: "choice",
+          holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+          source: {
+            tag: "unit",
+            unitId: "weapon_longsword",
+            choiceKey: unitChoiceKey("loadout_weapon"),
+          },
+          cardinality: exactChoiceCardinality(1),
+          options: [
+            {
+              optionId: creationChoiceOptionId("wielded_one_handed"),
+              label: "Wielded one-handed",
+              unitRef: { unitId: "weapon_longsword" },
+            },
+          ],
+        },
+        {
+          kind: "choice",
+          holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+          source: {
+            tag: "unit",
+            unitId: "weapon_longsword",
+            choiceKey: unitChoiceKey("loadout_weapon"),
+          },
+          cardinality: boundedChoiceCardinality({ min: 1, max: 2 }),
+          options: [
+            {
+              optionId: creationChoiceOptionId("wielded_two_handed"),
+              label: "Wielded two-handed",
+              unitRef: { unitId: "weapon_longsword" },
+            },
+          ],
+        },
+      ]),
+    ).toThrow(
+      "Conflicting choice cardinality for source weapon_longsword:loadout_weapon.",
+    );
   });
 
   test("does not finalize incomplete or illegal drafts", () => {

@@ -19,6 +19,20 @@
 Runtime logs, prompts, review reports, chooser outputs, and diffs are written under ignored `.ralph/runs/<run-id>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
 
+If `OPENROUTER_API_KEY` is not already exported in the shell, the harness loads it from repo-root `.env` before launching agents.
+
+Ralph is quiet by default: Codex/Claude stdout and stderr are persisted to the
+per-attempt log files instead of streamed through the supervisor terminal. This
+keeps live run observation from copying full model transcripts into the
+supervising context window. Set `RALPH_STREAM_LOGS=1` only for short diagnostic
+runs where terminal streaming is explicitly worth the context cost.
+
+Post-mortem inspection should start from `events.tsv`, `history.tsv`,
+`*-implementer.final.md`, `*-review.md`, `decider.final.md`, and `git diff
+--stat` over saved diffs. Open full `*.log` files or large `*.diff` files only
+after narrowing to a concrete failure. In particular, standard Ralph fuzz-script
+stub diffs are harness noise and should not be pasted into model context.
+
 Important queue contract: unfiltered Ralph runs are phase-capable. A numbered task may update later tasks, unblock later tasks, add new later tasks, reorder the future queue, or turn itself back into a runnable state after a research/plan pass. After every decider refresh, the harness asks the chooser to pick again from the live runnable set, including reruns of the same numbered task when the plan clearly intends that.
 
 The harness persists per-attempt history in `.ralph/runs/<run-id>/history.tsv` and gives that history to the chooser so the model can avoid blindly repeating unproductive attempts while still allowing intentional reruns. It also enforces a per-task attempt cap within a single Ralph run: by default a task may reach the decider at most 3 times.
@@ -135,7 +149,8 @@ In addition, the decider must:
 
 1. choose `retry-same-task` only when the task is still implementation-ready and the next attempt has a concrete implementable delta;
 2. keep attempt-specific failure notes in run-local review/decider artifacts instead of `plans/ACTIVE_PLAN.md`;
-3. edit the plan only when the rejection revealed a genuinely new durable planning fact.
+3. for runnable rejections (`retry-same-task` / `needs-more-research`), add or update a concise attempt-agnostic `Retry Guidance:` subsection in the task body that tells the next implementer pass what to change;
+4. edit the plan only when the rejection revealed a genuinely new durable planning fact.
 
 When the decider leaves a task `blocked`, it must also record:
 
@@ -158,7 +173,7 @@ Before editing the plan, the decider must pass a new-information gate in its fin
 2. why that fact was not already implied by the current plan text;
 3. why that fact is durable enough to remain true after run-local artifacts are deleted.
 
-The harness treats attempt-numbered rejection notes or "next attempt must..." guidance in `plans/ACTIVE_PLAN.md` as a fatal decider error. Durable requirements belong in the plan. Attempt scar tissue does not.
+The harness treats attempt-numbered rejection notes in `plans/ACTIVE_PLAN.md` as a fatal decider error. Durable requirements and attempt-agnostic `Retry Guidance:` belong in the plan. Attempt scar tissue does not.
 
 This is the key difference between a normal task rejection and a fatal harness failure. Rejection is part of the loop. Fatal harness failure is loss of a trustworthy repo or plan state.
 

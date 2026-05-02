@@ -728,6 +728,15 @@ export function discoverClassFeatureGrantHoles(
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
 ): readonly CreationHole[] {
+  return classFeatureGrantChoiceHoles(featureUnitId, unitLibrary).flatMap(
+    (hole) => unselectedUnitChoiceHole(draft, hole),
+  );
+}
+
+export function classFeatureGrantChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): readonly ChoiceCreationHole[] {
   const feature = requireClassFeature(unitLibrary, featureUnitId);
   const mechanics = feature.mechanics;
 
@@ -741,11 +750,13 @@ export function discoverClassFeatureGrantHoles(
           : grant.categories.includes("fighting_style")),
     )
   ) {
-    return discoverFightingStyleFeatureHole(featureUnitId, draft, unitLibrary);
+    return [
+      fightingStyleFeatureHoleSource(featureUnitId, unitLibrary),
+    ] as const;
   }
 
   if (isWeaponMasteryChoiceFeature(feature)) {
-    return discoverWeaponMasteryFeatureHole(feature, draft, unitLibrary);
+    return [weaponMasteryFeatureHoleSource(feature, unitLibrary)] as const;
   }
 
   return [];
@@ -774,11 +785,10 @@ function isWeaponMasteryChoiceFeature(
   return feature.mechanics.family === "weapon_mastery_choice";
 }
 
-function discoverFightingStyleFeatureHole(
+function fightingStyleFeatureHoleSource(
   featureUnitId: UnitRecord["id"],
-  draft: CharacterDraft,
   unitLibrary: UnitCatalog,
-): readonly CreationHole[] {
+): ChoiceCreationHole {
   const options = unitLibrary
     .listUnits()
     .filter(
@@ -787,8 +797,7 @@ function discoverFightingStyleFeatureHole(
     )
     .map(unitOption);
 
-  return unselectedUnitChoiceHole(
-    draft,
+  return requireChoiceCreationHole(
     choiceHole({
       source: unitSource(featureUnitId, FIGHTER_FIGHTING_STYLE_CHOICE_KEY),
       cardinality: EXACTLY_ONE_CHOICE,
@@ -797,18 +806,16 @@ function discoverFightingStyleFeatureHole(
   );
 }
 
-function discoverWeaponMasteryFeatureHole(
+function weaponMasteryFeatureHoleSource(
   feature: ClassFeatureRecord & {
     readonly mechanics: Extract<
       ClassFeatureRecord["mechanics"],
       { readonly family: "weapon_mastery_choice" }
     >;
   },
-  draft: CharacterDraft,
   unitLibrary: UnitCatalog,
-): readonly CreationHole[] {
+): ChoiceCreationHole {
   const mechanics = feature.mechanics;
-
   const options = unitLibrary
     .listUnits()
     .filter(
@@ -818,14 +825,21 @@ function discoverWeaponMasteryFeatureHole(
     )
     .map(unitOption);
 
-  return unselectedUnitChoiceHole(
-    draft,
+  return requireChoiceCreationHole(
     choiceHole({
       source: unitSource(feature.id, FIGHTER_WEAPON_MASTERY_CHOICE_KEY),
       cardinality: exactChoiceCardinality(mechanics.choose),
       options,
     }),
   );
+}
+
+function requireChoiceCreationHole(hole: CreationHole): ChoiceCreationHole {
+  if (hole.kind !== "choice") {
+    throw new Error("Expected a choice creation hole.");
+  }
+
+  return hole;
 }
 
 export function draftHole(
