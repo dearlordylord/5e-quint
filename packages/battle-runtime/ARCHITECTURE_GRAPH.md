@@ -4,9 +4,11 @@ This is a data-flow map of the `@dnd/battle-runtime` reducer. It owns the
 battle protocol for package callers: initialize combatants, discover battle
 subjects, replay caller fills, resolve state transitions, and expose snapshots.
 
-The promoted `@dnd/battle-runtime` is the active semantic authority for new
+`@dnd/battle-runtime` is the semantic authority for promoted
 Unit/StatBlock-backed battle behavior. `battle-runtime.qnt` is its canonical
-package-local spec. The legacy Correction graph, old root `battle.qnt`, and Core
+package-local spec.
+
+The legacy Correction graph, old root `battle.qnt`, and Core
 battle MBT remain useful breadth/proof source material, not active promoted
 runtime authorities.
 
@@ -188,11 +190,24 @@ flowchart TD
   than the old Core MBT, and does not require MBT for every authored Unit or
   Stat Block.
 
-## Relationship To Surface Runtime Correction
+## Relationship To Core And Surface Runtime Correction
 
-`packages/surface-runtime-correction/ARCHITECTURE_GRAPH.md` documents a broader
-Correction reducer: Unit subjects, cantrip discovery, save-gate effects,
-healing, extra-action grants, spell-slot/use-count gates, and other Unit
-activation machinery. Those concepts are source material for future battle
-runtime width/restoration, not evidence that legacy Correction or Core remains
-canonical for promoted battle behavior.
+`@dnd/core`, root `battle.qnt`, and the old Core battle MBT are the legacy
+battle system being strangled. They remain the broadest source for old behavior,
+feature expectations, and proof material, but they are not the active owner for
+new promoted Unit/StatBlock-backed battle behavior.
+
+`packages/surface-runtime-correction/ARCHITECTURE_GRAPH.md` documents earlier
+Surface/Unit reducer work that already implemented several Unit activation
+families not yet restored in `@dnd/battle-runtime`: Unit subjects, cantrip
+discovery, save-gate effects, healing, extra-action grants,
+spell-slot/use-count gates, and related machinery. Correction is therefore
+implementation and test source material for broadening `@dnd/battle-runtime`,
+not the strategic destination and not a second canonical battle reducer.
+
+Restoration work should read both sources according to their strengths: Core
+for legacy behavior/proof breadth and Correction for prior Surface/Unit-shaped
+reducer mechanics. The restored behavior belongs in `@dnd/battle-runtime`
+through battle subjects, support gates, holes/fills, reducer state, and
+`battle-runtime.qnt`, not by making Core depend on `@dnd/battle-runtime` or by
+reviving Correction as the promoted owner.

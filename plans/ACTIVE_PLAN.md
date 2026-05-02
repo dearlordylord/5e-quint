@@ -39,6 +39,15 @@ immediately. The next queue should be organized in this order:
    widening from this queue until the maximum parity/composition archive is
    complete and the feature-parity restoration queue is explicit.
 
+Restoration source discipline: Core/root `battle.qnt` is the legacy battle
+system being strangled and remains the primary source for old behavior breadth,
+feature expectations, and old proof coverage. `surface-runtime-correction` is
+earlier Surface/Unit reducer work and remains source material for reducer
+mechanics, support gates, hole/fill flows, and modular tests. Neither source is
+the promoted owner. Restored behavior belongs in `@dnd/battle-runtime` through
+its package-owned subjects, support gates, reducer state, tests, and
+`battle-runtime.qnt`.
+
 Primary planning documents:
 
 - [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md)
