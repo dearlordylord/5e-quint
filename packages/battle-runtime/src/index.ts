@@ -594,7 +594,6 @@ export type CharacterBattleCreatureInit = {
   readonly currentHp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
-  readonly zeroHpLifecyclePolicy: "usesDeathSavingThrows";
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly attack: CharacterWeaponAttackActionOption | null;
@@ -618,13 +617,14 @@ export type StatBlockBattleCreatureInit = {
   readonly currentHp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
-  readonly zeroHpLifecyclePolicy: "diesAtZeroHp";
 };
 
 export type BattleCreatureInit = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
+  // The creature init kind is the zero-HP lifecycle authority:
+  // characters use death saves; stat block creatures die at 0 HP.
   readonly creatureInit:
     | CharacterBattleCreatureInit
     | StatBlockBattleCreatureInit;
@@ -2785,7 +2785,7 @@ function battleCreatureStateFromInit(
 ): BattleCreatureState {
   const creatureInit = input.creatureInit;
   assertCurrentHpWithinMaxHp(creatureInit);
-  const zeroHpLifecycle = initialZeroHpLifecycle(creatureInit);
+  const zeroHpLifecycle = initialZeroHpLifecycleForCreatureOrigin(creatureInit);
   const base = {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -3125,7 +3125,7 @@ function activeEffectArmorClass(
   };
 }
 
-function initialZeroHpLifecycle(
+function initialZeroHpLifecycleForCreatureOrigin(
   creatureInit: BattleCreatureInit["creatureInit"],
 ): ZeroHpLifecycle {
   return Match.value(creatureInit).pipe(
@@ -3435,7 +3435,6 @@ export function battleCreatureInitFromStatBlock(
       currentHp: input.currentHp ?? maxHp,
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
-      zeroHpLifecyclePolicy: "diesAtZeroHp",
     },
   };
 }

@@ -309,7 +309,6 @@ function fighterCreatureInit(input: {
       currentHp: Hp(12),
       maxHp: Hp(12),
       tempHp: Hp(0),
-      zeroHpLifecyclePolicy: "usesDeathSavingThrows",
       selectedLoadout: {
         weapon: {
           itemId: "main:weapon_flail",
@@ -354,7 +353,6 @@ function skeletonCreatureInit(input: {
       currentHp: Hp(13),
       maxHp: Hp(13),
       tempHp: Hp(0),
-      zeroHpLifecyclePolicy: "diesAtZeroHp",
     },
   };
 }

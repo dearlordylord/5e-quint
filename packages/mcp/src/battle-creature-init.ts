@@ -102,7 +102,6 @@ export function battleCreatureInitFromCharacterBuild(
       currentHp,
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
-      zeroHpLifecyclePolicy: "usesDeathSavingThrows",
       ...(input.zeroHpLifecycle === undefined
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),

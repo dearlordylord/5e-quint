@@ -7149,7 +7149,6 @@ function characterSeed(input: {
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(12),
       tempHp: Hp(input.tempHp ?? 0),
-      zeroHpLifecyclePolicy: "usesDeathSavingThrows",
       selectedLoadout,
       attack,
       ...(input.offHandAttack === undefined
@@ -7296,7 +7295,6 @@ function statBlockCreatureInit(input: {
       currentHp: Hp(input.currentHp ?? maxHp),
       maxHp: Hp(maxHp),
       tempHp: Hp(input.tempHp ?? 0),
-      zeroHpLifecyclePolicy: "diesAtZeroHp",
     },
   };
 }
@@ -7423,7 +7421,6 @@ function skeletonCreatureInit(input: {
       currentHp: Hp(13),
       maxHp: Hp(13),
       tempHp: Hp(0),
-      zeroHpLifecyclePolicy: "diesAtZeroHp",
     },
   };
 }
@@ -7460,7 +7457,6 @@ function resistantSkeletonCreatureInit(input: {
       currentHp: Hp(13),
       maxHp: Hp(13),
       tempHp: Hp(0),
-      zeroHpLifecyclePolicy: "diesAtZeroHp",
     },
   };
 }
