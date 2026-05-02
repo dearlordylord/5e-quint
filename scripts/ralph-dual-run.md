@@ -189,6 +189,7 @@ Useful options:
 scripts/ralph-dual-run.sh plans/some-plan.md \
   --task 3 \
   --codex-only \
+  --codex-model gpt-5.3-codex-spark \
   --max-task-attempts 3 \
   --test-command "pnpm --filter @dnd/core test" \
   --output-branch "ralph/my-run/integration" \
@@ -240,6 +241,12 @@ Set these when you want to force a model:
 
 ```bash
 RALPH_CLAUDE_MODEL=opus RALPH_CODEX_MODEL=gpt-5.4 scripts/ralph-dual-run.sh plans/some-plan.md
+```
+
+For Codex, the equivalent command-line option is:
+
+```bash
+scripts/ralph-dual-run.sh plans/some-plan.md --codex-model gpt-5.3-codex-spark
 ```
 
 Default verification is `pnpm quality`. Override it per plan with `--test-command` when the plan has a narrower repo-approved command.

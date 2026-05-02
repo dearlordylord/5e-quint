@@ -36,6 +36,8 @@ Options:
                           implementation and review.
   --claude-only           Run only the Claude implementer path; skip Codex
                           implementation and review.
+  --codex-model <model>   Model passed to codex exec --model. Overrides
+                          RALPH_CODEX_MODEL.
   --skip-decider          Stop each task after implementation and review.
   -h, --help              Show this help.
 
@@ -90,6 +92,7 @@ keep_worktrees=false
 skip_decider=false
 codex_only=false
 claude_only=false
+codex_model="${RALPH_CODEX_MODEL:-}"
 candidate_round_limit=3
 selected_tasks=()
 child_pids=()
@@ -189,6 +192,11 @@ while [[ $# -gt 0 ]]; do
     --claude-only)
       claude_only=true
       shift
+      ;;
+    --codex-model)
+      [[ $# -ge 2 ]] || die "--codex-model requires a value"
+      codex_model="$2"
+      shift 2
       ;;
     --skip-decider)
       skip_decider=true
@@ -849,8 +857,8 @@ run_codex() {
   local output_file="$4"
   local -a args=(exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
 
-  if [[ -n "${RALPH_CODEX_MODEL:-}" ]]; then
-    args+=("--model" "$RALPH_CODEX_MODEL")
+  if [[ -n "$codex_model" ]]; then
+    args+=("--model" "$codex_model")
   fi
 
   log "codex: $(quote_cmd codex "${args[@]}" -)"
