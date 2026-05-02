@@ -79,6 +79,10 @@ module battleRuntime {
   //   Search DC, grants Invisible while hidden, Search can find the hidden
   //   creature, and making an attack roll or casting a Verbal spell reveals the
   //   hidden creature.
+  // - Playing-the-Game.md lines 295-305, 326-332, 499-513, and
+  //   Rules-Glossary.md lines 361-365, 420-428, 528-535, 802-806, and
+  //   818-826: Dash, Disengage, Dodge, Help, Ready, and standing from Prone
+  //   are battle-owned turn/action or movement procedures.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -161,6 +165,8 @@ module battleRuntime {
     speed: int,
     movementSpent: int,
     hidden: HiddenState,
+    dodging: bool,
+    prone: bool,
     creatureSize: CreatureSize,
     leftHandUse: HandUse,
     rightHandUse: HandUse,
@@ -187,8 +193,12 @@ module battleRuntime {
     goblin: Combatant,
     actionAvailable: bool,
     bonusActionAvailable: bool,
+    dashMovementBonus: int,
+    disengaged: bool,
     lightWeaponAttackMade: bool,
     fighterReadiedSpellHeld: bool,
+    fighterReadiedActionHeld: bool,
+    fighterHelpAttackGoblinForGoblin: bool,
     grapple: GrappleState,
     interruptStack: List[PendingReactionFrame],
     fighterGoblinDistance: int,
@@ -235,6 +245,8 @@ module battleRuntime {
       speed: 30,
       movementSpent: 0,
       hidden: NotHidden,
+      dodging: false,
+      prone: false,
       creatureSize: Medium,
       leftHandUse: HFree,
       rightHandUse: HMainWeapon,
@@ -256,14 +268,20 @@ module battleRuntime {
       speed: 30,
       movementSpent: 0,
       hidden: NotHidden,
+      dodging: false,
+      prone: false,
       creatureSize: Small,
       leftHandUse: HFree,
       rightHandUse: HFree,
     },
     actionAvailable: true,
     bonusActionAvailable: true,
+    dashMovementBonus: 0,
+    disengaged: false,
     lightWeaponAttackMade: false,
     fighterReadiedSpellHeld: false,
+    fighterReadiedActionHeld: false,
+    fighterHelpAttackGoblinForGoblin: false,
     grapple: NoGrapple,
     interruptStack: [],
     fighterGoblinDistance: 5,
@@ -414,10 +432,14 @@ module battleRuntime {
       initiative: advancedInitiative,
       actionAvailable: true,
       bonusActionAvailable: true,
+      dashMovementBonus: 0,
+      disengaged: false,
       lightWeaponAttackMade: false,
       fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and nextActor == Fighter) false else state.fighterReadiedSpellHeld,
-      fighter: if (nextActor == Fighter) { ...state.fighter, reactionAvailable: true, movementSpent: 0 } else state.fighter,
-      goblin: if (nextActor == Goblin) { ...state.goblin, reactionAvailable: true, movementSpent: 0 } else state.goblin,
+      fighterReadiedActionHeld: if (state.fighterReadiedActionHeld and nextActor == Fighter) false else state.fighterReadiedActionHeld,
+      fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) false else state.fighterHelpAttackGoblinForGoblin,
+      fighter: if (nextActor == Fighter) { ...state.fighter, reactionAvailable: true, movementSpent: 0, dodging: false } else state.fighter,
+      goblin: if (nextActor == Goblin) { ...state.goblin, reactionAvailable: true, movementSpent: 0, dodging: false } else state.goblin,
       goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else state.goblinLegendaryUsesRemaining,
       lastTurnActor: if (currentActor(state) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
@@ -663,6 +685,47 @@ module battleRuntime {
     else
       state
 
+  pure def dashFighter(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious))
+      { ...state, actionAvailable: false, dashMovementBonus: state.dashMovementBonus + state.fighter.speed }
+    else
+      state
+
+  pure def disengageFighter(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious))
+      { ...state, actionAvailable: false, disengaged: true }
+    else
+      state
+
+  pure def dodgeFighter(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious))
+      { ...state, actionAvailable: false, fighter: { ...state.fighter, dodging: true } }
+    else
+      state
+
+  pure def readyFighter(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious))
+      { ...state, actionAvailable: false, fighterReadiedActionHeld: true }
+    else
+      state
+
+  pure def helpFighterAttack(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and state.fighterGoblinDistance <= 5)
+      { ...state, actionAvailable: false, fighterHelpAttackGoblinForGoblin: true }
+    else
+      state
+
+  pure def standFighterFromProne(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.fighter.prone and state.fighter.speed / 2 > 0 and state.fighter.movementSpent + state.fighter.speed / 2 <= state.fighter.speed + state.dashMovementBonus)
+      { ...state, fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + state.fighter.speed / 2, prone: false } }
+    else
+      state
+
+  pure def movementRemainingForFighter(state: BattleState): int = {
+    val remaining = state.fighter.speed + state.dashMovementBonus - state.fighter.movementSpent
+    if (remaining < 0) 0 else remaining
+  }
+
   pure def movementRemaining(combatant: Combatant): int =
     if (combatant.speed - combatant.movementSpent < 0) 0 else combatant.speed - combatant.movementSpent
 
@@ -689,7 +752,7 @@ module battleRuntime {
     movementCost > 0 and
     distanceMoved > 0 and
     distanceMoved <= movementCost and
-    movementCost <= movementRemaining(state.fighter) and
+    movementCost <= movementRemainingForFighter(state) and
     grappleDragMovementCostSatisfied(state, movementCost, distanceMoved)
 
   pure def fighterCanGrappleGoblin(state: BattleState): bool =
@@ -747,6 +810,7 @@ module battleRuntime {
   pure def goblinCanOpportunityAttack(state: BattleState, destinationDistance: int): bool =
     state.goblin.hp > 0 and
     state.goblin.reactionAvailable and
+    not(state.disengaged) and
     state.fighterGoblinDistance <= 5 and
     destinationDistance > 5
 
@@ -1369,6 +1433,43 @@ module battleRuntime {
       assert(moved.fighter.movementSpent == 10),
       assert(moved.fighterGoblinDistance == 4),
       assert(movementRemaining(moved.fighter) == 20),
+    }
+  }
+
+  run test_generic_combat_actions_update_turn_state = {
+    val dashed = dashFighter(initialState)
+    val disengaged = disengageFighter(initialState)
+    val dodged = dodgeFighter(initialState)
+    val readied = readyFighter(initialState)
+    val helped = helpFighterAttack(initialState)
+    all {
+      assert(not(dashed.actionAvailable)),
+      assert(dashed.dashMovementBonus == 30),
+      assert(movementRemainingForFighter(dashed) == 60),
+      assert(disengaged.disengaged),
+      assert(dodged.fighter.dodging),
+      assert(readied.fighterReadiedActionHeld),
+      assert(helped.fighterHelpAttackGoblinForGoblin),
+    }
+  }
+
+  run test_stand_from_prone_spends_half_speed_movement = {
+    val prone = { ...initialState, fighter: { ...initialState.fighter, prone: true } }
+    val stood = standFighterFromProne(prone)
+    all {
+      assert(stood.fighter.movementSpent == 15),
+      assert(not(stood.fighter.prone)),
+      assert(movementRemainingForFighter(stood) == 15),
+    }
+  }
+
+  run test_disengage_suppresses_opportunity_attack_window = {
+    val disengaged = disengageFighter({ ...initialState, actionAvailable: true })
+    val moved = moveFighter(disengaged, 5, 5, 10)
+    all {
+      assert(moved.interruptStack == []),
+      assert(moved.fighterGoblinDistance == 10),
+      assert(moved.fighter.movementSpent == 5),
     }
   }
 

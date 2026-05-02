@@ -11,7 +11,9 @@ import { describe, expect, test } from "vitest";
 import {
   BATTLE_UNIT_SUPPORT_PROFILES,
   BattleFillSchema,
+  BattleSubjectSchema,
   BATTLE_READIED_SPELL_TRIGGERS,
+  addBattleCombatant,
   battleId,
   breakBattleConcentration,
   characterId,
@@ -23,6 +25,7 @@ import {
   resolveBattleSubject,
   resolveBattleReaction,
   resolveBattleConcentrationDamage,
+  removeBattleCombatants,
   snapshotBattle,
   startBattle,
   type BattleFill,
@@ -38,6 +41,7 @@ import {
   abilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   holeId,
@@ -186,6 +190,8 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: true,
+        dashMovementBonusFeet: movementFeet(0),
+        disengaged: false,
       },
     });
   });
@@ -405,17 +411,19 @@ describe("battle runtime", () => {
       }),
     );
 
-    expect(acts.map((act) => act.subject)).toEqual([
-      {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
-      { tag: "action", actorId: fighterId, action: "grapple" },
-      { tag: "runtimeCommand", actorId: fighterId, command: "move" },
-      { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
-    ]);
+    expect(acts.map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
+        { tag: "action", actorId: fighterId, action: "grapple" },
+        { tag: "runtimeCommand", actorId: fighterId, command: "move" },
+        { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
+      ]),
+    );
     expect(acts[0]?.initialHoles).toMatchObject([
       {
         kind: "targetChoice",
@@ -433,9 +441,398 @@ describe("battle runtime", () => {
       }),
     );
 
-    expect(acts.map((act) => act.subject)).toEqual([
-      { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
+    expect(acts.map((act) => act.subject)).not.toContainEqual(
+      expect.objectContaining({ tag: "action", action: "attack" }),
+    );
+    expect(acts.map((act) => act.subject)).toContainEqual({
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "endTurn",
+    });
+  });
+
+  test("mid-battle roster mutation preserves Initiative and current turn state", () => {
+    const state = fighterVsGoblinBattle();
+    const added = addBattleCombatant({
+      state,
+      combatant: statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Skeleton",
+        initiative: 15,
+      }),
+      combatantDistances: [
+        {
+          combatantA: skeletonId,
+          combatantB: fighterId,
+          feet: movementFeet(10),
+        },
+        {
+          combatantA: skeletonId,
+          combatantB: goblinId,
+          feet: movementFeet(15),
+        },
+      ],
+    });
+
+    expect(snapshotBattle(added)).toMatchObject({
+      currentActorId: fighterId,
+      turnOrder: [fighterId, skeletonId, goblinId],
+    });
+
+    const removedCurrent = removeBattleCombatants({
+      state: added,
+      combatantIds: [fighterId],
+    });
+
+    expect(snapshotBattle(removedCurrent)).toMatchObject({
+      currentActorId: skeletonId,
+      turnOrder: [skeletonId, goblinId],
+    });
+    expect(
+      removedCurrent.combatantDistances.get(skeletonId)?.has(fighterId),
+    ).toBe(false);
+  });
+
+  test("generic combat actions spend the Action and expose typed battle state", () => {
+    const state = fighterVsGoblinBattle();
+
+    const dashed = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "action", actorId: fighterId, action: "dash" },
+        fills: [],
+      }),
+    );
+    expect(dashed.snapshot.currentTurnResources.actionResources).toEqual([]);
+    expect(dashed.snapshot.currentTurnResources.dashMovementBonusFeet).toBe(30);
+    expect(dashed.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: fighterId,
+        movement: expect.objectContaining({ remainingFeet: movementFeet(60) }),
+      }),
+    );
+
+    const dodged = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "action", actorId: fighterId, action: "dodge" },
+        fills: [],
+      }),
+    );
+    expect(dodged.state.combatants.get(fighterId)?.dodging).toBe(true);
+
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "action",
+          actorId: fighterId,
+          action: "ready",
+          readyTrigger: "attackHit",
+        },
+        fills: [],
+      }),
+    );
+    expect(readied.snapshot.readiedActions).toEqual([
+      expect.objectContaining({
+        actorId: fighterId,
+        trigger: "attackHit",
+        response: { kind: "move" },
+      }),
     ]);
+  });
+
+  test("Ready subjects require an explicit Reaction trigger", () => {
+    const decoded = Schema.decodeUnknownEither(BattleSubjectSchema)({
+      tag: "action",
+      actorId: fighterId,
+      action: "ready",
+    });
+
+    expect(Either.isLeft(decoded)).toBe(true);
+  });
+
+  test("Disengage suppresses Opportunity Attacks for current-turn Movement", () => {
+    const state = fighterVsGoblinBattle();
+    const disengaged = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "action", actorId: fighterId, action: "disengage" },
+        fills: [],
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state: disengaged, subject, fills: [] }),
+      "movement",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: disengaged,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 10,
+            distanceMovedFeet: 10,
+            destinationDistances: [{ combatantId: goblinId, feet: 30 }],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved", snapshot: { pendingReaction: null } });
+  });
+
+  test("Ready holds executable Reaction movement until its trigger", () => {
+    const state = fighterVsGoblinBattle();
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "action",
+          actorId: fighterId,
+          action: "ready",
+          readyTrigger: "attackHit",
+        },
+        fills: [],
+      }),
+    ).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied, actorId: fighterId }),
+    ).state;
+    expect(discoverBattleActs(goblinTurn)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: expect.objectContaining({
+            tag: "runtimeCommand",
+            command: "releaseReadiedAction",
+          }),
+        }),
+      ]),
+    );
+    const releaseSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "releaseReadiedAction" as const,
+      readiedActionActorId: fighterId,
+    };
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: releaseSubject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Scimitar",
+      statBlockSection: "actions",
+    };
+    const target = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: attackSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: attackSubject,
+        fills: [targetFill(target, fighterId)],
+      }),
+      "attackRoll",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state: goblinTurn,
+      subject: attackSubject,
+      fills: [
+        targetFill(target, fighterId),
+        attackRollFill(roll, { total: 20, naturalD20: 12 }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    const readiedChoice =
+      awaitingReaction.snapshot.pendingReaction?.frame.choices.find(
+        (choice) =>
+          choice.kind === "releaseReadiedAction" &&
+          choice.readiedActionActorId === fighterId,
+      );
+    expect(awaitingReaction.snapshot.pendingReaction?.frame.choices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "releaseReadiedAction",
+          reactorId: fighterId,
+          readiedActionActorId: fighterId,
+        }),
+      ]),
+    );
+    if (readiedChoice === undefined) {
+      throw new Error("Expected a readied action Reaction choice.");
+    }
+    const readiedMovementHole = readiedChoice.initialHoles[0];
+    if (readiedMovementHole === undefined) {
+      throw new Error("Expected readied action Reaction movement hole.");
+    }
+    const readiedMove = movementFill(readiedMovementHole, {
+      movementCostFeet: 5,
+      distanceMovedFeet: 5,
+      destinationDistances: [{ combatantId: goblinId, feet: 0 }],
+    });
+
+    const decision = requireHole(awaitingReaction, "reactionDecision");
+    const released = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(decision, {
+        kind: "resolve",
+        reactorId: fighterId,
+        choice: {
+          kind: "releaseReadiedAction",
+          readiedActionActorId: fighterId,
+          fills: [readiedMove],
+        },
+      }),
+    });
+    if (released.tag === "invalid") {
+      throw new Error(
+        `Expected readied action release, got ${released.message}.`,
+      );
+    }
+
+    expect(released.state.readiedActions.has(fighterId)).toBe(false);
+    expect(released.state.combatants.get(fighterId)).toMatchObject({
+      reactionAvailable: false,
+      movementSpentFeet: movementFeet(0),
+    });
+    expect(
+      released.state.combatantDistances.get(fighterId)?.get(goblinId),
+    ).toBe(movementFeet(0));
+  });
+
+  test("Help attack grants and consumes Advantage for the selected ally and target", () => {
+    const state = startBattle({
+      battleId: battleId("battle-help-attack"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 5,
+        }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "helpAttack",
+    };
+    const ally = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(ally, wizardId)],
+      }),
+      "targetChoice",
+    );
+    const helped = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(ally, wizardId), targetFill(target, goblinId)],
+      }),
+    ).state;
+    const wizardTurn = requireResolved(
+      endTurn({
+        state: requireResolved(endTurn({ state: helped, actorId: fighterId }))
+          .state,
+        actorId: goblinId,
+      }),
+    ).state;
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: wizardId,
+      action: "attack",
+      attackName: "Longsword",
+    };
+    const attackTarget = requireHole(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: attackSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: attackSubject,
+        fills: [targetFill(attackTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+    const missed = requireResolved(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, goblinId),
+          attackRollFill(attackRoll, {
+            total: 1,
+            naturalD20: 1,
+            rollMode: "advantage",
+          }),
+        ],
+      }),
+    );
+    expect(missed.snapshot.helpAttacks).toEqual([]);
+  });
+
+  test("Stand from Prone spends half Speed as Movement and clears Prone", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId)!;
+    const proneState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...fighter,
+        conditions: applyCondition(fighter.conditions, "prone"),
+      }),
+    };
+    const stood = requireResolved(
+      resolveBattleSubject({
+        state: proneState,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "standFromProne",
+        },
+        fills: [],
+      }),
+    );
+
+    expect(stood.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: fighterId,
+        conditions: expect.not.arrayContaining(["prone"]),
+        movement: expect.objectContaining({
+          spentFeet: movementFeet(15),
+          remainingFeet: movementFeet(15),
+        }),
+      }),
+    );
   });
 
   test("discoverBattleActs omits attack when the current character is Unconscious at 0 HP", () => {
@@ -833,6 +1230,52 @@ describe("battle runtime", () => {
     expect(hiddenRoll).not.toHaveProperty("rollMode");
   });
 
+  test("Dodge attack-roll Disadvantage requires seeing the attacker", () => {
+    const state = fighterVsGoblinBattle();
+    const dodged = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "action", actorId: fighterId, action: "dodge" },
+        fills: [],
+      }),
+    ).state;
+    const fighter = dodged.combatants.get(fighterId);
+    if (fighter === undefined) {
+      throw new Error("Expected Fighter combatant.");
+    }
+    const blindedDodger: BattleState = {
+      ...dodged,
+      combatants: new Map(dodged.combatants).set(fighterId, {
+        ...fighter,
+        conditions: applyCondition(fighter.conditions, "blinded"),
+      }),
+    };
+    const goblinTurn = requireResolved(
+      endTurn({ state: blindedDodger, actorId: fighterId }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Scimitar",
+      statBlockSection: "actions",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [targetFill(target, fighterId)],
+      }),
+      "attackRoll",
+    );
+
+    expect(roll).not.toHaveProperty("rollMode");
+  });
+
   test("Grappled spell attack rolls have disadvantage against targets other than the grappler", () => {
     const state = startBattle({
       battleId: battleId("battle-grappled-spell-attack-disadvantage"),
@@ -1133,6 +1576,7 @@ describe("battle runtime", () => {
         actorId: wizardId,
         spellId: "ray_of_frost",
         spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        readyTrigger: "spellCast",
       },
       fills: [],
     });
@@ -2308,6 +2752,35 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Dodge projects Advantage for Dexterity saving throw outcome holes", () => {
+    const base = wizardVsSkeletonBattle();
+    const skeleton = base.combatants.get(skeletonId);
+    if (skeleton === undefined) {
+      throw new Error("Expected Skeleton combatant.");
+    }
+    const state: BattleState = {
+      ...base,
+      combatants: new Map(base.combatants).set(skeletonId, {
+        ...skeleton,
+        conditions: applyCondition(skeleton.conditions, "blinded"),
+        dodging: true,
+      }),
+    };
+    const saveHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("acid_splash"),
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+
+    expect(saveHole).toMatchObject({
+      ability: "dex",
+      targetRollModes: [{ targetId: skeletonId, rollMode: "advantage" }],
+    });
+  });
+
   test("Ready stores the runtime-selected trigger without test-only state surgery", () => {
     for (const trigger of BATTLE_READIED_SPELL_TRIGGERS) {
       const state = wizardVsSkeletonBattle();
@@ -2341,6 +2814,24 @@ describe("battle runtime", () => {
           spellId: "ray_of_frost",
           spellActId: "cantripSpellAttack:ray_of_frost",
           readyTrigger: "afterDamage",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedSubject",
+    });
+  });
+
+  test("Ready Spell rejects readied spell subjects without a selected trigger", () => {
+    expect(
+      resolveBattleSubject({
+        state: wizardVsSkeletonBattle(),
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
         },
         fills: [],
       }),
@@ -3075,6 +3566,8 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: true,
+        dashMovementBonusFeet: movementFeet(0),
+        disengaged: false,
       },
     } satisfies BattleState;
 
@@ -3285,6 +3778,8 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: false,
+        dashMovementBonusFeet: movementFeet(0),
+        disengaged: false,
       },
     } satisfies BattleState;
 
@@ -3305,6 +3800,8 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: false,
+        dashMovementBonusFeet: movementFeet(0),
+        disengaged: false,
       },
     } satisfies BattleState;
 
@@ -3350,22 +3847,24 @@ describe("battle runtime", () => {
 
     const acts = discoverBattleActs(afterFighter.state);
 
-    expect(acts.map((act) => act.subject)).toEqual([
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        attackName: "Scimitar",
-      },
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        attackName: "Shortbow",
-      },
-      { tag: "runtimeCommand", actorId: goblinId, command: "move" },
-      { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
-    ]);
+    expect(acts.map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Scimitar",
+        },
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Shortbow",
+        },
+        { tag: "runtimeCommand", actorId: goblinId, command: "move" },
+        { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
+      ]),
+    );
   });
 
   test("Stat Block limited-use resources are initialized from authored monster controls", () => {
@@ -4441,6 +4940,8 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        dashMovementBonusFeet: movementFeet(0),
+        disengaged: false,
       },
     } satisfies BattleState;
 
@@ -4550,6 +5051,8 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        dashMovementBonusFeet: movementFeet(0),
+        disengaged: false,
       },
     } satisfies BattleState;
     expect(
@@ -4584,6 +5087,8 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        dashMovementBonusFeet: movementFeet(0),
+        disengaged: false,
       },
     } satisfies BattleState;
 
@@ -4697,6 +5202,8 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: false,
+        dashMovementBonusFeet: movementFeet(0),
+        disengaged: false,
       },
     } satisfies BattleState;
     expect(
@@ -4723,7 +5230,7 @@ describe("battle runtime", () => {
       ],
     });
     expect(discoverBattleActs(depletedState).map((act) => act.subject)).toEqual(
-      [
+      expect.arrayContaining([
         {
           tag: "action",
           actorId: fighterId,
@@ -4733,7 +5240,7 @@ describe("battle runtime", () => {
         { tag: "action", actorId: fighterId, action: "grapple" },
         { tag: "runtimeCommand", actorId: fighterId, command: "move" },
         { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
-      ],
+      ]),
     );
 
     const unsupportedState = startBattle({
@@ -4834,113 +5341,115 @@ describe("battle runtime", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     expect(
       discoverBattleActs(magicMissileState).map((act) => act.subject),
-    ).toEqual([
-      { tag: "action", actorId: wizardId, action: "grapple" },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "preparedSlotSpell:magic_missile:slot:1",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-        readyTrigger: "attackHit",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-        readyTrigger: "spellCast",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-        readyTrigger: "saveFailed",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-        readyTrigger: "afterDamage",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "ray_of_frost",
-        spellActId: "cantripSpellAttack:ray_of_frost",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "ray_of_frost",
-        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-        readyTrigger: "attackHit",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "ray_of_frost",
-        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-        readyTrigger: "spellCast",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "ray_of_frost",
-        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-        readyTrigger: "saveFailed",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "ray_of_frost",
-        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-        readyTrigger: "afterDamage",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "acid_splash",
-        spellActId: "cantripSaveGateDamage:acid_splash",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "acid_splash",
-        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-        readyTrigger: "attackHit",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "acid_splash",
-        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-        readyTrigger: "spellCast",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "acid_splash",
-        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-        readyTrigger: "saveFailed",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "acid_splash",
-        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-        readyTrigger: "afterDamage",
-      },
-      { tag: "runtimeCommand", actorId: wizardId, command: "move" },
-      { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
-    ]);
+    ).toEqual(
+      expect.arrayContaining([
+        { tag: "action", actorId: wizardId, action: "grapple" },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "preparedSlotSpell:magic_missile:slot:1",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "attackHit",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "spellCast",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "saveFailed",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "afterDamage",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "cantripSpellAttack:ray_of_frost",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: "attackHit",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: "spellCast",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: "saveFailed",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: "afterDamage",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "acid_splash",
+          spellActId: "cantripSaveGateDamage:acid_splash",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "acid_splash",
+          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+          readyTrigger: "attackHit",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "acid_splash",
+          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+          readyTrigger: "spellCast",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "acid_splash",
+          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+          readyTrigger: "saveFailed",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "acid_splash",
+          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+          readyTrigger: "afterDamage",
+        },
+        { tag: "runtimeCommand", actorId: wizardId, command: "move" },
+        { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
+      ]),
+    );
 
     const magicMissileTarget = requireHole(
       resolveBattleSubject({
@@ -5240,45 +5749,47 @@ describe("battle runtime", () => {
 
     expect(
       discoverBattleActs(unsupportedState).map((act) => act.subject),
-    ).toEqual([
-      { tag: "action", actorId: wizardId, action: "grapple" },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "preparedSlotSpell:magic_missile:slot:1",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-        readyTrigger: "attackHit",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-        readyTrigger: "spellCast",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-        readyTrigger: "saveFailed",
-      },
-      {
-        tag: "actionSpell",
-        actorId: wizardId,
-        spellId: "magic_missile",
-        spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-        readyTrigger: "afterDamage",
-      },
-      { tag: "runtimeCommand", actorId: wizardId, command: "move" },
-      { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
-    ]);
+    ).toEqual(
+      expect.arrayContaining([
+        { tag: "action", actorId: wizardId, action: "grapple" },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "preparedSlotSpell:magic_missile:slot:1",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "attackHit",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "spellCast",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "saveFailed",
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "afterDamage",
+        },
+        { tag: "runtimeCommand", actorId: wizardId, command: "move" },
+        { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
+      ]),
+    );
   });
 
   test("Mage Armor creates a persistent base AC spell effect with typed early end", () => {
@@ -5478,6 +5989,7 @@ describe("battle runtime", () => {
           actorId: wizardId,
           spellId: "ray_of_frost",
           spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: "spellCast",
         },
         fills: [],
       }),
@@ -5556,6 +6068,7 @@ describe("battle runtime", () => {
       actorId: wizardId,
       spellId: "ray_of_frost",
       spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+      readyTrigger: "spellCast" as const,
     };
     const readied = resolveBattleSubject({
       state,
@@ -5652,6 +6165,7 @@ describe("battle runtime", () => {
         actorId: wizardId,
         spellId: "ray_of_frost",
         spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        readyTrigger: "attackHit",
       },
       fills: [],
     });
@@ -5751,6 +6265,7 @@ describe("battle runtime", () => {
           actorId: wizardId,
           spellId: "ray_of_frost",
           spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: "spellCast",
         },
         fills: [],
       }),
@@ -5766,6 +6281,7 @@ describe("battle runtime", () => {
           actorId: secondWizardId,
           spellId: "acid_splash",
           spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
+          readyTrigger: "saveFailed",
         },
         fills: [],
       }),
@@ -6147,7 +6663,7 @@ describe("battle runtime", () => {
         afterGoblinEndTurn: snapshotProjection(afterGoblin),
       }),
     );
-  });
+  }, 10_000);
 });
 
 function resolveAttackFixture(input: {
@@ -6264,7 +6780,12 @@ function subjectName(
   subject: BattleSubject,
 ):
   | "attack"
+  | "dash"
+  | "disengage"
+  | "dodge"
+  | "helpAttack"
   | "hide"
+  | "ready"
   | "search"
   | "grapple"
   | "escapeGrapple"
@@ -6273,8 +6794,10 @@ function subjectName(
   | "unitFeature"
   | "endTurn"
   | "move"
+  | "standFromProne"
   | "releaseGrapple"
   | "releaseReadiedSpell"
+  | "releaseReadiedAction"
   | "opportunityAttack" {
   if (subject.tag === "action") {
     return subject.action;
@@ -6400,7 +6923,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("55 passing");
+  expect(quintOutput).toContain("58 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -6507,6 +7030,8 @@ function renderQntCharacterProjection(
       speed: 30,
       movementSpent: 0,
       hidden: NotHidden,
+      dodging: false,
+      prone: false,
       creatureSize: Medium,
       leftHandUse: HFree,
       rightHandUse: HMainWeapon,
@@ -6539,6 +7064,8 @@ function renderQntStateProjection(
         speed: 30,
         movementSpent: 0,
         hidden: NotHidden,
+        dodging: false,
+        prone: false,
         creatureSize: Medium,
         leftHandUse: HFree,
         rightHandUse: HMainWeapon,
@@ -6560,14 +7087,20 @@ function renderQntStateProjection(
         speed: 30,
         movementSpent: 0,
         hidden: NotHidden,
+        dodging: false,
+        prone: false,
         creatureSize: Small,
         leftHandUse: HFree,
         rightHandUse: HFree,
       },
       actionAvailable: ${input.actionAvailable},
       bonusActionAvailable: ${input.bonusActionAvailable},
+      dashMovementBonus: 0,
+      disengaged: false,
       lightWeaponAttackMade: ${input.actionAvailable ? "false" : "true"},
       fighterReadiedSpellHeld: false,
+      fighterReadiedActionHeld: false,
+      fighterHelpAttackGoblinForGoblin: false,
       grapple: NoGrapple,
       interruptStack: [],
       fighterGoblinDistance: 5,

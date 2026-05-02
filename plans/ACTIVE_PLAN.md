@@ -403,13 +403,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 54,
       "id": "PBA14",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Restore Turn Roster And Generic Combat Actions"
     },
     {
       "number": 55,
       "id": "PBA14A",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Restore Persistent Stance Class Riders"
     },
     {
@@ -544,8 +544,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | done               | PBA13D               | PBA13F                             | Added a repo-local authored-id dispatch boundary check with explicit allowlists, integrated it into quality gating, and documented support-profile-first widening rules in owning runtime READMEs.                 | Completed in Task 51 run; PBA13F is unblocked and PBA14+ remain blocked on PBA13F/PBA13G. |
 | 52    | PBA13F - Introduce Canonical Elapsed-Time Algebra                | done               | PBA13E               | PBA13G                             | Added shared elapsed-time ticks/initiative-round brands and migrated Surface duration parsing/projection, Core active-effect/concentration fields, battle-runtime persistent spell duration, and UI duration authoring. | Completed in Task 52 run; PBA13G is unblocked.                                            |
 | 53    | PBA13G - Replace Bare Domain Primitives With Owned Types         | done               | PBA13F               | PBA14                              | Audit and migrate production runtime/domain signatures away from bare `string`, `number`, and `boolean` where shared or package-owned domain types should carry meaning.                                          | Completed in Task 53 run; promoted battle-runtime primitive debt is settled and PBA15A owns deferred Surface/character-creation primitive migration. |
-| 54    | PBA14 - Restore Turn Roster And Generic Combat Actions           | ready-for-research | PBA13G               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Unblocked by PBA13G; start with RAW/source research before rules edits.                    |
-| 55    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14A1                            | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
+| 54    | PBA14 - Restore Turn Roster And Generic Combat Actions           | done               | PBA13G               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Completed in Task 54 run; PBA14A is unblocked for persistent stance restoration.           |
+| 55    | PBA14A - Restore Persistent Stance Class Riders                  | ready-for-research | PBA14                | PBA14A1                            | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Unblocked by PBA14; start with RAW/source research before stance procedure edits.          |
 | 56    | PBA14A1 - Restore Authored Critical Range Attack Hook            | blocked            | PBA14A               | PBA14B                             | Restore Unit-authored critical-range attack hooks through Surface support profiles and battle-runtime attack adjudication, without naming Champion or other authored ids in production support code.              | Blocked behind stance state; unblocks broader attack-rider procedure work.                |
 | 57    | PBA14B - Restore Attack Rider Procedure Family                   | blocked            | PBA14A1              | PBA14C                             | Restore reusable attack-rider windows and damage/roll rider data for Sneak Attack plus Rage/Reckless-style interactions through support profiles, not named ability branches.                                    | Blocked behind authored critical-range attack hook restoration.                           |
 | 58    | PBA14C - Restore Save Damage Replacement Riders                  | blocked            | PBA14B               | PBA14D                             | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                             | Blocked behind attack-rider procedure family.                                             |
@@ -3756,7 +3756,7 @@ Plan Impact:
 
 ### Task 54 - PBA14 - Restore Turn Roster And Generic Combat Actions
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA13G
 Blocks: PBA14A
@@ -3805,11 +3805,11 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA14A.
+- Completed in Task 54 run; PBA14A is unblocked.
 
 ### Task 55 - PBA14A - Restore Persistent Stance Class Riders
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA14
 Blocks: PBA14A1
