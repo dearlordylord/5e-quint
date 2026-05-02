@@ -1,6 +1,9 @@
 import { Match } from "effect";
 
-import type { ProjectedExecutableAction, ProjectedSource } from "#/projected-executable.ts";
+import type {
+  ProjectedExecutableAction,
+  ProjectedSource,
+} from "#/projected-executable.ts";
 import {
   nextTargetsForOutcome,
   requireTargets,
@@ -84,7 +87,12 @@ export function interpretProjectedAction(
 
   return Match.value(action).pipe(
     Match.when({ tag: "PEASaveGateDamage" }, (saveAction) => {
-      const resolvedDc = resolveSaveDc(action.source, actor, saveAction.dc, fail);
+      const resolvedDc = resolveSaveDc(
+        action.source,
+        actor,
+        saveAction.dc,
+        fail,
+      );
       const outcomes = validateOutcomeTargets(
         action.source,
         targetIds,

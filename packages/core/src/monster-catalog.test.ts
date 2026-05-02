@@ -61,7 +61,12 @@ import {
   WARRIOR_INFANTRY,
   WARRIOR_VETERAN,
 } from "#/monster-catalog.ts";
-import { CreatureId, abilityModifier, spellId, spellSlotLevel } from "#/types.ts";
+import {
+  CreatureId,
+  abilityModifier,
+  spellId,
+  spellSlotLevel,
+} from "#/types.ts";
 
 const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
@@ -1280,7 +1285,7 @@ describe("monster catalog", () => {
 
   it("can project a selected named stat-block attack into the battle attack lane", () => {
     const config = statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+      spellLibrary: SPELL_LIBRARY,
       id: CreatureId("goblin-warrior-1"),
       statBlock: GOBLIN_WARRIOR,
       primaryAttackName: "shortbow",
@@ -1488,7 +1493,7 @@ describe("monster catalog", () => {
 
     expect(statBlockInitiativeScore(synthetic)).toBe(22);
     const config = statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+      spellLibrary: SPELL_LIBRARY,
       id: CreatureId("dragon-1"),
       statBlock: synthetic,
     });

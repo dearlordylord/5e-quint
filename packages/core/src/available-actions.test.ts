@@ -75,9 +75,7 @@ function preparedSpellIds(
   return new Set(spells.map(spellId));
 }
 
-function battlePreparedSpellAccesses(
-  ...spells: ReadonlyArray<string>
-) {
+function battlePreparedSpellAccesses(...spells: ReadonlyArray<string>) {
   return preparedBattleSpellAccesses({
     spellDictionary: SPELL_LIBRARY,
     spellIds: spells.map(spellId),
@@ -218,7 +216,9 @@ const WIZARD_4_INPUT: DndMachineInput = {
 const WIZARD_WITH_ACID_SPLASH_INPUT: DndMachineInput = {
   ...WIZARD_4_INPUT,
   preparedSpells: preparedSpellIds("acid_splash"),
-  preparedSpellSaveDCs: new Map([[spellId("acid_splash"), difficultyClass(15)]]),
+  preparedSpellSaveDCs: new Map([
+    [spellId("acid_splash"), difficultyClass(15)],
+  ]),
 };
 
 const WIZARD_14_INPUT: DndMachineInput = {
@@ -5385,7 +5385,10 @@ describe("available actions contract", () => {
     ]);
 
     const hiddenActor = initBattleForAfterDamageDiscovery(
-      { caster: true, spellAccesses: battlePreparedSpellAccesses("hellish_rebuke") },
+      {
+        caster: true,
+        spellAccesses: battlePreparedSpellAccesses("hellish_rebuke"),
+      },
       { ...DEFAULT_BATTLE_ATTACK_CONTEXT, targetCanSeeAttacker: false },
     );
     expect(
@@ -5393,7 +5396,10 @@ describe("available actions contract", () => {
     ).toEqual([]);
 
     const rangedActor = initBattleForAfterDamageDiscovery(
-      { caster: true, spellAccesses: battlePreparedSpellAccesses("hellish_rebuke") },
+      {
+        caster: true,
+        spellAccesses: battlePreparedSpellAccesses("hellish_rebuke"),
+      },
       {
         ...DEFAULT_BATTLE_ATTACK_CONTEXT,
         isMelee: false,

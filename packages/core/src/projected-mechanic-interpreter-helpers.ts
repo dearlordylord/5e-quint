@@ -47,7 +47,12 @@ export function validateAttachmentResolution(
   resolved: ReadonlyArray<string>,
   fail: (source: ProjectedSource, message: string) => never,
 ): ReadonlyArray<string> {
-  const targetIds = uniqueTargetIds(source, "attachment resolution", resolved, fail);
+  const targetIds = uniqueTargetIds(
+    source,
+    "attachment resolution",
+    resolved,
+    fail,
+  );
   return Match.value(attachment.tag).pipe(
     Match.when("PEASelf", () => {
       if (targetIds.length !== 1 || targetIds[0] !== actor.actorId) {

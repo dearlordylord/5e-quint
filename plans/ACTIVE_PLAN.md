@@ -3459,6 +3459,13 @@ Output:
 - New ordered ACTIVE_PLAN tasks for broader Surface/catalog, MCP workflow, app
   battle UI, trace/snapshot, or additional monster/spell/class widening.
 - Explicit deferrals for any old-only group the owner chooses not to restore.
+- Delete temporary BA research artifacts after every still-relevant row has
+  either been restored, intentionally deferred, or moved into durable follow-up
+  tasks:
+  [battle-authority-inventory.md](/workspace/typescript/dnd/plans/battle-authority-inventory.md)
+  and
+  [battle-runtime-proof-coverage.md](/workspace/typescript/dnd/plans/battle-runtime-proof-coverage.md).
+  These are BA1/BA2 research artifacts, not permanent parallel backlogs.
 
 Acceptance:
 
@@ -3468,6 +3475,10 @@ Acceptance:
   discipline.
 - The Restore Ledger remains provenance/status evidence, not the only work
   queue.
+- No future work depends on `plans/battle-authority-inventory.md` or
+  `plans/battle-runtime-proof-coverage.md`; any remaining actionable
+  Core/source evidence or proof-gap evidence is copied into successor tasks
+  before the files are deleted.
 
 Verification:
 

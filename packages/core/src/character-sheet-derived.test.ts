@@ -454,7 +454,10 @@ describe("character-sheet-derived", () => {
     const derived = deriveCharacterSheetNumbers(sheet);
     const projection = characterSheetCreatureProjection(sheet);
     const machineInput = characterSheetMachineInput(sheet);
-    const battleProjection = characterSheetBattleProjection(sheet, SPELL_LIBRARY);
+    const battleProjection = characterSheetBattleProjection(
+      sheet,
+      SPELL_LIBRARY,
+    );
 
     expect(derived).toMatchObject({
       proficiencyBonus: 3,
@@ -565,9 +568,13 @@ describe("character-sheet-derived", () => {
       },
     ]);
 
-    const battleProjection = characterSheetBattleProjection(sheet, SPELL_LIBRARY, {
-      activeProjectedPersistents,
-    });
+    const battleProjection = characterSheetBattleProjection(
+      sheet,
+      SPELL_LIBRARY,
+      {
+        activeProjectedPersistents,
+      },
+    );
 
     expect(battleProjection.activeProjectedPersistents).toBe(
       activeProjectedPersistents,

@@ -104,11 +104,11 @@ export function battleResolveCounterspell({
       ? reactor.spellAccesses.find(
           (access) => access.projection.reactionResolution === "counterspell",
         )
-      : Option.getOrNull(battleSpellAccessById(reactor.spellAccesses, e.accessId));
+      : Option.getOrNull(
+          battleSpellAccessById(reactor.spellAccesses, e.accessId),
+        );
   if (counterspellAccess == null) return {};
-  if (
-    counterspellAccess.projection.reactionResolution !== "counterspell"
-  ) {
+  if (counterspellAccess.projection.reactionResolution !== "counterspell") {
     return {};
   }
   if (!canProvideBattleSpellComponentsForAccess(reactor, counterspellAccess))

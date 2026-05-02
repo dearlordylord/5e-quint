@@ -19,7 +19,12 @@ import { preparedBattleSpellAccesses } from "#/battle-spell-access.ts";
 import type { ScenarioMeta } from "#/battle-scene/scene-snapshot.ts";
 import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import type { DamageType } from "#/types.ts";
-import { CreatureId as cid, difficultyClass, spellId, spellSlotLevel } from "#/types.ts";
+import {
+  CreatureId as cid,
+  difficultyClass,
+  spellId,
+  spellSlotLevel,
+} from "#/types.ts";
 
 const WIZARD_HP = 50;
 const FIREBALL_DMG = 28;
@@ -43,9 +48,7 @@ const NO_CS: ReadonlySet<string> = new Set([
   "shield",
 ]);
 
-function battlePreparedSpellAccessesForDemo(
-  spells: ReadonlySet<string>,
-) {
+function battlePreparedSpellAccessesForDemo(spells: ReadonlySet<string>) {
   return preparedBattleSpellAccesses({
     spellDictionary: SPELL_LIBRARY,
     spellIds: [...spells].map(spellId),

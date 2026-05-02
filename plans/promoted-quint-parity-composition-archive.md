@@ -104,8 +104,10 @@ These are explicit follow-up owners, not vague parity debt:
 
 Proof gaps already cataloged in
 [`battle-runtime-proof-coverage.md`](./battle-runtime-proof-coverage.md) stay
-with their listed owner. They should become implementation tasks only when they
-represent missing promoted behavior or selected integrated proof value.
+with their listed owner until PBA15 copies any still-actionable proof gaps into
+durable successor tasks and deletes the temporary BA2 inventory. They should
+become implementation tasks only when they represent missing promoted behavior
+or selected integrated proof value.
 
 ## Source Checks
 

@@ -158,7 +158,9 @@ export function parseDamageTypeSet(raw: unknown): ReadonlySet<string> {
   return result;
 }
 
-function parseSpellSaveDcRecord(raw: unknown): Readonly<Record<string, number>> {
+function parseSpellSaveDcRecord(
+  raw: unknown,
+): Readonly<Record<string, number>> {
   return quintMapToRecord(raw, Number);
 }
 

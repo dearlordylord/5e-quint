@@ -130,8 +130,8 @@ function duplicateSpells(values: ReadonlyArray<string>): ReadonlyArray<string> {
 function canonicalSpellIds(
   spells: ReadonlyArray<string> | undefined,
 ): ReadonlyArray<SpellId> {
-  return (spells ?? []).map((spellRef) =>
-    getSpellRecordStrict(SPELL_LIBRARY, spellRef).id,
+  return (spells ?? []).map(
+    (spellRef) => getSpellRecordStrict(SPELL_LIBRARY, spellRef).id,
   );
 }
 

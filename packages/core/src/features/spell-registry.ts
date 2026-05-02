@@ -4399,7 +4399,8 @@ export function getSpellRecordStrict(
 export function getBattleReadyableSpellMechanics(
   idOrName: string,
 ): BattleReadyableSaveSpellMechanics | null {
-  const mechanics = getSpellRecord(SRD_SPELL_LIBRARY, idOrName)?.modeling.mechanics;
+  const mechanics = getSpellRecord(SRD_SPELL_LIBRARY, idOrName)?.modeling
+    .mechanics;
   return mechanics?.family === "battleReadyableSave" ? mechanics : null;
 }
 
@@ -4415,10 +4416,10 @@ export function projectBattleReadyableSpellPayload(
   saveDC: DifficultyClass,
 ): BattleReadyableSpellPayload | null {
   return (
-    getSpellRecord(SRD_SPELL_LIBRARY, idOrName)?.projections.toBattleReadyablePayload?.(
-      slotLevel,
-      saveDC,
-    ) ?? null
+    getSpellRecord(
+      SRD_SPELL_LIBRARY,
+      idOrName,
+    )?.projections.toBattleReadyablePayload?.(slotLevel, saveDC) ?? null
   );
 }
 

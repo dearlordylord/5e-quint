@@ -461,10 +461,10 @@ export function battleResolveHitReaction({
           ? Option.getOrNull(
               battleSpellAccessById(reactor.spellAccesses, e.spellAccessId),
             )
-          : reactor.spellAccesses.find(
+          : (reactor.spellAccesses.find(
               (entry) =>
                 entry.projection.reactionResolution === "shieldArmorClassBonus",
-            ) ?? null;
+            ) ?? null);
         if (
           access == null ||
           access.projection.reactionResolution !== "shieldArmorClassBonus"
@@ -477,7 +477,10 @@ export function battleResolveHitReaction({
         ) {
           return reactor;
         }
-        const preparedReactor = prepareBattleCasterForSpellAccess(reactor, access);
+        const preparedReactor = prepareBattleCasterForSpellAccess(
+          reactor,
+          access,
+        );
         if (access.resourcePath.kind === "dailyUse") {
           const remaining =
             preparedReactor.dailyUsesRemaining[access.resourcePath.usageId];
@@ -693,7 +696,10 @@ export function battleAfterDamageSpellReaction({
         )
       : battleSpellAccessById(reactor.spellAccesses, e.accessId),
   );
-  if (access == null || access.projection.reactionResolution !== "hellishRebuke")
+  if (
+    access == null ||
+    access.projection.reactionResolution !== "hellishRebuke"
+  )
     return {};
   if (
     !canProvideBattleSpellComponentsForAccess(reactor, access) ||
@@ -704,7 +710,8 @@ export function battleAfterDamageSpellReaction({
   const preparedReactor = prepareBattleCasterForSpellAccess(reactor, access);
   let updatedReactor: BattleCreatureState;
   if (access.resourcePath.kind === "dailyUse") {
-    const remaining = preparedReactor.dailyUsesRemaining[access.resourcePath.usageId];
+    const remaining =
+      preparedReactor.dailyUsesRemaining[access.resourcePath.usageId];
     if (remaining == null || remaining <= 0) return {};
     updatedReactor = {
       ...spendReaction(preparedReactor),
@@ -721,11 +728,7 @@ export function battleAfterDamageSpellReaction({
     if (slotLevel == null) return {};
     updatedReactor = expendSlot(spendReaction(preparedReactor), slotLevel);
   }
-  const cs1 = setCreature(
-    c.creatures,
-    e.reactorId,
-    updatedReactor,
-  );
+  const cs1 = setCreature(c.creatures, e.reactorId, updatedReactor);
   const actualDmg = e.reactionSaved
     ? Math.trunc(e.reactionDmg / 2)
     : e.reactionDmg;

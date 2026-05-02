@@ -4,9 +4,7 @@
  */
 import { Match, Option } from "effect";
 
-import {
-  preparedBattleSpellAccess,
-} from "#/battle-spell-access.ts";
+import { preparedBattleSpellAccess } from "#/battle-spell-access.ts";
 import {
   makeSpellLibrary,
   SRD_SPELLS,
@@ -36,7 +34,12 @@ import type {
   QualifiedPhysicalBypass,
   SpellId,
 } from "#/types.ts";
-import { armorClass, difficultyClass, resourceCount, spellId } from "#/types.ts";
+import {
+  armorClass,
+  difficultyClass,
+  resourceCount,
+  spellId,
+} from "#/types.ts";
 
 const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
@@ -945,12 +948,13 @@ const CASTER_PREPARED_SPELLS: ReadonlySet<SpellId> = new Set(
   ].map(spellId),
 );
 
-const CASTER_SPELL_ACCESSES = [...CASTER_PREPARED_SPELLS].map((currentSpellId) =>
-  preparedBattleSpellAccess({
-    spellDictionary: SPELL_LIBRARY,
-    spellId: currentSpellId,
-    spellSaveDC: difficultyClass(13),
-  }),
+const CASTER_SPELL_ACCESSES = [...CASTER_PREPARED_SPELLS].map(
+  (currentSpellId) =>
+    preparedBattleSpellAccess({
+      spellDictionary: SPELL_LIBRARY,
+      spellId: currentSpellId,
+      spellSaveDC: difficultyClass(13),
+    }),
 );
 
 export function freshCreature(

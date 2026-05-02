@@ -1,6 +1,9 @@
 import { Option } from "effect";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
-import { battleSpellAccessById, resolveBattleSpellAccess } from "#/battle-spell-access.ts";
+import {
+  battleSpellAccessById,
+  resolveBattleSpellAccess,
+} from "#/battle-spell-access.ts";
 import {
   activeId,
   effectiveBattleSaveRollForCreature,
@@ -71,10 +74,7 @@ export function battleCastAoE({
     spellId: currentSpellId,
   });
   const resolvedAccess = Option.getOrNull(access);
-  if (
-    e.accessId != null &&
-    resolvedAccess == null
-  ) {
+  if (e.accessId != null && resolvedAccess == null) {
     return {};
   }
   if (

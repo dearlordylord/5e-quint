@@ -87,6 +87,7 @@ module battleRuntime {
 
   type Actor = Fighter | Goblin
 
+  // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
 
   type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash

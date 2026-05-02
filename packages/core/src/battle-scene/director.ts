@@ -157,7 +157,9 @@ export function directorStep(
   ) {
     const casterId = snapshot.activeCreatureId;
     if (casterId) {
-      const visual = getSpellVisual(event.spellId ?? event.spellName ?? "spell");
+      const visual = getSpellVisual(
+        event.spellId ?? event.spellName ?? "spell",
+      );
       castBar = { casterId, spellName: visual.label, progress: 1 };
       applyCue(creatureCues, casterId, {
         castingGlow: true,

@@ -184,8 +184,7 @@ export interface ProjectedDirectHealHpAction extends ProjectedExecutableBase {
   readonly amount: ProjectedAmount;
 }
 
-export interface ProjectedDirectGrantExtraActionAction
-  extends ProjectedExecutableBase {
+export interface ProjectedDirectGrantExtraActionAction extends ProjectedExecutableBase {
   readonly tag: "PEADirectGrantExtraAction";
   readonly restriction: ProjectedGrantedActionRestriction;
 }

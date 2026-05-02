@@ -8,9 +8,7 @@ import type {
   SaveFailedCtx,
   SpellCastCtx,
 } from "#/battle-machine-types.ts";
-import type {
-  BattleSpellAccessId,
-} from "#/battle-spell-access.ts";
+import type { BattleSpellAccessId } from "#/battle-spell-access.ts";
 import type {
   BattleMonsterSaveEffectEvent,
   BattleMonsterTraversalEvent,

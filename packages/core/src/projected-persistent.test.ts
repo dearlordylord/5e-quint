@@ -62,14 +62,11 @@ describe("projected persistent battle state", () => {
           kind: "PC",
           dexMod: 2,
           baseArmorClass: armorClass(12),
-          activeProjectedPersistents: addActiveProjectedPersistent(
-            new Set(),
-            {
-              record: MAGE_ARMOR_RECORD,
-              casterId: CreatureId("mage"),
-              targetId: CreatureId("mage"),
-            },
-          ),
+          activeProjectedPersistents: addActiveProjectedPersistent(new Set(), {
+            record: MAGE_ARMOR_RECORD,
+            casterId: CreatureId("mage"),
+            targetId: CreatureId("mage"),
+          }),
         },
       ],
     });

@@ -1,6 +1,9 @@
 import { Option } from "effect";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
-import { battleSpellAccessId, resolveBattleSpellAccess } from "#/battle-spell-access.ts";
+import {
+  battleSpellAccessId,
+  resolveBattleSpellAccess,
+} from "#/battle-spell-access.ts";
 import {
   activeId,
   breakConcentrationAndPropagate,

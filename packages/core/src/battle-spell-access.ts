@@ -1,7 +1,5 @@
 import { Array, Brand, Either, Option } from "effect";
-import {
-  normalizeCastingTime,
-} from "#/features/spell-available-actions.ts";
+import { normalizeCastingTime } from "#/features/spell-available-actions.ts";
 import {
   getSpellRecordStrict,
   type SpellLibrary,
@@ -99,9 +97,7 @@ export type MultipleBattleSpellAccessesError = {
   readonly spellId: SpellId;
 };
 
-function parseBattleSpellComponentRequirements(
-  record: SpellRecord,
-): {
+function parseBattleSpellComponentRequirements(record: SpellRecord): {
   readonly requiresVerbal: boolean;
   readonly requiresHandComponent: boolean;
 } {
@@ -123,7 +119,10 @@ export function preparedBattleSpellAccess(params: {
   return {
     tag: "prepared",
     accessId: battleSpellAccessId(`prepared:${params.spellId}`),
-    projection: projectBattleSpellAccess(params.spellDictionary, params.spellId),
+    projection: projectBattleSpellAccess(
+      params.spellDictionary,
+      params.spellId,
+    ),
     spellId: params.spellId,
     spellSaveDC: params.spellSaveDC,
     resourcePath: { kind: "spellSlotLadder" },
@@ -160,7 +159,10 @@ export function statBlockActionGrantedBattleSpellAccess(params: {
     accessId: battleSpellAccessId(
       `statBlockActionGranted:${params.usageId}:${params.spellId}:${params.fixedCastLevel}`,
     ),
-    projection: projectBattleSpellAccess(params.spellDictionary, params.spellId),
+    projection: projectBattleSpellAccess(
+      params.spellDictionary,
+      params.spellId,
+    ),
     spellId: params.spellId,
     spellSaveDC: params.spellSaveDC,
     resourcePath: {
@@ -177,10 +179,7 @@ export function battleSpellAccessById(
   accesses: ReadonlyArray<BattleSpellAccess>,
   accessId: BattleSpellAccessId,
 ): Option.Option<BattleSpellAccess> {
-  return Array.findFirst(
-    accesses,
-    (access) => access.accessId === accessId,
-  );
+  return Array.findFirst(accesses, (access) => access.accessId === accessId);
 }
 
 // EXPLANATION: resolve the concrete battle spell access to use for a cast. If
@@ -198,7 +197,10 @@ export function resolveBattleSpellAccess(params: {
     }
     return found;
   }
-  const fallback = singleBattleSpellAccessForSpell(params.accesses, params.spellId);
+  const fallback = singleBattleSpellAccessForSpell(
+    params.accesses,
+    params.spellId,
+  );
   if (Either.isLeft(fallback)) return Option.none();
   return fallback.right;
 }
@@ -216,8 +218,7 @@ export function sameBattleCreatureReactionTrigger(
     return true;
   }
   return (
-    left.sourceMustBeVisibleToReactor ===
-      right.sourceMustBeVisibleToReactor &&
+    left.sourceMustBeVisibleToReactor === right.sourceMustBeVisibleToReactor &&
     left.maxSourceDistanceFeetFromReactor ===
       right.maxSourceDistanceFeetFromReactor
   );

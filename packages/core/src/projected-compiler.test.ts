@@ -297,7 +297,9 @@ describe("projected compiler shape-driven widening", () => {
       },
     };
 
-    expect(compileProjectedExecutable(drifted).activationCost).toBe("PACAction");
+    expect(compileProjectedExecutable(drifted).activationCost).toBe(
+      "PACAction",
+    );
   });
 
   it("still rejects Action Surge when the shape leaves the supported direct-self projection subset", () => {
