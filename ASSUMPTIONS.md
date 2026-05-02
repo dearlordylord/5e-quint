@@ -369,3 +369,11 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Why the runtime requires it:** The package finalizes a player-character boundary for later battle composition, not just a paper character sheet. The first supported vertical buys Chain Mail, a Shield, and a Longsword from Fighter option C coins; battle initialization needs an unambiguous starting loadout to derive armor/shield/weapon state without adding a second post-finalization setup protocol.
 
 **Changes:** `@dnd/character-creation-runtime` exposes loadout Creation Holes after the supported equipment purchase. The phase-1 Quint slice and runtime MBT model require those holes before `finalizeCharacterDraft` returns `ready`. This is a runtime projection precondition, not an SRD-authored character-creation choice.
+
+## A41: `walkFeet` means ordinary ground Speed, not a separate walk/run mode
+
+**Assumption:** Runtime fields named `walkFeet` represent the creature's ordinary ground Speed in feet: the default "walk" movement mode used when no special speed such as Climb, Fly, Swim, or Burrow is selected. The runtime does not model a separate run mode. Taking Dash grants extra movement equal to the selected Speed; for ordinary ground movement, that means the creature can spend more movement from the same `walkFeet`-based budget, not that it switches from walking to running.
+
+**Rules basis:** SRD 5.2.1 defines Speed as the distance a creature can cover when it moves on its turn. The movement rules say movement can include climbing, crawling, jumping, and swimming, and the Rules Glossary distinguishes special speeds from the base Speed. Dash says the creature gains extra movement equal to its Speed for the current turn, and gives the example that Speed 30 allows moving up to 60 feet when Dashing. The SRD does not create separate walk and run speeds for combat movement.
+
+**Changes:** Documentation only. Existing `walkFeet` fields in Surface, MCP battle initialization, and `@dnd/battle-runtime` continue to mean ordinary ground Speed. Dash should widen movement budget derived from the selected speed rather than introduce a second run/walk state.
