@@ -360,42 +360,72 @@ The Ralph harness reads this machine-readable index for task order and status. K
     },
     {
       "number": 47,
-      "id": "PBA14",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Restore Turn Roster And Generic Combat Actions"
+      "id": "PBA13A",
+      "status": "ready-for-research",
+      "title": "Inventory Production Authored-Id Semantic Dispatch"
     },
     {
       "number": 48,
+      "id": "PBA13B",
+      "status": "blocked",
+      "title": "Design Battle Support Profiles Without Authored Id Dispatch"
+    },
+    {
+      "number": 49,
+      "id": "PBA13C",
+      "status": "blocked",
+      "title": "Migrate Battle Runtime To Support Profiles"
+    },
+    {
+      "number": 50,
+      "id": "PBA13D",
+      "status": "blocked",
+      "title": "Audit Character Creation Authored-Id Dispatch"
+    },
+    {
+      "number": 51,
+      "id": "PBA13E",
+      "status": "blocked",
+      "title": "Enforce Authored-Id Dispatch Boundary"
+    },
+    {
+      "number": 52,
+      "id": "PBA14",
+      "status": "blocked",
+      "title": "Restore Turn Roster And Generic Combat Actions"
+    },
+    {
+      "number": 53,
       "id": "PBA14A",
       "status": "blocked",
       "title": "Restore Persistent Stance Class Riders"
     },
     {
-      "number": 49,
+      "number": 54,
       "id": "PBA14A1",
       "status": "blocked",
       "title": "Restore Authored Critical Range Attack Hook"
     },
     {
-      "number": 50,
+      "number": 55,
       "id": "PBA14B",
       "status": "blocked",
       "title": "Restore Attack Rider Procedure Family"
     },
     {
-      "number": 51,
+      "number": 56,
       "id": "PBA14C",
       "status": "blocked",
       "title": "Restore Save Damage Replacement Riders"
     },
     {
-      "number": 52,
+      "number": 57,
       "id": "PBA14D",
       "status": "blocked",
       "title": "Restore Reaction Roll Damage Modification Riders"
     },
     {
-      "number": 53,
+      "number": 58,
       "id": "PBA15",
       "status": "blocked",
       "title": "Plan Broader Battle Widening Queue"
@@ -488,14 +518,19 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 43    | PBA10 - Restore Movement Positioning And Opportunity Attacks     | done               | PBA9                 | PBA11                               | Restored promoted-runtime movement state/input, movement budget, Opportunity Attack reaction windows, QNT continuation coverage, and MCP movement holes.                                                          | Completed; PBA11 is unblocked.                                                           |
 | 44    | PBA11 - Restore Monster Resource Controls                        | done               | PBA10                | PBA12                               | Restored StatBlockRecord-backed monster recharge, daily-use, and Legendary Action resources with promoted-runtime support gates.                                                                                 | Completed; PBA12 is unblocked.                                                           |
 | 45    | PBA12 - Restore Hand Weapon And Grapple State                    | done               | PBA11                | PBA13                               | Restored hand occupancy, weapon modes, off-hand attacks, Grapple, Escape Grapple, release, and actual-distance grapple movement-cost state.                                                                       | Completed; PBA13 is unblocked.                                                           |
-| 46    | PBA13 - Restore Hide Search And Class Rider Width                | done               | PBA12                | PBA14                               | Restored Hide/Search/hidden discovery, attack and Verbal-spell reveal triggers, hidden attack roll modes, MCP hidden projection, and Rogue Cunning Action Hide as a Bonus Action.                                | Completed; PBA14 is unblocked.                                                           |
-| 47    | PBA14 - Restore Turn Roster And Generic Combat Actions           | ready-for-implementation-after-light-research | PBA13                | PBA14A                              | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Unblocked by PBA13; requires RAW/light research before implementation.                    |
-| 48    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14A1                             | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
-| 49    | PBA14A1 - Restore Authored Critical Range Attack Hook            | blocked            | PBA14A               | PBA14B                              | Restore Unit-authored critical-range attack hooks, such as Champion Improved Critical, through Surface/interpreter support gates and battle-runtime attack adjudication.                                          | Blocked behind stance state; unblocks broader attack-rider procedure work.                |
-| 50    | PBA14B - Restore Attack Rider Procedure Family                   | blocked            | PBA14A1              | PBA14C                              | Restore reusable attack-rider windows and damage/roll rider data for Sneak Attack plus Rage/Reckless attack interactions.                                                                                        | Blocked behind authored critical-range attack hook restoration.                           |
-| 51    | PBA14C - Restore Save Damage Replacement Riders                  | blocked            | PBA14B               | PBA14D                              | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                             | Blocked behind attack-rider procedure family.                                             |
-| 52    | PBA14D - Restore Reaction Roll Damage Modification Riders        | blocked            | PBA14C               | PBA15                               | Restore reusable reaction roll/damage modification procedure support for Deflect Attacks, Uncanny Dodge, and Cutting Words.                                                                                      | Blocked behind save-damage replacement riders.                                            |
-| 53    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14D               | future tasks                        | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
+| 46    | PBA13 - Restore Hide Search And Class Rider Width                | done               | PBA12                | PBA13A                              | Restored Hide/Search/hidden discovery, attack and Verbal-spell reveal triggers, hidden attack roll modes, MCP hidden projection, and Rogue Cunning Action Hide as a Bonus Action.                                | Completed; emergency authored-id dispatch audit is now the next unblocked task.           |
+| 47    | PBA13A - Inventory Production Authored-Id Semantic Dispatch      | ready-for-research | PBA13                | PBA13B                             | Inventory production code that uses concrete authored ids/names/slugs to choose runtime semantics, separating allowed catalog/composition/test identity from violations.                                         | Ready; source-only research, no MBT.                                                      |
+| 48    | PBA13B - Design Battle Support Profiles Without Authored Id Dispatch | blocked         | PBA13A               | PBA13C                             | Define the generic battle support-profile model for Unit features, spells, Stat Block actions, and class riders so support is selected by Surface mechanics shape, not authored ids.                             | Blocked until the inventory identifies the current violation set.                         |
+| 49    | PBA13C - Migrate Battle Runtime To Support Profiles              | blocked            | PBA13B               | PBA13D                             | Replace battle-runtime named authored-content support types/constants with profile parsers and generic hole/subject data while preserving existing behavior.                                                       | Blocked behind profile design.                                                            |
+| 50    | PBA13D - Audit Character Creation Authored-Id Dispatch           | blocked            | PBA13C               | PBA13E                             | Audit and, if needed, replan/migrate character-creation production support gates that use concrete Unit ids or choice keys as semantic dispatch instead of Surface support profiles.                              | Blocked until battle-runtime policy migration establishes the pattern.                    |
+| 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | blocked            | PBA13D               | PBA14                              | Add durable docs/checks that prevent production reducers from reintroducing concrete authored ids as semantic switches outside allowed catalog/composition/test boundaries.                                        | Blocked until battle and character-creation inventories are resolved.                     |
+| 52    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13E               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked until emergency authored-id dispatch boundary is enforced.                        |
+| 53    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14A1                            | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
+| 54    | PBA14A1 - Restore Authored Critical Range Attack Hook            | blocked            | PBA14A               | PBA14B                             | Restore Unit-authored critical-range attack hooks through Surface support profiles and battle-runtime attack adjudication, without naming Champion or other authored ids in production support code.              | Blocked behind stance state; unblocks broader attack-rider procedure work.                |
+| 55    | PBA14B - Restore Attack Rider Procedure Family                   | blocked            | PBA14A1              | PBA14C                             | Restore reusable attack-rider windows and damage/roll rider data for Sneak Attack plus Rage/Reckless-style interactions through support profiles, not named ability branches.                                    | Blocked behind authored critical-range attack hook restoration.                           |
+| 56    | PBA14C - Restore Save Damage Replacement Riders                  | blocked            | PBA14B               | PBA14D                             | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                             | Blocked behind attack-rider procedure family.                                             |
+| 57    | PBA14D - Restore Reaction Roll Damage Modification Riders        | blocked            | PBA14C               | PBA15                              | Restore reusable reaction roll/damage modification procedure support for Deflect Attacks, Uncanny Dodge, and Cutting Words-style riders through support profiles.                                                 | Blocked behind save-damage replacement riders.                                            |
+| 58    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14D               | future tasks                       | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
 
 ## Task Details
 
@@ -2674,8 +2709,10 @@ Output:
 Acceptance:
 
 - The audit distinguishes data identity from reducer dispatch identity.
-- It does not demand removing all names; names may remain as support gates or
-  authored identity when they are localized and not acting as procedure logic.
+- Superseded by PBA13A-PBA13E: names may remain only as retained authored
+  identity at catalog, composition, subject, snapshot, test, or fixture
+  boundaries. Production support gates must not use names or ids to select
+  reducer semantics.
 - Any strong connascence found is either localized or assigned to PBA3/future
   tasks.
 
@@ -2700,8 +2737,10 @@ PBA2 source-only closeout check:
   canonical support-gate discipline docs.
 - The audit distinguishes reducer dispatch identity from authored data identity:
   `BattleSubject` tags dispatch procedure families, while attack names, spell
-  ids, Unit ids, and Stat Block ids remain retained Surface identity or
-  localized support gates.
+  ids, Unit ids, and Stat Block ids remain retained Surface identity only at
+  catalog, composition, subject, snapshot, test, or fixture boundaries. The
+  earlier "localized support gate" allowance is superseded by the emergency
+  PBA13A-PBA13E support-profile correction.
 - No battle MBT was run.
 - `/simplify` round 1 rechecked reducer named references and separated support
   gates from dispatch identity. Action Surge discovery/resolution support drift
@@ -3219,13 +3258,271 @@ Verification:
 
 Plan Impact:
 
-- Completed; PBA14 is unblocked.
+- Completed; PBA13A is unblocked as the emergency authored-id dispatch
+  correction gate before further feature-parity work.
 
-### Task 47 - PBA14 - Restore Turn Roster And Generic Combat Actions
+### Task 47 - PBA13A - Inventory Production Authored-Id Semantic Dispatch
 
-Status: `ready-for-implementation-after-light-research`
+Status: `ready-for-research`
 
 Depends on: PBA13
+Blocks: PBA13B
+
+Batch: emergency architecture correction before further feature-parity work.
+
+Next action: inventory production code that uses concrete authored content ids,
+names, or slugs to choose runtime semantics.
+
+Input:
+
+- Canonical authored-content identity policy in [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md),
+  [packages/battle-runtime/README.md](/workspace/typescript/dnd/packages/battle-runtime/README.md),
+  [packages/battle-runtime/ARCHITECTURE_GRAPH.md](/workspace/typescript/dnd/packages/battle-runtime/ARCHITECTURE_GRAPH.md),
+  and [packages/surface/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/packages/surface/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md).
+- `rg` evidence from production files under `packages/`, excluding tests,
+  authored content files, generated traces, and Surface catalog import lists.
+- Current suspicious examples include `SupportedSecondWindUnitFeature`,
+  `SupportedActionSurgeUnitFeature`, spell-specific support acts, named
+  class-rider support gates, phase-1 character-creation manifests, and any
+  production constants such as `fighter_*`, `wizard_*`, `magic_missile`,
+  `ray_of_frost`, `acid_splash`, `skeleton`, or `goblin` outside allowed
+  catalog/composition boundaries.
+
+Output:
+
+- An inventory section in this task closeout, not a separate temporary file,
+  classifying each occurrence as:
+  allowed catalog boundary, allowed composition/user-selection identity,
+  allowed test/fixture identity, legacy Core-only material, or production
+  semantic-dispatch violation.
+- For every violation, assign one of:
+  PBA13B battle support-profile design, PBA13C battle-runtime migration,
+  PBA13D character-creation audit/migration, or explicit owner decision.
+- Explicitly distinguish retaining authored identity on subjects/snapshots from
+  using authored identity to decide reducer behavior.
+
+Acceptance:
+
+- No production authored-id semantic switch remains unassigned.
+- The inventory treats SRD ids as architecturally forbidden semantic switches in
+  production even though SRD content is license-allowed in this repository.
+- The next task has enough information to design the smallest durable
+  support-profile model instead of renaming concrete ability types one by one.
+
+Verification:
+
+- Source-only `rg` audit.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA13B and keep PBA14 blocked.
+
+### Task 48 - PBA13B - Design Battle Support Profiles Without Authored Id Dispatch
+
+Status: `blocked`
+
+Depends on: PBA13A
+Blocks: PBA13C
+
+Batch: emergency architecture correction before further feature-parity work.
+
+Next action: design the generic support-profile layer that lets
+`@dnd/battle-runtime` admit Surface-authored battle content by mechanics shape,
+not by concrete authored ids.
+
+Best solution:
+
+- Keep Surface as the authored-content DSL and schema owner.
+- Keep battle-runtime as the owner of battle legality, support admission,
+  replay, and durable state.
+- Add a battle-runtime support-profile module that parses `UnitRecord`,
+  `SpellRecord`, and `StatBlockRecord` shapes into procedure-facing profiles.
+  Profile discriminants must be domain/procedure names, not authored names.
+  Examples:
+  `extraActionGrant`, `selfBonusActionHealing`, `bonusActionHide`,
+  `oneTargetAutomaticDamageSpell`, `spellAttackDamage`, `saveGateDamageSpell`,
+  `persistentAcEffect`, `reactionWindowProvider`, `statBlockNamedAttack`,
+  `statBlockLimitedUseControl`.
+- The parser may retain the original authored record/id as identity for labels,
+  subjects, resource keys, snapshots, and catalog traceability, but the branch
+  that selects reducer semantics must be the parsed profile tag and structure.
+- Unsupported content fails at this support-profile boundary with precise
+  unsupported-shape issues.
+
+Output:
+
+- A concrete type/API design for the battle support-profile module.
+- A migration map from every battle-runtime violation found by PBA13A to a
+  generic profile.
+- A decision for each current named type such as
+  `SupportedSecondWindUnitFeature`: replace with a generic profile, rename to a
+  generic procedure profile, or delete as obsolete after migration.
+
+Acceptance:
+
+- No design requires one production branch per Unit, spell, feature, monster
+  action, or authored slug.
+- The design avoids a new executable IR: profiles are support-gate outputs for
+  admitted Surface shapes, not a parallel authored-content language.
+- Discovery and resolution share the same parsed profile values.
+- The design is compatible with future PBA14A-PBA14D class-rider restoration.
+
+Verification:
+
+- Source-only design check against `ARCHITECTURE.md` and battle-runtime docs.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA13C.
+
+### Task 49 - PBA13C - Migrate Battle Runtime To Support Profiles
+
+Status: `blocked`
+
+Depends on: PBA13B
+Blocks: PBA13D
+
+Batch: emergency architecture correction before further feature-parity work.
+
+Next action: replace battle-runtime production authored-id semantic dispatch
+with the support-profile module designed in PBA13B.
+
+Scope:
+
+- Remove concrete authored-id constants from battle-runtime reducer support and
+  resolution code, including Action Surge, Second Wind, spell-specific
+  procedure support, Rogue Cunning Action Hide, and Stat Block special cases
+  where they decide semantics.
+- Replace named supported-authored-content types with generic profile types.
+  For example, `BattleUnitFeatureRollHole` must not be hard-wired to
+  `SupportedSecondWindUnitFeature`; it should carry a generic rolled Unit
+  feature profile or become a procedure-specific generic healing-roll hole.
+- Keep authored ids only where they are identity retained from parsed Surface
+  records: `BattleSubject.unitId`, resource keys, labels, snapshots, and
+  composition-selected records.
+- Keep existing behavior and public workflows green.
+
+Acceptance:
+
+- `rg` over production battle-runtime source finds no concrete SRD Unit/Spell/
+  Stat Block ids used as semantic branches.
+- Existing supported workflows still discover and resolve the same acts for the
+  same SRD records through Surface profiles.
+- Unsupported legal content still fails at the support-profile boundary.
+- No projected executable vocabulary is introduced.
+
+Verification:
+
+- Focused `@dnd/battle-runtime` tests for existing supported Action Surge,
+  Second Wind, spell, Stat Block attack/control, hidden/Cunning Action, and
+  damage-modifier flows.
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- MCP tests only if public tool output or composition mapping changes.
+- Promoted MBT only if the migration changes the canonical QNT/MBT surface.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA13D.
+
+### Task 50 - PBA13D - Audit Character Creation Authored-Id Dispatch
+
+Status: `blocked`
+
+Depends on: PBA13C
+Blocks: PBA13E
+
+Batch: emergency architecture correction before further feature-parity work.
+
+Next action: audit character-creation runtime support gates and manifests for
+the same authored-id semantic-dispatch problem, then either migrate them or add
+precise successor tasks if the migration is larger than one agent task.
+
+Scope:
+
+- Inspect `packages/character-creation-runtime/src/phase1-manifest.ts`,
+  `support-gates.ts`, `discovery.ts`, `finalization.ts`, and related docs.
+- Separate:
+  allowed composition/catalog identity and fixture ids;
+  choice keys that are runtime protocol names;
+  production support gates that use concrete Unit ids as semantic switches.
+- Prefer deriving supported creation choices from Surface record families,
+  class/background/species/equipment/spell support profiles, and typed choice
+  structures rather than phase-named id arrays.
+
+Acceptance:
+
+- Character-creation authored-id usage is either migrated to support profiles or
+  split into concrete follow-up tasks with exact blockers and rationale.
+- The plan does not allow future battle work to depend on a hidden
+  character-creation id-dispatch policy hole.
+- MCP remains a composition boundary and does not gain private duplicate
+  support registries.
+
+Verification:
+
+- Source-only audit if no migration is performed; focused
+  `@dnd/character-creation-runtime` tests and typecheck if code changes.
+- No battle MBT runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA13E.
+
+### Task 51 - PBA13E - Enforce Authored-Id Dispatch Boundary
+
+Status: `blocked`
+
+Depends on: PBA13D
+Blocks: PBA14
+
+Batch: emergency architecture correction before further feature-parity work.
+
+Next action: add durable enforcement so production reducers cannot reintroduce
+concrete authored ids as semantic switches.
+
+Output:
+
+- A repo-local check, lint rule, or focused test that scans production runtime
+  packages for forbidden authored-id literals and requires explicit allowlisting
+  for catalog boundaries, tests/fixtures, composition selections, and legacy
+  Core quarantine.
+- Documentation in the owning package READMEs explaining the allowed list and
+  how to add a new support profile.
+- ACTIVE_PLAN closeout proving PBA14 and later class-rider tasks must use
+  support profiles, not authored-name branches.
+
+Acceptance:
+
+- The check catches examples like `fighter_second_wind`,
+  `fighter_action_surge`, `magic_missile`, or `skeleton` when used in production
+  reducer support/resolution files outside an allowed boundary.
+- The check does not block Surface catalog/content files, tests, fixtures, or
+  MCP/user-selection identity retention.
+- PBA14 is unblocked only after the check is in place or an explicit owner
+  decision records a narrower enforcement mechanism.
+
+Verification:
+
+- Run the new enforcement check.
+- Run affected package typecheck/tests if the check touches package scripts.
+- No battle MBT runs unless implementation changes the promoted QNT/MBT surface.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA14.
+
+### Task 52 - PBA14 - Restore Turn Roster And Generic Combat Actions
+
+Status: `blocked`
+
+Depends on: PBA13E
 Blocks: PBA14A
 
 Batch: old Core feature-parity restoration.
@@ -3274,7 +3571,7 @@ Plan Impact:
 
 - If successful, unblock PBA14A.
 
-### Task 48 - PBA14A - Restore Persistent Stance Class Riders
+### Task 53 - PBA14A - Restore Persistent Stance Class Riders
 
 Status: `blocked`
 
@@ -3316,7 +3613,7 @@ Plan Impact:
 
 - If successful, unblock PBA14A1.
 
-### Task 49 - PBA14A1 - Restore Authored Critical Range Attack Hook
+### Task 54 - PBA14A1 - Restore Authored Critical Range Attack Hook
 
 Status: `blocked`
 
@@ -3326,7 +3623,7 @@ Blocks: PBA14B
 Batch: old Core feature-parity restoration.
 
 Next action: restore Unit-authored critical-range attack hooks as a tracer
-bullet through Surface authored content, the support/interpreter boundary, and
+bullet through Surface authored content, the support-profile boundary, and
 promoted battle-runtime attack adjudication.
 
 Backlog candidate:
@@ -3340,18 +3637,19 @@ Backlog candidate:
   `UBIQUITOUS_LANGUAGE.md` attack roll, Critical Hit, Unit, and class feature
   terminology.
 - New-runtime owner: Surface Unit records for authored critical-range facts,
-  the Surface reader/support gate or interpreter that admits the reusable
-  attack hook, `@dnd/battle-runtime` attack-roll adjudication and critical
-  damage-hole selection, `battle-runtime.qnt`, and MCP snapshots/fills if the
-  hook is user-visible.
+  the Surface-shaped battle support profile that admits the reusable attack
+  hook without concrete authored-id dispatch, `@dnd/battle-runtime` attack-roll
+  adjudication and critical damage-hole selection, `battle-runtime.qnt`, and MCP
+  snapshots/fills if the hook is user-visible.
 - Acceptance summary: battle-runtime no longer treats Critical Hit as only
   `naturalD20 === 20` for all attacks. Weapon/Unarmed Strike attacks can receive
   an admitted authored critical threshold such as 19-20 from selected Units,
   while unsupported critical-range content is rejected at the support boundary.
 - Non-goals: every Champion subclass feature, every critical-hit rider,
   homebrew critical ranges, old Core `critRange` field shape as an adapter,
-  projected executable vocabulary, or broad attack-rider damage hooks beyond
-  the critical-threshold tracer bullet.
+  projected executable vocabulary, production support branches keyed by the
+  Champion feature id/name, or broad attack-rider damage hooks beyond the
+  critical-threshold tracer bullet.
 
 Verification:
 
@@ -3371,7 +3669,7 @@ Plan Impact:
 
 - If successful, unblock PBA14B.
 
-### Task 50 - PBA14B - Restore Attack Rider Procedure Family
+### Task 55 - PBA14B - Restore Attack Rider Procedure Family
 
 Status: `blocked`
 
@@ -3412,7 +3710,7 @@ Plan Impact:
 
 - If successful, unblock PBA14C.
 
-### Task 51 - PBA14C - Restore Save Damage Replacement Riders
+### Task 56 - PBA14C - Restore Save Damage Replacement Riders
 
 Status: `blocked`
 
@@ -3452,7 +3750,7 @@ Plan Impact:
 
 - If successful, unblock PBA14D.
 
-### Task 52 - PBA14D - Restore Reaction Roll Damage Modification Riders
+### Task 57 - PBA14D - Restore Reaction Roll Damage Modification Riders
 
 Status: `blocked`
 
@@ -3496,7 +3794,7 @@ Plan Impact:
 
 - If successful, unblock PBA15.
 
-### Task 53 - PBA15 - Plan Broader Battle Widening Queue
+### Task 58 - PBA15 - Plan Broader Battle Widening Queue
 
 Status: `blocked`
 

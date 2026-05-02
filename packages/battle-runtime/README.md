@@ -73,9 +73,10 @@ Use this decision rule for every new authored battle ability:
   not admit that shape yet. Unsupported legal content should fail there with a
   precise unsupported-shape issue; it should not leak partial behavior into
   `resolveBattleSubject`.
-  Support gates may use authored ids to select the currently admitted slice, but
-  the admitted mechanics shape must be parsed once and shared by discovery and
-  resolution.
+  Support gates classify authored Surface mechanics into named support profiles.
+  They must not use concrete Unit ids, Spell ids, Stat Block ids, feature names,
+  monster names, or authored slugs to select reducer semantics. The admitted
+  mechanics shape must be parsed once and shared by discovery and resolution.
 - **Reusable procedure family:** add or widen reducer behavior only when the SRD
   defines a distinct reusable resolution shape: a new timing window, resource
   spend/reset protocol, target or save procedure, interrupt/Reaction flow,
@@ -97,6 +98,17 @@ Projected executable vocabulary must stay out of this package. If old Core or
 Correction material names a projected action, translate the SRD procedure into
 Surface readers, support gates, battle subjects, holes, and reducer state
 instead of restoring the projected vocabulary.
+
+Concrete authored ids are allowed in production only when the code is a catalog
+boundary, a fixture/test helper, or a composition/user-selection boundary that is
+retaining identity selected elsewhere. Reducer support and resolution code must
+not ask "is this `fighter_second_wind`?" or "is this `magic_missile`?" to decide
+behavior. It must ask whether the Surface record parses as a reusable support
+profile, such as "self Bonus Action healing with use-count resource" or
+"one-target prepared slot spell with automatic force damage." SRD ids appearing
+in tests are acceptable because those tests verify catalog or workflow coverage;
+private licensed/non-SRD examples must use renamed synthetic records that are
+obviously fake.
 
 ## Runtime Flow
 

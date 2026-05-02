@@ -69,6 +69,21 @@ Surface has separate authored record families:
 Detailed Surface authoring, catalog, Dhall/JSON, and trace rules live in
 `packages/surface/README.md`.
 
+Authored-content identity is not a production-code dispatch mechanism outside
+Surface catalogs, fixture builders, tests, and composition-time user selections.
+Runtime packages must not hard-code concrete Unit ids, Spell ids, Stat Block
+ids, class-feature names, monster names, or other authored slugs to choose
+semantics. SRD content is allowed in this repository for licensing reasons, but
+that does not make SRD names a runtime abstraction. The architecture still
+requires production code to converse with authored content through Surface
+records, support-profile readers, and typed procedure facts.
+
+Tests may name concrete SRD authored records when they are verifying catalog,
+reader, support-gate, or end-user workflow behavior. Non-SRD or private licensed
+examples must not copy source names or text into this repository; tests should
+use renamed synthetic records that are visibly fake and exercise the Surface
+shape rather than the protected expression.
+
 ## Runtime Boundaries
 
 Runtime packages consume authored Surface records through typed boundaries and
@@ -92,13 +107,14 @@ Its reducer data-flow map lives in
 Battle reducer extensibility follows the SRD procedure-family boundary. A new
 authored Unit, Spell Record, feature, monster action, or Stat Block slug is
 data-only when it fits an existing support profile and procedure. If the Surface
-record shape is legal but not yet admitted, widen the owning reader or support
-gate so unsupported shapes fail at one boundary. Add reducer logic or runtime
-state only for a reusable SRD procedure family: a new timing/resource protocol,
-target/save/damage flow, interrupt window, persistent effect, movement
-procedure, or other durable state transition that authored records can select.
-Do not restore projected executable vocabulary or encode one reducer branch per
-authored name.
+record shape is legal but not yet admitted, widen the owning reader or
+support-profile parser so unsupported shapes fail at one boundary. Add reducer
+logic or runtime state only for a reusable SRD procedure family: a new
+timing/resource protocol, target/save/damage flow, interrupt window, persistent
+effect, movement procedure, or other durable state transition that authored
+records can select. Do not restore projected executable vocabulary, encode one
+reducer branch per authored name, or let authored ids stand in for support
+profiles.
 
 The shared domain abstraction is **Creature**. In `@dnd/battle-runtime`, the
 durable implementation type is `BattleCreatureState`, identified by

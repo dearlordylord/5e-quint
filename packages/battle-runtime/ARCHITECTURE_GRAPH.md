@@ -22,12 +22,14 @@ against a Skeleton Stat Block target through `discoverBattleActs`,
 
 Reducer extension follows SRD procedure families, not authored names. Surface
 records and retained origin data select supported procedures; support gates
-reject unsupported authored shapes before reducer replay. Add reducer state or a
-new `BattleSubject` only for a reusable procedure family such as a timing
-window, resource protocol, target/save flow, interrupt/Reaction flow, persistent
-effect, movement procedure, or other durable transition. Do not add one branch
-per Unit, spell, feature, monster action, or slug, and do not reintroduce
-projected executable vocabulary.
+reject unsupported authored shapes before reducer replay. Production support
+gates must classify Surface mechanics, not hard-code concrete Unit ids, Spell
+ids, Stat Block ids, feature names, monster names, or authored slugs as semantic
+switches. Add reducer state or a new `BattleSubject` only for a reusable
+procedure family such as a timing window, resource protocol, target/save flow,
+interrupt/Reaction flow, persistent effect, movement procedure, or other durable
+transition. Do not add one branch per Unit, spell, feature, monster action, or
+slug, and do not reintroduce projected executable vocabulary.
 
 ## System Graph
 
