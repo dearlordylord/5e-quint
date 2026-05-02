@@ -5388,6 +5388,50 @@ describe("battle runtime", () => {
     ]);
   });
 
+  test("breaking ordinary concentration does not clear a non-owned readied spell entry", () => {
+    const state = startBattle({
+      battleId: battleId("battle-ordinary-concentration-preserves-readied"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+        },
+        fills: [],
+      }),
+    ).state;
+    const wizard = readied.combatants.get(wizardId)!;
+    const concentrating = {
+      ...readied,
+      combatants: new Map(readied.combatants).set(wizardId, {
+        ...wizard,
+        concentration: {
+          sourceSpellId: "hold_person",
+          effectKind: "spellEffect",
+        },
+      }),
+    } satisfies BattleState;
+
+    const broken = breakBattleConcentration(concentrating, wizardId);
+
+    expect(broken.combatants.get(wizardId)?.concentration).toBeNull();
+    expect(broken.readiedSpells.has(wizardId)).toBe(true);
+  });
+
   test("failed concentration damage save uses the same concentration lifecycle", () => {
     const state = wizardVsSkeletonBattle();
     const wizard = state.combatants.get(wizardId)!;

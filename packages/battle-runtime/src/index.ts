@@ -3453,8 +3453,14 @@ export function breakBattleConcentration(
   state: BattleState,
   combatantId: CombatantId,
 ): BattleState {
-  const readiedSpells = new Map(state.readiedSpells);
-  readiedSpells.delete(combatantId);
+  const concentration = state.combatants.get(combatantId)?.concentration;
+  let readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell> =
+    state.readiedSpells;
+  if (concentration?.effectKind === "readiedSpell") {
+    const remainingReadiedSpells = new Map(state.readiedSpells);
+    remainingReadiedSpells.delete(combatantId);
+    readiedSpells = remainingReadiedSpells;
+  }
   return {
     ...state,
     combatants: breakCombatantConcentration(state.combatants, combatantId),
