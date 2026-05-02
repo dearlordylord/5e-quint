@@ -115,6 +115,21 @@ records. Units are capability records, not participant identity. A
 Stat Block-derived battle creature comes from the Stat Block record and does not
 own Units merely because Stat Blocks may reuse shared Surface sub-shapes.
 
+## Package Ownership
+
+| Package | Owns | Does not own |
+| --- | --- | --- |
+| `@dnd/surface` | Provenance-bearing authored Unit and Stat Block records, structural readers, SRD collections, and decode/catalog boundaries. | Runtime state, reducer legality, character draft sessions, battle sessions, or projected executable IR. |
+| `@dnd/shared-algebras` | Reusable reducer algebras such as action economy, Initiative, Armor Class, attack rolls, conditions, Death Saving Throw counters, runtime dice, and runtime hole identity. | Unit support gates, act subjects, authored-content catalogs, MCP sessions, or complete character/battle reducers. |
+| `@dnd/character-creation-runtime` | Character Draft mutation, creation holes/fills, support gates, finalization, and `CharacterBuild` projection from Surface Unit facts. | Battle initialization, battle state, current HP, in-play resource expenditure, or authored content provenance. |
+| `@dnd/battle-runtime` | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, and snapshots. | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, or old Core authority. |
+| `@dnd/mcp` | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, and cross-runtime workflow tests. | Reducer semantics, authored content rules, package-local QNT authority, or duplicated executable content. |
+
+The composition rule is direct use of owned package APIs, not an adapter layer.
+If a future task needs a lower layer to expose a stronger fact, change that
+layer and its proof owner. Do not add parallel MCP state or a private MCP
+registry to compensate for a missing runtime or Surface shape.
+
 ## MCP Composition
 
 `@dnd/mcp` is the tool-facing composition package.
@@ -157,6 +172,22 @@ Runtime correctness mechanisms depend on the package shape:
 - Reducer packages use package-local QNT specs plus deterministic parity tests.
 - Shared algebras use focused unit tests and, where present, package-local QNT or
   MBT coverage.
+
+Proof layers for the promoted path are package-owned:
+
+| Boundary | Proof owner | Default proof shape | Escalate when |
+| --- | --- | --- | --- |
+| Authored Surface records and catalogs | `@dnd/surface` | Decode/reader tests, trace review, provenance/cross-collection constraints, and table-driven catalog contract tests. | A new record family or structural reader changes runtime-visible meaning. |
+| Small reusable reducer algebra | `@dnd/shared-algebras` | Focused deterministic tests plus modular Quint MBT replay against the shared TypeScript algebra. | The algebra's state transition semantics change or a new reusable algebra is introduced. |
+| Character creation reducer | `@dnd/character-creation-runtime` | Focused reducer tests, package-local QNT, and package-local randomized MBT where present. | Draft mutation, hole/fill semantics, support gates, or final `CharacterBuild` projection changes. |
+| Battle reducer deterministic semantics | `@dnd/battle-runtime` | Focused reducer tests plus generated parity/self-tests against `battle-runtime.qnt`. | Implemented battle behavior, action resources, HP lifecycle, act discovery, replay, or snapshots change. |
+| Selected composed battle-runtime flows | `@dnd/battle-runtime` | Narrow integrated promoted MBT through public `discoverBattleActs`, `resolveBattleSubject`, and `snapshotBattle`. | Trace generation adds value across discovery, replay holes, action resources, damage, and snapshots. |
+| MCP runtime composition | `@dnd/mcp` | Deterministic MCP server/protocol tests and end-user acceptance scenarios over real tool calls and in-memory sessions. | Tool schema, session ownership, cross-runtime projection, battle fill storage, handoff, or workflow recovery changes. |
+
+No layer requires MBT per authored Unit, Spell, weapon, feature, or Stat Block.
+Ordinary catalog width belongs in Surface reader/contract tests and package
+support-gate tests unless it changes a reusable reducer procedure family or a
+selected high-risk composition flow.
 
 ## Dependency Direction
 

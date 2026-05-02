@@ -73,6 +73,9 @@ Use this decision rule for every new authored battle ability:
   not admit that shape yet. Unsupported legal content should fail there with a
   precise unsupported-shape issue; it should not leak partial behavior into
   `resolveBattleSubject`.
+  Support gates may use authored ids to select the currently admitted slice, but
+  the admitted mechanics shape must be parsed once and shared by discovery and
+  resolution.
 - **Reusable procedure family:** add or widen reducer behavior only when the SRD
   defines a distinct reusable resolution shape: a new timing window, resource
   spend/reset protocol, target or save procedure, interrupt/Reaction flow,
@@ -425,11 +428,22 @@ Promoted battle-runtime proof is intentionally layered:
 - Surface projection MBT is a separate future decision and is not implied by
   adding battle-runtime MBT.
 
-The current integrated MBT strategy is recorded in
-[`plans/promoted-battle-runtime-mbt-strategy.md`](../../plans/promoted-battle-runtime-mbt-strategy.md).
-The first selected candidate is Fighter weapon Attack against a Skeleton
-Stat Block target through public `discoverBattleActs`, `resolveBattleSubject`,
-and `snapshotBattle`.
+Integrated battle-runtime MBT stays selective. Add it when a promoted behavior
+is already implemented and deterministically tested, crosses multiple reducer
+responsibilities, and can expose replay/order/state-transition mistakes that
+isolated assertions would miss. Keep the state space small with one or two
+combatants and bounded fills.
+
+Prefer table-driven contract tests for ordinary catalog width: another weapon,
+spell, Unit, or Stat Block that exercises an already proved reducer family
+without changing its semantic shape. Do not use integrated MBT to prove old-only
+Core breadth before that behavior is restored in the promoted runtime.
+
+The first selected integrated candidate is Fighter weapon Attack against a
+Skeleton Stat Block target through public `discoverBattleActs`,
+`resolveBattleSubject`, and `snapshotBattle`. Good later candidates are
+Action Surge, Magic Missile, and Ray of Frost when their trace interactions
+justify MBT over deterministic tests.
 
 Keep four facts separate when changing battle behavior:
 

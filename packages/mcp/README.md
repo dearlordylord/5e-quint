@@ -10,6 +10,10 @@ may see content catalogs, character sessions, battle sessions, and runtime
 initialization inputs because it is the composition boundary; it must not become
 the owner of character-creation or battle semantics.
 
+If a tool workflow needs a stronger Surface, character-creation, or battle fact,
+change the owning lower package and its tests instead of adding MCP-private
+runtime registries, duplicate executable content, or shadow reducer state.
+
 The normal MCP server route imports Surface authored content boundaries plus
 the character-creation and battle runtimes. Its composition root builds:
 
