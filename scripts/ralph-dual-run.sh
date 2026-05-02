@@ -576,7 +576,7 @@ for (const task of promoted) {
 
 let updatedText = lines.join("\n")
 for (const task of promoted) {
-  const headingPattern = new RegExp(`(^### Task ${task.number}[^\\n]*\\n\\nStatus: \\`)([^\\`]+)(\\`)`, "m")
+  const headingPattern = new RegExp("(^### Task " + task.number + "[^\\n]*\\n\\nStatus: `)([^`]+)(`)", "m")
   const headingReplacement = `$1${task.status}$3`
 
   const replaced = updatedText.replace(headingPattern, headingReplacement)
