@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import type { InitiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import {
   addIncapSource,
@@ -27,16 +28,16 @@ import { deathSaveCount, hp, tempHp } from "#/types.ts";
 export function addAe(
   aes: ReadonlyArray<ActiveEffect>,
   spellId: string,
-  turnsRemaining: number,
+  roundsRemaining: InitiativeDurationRounds,
   expiresAt: ExpiryPhase,
   casterId: CreatureId,
   options: Partial<
-    Omit<ActiveEffect, "spellId" | "turnsRemaining" | "expiresAt" | "casterId">
+    Omit<ActiveEffect, "spellId" | "roundsRemaining" | "expiresAt" | "casterId">
   > = {},
 ): ReadonlyArray<ActiveEffect> {
   return [
     ...aes.filter((ae) => ae.spellId !== spellId),
-    { spellId, turnsRemaining, expiresAt, casterId, ...options },
+    { spellId, roundsRemaining, expiresAt, casterId, ...options },
   ];
 }
 
@@ -257,7 +258,7 @@ export function computeEndTurn(
       !(
         (a.expiryOwnerId == null || a.expiryOwnerId === selfId) &&
         a.expiresAt === "end" &&
-        a.turnsRemaining <= 0
+        a.roundsRemaining <= 0
       ),
   );
 

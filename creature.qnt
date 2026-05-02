@@ -901,7 +901,7 @@ module creature {
   /// they just apply damage/healing/conditions directly.
   /// Core spec owns lifecycle plus narrow persistent payloads that drive battle timing.
   type ActiveEffect = {
-    spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
+    spellId: str, roundsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
     parentSpellId: str, parentCasterId: str,
     grantedConditions: Set[Condition],
     conditionalGrantedConditions: Set[ConditionalGrantedCondition],
@@ -1000,21 +1000,21 @@ module creature {
 
   /// Add an effect, replacing any existing with the same spellId (no stacking).
   pure def pAddEffect(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    effects: Set[ActiveEffect], spellId: str, durationRounds: int, expiresAt: ExpiryPhase, casterId: str,
     grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
   ): Set[ActiveEffect] =
     pAddEffectWithReactivePayload(
-      effects, spellId, durationTurns, expiresAt, casterId,
+      effects, spellId, durationRounds, expiresAt, casterId,
       grantedC, grantedR, grantedV, grantedI, NoReactivePayload
     )
 
   pure def pAddEffectWithReactivePayload(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    effects: Set[ActiveEffect], spellId: str, durationRounds: int, expiresAt: ExpiryPhase, casterId: str,
     grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType],
     reactivePayload: ReactiveEffectPayload
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
-      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      spellId: spellId, roundsRemaining: durationRounds, expiresAt: expiresAt, casterId: casterId,
       parentSpellId: "", parentCasterId: "",
       grantedConditions: grantedC,
       conditionalGrantedConditions: Set(),
@@ -1024,12 +1024,12 @@ module creature {
     }))
 
   pure def pAddEffectWithConditionalConditions(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    effects: Set[ActiveEffect], spellId: str, durationRounds: int, expiresAt: ExpiryPhase, casterId: str,
     grantedC: Set[Condition], conditionalGrantedC: Set[ConditionalGrantedCondition],
     grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
-      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      spellId: spellId, roundsRemaining: durationRounds, expiresAt: expiresAt, casterId: casterId,
       parentSpellId: "", parentCasterId: "",
       grantedConditions: grantedC,
       conditionalGrantedConditions: conditionalGrantedC,
@@ -1040,12 +1040,12 @@ module creature {
 
   /// Add an effect that depends on a battle-owned parent effect identity.
   pure def pAddDependentEffect(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    effects: Set[ActiveEffect], spellId: str, durationRounds: int, expiresAt: ExpiryPhase, casterId: str,
     parentSpellId: str, parentCasterId: str,
     grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
-      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      spellId: spellId, roundsRemaining: durationRounds, expiresAt: expiresAt, casterId: casterId,
       parentSpellId: parentSpellId, parentCasterId: parentCasterId,
       grantedConditions: grantedC,
       conditionalGrantedConditions: Set(),
@@ -1056,9 +1056,9 @@ module creature {
 
   /// Convenience wrapper: add effect with no granted R/V/I.
   pure def pAddEffectSimple(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str
+    effects: Set[ActiveEffect], spellId: str, durationRounds: int, expiresAt: ExpiryPhase, casterId: str
   ): Set[ActiveEffect] =
-    pAddEffect(effects, spellId, durationTurns, expiresAt, casterId, Set(), Set(), Set(), Set())
+    pAddEffect(effects, spellId, durationRounds, expiresAt, casterId, Set(), Set(), Set(), Set())
 
   /// Remove an effect by spellId (dispel, concentration break, etc.).
   pure def pRemoveEffect(effects: Set[ActiveEffect], spellId: str): Set[ActiveEffect] =
@@ -1066,11 +1066,11 @@ module creature {
 
   /// Decrement all durations by 1. Called during START_TURN (TA4).
   pure def pDecrementDurations(effects: Set[ActiveEffect]): Set[ActiveEffect] =
-    effects.map(e => e.with("turnsRemaining", e.turnsRemaining - 1))
+    effects.map(e => e.with("roundsRemaining", e.roundsRemaining - 1))
 
-  /// Return effects expired at the given phase (turnsRemaining <= 0 AND matching expiresAt).
+  /// Return effects expired at the given phase (roundsRemaining <= 0 AND matching expiresAt).
   pure def pExpiredAtPhase(effects: Set[ActiveEffect], phase: ExpiryPhase): Set[ActiveEffect] =
-    effects.filter(e => e.expiresAt == phase and e.turnsRemaining <= 0)
+    effects.filter(e => e.expiresAt == phase and e.roundsRemaining <= 0)
 
   /// Remove expired effects for the given phase only.
   pure def pClearExpiredAtPhase(effects: Set[ActiveEffect], phase: ExpiryPhase): Set[ActiveEffect] =
@@ -1078,11 +1078,11 @@ module creature {
 
   /// Check whether an effect with the given spellId is active (not expired).
   pure def pHasEffect(effects: Set[ActiveEffect], spellId: str): bool =
-    effects.exists(e => e.spellId == spellId and e.turnsRemaining > 0)
+    effects.exists(e => e.spellId == spellId and e.roundsRemaining > 0)
 
   /// Atomic decrement-by-n + clear all expired. Out-of-combat time advance primitive.
   pure def pTickEffects(effects: Set[ActiveEffect], n: int): Set[ActiveEffect] =
-    effects.map(e => e.with("turnsRemaining", e.turnsRemaining - n)).filter(e => e.turnsRemaining > 0)
+    effects.map(e => e.with("roundsRemaining", e.roundsRemaining - n)).filter(e => e.roundsRemaining > 0)
 
   pure def pConsumeOneShotHitEffects(
     effects: Set[ActiveEffect], isWeaponAttack: bool, isMeleeAttack: bool
@@ -6545,7 +6545,7 @@ module creature {
   val stableImpliesUnconscious = state.stable implies state.unconscious
 
   // Active effect durations
-  val activeEffectDurationsNonNeg = state.activeEffects.forall(e => e.turnsRemaining >= 0)
+  val activeEffectDurationsNonNeg = state.activeEffects.forall(e => e.roundsRemaining >= 0)
 
   // Death save state machine
   val hpPositiveImpliesNoDeathSaves =

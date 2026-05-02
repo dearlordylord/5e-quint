@@ -1,4 +1,11 @@
 import { Schema } from "effect";
+import * as Either from "effect/Either";
+import {
+  elapsedTimeTicksFromSurfaceDuration,
+  initiativeRoundsFromElapsedTimeTicks,
+  type ElapsedTimeUnit,
+  type InitiativeDurationRounds,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import type { ClassName } from "#/features/class-tables.ts";
 import {
@@ -46,7 +53,7 @@ export type ModeledPreparedSpellInfo = {
   readonly requiresVerbal: boolean;
   readonly requiresSomatic: boolean;
   readonly requiresMaterial: boolean;
-  readonly durationTurns?: number;
+  readonly durationRounds?: InitiativeDurationRounds;
 };
 
 export type SpellComponentRequirements = {
@@ -93,16 +100,25 @@ export function normalizeCastingTime(
   return null;
 }
 
-function parseConcentrationDurationTurns(duration: string): number | undefined {
+function parseConcentrationDurationRounds(
+  duration: string,
+): InitiativeDurationRounds | undefined {
   const match = /^Concentration, up to (\d+) (minute|minutes|hour|hours)$/.exec(
     duration,
   );
   if (match == null) return undefined;
   const count = Number(match[1]);
   const unit = match[2];
-  if (unit.startsWith("minute")) return count * 10;
-  if (unit.startsWith("hour")) return count * 600;
-  return undefined;
+  const elapsedUnit: ElapsedTimeUnit = unit.startsWith("minute")
+    ? "minute"
+    : "hour";
+  const ticks = elapsedTimeTicksFromSurfaceDuration({
+    unit: elapsedUnit,
+    amount: count,
+  });
+  return Either.isRight(ticks)
+    ? initiativeRoundsFromElapsedTimeTicks(ticks.right)
+    : undefined;
 }
 
 function parseSpellComponentRequirements(
@@ -129,10 +145,10 @@ function requireSpellInfo(
     throw new Error(
       `Unsupported casting time for modeled prepared spell ${spellName}: ${entry.castingTime}`,
     );
-  const durationTurns = entry.concentration
-    ? parseConcentrationDurationTurns(entry.duration)
+  const durationRounds = entry.concentration
+    ? parseConcentrationDurationRounds(entry.duration)
     : undefined;
-  if (entry.concentration && durationTurns == null) {
+  if (entry.concentration && durationRounds == null) {
     throw new Error(
       `Unsupported concentration duration for modeled prepared spell ${spellName}: ${entry.duration}`,
     );
@@ -144,7 +160,7 @@ function requireSpellInfo(
     castingTime,
     concentration: entry.concentration,
     ...components,
-    ...(durationTurns == null ? {} : { durationTurns }),
+    ...(durationRounds == null ? {} : { durationRounds }),
   };
 }
 

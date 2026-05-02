@@ -2,6 +2,12 @@
 // SRD 5.2.1 Sorcerer
 
 import { Schema } from "effect";
+import * as Either from "effect/Either";
+import {
+  elapsedTimeTicksFromHours,
+  elapsedTimeTicksFromMinutes,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { SpellSlots } from "#/types.ts";
 
 // --- Constants ---
@@ -366,10 +372,16 @@ export function empoweredSpellCost(): number {
 }
 
 /** Extended Spell (1 SP): double duration (max 24 hours). Advantage on conc saves. */
-export function extendedSpellDurationMinutes(
+export function extendedSpellDurationTicks(
   baseDurationMinutes: number,
-): number {
-  return Math.min(baseDurationMinutes * 2, 24 * 60);
+): ElapsedTimeTicks {
+  const doubled = elapsedTimeTicksFromMinutes(baseDurationMinutes * 2);
+  const cap = elapsedTimeTicksFromHours(24);
+  if (Either.isLeft(doubled) || Either.isLeft(cap)) {
+    throw new Error("Extended Spell duration must be whole elapsed minutes.");
+  }
+
+  return Number(doubled.right) <= Number(cap.right) ? doubled.right : cap.right;
 }
 
 export function extendedSpellCost(): number {

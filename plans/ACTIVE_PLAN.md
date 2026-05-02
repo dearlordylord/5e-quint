@@ -391,13 +391,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 52,
       "id": "PBA13F",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Introduce Canonical Elapsed-Time Algebra"
     },
     {
       "number": 53,
       "id": "PBA13G",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replace Bare Domain Primitives With Owned Types"
     },
     {
@@ -536,8 +536,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 49    | PBA13C - Migrate Battle Runtime To Support Profiles              | done               | PBA13B               | PBA13D                             | Migrated battle-runtime production support and resolution from authored-id semantic dispatch to generic support profiles while preserving supported workflows.                                                      | Completed in Task 49 run; PBA13D is now unblocked for audit work.                        |
 | 50    | PBA13D - Audit Character Creation Authored-Id Dispatch           | done               | PBA13C               | PBA13E                             | Audited character-creation support/finalization authored-id dispatch and migrated finalization choice support checks to source-shaped holes derived from Surface readers plus support profiles.                     | Completed in Task 50 run; PBA13E is now unblocked.                                       |
 | 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | done               | PBA13D               | PBA13F                             | Added a repo-local authored-id dispatch boundary check with explicit allowlists, integrated it into quality gating, and documented support-profile-first widening rules in owning runtime READMEs.                 | Completed in Task 51 run; PBA13F is unblocked and PBA14+ remain blocked on PBA13F/PBA13G. |
-| 52    | PBA13F - Introduce Canonical Elapsed-Time Algebra                | ready-for-research | PBA13E               | PBA13G                             | Add one shared algebra for elapsed hours, minutes, and atomic duration ticks, then migrate app/runtime duration code to use it instead of ad hoc local shapes.                                                    | Unblocked by PBA13E; must preserve turn-boundary timers separately.                        |
-| 53    | PBA13G - Replace Bare Domain Primitives With Owned Types         | blocked            | PBA13F               | PBA14                              | Audit and migrate production runtime/domain signatures away from bare `string`, `number`, and `boolean` where shared or package-owned domain types should carry meaning.                                          | Blocked until elapsed-time brands are available; must place types at the proper abstraction layer. |
+| 52    | PBA13F - Introduce Canonical Elapsed-Time Algebra                | done               | PBA13E               | PBA13G                             | Added shared elapsed-time ticks/initiative-round brands and migrated Surface duration parsing/projection, Core active-effect/concentration fields, battle-runtime persistent spell duration, and UI duration authoring. | Completed in Task 52 run; PBA13G is unblocked.                                            |
+| 53    | PBA13G - Replace Bare Domain Primitives With Owned Types         | ready-for-research | PBA13F               | PBA14                              | Audit and migrate production runtime/domain signatures away from bare `string`, `number`, and `boolean` where shared or package-owned domain types should carry meaning.                                          | Unblocked by PBA13F; must place types at the proper abstraction layer.                     |
 | 54    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13G               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked until emergency architecture cleanup is complete.                                 |
 | 55    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14A1                            | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
 | 56    | PBA14A1 - Restore Authored Critical Range Attack Hook            | blocked            | PBA14A               | PBA14B                             | Restore Unit-authored critical-range attack hooks through Surface support profiles and battle-runtime attack adjudication, without naming Champion or other authored ids in production support code.              | Blocked behind stance state; unblocks broader attack-rider procedure work.                |
@@ -3562,7 +3562,7 @@ Plan Impact:
 
 ### Task 52 - PBA13F - Introduce Canonical Elapsed-Time Algebra
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA13E
 Blocks: PBA13G
@@ -3639,29 +3639,19 @@ Verification:
   document why source/tests were sufficient.
 - `/simplify` convergence, minimum 2 rounds.
 
-Plan Impact:
+Completion:
 
-- If successful, unblock PBA13G with the elapsed-time brands available for the
-  broader primitive-domain migration.
-
-Retry Guidance:
-
-- Next implementation must inventory and migrate the known production duration
-  paths before editing behavior: `packages/core/src/features/class-sorcerer.ts`
-  `extendedSpellDurationMinutes`, core prepared-spell `durationTurns` and active
-  effects, battle-runtime Mage Armor `{ kind: "hours" }`, Surface
-  `hours`/`elapsed_hours` schemas and tracer labels, and UI-authored
-  `durationTurns` in `packages/app/src/components/EventPanel.tsx`.
-- Do not drop concentration max-duration expiry while separating elapsed-time
-  durations from initiative-bound start/end-of-turn active effects. Preserve the
-  existing executable expiry behavior or first remodel the owning spec/runtime
-  boundary with focused tests that prove the SRD maximum duration still expires.
-- Treat Ralph fuzz-script stub diffs as harness noise unless a candidate changes
-  them beyond the standard hard-fail replacement.
+- Added shared elapsed-time ticks and initiative-duration-round brands with
+  minute/hour/day conversion and formatting helpers.
+- Migrated Surface duration schemas/tracer labels, Core active-effect and
+  concentration duration fields, battle-runtime Mage Armor duration storage, and
+  UI-authored concentration duration defaults to the shared algebra.
+- PBA13G is unblocked with elapsed-time brands available for the broader
+  primitive-domain migration.
 
 ### Task 53 - PBA13G - Replace Bare Domain Primitives With Owned Types
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA13F
 Blocks: PBA14

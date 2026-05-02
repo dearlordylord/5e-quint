@@ -1060,7 +1060,7 @@ export function applyFailEffects(
     let target = addEffect(
       currentTarget,
       duration.effectId,
-      duration.turnsRemaining,
+      duration.roundsRemaining,
       duration.expiresAt,
       ctx.caster,
       {

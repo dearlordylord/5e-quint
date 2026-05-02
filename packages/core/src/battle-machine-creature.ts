@@ -3,6 +3,10 @@
  * All functions are pure (no XState imports, no side effects).
  */
 import { Match, Option } from "effect";
+import {
+  decrementInitiativeDurationRounds,
+  type InitiativeDurationRounds,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import { preparedBattleSpellAccess } from "#/battle-spell-access.ts";
 import {
@@ -776,12 +780,14 @@ export function advanceEffectsForOwner(
       continue;
     }
     changed = true;
-    const turnsRemaining = effect.turnsRemaining - 1;
-    if (turnsRemaining <= 0 && effect.expiresAt === phase) {
+    const roundsRemaining = decrementInitiativeDurationRounds(
+      effect.roundsRemaining,
+    );
+    if (roundsRemaining <= 0 && effect.expiresAt === phase) {
       removed.push(effect);
       continue;
     }
-    advanced.push({ ...effect, turnsRemaining });
+    advanced.push({ ...effect, roundsRemaining });
   }
   if (!changed) return creature;
   return removeGrantedConditions(
@@ -793,11 +799,11 @@ export function advanceEffectsForOwner(
 export function addEffect(
   c: BattleCreatureState,
   effectId: string,
-  duration: number,
+  duration: InitiativeDurationRounds,
   expiresAt: ExpiryPhase,
   casterId: CreatureId,
   options: Partial<
-    Omit<ActiveEffect, "spellId" | "turnsRemaining" | "expiresAt" | "casterId">
+    Omit<ActiveEffect, "spellId" | "roundsRemaining" | "expiresAt" | "casterId">
   > = {},
 ): BattleCreatureState {
   return {
@@ -808,7 +814,7 @@ export function addEffect(
       ),
       {
         spellId: effectId,
-        turnsRemaining: duration,
+        roundsRemaining: duration,
         expiresAt,
         casterId,
         ...options,

@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   createInitiativeStack,
   initiativeOrder,
@@ -867,7 +868,9 @@ export function battleMonsterSaveEffect({
         ? {
             conditionDurationOnFail: {
               effectId: `monster:${monsterId}:${ability.id}`,
-              turnsRemaining: timedConditionOnFail.duration.rounds,
+              roundsRemaining: initiativeDurationRounds(
+                timedConditionOnFail.duration.rounds,
+              ),
               expiresAt: timedConditionOnFail.duration.expiresAt,
               expiryOwnerId:
                 timedConditionOnFail.duration.expiryOwner === "target"

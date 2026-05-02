@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  ELAPSED_TIME_TICKS_PER_HOUR,
+  ELAPSED_TIME_TICKS_PER_MINUTE,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import {
   canUseMetamagic,
@@ -18,7 +22,7 @@ import {
   dragonWingsFlySpeed,
   elementalAffinityDamageBonus,
   empoweredSpellMaxRerolls,
-  extendedSpellDurationMinutes,
+  extendedSpellDurationTicks,
   hasDragonCompanion,
   hasElementalAffinity,
   metamagicCost,
@@ -539,12 +543,18 @@ describe("Empowered Spell", () => {
 
 describe("Extended Spell", () => {
   it("doubles duration", () => {
-    expect(extendedSpellDurationMinutes(10)).toBe(20);
-    expect(extendedSpellDurationMinutes(60)).toBe(120);
+    expect(Number(extendedSpellDurationTicks(10))).toBe(
+      20 * ELAPSED_TIME_TICKS_PER_MINUTE,
+    );
+    expect(Number(extendedSpellDurationTicks(60))).toBe(
+      120 * ELAPSED_TIME_TICKS_PER_MINUTE,
+    );
   });
-  it("caps at 24 hours (1440 minutes)", () => {
-    expect(extendedSpellDurationMinutes(800)).toBe(1440);
-    expect(extendedSpellDurationMinutes(1440)).toBe(1440);
+  it("caps at 24 hours", () => {
+    const maxDurationTicks = 24 * ELAPSED_TIME_TICKS_PER_HOUR;
+
+    expect(Number(extendedSpellDurationTicks(800))).toBe(maxDurationTicks);
+    expect(Number(extendedSpellDurationTicks(1_440))).toBe(maxDurationTicks);
   });
 });
 

@@ -11,6 +11,7 @@ import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Option } from "effect";
+import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { createActor } from "xstate";
 import { z } from "zod";
@@ -844,7 +845,7 @@ function createBattleProjectionDriver() {
         send(targetId, {
           type: "ADD_EFFECT",
           spellId: mkSpellId(SHOCKING_GRASP_ID),
-          durationTurns: 1,
+          durationRounds: initiativeDurationRounds(1),
           expiresAt: "start",
           casterId: mkCreatureId(attackerId),
           expiryOwnerId: mkCreatureId(targetId),
@@ -856,7 +857,7 @@ function createBattleProjectionDriver() {
         send(targetId, {
           type: "ADD_EFFECT",
           spellId: mkSpellId(RAY_OF_FROST_ID),
-          durationTurns: 1,
+          durationRounds: initiativeDurationRounds(1),
           expiresAt: "start",
           casterId: mkCreatureId(attackerId),
           expiryOwnerId: mkCreatureId(attackerId),
@@ -1763,7 +1764,7 @@ function createBattleProjectionDriver() {
       send(conc.caster, {
         type: "START_CONCENTRATION",
         spellId: mkSpellId(conc.spellId),
-        durationTurns: conc.duration,
+        durationRounds: initiativeDurationRounds(conc.duration),
         expiresAt: "end",
         casterId: mkCreatureId(conc.caster),
       });
@@ -1772,7 +1773,7 @@ function createBattleProjectionDriver() {
       send(conc.target, {
         type: "ADD_EFFECT",
         spellId: mkSpellId(conc.spellId),
-        durationTurns: conc.duration,
+        durationRounds: initiativeDurationRounds(conc.duration),
         expiresAt: "end",
         casterId: mkCreatureId(conc.caster),
       });
@@ -2287,7 +2288,7 @@ function createBattleProjectionDriver() {
       send(id, {
         type: "START_CONCENTRATION",
         spellId: mkSpellId(spellName),
-        durationTurns: 1,
+        durationRounds: initiativeDurationRounds(1),
         expiresAt: "end",
         casterId: mkCreatureId(id),
       });

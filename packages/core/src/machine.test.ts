@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
@@ -1231,7 +1232,7 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("regeneration"),
-      durationTurns: 2,
+      durationRounds: initiativeDurationRounds(2),
       expiresAt: "end",
       casterId: CreatureId("self"),
       startOfTurnHook: {
@@ -1249,7 +1250,7 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("blindness"),
-      durationTurns: 2,
+      durationRounds: initiativeDurationRounds(2),
       expiresAt: "end",
       casterId: CreatureId("self"),
       endOfTurnHook: {
@@ -1282,7 +1283,7 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("owned_regeneration"),
-      durationTurns: 2,
+      durationRounds: initiativeDurationRounds(2),
       expiresAt: "start",
       casterId: CreatureId("ally"),
       expiryOwnerId: CreatureId("self"),
@@ -1293,7 +1294,7 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("foreign_regeneration"),
-      durationTurns: 2,
+      durationRounds: initiativeDurationRounds(2),
       expiresAt: "start",
       casterId: CreatureId("ally"),
       expiryOwnerId: CreatureId("other"),
@@ -1309,12 +1310,12 @@ describe("turn lifecycle - START_TURN", () => {
       expect.arrayContaining([
         expect.objectContaining({
           spellId: mkSpellId("owned_regeneration"),
-          turnsRemaining: 1,
+          roundsRemaining: initiativeDurationRounds(1),
           expiryOwnerId: CreatureId("self"),
         }),
         expect.objectContaining({
           spellId: mkSpellId("foreign_regeneration"),
-          turnsRemaining: 2,
+          roundsRemaining: initiativeDurationRounds(2),
           expiryOwnerId: CreatureId("other"),
         }),
       ]),
@@ -1326,14 +1327,14 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("bless"),
-      durationTurns: 2,
+      durationRounds: initiativeDurationRounds(2),
       expiresAt: "end",
       casterId: CreatureId("self"),
     });
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("bless"),
-      durationTurns: 5,
+      durationRounds: initiativeDurationRounds(5),
       expiresAt: "end",
       casterId: CreatureId("self"),
     });
@@ -1341,7 +1342,7 @@ describe("turn lifecycle - START_TURN", () => {
     expect(ctx(a).activeEffects).toEqual([
       expect.objectContaining({
         spellId: mkSpellId("bless"),
-        turnsRemaining: 5,
+        roundsRemaining: initiativeDurationRounds(5),
       }),
     ]);
   });
@@ -1355,7 +1356,7 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("slow_ray"),
-      durationTurns: 2,
+      durationRounds: initiativeDurationRounds(2),
       expiresAt: "start",
       casterId: CreatureId("ally"),
       expiryOwnerId: CreatureId("ally"),
@@ -1374,7 +1375,7 @@ describe("turn lifecycle - START_TURN", () => {
       activeEffects: [
         {
           spellId: mkSpellId("test_rider"),
-          turnsRemaining: 10,
+          roundsRemaining: initiativeDurationRounds(10),
           expiresAt: "end" as const,
           casterId: CreatureId("self"),
           consumeOnQualifiedHit: { trigger: "nextWeaponHit" as const },
@@ -1397,7 +1398,7 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("foreign_blindness"),
-      durationTurns: 1,
+      durationRounds: initiativeDurationRounds(1),
       expiresAt: "end",
       casterId: CreatureId("ally"),
       expiryOwnerId: CreatureId("other"),
@@ -1419,14 +1420,14 @@ describe("turn lifecycle - START_TURN", () => {
       expect.arrayContaining([
         expect.objectContaining({
           spellId: mkSpellId("foreign_blindness"),
-          turnsRemaining: 1,
+          roundsRemaining: initiativeDurationRounds(1),
           expiryOwnerId: CreatureId("other"),
         }),
       ]),
     );
   });
 
-  it("AtEndOfTurn effect with turnsRemaining=1 fires end-of-turn hook then clears", () => {
+  it("AtEndOfTurn effect with roundsRemaining=1 fires end-of-turn hook then clears", () => {
     const a = createWithInput({
       maxHp: DEFAULT_MAX_HP,
       selfId: CreatureId("self"),
@@ -1436,7 +1437,7 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("faerie_fire"),
-      durationTurns: 1,
+      durationRounds: initiativeDurationRounds(1),
       expiresAt: "end",
       casterId: CreatureId("self"),
       endOfTurnHook: {
@@ -1462,7 +1463,7 @@ describe("turn lifecycle - START_TURN", () => {
     ).toBe(false);
   });
 
-  it("AtStartOfTurn effect with turnsRemaining=1 is cleared at start of its final turn", () => {
+  it("AtStartOfTurn effect with roundsRemaining=1 is cleared at start of its final turn", () => {
     const a = createWithInput({
       maxHp: DEFAULT_MAX_HP,
       selfId: CreatureId("self"),
@@ -1470,7 +1471,7 @@ describe("turn lifecycle - START_TURN", () => {
     a.send({
       type: "ADD_EFFECT",
       spellId: mkSpellId("shield"),
-      durationTurns: 1,
+      durationRounds: initiativeDurationRounds(1),
       expiresAt: "start",
       casterId: CreatureId("self"),
     });
@@ -2442,7 +2443,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2457,14 +2458,14 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("haste"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2479,7 +2480,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2493,7 +2494,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2510,7 +2511,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2526,7 +2527,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2541,7 +2542,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2557,7 +2558,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2571,7 +2572,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2585,7 +2586,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 10,
+      durationRounds: initiativeDurationRounds(10),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
@@ -2599,7 +2600,7 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 1,
+      durationRounds: initiativeDurationRounds(1),
       expiresAt: "start",
       casterId: CreatureId(""),
     });
@@ -2614,12 +2615,12 @@ describe("concentration", () => {
     a.send({
       type: "START_CONCENTRATION",
       spellId: mkSpellId("bless"),
-      durationTurns: 1,
+      durationRounds: initiativeDurationRounds(1),
       expiresAt: "end",
       casterId: CreatureId(""),
     });
     expect(isConcentrating(snap(a))).toBe(true);
-    startTurn(a); // decrements turnsRemaining to 0
+    startTurn(a); // decrements roundsRemaining to 0
     // Effect still active (expiresAt=end, cleared at end of turn)
     endTurn(a);
     expect(Option.isNone(ctx(a).concentrationSpellId)).toBe(true);
@@ -2680,7 +2681,7 @@ describe("cast prepared spell", () => {
       expect.arrayContaining([
         expect.objectContaining({
           spellId: "bless",
-          turnsRemaining: 10,
+          roundsRemaining: initiativeDurationRounds(10),
           expiresAt: "end",
         }),
       ]),
@@ -2720,7 +2721,7 @@ describe("cast prepared spell", () => {
       expect.arrayContaining([
         expect.objectContaining({
           spellId: "hold_person",
-          turnsRemaining: 10,
+          roundsRemaining: initiativeDurationRounds(10),
           expiresAt: "end",
         }),
       ]),

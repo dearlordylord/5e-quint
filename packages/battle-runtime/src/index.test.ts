@@ -38,6 +38,7 @@ import {
   abilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   holeId,
   type AttackRollMode,
@@ -90,6 +91,14 @@ const unitCatalogResult = buildUnitCatalog({
 const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
+
+function requireElapsedHours(hours: number) {
+  const parsed = elapsedTimeTicksFromHours(hours);
+  if (Either.isLeft(parsed)) {
+    throw new Error(`invalid test elapsed hours: ${hours}`);
+  }
+  return parsed.right;
+}
 
 if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
   throw new Error("Battle runtime test catalogs must build successfully.");
@@ -5285,7 +5294,7 @@ describe("battle runtime", () => {
                 sourceCombatantId: wizardId,
                 base: 13,
                 ability: "dex",
-                duration: { kind: "hours", amount: 8 },
+                durationTicks: requireElapsedHours(8),
                 earlyEnds: [{ kind: "targetDonsArmor" }],
               },
             ],
@@ -5378,7 +5387,7 @@ describe("battle runtime", () => {
               sourceCombatantId: wizardId,
               base: 13,
               ability: "dex",
-              duration: { kind: "hours", amount: 1 },
+              durationTicks: requireElapsedHours(1),
               earlyEnds: [{ kind: "concentrationBroken" }],
             },
           ],

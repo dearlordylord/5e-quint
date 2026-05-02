@@ -194,6 +194,12 @@ export type DiceDelta = Schema.Schema.Type<
 export type DurationUpcastTier = Schema.Schema.Type<
   typeof SurfaceSchema.DurationUpcastTierSchema
 >;
+export type InitiativeDurationValue = Schema.Schema.Type<
+  typeof SurfaceSchema.InitiativeDurationValueSchema
+>;
+export type ElapsedTimeDurationValue = Schema.Schema.Type<
+  typeof SurfaceSchema.ElapsedTimeDurationValueSchema
+>;
 export type DurationValue = Schema.Schema.Type<
   typeof SurfaceSchema.DurationValueSchema
 >;

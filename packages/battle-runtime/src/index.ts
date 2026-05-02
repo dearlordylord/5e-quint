@@ -36,6 +36,10 @@ import {
   resolveDeathSavingThrow,
   validDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
+import {
+  elapsedTimeTicksFromHours,
+  elapsedTimeTicksFromSurfaceDuration,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -50,6 +54,7 @@ import type {
   DeathSaves,
   DeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   HoleId,
   HoleInstanceKey,
@@ -355,10 +360,7 @@ export type BattleActiveEffect =
       readonly base: number;
       readonly ability: "dex";
       readonly earlyEnds: readonly BattleSpellEffectEarlyEnd[];
-      readonly duration: {
-        readonly kind: "hours";
-        readonly amount: number;
-      };
+      readonly durationTicks: ElapsedTimeTicks;
     });
 export type BattleConcentration = {
   readonly sourceSpellId: SpellRecord["id"];
@@ -7337,13 +7339,20 @@ function supportedPreparedPersistentSpellProfile(
     return [];
   }
   const operation = spell.mechanics.operations[0];
+  const durationTicks = elapsedTimeTicksFromSurfaceDuration(
+    spell.mechanics.duration.kind === "timed"
+      ? spell.mechanics.duration.value
+      : { unit: "unsupported", amount: 0 },
+  );
+  const mageArmorDurationTicks = elapsedTimeTicksFromHours(8);
   if (
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "touch" ||
     spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "hour" ||
-    spell.mechanics.duration.value.amount !== 8 ||
+    Either.isLeft(durationTicks) ||
+    Either.isLeft(mageArmorDurationTicks) ||
+    Number(durationTicks.right) !== Number(mageArmorDurationTicks.right) ||
     spell.mechanics.operations.length !== 1 ||
     operation?.trigger.kind !== "passive" ||
     operation.effect.kind !== "modify_ac_set_base" ||
@@ -7364,10 +7373,7 @@ function supportedPreparedPersistentSpellProfile(
         sourceCombatantId: actorId,
         base: operation.effect.formula.base,
         ability: "dex",
-        duration: {
-          kind: "hours",
-          amount: spell.mechanics.duration.value.amount,
-        },
+        durationTicks: durationTicks.right,
         earlyEnds: [{ kind: "targetDonsArmor" }],
       },
     },

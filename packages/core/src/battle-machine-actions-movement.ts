@@ -2,6 +2,7 @@ import {
   buildBattleAttackContext,
   resolveAttack,
 } from "#/battle-machine-actions-attack.ts";
+import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { isIncapacitated, removeCondition } from "#/battle-machine-creature.ts";
 import {
   activeId,
@@ -368,7 +369,9 @@ export function battleResolveTraversalStep({
         ? {
             conditionDurationOnFail: {
               effectId: `monster:${traversal.mover}:${traversal.abilityId}:${nextTarget.targetId}`,
-              turnsRemaining: timedConditionOnFail.duration.rounds,
+              roundsRemaining: initiativeDurationRounds(
+                timedConditionOnFail.duration.rounds,
+              ),
               expiresAt: timedConditionOnFail.duration.expiresAt,
               expiryOwnerId:
                 timedConditionOnFail.duration.expiryOwner === "target"

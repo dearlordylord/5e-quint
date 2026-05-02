@@ -642,7 +642,7 @@ module battle {
   // Context for a save-based spell targeting one creature.
   type SaveFailureConditionDuration = {
     effectId: str,
-    turnsRemaining: int,
+    roundsRemaining: int,
     expiresAt: ExpiryPhase,
     expiryOwnerId: CreatureId,
   }
@@ -658,7 +658,7 @@ module battle {
   /// Runtime-empty sentinel for "no condition duration is attached to this save".
   val EMPTY_SAVE_FAILURE_CONDITION_DURATION: SaveFailureConditionDuration = {
     effectId: "",
-    turnsRemaining: 0,
+    roundsRemaining: 0,
     expiresAt: AtEndOfTurn,
     expiryOwnerId: "",
   }
@@ -1284,10 +1284,10 @@ module battle {
     else holderId
 
   pure def blocksOpportunityAttacks(effects: Set[ActiveEffect]): bool =
-    effects.exists(e => e.spellId == SHOCKING_GRASP_SPELL_ID and e.turnsRemaining > 0)
+    effects.exists(e => e.spellId == SHOCKING_GRASP_SPELL_ID and e.roundsRemaining > 0)
 
   pure def speedDeltaFromEffects(effects: Set[ActiveEffect]): int =
-    if (effects.exists(e => e.spellId == RAY_OF_FROST_SPELL_ID and e.turnsRemaining > 0)) -10
+    if (effects.exists(e => e.spellId == RAY_OF_FROST_SPELL_ID and e.roundsRemaining > 0)) -10
     else 0
 
   pure def battleEffectiveSpeed(c: Combatant): int = {
@@ -1447,7 +1447,7 @@ module battle {
       val cb = acc.get(holderId)
       val advanced = cb.creature.activeEffects.map(e =>
         if (effectExpiryOwner(holderId, e) == ownerId)
-          e.with("turnsRemaining", e.turnsRemaining - 1)
+          e.with("roundsRemaining", e.roundsRemaining - 1)
         else e
       )
       val expired = pExpiredAtPhase(advanced, AtStartOfTurn)
@@ -2762,7 +2762,7 @@ module battle {
             val nextEffects = pAddEffectWithConditionalConditions(
               currentTarget.creature.activeEffects,
               ctx.conditionDurationOnFail.effectId,
-              ctx.conditionDurationOnFail.turnsRemaining,
+              ctx.conditionDurationOnFail.roundsRemaining,
               ctx.conditionDurationOnFail.expiresAt,
               ctx.caster,
               Set(ctx.conditionOnFail),
@@ -2792,7 +2792,7 @@ module battle {
             val nextEffects = pAddEffectWithConditionalConditions(
               currentTarget.creature.activeEffects,
               ctx.conditionDurationOnFail.effectId,
-              ctx.conditionDurationOnFail.turnsRemaining,
+              ctx.conditionDurationOnFail.roundsRemaining,
               ctx.conditionDurationOnFail.expiresAt,
               ctx.caster,
               Set(ctx.conditionOnFail),

@@ -253,7 +253,7 @@ const ConditionalGrantedConditionSchema = Schema.Struct({
 
 const ActiveEffectSchema = Schema.Struct({
   spellId: Schema.optional(Schema.String),
-  turnsRemaining: Schema.Number,
+  roundsRemaining: Schema.Number,
   expiresAt: ExpiryPhaseSchema,
   casterId: Schema.String,
   expiryOwnerId: Schema.optional(Schema.String),

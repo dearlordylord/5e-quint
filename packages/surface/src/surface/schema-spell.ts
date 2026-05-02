@@ -970,7 +970,7 @@ export const CastingTimeSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("minutes"),
-    amount: Schema.Number,
+    amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
     ritual: Schema.Boolean,
   }),
 );
@@ -2652,8 +2652,11 @@ export const ReanimationSlotEntrySchema = Schema.Struct({
 export const ReanimationMenuSchema = nonEmpty(ReanimationSlotEntrySchema);
 
 export const ReanimationReassertWindowSchema = Schema.Struct({
-  hours: Schema.Number,
-  maxReassertPerCast: Schema.Number,
+  hours: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  maxReassertPerCast: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+  ),
 });
 
 export const ReanimatedCreatureMechanicsSchema = Schema.extend(

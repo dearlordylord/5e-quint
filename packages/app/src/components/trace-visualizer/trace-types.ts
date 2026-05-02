@@ -26,7 +26,7 @@ export interface NormalizedState {
   readonly hitPointDiceRemaining: number | Record<string, number>
   readonly activeEffects: ReadonlyArray<{
     spellId: string
-    turnsRemaining: number
+    roundsRemaining: number
     expiresAt: string
   }>
   readonly movementRemaining: number

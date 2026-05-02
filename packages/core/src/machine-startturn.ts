@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { decrementInitiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import {
   fighterExtraAttacks,
@@ -48,7 +49,12 @@ function decrementDurationsForOwner(
 ): ReadonlyArray<ActiveEffect> {
   return aes.map((ae) =>
     effectOwnedBySelf(ae, selfId)
-      ? { ...ae, turnsRemaining: ae.turnsRemaining - 1 }
+      ? {
+          ...ae,
+          roundsRemaining: decrementInitiativeDurationRounds(
+            ae.roundsRemaining,
+          ),
+        }
       : ae,
   );
 }
@@ -62,13 +68,13 @@ function clearExpiredStartForOwner(
       !(
         effectOwnedBySelf(a, selfId) &&
         a.expiresAt === "start" &&
-        a.turnsRemaining <= 0
+        a.roundsRemaining <= 0
       ),
   );
 }
 
 function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: string): boolean {
-  return aes.some((a) => a.spellId === spellId && a.turnsRemaining > 0);
+  return aes.some((a) => a.spellId === spellId && a.roundsRemaining > 0);
 }
 
 function aggregateDamageModifiers(

@@ -8,6 +8,7 @@
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { Option } from "effect";
 import { afterAll, beforeAll, describe, it } from "vitest";
@@ -189,7 +190,7 @@ interface NormalizedBattleCreature {
   incapacitatedSources: ReadonlySet<string>;
   activeEffects: ReadonlyArray<{
     spellId: string;
-    turnsRemaining: number;
+    roundsRemaining: number;
     expiresAt: string;
     casterId: string;
     parentSpellId: string;
@@ -296,7 +297,7 @@ function quintCombatantToNormalized(
     incapacitatedSources: s.incapacitatedSources,
     activeEffects: s.activeEffects.map((ae) => ({
       spellId: ae.spellId,
-      turnsRemaining: ae.turnsRemaining,
+      roundsRemaining: ae.roundsRemaining,
       expiresAt: ae.expiresAt,
       casterId: ae.casterId,
       parentSpellId: ae.parentSpellId,
@@ -407,7 +408,7 @@ function xstateCreatureToNormalized(
     activeEffects: [...c.activeEffects]
       .map((ae) => ({
         spellId: ae.spellId,
-        turnsRemaining: ae.turnsRemaining,
+        roundsRemaining: ae.roundsRemaining,
         expiresAt: ae.expiresAt,
         casterId: ae.casterId,
         parentSpellId: ae.parentSpellId ?? "",
@@ -837,7 +838,7 @@ function onHitEffectFromPicks(
   if (hitRider === "AHRShockingGrasp") {
     return {
       spellId: mkSpellId("shocking_grasp"),
-      turnsRemaining: 1,
+      roundsRemaining: initiativeDurationRounds(1),
       expiresAt: "start" as const,
       casterId: attackerId,
       expiryOwnerId: targetId,
@@ -847,7 +848,7 @@ function onHitEffectFromPicks(
   if (hitRider === "AHRRayOfFrost") {
     return {
       spellId: mkSpellId("ray_of_frost"),
-      turnsRemaining: 1,
+      roundsRemaining: initiativeDurationRounds(1),
       expiresAt: "start" as const,
       casterId: attackerId,
       expiryOwnerId: attackerId,
@@ -1110,7 +1111,7 @@ function createBattleMachineDriver() {
           type: "BATTLE_CAST_CONCENTRATION_SPELL",
           targetId: pc(picks, "targetId", ""),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
-          duration: p(picks, "duration", 5),
+          duration: initiativeDurationRounds(p(picks, "duration", 5)),
           spellId: mkSpellId(ps(picks, "spellId", "hold_person")),
           cond:
             QUINT_CONDITION_MAP[ps(picks, "cond", "CParalyzed")] ?? "paralyzed",

@@ -313,11 +313,11 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 ## A34: Spell durations are non-negative
 
-**Assumption:** Spell effect durations (tracked as `turnsRemaining` on `ActiveEffect`) are non-negative integers. When a duration reaches 0, the effect ends and is removed. Negative durations do not exist. (This note does not imply that other non-mentioned durations are negative.)
+**Assumption:** Spell effect durations (tracked as `roundsRemaining` on `ActiveEffect`) are non-negative integers. When a duration reaches 0, the effect ends and is removed. Negative durations do not exist. (This note does not imply that other non-mentioned durations are negative.)
 
 **Rules basis:** The SRD describes durations as positive time spans ("1 minute," "Concentration, up to 10 minutes," etc.) that simply end when expired. No SRD passage addresses negative durations because the concept does not exist in the rules.
 
-**Changes:** Invariant `turnsRemaining >= 0` added to safety invariants (see PLAN_INVARIANTS.md L2).
+**Changes:** Invariant `roundsRemaining >= 0` added to safety invariants (see PLAN_INVARIANTS.md L2).
 
 ## A37: Grapple Movable cost modeled as movement cost, not speed reduction
 

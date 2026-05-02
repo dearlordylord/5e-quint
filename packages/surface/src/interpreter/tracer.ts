@@ -1,6 +1,13 @@
 // Tracer — interpreter over the authored unit ADT. Emits a dependency
 // graph of atoms + typed relations; does not call the combat runtime.
 
+import * as Either from "effect/Either";
+import {
+  elapsedTimeTicksFromHours,
+  elapsedTimeTicksFromSurfaceDuration,
+  formatElapsedTimeDuration,
+} from "@dnd/shared/elapsed-time";
+
 import type {
   UnitRecord,
   SpellRecord,
@@ -6384,14 +6391,13 @@ function traceActivationCost(
     }
     case "study": {
       const id = ids("study");
-      const hourLabel = c.hours === 1 ? "hour" : "hours";
       const dayLabel = c.withinDays === 1 ? "day" : "days";
       nodes.push({
         id,
         category: "window",
         atomKind: "duration_window",
         label:
-          `duration_window\nstudy ${c.hours} ${hourLabel}\n` +
+          `duration_window\nstudy ${formatElapsedHours(c.hours)}\n` +
           `within ${c.withinDays} ${dayLabel}`,
       });
       edges.push({ from: procId, to: id, relation: "requires" });
@@ -6618,12 +6624,11 @@ function traceResetCadence(
         c.regain == null
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
-      const hourLabel = c.hours === 1 ? "hour" : "hours";
       nodes.push({
         id: hid,
         category: "window",
         atomKind: "duration_window",
-        label: `duration_window\n${c.hours} ${hourLabel} cooldown (${refill})`,
+        label: `duration_window\n${formatElapsedHours(c.hours)} cooldown (${refill})`,
       });
       edges.push({ from: resId, to: hid, relation: "persists_until" });
       return;
@@ -7038,7 +7043,10 @@ function describeDurationValue(d: {
     readonly amount: number;
   }>;
 }): string {
-  const base = `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
+  const elapsed = elapsedTimeTicksFromSurfaceDuration(d);
+  const base = Either.isRight(elapsed)
+    ? formatElapsedTimeDuration(elapsed.right)
+    : `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
   if (d.upcastTiers === undefined || d.upcastTiers.length === 0) return base;
   const tiers = d.upcastTiers
     .map(
@@ -7047,6 +7055,13 @@ function describeDurationValue(d: {
     )
     .join(", ");
   return `${base}\nupcast: ${tiers}`;
+}
+
+function formatElapsedHours(hours: number): string {
+  const ticks = elapsedTimeTicksFromHours(hours);
+  return Either.isRight(ticks)
+    ? formatElapsedTimeDuration(ticks.right)
+    : `${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
 function describeConditionChoice(
@@ -7382,7 +7397,7 @@ function traceReanimatedCreature(
     id: cmdId,
     category: "effect",
     atomKind: "command_companion",
-    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}\nreassert within ${m.reassertWindow.hours}h (up to ${m.reassertWindow.maxReassertPerCast})`,
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}\nreassert within ${formatElapsedHours(m.reassertWindow.hours)} (up to ${m.reassertWindow.maxReassertPerCast})`,
   });
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });

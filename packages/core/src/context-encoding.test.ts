@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
@@ -43,7 +44,7 @@ describe("context encoding", () => {
       activeEffects: [
         {
           spellId: mkSpellId("bless"),
-          turnsRemaining: 2,
+          roundsRemaining: initiativeDurationRounds(2),
           expiresAt: "end",
           casterId: CreatureId("caster-1"),
           grantedConditions: ["restrained", "blinded"],

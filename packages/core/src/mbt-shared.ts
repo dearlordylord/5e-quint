@@ -387,7 +387,7 @@ export const QuintCreatureState = z.object({
   activeEffects: z.any().transform((raw: unknown) => {
     const items: Array<{
       spellId: string;
-      turnsRemaining: number;
+      roundsRemaining: number;
       expiresAt: string;
       casterId: string;
       parentSpellId: string;
@@ -409,7 +409,7 @@ export const QuintCreatureState = z.object({
         const r = e as Record<string, unknown>;
         items.push({
           spellId: String(r.spellId ?? ""),
-          turnsRemaining: Number(r.turnsRemaining ?? r.remainingTurns ?? 0),
+          roundsRemaining: Number(r.roundsRemaining ?? r.remainingRounds ?? 0),
           expiresAt: mapExpiryPhase(variantToString(r.expiresAt)),
           casterId: String(r.casterId ?? ""),
           parentSpellId: String(r.parentSpellId ?? ""),
@@ -698,7 +698,7 @@ export interface NormalizedState {
   readonly hitDiceRemaining: Record<ClassName, number>;
   readonly activeEffects: ReadonlyArray<{
     spellId: string;
-    turnsRemaining: number;
+    roundsRemaining: number;
     expiresAt: string;
     casterId: string;
     parentSpellId: string;
@@ -979,7 +979,7 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     activeEffects: [...c.activeEffects]
       .map((ae) => ({
         spellId: ae.spellId,
-        turnsRemaining: ae.turnsRemaining,
+        roundsRemaining: ae.roundsRemaining,
         expiresAt: ae.expiresAt,
         casterId: ae.casterId,
         parentSpellId: ae.parentSpellId ?? "",
@@ -1229,7 +1229,7 @@ export function activeEffectsEqual(
   for (let i = 0; i < a.length; i++) {
     if (
       a[i].spellId !== b[i].spellId ||
-      a[i].turnsRemaining !== b[i].turnsRemaining ||
+      a[i].roundsRemaining !== b[i].roundsRemaining ||
       a[i].expiresAt !== b[i].expiresAt ||
       a[i].casterId !== b[i].casterId ||
       a[i].parentSpellId !== b[i].parentSpellId ||

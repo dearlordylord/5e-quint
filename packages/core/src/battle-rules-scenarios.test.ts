@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   currentActing,
   initiativeOrder,
@@ -362,7 +363,7 @@ function initFireShieldBattle(retaliationDamageType: "fire" | "cold") {
         activeEffects: [
           {
             spellId: spellId("fire_shield"),
-            turnsRemaining: 10,
+            roundsRemaining: initiativeDurationRounds(10),
             expiresAt: "end",
             casterId: CreatureId("B"),
             grantedResistances: new Set(
@@ -1209,7 +1210,7 @@ describe("battle rules scenario regressions", () => {
           activeEffects: [
             {
               spellId: hunter,
-              turnsRemaining: 3,
+              roundsRemaining: initiativeDurationRounds(3),
               expiresAt: "end",
               casterId: CreatureId("A"),
               grantedConditions: ["invisible"],
@@ -1225,7 +1226,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_CAST_CONCENTRATION_SPELL",
       targetId: CreatureId("B"),
       slotLvl: spellSlotLevel(2),
-      duration: 10,
+      duration: initiativeDurationRounds(10),
       spellId: spellId("hold_person"),
       cond: "paralyzed",
       applyCond: true,
@@ -1697,7 +1698,7 @@ describe("battle rules scenario regressions", () => {
       ...DEFAULT_ATTACK_CONTEXT,
       onHitEffect: {
         spellId: spellId("ray_of_frost"),
-        turnsRemaining: 1,
+        roundsRemaining: initiativeDurationRounds(1),
         expiresAt: "start",
         casterId: CreatureId("A"),
         expiryOwnerId: CreatureId("A"),
@@ -3663,7 +3664,7 @@ describe("battle rules scenario regressions", () => {
       tAc: armorClass(12),
       onHitEffect: {
         spellId: spellId("shocking_grasp"),
-        turnsRemaining: 1,
+        roundsRemaining: initiativeDurationRounds(1),
         expiresAt: "start",
         casterId: CreatureId("A"),
         expiryOwnerId: CreatureId("B"),
@@ -3735,7 +3736,7 @@ describe("battle rules scenario regressions", () => {
       tAc: armorClass(12),
       onHitEffect: {
         spellId: spellId("ray_of_frost"),
-        turnsRemaining: 1,
+        roundsRemaining: initiativeDurationRounds(1),
         expiresAt: "start",
         casterId: CreatureId("A"),
         expiryOwnerId: CreatureId("A"),
@@ -3810,7 +3811,7 @@ describe("battle rules scenario regressions", () => {
       tAc: armorClass(12),
       onHitEffect: {
         spellId: spellId("ray_of_frost"),
-        turnsRemaining: 1,
+        roundsRemaining: initiativeDurationRounds(1),
         expiresAt: "start",
         casterId: CreatureId("A"),
         expiryOwnerId: CreatureId("A"),
@@ -3849,7 +3850,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_CAST_CONCENTRATION_SPELL",
       targetId: CreatureId("B"),
       slotLvl: spellSlotLevel(2),
-      duration: 10,
+      duration: initiativeDurationRounds(10),
       spellId: spellId("hold_person"),
       cond: "paralyzed",
       applyCond: true,
@@ -3886,7 +3887,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_CAST_CONCENTRATION_SPELL",
       targetId: CreatureId("B"),
       slotLvl: spellSlotLevel(2),
-      duration: 10,
+      duration: initiativeDurationRounds(10),
       spellId: spellId("hold_person"),
       cond: "paralyzed",
       applyCond: true,
@@ -3924,7 +3925,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_CAST_CONCENTRATION_SPELL",
       targetId: CreatureId("C"),
       slotLvl: spellSlotLevel(2),
-      duration: 10,
+      duration: initiativeDurationRounds(10),
       spellId: spellId("hold_person"),
       cond: "paralyzed",
       applyCond: true,
@@ -4962,7 +4963,7 @@ describe("battle rules scenario regressions", () => {
           activeEffects: [
             {
               spellId: spellId("test_rider"),
-              turnsRemaining: 10,
+              roundsRemaining: initiativeDurationRounds(10),
               expiresAt: "end",
               casterId: CreatureId("A"),
               consumeOnQualifiedHit: { trigger: "nextWeaponHit" },
@@ -4991,7 +4992,7 @@ describe("battle rules scenario regressions", () => {
       crit: false,
       onHitEffect: {
         spellId: spellId("spell_attack_marker"),
-        turnsRemaining: 1,
+        roundsRemaining: initiativeDurationRounds(1),
         expiresAt: "end",
         casterId: CreatureId("A"),
       },
@@ -5505,13 +5506,13 @@ describe("battle rules scenario regressions", () => {
       activeEffects: [
         {
           spellId: bless,
-          turnsRemaining: 3,
+          roundsRemaining: initiativeDurationRounds(3),
           expiresAt: "end",
           casterId: CreatureId("A"),
         },
         {
           spellId: bless,
-          turnsRemaining: 3,
+          roundsRemaining: initiativeDurationRounds(3),
           expiresAt: "end",
           casterId: CreatureId("B"),
         },
@@ -5522,7 +5523,7 @@ describe("battle rules scenario regressions", () => {
       activeEffects: [
         {
           spellId: child,
-          turnsRemaining: 3,
+          roundsRemaining: initiativeDurationRounds(3),
           expiresAt: "end",
           casterId: CreatureId("A"),
           parentSpellId: bless,
@@ -5538,7 +5539,7 @@ describe("battle rules scenario regressions", () => {
     expect(result.get(CreatureId("A"))?.activeEffects).toEqual([
       {
         spellId: bless,
-        turnsRemaining: 3,
+        roundsRemaining: initiativeDurationRounds(3),
         expiresAt: "end",
         casterId: CreatureId("B"),
       },
@@ -6131,7 +6132,7 @@ describe("battle rules scenario regressions", () => {
           activeEffects: [
             {
               spellId: spellId("invisibility"),
-              turnsRemaining: 3,
+              roundsRemaining: initiativeDurationRounds(3),
               expiresAt: "end",
               casterId: CreatureId("B"),
               grantedConditions: ["invisible"],

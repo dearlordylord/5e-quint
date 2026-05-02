@@ -28,6 +28,7 @@ import {
   SpellSlotLevel as SharedSpellSlotLevel,
   TempHP as SharedTempHP,
 } from "@dnd/shared/types";
+import type { InitiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 export {
   ABILITIES,
@@ -289,7 +290,7 @@ export interface ConditionalGrantedCondition {
 
 export interface ActiveEffect {
   readonly spellId: string;
-  readonly turnsRemaining: number;
+  readonly roundsRemaining: InitiativeDurationRounds;
   readonly expiresAt: ExpiryPhase;
   readonly casterId: CreatureId;
   readonly parentSpellId?: SpellId;

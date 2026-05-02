@@ -80,8 +80,8 @@ export const ClassFeatureActivationCostSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("study"),
-    hours: Schema.Number,
-    withinDays: Schema.Number,
+    hours: PositiveIntegerSchema,
+    withinDays: PositiveIntegerSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("replace_attack") }),
 );
@@ -175,7 +175,7 @@ export const TimeResetCadenceSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("elapsed_hours"),
-    hours: Schema.Number,
+    hours: PositiveIntegerSchema,
     regain: exactOptional(Schema.NullOr(DiceAmountSchema)),
   }),
   Schema.Struct({ kind: Schema.Literal("never") }),

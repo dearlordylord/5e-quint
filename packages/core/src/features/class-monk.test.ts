@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ELAPSED_TIME_TICKS_PER_MINUTE } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import type { FocusPoolState } from "#/features/class-monk.ts";
 import { abilityModifier } from "#/types.ts";
@@ -681,7 +682,7 @@ describe("Superior Defense", () => {
     const result = useSuperiorDefense(10);
     expect(result.focusPoints).toBe(7);
     expect(result.resistancesGranted).toBe(true);
-    expect(result.durationMinutes).toBe(1);
+    expect(Number(result.durationTicks)).toBe(ELAPSED_TIME_TICKS_PER_MINUTE);
   });
 });
 

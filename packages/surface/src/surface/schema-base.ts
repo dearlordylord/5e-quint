@@ -188,18 +188,29 @@ export const DiceDeltaSchema = Schema.Union(
 );
 
 export const DurationUpcastTierSchema = Schema.Struct({
-  atSlot: Schema.Number,
-  amount: Schema.Number,
+  atSlot: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
 });
 
 export const ReadonlyNonEmptyArrayDurationUpcastTierSchema =
   Schema.NonEmptyArray(DurationUpcastTierSchema);
 
-export const DurationValueSchema = Schema.Struct({
-  unit: Schema.Literal("round", "minute", "hour", "day"),
-  amount: Schema.Number,
+export const InitiativeDurationValueSchema = Schema.Struct({
+  unit: Schema.Literal("round"),
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
   upcastTiers: exactOptional(ReadonlyNonEmptyArrayDurationUpcastTierSchema),
 });
+
+export const ElapsedTimeDurationValueSchema = Schema.Struct({
+  unit: Schema.Literal("minute", "hour", "day"),
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  upcastTiers: exactOptional(ReadonlyNonEmptyArrayDurationUpcastTierSchema),
+});
+
+export const DurationValueSchema = Schema.Union(
+  InitiativeDurationValueSchema,
+  ElapsedTimeDurationValueSchema,
+);
 
 export const SkillSchema = Schema.Literal(
   "acrobatics",

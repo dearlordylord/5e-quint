@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
+    "./elapsed-time": "./src/elapsed-time.ts",
     "./game-facts": "./src/game-facts.ts",
     "./types": "./src/types.ts"
   },
@@ -11,6 +12,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5"
   }
 }
