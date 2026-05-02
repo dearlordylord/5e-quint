@@ -3644,7 +3644,7 @@ Plan Impact:
 - If successful, unblock PBA13G with the elapsed-time brands available for the
   broader primitive-domain migration.
 
-Current Attempt Notes:
+Retry Guidance:
 
 - Next implementation must inventory and migrate the known production duration
   paths before editing behavior: `packages/core/src/features/class-sorcerer.ts`
