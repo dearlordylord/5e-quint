@@ -44,6 +44,8 @@ Options:
 Environment:
   RALPH_CLAUDE_MODEL      Optional model passed to claude --model.
   RALPH_CODEX_MODEL       Optional model passed to codex exec --model.
+  RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
+                          Default is quiet: persist logs to files only.
 EOF
 }
 
@@ -855,6 +857,7 @@ run_codex() {
   local prompt="$2"
   local log_file="$3"
   local output_file="$4"
+  local status=0
   local -a args=(exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
 
   if [[ -n "$codex_model" ]]; then
@@ -862,7 +865,22 @@ run_codex() {
   fi
 
   log "codex: $(quote_cmd codex "${args[@]}" -)"
-  codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
+  set +e
+  if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
+    codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
+    status=${PIPESTATUS[0]}
+  else
+    codex "${args[@]}" - <"$prompt" >"$log_file" 2>&1
+    status=$?
+  fi
+  set -e
+
+  if [[ "$status" -ne 0 ]]; then
+    log "codex exited $status; full log: $log_file"
+  else
+    log "codex completed; final: $output_file log: $log_file"
+  fi
+  return "$status"
 }
 
 run_claude() {
