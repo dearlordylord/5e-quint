@@ -9,6 +9,7 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import {
+  BATTLE_UNIT_SUPPORT_PROFILES,
   BattleFillSchema,
   BATTLE_READIED_SPELL_TRIGGERS,
   battleId,
@@ -1185,7 +1186,11 @@ describe("battle runtime", () => {
       combatants: [
         characterSeed({
           initiative: 20,
-          classLevels: [{ className: "rogue", level: 2 }],
+          classLevels: [{ className: "fighter", level: 1 }],
+          characterUnitRefs: [{
+            unitId: "class_rogue",
+            supportProfiles: BATTLE_UNIT_SUPPORT_PROFILES,
+          }],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
@@ -5275,7 +5280,7 @@ describe("battle runtime", () => {
             armorClass: 15,
             activeEffects: [
               {
-                kind: "mageArmorBaseArmorClass",
+                kind: "spellBaseArmorClass",
                 sourceSpellId: "mage_armor",
                 sourceCombatantId: wizardId,
                 base: 13,
@@ -5368,7 +5373,7 @@ describe("battle runtime", () => {
           ...skeleton,
           activeEffects: [
             {
-              kind: "mageArmorBaseArmorClass",
+              kind: "spellBaseArmorClass",
               sourceSpellId: "hold_person",
               sourceCombatantId: wizardId,
               base: 13,
@@ -7157,6 +7162,10 @@ function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
+  readonly characterUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -7182,7 +7191,7 @@ function characterSeed(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
-      characterUnitRefs: [],
+      characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: input.classLevels ?? [
         { className: "fighter", level: input.classLevel ?? 1 },
       ],
@@ -7558,7 +7567,7 @@ function unsupportedClassRiderResource(
     { readonly kind: "character" }
   >["resources"]
 >[number] {
-  const unit = unitLibrary.requireUnit("fighter_action_surge");
+  const unit = actionSurgeWithAdditionalDirectEffect();
   if (unit.kind !== "class_feature" || !("resource" in unit.mechanics)) {
     throw new Error("Expected class feature resource Unit.");
   }

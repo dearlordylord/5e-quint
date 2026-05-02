@@ -145,8 +145,13 @@ export type BattleWeaponDamage = Extract<
   { readonly kind: "dice" }
 >;
 
+export const BATTLE_UNIT_SUPPORT_PROFILES = ["bonusActionHide"] as const;
+export type BattleUnitSupportProfile =
+  (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number];
+
 export type BattleUnitRef = {
   readonly unitId: UnitRecord["id"];
+  readonly supportProfiles?: readonly BattleUnitSupportProfile[];
 };
 
 export type CharacterBattleLoadoutRef = {
@@ -346,7 +351,7 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
-      readonly kind: "mageArmorBaseArmorClass";
+      readonly kind: "spellBaseArmorClass";
       readonly base: number;
       readonly ability: "dex";
       readonly earlyEnds: readonly BattleSpellEffectEarlyEnd[];
@@ -574,7 +579,7 @@ export type SupportedSpellAct =
       readonly rangeFeet: number;
       readonly activeEffect: Extract<
         BattleActiveEffect,
-        { readonly kind: "mageArmorBaseArmorClass" }
+        { readonly kind: "spellBaseArmorClass" }
       >;
     };
 
@@ -875,7 +880,7 @@ type BonusActionHideSubject = {
   readonly action: "hide";
 };
 
-const ACID_SPLASH_POINT_SPHERE_RADIUS_FEET = 5;
+const SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET = 5;
 
 export function sameBattleSubject(
   left: BattleSubject,
@@ -1012,7 +1017,10 @@ export type BattleUnitFeatureRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly unitFeature: SupportedSecondWindUnitFeature;
+  readonly unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >;
 };
 export type BattleDeathSavingThrowHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -1774,31 +1782,26 @@ const ESCAPE_GRAPPLE_OUTCOME_HOLE_ID = holeId("battle:escape-grapple:outcome");
 const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
   "battle:escape-grapple:outcome",
 );
-const ACTION_SURGE_UNIT_ID = "fighter_action_surge";
-const SECOND_WIND_UNIT_ID = "fighter_second_wind";
-const SECOND_WIND_HEALING_ROLL_HOLE_ID = holeId(
-  "battle:unit-feature:second-wind:healing-roll",
-);
-const SECOND_WIND_HEALING_ROLL_HOLE_INSTANCE = holeInstanceKey(
-  "battle:unit-feature:second-wind:healing-roll",
-);
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = 5;
 const HIDE_DC = 15;
 
-type SupportedActionSurgeUnitFeature = {
-  readonly unit: UnitRecord;
-  readonly restriction: ActionRestriction;
-};
-type SupportedSecondWindUnitFeature = {
-  readonly unit: UnitRecord;
-  readonly dice: number;
-  readonly dieSize: number;
-  readonly flatBase: number;
-  readonly flatPerLevel: number;
-  readonly startingAtLevel: number;
-  readonly className: ClassName;
-  readonly classLevel: ClassLevel;
-};
+type SupportedUnitFeatureProfile =
+  | {
+      readonly kind: "extraActionGrant";
+      readonly unit: UnitRecord;
+      readonly restriction: ActionRestriction;
+    }
+  | {
+      readonly kind: "selfBonusActionHealing";
+      readonly unit: UnitRecord;
+      readonly dice: number;
+      readonly dieSize: number;
+      readonly flatBase: number;
+      readonly flatPerLevel: number;
+      readonly startingAtLevel: number;
+      readonly className: ClassName;
+      readonly classLevel: ClassLevel;
+    };
 
 export function startBattle(input: {
   readonly battleId: BattleId;
@@ -1978,13 +1981,13 @@ export function discoverBattleActs(
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     state.currentTurnResources.currentHasBonusAction &&
-    canUseCunningActionHide(state.combatants.get(actorId)) &&
+    actorSupportsBonusActionHide(state.combatants.get(actorId)) &&
     canHideInCurrentCircumstances(state, actorId)
   ) {
     acts.push({
       subject: { tag: "bonusAction", actorId, action: "hide" },
       label: "Hide",
-      summary: "Use Cunning Action to Hide as a Bonus Action.",
+      summary: "Use a supported feature to Hide as a Bonus Action.",
       initialHoles: [hideAbilityCheckHole()],
     });
   }
@@ -3115,7 +3118,7 @@ function activeEffectArmorClass(
   combatant: BattleCreatureState,
 ): ArmorClassState {
   const mageArmor = combatant.activeEffects.find(
-    (effect) => effect.kind === "mageArmorBaseArmorClass",
+    (effect) => effect.kind === "spellBaseArmorClass",
   );
   if (mageArmor === undefined || combatant.armorClass.base.kind === "armor") {
     return combatant.armorClass;
@@ -3126,7 +3129,7 @@ function activeEffectArmorClass(
       kind: "ability_sum",
       base: armorClass(mageArmor.base),
       abilityModifiers: [mageArmor.ability],
-      source: "mage_armor",
+      source: "spell_base_plus_ability",
     },
   };
 }
@@ -3714,11 +3717,14 @@ function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
       "Hide is no longer available for the current actor.",
     );
   }
-  if (input.subject.tag === "bonusAction" && !canUseCunningActionHide(actor)) {
+  if (
+    input.subject.tag === "bonusAction" &&
+    !actorSupportsBonusActionHide(actor)
+  ) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Bonus Action Hide requires an admitted Cunning Action class rider.",
+      "Bonus Action Hide requires an admitted support profile.",
     );
   }
   if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
@@ -5219,9 +5225,12 @@ function supportedUnitFeatureActs(
 
   const classLevels = actor.origin.classLevels;
   return actor.origin.resources.flatMap((resource) => {
-    const actionSurge = parseSupportedActionSurgeUnitFeature(resource.unit);
+    const unitFeature = parseSupportedUnitFeatureProfile(
+      resource.unit,
+      classLevels,
+    );
     if (
-      actionSurge !== null &&
+      unitFeature?.kind === "extraActionGrant" &&
       resource.usesRemaining > 0 &&
       !resource.usedThisTurn
     ) {
@@ -5230,20 +5239,16 @@ function supportedUnitFeatureActs(
           subject: {
             tag: "unitFeature" as const,
             actorId,
-            unitId: actionSurge.unit.id,
+            unitId: unitFeature.unit.id,
           },
-          label: actionSurge.unit.name,
+          label: unitFeature.unit.name,
           summary: "Grant one additional non-Magic action this turn.",
           initialHoles: [],
         },
       ];
     }
 
-    const secondWind = parseSupportedSecondWindUnitFeature(
-      resource.unit,
-      classLevels,
-    );
-    return secondWind !== null &&
+    return unitFeature?.kind === "selfBonusActionHealing" &&
       resource.usesRemaining > 0 &&
       state.currentTurnResources.currentHasBonusAction
       ? [
@@ -5251,11 +5256,11 @@ function supportedUnitFeatureActs(
             subject: {
               tag: "unitFeature" as const,
               actorId,
-              unitId: secondWind.unit.id,
+              unitId: unitFeature.unit.id,
             },
-            label: secondWind.unit.name,
+            label: unitFeature.unit.name,
             summary: "Spend a Bonus Action and one use to regain Hit Points.",
-            initialHoles: [secondWindHealingRollHole(secondWind)],
+            initialHoles: [selfBonusActionHealingRollHole(unitFeature)],
           },
         ]
       : [];
@@ -5279,22 +5284,25 @@ function resolveUnitFeature(
     );
 
     if (resource !== undefined) {
-      const actionSurge = parseSupportedActionSurgeUnitFeature(resource.unit);
-      if (actionSurge !== null) {
-        return resolveActionSurgeUnitFeature(
-          input,
-          actor,
-          resource,
-          actionSurge,
-        );
-      }
-
-      const secondWind = parseSupportedSecondWindUnitFeature(
+      const unitFeature = parseSupportedUnitFeatureProfile(
         resource.unit,
         actor.origin.classLevels,
       );
-      if (secondWind !== null) {
-        return resolveSecondWindUnitFeature(input, actor, resource, secondWind);
+      if (unitFeature?.kind === "extraActionGrant") {
+        return resolveExtraActionGrantUnitFeature(
+          input,
+          actor,
+          resource,
+          unitFeature,
+        );
+      }
+      if (unitFeature?.kind === "selfBonusActionHealing") {
+        return resolveSelfBonusActionHealingUnitFeature(
+          input,
+          actor,
+          resource,
+          unitFeature,
+        );
       }
     }
   }
@@ -5314,17 +5322,20 @@ function resolveUnitFeature(
   );
 }
 
-function resolveActionSurgeUnitFeature(
+function resolveExtraActionGrantUnitFeature(
   input: UnitFeatureBattleResolutionInput,
   actor: CharacterBattleCreatureState,
   resource: CharacterBattleResourceState,
-  actionSurge: SupportedActionSurgeUnitFeature,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "extraActionGrant" }
+  >,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Action Surge does not accept battle fills.",
+      "This Unit feature does not accept battle fills.",
     );
   }
 
@@ -5332,7 +5343,7 @@ function resolveActionSurgeUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Action Surge is no longer available for the current actor.",
+      "Unit feature is no longer available for the current actor.",
     );
   }
 
@@ -5340,13 +5351,13 @@ function resolveActionSurgeUnitFeature(
     input.state.currentTurnResources,
     input.subject.actorId,
     input.subject.unitId,
-    actionSurge.restriction,
+    unitFeature.restriction,
   );
   if (Either.isLeft(granted)) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Action Surge has already granted an action this turn.",
+      "This Unit feature has already granted an action this turn.",
     );
   }
 
@@ -5380,11 +5391,14 @@ function resolveActionSurgeUnitFeature(
   };
 }
 
-function resolveSecondWindUnitFeature(
+function resolveSelfBonusActionHealingUnitFeature(
   input: UnitFeatureBattleResolutionInput,
   actor: CharacterBattleCreatureState,
   resource: CharacterBattleResourceState,
-  secondWind: SupportedSecondWindUnitFeature,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >,
 ): BattleResolutionResult {
   if (
     resource.usesRemaining <= 0 ||
@@ -5393,17 +5407,17 @@ function resolveSecondWindUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Second Wind is no longer available for the current actor.",
+      selfBonusActionHealingStaleMessage(unitFeature),
     );
   }
 
-  const healingRoll = secondWindHealingRollFill(input.fills, secondWind);
+  const healingRoll = selfBonusActionHealingRollFill(input.fills, unitFeature);
   if (healingRoll.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", healingRoll.message);
   }
   if (healingRoll.value === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      secondWindHealingRollHole(secondWind),
+      selfBonusActionHealingRollHole(unitFeature),
     ]);
   }
 
@@ -5414,7 +5428,7 @@ function resolveSecondWindUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Second Wind is no longer available for the current actor.",
+      selfBonusActionHealingStaleMessage(unitFeature),
     );
   }
 
@@ -5430,7 +5444,7 @@ function resolveSecondWindUnitFeature(
         ),
       },
     },
-    secondWindHealingAmount(secondWind, healingRoll.value),
+    selfBonusActionHealingAmount(unitFeature, healingRoll.value),
   );
   const nextState = {
     ...input.state,
@@ -5447,10 +5461,13 @@ function resolveSecondWindUnitFeature(
   };
 }
 
-function parseSupportedActionSurgeUnitFeature(
+function parseExtraActionGrantUnitFeatureProfile(
   unit: UnitRecord,
-): SupportedActionSurgeUnitFeature | null {
-  if (unit.id !== ACTION_SURGE_UNIT_ID || unit.kind !== "class_feature") {
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "extraActionGrant" }
+> | null {
+  if (unit.kind !== "class_feature") {
     return null;
   }
   const mechanics = unit.mechanics;
@@ -5475,7 +5492,11 @@ function parseSupportedActionSurgeUnitFeature(
   }
   const effect = phase.effects[0];
   return effect.kind === "grant_extra_action"
-    ? { unit, restriction: effect.restriction }
+    ? {
+        kind: "extraActionGrant",
+        unit,
+        restriction: effect.restriction,
+      }
     : null;
 }
 
@@ -5488,9 +5509,12 @@ type UnitFeatureRolledDiceFill =
     }
   | { readonly tag: "invalid"; readonly message: string };
 
-function secondWindHealingRollFill(
+function selfBonusActionHealingRollFill(
   fills: readonly BattleFill[],
-  secondWind: SupportedSecondWindUnitFeature,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >,
 ): UnitFeatureRolledDiceFill {
   let healingRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
@@ -5498,12 +5522,12 @@ function secondWindHealingRollFill(
   for (const fill of fills) {
     if (
       fill.kind === "rolledDice" &&
-      fill.holeId === SECOND_WIND_HEALING_ROLL_HOLE_ID
+      fill.holeId === selfBonusActionHealingRollHoleId(unitFeature)
     ) {
       if (healingRoll !== undefined) {
         return {
           tag: "invalid",
-          message: "Second Wind healing roll was filled twice.",
+          message: `${unitFeature.unit.name} healing roll was filled twice.`,
         };
       }
       healingRoll = fill;
@@ -5512,7 +5536,7 @@ function secondWindHealingRollFill(
 
     return {
       tag: "invalid",
-      message: `Fill ${fill.kind} does not match the Second Wind replay holes.`,
+      message: `Fill ${fill.kind} does not match the ${unitFeature.unit.name} replay holes.`,
     };
   }
 
@@ -5521,28 +5545,70 @@ function secondWindHealingRollFill(
   }
 
   const validation = validateRolledDiceForDiceExpr(healingRoll.value, {
-    dice: secondWind.dice,
-    dieSize: secondWind.dieSize,
+    dice: unitFeature.dice,
+    dieSize: unitFeature.dieSize,
   });
   return validation == null
     ? { tag: "ok", value: healingRoll }
     : { tag: "invalid", message: validation.reason };
 }
 
-function secondWindHealingRollHole(
-  secondWind: SupportedSecondWindUnitFeature,
+function selfBonusActionHealingRollHole(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >,
 ): BattleUnitFeatureRollHole {
   return {
     kind: "rolledDice",
-    holeId: SECOND_WIND_HEALING_ROLL_HOLE_ID,
-    holeInstanceKey: SECOND_WIND_HEALING_ROLL_HOLE_INSTANCE,
-    label: `${secondWind.unit.name} healing (${secondWind.dice}d${secondWind.dieSize})`,
-    unitFeature: secondWind,
+    holeId: selfBonusActionHealingRollHoleId(unitFeature),
+    holeInstanceKey: selfBonusActionHealingRollHoleInstanceKey(unitFeature),
+    label: `${unitFeature.unit.name} healing (${unitFeature.dice}d${unitFeature.dieSize})`,
+    unitFeature,
   };
 }
 
-function secondWindHealingAmount(
-  secondWind: SupportedSecondWindUnitFeature,
+function selfBonusActionHealingStaleMessage(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >,
+): string {
+  return `${unitFeature.unit.name} is no longer available for the current actor.`;
+}
+
+function selfBonusActionHealingRollProtocolId(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >,
+): string {
+  return `battle:unit-feature:${unitFeature.unit.id}:healing-roll`;
+}
+
+function selfBonusActionHealingRollHoleId(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >,
+): BattleHoleId {
+  return holeId(selfBonusActionHealingRollProtocolId(unitFeature));
+}
+
+function selfBonusActionHealingRollHoleInstanceKey(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >,
+): HoleInstanceKey {
+  return holeInstanceKey(selfBonusActionHealingRollProtocolId(unitFeature));
+}
+
+function selfBonusActionHealingAmount(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "selfBonusActionHealing" }
+  >,
   healingRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): number {
   const diceTotal = healingRoll.value.reduce(
@@ -5556,9 +5622,9 @@ function secondWindHealingAmount(
   );
   return (
     diceTotal +
-    secondWind.flatBase +
-    Math.max(0, secondWind.classLevel - secondWind.startingAtLevel) *
-      secondWind.flatPerLevel
+    unitFeature.flatBase +
+    Math.max(0, unitFeature.classLevel - unitFeature.startingAtLevel) *
+      unitFeature.flatPerLevel
   );
 }
 
@@ -5583,11 +5649,14 @@ function requireCharacterClassLevel(
   return classLevel;
 }
 
-function parseSupportedSecondWindUnitFeature(
+function parseSelfBonusActionHealingUnitFeatureProfile(
   unit: UnitRecord,
   classLevels: readonly CharacterBattleClassLevel[],
-): SupportedSecondWindUnitFeature | null {
-  if (unit.id !== SECOND_WIND_UNIT_ID || unit.kind !== "class_feature") {
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "selfBonusActionHealing" }
+> | null {
+  if (unit.kind !== "class_feature") {
     return null;
   }
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
@@ -5626,6 +5695,7 @@ function parseSupportedSecondWindUnitFeature(
     return null;
   }
   return {
+    kind: "selfBonusActionHealing",
     unit,
     dice: effect.amount.base.dice,
     dieSize: effect.amount.base.dieSize,
@@ -5635,6 +5705,16 @@ function parseSupportedSecondWindUnitFeature(
     className: unit.className,
     classLevel,
   };
+}
+
+function parseSupportedUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): SupportedUnitFeatureProfile | null {
+  return (
+    parseExtraActionGrantUnitFeatureProfile(unit) ??
+    parseSelfBonusActionHealingUnitFeatureProfile(unit, classLevels)
+  );
 }
 
 function discoverSupportedSpellActs(
@@ -7042,7 +7122,7 @@ function withoutConcentration(
     concentration: null,
     activeEffects: combatant.activeEffects.filter(
       (effect) =>
-        effect.kind !== "mageArmorBaseArmorClass" ||
+        effect.kind !== "spellBaseArmorClass" ||
         !effect.earlyEnds.some(
           (earlyEnd) => earlyEnd.kind === "concentrationBroken",
         ),
@@ -7077,7 +7157,7 @@ function concentrationBrokenEffectFrom(
 ): boolean {
   return (
     effect.sourceCombatantId === combatantId &&
-    effect.kind === "mageArmorBaseArmorClass" &&
+    effect.kind === "spellBaseArmorClass" &&
     effect.earlyEnds.some((earlyEnd) => earlyEnd.kind === "concentrationBroken")
   );
 }
@@ -7181,28 +7261,28 @@ function supportedSpellActs(
 
   return [
     ...spellcasting.preparedSpells.flatMap((spell) =>
-      supportedPreparedSlotSpell(spell),
+      supportedPreparedSlotSpellProfile(spell),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
-      supportedPreparedPersistentSpell(actor.combatantId, spell),
+      supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
     ),
     ...spellcasting.cantrips.flatMap((spell) =>
-      supportedCantripSpellAttack(
+      supportedCantripSpellAttackProfile(
         spell,
         spellcasting.spellcastingAbilityModifier,
         spellcasting.proficiencyBonus,
       ),
     ),
     ...spellcasting.cantrips.flatMap((spell) =>
-      supportedCantripSaveGateDamage(spell),
+      supportedCantripSaveGateDamageProfile(spell),
     ),
   ];
 }
 
-function supportedPreparedSlotSpell(
+function supportedPreparedSlotSpellProfile(
   spell: SpellRecord,
 ): readonly SupportedSpellAct[] {
-  if (spell.id !== "magic_missile" || spell.mechanics.family !== "activation") {
+  if (spell.mechanics.family !== "activation") {
     return [];
   }
   const phase = spell.mechanics.phases[0];
@@ -7249,14 +7329,11 @@ function supportedPreparedSlotSpell(
     : [];
 }
 
-function supportedPreparedPersistentSpell(
+function supportedPreparedPersistentSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
 ): readonly SupportedSpellAct[] {
-  if (
-    spell.id !== "mage_armor" ||
-    spell.mechanics.family !== "ongoing_effect"
-  ) {
+  if (spell.mechanics.family !== "ongoing_effect") {
     return [];
   }
   const operation = spell.mechanics.operations[0];
@@ -7282,7 +7359,7 @@ function supportedPreparedPersistentSpell(
       slotLevel: 1,
       rangeFeet: 5,
       activeEffect: {
-        kind: "mageArmorBaseArmorClass",
+        kind: "spellBaseArmorClass",
         sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         base: operation.effect.formula.base,
@@ -7297,12 +7374,12 @@ function supportedPreparedPersistentSpell(
   ];
 }
 
-function supportedCantripSpellAttack(
+function supportedCantripSpellAttackProfile(
   spell: SpellRecord,
   spellcastingAbilityModifier: number,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly SupportedSpellAct[] {
-  if (spell.id !== "ray_of_frost" || spell.mechanics.family !== "activation") {
+  if (spell.mechanics.family !== "activation") {
     return [];
   }
   const phase = spell.mechanics.phases[0];
@@ -7353,7 +7430,7 @@ function supportedCantripSpellAttack(
   ];
 }
 
-function supportedCantripSaveGateDamage(
+function supportedCantripSaveGateDamageProfile(
   spell: SpellRecord,
 ): readonly SupportedSpellAct[] {
   if (spell.mechanics.family !== "activation") {
@@ -7371,7 +7448,7 @@ function supportedCantripSaveGateDamage(
     phase.attachment.value.origin.kind !== "point_within_range" ||
     phase.attachment.value.shape.kind !== "sphere" ||
     phase.attachment.value.shape.radiusFeet !==
-      ACID_SPLASH_POINT_SPHERE_RADIUS_FEET ||
+      SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET ||
     phase.onSuccess.kind !== "none" ||
     phase.onFail.kind !== "damage" ||
     typeof phase.onFail.damageType !== "string"
@@ -7945,12 +8022,17 @@ function revealHidden(
   };
 }
 
-function canUseCunningActionHide(
+function actorSupportsBonusActionHide(
   combatant: BattleCreatureState | undefined,
 ): boolean {
   return (
     combatant?.origin.kind === "character" &&
-    (findCharacterClassLevel(combatant.origin.classLevels, "rogue") ?? 0) >= 2
+    combatant.origin.characterUnitRefs.some(
+      (unitRef) =>
+        unitRef.supportProfiles?.some(
+          (profile) => profile === "bonusActionHide",
+        ) === true,
+    )
   );
 }
 

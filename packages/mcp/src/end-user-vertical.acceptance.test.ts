@@ -569,7 +569,7 @@ describe("end-user promoted MCP vertical", () => {
       unitFeatureSubject("fighter", "fighter_second_wind"),
       {
         kind: "rolledDice",
-        holeId: "battle:unit-feature:second-wind:healing-roll",
+        holeId: "battle:unit-feature:fighter_second_wind:healing-roll",
         value: [{ results: [2] }],
       },
     );
