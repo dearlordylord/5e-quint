@@ -174,6 +174,10 @@ runtime choice rather than patched into state later.
   trigger, eligible reactors, admitted reaction choices, and the interrupted
   continuation to resume after all reactors decline or the chosen Reaction
   procedure completes.
+- `SupportProfile` - parsed, typed support-boundary value proving an authored
+  Surface record shape matches one implemented runtime procedure family.
+  Support profiles are admission/dispatch inputs; they are neither a second
+  authored DSL nor durable battle state.
 - `origin` - the Character or Stat Block origin data retained on a
   `BattleCreatureState`. Origin is not provenance. Provenance is the canonical
   rules/content source claimed by authored Surface records.
