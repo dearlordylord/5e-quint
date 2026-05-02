@@ -442,6 +442,165 @@ fs.writeFileSync(path, text)
 NODE
 }
 
+auto_unblock_blocked_tasks() {
+  local target_file="$1"
+
+  local promoted_tasks
+  promoted_tasks="$(node - "$target_file" <<'NODE'
+const fs = require("fs")
+
+const path = process.argv[2]
+const text = fs.readFileSync(path, "utf8")
+
+const canonicalDep = (value) => {
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+}
+
+const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
+if (!indexMatch) {
+  throw new Error(`missing ralph-task-index block in ${path}`)
+}
+
+const index = JSON.parse(indexMatch[1])
+if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
+  throw new Error(`invalid ralph-task-index schema in ${path}`)
+}
+
+const statusById = new Map()
+for (const task of index.tasks) {
+  if (typeof task?.id !== "string" || typeof task?.number !== "number") {
+    continue
+  }
+  task.id = task.id.trim()
+  statusById.set(task.id, String(task.status ?? "").trim())
+}
+
+const dependsByNumber = new Map()
+const rowIndexByNumber = new Map()
+
+const lines = text.split("\n")
+let inDagSection = false
+
+for (let i = 0; i < lines.length; i += 1) {
+  const line = lines[i]
+  const trimmed = line.trim()
+
+  if (trimmed.startsWith("## DAG / Queue Order")) {
+    inDagSection = true
+    continue
+  }
+
+  if (inDagSection && trimmed.startsWith("## Task Details")) {
+    inDagSection = false
+    continue
+  }
+
+  if (!inDagSection) {
+    continue
+  }
+
+  if (!line.startsWith("|")) {
+    continue
+  }
+
+  const cells = line.split("|")
+  if (cells.length < 6) {
+    continue
+  }
+
+  const number = Number(cells[1]?.trim())
+  if (!Number.isInteger(number)) {
+    continue
+  }
+
+  const titleCell = String(cells[2] ?? "").trim()
+  const statusCell = String(cells[3] ?? "").trim()
+  const dependsCell = String(cells[4] ?? "").trim()
+  const taskId = titleCell.split(" - ")[0]?.trim()
+
+  if (!taskId) {
+    continue
+  }
+
+  const depends = canonicalDep(dependsCell)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .filter((dep) => {
+      const normalized = dep.toLowerCase()
+      return normalized !== "none" && normalized !== "completed baseline"
+    })
+
+  if (statusCell && statusById.get(taskId) === "blocked" && depends.length > 0) {
+    dependsByNumber.set(number, depends)
+    rowIndexByNumber.set(number, i)
+  }
+}
+
+const promoted = []
+
+for (const [number, deps] of dependsByNumber.entries()) {
+  const task = index.tasks.find((entry) => entry.number === number)
+  if (!task) {
+    continue
+  }
+
+  const allSatisfied = deps.every((dep) => statusById.get(dep) === "done")
+  if (!allSatisfied) {
+    continue
+  }
+
+  if (task.status === "blocked") {
+    task.status = "ready-for-research"
+    statusById.set(task.id, "ready-for-research")
+    promoted.push(task)
+  }
+}
+
+if (promoted.length === 0) {
+  process.exit(0)
+}
+
+for (const task of promoted) {
+  const rowIndex = rowIndexByNumber.get(task.number)
+  if (typeof rowIndex !== "number") {
+    throw new Error(`missing DAG row index for #${task.number}`)
+  }
+
+  const rowCells = lines[rowIndex].split("|")
+  rowCells[3] = ` ${task.status} `
+  lines[rowIndex] = rowCells.join("|")
+}
+
+let updatedText = lines.join("\n")
+for (const task of promoted) {
+  const headingPattern = new RegExp(`(^### Task ${task.number}[^\\n]*\\n\\nStatus: \\`)([^\\`]+)(\\`)`, "m")
+  const headingReplacement = `$1${task.status}$3`
+
+  const replaced = updatedText.replace(headingPattern, headingReplacement)
+  if (replaced === updatedText) {
+    throw new Error(`missing task heading for #${task.number}`)
+  }
+  updatedText = replaced
+}
+
+updatedText = updatedText.replace(/<!-- ralph-task-index\n[\s\S]*?\n-->/, `<!-- ralph-task-index\n${JSON.stringify(index, null, 2)}\n-->`)
+
+fs.writeFileSync(path, updatedText)
+for (const task of promoted) {
+  const safe = `${task.number}|${task.id}`
+  console.log(safe)
+}
+NODE
+  )"
+
+  if [[ -n "$promoted_tasks" ]]; then
+    note "plan" "auto-unblocked-from-dependencies tasks=$(echo "$promoted_tasks" | tr '\n' ',')"
+  fi
+}
+
 lookup_task_row() {
   local task_no="$1"
   awk -F $'\t' -v selected="$task_no" '
@@ -1229,6 +1388,8 @@ choose_next_task() {
   local ready_count
   mkdir -p "$chooser_root"
 
+  refresh_plan_snapshot
+  auto_unblock_blocked_tasks "$plan_file"
   refresh_plan_snapshot
 
   if [[ ${#selected_tasks[@]} -gt 0 ]]; then
