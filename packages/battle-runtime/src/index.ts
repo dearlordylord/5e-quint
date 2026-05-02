@@ -395,25 +395,37 @@ export type BattleConcentration = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly effectKind: "spellEffect" | "readiedSpell";
 };
+// SRD 5.2.1 Ready [Action]: this is the spell-specific Readied Response
+// created by taking Ready with an action-time spell. The caster spends the
+// spell's resources immediately, holds the energy with Concentration, and
+// releases it later with a Reaction.
 export type BattleReadiedSpell = {
   readonly invocation: SupportedDamageSpellAct;
   readonly trigger: BattleReadiedSpellTrigger;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
-export type BattleReadiedActionResponse = {
-  readonly kind: "move";
-};
-export type BattleReadiedAction = {
+// SRD 5.2.1 Ready [Action]: Ready can hold a chosen action, or the special
+// alternative to move up to Speed. This promoted slice models only that
+// movement alternative for non-spell Ready responses.
+export type BattleReadiedMovement = {
+  // supported runtime trigger buckets, not the RAW Ready trigger taxonomy; RAW is closer to "table decision" and probably shall be modeled like that
   readonly trigger: BattleReactionTrigger;
-  readonly response: BattleReadiedActionResponse;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
+// SRD 5.2.1 Help [Action], "Assist an Attack Roll": helper distracts an
+// enemy within 5 feet, granting Advantage to one ally's next attack roll
+// against that enemy; the benefit expires at the start of the helper's
+// next turn. This promoted slice models that attack-roll branch only, not
+// Help's ability-check branch or first-aid action summary.
 export type BattleHelpAttack = {
   readonly helperId: CombatantId;
   readonly allyId: CombatantId;
   readonly targetEnemyId: CombatantId;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
+// Runtime trigger buckets for Reaction procedures. These names are local
+// projections of SRD timing clauses such as "when a creature hits" or "when
+// the trigger occurs"; they are not authored action names.
 export const BATTLE_REACTION_TRIGGERS = [
   "attackHit",
   "spellCast",
@@ -455,8 +467,8 @@ export type BattleReactionProcedureChoice = {
       readonly readiedSpellCasterId: CombatantId;
     }
   | {
-      readonly kind: "releaseReadiedAction";
-      readonly readiedActionActorId: CombatantId;
+      readonly kind: "releaseReadiedMovement";
+      readonly readiedMovementActorId: CombatantId;
     }
   | {
       readonly kind: "opportunityAttack";
@@ -470,8 +482,8 @@ export type BattleReactionProcedureSelection = {
       readonly readiedSpellCasterId: CombatantId;
     }
   | {
-      readonly kind: "releaseReadiedAction";
-      readonly readiedActionActorId: CombatantId;
+      readonly kind: "releaseReadiedMovement";
+      readonly readiedMovementActorId: CombatantId;
     }
   | {
       readonly kind: "opportunityAttack";
@@ -782,7 +794,7 @@ export type BattleState = {
   >;
   readonly currentTurnResources: BattleTurnResources;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
-  readonly readiedActions: ReadonlyMap<CombatantId, BattleReadiedAction>;
+  readonly readiedMovements: ReadonlyMap<CombatantId, BattleReadiedMovement>;
   readonly helpAttacks: readonly BattleHelpAttack[];
   readonly grapples: readonly BattleGrappleLink[];
   readonly interruptStack: readonly BattleReactionFrame[];
@@ -811,7 +823,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "move",
   "standFromProne",
   "releaseReadiedSpell",
-  "releaseReadiedAction",
+  "releaseReadiedMovement",
   "releaseGrapple",
   "opportunityAttack",
 ] as const;
@@ -954,8 +966,8 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedAction"),
-    readiedActionActorId: CombatantId,
+    command: Schema.Literal("releaseReadiedMovement"),
+    readiedMovementActorId: CombatantId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1069,8 +1081,8 @@ function battleSubjectKey(subject: BattleSubject): string {
         command.actorId,
         command.command,
         "readiedSpellCasterId" in command ? command.readiedSpellCasterId : null,
-        "readiedActionActorId" in command
-          ? command.readiedActionActorId
+        "readiedMovementActorId" in command
+          ? command.readiedMovementActorId
           : null,
         "targetId" in command ? command.targetId : null,
         "reactorId" in command ? command.reactorId : null,
@@ -1580,8 +1592,8 @@ type BattleFillEncoded =
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
-                  readonly kind: "releaseReadiedAction";
-                  readonly readiedActionActorId: string;
+                  readonly kind: "releaseReadiedMovement";
+                  readonly readiedMovementActorId: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -1697,8 +1709,8 @@ export const BattleFillSchema: Schema.Schema<
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
-              kind: Schema.Literal("releaseReadiedAction"),
-              readiedActionActorId: CombatantId,
+              kind: Schema.Literal("releaseReadiedMovement"),
+              readiedMovementActorId: CombatantId,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
@@ -1829,7 +1841,7 @@ export type BattleSnapshot = {
   readonly readiedSpells: readonly (BattleReadiedSpell & {
     readonly casterId: CombatantId;
   })[];
-  readonly readiedActions: readonly (BattleReadiedAction & {
+  readonly readiedMovements: readonly (BattleReadiedMovement & {
     readonly actorId: CombatantId;
   })[];
   readonly helpAttacks: readonly BattleHelpAttack[];
@@ -2021,7 +2033,7 @@ export function startBattle(input: {
     combatantDistances: battleCombatantDistances(input),
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
-    readiedActions: new Map(),
+    readiedMovements: new Map(),
     helpAttacks: [],
     grapples: [],
     interruptStack: [],
@@ -2148,8 +2160,8 @@ export function removeBattleCombatants(input: {
     readiedSpells: new Map(
       [...input.state.readiedSpells].filter(([id]) => !removeIds.has(id)),
     ),
-    readiedActions: new Map(
-      [...input.state.readiedActions].filter(([id]) => !removeIds.has(id)),
+    readiedMovements: new Map(
+      [...input.state.readiedMovements].filter(([id]) => !removeIds.has(id)),
     ),
     helpAttacks: input.state.helpAttacks.filter(
       (help) =>
@@ -2644,9 +2656,9 @@ function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
-      subject.command === "releaseReadiedAction"
+      subject.command === "releaseReadiedMovement"
     ) {
-      return resolveReleaseReadiedActionCommand({ ...input, subject });
+      return resolveReleaseReadiedMovementCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&
@@ -2910,10 +2922,12 @@ function sameReactionProcedureChoice(
     return choice.readiedSpellCasterId === decisionChoice.readiedSpellCasterId;
   }
   if (
-    choice.kind === "releaseReadiedAction" &&
-    decisionChoice.kind === "releaseReadiedAction"
+    choice.kind === "releaseReadiedMovement" &&
+    decisionChoice.kind === "releaseReadiedMovement"
   ) {
-    return choice.readiedActionActorId === decisionChoice.readiedActionActorId;
+    return (
+      choice.readiedMovementActorId === decisionChoice.readiedMovementActorId
+    );
   }
   return (
     choice.kind === "opportunityAttack" &&
@@ -3048,10 +3062,10 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       casterId,
       ...readiedSpell,
     })),
-    readiedActions: [...state.readiedActions].map(
-      ([actorId, readiedAction]) => ({
+    readiedMovements: [...state.readiedMovements].map(
+      ([actorId, readiedMovement]) => ({
         actorId,
-        ...readiedAction,
+        ...readiedMovement,
       }),
     ),
     helpAttacks: state.helpAttacks,
@@ -3197,20 +3211,19 @@ function readiedSpellReactionChoices(
   return readiedChoices;
 }
 
-function readiedActionReactionChoices(
+function readiedMovementReactionChoices(
   state: BattleState,
   trigger: BattleReactionTrigger,
 ): readonly BattleReactionProcedureChoice[] {
-  return [...state.readiedActions].flatMap(
-    ([readiedActionActorId, readiedAction]) => {
-      const reactor = state.combatants.get(readiedActionActorId);
-      const initialHoles = readiedActionInitialHoles(
+  return [...state.readiedMovements].flatMap(
+    ([readiedMovementActorId, readiedMovement]) => {
+      const reactor = state.combatants.get(readiedMovementActorId);
+      const initialHoles = readiedMovementInitialHoles(
         state,
-        readiedActionActorId,
-        readiedAction,
+        readiedMovementActorId,
       );
       if (
-        readiedAction.trigger !== trigger ||
+        readiedMovement.trigger !== trigger ||
         reactor === undefined ||
         !reactor.reactionAvailable ||
         initialHoles.length === 0
@@ -3219,15 +3232,15 @@ function readiedActionReactionChoices(
       }
       return [
         {
-          kind: "releaseReadiedAction" as const,
-          reactorId: readiedActionActorId,
-          readiedActionActorId,
+          kind: "releaseReadiedMovement" as const,
+          reactorId: readiedMovementActorId,
+          readiedMovementActorId,
           initialHoles,
           subject: {
             tag: "runtimeCommand" as const,
             actorId: currentActorId(state),
-            command: "releaseReadiedAction" as const,
-            readiedActionActorId,
+            command: "releaseReadiedMovement" as const,
+            readiedMovementActorId,
           },
         },
       ];
@@ -3241,7 +3254,7 @@ function reactionChoices(
 ): readonly BattleReactionProcedureChoice[] {
   const readiedChoices = [
     ...readiedSpellReactionChoices(state, frame.trigger),
-    ...readiedActionReactionChoices(state, frame.trigger),
+    ...readiedMovementReactionChoices(state, frame.trigger),
   ];
   return frame.trigger === "opportunityAttack"
     ? [
@@ -4391,11 +4404,10 @@ function resolveReady(
   const nextState = {
     ...input.state,
     currentTurnResources: spent.right,
-    readiedActions: new Map(input.state.readiedActions).set(
+    readiedMovements: new Map(input.state.readiedMovements).set(
       input.subject.actorId,
       {
         trigger: input.subject.readyTrigger,
-        response: { kind: "move" },
         expiresAt: {
           kind: "startOfTurn" as const,
           combatantId: input.subject.actorId,
@@ -5318,10 +5330,10 @@ function resolveEndTurn(
   for (const casterId of expiringReadiedSpellCasterIds) {
     readiedSpells.delete(casterId);
   }
-  const readiedActions = new Map(state.readiedActions);
-  for (const [actorId, readiedAction] of state.readiedActions) {
-    if (readiedAction.expiresAt.combatantId === nextActorId) {
-      readiedActions.delete(actorId);
+  const readiedMovements = new Map(state.readiedMovements);
+  for (const [actorId, readiedMovement] of state.readiedMovements) {
+    if (readiedMovement.expiresAt.combatantId === nextActorId) {
+      readiedMovements.delete(actorId);
     }
   }
   const helpAttacks = state.helpAttacks.filter(
@@ -5352,7 +5364,7 @@ function resolveEndTurn(
     combatants: combatantsAfterRecharge,
     currentTurnResources: resetBattleTurnResources(state.currentTurnResources),
     readiedSpells,
-    readiedActions,
+    readiedMovements,
     helpAttacks,
     legendaryActionWindow: {
       afterTurnActorId: currentActorId(state),
@@ -5794,7 +5806,7 @@ function movementHole(
   );
 }
 
-function readiedActionMovementHole(
+function readiedMovementHole(
   state: BattleState,
   actorId: CombatantId,
 ): BattleMovementHole {
@@ -6042,17 +6054,13 @@ function readiedSpellInitialHoles(
     : [spellTargetHole(state, casterId, readied.invocation)];
 }
 
-function readiedActionInitialHoles(
+function readiedMovementInitialHoles(
   state: BattleState,
   actorId: CombatantId,
-  readied: BattleReadiedAction,
 ): readonly BattleHole[] {
-  if (readied.response.kind !== "move") {
-    return [];
-  }
   const movementBudget = readiedMovementBudgetForActor(state, actorId);
   return Number(movementBudget) > 0
-    ? [readiedActionMovementHole(state, actorId)]
+    ? [readiedMovementHole(state, actorId)]
     : [];
 }
 
@@ -6125,108 +6133,103 @@ function resolveReleaseReadiedSpellCommand(
   };
 }
 
-function resolveReleaseReadiedActionCommand(
+function resolveReleaseReadiedMovementCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "releaseReadiedAction";
+        readonly command: "releaseReadiedMovement";
       }
     >
   >,
 ): BattleResolutionResult {
-  const readiedActorId = input.subject.readiedActionActorId;
+  const readiedMovementActorId = input.subject.readiedMovementActorId;
   const activeReaction = currentReactionFrame(input.state)?.activeReaction;
   if (
     activeReaction === undefined ||
-    activeReaction.reactorId !== readiedActorId ||
+    activeReaction.reactorId !== readiedMovementActorId ||
     !sameBattleSubject(activeReaction.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Readied Action release requires an active Reaction window.",
+      "Readied Movement release requires an active Reaction window.",
     );
   }
-  const readied = input.state.readiedActions.get(readiedActorId);
+  const readied = input.state.readiedMovements.get(readiedMovementActorId);
   if (readied === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "No readied action is currently being held.",
+      "No readied movement is currently being held.",
     );
   }
-  if (readied.response.kind === "move") {
-    if (input.fills.length === 0) {
-      return needsHolesResult(input.state, input.subject, [
-        readiedActionMovementHole(input.state, readiedActorId),
-      ]);
-    }
-    if (input.fills.length > 1 || input.fills[0]?.kind !== "movement") {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Release Readied Action requires exactly one Movement fill.",
-      );
-    }
-    const fill = input.fills[0];
-    if (fill.holeId !== MOVEMENT_HOLE_ID) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Readied Movement fill does not match the requested hole.",
-      );
-    }
-    const movement = parseBattleMovement(input.state, readiedActorId, fill, {
+  if (input.fills.length === 0) {
+    return needsHolesResult(input.state, input.subject, [
+      readiedMovementHole(input.state, readiedMovementActorId),
+    ]);
+  }
+  if (input.fills.length > 1 || input.fills[0]?.kind !== "movement") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Release Readied Movement requires exactly one Movement fill.",
+    );
+  }
+  const fill = input.fills[0];
+  if (fill.holeId !== MOVEMENT_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Readied Movement fill does not match the requested hole.",
+    );
+  }
+  const movement = parseBattleMovement(
+    input.state,
+    readiedMovementActorId,
+    fill,
+    {
       movementBudgetFeet: readiedMovementBudgetForActor(
         input.state,
-        readiedActorId,
+        readiedMovementActorId,
       ),
       spendsTurnMovement: false,
-    });
-    if (movement.tag === "invalid") {
-      return invalidResult(input.state, "invalidFill", movement.message);
-    }
-    const readiedActions = new Map(input.state.readiedActions);
-    readiedActions.delete(readiedActorId);
-    const stateWithoutReadied = { ...input.state, readiedActions };
-    const reactors = opportunityAttackReactorsForMovement(
-      stateWithoutReadied,
-      movement.movement,
-    );
-    if (reactors.length > 0) {
-      const reactionWindow = maybeOpenReactionWindow(
-        stateWithoutReadied,
-        {
-          trigger: "opportunityAttack",
-          moverId: readiedActorId,
-          reactorIds: reactors,
-          continuation: {
-            kind: "movement",
-            subject: input.subject,
-            movement: movement.movement,
-          },
-        },
-        undefined,
-      );
-      if (reactionWindow !== null) return reactionWindow;
-    }
-    const nextState = applyBattleMovement(
-      stateWithoutReadied,
-      movement.movement,
-    );
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
-  }
-  return invalidResult(
-    input.state,
-    "unsupportedSubject",
-    "Unsupported readied action response.",
+    },
   );
+  if (movement.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", movement.message);
+  }
+  const readiedMovements = new Map(input.state.readiedMovements);
+  readiedMovements.delete(readiedMovementActorId);
+  const stateWithoutReadied = { ...input.state, readiedMovements };
+  const reactors = opportunityAttackReactorsForMovement(
+    stateWithoutReadied,
+    movement.movement,
+  );
+  if (reactors.length > 0) {
+    const reactionWindow = maybeOpenReactionWindow(
+      stateWithoutReadied,
+      {
+        trigger: "opportunityAttack",
+        moverId: readiedMovementActorId,
+        reactorIds: reactors,
+        continuation: {
+          kind: "movement",
+          subject: input.subject,
+          movement: movement.movement,
+        },
+      },
+      undefined,
+    );
+    if (reactionWindow !== null) return reactionWindow;
+  }
+  const nextState = applyBattleMovement(stateWithoutReadied, movement.movement);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resetStartOfTurnCombatant(

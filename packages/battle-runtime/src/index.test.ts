@@ -533,11 +533,10 @@ describe("battle runtime", () => {
         fills: [],
       }),
     );
-    expect(readied.snapshot.readiedActions).toEqual([
+    expect(readied.snapshot.readiedMovements).toEqual([
       expect.objectContaining({
         actorId: fighterId,
         trigger: "attackHit",
-        response: { kind: "move" },
       }),
     ]);
   });
@@ -608,7 +607,7 @@ describe("battle runtime", () => {
         expect.objectContaining({
           subject: expect.objectContaining({
             tag: "runtimeCommand",
-            command: "releaseReadiedAction",
+            command: "releaseReadiedMovement",
           }),
         }),
       ]),
@@ -616,8 +615,8 @@ describe("battle runtime", () => {
     const releaseSubject = {
       tag: "runtimeCommand" as const,
       actorId: goblinId,
-      command: "releaseReadiedAction" as const,
-      readiedActionActorId: fighterId,
+      command: "releaseReadiedMovement" as const,
+      readiedMovementActorId: fighterId,
     };
     expect(
       resolveBattleSubject({
@@ -663,24 +662,24 @@ describe("battle runtime", () => {
     const readiedChoice =
       awaitingReaction.snapshot.pendingReaction?.frame.choices.find(
         (choice) =>
-          choice.kind === "releaseReadiedAction" &&
-          choice.readiedActionActorId === fighterId,
+          choice.kind === "releaseReadiedMovement" &&
+          choice.readiedMovementActorId === fighterId,
       );
     expect(awaitingReaction.snapshot.pendingReaction?.frame.choices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "releaseReadiedAction",
+          kind: "releaseReadiedMovement",
           reactorId: fighterId,
-          readiedActionActorId: fighterId,
+          readiedMovementActorId: fighterId,
         }),
       ]),
     );
     if (readiedChoice === undefined) {
-      throw new Error("Expected a readied action Reaction choice.");
+      throw new Error("Expected a readied movement Reaction choice.");
     }
     const readiedMovementHole = readiedChoice.initialHoles[0];
     if (readiedMovementHole === undefined) {
-      throw new Error("Expected readied action Reaction movement hole.");
+      throw new Error("Expected readied movement Reaction movement hole.");
     }
     const readiedMove = movementFill(readiedMovementHole, {
       movementCostFeet: 5,
@@ -695,19 +694,19 @@ describe("battle runtime", () => {
         kind: "resolve",
         reactorId: fighterId,
         choice: {
-          kind: "releaseReadiedAction",
-          readiedActionActorId: fighterId,
+          kind: "releaseReadiedMovement",
+          readiedMovementActorId: fighterId,
           fills: [readiedMove],
         },
       }),
     });
     if (released.tag === "invalid") {
       throw new Error(
-        `Expected readied action release, got ${released.message}.`,
+        `Expected readied movement release, got ${released.message}.`,
       );
     }
 
-    expect(released.state.readiedActions.has(fighterId)).toBe(false);
+    expect(released.state.readiedMovements.has(fighterId)).toBe(false);
     expect(released.state.combatants.get(fighterId)).toMatchObject({
       reactionAvailable: false,
       movementSpentFeet: movementFeet(0),
@@ -6797,7 +6796,7 @@ function subjectName(
   | "standFromProne"
   | "releaseGrapple"
   | "releaseReadiedSpell"
-  | "releaseReadiedAction"
+  | "releaseReadiedMovement"
   | "opportunityAttack" {
   if (subject.tag === "action") {
     return subject.action;
@@ -7099,7 +7098,7 @@ function renderQntStateProjection(
       disengaged: false,
       lightWeaponAttackMade: ${input.actionAvailable ? "false" : "true"},
       fighterReadiedSpellHeld: false,
-      fighterReadiedActionHeld: false,
+      fighterReadiedMovementHeld: false,
       fighterHelpAttackGoblinForGoblin: false,
       grapple: NoGrapple,
       interruptStack: [],

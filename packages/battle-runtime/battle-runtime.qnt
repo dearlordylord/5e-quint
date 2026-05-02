@@ -197,7 +197,7 @@ module battleRuntime {
     disengaged: bool,
     lightWeaponAttackMade: bool,
     fighterReadiedSpellHeld: bool,
-    fighterReadiedActionHeld: bool,
+    fighterReadiedMovementHeld: bool,
     fighterHelpAttackGoblinForGoblin: bool,
     grapple: GrappleState,
     interruptStack: List[PendingReactionFrame],
@@ -280,7 +280,7 @@ module battleRuntime {
     disengaged: false,
     lightWeaponAttackMade: false,
     fighterReadiedSpellHeld: false,
-    fighterReadiedActionHeld: false,
+    fighterReadiedMovementHeld: false,
     fighterHelpAttackGoblinForGoblin: false,
     grapple: NoGrapple,
     interruptStack: [],
@@ -436,7 +436,7 @@ module battleRuntime {
       disengaged: false,
       lightWeaponAttackMade: false,
       fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and nextActor == Fighter) false else state.fighterReadiedSpellHeld,
-      fighterReadiedActionHeld: if (state.fighterReadiedActionHeld and nextActor == Fighter) false else state.fighterReadiedActionHeld,
+      fighterReadiedMovementHeld: if (state.fighterReadiedMovementHeld and nextActor == Fighter) false else state.fighterReadiedMovementHeld,
       fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) false else state.fighterHelpAttackGoblinForGoblin,
       fighter: if (nextActor == Fighter) { ...state.fighter, reactionAvailable: true, movementSpent: 0, dodging: false } else state.fighter,
       goblin: if (nextActor == Goblin) { ...state.goblin, reactionAvailable: true, movementSpent: 0, dodging: false } else state.goblin,
@@ -705,7 +705,7 @@ module battleRuntime {
 
   pure def readyFighter(state: BattleState): BattleState =
     if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious))
-      { ...state, actionAvailable: false, fighterReadiedActionHeld: true }
+      { ...state, actionAvailable: false, fighterReadiedMovementHeld: true }
     else
       state
 
@@ -1448,7 +1448,7 @@ module battleRuntime {
       assert(movementRemainingForFighter(dashed) == 60),
       assert(disengaged.disengaged),
       assert(dodged.fighter.dodging),
-      assert(readied.fighterReadiedActionHeld),
+      assert(readied.fighterReadiedMovementHeld),
       assert(helped.fighterHelpAttackGoblinForGoblin),
     }
   }
