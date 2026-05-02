@@ -205,7 +205,7 @@ function mbtInvalidReason(
 
 const battleRuntimeStateCheck = stateCheck(normalizeQuintState, compareState);
 
-describe("promoted battle-runtime MBT", () => {
+describe("battle-runtime MBT", () => {
   it("replays Fighter weapon Attack traces against a Skeleton target", async () => {
     await run({
       spec: path.resolve(import.meta.dirname, "../battle-runtime.mbt.qnt"),

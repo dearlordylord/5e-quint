@@ -55,7 +55,7 @@ module battleRuntime {
   //   Spells/Gaining-and-Casting.md lines 92-100: a Reaction is an instant
   //   response to a trigger, can interrupt another creature's turn, is usable
   //   once until the start of the reactor's next turn, and reaction spells use
-  //   spell-authored triggers. The promoted runtime models the reusable
+  //   spell-authored triggers. The battle runtime models the reusable
   //   interrupt window/continuation protocol here; individual reaction
   //   features and spells are restored by later width tasks.
   // - Playing-the-Game.md lines 533-551, Rules-Glossary.md lines 395-397,
@@ -66,11 +66,11 @@ module battleRuntime {
   //   window before the distance mutation is committed.
   // - Monsters/Overview.md lines 253-265 and ASSUMPTIONS.md A21-A24: Stat
   //   Block monster controls own Legendary Action uses and limited-use
-  //   resources. This spec models the promoted resource boundary with a
+  //   resources. This spec models the Stat Block resource boundary with a
   //   representative Goblin recharge part and Legendary Action use pool;
   //   TypeScript carries the authored StatBlockRecord catalog breadth.
   // - Rules-Glossary.md lines 102-106, 496-514, and 1074 plus
-  //   Equipment.md lines 54-56 and ASSUMPTIONS.md A8/A37: the promoted
+  //   Equipment.md lines 54-56 and ASSUMPTIONS.md A8/A37: the battle-owned
   //   held/wielded hand state, Light-property Off-Hand Attack damage modifier
   //   behavior, Grapple links, release, Escape Grapple, Grappled attack-roll
   //   disadvantage, and Grappled movement-cost facts are battle-owned state.
@@ -83,7 +83,7 @@ module battleRuntime {
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
   // proof and restore source material; it is not the place to add new
-  // promoted runtime behavior.
+  // @dnd/battle-runtime behavior.
 
   type Actor = Fighter | Goblin
 
@@ -274,7 +274,7 @@ module battleRuntime {
     legendaryActionWindowConsumed: false,
   }
 
-  // The promoted runtime receives Initiative counts and the caller-resolved
+  // The battle runtime receives Initiative counts and the caller-resolved
   // order for tied counts at the boundary. The spec treats that order as
   // authoritative once battle starts.
   pure val callerOrderedTieInitialState: BattleState = {
