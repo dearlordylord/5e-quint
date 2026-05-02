@@ -390,42 +390,48 @@ The Ralph harness reads this machine-readable index for task order and status. K
     },
     {
       "number": 52,
+      "id": "PBA13F",
+      "status": "blocked",
+      "title": "Introduce Canonical Elapsed-Time Algebra"
+    },
+    {
+      "number": 53,
       "id": "PBA14",
       "status": "blocked",
       "title": "Restore Turn Roster And Generic Combat Actions"
     },
     {
-      "number": 53,
+      "number": 54,
       "id": "PBA14A",
       "status": "blocked",
       "title": "Restore Persistent Stance Class Riders"
     },
     {
-      "number": 54,
+      "number": 55,
       "id": "PBA14A1",
       "status": "blocked",
       "title": "Restore Authored Critical Range Attack Hook"
     },
     {
-      "number": 55,
+      "number": 56,
       "id": "PBA14B",
       "status": "blocked",
       "title": "Restore Attack Rider Procedure Family"
     },
     {
-      "number": 56,
+      "number": 57,
       "id": "PBA14C",
       "status": "blocked",
       "title": "Restore Save Damage Replacement Riders"
     },
     {
-      "number": 57,
+      "number": 58,
       "id": "PBA14D",
       "status": "blocked",
       "title": "Restore Reaction Roll Damage Modification Riders"
     },
     {
-      "number": 58,
+      "number": 59,
       "id": "PBA15",
       "status": "blocked",
       "title": "Plan Broader Battle Widening Queue"
@@ -523,14 +529,15 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 48    | PBA13B - Design Battle Support Profiles Without Authored Id Dispatch | blocked         | PBA13A               | PBA13C                             | Define the generic battle support-profile model for Unit features, spells, Stat Block actions, and class riders so support is selected by Surface mechanics shape, not authored ids.                             | Blocked until the inventory identifies the current violation set.                         |
 | 49    | PBA13C - Migrate Battle Runtime To Support Profiles              | blocked            | PBA13B               | PBA13D                             | Replace battle-runtime named authored-content support types/constants with profile parsers and generic hole/subject data while preserving existing behavior.                                                       | Blocked behind profile design.                                                            |
 | 50    | PBA13D - Audit Character Creation Authored-Id Dispatch           | blocked            | PBA13C               | PBA13E                             | Audit and, if needed, replan/migrate character-creation production support gates that use concrete Unit ids or choice keys as semantic dispatch instead of Surface support profiles.                              | Blocked until battle-runtime policy migration establishes the pattern.                    |
-| 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | blocked            | PBA13D               | PBA14                              | Add durable docs/checks that prevent production reducers from reintroducing concrete authored ids as semantic switches outside allowed catalog/composition/test boundaries.                                        | Blocked until battle and character-creation inventories are resolved.                     |
-| 52    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13E               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked until emergency authored-id dispatch boundary is enforced.                        |
-| 53    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14A1                            | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
-| 54    | PBA14A1 - Restore Authored Critical Range Attack Hook            | blocked            | PBA14A               | PBA14B                             | Restore Unit-authored critical-range attack hooks through Surface support profiles and battle-runtime attack adjudication, without naming Champion or other authored ids in production support code.              | Blocked behind stance state; unblocks broader attack-rider procedure work.                |
-| 55    | PBA14B - Restore Attack Rider Procedure Family                   | blocked            | PBA14A1              | PBA14C                             | Restore reusable attack-rider windows and damage/roll rider data for Sneak Attack plus Rage/Reckless-style interactions through support profiles, not named ability branches.                                    | Blocked behind authored critical-range attack hook restoration.                           |
-| 56    | PBA14C - Restore Save Damage Replacement Riders                  | blocked            | PBA14B               | PBA14D                             | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                             | Blocked behind attack-rider procedure family.                                             |
-| 57    | PBA14D - Restore Reaction Roll Damage Modification Riders        | blocked            | PBA14C               | PBA15                              | Restore reusable reaction roll/damage modification procedure support for Deflect Attacks, Uncanny Dodge, and Cutting Words-style riders through support profiles.                                                 | Blocked behind save-damage replacement riders.                                            |
-| 58    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14D               | future tasks                       | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
+| 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | blocked            | PBA13D               | PBA13F                             | Add durable docs/checks that prevent production reducers from reintroducing concrete authored ids as semantic switches outside allowed catalog/composition/test boundaries.                                        | Blocked until battle and character-creation inventories are resolved.                     |
+| 52    | PBA13F - Introduce Canonical Elapsed-Time Algebra                | blocked            | PBA13E               | PBA14                              | Add one shared algebra for elapsed hours, minutes, and atomic duration ticks, then migrate app/runtime duration code to use it instead of ad hoc local shapes.                                                    | Blocked until support-profile enforcement lands; must preserve turn-boundary timers separately. |
+| 53    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13F               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked until emergency architecture cleanup is complete.                                 |
+| 54    | PBA14A - Restore Persistent Stance Class Riders                  | blocked            | PBA14                | PBA14A1                            | Restore reusable persistent stance state for class riders such as Rage and Reckless Attack without named-ability reducer branches.                                                                                | Blocked behind generic combat-action/turn-state restoration.                              |
+| 55    | PBA14A1 - Restore Authored Critical Range Attack Hook            | blocked            | PBA14A               | PBA14B                             | Restore Unit-authored critical-range attack hooks through Surface support profiles and battle-runtime attack adjudication, without naming Champion or other authored ids in production support code.              | Blocked behind stance state; unblocks broader attack-rider procedure work.                |
+| 56    | PBA14B - Restore Attack Rider Procedure Family                   | blocked            | PBA14A1              | PBA14C                             | Restore reusable attack-rider windows and damage/roll rider data for Sneak Attack plus Rage/Reckless-style interactions through support profiles, not named ability branches.                                    | Blocked behind authored critical-range attack hook restoration.                           |
+| 57    | PBA14C - Restore Save Damage Replacement Riders                  | blocked            | PBA14B               | PBA14D                             | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                             | Blocked behind attack-rider procedure family.                                             |
+| 58    | PBA14D - Restore Reaction Roll Damage Modification Riders        | blocked            | PBA14C               | PBA15                              | Restore reusable reaction roll/damage modification procedure support for Deflect Attacks, Uncanny Dodge, and Cutting Words-style riders through support profiles.                                                 | Blocked behind save-damage replacement riders.                                            |
+| 59    | PBA15 - Plan Broader Battle Widening Queue                       | blocked            | PBA14D               | future tasks                       | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                            | Blocked until feature-parity queue reaches its first closeout point.                      |
 
 ## Task Details
 
@@ -3218,7 +3225,7 @@ Plan Impact:
 Status: `done`
 
 Depends on: PBA12
-Blocks: PBA14
+Blocks: PBA13A
 
 Batch: old Core feature-parity restoration.
 
@@ -3479,7 +3486,7 @@ Plan Impact:
 Status: `blocked`
 
 Depends on: PBA13D
-Blocks: PBA14
+Blocks: PBA13F
 
 Batch: emergency architecture correction before further feature-parity work.
 
@@ -3516,13 +3523,97 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA14.
+- If successful, unblock PBA13F.
 
-### Task 52 - PBA14 - Restore Turn Roster And Generic Combat Actions
+### Task 52 - PBA13F - Introduce Canonical Elapsed-Time Algebra
 
 Status: `blocked`
 
 Depends on: PBA13E
+Blocks: PBA14
+
+Batch: emergency architecture correction before further feature-parity work.
+
+Description:
+
+The repo needs one canonical algebra for elapsed time across Surface, shared
+algebras, battle runtime, MCP/app projection, and any UI-facing duration logic.
+Today duration facts are split across Surface `DurationValue` (`round`,
+`minute`, `hour`, `day`), spell casting-time shapes, and battle-runtime local
+duration records such as Mage Armor's ad hoc `{ kind: "hours" }`. That lets
+minutes, hours, and combat-duration counters drift.
+
+Model elapsed time as integer atomic ticks where one minute is exactly 10 ticks
+and one hour is exactly 600 ticks. Do not introduce seconds into the runtime
+model. Preserve domain language: actor **Turn** and start/end-of-turn timers are
+initiative-bound events, not elapsed-time values. If the implementation needs a
+name for the 1/10-minute elapsed-time atom, choose one that does not conflate it
+with a creature's Turn, or document an explicit owner decision before using
+`Turn` as the algebraic unit.
+
+Next action: inventory all production duration/time representations, then add
+the shared algebra and migrate the whole app/runtime code path to it.
+
+Input:
+
+- `UBIQUITOUS_LANGUAGE.md` Turn Structure, Casting Time, Duration, Rest, and
+  Suffocation entries.
+- Surface duration schemas in `packages/surface/src/surface/schema-base.ts`,
+  `schema-spell.ts`, and `schema-nonspell.ts`.
+- Existing battle-runtime active-effect, concentration, readied-spell,
+  death-save, rest, resource-reset, and UI/MCP snapshot duration projections.
+- Existing app code that displays, edits, fills, or interprets durations.
+- Relevant SRD passages in `.references/srd-5.2.1/` for any modeled rule touched
+  by the migration.
+
+Output:
+
+- A shared elapsed-time algebra module with named constants for ticks per minute
+  and ticks per hour, branded/parsed tick values, conversion helpers, and
+  formatting/projection helpers as needed by callers.
+- A clear type split between elapsed-time durations and initiative-bound
+  turn-boundary expirations (`startOfTurn`, `endOfTurn`, round/initiative
+  counters, reaction reset timing, and similar event timers).
+- Surface, battle runtime, MCP/app projection, and UI duration code migrated to
+  use the shared algebra instead of local `hours`/`minutes`/`rounds` conversion
+  logic or duplicate duration records.
+- Tests proving hour/minute/tick conversion, parser rejection of fractional or
+  unsupported values, and at least one migrated runtime duration path.
+- Closeout notes listing any intentionally unmigrated duration shape and why it
+  is not elapsed time.
+
+Acceptance:
+
+- No production package has independent hour/minute/tick conversion constants or
+  helper logic outside the shared algebra.
+- The app/runtime path no longer stores a derivable hour/minute duration beside
+  a canonical tick count unless that duplication is an executable boundary
+  projection.
+- Actor turns remain represented as initiative events; elapsed-time ticks do not
+  replace start/end-of-turn expiration semantics.
+- The migration does not add seconds or second-based public/runtime types.
+
+Verification:
+
+- RAW agent check for every rule whose duration semantics changed or became
+  executable through the algebra.
+- Focused shared-algebra, Surface, battle-runtime, MCP/app, and UI tests touched
+  by the migration.
+- `pnpm` package typechecks for every touched package.
+- Battle-runtime QNT/MBT only if promoted battle behavior changes; otherwise
+  document why source/tests were sufficient.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA14 with the time model settled before generic
+  turn/round action restoration.
+
+### Task 53 - PBA14 - Restore Turn Roster And Generic Combat Actions
+
+Status: `blocked`
+
+Depends on: PBA13F
 Blocks: PBA14A
 
 Batch: old Core feature-parity restoration.
@@ -3571,7 +3662,7 @@ Plan Impact:
 
 - If successful, unblock PBA14A.
 
-### Task 53 - PBA14A - Restore Persistent Stance Class Riders
+### Task 54 - PBA14A - Restore Persistent Stance Class Riders
 
 Status: `blocked`
 
@@ -3613,7 +3704,7 @@ Plan Impact:
 
 - If successful, unblock PBA14A1.
 
-### Task 54 - PBA14A1 - Restore Authored Critical Range Attack Hook
+### Task 55 - PBA14A1 - Restore Authored Critical Range Attack Hook
 
 Status: `blocked`
 
@@ -3669,7 +3760,7 @@ Plan Impact:
 
 - If successful, unblock PBA14B.
 
-### Task 55 - PBA14B - Restore Attack Rider Procedure Family
+### Task 56 - PBA14B - Restore Attack Rider Procedure Family
 
 Status: `blocked`
 
@@ -3710,7 +3801,7 @@ Plan Impact:
 
 - If successful, unblock PBA14C.
 
-### Task 56 - PBA14C - Restore Save Damage Replacement Riders
+### Task 57 - PBA14C - Restore Save Damage Replacement Riders
 
 Status: `blocked`
 
@@ -3750,7 +3841,7 @@ Plan Impact:
 
 - If successful, unblock PBA14D.
 
-### Task 57 - PBA14D - Restore Reaction Roll Damage Modification Riders
+### Task 58 - PBA14D - Restore Reaction Roll Damage Modification Riders
 
 Status: `blocked`
 
@@ -3794,7 +3885,7 @@ Plan Impact:
 
 - If successful, unblock PBA15.
 
-### Task 58 - PBA15 - Plan Broader Battle Widening Queue
+### Task 59 - PBA15 - Plan Broader Battle Widening Queue
 
 Status: `blocked`
 
