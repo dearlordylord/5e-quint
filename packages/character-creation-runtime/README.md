@@ -145,6 +145,14 @@ are outside the support profile. `CharacterBuild` does not carry current HP,
 Temporary Hit Points, expended resources or Spell Slots, Hit Dice remaining, or
 battle creature-init types.
 
+Phase-1 manifest lock is still intentional in the current runtime. The lock ends
+only after the promoted-reachable shape inventory for character creation has been
+closed: every promoted-reachable shape from Core/correction is either admitted by
+support profiles with executable projection/finalization behavior or rejected at
+one typed support boundary with explicit rationale. At that point,
+`temporarySupportedSliceIssues`, `supportProfile.manifest` origin locking, and
+`phase1-manifest` naming become removal targets rather than active policy.
+
 Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
 or build state. SRD 5.2.1 says they last until depleted or Long Rest, so a future
 in-play `CharacterSheet` should persist them between battles and clear them at

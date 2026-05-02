@@ -3487,6 +3487,17 @@ Verification:
 Plan Impact:
 
 - If successful, unblock PBA13E.
+- Phase-1 manifest lock remains active until explicit Phase-1 exit criteria are
+  met:
+  1. inventory Core + correction character-creation shapes and classify each as
+     promoted-reachable or legacy-only;
+  2. for every promoted-reachable shape, either admit it via support profiles
+     with executable runtime behavior or reject it at one typed support boundary
+     with explicit rationale;
+  3. remove temporary manifest-only finalization locks (`temporarySupportedSliceIssues` /
+     `supportProfile.manifest` origin constraints);
+  4. remove phase-named manifest ownership (`phase1-manifest.ts` naming and
+     associated authored-id-dispatch allowlist dependency).
 
 ### Task 51 - PBA13E - Enforce Authored-Id Dispatch Boundary
 
