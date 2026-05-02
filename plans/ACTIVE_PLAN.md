@@ -379,13 +379,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 50,
       "id": "PBA13D",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Character Creation Authored-Id Dispatch"
     },
     {
       "number": 51,
       "id": "PBA13E",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Enforce Authored-Id Dispatch Boundary"
     },
     {
@@ -534,8 +534,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 47    | PBA13A - Inventory Production Authored-Id Semantic Dispatch      | done               | PBA13                | PBA13B                             | Inventoried production code that uses concrete authored ids/names/slugs to choose runtime semantics, separating allowed catalog/composition/test identity from violations.                                         | Completed in Ralph artifact; PBA13B consumed the battle-runtime violation set.            |
 | 48    | PBA13B - Design Battle Support Profiles Without Authored Id Dispatch | done            | PBA13A               | PBA13C                             | Defined the generic battle support-profile model for Unit features, spells, Stat Block actions, and class riders so support is selected by Surface mechanics shape, not authored ids.                             | Completed manually from Ralph salvage; PBA13C is unblocked for implementation.            |
 | 49    | PBA13C - Migrate Battle Runtime To Support Profiles              | done               | PBA13B               | PBA13D                             | Migrated battle-runtime production support and resolution from authored-id semantic dispatch to generic support profiles while preserving supported workflows.                                                      | Completed in Task 49 run; PBA13D is now unblocked for audit work.                        |
-| 50    | PBA13D - Audit Character Creation Authored-Id Dispatch           | ready-for-research | PBA13C               | PBA13E                             | Audit and, if needed, replan/migrate character-creation production support gates that use concrete Unit ids or choice keys as semantic dispatch instead of Surface support profiles.                              | Ready now that battle-runtime support-profile migration landed in PBA13C.                |
-| 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | blocked            | PBA13D               | PBA13F                             | Add durable docs/checks that prevent production reducers from reintroducing concrete authored ids as semantic switches outside allowed catalog/composition/test boundaries.                                        | Blocked until battle and character-creation inventories are resolved.                     |
+| 50    | PBA13D - Audit Character Creation Authored-Id Dispatch           | done               | PBA13C               | PBA13E                             | Audited character-creation support/finalization authored-id dispatch and migrated finalization choice support checks to source-shaped holes derived from Surface readers plus support profiles.                     | Completed in Task 50 run; PBA13E is now unblocked.                                       |
+| 51    | PBA13E - Enforce Authored-Id Dispatch Boundary                   | ready-for-research | PBA13D               | PBA13F                             | Add durable docs/checks that prevent production reducers from reintroducing concrete authored ids as semantic switches outside allowed catalog/composition/test boundaries.                                        | Unblocked now that character-creation authored-id dispatch migration landed in PBA13D.    |
 | 52    | PBA13F - Introduce Canonical Elapsed-Time Algebra                | blocked            | PBA13E               | PBA13G                             | Add one shared algebra for elapsed hours, minutes, and atomic duration ticks, then migrate app/runtime duration code to use it instead of ad hoc local shapes.                                                    | Blocked until support-profile enforcement lands; must preserve turn-boundary timers separately. |
 | 53    | PBA13G - Replace Bare Domain Primitives With Owned Types         | blocked            | PBA13F               | PBA14                              | Audit and migrate production runtime/domain signatures away from bare `string`, `number`, and `boolean` where shared or package-owned domain types should carry meaning.                                          | Blocked until elapsed-time brands are available; must place types at the proper abstraction layer. |
 | 54    | PBA14 - Restore Turn Roster And Generic Combat Actions           | blocked            | PBA13G               | PBA14A                             | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                           | Blocked until emergency architecture cleanup is complete.                                 |
@@ -3455,16 +3455,16 @@ Plan Impact:
 
 ### Task 50 - PBA13D - Audit Character Creation Authored-Id Dispatch
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA13C
 Blocks: PBA13E
 
 Batch: emergency architecture correction before further feature-parity work.
 
-Next action: audit character-creation runtime support gates and manifests for
-the same authored-id semantic-dispatch problem, then either migrate them or add
-precise successor tasks if the migration is larger than one agent task.
+Completed action: audited character-creation runtime authored-id dispatch and
+migrated finalization support checks to source-shaped hole matching derived
+from Surface readers plus support-profile gates.
 
 Scope:
 
@@ -3496,11 +3496,12 @@ Verification:
 
 Plan Impact:
 
-- If successful, unblock PBA13E.
+- Completed in Task 50 run: finalization no longer branches on hard-coded
+  fighter feature ids for supported choice validation; PBA13E is unblocked.
 
 ### Task 51 - PBA13E - Enforce Authored-Id Dispatch Boundary
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA13D
 Blocks: PBA13F

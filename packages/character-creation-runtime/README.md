@@ -145,6 +145,11 @@ are outside the support profile. `CharacterBuild` does not carry current HP,
 Temporary Hit Points, expended resources or Spell Slots, Hit Dice remaining, or
 battle creature-init types.
 
+Finalization support checks are source-shaped: they reconstruct expected
+choice-hole families from Surface readers plus the support profile and validate
+selected choices against those hole shapes, instead of branching on
+hard-coded authored feature ids in finalization logic.
+
 Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
 or build state. SRD 5.2.1 says they last until depleted or Long Rest, so a future
 in-play `CharacterSheet` should persist them between battles and clear them at

@@ -40,3 +40,8 @@ keeps finalizable builds inside the current support profile: Orc/Soldier origin
 facts, supported class levels, supported Unit choice families, and supported
 equipment/loadout facts. It rejects complete drafts outside that profile before
 producing a `CharacterBuild`.
+
+Source-shaped finalization checks - finalization reconstructs expected
+choice-hole families from Surface readers and support-profile entries, then
+matches selected choices against those hole shapes. This avoids authored-id
+semantic dispatch in finalization.

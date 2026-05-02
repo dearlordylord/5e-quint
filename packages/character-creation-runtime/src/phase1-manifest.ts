@@ -93,8 +93,6 @@ export const SUPPORTED_LANGUAGE_OPTION_IDS = [
   creationChoiceOptionId("Goblin"),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 
-export const FIGHTER_FIGHTING_STYLE_FEATURE_ID = "fighter_fighting_style_l1";
-export const FIGHTER_WEAPON_MASTERY_FEATURE_ID = "fighter_weapon_mastery_l1";
 export const PHASE1_CLASS_EQUIPMENT_OPTION_ID =
   creationChoiceOptionId("option_c");
 export const PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID =

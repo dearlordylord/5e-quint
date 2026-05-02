@@ -17,22 +17,21 @@ import type {
 } from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
 import {
+  backgroundToolChoiceSpec,
+  classFeatureGrantChoiceHoles,
   choiceSelectionOptionIds,
   choiceSelectionMatchesHole,
   sameCreationHoleSource,
   sameOptionIdMultiset,
   startingEquipmentChoiceHole,
 } from "./discovery.ts";
-import { unitSource } from "./hole-factories.ts";
+import { choiceHole, skillOption, unitSource } from "./hole-factories.ts";
 import {
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
-  FIGHTER_FIGHTING_STYLE_FEATURE_ID,
-  FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
   FIGHTER_SKILL_CHOICE_KEY,
-  FIGHTER_WEAPON_MASTERY_FEATURE_ID,
-  FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
+  EXACTLY_ONE_CHOICE,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SKILL_CHOICE_KEY,
@@ -43,10 +42,14 @@ import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   isSupportedAdvancement,
   supportedLoadoutChoiceForSource,
+  supportedLoadoutChoices,
   unitRefsForSupportedClassChoice,
 } from "./support-gates.ts";
 import {
+  creationChoiceOptionId,
   characterClassLevel,
+  choiceCardinalityBounds,
+  exactChoiceCardinality,
   hitDieSize,
   hitDieTotal,
   nonEmptyReadonlyArray,
@@ -57,7 +60,10 @@ import {
   type CharacterBuildFeature,
   type CharacterBuildResource,
   type CharacterBuildSpellcasting,
+  type CreationChoiceOption,
   type CharacterChoiceSelection,
+  type ChoiceCreationHole,
+  type CreationHole,
   type CharacterDraft,
   type CreationChoiceOptionId,
   type CreationFinalizationIssue,
@@ -65,8 +71,13 @@ import {
   type FinalizedCharacterSelections,
   type NonEmptyReadonlyArray,
   type UnitCatalog,
+  type UnitChoiceSource,
   type UnitRef,
 } from "./types.ts";
+
+type UnitChoiceCreationHole = ChoiceCreationHole & {
+  readonly source: UnitChoiceSource;
+};
 
 export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
@@ -533,83 +544,285 @@ export function allFinalizedChoicesSupported(
     "background",
   );
   const classLevel = selections.advancement.entries[0]?.level ?? 1;
-  const selectedEquipment = new Set(selections.equipment.selectedUnitIds);
-  const choiceSourceKeys = selections.choices.map(
-    (choice) => `${choice.source.unitId}:${choice.source.choiceKey}`,
+  const classEquipmentHole = requireUnitChoiceCreationHole(
+    startingEquipmentChoiceHole(
+      unitSource(selections.primaryClass, CLASS_EQUIPMENT_CHOICE_KEY),
+      classFacts.startingEquipment,
+    ),
   );
+  const backgroundEquipmentHole = requireUnitChoiceCreationHole(
+    startingEquipmentChoiceHole(
+      unitSource(selections.background, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+      backgroundFacts.startingEquipment,
+    ),
+  );
+  const supportedHolesBySource = supportedChoiceHolesBySource(
+    supportedFinalizationChoiceHoles({
+      selections,
+      classFacts,
+      classLevel,
+      backgroundFacts,
+      unitLibrary,
+      classEquipmentHole,
+      backgroundEquipmentHole,
+    }),
+  );
+  const choiceSourceKeys = selections.choices.map((choice) =>
+    unitChoiceSourceKey(choice.source),
+  );
+
   return (
     new Set(choiceSourceKeys).size === choiceSourceKeys.length &&
     selections.choices.every((choice) => {
-      const key = choice.source.choiceKey;
-      return (
-        choiceHasSource(
-          choice,
-          selections.primaryClass,
-          classFacts.className === "wizard"
-            ? WIZARD_SKILL_CHOICE_KEY
-            : FIGHTER_SKILL_CHOICE_KEY,
-        ) ||
-        (classFacts.className === "fighter" &&
-          classLevel >= 1 &&
-          (choiceHasSource(
-            choice,
-            FIGHTER_FIGHTING_STYLE_FEATURE_ID,
-            FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
-          ) ||
-            choiceHasSource(
-              choice,
-              FIGHTER_WEAPON_MASTERY_FEATURE_ID,
-              FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
-            ))) ||
-        (classFacts.className === "wizard" &&
-          (choiceHasSource(
-            choice,
-            selections.primaryClass,
-            WIZARD_CANTRIP_CHOICE_KEY,
-          ) ||
-            choiceHasSource(
-              choice,
-              selections.primaryClass,
-              WIZARD_SPELLBOOK_CHOICE_KEY,
-            ) ||
-            choiceHasSource(
-              choice,
-              selections.primaryClass,
-              WIZARD_PREPARED_SPELL_CHOICE_KEY,
-            ))) ||
-        choiceHasSource(
-          choice,
-          selections.background,
-          BACKGROUND_TOOL_CHOICE_KEY,
-        ) ||
-        supportedStartingEquipmentCoinGrantChoice(
+      const supportedHole = supportedHolesBySource.get(
+        unitChoiceSourceKey(choice.source),
+      );
+      if (supportedHole == null || !choiceSelectionMatchesHole(choice, supportedHole)) {
+        return false;
+      }
+
+      if (sameCreationHoleSource(choice.source, classEquipmentHole.source)) {
+        return supportedStartingEquipmentCoinGrantChoice(
           choice,
           selections.primaryClass,
           CLASS_EQUIPMENT_CHOICE_KEY,
           classFacts.startingEquipment,
-        ) ||
-        supportedStartingEquipmentCoinGrantChoice(
+        );
+      }
+
+      if (sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)) {
+        return supportedStartingEquipmentCoinGrantChoice(
           choice,
           selections.background,
           BACKGROUND_EQUIPMENT_CHOICE_KEY,
           backgroundFacts.startingEquipment,
-        ) ||
-        (key.startsWith("loadout_") &&
-          selectedEquipment.has(choice.source.unitId))
+        );
+      }
+
+      return (
+        !sameCreationHoleSource(choice.source, classEquipmentHole.source) &&
+        !sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)
       );
     })
   );
 }
 
-function choiceHasSource(
-  selection: CharacterChoiceSelection,
-  unitId: UnitRecord["id"],
-  choiceKey: CharacterChoiceSelection["source"]["choiceKey"],
-): boolean {
+function unitChoiceSourceKey(
+  source: UnitChoiceSource,
+): string {
   return (
-    selection.source.unitId === unitId &&
-    selection.source.choiceKey === choiceKey
+    `${source.unitId}:${source.choiceKey}`
   );
+}
+
+export function supportedChoiceHolesBySource(
+  holes: readonly UnitChoiceCreationHole[],
+): ReadonlyMap<string, UnitChoiceCreationHole> {
+  const bySource = new Map<string, UnitChoiceCreationHole>();
+  for (const hole of holes) {
+    const sourceKey = unitChoiceSourceKey(hole.source);
+    const existing = bySource.get(sourceKey);
+    if (existing == null) {
+      bySource.set(sourceKey, hole);
+      continue;
+    }
+
+    bySource.set(sourceKey, mergeChoiceHoles(existing, hole));
+  }
+
+  return bySource;
+}
+
+function mergeChoiceHoles(
+  left: UnitChoiceCreationHole,
+  right: UnitChoiceCreationHole,
+): UnitChoiceCreationHole {
+  if (!sameChoiceCardinality(left, right)) {
+    throw new Error(
+      `Conflicting choice cardinality for source ${unitChoiceSourceKey(left.source)}.`,
+    );
+  }
+
+  return {
+    ...left,
+    options: mergeChoiceHoleOptions(left.options, right.options),
+  };
+}
+
+function sameChoiceCardinality(
+  left: UnitChoiceCreationHole,
+  right: UnitChoiceCreationHole,
+): boolean {
+  const leftBounds = choiceCardinalityBounds(left.cardinality);
+  const rightBounds = choiceCardinalityBounds(right.cardinality);
+  return leftBounds.min === rightBounds.min && leftBounds.max === rightBounds.max;
+}
+
+function mergeChoiceHoleOptions(
+  left: readonly CreationChoiceOption[],
+  right: readonly CreationChoiceOption[],
+): readonly CreationChoiceOption[] {
+  const merged = [...left];
+  for (const option of right) {
+    const alreadyPresent = merged.some(
+      (existing) =>
+        existing.optionId === option.optionId &&
+        existing.unitRef?.unitId === option.unitRef?.unitId,
+    );
+    if (!alreadyPresent) {
+      merged.push(option);
+    }
+  }
+
+  return merged;
+}
+
+function supportedFinalizationChoiceHoles(input: {
+  readonly selections: FinalizedCharacterSelections;
+  readonly classFacts: ClassCreationFacts;
+  readonly classLevel: number;
+  readonly backgroundFacts: Extract<
+    ReturnType<typeof readBackgroundCreationFacts>,
+    { readonly tag: "readable" }
+  >["value"];
+  readonly unitLibrary: UnitCatalog;
+  readonly classEquipmentHole: UnitChoiceCreationHole;
+  readonly backgroundEquipmentHole: UnitChoiceCreationHole;
+}): readonly UnitChoiceCreationHole[] {
+  const classSkillHole = requireUnitChoiceCreationHole(
+    choiceHole({
+      source: unitSource(
+        input.selections.primaryClass,
+        input.classFacts.className === "wizard"
+          ? WIZARD_SKILL_CHOICE_KEY
+          : FIGHTER_SKILL_CHOICE_KEY,
+      ),
+      cardinality: exactChoiceCardinality(
+        input.classFacts.skillProficiencyChoice.choose,
+      ),
+      options: input.classFacts.skillProficiencyChoice.options.map(skillOption),
+    }),
+  );
+  const classFeatureHoles = input.classFacts.featureGrants
+    .filter((grant) => grant.level <= input.classLevel)
+    .flatMap((grant) =>
+      classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary),
+    )
+    .map((hole) => requireUnitChoiceCreationHole(hole));
+  const wizardSpellHoles =
+    input.classFacts.className === "wizard"
+      ? wizardSpellcastingChoiceHoles(input.selections.primaryClass, input.classFacts)
+      : [];
+  const backgroundToolHole = backgroundToolChoiceSpec(
+    input.backgroundFacts.toolProficiency,
+  );
+  const selectedEquipment = new Set(input.selections.equipment.selectedUnitIds);
+
+  return [
+    classSkillHole,
+    ...classFeatureHoles,
+    ...wizardSpellHoles,
+    ...(backgroundToolHole == null
+      ? []
+      : [
+          requireUnitChoiceCreationHole(
+            choiceHole({
+              source: unitSource(
+                input.selections.background,
+                BACKGROUND_TOOL_CHOICE_KEY,
+              ),
+              cardinality: backgroundToolHole.cardinality,
+              options: backgroundToolHole.options,
+            }),
+          ),
+        ]),
+    input.classEquipmentHole,
+    input.backgroundEquipmentHole,
+    ...supportedLoadoutChoices().flatMap((loadoutChoice) =>
+      selectedEquipment.has(loadoutChoice.unitId)
+        ? [
+            requireUnitChoiceCreationHole(
+              choiceHole({
+                source: unitSource(loadoutChoice.unitId, loadoutChoice.choiceKey),
+                cardinality: EXACTLY_ONE_CHOICE,
+                options: [
+                  {
+                    optionId: loadoutChoice.optionId,
+                    label: loadoutChoice.label,
+                    unitRef: { unitId: loadoutChoice.unitId },
+                  },
+                ],
+              }),
+            ),
+          ]
+        : [],
+    ),
+  ];
+}
+
+function wizardSpellcastingChoiceHoles(
+  classUnitId: UnitRecord["id"],
+  classFacts: Extract<ClassCreationFacts, { readonly className: "wizard" }>,
+): readonly UnitChoiceCreationHole[] {
+  const spellcasting = classFacts.spellcasting;
+  return [
+    requireUnitChoiceCreationHole(
+      choiceHole({
+        source: unitSource(classUnitId, WIZARD_CANTRIP_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(spellcasting.cantripAccess.choose),
+        options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
+          optionId: creationChoiceOptionId(spellId),
+          label: spellId,
+          unitRef: { unitId: spellId },
+        })),
+      }),
+    ),
+    requireUnitChoiceCreationHole(
+      choiceHole({
+        source: unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(spellcasting.spellbookAccess.choose),
+        options: spellcasting.spellbookAccess.spells.map((spell) => ({
+          optionId: creationChoiceOptionId(spell.spellId),
+          label: spell.spellId,
+          unitRef: { unitId: spell.spellId },
+        })),
+      }),
+    ),
+    requireUnitChoiceCreationHole(
+      choiceHole({
+        source: unitSource(classUnitId, WIZARD_PREPARED_SPELL_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
+        options: spellcasting.preparedAccess.spellIds.map((spellId) => ({
+          optionId: creationChoiceOptionId(spellId),
+          label: spellId,
+          unitRef: { unitId: spellId },
+        })),
+      }),
+    ),
+  ];
+}
+
+function requireChoiceCreationHole(hole: CreationHole): ChoiceCreationHole {
+  if (hole.kind !== "choice") {
+    throw new Error("Expected a choice creation hole.");
+  }
+
+  return hole;
+}
+
+function isUnitChoiceCreationHole(
+  hole: ChoiceCreationHole,
+): hole is UnitChoiceCreationHole {
+  return hole.source.tag === "unit";
+}
+
+function requireUnitChoiceCreationHole(hole: CreationHole): UnitChoiceCreationHole {
+  const choice = requireChoiceCreationHole(hole);
+  if (!isUnitChoiceCreationHole(choice)) {
+    throw new Error("Expected a unit-sourced choice creation hole.");
+  }
+
+  return choice;
 }
 
 function supportedStartingEquipmentCoinGrantChoice(
