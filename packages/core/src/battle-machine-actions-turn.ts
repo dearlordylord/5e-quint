@@ -1,5 +1,5 @@
 import { Option } from "effect";
-import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { boundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   createInitiativeStack,
   initiativeOrder,
@@ -868,7 +868,7 @@ export function battleMonsterSaveEffect({
         ? {
             conditionDurationOnFail: {
               effectId: `monster:${monsterId}:${ability.id}`,
-              roundsRemaining: initiativeDurationRounds(
+              boundaryCrossingsRemaining: boundaryCrossingsRemaining(
                 timedConditionOnFail.duration.rounds,
               ),
               expiresAt: timedConditionOnFail.duration.expiresAt,

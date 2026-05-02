@@ -183,6 +183,7 @@ module characterCreation {
 
   type CharacterSheet = {
     primaryClass: ClassName,
+    classLevels: ClassName -> int,
     advancement: List[CharacterAdvancementEntry],
     background: CharacterBackground,
     abilityScoreGeneration: {
@@ -1678,6 +1679,7 @@ module characterCreation {
 
       Finalized({
         primaryClass: primaryClass,
+        classLevels: advancementReplay.classLevels,
         advancement: advancementReplay.advancement,
         background: background,
         abilityScoreGeneration: { mode: abilityScoreGeneration.mode, assignedScores: baseScores },

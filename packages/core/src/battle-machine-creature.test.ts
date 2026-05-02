@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initiativeDurationRounds } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { boundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import {
   addEffect,
@@ -15,7 +15,7 @@ describe("battle-machine-creature conditional grants", () => {
     target = addEffect(
       target,
       "monster:A:sting",
-      initiativeDurationRounds(600),
+      boundaryCrossingsRemaining(600),
       "end",
       CreatureId("A"),
       {
@@ -35,7 +35,7 @@ describe("battle-machine-creature conditional grants", () => {
     target = addEffect(
       target,
       "monster:C:sting",
-      initiativeDurationRounds(600),
+      boundaryCrossingsRemaining(600),
       "end",
       CreatureId("C"),
       {

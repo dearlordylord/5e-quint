@@ -1,39 +1,49 @@
 import { Brand, Either, Match } from "effect";
 
-export const ELAPSED_TIME_TICKS_PER_MINUTE = 10;
+export const TIME_SPAN_SECONDS_PER_ROUND = 6;
+export const TIME_SPAN_SECONDS_PER_MINUTE = 60;
+export const ELAPSED_TIME_TICKS_PER_MINUTE =
+  TIME_SPAN_SECONDS_PER_MINUTE / TIME_SPAN_SECONDS_PER_ROUND;
 export const ELAPSED_TIME_TICKS_PER_HOUR = ELAPSED_TIME_TICKS_PER_MINUTE * 60;
 export const ELAPSED_TIME_HOURS_PER_DAY = 24;
 export const ELAPSED_TIME_TICKS_PER_DAY =
   ELAPSED_TIME_TICKS_PER_HOUR * ELAPSED_TIME_HOURS_PER_DAY;
 
-export const ELAPSED_TIME_UNITS = ["tick", "minute", "hour", "day"] as const;
-export type ElapsedTimeUnit = (typeof ELAPSED_TIME_UNITS)[number];
+export const TIME_SPAN_UNITS = ["round", "minute", "hour", "day"] as const;
+export type TimeSpanUnit = (typeof TIME_SPAN_UNITS)[number];
 
 export type ElapsedTimeTicks = number & Brand.Brand<"ElapsedTimeTicks">;
 const ElapsedTimeTicks = Brand.nominal<ElapsedTimeTicks>();
 
-export type InitiativeDurationRounds = number &
-  Brand.Brand<"InitiativeDurationRounds">;
-const InitiativeDurationRounds = Brand.nominal<InitiativeDurationRounds>();
+export type PositiveInt = number & Brand.Brand<"PositiveInt">;
+const PositiveInt = Brand.nominal<PositiveInt>();
 
-export type ElapsedTimeDuration = {
-  readonly ticks: ElapsedTimeTicks;
+// Count of future actor-relative turn-boundary crossings while an effect is active.
+export type BoundaryCrossingsRemaining = number &
+  Brand.Brand<"BoundaryCrossingsRemaining">;
+const BoundaryCrossingsRemaining = Brand.nominal<BoundaryCrossingsRemaining>();
+
+export type TimeSpanDuration = {
+  readonly kind: "timeSpan";
+  readonly unit: TimeSpanUnit;
+  readonly amount: PositiveInt;
 };
 
 export type ElapsedTimeParseError =
   | { readonly kind: "unsupportedUnit"; readonly unit: string }
   | { readonly kind: "fractionalAmount"; readonly amount: number }
-  | { readonly kind: "negativeAmount"; readonly amount: number };
+  | { readonly kind: "negativeAmount"; readonly amount: number }
+  | { readonly kind: "nonPositiveAmount"; readonly amount: number };
 
-export type SurfaceElapsedDurationValue = {
+export type SurfaceTimeSpanDurationValue = {
   readonly unit: string;
   readonly amount: number;
 };
 
-const ELAPSED_TIME_UNIT_SET: ReadonlySet<string> = new Set(ELAPSED_TIME_UNITS);
+const TIME_SPAN_UNIT_SET: ReadonlySet<string> = new Set(TIME_SPAN_UNITS);
 
-export function isElapsedTimeUnit(unit: string): unit is ElapsedTimeUnit {
-  return ELAPSED_TIME_UNIT_SET.has(unit);
+export function isTimeSpanUnit(unit: string): unit is TimeSpanUnit {
+  return TIME_SPAN_UNIT_SET.has(unit);
 }
 
 export function parseElapsedTimeTicks(
@@ -56,30 +66,46 @@ export function elapsedTimeTicks(value: number): ElapsedTimeTicks {
   return parsed.right;
 }
 
-export function initiativeDurationRounds(
+export function boundaryCrossingsRemaining(
   value: number,
-): InitiativeDurationRounds {
-  const parsed = parseElapsedTimeTicks(value);
+): BoundaryCrossingsRemaining {
+  const parsed = parsePositiveInt(value);
   if (Either.isLeft(parsed)) {
     throw new Error(describeElapsedTimeParseError(parsed.left));
   }
-  return InitiativeDurationRounds(value);
+  return BoundaryCrossingsRemaining(parsed.right);
 }
 
-export function decrementInitiativeDurationRounds(
-  value: InitiativeDurationRounds,
-): InitiativeDurationRounds {
-  return initiativeDurationRounds(Math.max(0, Number(value) - 1));
+export function parseBoundaryCrossingsRemaining(
+  value: number,
+): Either.Either<BoundaryCrossingsRemaining, ElapsedTimeParseError> {
+  const parsed = parsePositiveInt(value);
+  return Either.isRight(parsed)
+    ? Either.right(BoundaryCrossingsRemaining(parsed.right))
+    : Either.left(parsed.left);
 }
 
-export function initiativeRoundsFromElapsedTimeTicks(
-  ticks: ElapsedTimeTicks,
-): InitiativeDurationRounds {
-  return initiativeDurationRounds(Number(ticks));
+export function parsePositiveInt(
+  value: number,
+): Either.Either<PositiveInt, ElapsedTimeParseError> {
+  if (!Number.isInteger(value)) {
+    return Either.left({ kind: "fractionalAmount", amount: value });
+  }
+  if (value <= 0) {
+    return Either.left({ kind: "nonPositiveAmount", amount: value });
+  }
+  return Either.right(PositiveInt(value));
+}
+
+export function decrementBoundaryCrossingsRemaining(
+  value: BoundaryCrossingsRemaining,
+): BoundaryCrossingsRemaining | null {
+  const next = Number(value) - 1;
+  return next <= 0 ? null : boundaryCrossingsRemaining(next);
 }
 
 export function elapsedTimeTicksFromUnit(
-  unit: ElapsedTimeUnit,
+  unit: TimeSpanUnit,
   amount: number,
 ): Either.Either<ElapsedTimeTicks, ElapsedTimeParseError> {
   if (!Number.isInteger(amount)) {
@@ -92,7 +118,7 @@ export function elapsedTimeTicksFromUnit(
   return Either.right(
     elapsedTimeTicks(
       Match.value(unit).pipe(
-        Match.when("tick", () => amount),
+        Match.when("round", () => amount),
         Match.when("minute", () => amount * ELAPSED_TIME_TICKS_PER_MINUTE),
         Match.when("hour", () => amount * ELAPSED_TIME_TICKS_PER_HOUR),
         Match.when("day", () => amount * ELAPSED_TIME_TICKS_PER_DAY),
@@ -102,13 +128,25 @@ export function elapsedTimeTicksFromUnit(
   );
 }
 
-export function elapsedTimeTicksFromSurfaceDuration(
-  duration: SurfaceElapsedDurationValue,
+export function elapsedTimeTicksFromTimeSpanDuration(
+  duration: SurfaceTimeSpanDurationValue,
 ): Either.Either<ElapsedTimeTicks, ElapsedTimeParseError> {
-  if (!isElapsedTimeUnit(duration.unit)) {
+  if (!isTimeSpanUnit(duration.unit)) {
     return Either.left({ kind: "unsupportedUnit", unit: duration.unit });
   }
   return elapsedTimeTicksFromUnit(duration.unit, duration.amount);
+}
+
+export function timeSpanDuration(
+  value: SurfaceTimeSpanDurationValue,
+): Either.Either<TimeSpanDuration, ElapsedTimeParseError> {
+  if (!isTimeSpanUnit(value.unit)) {
+    return Either.left({ kind: "unsupportedUnit", unit: value.unit });
+  }
+  const amount = parsePositiveInt(value.amount);
+  return Either.isRight(amount)
+    ? Either.right({ kind: "timeSpan", unit: value.unit, amount: amount.right })
+    : Either.left(amount.left);
 }
 
 export function elapsedTimeTicksFromMinutes(
@@ -123,21 +161,22 @@ export function elapsedTimeTicksFromHours(
   return elapsedTimeTicksFromUnit("hour", hours);
 }
 
-export function formatElapsedTimeDuration(ticks: ElapsedTimeTicks): string {
+export function formatTimeSpanDuration(duration: TimeSpanDuration): string {
+  return formatTimeSpanUnit(Number(duration.amount), duration.unit);
+}
+
+export function formatElapsedTimeTicks(ticks: ElapsedTimeTicks): string {
   const value = Number(ticks);
   if (value % ELAPSED_TIME_TICKS_PER_DAY === 0) {
-    return formatElapsedTimeUnit(value / ELAPSED_TIME_TICKS_PER_DAY, "day");
+    return formatTimeSpanUnit(value / ELAPSED_TIME_TICKS_PER_DAY, "day");
   }
   if (value % ELAPSED_TIME_TICKS_PER_HOUR === 0) {
-    return formatElapsedTimeUnit(value / ELAPSED_TIME_TICKS_PER_HOUR, "hour");
+    return formatTimeSpanUnit(value / ELAPSED_TIME_TICKS_PER_HOUR, "hour");
   }
   if (value % ELAPSED_TIME_TICKS_PER_MINUTE === 0) {
-    return formatElapsedTimeUnit(
-      value / ELAPSED_TIME_TICKS_PER_MINUTE,
-      "minute",
-    );
+    return formatTimeSpanUnit(value / ELAPSED_TIME_TICKS_PER_MINUTE, "minute");
   }
-  return formatElapsedTimeUnit(value, "tick");
+  return formatTimeSpanUnit(value, "round");
 }
 
 export function describeElapsedTimeParseError(
@@ -156,10 +195,14 @@ export function describeElapsedTimeParseError(
       { kind: "negativeAmount" },
       ({ amount }) => `Elapsed-time amount must be non-negative: ${amount}`,
     ),
+    Match.when(
+      { kind: "nonPositiveAmount" },
+      ({ amount }) => `Amount must be a positive integer: ${amount}`,
+    ),
     Match.exhaustive,
   );
 }
 
-function formatElapsedTimeUnit(amount: number, unit: ElapsedTimeUnit): string {
+function formatTimeSpanUnit(amount: number, unit: TimeSpanUnit): string {
   return `${amount} ${unit}${amount === 1 ? "" : "s"}`;
 }

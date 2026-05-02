@@ -440,7 +440,7 @@ export const creatureMachine = setup({
                 ? c.nonCantripActionSpellCast
                 : true,
             };
-      if (!spell.concentration || spell.durationRounds == null) {
+      if (!spell.concentration || spell.boundaryCrossings == null) {
         return {
           slotsCurrent,
           slotExpendedThisTurn: isCantrip ? c.slotExpendedThisTurn : true,
@@ -460,7 +460,7 @@ export const creatureMachine = setup({
         activeEffects: addAe(
           baseEffects,
           nextSpellId,
-          spell.durationRounds,
+          spell.boundaryCrossings,
           "end",
           c.selfId ?? mkCreatureId(""),
         ),
@@ -527,7 +527,7 @@ export const creatureMachine = setup({
         activeEffects: addAe(
           base,
           ev.spellId,
-          ev.durationRounds,
+          ev.boundaryCrossings,
           ev.expiresAt,
           ev.casterId,
         ),
@@ -546,7 +546,7 @@ export const creatureMachine = setup({
         activeEffects: addAe(
           c.activeEffects,
           ev.spellId,
-          ev.durationRounds,
+          ev.boundaryCrossings,
           ev.expiresAt,
           ev.casterId,
           {

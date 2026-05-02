@@ -311,14 +311,6 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Assumption:** The battle spec models adding/removing creatures mid-combat (A33) but does not model summoning _spell effects_ (specific stat blocks, durations, caster-control rules). These belong in `features/spell-*.ts` as content, not in the Quint spec.
 
-## A34: Spell durations are non-negative
-
-**Assumption:** Spell effect durations (tracked as `roundsRemaining` on `ActiveEffect`) are non-negative integers. When a duration reaches 0, the effect ends and is removed. Negative durations do not exist. (This note does not imply that other non-mentioned durations are negative.)
-
-**Rules basis:** The SRD describes durations as positive time spans ("1 minute," "Concentration, up to 10 minutes," etc.) that simply end when expired. No SRD passage addresses negative durations because the concept does not exist in the rules.
-
-**Changes:** Invariant `roundsRemaining >= 0` added to safety invariants (see PLAN_INVARIANTS.md L2).
-
 ## A37: Grapple Movable cost modeled as movement cost, not speed reduction
 
 **Assumption:** The SRD 5.2.1 Grappled condition's Movable property is modeled directly in battle semantics as an extra movement cost: when the grappler moves while dragging a grappled creature, each foot costs 1 extra foot unless the target is Tiny or two or more sizes smaller than the grappler.
@@ -377,3 +369,13 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rules basis:** SRD 5.2.1 defines Speed as the distance a creature can cover when it moves on its turn. The movement rules say movement can include climbing, crawling, jumping, and swimming, and the Rules Glossary distinguishes special speeds from the base Speed. Dash says the creature gains extra movement equal to its Speed for the current turn, and gives the example that Speed 30 allows moving up to 60 feet when Dashing. The SRD does not create separate walk and run speeds for combat movement.
 
 **Changes:** Documentation only. Existing `walkFeet` fields in Surface, MCP battle initialization, and `@dnd/battle-runtime` continue to mean ordinary ground Speed. Dash should widen movement budget derived from the selected speed rather than introduce a second run/walk state.
+
+## A42: Round time-span conversion uses whole 6-second units
+
+**Assumption:** When authored time-span durations are projected into elapsed-time math, each `round` contributes exactly 6 seconds. The conversion does not prorate or subtract partial round progress based on whose turn is currently being resolved.
+
+**Rules basis:** SRD 5.2.1 says combat is organized into rounds and turns, a round represents about 6 seconds, and spell time spans can be stated in rounds. It does not define partial-round elapsed-time accounting.
+
+**Rationale:** Initiative order is a resolution view over combat time, not a statement that one creature's turn consumes an isolated slice of the 6-second round. The model treats turns in a round as an ordered resolution of one 6-second combat cycle, so it does not charge partial elapsed seconds based on position in initiative order.
+
+**Changes:** Shared timing conversion uses `TIME_SPAN_SECONDS_PER_ROUND = 6`; no conversion helper subtracts elapsed turn progress from a round.

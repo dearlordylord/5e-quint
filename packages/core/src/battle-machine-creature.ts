@@ -4,8 +4,8 @@
  */
 import { Match, Option } from "effect";
 import {
-  decrementInitiativeDurationRounds,
-  type InitiativeDurationRounds,
+  decrementBoundaryCrossingsRemaining,
+  type BoundaryCrossingsRemaining,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import { preparedBattleSpellAccess } from "#/battle-spell-access.ts";
@@ -775,19 +775,19 @@ export function advanceEffectsForOwner(
   const advanced: Array<ActiveEffect> = [];
   const removed: Array<ActiveEffect> = [];
   for (const effect of creature.activeEffects) {
-    if (effectExpiryOwnerId(effect) !== ownerId) {
+    if (effectExpiryOwnerId(effect) !== ownerId || effect.expiresAt !== phase) {
       advanced.push(effect);
       continue;
     }
     changed = true;
-    const roundsRemaining = decrementInitiativeDurationRounds(
-      effect.roundsRemaining,
+    const boundaryCrossingsRemaining = decrementBoundaryCrossingsRemaining(
+      effect.boundaryCrossingsRemaining,
     );
-    if (roundsRemaining <= 0 && effect.expiresAt === phase) {
+    if (boundaryCrossingsRemaining == null) {
       removed.push(effect);
       continue;
     }
-    advanced.push({ ...effect, roundsRemaining });
+    advanced.push({ ...effect, boundaryCrossingsRemaining });
   }
   if (!changed) return creature;
   return removeGrantedConditions(
@@ -799,11 +799,14 @@ export function advanceEffectsForOwner(
 export function addEffect(
   c: BattleCreatureState,
   effectId: string,
-  duration: InitiativeDurationRounds,
+  duration: BoundaryCrossingsRemaining,
   expiresAt: ExpiryPhase,
   casterId: CreatureId,
   options: Partial<
-    Omit<ActiveEffect, "spellId" | "roundsRemaining" | "expiresAt" | "casterId">
+    Omit<
+      ActiveEffect,
+      "spellId" | "boundaryCrossingsRemaining" | "expiresAt" | "casterId"
+    >
   > = {},
 ): BattleCreatureState {
   return {
@@ -814,7 +817,7 @@ export function addEffect(
       ),
       {
         spellId: effectId,
-        roundsRemaining: duration,
+        boundaryCrossingsRemaining: duration,
         expiresAt,
         casterId,
         ...options,

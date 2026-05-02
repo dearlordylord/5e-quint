@@ -4,8 +4,9 @@
 import * as Either from "effect/Either";
 import {
   elapsedTimeTicksFromHours,
-  elapsedTimeTicksFromSurfaceDuration,
-  formatElapsedTimeDuration,
+  formatElapsedTimeTicks,
+  formatTimeSpanDuration,
+  timeSpanDuration,
 } from "@dnd/shared/elapsed-time";
 
 import type {
@@ -7043,9 +7044,9 @@ function describeDurationValue(d: {
     readonly amount: number;
   }>;
 }): string {
-  const elapsed = elapsedTimeTicksFromSurfaceDuration(d);
-  const base = Either.isRight(elapsed)
-    ? formatElapsedTimeDuration(elapsed.right)
+  const duration = timeSpanDuration(d);
+  const base = Either.isRight(duration)
+    ? formatTimeSpanDuration(duration.right)
     : `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
   if (d.upcastTiers === undefined || d.upcastTiers.length === 0) return base;
   const tiers = d.upcastTiers
@@ -7060,7 +7061,7 @@ function describeDurationValue(d: {
 function formatElapsedHours(hours: number): string {
   const ticks = elapsedTimeTicksFromHours(hours);
   return Either.isRight(ticks)
-    ? formatElapsedTimeDuration(ticks.right)
+    ? formatElapsedTimeTicks(ticks.right)
     : `${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
