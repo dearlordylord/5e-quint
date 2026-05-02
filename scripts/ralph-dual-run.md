@@ -149,7 +149,8 @@ In addition, the decider must:
 
 1. choose `retry-same-task` only when the task is still implementation-ready and the next attempt has a concrete implementable delta;
 2. keep attempt-specific failure notes in run-local review/decider artifacts instead of `plans/ACTIVE_PLAN.md`;
-3. edit the plan only when the rejection revealed a genuinely new durable planning fact.
+3. for runnable rejections (`retry-same-task` / `needs-more-research`), add or update a concise attempt-agnostic `Retry Guidance:` subsection in the task body that tells the next implementer pass what to change;
+4. edit the plan only when the rejection revealed a genuinely new durable planning fact.
 
 When the decider leaves a task `blocked`, it must also record:
 
@@ -172,7 +173,7 @@ Before editing the plan, the decider must pass a new-information gate in its fin
 2. why that fact was not already implied by the current plan text;
 3. why that fact is durable enough to remain true after run-local artifacts are deleted.
 
-The harness treats attempt-numbered rejection notes or "next attempt must..." guidance in `plans/ACTIVE_PLAN.md` as a fatal decider error. Durable requirements belong in the plan. Attempt scar tissue does not.
+The harness treats attempt-numbered rejection notes in `plans/ACTIVE_PLAN.md` as a fatal decider error. Durable requirements and attempt-agnostic `Retry Guidance:` belong in the plan. Attempt scar tissue does not.
 
 This is the key difference between a normal task rejection and a fatal harness failure. Rejection is part of the loop. Fatal harness failure is loss of a trustworthy repo or plan state.
 

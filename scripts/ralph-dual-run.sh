@@ -60,7 +60,15 @@ log() {
 
 contains_attempt_specific_plan_notes() {
   local path="$1"
-  rg -n '^[[:space:]-]*Attempt [0-9]+|^[[:space:]-]*next attempt must\b' "$path" >/dev/null 2>&1
+  rg -n '^[[:space:]-]*Attempt [0-9]+' "$path" >/dev/null 2>&1
+}
+
+# Retry guidance is durable, attempt-agnostic task steering for the next rerun.
+task_body_has_retry_guidance() {
+  local path="$1"
+  local start_line="$2"
+  local end_line="$3"
+  sed -n "${start_line},${end_line}p" "$path" | rg -q '^[[:space:]]*(Retry Guidance:|### Retry Guidance\b)'
 }
 
 note() {
@@ -708,13 +716,17 @@ Requirements:
 - Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat those script diffs as harness noise, not task-owned changes, unless a candidate went beyond the standard stub content.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
-- Inspect both implementations and both reviews for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes, parser-error reminders, or "next attempt must..." guidance to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
+- Inspect both implementations and both reviews for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes or parser-error reminders to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
 - Preserve task surface as executable tasks, not only status prose. If you accept a task by narrowing or splitting its original scope, any excluded still-desired work must be added or revised as concrete follow-up tasks in $plan_file before you commit. A note that work "remains support-gated", "is deferred", or "belongs to a later family" is not sufficient unless the corresponding Ralph Task Index, DAG table, and task-detail entries already keep that work visible and dependency-ordered.
 - Before editing $plan_file, answer a New Information Gate in the decider final:
   - What new fact was learned?
   - Why was it not already implied by the current plan text?
   - Why is it durable enough to remain correct after run-local artifacts are deleted?
-- If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied; otherwise leave the plan stable and rely on the task body plus run-local artifacts for the rerun.
+- If the task stays runnable (
+  - retry-same-task
+  - needs-more-research
+  ), add or update a concise `Retry Guidance:` section in the current task body in $plan_file. Keep it attempt-agnostic, actionable, and focused on what the next implementer round should change.
+- If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied, except for required attempt-agnostic `Retry Guidance:` updates on runnable reruns.
 - Every decider result must classify the task disposition as exactly one of:
   - done
   - retry-same-task
@@ -1533,12 +1545,24 @@ run_task_attempt() {
         append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-final-attempt-rerun" "-" "final attempt left task runnable"
         return 2
       fi
+      if ! task_body_has_retry_guidance "$plan_snapshot" "$_ref_task_start" "$_ref_task_end"; then
+        printf 'task %s attempt %s left task runnable without Retry Guidance in the task body\n' "$task_no" "$attempt_no" >"$last_error_file"
+        note "task" "fatal-missing-retry-guidance task=$task_no attempt=$attempt_no disposition=$decider_disposition"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-retry-guidance" "-" "runnable task missing retry guidance"
+        return 2
+      fi
       ;;
     needs-more-research)
       if [[ "$final_attempt" == "true" ]]; then
         printf 'task %s attempt %s used needs-more-research on the final allowed attempt\n' "$task_no" "$attempt_no" >"$last_error_file"
         note "task" "fatal-final-attempt-rerun task=$task_no attempt=$attempt_no disposition=$decider_disposition"
         append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-final-attempt-rerun" "-" "final attempt left task research-runnable"
+        return 2
+      fi
+      if ! task_body_has_retry_guidance "$plan_snapshot" "$_ref_task_start" "$_ref_task_end"; then
+        printf 'task %s attempt %s left task runnable without Retry Guidance in the task body\n' "$task_no" "$attempt_no" >"$last_error_file"
+        note "task" "fatal-missing-retry-guidance task=$task_no attempt=$attempt_no disposition=$decider_disposition"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-retry-guidance" "-" "runnable task missing retry guidance"
         return 2
       fi
       ;;
