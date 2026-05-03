@@ -813,9 +813,9 @@ module dndTest::Impl {
   // ============================================================
 
   pure val EMPTY_EFFECTS: Set[ActiveEffect] = Set()
-  pure val EFF_A: ActiveEffect = { spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
-  pure val EFF_B: ActiveEffect = { spellId: "bless", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
-  pure val EFF_START: ActiveEffect = { spellId: "dodge", turnsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
+  pure val EFF_A: ActiveEffect = { spellId: "hold_person", boundaryCrossingsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
+  pure val EFF_B: ActiveEffect = { spellId: "bless", boundaryCrossingsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
+  pure val EFF_START: ActiveEffect = { spellId: "dodge", boundaryCrossingsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
   pure val TWO_EFFECTS: Set[ActiveEffect] = Set(EFF_A, EFF_B)
 
   // -- pAddEffect --
@@ -835,7 +835,7 @@ module dndTest::Impl {
     all {
       assert(result.size() == 2),
       assert(pHasEffect(result, "hold_person")),
-      assert(result.exists(e => e.spellId == "hold_person" and e.turnsRemaining == 7))
+      assert(result.exists(e => e.spellId == "hold_person" and e.boundaryCrossingsRemaining == 7))
     }
   }
 
@@ -871,68 +871,21 @@ module dndTest::Impl {
     assert(result.size() == 2)
   }
 
-  // -- pDecrementDurations --
+  // -- pAdvanceEffectsAtPhase --
 
-  run test_decrement_durations = {
-    val result = pDecrementDurations(TWO_EFFECTS)
+  run test_advance_effects_at_end_boundary = {
+    val result = pAdvanceEffectsAtPhase(TWO_EFFECTS, AtEndOfTurn)
     all {
-      assert(result.exists(e => e.spellId == "hold_person" and e.turnsRemaining == 2)),
-      assert(result.exists(e => e.spellId == "bless" and e.turnsRemaining == 9))
+      assert(result.exists(e => e.spellId == "hold_person" and e.boundaryCrossingsRemaining == 2)),
+      assert(result.exists(e => e.spellId == "bless" and e.boundaryCrossingsRemaining == 9))
     }
   }
 
-  run test_decrement_to_zero = {
-    val effects = Set({ spellId: "shield", turnsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload })
-    val result = pDecrementDurations(effects)
-    assert(result.exists(e => e.spellId == "shield" and e.turnsRemaining == 0))
+  run test_advance_final_crossing_expires_without_zero = {
+    val effects = Set({ spellId: "shield", boundaryCrossingsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload })
+    val result = pAdvanceEffectsAtPhase(effects, AtStartOfTurn)
+    assert(result.size() == 0)
   }
-
-  // -- pExpiredAtPhase --
-
-  run test_expired_at_phase_none = assert(pExpiredAtPhase(TWO_EFFECTS, AtEndOfTurn) == Set())
-
-  run test_expired_at_phase_end = {
-    val effects = Set(
-      { spellId: "a", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload },
-      { spellId: "b", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload },
-      { spellId: "c", turnsRemaining: -1, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
-    )
-    val expired = pExpiredAtPhase(effects, AtEndOfTurn)
-    all { assert(expired.exists(e => e.spellId == "a")), assert(expired.exists(e => e.spellId == "c")), assert(expired.size() == 2) }
-  }
-
-  run test_expired_at_phase_start_only = {
-    val effects = Set(
-      { spellId: "a", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload },
-      { spellId: "b", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
-    )
-    val expiredStart = pExpiredAtPhase(effects, AtStartOfTurn)
-    val expiredEnd = pExpiredAtPhase(effects, AtEndOfTurn)
-    all {
-      assert(expiredStart.size() == 1),
-      assert(expiredStart.exists(e => e.spellId == "a")),
-      assert(expiredEnd.size() == 1),
-      assert(expiredEnd.exists(e => e.spellId == "b"))
-    }
-  }
-
-  // -- pClearExpiredAtPhase --
-
-  run test_clear_expired_at_phase = {
-    val effects = Set(
-      { spellId: "a", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload },
-      { spellId: "b", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload },
-      { spellId: "c", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
-    )
-    val result = pClearExpiredAtPhase(effects, AtEndOfTurn)
-    all {
-      assert(result.size() == 2),
-      assert(pHasEffect(result, "b")),
-      assert(result.exists(e => e.spellId == "c"))  // AtStartOfTurn not cleared
-    }
-  }
-
-  run test_clear_expired_none_expired = assert(pClearExpiredAtPhase(TWO_EFFECTS, AtEndOfTurn) == TWO_EFFECTS)
 
   // -- pHasEffect --
 
@@ -940,22 +893,17 @@ module dndTest::Impl {
   run test_has_effect_false = assert(not(pHasEffect(TWO_EFFECTS, "fireball")))
   run test_has_effect_empty = assert(not(pHasEffect(EMPTY_EFFECTS, "anything")))
 
-  run test_has_effect_expired_false = {
-    val effects = Set({ spellId: "shield", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload })
-    assert(not(pHasEffect(effects, "shield")))
-  }
-
   // -- pTickEffects --
 
   run test_tick_effects = {
     val effects = Set(
-      { spellId: "a", turnsRemaining: 5, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload },
-      { spellId: "b", turnsRemaining: 2, expiresAt: AtStartOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
+      { spellId: "a", boundaryCrossingsRemaining: 5, expiresAt: AtEndOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload },
+      { spellId: "b", boundaryCrossingsRemaining: 2, expiresAt: AtStartOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }
     )
     val result = pTickEffects(effects, 3)
     all {
       assert(result.size() == 1),
-      assert(result.exists(e => e.spellId == "a" and e.turnsRemaining == 2))
+      assert(result.exists(e => e.spellId == "a" and e.boundaryCrossingsRemaining == 2))
     }
   }
 
@@ -966,7 +914,8 @@ module dndTest::Impl {
 
   run test_consume_one_shot_weapon_hit_effect = {
     val triggered: ActiveEffect = {
-      spellId: "searing_smite", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster",
+      spellId: "searing_smite", boundaryCrossingsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster",
+      expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: Set(),
       conditionalGrantedConditions: Set(),
@@ -974,7 +923,8 @@ module dndTest::Impl {
       consumeOnQualifiedHit: ORNextWeaponHit, reactivePayload: NoReactivePayload,
     }
     val persistent: ActiveEffect = {
-      spellId: "bless", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster",
+      spellId: "bless", boundaryCrossingsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster",
+      expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: Set(),
       conditionalGrantedConditions: Set(),
@@ -990,7 +940,8 @@ module dndTest::Impl {
 
   run test_keep_melee_only_rider_on_ranged_weapon_hit = {
     val meleeOnly: ActiveEffect = {
-      spellId: "wrathful_smite", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster",
+      spellId: "wrathful_smite", boundaryCrossingsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster",
+      expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: Set(),
       conditionalGrantedConditions: Set(),
@@ -1026,16 +977,15 @@ module dndTest::Impl {
     assert(result == TWO_EFFECTS)
   }
 
-  // -- Full lifecycle: add -> decrement -> expire -> clear --
+  // -- Full lifecycle: add -> advance -> expire --
 
-  run test_lifecycle_add_decrement_expire_clear = {
+  run test_lifecycle_add_advance_expire = {
     val e0 = pAddEffectSimple(EMPTY_EFFECTS, "spell_x", 2, AtEndOfTurn, "")
-    val e1 = pDecrementDurations(e0)  // turnsRemaining = 1
-    val e2 = pDecrementDurations(e1)  // turnsRemaining = 0
+    val e1 = pAdvanceEffectsAtPhase(e0, AtEndOfTurn)
+    val e2 = pAdvanceEffectsAtPhase(e1, AtEndOfTurn)
     all {
-      assert(pExpiredAtPhase(e1, AtEndOfTurn) == Set()),
-      assert(pExpiredAtPhase(e2, AtEndOfTurn).size() == 1),
-      assert(pClearExpiredAtPhase(e2, AtEndOfTurn).size() == 0)
+      assert(e1.exists(e => e.spellId == "spell_x" and e.boundaryCrossingsRemaining == 1)),
+      assert(e2.size() == 0)
     }
   }
 
@@ -1045,7 +995,7 @@ module dndTest::Impl {
 
   run test_end_turn_save_removes_effect = {
     val s = freshCreature(20).with("activeEffects",
-      Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
+      Set({ spellId: "hold_person", boundaryCrossingsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
     val saves = [{ spellId: "hold_person", saveSucceeded: true, conditionsToRemove: Set() }]
     val r = pEndTurn(s, FRESH_SPELL_SLOTS, saves, [])
     assert(not(pHasEffect(r.creature.activeEffects, "hold_person")))
@@ -1053,7 +1003,7 @@ module dndTest::Impl {
 
   run test_end_turn_save_removes_condition = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
+      .with("activeEffects", Set({ spellId: "hold_person", boundaryCrossingsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
     val s2 = pApplyCondition(s, CParalyzed, Set())
     val saves = [{ spellId: "hold_person", saveSucceeded: true, conditionsToRemove: Set(CParalyzed) }]
     val r = pEndTurn(s2, FRESH_SPELL_SLOTS, saves, [])
@@ -1065,7 +1015,7 @@ module dndTest::Impl {
 
   run test_end_turn_save_fail_keeps = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "hold_person", turnsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
+      .with("activeEffects", Set({ spellId: "hold_person", boundaryCrossingsRemaining: 3, expiresAt: AtEndOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
     val s2 = pApplyCondition(s, CParalyzed, Set())
     val saves = [{ spellId: "hold_person", saveSucceeded: false, conditionsToRemove: Set(CParalyzed) }]
     val r = pEndTurn(s2, FRESH_SPELL_SLOTS, saves, [])
@@ -1084,7 +1034,7 @@ module dndTest::Impl {
 
   run test_end_turn_damage_breaks_conc = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "bless", turnsRemaining: 5, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
+      .with("activeEffects", Set({ spellId: "bless", boundaryCrossingsRemaining: 5, expiresAt: AtEndOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
     val ss = FRESH_SPELL_SLOTS.with("concentrationSpellId", "bless")
     val damages = [{ spellId: "wall_of_fire", damage: 5, damageType: Fire, conSaveSucceeded: false, resistances: Set(), vulnerabilities: Set(), immunities: Set() }]
     val r = pEndTurn(s, ss, [], damages)
@@ -1097,16 +1047,16 @@ module dndTest::Impl {
 
   run test_end_turn_clears_expired_at_end = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "rage", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
+      .with("activeEffects", Set({ spellId: "rage", boundaryCrossingsRemaining: 1, expiresAt: AtEndOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
     val r = pEndTurn(s, FRESH_SPELL_SLOTS, [], [])
     assert(r.creature.activeEffects.size() == 0)
   }
 
   run test_end_turn_preserves_start_expired = {
     val s = freshCreature(20)
-      .with("activeEffects", Set({ spellId: "dodge", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
+      .with("activeEffects", Set({ spellId: "dodge", boundaryCrossingsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "", expiryOwnerId: "", parentSpellId: "", parentCasterId: "", grantedConditions: Set(), conditionalGrantedConditions: Set(), grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload }))
     val r = pEndTurn(s, FRESH_SPELL_SLOTS, [], [])
-    // AtStartOfTurn expired effects are NOT cleared by END_TURN — that's START_TURN's job
+    // AtStartOfTurn effects are not advanced by END_TURN.
     assert(r.creature.activeEffects.size() == 1)
   }
 
@@ -2569,11 +2519,12 @@ module dndTest::Impl {
   // -- Concentration Auto-Expiry --
 
   run test_conc_auto_break_expired_at_start = {
-    // Concentration spell with 1 turn remaining, expires at start of turn.
-    // After pStartTurnFull, duration hits 0 → effect removed → concentration auto-broken.
+    // Concentration spell with one start-boundary crossing remaining.
+    // pStartTurnFull consumes the crossing, removes the effect, and auto-breaks concentration.
     val eff: ActiveEffect = {
-      spellId: "bless", turnsRemaining: 1, expiresAt: AtStartOfTurn,
+      spellId: "bless", boundaryCrossingsRemaining: 1, expiresAt: AtStartOfTurn,
       casterId: "",
+      expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: Set(),
       conditionalGrantedConditions: Set(),
@@ -2590,11 +2541,12 @@ module dndTest::Impl {
   }
 
   run test_conc_auto_break_expired_at_end = {
-    // Concentration spell with turnsRemaining already at 0, expires at end of turn.
-    // pEndTurn clears it → concentration auto-broken.
+    // Concentration spell with one crossing remaining expires at end of turn.
+    // pEndTurn consumes the crossing → concentration auto-broken.
     val eff: ActiveEffect = {
-      spellId: "bless", turnsRemaining: 0, expiresAt: AtEndOfTurn,
+      spellId: "bless", boundaryCrossingsRemaining: 1, expiresAt: AtEndOfTurn,
       casterId: "",
+      expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: Set(),
       conditionalGrantedConditions: Set(),
@@ -2611,10 +2563,11 @@ module dndTest::Impl {
   }
 
   run test_conc_not_broken_when_effect_still_alive = {
-    // Concentration spell with 2 turns remaining. After one decrement it still has 1 → not broken.
+    // Concentration spell with two start-boundary crossings remaining. After one start boundary it still has one crossing, so concentration remains.
     val eff: ActiveEffect = {
-      spellId: "bless", turnsRemaining: 2, expiresAt: AtStartOfTurn,
+      spellId: "bless", boundaryCrossingsRemaining: 2, expiresAt: AtStartOfTurn,
       casterId: "",
+      expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: Set(),
       conditionalGrantedConditions: Set(),
@@ -7687,8 +7640,9 @@ module dndTest::Impl {
     FRESH_SPELL_SLOTS.with("concentrationSpellId", "spell1")
 
   pure val INV_CONC_EFFECT: ActiveEffect = {
-    spellId: "spell1", turnsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster1",
-    parentSpellId: "", parentCasterId: "",
+    spellId: "spell1", boundaryCrossingsRemaining: 10, expiresAt: AtEndOfTurn, casterId: "caster1",
+    expiryOwnerId: "",
+      parentSpellId: "", parentCasterId: "",
     grantedConditions: Set(),
     conditionalGrantedConditions: Set(),
     grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload,
@@ -7970,7 +7924,7 @@ module dndTest::Impl {
     val e2 = pAddEffectSimple(e1, "spell1", 5, AtEndOfTurn, "c1")
     all {
       assert(e2.size() == 1),
-      assert(e2.forall(e => e.turnsRemaining == 5)),
+      assert(e2.forall(e => e.boundaryCrossingsRemaining == 5)),
     }
   }
 
@@ -7986,31 +7940,33 @@ module dndTest::Impl {
     }
   }
 
-  // Decrement durations: 1 → 0 (not negative)
-  run inv_activeEffect_decrementToZero = {
-    val effects = Set(INV_CONC_EFFECT.with("turnsRemaining", 1))
-    val decremented = pDecrementDurations(effects)
-    assert(decremented.forall(e => e.turnsRemaining == 0))
+  // Advancing the final boundary crossing expires instead of storing zero.
+  run inv_activeEffect_finalBoundaryExpires = {
+    val effects = Set(INV_CONC_EFFECT.with("boundaryCrossingsRemaining", 1))
+    val advanced = pAdvanceEffectsAtPhase(effects, AtEndOfTurn)
+    assert(advanced.size() == 0)
   }
 
-  // clearExpiredAtPhase only clears matching phase
+  // Boundary advancement only consumes crossings at the matching phase.
   run inv_activeEffect_expiryPhaseSpecific = {
     val eEnd: ActiveEffect = {
-      spellId: "endSpell", turnsRemaining: 0, expiresAt: AtEndOfTurn, casterId: "c1",
+      spellId: "endSpell", boundaryCrossingsRemaining: 1, expiresAt: AtEndOfTurn, casterId: "c1",
+      expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: Set(),
       conditionalGrantedConditions: Set(),
       grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload,
     }
     val eStart: ActiveEffect = {
-      spellId: "startSpell", turnsRemaining: 0, expiresAt: AtStartOfTurn, casterId: "c1",
+      spellId: "startSpell", boundaryCrossingsRemaining: 1, expiresAt: AtStartOfTurn, casterId: "c1",
+      expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: Set(),
       conditionalGrantedConditions: Set(),
       grantedResistances: Set(), grantedVulnerabilities: Set(), grantedImmunities: Set(), consumeOnQualifiedHit: NoOneShotRider, reactivePayload: NoReactivePayload,
     }
     val effects = Set(eEnd, eStart)
-    val cleared = pClearExpiredAtPhase(effects, AtEndOfTurn)
+    val cleared = pAdvanceEffectsAtPhase(effects, AtEndOfTurn)
     all {
       assert(cleared.size() == 1),
       assert(cleared.exists(e => e.spellId == "startSpell")),
@@ -8119,14 +8075,14 @@ module dndTest::Impl {
 
   pure val TEST_PSEUDODRAGON_STING_DURATION_A: SaveFailureConditionDuration = {
     effectId: "monster:A:sting",
-    turnsRemaining: 600,
+    boundaryCrossingsRemaining: 600,
     expiresAt: AtEndOfTurn,
     expiryOwnerId: "B",
   }
 
   pure val TEST_PSEUDODRAGON_STING_DURATION_C: SaveFailureConditionDuration = {
     effectId: "monster:C:sting",
-    turnsRemaining: 600,
+    boundaryCrossingsRemaining: 600,
     expiresAt: AtEndOfTurn,
     expiryOwnerId: "B",
   }

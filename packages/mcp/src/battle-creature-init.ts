@@ -3,12 +3,14 @@ import {
   battleCreatureInitFromStatBlock,
   scoreModifier,
   startBattle,
+  type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
   type CharacterZeroHpLifecycleInit,
   type CharacterWeaponAttackActionOption,
   type BattleId,
   type BattleState,
+  type BattleCombatantSide,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
@@ -26,7 +28,14 @@ import {
   zeroAbilityModifiers,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import { Hp, movementFeet, proficiencyBonus } from "@dnd/shared/types";
+import {
+  Hp,
+  abilityModifier as battleAbilityModifier,
+  movementFeet,
+  proficiencyBonus,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match } from "effect";
@@ -46,6 +55,7 @@ export type CharacterBuildCreatureInput = {
   readonly displayName: string;
   readonly build: CharacterBuild;
   readonly initiative: InitiativeScore;
+  readonly side: BattleCombatantSide;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
@@ -102,6 +112,7 @@ export function battleCreatureInitFromCharacterBuild(
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: input.initiative,
+    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: input.characterId,
@@ -119,6 +130,7 @@ export function battleCreatureInitFromCharacterBuild(
       selectedLoadout: input.build.equipment,
       attack: characterAttackActionOption(input.build, input.unitLibrary),
       ...(offHandAttack === undefined ? {} : { offHandAttack }),
+      unitFeatures: characterBattleFeatures(input.build, input.unitLibrary),
       resources: characterBattleResources(input.build, input.unitLibrary),
       ...(input.build.spellcasting === undefined
         ? {}
@@ -232,9 +244,23 @@ function characterBattleResources(
 
     return {
       unit,
-      resource: resource.resource,
     };
   });
+}
+
+function characterBattleFeatures(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): readonly CharacterBattleFeatureInit[] {
+  return build.features
+    .filter((feature) => feature.kind === "classFeature")
+    .map((feature) => {
+      const unit = unitLibrary.requireUnit(feature.unitId);
+      if (unit.kind !== "class_feature") {
+        throw new Error(`Expected class feature Unit for feature: ${unit.id}`);
+      }
+      return { unit };
+    });
 }
 
 function characterArmorClassState(
@@ -368,7 +394,9 @@ function characterWeaponAttackActionOption(
     kind: "weapon",
     weapon: unit,
     ability: "str",
-    abilityModifier: scoreModifier(build.abilityScores.str),
+    abilityModifier: battleAbilityModifier(
+      scoreModifier(build.abilityScores.str),
+    ),
   };
 }
 
@@ -401,8 +429,8 @@ function characterSpellcasting(input: {
   }
 
   return {
-    spellcastingAbilityModifier: scoreModifier(
-      build.abilityScores[spellcasting.spellcastingAbility],
+    spellcastingAbilityModifier: battleAbilityModifier(
+      scoreModifier(build.abilityScores[spellcasting.spellcastingAbility]),
     ),
     proficiencyBonus: proficiencyBonus(characterLevel(build)),
     canCastSpells: spellcastingAllowedByArmorTraining(build, unitLibrary),
@@ -411,7 +439,10 @@ function characterSpellcasting(input: {
       unitLibrary,
       spellcasting.preparedSpells,
     ),
-    spellSlots: spellcasting.spellSlots,
+    spellSlots: spellcasting.spellSlots.map((slot) => ({
+      spellLevel: spellSlotLevel(slot.spellLevel),
+      count: resourceCount(slot.count),
+    })),
     ...(input.spellSlots === undefined
       ? {}
       : {

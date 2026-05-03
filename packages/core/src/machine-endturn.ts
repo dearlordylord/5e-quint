@@ -1,4 +1,8 @@
 import { Option } from "effect";
+import {
+  decrementBoundaryCrossingsRemaining,
+  type BoundaryCrossingsRemaining,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import {
   addIncapSource,
@@ -27,16 +31,19 @@ import { deathSaveCount, hp, tempHp } from "#/types.ts";
 export function addAe(
   aes: ReadonlyArray<ActiveEffect>,
   spellId: string,
-  turnsRemaining: number,
+  boundaryCrossingsRemaining: BoundaryCrossingsRemaining,
   expiresAt: ExpiryPhase,
   casterId: CreatureId,
   options: Partial<
-    Omit<ActiveEffect, "spellId" | "turnsRemaining" | "expiresAt" | "casterId">
+    Omit<
+      ActiveEffect,
+      "spellId" | "boundaryCrossingsRemaining" | "expiresAt" | "casterId"
+    >
   > = {},
 ): ReadonlyArray<ActiveEffect> {
   return [
     ...aes.filter((ae) => ae.spellId !== spellId),
-    { spellId, turnsRemaining, expiresAt, casterId, ...options },
+    { spellId, boundaryCrossingsRemaining, expiresAt, casterId, ...options },
   ];
 }
 
@@ -45,6 +52,28 @@ export function removeAe(
   spellId: string,
 ): ReadonlyArray<ActiveEffect> {
   return aes.filter((ae) => ae.spellId !== spellId);
+}
+
+function advanceEndBoundaryForOwner(
+  aes: ReadonlyArray<ActiveEffect>,
+  selfId: CreatureId,
+  removeIds: ReadonlySet<string>,
+): ReadonlyArray<ActiveEffect> {
+  return aes.flatMap((a) => {
+    if (removeIds.has(a.spellId)) return [];
+    if (
+      (a.expiryOwnerId != null && a.expiryOwnerId !== selfId) ||
+      a.expiresAt !== "end"
+    ) {
+      return [a];
+    }
+    const boundaryCrossingsRemaining = decrementBoundaryCrossingsRemaining(
+      a.boundaryCrossingsRemaining,
+    );
+    return boundaryCrossingsRemaining == null
+      ? []
+      : [{ ...a, boundaryCrossingsRemaining }];
+  });
 }
 
 function aggregateDamageModifiers(
@@ -250,16 +279,7 @@ export function computeEndTurn(
     }
   }
 
-  // Single pass: remove by ID + clear expired AtEndOfTurn
-  const ae = ctx.activeEffects.filter(
-    (a) =>
-      !removeIds.has(a.spellId) &&
-      !(
-        (a.expiryOwnerId == null || a.expiryOwnerId === selfId) &&
-        a.expiresAt === "end" &&
-        a.turnsRemaining <= 0
-      ),
-  );
+  const ae = advanceEndBoundaryForOwner(ctx.activeEffects, selfId, removeIds);
 
   // Auto-break concentration if the concentrated spell's effect expired
   if (Option.isSome(conc)) {

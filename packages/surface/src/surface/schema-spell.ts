@@ -401,6 +401,7 @@ type EffectAtom =
       readonly kind: "modify_damage_numeric";
       readonly delta: DiceDelta;
       readonly weaponFilter?: WeaponFilter;
+      readonly abilityFilter?: ReadonlyNonEmptyArray<Ability>;
     }
   | {
       readonly kind: "modify_crit_range";
@@ -419,6 +420,7 @@ type EffectAtom =
   | {
       readonly kind: "modify_roll_advantage";
       readonly mode: "advantage" | "disadvantage";
+      readonly affects?: "self_roll" | "rolls_against_self";
       readonly on: ReadonlyNonEmptyArray<RollKind>;
       readonly attackerTypeFilter?: ReadonlyNonEmptyArray<CreatureType>;
       readonly skillFilter?:
@@ -970,7 +972,7 @@ export const CastingTimeSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("minutes"),
-    amount: Schema.Number,
+    amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
     ritual: Schema.Boolean,
   }),
 );
@@ -1585,6 +1587,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("modify_damage_numeric"),
         delta: DiceDeltaSchema,
         weaponFilter: optionalExact(WeaponFilterSchema),
+        abilityFilter: optionalExact(nonEmpty(AbilitySchema)),
       }),
       Schema.Struct({
         kind: Schema.Literal("modify_crit_range"),
@@ -1605,6 +1608,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("modify_roll_advantage"),
         mode: Schema.Literal("advantage", "disadvantage"),
+        affects: optionalExact(
+          Schema.Literal("self_roll", "rolls_against_self"),
+        ),
         on: nonEmpty(RollKindSchema),
         attackerTypeFilter: optionalExact(nonEmpty(CreatureTypeSchema)),
         skillFilter: optionalExact(
@@ -2652,8 +2658,11 @@ export const ReanimationSlotEntrySchema = Schema.Struct({
 export const ReanimationMenuSchema = nonEmpty(ReanimationSlotEntrySchema);
 
 export const ReanimationReassertWindowSchema = Schema.Struct({
-  hours: Schema.Number,
-  maxReassertPerCast: Schema.Number,
+  hours: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  maxReassertPerCast: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+  ),
 });
 
 export const ReanimatedCreatureMechanicsSchema = Schema.extend(

@@ -4,6 +4,8 @@ import { Option } from "effect";
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
+import barbarianRageInput from "../../content/barbarian_rage.json";
+import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import classFighterInput from "../../content/class_fighter.json";
 import classWizardInput from "../../content/class_wizard.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
@@ -142,6 +144,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterWeaponMasteryL1Input,
     fighterActionSurgeInput,
     fighterTacticalMindInput,
+    barbarianRageInput,
+    barbarianRecklessAttackInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
     featDefenseInput,

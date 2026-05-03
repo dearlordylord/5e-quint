@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Schema } from "effect";
+import { boundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { createActor } from "xstate";
 
 import {
@@ -5479,7 +5480,7 @@ describe("available actions contract", () => {
       activeEffects: [
         {
           spellId: spellId("fire_shield"),
-          turnsRemaining: 100,
+          boundaryCrossingsRemaining: boundaryCrossingsRemaining(100),
           expiresAt: "end",
           casterId: CreatureId("B"),
           reactivePayload: {

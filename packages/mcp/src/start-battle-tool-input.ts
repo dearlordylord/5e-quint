@@ -1,4 +1,5 @@
 import {
+  BattleCombatantSide,
   BattleId as BattleIdSchema,
   combatantId,
   initiativeScore,
@@ -11,7 +12,7 @@ import {
   characterDraftId,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
-import { Hp, type Hp as HpType } from "@dnd/shared/types";
+import { Hp, movementFeet, type Hp as HpType } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Schema } from "effect";
 
@@ -26,6 +27,7 @@ const IntegerSchema = Schema.Number.pipe(Schema.int());
 const NonNegativeIntegerSchema = IntegerSchema.pipe(
   Schema.greaterThanOrEqualTo(0),
 );
+const BattleCombatantSideSchema = BattleCombatantSide;
 const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("characterSession").annotations({
     description: "Initial combatant source: finalized character session.",
@@ -41,6 +43,10 @@ const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
   initiative: IntegerSchema.annotations({
     description: "Caller-supplied Initiative score.",
   }),
+  side: BattleCombatantSideSchema.annotations({
+    description:
+      "Caller-chosen encounter side id; matching side ids are allies and differing side ids are enemies.",
+  }),
 });
 const InitialStatBlockCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("statBlock").annotations({
@@ -55,6 +61,10 @@ const InitialStatBlockCombatantArgsSchema = Schema.Struct({
   }),
   initiative: IntegerSchema.annotations({
     description: "Caller-supplied Initiative score.",
+  }),
+  side: BattleCombatantSideSchema.annotations({
+    description:
+      "Caller-chosen encounter side id; matching side ids are allies and differing side ids are enemies.",
   }),
   currentHp: Schema.optionalWith(NonNegativeIntegerSchema, {
     exact: true,
@@ -110,6 +120,7 @@ export type InitialCharacterSessionCombatantToolInput = {
   readonly sourceDraftId: CharacterDraftId;
   readonly combatantId: CombatantId;
   readonly initiative: InitiativeScore;
+  readonly side: BattleCombatantSide;
 };
 
 export type InitialStatBlockCombatantToolInput = {
@@ -117,6 +128,7 @@ export type InitialStatBlockCombatantToolInput = {
   readonly statBlockId: StatBlockId;
   readonly combatantId: CombatantId;
   readonly initiative: InitiativeScore;
+  readonly side: BattleCombatantSide;
   readonly currentHp?: HpType;
   readonly tempHp?: HpType;
 };
@@ -141,7 +153,7 @@ export function decodeStartBattleArgs(
             (distance) => ({
               combatantA: combatantId(distance.combatantA),
               combatantB: combatantId(distance.combatantB),
-              feet: distance.feet,
+              feet: movementFeet(distance.feet),
             }),
           ),
         }),
@@ -158,6 +170,7 @@ function decodeInitialCombatants(
         sourceDraftId: characterDraftId(combatant.sourceDraftId),
         combatantId: combatantId(combatant.combatantId),
         initiative: initiativeScore(combatant.initiative),
+        side: combatant.side,
       };
     }
     return {
@@ -165,6 +178,7 @@ function decodeInitialCombatants(
       statBlockId: combatant.statBlockId,
       combatantId: combatantId(combatant.combatantId),
       initiative: initiativeScore(combatant.initiative),
+      side: combatant.side,
       ...(combatant.currentHp === undefined
         ? {}
         : { currentHp: Hp(combatant.currentHp) }),

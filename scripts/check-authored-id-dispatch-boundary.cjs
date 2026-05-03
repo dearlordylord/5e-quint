@@ -34,7 +34,7 @@ const ALLOWLIST_PATH_RULES = [
   },
   {
     reason: "legacy-core-quarantine",
-    pattern: /^packages\/(?:core|surface-runtime-correction)\/src\//,
+    pattern: /^packages\/core\/src\//,
   },
   {
     reason: "fixture-boundary",
@@ -156,7 +156,9 @@ function extractParenthesizedExpression(text, openIndex) {
 
 function collectAuthoredIds() {
   if (!fs.existsSync(SURFACE_CONTENT_ROOT)) {
-    throw new Error("authored-id boundary check: surface content directory not found");
+    throw new Error(
+      "authored-id boundary check: surface content directory not found",
+    );
   }
 
   const ids = new Set();
@@ -293,7 +295,11 @@ function collectLiteralAliasMap(content, authoredAlternation) {
   return aliases;
 }
 
-function collectLocalAuthoredContainerMap(content, authoredAlternation, literalAliases) {
+function collectLocalAuthoredContainerMap(
+  content,
+  authoredAlternation,
+  literalAliases,
+) {
   const authoredTokenRegex = new RegExp(`\\b(${authoredAlternation})\\b`);
   const declarationRegex =
     /\b(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([\s\S]*?)(?=;|\n\s*(?:(?:export\s+)?(?:const|let|var|function|class|type|interface|enum)\b)|$)/g;
@@ -311,7 +317,8 @@ function collectLocalAuthoredContainerMap(content, authoredAlternation, literalA
       continue;
     }
 
-    const initializerStart = declarationMatch.index + declarationMatch[0].indexOf(initializer);
+    const initializerStart =
+      declarationMatch.index + declarationMatch[0].indexOf(initializer);
 
     const authoredMatch = authoredTokenRegex.exec(initializer);
     if (authoredMatch != null) {
@@ -455,7 +462,11 @@ function collectImportedAuthoredBindings(
 
     const clause = (match[1] ?? "").trim();
     const specifier = match[3] ?? "";
-    const resolvedImport = resolveImportSpecifier(relativePath, specifier, sourceFilesSet);
+    const resolvedImport = resolveImportSpecifier(
+      relativePath,
+      specifier,
+      sourceFilesSet,
+    );
     if (resolvedImport == null) {
       continue;
     }
@@ -637,7 +648,10 @@ function collectComparisonViolations(
 }
 
 function switchExpressionBeforeCase(content, caseIndex) {
-  const switchSearchWindow = content.slice(Math.max(0, caseIndex - 5000), caseIndex);
+  const switchSearchWindow = content.slice(
+    Math.max(0, caseIndex - 5000),
+    caseIndex,
+  );
   const switchLocalIndex = switchSearchWindow.lastIndexOf("switch");
 
   if (switchLocalIndex < 0) {
@@ -733,7 +747,10 @@ function collectDispatchContainerViolations(
   importedContainers,
   importedNamespaceContainers,
 ) {
-  if (dispatchContainerUsages.length === 0 && dispatchContainerNames.size === 0) {
+  if (
+    dispatchContainerUsages.length === 0 &&
+    dispatchContainerNames.size === 0
+  ) {
     return [];
   }
 
@@ -777,7 +794,8 @@ function collectDispatchContainerViolations(
 
     const namespaceExports = importedNamespaceContainers.get(containerRoot);
     const containerSegments = usage.container.split(".");
-    const namespaceMember = containerSegments.length > 1 ? containerSegments[1] : null;
+    const namespaceMember =
+      containerSegments.length > 1 ? containerSegments[1] : null;
     if (namespaceExports == null || namespaceMember == null) {
       continue;
     }
@@ -837,14 +855,20 @@ function findViolationsForFile(
     dispatchContainerUsages,
   );
 
-  const localLiteralAliases = collectLiteralAliasMap(content, authoredAlternation);
-  const { importedLiteralAliases, importedContainers, importedNamespaceContainers } =
-    collectImportedAuthoredBindings(
-      content,
-      relativePath,
-      sourceFilesSet,
-      authoredExportsByFile,
-    );
+  const localLiteralAliases = collectLiteralAliasMap(
+    content,
+    authoredAlternation,
+  );
+  const {
+    importedLiteralAliases,
+    importedContainers,
+    importedNamespaceContainers,
+  } = collectImportedAuthoredBindings(
+    content,
+    relativePath,
+    sourceFilesSet,
+    authoredExportsByFile,
+  );
 
   const allLiteralAliases = new Map(localLiteralAliases);
   for (const [aliasName, literal] of importedLiteralAliases.entries()) {
@@ -888,7 +912,11 @@ function formatCountMapEntries(map) {
     .map(([reason, count]) => ({ reason, count }));
 }
 
-function buildAuthoredExportIndex(sourceFiles, sourceFilesSet, authoredAlternation) {
+function buildAuthoredExportIndex(
+  sourceFiles,
+  sourceFilesSet,
+  authoredAlternation,
+) {
   const exportedByFile = new Map();
 
   for (const relativePath of sourceFiles) {
@@ -904,7 +932,10 @@ function buildAuthoredExportIndex(sourceFiles, sourceFilesSet, authoredAlternati
       continue;
     }
 
-    const exported = collectExportedAuthoredContainers(content, localContainers);
+    const exported = collectExportedAuthoredContainers(
+      content,
+      localContainers,
+    );
     if (exported.size > 0) {
       exportedByFile.set(relativePath, exported);
     }
@@ -921,7 +952,9 @@ function main() {
 
   const { ids: authoredIds, malformedContentFiles } = collectAuthoredIds();
   if (malformedContentFiles.length > 0) {
-    console.error("authored-id boundary check: malformed surface content file(s):");
+    console.error(
+      "authored-id boundary check: malformed surface content file(s):",
+    );
     for (const file of malformedContentFiles) {
       console.error(`  - ${file}`);
     }
@@ -929,17 +962,23 @@ function main() {
   }
 
   if (authoredIds.size === 0) {
-    console.error("authored-id boundary check: no authored ids discovered from surface content");
+    console.error(
+      "authored-id boundary check: no authored ids discovered from surface content",
+    );
     process.exit(1);
   }
 
   const authoredAlternation = Array.from(authoredIds)
-    .sort((left, right) => right.length - left.length || left.localeCompare(right))
+    .sort(
+      (left, right) => right.length - left.length || left.localeCompare(right),
+    )
     .map((id) => escapeForRegExp(id))
     .join("|");
 
   const sourceFiles = listFiles(PACKAGES_ROOT)
-    .map((filePath) => path.relative(REPO_ROOT, filePath).replaceAll(path.sep, "/"))
+    .map((filePath) =>
+      path.relative(REPO_ROOT, filePath).replaceAll(path.sep, "/"),
+    )
     .sort();
 
   const sourceFilesSet = new Set(sourceFiles);
@@ -960,7 +999,10 @@ function main() {
   for (const relativePath of sourceFiles) {
     const excludedReason = classifyPath(relativePath, EXCLUDED_PATH_RULES);
     if (excludedReason != null) {
-      stats.excluded.set(excludedReason, (stats.excluded.get(excludedReason) ?? 0) + 1);
+      stats.excluded.set(
+        excludedReason,
+        (stats.excluded.get(excludedReason) ?? 0) + 1,
+      );
       continue;
     }
 

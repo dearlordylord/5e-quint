@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { decrementBoundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import {
   fighterExtraAttacks,
@@ -42,33 +43,27 @@ function effectOwnedBySelf(
   );
 }
 
-function decrementDurationsForOwner(
+function advanceStartBoundaryForOwner(
   aes: ReadonlyArray<ActiveEffect>,
   selfId: string,
 ): ReadonlyArray<ActiveEffect> {
-  return aes.map((ae) =>
-    effectOwnedBySelf(ae, selfId)
-      ? { ...ae, turnsRemaining: ae.turnsRemaining - 1 }
-      : ae,
-  );
-}
-
-function clearExpiredStartForOwner(
-  aes: ReadonlyArray<ActiveEffect>,
-  selfId: string,
-): ReadonlyArray<ActiveEffect> {
-  return aes.filter(
-    (a) =>
-      !(
-        effectOwnedBySelf(a, selfId) &&
-        a.expiresAt === "start" &&
-        a.turnsRemaining <= 0
-      ),
-  );
+  return aes.flatMap((ae) => {
+    if (!effectOwnedBySelf(ae, selfId) || ae.expiresAt !== "start") {
+      return [ae];
+    }
+    const boundaryCrossingsRemaining = decrementBoundaryCrossingsRemaining(
+      ae.boundaryCrossingsRemaining,
+    );
+    return boundaryCrossingsRemaining == null
+      ? []
+      : [{ ...ae, boundaryCrossingsRemaining }];
+  });
 }
 
 function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: string): boolean {
-  return aes.some((a) => a.spellId === spellId && a.turnsRemaining > 0);
+  return aes.some(
+    (a) => a.spellId === spellId && a.boundaryCrossingsRemaining > 0,
+  );
 }
 
 function aggregateDamageModifiers(
@@ -186,11 +181,8 @@ export function computeStartTurn(
   let dsSucc = ctx.deathSaves.successes as number;
   let dsFail = ctx.deathSaves.failures as number;
 
-  // 1. Decrement durations + clear expired AtStartOfTurn
-  let ae = clearExpiredStartForOwner(
-    decrementDurationsForOwner(ctx.activeEffects, selfId),
-    selfId,
-  );
+  // 1. Advance this creature's start-turn expiry boundary.
+  let ae = advanceStartBoundaryForOwner(ctx.activeEffects, selfId);
 
   // 1b. Auto-break concentration if the concentrated spell's effect expired
   if (Option.isSome(conc)) {

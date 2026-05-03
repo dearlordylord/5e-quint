@@ -39,7 +39,7 @@ Battle/combat has different error surfaces:
 - `packages/battle-runtime/src/index.ts`
   - battle resolution invalid results such as `invalidFill`, `unsupportedActProfile`, etc.
 - `packages/shared-algebras/src/runtime-hole-algebra.ts`
-  - shared runtime hole/fill *shape* types, but no shared fill-error vocabulary.
+  - shared runtime hole/fill _shape_ types, but no shared fill-error vocabulary.
 - `packages/shared-algebras/src/validation-algebra.ts`
   - shared `traverseValidation` for accumulating per-item validation failures.
 
@@ -49,7 +49,7 @@ Make the error vocabulary intentional and clear.
 
 Acceptable outcomes:
 
-1. Extract a shared fill/hole validation vocabulary into `@dnd/shared-algebras` if creation and battle/runtime correction are using the same protocol.
+1. Extract a shared fill/hole validation vocabulary into `@dnd/shared-algebras` if creation and battle runtime are using the same protocol.
 2. Keep creation-specific issue codes local if creation holes are a different protocol, but document or rename enough that future readers do not assume accidental divergence.
 
 Do not create a shared abstraction only because words like "hole", "fill", or "invalid" appear in multiple places.
@@ -61,8 +61,11 @@ Before editing, inspect:
 - `packages/character-creation-runtime/src/index.ts`
 - `packages/shared-algebras/src/runtime-hole-algebra.ts`
 - `packages/shared-algebras/src/validation-algebra.ts`
-- `packages/surface-runtime-correction/src/reducer-hole-refilling.ts`
-- `packages/surface-runtime-correction/src/reducer-hole-resolution.ts`
+- deleted Correction reducer hole files via
+  `git show <sha>:packages/surface-runtime-correction/src/reducer-hole-refilling.ts`
+  and
+  `git show <sha>:packages/surface-runtime-correction/src/reducer-hole-resolution.ts`
+  only if historical comparison is needed
 - `packages/core/src/available-actions.ts`
 - `packages/battle-runtime/src/index.ts`
 
@@ -124,14 +127,13 @@ Expected edits:
 
 ### Path B: Extract Shared Fill Validation Algebra
 
-Choose this only if `surface-runtime-correction` and creation can use the same fill-validation concepts without losing domain precision.
+Choose this only if battle runtime and creation can use the same fill-validation concepts without losing domain precision. Deleted Correction code may inform the comparison as historical source material.
 
 Expected edits:
 
 - Add shared type(s) in `packages/shared-algebras`, probably near `runtime-hole-algebra.ts` or a new `hole-fill-validation-algebra.ts`.
 - Re-export if local package patterns require it.
 - Update creation issue codes to use or map from the shared code type.
-- Update `surface-runtime-correction` only if it genuinely benefits and does not distort its current error model.
 - Keep creation batch/finalization issue types local.
 
 ## Non-Goals
@@ -158,13 +160,6 @@ For shared-algebras changes:
 ```sh
 pnpm --filter @dnd/shared-algebras typecheck
 pnpm --filter @dnd/shared-algebras test
-```
-
-For surface-runtime-correction changes:
-
-```sh
-pnpm --filter @dnd/surface-runtime-correction typecheck
-pnpm --filter @dnd/surface-runtime-correction test
 ```
 
 If only comments/types in creation are changed, the focused `src/index.test.ts` run is enough.

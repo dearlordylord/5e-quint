@@ -5,6 +5,7 @@ import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Schema } from "effect";
+import { boundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 import { z } from "zod";
@@ -790,7 +791,7 @@ function createDndDriver() {
         send({
           type: "START_CONCENTRATION",
           spellId: spellId(sid),
-          durationTurns: Number(duration),
+          boundaryCrossings: boundaryCrossingsRemaining(Number(duration)),
           expiresAt: mapExpiryPhase(expiresAt),
           casterId: CreatureId(""),
         });
@@ -802,7 +803,7 @@ function createDndDriver() {
         send({
           type: "ADD_EFFECT",
           spellId: spellId(sid),
-          durationTurns: Number(duration),
+          boundaryCrossings: boundaryCrossingsRemaining(Number(duration)),
           expiresAt: mapExpiryPhase(expiresAt),
           casterId: CreatureId(""),
         });

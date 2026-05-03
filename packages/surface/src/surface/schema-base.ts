@@ -158,6 +158,11 @@ export const LevelAxisSchema = Schema.Literal(
 
 export const DiceDeltaSchema = Schema.Union(
   Schema.Struct({
+    kind: Schema.Literal("fixed_number"),
+    amount: Schema.Number,
+    sign: Schema.Literal("+", "-"),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("fixed_dice"),
     dice: Schema.Number,
     dieSize: Schema.Number,
@@ -171,6 +176,18 @@ export const DiceDeltaSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("ability_modifier"),
     ability: AbilitySchema,
+    sign: Schema.Literal("+", "-"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("threshold_tiers"),
+    axis: LevelAxisSchema,
+    base: Schema.Number,
+    tiers: Schema.NonEmptyArray(
+      Schema.Struct({
+        atLevel: Schema.Number,
+        value: Schema.Number,
+      }),
+    ),
     sign: Schema.Literal("+", "-"),
   }),
   Schema.Struct({
@@ -188,18 +205,20 @@ export const DiceDeltaSchema = Schema.Union(
 );
 
 export const DurationUpcastTierSchema = Schema.Struct({
-  atSlot: Schema.Number,
-  amount: Schema.Number,
+  atSlot: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
 });
 
 export const ReadonlyNonEmptyArrayDurationUpcastTierSchema =
   Schema.NonEmptyArray(DurationUpcastTierSchema);
 
-export const DurationValueSchema = Schema.Struct({
+export const TimeSpanDurationValueSchema = Schema.Struct({
   unit: Schema.Literal("round", "minute", "hour", "day"),
-  amount: Schema.Number,
+  amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
   upcastTiers: exactOptional(ReadonlyNonEmptyArrayDurationUpcastTierSchema),
 });
+
+export const DurationValueSchema = TimeSpanDurationValueSchema;
 
 export const SkillSchema = Schema.Literal(
   "acrobatics",

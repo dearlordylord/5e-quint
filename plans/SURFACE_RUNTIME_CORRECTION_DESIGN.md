@@ -1,8 +1,13 @@
 # Surface Runtime Correction Design
 
+Status: archived historical design. The active package
+`packages/surface-runtime-correction` has been deleted; use git history for the
+old files if a restoration task needs source material.
+
 ## Purpose
 
-This document captures the design direction for `packages/surface-runtime-correction`.
+This document captured the design direction for
+`packages/surface-runtime-correction`.
 
 It exists to lock down the architectural intent before more code is written, especially where the existing `core` package is already carrying confusing execution-projection patterns that we do not want to blindly copy.
 

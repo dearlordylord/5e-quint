@@ -5,7 +5,12 @@ import { Match } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import { DieRollResult, Hp, movementFeet } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  abilityModifier,
+  movementFeet,
+} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -17,6 +22,7 @@ import {
 
 import {
   battleId,
+  battleCombatantSide,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -52,6 +58,8 @@ type MbtProjection = {
 
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
+const partySide = battleCombatantSide("party");
+const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
@@ -295,6 +303,7 @@ function fighterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Fighter",
     initiative: initiativeScore(input.initiative),
+    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
@@ -336,7 +345,7 @@ function flailAttack(): NonNullable<
     kind: "weapon",
     weapon,
     ability: "str",
-    abilityModifier: 3,
+    abilityModifier: abilityModifier(3),
   };
 }
 
@@ -347,6 +356,7 @@ function skeletonCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Skeleton",
     initiative: initiativeScore(input.initiative),
+    side: oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),

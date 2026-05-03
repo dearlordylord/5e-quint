@@ -1,6 +1,14 @@
 // Tracer — interpreter over the authored unit ADT. Emits a dependency
 // graph of atoms + typed relations; does not call the combat runtime.
 
+import * as Either from "effect/Either";
+import {
+  elapsedTimeTicksFromHours,
+  formatElapsedTimeTicks,
+  formatTimeSpanDuration,
+  timeSpanDuration,
+} from "@dnd/shared/elapsed-time";
+
 import type {
   UnitRecord,
   SpellRecord,
@@ -6147,9 +6155,11 @@ function traceActivatedAbility(
   traceActivationCost(m.activationCost, procId, nodes, edges, ids);
 
   // Resource consumption + reset cadence.
-  const resId = traceActivationResource(m.resource, nodes, edges, ids);
-  edges.push({ from: procId, to: resId, relation: "consumes" });
-  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+  if (m.resource !== undefined && m.resetCadence !== undefined) {
+    const resId = traceActivationResource(m.resource, nodes, edges, ids);
+    edges.push({ from: procId, to: resId, relation: "consumes" });
+    traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+  }
 
   traceUsageLimit(m.usageLimit, procId, "consumes", nodes, edges, ids);
 
@@ -6384,14 +6394,13 @@ function traceActivationCost(
     }
     case "study": {
       const id = ids("study");
-      const hourLabel = c.hours === 1 ? "hour" : "hours";
       const dayLabel = c.withinDays === 1 ? "day" : "days";
       nodes.push({
         id,
         category: "window",
         atomKind: "duration_window",
         label:
-          `duration_window\nstudy ${c.hours} ${hourLabel}\n` +
+          `duration_window\nstudy ${formatElapsedHours(c.hours)}\n` +
           `within ${c.withinDays} ${dayLabel}`,
       });
       edges.push({ from: procId, to: id, relation: "requires" });
@@ -6618,12 +6627,11 @@ function traceResetCadence(
         c.regain == null
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
-      const hourLabel = c.hours === 1 ? "hour" : "hours";
       nodes.push({
         id: hid,
         category: "window",
         atomKind: "duration_window",
-        label: `duration_window\n${c.hours} ${hourLabel} cooldown (${refill})`,
+        label: `duration_window\n${formatElapsedHours(c.hours)} cooldown (${refill})`,
       });
       edges.push({ from: resId, to: hid, relation: "persists_until" });
       return;
@@ -7038,7 +7046,10 @@ function describeDurationValue(d: {
     readonly amount: number;
   }>;
 }): string {
-  const base = `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
+  const duration = timeSpanDuration(d);
+  const base = Either.isRight(duration)
+    ? formatTimeSpanDuration(duration.right)
+    : `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
   if (d.upcastTiers === undefined || d.upcastTiers.length === 0) return base;
   const tiers = d.upcastTiers
     .map(
@@ -7047,6 +7058,13 @@ function describeDurationValue(d: {
     )
     .join(", ");
   return `${base}\nupcast: ${tiers}`;
+}
+
+function formatElapsedHours(hours: number): string {
+  const ticks = elapsedTimeTicksFromHours(hours);
+  return Either.isRight(ticks)
+    ? formatElapsedTimeTicks(ticks.right)
+    : `${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
 function describeConditionChoice(
@@ -7231,6 +7249,8 @@ function describeSavingThrowSourceFilter(
 
 function describeDelta(d: DiceDelta): string {
   switch (d.kind) {
+    case "fixed_number":
+      return `${d.sign}${d.amount}`;
     case "fixed_dice":
       // dieSize=1 collapses to a flat bonus (N × 1 = N).
       if (d.dieSize === 1) return `${d.sign}${d.dice}`;
@@ -7239,6 +7259,10 @@ function describeDelta(d: DiceDelta): string {
       return d.scale === "half" ? `${d.sign}½ PB` : `${d.sign}PB`;
     case "ability_modifier":
       return `${d.sign}${d.ability.toUpperCase()} mod`;
+    case "threshold_tiers":
+      return `${d.sign}${d.base} (${d.axis} tiers ${d.tiers
+        .map((t) => `L${t.atLevel}:${t.value}`)
+        .join(", ")})`;
     case "magic_item_rarity_bonus":
       return `${d.sign}bonus by item rarity (${Object.entries(d.byRarity)
         .map(([rarity, bonus]) => `${rarity}=${bonus}`)
@@ -7382,7 +7406,7 @@ function traceReanimatedCreature(
     id: cmdId,
     category: "effect",
     atomKind: "command_companion",
-    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}\nreassert within ${m.reassertWindow.hours}h (up to ${m.reassertWindow.maxReassertPerCast})`,
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}\nreassert within ${formatElapsedHours(m.reassertWindow.hours)} (up to ${m.reassertWindow.maxReassertPerCast})`,
   });
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });

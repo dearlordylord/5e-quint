@@ -233,16 +233,6 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Changes:** `creature.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `creature.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
 
-## A26: Rage maintenance timing
-
-**Assumption:** Rage maintenance is checked at the start of the barbarian's next turn, using flags from the previous turn (`attackedOrForcedSaveThisTurn`, `rageExtendedWithBA`). If neither flag is set and level < 15 (Persistent Rage), rage ends.
-
-**Rules basis (SRD 5.2.1 Barbarian L1 "Rage > Duration"):** "The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following: Make an attack roll against an enemy. Force an enemy to make a saving throw. Take a Bonus Action to extend your Rage."
-
-The SRD says rage "lasts until the end of your next turn" — checking maintenance at the start of the next turn (before the turn's actions) is equivalent: if you didn't maintain it during your previous turn, it expires before you can act.
-
-**Changes:** `creature.qnt`: `pBarbarianStartTurn` calls `pCheckRageMaintenance` before resetting per-turn flags. XState: `barbarianStartTurnUpdate` mirrors this logic.
-
 ## A27: TS-only barbarian features
 
 **Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow), Frenzy bonus damage, Danger Sense advantage, and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., applying extra damage dice, granting advantage on DEX saves) rather than resource tracking, so they don't need Quint state variables.
@@ -250,22 +240,6 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Rules basis:** These features modify attack rolls, damage totals, or saving throws — all computed by the caller using the existing spec mechanics (damage, advantage, saves). The spec tracks only the resource charges and state flags that constrain when these features can be used.
 
 **Changes:** Retaliation after-damage reaction eligibility is modeled in `battle.qnt` from battle-owned trigger qualifiers. The remaining TS-only features are implemented in `class-barbarian.ts`.
-
-## A28: Persistent Rage modeling
-
-**Assumption:** Persistent Rage (L15+) is modeled by skipping the rage maintenance check in `pCheckRageMaintenance`. The SRD says rage "lasts for 10 minutes without you needing to do anything to extend it" — we model this as `rageTurnsRemaining = 100` (10 min ≈ 100 rounds) with no maintenance required. Rage can still end early from Unconscious condition or donning Heavy armor (caller responsibility).
-
-**Rules basis (SRD 5.2.1 Barbarian L15 "Persistent Rage"):** "Your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor."
-
-**Changes:** `creature.qnt`: `pCheckRageMaintenance` returns early (no-op) when `barbarianLevel >= 15`. XState: `barbarianStartTurnUpdate` mirrors this.
-
-## A29: MonkState scope — caller-side features
-
-**Assumption:** Most Monk features are caller-side composition (D4 from plan): Martial Arts die, Unarmored Movement, Unarmored Defense AC, Evasion, Deflect Attacks damage reduction, Slow Fall, Open Hand Technique target effects (Addle/Push/Topple), Focus-Empowered Strikes, Self-Restoration, Disciplined Survivor, Perfect Focus, Fleet Step, Quivering Palm. The Quint spec only models resource tracking: Focus Points, Stunning Strike per-turn flag, Wholeness of Body charges, and Uncanny Metabolism once-per-long-rest flag.
-
-**Rules basis (SRD 5.2.1 Monk):** These features modify damage, AC, saves, or apply effects to targets — all caller-side concerns that the spec cannot observe without modeling two combatants.
-
-**Changes:** `creature.qnt`: `MonkState` has 6 fields. `machine-monk.ts`: delegates to `class-monk.ts` and `class-monk-features.ts` for calculations.
 
 ## A30: Wholeness of Body — WIS modifier range
 
@@ -311,14 +285,6 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 
 **Assumption:** The battle spec models adding/removing creatures mid-combat (A33) but does not model summoning _spell effects_ (specific stat blocks, durations, caster-control rules). These belong in `features/spell-*.ts` as content, not in the Quint spec.
 
-## A34: Spell durations are non-negative
-
-**Assumption:** Spell effect durations (tracked as `turnsRemaining` on `ActiveEffect`) are non-negative integers. When a duration reaches 0, the effect ends and is removed. Negative durations do not exist. (This note does not imply that other non-mentioned durations are negative.)
-
-**Rules basis:** The SRD describes durations as positive time spans ("1 minute," "Concentration, up to 10 minutes," etc.) that simply end when expired. No SRD passage addresses negative durations because the concept does not exist in the rules.
-
-**Changes:** Invariant `turnsRemaining >= 0` added to safety invariants (see PLAN_INVARIANTS.md L2).
-
 ## A37: Grapple Movable cost modeled as movement cost, not speed reduction
 
 **Assumption:** The SRD 5.2.1 Grappled condition's Movable property is modeled directly in battle semantics as an extra movement cost: when the grappler moves while dragging a grappled creature, each foot costs 1 extra foot unless the target is Tiny or two or more sizes smaller than the grappler.
@@ -358,7 +324,7 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 
 **Rules basis:** SRD 5.2.1 repeatedly distinguishes taking the Attack action from attacks made as part of that action. Multiattack says some creatures can make more than one attack when they take the Attack action. Grapple and Shove say they can replace one attack when a creature takes the Attack action. This implies a two-step structure: spend the Action to take the Attack action, then spend the attacks made available by that action.
 
-**Changes:** `UBIQUITOUS_LANGUAGE.md` records the terminology distinction. Surface uses `replace_attack` for authored units such as Dragonborn Breath Weapon and Javelin of Lightning, keeping them separate from `standard_action` activation costs. The current `surface-runtime-correction` slice does not yet implement attack-opportunity accounting; this assumption records the intended model before that reducer work.
+**Changes:** `UBIQUITOUS_LANGUAGE.md` records the terminology distinction. Surface uses `replace_attack` for authored units such as Dragonborn Breath Weapon and Javelin of Lightning, keeping them separate from `standard_action` activation costs. The deleted `surface-runtime-correction` slice did not implement attack-opportunity accounting; this assumption records the intended model before that reducer work.
 
 ## A40: Character creation runtime loadout precondition
 
@@ -377,3 +343,13 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rules basis:** SRD 5.2.1 defines Speed as the distance a creature can cover when it moves on its turn. The movement rules say movement can include climbing, crawling, jumping, and swimming, and the Rules Glossary distinguishes special speeds from the base Speed. Dash says the creature gains extra movement equal to its Speed for the current turn, and gives the example that Speed 30 allows moving up to 60 feet when Dashing. The SRD does not create separate walk and run speeds for combat movement.
 
 **Changes:** Documentation only. Existing `walkFeet` fields in Surface, MCP battle initialization, and `@dnd/battle-runtime` continue to mean ordinary ground Speed. Dash should widen movement budget derived from the selected speed rather than introduce a second run/walk state.
+
+## A42: Round time-span conversion uses whole 6-second units
+
+**Assumption:** When authored time-span durations are projected into elapsed-time math, each `round` contributes exactly 6 seconds. The conversion does not prorate or subtract partial round progress based on whose turn is currently being resolved.
+
+**Rules basis:** SRD 5.2.1 says combat is organized into rounds and turns, a round represents about 6 seconds, and spell time spans can be stated in rounds. It does not define partial-round elapsed-time accounting.
+
+**Rationale:** Initiative order is a resolution view over combat time, not a statement that one creature's turn consumes an isolated slice of the 6-second round. The model treats turns in a round as an ordered resolution of one 6-second combat cycle, so it does not charge partial elapsed seconds based on position in initiative order.
+
+**Changes:** Shared timing conversion uses `TIME_SPAN_SECONDS_PER_ROUND = 6`; no conversion helper subtracts elapsed turn progress from a round.

@@ -3,6 +3,10 @@
  * All functions are pure (no XState imports, no side effects).
  */
 import { Match, Option } from "effect";
+import {
+  decrementBoundaryCrossingsRemaining,
+  type BoundaryCrossingsRemaining,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import { preparedBattleSpellAccess } from "#/battle-spell-access.ts";
 import {
@@ -771,17 +775,19 @@ export function advanceEffectsForOwner(
   const advanced: Array<ActiveEffect> = [];
   const removed: Array<ActiveEffect> = [];
   for (const effect of creature.activeEffects) {
-    if (effectExpiryOwnerId(effect) !== ownerId) {
+    if (effectExpiryOwnerId(effect) !== ownerId || effect.expiresAt !== phase) {
       advanced.push(effect);
       continue;
     }
     changed = true;
-    const turnsRemaining = effect.turnsRemaining - 1;
-    if (turnsRemaining <= 0 && effect.expiresAt === phase) {
+    const boundaryCrossingsRemaining = decrementBoundaryCrossingsRemaining(
+      effect.boundaryCrossingsRemaining,
+    );
+    if (boundaryCrossingsRemaining == null) {
       removed.push(effect);
       continue;
     }
-    advanced.push({ ...effect, turnsRemaining });
+    advanced.push({ ...effect, boundaryCrossingsRemaining });
   }
   if (!changed) return creature;
   return removeGrantedConditions(
@@ -793,11 +799,14 @@ export function advanceEffectsForOwner(
 export function addEffect(
   c: BattleCreatureState,
   effectId: string,
-  duration: number,
+  duration: BoundaryCrossingsRemaining,
   expiresAt: ExpiryPhase,
   casterId: CreatureId,
   options: Partial<
-    Omit<ActiveEffect, "spellId" | "turnsRemaining" | "expiresAt" | "casterId">
+    Omit<
+      ActiveEffect,
+      "spellId" | "boundaryCrossingsRemaining" | "expiresAt" | "casterId"
+    >
   > = {},
 ): BattleCreatureState {
   return {
@@ -808,7 +817,7 @@ export function addEffect(
       ),
       {
         spellId: effectId,
-        turnsRemaining: duration,
+        boundaryCrossingsRemaining: duration,
         expiresAt,
         casterId,
         ...options,

@@ -113,6 +113,7 @@ export {
   DiceDeltaSchema,
   DiceExprDeltaSchema,
   DiceExprSchema,
+  TimeSpanDurationValueSchema,
   DurationUpcastTierSchema,
   DurationValueSchema,
   ClassRecordKindSchema,

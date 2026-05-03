@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { boundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import {
   addEffect,
@@ -11,31 +12,45 @@ import { CreatureId } from "#/types.ts";
 describe("battle-machine-creature conditional grants", () => {
   it("keeps conditions from another active Sting source when one source ends", () => {
     let target = freshCreature(20, "PC");
-    target = addEffect(target, "monster:A:sting", 600, "end", CreatureId("A"), {
-      expiryOwnerId: CreatureId("B"),
-      grantedConditions: ["poisoned"],
-      conditionalGrantedConditions: [
-        {
-          condition: "unconscious",
-          whileCondition: "poisoned",
-          endsEarlyOnDamage: true,
-          endsEarlyOnWakeActionWithinFeet: 5,
-        },
-      ],
-    });
+    target = addEffect(
+      target,
+      "monster:A:sting",
+      boundaryCrossingsRemaining(600),
+      "end",
+      CreatureId("A"),
+      {
+        expiryOwnerId: CreatureId("B"),
+        grantedConditions: ["poisoned"],
+        conditionalGrantedConditions: [
+          {
+            condition: "unconscious",
+            whileCondition: "poisoned",
+            endsEarlyOnDamage: true,
+            endsEarlyOnWakeActionWithinFeet: 5,
+          },
+        ],
+      },
+    );
     target = applyCondition(applyCondition(target, "poisoned"), "unconscious");
-    target = addEffect(target, "monster:C:sting", 600, "end", CreatureId("C"), {
-      expiryOwnerId: CreatureId("B"),
-      grantedConditions: ["poisoned"],
-      conditionalGrantedConditions: [
-        {
-          condition: "unconscious",
-          whileCondition: "poisoned",
-          endsEarlyOnDamage: true,
-          endsEarlyOnWakeActionWithinFeet: 5,
-        },
-      ],
-    });
+    target = addEffect(
+      target,
+      "monster:C:sting",
+      boundaryCrossingsRemaining(600),
+      "end",
+      CreatureId("C"),
+      {
+        expiryOwnerId: CreatureId("B"),
+        grantedConditions: ["poisoned"],
+        conditionalGrantedConditions: [
+          {
+            condition: "unconscious",
+            whileCondition: "poisoned",
+            endsEarlyOnDamage: true,
+            endsEarlyOnWakeActionWithinFeet: 5,
+          },
+        ],
+      },
+    );
     target = applyCondition(applyCondition(target, "poisoned"), "unconscious");
 
     const updated = removeEffect(target, "monster:A:sting");

@@ -387,9 +387,10 @@ export const QuintCreatureState = z.object({
   activeEffects: z.any().transform((raw: unknown) => {
     const items: Array<{
       spellId: string;
-      turnsRemaining: number;
+      boundaryCrossingsRemaining: number;
       expiresAt: string;
       casterId: string;
+      expiryOwnerId: string;
       parentSpellId: string;
       parentCasterId: string;
       grantedConditions: ReadonlySet<string>;
@@ -407,11 +408,24 @@ export const QuintCreatureState = z.object({
     if (raw instanceof Set) {
       for (const e of raw) {
         const r = e as Record<string, unknown>;
+        if (r.boundaryCrossingsRemaining == null) {
+          throw new Error("ActiveEffect missing boundaryCrossingsRemaining");
+        }
+        const boundaryCrossingsRemaining = Number(r.boundaryCrossingsRemaining);
+        if (
+          !Number.isInteger(boundaryCrossingsRemaining) ||
+          boundaryCrossingsRemaining <= 0
+        ) {
+          throw new Error(
+            `ActiveEffect boundaryCrossingsRemaining must be positive: ${String(r.boundaryCrossingsRemaining)}`,
+          );
+        }
         items.push({
           spellId: String(r.spellId ?? ""),
-          turnsRemaining: Number(r.turnsRemaining ?? r.remainingTurns ?? 0),
+          boundaryCrossingsRemaining,
           expiresAt: mapExpiryPhase(variantToString(r.expiresAt)),
           casterId: String(r.casterId ?? ""),
+          expiryOwnerId: String(r.expiryOwnerId ?? ""),
           parentSpellId: String(r.parentSpellId ?? ""),
           parentCasterId: String(r.parentCasterId ?? ""),
           grantedConditions:
@@ -698,9 +712,10 @@ export interface NormalizedState {
   readonly hitDiceRemaining: Record<ClassName, number>;
   readonly activeEffects: ReadonlyArray<{
     spellId: string;
-    turnsRemaining: number;
+    boundaryCrossingsRemaining: number;
     expiresAt: string;
     casterId: string;
+    expiryOwnerId: string;
     parentSpellId: string;
     parentCasterId: string;
     grantedConditions: ReadonlySet<string>;
@@ -979,9 +994,10 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     activeEffects: [...c.activeEffects]
       .map((ae) => ({
         spellId: ae.spellId,
-        turnsRemaining: ae.turnsRemaining,
+        boundaryCrossingsRemaining: ae.boundaryCrossingsRemaining,
         expiresAt: ae.expiresAt,
         casterId: ae.casterId,
+        expiryOwnerId: ae.expiryOwnerId ?? "",
         parentSpellId: ae.parentSpellId ?? "",
         parentCasterId: ae.parentCasterId ?? "",
         grantedConditions:
@@ -1229,9 +1245,10 @@ export function activeEffectsEqual(
   for (let i = 0; i < a.length; i++) {
     if (
       a[i].spellId !== b[i].spellId ||
-      a[i].turnsRemaining !== b[i].turnsRemaining ||
+      a[i].boundaryCrossingsRemaining !== b[i].boundaryCrossingsRemaining ||
       a[i].expiresAt !== b[i].expiresAt ||
       a[i].casterId !== b[i].casterId ||
+      a[i].expiryOwnerId !== b[i].expiryOwnerId ||
       a[i].parentSpellId !== b[i].parentSpellId ||
       a[i].parentCasterId !== b[i].parentCasterId ||
       a[i].reactivePayload !== b[i].reactivePayload ||

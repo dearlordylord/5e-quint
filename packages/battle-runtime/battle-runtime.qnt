@@ -79,6 +79,10 @@ module battleRuntime {
   //   Search DC, grants Invisible while hidden, Search can find the hidden
   //   creature, and making an attack roll or casting a Verbal spell reveals the
   //   hidden creature.
+  // - Playing-the-Game.md lines 295-305, 326-332, 499-513, and
+  //   Rules-Glossary.md lines 361-365, 420-428, 528-535, 802-806, and
+  //   818-826: Dash, Disengage, Dodge, Help, Ready, and standing from Prone
+  //   are battle-owned turn/action or movement procedures.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -86,6 +90,7 @@ module battleRuntime {
   // @dnd/battle-runtime behavior.
 
   type Actor = Fighter | Goblin
+  type CombatantSide = PartySide | OppositionSide
 
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
@@ -144,6 +149,27 @@ module battleRuntime {
     | NotHidden
     | HiddenByDc(HiddenDiscoveryDc)
 
+  type ActiveOngoingFeatureOccurrence =
+    | NoActiveOngoingFeatureOccurrence
+    | ActiveStartOfTurnOngoingFeature
+    | ActiveRoundExtendedOngoingFeature({
+        expiresAtEndOfFighterTurnRound: int,
+        maxExpiresRound: int,
+      })
+    | ActiveFixedDurationOngoingFeature({
+        expiresAtEndOfFighterTurnRound: int,
+      })
+
+  type ActiveOngoingFeatureOccurrences = int -> ActiveOngoingFeatureOccurrence
+
+  pure val FIGHTER_RAGE_SOURCE_KEY = 1
+  pure val FIGHTER_RECKLESS_ATTACK_SOURCE_KEY = 2
+  pure val NO_ACTIVE_ONGOING_FEATURE_OCCURRENCES: ActiveOngoingFeatureOccurrences =
+    Map(
+      FIGHTER_RAGE_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
+      FIGHTER_RECKLESS_ATTACK_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
+    )
+
   type Combatant = {
     hp: int,
     maxHp: int,
@@ -161,6 +187,14 @@ module battleRuntime {
     speed: int,
     movementSpent: int,
     hidden: HiddenState,
+    dodging: bool,
+    prone: bool,
+    incapacitated: bool,
+    // Runtime projection: true when the combatant is wearing armor whose
+    // category is Heavy. This exists for SRD Barbarian Heavy-armor gates
+    // without modeling full equipment/armor state in the Quint battle spec.
+    wearingHeavyArmor: bool,
+    activeOngoingFeatureOccurrences: ActiveOngoingFeatureOccurrences,
     creatureSize: CreatureSize,
     leftHandUse: HandUse,
     rightHandUse: HandUse,
@@ -187,8 +221,13 @@ module battleRuntime {
     goblin: Combatant,
     actionAvailable: bool,
     bonusActionAvailable: bool,
+    attackRollMadeThisTurn: bool,
+    dashMovementBonus: int,
+    disengaged: bool,
     lightWeaponAttackMade: bool,
     fighterReadiedSpellHeld: bool,
+    fighterReadiedMovementHeld: bool,
+    fighterHelpAttackGoblinForGoblin: bool,
     grapple: GrappleState,
     interruptStack: List[PendingReactionFrame],
     fighterGoblinDistance: int,
@@ -235,6 +274,11 @@ module battleRuntime {
       speed: 30,
       movementSpent: 0,
       hidden: NotHidden,
+      dodging: false,
+      prone: false,
+      incapacitated: false,
+      wearingHeavyArmor: false,
+      activeOngoingFeatureOccurrences: NO_ACTIVE_ONGOING_FEATURE_OCCURRENCES,
       creatureSize: Medium,
       leftHandUse: HFree,
       rightHandUse: HMainWeapon,
@@ -256,14 +300,24 @@ module battleRuntime {
       speed: 30,
       movementSpent: 0,
       hidden: NotHidden,
+      dodging: false,
+      prone: false,
+      incapacitated: false,
+      wearingHeavyArmor: false,
+      activeOngoingFeatureOccurrences: NO_ACTIVE_ONGOING_FEATURE_OCCURRENCES,
       creatureSize: Small,
       leftHandUse: HFree,
       rightHandUse: HFree,
     },
     actionAvailable: true,
     bonusActionAvailable: true,
+    attackRollMadeThisTurn: false,
+    dashMovementBonus: 0,
+    disengaged: false,
     lightWeaponAttackMade: false,
     fighterReadiedSpellHeld: false,
+    fighterReadiedMovementHeld: false,
+    fighterHelpAttackGoblinForGoblin: false,
     grapple: NoGrapple,
     interruptStack: [],
     fighterGoblinDistance: 5,
@@ -288,9 +342,123 @@ module battleRuntime {
   pure def currentActorCanAttack(state: BattleState): bool =
     state.actionAvailable and
     (
-      (currentActor(state) == Fighter and not(state.fighter.unconscious)) or
+      (currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated)) or
       (currentActor(state) == Goblin and state.goblin.hp > 0)
     )
+
+  pure def fighterRageOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
+    state.fighter.activeOngoingFeatureOccurrences.get(FIGHTER_RAGE_SOURCE_KEY)
+
+  pure def fighterRecklessAttackOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
+    state.fighter.activeOngoingFeatureOccurrences.get(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY)
+
+  pure def fighterHasRage(state: BattleState): bool =
+    fighterRageOccurrence(state) != NoActiveOngoingFeatureOccurrence
+
+  pure def fighterHasRoundExtendedRage(state: BattleState): bool =
+    match fighterRageOccurrence(state) {
+      | ActiveRoundExtendedOngoingFeature(_) => true
+      | _ => false
+    }
+
+  pure def fighterHasRecklessAttack(state: BattleState): bool =
+    fighterRecklessAttackOccurrence(state) == ActiveStartOfTurnOngoingFeature
+
+  pure def fighterRageResistances(state: BattleState): Set[DamageType] =
+    if (fighterHasRage(state))
+      Set(Bludgeoning, Piercing, Slashing)
+    else
+      Set()
+
+  pure def removeFighterBonusActionOngoingFeature(state: BattleState): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
+          .set(FIGHTER_RAGE_SOURCE_KEY, NoActiveOngoingFeatureOccurrence),
+      },
+    }
+
+  pure def removeFighterFirstAttackRollOngoingFeature(state: BattleState): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
+          .set(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY, NoActiveOngoingFeatureOccurrence),
+      },
+    }
+
+  pure def expireFighterEndOfTurnOngoingFeatures(state: BattleState): BattleState =
+    if (currentActor(state) != Fighter)
+      state
+    else {
+      val afterRoundExtended = match fighterRageOccurrence(state) {
+        | ActiveRoundExtendedOngoingFeature(data) =>
+            if (data.expiresAtEndOfFighterTurnRound == state.initiative.round)
+              removeFighterBonusActionOngoingFeature(state)
+            else
+              state
+        | _ => state
+      }
+      match fighterRageOccurrence(afterRoundExtended) {
+        | ActiveFixedDurationOngoingFeature(data) =>
+            if (data.expiresAtEndOfFighterTurnRound == state.initiative.round)
+              removeFighterBonusActionOngoingFeature(afterRoundExtended)
+            else
+              afterRoundExtended
+        | _ => afterRoundExtended
+      }
+    }
+
+  pure def expireFighterStartOfTurnOngoingFeatures(state: BattleState, nextActor: Actor): BattleState =
+    if (nextActor == Fighter)
+      removeFighterFirstAttackRollOngoingFeature(state)
+    else
+      state
+
+  pure def normalizeFighterEarlyEndedOngoingFeatures(state: BattleState): BattleState =
+    if (state.fighter.wearingHeavyArmor)
+      removeFighterBonusActionOngoingFeature(state)
+    else if (state.fighter.incapacitated or state.fighter.unconscious)
+      {
+        ...state,
+        fighter: {
+        ...state.fighter,
+          activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
+            .set(FIGHTER_RAGE_SOURCE_KEY, if (state.fighter.unconscious)
+              NoActiveOngoingFeatureOccurrence
+            else
+              match fighterRageOccurrence(state) {
+                | ActiveRoundExtendedOngoingFeature(_) => NoActiveOngoingFeatureOccurrence
+                | _ => fighterRageOccurrence(state)
+              }),
+        },
+      }
+    else
+      state
+
+  pure def fighterRoundExtendedOngoingFeatureMaxExpiresRound(state: BattleState): int =
+    match fighterRageOccurrence(state) {
+      | ActiveRoundExtendedOngoingFeature(data) => data.maxExpiresRound
+      | _ => state.initiative.round + 100
+    }
+
+  pure def setFighterRoundExtendedOngoingFeatureExpiry(state: BattleState, round: int): BattleState = {
+    val maxRound = fighterRoundExtendedOngoingFeatureMaxExpiresRound(state)
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
+          .set(FIGHTER_RAGE_SOURCE_KEY, ActiveRoundExtendedOngoingFeature({
+            expiresAtEndOfFighterTurnRound: if (round > maxRound) maxRound else round,
+            maxExpiresRound: maxRound,
+          })),
+      },
+    }
+  }
 
   pure def combatantArmorClass(combatant: Combatant): int =
     activeEffectArmorClass(combatant.ac, combatant.dexMod, combatant.activeEffects)
@@ -407,19 +575,26 @@ module battleRuntime {
   }
 
   pure def endTurn(state: BattleState): BattleState = {
-    val advancedInitiative = nextInitiative(state.initiative)
+    val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(state))
+    val advancedInitiative = nextInitiative(featureChecked.initiative)
     val nextActor = advancedInitiative.stillToAct[0]
+    val featureAdvanced = expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor)
     {
-      ...state,
+      ...featureAdvanced,
       initiative: advancedInitiative,
       actionAvailable: true,
       bonusActionAvailable: true,
+      attackRollMadeThisTurn: false,
+      dashMovementBonus: 0,
+      disengaged: false,
       lightWeaponAttackMade: false,
-      fighterReadiedSpellHeld: if (state.fighterReadiedSpellHeld and nextActor == Fighter) false else state.fighterReadiedSpellHeld,
-      fighter: if (nextActor == Fighter) { ...state.fighter, reactionAvailable: true, movementSpent: 0 } else state.fighter,
-      goblin: if (nextActor == Goblin) { ...state.goblin, reactionAvailable: true, movementSpent: 0 } else state.goblin,
-      goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else state.goblinLegendaryUsesRemaining,
-      lastTurnActor: if (currentActor(state) == Fighter) LastTurnFighter else LastTurnGoblin,
+      fighterReadiedSpellHeld: if (featureAdvanced.fighterReadiedSpellHeld and nextActor == Fighter) false else featureAdvanced.fighterReadiedSpellHeld,
+      fighterReadiedMovementHeld: if (featureAdvanced.fighterReadiedMovementHeld and nextActor == Fighter) false else featureAdvanced.fighterReadiedMovementHeld,
+      fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) false else featureAdvanced.fighterHelpAttackGoblinForGoblin,
+      fighter: if (nextActor == Fighter) { ...featureAdvanced.fighter, reactionAvailable: true, movementSpent: 0, dodging: false } else featureAdvanced.fighter,
+      goblin: if (nextActor == Goblin) { ...featureAdvanced.goblin, reactionAvailable: true, movementSpent: 0, dodging: false } else featureAdvanced.goblin,
+      goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else featureAdvanced.goblinLegendaryUsesRemaining,
+      lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
     }
   }
@@ -553,15 +728,35 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
+    resolveAttackAtBarbarianLevel(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, 1)
+
+  pure def resolveAttackAtBarbarianLevel(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    barbarianLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
       state
     else {
-      val revealed = revealFighterHidden(state)
+      val revealed = recordFighterAttackRoll(revealFighterHidden(state))
+      val rageDamage = if (fighterHasRage(revealed)) fighterRageDamageBonus(barbarianLevel) else 0
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
         { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
       else
-        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
+        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
     }
+
+  pure def resolveAttackRecklessly(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    resolveAttack(activateRecklessAttackOnFirstAttackRoll(state), attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded)
 
   pure def resolveGoblinAttack(
     state: BattleState,
@@ -574,8 +769,10 @@ module battleRuntime {
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter))))
       { ...state, actionAvailable: false }
-    else
-      { ...state, fighter: applyDamage(state.fighter, damageRoll + 2, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+    else {
+      val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
+      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+    }
 
   pure def resolveGoblinOpportunityAttack(
     state: BattleState,
@@ -588,8 +785,10 @@ module battleRuntime {
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter))))
       state
-    else
-      { ...state, fighter: applyDamage(state.fighter, damageRoll + 2, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded) }
+    else {
+      val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
+      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded) }
+    }
 
   pure def resolveRayOfFrost(
     state: BattleState,
@@ -598,13 +797,16 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
-      { ...revealFighterHidden(state), actionAvailable: false }
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin)))) {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      { ...rolled, actionAvailable: false }
+    }
     else {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val damaged = applyDamage(state.goblin, damageRoll, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded)
-      { ...revealFighterHidden(state), goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
+      { ...rolled, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
     }
 
   pure def concentrationSavingThrowDc(damage: int): int = {
@@ -652,16 +854,57 @@ module battleRuntime {
     { ...target, activeEffects: target.activeEffects.exclude(Set(MageArmor)) }
 
   pure def readySpell(state: BattleState): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighterReadiedSpellHeld)
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or state.fighterReadiedSpellHeld)
       state
     else
       { ...state, fighter: { ...state.fighter, concentrating: true }, actionAvailable: false, fighterReadiedSpellHeld: true }
 
   pure def releaseReadiedSpell(state: BattleState): BattleState =
-    if (state.fighterReadiedSpellHeld)
+    if (state.fighterReadiedSpellHeld and not(fighterHasRage(state)))
       { ...state, fighter: { ...state.fighter, concentrating: false }, fighterReadiedSpellHeld: false }
     else
       state
+
+  pure def dashFighter(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
+      { ...state, actionAvailable: false, dashMovementBonus: state.dashMovementBonus + state.fighter.speed }
+    else
+      state
+
+  pure def disengageFighter(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
+      { ...state, actionAvailable: false, disengaged: true }
+    else
+      state
+
+  pure def dodgeFighter(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
+      { ...state, actionAvailable: false, fighter: { ...state.fighter, dodging: true } }
+    else
+      state
+
+  pure def readyFighter(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
+      { ...state, actionAvailable: false, fighterReadiedMovementHeld: true }
+    else
+      state
+
+  pure def helpFighterAttack(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated) and state.fighterGoblinDistance <= 5)
+      { ...state, actionAvailable: false, fighterHelpAttackGoblinForGoblin: true }
+    else
+      state
+
+  pure def standFighterFromProne(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and state.fighter.prone and state.fighter.speed / 2 > 0 and state.fighter.movementSpent + state.fighter.speed / 2 <= state.fighter.speed + state.dashMovementBonus)
+      { ...state, fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + state.fighter.speed / 2, prone: false } }
+    else
+      state
+
+  pure def movementRemainingForFighter(state: BattleState): int = {
+    val remaining = state.fighter.speed + state.dashMovementBonus - state.fighter.movementSpent
+    if (remaining < 0) 0 else remaining
+  }
 
   pure def movementRemaining(combatant: Combatant): int =
     if (combatant.speed - combatant.movementSpent < 0) 0 else combatant.speed - combatant.movementSpent
@@ -686,16 +929,18 @@ module battleRuntime {
   pure def fighterCanMove(state: BattleState, movementCost: int, distanceMoved: int): bool =
     currentActor(state) == Fighter and
     not(state.fighter.unconscious) and
+    not(state.fighter.incapacitated) and
     movementCost > 0 and
     distanceMoved > 0 and
     distanceMoved <= movementCost and
-    movementCost <= movementRemaining(state.fighter) and
+    movementCost <= movementRemainingForFighter(state) and
     grappleDragMovementCostSatisfied(state, movementCost, distanceMoved)
 
   pure def fighterCanGrappleGoblin(state: BattleState): bool =
     currentActor(state) == Fighter and
     state.actionAvailable and
     not(state.fighter.unconscious) and
+    not(state.fighter.incapacitated) and
     not(fighterGoblinGrappleExists(state)) and
     state.fighterGoblinDistance <= 5 and
     state.fighter.leftHandUse == HFree
@@ -703,15 +948,19 @@ module battleRuntime {
   pure def grappleFighterGoblin(state: BattleState, targetFailedSave: bool): BattleState =
     if (not(fighterCanGrappleGoblin(state)))
       state
-    else if (targetFailedSave)
+    else if (targetFailedSave) {
+      val extended = extendRageWithEnemySavingThrow(state, Goblin)
       {
-        ...state,
+        ...extended,
         actionAvailable: false,
-        fighter: { ...state.fighter, leftHandUse: HGrapple },
+        fighter: { ...extended.fighter, leftHandUse: HGrapple },
         grapple: FighterGrapplesGoblin({ escapeDc: 13, targetDragCostExempt: false }),
       }
-    else
-      { ...state, actionAvailable: false }
+    }
+    else {
+      val extended = extendRageWithEnemySavingThrow(state, Goblin)
+      { ...extended, actionAvailable: false }
+    }
 
   pure def releaseFighterGrapple(state: BattleState): BattleState =
     if (fighterGoblinGrappleExists(state))
@@ -747,6 +996,7 @@ module battleRuntime {
   pure def goblinCanOpportunityAttack(state: BattleState, destinationDistance: int): bool =
     state.goblin.hp > 0 and
     state.goblin.reactionAvailable and
+    not(state.disengaged) and
     state.fighterGoblinDistance <= 5 and
     destinationDistance > 5
 
@@ -866,6 +1116,119 @@ module battleRuntime {
     else
       { state: state, usesRemaining: usesRemaining }
 
+  pure def startRage(state: BattleState, usesRemaining: int): SecondWindResult =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      usesRemaining > 0 and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(state.fighter.wearingHeavyArmor) and
+      not(fighterHasRage(state))
+    )
+      {
+        state: {
+          ...setFighterRoundExtendedOngoingFeatureExpiry({ ...state, fighter: breakConcentration(state.fighter) }, state.initiative.round + 1),
+          bonusActionAvailable: false,
+          fighterReadiedSpellHeld: false,
+        },
+        usesRemaining: usesRemaining - 1,
+      }
+    else
+      { state: state, usesRemaining: usesRemaining }
+
+  pure def startPersistentRage(state: BattleState, usesRemaining: int): SecondWindResult =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      usesRemaining > 0 and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(state.fighter.wearingHeavyArmor) and
+      not(fighterHasRage(state))
+    )
+      {
+        state: {
+          ...state,
+          fighter: {
+            ...breakConcentration(state.fighter),
+            activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
+              .set(FIGHTER_RAGE_SOURCE_KEY, ActiveFixedDurationOngoingFeature({
+                expiresAtEndOfFighterTurnRound: state.initiative.round + 100,
+              })),
+          },
+          bonusActionAvailable: false,
+          fighterReadiedSpellHeld: false,
+        },
+        usesRemaining: usesRemaining - 1,
+      }
+    else
+      { state: state, usesRemaining: usesRemaining }
+
+  pure def extendRageWithBonusAction(state: BattleState, usesRemaining: int): SecondWindResult =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      fighterHasRage(state) and
+      fighterHasRoundExtendedRage(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(state.fighter.wearingHeavyArmor)
+    )
+      {
+        state: {
+          ...setFighterRoundExtendedOngoingFeatureExpiry(state, state.initiative.round + 1),
+          bonusActionAvailable: false,
+        },
+        usesRemaining: usesRemaining,
+      }
+    else
+      { state: state, usesRemaining: usesRemaining }
+
+  pure def actorSide(actor: Actor): CombatantSide =
+    match actor {
+      | Fighter => PartySide
+      | Goblin => OppositionSide
+    }
+
+  pure def actorsAreEnemies(attacker: Actor, target: Actor): bool =
+    actorSide(attacker) != actorSide(target)
+
+  pure def extendRageWithAttackRoll(state: BattleState, target: Actor): BattleState =
+    if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))
+      setFighterRoundExtendedOngoingFeatureExpiry(state, state.initiative.round + 1)
+    else
+      state
+
+  pure def recordFighterAttackRoll(state: BattleState): BattleState =
+    { ...extendRageWithAttackRoll(state, Goblin), attackRollMadeThisTurn: true }
+
+  pure def extendRageWithEnemySavingThrow(state: BattleState, target: Actor): BattleState =
+    if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))
+      setFighterRoundExtendedOngoingFeatureExpiry(state, state.initiative.round + 1)
+    else
+      state
+
+  pure def activateRecklessAttackOnFirstAttackRoll(state: BattleState): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      not(state.attackRollMadeThisTurn) and
+      not(fighterHasRecklessAttack(state))
+    )
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
+            .set(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY, ActiveStartOfTurnOngoingFeature),
+        },
+      }
+    else
+      state
+
+  pure def goblinAttackAgainstFighterHasAdvantage(state: BattleState): bool =
+    fighterHasRecklessAttack(state)
+
   pure def expendedSlotsAfterInvocation(
     invocation: SpellInvocation,
     expendedLevelOneSlots: int,
@@ -876,8 +1239,13 @@ module battleRuntime {
       | AcidSplash => expendedLevelOneSlots
     }
 
-  pure def canDiscoverSpellActs(canCastSpells: bool): bool =
-    canCastSpells
+  pure def canDiscoverSpellActs(canCastSpells: bool, raging: bool): bool =
+    canCastSpells and not(raging)
+
+  pure def fighterRageDamageBonus(barbarianLevel: int): int =
+    if (barbarianLevel >= 16) 4
+    else if (barbarianLevel >= 9) 3
+    else 2
 
   pure def spellAttackModifier(
     spellcastingAbilityModifier: int,
@@ -932,7 +1300,7 @@ module battleRuntime {
     fighterConcentrationSaveSucceeded: bool,
     goblinConcentrationSaveSucceeded: bool,
   ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious)
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
     else
       {
@@ -945,7 +1313,7 @@ module battleRuntime {
   pure def applyDropToZeroHp(target: Combatant): Combatant =
     match target.lifecycle {
       | DiesAtZeroHp => target
-      | UsesDeathSavingThrows => { ...target, unconscious: true, stable: false, deathSuccesses: 0, deathFailures: 0 }
+      | UsesDeathSavingThrows => { ...breakConcentration(target), unconscious: true, stable: false, deathSuccesses: 0, deathFailures: 0 }
     }
 
   pure def applyDamageAtZeroHp(target: Combatant, deathFailuresAtZeroHp: int): Combatant =
@@ -1131,6 +1499,115 @@ module battleRuntime {
     }
   }
 
+  run test_rage_ongoing_feature_spends_bonus_action_applies_damage_and_resistance = {
+    val raging = startRage(initialState, 2)
+    val hit = resolveAttack({ ...raging.state, actionAvailable: true }, 15, 10, 4, true)
+    val levelNineHit = resolveAttackAtBarbarianLevel({ ...raging.state, actionAvailable: true }, 15, 10, 4, true, 9)
+    val goblinTurn = endTurn(raging.state)
+    val resisted = resolveGoblinAttack(goblinTurn, 15, 10, 4, true)
+    all {
+      assert(raging.usesRemaining == 1),
+      assert(not(raging.state.bonusActionAvailable)),
+      assert(fighterHasRage(raging.state)),
+      assert(hit.goblin.hp == 1),
+      assert(levelNineHit.goblin.hp == 0),
+      assert(resisted.fighter.hp == 9),
+    }
+  }
+
+  run test_rage_heavy_armor_and_incapacitated_end = {
+    val armored = { ...initialState, fighter: { ...initialState.fighter, wearingHeavyArmor: true } }
+    val cannotStart = startRage(armored, 2)
+    val raging = startRage(initialState, 2).state
+    val incapacitated = { ...raging, fighter: { ...raging.fighter, incapacitated: true } }
+    all {
+      assert(not(fighterHasRage(cannotStart.state))),
+      assert(not(fighterHasRage(endTurn(incapacitated)))),
+    }
+  }
+
+  run test_rage_bonus_action_extension_preserves_uses = {
+    val raging = startRage(initialState, 2)
+    val nextFighterTurn = endTurn(endTurn(raging.state))
+    val extended = extendRageWithBonusAction(nextFighterTurn, raging.usesRemaining)
+    all {
+      assert(fighterHasRage(extended.state)),
+      assert(not(extended.state.bonusActionAvailable)),
+      assert(extended.usesRemaining == 1),
+    }
+  }
+
+  run test_persistent_rage_survives_incapacitated_but_not_unconscious = {
+    val raging = startPersistentRage(initialState, 2).state
+    val incapacitated = { ...raging, fighter: { ...raging.fighter, incapacitated: true } }
+    val unconscious = { ...raging, fighter: { ...raging.fighter, unconscious: true } }
+    all {
+      assert(fighterHasRage(endTurn(incapacitated))),
+      assert(not(fighterHasRage(endTurn(unconscious)))),
+    }
+  }
+
+  run test_rage_extends_when_grapple_forces_enemy_save = {
+    val raging = startRage(initialState, 2).state
+    val nextFighterTurn = endTurn(endTurn(raging))
+    val grappled = grappleFighterGoblin(nextFighterTurn, true)
+    val extendedToNextTurn = match fighterRageOccurrence(grappled) {
+      | ActiveRoundExtendedOngoingFeature(data) =>
+          data.expiresAtEndOfFighterTurnRound == nextFighterTurn.initiative.round + 1
+      | _ => false
+    }
+    all {
+      assert(fighterHasRage(grappled)),
+      assert(extendedToNextTurn),
+    }
+  }
+
+  run test_rage_breaks_concentration_and_blocks_spells = {
+    val concentrating = { ...initialState, fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(MageArmor) } }
+    val raging = startRage(concentrating, 2).state
+    all {
+      assert(not(raging.fighter.concentrating)),
+      assert(not(canDiscoverSpellActs(true, fighterHasRage(raging)))),
+      assert(resolveRayOfFrost(raging, 15, 10, 4, true) == raging),
+    }
+  }
+
+  run test_rage_breaks_readied_spell_hold = {
+    val readied = readySpell(initialState)
+    val raging = startRage(readied, 2).state
+    all {
+      assert(not(raging.fighter.concentrating)),
+      assert(not(raging.fighterReadiedSpellHeld)),
+      assert(releaseReadiedSpell(raging) == raging),
+    }
+  }
+
+  run test_spell_attack_roll_counts_for_first_attack_roll = {
+    val afterSpellAttack = resolveRayOfFrost(initialState, 1, 1, 4, true)
+    val recklessAfterSpell = activateRecklessAttackOnFirstAttackRoll(afterSpellAttack)
+    all {
+      assert(afterSpellAttack.attackRollMadeThisTurn),
+      assert(not(fighterHasRecklessAttack(recklessAfterSpell))),
+    }
+  }
+
+  run test_normal_rage_ends_when_drop_to_zero_sets_unconscious = {
+    val raging = startRage(initialState, 2).state
+    val dropped = { ...raging, fighter: applyDropToZeroHp(raging.fighter) }
+    assert(not(fighterHasRage(endTurn(dropped))))
+  }
+
+  run test_reckless_attack_activates_on_first_attack_roll_boundary = {
+    val reckless = resolveAttackRecklessly(initialState, 15, 10, 4, true)
+    val goblinTurn = endTurn(reckless)
+    val fighterTurn = endTurn(goblinTurn)
+    all {
+      assert(fighterHasRecklessAttack(reckless)),
+      assert(goblinAttackAgainstFighterHasAdvantage(goblinTurn)),
+      assert(not(fighterHasRecklessAttack(fighterTurn))),
+    }
+  }
+
   run test_spell_invocation_slot_spend_distinguishes_prepared_spell_from_cantrip = {
     all {
       assert(expendedSlotsAfterInvocation(MagicMissile, 0) == 1),
@@ -1141,8 +1618,9 @@ module battleRuntime {
 
   run test_spell_act_discovery_respects_spellcasting_gate = {
     all {
-      assert(canDiscoverSpellActs(true)),
-      assert(not(canDiscoverSpellActs(false))),
+      assert(canDiscoverSpellActs(true, false)),
+      assert(not(canDiscoverSpellActs(false, false))),
+      assert(not(canDiscoverSpellActs(true, true))),
     }
   }
 
@@ -1369,6 +1847,43 @@ module battleRuntime {
       assert(moved.fighter.movementSpent == 10),
       assert(moved.fighterGoblinDistance == 4),
       assert(movementRemaining(moved.fighter) == 20),
+    }
+  }
+
+  run test_generic_combat_actions_update_turn_state = {
+    val dashed = dashFighter(initialState)
+    val disengaged = disengageFighter(initialState)
+    val dodged = dodgeFighter(initialState)
+    val readied = readyFighter(initialState)
+    val helped = helpFighterAttack(initialState)
+    all {
+      assert(not(dashed.actionAvailable)),
+      assert(dashed.dashMovementBonus == 30),
+      assert(movementRemainingForFighter(dashed) == 60),
+      assert(disengaged.disengaged),
+      assert(dodged.fighter.dodging),
+      assert(readied.fighterReadiedMovementHeld),
+      assert(helped.fighterHelpAttackGoblinForGoblin),
+    }
+  }
+
+  run test_stand_from_prone_spends_half_speed_movement = {
+    val prone = { ...initialState, fighter: { ...initialState.fighter, prone: true } }
+    val stood = standFighterFromProne(prone)
+    all {
+      assert(stood.fighter.movementSpent == 15),
+      assert(not(stood.fighter.prone)),
+      assert(movementRemainingForFighter(stood) == 15),
+    }
+  }
+
+  run test_disengage_suppresses_opportunity_attack_window = {
+    val disengaged = disengageFighter({ ...initialState, actionAvailable: true })
+    val moved = moveFighter(disengaged, 5, 5, 10)
+    all {
+      assert(moved.interruptStack == []),
+      assert(moved.fighterGoblinDistance == 10),
+      assert(moved.fighter.movementSpent == 5),
     }
   }
 

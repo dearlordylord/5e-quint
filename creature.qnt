@@ -901,7 +901,7 @@ module creature {
   /// they just apply damage/healing/conditions directly.
   /// Core spec owns lifecycle plus narrow persistent payloads that drive battle timing.
   type ActiveEffect = {
-    spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
+    spellId: str, boundaryCrossingsRemaining: int, expiresAt: ExpiryPhase, casterId: str, expiryOwnerId: str,
     parentSpellId: str, parentCasterId: str,
     grantedConditions: Set[Condition],
     conditionalGrantedConditions: Set[ConditionalGrantedCondition],
@@ -1000,21 +1000,21 @@ module creature {
 
   /// Add an effect, replacing any existing with the same spellId (no stacking).
   pure def pAddEffect(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    effects: Set[ActiveEffect], spellId: str, boundaryCrossings: int, expiresAt: ExpiryPhase, casterId: str,
     grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
   ): Set[ActiveEffect] =
     pAddEffectWithReactivePayload(
-      effects, spellId, durationTurns, expiresAt, casterId,
+      effects, spellId, boundaryCrossings, expiresAt, casterId,
       grantedC, grantedR, grantedV, grantedI, NoReactivePayload
     )
 
   pure def pAddEffectWithReactivePayload(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    effects: Set[ActiveEffect], spellId: str, boundaryCrossings: int, expiresAt: ExpiryPhase, casterId: str,
     grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType],
     reactivePayload: ReactiveEffectPayload
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
-      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      spellId: spellId, boundaryCrossingsRemaining: boundaryCrossings, expiresAt: expiresAt, casterId: casterId, expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: grantedC,
       conditionalGrantedConditions: Set(),
@@ -1024,12 +1024,12 @@ module creature {
     }))
 
   pure def pAddEffectWithConditionalConditions(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    effects: Set[ActiveEffect], spellId: str, boundaryCrossings: int, expiresAt: ExpiryPhase, casterId: str,
     grantedC: Set[Condition], conditionalGrantedC: Set[ConditionalGrantedCondition],
     grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
-      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      spellId: spellId, boundaryCrossingsRemaining: boundaryCrossings, expiresAt: expiresAt, casterId: casterId, expiryOwnerId: "",
       parentSpellId: "", parentCasterId: "",
       grantedConditions: grantedC,
       conditionalGrantedConditions: conditionalGrantedC,
@@ -1040,12 +1040,12 @@ module creature {
 
   /// Add an effect that depends on a battle-owned parent effect identity.
   pure def pAddDependentEffect(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    effects: Set[ActiveEffect], spellId: str, boundaryCrossings: int, expiresAt: ExpiryPhase, casterId: str,
     parentSpellId: str, parentCasterId: str,
     grantedC: Set[Condition], grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
   ): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId).union(Set({
-      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      spellId: spellId, boundaryCrossingsRemaining: boundaryCrossings, expiresAt: expiresAt, casterId: casterId, expiryOwnerId: "",
       parentSpellId: parentSpellId, parentCasterId: parentCasterId,
       grantedConditions: grantedC,
       conditionalGrantedConditions: Set(),
@@ -1056,33 +1056,46 @@ module creature {
 
   /// Convenience wrapper: add effect with no granted R/V/I.
   pure def pAddEffectSimple(
-    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str
+    effects: Set[ActiveEffect], spellId: str, boundaryCrossings: int, expiresAt: ExpiryPhase, casterId: str
   ): Set[ActiveEffect] =
-    pAddEffect(effects, spellId, durationTurns, expiresAt, casterId, Set(), Set(), Set(), Set())
+    pAddEffect(effects, spellId, boundaryCrossings, expiresAt, casterId, Set(), Set(), Set(), Set())
+
+  pure def pAddEffectWithExpiryOwner(
+    effects: Set[ActiveEffect], spellId: str, boundaryCrossings: int, expiresAt: ExpiryPhase, casterId: str,
+    expiryOwnerId: str, grantedC: Set[Condition]
+  ): Set[ActiveEffect] =
+    pAddEffect(effects, spellId, boundaryCrossings, expiresAt, casterId, grantedC, Set(), Set(), Set())
+      .map(e => if (e.spellId == spellId) e.with("expiryOwnerId", expiryOwnerId) else e)
+
+  pure def pAddEffectWithConditionalConditionsAndExpiryOwner(
+    effects: Set[ActiveEffect], spellId: str, boundaryCrossings: int, expiresAt: ExpiryPhase, casterId: str,
+    expiryOwnerId: str, grantedC: Set[Condition], conditionalGrantedC: Set[ConditionalGrantedCondition]
+  ): Set[ActiveEffect] =
+    pAddEffectWithConditionalConditions(
+      effects, spellId, boundaryCrossings, expiresAt, casterId,
+      grantedC, conditionalGrantedC, Set(), Set(), Set()
+    ).map(e => if (e.spellId == spellId) e.with("expiryOwnerId", expiryOwnerId) else e)
 
   /// Remove an effect by spellId (dispel, concentration break, etc.).
   pure def pRemoveEffect(effects: Set[ActiveEffect], spellId: str): Set[ActiveEffect] =
     effects.filter(e => e.spellId != spellId)
 
-  /// Decrement all durations by 1. Called during START_TURN (TA4).
-  pure def pDecrementDurations(effects: Set[ActiveEffect]): Set[ActiveEffect] =
-    effects.map(e => e.with("turnsRemaining", e.turnsRemaining - 1))
-
-  /// Return effects expired at the given phase (turnsRemaining <= 0 AND matching expiresAt).
-  pure def pExpiredAtPhase(effects: Set[ActiveEffect], phase: ExpiryPhase): Set[ActiveEffect] =
-    effects.filter(e => e.expiresAt == phase and e.turnsRemaining <= 0)
-
-  /// Remove expired effects for the given phase only.
-  pure def pClearExpiredAtPhase(effects: Set[ActiveEffect], phase: ExpiryPhase): Set[ActiveEffect] =
-    effects.exclude(pExpiredAtPhase(effects, phase))
+  /// Advance the effects whose expiry boundary was just crossed.
+  pure def pAdvanceEffectsAtPhase(effects: Set[ActiveEffect], phase: ExpiryPhase): Set[ActiveEffect] = {
+    val phaseEffects = effects.filter(e => e.expiresAt == phase)
+    val survivors = phaseEffects
+      .filter(e => e.boundaryCrossingsRemaining > 1)
+      .map(e => e.with("boundaryCrossingsRemaining", e.boundaryCrossingsRemaining - 1))
+    effects.exclude(phaseEffects).union(survivors)
+  }
 
   /// Check whether an effect with the given spellId is active (not expired).
   pure def pHasEffect(effects: Set[ActiveEffect], spellId: str): bool =
-    effects.exists(e => e.spellId == spellId and e.turnsRemaining > 0)
+    effects.exists(e => e.spellId == spellId and e.boundaryCrossingsRemaining > 0)
 
   /// Atomic decrement-by-n + clear all expired. Out-of-combat time advance primitive.
   pure def pTickEffects(effects: Set[ActiveEffect], n: int): Set[ActiveEffect] =
-    effects.map(e => e.with("turnsRemaining", e.turnsRemaining - n)).filter(e => e.turnsRemaining > 0)
+    effects.map(e => e.with("boundaryCrossingsRemaining", e.boundaryCrossingsRemaining - n)).filter(e => e.boundaryCrossingsRemaining > 0)
 
   pure def pConsumeOneShotHitEffects(
     effects: Set[ActiveEffect], isWeaponAttack: bool, isMeleeAttack: bool
@@ -2488,7 +2501,7 @@ module creature {
   ): ConcBreakResult = {
     val s1 = pProcessEndOfTurnSaves(s, saves)
     val r = pProcessEndOfTurnDamage(s1, ss, damages)
-    val cleaned = pClearExpiredAtPhase(r.creature.activeEffects, AtEndOfTurn)
+    val cleaned = pAdvanceEffectsAtPhase(r.creature.activeEffects, AtEndOfTurn)
     val ss2 = pAutoBreakExpiredConcentration(r.slots, cleaned)
     { creature: r.creature.with("activeEffects", cleaned), slots: ss2 }
   }
@@ -2544,10 +2557,8 @@ module creature {
     deathSaveRoll2: int,
     startEffects: List[StartOfTurnEffect]
   ): StartTurnFullResult = {
-    // 1. Decrement all durations
-    val eff1 = pDecrementDurations(s.activeEffects)
-    // 2. Clear expired AtStartOfTurn
-    val eff2 = pClearExpiredAtPhase(eff1, AtStartOfTurn)
+    // 1-2. Advance and clear effects at this start-turn boundary
+    val eff2 = pAdvanceEffectsAtPhase(s.activeEffects, AtStartOfTurn)
     val ss1 = pAutoBreakExpiredConcentration(ss, eff2)
     val s1 = s.with("activeEffects", eff2)
     // 3. Death save (if applicable) — Defy Death (Champion L18) applied via pFighterDeathSaveRoll
@@ -6545,7 +6556,8 @@ module creature {
   val stableImpliesUnconscious = state.stable implies state.unconscious
 
   // Active effect durations
-  val activeEffectDurationsNonNeg = state.activeEffects.forall(e => e.turnsRemaining >= 0)
+  val activeEffectBoundaryCrossingsPositive =
+    state.activeEffects.forall(e => e.boundaryCrossingsRemaining > 0)
 
   // Death save state machine
   val hpPositiveImpliesNoDeathSaves =
@@ -6604,7 +6616,7 @@ module creature {
     extraAttacksNonNeg,
     stableImpliesZeroHp,
     stableImpliesUnconscious,
-    activeEffectDurationsNonNeg,
+    activeEffectBoundaryCrossingsPositive,
     hpPositiveImpliesNoDeathSaves,
     zeroHpNotDeadNotStableImpliesUnconscious,
     threeDeathFailuresImpliesDead,

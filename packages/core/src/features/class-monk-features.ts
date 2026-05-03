@@ -4,6 +4,11 @@
 import type { MartialArtsDie } from "#/features/class-monk.ts";
 import { pMartialArtsDie } from "#/features/class-monk.ts";
 import type { Condition, Size } from "#/types.ts";
+import * as Either from "effect/Either";
+import {
+  elapsedTimeTicksFromMinutes,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 
 // --- Monk Passives (T44) ---
 
@@ -17,7 +22,7 @@ export interface DisciplinedSurvivorRerollResult {
 export interface SuperiorDefenseResult {
   readonly focusPoints: number;
   readonly resistancesGranted: true;
-  readonly durationMinutes: 1;
+  readonly durationTicks: ElapsedTimeTicks;
 }
 
 // --- Constants ---
@@ -119,10 +124,15 @@ export function canUseSuperiorDefense(
 
 /** Spend 3 FP to gain resistance to all damage except Force for 1 minute. */
 export function useSuperiorDefense(focusPoints: number): SuperiorDefenseResult {
+  const durationTicks = elapsedTimeTicksFromMinutes(1);
+  if (Either.isLeft(durationTicks)) {
+    throw new Error("Superior Defense duration must be whole elapsed minutes.");
+  }
+
   return {
     focusPoints: focusPoints - SUPERIOR_DEFENSE_COST,
     resistancesGranted: true,
-    durationMinutes: 1,
+    durationTicks: durationTicks.right,
   };
 }
 

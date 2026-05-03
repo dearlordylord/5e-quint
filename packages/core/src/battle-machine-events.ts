@@ -1,4 +1,5 @@
 /** Battle events, reaction decisions, and pending interrupt types. */
+import type { BoundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   AfterDamageCtx,
   AttackDamageCtx,
@@ -220,7 +221,7 @@ export type BattleEvent =
       readonly targetId: CreatureId;
       readonly slotLvl: SpellSlotLevel;
       readonly accessId?: BattleSpellAccessId;
-      readonly duration: number;
+      readonly duration: BoundaryCrossingsRemaining;
       readonly spellId: SpellId;
       readonly cond: Condition;
       readonly applyCond: boolean;

@@ -1,4 +1,5 @@
 import type { Option } from "effect";
+import type { BoundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts";
 import type { ClassStateMap } from "#/machine-class-states.ts";
 import type { MetamagicOption } from "#/features/class-sorcerer.ts";
@@ -347,14 +348,14 @@ export type DndEvent =
   | {
       readonly type: "START_CONCENTRATION";
       readonly spellId: SpellId;
-      readonly durationTurns: number;
+      readonly boundaryCrossings: BoundaryCrossingsRemaining;
       readonly expiresAt: ExpiryPhase;
       readonly casterId: CreatureId;
     }
   | {
       readonly type: "ADD_EFFECT";
       readonly spellId: SpellId;
-      readonly durationTurns: number;
+      readonly boundaryCrossings: BoundaryCrossingsRemaining;
       readonly expiresAt: ExpiryPhase;
       readonly casterId: CreatureId;
       readonly expiryOwnerId?: CreatureId;

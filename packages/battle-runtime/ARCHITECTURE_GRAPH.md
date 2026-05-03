@@ -8,17 +8,21 @@ subjects, replay caller fills, resolve state transitions, and expose snapshots.
 Unit/StatBlock-backed battle behavior. `battle-runtime.qnt` is its canonical
 package-local spec.
 
-The legacy Correction graph, old root `battle.qnt`, and Core
-battle MBT remain useful breadth/proof source material, not active promoted
-runtime authorities.
+Deleted legacy Correction docs, old root `battle.qnt`, and Core battle MBT
+remain useful breadth/proof source material, not active promoted runtime
+authorities. Correction was legacy source material for prior Surface/Unit-shaped
+reducer work; it was never the promoted owner of Unit/StatBlock-backed battle
+runtime behavior.
 
-The promoted MBT strategy is selective. Shared reducer algebras remain covered
-by modular MBT, broad Surface/Unit/StatBlock catalog coverage defaults to
-table-driven contract tests, and integrated battle-runtime MBT is reserved for
-high-risk public reducer verticals. Surface projection MBT is a separate
-decision. The first selected integrated candidate is Fighter weapon Attack
-against a Skeleton Stat Block target through `discoverBattleActs`,
-`resolveBattleSubject`, and `snapshotBattle`.
+The promoted MBT strategy is selective. MBT proves reducer facts after Surface
+decode/projection; it must not enumerate all Surface-authored content multiplied
+by all battle states. Shared reducer algebras remain covered by modular MBT,
+broad Surface/Unit/StatBlock catalog coverage defaults to table-driven contract
+tests, and integrated battle-runtime MBT is reserved for small semantic
+algebras and selected high-risk public reducer verticals. The first selected
+integrated candidate is Fighter weapon Attack against a Skeleton Stat Block
+target through `discoverBattleActs`, `resolveBattleSubject`, and
+`snapshotBattle`.
 
 Reducer extension follows SRD procedure families, not authored names. Surface
 records and retained origin data select supported procedures; support gates
@@ -47,7 +51,7 @@ flowchart TD
   AttackRoll["attack-roll-algebra<br/>input: AttackRollResult + Armor Class<br/>success: SRD natural 1/20 and AC hit fact<br/>why: one d20 attack-roll adjudication path"]
   RuntimeDice["runtime-dice-algebra<br/>input: rolled dice groups + weapon damage dice expression<br/>success: validated dice count/range facts<br/>why: one dice-roll validation path"]
   Discover["discoverBattleActs(state)<br/>success: AvailableBattleAct[] = subject + label + summary + initial holes<br/>why: public act discovery API<br/>without: callers duplicate legality checks"]
-  Subject["BattleSubject<br/>action.attack, actionSpell, unitFeature, or runtimeCommand.endTurn<br/>why: stable caller-selected replay key, including turn-start Death Saving Throw fills"]
+  Subject["BattleSubject<br/>action.attack, generic combat actions, actionSpell, unitFeature, or runtimeCommand movement/turn/reaction commands<br/>why: stable caller-selected replay key, including turn-start Death Saving Throw fills"]
   FillSession["caller-owned BattleFill[]<br/>data: accumulated answers for a selected subject<br/>why: replay-from-root input<br/>without: partially answered forms become durable battle state"]
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
@@ -192,24 +196,30 @@ flowchart TD
   than the old Core MBT, and does not require MBT for every authored Unit or
   Stat Block.
 
-## Relationship To Core And Surface Runtime Correction
+## Relationship To Core And Deleted Correction
 
 `@dnd/core`, root `battle.qnt`, and the old Core battle MBT are the legacy
 battle system being strangled. They remain the broadest source for old behavior,
 feature expectations, and proof material, but they are not the active owner for
 new promoted Unit/StatBlock-backed battle behavior.
 
-`packages/surface-runtime-correction/ARCHITECTURE_GRAPH.md` documents earlier
-Surface/Unit reducer work that already implemented several Unit activation
-families not yet restored in `@dnd/battle-runtime`: Unit subjects, cantrip
-discovery, save-gate effects, healing, extra-action grants,
-spell-slot/use-count gates, and related machinery. Correction is therefore
-implementation and test source material for broadening `@dnd/battle-runtime`,
-not the strategic destination and not a second canonical battle reducer.
+Deleted `packages/surface-runtime-correction` material represented earlier
+Surface/Unit reducer mechanics. Its remaining facts are preserved here as
+restoration pressure, not as active package architecture:
 
-Restoration work should read both sources according to their strengths: Core
-for legacy behavior/proof breadth and Correction for prior Surface/Unit-shaped
-reducer mechanics. The restored behavior belongs in `@dnd/battle-runtime`
-through battle subjects, support gates, holes/fills, reducer state, and
-`battle-runtime.qnt`, not by making Core depend on `@dnd/battle-runtime` or by
-reviving Correction as the promoted owner.
+- generic Unit activation for `spell | class_feature` activations with exactly
+  one `attack_roll`, `save_gate`, or `direct` phase;
+- generic UnitRecord resolution for cantrip attack/save-gate effects, direct
+  `heal_hp`, and `grant_extra_action`;
+- spell-slot and use-count gates;
+- generic Surface attachment projection and damage-type hole projection,
+  including temporary attachment and damage-type reference fills;
+- leveled save-gate spell support with half damage on a successful save, if
+  not fully promoted when that work begins.
+
+Future restorations belong in `@dnd/battle-runtime` implementation,
+package-local deterministic tests, and `battle-runtime.qnt`. Restore SRD
+procedure families through battle subjects, support gates, battle-owned
+holes/fills, reducer state, and package-local specs. Do not revive Correction as
+the promoted owner, keep a parallel Correction reducer, or reintroduce projected
+executable vocabulary.

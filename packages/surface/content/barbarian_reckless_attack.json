@@ -1,0 +1,57 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "barbarian",
+  "description": "Attack recklessly to gain Advantage on Strength attack rolls while attacks against you also have Advantage.",
+  "id": "barbarian_reckless_attack",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "free"
+    },
+    "family": "activation",
+    "ongoingFeature": {
+      "activationTiming": "first_attack_roll",
+      "lifecycle": {
+        "initialExpiration": "start_of_next_turn",
+        "kind": "turn_boundary"
+      }
+    },
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "abilityFilter": [
+              "str"
+            ],
+            "affects": "self_roll",
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "attack_roll"
+            ]
+          },
+          {
+            "affects": "rolls_against_self",
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "attack_roll"
+            ]
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "usageLimit": {
+      "kind": "once_per_turn"
+    }
+  },
+  "name": "Reckless Attack",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Barbarian#Reckless Attack"
+  }
+}

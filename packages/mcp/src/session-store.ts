@@ -13,7 +13,14 @@ import type {
   CharacterId,
 } from "@dnd/battle-runtime";
 import { snapshotBattle } from "@dnd/battle-runtime";
-import { Hp, type Hp as HpType } from "@dnd/shared/types";
+import {
+  Hp,
+  resourceCount,
+  spellSlotLevel,
+  type Hp as HpType,
+  type ResourceCount,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
 import type {
   DeathSaveCount,
   DeathSaves,
@@ -95,10 +102,8 @@ export type CharacterSessionZeroHpLifecycleInput =
     };
 
 export type CharacterSpellSlotExpenditure = {
-  readonly spellLevel: NonNullable<
-    CharacterBuild["spellcasting"]
-  >["spellSlots"][number]["spellLevel"];
-  readonly expended: number;
+  readonly spellLevel: SpellSlotLevel;
+  readonly expended: ResourceCount;
 };
 
 export type AvailableCharacterSessionInput = {
@@ -249,7 +254,11 @@ export function characterBattleSpellSlots(
         `Missing Spell Slot expenditure for level ${slot.spellLevel}.`,
       );
     }
-    return { ...slot, expended: expenditure.expended };
+    return {
+      spellLevel: spellSlotLevel(slot.spellLevel),
+      count: resourceCount(slot.count),
+      expended: expenditure.expended,
+    };
   });
 }
 
@@ -261,8 +270,9 @@ function spellSlotExpendituresFromInput(
   const runtimeSlots =
     input.spellSlots ??
     input.build.spellcasting.spellSlots.map((slot) => ({
-      ...slot,
-      expended: 0,
+      spellLevel: spellSlotLevel(slot.spellLevel),
+      count: resourceCount(slot.count),
+      expended: resourceCount(0),
     }));
   if (runtimeSlots.length !== input.build.spellcasting.spellSlots.length) {
     throw new Error("Spell Slot state must match build capacity exactly.");
@@ -276,11 +286,12 @@ function spellSlotExpendituresFromInput(
   }
   return input.build.spellcasting.spellSlots.map((buildSlot) => {
     const runtimeSlot = runtimeSlots.find(
-      (candidate) => candidate.spellLevel === buildSlot.spellLevel,
+      (candidate) =>
+        candidate.spellLevel === spellSlotLevel(buildSlot.spellLevel),
     );
     if (
       runtimeSlot === undefined ||
-      runtimeSlot.count !== buildSlot.count ||
+      runtimeSlot.count !== resourceCount(buildSlot.count) ||
       !Number.isInteger(runtimeSlot.expended) ||
       runtimeSlot.expended < 0 ||
       runtimeSlot.expended > buildSlot.count
@@ -290,8 +301,8 @@ function spellSlotExpendituresFromInput(
       );
     }
     return {
-      spellLevel: buildSlot.spellLevel,
-      expended: runtimeSlot.expended,
+      spellLevel: spellSlotLevel(buildSlot.spellLevel),
+      expended: resourceCount(runtimeSlot.expended),
     };
   });
 }

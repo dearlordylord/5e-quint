@@ -216,35 +216,41 @@ function initialBattleCreatureInits(input: {
         if (session?.tag !== "available") {
           throw new Error("Character session is not available.");
         }
-        return battleCreatureInitFromCharacterBuild({
-          combatantId: character.combatantId,
-          characterId: session.characterId,
-          displayName: characterBuildDisplayName(
-            input.root.unitLibrary,
-            session.build,
-          ),
-          build: session.build,
-          initiative: character.initiative,
-          currentHp: characterSessionCurrentHp(session),
-          zeroHpLifecycle: characterBattleZeroHpLifecycle(session),
-          spellSlots: characterBattleSpellSlots(session),
-          unitLibrary: input.root.unitLibrary,
-        });
+        return {
+          ...battleCreatureInitFromCharacterBuild({
+            combatantId: character.combatantId,
+            characterId: session.characterId,
+            displayName: characterBuildDisplayName(
+              input.root.unitLibrary,
+              session.build,
+            ),
+            build: session.build,
+            initiative: character.initiative,
+            side: character.side,
+            currentHp: characterSessionCurrentHp(session),
+            zeroHpLifecycle: characterBattleZeroHpLifecycle(session),
+            spellSlots: characterBattleSpellSlots(session),
+            unitLibrary: input.root.unitLibrary,
+          }),
+        };
       }),
       Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
-        return battleCreatureInitFromStatBlock({
-          combatantId: statBlockCombatant.combatantId,
-          statBlock: input.root.statBlockCatalog.requireStatBlock(
-            statBlockCombatant.statBlockId,
-          ),
-          initiative: statBlockCombatant.initiative,
-          ...(statBlockCombatant.currentHp === undefined
-            ? {}
-            : { currentHp: statBlockCombatant.currentHp }),
-          ...(statBlockCombatant.tempHp === undefined
-            ? {}
-            : { tempHp: statBlockCombatant.tempHp }),
-        });
+        return {
+          ...battleCreatureInitFromStatBlock({
+            combatantId: statBlockCombatant.combatantId,
+            statBlock: input.root.statBlockCatalog.requireStatBlock(
+              statBlockCombatant.statBlockId,
+            ),
+            initiative: statBlockCombatant.initiative,
+            side: statBlockCombatant.side,
+            ...(statBlockCombatant.currentHp === undefined
+              ? {}
+              : { currentHp: statBlockCombatant.currentHp }),
+            ...(statBlockCombatant.tempHp === undefined
+              ? {}
+              : { tempHp: statBlockCombatant.tempHp }),
+          }),
+        };
       }),
       Match.exhaustive,
     ),

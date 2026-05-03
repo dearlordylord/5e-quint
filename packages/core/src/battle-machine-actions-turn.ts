@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { boundaryCrossingsRemaining } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   createInitiativeStack,
   initiativeOrder,
@@ -867,7 +868,9 @@ export function battleMonsterSaveEffect({
         ? {
             conditionDurationOnFail: {
               effectId: `monster:${monsterId}:${ability.id}`,
-              turnsRemaining: timedConditionOnFail.duration.rounds,
+              boundaryCrossingsRemaining: boundaryCrossingsRemaining(
+                timedConditionOnFail.duration.rounds,
+              ),
               expiresAt: timedConditionOnFail.duration.expiresAt,
               expiryOwnerId:
                 timedConditionOnFail.duration.expiryOwner === "target"
