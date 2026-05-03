@@ -67,7 +67,6 @@ import type {
   TriggeredReactionAbilityMechanics,
   ReactionTrigger,
   MarkTransfer,
-  MasteryTrigger,
   OnHitTriggerMechanics,
   OnHitRiderEffect,
   RiderExpiry,
@@ -5846,6 +5845,8 @@ function traceClassFeatureMechanics(
       return [traceActivatedAbility(m, nodes, edges, ids)];
     case "passive":
       return [tracePassiveMechanics(m, nodes, edges, ids)];
+    case "on_hit_trigger":
+      return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
     case "weapon_mastery_choice": {
       const masteryId = ids("mastery");
       nodes.push({
@@ -5904,6 +5905,8 @@ function traceClassFeatureMechanics(
             return traceActivatedAbility(part, nodes, edges, ids);
           case "passive":
             return tracePassiveMechanics(part, nodes, edges, ids);
+          case "on_hit_trigger":
+            return traceOnHitTriggerMechanics(part, nodes, edges, ids);
           default: {
             const _exhaustive: never = part;
             throw new Error(
@@ -6734,7 +6737,7 @@ function traceOnHitTriggerMechanics(
     id: resId,
     category: "resolution",
     atomKind: "attack_roll",
-    label: `attack_roll\n${describeMasteryTrigger(m.trigger)}`,
+    label: `attack_roll\n${describeOnHitTrigger(m.trigger)}`,
   });
 
   const winId = ids("win");
@@ -6779,15 +6782,17 @@ function traceOnHitTriggerMechanics(
   return resId;
 }
 
-function describeMasteryTrigger(t: MasteryTrigger): string {
+function describeOnHitTrigger(t: OnHitTriggerMechanics["trigger"]): string {
   switch (t.kind) {
     case "weapon_hit":
       return "(any weapon hit)";
     case "weapon_hit_melee_only":
       return "(melee weapon hit only)";
+    case "attack_roll_hit":
+      return `(attack-roll hit, ${t.weaponFilter}, ${t.rollRequirement})`;
     default: {
       const _: never = t;
-      throw new Error(`unhandled mastery trigger: ${String(_)}`);
+      throw new Error(`unhandled on-hit trigger: ${String(_)}`);
     }
   }
 }
@@ -6888,6 +6893,21 @@ function traceOnHitRiderEffect(
       });
       edges.push({ from: winId, to: rerollId, relation: "grants" });
       edges.push({ from: rerollId, to: targetId, relation: "attaches_to" });
+      return;
+    }
+    case "add_attack_damage_dice": {
+      const damageId = ids("dmg");
+      nodes.push({
+        id: damageId,
+        category: "effect",
+        atomKind: "damage",
+        label:
+          `add_attack_damage_dice\n` +
+          `${e.dice.className} level table d${e.dice.dieSize}\n` +
+          `type ${e.damageType}`,
+      });
+      edges.push({ from: winId, to: damageId, relation: "grants" });
+      edges.push({ from: damageId, to: targetId, relation: "attaches_to" });
       return;
     }
     default: {
@@ -7252,7 +7272,7 @@ function describeCriticalRangeAttackFilter(
 ): string {
   return filter === "weapon_or_unarmed_strike"
     ? "weapons and Unarmed Strikes"
-    : filter satisfies never;
+    : (filter satisfies never);
 }
 
 function describeDelta(d: DiceDelta): string {

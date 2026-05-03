@@ -51,6 +51,7 @@ type MbtProjection = {
   readonly skeletonHp: number;
   readonly skeletonDead: boolean;
   readonly actionAvailable: boolean;
+  readonly sneakAttackUsedThisTurn: boolean;
   readonly holes: readonly MbtHole[];
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
@@ -83,6 +84,8 @@ const driverSchema = {
   doFillAttackRollHit: {},
   doFillDamageLow: {},
   doFillDamageHigh: {},
+  doFillDamageLowSneakAttack: {},
+  doFillDamageHighSneakAttack: {},
   doRejectStaleAfterResolved: {},
   step: {},
 } as const;
@@ -154,7 +157,11 @@ function createBattleRuntimeDriver() {
         const attackRoll = requireHole(holes, "attackRoll");
         submit([
           ...fills,
-          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          attackRollFill(attackRoll, {
+            total: 14,
+            naturalD20: 10,
+            rollMode: "advantage",
+          }),
         ]);
       },
       doFillDamageLow: () => {
@@ -164,6 +171,24 @@ function createBattleRuntimeDriver() {
       doFillDamageHigh: () => {
         const damage = requireHole(holes, "rolledDice");
         submit([...fills, damageRollFill(damage, 4)]);
+      },
+      doFillDamageLowSneakAttack: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([
+          ...fills,
+          damageRollFillWithGroups(damage, [[2], [2]], [
+            "rogue_sneak_attack",
+          ]),
+        ]);
+      },
+      doFillDamageHighSneakAttack: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([
+          ...fills,
+          damageRollFillWithGroups(damage, [[4], [4]], [
+            "rogue_sneak_attack",
+          ]),
+        ]);
       },
       doRejectStaleAfterResolved: () => {
         recordResult(resolveBattleSubject({ state, subject, fills }));
@@ -187,6 +212,10 @@ function normalizeQuintState(raw: unknown): MbtProjection {
     skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
     skeletonDead: booleanField(state, "qSkeletonDead"),
     actionAvailable: booleanField(state, "qActionAvailable"),
+    sneakAttackUsedThisTurn: booleanField(
+      state,
+      "qSneakAttackUsedThisTurn",
+    ),
     holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
     lastResult: mbtLastResult(state["qLastResult"]),
     lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
@@ -214,7 +243,7 @@ function mbtInvalidReason(
 const battleRuntimeStateCheck = stateCheck(normalizeQuintState, compareState);
 
 describe("battle-runtime MBT", () => {
-  it("replays Fighter weapon Attack traces against a Skeleton target", async () => {
+  it("replays Rogue weapon Attack and Sneak Attack traces against a Skeleton target", async () => {
     await run({
       spec: path.resolve(import.meta.dirname, "../battle-runtime.mbt.qnt"),
       init: "init",
@@ -250,6 +279,12 @@ function projectMbtState(input: {
     actionAvailable: snapshot.currentTurnResources.actionResources.some(
       (resource) => resource.kind === "action",
     ),
+    sneakAttackUsedThisTurn:
+      snapshot.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+        (usage) =>
+          usage.attackerId === fighterId &&
+          usage.unitId === "rogue_sneak_attack",
+      ),
     holes: input.holes.map(projectHole).sort(),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
@@ -265,10 +300,10 @@ function discoverAttackHoles(
       candidate.subject.tag === subject.tag &&
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === "Flail",
+      candidate.subject.attackName === "Dagger",
   );
   if (act == null) {
-    throw new Error("Expected Fighter Flail attack act.");
+    throw new Error("Expected Rogue Dagger attack act.");
   }
 
   return act.initialHoles;
@@ -282,7 +317,7 @@ function fighterAttackSubject(): Extract<
     tag: "action",
     actorId: fighterId,
     action: "attack",
-    attackName: "Flail",
+    attackName: "Dagger",
   };
 }
 
@@ -290,25 +325,25 @@ function fighterVsSkeletonBattle(): BattleState {
   return startBattle({
     battleId: battleId("battle-runtime-mbt-fighter-skeleton"),
     combatants: [
-      fighterCreatureInit({ initiative: 20 }),
+      rogueCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
 }
 
-function fighterCreatureInit(input: {
+function rogueCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
   return {
     combatantId: fighterId,
-    displayName: "Fighter",
+    displayName: "Rogue",
     initiative: initiativeScore(input.initiative),
     side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
       characterUnitRefs: [],
-      classLevels: [{ className: "fighter", level: 1 }],
+      classLevels: [{ className: "rogue", level: 1 }],
       armorClass: {
         ...defaultArmorClassState(),
         rightHandUse: "mainWeapon",
@@ -320,25 +355,26 @@ function fighterCreatureInit(input: {
       tempHp: Hp(0),
       selectedLoadout: {
         weapon: {
-          itemId: "main:weapon_flail",
-          unitId: "weapon_flail",
+          itemId: "main:weapon_dagger",
+          unitId: "weapon_dagger",
           grip: "one_handed",
         },
       },
-      attack: flailAttack(),
+      attack: daggerAttack(),
+      unitFeatures: [{ unit: unitLibrary.requireUnit("rogue_sneak_attack") }],
     },
   };
 }
 
-function flailAttack(): NonNullable<
+function daggerAttack(): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"]
 > {
-  const weapon = unitLibrary.requireUnit("weapon_flail");
+  const weapon = unitLibrary.requireUnit("weapon_dagger");
   if (weapon.kind !== "weapon") {
-    throw new Error("Expected Flail weapon Unit.");
+    throw new Error("Expected Dagger weapon Unit.");
   }
 
   return {
@@ -395,6 +431,7 @@ function attackRollFill(
   value: {
     readonly total: number;
     readonly naturalD20: number;
+    readonly rollMode?: "normal" | "advantage" | "disadvantage";
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   return {
@@ -403,6 +440,7 @@ function attackRollFill(
     value: {
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
+      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
     },
   };
 }
@@ -411,10 +449,52 @@ function damageRollFill(
   hole: BattleHole,
   value: number,
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  return damageRollFillWithGroups(hole, [[value]]);
+}
+
+function damageRollFillWithGroups(
+  hole: BattleHole,
+  groups: readonly (readonly number[])[],
+  selectedAttackDamageRiderUnitIds?: readonly string[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  if (groups.length === 0 || groups.some((group) => group.length === 0)) {
+    throw new Error("Expected non-empty rolled damage groups.");
+  }
+
   return {
     kind: "rolledDice",
     holeId: hole.holeId,
-    value: [{ results: [DieRollResult(value)] }],
+    ...(selectedAttackDamageRiderUnitIds === undefined
+      ? {}
+      : { selectedAttackDamageRiderUnitIds }),
+    value: rolledDiceGroups(groups),
+  };
+}
+
+function rolledDiceGroups(
+  groups: readonly (readonly number[])[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }>["value"] {
+  const [firstGroup, ...restGroups] = groups;
+  if (firstGroup === undefined) {
+    throw new Error("Expected at least one rolled damage group.");
+  }
+
+  return [
+    rolledDiceGroup(firstGroup),
+    ...restGroups.map((group) => rolledDiceGroup(group)),
+  ];
+}
+
+function rolledDiceGroup(
+  group: readonly number[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }>["value"][number] {
+  const [first, ...rest] = group;
+  if (first === undefined) {
+    throw new Error("Expected at least one die result.");
+  }
+
+  return {
+    results: [DieRollResult(first), ...rest.map(DieRollResult)],
   };
 }
 

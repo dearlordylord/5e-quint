@@ -6,20 +6,21 @@ module battleRuntimeMbt {
   var qSkeletonHp: int
   var qSkeletonDead: bool
   var qActionAvailable: bool
+  var qSneakAttackUsedThisTurn: bool
   var qHoles: Set[Hole]
   var qLastResult: str
   var qLastInvalidReason: str
 
   pure val skeletonInitialHp: int = 13
-  pure val fighterAttackModifier: int = 3
+  pure val rogueAttackModifier: int = 3
 
-  pure def skeletonHpAfterBludgeoningWeaponDamage(
+  pure def skeletonHpAfterPiercingWeaponDamage(
     hp: int,
     damageRoll: int,
   ): int = {
     val adjustedDamage = damageAfterAdjustments(
-      damageRoll + fighterAttackModifier,
-      Bludgeoning,
+      damageRoll + rogueAttackModifier,
+      Piercing,
       Set(),
       Set(Bludgeoning),
       Set(Poison),
@@ -31,6 +32,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = skeletonInitialHp,
     qSkeletonDead' = false,
     qActionAvailable' = true,
+    qSneakAttackUsedThisTurn' = false,
     qHoles' = Set(TargetChoice),
     qLastResult' = "init",
     qLastInvalidReason' = "",
@@ -42,6 +44,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(TargetChoice),
     qLastResult' = "needsHoles",
     qLastInvalidReason' = "",
@@ -53,6 +56,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(AttackRoll),
     qLastResult' = "needsHoles",
     qLastInvalidReason' = "",
@@ -64,6 +68,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = qHoles,
     qLastResult' = "invalid",
     qLastInvalidReason' = "invalidFill",
@@ -75,6 +80,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = false,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
@@ -86,6 +92,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(DamageRoll),
     qLastResult' = "needsHoles",
     qLastInvalidReason' = "",
@@ -94,9 +101,10 @@ module battleRuntimeMbt {
   action doFillDamageLow = all {
     qActionAvailable,
     qHoles == Set(DamageRoll),
-    qSkeletonHp' = skeletonHpAfterBludgeoningWeaponDamage(qSkeletonHp, 2),
-    qSkeletonDead' = skeletonHpAfterBludgeoningWeaponDamage(qSkeletonHp, 2) == 0,
+    qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 2),
+    qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 2) == 0,
     qActionAvailable' = false,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
@@ -105,9 +113,36 @@ module battleRuntimeMbt {
   action doFillDamageHigh = all {
     qActionAvailable,
     qHoles == Set(DamageRoll),
-    qSkeletonHp' = skeletonHpAfterBludgeoningWeaponDamage(qSkeletonHp, 4),
-    qSkeletonDead' = skeletonHpAfterBludgeoningWeaponDamage(qSkeletonHp, 4) == 0,
+    qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4),
+    qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4) == 0,
     qActionAvailable' = false,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+    qHoles' = Set(),
+    qLastResult' = "resolved",
+    qLastInvalidReason' = "",
+  }
+
+  action doFillDamageLowSneakAttack = all {
+    qActionAvailable,
+    qHoles == Set(DamageRoll),
+    not(qSneakAttackUsedThisTurn),
+    qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4),
+    qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4) == 0,
+    qActionAvailable' = false,
+    qSneakAttackUsedThisTurn' = true,
+    qHoles' = Set(),
+    qLastResult' = "resolved",
+    qLastInvalidReason' = "",
+  }
+
+  action doFillDamageHighSneakAttack = all {
+    qActionAvailable,
+    qHoles == Set(DamageRoll),
+    not(qSneakAttackUsedThisTurn),
+    qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 8),
+    qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 8) == 0,
+    qActionAvailable' = false,
+    qSneakAttackUsedThisTurn' = true,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
@@ -119,6 +154,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = qHoles,
     qLastResult' = "invalid",
     qLastInvalidReason' = "staleSubject",
@@ -132,6 +168,8 @@ module battleRuntimeMbt {
     doFillAttackRollHit,
     doFillDamageLow,
     doFillDamageHigh,
+    doFillDamageLowSneakAttack,
+    doFillDamageHighSneakAttack,
     doRejectStaleAfterResolved,
   }
 }

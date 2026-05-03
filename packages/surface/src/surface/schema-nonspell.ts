@@ -164,7 +164,9 @@ const OngoingFeatureLifecycleSchema = Schema.Union(
     initialExpiration: Schema.Literal("end_of_next_turn"),
     earlyEndConditions: exactOptional(Schema.Array(ConditionSchema)),
     earlyEndArmorCategories: exactOptional(Schema.Array(ArmorCategorySchema)),
-    extensionTriggers: Schema.NonEmptyArray(OngoingFeatureExtensionTriggerSchema),
+    extensionTriggers: Schema.NonEmptyArray(
+      OngoingFeatureExtensionTriggerSchema,
+    ),
     maximumDuration: Schema.Struct({
       unit: Schema.Literal("round", "minute", "hour", "day"),
       amount: PositiveIntegerSchema,
@@ -184,7 +186,9 @@ const OngoingFeatureLifecycleSchema = Schema.Union(
 const OngoingFeatureSupportFields = {
   lifecycle: OngoingFeatureLifecycleSchema,
   concentrationEffect: exactOptional(Schema.Literal("break_and_prevent")),
-  actionRestrictions: exactOptional(Schema.Array(Schema.Literal("spellcasting"))),
+  actionRestrictions: exactOptional(
+    Schema.Array(Schema.Literal("spellcasting")),
+  ),
   levelOverrides: exactOptional(
     Schema.Array(
       Schema.Struct({
@@ -393,6 +397,7 @@ export const ClassFeatureActivationMechanicsSchema =
 export const ClassFeatureComponentMechanicsSchema = Schema.Union(
   Schema.suspend(() => PassiveMechanicsSchema),
   ActivatedAbilityMechanicsSchema,
+  Schema.suspend(() => OnHitTriggerMechanicsSchema),
 );
 
 export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
@@ -477,6 +482,32 @@ export const MasteryTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("weapon_hit_melee_only") }),
 );
 
+export const AttackDamageRiderTriggerSchema = Schema.Struct({
+  kind: Schema.Literal("attack_roll_hit"),
+  weaponFilter: Schema.Literal("finesse_or_ranged"),
+  rollRequirement: Schema.Literal(
+    "advantage_or_ally_adjacent_without_disadvantage",
+  ),
+});
+
+export const ClassLevelDamageDiceSchema = Schema.Struct({
+  kind: Schema.Literal("class_level_table"),
+  className: ClassNameSchema,
+  dieSize: PositiveIntegerSchema,
+  dice: Schema.NonEmptyArray(
+    Schema.Struct({
+      atLevel: PositiveIntegerSchema,
+      count: PositiveIntegerSchema,
+    }),
+  ),
+});
+
+export const AddAttackDamageDiceRiderSchema = Schema.Struct({
+  kind: Schema.Literal("add_attack_damage_dice"),
+  dice: ClassLevelDamageDiceSchema,
+  damageType: Schema.Literal("same_as_attack"),
+});
+
 export const SecondaryTargetSelectionSchema = Schema.Struct({
   kind: Schema.Literal("adjacent_to_primary"),
   constraint: Schema.Literal("within_5ft_and_reach"),
@@ -531,11 +562,12 @@ export const MasteryEffectSchema = Schema.Union(
 export const OnHitRiderEffectSchema = Schema.Union(
   MasteryEffectSchema,
   RerollWeaponDamageDiceRiderSchema,
+  AddAttackDamageDiceRiderSchema,
 );
 
 export const OnHitTriggerMechanicsSchema = Schema.Struct({
   family: Schema.Literal("on_hit_trigger"),
-  trigger: MasteryTriggerSchema,
+  trigger: Schema.Union(MasteryTriggerSchema, AttackDamageRiderTriggerSchema),
   optional: Schema.Boolean,
   effect: OnHitRiderEffectSchema,
   usageLimit: exactOptional(UsageLimitSchema),

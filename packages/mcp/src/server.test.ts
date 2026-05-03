@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   battleId,
   battleCombatantSide,
   characterId,
@@ -226,6 +227,86 @@ describe("MCP server route", () => {
     ).toThrow(
       `Unsupported battle critical-range Unit hook: ${unsupportedCriticalRangeUnit.id}.`,
     );
+  });
+
+  test("admits only attack-damage rider Unit hooks tied to their own class table", () => {
+    const root = createMcpCompositionRoot();
+    const rogueBuild = rogueCharacterBuild(root.unitLibrary);
+    const supportedLibrary = rogueBattleUnitLibrary(root);
+    const supportedState = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-supported-attack-damage-rider"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("rogue-character"),
+        displayName: "Orc Soldier Rogue",
+        build: rogueBuild,
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: supportedLibrary,
+    });
+
+    expect(
+      characterUnitRef(supportedState, fighterId, "rogue_sneak_attack"),
+    ).toMatchObject({
+      supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
+    });
+
+    const sneakAttackUnit = root.unitLibrary.requireUnit("rogue_sneak_attack");
+    if (
+      sneakAttackUnit.kind !== "class_feature" ||
+      sneakAttackUnit.mechanics.family !== "on_hit_trigger" ||
+      sneakAttackUnit.mechanics.effect.kind !== "add_attack_damage_dice" ||
+      sneakAttackUnit.mechanics.effect.dice.kind !== "class_level_table"
+    ) {
+      throw new Error("Expected Sneak Attack class-feature Unit.");
+    }
+    const unsupportedSneakAttackUnit: UnitRecord = {
+      ...sneakAttackUnit,
+      mechanics: {
+        ...sneakAttackUnit.mechanics,
+        effect: {
+          ...sneakAttackUnit.mechanics.effect,
+          dice: {
+            ...sneakAttackUnit.mechanics.effect.dice,
+            className: "fighter",
+          },
+        },
+      },
+    };
+
+    expect(() =>
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("battle-unsupported-attack-damage-rider"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("rogue-character"),
+          displayName: "Unsupported Sneak Attack Rogue",
+          build: rogueBuild,
+          initiative: initiativeScore(12),
+          side: partySide,
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(11),
+          side: oppositionSide,
+        },
+        unitLibrary: rogueBattleUnitLibrary(root, {
+          sneakAttackUnit: unsupportedSneakAttackUnit,
+        }),
+      }),
+    ).toThrow("Unsupported battle attack-damage rider Unit hook");
   });
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
@@ -985,6 +1066,87 @@ describe("MCP server route", () => {
       expect.objectContaining({ combatantId: "fighter", hp: 5 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
+  });
+
+  test("replays visible Sneak Attack rider hole and fill shape through MCP battle tools", () => {
+    const root = createMcpCompositionRoot();
+    root.sessionStore.battleState = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle:mcp-sneak-attack-rider"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("rogue-character"),
+        displayName: "Orc Soldier Rogue",
+        build: rogueCharacterBuild(root.unitLibrary),
+        initiative: initiativeScore(18),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(7),
+        side: oppositionSide,
+      },
+      unitLibrary: rogueBattleUnitLibrary(root),
+    });
+    root.sessionStore.transientBattleFills = null;
+
+    fillBattleHoleThroughTool(root, "fighter", "Dagger", {
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "goblin",
+    });
+    const afterAttackRoll = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Dagger",
+      {
+        kind: "attackRoll",
+        holeId: "battle:attack:roll",
+        value: { total: 16, naturalD20: 14, rollMode: "advantage" },
+      },
+    );
+
+    expect(afterAttackRoll.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "rolledDice",
+          holeId: "battle:attack:damage-result:1d4+3-piercing",
+          attackDamageRiders: [
+            {
+              unitId: "rogue_sneak_attack",
+              label: "Sneak Attack",
+              damage: { dice: 1, dieSize: 6, damageType: "piercing" },
+            },
+          ],
+        },
+      ],
+    });
+
+    const afterDamage = fillBattleHoleThroughTool(root, "fighter", "Dagger", {
+      kind: "rolledDice",
+      holeId: "battle:attack:damage-result:1d4+3-piercing",
+      selectedAttackDamageRiderUnitIds: ["rogue_sneak_attack"],
+      value: [{ results: [2] }, { results: [3] }],
+    });
+
+    expect(afterDamage).toMatchObject({
+      result: { tag: "resolved" },
+      battleState: {
+        combatants: [
+          { combatantId: "fighter", hp: 12 },
+          { combatantId: "goblin", hp: 2 },
+        ],
+        currentTurnResources: {
+          attackDamageRidersUsedThisTurn: [
+            { attackerId: "fighter", unitId: "rogue_sneak_attack" },
+          ],
+        },
+      },
+      session: { transientBattleFills: null },
+    });
   });
 
   test("start_battle rejects missing caller-supplied Initiative scores", () => {
@@ -3019,6 +3181,7 @@ function fillBattleHoleThroughTool(
   fill: {
     readonly kind: "targetChoice" | "attackRoll" | "rolledDice";
     readonly holeId: string;
+    readonly selectedAttackDamageRiderUnitIds?: readonly string[];
     readonly value: unknown;
   },
 ) {
@@ -3044,4 +3207,80 @@ function initialClassHoleIds(): readonly CreationHoleIdText[] {
     ...manifestAdvancementFills().map((fill) => fill.holeId),
     ...manifestChoiceFills().map((fill) => fill.holeId),
   ];
+}
+
+function rogueCharacterBuild(
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+): CharacterBuild {
+  const base = fighterCharacterBuild(unitLibrary);
+  return {
+    ...base,
+    advancement: {
+      entries: [
+        {
+          classUnitId: "class_rogue",
+          level: 1 as CharacterClassLevel,
+        },
+      ],
+    },
+    features: [
+      ...base.features.filter(
+        (feature) =>
+          feature.kind !== "classFeature" && feature.kind !== "classChoice",
+      ),
+      {
+        kind: "classFeature",
+        unitId: "rogue_sneak_attack",
+        level: 1 as CharacterClassLevel,
+      },
+    ],
+    resources: [],
+    equipment: {
+      weapon: {
+        itemId: "main:weapon_dagger",
+        unitId: "weapon_dagger",
+        grip: "one_handed",
+      },
+    },
+  };
+}
+
+function rogueBattleUnitLibrary(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  overrides?: {
+    readonly sneakAttackUnit?: UnitRecord;
+  },
+): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
+  const rogueClass = rogueClassUnit(root.unitLibrary);
+  return {
+    ...root.unitLibrary,
+    requireUnit: (unitId: string) => {
+      if (unitId === "class_rogue") return rogueClass;
+      if (unitId === "rogue_sneak_attack") {
+        return (
+          overrides?.sneakAttackUnit ?? root.unitLibrary.requireUnit(unitId)
+        );
+      }
+      return root.unitLibrary.requireUnit(unitId);
+    },
+  };
+}
+
+function rogueClassUnit(
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+): Extract<UnitRecord, { readonly kind: "class" }> {
+  const fighter = unitLibrary.requireUnit("class_fighter");
+  if (fighter.kind !== "class") {
+    throw new Error("Expected Fighter class Unit.");
+  }
+  const { spellcasting: _spellcasting, ...fighterWithoutSpellcasting } =
+    fighter;
+  return {
+    ...fighterWithoutSpellcasting,
+    id: "class_rogue",
+    name: "Rogue",
+    className: "rogue",
+    hitPointDie: 8,
+    featureGrants: [{ level: 1, unitId: "rogue_sneak_attack" }],
+  };
 }

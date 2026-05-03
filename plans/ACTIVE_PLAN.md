@@ -421,13 +421,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 57,
       "id": "PBA14B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Restore Attack Rider Procedure Family"
     },
     {
       "number": 58,
       "id": "PBA14C",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Restore Save Damage Replacement Riders"
     },
     {
@@ -547,8 +547,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 54    | PBA14 - Restore Turn Roster And Generic Combat Actions               | done                                          | PBA13G               | PBA14A                              | Restore mid-battle add/remove, Dash, Dodge, Disengage, Ready, Help, Stand from Prone, and generic combat-action subjects as promoted-runtime behavior.                                                                         | Completed in Task 54 run; PBA14A is unblocked for active ongoing feature restoration.                                                                |
 | 55    | PBA14A - Restore Active Ongoing Feature Class Riders                 | done                                          | PBA14                | PBA14A1                             | Restored Rage and Reckless Attack through active ongoing feature occurrence state keyed by source, with source-derived profile mechanics and promoted QNT coverage.                                                            | Completed in Task 55 run; PBA14A1 is unblocked.                                                                                                      |
 | 56    | PBA14A1 - Restore Authored Critical Range Attack Hook                | done                                          | PBA14A               | PBA14B                              | Restore Unit-authored critical-range attack hooks through Surface support profiles and battle-runtime attack adjudication, without naming Champion or other authored ids in production support code.                           | Completed in Task 56 run; PBA14B is unblocked for attack-rider procedure restoration.                                                                |
-| 57    | PBA14B - Restore Attack Rider Procedure Family                       | ready-for-implementation-after-light-research | PBA14A1              | PBA14C                              | Restore reusable attack-rider windows and damage/roll rider data for Sneak Attack plus Rage/Reckless-style interactions through support profiles, not named ability branches.                                                  | Unblocked by PBA14A1; start with RAW/source check before attack-rider edits.                                                                         |
-| 58    | PBA14C - Restore Save Damage Replacement Riders                      | blocked                                       | PBA14B               | PBA14D                              | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                                           | Blocked behind attack-rider procedure family.                                                                                                        |
+| 57    | PBA14B - Restore Attack Rider Procedure Family                       | done                                          | PBA14A1              | PBA14C                              | Restored reusable optional attack damage rider hooks for Sneak Attack through support profiles, damage holes, once-per-turn usage, MCP replay, and promoted QNT/MBT coverage.                                                   | Completed in Task 57 run; PBA14C is unblocked for save-damage replacement rider restoration.                                                         |
+| 58    | PBA14C - Restore Save Damage Replacement Riders                      | ready-for-implementation-after-light-research | PBA14B               | PBA14D                              | Restore reusable save-damage replacement procedure support for Evasion-style riders.                                                                                                                                           | Unblocked by PBA14B; start with RAW/source check before save-damage replacement edits.                                                               |
 | 59    | PBA14D - Restore Reaction Roll Damage Modification Riders            | blocked                                       | PBA14C               | PBA15                               | Restore reusable reaction roll/damage modification procedure support for Deflect Attacks, Uncanny Dodge, and Cutting Words-style riders through support profiles.                                                              | Blocked behind save-damage replacement riders.                                                                                                       |
 | 60    | PBA15 - Plan Broader Battle Widening Queue                           | blocked                                       | PBA14D               | PBA15A                              | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                                          | Blocked until feature-parity queue reaches its first closeout point.                                                                                 |
 | 61    | PBA15A - Migrate Surface And Character-Creation Domain Primitives    | blocked                                       | PBA15                | future tasks                        | Replace remaining Surface-authored and character-creation-runtime durable domain primitives with owned shared, Surface, or package-local types after the promoted battle feature-parity queue.                                 | Blocked behind PBA15 so broader Surface/catalog migration is ordered after feature parity.                                                           |
@@ -3930,7 +3930,7 @@ Plan Impact:
 
 ### Task 57 - PBA14B - Restore Attack Rider Procedure Family
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA14A1
 Blocks: PBA14C
@@ -3971,7 +3971,7 @@ Plan Impact:
 
 ### Task 58 - PBA14C - Restore Save Damage Replacement Riders
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA14B
 Blocks: PBA14D

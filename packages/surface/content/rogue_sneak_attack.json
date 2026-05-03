@@ -1,0 +1,75 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "rogue",
+  "description": "Once per turn, deal extra damage to one creature you hit with an eligible attack roll.",
+  "id": "rogue_sneak_attack",
+  "kind": "class_feature",
+  "mechanics": {
+    "effect": {
+      "damageType": "same_as_attack",
+      "dice": {
+        "className": "rogue",
+        "dice": [
+          {
+            "atLevel": 1,
+            "count": 1
+          },
+          {
+            "atLevel": 3,
+            "count": 2
+          },
+          {
+            "atLevel": 5,
+            "count": 3
+          },
+          {
+            "atLevel": 7,
+            "count": 4
+          },
+          {
+            "atLevel": 9,
+            "count": 5
+          },
+          {
+            "atLevel": 11,
+            "count": 6
+          },
+          {
+            "atLevel": 13,
+            "count": 7
+          },
+          {
+            "atLevel": 15,
+            "count": 8
+          },
+          {
+            "atLevel": 17,
+            "count": 9
+          },
+          {
+            "atLevel": 19,
+            "count": 10
+          }
+        ],
+        "dieSize": 6,
+        "kind": "class_level_table"
+      },
+      "kind": "add_attack_damage_dice"
+    },
+    "family": "on_hit_trigger",
+    "optional": true,
+    "trigger": {
+      "kind": "attack_roll_hit",
+      "rollRequirement": "advantage_or_ally_adjacent_without_disadvantage",
+      "weaponFilter": "finesse_or_ranged"
+    },
+    "usageLimit": {
+      "kind": "once_per_turn"
+    }
+  },
+  "name": "Sneak Attack",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue#Sneak Attack"
+  }
+}
