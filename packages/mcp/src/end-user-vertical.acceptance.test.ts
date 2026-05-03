@@ -183,6 +183,7 @@ describe("end-user promoted MCP vertical", () => {
 
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Second Wind",
       "Move",
@@ -406,6 +407,7 @@ describe("end-user promoted MCP vertical", () => {
     const fighterActs = callTool(root, "discover_battle_acts", {});
     expect(actionLabels(fighterActs)).toEqual([
       "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Second Wind",
       "Action Surge",
@@ -457,6 +459,7 @@ describe("end-user promoted MCP vertical", () => {
       ]),
     );
     expect(actionLabels(surged)).toEqual([
+      "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Second Wind",

@@ -136,6 +136,76 @@ describe("MCP server route", () => {
       currentActorId: fighterId,
     });
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
+    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Longsword",
+        },
+        {
+          tag: "action",
+          actorId: fighterId,
+          action: "attack",
+          attackName: "Unarmed Strike",
+        },
+      ]),
+    );
+  });
+
+  test("derives base Unarmed Strike when no weapon is selected", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const state = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-root-unarmed"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Orc Soldier Fighter",
+        build: {
+          ...build,
+          equipment: {
+            armor: build.equipment.armor,
+            shield: build.equipment.shield,
+          },
+        },
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: root.unitLibrary,
+    });
+    const combatant = state.combatants.get(fighterId);
+
+    expect(combatant?.origin).toMatchObject({
+      kind: "character",
+      attack: null,
+      unarmedStrike: {
+        kind: "unarmedStrike",
+        effect: {
+          kind: "damage",
+          damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+        },
+        attackAbility: "str",
+        attackAbilityModifier: 3,
+        attackBonus: 5,
+        damageAbilityModifier: 3,
+      },
+    });
+    expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual({
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Unarmed Strike",
+    });
   });
 
   test("admits only supported authored critical-range Unit hooks at the battle support boundary", () => {
@@ -656,6 +726,7 @@ describe("MCP server route", () => {
     expect(
       read.snapshot.acts.map((act: { label: string }) => act.label),
     ).toEqual([
+      "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Second Wind",
@@ -1789,6 +1860,7 @@ describe("MCP server route", () => {
     expect(
       fighterActs.snapshot.acts.map((act: { label: string }) => act.label),
     ).toEqual([
+      "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Second Wind",

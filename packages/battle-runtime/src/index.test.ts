@@ -9,6 +9,7 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import {
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_UNIT_SUPPORT_PROFILES,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -3393,7 +3394,8 @@ describe("battle runtime", () => {
         characterSeed({
           initiative: 20,
           characterUnitRefs: criticalRange19UnitRefs(),
-          attack: testUnarmedStrikeDamageAttack(),
+          attack: null,
+          unarmedStrike: testUnarmedStrikeDamageAttack(),
           selectedLoadout: {},
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -3423,6 +3425,116 @@ describe("battle runtime", () => {
         combatants: [
           { combatantId: fighterId },
           { combatantId: goblinId, hp: 6, defeated: false },
+        ],
+      },
+    });
+  });
+
+  test("dice-based Unarmed Strike profiles request damage dice fills", () => {
+    const state = startBattle({
+      battleId: battleId("battle-unarmed-dice-profile"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: null,
+          unarmedStrike: testUnarmedStrikeDieAttack(),
+          selectedLoadout: {},
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Unarmed Strike",
+    };
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 15, naturalD20: 10 },
+      subject,
+    );
+
+    expect(damageHole).toMatchObject({
+      critical: false,
+      label: "Unarmed Strike damage (1d4+3-bludgeoning)",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 4),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: goblinId, hp: 3, defeated: false },
+        ],
+      },
+    });
+  });
+
+  test("critical hits double dice-based Unarmed Strike profile dice", () => {
+    const state = startBattle({
+      battleId: battleId("battle-unarmed-dice-critical"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: null,
+          unarmedStrike: testUnarmedStrikeDieAttack(),
+          selectedLoadout: {},
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Unarmed Strike",
+    };
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 20, naturalD20: 20 },
+      subject,
+    );
+
+    expect(damageHole).toMatchObject({
+      critical: true,
+      label: "Unarmed Strike damage (2d4+3-bludgeoning)",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
+        damageRollFillWithGroups(damageHole, [[4, 4]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: goblinId, hp: 0, defeated: true },
         ],
       },
     });
@@ -6562,6 +6674,7 @@ describe("battle runtime", () => {
           initiative: 20,
           classLevels: [{ className: "rogue", level: 1 }],
           unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -6623,6 +6736,7 @@ describe("battle runtime", () => {
           initiative: 20,
           classLevels: [{ className: "rogue", level: 1 }],
           unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
           attack: testLongswordAttack(),
         }),
         characterSeed({
@@ -6697,6 +6811,7 @@ describe("battle runtime", () => {
           initiative: 20,
           classLevels: [{ className: "rogue", level: 1 }],
           unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
         }),
         characterSeed({
@@ -6741,6 +6856,7 @@ describe("battle runtime", () => {
           initiative: 20,
           classLevels: [{ className: "rogue", level: 1 }],
           unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
         }),
         characterSeed({
@@ -6802,6 +6918,7 @@ describe("battle runtime", () => {
           initiative: 20,
           classLevels: [{ className: "rogue", level: 1 }],
           unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -6847,6 +6964,7 @@ describe("battle runtime", () => {
           initiative: 20,
           classLevels: [{ className: "rogue", level: 1 }],
           unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -6904,6 +7022,7 @@ describe("battle runtime", () => {
           initiative: 20,
           classLevels: [{ className: "rogue", level: 1 }],
           unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -8647,6 +8766,7 @@ function resolveSneakAttackParityFixture(): Extract<
         initiative: 20,
         classLevels: [{ className: "rogue", level: 1 }],
         unitFeatures: [sneakAttackFeature()],
+        characterUnitRefs: sneakAttackUnitRefs(),
         attack: testDaggerAttack(),
       }),
       statBlockCreatureInit({ initiative: 10 }),
@@ -9199,6 +9319,18 @@ function criticalRange19UnitRefs(): Extract<
     {
       unitId: "fighter_improved_critical",
       supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
+    },
+  ];
+}
+
+function sneakAttackUnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  return [
+    {
+      unitId: "rogue_sneak_attack",
+      supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
     },
   ];
 }
@@ -9836,6 +9968,10 @@ function characterSeed(input: {
         { readonly kind: "character" }
       >["attack"]
     | null;
+  readonly unarmedStrike?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["unarmedStrike"];
   readonly offHandAttack?: TestCharacterWeaponAttack;
   readonly resources?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -9888,6 +10024,7 @@ function characterSeed(input: {
       tempHp: Hp(input.tempHp ?? 0),
       selectedLoadout,
       attack,
+      unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),
       ...(input.offHandAttack === undefined
         ? {}
         : { offHandAttack: input.offHandAttack }),
@@ -9947,16 +10084,43 @@ function testLongswordAttack(): TestCharacterWeaponAttack {
   };
 }
 
-function testUnarmedStrikeDamageAttack(): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["attack"]
-> {
+function testUnarmedStrikeDamageAttack(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["unarmedStrike"] {
   return {
-    kind: "unarmedStrikeDamage",
+    kind: "unarmedStrike",
+    effect: {
+      kind: "damage",
+      damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+    },
+    attackAbility: "str",
+    attackAbilityModifier: battleAbilityModifier(3),
     attackBonus: attackBonus(5),
-    strengthModifier: battleAbilityModifier(3),
+    damageAbilityModifier: battleAbilityModifier(3),
+  };
+}
+
+function testUnarmedStrikeDieAttack(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["unarmedStrike"] {
+  return {
+    kind: "unarmedStrike",
+    effect: {
+      kind: "damage",
+      damage: {
+        kind: "authoredReplacement",
+        sourceUnitId: "test_unarmed_die_profile",
+        dice: 1,
+        dieSize: 4,
+        damageType: "bludgeoning",
+      },
+    },
+    attackAbility: "str",
+    attackAbilityModifier: battleAbilityModifier(3),
+    attackBonus: attackBonus(5),
+    damageAbilityModifier: battleAbilityModifier(3),
   };
 }
 

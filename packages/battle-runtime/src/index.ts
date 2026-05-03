@@ -125,6 +125,7 @@ import type {
   WeaponDamage,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
 
 export const CombatantId = CreatureId.pipe(Schema.brand("CombatantId"));
 export type CombatantId = typeof CombatantId.Type;
@@ -228,14 +229,35 @@ export type CharacterWeaponAttackActionOption = {
   readonly abilityModifier: AbilityModifier;
   readonly damageAbilityModifier?: AbilityModifier;
 };
-export type CharacterUnarmedStrikeDamageActionOption = {
-  readonly kind: "unarmedStrikeDamage";
+export type UnarmedStrikeDamageProfile =
+  | {
+      readonly kind: "base";
+      readonly damageType: "bludgeoning";
+      readonly flat: 1;
+    }
+  | {
+      readonly kind: "authoredReplacement";
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly dice: 1;
+      readonly dieSize: 4 | 6 | 8 | 10 | 12;
+      readonly damageType: DamageType;
+    };
+export type UnarmedStrikeDamageEffect = {
+  readonly kind: "damage";
+  readonly damage: UnarmedStrikeDamageProfile;
+};
+export type CharacterUnarmedStrikeActionOption = {
+  readonly kind: "unarmedStrike";
+  readonly effect: UnarmedStrikeDamageEffect;
+  readonly attackAbility: Ability;
+  readonly attackAbilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
-  readonly strengthModifier: AbilityModifier;
+  readonly damageAbilityModifier: AbilityModifier;
+  readonly damageBonus?: number;
 };
 export type CharacterAttackActionOption =
   | CharacterWeaponAttackActionOption
-  | CharacterUnarmedStrikeDamageActionOption;
+  | CharacterUnarmedStrikeActionOption;
 export type CharacterBattleResourceInit = {
   readonly unit: UnitRecord;
   readonly usesRemaining?: number;
@@ -717,7 +739,8 @@ export type CharacterBattleCreatureInit = {
   readonly tempHp: Hp;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
-  readonly attack: CharacterAttackActionOption | null;
+  readonly attack: CharacterWeaponAttackActionOption | null;
+  readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
   readonly offHandAttack?: CharacterWeaponAttackActionOption | undefined;
   readonly unitFeatures?: readonly CharacterBattleFeatureInit[];
   readonly resources?: readonly CharacterBattleResourceInit[];
@@ -1001,7 +1024,8 @@ export type BattleCreatureState = {
         readonly classLevels: readonly CharacterBattleClassLevel[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly speed: BattleWalkSpeed;
-        readonly attack: CharacterAttackActionOption | null;
+        readonly attack: CharacterWeaponAttackActionOption | null;
+        readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: CharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
         readonly ongoingFeatureProfiles: ReadonlyMap<
@@ -1539,9 +1563,29 @@ const SupportedAttackActionOptionSchema = Schema.Union(
     }),
   }),
   Schema.Struct({
-    kind: Schema.Literal("unarmedStrikeDamage"),
+    kind: Schema.Literal("unarmedStrike"),
+    effect: Schema.Struct({
+      kind: Schema.Literal("damage"),
+      damage: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("base"),
+          damageType: Schema.Literal("bludgeoning"),
+          flat: Schema.Literal(1),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("authoredReplacement"),
+          sourceUnitId: Schema.String,
+          dice: Schema.Literal(1),
+          dieSize: Schema.Literal(4, 6, 8, 10, 12),
+          damageType: DamageTypeSchema,
+        }),
+      ),
+    }),
+    attackAbility: AbilitySchema,
+    attackAbilityModifier: AbilityModifier,
     attackBonus: AttackBonus,
-    strengthModifier: AbilityModifier,
+    damageAbilityModifier: AbilityModifier,
+    damageBonus: Schema.optionalWith(Schema.Number, { exact: true }),
   }),
   Schema.Struct({
     kind: Schema.Literal("statBlockAttack"),
@@ -3747,6 +3791,7 @@ function battleCreatureStateFromInit(
         selectedLoadout: creatureInit.selectedLoadout,
         speed: creatureInit.speed,
         attack: creatureInit.attack,
+        unarmedStrike: creatureInit.unarmedStrike,
         ...(creatureInit.offHandAttack === undefined
           ? {}
           : { offHandAttack: creatureInit.offHandAttack }),
@@ -3761,6 +3806,7 @@ function battleCreatureStateFromInit(
         attackDamageRiderProfiles: characterAttackDamageRiderProfiles(
           creatureInit.resources ?? [],
           creatureInit.unitFeatures ?? [],
+          creatureInit.characterUnitRefs,
           classLevels,
         ),
         saveDamageReplacementProfiles: characterSaveDamageReplacementProfiles(
@@ -4458,6 +4504,7 @@ function characterOngoingFeatureProfiles(
 function characterAttackDamageRiderProfiles(
   resources: readonly CharacterBattleResourceInit[],
   features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
   classLevels: readonly CharacterBattleClassLevel[],
 ): ReadonlyMap<
   UnitRecord["id"],
@@ -4470,7 +4517,12 @@ function characterAttackDamageRiderProfiles(
   return new Map(
     units.flatMap((unit) => {
       const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
-      return profile?.kind === "attackDamageRider"
+      return profile?.kind === "attackDamageRider" &&
+        unitRefSupportsProfile(
+          unitRefs,
+          unit.id,
+          ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+        )
         ? [[unit.id, profile] as const]
         : [];
     }),
@@ -4936,7 +4988,7 @@ function resolveAttack(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Unarmed Strike damage does not use a rolled damage fill.",
+        "Fixed Unarmed Strike damage does not use a rolled damage fill.",
       );
     }
     const concentrationSave = concentrationSavingThrowHole(
@@ -6223,12 +6275,15 @@ function fixedAttackDamageAmount(
   attack: SupportedAttackActionOption,
 ): number | null {
   return Match.value(attack).pipe(
-    Match.when({ kind: "unarmedStrikeDamage" }, () =>
-      damageAmountByTypeAfterTargetAdjustments(
+    Match.when({ kind: "unarmedStrike" }, (unarmedStrike) => {
+      if (unarmedStrike.effect.damage.kind !== "base") {
+        return null;
+      }
+      return damageAmountByTypeAfterTargetAdjustments(
         target,
         new Map([
           [
-            "bludgeoning",
+            unarmedStrike.effect.damage.damageType,
             Math.max(
               0,
               attackDamageModifier(attack) +
@@ -6236,8 +6291,8 @@ function fixedAttackDamageAmount(
             ),
           ],
         ]),
-      ),
-    ),
+      );
+    }),
     Match.when({ kind: "weapon" }, () => null),
     Match.when({ kind: "statBlockAttack" }, () => null),
     Match.exhaustive,
@@ -6331,7 +6386,7 @@ function attackUsesWeaponOrUnarmedStrikeCriticalRange(
 ): boolean {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, () => true),
-    Match.when({ kind: "unarmedStrikeDamage" }, () => true),
+    Match.when({ kind: "unarmedStrike" }, () => true),
     Match.when({ kind: "statBlockAttack" }, () => false),
     Match.exhaustive,
   );
@@ -6935,7 +6990,7 @@ function resolveOpportunityAttackCommand(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Opportunity Attack Unarmed Strike damage does not use a rolled damage fill.",
+        "Opportunity Attack Fixed Unarmed Strike damage does not use a rolled damage fill.",
       );
     }
     const concentrationSave = concentrationSavingThrowHole(
@@ -12290,7 +12345,9 @@ function attackActionOptionsForActor(
 ): readonly SupportedAttackActionOption[] {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind === "character") {
-    return actor.origin.attack == null ? [] : [actor.origin.attack];
+    return actor.origin.attack == null
+      ? [actor.origin.unarmedStrike]
+      : [actor.origin.attack, actor.origin.unarmedStrike];
   }
 
   if (actor?.origin.kind === "statBlock") {
@@ -12762,7 +12819,7 @@ function statBlockSectionMatchesSubject(
 ): boolean {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, () => section === undefined),
-    Match.when({ kind: "unarmedStrikeDamage" }, () => section === undefined),
+    Match.when({ kind: "unarmedStrike" }, () => section === undefined),
     Match.when(
       { kind: "statBlockAttack" },
       (option) => option.part.section === (section ?? "actions"),
@@ -12776,7 +12833,7 @@ function statBlockSubjectPart(attack: SupportedAttackActionOption): {
 } {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, () => ({})),
-    Match.when({ kind: "unarmedStrikeDamage" }, () => ({})),
+    Match.when({ kind: "unarmedStrike" }, () => ({})),
     Match.when({ kind: "statBlockAttack" }, (option) =>
       option.part.section === "actions"
         ? {}
@@ -12934,7 +12991,7 @@ function attackTargetConstraint(
     Match.when({ kind: "weapon" }, (option) =>
       weaponTargetConstraint(option.weapon),
     ),
-    Match.when({ kind: "unarmedStrikeDamage" }, () => ({
+    Match.when({ kind: "unarmedStrike" }, () => ({
       kind: "meleeReach" as const,
       reachFeet: movementFeet(5),
     })),
@@ -12978,7 +13035,7 @@ function selectedWeaponDamage(weapon: WeaponRecord): BattleWeaponDamage {
 function attackActionOptionName(attack: SupportedAttackActionOption): string {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) => weaponAttack.weapon.name),
-    Match.when({ kind: "unarmedStrikeDamage" }, () => "Unarmed Strike"),
+    Match.when({ kind: "unarmedStrike" }, () => "Unarmed Strike"),
     Match.when(
       { kind: "statBlockAttack" },
       (statBlockAttack) => statBlockAttack.attack.name,
@@ -12997,12 +13054,9 @@ function attackDamage(attack: SupportedAttackActionOption): {
     Match.when({ kind: "weapon" }, (weaponAttack) =>
       selectedWeaponDamage(weaponAttack.weapon),
     ),
-    Match.when({ kind: "unarmedStrikeDamage" }, () => ({
-      dice: 0,
-      dieSize: 1,
-      flat: 1,
-      damageType: "bludgeoning" as const,
-    })),
+    Match.when({ kind: "unarmedStrike" }, (unarmedStrike) =>
+      unarmedStrikeAttackDamage(unarmedStrike),
+    ),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const damage = statBlockAttackDamage(statBlockAttack);
       return {
@@ -13012,6 +13066,44 @@ function attackDamage(attack: SupportedAttackActionOption): {
         damageType: damage.damageType,
       };
     }),
+    Match.exhaustive,
+  );
+}
+
+function unarmedStrikeAttackDamage(
+  attack: CharacterUnarmedStrikeActionOption,
+): {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flat?: number;
+  readonly damageType: DamageType;
+} {
+  return Match.value(attack.effect.damage).pipe(
+    Match.when({ kind: "base" }, (damage) => ({
+      dice: 0,
+      dieSize: 1,
+      flat: damage.flat,
+      damageType: damage.damageType,
+    })),
+    Match.when({ kind: "authoredReplacement" }, (damage) => ({
+      dice: damage.dice,
+      dieSize: damage.dieSize,
+      damageType: damage.damageType,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function unarmedStrikeDamageDiceExpr(
+  attack: CharacterUnarmedStrikeActionOption,
+  critical: boolean,
+): DiceExpr | null {
+  return Match.value(attack.effect.damage).pipe(
+    Match.when({ kind: "base" }, () => null),
+    Match.when({ kind: "authoredReplacement" }, (damage) => ({
+      dice: critical ? damage.dice * 2 : damage.dice,
+      dieSize: damage.dieSize,
+    })),
     Match.exhaustive,
   );
 }
@@ -13184,7 +13276,12 @@ function attackDamageComponents(
         },
       ];
     }),
-    Match.when({ kind: "unarmedStrikeDamage" }, () => []),
+    Match.when({ kind: "unarmedStrike" }, (unarmedStrike) => {
+      const expr = unarmedStrikeDamageDiceExpr(unarmedStrike, critical);
+      return expr === null
+        ? []
+        : [{ expr, damageType: unarmedStrike.effect.damage.damageType }];
+    }),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const damage = statBlockAttackDamage(statBlockAttack);
       const base = damage.expr;
@@ -13229,8 +13326,13 @@ function attackDamageModifier(attack: SupportedAttackActionOption): number {
       ),
     ),
     Match.when(
-      { kind: "unarmedStrikeDamage" },
-      (unarmedStrike) => 1 + Number(unarmedStrike.strengthModifier),
+      { kind: "unarmedStrike" },
+      (unarmedStrike) =>
+        (unarmedStrike.effect.damage.kind === "base"
+          ? unarmedStrike.effect.damage.flat
+          : 0) +
+        Number(unarmedStrike.damageAbilityModifier) +
+        (unarmedStrike.damageBonus ?? 0),
     ),
     Match.when(
       { kind: "statBlockAttack" },
@@ -13247,7 +13349,7 @@ function attackActionBonus(attack: SupportedAttackActionOption): AttackBonus {
       attackBonus(weaponAttack.abilityModifier),
     ),
     Match.when(
-      { kind: "unarmedStrikeDamage" },
+      { kind: "unarmedStrike" },
       (unarmedStrike) => unarmedStrike.attackBonus,
     ),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) =>

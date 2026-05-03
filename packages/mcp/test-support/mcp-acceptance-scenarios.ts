@@ -390,14 +390,14 @@ export async function verifyBaselineVertical(client: Client) {
         sourceDraftId: draftId,
         combatantId: "fighter",
         initiative: 18,
-          side: "party",
+        side: "party",
       },
       {
         kind: "statBlock",
         statBlockId: "stat_block_goblin_warrior",
         combatantId: "goblin",
         initiative: 7,
-          side: "opposition",
+        side: "opposition",
       },
     ],
   });
@@ -409,6 +409,7 @@ export async function verifyBaselineVertical(client: Client) {
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
     [
+      "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Second Wind",
@@ -528,21 +529,21 @@ export async function verifyWidthVertical(client: Client) {
         sourceDraftId: fighterDraftId,
         combatantId: "fighter",
         initiative: 18,
-          side: "party",
+        side: "party",
       },
       {
         kind: "characterSession",
         sourceDraftId: wizardDraftId,
         combatantId: "wizard",
         initiative: 14,
-          side: "party",
+        side: "party",
       },
       {
         kind: "statBlock",
         statBlockId: "stat_block_skeleton",
         combatantId: "skeleton",
         initiative: 8,
-          side: "opposition",
+        side: "opposition",
       },
     ],
   });
@@ -558,6 +559,7 @@ export async function verifyWidthVertical(client: Client) {
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
     [
+      "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Second Wind",
