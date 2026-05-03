@@ -6,8 +6,7 @@ This package contains reusable reducer/model algebras. It is separate from
 - `@dnd/shared` owns low-level scalar/domain types and package-neutral utilities.
 - `@dnd/shared-algebras` owns reusable semantic algebras that can be consumed by
   runtime packages such as `@dnd/battle-runtime`,
-  `@dnd/character-creation-runtime`, legacy `@dnd/core`, and legacy
-  `@dnd/surface-runtime-correction`.
+  `@dnd/character-creation-runtime`, and legacy `@dnd/core`.
 
 ## Surface Dependency Policy
 
@@ -48,10 +47,29 @@ vocabulary:
 - `FilledHoleValue` carries keyed answers supplied by the caller.
 
 The algebra intentionally does not own act subjects, battle state, Unit support
-gates, or execution semantics. Those remain in the consuming runtime. Legacy
-Correction uses the broad runtime hole variants. `@dnd/battle-runtime` may reuse
-the branded hole identity types, but it should expose only the battle hole/fill
-variants that its own reducer can discover and resolve.
+gates, or execution semantics. Those remain in the consuming runtime.
+`@dnd/battle-runtime` may reuse the branded hole identity types, but it should
+expose only the battle hole/fill variants that its own reducer can discover and
+resolve.
+
+## MBT Boundary
+
+MBT should prove reducer facts after Surface decode/projection. It must not
+enumerate all Surface-authored content multiplied by all battle or character
+states. Use ordinary table-driven contract tests for broad Surface vocabulary
+and authored-unit coverage. Reserve MBT for small semantic algebras and selected
+high-risk integrated reducer flows where state transition parity is the fact
+being proved.
+
+Keep coverage goals distinct:
+
+- **Surface vocabulary coverage:** representative fixtures for Surface language
+  constructs and their projection contract into reducer facts.
+- **Authored-unit coverage:** deterministic contract tests for each shipped
+  authored record's decode, support-profile result, projected holes/effects,
+  resource cost, and expected resolver frontier or execution path.
+- **Reducer behavior coverage:** focused algebra tests and selective MBT for
+  state transitions after inputs have already crossed the Surface boundary.
 
 ## Verification
 

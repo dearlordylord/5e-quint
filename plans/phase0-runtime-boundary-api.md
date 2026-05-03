@@ -3,7 +3,10 @@
 Status: draft audit artifact for Phase 0  
 Notes from audit:
 
-- This draft uses `packages/surface-runtime-correction/VOCABULARY.md`, `ARCHITECTURE_GRAPH.md`, `MBT_TO_REDUCER_GRAPH.md`, and current reducer source.
+- This draft used the now-deleted `packages/surface-runtime-correction`
+  vocabulary, architecture, MBT graph, and reducer source as historical input.
+  Use `git show <sha>:packages/surface-runtime-correction/<file>` if that
+  baseline is needed.
 - Phase 0 artifacts are present as `plans/phase1-fighter-manifest.md` and `plans/phase0-surface-unit-availability.md`. This draft follows their selected Orc Soldier Fighter / Goblin Warrior vertical and Surface package decision.
 - Core files were read only to identify old facts and handoff shapes. The promoted runtime path must not preserve Core package boundaries.
 - Review passes applied: RAW/SRD consistency, ubiquitous language, and architecture/depth. The tightened points are the explicit SRD Stat Block catalog boundary, Phase 1-only battle subjects, and stronger domain identities for holes, choices, creature initialization inputs, and snapshot projections.
@@ -672,8 +675,8 @@ phase-1 protocol exposes only Attack target, Attack Roll, and damage roll
 holes/fills for supported character weapon and Goblin Warrior Stat Block attack
 options. End Turn is a runtime command and must not accept fills. Later tasks
 should add only battle-owned variants that are actually discoverable and
-resolvable. Do not expose Correction's Surface/Unit/effect execution holes
-through `@dnd/battle-runtime`.
+resolvable. Do not expose deleted Correction Surface/Unit/effect execution
+holes through `@dnd/battle-runtime`.
 
 ```ts
 export type BattleHoleId = HoleId;

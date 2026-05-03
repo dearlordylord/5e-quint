@@ -1,6 +1,10 @@
 # Surface Runtime Correction Reducer Design
 
-This document records the reducer-direction decisions for
+Status: archived historical design. The active package
+`packages/surface-runtime-correction` has been deleted; use git history for the
+old files if a restoration task needs source material.
+
+This document recorded the reducer-direction decisions for
 `packages/surface-runtime-correction`.
 
 It is intentionally narrower than

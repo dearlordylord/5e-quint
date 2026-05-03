@@ -30,7 +30,8 @@ Package/import consequences:
 - Runtime packages import schemas, types, and decode helpers from `@dnd/surface`.
 - Update repo docs to refer to `@dnd/surface` as the active package; historical prototype-package references should be explicitly archival or removed.
 - Keep authored SRD content either in this package during Phase 1 or move it behind a later `@dnd/srd-units` artifact without changing Surface type imports.
-- Replace `@dnd/surface` imports in `packages/surface-runtime-correction` when its patterns are reused.
+- Deleted `packages/surface-runtime-correction` patterns may be read from git
+  history as source material when they are reused.
 - Do not introduce `@dnd/surface-runtime-*` package-specific content languages.
 
 ## Unit Library Boundary
