@@ -175,6 +175,10 @@ flowchart TD
   damage is requested and applied only for failed outcomes.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
+- Optional attack damage riders are retained feature profiles, not named
+  reducer branches. The Attack replay exposes eligible rider choices on the
+  damage hole and stores once-per-turn rider use in turn resources; Sneak Attack
+  is the first admitted profile.
 - Unsupported Stat Block attack branches such as Multiattack and unsupported
   conditional on-hit riders are filtered by support gates and are not copied
   into MCP state.

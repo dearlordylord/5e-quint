@@ -1,4 +1,5 @@
 import {
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   type BattleUnitRef,
   type BattleUnitSupportProfile,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -15,6 +16,9 @@ const BONUS_ACTION_HIDE_SUPPORT_PROFILES = [
 ] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
 const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILES = [
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
+const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILES = [
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
 ] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
 
 export function characterUnitRefsWithBattleSupportProfiles(
@@ -96,6 +100,17 @@ function battleSupportProfilesForUnit(
     );
   }
 
+  const attackDamageRiderSupport =
+    supportedAttackDamageRiderProfileForUnit(unit);
+  if (attackDamageRiderSupport === "unsupported") {
+    throw new Error(
+      `Unsupported battle attack-damage rider Unit hook: ${unit.id}.`,
+    );
+  }
+  if (attackDamageRiderSupport === "attackDamageRider") {
+    supportProfiles.push(...ATTACK_DAMAGE_RIDER_SUPPORT_PROFILES);
+  }
+
   return supportProfiles;
 }
 
@@ -122,5 +137,34 @@ function supportedCriticalRangeProfileForUnit(
       effect.weaponFilter === undefined,
   )
     ? "criticalRange19"
+    : "unsupported";
+}
+
+type AttackDamageRiderSupportProfile =
+  | "attackDamageRider"
+  | "unsupported"
+  | null;
+
+function supportedAttackDamageRiderProfileForUnit(
+  unit: UnitRecord,
+): AttackDamageRiderSupportProfile {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "on_hit_trigger"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  return mechanics.optional === true &&
+    mechanics.usageLimit?.kind === "once_per_turn" &&
+    mechanics.trigger.kind === "attack_roll_hit" &&
+    mechanics.trigger.weaponFilter === "finesse_or_ranged" &&
+    mechanics.trigger.rollRequirement ===
+      "advantage_or_ally_adjacent_without_disadvantage" &&
+    mechanics.effect.kind === "add_attack_damage_dice" &&
+    mechanics.effect.damageType === "same_as_attack" &&
+    mechanics.effect.dice.kind === "class_level_table" &&
+    mechanics.effect.dice.className === unit.className
+    ? "attackDamageRider"
     : "unsupported";
 }

@@ -30,6 +30,10 @@ module battleRuntime {
   // - Classes/Fighter.md lines 64-68, Playing-the-Game.md lines 318-324 and
   //   740-746: Second Wind spends a Bonus Action and one Short/Long Rest
   //   feature use to restore 1d10 + Fighter level HP, clamped by maximum HP.
+  // - Classes/Rogue.md lines 63-69 and Playing-the-Game.md lines 700-703:
+  //   Sneak Attack is an optional once-per-turn on-hit damage rider for an
+  //   eligible Finesse/Ranged attack, and its extra damage dice are doubled on
+  //   Critical Hits.
   // - Spells/Gaining-and-Casting.md lines 3-65 and 92-96, Rules-Glossary.md
   //   lines 698-702, and Classes/Wizard.md lines 56-82: prepared level-1
   //   Wizard spells spend Spell Slots; cantrips do not.
@@ -241,6 +245,8 @@ module battleRuntime {
     lastTurnActor: LastTurnActor,
     legendaryActionWindowConsumed: bool,
     fighterCriticalRange: FighterCriticalRange,
+    fighterSneakAttackSupported: bool,
+    fighterSneakAttackUsedThisTurn: bool,
   }
 
   type ActionSurgeResult = {
@@ -332,6 +338,8 @@ module battleRuntime {
     lastTurnActor: NoTurnEnded,
     legendaryActionWindowConsumed: false,
     fighterCriticalRange: DefaultCriticalRange,
+    fighterSneakAttackSupported: false,
+    fighterSneakAttackUsedThisTurn: false,
   }
 
   // The battle runtime receives Initiative counts and the caller-resolved
@@ -602,6 +610,7 @@ module battleRuntime {
       goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else featureAdvanced.goblinLegendaryUsesRemaining,
       lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
+      fighterSneakAttackUsedThisTurn: false,
     }
   }
 
@@ -736,6 +745,9 @@ module battleRuntime {
   pure def withFighterImprovedCriticalRange19(state: BattleState): BattleState =
     { ...state, fighterCriticalRange: ImprovedCriticalRange19 }
 
+  pure def withFighterSneakAttack(state: BattleState): BattleState =
+    { ...state, fighterSneakAttackSupported: true }
+
   pure def withGoblinHp(state: BattleState, hp: int, tempHp: int): BattleState =
     { ...state, goblin: { ...state.goblin, hp: hp, tempHp: tempHp } }
 
@@ -768,6 +780,49 @@ module battleRuntime {
         { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
       else
         { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
+    }
+
+  pure def fighterSneakAttackEligible(
+    state: BattleState,
+    rollHasAdvantage: bool,
+    allyAdjacent: bool,
+    rollHasDisadvantage: bool,
+  ): bool =
+    state.fighterSneakAttackSupported and
+    not(state.fighterSneakAttackUsedThisTurn) and
+    (rollHasAdvantage or (allyAdjacent and not(rollHasDisadvantage)))
+
+  pure def resolveAttackWithOptionalSneakAttack(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    weaponDamageRoll: int,
+    sneakAttackDamageRoll: int,
+    selectedSneakAttack: bool,
+    rollHasAdvantage: bool,
+    allyAdjacent: bool,
+    rollHasDisadvantage: bool,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+      state
+    else {
+      val revealed = recordFighterAttackRoll(revealFighterHidden(state))
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
+        { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
+      else {
+        val sneakSelectedAndEligible =
+          selectedSneakAttack and
+          fighterSneakAttackEligible(revealed, rollHasAdvantage, allyAdjacent, rollHasDisadvantage)
+        val damage = weaponDamageRoll + 3 + (if (sneakSelectedAndEligible) sneakAttackDamageRoll else 0)
+        {
+          ...revealed,
+          goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded),
+          actionAvailable: false,
+          lightWeaponAttackMade: true,
+          fighterSneakAttackUsedThisTurn: sneakSelectedAndEligible or revealed.fighterSneakAttackUsedThisTurn,
+        }
+      }
     }
 
   pure def resolveAttackRecklessly(
@@ -1475,6 +1530,39 @@ module battleRuntime {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 3),
     }
+  }
+
+  run test_sneak_attack_optional_rider_applies_once_per_turn = {
+    val result = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, true, false, false, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 0),
+      assert(result.fighterSneakAttackUsedThisTurn),
+    }
+  }
+
+  run test_sneak_attack_adjacent_ally_branch_requires_no_disadvantage = {
+    val eligible = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, false, true, false, true)
+    val disadvantaged = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, false, true, true, true)
+    all {
+      assert(eligible.goblin.hp == 0),
+      assert(eligible.fighterSneakAttackUsedThisTurn),
+      assert(disadvantaged.goblin.hp == 3),
+      assert(not(disadvantaged.fighterSneakAttackUsedThisTurn)),
+    }
+  }
+
+  run test_sneak_attack_critical_uses_doubled_rider_dice_total = {
+    val result = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 20, 20, 2, 9, true, true, false, false, true)
+    all {
+      assert(result.goblin.hp == 0),
+      assert(result.fighterSneakAttackUsedThisTurn),
+    }
+  }
+
+  run test_sneak_attack_usage_resets_on_next_turn = {
+    val used = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, true, false, false, true)
+    assert(not(endTurn(used).fighterSneakAttackUsedThisTurn))
   }
 
   run test_goblin_attack_hit_applies_stat_block_damage_to_fighter = {

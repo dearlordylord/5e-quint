@@ -178,9 +178,11 @@ export type BattleWeaponDamage = Extract<
 
 export const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE =
   "weaponOrUnarmedCriticalRange19";
+export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
 export const BATTLE_UNIT_SUPPORT_PROFILES = [
   "bonusActionHide",
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
 ] as const;
 export type BattleUnitSupportProfile =
   (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number];
@@ -782,6 +784,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
   readonly attackRollMadeThisTurn: boolean;
+  readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
   };
@@ -808,6 +811,20 @@ export type OngoingFeatureRollModifier = {
   readonly affects: "selfRoll" | "rollsAgainstSelf";
   readonly on: "attackRoll";
   readonly abilityFilter?: readonly Ability[];
+};
+export type AttackDamageRider = {
+  readonly attackerId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly label: UnitRecord["name"];
+  readonly damage: {
+    readonly dice: number;
+    readonly dieSize: number;
+    readonly damageType: DamageType;
+  };
+};
+export type AttackDamageRiderUsage = {
+  readonly attackerId: CombatantId;
+  readonly unitId: UnitRecord["id"];
 };
 export type OngoingFeatureDamageModifier = {
   readonly amount: number;
@@ -989,6 +1006,13 @@ export type BattleCreatureState = {
           Extract<
             SupportedUnitFeatureProfile,
             { readonly kind: "ongoingFeature" }
+          >
+        >;
+        readonly attackDamageRiderProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "attackDamageRider" }
           >
         >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
@@ -1359,6 +1383,7 @@ export type BattleDamageRollHole = Extract<
 > & {
   readonly attack: SupportedAttackActionOption;
   readonly critical: boolean;
+  readonly attackDamageRiders?: readonly AttackDamageRider[];
 };
 export type BattleSpellDamageRollHole = Extract<
   RuntimeHole,
@@ -1602,6 +1627,21 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("rolledDice"),
     attack: SupportedAttackActionOptionSchema,
     critical: Schema.Boolean,
+    attackDamageRiders: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          attackerId: Schema.String,
+          unitId: Schema.String,
+          label: Schema.String,
+          damage: Schema.Struct({
+            dice: Schema.Number,
+            dieSize: Schema.Number,
+            damageType: Schema.String,
+          }),
+        }),
+      ),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1685,13 +1725,19 @@ export const BattleHoleSchema = Schema.Union(
 export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
 };
+export type BattleRolledDiceFill = Extract<
+  FilledHoleValue,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly selectedAttackDamageRiderUnitIds?: readonly UnitRecord["id"][];
+};
 export type BattleFill =
   | {
       readonly kind: "attackRoll";
       readonly holeId: BattleHoleId;
       readonly value: BattleAttackRollResult;
     }
-  | Extract<FilledHoleValue, { readonly kind: "rolledDice" }>
+  | BattleRolledDiceFill
   | {
       readonly kind: "savingThrowOutcome";
       readonly holeId: BattleHoleId;
@@ -1797,6 +1843,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "rolledDice";
       readonly holeId: string;
+      readonly selectedAttackDamageRiderUnitIds?: readonly string[];
       readonly value: readonly [
         {
           readonly results: readonly [number, ...number[]];
@@ -1914,6 +1961,10 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("rolledDice"),
       holeId: BattleHoleIdSchema,
+      selectedAttackDamageRiderUnitIds: Schema.optionalWith(
+        Schema.Array(Schema.String),
+        { exact: true },
+      ),
       value: Schema.NonEmptyArray(BattleRolledDiceGroupSchema),
     }),
     Schema.Struct({
@@ -2163,6 +2214,7 @@ const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
   attackRollMadeThisTurn: false,
+  attackDamageRidersUsedThisTurn: [],
   dashMovementBonusFeet: movementFeet(0),
   disengaged: false,
 });
@@ -2277,6 +2329,21 @@ type SupportedUnitFeatureProfile =
       readonly rollModifiers: readonly OngoingFeatureRollModifier[];
       readonly damageModifiers: readonly OngoingFeatureDamageModifier[];
       readonly resistances: readonly DamageType[];
+    }
+  | {
+      readonly kind: "attackDamageRider";
+      readonly unit: UnitRecord;
+      readonly optional: true;
+      readonly usageLimit: "oncePerTurn";
+      readonly weaponFilter: "finesseOrRanged";
+      readonly rollRequirement: "advantageOrAllyAdjacentWithoutDisadvantage";
+      readonly className: ClassName;
+      readonly classLevel: ClassLevel;
+      readonly dieSize: number;
+      readonly diceByLevel: readonly {
+        readonly atLevel: number;
+        readonly count: number;
+      }[];
     };
 
 export function startBattle(input: {
@@ -3669,6 +3736,11 @@ function battleCreatureStateFromInit(
           creatureInit.unitFeatures ?? [],
           classLevels,
         ),
+        attackDamageRiderProfiles: characterAttackDamageRiderProfiles(
+          creatureInit.resources ?? [],
+          creatureInit.unitFeatures ?? [],
+          classLevels,
+        ),
         ...(creatureInit.spellcasting === undefined
           ? {}
           : {
@@ -4355,6 +4427,28 @@ function characterOngoingFeatureProfiles(
   );
 }
 
+function characterAttackDamageRiderProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<SupportedUnitFeatureProfile, { readonly kind: "attackDamageRider" }>
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "attackDamageRider"
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
 export function characterBattleResourceUsage(
   resource: CharacterBattleResourceState,
 ): "limited" | "unlimited" {
@@ -4742,6 +4836,22 @@ function resolveAttack(
     fillSet.attackRoll,
     criticalThreshold,
   );
+  const eligibleDamageRiders = hit
+    ? eligibleAttackDamageRiders(
+        attackRolledState,
+        input.subject.actorId,
+        target.combatantId,
+        attack,
+        fillSet.attackRoll,
+      )
+    : [];
+  const selectedDamageRiders =
+    fillSet.damageRoll === undefined
+      ? []
+      : (selectedAttackDamageRiders(
+          eligibleDamageRiders,
+          fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
+        ) ?? []);
   const fixedDamageAmount = hit
     ? fixedAttackDamageAmount(
         attackRolledState.combatants.get(input.subject.actorId),
@@ -4840,6 +4950,7 @@ function resolveAttack(
         attack,
         critical,
         fillSet.attackRoll,
+        eligibleDamageRiders,
         ongoingFeatureDamageModifier(
           attackRolledState.combatants.get(input.subject.actorId),
           attack,
@@ -4860,6 +4971,7 @@ function resolveAttack(
       attack,
       critical,
       fillSet.attackRoll,
+      eligibleDamageRiders,
       ongoingFeatureDamageModifier(
         attackRolledState.combatants.get(input.subject.actorId),
         attack,
@@ -4875,6 +4987,7 @@ function resolveAttack(
       fillSet.damageRoll,
       critical,
       fillSet.attackRoll,
+      selectedDamageRiders,
     );
     const concentrationSave = concentrationSavingThrowHole(
       target,
@@ -4910,6 +5023,7 @@ function resolveAttack(
         attack,
         fillSet,
         critical,
+        selectedDamageRiders,
       ),
       input.subject.actorId,
       attack,
@@ -5528,12 +5642,29 @@ function resolveOffHandAttack(
     fillSet.attackRoll,
     criticalThreshold,
   );
+  const eligibleDamageRiders = hit
+    ? eligibleAttackDamageRiders(
+        attackRolledState,
+        input.subject.actorId,
+        target.combatantId,
+        attack,
+        fillSet.attackRoll,
+      )
+    : [];
+  const selectedDamageRiders =
+    fillSet.damageRoll === undefined
+      ? []
+      : (selectedAttackDamageRiders(
+          eligibleDamageRiders,
+          fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
+        ) ?? []);
   if (hit && fillSet.damageRoll == null) {
     return needsHolesResult(attackRolledState, input.subject, [
       attackDamageHole(
         attack,
         critical,
         fillSet.attackRoll,
+        eligibleDamageRiders,
         ongoingFeatureDamageModifier(
           attackRolledState.combatants.get(input.subject.actorId),
           attack,
@@ -5554,6 +5685,7 @@ function resolveOffHandAttack(
       attack,
       critical,
       fillSet.attackRoll,
+      eligibleDamageRiders,
       ongoingFeatureDamageModifier(
         attackRolledState.combatants.get(input.subject.actorId),
         attack,
@@ -5569,6 +5701,7 @@ function resolveOffHandAttack(
       fillSet.damageRoll,
       critical,
       fillSet.attackRoll,
+      selectedDamageRiders,
     );
     const concentrationSave = concentrationSavingThrowHole(
       target,
@@ -5597,10 +5730,6 @@ function resolveOffHandAttack(
       );
     }
   }
-  const nextTurnResources = {
-    ...input.state.currentTurnResources,
-    currentHasBonusAction: false,
-  };
   const nextState = hit
     ? applyAttackDamage(
         attackRolledState,
@@ -5609,11 +5738,15 @@ function resolveOffHandAttack(
         attack,
         fillSet,
         critical,
+        selectedDamageRiders,
       )
     : attackRolledState;
   const state = normalizeBattleGrapples({
     ...nextState,
-    currentTurnResources: nextTurnResources,
+    currentTurnResources: {
+      ...nextState.currentTurnResources,
+      currentHasBonusAction: false,
+    },
   });
   return { tag: "resolved", state, snapshot: snapshotBattle(state) };
 }
@@ -5949,12 +6082,20 @@ function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
 }
 
 function validateAttackDamageFill(
-  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  fill: BattleRolledDiceFill,
   attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll: AttackRollResult,
+  eligibleAttackDamageRiders: readonly AttackDamageRider[],
   ongoingDamageModifier = 0,
 ): string | null {
+  const selectedRiders = selectedAttackDamageRiders(
+    eligibleAttackDamageRiders,
+    fill.selectedAttackDamageRiderUnitIds,
+  );
+  if (selectedRiders === null) {
+    return "Selected attack damage rider is not eligible for this attack.";
+  }
   if (
     fill.holeId !==
     attackDamageHoleId(attack, critical, attackRoll, ongoingDamageModifier)
@@ -5969,6 +6110,7 @@ function validateAttackDamageFill(
     attack,
     critical,
     attackRoll,
+    selectedRiders,
   );
 }
 
@@ -5977,8 +6119,14 @@ function validateRolledDiceForWeaponAttack(
   attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll: AttackRollResult,
+  attackDamageRiders: readonly AttackDamageRider[],
 ): string | null {
-  const components = attackDamageComponents(attack, critical, attackRoll);
+  const components = attackDamageComponents(
+    attack,
+    critical,
+    attackRoll,
+    attackDamageRiders,
+  );
   if (groups.length !== components.length) {
     return "filled damage groups do not match current attack damage";
   }
@@ -6332,6 +6480,7 @@ function resetBattleTurnResources(
   return {
     ...base,
     attackRollMadeThisTurn: false,
+    attackDamageRidersUsedThisTurn: [],
     dashMovementBonusFeet: movementFeet(0),
     disengaged: false,
   };
@@ -6674,6 +6823,22 @@ function resolveOpportunityAttackCommand(
     fillSet.attackRoll,
     criticalThreshold,
   );
+  const eligibleDamageRiders = hit
+    ? eligibleAttackDamageRiders(
+        attackRolledState,
+        subject.reactorId,
+        subject.targetId,
+        attack,
+        fillSet.attackRoll,
+      )
+    : [];
+  const selectedDamageRiders =
+    fillSet.damageRoll === undefined
+      ? []
+      : (selectedAttackDamageRiders(
+          eligibleDamageRiders,
+          fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
+        ) ?? []);
   if (!hit && fillSet.damageRoll != null) {
     return invalidResult(
       input.state,
@@ -6747,6 +6912,7 @@ function resolveOpportunityAttackCommand(
         attack,
         critical,
         fillSet.attackRoll,
+        eligibleDamageRiders,
         ongoingFeatureDamageModifier(
           attackRolledState.combatants.get(subject.reactorId),
           attack,
@@ -6759,6 +6925,7 @@ function resolveOpportunityAttackCommand(
     attack,
     critical,
     fillSet.attackRoll,
+    eligibleDamageRiders,
     ongoingFeatureDamageModifier(
       attackRolledState.combatants.get(subject.reactorId),
       attack,
@@ -6774,6 +6941,7 @@ function resolveOpportunityAttackCommand(
     fillSet.damageRoll,
     critical,
     fillSet.attackRoll,
+    selectedDamageRiders,
   );
   const concentrationSave = concentrationSavingThrowHole(target, damageAmount);
   if (concentrationSave !== null) {
@@ -6797,6 +6965,7 @@ function resolveOpportunityAttackCommand(
     attack,
     fillSet,
     critical,
+    selectedDamageRiders,
   );
   return {
     tag: "resolved",
@@ -8198,6 +8367,53 @@ function classLevelForClass(
   );
 }
 
+function parseAttackDamageRiderUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "attackDamageRider" }
+> | null {
+  if (unit.kind !== "class_feature") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "on_hit_trigger" ||
+    mechanics.optional !== true ||
+    mechanics.usageLimit?.kind !== "once_per_turn" ||
+    mechanics.trigger.kind !== "attack_roll_hit" ||
+    mechanics.trigger.weaponFilter !== "finesse_or_ranged" ||
+    mechanics.trigger.rollRequirement !==
+      "advantage_or_ally_adjacent_without_disadvantage" ||
+    mechanics.effect.kind !== "add_attack_damage_dice" ||
+    mechanics.effect.damageType !== "same_as_attack" ||
+    mechanics.effect.dice.kind !== "class_level_table" ||
+    mechanics.effect.dice.className !== unit.className
+  ) {
+    return null;
+  }
+  const classLevel = findCharacterClassLevel(
+    classLevels,
+    mechanics.effect.dice.className,
+  );
+  if (classLevel === undefined) {
+    return null;
+  }
+  return {
+    kind: "attackDamageRider",
+    unit,
+    optional: true,
+    usageLimit: "oncePerTurn",
+    weaponFilter: "finesseOrRanged",
+    rollRequirement: "advantageOrAllyAdjacentWithoutDisadvantage",
+    className: mechanics.effect.dice.className,
+    classLevel,
+    dieSize: mechanics.effect.dice.dieSize,
+    diceByLevel: mechanics.effect.dice.dice,
+  };
+}
+
 function parseOngoingFeatureInitialExpiration(
   expiration: "start_of_next_turn" | "end_of_next_turn",
 ): "startOfNextTurn" | "endOfNextTurn" {
@@ -8469,7 +8685,8 @@ function parseSupportedUnitFeatureProfile(
   return (
     parseExtraActionGrantUnitFeatureProfile(unit) ??
     parseSelfBonusActionHealingUnitFeatureProfile(unit, classLevels) ??
-    parseOngoingFeatureUnitFeatureProfile(unit, classLevels)
+    parseOngoingFeatureUnitFeatureProfile(unit, classLevels) ??
+    parseAttackDamageRiderUnitFeatureProfile(unit, classLevels)
   );
 }
 
@@ -9625,6 +9842,7 @@ function applyAttackDamage(
   attack: SupportedAttackActionOption,
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
   critical: boolean,
+  attackDamageRiders: readonly AttackDamageRider[] = [],
 ): BattleState {
   if (fillSet.damageRoll == null) {
     return state;
@@ -9641,6 +9859,7 @@ function applyAttackDamage(
     fillSet.damageRoll,
     critical,
     fillSet.attackRoll,
+    attackDamageRiders,
   );
   const damaged = applyHpDamage(target, damageAmount, {
     deathFailuresAtZeroHp: critical ? 2 : 1,
@@ -9656,7 +9875,31 @@ function applyAttackDamage(
     (target.concentration !== null && damaged.concentration === null)
       ? breakBattleConcentration(nextState, targetId)
       : nextState;
-  return normalizeBattleGrapples(concentrated);
+  return normalizeBattleGrapples(
+    recordAttackDamageRidersUsed(concentrated, attackDamageRiders),
+  );
+}
+
+function recordAttackDamageRidersUsed(
+  state: BattleState,
+  attackDamageRiders: readonly AttackDamageRider[],
+): BattleState {
+  if (attackDamageRiders.length === 0) {
+    return state;
+  }
+  return {
+    ...state,
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      attackDamageRidersUsedThisTurn: [
+        ...state.currentTurnResources.attackDamageRidersUsedThisTurn,
+        ...attackDamageRiders.map((rider) => ({
+          attackerId: rider.attackerId,
+          unitId: rider.unitId,
+        })),
+      ],
+    },
+  };
 }
 
 type BattleDamageContext = {
@@ -10018,11 +10261,17 @@ function attackDamageAmount(
   attacker: BattleCreatureState | undefined,
   target: BattleCreatureState,
   attack: SupportedAttackActionOption,
-  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  damageRoll: BattleRolledDiceFill,
   critical: boolean,
   attackRoll?: AttackRollResult,
+  attackDamageRiders: readonly AttackDamageRider[] = [],
 ): number {
-  const components = attackDamageComponents(attack, critical, attackRoll);
+  const components = attackDamageComponents(
+    attack,
+    critical,
+    attackRoll,
+    attackDamageRiders,
+  );
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
     (totals, group, index) => {
       const component = components[index];
@@ -11769,12 +12018,14 @@ function attackDamageHole(
   attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
+  attackDamageRiders: readonly AttackDamageRider[] = [],
   ongoingDamageModifier = 0,
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(
     attack,
     critical,
     attackRoll,
+    [],
     ongoingDamageModifier,
   );
   const name = attackActionOptionName(attack);
@@ -11792,6 +12043,7 @@ function attackDamageHole(
     label: `${name} damage (${expression})`,
     attack,
     critical,
+    ...(attackDamageRiders.length === 0 ? {} : { attackDamageRiders }),
   };
 }
 
@@ -11806,6 +12058,7 @@ function attackDamageHoleId(
       attack,
       critical,
       attackRoll,
+      [],
       ongoingDamageModifier,
     )}`,
   );
@@ -12303,10 +12556,7 @@ function statBlockSectionMatchesSubject(
 ): boolean {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, () => section === undefined),
-    Match.when(
-      { kind: "unarmedStrikeDamage" },
-      () => section === undefined,
-    ),
+    Match.when({ kind: "unarmedStrikeDamage" }, () => section === undefined),
     Match.when(
       { kind: "statBlockAttack" },
       (option) => option.part.section === (section ?? "actions"),
@@ -12565,12 +12815,152 @@ type AttackDamageComponent = {
   readonly damageType: DamageType;
 };
 
+function attackDamageRiderDiceCount(
+  profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "attackDamageRider" }
+  >,
+): number {
+  return profile.diceByLevel.reduce(
+    (current, tier) =>
+      Number(profile.classLevel) >= tier.atLevel
+        ? Math.max(current, tier.count)
+        : current,
+    0,
+  );
+}
+
+function attackDamageRiderForProfile(
+  profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "attackDamageRider" }
+  >,
+  attackerId: CombatantId,
+  damageType: DamageType,
+): AttackDamageRider | null {
+  const dice = attackDamageRiderDiceCount(profile);
+  return dice > 0
+    ? {
+        attackerId,
+        unitId: profile.unit.id,
+        label: profile.unit.name,
+        damage: {
+          dice,
+          dieSize: profile.dieSize,
+          damageType,
+        },
+      }
+    : null;
+}
+
+function weaponAttackSupportsFinesseOrRanged(
+  attack: SupportedAttackActionOption,
+): attack is CharacterWeaponAttackActionOption {
+  return (
+    attack.kind === "weapon" &&
+    (attack.weapon.usage === "ranged" ||
+      (attack.weapon.properties ?? []).some(
+        (property) => property.kind === "finesse",
+      ))
+  );
+}
+
+function targetHasAdjacentNonIncapacitatedAlly(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+): boolean {
+  return [...state.combatants].some(([allyId, ally]) => {
+    const distance = combatantDistanceFeet(state, allyId, targetId);
+    return (
+      allyId !== attackerId &&
+      allyId !== targetId &&
+      combatantsAreAllies(state, attackerId, allyId) &&
+      !isIncapacitated(ally.conditions) &&
+      distance !== undefined &&
+      distance <= 5
+    );
+  });
+}
+
+function eligibleAttackDamageRiders(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+  attackRoll: AttackRollResult,
+): readonly AttackDamageRider[] {
+  const attacker = state.combatants.get(attackerId);
+  if (
+    !isCharacterBattleCreatureState(attacker) ||
+    !weaponAttackSupportsFinesseOrRanged(attack)
+  ) {
+    return [];
+  }
+  const hasRequiredRollContext =
+    attackRoll.rollMode === "advantage" ||
+    (targetHasAdjacentNonIncapacitatedAlly(state, attackerId, targetId) &&
+      attackRoll.rollMode !== "disadvantage");
+  if (!hasRequiredRollContext) {
+    return [];
+  }
+  return [...attacker.origin.attackDamageRiderProfiles.values()].flatMap(
+    (profile): readonly AttackDamageRider[] => {
+      if (
+        state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+          (usage) =>
+            usage.attackerId === attackerId && usage.unitId === profile.unit.id,
+        )
+      ) {
+        return [];
+      }
+      const rider = attackDamageRiderForProfile(
+        profile,
+        attackerId,
+        selectedWeaponDamage(attack.weapon).damageType,
+      );
+      return rider === null ? [] : [rider];
+    },
+  );
+}
+
+function selectedAttackDamageRiders(
+  eligibleRiders: readonly AttackDamageRider[],
+  selectedUnitIds: readonly UnitRecord["id"][] | undefined,
+): readonly AttackDamageRider[] | null {
+  if (selectedUnitIds === undefined || selectedUnitIds.length === 0) {
+    return [];
+  }
+  if (new Set(selectedUnitIds).size !== selectedUnitIds.length) {
+    return null;
+  }
+  const selected: AttackDamageRider[] = [];
+  for (const unitId of selectedUnitIds) {
+    const rider = eligibleRiders.find(
+      (candidate) => candidate.unitId === unitId,
+    );
+    if (rider === undefined) {
+      return null;
+    }
+    selected.push(rider);
+  }
+  return selected;
+}
+
 function attackDamageComponents(
   attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll?: AttackRollResult,
+  attackDamageRiders: readonly AttackDamageRider[] = [],
 ): readonly AttackDamageComponent[] {
-  return Match.value(attack).pipe(
+  const riderComponents = attackDamageRiders.map((rider) => ({
+    expr: {
+      dice: critical ? rider.damage.dice * 2 : rider.damage.dice,
+      dieSize: rider.damage.dieSize,
+    },
+    damageType: rider.damage.damageType,
+  }));
+  const baseComponents = Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) => {
       const damage = selectedWeaponDamage(weaponAttack.weapon);
       return [
@@ -12622,6 +13012,7 @@ function attackDamageComponents(
     }),
     Match.exhaustive,
   );
+  return [...baseComponents, ...riderComponents];
 }
 
 function attackDamageModifier(attack: SupportedAttackActionOption): number {
@@ -12664,10 +13055,16 @@ function weaponAttackDamageExpression(
   attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
+  attackDamageRiders: readonly AttackDamageRider[] = [],
   ongoingDamageModifier = 0,
 ): string {
   const damage = attackDamage(attack);
-  const components = attackDamageComponents(attack, critical, attackRoll);
+  const components = attackDamageComponents(
+    attack,
+    critical,
+    attackRoll,
+    attackDamageRiders,
+  );
   const modifier = signedModifier(
     attackDamageModifier(attack) + ongoingDamageModifier,
   );

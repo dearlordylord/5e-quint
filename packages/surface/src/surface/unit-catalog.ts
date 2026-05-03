@@ -28,6 +28,7 @@ import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
+import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
 import shieldInput from "../../content/shield.json";
 import sleepInput from "../../content/sleep.json";
 import thunderwaveInput from "../../content/thunderwave.json";
@@ -148,6 +149,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterImprovedCriticalInput,
     barbarianRageInput,
     barbarianRecklessAttackInput,
+    rogueSneakAttackInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
     featDefenseInput,
