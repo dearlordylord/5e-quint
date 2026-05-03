@@ -176,9 +176,10 @@ The support-profile parser surface should cover these profile families:
   ongoing features can retain use-count resources; first-attack-roll ongoing
   features are retained as feature profiles without projecting a battle resource.
 - `UnitProfile.attackDamageRider`: an optional attack-roll-hit damage rider
-  profile. The replay exposes eligible rider choices on the attack damage hole,
-  records selected rider use in turn resources, and derives rider dice/type from
-  the admitted Unit profile plus the resolved attack.
+  profile using the `Rider` vocabulary from `UBIQUITOUS_LANGUAGE.md`. The replay
+  exposes eligible rider choices on the attack damage hole, records selected
+  rider use in turn resources, and derives rider dice/type from the admitted Unit
+  profile plus the resolved attack.
 - `UnitProfile.saveDamageReplacement`: a passive save-damage replacement
   profile. Save-gate damage replay derives the replacement from the retained
   Unit profile, the Saving Throw outcome, and the damage procedure.

@@ -31,6 +31,12 @@
 | **Decline**      | A creature in a reaction window explicitly chooses not to react. Declining does not consume the reaction resource.                                                                                                                | Pass                                           |
 | **Magic Action** | The 2024 action used to cast a spell with casting time of an action, or to use a feature or magic item that requires a Magic action. Casting a spell is one way to take the Magic action; not every Magic action is spellcasting. | Cast a Spell action, spell action, magic quota |
 
+## Riders
+
+- **Rider** is project vocabulary, not SRD vocabulary, for a secondary rules payload attached to a specific host procedure, trigger, or outcome. A rider is not a standalone action unless RAW makes it one.
+- An **Attack Damage Rider** is a rider whose host is an attack-roll hit or attack damage step, and whose payload adds, replaces, or modifies attack damage. It is optional only when the source rule gives the player a choice.
+- Prefer domain-specific names at implementation boundaries, such as `attackDamageRider`, `saveDamageReplacement`, or `reactionDamageReduction`, rather than using `rider` alone when the host procedure matters.
+
 ## Resource Consumption
 
 | Term        | Definition                                                                                                         | Aliases to avoid             |
