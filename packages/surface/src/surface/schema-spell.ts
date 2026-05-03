@@ -406,6 +406,7 @@ type EffectAtom =
   | {
       readonly kind: "modify_crit_range";
       readonly threshold: number;
+      readonly attackRollFilter: "weapon_or_unarmed_strike";
       readonly weaponFilter?: WeaponFilter;
     }
   | {
@@ -1592,6 +1593,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("modify_crit_range"),
         threshold: Schema.Number,
+        attackRollFilter: Schema.Literal("weapon_or_unarmed_strike"),
         weaponFilter: optionalExact(WeaponFilterSchema),
       }),
       Schema.Struct({

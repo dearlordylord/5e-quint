@@ -8,6 +8,7 @@ import {
   discoverBattleActs,
   initiativeScore,
   snapshotBattle,
+  WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleState,
 } from "@dnd/battle-runtime";
 import {
@@ -19,6 +20,7 @@ import {
   finalizeCharacterDraft,
   type CharacterDraft,
   type CharacterBuild,
+  type CharacterClassLevel,
   type CreationFill,
   type CreationHole,
   type CreationHoleIdText,
@@ -45,6 +47,7 @@ import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_READY_TRIGGERS,
 } from "../test-support/battle-act-labels.ts";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
@@ -131,6 +134,98 @@ describe("MCP server route", () => {
       currentActorId: fighterId,
     });
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
+  });
+
+  test("admits only supported authored critical-range Unit hooks at the battle support boundary", () => {
+    const root = createMcpCompositionRoot();
+    const supportedBuild = characterBuildWithFeature(
+      fighterCharacterBuild(root.unitLibrary),
+      "fighter_improved_critical",
+      3,
+    );
+    const supportedState = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-supported-critical-range"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Champion Fighter",
+        build: supportedBuild,
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: root.unitLibrary,
+    });
+
+    expect(
+      characterUnitRef(supportedState, fighterId, "fighter_improved_critical"),
+    ).toMatchObject({
+      supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
+    });
+
+    const improvedCriticalUnit = root.unitLibrary.requireUnit(
+      "fighter_improved_critical",
+    );
+    if (improvedCriticalUnit.kind !== "class_feature") {
+      throw new Error("Expected Improved Critical class-feature Unit.");
+    }
+    const unsupportedCriticalRangeUnit: UnitRecord = {
+      ...improvedCriticalUnit,
+      id: "fighter_unsupported_critical_range",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            kind: "modify_crit_range",
+            threshold: 18,
+            attackRollFilter: "weapon_or_unarmed_strike",
+          },
+        ],
+      },
+    };
+    const unsupportedLibrary = {
+      ...root.unitLibrary,
+      requireUnit: (unitId: string) =>
+        unitId === unsupportedCriticalRangeUnit.id
+          ? unsupportedCriticalRangeUnit
+          : root.unitLibrary.requireUnit(unitId),
+    } as typeof root.unitLibrary;
+    const unsupportedBuild = characterBuildWithFeature(
+      fighterCharacterBuild(root.unitLibrary),
+      unsupportedCriticalRangeUnit.id,
+      3,
+    );
+    expect(() =>
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("battle-unsupported-critical-range"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("fighter-character"),
+          displayName: "Unsupported Critical Range Fighter",
+          build: unsupportedBuild,
+          initiative: initiativeScore(12),
+          side: partySide,
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(11),
+          side: oppositionSide,
+        },
+        unitLibrary: unsupportedLibrary,
+      }),
+    ).toThrow(
+      `Unsupported battle critical-range Unit hook: ${unsupportedCriticalRangeUnit.id}.`,
+    );
   });
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
@@ -332,14 +427,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -437,14 +532,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -496,14 +591,14 @@ describe("MCP server route", () => {
             sourceDraftId: firstDraftId,
             combatantId: "first-fighter",
             initiative: 11,
-          side: "party",
+            side: "party",
           },
           {
             kind: "characterSession",
             sourceDraftId: secondDraftId,
             combatantId: "second-fighter",
             initiative: 17,
-          side: "party",
+            side: "party",
           },
         ],
       }),
@@ -548,14 +643,14 @@ describe("MCP server route", () => {
             sourceDraftId: firstDraftId,
             combatantId: "fighter",
             initiative: 18,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -572,14 +667,14 @@ describe("MCP server route", () => {
             sourceDraftId: secondDraftId,
             combatantId: "second-fighter",
             initiative: 16,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "second-goblin",
             initiative: 8,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -625,14 +720,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -911,7 +1006,7 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
@@ -974,7 +1069,7 @@ describe("MCP server route", () => {
               sourceDraftId: draftId,
               combatantId: "fighter",
               initiative: 18,
-          side: "party",
+              side: "party",
               characterDisplayName: "Contradictory Caller Name",
             },
           ],
@@ -1007,21 +1102,21 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
-          side: "party",
+            side: "party",
           },
           {
             kind: "characterSession",
             sourceDraftId: "draft:mcp-missing-additional-secondary",
             combatantId: "second-fighter",
             initiative: 16,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -1099,14 +1194,14 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "first-goblin",
             initiative: 11,
-          side: "opposition",
+            side: "opposition",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "second-goblin",
             initiative: 8,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -1147,14 +1242,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -1236,7 +1331,7 @@ describe("MCP server route", () => {
       sourceDraftId: secondDraftId,
       combatantId: "second-fighter",
       initiative: 16,
-          side: "party",
+      side: "party",
     } as const;
 
     expect(
@@ -1388,14 +1483,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -1627,14 +1722,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 12,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -1731,14 +1826,14 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 12,
-          side: "opposition",
+            side: "opposition",
           },
           {
             kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 10,
-          side: "party",
+            side: "party",
           },
         ],
       }),
@@ -1792,14 +1887,14 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 12,
-          side: "opposition",
+            side: "opposition",
           },
           {
             kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 10,
-          side: "party",
+            side: "party",
           },
         ],
       }),
@@ -1892,14 +1987,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 12,
-          side: "party",
+            side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
-          side: "opposition",
+            side: "opposition",
           },
         ],
       }),
@@ -2644,6 +2739,34 @@ function fighterTwoCharacterBuild(
   }
 
   return result.build;
+}
+
+function characterBuildWithFeature(
+  build: CharacterBuild,
+  unitId: string,
+  level: number,
+): CharacterBuild {
+  return {
+    ...build,
+    features: [
+      ...build.features,
+      { kind: "classFeature", unitId, level: level as CharacterClassLevel },
+    ],
+  };
+}
+
+function characterUnitRef(
+  state: BattleState,
+  combatantId: typeof fighterId,
+  unitId: string,
+) {
+  const combatant = state.combatants.get(combatantId);
+  if (combatant?.origin.kind !== "character") {
+    throw new Error(`Expected character combatant: ${combatantId}`);
+  }
+  return combatant.origin.characterUnitRefs.find(
+    (ref) => ref.unitId === unitId,
+  );
 }
 
 function fighterTwoLightWeaponBuild(

@@ -21,6 +21,7 @@ const requiredFirstVerticalUnitIds = [
   "fighter_weapon_mastery_l1",
   "fighter_action_surge",
   "fighter_tactical_mind",
+  "fighter_improved_critical",
   "wizard_ritual_adept",
   "wizard_arcane_recovery",
   "defense",

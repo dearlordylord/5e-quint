@@ -10,6 +10,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   BATTLE_UNIT_SUPPORT_PROFILES,
+  WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   BattleFillSchema,
   battleCombatantSide,
   BattleSubjectSchema,
@@ -50,6 +51,7 @@ import {
   type AttackRollMode,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
+  attackBonus,
   abilityModifier as battleAbilityModifier,
   difficultyClass,
   DieRollResult,
@@ -96,6 +98,15 @@ type DamageRollValue = Extract<
   BattleFill,
   { readonly kind: "rolledDice" }
 >["value"];
+type TestCharacterWeaponAttack = Extract<
+  NonNullable<
+    Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["attack"]
+  >,
+  { readonly kind: "weapon" }
+>;
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
@@ -1814,6 +1825,116 @@ describe("battle runtime", () => {
     });
   });
 
+  test("admitted authored critical-range support makes a natural 19 Off-Hand Attack critical", () => {
+    const state = startBattle({
+      battleId: battleId("battle-off-hand-critical-range"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: criticalRange19UnitRefs(),
+          attack: testShortswordAttack(),
+          offHandAttack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: "main:weapon_shortsword",
+              unitId: "weapon_shortsword",
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: "off:weapon_dagger",
+              unitId: "weapon_dagger",
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Shortsword",
+    };
+    const attackTarget = requireHole(
+      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(attackTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterQualifyingAttack = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, goblinId),
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "bonusAction",
+      actorId: fighterId,
+      action: "offHandAttack",
+      attackName: "Dagger",
+    };
+    const target = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 1, naturalD20: 19 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({
+      critical: true,
+      label: "Dagger damage (2d4-piercing)",
+    });
+    expect(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 1, naturalD20: 19 }),
+          damageRollFillWithGroups(damage, [[2, 3]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 5 }),
+        ]),
+      },
+    });
+  });
+
   test("Off-Hand Attack distinguishes held weapon identity from weapon kind", () => {
     const state = startBattle({
       battleId: battleId("battle-off-hand-two-daggers"),
@@ -3221,6 +3342,132 @@ describe("battle runtime", () => {
     });
   });
 
+  test("admitted authored critical-range support makes a natural 19 weapon attack critical", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: criticalRange19UnitRefs(),
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {
+      total: 1,
+      naturalD20: 19,
+    });
+
+    expect(damageHole).toMatchObject({
+      critical: true,
+      label: "Longsword damage (2d8+3-slashing)",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 1, naturalD20: 19 }),
+        damageRollFillWithGroups(damageHole, [[4, 5]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: goblinId, hp: 0, defeated: true },
+        ],
+      },
+    });
+  });
+
+  test("admitted authored critical-range support makes a natural 19 Unarmed Strike critical", () => {
+    const state = startBattle({
+      battleId: battleId("battle-unarmed-critical-range"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: criticalRange19UnitRefs(),
+          attack: testUnarmedStrikeDamageAttack(),
+          selectedLoadout: {},
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Unarmed Strike",
+    };
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 1, naturalD20: 19 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: goblinId, hp: 6, defeated: false },
+        ],
+      },
+    });
+  });
+
+  test("natural 19 weapon attacks are ordinary hits without the admitted critical-range hook", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {
+      total: 19,
+      naturalD20: 19,
+    });
+
+    expect(damageHole).toMatchObject({
+      critical: false,
+      label: "Longsword damage (1d8+3-slashing)",
+    });
+  });
+
+  test("natural 1 still misses with admitted critical-range support", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: criticalRange19UnitRefs(),
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 99, naturalD20: 1 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentTurnResources: { actionResources: [] } },
+    });
+  });
+
   test("attack rejects a non-current actor", () => {
     const state = fighterVsGoblinBattle();
 
@@ -3534,6 +3781,65 @@ describe("battle runtime", () => {
               policy: "usesDeathSavingThrows",
               deathSaves: { failures: 3 },
               dead: true,
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  test("admitted authored critical-range natural 19 damage at 0 HP causes two death-save failures", () => {
+    const targetCharacterId = combatantId("target-character");
+    const state = startBattle({
+      battleId: battleId("battle-character-zero-critical-range"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: criticalRange19UnitRefs(),
+        }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+        }),
+      ],
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {
+      total: 1,
+      naturalD20: 19,
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, targetCharacterId),
+        attackRollFill(rollHole, { total: 1, naturalD20: 19 }),
+        damageRollFillWithGroups(damageHole, [[1, 1]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 0,
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 2 },
+              dead: false,
             },
           },
         ],
@@ -5853,8 +6159,9 @@ describe("battle runtime", () => {
       actorId: fighterId,
       unitId: "barbarian_rage",
     };
-    expect(discoverBattleActs(incapacitatedState).map((act) => act.subject)).not
-      .toEqual(expect.arrayContaining([rageSubject]));
+    expect(
+      discoverBattleActs(incapacitatedState).map((act) => act.subject),
+    ).not.toEqual(expect.arrayContaining([rageSubject]));
     expect(
       resolveBattleSubject({
         state: incapacitatedState,
@@ -7897,8 +8204,7 @@ function stateProjection(state: BattleState): BattleRuntimeParityProjection {
       (occurrence) => occurrence.source.unitId === "barbarian_rage",
     ),
     recklessActive: fighter.activeOngoingFeatureOccurrences.some(
-      (occurrence) =>
-        occurrence.source.unitId === "barbarian_reckless_attack",
+      (occurrence) => occurrence.source.unitId === "barbarian_reckless_attack",
     ),
   };
 }
@@ -7944,7 +8250,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("68 passing");
+  expect(quintOutput).toContain("71 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -8150,6 +8456,7 @@ function renderQntStateProjection(
       goblinLegendaryUsesRemaining: 2,
       lastTurnActor: ${input.lastTurnActor},
       legendaryActionWindowConsumed: false,
+      fighterCriticalRange: DefaultCriticalRange,
     }`;
 }
 
@@ -8197,17 +8504,38 @@ function hidePrerequisites(
 
 function fighterVsGoblinBattle(input?: {
   readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
+  readonly characterUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
 }): BattleState {
   return startBattle({
     battleId: battleId("battle-attack"),
     combatants: [
-      characterSeed({ initiative: 20 }),
+      characterSeed({
+        initiative: 20,
+        ...(input?.characterUnitRefs === undefined
+          ? {}
+          : { characterUnitRefs: input.characterUnitRefs }),
+      }),
       statBlockCreatureInit({ initiative: 10 }),
     ],
     ...(input?.hidePrerequisites === undefined
       ? {}
       : { hidePrerequisites: input.hidePrerequisites }),
   });
+}
+
+function criticalRange19UnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  return [
+    {
+      unitId: "fighter_improved_critical",
+      supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
+    },
+  ];
 }
 
 function fighterGrapplesGoblin(
@@ -8833,8 +9161,13 @@ function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"];
-  readonly attack?: ReturnType<typeof testLongswordAttack> | null;
-  readonly offHandAttack?: NonNullable<ReturnType<typeof testLongswordAttack>>;
+  readonly attack?:
+    | Extract<
+        BattleCreatureInit["creatureInit"],
+        { readonly kind: "character" }
+      >["attack"]
+    | null;
+  readonly offHandAttack?: TestCharacterWeaponAttack;
   readonly resources?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -8931,10 +9264,7 @@ function heavyArmorClassState(): ReturnType<typeof defaultArmorClassState> {
   };
 }
 
-function testLongswordAttack(): Extract<
-  BattleCreatureInit["creatureInit"],
-  { readonly kind: "character" }
->["attack"] {
+function testLongswordAttack(): TestCharacterWeaponAttack {
   const weapon = unitLibrary.requireUnit("weapon_longsword");
   if (weapon.kind !== "weapon") {
     throw new Error("Expected Longsword weapon Unit.");
@@ -8948,12 +9278,20 @@ function testLongswordAttack(): Extract<
   };
 }
 
-function testDaggerAttack(): NonNullable<
+function testUnarmedStrikeDamageAttack(): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"]
 > {
+  return {
+    kind: "unarmedStrikeDamage",
+    attackBonus: attackBonus(5),
+    strengthModifier: battleAbilityModifier(3),
+  };
+}
+
+function testDaggerAttack(): TestCharacterWeaponAttack {
   const weapon = unitLibrary.requireUnit("weapon_dagger");
   if (weapon.kind !== "weapon") {
     throw new Error("Expected Dagger weapon Unit.");
@@ -8967,12 +9305,7 @@ function testDaggerAttack(): NonNullable<
   };
 }
 
-function testShortswordAttack(): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["attack"]
-> {
+function testShortswordAttack(): TestCharacterWeaponAttack {
   const weapon = unitLibrary.requireUnit("weapon_shortsword");
   if (weapon.kind !== "weapon") {
     throw new Error("Expected Shortsword weapon Unit.");
@@ -8986,12 +9319,7 @@ function testShortswordAttack(): NonNullable<
   };
 }
 
-function testLightHammerAttack(): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["attack"]
-> {
+function testLightHammerAttack(): TestCharacterWeaponAttack {
   const weapon = unitLibrary.requireUnit("weapon_flail");
   if (weapon.kind !== "weapon") {
     throw new Error("Expected Flail weapon Unit.");
@@ -9005,12 +9333,7 @@ function testLightHammerAttack(): NonNullable<
   };
 }
 
-function testPoisonWeaponAttack(): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["attack"]
-> {
+function testPoisonWeaponAttack(): TestCharacterWeaponAttack {
   const base = testLightHammerAttack();
   return {
     ...base,

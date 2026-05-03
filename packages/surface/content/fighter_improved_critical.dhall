@@ -7,7 +7,8 @@
 -- Consolidated validation reference for:
 --   • ClassFeatureMechanics.passive (no activation, no resource, no
 --     reset — always-on)
---   • modify_crit_range atom (lowers crit threshold from 20 to N)
+--   • modify_crit_range atom (lowers weapon and Unarmed Strike attack-roll
+--     crit threshold from 20 to N)
 --
 -- Improved Critical is Champion-subclass specific (Fighter L3). The
 -- `className` field is set to "fighter" and the prototype's current
@@ -30,7 +31,11 @@ let improvedCritical =
       , mechanics =
           { family = "passive"
           , grants =
-              [ { kind = "modify_crit_range", threshold = 19 } ]
+              [ { kind = "modify_crit_range"
+                , threshold = 19
+                , attackRollFilter = "weapon_or_unarmed_strike"
+                }
+              ]
           }
       }
 
