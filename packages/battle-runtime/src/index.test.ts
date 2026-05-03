@@ -9244,7 +9244,7 @@ function renderQntStateProjection(
       statBlockLegendaryUsesRemaining: 2,
       lastTurnActor: ${input.lastTurnActor},
       legendaryActionWindowConsumed: false,
-      weaponOrUnarmedCriticalRange: DefaultCriticalRange,
+      weaponOrUnarmedStrikeCriticalRange: DefaultCriticalRange,
       attackDamageRider: ${renderQntAttackDamageRiderProjection(overrides.attackDamageRider)},
     }`;
 }

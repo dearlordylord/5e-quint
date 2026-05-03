@@ -145,7 +145,7 @@ module battleRuntime {
   type ReactionTrigger = AttackHit | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
 
   type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
-  type WeaponOrUnarmedCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
+  type WeaponOrUnarmedStrikeCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
 
   type AttackDamageRiderProjection =
     | NoSupportedAttackDamageRider
@@ -276,7 +276,7 @@ module battleRuntime {
     statBlockLegendaryUsesRemaining: int,
     lastTurnActor: LastTurnActor,
     legendaryActionWindowConsumed: bool,
-    weaponOrUnarmedCriticalRange: WeaponOrUnarmedCriticalRange,
+    weaponOrUnarmedStrikeCriticalRange: WeaponOrUnarmedStrikeCriticalRange,
     // Surface projection, not Fighter class content.
     //
     // This package-local QNT spec uses the fixed Actor name `Fighter` for the
@@ -382,7 +382,7 @@ module battleRuntime {
     statBlockLegendaryUsesRemaining: 2,
     lastTurnActor: NoTurnEnded,
     legendaryActionWindowConsumed: false,
-    weaponOrUnarmedCriticalRange: DefaultCriticalRange,
+    weaponOrUnarmedStrikeCriticalRange: DefaultCriticalRange,
     attackDamageRider: NoSupportedAttackDamageRider,
   }
 
@@ -780,17 +780,17 @@ module battleRuntime {
   pure def attackIsCritical(naturalD20: int, criticalThreshold: int): bool =
     naturalD20 >= criticalThreshold
 
-  pure def weaponOrUnarmedCriticalThreshold(state: BattleState): int =
-    match state.weaponOrUnarmedCriticalRange {
+  pure def weaponOrUnarmedStrikeCriticalThreshold(state: BattleState): int =
+    match state.weaponOrUnarmedStrikeCriticalRange {
       | DefaultCriticalRange => 20
       | ImprovedCriticalRange19 => 19
     }
 
   pure def attackCriticalThreshold(state: BattleState, attacker: Actor): int =
-    if (attacker == Fighter) weaponOrUnarmedCriticalThreshold(state) else 20
+    if (attacker == Fighter) weaponOrUnarmedStrikeCriticalThreshold(state) else 20
 
-  pure def withWeaponOrUnarmedImprovedCriticalRange19(state: BattleState): BattleState =
-    { ...state, weaponOrUnarmedCriticalRange: ImprovedCriticalRange19 }
+  pure def withWeaponOrUnarmedStrikeImprovedCriticalRange19(state: BattleState): BattleState =
+    { ...state, weaponOrUnarmedStrikeCriticalRange: ImprovedCriticalRange19 }
 
   // Test/spec fixture hook for the representative Surface attack-damage-rider
   // projection above. The promoted runtime parity test feeds this from the SRD
@@ -827,10 +827,10 @@ module battleRuntime {
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
       val rageDamage = if (hasRage(revealed)) rageDamageBonus(barbarianLevel) else 0
-      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedCriticalThreshold(state))))
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedStrikeCriticalThreshold(state))))
         { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
       else
-        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, weaponOrUnarmedCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
+        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, weaponOrUnarmedStrikeCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
     }
 
   // Generic projection of an optional once-per-turn Finesse/Ranged on-hit
@@ -874,7 +874,7 @@ module battleRuntime {
       state
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
-      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedCriticalThreshold(state))))
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedStrikeCriticalThreshold(state))))
         { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
       else {
         val riderSelectedAndEligible =
@@ -883,7 +883,7 @@ module battleRuntime {
         val damage = weaponDamageRoll + 3 + (if (riderSelectedAndEligible) attackDamageRiderDamageRoll else 0)
         {
           ...revealed,
-          goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, weaponOrUnarmedCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded),
+          goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, weaponOrUnarmedStrikeCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded),
           actionAvailable: false,
           lightWeaponAttackMade: true,
           attackDamageRider: match revealed.attackDamageRider {
@@ -1132,8 +1132,8 @@ module battleRuntime {
 
   pure def offHandAttackFighter(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int): BattleState =
     if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
-      if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedCriticalThreshold(state)))
-        { ...state, goblin: applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, weaponOrUnarmedCriticalThreshold(state))) 2 else 1, false), bonusActionAvailable: false }
+      if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedStrikeCriticalThreshold(state)))
+        { ...state, goblin: applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, weaponOrUnarmedStrikeCriticalThreshold(state))) 2 else 1, false), bonusActionAvailable: false }
       else
         { ...state, bonusActionAvailable: false }
     else
@@ -1865,7 +1865,7 @@ module battleRuntime {
   }
 
   run test_authored_critical_range_19_weapon_attack_crits_on_natural_19 = {
-    val result = resolveAttack(withWeaponOrUnarmedImprovedCriticalRange19(initialState), 1, 19, 1, true)
+    val result = resolveAttack(withWeaponOrUnarmedStrikeImprovedCriticalRange19(initialState), 1, 19, 1, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 6),
@@ -1881,7 +1881,7 @@ module battleRuntime {
   }
 
   run test_authored_critical_range_keeps_natural_1_auto_miss = {
-    val result = resolveAttack(withWeaponOrUnarmedImprovedCriticalRange19(initialState), 99, 1, 9, true)
+    val result = resolveAttack(withWeaponOrUnarmedStrikeImprovedCriticalRange19(initialState), 99, 1, 9, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 10),
