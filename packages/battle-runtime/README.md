@@ -566,14 +566,19 @@ Promoted battle-runtime proof is intentionally layered:
 - small reusable reducer algebras stay covered by modular Quint MBT in the
   shared algebra packages;
 - `battle-runtime.qnt` stays the package-local deterministic reference for the
-  implemented runtime subset, but self-tests and generated assertions are not
-  enough for long-term composed reducer proof;
+  implemented runtime subset, but self-tests are not enough for long-term
+  composed reducer proof;
 - broad Surface, Unit, Spell, and Stat Block catalog coverage defaults to
   table-driven contract tests, not one MBT per authored record;
 - integrated battle-runtime QNT/MBT is reserved for selected high-risk verticals
   where public discovery, replay holes, reducer state, and snapshots interact;
 - Surface projection MBT is a separate future decision and is not implied by
   adding battle-runtime MBT.
+
+Do not generate Quint expected state literals from TypeScript runtime results.
+That reverses the oracle direction. Package-local QNT tests must author their
+expected facts in Quint, and integrated MBT must compare Quint-owned traces
+against TypeScript projections.
 
 Integrated battle-runtime MBT stays selective. Add it when a promoted behavior
 is already implemented and deterministically tested, crosses multiple reducer
