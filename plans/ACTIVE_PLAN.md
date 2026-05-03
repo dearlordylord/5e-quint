@@ -4040,6 +4040,18 @@ Backlog candidate:
 - Non-goals: every reaction feature, subclass reactions, or UI-specific
   reaction prompts beyond MCP/runtime snapshots.
 
+Rerun guidance:
+
+- Ensure reaction replay drops or ignores now-stale downstream damage fills when
+  an attack-roll reaction changes a hit into a miss.
+- Apply Cutting Words damage-roll reductions to the creature's damage roll
+  before target-side damage adjustments such as resistance, vulnerability, or
+  immunity.
+- Preserve attack damage rider usage recording when attack damage resolves
+  through a reaction-modified damage path.
+- Cover Cutting Words against non-attack damage rolls if the restored reusable
+  procedure models the SRD "damage roll" trigger rather than only attack damage.
+
 Verification:
 
 - RAW traceability check before rules edits.
