@@ -9024,7 +9024,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("76 passing");
+  expect(quintOutput).toContain("77 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -9120,7 +9120,11 @@ function renderBattleRuntimeParityModule(input: {
   }
 
   run parity_sneak_attack_rider_matches_runtime = {
-    assert(resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, true, false, false, true) == ${renderQntStateProjection(input.sneakAttack, { fighterSneakAttackSupported: true, fighterSneakAttackUsedThisTurn: true })})
+    // Sneak Attack appears here only as the SRD Rogue Unit fixture for the
+    // generic attack-damage-rider projection in battle-runtime.qnt. The fixed
+    // Fighter actor name is the spec's player-character slot, not the Fighter
+    // class, and this parity case must not be read as "Fighter Sneak Attack."
+    assert(resolveAttackWithOptionalAttackDamageRider(withSupportedAttackDamageRider(initialState), 15, 10, 4, 6, true, true, true, false, false, true) == ${renderQntStateProjection(input.sneakAttack, { attackDamageRider: { usedThisTurn: true } })})
   }
 }
 `;
@@ -9160,8 +9164,9 @@ function renderQntCharacterProjection(
 function renderQntStateProjection(
   input: BattleRuntimeParityProjection,
   overrides: {
-    readonly fighterSneakAttackSupported?: boolean;
-    readonly fighterSneakAttackUsedThisTurn?: boolean;
+    readonly attackDamageRider?: {
+      readonly usedThisTurn: boolean;
+    };
   } = {},
 ): string {
   return `{
@@ -9235,21 +9240,32 @@ function renderQntStateProjection(
       interruptStack: [],
       fighterGoblinDistance: 5,
       fighterHidePrerequisite: false,
-      goblinRechargeAvailable: true,
-      goblinLegendaryUsesRemaining: 2,
+      statBlockRechargeAvailable: true,
+      statBlockLegendaryUsesRemaining: 2,
       lastTurnActor: ${input.lastTurnActor},
       legendaryActionWindowConsumed: false,
-      fighterCriticalRange: DefaultCriticalRange,
-      fighterSneakAttackSupported: ${overrides.fighterSneakAttackSupported ?? false},
-      fighterSneakAttackUsedThisTurn: ${overrides.fighterSneakAttackUsedThisTurn ?? false},
+      weaponOrUnarmedCriticalRange: DefaultCriticalRange,
+      attackDamageRider: ${renderQntAttackDamageRiderProjection(overrides.attackDamageRider)},
     }`;
+}
+
+function renderQntAttackDamageRiderProjection(
+  override:
+    | {
+        readonly usedThisTurn: boolean;
+      }
+    | undefined,
+): string {
+  return override === undefined
+    ? "NoSupportedAttackDamageRider"
+    : `SupportedAttackDamageRider({ usedThisTurn: ${override.usedThisTurn} })`;
 }
 
 function renderQntActiveOngoingFeatureOccurrences(
   input: BattleRuntimeParityProjection,
 ): string {
   return `Map(
-          FIGHTER_RAGE_SOURCE_KEY -> ${
+          RAGE_SOURCE_KEY -> ${
             input.rageActive
               ? `ActiveRoundExtendedOngoingFeature({
             expiresAtEndOfFighterTurnRound: ${input.round + 1},
@@ -9257,7 +9273,7 @@ function renderQntActiveOngoingFeatureOccurrences(
           })`
               : "NoActiveOngoingFeatureOccurrence"
           },
-          FIGHTER_RECKLESS_ATTACK_SOURCE_KEY -> ${
+          RECKLESS_ATTACK_SOURCE_KEY -> ${
             input.recklessActive
               ? "ActiveStartOfTurnOngoingFeature"
               : "NoActiveOngoingFeatureOccurrence"
