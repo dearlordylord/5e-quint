@@ -182,6 +182,12 @@ module deathSavesAlgebraMbt {
     doCriticalDamageFailure,
   }
 
-  val invariant =
-    qValidState(qSuccesses, qFailures, qStable, qDead, qHpRegained)
+  val invariant = all {
+    qSuccesses.in(0.to(3)),
+    qFailures.in(0.to(3)),
+    qStable.in(Set(true, false)),
+    qDead.in(Set(true, false)),
+    qHpRegained.in(Set(true, false)),
+    qValidState(qSuccesses, qFailures, qStable, qDead, qHpRegained),
+  }
 }

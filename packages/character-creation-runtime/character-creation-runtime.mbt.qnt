@@ -235,4 +235,75 @@ module characterCreationRuntimeMbt {
     doRejectUnknownLoadoutArmor,
     doRejectUnsupportedClassEquipment,
   }
+
+  pure def validLastResult(result: str): bool =
+    Set("init", "accepted", "rejected").contains(result)
+
+  pure def draftFillCount(draft: Draft): int =
+    (if (draft.primaryClass) 1 else 0)
+      + (if (draft.advancement) 1 else 0)
+      + (if (draft.background) 1 else 0)
+      + (if (draft.species) 1 else 0)
+      + (if (draft.abilityScores) 1 else 0)
+      + (if (draft.languages) 1 else 0)
+      + (if (draft.alignment) 1 else 0)
+      + (if (draft.fighterSkills) 1 else 0)
+      + (if (draft.fighterFightingStyle) 1 else 0)
+      + (if (draft.fighterWeaponMastery) 1 else 0)
+      + (if (draft.backgroundAbilityScoreIncrease) 1 else 0)
+      + (if (draft.backgroundTool) 1 else 0)
+      + (if (draft.classEquipment) 1 else 0)
+      + (if (draft.backgroundEquipment) 1 else 0)
+      + (if (draft.equipmentPurchase) 1 else 0)
+      + (if (draft.loadoutArmor) 1 else 0)
+      + (if (draft.loadoutShield) 1 else 0)
+      + (if (draft.loadoutWeapon) 1 else 0)
+
+  pure def draftPrerequisitesHold(draft: Draft): bool =
+    (draft.advancement implies draft.primaryClass)
+      and (draft.fighterSkills implies draft.primaryClass)
+      and (draft.fighterFightingStyle implies draft.primaryClass)
+      and (draft.fighterWeaponMastery implies draft.primaryClass)
+      and (draft.classEquipment implies draft.primaryClass)
+      and (draft.backgroundAbilityScoreIncrease implies draft.background)
+      and (draft.backgroundTool implies draft.background)
+      and (draft.backgroundEquipment implies draft.background)
+      and (draft.equipmentPurchase implies draft.classEquipment and draft.backgroundEquipment)
+      and (draft.loadoutArmor implies draft.equipmentPurchase)
+      and (draft.loadoutShield implies draft.equipmentPurchase)
+      and (draft.loadoutWeapon implies draft.equipmentPurchase)
+
+  pure def draftReadyFieldsHold(draft: Draft): bool =
+    draft.primaryClass
+      and draft.advancement
+      and draft.background
+      and draft.species
+      and draft.abilityScores
+      and draft.languages
+      and draft.alignment
+      and draft.fighterSkills
+      and draft.fighterFightingStyle
+      and draft.fighterWeaponMastery
+      and draft.backgroundAbilityScoreIncrease
+      and draft.backgroundTool
+      and draft.classEquipment
+      and draft.backgroundEquipment
+      and draft.equipmentPurchase
+      and draft.loadoutArmor
+      and draft.loadoutShield
+      and draft.loadoutWeapon
+
+  val invariant =
+    qDraft.revision >= 0
+      and qDraft.revision <= 6
+      and qDraft.revision <= draftFillCount(qDraft)
+      and (qLastResult == "init" implies qDraft == emptyDraft)
+      and draftPrerequisitesHold(qDraft)
+      and qHoles == openCreationHoles(qDraft)
+      and qFinalization == finalizeDraft(qDraft)
+      and ((qFinalization == Ready) == draftReadyFieldsHold(qDraft))
+      and ((qFinalization == Ready) == (qHoles == Set()))
+      and validLastResult(qLastResult)
+      and (qLastResult != "rejected" implies qLastBatchIssueCodes == Set())
+      and (qLastResult != "rejected" implies qLastFillIssues == Set())
 }

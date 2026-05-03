@@ -309,4 +309,32 @@ module conditionsAlgebraMbt::Impl {
     doApplyDirectIncapacitated,
     doRemoveDirectIncapacitated,
   }
+
+  val invariant = all {
+    qBlinded.in(Set(true, false)),
+    qCharmed.in(Set(true, false)),
+    qDeafened.in(Set(true, false)),
+    qFrightened.in(Set(true, false)),
+    qGrappled.in(Set(true, false)),
+    qInvisible.in(Set(true, false)),
+    qParalyzed.in(Set(true, false)),
+    qPetrified.in(Set(true, false)),
+    qPoisoned.in(Set(true, false)),
+    qProne.in(Set(true, false)),
+    qRestrained.in(Set(true, false)),
+    qStunned.in(Set(true, false)),
+    qUnconscious.in(Set(true, false)),
+    qDirectIncapacitated.in(Set(true, false)),
+    qHasIncapacitated.in(Set(true, false)),
+    qHasProne.in(Set(true, false)),
+    qHasIncapacitated == qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne == qComputeHasProne(qProne, qUnconscious),
+    qUnconscious implies qProne,
+  }
 }

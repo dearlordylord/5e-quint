@@ -35,6 +35,66 @@ module initiativeAlgebraMbt::Impl {
   pure def initiativeOrder(stack: InitiativeStack): List[InitiativeEntry] =
     stack.alreadyActed.concat(stack.stillToAct)
 
+  pure def qIsMonotoneInitiative(order: List[InitiativeEntry]): bool =
+    order.foldl(
+      { first: true, prev: 0, ok: true },
+      (acc, current) =>
+        if (acc.first)
+          { first: false, prev: current.initiative, ok: true }
+        else
+          {
+            first: false,
+            prev: current.initiative,
+            ok: acc.ok and acc.prev >= current.initiative,
+          }
+    ).ok
+
+  pure def qKnownInsertStatus(status: str): bool =
+    Set("none", "ok", "decide", "error").contains(status)
+
+  pure def qKnownCreature(creature: CreatureId): bool =
+    Set("c1", "c2", "c2b", "c3", "c4", "cx").contains(creature)
+
+  pure def qExpectedInitiative(creature: CreatureId): int =
+    if (creature == "c4") 4
+    else if (creature == "c3") 3
+    else if (creature == "c2" or creature == "c2b" or creature == "cx") 2
+    else 1
+
+  pure def qEntryMatchesCreature(entry: InitiativeEntry): bool =
+    qKnownCreature(entry.creature)
+      and entry.initiative == qExpectedInitiative(entry.creature)
+
+  pure def qNoDuplicateEntries(entries: List[InitiativeEntry]): bool =
+    entries.foldl({ seen: Set(), ok: true }, (acc, entry) =>
+      {
+        seen: acc.seen.union(Set(entry.creature)),
+        ok: acc.ok and not(acc.seen.contains(entry.creature)),
+      }
+    ).ok
+
+  pure def qNoDuplicateCreatures(creatures: List[CreatureId]): bool =
+    creatures.foldl({ seen: Set(), ok: true }, (acc, creature) =>
+      {
+        seen: acc.seen.union(Set(creature)),
+        ok: acc.ok and not(acc.seen.contains(creature)),
+      }
+    ).ok
+
+  pure def qKnownTie(tie: List[CreatureId]): bool =
+    tie.length() <= 3
+      and tie.foldl(true, (ok, creature) => ok and qKnownCreature(creature))
+      and qNoDuplicateCreatures(tie)
+
+  pure def qStackInvariant(round: int, alreadyActed: List[InitiativeEntry], stillToAct: List[InitiativeEntry]): bool =
+    val order = alreadyActed.concat(stillToAct)
+    round >= 1
+      and stillToAct.length() > 0
+      and order.length() <= 6
+      and qIsMonotoneInitiative(order)
+      and qNoDuplicateEntries(order)
+      and order.foldl(true, (ok, entry) => ok and qEntryMatchesCreature(entry))
+
   pure def nextInitiative(stack: InitiativeStack): { stack: InitiativeStack, roundTicked: bool } = {
     val current = stack.stillToAct[0]
     val remaining = stack.stillToAct.slice(1, stack.stillToAct.length())
@@ -358,4 +418,10 @@ module initiativeAlgebraMbt::Impl {
     doInsertCxTieDecision,
     doInsertC3WrongDecision,
   }
+
+  val invariant =
+    qStackInvariant(qRound, qAlreadyActed, qStillToAct)
+      and qKnownInsertStatus(qLastInsertStatus)
+      and qKnownTie(qLastTie)
+      and ((qLastInsertStatus == "decide") == (qLastTie.length() > 0))
 }

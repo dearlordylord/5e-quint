@@ -75,5 +75,29 @@ module actionEconomyAlgebraMbt {
     doResetTurn,
   }
 
-  val invariant = true
+  pure def qUnitActionCount(order: int): int =
+    if (order == 0) 0
+    else if (order == 1 or order == 2) 1
+    else 2
+
+  pure def qHasRestrictedUnitActionA(order: int): bool =
+    order == 1 or order == 3 or order == 4
+
+  pure def qHasRestrictedUnitActionB(order: int): bool =
+    order == 2 or order == 3 or order == 4
+
+  pure def qBoolCount(value: bool): int =
+    if (value) 1 else 0
+
+  val invariant = all {
+    qTurnActionAvailable.in(Set(true, false)),
+    qRestrictedUnitActionOrder.in(0.to(4)),
+    qHasBonusAction.in(Set(true, false)),
+    qUnitActionCount(qRestrictedUnitActionOrder) >= 0,
+    qUnitActionCount(qRestrictedUnitActionOrder) <= 2,
+    qUnitActionCount(qRestrictedUnitActionOrder) ==
+      qBoolCount(qHasRestrictedUnitActionA(qRestrictedUnitActionOrder))
+        + qBoolCount(qHasRestrictedUnitActionB(qRestrictedUnitActionOrder)),
+    (qRestrictedUnitActionOrder == 0) == (qUnitActionCount(qRestrictedUnitActionOrder) == 0),
+  }
 }
