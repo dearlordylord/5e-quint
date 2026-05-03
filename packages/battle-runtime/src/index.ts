@@ -2393,8 +2393,7 @@ type SupportedUnitFeatureProfile =
       readonly optional: true;
       readonly usageLimit: "oncePerTurn";
       readonly weaponFilter: "finesseOrRanged";
-      readonly rollRequirement: "advantageOrAllyAdjacentWithoutDisadvantage";
-      readonly className: ClassName;
+      readonly eligibility: "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage";
       readonly classLevel: ClassLevel;
       readonly dieSize: number;
       readonly diceByLevel: readonly {
@@ -4967,6 +4966,7 @@ function resolveAttack(
         target.combatantId,
         attack,
         fillSet.attackRoll,
+        fillSet.attackRoll.rollMode === "advantage",
       )
     : [];
   const selectedDamageRiders =
@@ -5773,6 +5773,7 @@ function resolveOffHandAttack(
         target.combatantId,
         attack,
         fillSet.attackRoll,
+        fillSet.attackRoll.rollMode === "advantage",
       )
     : [];
   const selectedDamageRiders =
@@ -6957,6 +6958,7 @@ function resolveOpportunityAttackCommand(
         subject.targetId,
         attack,
         fillSet.attackRoll,
+        fillSet.attackRoll.rollMode === "advantage",
       )
     : [];
   const selectedDamageRiders =
@@ -8349,7 +8351,7 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
     return null;
   }
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
-  if (classLevel === undefined) {
+  if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
   const mechanics = unit.mechanics;
@@ -8508,23 +8510,20 @@ function parseAttackDamageRiderUnitFeatureProfile(
   if (
     mechanics.family !== "on_hit_trigger" ||
     mechanics.optional !== true ||
-    mechanics.usageLimit?.kind !== "once_per_turn" ||
-    mechanics.trigger.kind !== "attack_roll_hit" ||
+    mechanics.trigger.kind !== "hit_with_attack_roll" ||
     mechanics.trigger.weaponFilter !== "finesse_or_ranged" ||
-    mechanics.trigger.rollRequirement !==
-      "advantage_or_ally_adjacent_without_disadvantage" ||
+    mechanics.trigger.eligibility !==
+      "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage" ||
+    !("usageLimit" in mechanics) ||
+    mechanics.usageLimit.kind !== "once_per_turn" ||
     mechanics.effect.kind !== "add_attack_damage_dice" ||
     mechanics.effect.damageType !== "same_as_attack" ||
-    mechanics.effect.dice.kind !== "class_level_table" ||
-    mechanics.effect.dice.className !== unit.className
+    mechanics.effect.dice.kind !== "class_level_table"
   ) {
     return null;
   }
-  const classLevel = findCharacterClassLevel(
-    classLevels,
-    mechanics.effect.dice.className,
-  );
-  if (classLevel === undefined) {
+  const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
   return {
@@ -8533,8 +8532,8 @@ function parseAttackDamageRiderUnitFeatureProfile(
     optional: true,
     usageLimit: "oncePerTurn",
     weaponFilter: "finesseOrRanged",
-    rollRequirement: "advantageOrAllyAdjacentWithoutDisadvantage",
-    className: mechanics.effect.dice.className,
+    eligibility:
+      "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage",
     classLevel,
     dieSize: mechanics.effect.dice.dieSize,
     diceByLevel: mechanics.effect.dice.dice,
@@ -13187,6 +13186,7 @@ function eligibleAttackDamageRiders(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
   attackRoll: AttackRollResult,
+  attackRollHadAdvantage: boolean,
 ): readonly AttackDamageRider[] {
   const attacker = state.combatants.get(attackerId);
   if (
@@ -13196,7 +13196,7 @@ function eligibleAttackDamageRiders(
     return [];
   }
   const hasRequiredRollContext =
-    attackRoll.rollMode === "advantage" ||
+    attackRollHadAdvantage ||
     (targetHasAdjacentNonIncapacitatedAlly(state, attackerId, targetId) &&
       attackRoll.rollMode !== "disadvantage");
   if (!hasRequiredRollContext) {

@@ -581,6 +581,12 @@ export type RiderExpiry = Schema.Schema.Type<
 export type MasteryTrigger = Schema.Schema.Type<
   typeof SurfaceSchema.MasteryTriggerSchema
 >;
+export type AttackDamageRiderTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.AttackDamageRiderTriggerSchema
+>;
+export type WeaponDamageDiceRerollTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponDamageDiceRerollTriggerSchema
+>;
 export type SecondaryTargetSelection = Schema.Schema.Type<
   typeof SurfaceSchema.SecondaryTargetSelectionSchema
 >;
@@ -599,6 +605,18 @@ export type SaveGateRider = Schema.Schema.Type<
 export type RerollWeaponDamageDiceRider = Schema.Schema.Type<
   typeof SurfaceSchema.RerollWeaponDamageDiceRiderSchema
 >;
+export type SapMasteryEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.SapMasteryEffectSchema
+>;
+export type ToppleMasteryEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.ToppleMasteryEffectSchema
+>;
+export type VexMasteryEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.VexMasteryEffectSchema
+>;
+export type WeaponHitMasteryEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponHitMasteryEffectSchema
+>;
 export type MasteryEffect = Schema.Schema.Type<
   typeof SurfaceSchema.MasteryEffectSchema
 >;
@@ -608,8 +626,29 @@ export type OnHitRiderEffect = Schema.Schema.Type<
 export type UsageLimit = Schema.Schema.Type<
   typeof SurfaceSchema.UsageLimitSchema
 >;
+export type AttackDamageRiderMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.AttackDamageRiderMechanicsSchema
+>;
+export type WeaponDamageDiceRerollMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponDamageDiceRerollMechanicsSchema
+>;
+export type SapMasteryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SapMasteryMechanicsSchema
+>;
+export type ToppleMasteryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ToppleMasteryMechanicsSchema
+>;
+export type VexMasteryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.VexMasteryMechanicsSchema
+>;
+export type CleaveMasteryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.CleaveMasteryMechanicsSchema
+>;
 export type OnHitTriggerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.OnHitTriggerMechanicsSchema
+>;
+export type MasteryOrWeaponDamageDiceRerollMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MasteryOrWeaponDamageDiceRerollMechanicsSchema
 >;
 export type MasteryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.MasteryMechanicsSchema

@@ -171,15 +171,15 @@ function supportedAttackDamageRiderProfileForUnit(
   }
   const mechanics = unit.mechanics;
   return mechanics.optional === true &&
-    mechanics.usageLimit?.kind === "once_per_turn" &&
-    mechanics.trigger.kind === "attack_roll_hit" &&
+    mechanics.trigger.kind === "hit_with_attack_roll" &&
     mechanics.trigger.weaponFilter === "finesse_or_ranged" &&
-    mechanics.trigger.rollRequirement ===
-      "advantage_or_ally_adjacent_without_disadvantage" &&
+    mechanics.trigger.eligibility ===
+      "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage" &&
+    "usageLimit" in mechanics &&
+    mechanics.usageLimit.kind === "once_per_turn" &&
     mechanics.effect.kind === "add_attack_damage_dice" &&
     mechanics.effect.damageType === "same_as_attack" &&
-    mechanics.effect.dice.kind === "class_level_table" &&
-    mechanics.effect.dice.className === unit.className
+    mechanics.effect.dice.kind === "class_level_table"
     ? "attackDamageRider"
     : "unsupported";
 }

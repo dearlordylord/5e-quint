@@ -5,8 +5,8 @@
 --   with an attack roll if you have Advantage on the roll and the attack uses
 --   a Finesse or a Ranged weapon."
 --
--- The ally-adjacent alternative is part of the same attack-roll-hit rider
--- trigger. The runtime projects the same-as-weapon damage type at attack
+-- The ally-within-5-feet alternative is part of the same hit-with-attack-roll
+-- rider trigger. The runtime projects the same-as-weapon damage type at attack
 -- resolution time.
 let sneakAttack =
       { id = "rogue_sneak_attack"
@@ -21,10 +21,10 @@ let sneakAttack =
       , mechanics =
         { family = "on_hit_trigger"
         , trigger =
-          { kind = "attack_roll_hit"
+          { kind = "hit_with_attack_roll"
           , weaponFilter = "finesse_or_ranged"
-          , rollRequirement =
-              "advantage_or_ally_adjacent_without_disadvantage"
+          , eligibility =
+              "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage"
           }
         , optional = True
         , usageLimit = { kind = "once_per_turn" }
@@ -33,7 +33,6 @@ let sneakAttack =
           , damageType = "same_as_attack"
           , dice =
             { kind = "class_level_table"
-            , className = "rogue"
             , dieSize = 6
             , dice =
               [ { atLevel = 1, count = 1 }

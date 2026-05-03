@@ -300,7 +300,7 @@ describe("MCP server route", () => {
     );
   });
 
-  test("admits only attack-damage rider Unit hooks tied to their own class table", () => {
+  test("admits attack-damage rider Unit hooks through their owning class feature", () => {
     const root = createMcpCompositionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary);
     const supportedLibrary = rogueBattleUnitLibrary(root);
@@ -332,52 +332,17 @@ describe("MCP server route", () => {
     });
 
     const sneakAttackUnit = root.unitLibrary.requireUnit("rogue_sneak_attack");
-    if (
-      sneakAttackUnit.kind !== "class_feature" ||
-      sneakAttackUnit.mechanics.family !== "on_hit_trigger" ||
-      sneakAttackUnit.mechanics.effect.kind !== "add_attack_damage_dice" ||
-      sneakAttackUnit.mechanics.effect.dice.kind !== "class_level_table"
-    ) {
-      throw new Error("Expected Sneak Attack class-feature Unit.");
-    }
-    const unsupportedSneakAttackUnit: UnitRecord = {
-      ...sneakAttackUnit,
+    expect(sneakAttackUnit).toMatchObject({
+      kind: "class_feature",
+      className: "rogue",
       mechanics: {
-        ...sneakAttackUnit.mechanics,
         effect: {
-          ...sneakAttackUnit.mechanics.effect,
           dice: {
-            ...sneakAttackUnit.mechanics.effect.dice,
-            className: "fighter",
+            kind: "class_level_table",
           },
         },
       },
-    };
-
-    expect(() =>
-      startBattleFromCharacterBuildAndStatBlock({
-        battleId: battleId("battle-unsupported-attack-damage-rider"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("rogue-character"),
-          displayName: "Unsupported Sneak Attack Rogue",
-          build: rogueBuild,
-          initiative: initiativeScore(12),
-          side: partySide,
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(11),
-          side: oppositionSide,
-        },
-        unitLibrary: rogueBattleUnitLibrary(root, {
-          sneakAttackUnit: unsupportedSneakAttackUnit,
-        }),
-      }),
-    ).toThrow("Unsupported battle attack-damage rider Unit hook");
+    });
   });
 
   test("admits only save-damage replacement Unit hooks with Evasion-style mechanics", () => {
@@ -1239,6 +1204,39 @@ describe("MCP server route", () => {
       },
       unitLibrary: rogueBattleUnitLibrary(root),
     });
+    const allyId = combatantId("sneak-attack-ally");
+    const battleState = root.sessionStore.battleState;
+    const rogue = battleState.combatants.get(fighterId);
+    if (rogue === undefined) {
+      throw new Error("Expected rogue combatant in MCP Sneak Attack fixture.");
+    }
+    const combatants = new Map(battleState.combatants).set(allyId, {
+      ...rogue,
+      combatantId: allyId,
+      displayName: "Sneak Attack Ally",
+    });
+    const combatantDistances = new Map(battleState.combatantDistances);
+    const setDistance = (
+      from: typeof fighterId,
+      to: typeof fighterId,
+      feet: ReturnType<typeof movementFeet>,
+    ): void => {
+      combatantDistances.set(
+        from,
+        new Map(combatantDistances.get(from)).set(to, feet),
+      );
+    };
+    setDistance(fighterId, goblinId, movementFeet(5));
+    setDistance(goblinId, fighterId, movementFeet(5));
+    setDistance(fighterId, allyId, movementFeet(5));
+    setDistance(allyId, fighterId, movementFeet(5));
+    setDistance(allyId, goblinId, movementFeet(5));
+    setDistance(goblinId, allyId, movementFeet(5));
+    root.sessionStore.battleState = {
+      ...battleState,
+      combatants,
+      combatantDistances,
+    };
     root.sessionStore.transientBattleFills = null;
 
     fillBattleHoleThroughTool(root, "fighter", "Dagger", {
@@ -1253,7 +1251,7 @@ describe("MCP server route", () => {
       {
         kind: "attackRoll",
         holeId: "battle:attack:roll",
-        value: { total: 16, naturalD20: 14, rollMode: "advantage" },
+        value: { total: 16, naturalD20: 14 },
       },
     );
 
@@ -1281,21 +1279,18 @@ describe("MCP server route", () => {
       value: [{ results: [2] }, { results: [3] }],
     });
 
-    expect(afterDamage).toMatchObject({
-      result: { tag: "resolved" },
-      battleState: {
-        combatants: [
-          { combatantId: "fighter", hp: 12 },
-          { combatantId: "goblin", hp: 2 },
-        ],
-        currentTurnResources: {
-          attackDamageRidersUsedThisTurn: [
-            { attackerId: "fighter", unitId: "rogue_sneak_attack" },
-          ],
-        },
-      },
-      session: { transientBattleFills: null },
-    });
+    expect(afterDamage.result).toMatchObject({ tag: "resolved" });
+    expect(afterDamage.battleState.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: "fighter", hp: 12 }),
+        expect.objectContaining({ combatantId: "goblin", hp: 2 }),
+      ]),
+    );
+    expect(
+      afterDamage.battleState.currentTurnResources
+        .attackDamageRidersUsedThisTurn,
+    ).toEqual([{ attackerId: "fighter", unitId: "rogue_sneak_attack" }]);
+    expect(afterDamage.session).toMatchObject({ transientBattleFills: null });
   });
 
   test("start_battle rejects missing caller-supplied Initiative scores", () => {

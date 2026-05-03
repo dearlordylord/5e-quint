@@ -8,7 +8,6 @@
     "effect": {
       "damageType": "same_as_attack",
       "dice": {
-        "className": "rogue",
         "dice": [
           {
             "atLevel": 1,
@@ -59,8 +58,8 @@
     "family": "on_hit_trigger",
     "optional": true,
     "trigger": {
-      "kind": "attack_roll_hit",
-      "rollRequirement": "advantage_or_ally_adjacent_without_disadvantage",
+      "kind": "hit_with_attack_roll",
+      "eligibility": "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
       "weaponFilter": "finesse_or_ranged"
     },
     "usageLimit": {
