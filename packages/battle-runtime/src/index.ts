@@ -80,6 +80,7 @@ import {
   AttackBonus,
   ClassLevel,
   CreatureId,
+  DamageDieSizeSchema,
   DamageAmount,
   DifficultyClass,
   Hp,
@@ -99,6 +100,7 @@ import {
   resourceCount,
   spellSlotLevel,
   type Condition,
+  type DamageDieSize,
   type DieRollResult,
   type HandUse,
   type ProficiencyBonus as ProficiencyBonusType,
@@ -239,7 +241,7 @@ export type UnarmedStrikeDamageProfile =
       readonly kind: "authoredReplacement";
       readonly sourceUnitId: UnitRecord["id"];
       readonly dice: 1;
-      readonly dieSize: 4 | 6 | 8 | 10 | 12;
+      readonly dieSize: DamageDieSize;
       readonly damageType: DamageType;
     };
 export type UnarmedStrikeDamageEffect = {
@@ -1583,7 +1585,7 @@ const SupportedAttackActionOptionSchema = Schema.Union(
           kind: Schema.Literal("authoredReplacement"),
           sourceUnitId: Schema.String,
           dice: Schema.Literal(1),
-          dieSize: Schema.Literal(4, 6, 8, 10, 12),
+          dieSize: DamageDieSizeSchema,
           damageType: DamageTypeSchema,
         }),
       ),

@@ -91,6 +91,11 @@ export const DAMAGE_TYPES = [
 ] as const;
 export type DamageType = (typeof DAMAGE_TYPES)[number];
 
+export const DAMAGE_DIE_SIZES = [4, 6, 8, 10, 12] as const satisfies
+  ReadonlyArray<number>;
+export type DamageDieSize = (typeof DAMAGE_DIE_SIZES)[number];
+export const DamageDieSizeSchema = Schema.Literal(...DAMAGE_DIE_SIZES);
+
 export const DAMAGE_QUALIFIERS = ["adamantine", "magical", "silvered"] as const;
 export type DamageQualifier = (typeof DAMAGE_QUALIFIERS)[number];
 
