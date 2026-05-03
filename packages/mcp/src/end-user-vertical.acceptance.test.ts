@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
+import {
+  GENERIC_COMBAT_ACTION_LABELS,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+} from "../test-support/battle-act-labels.ts";
 
 describe("end-user promoted MCP vertical", () => {
   test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {
@@ -157,12 +161,14 @@ describe("end-user promoted MCP vertical", () => {
           sourceDraftId: draftId,
           combatantId: "fighter",
           initiative: 18,
+          side: "party",
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
+          side: "opposition",
         },
       ],
     });
@@ -177,6 +183,7 @@ describe("end-user promoted MCP vertical", () => {
 
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
       "Second Wind",
       "Move",
       "End Turn",
@@ -235,6 +242,7 @@ describe("end-user promoted MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
       "Move",
       "End Turn",
     ]);
@@ -353,18 +361,21 @@ describe("end-user promoted MCP vertical", () => {
           sourceDraftId: fighterDraftId,
           combatantId: "fighter",
           initiative: 18,
+          side: "party",
         },
         {
           kind: "characterSession",
           sourceDraftId: wizardDraftId,
           combatantId: "wizard",
           initiative: 14,
+          side: "party",
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_skeleton",
           combatantId: "skeleton",
           initiative: 8,
+          side: "opposition",
         },
       ],
     });
@@ -395,6 +406,7 @@ describe("end-user promoted MCP vertical", () => {
     const fighterActs = callTool(root, "discover_battle_acts", {});
     expect(actionLabels(fighterActs)).toEqual([
       "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Second Wind",
       "Action Surge",
       "Move",
@@ -438,6 +450,7 @@ describe("end-user promoted MCP vertical", () => {
       expect.arrayContaining([
         expect.objectContaining({
           unitId: "fighter_action_surge",
+          usage: "limited",
           usesRemaining: 0,
           usedThisTurn: true,
         }),
@@ -445,6 +458,7 @@ describe("end-user promoted MCP vertical", () => {
     );
     expect(actionLabels(surged)).toEqual([
       "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
       "Second Wind",
       "Move",
       "End Turn",

@@ -22,6 +22,7 @@ import {
 
 import {
   battleId,
+  battleCombatantSide,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -57,6 +58,8 @@ type MbtProjection = {
 
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
+const partySide = battleCombatantSide("party");
+const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
@@ -300,6 +303,7 @@ function fighterCreatureInit(input: {
     combatantId: fighterId,
     displayName: "Fighter",
     initiative: initiativeScore(input.initiative),
+    side: partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
@@ -352,6 +356,7 @@ function skeletonCreatureInit(input: {
     combatantId: skeletonId,
     displayName: "Skeleton",
     initiative: initiativeScore(input.initiative),
+    side: oppositionSide,
     creatureInit: {
       kind: "statBlock",
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),

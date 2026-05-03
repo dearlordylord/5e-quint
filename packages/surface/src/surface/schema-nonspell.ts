@@ -146,6 +146,63 @@ export const ActivationResourceSchema = Schema.Union(
   ChargePoolResourceSchema,
 );
 
+const OngoingFeatureExtensionTriggerSchema = Schema.Literal(
+  "attack_roll_against_enemy",
+  "bonus_action",
+  "enemy_saving_throw",
+);
+
+const OngoingFeatureLifecycleSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("turn_boundary"),
+    initialExpiration: Schema.Literal("start_of_next_turn"),
+    earlyEndConditions: exactOptional(Schema.Array(ConditionSchema)),
+    earlyEndArmorCategories: exactOptional(Schema.Array(ArmorCategorySchema)),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("round_extended"),
+    initialExpiration: Schema.Literal("end_of_next_turn"),
+    earlyEndConditions: exactOptional(Schema.Array(ConditionSchema)),
+    earlyEndArmorCategories: exactOptional(Schema.Array(ArmorCategorySchema)),
+    extensionTriggers: Schema.NonEmptyArray(OngoingFeatureExtensionTriggerSchema),
+    maximumDuration: Schema.Struct({
+      unit: Schema.Literal("round", "minute", "hour", "day"),
+      amount: PositiveIntegerSchema,
+    }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("fixed_duration"),
+    duration: Schema.Struct({
+      unit: Schema.Literal("round", "minute", "hour", "day"),
+      amount: PositiveIntegerSchema,
+    }),
+    earlyEndConditions: exactOptional(Schema.Array(ConditionSchema)),
+    earlyEndArmorCategories: exactOptional(Schema.Array(ArmorCategorySchema)),
+  }),
+);
+
+const OngoingFeatureSupportFields = {
+  lifecycle: OngoingFeatureLifecycleSchema,
+  concentrationEffect: exactOptional(Schema.Literal("break_and_prevent")),
+  actionRestrictions: exactOptional(Schema.Array(Schema.Literal("spellcasting"))),
+  levelOverrides: exactOptional(
+    Schema.Array(
+      Schema.Struct({
+        atClassLevel: PositiveIntegerSchema,
+        lifecycle: OngoingFeatureLifecycleSchema,
+      }),
+    ),
+  ),
+};
+const ActivationCostOngoingFeatureSupportSchema = Schema.Struct({
+  activationTiming: Schema.Literal("activation_cost"),
+  ...OngoingFeatureSupportFields,
+});
+const FirstAttackRollOngoingFeatureSupportSchema = Schema.Struct({
+  activationTiming: Schema.Literal("first_attack_roll"),
+  ...OngoingFeatureSupportFields,
+});
+
 export const RelativeDayResetTriggerSchema = Schema.Literal(
   "resource_spent",
   "resource_empty",
@@ -245,23 +302,57 @@ export const PassiveOperationSchema = Schema.Struct({
   effect: EffectAtomSchema,
 });
 
-const ActivatedAbilityHeaderSchema = Schema.Struct({
+const ActivatedAbilityBaseFields = {
   condition: exactOptional(EquipmentPredicateSchema),
-  activationCost: ClassFeatureActivationCostSchema,
   range: exactOptional(RangeSchema),
-  resource: ActivationResourceSchema,
-  resetCadence: ResetCadenceSchema,
-  duration: exactOptional(DurationSchema),
   usageLimit: exactOptional(
     Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
   ),
-});
-
-export const ActivatedAbilityMechanicsSchema = Schema.Struct({
-  ...ActivatedAbilityHeaderSchema.fields,
-  family: Schema.Literal("activation"),
-  phases: Schema.NonEmptyArray(ActivationPhaseSchema),
-});
+};
+const ResourceActivatedAbilityFields = {
+  ...ActivatedAbilityBaseFields,
+  resource: ActivationResourceSchema,
+  resetCadence: ResetCadenceSchema,
+  duration: exactOptional(DurationSchema),
+};
+const ResourceOngoingFeatureAbilityFields = {
+  ...ActivatedAbilityBaseFields,
+  resource: ActivationResourceSchema,
+  resetCadence: ResetCadenceSchema,
+  duration: exactOptional(Schema.Never),
+};
+const ResourcelessOngoingFeatureAbilityFields = {
+  ...ActivatedAbilityBaseFields,
+  resource: exactOptional(Schema.Never),
+  resetCadence: exactOptional(Schema.Never),
+  duration: exactOptional(Schema.Never),
+};
+export const ActivatedAbilityMechanicsSchema = Schema.Union(
+  Schema.Struct({
+    ...ResourceActivatedAbilityFields,
+    activationCost: ClassFeatureActivationCostSchema,
+    ongoingFeature: exactOptional(Schema.Never),
+    family: Schema.Literal("activation"),
+    phases: Schema.NonEmptyArray(ActivationPhaseSchema),
+  }),
+  Schema.Struct({
+    ...ResourceOngoingFeatureAbilityFields,
+    activationCost: Schema.Struct({
+      kind: Schema.Literal("bonus_action"),
+      action: exactOptional(StandardActionKindSchema),
+    }),
+    ongoingFeature: ActivationCostOngoingFeatureSupportSchema,
+    family: Schema.Literal("activation"),
+    phases: Schema.NonEmptyArray(ActivationPhaseSchema),
+  }),
+  Schema.Struct({
+    ...ResourcelessOngoingFeatureAbilityFields,
+    activationCost: Schema.Struct({ kind: Schema.Literal("free") }),
+    ongoingFeature: FirstAttackRollOngoingFeatureSupportSchema,
+    family: Schema.Literal("activation"),
+    phases: Schema.NonEmptyArray(ActivationPhaseSchema),
+  }),
+);
 
 export const TriggeredReactionAbilityMechanicsSchema = Schema.Struct({
   condition: exactOptional(EquipmentPredicateSchema),
@@ -289,7 +380,8 @@ const MagicItemSpawnedCreaturePayloadSchema = Schema.Struct({
 });
 
 export const MagicItemSpawnedCreatureMechanicsSchema = Schema.Struct({
-  ...ActivatedAbilityHeaderSchema.fields,
+  ...ResourceActivatedAbilityFields,
+  activationCost: ClassFeatureActivationCostSchema,
   ...MagicItemSpawnedCreaturePayloadSchema.fields,
   family: Schema.Literal("spawned_creature"),
   range: RangeSchema,

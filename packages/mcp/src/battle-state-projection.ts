@@ -1,4 +1,7 @@
-import { snapshotBattle } from "@dnd/battle-runtime";
+import {
+  characterBattleResourceUsage,
+  snapshotBattle,
+} from "@dnd/battle-runtime";
 import type { BattleCreatureState, BattleState } from "@dnd/battle-runtime";
 
 export function battleStateProjection(state: BattleState) {
@@ -38,6 +41,7 @@ function battleCreatureStateProjection(
     combatantId: combatant.combatantId,
     displayName: combatant.displayName,
     initiative: combatant.initiative,
+    side: combatant.side,
     hp: combatant.hp,
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
@@ -46,6 +50,8 @@ function battleCreatureStateProjection(
     hidden: combatant.hidden,
     armorClass: combatant.armorClass,
     activeEffects: combatant.activeEffects,
+    activeOngoingFeatureOccurrences:
+      snapshot?.activeOngoingFeatureOccurrences ?? [],
     concentration: combatant.concentration,
     size: combatant.size,
     hands: snapshot?.hands,
@@ -56,11 +62,17 @@ function battleCreatureStateProjection(
         ? {
             kind: "character" as const,
             characterId: combatant.origin.characterId,
-            resources: combatant.origin.resources.map((resource) => ({
-              unitId: resource.unit.id,
-              usesRemaining: resource.usesRemaining,
-              usedThisTurn: resource.usedThisTurn,
-            })),
+            resources: combatant.origin.resources.map((resource) => {
+              const usage = characterBattleResourceUsage(resource);
+              return {
+                unitId: resource.unit.id,
+                usage,
+                ...(usage === "limited" && "usesRemaining" in resource
+                  ? { usesRemaining: resource.usesRemaining }
+                  : {}),
+                usedThisTurn: resource.usedThisTurn,
+              };
+            }),
             spellcasting:
               combatant.origin.spellcasting === undefined
                 ? undefined

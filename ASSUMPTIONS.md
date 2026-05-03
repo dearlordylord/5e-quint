@@ -233,16 +233,6 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Changes:** `creature.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `creature.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
 
-## A26: Rage maintenance timing
-
-**Assumption:** Rage maintenance is checked at the start of the barbarian's next turn, using flags from the previous turn (`attackedOrForcedSaveThisTurn`, `rageExtendedWithBA`). If neither flag is set and level < 15 (Persistent Rage), rage ends.
-
-**Rules basis (SRD 5.2.1 Barbarian L1 "Rage > Duration"):** "The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following: Make an attack roll against an enemy. Force an enemy to make a saving throw. Take a Bonus Action to extend your Rage."
-
-The SRD says rage "lasts until the end of your next turn" — checking maintenance at the start of the next turn (before the turn's actions) is equivalent: if you didn't maintain it during your previous turn, it expires before you can act.
-
-**Changes:** `creature.qnt`: `pBarbarianStartTurn` calls `pCheckRageMaintenance` before resetting per-turn flags. XState: `barbarianStartTurnUpdate` mirrors this logic.
-
 ## A27: TS-only barbarian features
 
 **Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow), Frenzy bonus damage, Danger Sense advantage, and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., applying extra damage dice, granting advantage on DEX saves) rather than resource tracking, so they don't need Quint state variables.
@@ -250,22 +240,6 @@ The SRD says rage "lasts until the end of your next turn" — checking maintenan
 **Rules basis:** These features modify attack rolls, damage totals, or saving throws — all computed by the caller using the existing spec mechanics (damage, advantage, saves). The spec tracks only the resource charges and state flags that constrain when these features can be used.
 
 **Changes:** Retaliation after-damage reaction eligibility is modeled in `battle.qnt` from battle-owned trigger qualifiers. The remaining TS-only features are implemented in `class-barbarian.ts`.
-
-## A28: Persistent Rage modeling
-
-**Assumption:** Persistent Rage (L15+) is modeled by skipping the rage maintenance check in `pCheckRageMaintenance`. The SRD says rage "lasts for 10 minutes without you needing to do anything to extend it" — we model this as `rageTurnsRemaining = 100` (10 min ≈ 100 rounds) with no maintenance required. Rage can still end early from Unconscious condition or donning Heavy armor (caller responsibility).
-
-**Rules basis (SRD 5.2.1 Barbarian L15 "Persistent Rage"):** "Your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor."
-
-**Changes:** `creature.qnt`: `pCheckRageMaintenance` returns early (no-op) when `barbarianLevel >= 15`. XState: `barbarianStartTurnUpdate` mirrors this.
-
-## A29: MonkState scope — caller-side features
-
-**Assumption:** Most Monk features are caller-side composition (D4 from plan): Martial Arts die, Unarmored Movement, Unarmored Defense AC, Evasion, Deflect Attacks damage reduction, Slow Fall, Open Hand Technique target effects (Addle/Push/Topple), Focus-Empowered Strikes, Self-Restoration, Disciplined Survivor, Perfect Focus, Fleet Step, Quivering Palm. The Quint spec only models resource tracking: Focus Points, Stunning Strike per-turn flag, Wholeness of Body charges, and Uncanny Metabolism once-per-long-rest flag.
-
-**Rules basis (SRD 5.2.1 Monk):** These features modify damage, AC, saves, or apply effects to targets — all caller-side concerns that the spec cannot observe without modeling two combatants.
-
-**Changes:** `creature.qnt`: `MonkState` has 6 fields. `machine-monk.ts`: delegates to `class-monk.ts` and `class-monk-features.ts` for calculations.
 
 ## A30: Wholeness of Body — WIS modifier range
 
@@ -350,7 +324,7 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 
 **Rules basis:** SRD 5.2.1 repeatedly distinguishes taking the Attack action from attacks made as part of that action. Multiattack says some creatures can make more than one attack when they take the Attack action. Grapple and Shove say they can replace one attack when a creature takes the Attack action. This implies a two-step structure: spend the Action to take the Attack action, then spend the attacks made available by that action.
 
-**Changes:** `UBIQUITOUS_LANGUAGE.md` records the terminology distinction. Surface uses `replace_attack` for authored units such as Dragonborn Breath Weapon and Javelin of Lightning, keeping them separate from `standard_action` activation costs. The current `surface-runtime-correction` slice does not yet implement attack-opportunity accounting; this assumption records the intended model before that reducer work.
+**Changes:** `UBIQUITOUS_LANGUAGE.md` records the terminology distinction. Surface uses `replace_attack` for authored units such as Dragonborn Breath Weapon and Javelin of Lightning, keeping them separate from `standard_action` activation costs. The deleted `surface-runtime-correction` slice did not implement attack-opportunity accounting; this assumption records the intended model before that reducer work.
 
 ## A40: Character creation runtime loadout precondition
 

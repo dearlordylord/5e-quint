@@ -3,12 +3,14 @@ import {
   battleCreatureInitFromStatBlock,
   scoreModifier,
   startBattle,
+  type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
   type CharacterZeroHpLifecycleInit,
   type CharacterWeaponAttackActionOption,
   type BattleId,
   type BattleState,
+  type BattleCombatantSide,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
@@ -53,6 +55,7 @@ export type CharacterBuildCreatureInput = {
   readonly displayName: string;
   readonly build: CharacterBuild;
   readonly initiative: InitiativeScore;
+  readonly side: BattleCombatantSide;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
@@ -109,6 +112,7 @@ export function battleCreatureInitFromCharacterBuild(
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: input.initiative,
+    side: input.side,
     creatureInit: {
       kind: "character",
       characterId: input.characterId,
@@ -126,6 +130,7 @@ export function battleCreatureInitFromCharacterBuild(
       selectedLoadout: input.build.equipment,
       attack: characterAttackActionOption(input.build, input.unitLibrary),
       ...(offHandAttack === undefined ? {} : { offHandAttack }),
+      unitFeatures: characterBattleFeatures(input.build, input.unitLibrary),
       resources: characterBattleResources(input.build, input.unitLibrary),
       ...(input.build.spellcasting === undefined
         ? {}
@@ -239,9 +244,23 @@ function characterBattleResources(
 
     return {
       unit,
-      resource: resource.resource,
     };
   });
+}
+
+function characterBattleFeatures(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): readonly CharacterBattleFeatureInit[] {
+  return build.features
+    .filter((feature) => feature.kind === "classFeature")
+    .map((feature) => {
+      const unit = unitLibrary.requireUnit(feature.unitId);
+      if (unit.kind !== "class_feature") {
+        throw new Error(`Expected class feature Unit for feature: ${unit.id}`);
+      }
+      return { unit };
+    });
 }
 
 function characterArmorClassState(

@@ -1090,7 +1090,8 @@ export function resourceForFeature(
     return [];
   }
 
-  return unit.mechanics.family === "activation"
+  return unit.mechanics.family === "activation" &&
+    unit.mechanics.resource !== undefined
     ? [{ unitId: unit.id, resource: unit.mechanics.resource }]
     : [];
 }

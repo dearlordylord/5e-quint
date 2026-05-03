@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   battleId,
+  battleCombatantSide,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -40,9 +41,15 @@ import {
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
 import { availableCharacterSession } from "./session-store.ts";
+import {
+  GENERIC_COMBAT_ACTION_LABELS,
+  GENERIC_READY_TRIGGERS,
+} from "../test-support/battle-act-labels.ts";
 
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
+const partySide = battleCombatantSide("party");
+const oppositionSide = battleCombatantSide("opposition");
 
 describe("MCP server route", () => {
   test("builds SRD catalogs and keeps selected Stat Block state identity-only", () => {
@@ -82,6 +89,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter",
         build: fighterCharacterBuild(root.unitLibrary),
         initiative: initiativeScore(12),
+        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -89,6 +97,7 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
+        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -134,6 +143,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter 2",
         build: fighterTwoCharacterBuild(root.unitLibrary),
         initiative: initiativeScore(12),
+        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -141,6 +151,7 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
+        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -166,6 +177,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter",
         build: fighterTwoLightWeaponBuild(root.unitLibrary),
         initiative: initiativeScore(12),
+        side: partySide,
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -173,6 +185,7 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(11),
+        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -319,12 +332,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
+          side: "opposition",
           },
         ],
       }),
@@ -386,7 +401,21 @@ describe("MCP server route", () => {
     });
     expect(
       read.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Second Wind", "Move", "End Turn"]);
+    ).toEqual([
+      "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Second Wind",
+      "Move",
+      "End Turn",
+    ]);
+    expect(
+      read.snapshot.acts
+        .filter((act: { label: string }) => act.label === "Ready")
+        .map(
+          (act: { subject: { readonly readyTrigger?: string } }) =>
+            act.subject.readyTrigger,
+        ),
+    ).toEqual([...GENERIC_READY_TRIGGERS]);
     expect(read.battleState.combatants).toHaveLength(2);
   });
 
@@ -408,12 +437,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
+          side: "opposition",
           },
         ],
       }),
@@ -465,12 +496,14 @@ describe("MCP server route", () => {
             sourceDraftId: firstDraftId,
             combatantId: "first-fighter",
             initiative: 11,
+          side: "party",
           },
           {
             kind: "characterSession",
             sourceDraftId: secondDraftId,
             combatantId: "second-fighter",
             initiative: 17,
+          side: "party",
           },
         ],
       }),
@@ -515,12 +548,14 @@ describe("MCP server route", () => {
             sourceDraftId: firstDraftId,
             combatantId: "fighter",
             initiative: 18,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
+          side: "opposition",
           },
         ],
       }),
@@ -537,12 +572,14 @@ describe("MCP server route", () => {
             sourceDraftId: secondDraftId,
             combatantId: "second-fighter",
             initiative: 16,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "second-goblin",
             initiative: 8,
+          side: "opposition",
           },
         ],
       }),
@@ -588,12 +625,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
+          side: "opposition",
           },
         ],
       }),
@@ -779,7 +818,13 @@ describe("MCP server route", () => {
     );
     expect(
       goblinActs.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
+    ).toEqual([
+      "Attack",
+      "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Move",
+      "End Turn",
+    ]);
 
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -866,6 +911,7 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
+          side: "party",
           },
           {
             kind: "statBlock",
@@ -901,6 +947,7 @@ describe("MCP server route", () => {
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
+          side: "opposition",
         },
       ],
     };
@@ -927,6 +974,7 @@ describe("MCP server route", () => {
               sourceDraftId: draftId,
               combatantId: "fighter",
               initiative: 18,
+          side: "party",
               characterDisplayName: "Contradictory Caller Name",
             },
           ],
@@ -959,18 +1007,21 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
+          side: "party",
           },
           {
             kind: "characterSession",
             sourceDraftId: "draft:mcp-missing-additional-secondary",
             combatantId: "second-fighter",
             initiative: 16,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
+          side: "opposition",
           },
         ],
       }),
@@ -998,12 +1049,14 @@ describe("MCP server route", () => {
           sourceDraftId: draftId,
           combatantId: "fighter",
           initiative: 18,
+          side: "party",
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
+          side: "opposition",
         },
       ],
     } as const;
@@ -1046,12 +1099,14 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "first-goblin",
             initiative: 11,
+          side: "opposition",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "second-goblin",
             initiative: 8,
+          side: "opposition",
           },
         ],
       }),
@@ -1092,12 +1147,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
+          side: "opposition",
           },
         ],
       }),
@@ -1163,12 +1220,14 @@ describe("MCP server route", () => {
           sourceDraftId: firstDraftId,
           combatantId: "fighter",
           initiative: 18,
+          side: "party",
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
+          side: "opposition",
         },
       ],
     };
@@ -1177,6 +1236,7 @@ describe("MCP server route", () => {
       sourceDraftId: secondDraftId,
       combatantId: "second-fighter",
       initiative: 16,
+          side: "party",
     } as const;
 
     expect(
@@ -1328,12 +1388,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 18,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
+          side: "opposition",
           },
         ],
       }),
@@ -1391,7 +1453,13 @@ describe("MCP server route", () => {
     );
     expect(
       fighterActs.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Second Wind", "Move", "End Turn"]);
+    ).toEqual([
+      "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Second Wind",
+      "Move",
+      "End Turn",
+    ]);
 
     fillBattleHoleThroughTool(root, "fighter", "Longsword", {
       kind: "targetChoice",
@@ -1464,7 +1532,13 @@ describe("MCP server route", () => {
     );
     expect(
       goblinActs.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
+    ).toEqual([
+      "Attack",
+      "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Move",
+      "End Turn",
+    ]);
 
     fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
       kind: "targetChoice",
@@ -1553,12 +1627,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 12,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
+          side: "opposition",
           },
         ],
       }),
@@ -1655,12 +1731,14 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 12,
+          side: "opposition",
           },
           {
             kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 10,
+          side: "party",
           },
         ],
       }),
@@ -1714,12 +1792,14 @@ describe("MCP server route", () => {
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 12,
+          side: "opposition",
           },
           {
             kind: "characterSession",
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 10,
+          side: "party",
           },
         ],
       }),
@@ -1812,12 +1892,14 @@ describe("MCP server route", () => {
             sourceDraftId: draftId,
             combatantId: "fighter",
             initiative: 12,
+          side: "party",
           },
           {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
+          side: "opposition",
           },
         ],
       }),
@@ -2017,6 +2099,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Orc Soldier Fighter",
         initiative: initiativeScore(12),
+        side: partySide,
         build: {
           ...build,
           equipment: {
@@ -2035,6 +2118,7 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
+        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -2055,6 +2139,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Armored Spellcaster",
         initiative: initiativeScore(12),
+        side: partySide,
         build: {
           ...build,
           armorTraining: [],
@@ -2081,6 +2166,7 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
+        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -2107,6 +2193,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Shield Spellcaster",
         initiative: initiativeScore(12),
+        side: partySide,
         build: {
           ...build,
           armorTraining: [],
@@ -2129,6 +2216,7 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
+        side: oppositionSide,
       },
       unitLibrary: root.unitLibrary,
     });
@@ -2154,6 +2242,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Acid Splash Spellcaster",
         initiative: initiativeScore(12),
+        side: partySide,
         build: {
           ...build,
           armorTraining: [],
@@ -2176,6 +2265,7 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
+        side: oppositionSide,
       },
       combatantDistances: [
         { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(30) },
@@ -2266,6 +2356,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Readied Spell Fighter",
         initiative: initiativeScore(12),
+        side: partySide,
         build: {
           ...build,
           armorTraining: [],
@@ -2286,6 +2377,7 @@ describe("MCP server route", () => {
           "stat_block_goblin_warrior",
         ),
         initiative: initiativeScore(10),
+        side: oppositionSide,
       },
       combatantDistances: [
         { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(30) },
@@ -2466,6 +2558,7 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(12),
+          side: partySide,
           currentHp: Hp(13),
         },
         statBlockBattleInput: {
@@ -2474,6 +2567,7 @@ describe("MCP server route", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(10),
+          side: oppositionSide,
         },
         unitLibrary: root.unitLibrary,
       }),

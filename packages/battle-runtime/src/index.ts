@@ -114,6 +114,7 @@ import type {
   DamageType,
   DcSource,
   DiceExpr,
+  EffectAtom,
   SpellRecord,
   StatBlockRecord,
   StatBlockValue,
@@ -218,15 +219,43 @@ export type CharacterWeaponAttackActionOption = {
 };
 export type CharacterBattleResourceInit = {
   readonly unit: UnitRecord;
-  readonly resource: ActivationResource;
   readonly usesRemaining?: number;
 };
-export type CharacterBattleResourceState = {
+export type CharacterBattleFeatureInit = {
   readonly unit: UnitRecord;
-  readonly resource: ActivationResource;
-  readonly usesRemaining: ResourceCount;
+};
+type UseCountActivationResource = Extract<
+  ActivationResource,
+  { readonly kind: "use_count" }
+>;
+type ChargePoolActivationResource = Extract<
+  ActivationResource,
+  { readonly kind: "charge_pool" }
+>;
+type UnlimitedActivationResource = UseCountActivationResource & {
+  readonly cap: { readonly kind: "unlimited" };
+};
+type LimitedActivationResource =
+  | ChargePoolActivationResource
+  | (UseCountActivationResource & {
+      readonly cap: Exclude<
+        UseCountActivationResource["cap"],
+        { readonly kind: "unlimited" }
+      >;
+    });
+type CharacterBattleResourceStateBase = {
+  readonly unit: UnitRecord;
   readonly usedThisTurn: boolean;
 };
+export type CharacterBattleResourceState =
+  | (CharacterBattleResourceStateBase & {
+      readonly resource: LimitedActivationResource;
+      readonly usesRemaining: ResourceCount;
+    })
+  | (CharacterBattleResourceStateBase & {
+      readonly resource: UnlimitedActivationResource;
+      readonly usesRemaining?: never;
+    });
 export type CharacterBattleSpellSlotInit = {
   readonly spellLevel: number;
   readonly count: number;
@@ -670,6 +699,7 @@ export type CharacterBattleCreatureInit = {
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly attack: CharacterWeaponAttackActionOption | null;
   readonly offHandAttack?: CharacterWeaponAttackActionOption | undefined;
+  readonly unitFeatures?: readonly CharacterBattleFeatureInit[];
   readonly resources?: readonly CharacterBattleResourceInit[];
   readonly spellcasting?: CharacterBattleSpellcastingInit;
 };
@@ -678,6 +708,7 @@ export type StatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
   readonly initiative: InitiativeScore;
+  readonly side: BattleCombatantSide;
   // defaults to max
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
@@ -695,6 +726,7 @@ export type BattleCreatureInit = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
+  readonly side: BattleCombatantSide;
   // The creature init kind is the zero-HP lifecycle authority:
   // characters use death saves; stat block creatures die at 0 HP.
   readonly creatureInit:
@@ -734,6 +766,7 @@ export type BattleCombatantDistanceValidationIssue =
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
+  readonly attackRollMadeThisTurn: boolean;
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
   };
@@ -741,15 +774,182 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly disengaged: boolean;
 };
 
+export type OngoingFeatureExpiration =
+  | {
+      readonly kind: "startOfTurn";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "endOfTurn";
+      readonly combatantId: CombatantId;
+      readonly round: RoundType;
+    };
+type EndOfTurnOngoingFeatureExpiration = Extract<
+  OngoingFeatureExpiration,
+  { readonly kind: "endOfTurn" }
+>;
+export type OngoingFeatureRollModifier = {
+  readonly mode: AttackRollMode;
+  readonly affects: "selfRoll" | "rollsAgainstSelf";
+  readonly on: "attackRoll";
+  readonly abilityFilter?: readonly Ability[];
+};
+export type OngoingFeatureDamageModifier = {
+  readonly amount: number;
+  readonly abilityFilter?: readonly Ability[];
+  readonly weaponUsageFilter?: WeaponRecord["usage"];
+};
+export type OngoingFeatureSource = {
+  readonly kind: "unit";
+  readonly unitId: UnitRecord["id"];
+};
+export const BattleCombatantSide = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleCombatantSide"),
+);
+export type BattleCombatantSide = typeof BattleCombatantSide.Type;
+export const battleCombatantSide: (value: string) => BattleCombatantSide =
+  BattleCombatantSide.make;
+export type OngoingFeatureSourceKey = string &
+  Brand.Brand<"OngoingFeatureSourceKey">;
+const OngoingFeatureSourceKey = Brand.nominal<OngoingFeatureSourceKey>();
+export type ActiveOngoingFeatureOccurrence =
+  | {
+      readonly kind: "turnBoundary";
+      readonly expiresAt: OngoingFeatureExpiration;
+    }
+  | {
+      readonly kind: "roundExtended";
+      readonly expiresAt: EndOfTurnOngoingFeatureExpiration;
+      readonly maxExpiresAt: EndOfTurnOngoingFeatureExpiration;
+    }
+  | {
+      readonly kind: "fixedDuration";
+      readonly expiresAt: EndOfTurnOngoingFeatureExpiration;
+    };
+export type ActiveOngoingFeatureOccurrenceSnapshot =
+  ActiveOngoingFeatureOccurrence & {
+    readonly source: OngoingFeatureSource;
+  };
+type OngoingFeatureExpirationEncoded =
+  | {
+      readonly kind: "startOfTurn";
+      readonly combatantId: string;
+    }
+  | {
+      readonly kind: "endOfTurn";
+      readonly combatantId: string;
+      readonly round: number;
+    };
+type EndOfTurnOngoingFeatureExpirationEncoded = Extract<
+  OngoingFeatureExpirationEncoded,
+  { readonly kind: "endOfTurn" }
+>;
+type OngoingFeatureSourceEncoded = {
+  readonly kind: "unit";
+  readonly unitId: string;
+};
+export type ActiveOngoingFeatureOccurrenceSnapshotEncoded =
+  | {
+      readonly kind: "turnBoundary";
+      readonly expiresAt: OngoingFeatureExpirationEncoded;
+      readonly source: OngoingFeatureSourceEncoded;
+    }
+  | {
+      readonly kind: "roundExtended";
+      readonly expiresAt: EndOfTurnOngoingFeatureExpirationEncoded;
+      readonly maxExpiresAt: EndOfTurnOngoingFeatureExpirationEncoded;
+      readonly source: OngoingFeatureSourceEncoded;
+    }
+  | {
+      readonly kind: "fixedDuration";
+      readonly expiresAt: EndOfTurnOngoingFeatureExpirationEncoded;
+      readonly source: OngoingFeatureSourceEncoded;
+    };
+const OngoingFeatureExpirationSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("startOfTurn"),
+    combatantId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("endOfTurn"),
+    combatantId: Schema.String,
+    round: Schema.Number,
+  }),
+);
+const EndOfTurnOngoingFeatureExpirationSchema = Schema.Struct({
+  kind: Schema.Literal("endOfTurn"),
+  combatantId: Schema.String,
+  round: Schema.Number,
+});
+const OngoingFeatureSourceSchema = Schema.Struct({
+  kind: Schema.Literal("unit"),
+  unitId: Schema.String,
+});
+export const ActiveOngoingFeatureOccurrenceSnapshotSchema: Schema.Schema<
+  ActiveOngoingFeatureOccurrenceSnapshotEncoded,
+  ActiveOngoingFeatureOccurrenceSnapshotEncoded,
+  never
+> = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("turnBoundary"),
+    expiresAt: OngoingFeatureExpirationSchema,
+    source: OngoingFeatureSourceSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("roundExtended"),
+    expiresAt: EndOfTurnOngoingFeatureExpirationSchema,
+    maxExpiresAt: EndOfTurnOngoingFeatureExpirationSchema,
+    source: OngoingFeatureSourceSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("fixedDuration"),
+    expiresAt: EndOfTurnOngoingFeatureExpirationSchema,
+    source: OngoingFeatureSourceSchema,
+  }),
+);
+
+function ongoingFeatureSourceKey(
+  source: OngoingFeatureSource,
+): OngoingFeatureSourceKey {
+  return OngoingFeatureSourceKey(source.unitId);
+}
+
+function ongoingFeatureSourceForUnit(
+  unitId: UnitRecord["id"],
+): OngoingFeatureSource {
+  return { kind: "unit", unitId };
+}
+
+function ongoingFeatureSourceKeyForUnit(
+  unitId: UnitRecord["id"],
+): OngoingFeatureSourceKey {
+  return ongoingFeatureSourceKey(ongoingFeatureSourceForUnit(unitId));
+}
+
+function ongoingFeatureSourceFromKey(
+  key: OngoingFeatureSourceKey,
+): OngoingFeatureSource {
+  const unitId = String(key);
+  if (unitId.length === 0) {
+    throw new Error(`Invalid ongoing feature source key: ${String(key)}`);
+  }
+  return { kind: "unit", unitId };
+}
+
 export type BattleCreatureState = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
+  readonly side: BattleCombatantSide;
   readonly hp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly conditions: ConditionState;
   readonly activeEffects: readonly BattleActiveEffect[];
+  readonly activeOngoingFeatureOccurrences: ReadonlyMap<
+    OngoingFeatureSourceKey,
+    ActiveOngoingFeatureOccurrence
+  >;
   readonly concentration: BattleConcentration | null;
   readonly dodging: boolean;
   readonly hidden: BattleHiddenState | null;
@@ -769,6 +969,13 @@ export type BattleCreatureState = {
         readonly attack: CharacterWeaponAttackActionOption | null;
         readonly offHandAttack?: CharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
+        readonly ongoingFeatureProfiles: ReadonlyMap<
+          OngoingFeatureSourceKey,
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "ongoingFeature" }
+          >
+        >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
       }
     | {
@@ -1116,6 +1323,12 @@ export type BattleAttackRollHole = Extract<
   readonly attack: SupportedAttackActionOption;
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
+  readonly ongoingFeatureActivations?: readonly AttackRollFeatureActivation[];
+};
+export type AttackRollFeatureActivation = {
+  readonly unitId: UnitRecord["id"];
+  readonly label: UnitRecord["name"];
+  readonly rollMode: AttackRollMode;
 };
 export type BattleSpellAttackRollHole = Extract<
   RuntimeHole,
@@ -1344,6 +1557,16 @@ export const BattleHoleSchema = Schema.Union(
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
     }),
+    ongoingFeatureActivations: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          unitId: Schema.String,
+          label: Schema.String,
+          rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+        }),
+      ),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1439,8 +1662,16 @@ export const BattleHoleSchema = Schema.Union(
   }),
 );
 
+export type BattleAttackRollResult = AttackRollResult & {
+  readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
+};
 export type BattleFill =
-  | Extract<FilledHoleValue, { readonly kind: "attackRoll" | "rolledDice" }>
+  | {
+      readonly kind: "attackRoll";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleAttackRollResult;
+    }
+  | Extract<FilledHoleValue, { readonly kind: "rolledDice" }>
   | {
       readonly kind: "savingThrowOutcome";
       readonly holeId: BattleHoleId;
@@ -1511,6 +1742,9 @@ const BattleAttackRollResultSchema = Schema.Struct({
   rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
     exact: true,
   }),
+  activatedOngoingFeatureUnitId: Schema.optionalWith(Schema.String, {
+    exact: true,
+  }),
 });
 const BattleRolledDiceGroupSchema = Schema.Struct({
   results: Schema.NonEmptyArray(BattleDieRollResultSchema),
@@ -1529,6 +1763,7 @@ type BattleFillEncoded =
         readonly total: number;
         readonly naturalD20: number;
         readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
+        readonly activatedOngoingFeatureUnitId?: string;
       };
     }
   | {
@@ -1767,6 +2002,7 @@ type BattleResolutionInputForSubject<TSubject extends BattleSubject> = Omit<
 type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
 > & {
+  readonly replayingInterruptedProcedure?: boolean;
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
 };
 type OffHandAttackBattleResolutionInput = BattleResolutionInputForSubject<
@@ -1866,6 +2102,7 @@ export type BattleCreatureSnapshot = {
   readonly conditions: readonly Condition[];
   readonly hidden: BattleHiddenState | null;
   readonly activeEffects: readonly BattleActiveEffect[];
+  readonly activeOngoingFeatureOccurrences: readonly ActiveOngoingFeatureOccurrenceSnapshot[];
   readonly concentration: BattleConcentration | null;
   readonly dodging: boolean;
   readonly reactionAvailable: boolean;
@@ -1905,6 +2142,7 @@ const INITIAL_ROUND: RoundType = Round(1);
 const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
+  attackRollMadeThisTurn: false,
   dashMovementBonusFeet: movementFeet(0),
   disengaged: false,
 });
@@ -1959,6 +2197,38 @@ const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = movementFeet(5);
 const HIDE_DC = difficultyClass(15);
 
+type OngoingFeatureExtensionTrigger =
+  | "attackRollAgainstEnemy"
+  | "bonusAction"
+  | "enemySavingThrow";
+
+type OngoingFeatureLifecycleProfile =
+  | {
+      readonly kind: "turnBoundary";
+      readonly initialExpiration: "startOfNextTurn" | "endOfNextTurn";
+      readonly earlyEndConditions: readonly Condition[];
+      readonly earlyEndArmorCategories: readonly ["heavy"] | readonly [];
+      readonly extensionTriggers: readonly [];
+    }
+  | {
+      readonly kind: "roundExtended";
+      readonly initialExpiration: "endOfNextTurn";
+      readonly maximumDurationRounds: number;
+      readonly earlyEndConditions: readonly Condition[];
+      readonly earlyEndArmorCategories: readonly ["heavy"] | readonly [];
+      readonly extensionTriggers: readonly [
+        OngoingFeatureExtensionTrigger,
+        ...OngoingFeatureExtensionTrigger[],
+      ];
+    }
+  | {
+      readonly kind: "fixedDuration";
+      readonly maximumDurationRounds: number;
+      readonly earlyEndConditions: readonly Condition[];
+      readonly earlyEndArmorCategories: readonly ["heavy"] | readonly [];
+      readonly extensionTriggers: readonly [];
+    };
+
 type SupportedUnitFeatureProfile =
   | {
       readonly kind: "extraActionGrant";
@@ -1975,6 +2245,18 @@ type SupportedUnitFeatureProfile =
       readonly startingAtLevel: number;
       readonly className: ClassName;
       readonly classLevel: ClassLevel;
+    }
+  | {
+      readonly kind: "ongoingFeature";
+      readonly unit: UnitRecord;
+      readonly activationTrigger: "bonusAction" | "firstAttackRoll";
+      readonly spendsUse: boolean;
+      readonly lifecycle: OngoingFeatureLifecycleProfile;
+      readonly concentrationEffect?: "breakAndPrevent";
+      readonly actionRestrictions: readonly "spellcasting"[];
+      readonly rollModifiers: readonly OngoingFeatureRollModifier[];
+      readonly damageModifiers: readonly OngoingFeatureDamageModifier[];
+      readonly resistances: readonly DamageType[];
     };
 
 export function startBattle(input: {
@@ -2585,7 +2867,12 @@ function resolveBattleSubjectInternal(
       return resolveAttack({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        ...(options.replayingInterruptedProcedure === undefined
+          ? {}
+          : { replayingInterruptedProcedure: options.replayingInterruptedProcedure }),
+        ...(options.suppressedReactionTrigger === undefined
+          ? {}
+          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
       });
     }
     if (subject.tag === "action" && subject.action === "dash") {
@@ -2752,11 +3039,15 @@ function consumeOrCloseLegendaryActionWindow(
 ): BattleResolutionResult {
   if (result.tag !== "resolved") return result;
   if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
-    return result;
+    const normalized = normalizeEarlyEndedOngoingFeatures(result.state);
+    return normalized === result.state
+      ? result
+      : { ...result, state: normalized, snapshot: snapshotBattle(normalized) };
   }
+  const normalized = normalizeEarlyEndedOngoingFeatures(result.state);
   const state = isLegendaryAttackSubject(subject)
-    ? consumeLegendaryActionWindow(result.state)
-    : closeLegendaryActionWindow(result.state);
+    ? consumeLegendaryActionWindow(normalized)
+    : closeLegendaryActionWindow(normalized);
   return state === result.state
     ? result
     : { ...result, state, snapshot: snapshotBattle(state) };
@@ -3308,11 +3599,13 @@ function battleCreatureStateFromInit(
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: input.initiative,
+    side: input.side,
     hp: creatureInit.currentHp,
     maxHp: creatureInit.maxHp,
     tempHp: creatureInit.tempHp,
     conditions: EMPTY_CONDITION_STATE,
     activeEffects: [],
+    activeOngoingFeatureOccurrences: new Map(),
     concentration: null,
     dodging: false,
     hidden: null,
@@ -3326,6 +3619,12 @@ function battleCreatureStateFromInit(
       creatureInit.classLevels,
     );
     assertCharacterBattleLoadoutMatchesHands(creatureInit);
+    assertCharacterBattleResourcesHaveUniqueUnits(
+      creatureInit.resources ?? [],
+    );
+    assertCharacterBattleFeaturesHaveUniqueUnits(
+      creatureInit.unitFeatures ?? [],
+    );
     return applyInitialZeroHpLifecycle({
       ...base,
       armorClass: creatureInit.armorClass,
@@ -3343,6 +3642,11 @@ function battleCreatureStateFromInit(
           : { offHandAttack: creatureInit.offHandAttack }),
         resources: (creatureInit.resources ?? []).map((resource) =>
           characterResourceState(resource, classLevels),
+        ),
+        ongoingFeatureProfiles: characterOngoingFeatureProfiles(
+          creatureInit.resources ?? [],
+          creatureInit.unitFeatures ?? [],
+          classLevels,
         ),
         ...(creatureInit.spellcasting === undefined
           ? {}
@@ -3377,6 +3681,30 @@ function assertHidePrerequisitesReferenceCombatants(
     if (!combatants.has(combatantId)) {
       throw new Error("Hide prerequisite references unknown combatant.");
     }
+  }
+}
+
+function assertCharacterBattleResourcesHaveUniqueUnits(
+  resources: readonly CharacterBattleResourceInit[],
+): void {
+  const seen = new Set<UnitRecord["id"]>();
+  for (const resource of resources) {
+    if (seen.has(resource.unit.id)) {
+      throw new Error(`Duplicate character battle resource unit: ${resource.unit.id}`);
+    }
+    seen.add(resource.unit.id);
+  }
+}
+
+function assertCharacterBattleFeaturesHaveUniqueUnits(
+  features: readonly CharacterBattleFeatureInit[],
+): void {
+  const seen = new Set<string>();
+  for (const feature of features) {
+    if (seen.has(feature.unit.id)) {
+      throw new Error(`Duplicate character battle feature unit: ${feature.unit.id}`);
+    }
+    seen.add(feature.unit.id);
   }
 }
 
@@ -3623,6 +3951,78 @@ function currentActorId(state: BattleState): CombatantId {
   return currentActing(state.initiative);
 }
 
+function activeOngoingFeatureOccurrencesForCombatant(
+  combatant: BattleCreatureState,
+): ReadonlyMap<OngoingFeatureSourceKey, ActiveOngoingFeatureOccurrence> {
+  return new Map(
+    [...combatant.activeOngoingFeatureOccurrences].filter(([key]) => {
+      const profile = ongoingFeatureProfileForSourceKey(combatant, key);
+      return (
+        profile !== null &&
+        !profile.lifecycle.earlyEndConditions.some((condition) =>
+          hasCondition(combatant.conditions, condition),
+        ) &&
+        !profile.lifecycle.earlyEndArmorCategories.some((category) =>
+          combatantWearingArmorCategory(combatant, category),
+        )
+      );
+    }),
+  );
+}
+
+function activeOngoingFeatureOccurrenceSnapshotsForCombatant(
+  combatant: BattleCreatureState,
+): readonly ActiveOngoingFeatureOccurrenceSnapshot[] {
+  return [...activeOngoingFeatureOccurrencesForCombatant(combatant)].map(
+    ([key, occurrence]) => ({
+      ...occurrence,
+      source: ongoingFeatureSourceFromKey(key),
+    }),
+  );
+}
+
+function ongoingFeatureProfileForSourceKey(
+  combatant: BattleCreatureState,
+  key: OngoingFeatureSourceKey,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "ongoingFeature" }
+> | null {
+  if (!isCharacterBattleCreatureState(combatant)) {
+    return null;
+  }
+  return combatant.origin.ongoingFeatureProfiles.get(key) ?? null;
+}
+
+function combatantWearingArmorCategory(
+  combatant: BattleCreatureState,
+  category: "heavy",
+): boolean {
+  return (
+    combatant.armorClass.base.kind === "armor" &&
+    combatant.armorClass.base.category === category
+  );
+}
+
+function normalizeEarlyEndedOngoingFeatures(state: BattleState): BattleState {
+  const combatants = new Map<CombatantId, BattleCreatureState>();
+  let changed = false;
+  for (const [id, combatant] of state.combatants) {
+    const activeOngoingFeatureOccurrences =
+      activeOngoingFeatureOccurrencesForCombatant(combatant);
+    if (
+      activeOngoingFeatureOccurrences.size !==
+      combatant.activeOngoingFeatureOccurrences.size
+    ) {
+      changed = true;
+      combatants.set(id, { ...combatant, activeOngoingFeatureOccurrences });
+    } else {
+      combatants.set(id, combatant);
+    }
+  }
+  return changed ? { ...state, combatants } : state;
+}
+
 function combatantSnapshot(
   state: BattleState,
   combatant: BattleCreatureState,
@@ -3649,6 +4049,8 @@ function combatantSnapshot(
     ),
     hidden: combatant.hidden,
     activeEffects: combatant.activeEffects,
+    activeOngoingFeatureOccurrences:
+      activeOngoingFeatureOccurrenceSnapshotsForCombatant(combatant),
     concentration: combatant.concentration,
     dodging: combatant.dodging,
     reactionAvailable: combatant.reactionAvailable,
@@ -3871,15 +4273,104 @@ function characterResourceState(
     input.unit.kind === "class_feature"
       ? requireCharacterClassLevel(classLevels, input.unit.className)
       : undefined;
-  return {
+  const resource = characterBattleResourceForUnit(input.unit);
+  const base = {
     unit: input.unit,
-    resource: input.resource,
-    usesRemaining:
-      input.usesRemaining === undefined
-        ? supportedUseCountCapForLevel(input.resource, unitClassLevel ?? 1)
-        : resourceCount(input.usesRemaining),
     usedThisTurn: false,
   };
+  if (activationResourceIsUnlimited(resource)) {
+    return { ...base, resource };
+  }
+  if (!activationResourceIsLimited(resource)) {
+    throw new Error("Character battle resource has an unsupported cap shape.");
+  }
+  return {
+    ...base,
+    resource,
+    usesRemaining:
+      input.usesRemaining === undefined
+        ? supportedUseCountCapForLevel(resource, unitClassLevel ?? 1)
+        : resourceCount(input.usesRemaining),
+  };
+}
+
+function characterBattleResourceForUnit(unit: UnitRecord): ActivationResource {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "activation" ||
+    !("resource" in unit.mechanics) ||
+    unit.mechanics.resource === undefined
+  ) {
+    throw new Error("Character battle resources must be activation class features.");
+  }
+  return unit.mechanics.resource;
+}
+
+function characterOngoingFeatureProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  OngoingFeatureSourceKey,
+  Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "ongoingFeature"
+        ? [[ongoingFeatureSourceKeyForUnit(unit.id), profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterBattleResourceUsage(
+  resource: CharacterBattleResourceState,
+): "limited" | "unlimited" {
+  return characterBattleResourceIsUnlimited(resource) ? "unlimited" : "limited";
+}
+
+function characterBattleResourceIsUnlimited(
+  resource: CharacterBattleResourceState,
+): resource is CharacterBattleResourceStateBase & {
+  readonly resource: UnlimitedActivationResource;
+  readonly usesRemaining?: never;
+} {
+  return (
+    resource.resource.kind === "use_count" &&
+    resource.resource.cap.kind === "unlimited"
+  );
+}
+
+function activationResourceIsUnlimited(
+  resource: ActivationResource,
+): resource is UnlimitedActivationResource {
+  return resource.kind === "use_count" && resource.cap.kind === "unlimited";
+}
+
+function activationResourceIsLimited(
+  resource: ActivationResource,
+): resource is LimitedActivationResource {
+  return !activationResourceIsUnlimited(resource);
+}
+
+function resourceHasUsesRemaining(resource: CharacterBattleResourceState): boolean {
+  return characterBattleResourceIsUnlimited(resource) || resource.usesRemaining > 0;
+}
+
+function spendCharacterResourceUse(
+  resource: CharacterBattleResourceState,
+): CharacterBattleResourceState {
+  return characterBattleResourceIsUnlimited(resource)
+    ? resource
+    : {
+        ...resource,
+        usesRemaining: resourceCount(Number(resource.usesRemaining) - 1),
+      };
 }
 
 function characterSpellcastingState(
@@ -3966,12 +4457,17 @@ function supportedUseCountCapForLevel(
   resource: ActivationResource,
   level: number,
 ): ResourceCount {
-  if (
-    resource.kind !== "use_count" ||
-    resource.cap.kind !== "threshold_tiers"
-  ) {
+  if (resource.kind !== "use_count") {
     throw new Error(
-      "Battle runtime supports only threshold-tier use-count resources.",
+      "Battle runtime supports only use-count class-feature resources.",
+    );
+  }
+  if (resource.cap.kind === "fixed") {
+    return resourceCount(resource.cap.uses);
+  }
+  if (resource.cap.kind !== "threshold_tiers") {
+    throw new Error(
+      "Battle runtime supports only fixed, unlimited, or threshold-tier use-count resources.",
     );
   }
 
@@ -4000,6 +4496,7 @@ export function battleCreatureInitFromStatBlock(
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
     initiative: input.initiative,
+    side: input.side,
     creatureInit: {
       kind: "statBlock",
       statBlock: input.statBlock,
@@ -4129,6 +4626,12 @@ function resolveAttack(
           input.state,
           input.subject.actorId,
           target.combatantId,
+          attack,
+        ),
+        attackRollOngoingFeatureActivations(
+          input.state,
+          input.subject.actorId,
+          attack,
         ),
       ),
     ]);
@@ -4141,11 +4644,41 @@ function resolveAttack(
       "Attack roll result is outside the d20 attack-roll protocol.",
     );
   }
-  const requiredRollMode = requiredAttackRollMode(
+  const activatedOngoingFeatureProfile =
+    attackRollOngoingFeatureActivationProfile(
+      input.state,
+      input.subject.actorId,
+      attack,
+      fillSet.attackRoll.activatedOngoingFeatureUnitId,
+      input.replayingInterruptedProcedure === true || fillSet.damageRoll != null,
+    );
+  if (
+    fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
+    activatedOngoingFeatureProfile === null
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack-roll ongoing feature activation is not available for this attack roll.",
+    );
+  }
+  const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
     input.state,
     input.subject.actorId,
     target.combatantId,
+    attack,
+    fillSet.attackRoll.activatedOngoingFeatureUnitId,
   );
+  if (
+    fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
+    fillSet.attackRoll.rollMode !== requiredRollMode
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack roll mode does not match the activated ongoing feature rule.",
+    );
+  }
   if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
     return invalidResult(
       input.state,
@@ -4159,7 +4692,12 @@ function resolveAttack(
     currentArmorClass(activeEffectArmorClass(target)),
   );
   const attackRolledState = consumeHelpAttackForAttackRoll(
-    revealHidden(input.state, input.subject.actorId),
+    recordAttackRollOngoingFeatures(
+      revealHidden(input.state, input.subject.actorId),
+      input.subject.actorId,
+      target.combatantId,
+      activatedOngoingFeatureProfile,
+    ),
     input.subject.actorId,
     target.combatantId,
   );
@@ -4183,7 +4721,15 @@ function resolveAttack(
       return reactionWindow;
     }
     return needsHolesResult(attackRolledState, input.subject, [
-      attackDamageHole(attack, critical, fillSet.attackRoll),
+      attackDamageHole(
+        attack,
+        critical,
+        fillSet.attackRoll,
+        ongoingFeatureDamageModifier(
+          attackRolledState.combatants.get(input.subject.actorId),
+          attack,
+        ),
+      ),
     ]);
   }
   if (!hit && fillSet.damageRoll != null) {
@@ -4199,11 +4745,16 @@ function resolveAttack(
       attack,
       critical,
       fillSet.attackRoll,
+      ongoingFeatureDamageModifier(
+        attackRolledState.combatants.get(input.subject.actorId),
+        attack,
+      ),
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
     const damageAmount = attackDamageAmount(
+      attackRolledState.combatants.get(input.subject.actorId),
       target,
       attack,
       fillSet.damageRoll,
@@ -4237,7 +4788,13 @@ function resolveAttack(
       );
     }
     const spent = spendAttackAction(
-      applyAttackDamage(attackRolledState, target.combatantId, attack, fillSet),
+      applyAttackDamage(
+        attackRolledState,
+        input.subject.actorId,
+        target.combatantId,
+        attack,
+        fillSet,
+      ),
       input.subject.actorId,
       attack,
     );
@@ -4268,6 +4825,7 @@ function resolveAttack(
     hit
       ? applyAttackDamage(
           attackRolledState,
+          input.subject.actorId,
           target.combatantId,
           attack,
           fillSet,
@@ -4690,7 +5248,9 @@ function helpAttackAllyChoices(
   return [...state.combatants]
     .filter(
       ([id, combatant]) =>
-        id !== helperId && !zeroHpLifecycleIsTerminal(combatant),
+        id !== helperId &&
+        combatantsAreAllies(state, helperId, id) &&
+        !zeroHpLifecycleIsTerminal(combatant),
     )
     .map(([id]) => id);
 }
@@ -4707,6 +5267,7 @@ function helpAttackTargetChoices(
       return (
         id !== helperId &&
         id !== allyId &&
+        combatantsAreEnemies(state, helperId, id) &&
         !zeroHpLifecycleIsTerminal(combatant) &&
         distance !== undefined &&
         distance <= 5
@@ -4768,6 +5329,12 @@ function resolveOffHandAttack(
           input.state,
           input.subject.actorId,
           target.combatantId,
+          attack,
+        ),
+        attackRollOngoingFeatureActivations(
+          input.state,
+          input.subject.actorId,
+          attack,
         ),
       ),
     ]);
@@ -4779,11 +5346,41 @@ function resolveOffHandAttack(
       "Off-Hand Attack roll result is outside the d20 attack-roll protocol.",
     );
   }
-  const requiredRollMode = requiredAttackRollMode(
+  const activatedOngoingFeatureProfile =
+    attackRollOngoingFeatureActivationProfile(
+      input.state,
+      input.subject.actorId,
+      attack,
+      fillSet.attackRoll.activatedOngoingFeatureUnitId,
+      fillSet.damageRoll != null,
+    );
+  if (
+    fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
+    activatedOngoingFeatureProfile === null
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Off-Hand Attack ongoing feature activation is not available for this attack roll.",
+    );
+  }
+  const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
     input.state,
     input.subject.actorId,
     target.combatantId,
+    attack,
+    fillSet.attackRoll.activatedOngoingFeatureUnitId,
   );
+  if (
+    fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
+    fillSet.attackRoll.rollMode !== requiredRollMode
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Off-Hand Attack roll mode does not match the activated ongoing feature rule.",
+    );
+  }
   if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
     return invalidResult(
       input.state,
@@ -4796,14 +5393,27 @@ function resolveOffHandAttack(
     currentArmorClass(activeEffectArmorClass(target)),
   );
   const attackRolledState = consumeHelpAttackForAttackRoll(
-    revealHidden(input.state, input.subject.actorId),
+    recordAttackRollOngoingFeatures(
+      revealHidden(input.state, input.subject.actorId),
+      input.subject.actorId,
+      target.combatantId,
+      activatedOngoingFeatureProfile,
+    ),
     input.subject.actorId,
     target.combatantId,
   );
   const critical = attackRollIsCriticalHit(fillSet.attackRoll);
   if (hit && fillSet.damageRoll == null) {
     return needsHolesResult(attackRolledState, input.subject, [
-      attackDamageHole(attack, critical, fillSet.attackRoll),
+      attackDamageHole(
+        attack,
+        critical,
+        fillSet.attackRoll,
+        ongoingFeatureDamageModifier(
+          attackRolledState.combatants.get(input.subject.actorId),
+          attack,
+        ),
+      ),
     ]);
   }
   if (!hit && fillSet.damageRoll != null) {
@@ -4819,11 +5429,16 @@ function resolveOffHandAttack(
       attack,
       critical,
       fillSet.attackRoll,
+      ongoingFeatureDamageModifier(
+        attackRolledState.combatants.get(input.subject.actorId),
+        attack,
+      ),
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
     const damageAmount = attackDamageAmount(
+      attackRolledState.combatants.get(input.subject.actorId),
       target,
       attack,
       fillSet.damageRoll,
@@ -4862,7 +5477,13 @@ function resolveOffHandAttack(
     currentHasBonusAction: false,
   };
   const nextState = hit
-    ? applyAttackDamage(attackRolledState, target.combatantId, attack, fillSet)
+    ? applyAttackDamage(
+        attackRolledState,
+        input.subject.actorId,
+        target.combatantId,
+        attack,
+        fillSet,
+      )
     : attackRolledState;
   const state = normalizeBattleGrapples({
     ...nextState,
@@ -4919,12 +5540,17 @@ function resolveGrapple(
       "Grapple is no longer available for the current actor.",
     );
   }
+  const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
+    input.state,
+    input.subject.actorId,
+    [fillSet.targetId],
+  );
   const nextState = normalizeBattleGrapples({
-    ...input.state,
+    ...savingThrowExtendedState,
     currentTurnResources: spent.right,
     grapples: fillSet.outcome.value.succeeded
-      ? input.state.grapples
-      : [...input.state.grapples, link.link],
+      ? savingThrowExtendedState.grapples
+      : [...savingThrowExtendedState.grapples, link.link],
   });
   return {
     tag: "resolved",
@@ -5033,7 +5659,7 @@ type AttackFillSet =
   | {
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
-      readonly attackRoll: AttackRollResult | undefined;
+      readonly attackRoll: BattleAttackRollResult | undefined;
       readonly concentrationSavingThrow:
         | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
         | undefined;
@@ -5054,7 +5680,7 @@ type GrappleFillSet =
 
 function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let targetId: CombatantId | undefined;
-  let attackRoll: AttackRollResult | undefined;
+  let attackRoll: BattleAttackRollResult | undefined;
   let concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
@@ -5201,8 +5827,12 @@ function validateAttackDamageFill(
   attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll: AttackRollResult,
+  ongoingDamageModifier = 0,
 ): string | null {
-  if (fill.holeId !== attackDamageHoleId(attack, critical, attackRoll)) {
+  if (
+    fill.holeId !==
+    attackDamageHoleId(attack, critical, attackRoll, ongoingDamageModifier)
+  ) {
     return critical
       ? "Critical hit damage must use the critical damage hole."
       : "Attack damage must use the normal hit damage hole.";
@@ -5346,8 +5976,17 @@ function resolveEndTurn(
       casterId,
     );
   }
-  const combatantsAfterStartEffects = expireStartOfTurnEffects(
+  const combatantsAfterEndTurnOngoingFeatures = expireEndOfTurnOngoingFeatures(
     combatantsAfterExpiredReadiedSpells,
+    currentActorId(state),
+    state.initiative.round,
+  );
+  const combatantsAfterStartOngoingFeatures = expireStartOfTurnOngoingFeatures(
+    combatantsAfterEndTurnOngoingFeatures,
+    nextActorId,
+  );
+  const combatantsAfterStartEffects = expireStartOfTurnEffects(
+    combatantsAfterStartOngoingFeatures,
     nextActorId,
   );
   const combatantsAfterRecharge =
@@ -5398,6 +6037,51 @@ function expireStartOfTurnEffects(
   );
 }
 
+function expireStartOfTurnOngoingFeatures(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return expireOngoingFeatures(
+    combatants,
+    (ongoingFeature) =>
+      ongoingFeature.expiresAt.kind === "startOfTurn" &&
+      ongoingFeature.expiresAt.combatantId === actorId,
+  );
+}
+
+function expireEndOfTurnOngoingFeatures(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  round: RoundType,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return expireOngoingFeatures(
+    combatants,
+    (ongoingFeature) =>
+      ongoingFeature.expiresAt.kind === "endOfTurn" &&
+      ongoingFeature.expiresAt.combatantId === actorId &&
+      ongoingFeature.expiresAt.round === round,
+  );
+}
+
+function expireOngoingFeatures(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  shouldExpire: (occurrence: ActiveOngoingFeatureOccurrence) => boolean,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => [
+      id,
+      {
+        ...combatant,
+        activeOngoingFeatureOccurrences: new Map(
+          [...combatant.activeOngoingFeatureOccurrences].filter(
+            ([, occurrence]) => !shouldExpire(occurrence),
+          ),
+        ),
+      },
+    ]),
+  );
+}
+
 function resetBattleTurnResources(
   resources: BattleTurnResources,
 ): BattleTurnResources {
@@ -5405,6 +6089,7 @@ function resetBattleTurnResources(
     resetTurnActionEconomy(resources);
   return {
     ...base,
+    attackRollMadeThisTurn: false,
     dashMovementBonusFeet: movementFeet(0),
     disengaged: false,
   };
@@ -5696,6 +6381,7 @@ function resolveOpportunityAttackCommand(
     input.state,
     subject.reactorId,
     subject.targetId,
+    attack,
   );
   if (fillSet.attackRoll == null) {
     if (fillSet.damageRoll != null) {
@@ -5724,7 +6410,12 @@ function resolveOpportunityAttackCommand(
     );
   }
   const attackRolledState = consumeHelpAttackForAttackRoll(
-    revealHidden(input.state, subject.reactorId),
+    recordAttackRollOngoingFeatures(
+      revealHidden(input.state, subject.reactorId),
+      subject.reactorId,
+      subject.targetId,
+      null,
+    ),
     subject.reactorId,
     subject.targetId,
   );
@@ -5749,7 +6440,15 @@ function resolveOpportunityAttackCommand(
   }
   if (fillSet.damageRoll == null) {
     return needsHolesResult(attackRolledState, input.subject, [
-      attackDamageHole(attack, critical, fillSet.attackRoll),
+      attackDamageHole(
+        attack,
+        critical,
+        fillSet.attackRoll,
+        ongoingFeatureDamageModifier(
+          attackRolledState.combatants.get(subject.reactorId),
+          attack,
+        ),
+      ),
     ]);
   }
   const damageValidation = validateAttackDamageFill(
@@ -5757,11 +6456,16 @@ function resolveOpportunityAttackCommand(
     attack,
     critical,
     fillSet.attackRoll,
+    ongoingFeatureDamageModifier(
+      attackRolledState.combatants.get(subject.reactorId),
+      attack,
+    ),
   );
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
   const damageAmount = attackDamageAmount(
+    attackRolledState.combatants.get(subject.reactorId),
     target,
     attack,
     fillSet.damageRoll,
@@ -5785,6 +6489,7 @@ function resolveOpportunityAttackCommand(
   }
   const nextState = applyAttackDamage(
     attackRolledState,
+    subject.reactorId,
     subject.targetId,
     attack,
     fillSet,
@@ -6322,19 +7027,20 @@ function supportedUnitFeatureActs(
   actorId: CombatantId,
 ): readonly AvailableBattleAct[] {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character" || !combatantCanTakeActions(actor)) {
+  if (!isCharacterBattleCreatureState(actor) || !combatantCanTakeActions(actor)) {
     return [];
   }
 
   const classLevels = actor.origin.classLevels;
   return actor.origin.resources.flatMap((resource) => {
-    const unitFeature = parseSupportedUnitFeatureProfile(
-      resource.unit,
+    const unitFeature = supportedUnitFeatureProfileForResource(
+      actor,
+      resource,
       classLevels,
     );
     if (
       unitFeature?.kind === "extraActionGrant" &&
-      resource.usesRemaining > 0 &&
+      resourceHasUsesRemaining(resource) &&
       !resource.usedThisTurn
     ) {
       return [
@@ -6351,8 +7057,27 @@ function supportedUnitFeatureActs(
       ];
     }
 
+    if (
+      unitFeature?.kind === "ongoingFeature" &&
+      unitFeature.activationTrigger === "bonusAction" &&
+      ongoingFeatureIsAvailable(state, actor, resource, unitFeature)
+    ) {
+      return [
+        {
+          subject: {
+            tag: "unitFeature" as const,
+            actorId,
+            unitId: unitFeature.unit.id,
+          },
+          label: unitFeature.unit.name,
+          summary: "Activate an ongoing feature occurrence.",
+          initialHoles: [],
+        },
+      ];
+    }
+
     return unitFeature?.kind === "selfBonusActionHealing" &&
-      resource.usesRemaining > 0 &&
+      resourceHasUsesRemaining(resource) &&
       state.currentTurnResources.currentHasBonusAction
       ? [
           {
@@ -6376,6 +7101,18 @@ function isCharacterBattleCreatureState(
   return actor?.origin.kind === "character";
 }
 
+function supportedUnitFeatureProfileForResource(
+  actor: CharacterBattleCreatureState,
+  resource: CharacterBattleResourceState,
+  classLevels: readonly CharacterBattleClassLevel[],
+): SupportedUnitFeatureProfile | null {
+  return (
+    actor.origin.ongoingFeatureProfiles.get(
+      ongoingFeatureSourceKeyForUnit(resource.unit.id),
+    ) ?? parseSupportedUnitFeatureProfile(resource.unit, classLevels)
+  );
+}
+
 function resolveUnitFeature(
   input: UnitFeatureBattleResolutionInput,
 ): BattleResolutionResult {
@@ -6387,8 +7124,9 @@ function resolveUnitFeature(
     );
 
     if (resource !== undefined) {
-      const unitFeature = parseSupportedUnitFeatureProfile(
-        resource.unit,
+      const unitFeature = supportedUnitFeatureProfileForResource(
+        actor,
+        resource,
         actor.origin.classLevels,
       );
       if (unitFeature?.kind === "extraActionGrant") {
@@ -6401,6 +7139,14 @@ function resolveUnitFeature(
       }
       if (unitFeature?.kind === "selfBonusActionHealing") {
         return resolveSelfBonusActionHealingUnitFeature(
+          input,
+          actor,
+          resource,
+          unitFeature,
+        );
+      }
+      if (unitFeature?.kind === "ongoingFeature") {
+        return resolveOngoingFeatureUnitFeature(
           input,
           actor,
           resource,
@@ -6442,7 +7188,7 @@ function resolveExtraActionGrantUnitFeature(
     );
   }
 
-  if (resource.usesRemaining <= 0 || resource.usedThisTurn) {
+  if (!resourceHasUsesRemaining(resource) || resource.usedThisTurn) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -6471,8 +7217,7 @@ function resolveExtraActionGrantUnitFeature(
       resources: actor.origin.resources.map((candidate) =>
         candidate.unit.id === input.subject.unitId
           ? {
-              ...candidate,
-              usesRemaining: resourceCount(Number(candidate.usesRemaining) - 1),
+              ...spendCharacterResourceUse(candidate),
               usedThisTurn: true,
             }
           : candidate,
@@ -6504,7 +7249,7 @@ function resolveSelfBonusActionHealingUnitFeature(
   >,
 ): BattleResolutionResult {
   if (
-    resource.usesRemaining <= 0 ||
+    !resourceHasUsesRemaining(resource) ||
     !input.state.currentTurnResources.currentHasBonusAction
   ) {
     return invalidResult(
@@ -6542,12 +7287,7 @@ function resolveSelfBonusActionHealingUnitFeature(
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
           candidate.unit.id === input.subject.unitId
-            ? {
-                ...candidate,
-                usesRemaining: resourceCount(
-                  Number(candidate.usesRemaining) - 1,
-                ),
-              }
+            ? spendCharacterResourceUse(candidate)
             : candidate,
         ),
       },
@@ -6569,6 +7309,241 @@ function resolveSelfBonusActionHealingUnitFeature(
   };
 }
 
+function ongoingFeatureIsAvailable(
+  state: BattleState,
+  actor: BattleCreatureState,
+  resource: CharacterBattleResourceState,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "ongoingFeature" }
+  >,
+): boolean {
+  if (unitFeature.activationTrigger === "firstAttackRoll") {
+    return false;
+  }
+  const occurrenceKey = ongoingFeatureSourceKeyForUnit(unitFeature.unit.id);
+  const activeOngoingFeature =
+    activeOngoingFeatureOccurrencesForCombatant(actor).get(occurrenceKey);
+  if (activeOngoingFeature !== undefined) {
+    return (
+      state.currentTurnResources.currentHasBonusAction &&
+      ongoingFeatureLifecycleHasExtensionTrigger(
+        unitFeature.lifecycle,
+        "bonusAction",
+      )
+    );
+  }
+  if (unitFeature.spendsUse && !resourceHasUsesRemaining(resource)) {
+    return false;
+  }
+  if (!state.currentTurnResources.currentHasBonusAction) {
+    return false;
+  }
+  return !unitFeature.lifecycle.earlyEndArmorCategories.some((category) =>
+    combatantWearingArmorCategory(actor, category),
+  );
+}
+
+function resolveOngoingFeatureUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  resource: CharacterBattleResourceState,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "ongoingFeature" }
+  >,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "This Unit feature does not accept battle fills.",
+    );
+  }
+  if (!ongoingFeatureIsAvailable(input.state, actor, resource, unitFeature)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Unit feature is no longer available for the current actor.",
+    );
+  }
+
+  const spent =
+    unitFeature.activationTrigger === "bonusAction"
+      ? spendActivationResource(input.state.currentTurnResources, {
+          kind: "bonusAction",
+        })
+      : Either.right(input.state.currentTurnResources);
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Unit feature is no longer available for the current actor.",
+    );
+  }
+
+  const occurrenceKey = ongoingFeatureSourceKeyForUnit(input.subject.unitId);
+  const activeOngoingFeature =
+    activeOngoingFeatureOccurrencesForCombatant(actor).get(occurrenceKey);
+  const nextActiveOngoingFeatureOccurrences = new Map(
+    actor.activeOngoingFeatureOccurrences,
+  );
+  nextActiveOngoingFeatureOccurrences.set(
+    occurrenceKey,
+    activeOngoingFeature === undefined
+      ? activeOngoingFeatureOccurrenceFromProfile(
+          input.state,
+          input.subject.actorId,
+          unitFeature,
+        )
+      : extendOngoingFeatureToEndOfNextTurn(
+          input.state,
+          input.subject.actorId,
+          activeOngoingFeature,
+        ),
+  );
+  const nextActorWithFeature: BattleCreatureState = {
+    ...actor,
+    activeOngoingFeatureOccurrences: nextActiveOngoingFeatureOccurrences,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        activeOngoingFeature === undefined &&
+        candidate.unit.id === input.subject.unitId &&
+        unitFeature.spendsUse
+          ? spendCharacterResourceUse(candidate)
+          : candidate,
+      ),
+    },
+  };
+  const nextActor = nextActorWithFeature;
+  const nextStateBeforeConcentration = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.subject.actorId,
+      nextActor,
+    ),
+    currentTurnResources: spent.right,
+  };
+  const nextState =
+    unitFeature.concentrationEffect === "breakAndPrevent"
+      ? breakBattleConcentration(nextStateBeforeConcentration, input.subject.actorId)
+      : nextStateBeforeConcentration;
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function activeOngoingFeatureOccurrenceFromProfile(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "ongoingFeature" }
+  >,
+): ActiveOngoingFeatureOccurrence {
+  const expiresAt = ongoingFeatureExpirationFromProfile(
+    state,
+    actorId,
+    unitFeature,
+  );
+  if (unitFeature.lifecycle.kind === "roundExtended") {
+    return {
+      kind: "roundExtended",
+      expiresAt: requireEndOfTurnOngoingFeatureExpiration(expiresAt),
+      maxExpiresAt: {
+        kind: "endOfTurn",
+        combatantId: actorId,
+        round: Round(
+          Number(state.initiative.round) +
+            unitFeature.lifecycle.maximumDurationRounds,
+        ),
+      },
+    };
+  }
+  if (unitFeature.lifecycle.kind === "fixedDuration") {
+    return {
+      kind: "fixedDuration",
+      expiresAt: requireEndOfTurnOngoingFeatureExpiration(expiresAt),
+    };
+  }
+  return {
+    kind: "turnBoundary",
+    expiresAt,
+  };
+}
+
+function requireEndOfTurnOngoingFeatureExpiration(
+  expiration: OngoingFeatureExpiration,
+): EndOfTurnOngoingFeatureExpiration {
+  if (expiration.kind !== "endOfTurn") {
+    throw new Error("Duration-based ongoing features must expire at end of turn.");
+  }
+  return expiration;
+}
+
+function ongoingFeatureExpirationFromProfile(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "ongoingFeature" }
+  >,
+): OngoingFeatureExpiration {
+  if (
+    unitFeature.lifecycle.kind === "turnBoundary" &&
+    unitFeature.lifecycle.initialExpiration === "startOfNextTurn"
+  ) {
+    return { kind: "startOfTurn", combatantId: actorId };
+  }
+  const rounds =
+    unitFeature.lifecycle.kind === "fixedDuration"
+      ? unitFeature.lifecycle.maximumDurationRounds
+      : 1;
+  return {
+    kind: "endOfTurn",
+    combatantId: actorId,
+    round: Round(Number(state.initiative.round) + rounds),
+  };
+}
+
+function extendOngoingFeatureToEndOfNextTurn(
+  state: BattleState,
+  actorId: CombatantId,
+  occurrence: ActiveOngoingFeatureOccurrence,
+): ActiveOngoingFeatureOccurrence {
+  if (occurrence.kind !== "roundExtended") {
+    return occurrence;
+  }
+  const nextExpiresAt: OngoingFeatureExpiration = {
+    kind: "endOfTurn",
+    combatantId: actorId,
+    round: Round(Number(state.initiative.round) + 1),
+  };
+  return {
+    ...occurrence,
+    expiresAt: clampOngoingFeatureExpiration(nextExpiresAt, occurrence),
+  };
+}
+
+function clampOngoingFeatureExpiration(
+  nextExpiresAt: OngoingFeatureExpiration,
+  occurrence: Extract<
+    ActiveOngoingFeatureOccurrence,
+    { readonly kind: "roundExtended" }
+  >,
+): EndOfTurnOngoingFeatureExpiration {
+  const endOfTurn = requireEndOfTurnOngoingFeatureExpiration(nextExpiresAt);
+  if (
+    Number(endOfTurn.round) <= Number(occurrence.maxExpiresAt.round)
+  ) {
+    return endOfTurn;
+  }
+  return occurrence.maxExpiresAt;
+}
+
 function parseExtraActionGrantUnitFeatureProfile(
   unit: UnitRecord,
 ): Extract<
@@ -6582,8 +7557,8 @@ function parseExtraActionGrantUnitFeatureProfile(
   if (
     mechanics.family !== "activation" ||
     mechanics.activationCost.kind !== "free" ||
-    mechanics.resource.kind !== "use_count" ||
-    mechanics.resetCadence.kind !== "short_or_long_rest" ||
+    mechanics.resource?.kind !== "use_count" ||
+    mechanics.resetCadence?.kind !== "short_or_long_rest" ||
     mechanics.usageLimit?.kind !== "once_per_turn"
   ) {
     return null;
@@ -6775,8 +7750,8 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   if (
     mechanics.family !== "activation" ||
     mechanics.activationCost.kind !== "bonus_action" ||
-    mechanics.resource.kind !== "use_count" ||
-    mechanics.resetCadence.kind !== "partial_short_full_long" ||
+    mechanics.resource?.kind !== "use_count" ||
+    mechanics.resetCadence?.kind !== "partial_short_full_long" ||
     mechanics.phases.length !== 1
   ) {
     return null;
@@ -6815,13 +7790,360 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   };
 }
 
+function parseOngoingFeatureUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "ongoingFeature" }
+> | null {
+  if (unit.kind !== "class_feature") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "activation" ||
+    !("ongoingFeature" in mechanics) ||
+    mechanics.ongoingFeature === undefined ||
+    mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = mechanics.phases[0];
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    phase.effects === undefined ||
+    phase.effects.length === 0
+  ) {
+    return null;
+  }
+  const parsedEffects = parseOngoingFeatureEffects(
+    phase.effects,
+    classLevels,
+    unit,
+  );
+  if (parsedEffects === null) {
+    return null;
+  }
+  const override =
+    unit.kind === "class_feature"
+      ? mechanics.ongoingFeature.levelOverrides
+          ?.filter(
+            (candidate) =>
+              classLevelForClass(classLevels, unit.className) >=
+              candidate.atClassLevel,
+          )
+          .at(-1)
+      : undefined;
+  const support = mechanics.ongoingFeature;
+  const lifecycle = override?.lifecycle ?? support.lifecycle;
+  const activation =
+    support.activationTiming === "activation_cost"
+      ? mechanics.activationCost.kind === "bonus_action" &&
+        "resource" in mechanics &&
+        mechanics.resource !== undefined
+        ? {
+            trigger: "bonusAction" as const,
+            spendsUse: mechanics.resource.cap.kind !== "unlimited",
+          }
+        : null
+      : mechanics.activationCost.kind === "free"
+        ? { trigger: "firstAttackRoll" as const, spendsUse: false }
+        : null;
+  if (activation === null) {
+    return null;
+  }
+  const lifecycleProfile = parseOngoingFeatureLifecycle(lifecycle);
+  return {
+    kind: "ongoingFeature",
+    unit,
+    activationTrigger: activation.trigger,
+    spendsUse: activation.spendsUse,
+    lifecycle: lifecycleProfile,
+    ...(support.concentrationEffect === undefined
+      ? {}
+      : { concentrationEffect: "breakAndPrevent" as const }),
+    actionRestrictions: (support.actionRestrictions ?? []).map((restriction) => {
+      if (restriction !== "spellcasting") {
+        throw new Error(`Unsupported ongoing feature restriction: ${restriction}`);
+      }
+      return "spellcasting" as const;
+    }),
+    ...parsedEffects,
+  };
+}
+
+function classLevelForClass(
+  classLevels: readonly CharacterBattleClassLevel[],
+  className: ClassName,
+): number {
+  return Number(
+    classLevels.find((candidate) => candidate.className === className)?.level ??
+      0,
+  );
+}
+
+function parseOngoingFeatureInitialExpiration(
+  expiration: "start_of_next_turn" | "end_of_next_turn",
+): "startOfNextTurn" | "endOfNextTurn" {
+  if (expiration === "start_of_next_turn") return "startOfNextTurn";
+  return "endOfNextTurn";
+}
+
+type OngoingFeatureLifecycleSupport =
+  | {
+      readonly kind: "turn_boundary";
+      readonly initialExpiration: "start_of_next_turn";
+      readonly earlyEndConditions?: readonly string[];
+      readonly earlyEndArmorCategories?: readonly string[];
+    }
+  | {
+      readonly kind: "round_extended";
+      readonly initialExpiration: "end_of_next_turn";
+      readonly maximumDuration: {
+        readonly unit: "round" | "minute" | "hour" | "day";
+        readonly amount: number;
+      };
+      readonly earlyEndConditions?: readonly string[];
+      readonly earlyEndArmorCategories?: readonly string[];
+      readonly extensionTriggers: readonly (
+        | "attack_roll_against_enemy"
+        | "bonus_action"
+        | "enemy_saving_throw"
+      )[];
+    }
+  | {
+      readonly kind: "fixed_duration";
+      readonly duration: {
+        readonly unit: "round" | "minute" | "hour" | "day";
+        readonly amount: number;
+      };
+      readonly earlyEndConditions?: readonly string[];
+      readonly earlyEndArmorCategories?: readonly string[];
+    };
+
+function parseOngoingFeatureLifecycle(
+  lifecycle: OngoingFeatureLifecycleSupport,
+): OngoingFeatureLifecycleProfile {
+  if (lifecycle.kind === "turn_boundary") {
+    return {
+      kind: "turnBoundary",
+      initialExpiration: parseOngoingFeatureInitialExpiration(
+        lifecycle.initialExpiration,
+      ),
+      earlyEndConditions: parseOngoingFeatureEarlyEndConditions(
+        lifecycle.earlyEndConditions ?? [],
+      ),
+      earlyEndArmorCategories: parseOngoingFeatureArmorCategories(
+        lifecycle.earlyEndArmorCategories ?? [],
+      ),
+      extensionTriggers: [],
+    };
+  }
+  if (lifecycle.kind === "round_extended") {
+    const extensionTriggers = lifecycle.extensionTriggers.map(
+      parseOngoingFeatureExtensionTrigger,
+    );
+    const [firstTrigger, ...remainingTriggers] = extensionTriggers;
+    if (firstTrigger === undefined) {
+      throw new Error("Round-extended ongoing features require extension triggers.");
+    }
+    return {
+      kind: "roundExtended",
+      initialExpiration: "endOfNextTurn",
+      maximumDurationRounds: durationToRounds(lifecycle.maximumDuration),
+      earlyEndConditions: parseOngoingFeatureEarlyEndConditions(
+        lifecycle.earlyEndConditions ?? [],
+      ),
+      earlyEndArmorCategories: parseOngoingFeatureArmorCategories(
+        lifecycle.earlyEndArmorCategories ?? [],
+      ),
+      extensionTriggers: [firstTrigger, ...remainingTriggers],
+    };
+  }
+  return {
+    kind: "fixedDuration",
+    maximumDurationRounds: durationToRounds(lifecycle.duration),
+    earlyEndConditions: parseOngoingFeatureEarlyEndConditions(
+      lifecycle.earlyEndConditions ?? [],
+    ),
+    earlyEndArmorCategories: parseOngoingFeatureArmorCategories(
+      lifecycle.earlyEndArmorCategories ?? [],
+    ),
+    extensionTriggers: [],
+  };
+}
+
+function parseOngoingFeatureExtensionTrigger(
+  trigger: "attack_roll_against_enemy" | "bonus_action" | "enemy_saving_throw",
+): "attackRollAgainstEnemy" | "bonusAction" | "enemySavingThrow" {
+  if (trigger === "attack_roll_against_enemy") return "attackRollAgainstEnemy";
+  if (trigger === "bonus_action") return "bonusAction";
+  return "enemySavingThrow";
+}
+
+function parseOngoingFeatureEarlyEndConditions(
+  conditions: readonly string[],
+): readonly Condition[] {
+  return conditions.map((condition) => {
+    const parsedCondition = ALL_CONDITIONS.find(
+      (candidate) => candidate === condition,
+    );
+    if (parsedCondition === undefined) {
+      throw new Error(
+        `Unsupported ongoing feature end condition: ${condition}`,
+      );
+    }
+    return parsedCondition;
+  });
+}
+
+function parseOngoingFeatureArmorCategories(
+  categories: readonly string[],
+): readonly ["heavy"] | readonly [] {
+  if (categories.length === 0) return [];
+  if (categories.length === 1 && categories[0] === "heavy") return ["heavy"];
+  throw new Error(
+    `Unsupported ongoing feature armor categories: ${categories.join(", ")}`,
+  );
+}
+
+function durationToRounds(duration: {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number;
+}): number {
+  const ticks = elapsedTimeTicksFromTimeSpanDuration(duration);
+  if (Either.isLeft(ticks)) {
+    throw new Error("Unsupported ongoing feature duration.");
+  }
+  return Number(ticks.right);
+}
+
+function parseOngoingFeatureEffects(
+  effects: readonly EffectAtom[],
+  classLevels: readonly CharacterBattleClassLevel[],
+  unit: UnitRecord,
+): Pick<
+  Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
+  "rollModifiers" | "damageModifiers" | "resistances"
+> | null {
+  const rollModifiers: OngoingFeatureRollModifier[] = [];
+  const damageModifiers: OngoingFeatureDamageModifier[] = [];
+  const resistances: DamageType[] = [];
+  for (const effect of effects) {
+    if (
+      effect.kind === "grant_resistance" &&
+      typeof effect.damageType === "string"
+    ) {
+      if ("sourceFilter" in effect && effect.sourceFilter !== undefined) {
+        return null;
+      }
+      resistances.push(effect.damageType);
+      continue;
+    }
+    if (
+      effect.kind === "modify_roll_advantage" &&
+      effect.on.includes("attack_roll")
+    ) {
+      if (effect.on.some((target) => target !== "attack_roll")) {
+        return null;
+      }
+      if (
+        ("attackerTypeFilter" in effect && effect.attackerTypeFilter !== undefined) ||
+        ("skillFilter" in effect && effect.skillFilter !== undefined) ||
+        ("conditionFilter" in effect && effect.conditionFilter !== undefined) ||
+        ("saveAbilityFilter" in effect && effect.saveAbilityFilter !== undefined) ||
+        ("saveSourceFilter" in effect && effect.saveSourceFilter !== undefined) ||
+        ("contextRangeFeet" in effect && effect.contextRangeFeet !== undefined) ||
+        ("count" in effect && effect.count !== undefined) ||
+        ("expiresOn" in effect && effect.expiresOn !== undefined)
+      ) {
+        return null;
+      }
+      rollModifiers.push({
+        mode: effect.mode,
+        affects:
+          effect.affects === "rolls_against_self"
+            ? "rollsAgainstSelf"
+            : "selfRoll",
+        on: "attackRoll",
+        ...(effect.abilityFilter === undefined
+          ? {}
+          : { abilityFilter: effect.abilityFilter }),
+      });
+      continue;
+    }
+    if (effect.kind === "modify_damage_numeric") {
+      if (
+        effect.weaponFilter !== undefined &&
+        effect.weaponFilter.kind !== "weapon_category"
+      ) {
+        return null;
+      }
+      const amount = numericDeltaForClassLevel(
+        effect.delta,
+        unit.kind === "class_feature"
+          ? classLevelForClass(classLevels, unit.className)
+          : 0,
+      );
+      if (amount === null) {
+        return null;
+      }
+      damageModifiers.push({
+        amount,
+        ...(effect.abilityFilter === undefined
+          ? {}
+          : { abilityFilter: effect.abilityFilter }),
+        ...(effect.weaponFilter?.kind === "weapon_category"
+          ? { weaponUsageFilter: effect.weaponFilter.category }
+          : {}),
+      });
+      continue;
+    }
+    return null;
+  }
+  return rollModifiers.length === 0 &&
+    damageModifiers.length === 0 &&
+    resistances.length === 0
+    ? null
+    : { rollModifiers, damageModifiers, resistances };
+}
+
+function numericDeltaForClassLevel(delta: {
+  readonly kind: string;
+  readonly amount?: number;
+  readonly axis?: string;
+  readonly base?: number;
+  readonly tiers?: readonly { readonly atLevel: number; readonly value: number }[];
+  readonly sign?: string;
+}, classLevel: number): number | null {
+  if (delta.kind === "fixed_number" && delta.amount !== undefined) {
+    return delta.sign === "-" ? -delta.amount : delta.amount;
+  }
+  if (
+    delta.kind === "threshold_tiers" &&
+    delta.axis === "class" &&
+    delta.base !== undefined &&
+    delta.tiers !== undefined
+  ) {
+    const value = delta.tiers.reduce(
+      (current, tier) => (classLevel >= tier.atLevel ? tier.value : current),
+      delta.base,
+    );
+    return delta.sign === "-" ? -value : value;
+  }
+  return null;
+}
+
 function parseSupportedUnitFeatureProfile(
   unit: UnitRecord,
   classLevels: readonly CharacterBattleClassLevel[],
 ): SupportedUnitFeatureProfile | null {
   return (
     parseExtraActionGrantUnitFeatureProfile(unit) ??
-    parseSelfBonusActionHealingUnitFeatureProfile(unit, classLevels)
+    parseSelfBonusActionHealingUnitFeatureProfile(unit, classLevels) ??
+    parseOngoingFeatureUnitFeatureProfile(unit, classLevels)
   );
 }
 
@@ -6831,6 +8153,9 @@ function discoverSupportedSpellActs(
 ): readonly AvailableBattleAct[] {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
+    return [];
+  }
+  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
     return [];
   }
   return supportedSpellActs(actor).flatMap(
@@ -6884,6 +8209,17 @@ function discoverSupportedSpellActs(
             ];
       return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
     },
+  );
+}
+
+function activeOngoingFeaturesPreventSpellcasting(
+  actor: BattleCreatureState,
+): boolean {
+  return [...activeOngoingFeatureOccurrencesForCombatant(actor)].some(
+    ([key]) =>
+      ongoingFeatureProfileForSourceKey(actor, key)?.actionRestrictions.includes(
+        "spellcasting",
+      ) === true,
   );
 }
 
@@ -6959,6 +8295,13 @@ function resolveSpellAct(
       input.state,
       "staleSubject",
       "Action-time spell act no longer has its required runtime spell resource.",
+    );
+  }
+  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Action-time spell act is unavailable while an active ongoing feature prevents spellcasting.",
     );
   }
 
@@ -7107,9 +8450,16 @@ function resolveSpellAct(
     );
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
     if (hit && fillSet.damageRoll == null) {
-      return needsHolesResult(castingState, input.subject, [
-        spellDamageHole(invocation, critical),
-      ]);
+      return needsHolesResult(
+        recordAttackRollOngoingFeatures(
+          castingState,
+          subject.actorId,
+          target.combatantId,
+          null,
+        ),
+        input.subject,
+        [spellDamageHole(invocation, critical)],
+      );
     }
     if (!hit && fillSet.damageRoll != null) {
       return invalidResult(
@@ -7119,7 +8469,14 @@ function resolveSpellAct(
       );
     }
     if (!hit) {
-      return spendMagicAction(castingState);
+      return spendMagicAction(
+        recordAttackRollOngoingFeatures(
+          castingState,
+          subject.actorId,
+          target.combatantId,
+          null,
+        ),
+      );
     }
   } else if (fillSet.attackRoll != null) {
     return invalidResult(
@@ -7134,6 +8491,15 @@ function resolveSpellAct(
       spellDamageHole(invocation),
     ]);
   }
+  const spellResolutionState =
+    invocation.kind === "cantripSpellAttack" && fillSet.attackRoll != null
+      ? recordAttackRollOngoingFeatures(
+          castingState,
+          subject.actorId,
+          target.combatantId,
+          null,
+        )
+      : castingState;
   const critical =
     invocation.kind === "cantripSpellAttack" &&
     fillSet.attackRoll != null &&
@@ -7164,7 +8530,9 @@ function resolveSpellAct(
         );
   if (concentrationSave !== null) {
     if (concentrationFill === undefined) {
-      return needsHolesResult(castingState, input.subject, [concentrationSave]);
+      return needsHolesResult(spellResolutionState, input.subject, [
+        concentrationSave,
+      ]);
     }
     if (fillSet.concentrationSavingThrows.length > 1) {
       return invalidResult(
@@ -7181,7 +8549,7 @@ function resolveSpellAct(
     );
   }
   const damaged = applySpellDamage(
-    castingState,
+    spellResolutionState,
     target.combatantId,
     invocation,
     fillSet.damageRoll,
@@ -7391,15 +8759,23 @@ function resolveSpellRelease(
         "Readied spell attack roll mode does not match the current attack-roll rule.",
       );
     }
+    const releaseAttackRolledState = recordAttackRollOngoingFeatures(
+      input.state,
+      input.subject.actorId,
+      target.combatantId,
+      null,
+    );
     const hit = attackRollHits(
       fillSet.attackRoll,
       currentArmorClass(activeEffectArmorClass(target)),
     );
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
     if (hit && fillSet.damageRoll == null) {
-      return needsHolesResult(input.state, input.subject, [
-        spellDamageHole(invocation, critical),
-      ]);
+      return needsHolesResult(
+        releaseAttackRolledState,
+        input.subject,
+        [spellDamageHole(invocation, critical)],
+      );
     }
     if (!hit && fillSet.damageRoll != null) {
       return invalidResult(
@@ -7411,8 +8787,8 @@ function resolveSpellRelease(
     if (!hit) {
       return {
         tag: "resolved",
-        state: input.state,
-        snapshot: snapshotBattle(input.state),
+        state: releaseAttackRolledState,
+        snapshot: snapshotBattle(releaseAttackRolledState),
       };
     }
   } else if (fillSet.attackRoll != null) {
@@ -7469,8 +8845,17 @@ function resolveSpellRelease(
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
+  const releaseResolutionState =
+    invocation.kind === "cantripSpellAttack" && fillSet.attackRoll != null
+      ? recordAttackRollOngoingFeatures(
+          input.state,
+          input.subject.actorId,
+          target.combatantId,
+          null,
+        )
+      : input.state;
   const damaged = applySpellDamage(
-    input.state,
+    releaseResolutionState,
     target.combatantId,
     invocation,
     fillSet.damageRoll,
@@ -7689,6 +9074,9 @@ function resolveSaveGateDamageSpellAct(input: {
     );
   }
 
+  const selectedTargetIds = input.fillSet.savingThrowOutcomes.map(
+    (outcome) => outcome.targetId,
+  );
   const failedTargets = input.fillSet.savingThrowOutcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
@@ -7720,7 +9108,13 @@ function resolveSaveGateDamageSpellAct(input: {
         "Save-gate spell damage can only be filled when at least one target failed its Saving Throw.",
       );
     }
-    return spendMagicAction(input.input.state);
+    return spendMagicAction(
+      extendSavingThrowOngoingFeatures(
+        input.input.state,
+        input.actorId,
+        selectedTargetIds,
+      ),
+    );
   }
 
   if (input.fillSet.damageRoll == null) {
@@ -7800,7 +9194,12 @@ function resolveSaveGateDamageSpellAct(input: {
       ),
     input.input.state,
   );
-  const spent = spendAction(damaged.currentTurnResources, "magic");
+  const extended = extendSavingThrowOngoingFeatures(
+    damaged,
+    input.actorId,
+    selectedTargetIds,
+  );
+  const spent = spendAction(extended.currentTurnResources, "magic");
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -7808,7 +9207,7 @@ function resolveSaveGateDamageSpellAct(input: {
       "Magic action is no longer available for the current actor.",
     );
   }
-  const nextState = { ...damaged, currentTurnResources: spent.right };
+  const nextState = { ...extended, currentTurnResources: spent.right };
   const afterDamageReactionWindow = maybeOpenReactionWindow(
     nextState,
     {
@@ -7896,6 +9295,7 @@ function spendMagicAction(
 
 function applyAttackDamage(
   state: BattleState,
+  attackerId: CombatantId,
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
@@ -7909,6 +9309,7 @@ function applyAttackDamage(
     return state;
   }
   const damageAmount = attackDamageAmount(
+    state.combatants.get(attackerId),
     target,
     attack,
     fillSet.damageRoll,
@@ -8291,6 +9692,7 @@ function zeroHpLifecycleIsTerminal(combatant: BattleCreatureState): boolean {
 }
 
 function attackDamageAmount(
+  attacker: BattleCreatureState | undefined,
   target: BattleCreatureState,
   attack: SupportedAttackActionOption,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
@@ -8309,13 +9711,55 @@ function attackDamageAmount(
         0,
       );
       const unadjusted =
-        diceTotal + (index === 0 ? attackDamageModifier(attack) : 0);
+        diceTotal +
+        (index === 0
+          ? attackDamageModifier(attack) +
+            ongoingFeatureDamageModifier(attacker, attack)
+          : 0);
       return addDamageAmountForType(totals, component.damageType, unadjusted);
     },
     new Map(),
   );
 
   return damageAmountByTypeAfterTargetAdjustments(target, damageByType);
+}
+
+function ongoingFeatureDamageModifier(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+): number {
+  if (attacker === undefined || attack.kind !== "weapon") {
+    return 0;
+  }
+  return [...activeOngoingFeatureOccurrencesForCombatant(attacker)].reduce(
+    (total, [key]) => {
+      const profile = ongoingFeatureProfileForSourceKey(attacker, key);
+      if (profile === null) return total;
+      return (
+        total +
+        profile.damageModifiers.reduce(
+          (ongoingFeatureTotal, modifier) =>
+            ongoingFeatureTotal +
+            (ongoingFeatureDamageModifierApplies(modifier, attack)
+              ? modifier.amount
+              : 0),
+          0,
+        )
+      );
+    },
+    0,
+  );
+}
+
+function ongoingFeatureDamageModifierApplies(
+  modifier: OngoingFeatureDamageModifier,
+  attack: CharacterWeaponAttackActionOption,
+): boolean {
+  return (
+    attackAbilityMatchesModifier(attack, modifier) &&
+    (modifier.weaponUsageFilter === undefined ||
+      modifier.weaponUsageFilter === attack.weapon.usage)
+  );
 }
 
 function addDamageAmountForType(
@@ -8346,7 +9790,14 @@ function damageAmountAfterTargetAdjustments(
   damageType: DamageType,
 ): number {
   if (target.origin.kind !== "statBlock") {
-    return amount;
+    return [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
+      ([key]) =>
+        ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
+          damageType,
+        ) === true,
+    )
+      ? Math.floor(amount / 2)
+      : amount;
   }
 
   const statBlock = target.origin.statBlock.statBlock;
@@ -8354,15 +9805,15 @@ function damageAmountAfterTargetAdjustments(
     return 0;
   }
 
-  const afterResistance =
+  const afterResiongoingFeature =
     statBlock.resistances?.kind === "fixed" &&
     statBlock.resistances.damageTypes.includes(damageType)
       ? Math.floor(amount / 2)
       : amount;
 
   return statBlock.vulnerabilities?.damageTypes.includes(damageType) === true
-    ? afterResistance * 2
-    : afterResistance;
+    ? afterResiongoingFeature * 2
+    : afterResiongoingFeature;
 }
 
 function supportedSpellActs(
@@ -8774,12 +10225,12 @@ function spellSavingThrowOutcomeHole(
     { readonly kind: "cantripSaveGateDamage" }
   >,
 ): BattleSpellSavingThrowOutcomeHole {
-  const holeInstance = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
+  const holeKey = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
   const areaChoices = spellPointSphereAreaChoices(state, actorId, invocation);
   return {
     kind: "savingThrowOutcome",
     holeId: spellSavingThrowOutcomeHoleId(invocation),
-    holeInstanceKey: holeInstanceKey(holeInstance),
+    holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} point-origin Sphere Saving Throw outcomes`,
     spell: invocation,
     ability: invocation.ability,
@@ -9517,6 +10968,7 @@ function combatantDistanceFeet(
 function attackRollHole(
   attack: SupportedAttackActionOption,
   rollMode?: AttackRollMode,
+  ongoingFeatureActivations?: readonly AttackRollFeatureActivation[],
 ): BattleAttackRollHole {
   const name = attackActionOptionName(attack);
   return {
@@ -9527,6 +10979,10 @@ function attackRollHole(
     attack,
     attackBonus: attackActionBonus(attack),
     ...(rollMode === undefined ? {} : { rollMode }),
+    ...(ongoingFeatureActivations === undefined ||
+    ongoingFeatureActivations.length === 0
+      ? {}
+      : { ongoingFeatureActivations }),
   };
 }
 
@@ -9534,6 +10990,7 @@ function requiredAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
+  attack?: SupportedAttackActionOption,
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
   const target = state.combatants.get(targetId);
@@ -9550,12 +11007,203 @@ function requiredAttackRollMode(
     (attacker?.hidden !== null && attacker?.hidden !== undefined) ||
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
-    );
+    ) ||
+    ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack);
   const hasDisadvantage =
-    hiddenTargetDisadvantage || dodgeDisadvantage || grappleDisadvantage;
+    hiddenTargetDisadvantage ||
+    dodgeDisadvantage ||
+    grappleDisadvantage ||
+    ongoingFeatureGrantsAttackRollMode(
+      attacker,
+      target,
+      "disadvantage",
+      attack,
+    );
   if (hasAdvantage && !hasDisadvantage) return "advantage";
   if (hasDisadvantage && !hasAdvantage) return "disadvantage";
   return undefined;
+}
+
+function attackRollHasAdvantageSource(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack?: SupportedAttackActionOption,
+): boolean {
+  const attacker = state.combatants.get(attackerId);
+  const target = state.combatants.get(targetId);
+  return (
+    (attacker?.hidden !== null && attacker?.hidden !== undefined) ||
+    state.helpAttacks.some(
+      (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
+    ) ||
+    ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack)
+  );
+}
+
+function attackRollModeWithOptionalOngoingFeature(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+  activatedOngoingFeatureUnitId: UnitRecord["id"] | undefined,
+): AttackRollMode | undefined {
+  const baseline = requiredAttackRollMode(state, attackerId, targetId, attack);
+  if (activatedOngoingFeatureUnitId === undefined) {
+    return baseline;
+  }
+  if (baseline === "disadvantage") {
+    return undefined;
+  }
+  if (baseline === undefined && attackRollHasAdvantageSource(state, attackerId, targetId, attack)) {
+    return undefined;
+  }
+  return "advantage";
+}
+
+function ongoingFeatureLifecycleHasExtensionTrigger(
+  lifecycle: OngoingFeatureLifecycleProfile,
+  trigger: OngoingFeatureExtensionTrigger,
+): boolean {
+  return lifecycle.kind === "roundExtended" && lifecycle.extensionTriggers.includes(trigger);
+}
+
+function ongoingFeatureProfileHasExtensionTrigger(
+  profile:
+    | Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>
+    | null,
+  trigger: OngoingFeatureExtensionTrigger,
+): boolean {
+  return (
+    profile !== null &&
+    ongoingFeatureLifecycleHasExtensionTrigger(profile.lifecycle, trigger)
+  );
+}
+
+function attackRollOngoingFeatureActivations(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+): readonly AttackRollFeatureActivation[] {
+  const attacker = state.combatants.get(attackerId);
+  if (
+    !isCharacterBattleCreatureState(attacker) ||
+    state.currentTurnResources.attackRollMadeThisTurn ||
+    attack.kind !== "weapon"
+  ) {
+    return [];
+  }
+  return [...attacker.origin.ongoingFeatureProfiles.values()].flatMap(
+    (unitFeature): readonly AttackRollFeatureActivation[] => {
+      if (
+        unitFeature.activationTrigger !== "firstAttackRoll" ||
+        unitFeature.spendsUse ||
+        activeOngoingFeatureOccurrencesForCombatant(attacker).has(
+          ongoingFeatureSourceKeyForUnit(unitFeature.unit.id),
+        ) ||
+        !unitFeature.rollModifiers.some(
+          (modifier) =>
+            modifier.affects === "selfRoll" &&
+            modifier.mode === "advantage" &&
+            attackAbilityMatchesModifier(attack, modifier),
+        )
+      ) {
+        return [];
+      }
+      return [
+        {
+          unitId: unitFeature.unit.id,
+          label: unitFeature.unit.name,
+          rollMode: "advantage" as const,
+        },
+      ];
+    },
+  );
+}
+
+function attackRollOngoingFeatureActivationProfile(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+  unitId: UnitRecord["id"] | undefined,
+  allowAlreadyActiveReplay: boolean,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "ongoingFeature" }
+> | null {
+  if (unitId === undefined) return null;
+  const attacker = state.combatants.get(attackerId);
+  if (!isCharacterBattleCreatureState(attacker)) return null;
+  const unitFeature = attacker.origin.ongoingFeatureProfiles.get(
+    ongoingFeatureSourceKeyForUnit(unitId),
+  );
+  if (
+    unitFeature?.kind !== "ongoingFeature" ||
+    unitFeature.activationTrigger !== "firstAttackRoll" ||
+    !(
+      attackRollOngoingFeatureActivations(state, attackerId, attack).some(
+        (option) => option.unitId === unitId,
+      ) ||
+      (allowAlreadyActiveReplay &&
+        activeOngoingFeatureOccurrencesForCombatant(attacker).has(
+          ongoingFeatureSourceKeyForUnit(unitId),
+        ))
+    )
+  ) {
+    return null;
+  }
+  return unitFeature;
+}
+
+function ongoingFeatureGrantsAttackRollMode(
+  attacker: BattleCreatureState | undefined,
+  target: BattleCreatureState | undefined,
+  mode: AttackRollMode,
+  attack?: SupportedAttackActionOption,
+): boolean {
+  const outgoing =
+    isCharacterBattleCreatureState(attacker) &&
+    target !== undefined &&
+    [...activeOngoingFeatureOccurrencesForCombatant(attacker)].some(
+      ([key]) =>
+        ongoingFeatureProfileForSourceKey(attacker, key)?.rollModifiers.some(
+          (modifier) =>
+            modifier.mode === mode &&
+            modifier.affects === "selfRoll" &&
+            modifier.on === "attackRoll" &&
+            attackAbilityMatchesModifier(
+              attack?.kind === "weapon" ? attack : null,
+              modifier,
+            ),
+        ),
+    );
+  const incoming =
+    isCharacterBattleCreatureState(target) &&
+    [...activeOngoingFeatureOccurrencesForCombatant(target)].some(([key]) =>
+      ongoingFeatureProfileForSourceKey(target, key)?.rollModifiers.some(
+        (modifier) =>
+          modifier.mode === mode &&
+          modifier.affects === "rollsAgainstSelf" &&
+          modifier.on === "attackRoll" &&
+          attackAbilityMatchesModifier(
+            attack?.kind === "weapon" ? attack : null,
+            modifier,
+          ),
+      ),
+    );
+  return outgoing || incoming;
+}
+
+function attackAbilityMatchesModifier(
+  attack: CharacterWeaponAttackActionOption | null | undefined,
+  modifier: OngoingFeatureRollModifier | OngoingFeatureDamageModifier,
+): boolean {
+  return (
+    modifier.abilityFilter === undefined ||
+    (attack !== null &&
+      attack !== undefined &&
+      modifier.abilityFilter.includes(attack.ability))
+  );
 }
 
 function hasDodgeBenefit(
@@ -9603,8 +11251,192 @@ function consumeHelpAttackForAttackRoll(
   };
 }
 
+function combatantsAreEnemies(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  const target = state.combatants.get(targetId);
+  return (
+    actor !== undefined &&
+    target !== undefined &&
+    actor.side !== target.side
+  );
+}
+
+function combatantsAreAllies(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  const target = state.combatants.get(targetId);
+  return (
+    actor !== undefined &&
+    target !== undefined &&
+    actor.side === target.side
+  );
+}
+
+function extendAttackRollOngoingFeatures(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+): BattleState {
+  if (!combatantsAreEnemies(state, attackerId, targetId)) {
+    return state;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) return state;
+  const activeOngoingFeatureOccurrences =
+    activeOngoingFeatureOccurrencesForCombatant(attacker);
+  if (
+    ![...activeOngoingFeatureOccurrences].some(
+      ([key]) =>
+        ongoingFeatureProfileHasExtensionTrigger(
+          ongoingFeatureProfileForSourceKey(attacker, key),
+          "attackRollAgainstEnemy",
+        ),
+    )
+  ) {
+    return state;
+  }
+  const nextOccurrences = new Map(attacker.activeOngoingFeatureOccurrences);
+  for (const [key, occurrence] of activeOngoingFeatureOccurrences) {
+    if (
+      ongoingFeatureProfileHasExtensionTrigger(
+        ongoingFeatureProfileForSourceKey(attacker, key),
+        "attackRollAgainstEnemy",
+      )
+    ) {
+      nextOccurrences.set(
+        key,
+        extendOngoingFeatureToEndOfNextTurn(state, attackerId, occurrence),
+      );
+    }
+  }
+  const nextActor = {
+    ...attacker,
+    activeOngoingFeatureOccurrences: nextOccurrences,
+  };
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(attackerId, nextActor),
+  };
+}
+
+function extendSavingThrowOngoingFeatures(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+): BattleState {
+  if (
+    !targetIds.some((targetId) =>
+      combatantsAreEnemies(state, actorId, targetId),
+    )
+  ) {
+    return state;
+  }
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) return state;
+  const activeOngoingFeatureOccurrences =
+    activeOngoingFeatureOccurrencesForCombatant(actor);
+  if (
+    ![...activeOngoingFeatureOccurrences].some(
+      ([key]) =>
+        ongoingFeatureProfileHasExtensionTrigger(
+          ongoingFeatureProfileForSourceKey(actor, key),
+          "enemySavingThrow",
+        ),
+    )
+  ) {
+    return state;
+  }
+  const nextOccurrences = new Map(actor.activeOngoingFeatureOccurrences);
+  for (const [key, occurrence] of activeOngoingFeatureOccurrences) {
+    if (
+      ongoingFeatureProfileHasExtensionTrigger(
+        ongoingFeatureProfileForSourceKey(actor, key),
+        "enemySavingThrow",
+      )
+    ) {
+      nextOccurrences.set(
+        key,
+        extendOngoingFeatureToEndOfNextTurn(state, actorId, occurrence),
+      );
+    }
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      activeOngoingFeatureOccurrences: nextOccurrences,
+    }),
+  };
+}
+
+function recordAttackRollOngoingFeatures(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  activatedOngoingFeatureProfile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "ongoingFeature" }
+  > | null,
+): BattleState {
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined || attackerId !== currentActorId(state)) {
+    return state;
+  }
+  const withActivatedOngoingFeature =
+    activatedOngoingFeatureProfile === null
+      ? state
+      : stateWithActiveOngoingFeatureOccurrence(
+          state,
+          attacker,
+          attackerId,
+          activatedOngoingFeatureProfile,
+        );
+  const withExtendedOngoingFeatures = extendAttackRollOngoingFeatures(
+    withActivatedOngoingFeature,
+    attackerId,
+    targetId,
+  );
+  return {
+    ...withExtendedOngoingFeatures,
+    currentTurnResources: {
+      ...withExtendedOngoingFeatures.currentTurnResources,
+      attackRollMadeThisTurn: true,
+    },
+  };
+}
+
+function stateWithActiveOngoingFeatureOccurrence(
+  state: BattleState,
+  actor: BattleCreatureState,
+  actorId: CombatantId,
+  profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "ongoingFeature" }
+  >,
+): BattleState {
+  const occurrences = new Map(actor.activeOngoingFeatureOccurrences);
+  occurrences.set(
+    ongoingFeatureSourceKeyForUnit(profile.unit.id),
+    activeOngoingFeatureOccurrenceFromProfile(state, actorId, profile),
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      activeOngoingFeatureOccurrences: occurrences,
+    }),
+  };
+}
+
 function attackRollModeMatches(
-  roll: AttackRollResult,
+  roll: BattleAttackRollResult,
   requiredMode: AttackRollMode | undefined,
 ): boolean {
   return requiredMode === undefined || roll.rollMode === requiredMode;
@@ -9614,12 +11446,23 @@ function attackDamageHole(
   attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
+  ongoingDamageModifier = 0,
 ): BattleDamageRollHole {
-  const expression = weaponAttackDamageExpression(attack, critical, attackRoll);
+  const expression = weaponAttackDamageExpression(
+    attack,
+    critical,
+    attackRoll,
+    ongoingDamageModifier,
+  );
   const name = attackActionOptionName(attack);
   return {
     kind: "rolledDice",
-    holeId: attackDamageHoleId(attack, critical, attackRoll),
+    holeId: attackDamageHoleId(
+      attack,
+      critical,
+      attackRoll,
+      ongoingDamageModifier,
+    ),
     holeInstanceKey: holeInstanceKey(
       `battle:attack:damage-result:${expression}`,
     ),
@@ -9633,12 +11476,14 @@ function attackDamageHoleId(
   attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
+  ongoingDamageModifier = 0,
 ): BattleHoleId {
   return holeId(
     `battle:attack:damage-result:${weaponAttackDamageExpression(
       attack,
       critical,
       attackRoll,
+      ongoingDamageModifier,
     )}`,
   );
 }
@@ -10464,10 +12309,13 @@ function weaponAttackDamageExpression(
   attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
+  ongoingDamageModifier = 0,
 ): string {
   const damage = attackDamage(attack);
   const components = attackDamageComponents(attack, critical, attackRoll);
-  const modifier = signedModifier(attackDamageModifier(attack));
+  const modifier = signedModifier(
+    attackDamageModifier(attack) + ongoingDamageModifier,
+  );
 
   return `${components
     .map((component) => `${component.expr.dice}d${component.expr.dieSize}`)

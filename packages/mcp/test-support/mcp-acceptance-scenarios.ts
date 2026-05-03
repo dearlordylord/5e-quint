@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
+import {
+  GENERIC_COMBAT_ACTION_LABELS,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+} from "./battle-act-labels.ts";
+
 type JsonObject = Record<string, unknown>;
 
 const expectedTools = [
@@ -385,12 +390,14 @@ export async function verifyBaselineVertical(client: Client) {
         sourceDraftId: draftId,
         combatantId: "fighter",
         initiative: 18,
+          side: "party",
       },
       {
         kind: "statBlock",
         statBlockId: "stat_block_goblin_warrior",
         combatantId: "goblin",
         initiative: 7,
+          side: "opposition",
       },
     ],
   });
@@ -401,7 +408,13 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(read, "snapshot.currentActorId"), "fighter");
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
-    ["Attack", "Second Wind", "Move", "End Turn"],
+    [
+      "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Second Wind",
+      "Move",
+      "End Turn",
+    ],
   );
 
   await callTool(client, "fill_battle_hole", {
@@ -428,7 +441,7 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(endedFighterTurn, "snapshot.currentActorId"), "goblin");
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
-    ["Attack", "Attack", "Move", "End Turn"],
+    ["Attack", "Attack", ...GENERIC_COMBAT_ACTION_LABELS, "Move", "End Turn"],
   );
 
   await callTool(client, "fill_battle_hole", {
@@ -515,18 +528,21 @@ export async function verifyWidthVertical(client: Client) {
         sourceDraftId: fighterDraftId,
         combatantId: "fighter",
         initiative: 18,
+          side: "party",
       },
       {
         kind: "characterSession",
         sourceDraftId: wizardDraftId,
         combatantId: "wizard",
         initiative: 14,
+          side: "party",
       },
       {
         kind: "statBlock",
         statBlockId: "stat_block_skeleton",
         combatantId: "skeleton",
         initiative: 8,
+          side: "opposition",
       },
     ],
   });
@@ -541,7 +557,14 @@ export async function verifyWidthVertical(client: Client) {
 
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
-    ["Attack", "Second Wind", "Action Surge", "Move", "End Turn"],
+    [
+      "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+      "Second Wind",
+      "Action Surge",
+      "Move",
+      "End Turn",
+    ],
   );
 
   await callTool(client, "fill_battle_hole", {
@@ -576,6 +599,7 @@ export async function verifyWidthVertical(client: Client) {
     resources.some(
       (resource) =>
         resource.unitId === "fighter_action_surge" &&
+        resource.usage === "limited" &&
         resource.usesRemaining === 0 &&
         resource.usedThisTurn === true,
     ),

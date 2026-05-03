@@ -1,0 +1,136 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "barbarian",
+  "description": "Enter a Rage as a Bonus Action, gaining Bludgeoning, Piercing, and Slashing Resistance and bonus damage for Strength weapon or Unarmed Strike attacks.",
+  "id": "barbarian_rage",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "bonus_action"
+    },
+    "family": "activation",
+    "ongoingFeature": {
+      "actionRestrictions": [
+        "spellcasting"
+      ],
+      "activationTiming": "activation_cost",
+      "concentrationEffect": "break_and_prevent",
+      "levelOverrides": [
+        {
+          "atClassLevel": 15,
+          "lifecycle": {
+            "duration": {
+              "amount": 10,
+              "unit": "minute"
+            },
+            "earlyEndArmorCategories": [
+              "heavy"
+            ],
+            "earlyEndConditions": [
+              "unconscious"
+            ],
+            "kind": "fixed_duration"
+          }
+        }
+      ],
+      "lifecycle": {
+        "earlyEndArmorCategories": [
+          "heavy"
+        ],
+        "earlyEndConditions": [
+          "incapacitated"
+        ],
+        "extensionTriggers": [
+          "attack_roll_against_enemy",
+          "bonus_action",
+          "enemy_saving_throw"
+        ],
+        "initialExpiration": "end_of_next_turn",
+        "kind": "round_extended",
+        "maximumDuration": {
+          "amount": 10,
+          "unit": "minute"
+        }
+      }
+    },
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "damageType": "bludgeoning",
+            "kind": "grant_resistance"
+          },
+          {
+            "damageType": "piercing",
+            "kind": "grant_resistance"
+          },
+          {
+            "damageType": "slashing",
+            "kind": "grant_resistance"
+          },
+          {
+            "abilityFilter": [
+              "str"
+            ],
+            "delta": {
+              "axis": "class",
+              "base": 2,
+              "kind": "threshold_tiers",
+              "sign": "+",
+              "tiers": [
+                {
+                  "atLevel": 9,
+                  "value": 3
+                },
+                {
+                  "atLevel": 16,
+                  "value": 4
+                }
+              ]
+            },
+            "kind": "modify_damage_numeric"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "partial_short_full_long",
+      "shortRestRefill": 1
+    },
+    "resource": {
+      "cap": {
+        "axis": "class",
+        "base": 2,
+        "kind": "threshold_tiers",
+        "tiers": [
+          {
+            "atLevel": 3,
+            "value": 3
+          },
+          {
+            "atLevel": 6,
+            "value": 4
+          },
+          {
+            "atLevel": 12,
+            "value": 5
+          },
+          {
+            "atLevel": 17,
+            "value": 6
+          }
+        ]
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Rage",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Barbarian#Rage"
+  }
+}

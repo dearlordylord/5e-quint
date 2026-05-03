@@ -1,4 +1,5 @@
 import {
+  ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BattleFillSchema,
   BattleHoleSchema,
   BattleSubjectSchema,
@@ -13,12 +14,16 @@ const BattleCombatantProjectionSchema = Schema.Struct({
   combatantId: Schema.String,
   displayName: Schema.String,
   initiative: Schema.Number,
+  side: Schema.String,
   hp: Schema.Number,
   maxHp: Schema.Number,
   tempHp: Schema.Number,
   reactionAvailable: Schema.Boolean,
   movementSpentFeet: Schema.Number,
   hidden: Schema.Union(JsonObjectSchema, Schema.Null),
+  activeOngoingFeatureOccurrences: Schema.Array(
+    ActiveOngoingFeatureOccurrenceSnapshotSchema,
+  ),
   origin: JsonObjectSchema,
   zeroHpLifecycle: JsonObjectSchema,
 });
@@ -57,6 +62,9 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
   conditions: Schema.Array(Schema.String),
   hidden: Schema.Union(JsonObjectSchema, Schema.Null),
   activeEffects: Schema.Array(JsonObjectSchema),
+  activeOngoingFeatureOccurrences: Schema.Array(
+    ActiveOngoingFeatureOccurrenceSnapshotSchema,
+  ),
   reactionAvailable: Schema.Boolean,
 });
 const AvailableBattleActSchema = Schema.Struct({

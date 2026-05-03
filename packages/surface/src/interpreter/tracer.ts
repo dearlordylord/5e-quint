@@ -6155,9 +6155,11 @@ function traceActivatedAbility(
   traceActivationCost(m.activationCost, procId, nodes, edges, ids);
 
   // Resource consumption + reset cadence.
-  const resId = traceActivationResource(m.resource, nodes, edges, ids);
-  edges.push({ from: procId, to: resId, relation: "consumes" });
-  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+  if (m.resource !== undefined && m.resetCadence !== undefined) {
+    const resId = traceActivationResource(m.resource, nodes, edges, ids);
+    edges.push({ from: procId, to: resId, relation: "consumes" });
+    traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+  }
 
   traceUsageLimit(m.usageLimit, procId, "consumes", nodes, edges, ids);
 
@@ -7247,6 +7249,8 @@ function describeSavingThrowSourceFilter(
 
 function describeDelta(d: DiceDelta): string {
   switch (d.kind) {
+    case "fixed_number":
+      return `${d.sign}${d.amount}`;
     case "fixed_dice":
       // dieSize=1 collapses to a flat bonus (N × 1 = N).
       if (d.dieSize === 1) return `${d.sign}${d.dice}`;
@@ -7255,6 +7259,10 @@ function describeDelta(d: DiceDelta): string {
       return d.scale === "half" ? `${d.sign}½ PB` : `${d.sign}PB`;
     case "ability_modifier":
       return `${d.sign}${d.ability.toUpperCase()} mod`;
+    case "threshold_tiers":
+      return `${d.sign}${d.base} (${d.axis} tiers ${d.tiers
+        .map((t) => `L${t.atLevel}:${t.value}`)
+        .join(", ")})`;
     case "magic_item_rarity_bonus":
       return `${d.sign}bonus by item rarity (${Object.entries(d.byRarity)
         .map(([rarity, bonus]) => `${rarity}=${bonus}`)

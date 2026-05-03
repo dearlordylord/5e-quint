@@ -129,6 +129,19 @@ This table is a support-layer projection of the SRD condition text. Quint remain
 - Casting an action-time spell is a Magic Action, but Magic Action is not synonymous with casting a spell. Surface/reducer code may treat `unit.kind === "spell"` with action casting time as sufficient for Magic Action, but magical features and magic items can also require it.
 - Action Surge grants an extra Action that excludes Magic. Model that as an action resource carrying the authored Surface `ActionRestriction`, not as a separate Magic-action counter. Its once-per-turn limit and use-count spend/restore are creature-scoped reducer state. Shared or scaled use-count pools are separate resource semantics: examples include several options spending the same pool, or a feature whose available uses scale beyond the current fixed-one-use slice.
 
+### Active Ongoing Feature Occurrences
+
+- An **Active Ongoing Feature Occurrence** is engine state saying a source feature has been activated and is currently contributing rules riders until its modeled boundary, duration, or early-end condition removes it.
+- It is not SRD/authored content and it is not provenance. The authored Unit/Surface feature remains the source of static mechanics such as activation trigger, modifiers, resistance, action restrictions, concentration effects, and early-end predicates.
+- Occurrence state should carry only mutable runtime facts, such as the active source key and current expiry. Do not duplicate display names, source mechanics, or derived support labels into the occurrence.
+- Use this term for Rage/Reckless-style active riders. Avoid `stance` unless the SRD source actually uses that term for the rule being modeled.
+
+### Encounter Relationships
+
+- An **Encounter Side** is a caller-supplied battle-runtime relationship id used to project current ally/enemy facts for supported procedures.
+- Combatants with the same Encounter Side are allies for the current encounter; combatants with different Encounter Side ids are enemies for the current encounter. This models the SRD's ally/enemy designation at the promoted runtime boundary without deriving it from creature kind, provenance, or player/monster origin.
+- Encounter Side is battle setup state, not SRD content provenance and not a creature trait. If a future rule needs per-pair hostility that cannot be represented by side equality, widen this relationship model before adding rule-specific exceptions.
+
 ## Turn Structure
 
 | Term                          | Definition                                                                                                                                                                                                        | Aliases to avoid                                                                                                                   |
