@@ -162,6 +162,28 @@ Examples:
 
 - Parse-don't-validate means parse or narrow once at the boundary and carry the stronger type forward; it does not require hiding the assumptions a downstream algorithm consumes. When an algorithm depends on a cardinality invariant already proven by a narrowed type, reify that dependency at the algorithm boundary with a named helper or assertion rather than anonymous positional access. This is not repeated validation; it makes the compile-time invariant visible at the semantic boundary that must change if the narrowed shape later widens.
 
+## Holistic Fix Requirement
+
+When reviewing a fix made in response to prior review feedback, do not only verify that the cited line changed. Review whether the fix preserves the surrounding domain model, lifecycle, timing, provenance, and support boundary.
+
+For every accepted fix, reviewers must ask:
+
+1. What broader invariant did the original bug violate?
+2. Does the fix encode that invariant at the right boundary, or only patch one symptom?
+3. Did the fix introduce a new state, continuation, support marker, or timing path?
+4. If yes, is that new shape composable with adjacent procedures, nested reactions, replay/resume flows, and future widening?
+5. Are tests exercising the invariant, not just the originally failing example?
+
+Flag fixes that:
+
+- solve one test while bypassing the modeled procedure lifecycle;
+- add support by omission, optional markers, or convention instead of an explicit typed boundary;
+- create a second path for the same domain rule without explaining why both paths must exist;
+- make future widening silently wrong rather than failing loudly;
+- update runtime behavior without checking whether the plan, README, assumptions, and support gates now overclaim.
+
+Prefer the smallest holistic correction that restores the domain invariant. Do not suggest line-local patches when the issue is really a lifecycle, timing, provenance, or support-boundary problem.
+
 ## Boundary Typing
 
 All data crossing system boundaries must be parsed or decoded at the boundary and represented with precise domain types afterward.

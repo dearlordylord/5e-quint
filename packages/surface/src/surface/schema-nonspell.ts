@@ -8,6 +8,7 @@ import {
   ClassRecordKindSchema,
   ClassNameSchema,
   ConditionSchema,
+  DamageTypeSchema,
   DiceAmountSchema,
   FeatCategorySchema,
   HeavyArmorAcFormulaSchema,
@@ -398,6 +399,7 @@ export const ClassFeatureComponentMechanicsSchema = Schema.Union(
   ActivatedAbilityMechanicsSchema,
   Schema.suspend(() => OnHitTriggerMechanicsSchema),
   Schema.suspend(() => SaveDamageReplacementMechanicsSchema),
+  Schema.suspend(() => ReactionRollOrDamageReductionMechanicsSchema),
 );
 
 export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
@@ -603,6 +605,91 @@ export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
     }),
   ),
 });
+
+const BardicInspirationDieReductionSchema = strictStruct({
+  kind: Schema.Literal("bardic_inspiration_die"),
+});
+
+const ReactionAttackDamageReductionTriggerSchema = strictStruct({
+  kind: Schema.Literal("hit_by_attack_roll"),
+  requiresVisibleAttacker: exactOptional(Schema.Boolean),
+  damageIncludes: exactOptional(Schema.NonEmptyArray(DamageTypeSchema)),
+});
+
+const ReactionAttackDamageReductionUnconditionalTriggerSchema = strictStruct({
+  kind: Schema.Literal("hit_by_attack_roll"),
+  requiresVisibleAttacker: exactOptional(Schema.Boolean),
+});
+
+const ReactionRollOrDamageReductionModifierSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("attack_roll_reduction"),
+    trigger: strictStruct({
+      kind: Schema.Literal("creature_succeeds_attack_roll"),
+      rangeFeet: PositiveIntegerSchema,
+      requiresVisibleCreature: Schema.Boolean,
+    }),
+    reduction: BardicInspirationDieReductionSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("ability_check_reduction"),
+    trigger: strictStruct({
+      kind: Schema.Literal("creature_succeeds_ability_check"),
+      rangeFeet: PositiveIntegerSchema,
+      requiresVisibleCreature: Schema.Boolean,
+    }),
+    reduction: BardicInspirationDieReductionSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("damage_roll_reduction"),
+    trigger: strictStruct({
+      kind: Schema.Literal("creature_makes_damage_roll"),
+      rangeFeet: PositiveIntegerSchema,
+      requiresVisibleCreature: Schema.Boolean,
+    }),
+    reduction: BardicInspirationDieReductionSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("attack_damage_reduction"),
+    trigger: ReactionAttackDamageReductionUnconditionalTriggerSchema,
+    reduction: Schema.Union(
+      strictStruct({
+        kind: Schema.Literal("half_damage"),
+        rounding: Schema.Literal("down"),
+      }),
+    ),
+  }),
+  strictStruct({
+    kind: Schema.Literal("attack_damage_reduction"),
+    trigger: ReactionAttackDamageReductionTriggerSchema,
+    reduction: strictStruct({
+      kind: Schema.Literal("dice_plus_ability_modifier_plus_class_level"),
+      dice: Schema.Struct({
+        dice: Schema.Literal(1),
+        dieSize: Schema.Literal(10),
+      }),
+      ability: Schema.Literal("dex"),
+    }),
+    zeroDamageRedirect: Schema.Literal(true),
+  }),
+);
+
+const ReactionRollOrDamageReductionModifiersSchema = Schema.NonEmptyArray(
+  ReactionRollOrDamageReductionModifierSchema,
+);
+
+export const ReactionRollOrDamageReductionMechanicsSchema = Schema.Union(
+  strictStruct({
+    family: Schema.Literal("reaction_roll_or_damage_reduction"),
+    modifiers: ReactionRollOrDamageReductionModifiersSchema,
+  }),
+  strictStruct({
+    family: Schema.Literal("reaction_roll_or_damage_reduction"),
+    resource: ActivationResourceSchema,
+    resetCadence: ResetCadenceSchema,
+    modifiers: ReactionRollOrDamageReductionModifiersSchema,
+  }),
+);
 
 export const RerollWeaponDamageDiceRiderSchema = strictStruct({
   kind: Schema.Literal("reroll_weapon_damage_dice"),

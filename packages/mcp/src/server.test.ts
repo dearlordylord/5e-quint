@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleId,
   battleCombatantSide,
@@ -420,6 +421,99 @@ describe("MCP server route", () => {
         }),
       }),
     ).toThrow("Unsupported battle save-damage replacement Unit hook");
+  });
+
+  test("admits reaction roll or damage reduction Unit hooks through support profiles", () => {
+    const root = createMcpCompositionRoot();
+    const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
+      level: 5,
+      includeUncannyDodge: true,
+    });
+    const state = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-supported-reaction-modifier"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("rogue-character"),
+        displayName: "Orc Soldier Rogue",
+        build: rogueBuild,
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: rogueBattleUnitLibrary(root),
+    });
+
+    expect(
+      characterUnitRef(state, fighterId, "rogue_uncanny_dodge"),
+    ).toMatchObject({
+      supportProfiles: [REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE],
+    });
+
+    const uncannyDodgeUnit = root.unitLibrary.requireUnit(
+      "rogue_uncanny_dodge",
+    );
+    if (
+      uncannyDodgeUnit.kind !== "class_feature" ||
+      uncannyDodgeUnit.mechanics.family !== "reaction_roll_or_damage_reduction"
+    ) {
+      throw new Error("Expected Uncanny Dodge reaction modifier Unit.");
+    }
+    const unsupportedUnit: UnitRecord = {
+      ...uncannyDodgeUnit,
+      provenance: {
+        kind: "xphb",
+        section: "structured-input-only",
+      },
+      mechanics: {
+        family: "reaction_roll_or_damage_reduction",
+        modifiers: [
+          {
+            kind: "ability_check_reduction",
+            trigger: {
+              kind: "creature_succeeds_ability_check",
+              rangeFeet: 60,
+              requiresVisibleCreature: true,
+            },
+            reduction: { kind: "bardic_inspiration_die" },
+          },
+        ],
+      },
+    };
+    const unsupportedBuild = {
+      ...rogueBuild,
+      features: rogueBuild.features,
+    };
+    expect(() =>
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("battle-unsupported-reaction-modifier"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("rogue-character"),
+          displayName: "Unsupported Rogue",
+          build: unsupportedBuild,
+          initiative: initiativeScore(12),
+          side: partySide,
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(11),
+          side: oppositionSide,
+        },
+        unitLibrary: rogueBattleUnitLibrary(root, {
+          uncannyDodgeUnit: unsupportedUnit,
+        }),
+      }),
+    ).toThrow("Unsupported battle reaction roll or damage reduction Unit hook");
   });
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
@@ -3359,6 +3453,7 @@ function rogueCharacterBuild(
   input: {
     readonly level?: number;
     readonly includeEvasion?: boolean;
+    readonly includeUncannyDodge?: boolean;
   } = {},
 ): CharacterBuild {
   const base = fighterCharacterBuild(unitLibrary);
@@ -3392,6 +3487,15 @@ function rogueCharacterBuild(
             },
           ]
         : []),
+      ...(input.includeUncannyDodge === true
+        ? [
+            {
+              kind: "classFeature" as const,
+              unitId: "rogue_uncanny_dodge",
+              level: 5 as CharacterClassLevel,
+            },
+          ]
+        : []),
     ],
     resources: [],
     equipment: {
@@ -3409,6 +3513,7 @@ function rogueBattleUnitLibrary(
   overrides?: {
     readonly sneakAttackUnit?: UnitRecord;
     readonly evasionUnit?: UnitRecord;
+    readonly uncannyDodgeUnit?: UnitRecord;
   },
 ): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
   const rogueClass = rogueClassUnit(root.unitLibrary);
@@ -3423,6 +3528,11 @@ function rogueBattleUnitLibrary(
       }
       if (unitId === "rogue_evasion") {
         return overrides?.evasionUnit ?? root.unitLibrary.requireUnit(unitId);
+      }
+      if (unitId === "rogue_uncanny_dodge") {
+        return (
+          overrides?.uncannyDodgeUnit ?? root.unitLibrary.requireUnit(unitId)
+        );
       }
       return root.unitLibrary.requireUnit(unitId);
     },

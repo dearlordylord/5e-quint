@@ -1,7 +1,9 @@
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleAttackDamageRiderSupportForUnit,
+  battleReactionRollOrDamageReductionSupportForUnit,
   battleSaveDamageReplacementSupportForUnit,
   type BattleUnitRef,
   type BattleUnitSupportProfile,
@@ -25,6 +27,9 @@ const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILES = [
 ] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
 const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILES = [
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
+const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILES = [
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 ] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
 
 export function characterUnitRefsWithBattleSupportProfiles(
@@ -125,6 +130,19 @@ function battleSupportProfilesForUnit(
   }
   if (saveDamageReplacementSupport === "saveDamageReplacement") {
     supportProfiles.push(...SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILES);
+  }
+
+  const reactionRollOrDamageReductionSupport =
+    battleReactionRollOrDamageReductionSupportForUnit(unit);
+  if (reactionRollOrDamageReductionSupport === "unsupported") {
+    throw new Error(
+      `Unsupported battle reaction roll or damage reduction Unit hook: ${unit.id}.`,
+    );
+  }
+  if (
+    reactionRollOrDamageReductionSupport === "reactionRollOrDamageReduction"
+  ) {
+    supportProfiles.push(...REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILES);
   }
 
   return supportProfiles;

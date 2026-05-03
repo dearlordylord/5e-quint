@@ -183,11 +183,14 @@ export const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE =
   "weaponOrUnarmedCriticalRange19";
 export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
 export const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE = "saveDamageReplacement";
+export const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE =
+  "reactionRollOrDamageReduction";
 export const BATTLE_UNIT_SUPPORT_PROFILES = [
   "bonusActionHide",
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 ] as const;
 export type BattleUnitSupportProfile =
   (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number];
@@ -500,6 +503,7 @@ export type BattleHelpAttack = {
 // the trigger occurs"; they are not authored action names.
 export const BATTLE_REACTION_TRIGGERS = [
   "attackHit",
+  "attackDamage",
   "spellCast",
   "saveFailed",
   "afterDamage",
@@ -519,6 +523,7 @@ export type BattleInterruptedProcedure =
       readonly kind: "replay";
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
+      readonly attackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
     }
   | {
       readonly kind: "resolved";
@@ -528,8 +533,39 @@ export type BattleInterruptedProcedure =
       readonly kind: "movement";
       readonly subject: BattleSubject;
       readonly movement: BattleResolvedMovement;
+    }
+  | {
+      readonly kind: "attackDamage";
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "action"; readonly action: "attack" }
+      >;
+      readonly attackerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly damageEvent: BattleAttackDamageEvent;
+      readonly fills: readonly BattleAttackDamagePrefixFill[];
+      readonly concentrationSavingThrow?: Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >;
+      readonly deathFailuresAtZeroHp: 1 | 2;
+      readonly attackDamageRiders: readonly AttackDamageRider[];
     };
-export type BattleReactionProcedureChoice = {
+type BattleAttackDamagePrefixFill = Extract<
+  BattleFill,
+  { readonly kind: "targetChoice" | "attackRoll" | "rolledDice" }
+>;
+type BattlePendingAttackDamageReduction = {
+  readonly reactorId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly label: string;
+  readonly reduction: Extract<
+    BattleReactionModifierChoice,
+    { readonly kind: "attackDamageReduction" }
+  >["reduction"];
+  readonly reductionAmount: number;
+};
+type BattleReactionProcedureChoiceWithSubject = {
   readonly reactorId: CombatantId;
   readonly subject: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>;
   readonly initialHoles: readonly BattleHole[];
@@ -546,6 +582,51 @@ export type BattleReactionProcedureChoice = {
       readonly kind: "opportunityAttack";
     }
 );
+type BattleAttackDamageContinuation = Extract<
+  BattleInterruptedProcedure,
+  { readonly kind: "attackDamage" }
+>;
+type BattleAttackDamageContinuationWithoutConcentration = Omit<
+  BattleAttackDamageContinuation,
+  "concentrationSavingThrow"
+> & {
+  readonly concentrationSavingThrow?: never;
+};
+type BattleReactionModifierChoice =
+  | {
+      readonly kind: "attackRollReduction" | "damageRollReduction";
+      readonly unitId: UnitRecord["id"];
+      readonly label: string;
+      readonly reduction: {
+        readonly kind: "rolled";
+        readonly flatModifier: number;
+        readonly dieSize: 6 | 8 | 10 | 12;
+      };
+    }
+  | {
+      readonly kind: "attackDamageReduction";
+      readonly unitId: UnitRecord["id"];
+      readonly label: string;
+      readonly reduction: { readonly kind: "halfDamage" };
+    };
+type BattleAttackDamageEvent =
+  | {
+      readonly kind: "aggregateDamage";
+      readonly damageByTypeBeforeTargetAdjustments: readonly DamageAmountByTypeEntry[];
+    }
+  | {
+      readonly kind: "rolledDamage";
+      readonly damageRollByType: readonly DamageAmountByTypeEntry[];
+    };
+type BattleReactionProcedureModifierChoice = {
+  readonly kind: "reactionRollOrDamageReduction";
+  readonly reactorId: CombatantId;
+  readonly choice: BattleReactionModifierChoice;
+  readonly initialHoles: readonly BattleHole[];
+};
+export type BattleReactionProcedureChoice =
+  | BattleReactionProcedureChoiceWithSubject
+  | BattleReactionProcedureModifierChoice;
 export type BattleReactionProcedureSelection = {
   readonly fills: readonly BattleFill[];
 } & (
@@ -561,10 +642,15 @@ export type BattleReactionProcedureSelection = {
       readonly kind: "opportunityAttack";
       readonly reactorId: CombatantId;
     }
+  | {
+      readonly kind: "reactionRollOrDamageReduction";
+      readonly unitId: UnitRecord["id"];
+      readonly modifierKind: BattleReactionModifierChoice["kind"];
+    }
 );
 type BattleActiveReactionProcedure = {
   readonly reactorId: CombatantId;
-  readonly subject: BattleReactionProcedureChoice["subject"];
+  readonly subject: BattleReactionProcedureChoiceWithSubject["subject"];
   readonly fills: readonly BattleFill[];
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
 };
@@ -573,35 +659,64 @@ type BattleReactionFrameBase = {
   readonly offeredReactors: readonly CombatantId[];
   readonly choices: readonly BattleReactionProcedureChoice[];
   readonly activeReaction?: BattleActiveReactionProcedure;
+};
+type BattleReactionFrameWithContinuationBase = BattleReactionFrameBase & {
   readonly continuation: BattleInterruptedProcedure;
 };
 export type BattleReactionFrame =
-  | (BattleReactionFrameBase & {
+  | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "attackHit";
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
+      readonly attackRoll: AttackRollResult;
+      readonly damageTypes: readonly DamageType[];
     })
   | (BattleReactionFrameBase & {
+      readonly trigger: "attackDamage";
+      readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
+    })
+  | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "spellCast";
       readonly casterId: CombatantId;
       readonly spellId: SpellRecord["id"];
     })
-  | (BattleReactionFrameBase & {
+  | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "saveFailed";
       readonly targetId: CombatantId;
       readonly sourceSpellId?: SpellRecord["id"];
     })
-  | (BattleReactionFrameBase & {
+  | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "afterDamage";
       readonly damageSourceId: CombatantId;
       readonly damagedId: CombatantId;
       readonly damageAmount: DamageAmount;
     })
-  | (BattleReactionFrameBase & {
+  | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "opportunityAttack";
       readonly moverId: CombatantId;
       readonly reactorIds: readonly CombatantId[];
     });
+type BattleInterruptFrame =
+  | { readonly kind: "reaction"; readonly frame: BattleReactionFrame }
+  | BattleReplayContinuationFrame
+  | BattleAttackDamageContinuationConcentrationFrame;
+type BattleReactionInterruptFrame = Extract<
+  BattleInterruptFrame,
+  { readonly kind: "reaction" }
+>;
+type BattleReplayContinuationFrame = {
+  readonly kind: "replayContinuation";
+  readonly continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "replay" }
+  >;
+  readonly suppressedReactionTrigger: BattleReactionTrigger;
+};
+type BattleAttackDamageContinuationConcentrationFrame = {
+  readonly kind: "attackDamageContinuationConcentration";
+  readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
+  readonly suppressedReactionTrigger: BattleReactionTrigger;
+};
 type BattleReactionFrameInput = BattleReactionFrame extends infer T
   ? T extends BattleReactionFrame
     ? Omit<
@@ -1058,6 +1173,13 @@ export type BattleCreatureState = {
             { readonly kind: "saveDamageReplacement" }
           >
         >;
+        readonly reactionRollOrDamageReductionProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "reactionRollOrDamageReduction" }
+          >
+        >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
       }
     | {
@@ -1086,7 +1208,7 @@ export type BattleState = {
   readonly readiedMovements: ReadonlyMap<CombatantId, BattleReadiedMovement>;
   readonly helpAttacks: readonly BattleHelpAttack[];
   readonly grapples: readonly BattleGrappleLink[];
-  readonly interruptStack: readonly BattleReactionFrame[];
+  readonly interruptStack: readonly BattleInterruptFrame[];
   readonly legendaryActionWindow: LegendaryActionWindow | null;
 };
 
@@ -1464,10 +1586,16 @@ export type BattleUnitFeatureRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly unitFeature: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "selfBonusActionHealing" }
-  >;
+  readonly unitFeature:
+    | Extract<
+        SupportedUnitFeatureProfile,
+        { readonly kind: "selfBonusActionHealing" }
+      >
+    | {
+        readonly unitId: UnitRecord["id"];
+        readonly label: string;
+        readonly modifierKind: BattleReactionModifierChoice["kind"];
+      };
 };
 export type BattleDeathSavingThrowHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -1968,6 +2096,15 @@ type BattleFillEncoded =
                   readonly kind: "opportunityAttack";
                   readonly reactorId: string;
                   readonly fills: readonly BattleFillEncoded[];
+                }
+              | {
+                  readonly kind: "reactionRollOrDamageReduction";
+                  readonly unitId: string;
+                  readonly modifierKind:
+                    | "attackRollReduction"
+                    | "damageRollReduction"
+                    | "attackDamageReduction";
+                  readonly fills: readonly BattleFillEncoded[];
                 };
           };
     }
@@ -2090,6 +2227,16 @@ export const BattleFillSchema: Schema.Schema<
               reactorId: CombatantId,
               fills: Schema.Array(BattleFillSchema),
             }),
+            Schema.Struct({
+              kind: Schema.Literal("reactionRollOrDamageReduction"),
+              unitId: BattleSubjectTextSchema,
+              modifierKind: Schema.Literal(
+                "attackRollReduction",
+                "damageRollReduction",
+                "attackDamageReduction",
+              ),
+              fills: Schema.Array(BattleFillSchema),
+            }),
           ),
         }),
       ),
@@ -2141,6 +2288,9 @@ type AttackBattleResolutionInput = BattleResolutionInputForSubject<
 > & {
   readonly replayingInterruptedProcedure?: boolean;
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly pendingAttackDamageReductions?:
+    | readonly BattlePendingAttackDamageReduction[]
+    | undefined;
 };
 type OffHandAttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<
@@ -2332,6 +2482,10 @@ const ESCAPE_GRAPPLE_OUTCOME_HOLE_ID = holeId("battle:escape-grapple:outcome");
 const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
   "battle:escape-grapple:outcome",
 );
+const REACTION_MODIFIER_ROLL_HOLE_ID = holeId("battle:reaction:modifier-roll");
+const REACTION_MODIFIER_ROLL_HOLE_INSTANCE = holeInstanceKey(
+  "battle:reaction:modifier-roll",
+);
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = movementFeet(5);
 const HIDE_DC = difficultyClass(15);
 
@@ -2418,6 +2572,32 @@ type SupportedUnitFeatureProfile =
       readonly onSuccess: "none";
       readonly onFail: "half";
       readonly suppressedByCondition: "incapacitated";
+    }
+  | {
+      readonly kind: "reactionRollOrDamageReduction";
+      readonly unit: UnitRecord;
+      readonly classLevel: ClassLevel;
+      readonly modifiers: readonly ReactionRollOrDamageReductionProfile[];
+    };
+
+type ReactionRollOrDamageReductionProfile =
+  | {
+      readonly kind: "attackRollReduction";
+      readonly rangeFeet: MovementFeet;
+      readonly requiresVisibleCreature: true;
+      readonly reduction: { readonly kind: "bardicInspirationDie" };
+    }
+  | {
+      readonly kind: "attackDamageRollReduction";
+      readonly rangeFeet: MovementFeet;
+      readonly requiresVisibleCreature: true;
+      readonly reduction: { readonly kind: "bardicInspirationDie" };
+    }
+  | {
+      readonly kind: "attackDamageReduction";
+      readonly requiresVisibleAttacker?: true;
+      readonly damageIncludes?: readonly DamageType[];
+      readonly reduction: { readonly kind: "halfDamage" };
     };
 
 export function startBattle(input: {
@@ -2893,30 +3073,67 @@ function resolveBattleSubjectInternal(
   options: {
     readonly replayingInterruptedProcedure?: boolean;
     readonly suppressedReactionTrigger?: BattleReactionTrigger;
+    readonly pendingAttackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
   },
 ): BattleResolutionResult {
   if (
     input.state.interruptStack.length > 0 &&
     options.replayingInterruptedProcedure !== true
   ) {
-    const activeFrame = currentReactionFrame(input.state);
-    const activeReaction = activeFrame?.activeReaction;
-    if (
-      activeReaction !== undefined &&
-      sameBattleSubject(input.subject, activeReaction.subject)
-    ) {
-      const reactionResult = resolveBattleSubjectInternal(input, {
-        replayingInterruptedProcedure: true,
-        ...(activeReaction.suppressedReactionTrigger === undefined
-          ? {}
-          : {
-              suppressedReactionTrigger:
-                activeReaction.suppressedReactionTrigger,
-            }),
-      });
-      return reactionResult.tag === "resolved"
-        ? completeActiveReactionProcedure(reactionResult.state)
-        : reactionResult;
+    const activeFrame = currentInterruptFrame(input.state);
+    if (activeFrame !== null) {
+      if (activeFrame.kind === "attackDamageContinuationConcentration") {
+        if (
+          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
+        ) {
+          return invalidResult(
+            input.state,
+            "staleSubject",
+            "Attack damage Concentration save must be resolved before other battle subjects.",
+          );
+        }
+        return resolveAttackDamageContinuationConcentration({
+          state: input.state,
+          frame: activeFrame,
+          subject: input.subject,
+          fills: input.fills,
+        });
+      }
+      if (activeFrame.kind === "replayContinuation") {
+        if (
+          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
+        ) {
+          return invalidResult(
+            input.state,
+            "staleSubject",
+            "Interrupted attack replay must be resolved before other battle subjects.",
+          );
+        }
+        return resolveReplayContinuation({
+          state: input.state,
+          frame: activeFrame,
+          subject: input.subject,
+          fills: input.fills,
+        });
+      }
+      const activeReaction = activeFrame.frame.activeReaction;
+      if (
+        activeReaction !== undefined &&
+        sameBattleSubject(input.subject, activeReaction.subject)
+      ) {
+        const reactionResult = resolveBattleSubjectInternal(input, {
+          replayingInterruptedProcedure: true,
+          ...(activeReaction.suppressedReactionTrigger === undefined
+            ? {}
+            : {
+                suppressedReactionTrigger:
+                  activeReaction.suppressedReactionTrigger,
+              }),
+        });
+        return reactionResult.tag === "resolved"
+          ? completeActiveReactionProcedure(reactionResult.state)
+          : reactionResult;
+      }
     }
     return invalidResult(
       input.state,
@@ -3037,6 +3254,12 @@ function resolveBattleSubjectInternal(
         ...(options.suppressedReactionTrigger === undefined
           ? {}
           : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+        ...(options.pendingAttackDamageReductions === undefined
+          ? {}
+          : {
+              pendingAttackDamageReductions:
+                options.pendingAttackDamageReductions,
+            }),
       });
     }
     if (subject.tag === "action" && subject.action === "dash") {
@@ -3223,8 +3446,17 @@ export function openBattleReactionWindow(input: {
 }): BattleState {
   return {
     ...input.state,
-    interruptStack: [...input.state.interruptStack, input.frame],
+    interruptStack: [
+      ...input.state.interruptStack,
+      reactionInterruptFrame(input.frame),
+    ],
   };
+}
+
+function reactionInterruptFrame(
+  frame: BattleReactionFrame,
+): BattleReactionInterruptFrame {
+  return { kind: "reaction", frame };
 }
 
 export function resolveBattleReaction(input: {
@@ -3259,7 +3491,10 @@ export function resolveBattleReaction(input: {
     );
   }
 
-  if (input.fill.value.kind === "resolve" && !reactor.reactionAvailable) {
+  if (
+    input.fill.value.kind === "resolve" &&
+    !combatantCanTakeReactions(reactor)
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3276,6 +3511,14 @@ export function resolveBattleReaction(input: {
         "Reaction choice is not admitted for the pending Reaction window.",
       );
     }
+    if (choice.kind === "reactionRollOrDamageReduction") {
+      return resolveReactionRollOrDamageReduction({
+        state: input.state,
+        frame,
+        choice,
+        selection: input.fill.value.choice,
+      });
+    }
     const activeFrame = {
       ...frame,
       activeReaction: {
@@ -3288,7 +3531,10 @@ export function resolveBattleReaction(input: {
     const activeState = spendReaction(
       {
         ...input.state,
-        interruptStack: [...stackWithoutCurrent, activeFrame],
+        interruptStack: [
+          ...stackWithoutCurrent,
+          reactionInterruptFrame(activeFrame),
+        ],
       },
       input.fill.value.reactorId,
     );
@@ -3319,7 +3565,10 @@ export function resolveBattleReaction(input: {
         }
       : {
           ...input.state,
-          interruptStack: [...stackWithoutCurrent, updatedFrame],
+          interruptStack: [
+            ...stackWithoutCurrent,
+            reactionInterruptFrame(updatedFrame),
+          ],
         };
   const nextState =
     remainingReactors.length === 0
@@ -3352,6 +3601,361 @@ function spendReaction(
   };
 }
 
+function spendReactionModifierResource(
+  state: BattleState,
+  reactorId: CombatantId,
+  unitId: UnitRecord["id"],
+): BattleState {
+  const reactor = state.combatants.get(reactorId);
+  if (reactor?.origin.kind !== "character") return state;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(reactorId, {
+      ...reactor,
+      origin: {
+        ...reactor.origin,
+        resources: reactor.origin.resources.map((resource) =>
+          resource.unit.id === unitId
+            ? spendCharacterResourceUse(resource)
+            : resource,
+        ),
+      },
+    }),
+  };
+}
+
+function resolveReactionRollOrDamageReduction(input: {
+  readonly state: BattleState;
+  readonly frame: BattleReactionFrame;
+  readonly choice: BattleReactionProcedureModifierChoice;
+  readonly selection: BattleReactionProcedureSelection;
+}): BattleResolutionResult {
+  if (input.selection.kind !== "reactionRollOrDamageReduction") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Reaction modifier selection does not match the admitted choice.",
+    );
+  }
+  const reductionRoll = reactionModifierReductionRoll(
+    input.choice.choice,
+    input.selection.fills,
+  );
+  if (reductionRoll.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", reductionRoll.message);
+  }
+  const reduction =
+    input.choice.choice.reduction.kind === "halfDamage"
+      ? 0
+      : reductionRoll.value + input.choice.choice.reduction.flatModifier;
+  if (
+    input.choice.choice.kind === "attackDamageReduction" &&
+    input.frame.trigger !== "attackHit"
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack damage reductions must be chosen when the attack roll hits.",
+    );
+  }
+  if (
+    input.choice.choice.kind === "attackDamageReduction" &&
+    input.frame.trigger === "attackHit"
+  ) {
+    const reactor = input.state.combatants.get(input.choice.reactorId);
+    if (
+      input.choice.reactorId !== input.frame.targetId ||
+      reactor?.origin.kind !== "character"
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack damage reductions require the damaged character as the reactor.",
+      );
+    }
+  }
+  if (
+    input.choice.choice.kind === "damageRollReduction" &&
+    (input.frame.trigger !== "attackDamage" ||
+      input.frame.continuation.damageEvent.kind !== "rolledDamage")
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Damage-roll reductions require unresolved rolled attack damage.",
+    );
+  }
+  const spent = spendReactionModifierResource(
+    spendReaction(input.state, input.choice.reactorId),
+    input.choice.reactorId,
+    input.choice.choice.unitId,
+  );
+  const updatedFrame = reactionFrameAfterModifier(
+    input.frame,
+    input.choice.reactorId,
+    input.choice.choice,
+    reduction,
+  );
+  const completedFrame: BattleReactionFrame = {
+    ...updatedFrame,
+    offeredReactors: [...updatedFrame.offeredReactors, input.choice.reactorId],
+  };
+  const remainingReactors = unofferedEligibleReactors(completedFrame);
+  const stackWithoutCurrent = spent.interruptStack.slice(0, -1);
+  const nextState =
+    remainingReactors.length === 0
+      ? { ...spent, interruptStack: stackWithoutCurrent }
+      : {
+          ...spent,
+          interruptStack: [
+            ...stackWithoutCurrent,
+            reactionInterruptFrame(completedFrame),
+          ],
+        };
+
+  return remainingReactors.length === 0
+    ? resumeInterruptedProcedure(
+        nextState,
+        completedFrame.continuation,
+        completedFrame.trigger,
+      )
+    : {
+        tag: "resolved",
+        state: nextState,
+        snapshot: snapshotBattle(nextState),
+      };
+}
+
+function reactionModifierReductionRoll(
+  choice: BattleReactionModifierChoice,
+  fills: readonly BattleFill[],
+):
+  | { readonly tag: "ok"; readonly value: number }
+  | {
+      readonly tag: "invalid";
+      readonly message: string;
+    } {
+  if (choice.reduction.kind === "halfDamage") {
+    return fills.length === 0
+      ? { tag: "ok", value: 0 }
+      : {
+          tag: "invalid",
+          message: "This Reaction modifier does not accept a roll fill.",
+        };
+  }
+  if (fills.length !== 1 || fills[0]?.kind !== "rolledDice") {
+    return {
+      tag: "invalid",
+      message: "This Reaction modifier requires one reduction roll fill.",
+    };
+  }
+  const fill = fills[0];
+  if (fill.holeId !== REACTION_MODIFIER_ROLL_HOLE_ID) {
+    return {
+      tag: "invalid",
+      message: "Reaction modifier roll fill does not match the requested hole.",
+    };
+  }
+  if (
+    fill.value.length !== 1 ||
+    fill.value[0]?.results.length !== 1 ||
+    Number(fill.value[0].results[0]) > choice.reduction.dieSize
+  ) {
+    return {
+      tag: "invalid",
+      message: "Reaction modifier roll must provide one Bardic Inspiration die result.",
+    };
+  }
+  const value = fill.value.reduce(
+    (total, group) =>
+      total +
+      group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      ),
+    0,
+  );
+  return { tag: "ok", value };
+}
+
+function bardicInspirationDieSize(
+  classLevel: ClassLevel,
+): 6 | 8 | 10 | 12 {
+  if (classLevel >= 15) return 12;
+  if (classLevel >= 10) return 10;
+  if (classLevel >= 5) return 8;
+  return 6;
+}
+
+function reactionFrameAfterModifier(
+  frame: BattleReactionFrame,
+  reactorId: CombatantId,
+  choice: BattleReactionModifierChoice,
+  reduction: number,
+): BattleReactionFrame {
+  if (frame.trigger === "attackHit" && choice.kind === "attackRollReduction") {
+    return {
+      ...frame,
+      attackRoll: {
+        ...frame.attackRoll,
+        total: frame.attackRoll.total - reduction,
+      },
+      continuation:
+        frame.continuation.kind === "replay"
+          ? {
+              ...frame.continuation,
+              fills: reactionModifiedAttackRollFills(
+                frame.continuation.fills,
+                frame.attackRoll.total - reduction,
+              ),
+            }
+          : frame.continuation,
+    };
+  }
+  if (
+    frame.trigger === "attackHit" &&
+    choice.kind === "attackDamageReduction" &&
+    frame.continuation.kind === "replay"
+  ) {
+    return {
+      ...frame,
+      continuation: {
+        ...frame.continuation,
+        attackDamageReductions: [
+          ...(frame.continuation.attackDamageReductions ?? []),
+          {
+            reactorId,
+            unitId: choice.unitId,
+            label: choice.label,
+            reduction: choice.reduction,
+            reductionAmount: reduction,
+          },
+        ],
+      },
+    };
+  }
+  if (
+    frame.trigger === "attackDamage" &&
+    choice.kind === "damageRollReduction"
+  ) {
+    const nextDamageEntries = damageAmountByTypeEntriesAfterScalarReduction(
+      attackDamageEventEntries(frame.continuation.damageEvent),
+      choice.reduction.kind,
+      reduction,
+    );
+    const nextDamageEvent =
+      frame.continuation.damageEvent.kind === "rolledDamage"
+        ? ({
+            kind: "rolledDamage" as const,
+            damageRollByType: nextDamageEntries,
+          } satisfies BattleAttackDamageEvent)
+        : ({
+            kind: "aggregateDamage" as const,
+            damageByTypeBeforeTargetAdjustments: nextDamageEntries,
+          } satisfies BattleAttackDamageEvent);
+    return {
+      ...frame,
+      continuation: {
+        ...frame.continuation,
+        damageEvent: nextDamageEvent,
+      },
+    };
+  }
+  return frame;
+}
+
+function attackDamageEventEntries(
+  event: BattleAttackDamageEvent,
+): readonly DamageAmountByTypeEntry[] {
+  return event.kind === "rolledDamage"
+    ? event.damageRollByType
+    : event.damageByTypeBeforeTargetAdjustments;
+}
+
+function attackDamageEventAmountForTarget(
+  target: BattleCreatureState,
+  event: BattleAttackDamageEvent,
+): DamageAmount {
+  return toDamageAmount(
+    damageAmountByTypeAfterTargetAdjustments(
+      target,
+      damageAmountByTypeEntriesToMap(attackDamageEventEntries(event)),
+    ),
+  );
+}
+
+function attackDamageEventAfterPendingReductions(
+  event: BattleAttackDamageEvent,
+  reductions: readonly BattlePendingAttackDamageReduction[],
+): BattleAttackDamageEvent {
+  return reductions.reduce(
+    (current, reduction) =>
+      attackDamageEventAfterPendingReduction(current, reduction),
+    event,
+  );
+}
+
+function attackDamageEventAfterPendingReduction(
+  event: BattleAttackDamageEvent,
+  reduction: BattlePendingAttackDamageReduction,
+): BattleAttackDamageEvent {
+  const nextEntries = damageAmountByTypeEntriesAfterScalarReduction(
+    attackDamageEventEntries(event),
+    reduction.reduction.kind,
+    reduction.reductionAmount,
+  );
+  return event.kind === "rolledDamage"
+    ? { ...event, damageRollByType: nextEntries }
+    : { ...event, damageByTypeBeforeTargetAdjustments: nextEntries };
+}
+
+function damageAmountByTypeEntriesAfterScalarReduction(
+  entries: readonly DamageAmountByTypeEntry[],
+  reductionKind: BattleReactionModifierChoice["reduction"]["kind"],
+  reduction: number,
+): readonly DamageAmountByTypeEntry[] {
+  const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
+  const reductionAmount =
+    reductionKind === "halfDamage"
+      ? total - Math.floor(total / 2)
+      : Math.min(total, Math.max(0, reduction));
+  return entriesAfterProportionalDamageReduction(entries, reductionAmount);
+}
+
+function reactionModifiedAttackRollFills(
+  fills: readonly BattleFill[],
+  total: number,
+): readonly BattleFill[] {
+  return fills.flatMap<BattleFill>((fill) => {
+    if (fill.kind === "attackRoll") {
+      return [{ ...fill, value: { ...fill.value, total } }];
+    }
+    return fill.kind === "rolledDice" ||
+      fill.kind === "concentrationSavingThrow"
+      ? []
+      : [fill];
+  });
+}
+
+function attackFillsThroughAttackRoll(
+  fills: readonly BattleFill[],
+): readonly BattleFill[] {
+  return fills.filter(
+    (fill) => fill.kind === "targetChoice" || fill.kind === "attackRoll",
+  );
+}
+
+function attackDamagePrefixFills(
+  fills: readonly BattleFill[],
+): readonly BattleAttackDamagePrefixFill[] {
+  return fills.filter(
+    (fill): fill is BattleAttackDamagePrefixFill =>
+      fill.kind === "targetChoice" ||
+      fill.kind === "attackRoll" ||
+      fill.kind === "rolledDice",
+  );
+}
+
 function admittedReactionChoice(
   frame: BattleReactionFrame,
   decision: Extract<BattleReactionDecision, { readonly kind: "resolve" }>,
@@ -3370,6 +3974,15 @@ function sameReactionProcedureChoice(
   choice: BattleReactionProcedureChoice,
   decisionChoice: BattleReactionProcedureSelection,
 ): boolean {
+  if (
+    choice.kind === "reactionRollOrDamageReduction" &&
+    decisionChoice.kind === "reactionRollOrDamageReduction"
+  ) {
+    return (
+      choice.choice.unitId === decisionChoice.unitId &&
+      choice.choice.kind === decisionChoice.modifierKind
+    );
+  }
   if (
     choice.kind === "releaseReadiedSpell" &&
     decisionChoice.kind === "releaseReadiedSpell"
@@ -3413,7 +4026,13 @@ function completeActiveReactionProcedure(
   const closedState =
     remainingReactors.length === 0
       ? { ...state, interruptStack: stackWithoutCurrent }
-      : { ...state, interruptStack: [...stackWithoutCurrent, completedFrame] };
+      : {
+          ...state,
+          interruptStack: [
+            ...stackWithoutCurrent,
+            reactionInterruptFrame(completedFrame),
+          ],
+        };
   const nextState =
     remainingReactors.length === 0
       ? suppressReactionTriggerForActiveReaction(closedState, frame.trigger)
@@ -3440,13 +4059,13 @@ function suppressReactionTriggerForActiveReaction(
     ...state,
     interruptStack: [
       ...state.interruptStack.slice(0, -1),
-      {
+      reactionInterruptFrame({
         ...frame,
         activeReaction: {
           ...frame.activeReaction,
           suppressedReactionTrigger,
         },
-      },
+      }),
     ],
   };
 }
@@ -3471,14 +4090,341 @@ function resumeInterruptedProcedure(
       snapshot: snapshotBattle(nextState),
     };
   }
+  if (continuation.kind === "attackDamage") {
+    const damageAmount = attackDamageContinuationAmount(state, continuation);
+    if (damageAmount === null) {
+      return invalidResult(
+        state,
+        "invalidFill",
+        "Attack damage target is no longer available.",
+      );
+    }
+    const concentrationPending = attackDamageContinuationConcentrationHole(
+      state,
+      continuation,
+    );
+    if (
+      concentrationPending !== null &&
+      continuation.concentrationSavingThrow === undefined
+    ) {
+      const {
+        concentrationSavingThrow: _pendingConcentrationSavingThrow,
+        ...continuationWithoutConcentration
+      } = continuation;
+      const pendingState = {
+        ...state,
+        interruptStack: [
+          ...state.interruptStack,
+          attackDamageContinuationConcentrationFrame(
+            continuationWithoutConcentration,
+            suppressedReactionTrigger,
+          ),
+        ],
+      };
+      return needsHolesResult(pendingState, continuation.subject, [
+        concentrationPending,
+      ]);
+    }
+    const damagedState = applyAttackDamageAmount(
+      state,
+      continuation.attackerId,
+      continuation.targetId,
+      damageAmount,
+      continuation.deathFailuresAtZeroHp,
+      continuation.attackDamageRiders,
+      continuation.concentrationSavingThrow,
+    );
+    const reactionWindow = maybeOpenReactionWindow(
+      damagedState,
+      {
+        trigger: "afterDamage",
+        damageSourceId: continuation.attackerId,
+        damagedId: continuation.targetId,
+        damageAmount,
+        continuation: {
+          kind: "resolved",
+          subject: continuation.subject,
+        },
+      },
+      suppressedReactionTrigger,
+    );
+    return (
+      reactionWindow ?? {
+        tag: "resolved",
+        state: damagedState,
+        snapshot: snapshotBattle(damagedState),
+      }
+    );
+  }
 
-  return resolveBattleSubjectInternal(
+  return resolveReplayContinuationFromState(
+    state,
+    continuation,
+    suppressedReactionTrigger,
+    continuation.fills,
+  );
+}
+
+function replayContinuationFrame(
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "replay" }
+  >,
+  suppressedReactionTrigger: BattleReactionTrigger,
+): BattleReplayContinuationFrame {
+  return {
+    kind: "replayContinuation",
+    continuation,
+    suppressedReactionTrigger,
+  };
+}
+
+function resolveReplayContinuation(input: {
+  readonly state: BattleState;
+  readonly frame: BattleReplayContinuationFrame;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const stateWithoutFrame = {
+    ...input.state,
+    interruptStack: input.state.interruptStack.slice(0, -1),
+  };
+  return resolveReplayContinuationFromState(
+    stateWithoutFrame,
+    input.frame.continuation,
+    input.frame.suppressedReactionTrigger,
+    input.fills,
+  );
+}
+
+function resolveReplayContinuationFromState(
+  state: BattleState,
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "replay" }
+  >,
+  suppressedReactionTrigger: BattleReactionTrigger,
+  fills: readonly BattleFill[],
+): BattleResolutionResult {
+  const result = resolveBattleSubjectInternal(
     {
       state,
       subject: continuation.subject,
-      fills: continuation.fills,
+      fills,
     },
-    { replayingInterruptedProcedure: true, suppressedReactionTrigger },
+    {
+      replayingInterruptedProcedure: true,
+      suppressedReactionTrigger,
+      ...(continuation.attackDamageReductions === undefined
+        ? {}
+        : {
+            pendingAttackDamageReductions: continuation.attackDamageReductions,
+          }),
+    },
+  );
+  if (
+    result.tag !== "needsHoles" ||
+    result.state.interruptStack.length !== state.interruptStack.length
+  ) {
+    return result;
+  }
+  const activeReaction = currentReactionFrame(result.state)?.activeReaction;
+  if (
+    activeReaction !== undefined &&
+    sameBattleSubject(activeReaction.subject, continuation.subject)
+  ) {
+    return result;
+  }
+  const pendingState = {
+    ...result.state,
+    interruptStack: [
+      ...result.state.interruptStack,
+      replayContinuationFrame(continuation, suppressedReactionTrigger),
+    ],
+  };
+  return {
+    ...result,
+    state: pendingState,
+    snapshot: snapshotBattle(pendingState),
+  };
+}
+
+function attackDamageContinuationConcentrationFrame(
+  continuation: BattleAttackDamageContinuationWithoutConcentration,
+  suppressedReactionTrigger: BattleReactionTrigger,
+): BattleAttackDamageContinuationConcentrationFrame {
+  return {
+    kind: "attackDamageContinuationConcentration",
+    continuation,
+    suppressedReactionTrigger,
+  };
+}
+
+function attackDamageContinuationAmount(
+  state: BattleState,
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "attackDamage" }
+  >,
+): DamageAmount | null {
+  const target = state.combatants.get(continuation.targetId);
+  return target === undefined
+    ? null
+    : attackDamageEventAmountForTarget(target, continuation.damageEvent);
+}
+
+function attackDamageContinuationConcentrationHole(
+  state: BattleState,
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "attackDamage" }
+  >,
+): BattleConcentrationSavingThrowHole | null {
+  const target = state.combatants.get(continuation.targetId);
+  return target === undefined
+    ? null
+    : concentrationSavingThrowHole(
+        target,
+        Number(
+          attackDamageEventAmountForTarget(target, continuation.damageEvent),
+        ),
+      );
+}
+
+function resolveAttackDamageContinuationConcentration(input: {
+  readonly state: BattleState;
+  readonly frame: BattleAttackDamageContinuationConcentrationFrame;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const concentrationSave = attackDamageContinuationConcentrationHole(
+    input.state,
+    input.frame.continuation,
+  );
+  if (concentrationSave === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Concentration Saving Throw is no longer available for the damaged target.",
+    );
+  }
+  const concentrationFill = attackDamageContinuationConcentrationFill(
+    input.frame.continuation,
+    input.fills,
+  );
+  if (concentrationFill.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", concentrationFill.message);
+  }
+  if (concentrationFill.value === undefined) {
+    return needsHolesResult(input.state, input.subject, [concentrationSave]);
+  }
+  if (concentrationFill.value.holeId !== concentrationSave.holeId) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Concentration Saving Throw fill does not match the damaged target.",
+    );
+  }
+  const stateWithoutFrame = {
+    ...input.state,
+    interruptStack: input.state.interruptStack.slice(0, -1),
+  };
+  return resumeInterruptedProcedure(
+    stateWithoutFrame,
+    {
+      ...input.frame.continuation,
+      concentrationSavingThrow: concentrationFill.value,
+    },
+    input.frame.suppressedReactionTrigger,
+  );
+}
+
+function attackDamageContinuationConcentrationFill(
+  continuation: BattleAttackDamageContinuationWithoutConcentration,
+  fills: readonly BattleFill[],
+):
+  | {
+      readonly tag: "ok";
+      readonly value:
+        | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const prefix = continuation.fills;
+  const accumulated =
+    fills.length >= prefix.length &&
+    prefix.every((fill, index) => battleFillEquals(fill, fills[index]!));
+  const remaining = accumulated ? fills.slice(prefix.length) : fills;
+  if (remaining.length === 0) {
+    return { tag: "ok", value: undefined };
+  }
+  if (
+    remaining.length !== 1 ||
+    remaining[0]?.kind !== "concentrationSavingThrow"
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Attack damage Concentration continuation accepts the pending Concentration Saving Throw after the original attack fills.",
+    };
+  }
+  return { tag: "ok", value: remaining[0] };
+}
+
+function battleFillEquals(
+  a: BattleAttackDamagePrefixFill,
+  b: BattleFill,
+): boolean {
+  if (a.kind !== b.kind || a.holeId !== b.holeId) {
+    return false;
+  }
+  if (a.kind === "targetChoice" && b.kind === "targetChoice") {
+    return a.value === b.value;
+  }
+  if (a.kind === "attackRoll" && b.kind === "attackRoll") {
+    return (
+      a.value.total === b.value.total &&
+      a.value.naturalD20 === b.value.naturalD20 &&
+      a.value.rollMode === b.value.rollMode &&
+      a.value.activatedOngoingFeatureUnitId ===
+        b.value.activatedOngoingFeatureUnitId
+    );
+  }
+  if (a.kind === "rolledDice" && b.kind === "rolledDice") {
+    return (
+      rolledDiceGroupsEqual(a.value, b.value) &&
+      attackDamageRiderSelectionsEqual(
+        a.selectedAttackDamageRiderUnitIds,
+        b.selectedAttackDamageRiderUnitIds,
+      )
+    );
+  }
+  return false;
+}
+
+function rolledDiceGroupsEqual(
+  a: BattleRolledDiceFill["value"],
+  b: BattleRolledDiceFill["value"],
+): boolean {
+  return (
+    a.length === b.length &&
+    a.every(
+      (group, index) =>
+        group.results.length === b[index]?.results.length &&
+        group.results.every(
+          (result, resultIndex) => result === b[index]?.results[resultIndex],
+        ),
+    )
+  );
+}
+
+function attackDamageRiderSelectionsEqual(
+  a: readonly UnitRecord["id"][] | undefined,
+  b: readonly UnitRecord["id"][] | undefined,
+): boolean {
+  return (
+    (a ?? []).length === (b ?? []).length &&
+    (a ?? []).every((unitId, index) => unitId === (b ?? [])[index])
   );
 }
 
@@ -3541,8 +4487,15 @@ function pendingReactionSnapshot(
       };
 }
 
-function currentReactionFrame(state: BattleState): BattleReactionFrame | null {
+function currentInterruptFrame(
+  state: BattleState,
+): BattleInterruptFrame | null {
   return state.interruptStack[state.interruptStack.length - 1] ?? null;
+}
+
+function currentReactionFrame(state: BattleState): BattleReactionFrame | null {
+  const frame = currentInterruptFrame(state);
+  return frame?.kind === "reaction" ? frame.frame : null;
 }
 
 function reactionDecisionHole(
@@ -3561,6 +4514,7 @@ function reactionDecisionHole(
 function reactionTriggerLabel(trigger: BattleReactionTrigger): string {
   return Match.value(trigger).pipe(
     Match.when("attackHit", () => "Attack hit"),
+    Match.when("attackDamage", () => "Attack damage"),
     Match.when("spellCast", () => "Spell cast"),
     Match.when("saveFailed", () => "Failed save"),
     Match.when("afterDamage", () => "After damage"),
@@ -3604,6 +4558,10 @@ function maybeOpenReactionWindow(
       ...triggerFrame,
       ...frameCommon,
     })),
+    Match.when({ trigger: "attackDamage" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...frameCommon,
+    })),
     Match.when({ trigger: "spellCast" }, (triggerFrame) => ({
       ...triggerFrame,
       ...frameCommon,
@@ -3643,7 +4601,7 @@ function readiedSpellReactionChoices(
       if (
         readiedSpell.trigger !== trigger ||
         reactor === undefined ||
-        !reactor.reactionAvailable
+        !combatantCanTakeReactions(reactor)
       ) {
         return [];
       }
@@ -3680,7 +4638,7 @@ function readiedMovementReactionChoices(
       if (
         readiedMovement.trigger !== trigger ||
         reactor === undefined ||
-        !reactor.reactionAvailable ||
+        !combatantCanTakeReactions(reactor) ||
         initialHoles.length === 0
       ) {
         return [];
@@ -3711,16 +4669,218 @@ function reactionChoices(
     ...readiedSpellReactionChoices(state, frame.trigger),
     ...readiedMovementReactionChoices(state, frame.trigger),
   ];
+  const modifierChoices = reactionRollOrDamageReductionChoices(state, frame);
   return frame.trigger === "opportunityAttack"
     ? [
         ...readiedChoices,
+        ...modifierChoices,
         ...opportunityAttackReactionChoices(
           state,
           frame.moverId,
           frame.reactorIds,
         ),
       ]
-    : readiedChoices;
+    : [...readiedChoices, ...modifierChoices];
+}
+
+function reactionRollOrDamageReductionChoices(
+  state: BattleState,
+  frame: BattleReactionFrameInput,
+): readonly BattleReactionProcedureChoice[] {
+  if (frame.trigger !== "attackHit" && frame.trigger !== "attackDamage") {
+    return [];
+  }
+  return [...state.combatants].flatMap(([reactorId, reactor]) => {
+    if (
+      reactor.origin.kind !== "character" ||
+      !combatantCanTakeReactions(reactor)
+    ) {
+      return [];
+    }
+    return [
+      ...reactor.origin.reactionRollOrDamageReductionProfiles.values(),
+    ].flatMap((profile) =>
+      profile.modifiers.flatMap((modifier) =>
+        reactionRollOrDamageReductionChoiceForProfile(
+          state,
+          frame,
+          reactorId,
+          profile,
+          modifier,
+        ),
+      ),
+    );
+  });
+}
+
+function reactionRollOrDamageReductionChoiceForProfile(
+  state: BattleState,
+  frame: BattleReactionFrameInput,
+  reactorId: CombatantId,
+  profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >,
+  modifier: ReactionRollOrDamageReductionProfile,
+): readonly BattleReactionProcedureChoice[] {
+  if (!reactionModifierResourceAvailable(state, reactorId, profile.unit.id)) {
+    return [];
+  }
+  if (
+    frame.trigger === "attackHit" &&
+    ((modifier.kind === "attackRollReduction" &&
+      combatantWithinFeet(
+        state,
+        reactorId,
+        frame.attackerId,
+        modifier.rangeFeet,
+      ) &&
+      combatantCanSee(state, reactorId, frame.attackerId)) ||
+      (modifier.kind === "attackDamageReduction" &&
+        reactorId === frame.targetId &&
+        (modifier.requiresVisibleAttacker !== true ||
+          combatantCanSee(state, reactorId, frame.attackerId)) &&
+        (modifier.damageIncludes === undefined ||
+          modifier.damageIncludes.some((damageType) =>
+            frame.damageTypes.includes(damageType),
+          ))))
+  ) {
+    if (modifier.kind === "attackDamageReduction") {
+      const reactorOrigin = state.combatants.get(reactorId)?.origin;
+      if (
+        reactorOrigin?.kind !== "character" ||
+        profile.unit.kind !== "class_feature"
+      ) {
+        return [];
+      }
+      return [
+        {
+          kind: "reactionRollOrDamageReduction",
+          reactorId,
+          choice: {
+            kind: "attackDamageReduction",
+            unitId: profile.unit.id,
+            label: profile.unit.name,
+            reduction: { kind: "halfDamage" },
+          },
+          initialHoles: [],
+        },
+      ];
+    }
+    return [
+      {
+        kind: "reactionRollOrDamageReduction",
+        reactorId,
+        choice: {
+          kind: "attackRollReduction",
+          unitId: profile.unit.id,
+            label: profile.unit.name,
+            reduction: {
+              kind: "rolled",
+              flatModifier: 0,
+              dieSize: bardicInspirationDieSize(profile.classLevel),
+            },
+          },
+        initialHoles: [
+          reactionModifierRollHole(profile, "attackRollReduction"),
+        ],
+      },
+    ];
+  }
+  if (frame.trigger !== "attackDamage") {
+    return [];
+  }
+  if (
+    modifier.kind === "attackDamageRollReduction" &&
+    frame.continuation.damageEvent.kind === "rolledDamage" &&
+    combatantWithinFeet(
+      state,
+      reactorId,
+      frame.continuation.attackerId,
+      modifier.rangeFeet,
+    ) &&
+    combatantCanSee(state, reactorId, frame.continuation.attackerId)
+  ) {
+    return [
+      {
+        kind: "reactionRollOrDamageReduction",
+        reactorId,
+        choice: {
+          kind: "damageRollReduction",
+          unitId: profile.unit.id,
+          label: profile.unit.name,
+          reduction: {
+            kind: "rolled",
+            flatModifier: 0,
+            dieSize: bardicInspirationDieSize(profile.classLevel),
+          },
+        },
+        initialHoles: [
+          reactionModifierRollHole(profile, "damageRollReduction"),
+        ],
+      },
+    ];
+  }
+  return [];
+}
+
+function combatantWithinFeet(
+  state: BattleState,
+  a: CombatantId,
+  b: CombatantId,
+  feet: MovementFeet,
+): boolean {
+  const distance = combatantDistanceFeet(state, a, b);
+  return distance !== undefined && distance <= Number(feet);
+}
+
+function combatantCanSee(
+  state: BattleState,
+  viewerId: CombatantId,
+  seenId: CombatantId,
+): boolean {
+  if (!state.combatants.has(viewerId)) {
+    return false;
+  }
+  const seen = state.combatants.get(seenId);
+  return (
+    seen !== undefined &&
+    seen.hidden === null &&
+    !hasCondition(seen.conditions, "invisible")
+  );
+}
+
+function reactionModifierRollHole(
+  profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >,
+  modifierKind: BattleReactionModifierChoice["kind"],
+): BattleHole {
+  return {
+    kind: "rolledDice",
+    holeId: REACTION_MODIFIER_ROLL_HOLE_ID,
+    holeInstanceKey: REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
+    label: `${profile.unit.name} reduction roll`,
+    unitFeature: {
+      unitId: profile.unit.id,
+      label: profile.unit.name,
+      modifierKind,
+    },
+  };
+}
+
+function reactionModifierResourceAvailable(
+  state: BattleState,
+  reactorId: CombatantId,
+  unitId: UnitRecord["id"],
+): boolean {
+  const reactor = state.combatants.get(reactorId);
+  if (reactor?.origin.kind !== "character") return false;
+  const resource = reactor.origin.resources.find(
+    (candidate) => candidate.unit.id === unitId,
+  );
+  return resource === undefined || resourceHasUsesRemaining(resource);
 }
 
 function opportunityAttackReactionChoices(
@@ -3823,6 +4983,13 @@ function battleCreatureStateFromInit(
           creatureInit.characterUnitRefs,
           classLevels,
         ),
+        reactionRollOrDamageReductionProfiles:
+          characterReactionRollOrDamageReductionProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
         ...(creatureInit.spellcasting === undefined
           ? {}
           : {
@@ -4327,6 +5494,12 @@ function combatantCanTakeActions(
   );
 }
 
+function combatantCanTakeReactions(
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return combatantCanTakeActions(combatant) && combatant.reactionAvailable;
+}
+
 function activeConditions(
   state: ConditionState,
   includeGrappled = false,
@@ -4476,7 +5649,8 @@ function characterResourceState(
 function characterBattleResourceForUnit(unit: UnitRecord): ActivationResource {
   if (
     unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "activation" ||
+    (unit.mechanics.family !== "activation" &&
+      unit.mechanics.family !== "reaction_roll_or_damage_reduction") ||
     !("resource" in unit.mechanics) ||
     unit.mechanics.resource === undefined
   ) {
@@ -4561,6 +5735,37 @@ function characterSaveDamageReplacementProfiles(
           unitRefs,
           unit.id,
           SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+function characterReactionRollOrDamageReductionProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "reactionRollOrDamageReduction" &&
+        unitRefSupportsProfile(
+          unitRefs,
+          unit.id,
+          REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];
@@ -4817,6 +6022,8 @@ function resolveAttack(
   input: AttackBattleResolutionInput,
 ): BattleResolutionResult {
   const subject = input.subject;
+  const pendingAttackDamageReductions =
+    input.pendingAttackDamageReductions ?? [];
 
   const attack = attackActionOptionForSubject(input.state, subject);
   if (attack == null) {
@@ -4984,14 +6191,52 @@ function resolveAttack(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
-  const fixedDamageAmount = hit
-    ? fixedAttackDamageAmount(
+  const fixedDamageByTypeBeforeTargetAdjustments = hit
+    ? fixedAttackDamageByTypeEntries(
         attackRolledState.combatants.get(input.subject.actorId),
-        target,
         attack,
       )
     : null;
-  if (hit && fixedDamageAmount !== null) {
+  const fixedDamageAmount =
+    fixedDamageByTypeBeforeTargetAdjustments === null
+      ? null
+      : damageAmountByTypeAfterTargetAdjustments(
+          target,
+          damageAmountByTypeEntriesToMap(
+            fixedDamageByTypeBeforeTargetAdjustments,
+          ),
+        );
+  if (hit && input.suppressedReactionTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenReactionWindow(
+      attackRolledState,
+      {
+        trigger: "attackHit",
+        attackerId: input.subject.actorId,
+        targetId: target.combatantId,
+        attackRoll: fillSet.attackRoll,
+        damageTypes: attackPotentialDamageTypes(
+          attack,
+          critical,
+          fillSet.attackRoll,
+          eligibleDamageRiders,
+        ),
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: attackFillsThroughAttackRoll(input.fills),
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
+  }
+  if (
+    hit &&
+    fixedDamageAmount !== null &&
+    fixedDamageByTypeBeforeTargetAdjustments !== null
+  ) {
     if (fillSet.damageRoll != null) {
       return invalidResult(
         input.state,
@@ -4999,15 +6244,72 @@ function resolveAttack(
         "Fixed Unarmed Strike damage does not use a rolled damage fill.",
       );
     }
+    const damageEvent = {
+      kind: "aggregateDamage" as const,
+      damageByTypeBeforeTargetAdjustments:
+        fixedDamageByTypeBeforeTargetAdjustments,
+    } satisfies BattleAttackDamageEvent;
+    const reducedDamageEvent = attackDamageEventAfterPendingReductions(
+      damageEvent,
+      pendingAttackDamageReductions,
+    );
+    const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
+      target,
+      reducedDamageEvent,
+    );
+    const attackDamageReactionWindow = maybeOpenReactionWindow(
+      attackRolledState,
+      {
+        trigger: "attackDamage",
+        continuation: {
+          kind: "attackDamage",
+          subject: input.subject,
+          attackerId: input.subject.actorId,
+          targetId: target.combatantId,
+          damageEvent: reducedDamageEvent,
+          fills: attackDamagePrefixFills(input.fills),
+          deathFailuresAtZeroHp: critical ? 2 : 1,
+          attackDamageRiders: [],
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (attackDamageReactionWindow !== null) {
+      const spent = spendAttackAction(
+        attackDamageReactionWindow.state,
+        input.subject.actorId,
+        attack,
+      );
+      return spent.tag === "invalid"
+        ? spent
+        : {
+            ...attackDamageReactionWindow,
+            state: spent.state,
+            snapshot: snapshotBattle(spent.state),
+          };
+    }
     const concentrationSave = concentrationSavingThrowHole(
       target,
-      fixedDamageAmount,
+      reducedFixedDamageAmount,
     );
     if (concentrationSave !== null) {
       if (fillSet.concentrationSavingThrow === undefined) {
-        return needsHolesResult(attackRolledState, input.subject, [
+        return needsAttackDamageConcentrationResult({
+          state: attackRolledState,
+          subject: input.subject,
+          attack,
+          continuation: {
+            kind: "attackDamage",
+            subject: input.subject,
+            attackerId: input.subject.actorId,
+            targetId: target.combatantId,
+            damageEvent: reducedDamageEvent,
+            fills: attackDamagePrefixFills(input.fills),
+            deathFailuresAtZeroHp: critical ? 2 : 1,
+            attackDamageRiders: [],
+          },
           concentrationSave,
-        ]);
+        });
       }
       if (
         fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId
@@ -5026,13 +6328,14 @@ function resolveAttack(
       );
     }
     const spent = spendAttackAction(
-      applyFixedAttackDamage(
+      applyAttackDamageAmount(
         attackRolledState,
         input.subject.actorId,
         target.combatantId,
-        attack,
-        fillSet,
-        critical,
+        toDamageAmount(reducedFixedDamageAmount),
+        critical ? 2 : 1,
+        [],
+        fillSet.concentrationSavingThrow,
       ),
       input.subject.actorId,
       attack,
@@ -5046,7 +6349,7 @@ function resolveAttack(
         trigger: "afterDamage",
         damageSourceId: input.subject.actorId,
         damagedId: target.combatantId,
-        damageAmount: toDamageAmount(fixedDamageAmount),
+        damageAmount: toDamageAmount(reducedFixedDamageAmount),
         continuation: {
           kind: "resolved",
           subject: input.subject,
@@ -5060,23 +6363,6 @@ function resolveAttack(
     return spent;
   }
   if (hit && fillSet.damageRoll == null) {
-    const reactionWindow = maybeOpenReactionWindow(
-      attackRolledState,
-      {
-        trigger: "attackHit",
-        attackerId: input.subject.actorId,
-        targetId: target.combatantId,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.suppressedReactionTrigger,
-    );
-    if (reactionWindow !== null) {
-      return reactionWindow;
-    }
     return needsHolesResult(attackRolledState, input.subject, [
       attackDamageHole(
         attack,
@@ -5112,24 +6398,79 @@ function resolveAttack(
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
-    const damageAmount = attackDamageAmount(
+    const damageRollByType = attackDamageByTypeEntries(
       attackRolledState.combatants.get(input.subject.actorId),
-      target,
       attack,
       fillSet.damageRoll,
       critical,
       fillSet.attackRoll,
       selectedDamageRiders,
     );
+    const damageEvent = {
+      kind: "rolledDamage" as const,
+      damageRollByType,
+    } satisfies BattleAttackDamageEvent;
+    const reducedDamageEvent = attackDamageEventAfterPendingReductions(
+      damageEvent,
+      pendingAttackDamageReductions,
+    );
+    const reducedDamageAmount = attackDamageEventAmountForTarget(
+      target,
+      reducedDamageEvent,
+    );
+    const attackDamageReactionWindow = maybeOpenReactionWindow(
+      attackRolledState,
+      {
+        trigger: "attackDamage",
+        continuation: {
+          kind: "attackDamage",
+          subject: input.subject,
+          attackerId: input.subject.actorId,
+          targetId: target.combatantId,
+          damageEvent: reducedDamageEvent,
+          fills: attackDamagePrefixFills(input.fills),
+          deathFailuresAtZeroHp: critical ? 2 : 1,
+          attackDamageRiders: selectedDamageRiders,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (attackDamageReactionWindow !== null) {
+      const spent = spendAttackAction(
+        attackDamageReactionWindow.state,
+        input.subject.actorId,
+        attack,
+      );
+      return spent.tag === "invalid"
+        ? spent
+        : {
+            ...attackDamageReactionWindow,
+            state: spent.state,
+            snapshot: snapshotBattle(spent.state),
+          };
+    }
     const concentrationSave = concentrationSavingThrowHole(
       target,
-      damageAmount,
+      reducedDamageAmount,
     );
     if (concentrationSave !== null) {
       if (fillSet.concentrationSavingThrow === undefined) {
-        return needsHolesResult(attackRolledState, input.subject, [
+        return needsAttackDamageConcentrationResult({
+          state: attackRolledState,
+          subject: input.subject,
+          attack,
+          continuation: {
+            kind: "attackDamage",
+            subject: input.subject,
+            attackerId: input.subject.actorId,
+            targetId: target.combatantId,
+            damageEvent: reducedDamageEvent,
+            fills: attackDamagePrefixFills(input.fills),
+            deathFailuresAtZeroHp: critical ? 2 : 1,
+            attackDamageRiders: selectedDamageRiders,
+          },
           concentrationSave,
-        ]);
+        });
       }
       if (
         fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId
@@ -5148,14 +6489,14 @@ function resolveAttack(
       );
     }
     const spent = spendAttackAction(
-      applyAttackDamage(
+      applyAttackDamageAmount(
         attackRolledState,
         input.subject.actorId,
         target.combatantId,
-        attack,
-        fillSet,
-        critical,
+        toDamageAmount(reducedDamageAmount),
+        critical ? 2 : 1,
         selectedDamageRiders,
+        fillSet.concentrationSavingThrow,
       ),
       input.subject.actorId,
       attack,
@@ -5169,7 +6510,7 @@ function resolveAttack(
         trigger: "afterDamage",
         damageSourceId: input.subject.actorId,
         damagedId: target.combatantId,
-        damageAmount: toDamageAmount(damageAmount),
+        damageAmount: toDamageAmount(reducedDamageAmount),
         continuation: {
           kind: "resolved",
           subject: input.subject,
@@ -5197,6 +6538,36 @@ function resolveAttack(
     input.subject.actorId,
     attack,
   );
+}
+
+function needsAttackDamageConcentrationResult(input: {
+  readonly state: BattleState;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+  readonly attack: SupportedAttackActionOption;
+  readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
+  readonly concentrationSave: BattleConcentrationSavingThrowHole;
+}): BattleResolutionResult {
+  const pendingState = {
+    ...input.state,
+    interruptStack: [
+      ...input.state.interruptStack,
+      attackDamageContinuationConcentrationFrame(
+        input.continuation,
+        "attackDamage",
+      ),
+    ],
+  };
+  const spent = spendAttackAction(
+    pendingState,
+    input.subject.actorId,
+    input.attack,
+  );
+  return spent.tag === "invalid"
+    ? spent
+    : needsHolesResult(spent.state, input.subject, [input.concentrationSave]);
 }
 
 function resolveDash(input: BattleResolutionInput): BattleResolutionResult {
@@ -6282,24 +7653,34 @@ function fixedAttackDamageAmount(
   target: BattleCreatureState,
   attack: SupportedAttackActionOption,
 ): number | null {
+  const entries = fixedAttackDamageByTypeEntries(attacker, attack);
+  return entries === null
+    ? null
+    : damageAmountByTypeAfterTargetAdjustments(
+        target,
+        damageAmountByTypeEntriesToMap(entries),
+      );
+}
+
+function fixedAttackDamageByTypeEntries(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+): readonly DamageAmountByTypeEntry[] | null {
   return Match.value(attack).pipe(
     Match.when({ kind: "unarmedStrike" }, (unarmedStrike) => {
       if (unarmedStrike.effect.damage.kind !== "base") {
         return null;
       }
-      return damageAmountByTypeAfterTargetAdjustments(
-        target,
-        new Map([
-          [
-            unarmedStrike.effect.damage.damageType,
-            Math.max(
-              0,
-              attackDamageModifier(attack) +
-                ongoingFeatureDamageModifier(attacker, attack),
-            ),
-          ],
-        ]),
-      );
+      return [
+        {
+          damageType: unarmedStrike.effect.damage.damageType,
+          amount: Math.max(
+            0,
+            attackDamageModifier(attack) +
+              ongoingFeatureDamageModifier(attacker, attack),
+          ),
+        },
+      ];
     }),
     Match.when({ kind: "weapon" }, () => null),
     Match.when({ kind: "statBlockAttack" }, () => null),
@@ -6441,7 +7822,10 @@ function spendAttackAction(
       : spent.right;
 
   const nextState = spendStatBlockAttackResources({
-    state: { ...state, currentTurnResources: nextTurnResources },
+    state: {
+      ...state,
+      currentTurnResources: nextTurnResources,
+    },
     actorId,
     attack,
   });
@@ -8662,6 +10046,123 @@ function parseSaveDamageReplacementUnitFeatureProfile(
   };
 }
 
+export type BattleReactionRollOrDamageReductionSupport =
+  | "reactionRollOrDamageReduction"
+  | "unsupported"
+  | null;
+
+export function battleReactionRollOrDamageReductionSupportForUnit(
+  unit: UnitRecord,
+): BattleReactionRollOrDamageReductionSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+  ) {
+    return null;
+  }
+  return reactionRollOrDamageReductionMechanicsProjection(unit) === null
+    ? "unsupported"
+    : "reactionRollOrDamageReduction";
+}
+
+function reactionRollOrDamageReductionMechanicsProjection(
+  unit: UnitRecord,
+): readonly ReactionRollOrDamageReductionProfile[] | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+  ) {
+    return null;
+  }
+  const modifiers = unit.mechanics.modifiers.flatMap(
+    (modifier): readonly ReactionRollOrDamageReductionProfile[] => {
+      if (
+        modifier.kind === "attack_roll_reduction" &&
+        modifier.trigger.kind === "creature_succeeds_attack_roll" &&
+        modifier.trigger.requiresVisibleCreature === true &&
+        modifier.reduction.kind === "bardic_inspiration_die"
+      ) {
+        return [
+          {
+            kind: "attackRollReduction",
+            rangeFeet: movementFeet(modifier.trigger.rangeFeet),
+            requiresVisibleCreature: true,
+            reduction: { kind: "bardicInspirationDie" },
+          },
+        ];
+      }
+      if (
+        modifier.kind === "damage_roll_reduction" &&
+        modifier.trigger.kind === "creature_makes_damage_roll" &&
+        modifier.trigger.requiresVisibleCreature === true &&
+        modifier.reduction.kind === "bardic_inspiration_die"
+      ) {
+        return [
+          {
+            kind: "attackDamageRollReduction",
+            rangeFeet: movementFeet(modifier.trigger.rangeFeet),
+            requiresVisibleCreature: true,
+            reduction: { kind: "bardicInspirationDie" },
+          },
+        ];
+      }
+      if (
+        modifier.kind === "attack_damage_reduction" &&
+        modifier.trigger.kind === "hit_by_attack_roll" &&
+        modifier.reduction.kind === "half_damage" &&
+        modifier.reduction.rounding === "down"
+      ) {
+        return [
+          {
+            kind: "attackDamageReduction",
+            ...(modifier.trigger.requiresVisibleAttacker === true
+              ? { requiresVisibleAttacker: true as const }
+              : {}),
+            reduction: { kind: "halfDamage" },
+          },
+        ];
+      }
+      return [];
+    },
+  );
+  return modifiers.length === unit.mechanics.modifiers.length &&
+    reactionRollOrDamageReductionKindsUnique(modifiers)
+    ? modifiers
+    : null;
+}
+
+function reactionRollOrDamageReductionKindsUnique(
+  modifiers: readonly ReactionRollOrDamageReductionProfile[],
+): boolean {
+  return (
+    new Set(modifiers.map((modifier) => modifier.kind)).size ===
+    modifiers.length
+  );
+}
+
+function parseReactionRollOrDamageReductionUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "reactionRollOrDamageReduction" }
+> | null {
+  const modifiers = reactionRollOrDamageReductionMechanicsProjection(unit);
+  if (unit.kind !== "class_feature" || modifiers === null) {
+    return null;
+  }
+  const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
+    return null;
+  }
+  return {
+    kind: "reactionRollOrDamageReduction",
+    unit,
+    classLevel,
+    modifiers,
+  };
+}
+
 function parseOngoingFeatureInitialExpiration(
   expiration: "start_of_next_turn" | "end_of_next_turn",
 ): "startOfNextTurn" | "endOfNextTurn" {
@@ -8935,7 +10436,8 @@ function parseSupportedUnitFeatureProfile(
     parseSelfBonusActionHealingUnitFeatureProfile(unit, classLevels) ??
     parseOngoingFeatureUnitFeatureProfile(unit, classLevels) ??
     parseAttackDamageRiderUnitFeatureProfile(unit, classLevels) ??
-    parseSaveDamageReplacementUnitFeatureProfile(unit, classLevels)
+    parseSaveDamageReplacementUnitFeatureProfile(unit, classLevels) ??
+    parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels)
   );
 }
 
@@ -10151,6 +11653,44 @@ function applyAttackDamage(
   );
 }
 
+function applyAttackDamageAmount(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  damageAmount: DamageAmount,
+  deathFailuresAtZeroHp: 1 | 2,
+  attackDamageRiders: readonly AttackDamageRider[],
+  concentrationSavingThrow?: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target == null) {
+    return state;
+  }
+  const damaged = applyHpDamage(target, Number(damageAmount), {
+    deathFailuresAtZeroHp,
+  });
+  const combatants = new Map(state.combatants).set(targetId, damaged);
+  const nextState = {
+    ...state,
+    combatants,
+  };
+  const concentrated =
+    Number(damageAmount) > 0 &&
+    (concentrationSavingThrow?.value.succeeded === false ||
+      (target.concentration !== null && damaged.concentration === null))
+      ? breakBattleConcentration(nextState, targetId)
+      : nextState;
+  return normalizeBattleGrapples(
+    recordAttackDamageRidersUsed(
+      concentrated,
+      attackDamageRiders.map((rider) => ({ ...rider, attackerId })),
+    ),
+  );
+}
+
 function recordAttackDamageRidersUsed(
   state: BattleState,
   attackDamageRiders: readonly AttackDamageRider[],
@@ -10528,6 +12068,11 @@ function zeroHpLifecycleIsTerminal(combatant: BattleCreatureState): boolean {
   );
 }
 
+type DamageAmountByTypeEntry = {
+  readonly damageType: DamageType;
+  readonly amount: number;
+};
+
 function attackDamageAmount(
   attacker: BattleCreatureState | undefined,
   target: BattleCreatureState,
@@ -10537,6 +12082,47 @@ function attackDamageAmount(
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
 ): number {
+  return damageAmountByTypeAfterTargetAdjustments(
+    target,
+    attackDamageByType(
+      attacker,
+      attack,
+      damageRoll,
+      critical,
+      attackRoll,
+      attackDamageRiders,
+    ),
+  );
+}
+
+function attackDamageByTypeEntries(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+  damageRoll: BattleRolledDiceFill,
+  critical: boolean,
+  attackRoll?: AttackRollResult,
+  attackDamageRiders: readonly AttackDamageRider[] = [],
+): readonly DamageAmountByTypeEntry[] {
+  return [
+    ...attackDamageByType(
+      attacker,
+      attack,
+      damageRoll,
+      critical,
+      attackRoll,
+      attackDamageRiders,
+    ),
+  ].map(([damageType, amount]) => ({ damageType, amount }));
+}
+
+function attackDamageByType(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+  damageRoll: BattleRolledDiceFill,
+  critical: boolean,
+  attackRoll?: AttackRollResult,
+  attackDamageRiders: readonly AttackDamageRider[] = [],
+): ReadonlyMap<DamageType, number> {
   const components = attackDamageComponents(
     attack,
     critical,
@@ -10563,8 +12149,52 @@ function attackDamageAmount(
     },
     new Map(),
   );
+  return damageByType;
+}
 
-  return damageAmountByTypeAfterTargetAdjustments(target, damageByType);
+function damageAmountByTypeEntriesToMap(
+  entries: readonly DamageAmountByTypeEntry[],
+): ReadonlyMap<DamageType, number> {
+  return entries.reduce<ReadonlyMap<DamageType, number>>(
+    (totals, entry) =>
+      addDamageAmountForType(totals, entry.damageType, entry.amount),
+    new Map(),
+  );
+}
+
+function entriesAfterProportionalDamageReduction(
+  entries: readonly DamageAmountByTypeEntry[],
+  reduction: number,
+): readonly DamageAmountByTypeEntry[] {
+  const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
+  const totalReduction = Math.min(total, Math.max(0, reduction));
+  if (total === 0 || totalReduction === 0) {
+    return entries;
+  }
+  const allocations = entries.map((entry, index) => {
+    const exact = (entry.amount * totalReduction) / total;
+    const base = Math.floor(exact);
+    return { index, base, remainder: exact - base };
+  });
+  const baseTotal = allocations.reduce(
+    (sum, allocation) => sum + allocation.base,
+    0,
+  );
+  const bonusIndexes = new Set(
+    [...allocations]
+      .sort(
+        (left, right) =>
+          right.remainder - left.remainder || left.index - right.index,
+      )
+      .slice(0, totalReduction - baseTotal)
+      .map((allocation) => allocation.index),
+  );
+  return entries.map((entry, index) => ({
+    ...entry,
+    amount:
+      entry.amount -
+      (allocations[index]!.base + (bonusIndexes.has(index) ? 1 : 0)),
+  }));
 }
 
 function ongoingFeatureDamageModifier(
@@ -11730,9 +13360,8 @@ function opportunityAttackReachFeet(
   if (
     reactor === undefined ||
     reactorId === targetId ||
-    !reactor.reactionAvailable ||
-    hasCondition(reactor.conditions, "blinded") ||
-    !combatantCanTakeActions(reactor)
+    !combatantCanTakeReactions(reactor) ||
+    hasCondition(reactor.conditions, "blinded")
   ) {
     return undefined;
   }
@@ -13398,6 +15027,24 @@ function attackDamageComponents(
     Match.exhaustive,
   );
   return [...baseComponents, ...riderComponents];
+}
+
+function attackPotentialDamageTypes(
+  attack: SupportedAttackActionOption,
+  critical: boolean,
+  attackRoll: AttackRollResult,
+  eligibleAttackDamageRiders: readonly AttackDamageRider[],
+): readonly DamageType[] {
+  return [
+    ...new Set(
+      attackDamageComponents(
+        attack,
+        critical,
+        attackRoll,
+        eligibleAttackDamageRiders,
+      ).map((component) => component.damageType),
+    ),
+  ];
 }
 
 function attackDamageModifier(attack: SupportedAttackActionOption): number {

@@ -433,13 +433,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 59,
       "id": "PBA14D",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Restore Reaction Roll Damage Modification Riders"
     },
     {
       "number": 60,
       "id": "PBA15",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Plan Broader Battle Widening Queue"
     },
     {
@@ -549,8 +549,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 56    | PBA14A1 - Restore Authored Critical Range Attack Hook                | done                                          | PBA14A               | PBA14B                              | Restore Unit-authored critical-range attack hooks through Surface support profiles and battle-runtime attack adjudication, without naming Champion or other authored ids in production support code.                           | Completed in Task 56 run; PBA14B is unblocked for attack-rider procedure restoration.                                                                |
 | 57    | PBA14B - Restore Attack Rider Procedure Family                       | done                                          | PBA14A1              | PBA14C                              | Restored reusable optional attack damage rider hooks for Sneak Attack through support profiles, damage holes, once-per-turn usage, MCP replay, and promoted QNT/MBT coverage.                                                   | Completed in Task 57 run; PBA14C is unblocked for save-damage replacement rider restoration.                                                         |
 | 58    | PBA14C - Restore Save Damage Replacement Riders                      | done                                          | PBA14B               | PBA14D                              | Restored reusable save-damage replacement procedure support for Evasion-style riders through support profiles, save-gate replay, Surface catalog records, MCP admission, and promoted QNT coverage.                           | Completed in Task 58 run; PBA14D is unblocked for reaction roll/damage modification rider restoration.                                                |
-| 59    | PBA14D - Restore Reaction Roll Damage Modification Riders            | ready-for-implementation-after-light-research | PBA14C               | PBA15                               | Restore reusable reaction roll/damage modification procedure support for Deflect Attacks, Uncanny Dodge, and Cutting Words-style riders through support profiles.                                                              | Unblocked by PBA14C; start with RAW/source and old Core behavior checks before reaction damage-modification edits.                                    |
-| 60    | PBA15 - Plan Broader Battle Widening Queue                           | blocked                                       | PBA14D               | PBA15A                              | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                                          | Blocked until feature-parity queue reaches its first closeout point.                                                                                 |
+| 59    | PBA14D - Restore Reaction Roll Damage Modification Riders            | done                                          | PBA14C               | PBA15                               | Restored reusable reaction roll/damage reduction procedure support for Uncanny Dodge and the promoted attack-roll / damage-roll branches of Cutting Words through support profiles; full Deflect Attacks remains gated.       | Completed in Task 59 run; PBA15 is unblocked, with broader non-main-Attack reaction-window widening called out for planning.                          |
+| 60    | PBA15 - Plan Broader Battle Widening Queue                           | ready-for-research                            | PBA14D               | PBA15A                              | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                                          | Unblocked by PBA14D; start by converting remaining proof gaps and explicitly deferred reaction-window breadth into ordered successor tasks.            |
 | 61    | PBA15A - Migrate Surface And Character-Creation Domain Primitives    | blocked                                       | PBA15                | future tasks                        | Replace remaining Surface-authored and character-creation-runtime durable domain primitives with owned shared, Surface, or package-local types after the promoted battle feature-parity queue.                                 | Blocked behind PBA15 so broader Surface/catalog migration is ordered after feature parity.                                                           |
 
 ## Task Details
@@ -4011,16 +4011,18 @@ Plan Impact:
 
 ### Task 59 - PBA14D - Restore Reaction Roll Damage Modification Riders
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA14C
 Blocks: PBA15
 
 Batch: old Core feature-parity restoration.
 
-Next action: restore reusable reaction roll/damage modification procedure
-support for Deflect Attacks, Uncanny Dodge, and Cutting Words after a
-RAW/source behavior check.
+Completed: restored reusable reaction roll/damage reduction procedure support
+for Uncanny Dodge and the currently promotable attack-roll / damage-roll
+branches of Cutting Words on promoted Attack action reaction windows after a
+RAW/source behavior check. Full Deflect Attacks remains support-gated because
+its redirect-on-zero follow-up is not yet promoted.
 
 Backlog candidate:
 
@@ -4032,9 +4034,9 @@ Backlog candidate:
   `.references/srd-5.2.1/Classes/Bard.md` Cutting Words; `Playing-the-Game.md`
   Reaction timing, attack rolls, and damage.
 - New-runtime owner: `@dnd/battle-runtime` reaction windows, roll/damage
-  modification holes, reaction resource spend, support-gated Unit records, and
+  reduction holes, reaction resource spend, support-gated Unit records, and
   MCP pending-reaction replay.
-- Acceptance summary: reaction modifiers are modeled as reusable interruption
+- Acceptance summary: reaction reductions are modeled as reusable interruption
   procedures that can alter attack rolls or damage once at the correct timing,
   without named reducer branches.
 - Non-goals: every reaction feature, subclass reactions, or UI-specific
@@ -4052,23 +4054,62 @@ Rerun guidance:
 - Cover Cutting Words against non-attack damage rolls if the restored reusable
   procedure models the SRD "damage roll" trigger rather than only attack damage.
 
+Closeout notes:
+
+- Added SRD-authored Surface Unit records for Rogue Uncanny Dodge, Monk Deflect
+  Attacks, and Bard Cutting Words, including Cutting Words' ability-check
+  trigger in authored content even though the promoted battle runtime currently
+  consumes the attack-roll and damage-roll paths.
+- Added a support-gated `reactionRollOrDamageReduction` runtime profile and MCP
+  admission path.
+- Added attack-hit and attack-damage reaction windows for promoted Attack action
+  replay. Attack-roll reductions update replayed fills and drop stale downstream
+  damage/concentration fills when a hit becomes a miss.
+- Added hit-triggered attack-damage reductions that preserve attack-damage
+  rider usage and apply before target-side damage adjustments.
+- Added damage-roll reductions that apply Cutting Words before target-side
+  damage adjustments. Mixed typed damage rolls use the proportional allocation
+  assumption recorded in `ASSUMPTIONS.md` A43.
+- Deflect Attacks redirect-on-zero remains a follow-up procedure, so the full
+  SRD feature is authored but unsupported by the promoted runtime until that
+  follow-up is promoted.
+- Review follow-up intentionally left for PBA15 planning: broaden these reaction
+  windows beyond the main Attack action lane, especially Off-Hand Attack and
+  Opportunity Attack, before claiming package-wide support for every attack-roll
+  host procedure.
+
 Verification:
 
-- RAW traceability check before rules edits.
+- RAW traceability check before rules edits:
+  `.references/srd-5.2.1/Classes/Monk.md`, `Classes/Rogue.md`,
+  `Classes/Bard.md`, `Playing-the-Game.md`, and `UBIQUITOUS_LANGUAGE.md`.
 - Focused battle-runtime tests for reaction eligibility, resource spend,
-  modified roll/damage outcomes, and stale/invalid fills.
-- MCP tests if reaction prompts or fills are user-visible.
-- Promoted QNT/MBT widening if reaction modifier semantics enter the canonical
-  spec.
-- `/simplify` convergence, minimum 2 rounds.
+  modified roll/damage outcomes, stale fills, pre-adjustment Cutting Words
+  damage-roll reduction, Uncanny Dodge, and Deflect support gating.
+- MCP tests for reaction reduction support-profile admission.
+- Promoted QNT self-test widened to cover the reaction roll/damage reduction
+  primitives; promoted battle-runtime MBT still passes.
+- `/simplify` convergence: two local simplification passes plus three requested
+  review agents (RAW, ubiquitous language, architecture). Addressed concrete
+  findings for Deflect visibility, Cutting Words ability-check authoring,
+  contradictory Bardic Inspiration attack-damage authoring shape, visibility
+  enforcement, pre-adjustment damage reduction, concentration propagation,
+  Deflect support gating, and mixed-damage assumption documentation.
+- `pnpm --filter @dnd/battle-runtime test -- --runInBand`
+- `pnpm --filter @dnd/mcp test -- --runInBand`
+- `pnpm --filter @dnd/surface test -- --runInBand`
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- `pnpm --filter @dnd/mcp typecheck`
+- `pnpm --filter @dnd/surface typecheck`
+- `pnpm check:authored-id-dispatch`
 
 Plan Impact:
 
-- If successful, unblock PBA15.
+- PBA15 is unblocked.
 
 ### Task 60 - PBA15 - Plan Broader Battle Widening Queue
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA14D
 Blocks: PBA15A
@@ -4076,7 +4117,7 @@ Blocks: PBA15A
 Batch: broader widening after parity/composition archive and explicit
 feature-parity queue.
 
-Next action: replan broader battle widening only after the post-BA archive and
+Next action: replan broader battle widening now that the post-BA archive and
 first feature-parity queue have reached their closeout point.
 
 Input:

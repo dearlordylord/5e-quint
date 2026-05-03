@@ -237,6 +237,7 @@ export {
   TacticalMindMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
   TriggeredReactionAbilityMechanicsSchema,
+  ReactionRollOrDamageReductionMechanicsSchema,
   UseCountCapSchema,
   UseCountResourceSchema,
   WizardSpellcastingCreationSchema,

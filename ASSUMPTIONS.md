@@ -353,3 +353,13 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rationale:** Initiative order is a resolution view over combat time, not a statement that one creature's turn consumes an isolated slice of the 6-second round. The model treats turns in a round as an ordered resolution of one 6-second combat cycle, so it does not charge partial elapsed seconds based on position in initiative order.
 
 **Changes:** Shared timing conversion uses `TIME_SPAN_SECONDS_PER_ROUND = 6`; no conversion helper subtracts elapsed turn progress from a round.
+
+## A43: Scalar reductions on mixed damage rolls allocate proportionally
+
+**Assumption:** When a single scalar reduction applies to an attack damage roll containing multiple damage types, the runtime allocates that reduction across the pre-adjustment damage entries proportionally to their amounts. Remainders use largest-remainder allocation, with ties resolved by authored entry order, and the total allocated reduction always equals the scalar reduction capped at total damage.
+
+**Rules basis:** SRD 5.2.1 describes damage rolls, damage types, and applying Resistance/Vulnerability/Immunity after other damage modifiers, but it does not specify how to split one scalar reduction across a mixed-type damage roll before target adjustments.
+
+**Rationale:** The promoted runtime stores typed damage entries so target adjustments can be applied after modifiers. Proportional allocation preserves the scalar total while keeping each typed entry nonnegative and deterministic.
+
+**Changes:** Reaction damage-roll reductions and hit-triggered attack-damage reductions use this allocation before Resistance, Vulnerability, and Immunity.

@@ -8,6 +8,7 @@ import { describe, expect, test } from "vitest";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_UNIT_SUPPORT_PROFILES,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   BattleFillSchema,
@@ -15,6 +16,7 @@ import {
   BattleSubjectSchema,
   BATTLE_READIED_SPELL_TRIGGERS,
   addBattleCombatant,
+  battleReactionRollOrDamageReductionSupportForUnit,
   battleId,
   breakBattleConcentration,
   characterBattleResourceUsage,
@@ -33,6 +35,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleHidePrerequisite,
+  type BattleReactionFrame,
   type BattleReadiedSpellTrigger,
   type BattleState,
   type BattleSubject,
@@ -47,6 +50,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   holeId,
+  holeInstanceKey,
   type AttackRollMode,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
@@ -2169,7 +2173,9 @@ describe("battle runtime", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
-    const choice = awaitingReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const choice = reactionChoiceWithSubject(
+      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+    );
     const startedReaction = resolveBattleReaction({
       state: awaitingReaction.state,
       fill: reactionDecisionFill(
@@ -2270,7 +2276,9 @@ describe("battle runtime", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
-    const choice = awaitingReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const choice = reactionChoiceWithSubject(
+      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+    );
     const startedReaction = resolveBattleReaction({
       state: awaitingReaction.state,
       fill: reactionDecisionFill(
@@ -2550,7 +2558,9 @@ describe("battle runtime", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
-    const choice = awaitingReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const choice = reactionChoiceWithSubject(
+      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+    );
 
     const resolved = resolveBattleReaction({
       state: awaitingReaction.state,
@@ -2655,8 +2665,9 @@ describe("battle runtime", () => {
         `Expected attack reaction window, got ${awaitingAttackReaction.tag}.`,
       );
     }
-    const releaseChoice =
-      awaitingAttackReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const releaseChoice = reactionChoiceWithSubject(
+      awaitingAttackReaction.snapshot.pendingReaction!.frame.choices,
+    );
     const released = resolveBattleReaction({
       state: awaitingAttackReaction.state,
       fill: reactionDecisionFill(
@@ -2998,7 +3009,9 @@ describe("battle runtime", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
 
-    const choice = awaitingReaction.snapshot.pendingReaction!.frame.choices[0]!;
+    const choice = reactionChoiceWithSubject(
+      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+    );
     const resolved = resolveBattleReaction({
       state: awaitingReaction.state,
       fill: reactionDecisionFill(
@@ -5117,7 +5130,16 @@ describe("battle runtime", () => {
 
   test("Goblin Warrior advantage rider is included when the attack roll had Advantage", () => {
     const state = goblinTurnBattle({ fighterHp: 12 });
-    const subject = goblinAttackSubject("Scimitar");
+    const subject: Extract<
+      BattleSubject,
+      { readonly tag: "action"; readonly action: "attack" }
+    > = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Scimitar",
+      statBlockSection: "actions",
+    };
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(
       state,
@@ -7170,7 +7192,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("old Core class riders without reusable procedure support remain gated", () => {
+  test("class riders without admitted support profiles remain gated", () => {
     const oldClassRiders = [
       ["rogue_evasion", "Rogue Evasion"],
       ["monk_deflect_attacks", "Deflect Attacks"],
@@ -7208,6 +7230,768 @@ describe("battle runtime", () => {
         }),
       ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     }
+  });
+
+  test("full SRD Cutting Words remains gated until ability-check reactions are promoted", () => {
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(
+        unitLibrary.requireUnit("bard_cutting_words"),
+      ),
+    ).toBe("unsupported");
+  });
+
+  test("full SRD Deflect Attacks remains gated until redirect-on-zero is promoted", () => {
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(
+        unitLibrary.requireUnit("monk_deflect_attacks"),
+      ),
+    ).toBe("unsupported");
+  });
+
+  test("Cutting Words attack-roll reduction can turn a hit into a miss and ignores stale damage fills", () => {
+    const cuttingWordsAttackOnly = cuttingWordsAttackOnlyUnit();
+    const state = startBattle({
+      battleId: battleId("battle-cutting-words-attack-roll"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Lore Bard",
+          initiative: 10,
+          classLevels: [{ className: "bard", level: 3 }],
+          attack: null,
+          resources: [cuttingWordsResource({ unit: cuttingWordsAttackOnly })],
+          unitFeatures: [{ unit: cuttingWordsAttackOnly }],
+          characterUnitRefs: [
+            reactionModifierUnitRef(cuttingWordsAttackOnly.id),
+          ],
+        }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Scimitar",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, fighterId)],
+      }),
+      "attackRoll",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, fighterId),
+        attackRollFill(attackRoll, { total: 12, naturalD20: 10 }),
+        {
+          kind: "rolledDice",
+          holeId: holeId("battle:attack:damage-result:1d6+2-slashing"),
+          value: [rolledDiceGroup([6])],
+        },
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Cutting Words attack-hit Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      cuttingWordsAttackOnly.id,
+      "attackRollReduction",
+    );
+    const resolved = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: cuttingWordsAttackOnly.id,
+            modifierKind: "attackRollReduction",
+            fills: [
+              {
+                kind: "rolledDice",
+                holeId: choice.initialHoles[0]!.holeId,
+                value: [rolledDiceGroup([3])],
+              },
+            ],
+          },
+        },
+      ),
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: {
+        combatants: expect.any(Map),
+      },
+    });
+    if (resolved.tag !== "resolved") throw new Error("Expected resolved.");
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(12));
+    const bard = resolved.state.combatants.get(fighterId);
+    if (bard?.origin.kind !== "character") {
+      throw new Error("Expected character Bard.");
+    }
+    expect(bard.origin.resources[0]?.usesRemaining).toBe(0);
+  });
+
+  test("Cutting Words damage-roll reduction applies before target damage adjustments", () => {
+    const cuttingWordsDamageOnly = cuttingWordsDamageOnlyUnit();
+    const state = startBattle({
+      battleId: battleId("battle-cutting-words-damage-roll"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        resistantSkeletonCreatureInit({ initiative: 10 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Lore Bard",
+          initiative: 5,
+          classLevels: [{ className: "bard", level: 3 }],
+          attack: null,
+          resources: [cuttingWordsResource({ unit: cuttingWordsDamageOnly })],
+          characterUnitRefs: [
+            reactionModifierUnitRef(cuttingWordsDamageOnly.id),
+          ],
+        }),
+      ],
+      combatantDistances: [
+        { combatantA: goblinId, combatantB: skeletonId, feet: movementFeet(5) },
+        { combatantA: goblinId, combatantB: fighterId, feet: movementFeet(30) },
+        {
+          combatantA: fighterId,
+          combatantB: skeletonId,
+          feet: movementFeet(30),
+        },
+      ],
+    });
+    const subject = goblinAttackSubject("Scimitar");
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      state,
+      target,
+      subject,
+      skeletonId,
+    );
+    const damage = attackDamageHoleAfterHit(
+      state,
+      target,
+      attackRoll,
+      { total: 20, naturalD20: 15 },
+      subject,
+      skeletonId,
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, skeletonId),
+        attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+        damageRollFill(damage, 6),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Cutting Words damage Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      cuttingWordsDamageOnly.id,
+      "damageRollReduction",
+    );
+    const resolved = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: cuttingWordsDamageOnly.id,
+            modifierKind: "damageRollReduction",
+            fills: [
+              {
+                kind: "rolledDice",
+                holeId: choice.initialHoles[0]!.holeId,
+                value: [rolledDiceGroup([3])],
+              },
+            ],
+          },
+        },
+      ),
+    });
+
+    if (resolved.tag !== "resolved") throw new Error("Expected resolved.");
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(11));
+  });
+
+  test("Uncanny Dodge is chosen when the attack hits and halves later attack damage", () => {
+    const state = goblinAttacksReactionModifierCharacter({
+      unit: uncannyDodgeUnit(),
+      className: "rogue",
+      level: 5,
+      unitId: "rogue_uncanny_dodge",
+    });
+    const resolved = resolveGoblinScimitarHitReduction({
+      state,
+      unitId: "rogue_uncanny_dodge",
+      damageRoll: 6,
+    });
+
+    if (resolved.tag !== "resolved") throw new Error("Expected resolved.");
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(8));
+    expect(resolved.state.combatants.get(fighterId)?.reactionAvailable).toBe(
+      false,
+    );
+  });
+
+  test("pending hit-triggered damage reductions block unrelated subjects until damage is filled", () => {
+    const state = goblinAttacksReactionModifierCharacter({
+      unit: uncannyDodgeUnit(),
+      className: "rogue",
+      level: 5,
+      unitId: "rogue_uncanny_dodge",
+    });
+    const setup = goblinScimitarHitReactionSetup(state);
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected attack-hit Reaction window.");
+    }
+    const afterReaction = resolveBattleReaction({
+      state: setup.result.state,
+      fill: reactionDecisionFill(
+        findHole(setup.result.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: "rogue_uncanny_dodge",
+            modifierKind: "attackDamageReduction",
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected pending damage roll.");
+    }
+
+    const blocked = resolveBattleSubject({
+      state: afterReaction.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+
+    expect(blocked).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("Uncanny Dodge can reduce visible ranged attack damage beyond 5 feet", () => {
+    const state = startBattle({
+      battleId: battleId("battle-uncanny-dodge-ranged"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Rogue",
+          initiative: 10,
+          classLevels: [{ className: "rogue", level: 5 }],
+          attack: null,
+          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
+        }),
+      ],
+      combatantDistances: [
+        { combatantA: goblinId, combatantB: fighterId, feet: movementFeet(30) },
+      ],
+    });
+    const subject = goblinAttackSubject("Shortbow");
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      state,
+      target,
+      subject,
+      fighterId,
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, fighterId),
+        attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected attack-hit Reaction window.");
+    }
+
+    expect(awaitingReaction.snapshot.pendingReaction!.frame.choices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "reactionRollOrDamageReduction",
+          choice: expect.objectContaining({
+            kind: "attackDamageReduction",
+            unitId: "rogue_uncanny_dodge",
+          }),
+        }),
+      ]),
+    );
+  });
+
+  test("Incapacitated combatants cannot use reaction roll or damage reductions", () => {
+    const base = goblinAttacksReactionModifierCharacter({
+      unit: uncannyDodgeUnit(),
+      className: "rogue",
+      level: 5,
+      unitId: "rogue_uncanny_dodge",
+    });
+    const fighter = base.combatants.get(fighterId)!;
+    const state = {
+      ...base,
+      combatants: new Map(base.combatants).set(fighterId, {
+        ...fighter,
+        conditions: applyCondition(fighter.conditions, "incapacitated"),
+      }),
+    } satisfies BattleState;
+    const setup = goblinScimitarHitReactionSetup(state);
+
+    expect(setup.result).toMatchObject({ tag: "needsHoles" });
+    expect(setup.result.snapshot.pendingReaction).toBeNull();
+  });
+
+  test("Bardic Inspiration reduction rolls must be one valid class die", () => {
+    const cuttingWordsAttackOnly = cuttingWordsAttackOnlyUnit();
+    const state = goblinAttacksReactionModifierCharacter({
+      unit: cuttingWordsAttackOnly,
+      className: "bard",
+      level: 3,
+      unitId: cuttingWordsAttackOnly.id,
+    });
+    const setup = goblinScimitarHitReactionSetup(state);
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected Cutting Words attack-hit Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      setup.result.snapshot.pendingReaction!.frame.choices,
+      cuttingWordsAttackOnly.id,
+      "attackRollReduction",
+    );
+
+    const resolved = resolveBattleReaction({
+      state: setup.result.state,
+      fill: reactionDecisionFill(
+        findHole(setup.result.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: cuttingWordsAttackOnly.id,
+            modifierKind: "attackRollReduction",
+            fills: [
+              {
+                kind: "rolledDice",
+                holeId: choice.initialHoles[0]!.holeId,
+                value: [rolledDiceGroup([7])],
+              },
+            ],
+          },
+        },
+      ),
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Reaction modifier roll must provide one Bardic Inspiration die result.",
+    });
+  });
+
+  test("hit and damage reduction reactions use their separate RAW windows", () => {
+    const cuttingWordsDamageOnly = cuttingWordsDamageOnlyUnit();
+    const state = startBattle({
+      battleId: battleId("battle-single-scalar-damage-modifier-choice"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Rogue Bard",
+          initiative: 10,
+          classLevels: [
+            { className: "rogue", level: 5 },
+            { className: "bard", level: 3 },
+          ],
+          attack: null,
+          resources: [cuttingWordsResource({ unit: cuttingWordsDamageOnly })],
+          unitFeatures: [uncannyDodgeUnit(), cuttingWordsDamageOnly].map(
+            (unit) => ({ unit }),
+          ),
+          characterUnitRefs: [
+            reactionModifierUnitRef("rogue_uncanny_dodge"),
+            reactionModifierUnitRef(cuttingWordsDamageOnly.id),
+          ],
+        }),
+      ],
+      combatantDistances: [
+        { combatantA: goblinId, combatantB: fighterId, feet: movementFeet(5) },
+      ],
+    });
+    const hitReaction = goblinScimitarHitReactionSetup(state);
+    if (hitReaction.result.tag !== "needsHoles") {
+      throw new Error("Expected attack-hit Reaction window.");
+    }
+
+    const hitModifierChoices =
+      hitReaction.result.snapshot.pendingReaction!.frame.choices.filter(
+        (choice) => choice.kind === "reactionRollOrDamageReduction",
+      );
+    expect(hitModifierChoices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "reactionRollOrDamageReduction",
+          choice: expect.objectContaining({ kind: "attackDamageReduction" }),
+        }),
+      ]),
+    );
+    expect(hitModifierChoices).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "reactionRollOrDamageReduction",
+          choice: expect.objectContaining({ kind: "damageRollReduction" }),
+        }),
+      ]),
+    );
+    const beforeDamage = resolveBattleReaction({
+      state: hitReaction.result.state,
+      fill: reactionDecisionFill(
+        findHole(hitReaction.result.holes, "reactionDecision"),
+        { kind: "decline", reactorId: fighterId },
+      ),
+    });
+    if (beforeDamage.tag !== "needsHoles") {
+      throw new Error("Expected damage roll after declining hit reaction.");
+    }
+    const damage = requireHole(beforeDamage, "rolledDice");
+    const awaitingDamageReaction = resolveBattleSubject({
+      state: beforeDamage.state,
+      subject: hitReaction.subject,
+      fills: [
+        ...hitReaction.prefixFills,
+        {
+          kind: "rolledDice",
+          holeId: damage.holeId,
+          value: [rolledDiceGroup([6])],
+        },
+      ],
+    });
+    if (awaitingDamageReaction.tag !== "needsHoles") {
+      throw new Error("Expected attack-damage Reaction window.");
+    }
+    const damageModifierChoices =
+      awaitingDamageReaction.snapshot.pendingReaction!.frame.choices.filter(
+        (choice) => choice.kind === "reactionRollOrDamageReduction",
+      );
+    expect(damageModifierChoices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "reactionRollOrDamageReduction",
+          choice: expect.objectContaining({ kind: "damageRollReduction" }),
+        }),
+      ]),
+    );
+  });
+
+  test("attack damage scalar reductions apply proportionally to mixed damage entries", () => {
+    const state = goblinAttacksReactionModifierCharacter({
+      unit: uncannyDodgeUnit(),
+      className: "rogue",
+      level: 5,
+      unitId: "rogue_uncanny_dodge",
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Scimitar",
+    };
+    const frame: BattleReactionFrame = {
+      trigger: "attackDamage",
+      eligibleReactors: [fighterId],
+      offeredReactors: [],
+      choices: [
+        {
+          kind: "reactionRollOrDamageReduction",
+          reactorId: fighterId,
+          choice: {
+            kind: "damageRollReduction",
+            unitId: "test_cutting_words",
+            label: "Cutting Words",
+            reduction: { kind: "rolled", flatModifier: 0, dieSize: 6 },
+          },
+          initialHoles: [
+            {
+              kind: "rolledDice",
+              holeId: holeId("battle:reaction:modifier-roll"),
+              holeInstanceKey: holeInstanceKey("battle:reaction:modifier-roll"),
+              label: "Cutting Words reduction roll",
+              unitFeature: {
+                unitId: "test_cutting_words",
+                label: "Cutting Words",
+                modifierKind: "damageRollReduction",
+              },
+            },
+          ],
+        },
+      ],
+      continuation: {
+        kind: "attackDamage",
+        subject,
+        attackerId: goblinId,
+        targetId: fighterId,
+        damageEvent: {
+          kind: "rolledDamage",
+          damageRollByType: [
+            { damageType: "slashing", amount: 5 },
+            { damageType: "poison", amount: 4 },
+          ],
+        },
+        fills: [],
+        deathFailuresAtZeroHp: 1,
+        attackDamageRiders: [],
+      },
+    };
+
+    const pendingState = {
+      ...state,
+      interruptStack: [{ kind: "reaction", frame }],
+    } satisfies BattleState;
+    const decision = snapshotBattle(pendingState).pendingReaction?.decisionHole;
+    if (decision === undefined) {
+      throw new Error("Expected pending Reaction decision.");
+    }
+    const resolved = resolveBattleReaction({
+      state: pendingState,
+      fill: reactionDecisionFill(decision, {
+        kind: "resolve",
+        reactorId: fighterId,
+        choice: {
+          kind: "reactionRollOrDamageReduction",
+          unitId: "test_cutting_words",
+          modifierKind: "damageRollReduction",
+          fills: [
+            {
+              kind: "rolledDice",
+              holeId: holeId("battle:reaction:modifier-roll"),
+              value: [rolledDiceGroup([3])] as const,
+            },
+          ],
+        },
+      }),
+    });
+
+    if (resolved.tag !== "resolved") throw new Error("Expected resolved.");
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(6));
+  });
+
+  test("attack-damage reduction rejects impossible stat-block reactor choices", () => {
+    const state = startBattle({
+      battleId: battleId("battle-attack-damage-reduction-before-vulnerability"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        skeletonCreatureInit({ initiative: 10 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Lore Bard",
+          initiative: 5,
+          classLevels: [{ className: "bard", level: 3 }],
+          attack: null,
+        }),
+      ],
+    });
+    const subject: Extract<
+      BattleSubject,
+      { readonly tag: "action"; readonly action: "attack" }
+    > = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Scimitar",
+      statBlockSection: "actions",
+    };
+    const frame: BattleReactionFrame = {
+      trigger: "attackDamage",
+      eligibleReactors: [skeletonId, fighterId],
+      offeredReactors: [],
+      choices: [
+        {
+          kind: "reactionRollOrDamageReduction",
+          reactorId: skeletonId,
+          choice: {
+            kind: "attackDamageReduction",
+            unitId: "test_uncanny_dodge",
+            label: "Uncanny Dodge",
+            reduction: { kind: "halfDamage" },
+          },
+          initialHoles: [],
+        },
+        {
+          kind: "reactionRollOrDamageReduction",
+          reactorId: fighterId,
+          choice: {
+            kind: "damageRollReduction",
+            unitId: "test_cutting_words",
+            label: "Cutting Words",
+            reduction: { kind: "rolled", flatModifier: 0, dieSize: 6 },
+          },
+          initialHoles: [],
+        },
+      ],
+      continuation: {
+        kind: "attackDamage",
+        subject,
+        attackerId: goblinId,
+        targetId: skeletonId,
+        damageEvent: {
+          kind: "rolledDamage",
+          damageRollByType: [{ damageType: "bludgeoning", amount: 5 }],
+        },
+        fills: [],
+        deathFailuresAtZeroHp: 1,
+        attackDamageRiders: [],
+      },
+    };
+    const pendingState = {
+      ...state,
+      interruptStack: [{ kind: "reaction", frame }],
+    } satisfies BattleState;
+    const decision = snapshotBattle(pendingState).pendingReaction?.decisionHole;
+    if (decision === undefined) {
+      throw new Error("Expected pending Reaction decision.");
+    }
+
+    const resolved = resolveBattleReaction({
+      state: pendingState,
+      fill: reactionDecisionFill(decision, {
+        kind: "resolve",
+        reactorId: skeletonId,
+        choice: {
+          kind: "reactionRollOrDamageReduction",
+          unitId: "test_uncanny_dodge",
+          modifierKind: "attackDamageReduction",
+          fills: [],
+        },
+      }),
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack damage reductions must be chosen when the attack roll hits.",
+    });
+  });
+
+  test("reaction-modified attack damage requests Concentration after the final damage amount", () => {
+    const base = goblinAttacksReactionModifierCharacter({
+      unit: uncannyDodgeUnit(),
+      className: "rogue",
+      level: 5,
+      unitId: "rogue_uncanny_dodge",
+    });
+    const fighter = base.combatants.get(fighterId)!;
+    const state = {
+      ...base,
+      combatants: new Map(base.combatants).set(fighterId, {
+        ...fighter,
+        concentration: {
+          sourceSpellId: "readied_acid_splash",
+          effectKind: "readiedSpell",
+        },
+      }),
+    } satisfies BattleState;
+    const afterReaction = resolveGoblinScimitarHitReduction({
+      state,
+      unitId: "rogue_uncanny_dodge",
+      damageRoll: 6,
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Scimitar",
+    };
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected post-reaction Concentration save.");
+    }
+    expect(afterReaction.snapshot.pendingReaction).toBeNull();
+    const concentration = findHole(
+      afterReaction.holes,
+      "concentrationSavingThrow",
+    );
+    expect(concentration).toMatchObject({ damageAmount: 4, dc: 10 });
+
+    const resolved = resolveBattleSubject({
+      state: afterReaction.state,
+      subject,
+      fills: [concentrationSavingThrowFill(concentration, false)],
+    });
+
+    if (resolved.tag !== "resolved") throw new Error("Expected resolved.");
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(8));
+    expect(resolved.state.combatants.get(fighterId)?.concentration).toBeNull();
+  });
+
+  test("pending attack-damage Concentration save blocks unrelated subjects", () => {
+    const base = goblinAttacksReactionModifierCharacter({
+      unit: uncannyDodgeUnit(),
+      className: "rogue",
+      level: 5,
+      unitId: "rogue_uncanny_dodge",
+    });
+    const fighter = base.combatants.get(fighterId)!;
+    const state = {
+      ...base,
+      combatants: new Map(base.combatants).set(fighterId, {
+        ...fighter,
+        concentration: {
+          sourceSpellId: "readied_acid_splash",
+          effectKind: "readiedSpell",
+        },
+      }),
+    } satisfies BattleState;
+    const afterReaction = resolveGoblinScimitarHitReduction({
+      state,
+      unitId: "rogue_uncanny_dodge",
+      damageRoll: 6,
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected post-reaction Concentration save.");
+    }
+
+    const blocked = resolveBattleSubject({
+      state: afterReaction.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+
+    expect(blocked).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
@@ -8736,7 +9520,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("76 passing");
+  expect(quintOutput).toContain("79 passing");
 }
 
 function hidePrerequisites(
@@ -9925,6 +10709,211 @@ function evasionFeature(input?: {
   return { unit: rogueEvasionUnit(input) };
 }
 
+function reactionModifierUnitRef(
+  unitId: string,
+): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"]
+>[number] {
+  return {
+    unitId,
+    supportProfiles: [REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE],
+  };
+}
+
+function cuttingWordsResource(input?: {
+  readonly unit?: Extract<UnitRecord, { readonly kind: "class_feature" }>;
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  return { unit: input?.unit ?? cuttingWordsUnit(), usesRemaining: 1 };
+}
+
+function goblinAttacksReactionModifierCharacter(input: {
+  readonly unit: Extract<UnitRecord, { readonly kind: "class_feature" }>;
+  readonly className: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"][number]["className"];
+  readonly level: number;
+  readonly unitId: string;
+  readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
+}): BattleState {
+  return startBattle({
+    battleId: battleId(`battle-${input.unitId}`),
+    combatants: [
+      statBlockCreatureInit({ initiative: 20 }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: input.unit.name,
+        initiative: 10,
+        classLevels: [{ className: input.className, level: input.level }],
+        attack: null,
+        ...(input.armorClass === undefined
+          ? {}
+          : { armorClass: input.armorClass }),
+        unitFeatures: [{ unit: input.unit }],
+        characterUnitRefs: [reactionModifierUnitRef(input.unitId)],
+      }),
+    ],
+  });
+}
+
+function goblinScimitarHitReactionSetup(state: BattleState): {
+  readonly subject: BattleSubject;
+  readonly prefixFills: readonly BattleFill[];
+  readonly result: ReturnType<typeof resolveBattleSubject>;
+} {
+  const subject: BattleSubject = {
+    tag: "action",
+    actorId: goblinId,
+    action: "attack",
+    attackName: "Scimitar",
+  };
+  const target = requireHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(target, fighterId)],
+    }),
+    "attackRoll",
+  );
+  const prefixFills = [
+    targetFill(target, fighterId),
+    attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+  ];
+  const result = resolveBattleSubject({ state, subject, fills: prefixFills });
+  return { subject, prefixFills, result };
+}
+
+function resolveGoblinScimitarHitReduction(input: {
+  readonly state: BattleState;
+  readonly unitId: string;
+  readonly reductionRoll?: number;
+  readonly damageRoll: number;
+}): ReturnType<typeof resolveBattleSubject> {
+  const setup = goblinScimitarHitReactionSetup(input.state);
+  if (setup.result.tag !== "needsHoles") {
+    throw new Error("Expected attack-hit Reaction window.");
+  }
+  const choice = reactionModifierChoice(
+    setup.result.snapshot.pendingReaction!.frame.choices,
+    input.unitId,
+    "attackDamageReduction",
+  );
+  const fills =
+    input.reductionRoll === undefined
+      ? []
+      : [
+          {
+            kind: "rolledDice" as const,
+            holeId: choice.initialHoles[0]!.holeId,
+            value: [rolledDiceGroup([input.reductionRoll])] as const,
+          },
+        ];
+  const afterReaction = resolveBattleReaction({
+    state: setup.result.state,
+    fill: reactionDecisionFill(
+      findHole(setup.result.holes, "reactionDecision"),
+      {
+        kind: "resolve",
+        reactorId: fighterId,
+        choice: {
+          kind: "reactionRollOrDamageReduction",
+          unitId: input.unitId,
+          modifierKind: "attackDamageReduction",
+          fills,
+        },
+      },
+    ),
+  });
+  if (afterReaction.tag !== "needsHoles") {
+    throw new Error("Expected damage roll after hit reduction.");
+  }
+  const damage = requireHole(afterReaction, "rolledDice");
+  const result = resolveBattleSubject({
+    state: afterReaction.state,
+    subject: setup.subject,
+    fills: [
+      ...setup.prefixFills,
+      {
+        kind: "rolledDice",
+        holeId: damage.holeId,
+        value: [rolledDiceGroup([input.damageRoll])] as const,
+      },
+    ],
+  });
+  if (result.tag !== "needsHoles") {
+    return result;
+  }
+  if (
+    result.snapshot.pendingReaction === null &&
+    !result.holes.some((hole) => hole.kind === "concentrationSavingThrow")
+  ) {
+    throw new Error("Expected attack-damage Reaction or Concentration window.");
+  }
+  return result;
+}
+
+function reactionModifierChoice(
+  choices: ReadonlyArray<
+    NonNullable<
+      ReturnType<typeof snapshotBattle>["pendingReaction"]
+    >["frame"]["choices"][number]
+  >,
+  unitId: string,
+  modifierKind:
+    | "attackRollReduction"
+    | "damageRollReduction"
+    | "attackDamageReduction",
+) {
+  const choice = choices.find(
+    (candidate) =>
+      candidate.kind === "reactionRollOrDamageReduction" &&
+      candidate.choice.unitId === unitId &&
+      candidate.choice.kind === modifierKind,
+  );
+  if (choice?.kind !== "reactionRollOrDamageReduction") {
+    throw new Error(
+      `Expected ${unitId} ${modifierKind} reaction choice among ${JSON.stringify(
+        choices.map((candidate) =>
+          candidate.kind === "reactionRollOrDamageReduction"
+            ? {
+                kind: candidate.kind,
+                unitId: candidate.choice.unitId,
+                modifierKind: candidate.choice.kind,
+              }
+            : { kind: candidate.kind },
+        ),
+      )}.`,
+    );
+  }
+  return choice;
+}
+
+function reactionChoiceWithSubject(
+  choices: ReadonlyArray<
+    NonNullable<
+      ReturnType<typeof snapshotBattle>["pendingReaction"]
+    >["frame"]["choices"][number]
+  >,
+) {
+  const choice = choices[0];
+  if (choice === undefined || !("subject" in choice)) {
+    throw new Error("Expected subject-backed reaction choice.");
+  }
+  return choice;
+}
+
 function rogueSneakAttackUnit(input?: {
   readonly acquiredAtLevel?: number;
 }): Extract<UnitRecord, { readonly kind: "class_feature" }> {
@@ -9998,6 +10987,150 @@ function rogueEvasionUnit(input?: {
       },
       replacement: { onSuccess: "no_damage", onFail: "half_damage" },
       suppressedBy: [{ kind: "condition", condition: "incapacitated" }],
+    },
+  };
+}
+
+function uncannyDodgeUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
+  return {
+    id: "rogue_uncanny_dodge",
+    kind: "class_feature",
+    name: "Uncanny Dodge",
+    className: "rogue",
+    acquiredAtLevel: 5,
+    description:
+      "Take a Reaction to halve damage from an attack roll that hits you.",
+    provenance: {
+      kind: "srd-5.2.1",
+      section: "Classes/Rogue#Uncanny Dodge",
+    },
+    mechanics: {
+      family: "reaction_roll_or_damage_reduction",
+      modifiers: [
+        {
+          kind: "attack_damage_reduction",
+          trigger: {
+            kind: "hit_by_attack_roll",
+            requiresVisibleAttacker: true,
+          },
+          reduction: { kind: "half_damage", rounding: "down" },
+        },
+      ],
+    },
+  };
+}
+
+function cuttingWordsUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
+  return {
+    id: "bard_cutting_words",
+    kind: "class_feature",
+    name: "Cutting Words",
+    className: "bard",
+    acquiredAtLevel: 3,
+    description:
+      "Take a Reaction and expend Bardic Inspiration to reduce an attack roll or damage roll.",
+    provenance: {
+      kind: "srd-5.2.1",
+      section: "Classes/Bard#Cutting Words",
+    },
+    mechanics: {
+      family: "reaction_roll_or_damage_reduction",
+      resource: {
+        kind: "use_count",
+        cap: { kind: "ability_modifier", ability: "cha" },
+      },
+      resetCadence: { kind: "long_rest" },
+      modifiers: [
+        {
+          kind: "attack_roll_reduction",
+          trigger: {
+            kind: "creature_succeeds_attack_roll",
+            rangeFeet: 60,
+            requiresVisibleCreature: true,
+          },
+          reduction: { kind: "bardic_inspiration_die" },
+        },
+        {
+          kind: "damage_roll_reduction",
+          trigger: {
+            kind: "creature_makes_damage_roll",
+            rangeFeet: 60,
+            requiresVisibleCreature: true,
+          },
+          reduction: { kind: "bardic_inspiration_die" },
+        },
+        {
+          kind: "ability_check_reduction",
+          trigger: {
+            kind: "creature_succeeds_ability_check",
+            rangeFeet: 60,
+            requiresVisibleCreature: true,
+          },
+          reduction: { kind: "bardic_inspiration_die" },
+        },
+      ],
+    },
+  };
+}
+
+function cuttingWordsDamageOnlyUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
+  const unit = cuttingWordsUnit();
+  if (unit.mechanics.family !== "reaction_roll_or_damage_reduction") {
+    throw new Error("Expected Cutting Words reaction modifier mechanics.");
+  }
+  const damageRollModifier = unit.mechanics.modifiers.find(
+    (modifier) => modifier.kind === "damage_roll_reduction",
+  );
+  if (damageRollModifier === undefined) {
+    throw new Error("Expected Cutting Words damage-roll modifier.");
+  }
+  return {
+    ...unit,
+    id: "bard_cutting_words_damage_test",
+    provenance: {
+      kind: "xphb",
+      section: "structured-input-only",
+    },
+    mechanics: {
+      ...unit.mechanics,
+      modifiers: [damageRollModifier],
+    },
+  };
+}
+
+function cuttingWordsAttackOnlyUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
+  const unit = cuttingWordsUnit();
+  if (unit.mechanics.family !== "reaction_roll_or_damage_reduction") {
+    throw new Error("Expected Cutting Words reaction modifier mechanics.");
+  }
+  const attackRollModifier = unit.mechanics.modifiers.find(
+    (modifier) => modifier.kind === "attack_roll_reduction",
+  );
+  if (attackRollModifier === undefined) {
+    throw new Error("Expected Cutting Words attack-roll modifier.");
+  }
+  return {
+    ...unit,
+    id: "bard_cutting_words_attack_test",
+    provenance: {
+      kind: "xphb",
+      section: "structured-input-only",
+    },
+    mechanics: {
+      ...unit.mechanics,
+      modifiers: [attackRollModifier],
     },
   };
 }

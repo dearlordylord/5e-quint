@@ -5849,6 +5849,8 @@ function traceClassFeatureMechanics(
       return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
     case "save_damage_replacement":
       return [traceSaveDamageReplacementMechanics(m, nodes, ids)];
+    case "reaction_roll_or_damage_reduction":
+      return [traceReactionRollOrDamageReductionMechanics(m, nodes, ids)];
     case "weapon_mastery_choice": {
       const masteryId = ids("mastery");
       nodes.push({
@@ -5911,6 +5913,12 @@ function traceClassFeatureMechanics(
             return traceOnHitTriggerMechanics(part, nodes, edges, ids);
           case "save_damage_replacement":
             return traceSaveDamageReplacementMechanics(part, nodes, ids);
+          case "reaction_roll_or_damage_reduction":
+            return traceReactionRollOrDamageReductionMechanics(
+              part,
+              nodes,
+              ids,
+            );
           default: {
             const _exhaustive: never = part;
             throw new Error(
@@ -5946,6 +5954,24 @@ function traceSaveDamageReplacementMechanics(
       `success ${m.replacement.onSuccess}\nfail ${m.replacement.onFail}`,
   });
   return replacementId;
+}
+
+function traceReactionRollOrDamageReductionMechanics(
+  m: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "reaction_roll_or_damage_reduction" }
+  >,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const modifierId = ids("reaction-roll-or-damage-reduction");
+  nodes.push({
+    id: modifierId,
+    category: "resolution",
+    atomKind: "reaction_roll_or_damage_reduction",
+    label: `reaction_roll_or_damage_reduction\n${m.modifiers.length} modifier(s)`,
+  });
+  return modifierId;
 }
 
 // Passive family — "grants" edge from a passive_grant procedure node to

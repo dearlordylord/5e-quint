@@ -34,6 +34,10 @@ module battleRuntime {
   //   Sneak Attack is an optional once-per-turn on-hit damage rider for an
   //   eligible Finesse/Ranged attack, and its extra damage dice are doubled on
   //   Critical Hits.
+  // - Classes/Monk.md lines 102-106, Classes/Rogue.md lines 109-111,
+  //   Classes/Bard.md lines 332-334, and Playing-the-Game.md lines 326-332:
+  //   Deflect Attacks, Uncanny Dodge, and Cutting Words are Reactions that
+  //   modify an attack roll or attack damage at the relevant interrupt point.
   // - Classes/Rogue.md lines 113-115, Classes/Monk.md lines 132-134, and
   //   Playing-the-Game.md lines 704-714: Evasion-style replacement riders
   //   apply only to Dexterity Saving Throw damage procedures whose successful
@@ -126,7 +130,7 @@ module battleRuntime {
     | ReactionDecision
     | StatBlockRechargeRoll
 
-  type ReactionTrigger = AttackHit | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
+  type ReactionTrigger = AttackHit | AttackDamage | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
 
   type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
   type FighterCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
@@ -135,7 +139,7 @@ module battleRuntime {
   // package-local QNT keeps representative deterministic fills for those lanes;
   // TypeScript carries the caller-provided fills in the runtime frame.
   type ReactionContinuation =
-    | ResumeAttack
+    | ResumeAttack({ damage: int })
     | ResumeSpell
     | ResumeSaveGateDamage
     | ResumeAfterDamage
@@ -147,6 +151,14 @@ module battleRuntime {
     offeredReactors: Set[Actor],
     continuation: ReactionContinuation,
   }
+  type AttackDamageConcentrationContinuation =
+    | ResumeAttackDamageToGoblin
+  type InterruptFrame =
+    | PendingReaction(PendingReactionFrame)
+    | PendingAttackDamageConcentration({ continuation: AttackDamageConcentrationContinuation, damage: int })
+  type PendingReactionFrameOption =
+    | NoPendingReactionFrame
+    | HasPendingReactionFrame(PendingReactionFrame)
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows
 
@@ -242,7 +254,7 @@ module battleRuntime {
     fighterReadiedMovementHeld: bool,
     fighterHelpAttackGoblinForGoblin: bool,
     grapple: GrappleState,
-    interruptStack: List[PendingReactionFrame],
+    interruptStack: List[InterruptFrame],
     fighterGoblinDistance: int,
     fighterHidePrerequisite: bool,
     goblinRechargeAvailable: bool,
@@ -642,7 +654,7 @@ module battleRuntime {
       state
 
   pure def openReactionWindow(state: BattleState, frame: PendingReactionFrame): BattleState =
-    { ...state, interruptStack: state.interruptStack.append(frame) }
+    { ...state, interruptStack: state.interruptStack.append(PendingReaction(frame)) }
 
   pure def reactionFrameComplete(frame: PendingReactionFrame): bool =
     frame.eligibleReactors == frame.offeredReactors
@@ -663,17 +675,22 @@ module battleRuntime {
     if (state.interruptStack.length() == 0)
       state
     else {
-      val frame = state.interruptStack[state.interruptStack.length() - 1]
-      val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
-      if (not(validReactor))
-        state
-      else {
-        val updatedFrame = { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
-        val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
-        if (reactionFrameComplete(updatedFrame))
-          { ...state, interruptStack: rest }
-        else
-          { ...state, interruptStack: rest.append(updatedFrame) }
+      val top = state.interruptStack[state.interruptStack.length() - 1]
+      match top {
+        | PendingReaction(frame) => {
+            val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
+            if (not(validReactor))
+              state
+            else {
+              val updatedFrame = { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
+              val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
+              if (reactionFrameComplete(updatedFrame))
+                { ...state, interruptStack: rest }
+              else
+                { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
+            }
+          }
+        | _ => state
       }
     }
   }
@@ -682,39 +699,78 @@ module battleRuntime {
     if (state.interruptStack.length() == 0)
       state
     else {
-      val frame = state.interruptStack[state.interruptStack.length() - 1]
-      val afterDecision = declineReaction(state, reactor)
-      if (afterDecision.interruptStack.length() < state.interruptStack.length())
-        resumeReactionContinuation(afterDecision, frame.continuation)
-      else
-        afterDecision
+      val top = state.interruptStack[state.interruptStack.length() - 1]
+      match top {
+        | PendingReaction(frame) => {
+            val afterDecision = declineReaction(state, reactor)
+            if (afterDecision.interruptStack.length() < state.interruptStack.length())
+              resumeReactionContinuation(afterDecision, frame.continuation)
+            else
+              afterDecision
+          }
+        | _ => state
+      }
     }
 
   pure def resolveReaction(state: BattleState, reactor: Actor): BattleState =
     if (state.interruptStack.length() == 0 or not(reactorCanReact(state, reactor)))
       state
     else {
-      val frame = state.interruptStack[state.interruptStack.length() - 1]
-      val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
-      if (not(validReactor))
-        state
-      else {
-        val afterReactionProcedure =
-          match frame.trigger {
-            | OpportunityAttack => resolveGoblinOpportunityAttack(spendReaction(state, reactor), 20, 18, 4, true)
-            | _ => releaseReadiedSpell(spendReaction(state, reactor))
+      val top = state.interruptStack[state.interruptStack.length() - 1]
+      match top {
+        | PendingReaction(frame) => {
+            val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
+            if (not(validReactor))
+              state
+            else {
+              val afterReactionProcedure =
+                match frame.trigger {
+                  | OpportunityAttack => resolveGoblinOpportunityAttack(spendReaction(state, reactor), 20, 18, 4, true)
+                  | _ => releaseReadiedSpell(spendReaction(state, reactor))
+                }
+              val afterDecision = declineReaction(afterReactionProcedure, reactor)
+              if (afterDecision.interruptStack.length() < state.interruptStack.length())
+                resumeReactionContinuation(afterDecision, frame.continuation)
+              else
+                afterDecision
+            }
           }
-        val afterDecision = declineReaction(afterReactionProcedure, reactor)
-        if (afterDecision.interruptStack.length() < state.interruptStack.length())
-          resumeReactionContinuation(afterDecision, frame.continuation)
-        else
-          afterDecision
+        | _ => state
+      }
+    }
+
+  pure def pendingReactionFrame(frame: InterruptFrame): PendingReactionFrameOption =
+    match frame {
+      | PendingReaction(pending) => HasPendingReactionFrame(pending)
+      | PendingAttackDamageConcentration(_) => NoPendingReactionFrame
+    }
+
+  pure def openAttackDamageConcentration(state: BattleState, continuation: AttackDamageConcentrationContinuation, damage: int): BattleState =
+    { ...state, interruptStack: state.interruptStack.append(PendingAttackDamageConcentration({ continuation: continuation, damage: damage })) }
+
+  pure def resolveAttackDamageConcentration(state: BattleState, concentrationSaveSucceeded: bool): BattleState =
+    if (state.interruptStack.length() == 0)
+      state
+    else {
+      val top = state.interruptStack[state.interruptStack.length() - 1]
+      match top {
+        | PendingAttackDamageConcentration(frame) => {
+            val rest = { ...state, interruptStack: state.interruptStack.slice(0, state.interruptStack.length() - 1) }
+            match frame.continuation {
+              | ResumeAttackDamageToGoblin => { ...rest, goblin: applyDamage(rest.goblin, frame.damage, 1, concentrationSaveSucceeded), actionAvailable: false }
+            }
+          }
+        | _ => state
       }
     }
 
   pure def resumeReactionContinuation(state: BattleState, continuation: ReactionContinuation): BattleState =
     match continuation {
-      | ResumeAttack => resolveAttack(state, 15, 10, 4, true)
+      | ResumeAttack(attack) =>
+          if (state.goblin.concentrating and attack.damage > 0)
+            openAttackDamageConcentration(state, ResumeAttackDamageToGoblin, attack.damage)
+          else
+            { ...state, goblin: applyDamage(state.goblin, attack.damage, 1, true), actionAvailable: false }
       | ResumeSpell => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
@@ -827,8 +883,19 @@ module battleRuntime {
           lightWeaponAttackMade: true,
           fighterSneakAttackUsedThisTurn: sneakSelectedAndEligible or revealed.fighterSneakAttackUsedThisTurn,
         }
-      }
     }
+    }
+
+  pure def cuttingWordsAttackRollTotal(attackTotal: int, bardicInspirationRoll: int): int =
+    attackTotal - bardicInspirationRoll
+
+  pure def uncannyDodgeDamage(damage: int): int =
+    damage / 2
+
+  pure def deflectAttacksDamage(damage: int, deflectRoll: int, dexMod: int, monkLevel: int): int = {
+    val reduced = damage - (deflectRoll + dexMod + monkLevel)
+    if (reduced < 0) 0 else reduced
+  }
 
   pure def resolveAttackRecklessly(
     state: BattleState,
@@ -1579,6 +1646,38 @@ module battleRuntime {
     assert(not(endTurn(used).fighterSneakAttackUsedThisTurn))
   }
 
+  run test_reaction_roll_or_damage_reductions = {
+    all {
+      assert(not(attackHits(cuttingWordsAttackRollTotal(12, 3), 10, 10, 20))),
+      assert(uncannyDodgeDamage(9) == 4),
+      assert(deflectAttacksDamage(8, 2, 3, 3) == 0),
+    }
+  }
+
+  run test_attack_damage_concentration_interrupt_resolves_before_damage = {
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
+    val pending = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 4 }))
+    val resolved = resolveAttackDamageConcentration(pending, false)
+    all {
+      assert(pending.interruptStack.length() == 1),
+      assert(pendingReactionFrame(pending.interruptStack[0]) == NoPendingReactionFrame),
+      assert(pending.goblin.hp == 10),
+      assert(resolved.interruptStack == []),
+      assert(resolved.goblin.hp == 6),
+      assert(not(resolved.goblin.concentrating)),
+    }
+  }
+
+  run test_zero_damage_reaction_attack_continuation_does_not_open_concentration_interrupt = {
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
+    val resolved = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 0 }))
+    all {
+      assert(resolved.interruptStack == []),
+      assert(resolved.goblin.hp == 10),
+      assert(resolved.goblin.concentrating),
+    }
+  }
+
   run test_goblin_attack_hit_applies_stat_block_damage_to_fighter = {
     val result = resolveGoblinAttack(endTurn(initialState), 20, 18, 5, true)
     all {
@@ -2100,8 +2199,12 @@ module battleRuntime {
       assert(awaiting.fighter.movementSpent == 0),
       assert(awaiting.fighterGoblinDistance == 5),
       assert(awaiting.interruptStack.length() == 1),
-      assert(awaiting.interruptStack[0].trigger == OpportunityAttack),
-      assert(awaiting.interruptStack[0].eligibleReactors == Set(Goblin)),
+      assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: OpportunityAttack,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeMovement({ movementCost: 5, distanceMoved: 5, destinationDistance: 10 }),
+      })),
     }
   }
 
@@ -2134,7 +2237,7 @@ module battleRuntime {
       trigger: AttackHit,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
-      continuation: ResumeAttack,
+      continuation: ResumeAttack({ damage: 7 }),
     })
     val resolved = resolveReaction(awaitingReaction, Fighter)
     all {

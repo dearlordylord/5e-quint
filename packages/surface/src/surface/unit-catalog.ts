@@ -4,6 +4,7 @@ import { Option } from "effect";
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
+import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import classFighterInput from "../../content/class_fighter.json";
@@ -23,12 +24,14 @@ import lightInput from "../../content/light.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import masterySapInput from "../../content/mastery_sap.json";
+import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
+import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
 import shieldInput from "../../content/shield.json";
 import sleepInput from "../../content/sleep.json";
@@ -150,7 +153,10 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterImprovedCriticalInput,
     barbarianRageInput,
     barbarianRecklessAttackInput,
+    bardCuttingWordsInput,
+    monkDeflectAttacksInput,
     rogueEvasionInput,
+    rogueUncannyDodgeInput,
     rogueSneakAttackInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
