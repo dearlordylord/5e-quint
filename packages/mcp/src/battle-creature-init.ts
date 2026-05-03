@@ -5,6 +5,7 @@ import {
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
+  type CharacterUnarmedStrikeActionOption,
   type CharacterZeroHpLifecycleInit,
   type CharacterWeaponAttackActionOption,
   type BattleId,
@@ -30,6 +31,7 @@ import {
 import {
   Hp,
   abilityModifier as battleAbilityModifier,
+  attackBonus as battleAttackBonus,
   movementFeet,
   proficiencyBonus,
   resourceCount,
@@ -122,6 +124,7 @@ export function battleCreatureInitFromCharacterBuild(
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout: input.build.equipment,
       attack: characterAttackActionOption(input.build, input.unitLibrary),
+      unarmedStrike: characterBaseUnarmedStrikeActionOption(input.build),
       ...(offHandAttack === undefined ? {} : { offHandAttack }),
       unitFeatures: characterBattleFeatures(input.build, input.unitLibrary),
       resources: characterBattleResources(input.build, input.unitLibrary),
@@ -338,6 +341,28 @@ function characterWeaponAttackActionOption(
     abilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores.str),
     ),
+  };
+}
+
+function characterBaseUnarmedStrikeActionOption(
+  build: CharacterBuild,
+): CharacterUnarmedStrikeActionOption {
+  const strengthModifier = battleAbilityModifier(
+    scoreModifier(build.abilityScores.str),
+  );
+  const buildProficiencyBonus = proficiencyBonus(characterLevel(build));
+  return {
+    kind: "unarmedStrike",
+    effect: {
+      kind: "damage",
+      damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+    },
+    attackAbility: "str",
+    attackAbilityModifier: strengthModifier,
+    attackBonus: battleAttackBonus(
+      Number(strengthModifier) + Number(buildProficiencyBonus),
+    ),
+    damageAbilityModifier: strengthModifier,
   };
 }
 
