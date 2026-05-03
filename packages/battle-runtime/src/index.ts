@@ -8494,19 +8494,45 @@ function classLevelForClass(
   );
 }
 
-function parseAttackDamageRiderUnitFeatureProfile(
+export type BattleAttackDamageRiderSupport =
+  | "attackDamageRider"
+  | "unsupported"
+  | null;
+
+type AttackDamageRiderMechanicsProjection = {
+  readonly className: ClassName;
+  readonly dieSize: number;
+  readonly dice: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "attackDamageRider" }
+  >["diceByLevel"];
+};
+
+export function battleAttackDamageRiderSupportForUnit(
   unit: UnitRecord,
-  classLevels: readonly CharacterBattleClassLevel[],
-): Extract<
-  SupportedUnitFeatureProfile,
-  { readonly kind: "attackDamageRider" }
-> | null {
-  if (unit.kind !== "class_feature") {
+): BattleAttackDamageRiderSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "on_hit_trigger"
+  ) {
+    return null;
+  }
+  return attackDamageRiderMechanicsProjection(unit) === null
+    ? "unsupported"
+    : "attackDamageRider";
+}
+
+function attackDamageRiderMechanicsProjection(
+  unit: UnitRecord,
+): AttackDamageRiderMechanicsProjection | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "on_hit_trigger"
+  ) {
     return null;
   }
   const mechanics = unit.mechanics;
   if (
-    mechanics.family !== "on_hit_trigger" ||
     mechanics.optional !== true ||
     mechanics.usageLimit?.kind !== "once_per_turn" ||
     mechanics.trigger.kind !== "attack_roll_hit" ||
@@ -8520,10 +8546,25 @@ function parseAttackDamageRiderUnitFeatureProfile(
   ) {
     return null;
   }
-  const classLevel = findCharacterClassLevel(
-    classLevels,
-    mechanics.effect.dice.className,
-  );
+  return {
+    className: mechanics.effect.dice.className,
+    dieSize: mechanics.effect.dice.dieSize,
+    dice: mechanics.effect.dice.dice,
+  };
+}
+
+function parseAttackDamageRiderUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "attackDamageRider" }
+> | null {
+  const mechanics = attackDamageRiderMechanicsProjection(unit);
+  if (unit.kind !== "class_feature" || mechanics === null) {
+    return null;
+  }
+  const classLevel = findCharacterClassLevel(classLevels, mechanics.className);
   if (classLevel === undefined) {
     return null;
   }
@@ -8534,26 +8575,47 @@ function parseAttackDamageRiderUnitFeatureProfile(
     usageLimit: "oncePerTurn",
     weaponFilter: "finesseOrRanged",
     rollRequirement: "advantageOrAllyAdjacentWithoutDisadvantage",
-    className: mechanics.effect.dice.className,
+    className: mechanics.className,
     classLevel,
-    dieSize: mechanics.effect.dice.dieSize,
-    diceByLevel: mechanics.effect.dice.dice,
+    dieSize: mechanics.dieSize,
+    diceByLevel: mechanics.dice,
   };
 }
 
-function parseSaveDamageReplacementUnitFeatureProfile(
+export type BattleSaveDamageReplacementSupport =
+  | "saveDamageReplacement"
+  | "unsupported"
+  | null;
+
+type SaveDamageReplacementMechanicsProjection = {
+  readonly ability: "dex";
+};
+
+export function battleSaveDamageReplacementSupportForUnit(
   unit: UnitRecord,
-  classLevels: readonly CharacterBattleClassLevel[],
-): Extract<
-  SupportedUnitFeatureProfile,
-  { readonly kind: "saveDamageReplacement" }
-> | null {
-  if (unit.kind !== "class_feature") {
+): BattleSaveDamageReplacementSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "save_damage_replacement"
+  ) {
+    return null;
+  }
+  return saveDamageReplacementMechanicsProjection(unit) === null
+    ? "unsupported"
+    : "saveDamageReplacement";
+}
+
+function saveDamageReplacementMechanicsProjection(
+  unit: UnitRecord,
+): SaveDamageReplacementMechanicsProjection | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "save_damage_replacement"
+  ) {
     return null;
   }
   const mechanics = unit.mechanics;
   if (
-    mechanics.family !== "save_damage_replacement" ||
     mechanics.trigger.kind !== "saving_throw_damage" ||
     mechanics.trigger.ability !== "dex" ||
     mechanics.trigger.successDamage !== "half_damage" ||
@@ -8565,6 +8627,20 @@ function parseSaveDamageReplacementUnitFeatureProfile(
   ) {
     return null;
   }
+  return { ability: mechanics.trigger.ability };
+}
+
+function parseSaveDamageReplacementUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "saveDamageReplacement" }
+> | null {
+  const mechanics = saveDamageReplacementMechanicsProjection(unit);
+  if (unit.kind !== "class_feature" || mechanics === null) {
+    return null;
+  }
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
@@ -8572,7 +8648,7 @@ function parseSaveDamageReplacementUnitFeatureProfile(
   return {
     kind: "saveDamageReplacement",
     unit,
-    ability: mechanics.trigger.ability,
+    ability: mechanics.ability,
     requiredSuccessDamage: "half",
     onSuccess: "none",
     onFail: "half",
