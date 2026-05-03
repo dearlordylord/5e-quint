@@ -9,6 +9,7 @@ import {
   DieRollResult,
   Hp,
   abilityModifier,
+  attackBonus,
   movementFeet,
 } from "@dnd/shared/types";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import {
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   battleId,
   battleCombatantSide,
   characterId,
@@ -176,18 +178,14 @@ function createBattleRuntimeDriver() {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[2], [2]], [
-            "rogue_sneak_attack",
-          ]),
+          damageRollFillWithGroups(damage, [[2], [2]], ["rogue_sneak_attack"]),
         ]);
       },
       doFillDamageHighSneakAttack: () => {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[4], [4]], [
-            "rogue_sneak_attack",
-          ]),
+          damageRollFillWithGroups(damage, [[4], [4]], ["rogue_sneak_attack"]),
         ]);
       },
       doRejectStaleAfterResolved: () => {
@@ -212,10 +210,7 @@ function normalizeQuintState(raw: unknown): MbtProjection {
     skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
     skeletonDead: booleanField(state, "qSkeletonDead"),
     actionAvailable: booleanField(state, "qActionAvailable"),
-    sneakAttackUsedThisTurn: booleanField(
-      state,
-      "qSneakAttackUsedThisTurn",
-    ),
+    sneakAttackUsedThisTurn: booleanField(state, "qSneakAttackUsedThisTurn"),
     holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
     lastResult: mbtLastResult(state["qLastResult"]),
     lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
@@ -342,7 +337,12 @@ function rogueCreatureInit(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
-      characterUnitRefs: [],
+      characterUnitRefs: [
+        {
+          unitId: "rogue_sneak_attack",
+          supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
+        },
+      ],
       classLevels: [{ className: "rogue", level: 1 }],
       armorClass: {
         ...defaultArmorClassState(),
@@ -361,6 +361,7 @@ function rogueCreatureInit(input: {
         },
       },
       attack: daggerAttack(),
+      unarmedStrike: baseUnarmedStrike(),
       unitFeatures: [{ unit: unitLibrary.requireUnit("rogue_sneak_attack") }],
     },
   };
@@ -382,6 +383,23 @@ function daggerAttack(): NonNullable<
     weapon,
     ability: "str",
     abilityModifier: abilityModifier(3),
+  };
+}
+
+function baseUnarmedStrike(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["unarmedStrike"] {
+  return {
+    kind: "unarmedStrike",
+    effect: {
+      kind: "damage",
+      damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+    },
+    attackAbility: "str",
+    attackAbilityModifier: abilityModifier(3),
+    attackBonus: attackBonus(5),
+    damageAbilityModifier: abilityModifier(3),
   };
 }
 

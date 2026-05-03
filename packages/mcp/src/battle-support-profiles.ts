@@ -1,6 +1,8 @@
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  battleAttackDamageRiderSupportForUnit,
+  battleSaveDamageReplacementSupportForUnit,
   type BattleUnitRef,
   type BattleUnitSupportProfile,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -104,8 +106,7 @@ function battleSupportProfilesForUnit(
     );
   }
 
-  const attackDamageRiderSupport =
-    supportedAttackDamageRiderProfileForUnit(unit);
+  const attackDamageRiderSupport = battleAttackDamageRiderSupportForUnit(unit);
   if (attackDamageRiderSupport === "unsupported") {
     throw new Error(
       `Unsupported battle attack-damage rider Unit hook: ${unit.id}.`,
@@ -116,7 +117,7 @@ function battleSupportProfilesForUnit(
   }
 
   const saveDamageReplacementSupport =
-    supportedSaveDamageReplacementProfileForUnit(unit);
+    battleSaveDamageReplacementSupportForUnit(unit);
   if (saveDamageReplacementSupport === "unsupported") {
     throw new Error(
       `Unsupported battle save-damage replacement Unit hook: ${unit.id}.`,
@@ -152,61 +153,5 @@ function supportedCriticalRangeProfileForUnit(
       effect.weaponFilter === undefined,
   )
     ? "criticalRange19"
-    : "unsupported";
-}
-
-type AttackDamageRiderSupportProfile =
-  | "attackDamageRider"
-  | "unsupported"
-  | null;
-
-function supportedAttackDamageRiderProfileForUnit(
-  unit: UnitRecord,
-): AttackDamageRiderSupportProfile {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "on_hit_trigger"
-  ) {
-    return null;
-  }
-  const mechanics = unit.mechanics;
-  return mechanics.optional === true &&
-    mechanics.usageLimit?.kind === "once_per_turn" &&
-    mechanics.trigger.kind === "attack_roll_hit" &&
-    mechanics.trigger.weaponFilter === "finesse_or_ranged" &&
-    mechanics.trigger.rollRequirement ===
-      "advantage_or_ally_adjacent_without_disadvantage" &&
-    mechanics.effect.kind === "add_attack_damage_dice" &&
-    mechanics.effect.damageType === "same_as_attack" &&
-    mechanics.effect.dice.kind === "class_level_table" &&
-    mechanics.effect.dice.className === unit.className
-    ? "attackDamageRider"
-    : "unsupported";
-}
-
-type SaveDamageReplacementSupportProfile =
-  | "saveDamageReplacement"
-  | "unsupported"
-  | null;
-
-function supportedSaveDamageReplacementProfileForUnit(
-  unit: UnitRecord,
-): SaveDamageReplacementSupportProfile {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "save_damage_replacement"
-  ) {
-    return null;
-  }
-  const mechanics = unit.mechanics;
-  return mechanics.trigger.kind === "saving_throw_damage" &&
-    mechanics.trigger.ability === "dex" &&
-    mechanics.trigger.successDamage === "half_damage" &&
-    mechanics.replacement.onSuccess === "no_damage" &&
-    mechanics.replacement.onFail === "half_damage" &&
-    mechanics.suppressedBy.length === 1 &&
-    mechanics.suppressedBy[0]?.kind === "condition" &&
-    mechanics.suppressedBy[0].condition === "incapacitated"
-    ? "saveDamageReplacement"
     : "unsupported";
 }
