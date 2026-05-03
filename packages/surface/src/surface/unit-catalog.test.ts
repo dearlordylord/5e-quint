@@ -1,8 +1,13 @@
 import { existsSync } from "node:fs";
 
+import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { decodeUnitRecordSync } from "./schema.ts";
+import {
+  decodeUnitRecordEither,
+  decodeUnitRecordSync,
+  OnHitTriggerMechanicsSchema,
+} from "./schema.ts";
 import {
   buildUnitCatalog,
   defineSrdUnitCollection,
@@ -229,6 +234,238 @@ describe("SRD Unit catalog boundary", () => {
         },
       });
     }
+  });
+
+  test("rejects mismatched on-hit trigger and effect families", () => {
+    const decode = Schema.decodeUnknownEither(OnHitTriggerMechanicsSchema);
+    const addSneakAttackDice = {
+      kind: "add_attack_damage_dice",
+      damageType: "same_as_attack",
+      dice: {
+        kind: "class_level_table",
+        dieSize: 6,
+        dice: [{ atLevel: 1, count: 1 }],
+      },
+    };
+    const sapEffect = {
+      kind: "modify_roll_advantage",
+      mode: "disadvantage",
+      on: ["attack_roll"],
+      count: 1,
+      expiresOn: { kind: "target_uses_or_turn_start" },
+    };
+    const vexLikeEffect = {
+      kind: "modify_roll_advantage",
+      mode: "advantage",
+      on: ["attack_roll"],
+      count: 1,
+      expiresOn: { kind: "end_of_next_turn" },
+    };
+    const rerollWeaponDamageDice = {
+      kind: "reroll_weapon_damage_dice",
+      diceScope: "weapon_damage_dice",
+      choose: "either_roll",
+    };
+    const cleaveEffect = {
+      kind: "grant_weapon_attack",
+      attackKind: "melee_weapon_attack",
+      secondaryTarget: {
+        kind: "adjacent_to_primary",
+        constraint: "within_5ft_and_reach",
+      },
+      onHit: {
+        kind: "weapon_damage",
+        abilityModifier: "negative_only",
+      },
+    };
+
+    const invalidMechanics = [
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit" },
+        effect: addSneakAttackDice,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: {
+          kind: "hit_with_attack_roll",
+          weaponFilter: "finesse_or_ranged",
+          eligibility:
+            "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
+        },
+        effect: sapEffect,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: {
+          kind: "hit_with_attack_roll",
+          weaponFilter: "finesse_or_ranged",
+          eligibility:
+            "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
+        },
+        effect: rerollWeaponDamageDice,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit_melee_only" },
+        effect: rerollWeaponDamageDice,
+        usageLimit: { kind: "once_per_turn" },
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit" },
+        effect: cleaveEffect,
+        usageLimit: { kind: "once_per_turn" },
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit" },
+        effect: vexLikeEffect,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit_with_damage" },
+        effect: vexLikeEffect,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit_melee_only" },
+        effect: sapEffect,
+        usageLimit: { kind: "once_per_turn" },
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit_melee_only" },
+        effect: cleaveEffect,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit" },
+        effect: sapEffect,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: false,
+        trigger: { kind: "weapon_hit" },
+        effect: vexLikeEffect,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: {
+          kind: "hit_with_attack_roll",
+          weaponFilter: "finesse_or_ranged",
+          eligibility:
+            "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
+        },
+        effect: addSneakAttackDice,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: true,
+        trigger: { kind: "weapon_hit" },
+        effect: rerollWeaponDamageDice,
+        usageLimit: { kind: "once_per_round" },
+      },
+      {
+        family: "on_hit_trigger",
+        optional: false,
+        trigger: {
+          kind: "weapon_hit",
+          weaponFilter: "finesse_or_ranged",
+        },
+        effect: sapEffect,
+      },
+      {
+        family: "on_hit_trigger",
+        optional: false,
+        trigger: { kind: "weapon_hit" },
+        effect: sapEffect,
+        usageLimit: { kind: "once_per_turn" },
+      },
+    ];
+
+    for (const mechanics of invalidMechanics) {
+      expect(Either.isLeft(decode(mechanics))).toBe(true);
+    }
+
+    expect(
+      Either.isRight(
+        decode({
+          family: "on_hit_trigger",
+          optional: false,
+          trigger: { kind: "weapon_hit_with_damage" },
+          effect: vexLikeEffect,
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          category: "origin",
+          description: "Invalid class-level damage dice without a class owner.",
+          id: "invalid_class_level_damage_feat",
+          kind: "feat",
+          mechanics: {
+            family: "on_hit_trigger",
+            optional: true,
+            trigger: {
+              kind: "hit_with_attack_roll",
+              weaponFilter: "finesse_or_ranged",
+              eligibility:
+                "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
+            },
+            usageLimit: { kind: "once_per_turn" },
+            effect: addSneakAttackDice,
+          },
+          name: "Invalid Class-Level Damage Feat",
+          provenance: { kind: "srd-5.2.1", section: "test" },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          acquiredAtLevel: 1,
+          className: "rogue",
+          description: "Invalid redundant class ownership on damage dice.",
+          id: "invalid_sneak_attack",
+          kind: "class_feature",
+          mechanics: {
+            family: "on_hit_trigger",
+            optional: true,
+            trigger: {
+              kind: "hit_with_attack_roll",
+              weaponFilter: "finesse_or_ranged",
+              eligibility:
+                "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
+            },
+            usageLimit: { kind: "once_per_turn" },
+            effect: {
+              ...addSneakAttackDice,
+              dice: {
+                ...addSneakAttackDice.dice,
+                className: "fighter",
+              },
+            },
+          },
+          name: "Invalid Sneak Attack",
+          provenance: { kind: "srd-5.2.1", section: "test" },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("authors Orc traits with their SRD action costs and rest resets", () => {

@@ -6667,7 +6667,7 @@ describe("battle runtime", () => {
   });
 
   test("Sneak Attack is exposed as an optional attack damage rider on eligible hits", () => {
-    const state = startBattle({
+    const visibleState = startBattle({
       battleId: battleId("battle-sneak-attack-rider"),
       combatants: [
         characterSeed({
@@ -6680,6 +6680,17 @@ describe("battle runtime", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const rogue = visibleState.combatants.get(fighterId);
+    if (rogue === undefined) {
+      throw new Error("Expected Sneak Attack rogue combatant.");
+    }
+    const state: BattleState = {
+      ...visibleState,
+      combatants: new Map(visibleState.combatants).set(fighterId, {
+        ...rogue,
+        hidden: { discoveryDc: difficultyClass(16) },
+      }),
+    };
     const attackSubject = fighterAttackSubject("Dagger");
     const target = attackInitialTargetHole(state, attackSubject);
     const roll = attackRollHoleAfterTarget(state, target, attackSubject);
@@ -6725,6 +6736,66 @@ describe("battle runtime", () => {
     expect(
       hit.state.currentTurnResources.attackDamageRidersUsedThisTurn,
     ).toEqual([{ attackerId: fighterId, unitId: "rogue_sneak_attack" }]);
+  });
+
+  test("Sneak Attack accepts caller-supplied Advantage as attack-roll Advantage", () => {
+    const state = startBattle({
+      battleId: battleId("battle-sneak-attack-caller-advantage"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "rogue", level: 1 }],
+          unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
+          attack: testDaggerAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject = fighterAttackSubject("Dagger");
+    const target = attackInitialTargetHole(state, attackSubject);
+    const roll = attackRollHoleAfterTarget(state, target, attackSubject);
+    const damage = attackDamageHoleAfterHit(
+      state,
+      target,
+      roll,
+      { total: 15, naturalD20: 10, rollMode: "advantage" },
+      attackSubject,
+    );
+
+    expect(damage).toMatchObject({
+      attackDamageRiders: [
+        expect.objectContaining({ unitId: "rogue_sneak_attack" }),
+      ],
+    });
+  });
+
+  test("Sneak Attack is inactive before its acquired class level", () => {
+    const state = startBattle({
+      battleId: battleId("battle-sneak-attack-before-acquired-level"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "rogue", level: 1 }],
+          unitFeatures: [sneakAttackFeature({ acquiredAtLevel: 2 })],
+          characterUnitRefs: sneakAttackUnitRefs(),
+          attack: testDaggerAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject = fighterAttackSubject("Dagger");
+    const target = attackInitialTargetHole(state, attackSubject);
+    const roll = attackRollHoleAfterTarget(state, target, attackSubject);
+    const damage = attackDamageHoleAfterHit(
+      state,
+      target,
+      roll,
+      { total: 15, naturalD20: 10, rollMode: "advantage" },
+      attackSubject,
+    );
+
+    expect(damage).not.toHaveProperty("attackDamageRiders");
   });
 
   test("Sneak Attack rider is gated by weapon, roll context, and once-per-turn usage", () => {
@@ -6802,10 +6873,10 @@ describe("battle runtime", () => {
     expect(usedDamage).not.toHaveProperty("attackDamageRiders");
   });
 
-  test("Sneak Attack can use the adjacent-ally eligibility branch", () => {
+  test("Sneak Attack can use the ally-within-5ft eligibility branch", () => {
     const allyId = combatantId("sneak-ally");
     const state = startBattle({
-      battleId: battleId("battle-sneak-attack-adjacent-ally"),
+      battleId: battleId("battle-sneak-attack-ally-within-5ft"),
       combatants: [
         characterSeed({
           initiative: 20,
@@ -6847,7 +6918,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("Sneak Attack adjacent-ally branch uses resolved roll mode after Advantage and Disadvantage cancel", () => {
+  test("Sneak Attack ally-within-5ft branch uses resolved roll mode after Advantage and Disadvantage cancel", () => {
     const allyId = combatantId("sneak-cancel-ally");
     const base = startBattle({
       battleId: battleId("battle-sneak-attack-canceled-roll-mode"),
@@ -6957,6 +7028,7 @@ describe("battle runtime", () => {
   });
 
   test("Sneak Attack damage dice are doubled on critical hits", () => {
+    const allyId = combatantId("critical-ally");
     const state = startBattle({
       battleId: battleId("battle-sneak-attack-critical"),
       combatants: [
@@ -6967,7 +7039,18 @@ describe("battle runtime", () => {
           characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
         }),
+        characterSeed({
+          combatantId: allyId,
+          displayName: "Critical Ally",
+          initiative: 10,
+          attack: null,
+        }),
         statBlockCreatureInit({ initiative: 10 }),
+      ],
+      combatantDistances: [
+        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(5) },
+        { combatantA: fighterId, combatantB: allyId, feet: movementFeet(5) },
+        { combatantA: allyId, combatantB: goblinId, feet: movementFeet(5) },
       ],
     });
     const subject = fighterAttackSubject("Dagger");
@@ -6977,7 +7060,7 @@ describe("battle runtime", () => {
       state,
       target,
       roll,
-      { total: 20, naturalD20: 20, rollMode: "advantage" },
+      { total: 20, naturalD20: 20 },
       subject,
     );
 
@@ -6990,7 +7073,6 @@ describe("battle runtime", () => {
           attackRollFill(roll, {
             total: 20,
             naturalD20: 20,
-            rollMode: "advantage",
           }),
           damageRollFillWithGroups(
             damage,
@@ -7013,6 +7095,7 @@ describe("battle runtime", () => {
 
   test("Sneak Attack once-per-turn usage is scoped to the attacking creature", () => {
     const secondRogueId = combatantId("second-rogue");
+    const allyId = combatantId("second-rogue-ally");
     const state = startBattle({
       battleId: battleId("battle-sneak-attack-two-rogues"),
       combatants: [
@@ -7025,7 +7108,26 @@ describe("battle runtime", () => {
           characterUnitRefs: sneakAttackUnitRefs(),
           attack: testDaggerAttack(),
         }),
+        characterSeed({
+          combatantId: allyId,
+          displayName: "Second Rogue Ally",
+          initiative: 10,
+          attack: null,
+        }),
         statBlockCreatureInit({ initiative: 10 }),
+      ],
+      combatantDistances: [
+        {
+          combatantA: secondRogueId,
+          combatantB: goblinId,
+          feet: movementFeet(5),
+        },
+        {
+          combatantA: secondRogueId,
+          combatantB: allyId,
+          feet: movementFeet(5),
+        },
+        { combatantA: allyId, combatantB: goblinId, feet: movementFeet(5) },
       ],
     });
     const secondRogueSubject = {
@@ -7051,13 +7153,15 @@ describe("battle runtime", () => {
       usedByDifferentRogue,
       target,
       secondRogueSubject,
+      goblinId,
     );
     const damage = attackDamageHoleAfterHit(
       usedByDifferentRogue,
       target,
       roll,
-      { total: 15, naturalD20: 10, rollMode: "advantage" },
+      { total: 15, naturalD20: 10 },
       secondRogueSubject,
+      goblinId,
     );
 
     expect(damage).toMatchObject({
@@ -8759,7 +8863,7 @@ function resolveSneakAttackParityFixture(): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
 > {
-  const state = startBattle({
+  const visibleState = startBattle({
     battleId: battleId("battle-qnt-parity-sneak-attack"),
     combatants: [
       characterSeed({
@@ -8772,6 +8876,17 @@ function resolveSneakAttackParityFixture(): Extract<
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
+  const rogue = visibleState.combatants.get(fighterId);
+  if (rogue === undefined) {
+    throw new Error("Expected Sneak Attack parity rogue combatant.");
+  }
+  const state: BattleState = {
+    ...visibleState,
+    combatants: new Map(visibleState.combatants).set(fighterId, {
+      ...rogue,
+      hidden: { discoveryDc: difficultyClass(16) },
+    }),
+  };
   const subject = fighterAttackSubject("Dagger");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject);
@@ -9024,7 +9139,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("77 passing");
+  expect(quintOutput).toContain("76 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -9120,11 +9235,7 @@ function renderBattleRuntimeParityModule(input: {
   }
 
   run parity_sneak_attack_rider_matches_runtime = {
-    // Sneak Attack appears here only as the SRD Rogue Unit fixture for the
-    // generic attack-damage-rider projection in battle-runtime.qnt. The fixed
-    // Fighter actor name is the spec's player-character slot, not the Fighter
-    // class, and this parity case must not be read as "Fighter Sneak Attack."
-    assert(resolveAttackWithOptionalAttackDamageRider(withSupportedAttackDamageRider(initialState), 15, 10, 4, 6, true, true, true, false, false, true) == ${renderQntStateProjection(input.sneakAttack, { attackDamageRider: { usedThisTurn: true } })})
+    assert(resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, true, false, false, true) == ${renderQntStateProjection(input.sneakAttack, { fighterSneakAttackSupported: true, fighterSneakAttackUsedThisTurn: true })})
   }
 }
 `;
@@ -9164,9 +9275,8 @@ function renderQntCharacterProjection(
 function renderQntStateProjection(
   input: BattleRuntimeParityProjection,
   overrides: {
-    readonly attackDamageRider?: {
-      readonly usedThisTurn: boolean;
-    };
+    readonly fighterSneakAttackSupported?: boolean;
+    readonly fighterSneakAttackUsedThisTurn?: boolean;
   } = {},
 ): string {
   return `{
@@ -9240,32 +9350,21 @@ function renderQntStateProjection(
       interruptStack: [],
       fighterGoblinDistance: 5,
       fighterHidePrerequisite: false,
-      statBlockRechargeAvailable: true,
-      statBlockLegendaryUsesRemaining: 2,
+      goblinRechargeAvailable: true,
+      goblinLegendaryUsesRemaining: 2,
       lastTurnActor: ${input.lastTurnActor},
       legendaryActionWindowConsumed: false,
-      weaponOrUnarmedStrikeCriticalRange: DefaultCriticalRange,
-      attackDamageRider: ${renderQntAttackDamageRiderProjection(overrides.attackDamageRider)},
+      fighterCriticalRange: DefaultCriticalRange,
+      fighterSneakAttackSupported: ${overrides.fighterSneakAttackSupported ?? false},
+      fighterSneakAttackUsedThisTurn: ${overrides.fighterSneakAttackUsedThisTurn ?? false},
     }`;
-}
-
-function renderQntAttackDamageRiderProjection(
-  override:
-    | {
-        readonly usedThisTurn: boolean;
-      }
-    | undefined,
-): string {
-  return override === undefined
-    ? "NoSupportedAttackDamageRider"
-    : `SupportedAttackDamageRider({ usedThisTurn: ${override.usedThisTurn} })`;
 }
 
 function renderQntActiveOngoingFeatureOccurrences(
   input: BattleRuntimeParityProjection,
 ): string {
   return `Map(
-          RAGE_SOURCE_KEY -> ${
+          FIGHTER_RAGE_SOURCE_KEY -> ${
             input.rageActive
               ? `ActiveRoundExtendedOngoingFeature({
             expiresAtEndOfFighterTurnRound: ${input.round + 1},
@@ -9273,7 +9372,7 @@ function renderQntActiveOngoingFeatureOccurrences(
           })`
               : "NoActiveOngoingFeatureOccurrence"
           },
-          RECKLESS_ATTACK_SOURCE_KEY -> ${
+          FIGHTER_RECKLESS_ATTACK_SOURCE_KEY -> ${
             input.recklessActive
               ? "ActiveStartOfTurnOngoingFeature"
               : "NoActiveOngoingFeatureOccurrence"
@@ -10461,13 +10560,15 @@ function recklessAttackFeature(): NonNullable<
   return { unit: barbarianRecklessAttackUnit() };
 }
 
-function sneakAttackFeature(): NonNullable<
+function sneakAttackFeature(input?: {
+  readonly acquiredAtLevel?: number;
+}): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
-  return { unit: rogueSneakAttackUnit() };
+  return { unit: rogueSneakAttackUnit(input) };
 }
 
 function evasionFeature(input?: {
@@ -10481,16 +10582,15 @@ function evasionFeature(input?: {
   return { unit: rogueEvasionUnit(input) };
 }
 
-function rogueSneakAttackUnit(): Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
-> {
+function rogueSneakAttackUnit(input?: {
+  readonly acquiredAtLevel?: number;
+}): Extract<UnitRecord, { readonly kind: "class_feature" }> {
   return {
     id: "rogue_sneak_attack",
     kind: "class_feature",
     name: "Sneak Attack",
     className: "rogue",
-    acquiredAtLevel: 1,
+    acquiredAtLevel: input?.acquiredAtLevel ?? 1,
     description:
       "Once per turn, deal extra damage to one creature hit with an eligible attack roll.",
     provenance: {
@@ -10500,9 +10600,10 @@ function rogueSneakAttackUnit(): Extract<
     mechanics: {
       family: "on_hit_trigger",
       trigger: {
-        kind: "attack_roll_hit",
+        kind: "hit_with_attack_roll",
         weaponFilter: "finesse_or_ranged",
-        rollRequirement: "advantage_or_ally_adjacent_without_disadvantage",
+        eligibility:
+          "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
       },
       optional: true,
       usageLimit: { kind: "once_per_turn" },
@@ -10510,7 +10611,6 @@ function rogueSneakAttackUnit(): Extract<
         kind: "add_attack_damage_dice",
         dice: {
           kind: "class_level_table",
-          className: "rogue",
           dieSize: 6,
           dice: [
             { atLevel: 1, count: 1 },

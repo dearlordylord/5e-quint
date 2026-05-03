@@ -101,30 +101,14 @@ module battleRuntime {
   // proof and restore source material; it is not the place to add new
   // @dnd/battle-runtime behavior.
 
-  // Representative two-combatant fixture actors.
-  //
-  // This package-local QNT still uses Fighter/Goblin as stable actor names so
-  // compact proofs and parity fixtures can stay readable. Treat those names as
-  // player-character slot and stat-block slot identities, not as authorization
-  // to attach authored class or monster content directly to the actor names.
-  // Generalize this to role-based actors before adding broader battle
-  // composition width, or document the fixed-actor shortcut as an intentional
-  // architecture sidestep for promoted spec slices.
   type Actor = Fighter | Goblin
   type CombatantSide = PartySide | OppositionSide
 
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
 
-  // SRD spell fixture identities. These are allowed only as promoted vertical
-  // slices until Surface spell projection replaces direct spell identities here.
-  // New spell behavior should prefer Surface-authored projections over adding
-  // more variants to this union.
   type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash
 
-  // SRD effect fixture identities. Mage Armor and Ray of Frost are fixture
-  // names, not a general active-effect architecture. Generalize to Surface
-  // active-effect projections before widening this set materially.
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta
 
   type CreatureSize = Tiny | Small | Medium | Large | Huge | Gargantuan
@@ -145,11 +129,7 @@ module battleRuntime {
   type ReactionTrigger = AttackHit | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
 
   type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
-  type WeaponOrUnarmedStrikeCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
-
-  type AttackDamageRiderProjection =
-    | NoSupportedAttackDamageRider
-    | SupportedAttackDamageRider({ usedThisTurn: bool })
+  type FighterCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
 
   // Continuations carry the replay lane interrupted by a Reaction window. This
   // package-local QNT keeps representative deterministic fills for those lanes;
@@ -195,12 +175,12 @@ module battleRuntime {
 
   type ActiveOngoingFeatureOccurrences = int -> ActiveOngoingFeatureOccurrence
 
-  pure val RAGE_SOURCE_KEY = 1
-  pure val RECKLESS_ATTACK_SOURCE_KEY = 2
+  pure val FIGHTER_RAGE_SOURCE_KEY = 1
+  pure val FIGHTER_RECKLESS_ATTACK_SOURCE_KEY = 2
   pure val NO_ACTIVE_ONGOING_FEATURE_OCCURRENCES: ActiveOngoingFeatureOccurrences =
     Map(
-      RAGE_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
-      RECKLESS_ATTACK_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
+      FIGHTER_RAGE_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
+      FIGHTER_RECKLESS_ATTACK_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
     )
 
   type Combatant = {
@@ -238,9 +218,6 @@ module battleRuntime {
     targetDragCostExempt: bool,
   }
 
-  // Two-actor fixture shape. FighterGrapplesGoblin currently means "the
-  // player-character slot grapples the stat-block slot." Generalize before
-  // supporting arbitrary grappler/target pairs.
   type GrappleState =
     | NoGrapple
     | FighterGrapplesGoblin(GrappleLink)
@@ -263,35 +240,18 @@ module battleRuntime {
     lightWeaponAttackMade: bool,
     fighterReadiedSpellHeld: bool,
     fighterReadiedMovementHeld: bool,
-    // Two-actor fixture fields. These keep the promoted spec compact for the
-    // current player-character/stat-block vertical, but should become
-    // role- or CombatantId-keyed runtime projection state before this spec
-    // models arbitrary battle composition.
     fighterHelpAttackGoblinForGoblin: bool,
     grapple: GrappleState,
     interruptStack: List[PendingReactionFrame],
     fighterGoblinDistance: int,
     fighterHidePrerequisite: bool,
-    statBlockRechargeAvailable: bool,
-    statBlockLegendaryUsesRemaining: int,
+    goblinRechargeAvailable: bool,
+    goblinLegendaryUsesRemaining: int,
     lastTurnActor: LastTurnActor,
     legendaryActionWindowConsumed: bool,
-    weaponOrUnarmedStrikeCriticalRange: WeaponOrUnarmedStrikeCriticalRange,
-    // Surface projection, not Fighter class content.
-    //
-    // This package-local QNT spec uses the fixed Actor name `Fighter` for the
-    // player-character slot in its two-combatant model. That actor can be
-    // initialized from different authored Surface units in the TypeScript
-    // runtime. These fields intentionally model only the generic runtime
-    // projection "this actor has one supported optional attack-damage rider,
-    // and has/has not used it this turn."
-    //
-    // The current SRD fixture for this shape is Rogue Sneak Attack
-    // (Classes/Rogue.md lines 63-69). Sneak Attack is not a Fighter feature.
-    // Do not rename these fields back to `fighterSneakAttack*`, and do not add
-    // class-feature identities to BattleState when a Surface Unit projection can
-    // carry the authored content.
-    attackDamageRider: AttackDamageRiderProjection,
+    fighterCriticalRange: FighterCriticalRange,
+    fighterSneakAttackSupported: bool,
+    fighterSneakAttackUsedThisTurn: bool,
   }
 
   type ActionSurgeResult = {
@@ -378,12 +338,13 @@ module battleRuntime {
     interruptStack: [],
     fighterGoblinDistance: 5,
     fighterHidePrerequisite: false,
-    statBlockRechargeAvailable: true,
-    statBlockLegendaryUsesRemaining: 2,
+    goblinRechargeAvailable: true,
+    goblinLegendaryUsesRemaining: 2,
     lastTurnActor: NoTurnEnded,
     legendaryActionWindowConsumed: false,
-    weaponOrUnarmedStrikeCriticalRange: DefaultCriticalRange,
-    attackDamageRider: NoSupportedAttackDamageRider,
+    fighterCriticalRange: DefaultCriticalRange,
+    fighterSneakAttackSupported: false,
+    fighterSneakAttackUsedThisTurn: false,
   }
 
   // The battle runtime receives Initiative counts and the caller-resolved
@@ -404,26 +365,26 @@ module battleRuntime {
       (currentActor(state) == Goblin and state.goblin.hp > 0)
     )
 
-  pure def rageOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
-    state.fighter.activeOngoingFeatureOccurrences.get(RAGE_SOURCE_KEY)
+  pure def fighterRageOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
+    state.fighter.activeOngoingFeatureOccurrences.get(FIGHTER_RAGE_SOURCE_KEY)
 
-  pure def recklessAttackOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
-    state.fighter.activeOngoingFeatureOccurrences.get(RECKLESS_ATTACK_SOURCE_KEY)
+  pure def fighterRecklessAttackOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
+    state.fighter.activeOngoingFeatureOccurrences.get(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY)
 
-  pure def hasRage(state: BattleState): bool =
-    rageOccurrence(state) != NoActiveOngoingFeatureOccurrence
+  pure def fighterHasRage(state: BattleState): bool =
+    fighterRageOccurrence(state) != NoActiveOngoingFeatureOccurrence
 
-  pure def hasRoundExtendedRage(state: BattleState): bool =
-    match rageOccurrence(state) {
+  pure def fighterHasRoundExtendedRage(state: BattleState): bool =
+    match fighterRageOccurrence(state) {
       | ActiveRoundExtendedOngoingFeature(_) => true
       | _ => false
     }
 
-  pure def hasRecklessAttack(state: BattleState): bool =
-    recklessAttackOccurrence(state) == ActiveStartOfTurnOngoingFeature
+  pure def fighterHasRecklessAttack(state: BattleState): bool =
+    fighterRecklessAttackOccurrence(state) == ActiveStartOfTurnOngoingFeature
 
-  pure def rageResistances(state: BattleState): Set[DamageType] =
-    if (hasRage(state))
+  pure def fighterRageResistances(state: BattleState): Set[DamageType] =
+    if (fighterHasRage(state))
       Set(Bludgeoning, Piercing, Slashing)
     else
       Set()
@@ -434,7 +395,7 @@ module battleRuntime {
       fighter: {
         ...state.fighter,
         activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-          .set(RAGE_SOURCE_KEY, NoActiveOngoingFeatureOccurrence),
+          .set(FIGHTER_RAGE_SOURCE_KEY, NoActiveOngoingFeatureOccurrence),
       },
     }
 
@@ -444,7 +405,7 @@ module battleRuntime {
       fighter: {
         ...state.fighter,
         activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-          .set(RECKLESS_ATTACK_SOURCE_KEY, NoActiveOngoingFeatureOccurrence),
+          .set(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY, NoActiveOngoingFeatureOccurrence),
       },
     }
 
@@ -452,7 +413,7 @@ module battleRuntime {
     if (currentActor(state) != Fighter)
       state
     else {
-      val afterRoundExtended = match rageOccurrence(state) {
+      val afterRoundExtended = match fighterRageOccurrence(state) {
         | ActiveRoundExtendedOngoingFeature(data) =>
             if (data.expiresAtEndOfFighterTurnRound == state.initiative.round)
               removeFighterBonusActionOngoingFeature(state)
@@ -460,7 +421,7 @@ module battleRuntime {
               state
         | _ => state
       }
-      match rageOccurrence(afterRoundExtended) {
+      match fighterRageOccurrence(afterRoundExtended) {
         | ActiveFixedDurationOngoingFeature(data) =>
             if (data.expiresAtEndOfFighterTurnRound == state.initiative.round)
               removeFighterBonusActionOngoingFeature(afterRoundExtended)
@@ -485,32 +446,32 @@ module battleRuntime {
         fighter: {
         ...state.fighter,
           activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-            .set(RAGE_SOURCE_KEY, if (state.fighter.unconscious)
+            .set(FIGHTER_RAGE_SOURCE_KEY, if (state.fighter.unconscious)
               NoActiveOngoingFeatureOccurrence
             else
-              match rageOccurrence(state) {
+              match fighterRageOccurrence(state) {
                 | ActiveRoundExtendedOngoingFeature(_) => NoActiveOngoingFeatureOccurrence
-                | _ => rageOccurrence(state)
+                | _ => fighterRageOccurrence(state)
               }),
         },
       }
     else
       state
 
-  pure def rageRoundExtendedOngoingFeatureMaxExpiresRound(state: BattleState): int =
-    match rageOccurrence(state) {
+  pure def fighterRoundExtendedOngoingFeatureMaxExpiresRound(state: BattleState): int =
+    match fighterRageOccurrence(state) {
       | ActiveRoundExtendedOngoingFeature(data) => data.maxExpiresRound
       | _ => state.initiative.round + 100
     }
 
   pure def setFighterRoundExtendedOngoingFeatureExpiry(state: BattleState, round: int): BattleState = {
-    val maxRound = rageRoundExtendedOngoingFeatureMaxExpiresRound(state)
+    val maxRound = fighterRoundExtendedOngoingFeatureMaxExpiresRound(state)
     {
       ...state,
       fighter: {
         ...state.fighter,
         activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-          .set(RAGE_SOURCE_KEY, ActiveRoundExtendedOngoingFeature({
+          .set(FIGHTER_RAGE_SOURCE_KEY, ActiveRoundExtendedOngoingFeature({
             expiresAtEndOfFighterTurnRound: if (round > maxRound) maxRound else round,
             maxExpiresRound: maxRound,
           })),
@@ -531,7 +492,7 @@ module battleRuntime {
     })) 13 + dexMod else baseAc
 
   pure def openHoles(state: BattleState): Set[Hole] =
-    if (currentActor(state) == Goblin and not(state.statBlockRechargeAvailable))
+    if (currentActor(state) == Goblin and not(state.goblinRechargeAvailable))
       Set(StatBlockRechargeRoll)
     else if (currentActorCanAttack(state))
       Set(TargetChoice)
@@ -651,35 +612,32 @@ module battleRuntime {
       fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) false else featureAdvanced.fighterHelpAttackGoblinForGoblin,
       fighter: if (nextActor == Fighter) { ...featureAdvanced.fighter, reactionAvailable: true, movementSpent: 0, dodging: false } else featureAdvanced.fighter,
       goblin: if (nextActor == Goblin) { ...featureAdvanced.goblin, reactionAvailable: true, movementSpent: 0, dodging: false } else featureAdvanced.goblin,
-      statBlockLegendaryUsesRemaining: if (nextActor == Goblin) 2 else featureAdvanced.statBlockLegendaryUsesRemaining,
+      goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else featureAdvanced.goblinLegendaryUsesRemaining,
       lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
-      attackDamageRider: match featureAdvanced.attackDamageRider {
-        | NoSupportedAttackDamageRider => NoSupportedAttackDamageRider
-        | SupportedAttackDamageRider(_) => SupportedAttackDamageRider({ usedThisTurn: false })
-      },
+      fighterSneakAttackUsedThisTurn: false,
     }
   }
 
-  pure def endTurnWithStatBlockRechargeRoll(state: BattleState, roll: int): BattleState = {
+  pure def endTurnWithGoblinRechargeRoll(state: BattleState, roll: int): BattleState = {
     val advanced = endTurn(state)
-    if (currentActor(advanced) == Goblin and not(advanced.statBlockRechargeAvailable))
-      { ...advanced, statBlockRechargeAvailable: roll >= 5 }
+    if (currentActor(advanced) == Goblin and not(advanced.goblinRechargeAvailable))
+      { ...advanced, goblinRechargeAvailable: roll >= 5 }
     else
       advanced
   }
 
-  pure def statBlockLegendaryActionWindowOpen(state: BattleState): bool =
+  pure def goblinLegendaryActionWindowOpen(state: BattleState): bool =
     state.lastTurnActor == LastTurnFighter and currentActor(state) != Goblin and not(state.legendaryActionWindowConsumed)
 
-  pure def statBlockCanUseLegendaryAction(state: BattleState): bool =
+  pure def goblinCanUseLegendaryAction(state: BattleState): bool =
     state.goblin.hp > 0 and
-    statBlockLegendaryActionWindowOpen(state) and
-    state.statBlockLegendaryUsesRemaining > 0
+    goblinLegendaryActionWindowOpen(state) and
+    state.goblinLegendaryUsesRemaining > 0
 
-  pure def useStatBlockLegendaryAction(state: BattleState): BattleState =
-    if (statBlockCanUseLegendaryAction(state))
-      { ...state, statBlockLegendaryUsesRemaining: state.statBlockLegendaryUsesRemaining - 1, legendaryActionWindowConsumed: true }
+  pure def useGoblinLegendaryAction(state: BattleState): BattleState =
+    if (goblinCanUseLegendaryAction(state))
+      { ...state, goblinLegendaryUsesRemaining: state.goblinLegendaryUsesRemaining - 1, legendaryActionWindowConsumed: true }
     else
       state
 
@@ -780,24 +738,20 @@ module battleRuntime {
   pure def attackIsCritical(naturalD20: int, criticalThreshold: int): bool =
     naturalD20 >= criticalThreshold
 
-  pure def weaponOrUnarmedStrikeCriticalThreshold(state: BattleState): int =
-    match state.weaponOrUnarmedStrikeCriticalRange {
+  pure def fighterCriticalThreshold(state: BattleState): int =
+    match state.fighterCriticalRange {
       | DefaultCriticalRange => 20
       | ImprovedCriticalRange19 => 19
     }
 
   pure def attackCriticalThreshold(state: BattleState, attacker: Actor): int =
-    if (attacker == Fighter) weaponOrUnarmedStrikeCriticalThreshold(state) else 20
+    if (attacker == Fighter) fighterCriticalThreshold(state) else 20
 
-  pure def withWeaponOrUnarmedStrikeImprovedCriticalRange19(state: BattleState): BattleState =
-    { ...state, weaponOrUnarmedStrikeCriticalRange: ImprovedCriticalRange19 }
+  pure def withFighterImprovedCriticalRange19(state: BattleState): BattleState =
+    { ...state, fighterCriticalRange: ImprovedCriticalRange19 }
 
-  // Test/spec fixture hook for the representative Surface attack-damage-rider
-  // projection above. The promoted runtime parity test feeds this from the SRD
-  // Rogue Sneak Attack Unit; the helper name stays generic so the spec does not
-  // imply a non-RAW "Fighter Sneak Attack."
-  pure def withSupportedAttackDamageRider(state: BattleState): BattleState =
-    { ...state, attackDamageRider: SupportedAttackDamageRider({ usedThisTurn: false }) }
+  pure def withFighterSneakAttack(state: BattleState): BattleState =
+    { ...state, fighterSneakAttackSupported: true }
 
   pure def withGoblinHp(state: BattleState, hp: int, tempHp: int): BattleState =
     { ...state, goblin: { ...state.goblin, hp: hp, tempHp: tempHp } }
@@ -826,45 +780,30 @@ module battleRuntime {
       state
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
-      val rageDamage = if (hasRage(revealed)) rageDamageBonus(barbarianLevel) else 0
-      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedStrikeCriticalThreshold(state))))
+      val rageDamage = if (fighterHasRage(revealed)) fighterRageDamageBonus(barbarianLevel) else 0
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
       else
-        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, weaponOrUnarmedStrikeCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
+        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
     }
 
-  // Generic projection of an optional once-per-turn Finesse/Ranged on-hit
-  // attack-damage rider. Rogue Sneak Attack is the SRD-backed fixture that
-  // exercises this shape today; the authored identity remains in Surface.
-  pure def attackDamageRiderEligible(
+  pure def fighterSneakAttackEligible(
     state: BattleState,
-    attackUsesFinesseOrRangedWeapon: bool,
     rollHasAdvantage: bool,
     allyAdjacent: bool,
     rollHasDisadvantage: bool,
   ): bool =
-    match state.attackDamageRider {
-      | NoSupportedAttackDamageRider => false
-      | SupportedAttackDamageRider(data) =>
-          attackUsesFinesseOrRangedWeapon and
-          not(data.usedThisTurn) and
-          (rollHasAdvantage or (allyAdjacent and not(rollHasDisadvantage)))
-    }
+    state.fighterSneakAttackSupported and
+    not(state.fighterSneakAttackUsedThisTurn) and
+    (rollHasAdvantage or (allyAdjacent and not(rollHasDisadvantage)))
 
-  pure def attackDamageRiderUsedThisTurn(state: BattleState): bool =
-    match state.attackDamageRider {
-      | NoSupportedAttackDamageRider => false
-      | SupportedAttackDamageRider(data) => data.usedThisTurn
-    }
-
-  pure def resolveAttackWithOptionalAttackDamageRider(
+  pure def resolveAttackWithOptionalSneakAttack(
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
     weaponDamageRoll: int,
-    attackDamageRiderDamageRoll: int,
-    selectedAttackDamageRider: bool,
-    attackUsesFinesseOrRangedWeapon: bool,
+    sneakAttackDamageRoll: int,
+    selectedSneakAttack: bool,
     rollHasAdvantage: bool,
     allyAdjacent: bool,
     rollHasDisadvantage: bool,
@@ -874,23 +813,19 @@ module battleRuntime {
       state
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
-      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedStrikeCriticalThreshold(state))))
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
       else {
-        val riderSelectedAndEligible =
-          selectedAttackDamageRider and
-          attackDamageRiderEligible(revealed, attackUsesFinesseOrRangedWeapon, rollHasAdvantage, allyAdjacent, rollHasDisadvantage)
-        val damage = weaponDamageRoll + 3 + (if (riderSelectedAndEligible) attackDamageRiderDamageRoll else 0)
+        val sneakSelectedAndEligible =
+          selectedSneakAttack and
+          fighterSneakAttackEligible(revealed, rollHasAdvantage, allyAdjacent, rollHasDisadvantage)
+        val damage = weaponDamageRoll + 3 + (if (sneakSelectedAndEligible) sneakAttackDamageRoll else 0)
         {
           ...revealed,
-          goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, weaponOrUnarmedStrikeCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded),
+          goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded),
           actionAvailable: false,
           lightWeaponAttackMade: true,
-          attackDamageRider: match revealed.attackDamageRider {
-            | NoSupportedAttackDamageRider => NoSupportedAttackDamageRider
-            | SupportedAttackDamageRider(data) =>
-                SupportedAttackDamageRider({ usedThisTurn: riderSelectedAndEligible or data.usedThisTurn })
-          },
+          fighterSneakAttackUsedThisTurn: sneakSelectedAndEligible or revealed.fighterSneakAttackUsedThisTurn,
         }
       }
     }
@@ -916,7 +851,7 @@ module battleRuntime {
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
       { ...state, actionAvailable: false }
     else {
-      val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, rageResistances(state), Set(), Set())
+      val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
     }
 
@@ -932,7 +867,7 @@ module battleRuntime {
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
       state
     else {
-      val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, rageResistances(state), Set(), Set())
+      val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded) }
     }
 
@@ -943,7 +878,7 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or hasRage(state))
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
@@ -1000,13 +935,13 @@ module battleRuntime {
     { ...target, activeEffects: target.activeEffects.exclude(Set(MageArmor)) }
 
   pure def readySpell(state: BattleState): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or hasRage(state) or state.fighterReadiedSpellHeld)
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or state.fighterReadiedSpellHeld)
       state
     else
       { ...state, fighter: { ...state.fighter, concentrating: true }, actionAvailable: false, fighterReadiedSpellHeld: true }
 
   pure def releaseReadiedSpell(state: BattleState): BattleState =
-    if (state.fighterReadiedSpellHeld and not(hasRage(state)))
+    if (state.fighterReadiedSpellHeld and not(fighterHasRage(state)))
       { ...state, fighter: { ...state.fighter, concentrating: false }, fighterReadiedSpellHeld: false }
     else
       state
@@ -1132,8 +1067,8 @@ module battleRuntime {
 
   pure def offHandAttackFighter(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int): BattleState =
     if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
-      if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), weaponOrUnarmedStrikeCriticalThreshold(state)))
-        { ...state, goblin: applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, weaponOrUnarmedStrikeCriticalThreshold(state))) 2 else 1, false), bonusActionAvailable: false }
+      if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state)))
+        { ...state, goblin: applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false), bonusActionAvailable: false }
       else
         { ...state, bonusActionAvailable: false }
     else
@@ -1270,7 +1205,7 @@ module battleRuntime {
       not(state.fighter.unconscious) and
       not(state.fighter.incapacitated) and
       not(state.fighter.wearingHeavyArmor) and
-      not(hasRage(state))
+      not(fighterHasRage(state))
     )
       {
         state: {
@@ -1291,7 +1226,7 @@ module battleRuntime {
       not(state.fighter.unconscious) and
       not(state.fighter.incapacitated) and
       not(state.fighter.wearingHeavyArmor) and
-      not(hasRage(state))
+      not(fighterHasRage(state))
     )
       {
         state: {
@@ -1299,7 +1234,7 @@ module battleRuntime {
           fighter: {
             ...breakConcentration(state.fighter),
             activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-              .set(RAGE_SOURCE_KEY, ActiveFixedDurationOngoingFeature({
+              .set(FIGHTER_RAGE_SOURCE_KEY, ActiveFixedDurationOngoingFeature({
                 expiresAtEndOfFighterTurnRound: state.initiative.round + 100,
               })),
           },
@@ -1315,8 +1250,8 @@ module battleRuntime {
     if (
       currentActor(state) == Fighter and
       state.bonusActionAvailable and
-      hasRage(state) and
-      hasRoundExtendedRage(state) and
+      fighterHasRage(state) and
+      fighterHasRoundExtendedRage(state) and
       not(state.fighter.unconscious) and
       not(state.fighter.incapacitated) and
       not(state.fighter.wearingHeavyArmor)
@@ -1341,7 +1276,7 @@ module battleRuntime {
     actorSide(attacker) != actorSide(target)
 
   pure def extendRageWithAttackRoll(state: BattleState, target: Actor): BattleState =
-    if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and hasRoundExtendedRage(state))
+    if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))
       setFighterRoundExtendedOngoingFeatureExpiry(state, state.initiative.round + 1)
     else
       state
@@ -1350,7 +1285,7 @@ module battleRuntime {
     { ...extendRageWithAttackRoll(state, Goblin), attackRollMadeThisTurn: true }
 
   pure def extendRageWithEnemySavingThrow(state: BattleState, target: Actor): BattleState =
-    if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and hasRoundExtendedRage(state))
+    if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))
       setFighterRoundExtendedOngoingFeatureExpiry(state, state.initiative.round + 1)
     else
       state
@@ -1359,21 +1294,21 @@ module battleRuntime {
     if (
       currentActor(state) == Fighter and
       not(state.attackRollMadeThisTurn) and
-      not(hasRecklessAttack(state))
+      not(fighterHasRecklessAttack(state))
     )
       {
         ...state,
         fighter: {
           ...state.fighter,
           activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-            .set(RECKLESS_ATTACK_SOURCE_KEY, ActiveStartOfTurnOngoingFeature),
+            .set(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY, ActiveStartOfTurnOngoingFeature),
         },
       }
     else
       state
 
   pure def goblinAttackAgainstFighterHasAdvantage(state: BattleState): bool =
-    hasRecklessAttack(state)
+    fighterHasRecklessAttack(state)
 
   pure def expendedSlotsAfterInvocation(
     invocation: SpellInvocation,
@@ -1388,7 +1323,7 @@ module battleRuntime {
   pure def canDiscoverSpellActs(canCastSpells: bool, raging: bool): bool =
     canCastSpells and not(raging)
 
-  pure def rageDamageBonus(barbarianLevel: int): int =
+  pure def fighterRageDamageBonus(barbarianLevel: int): int =
     if (barbarianLevel >= 16) 4
     else if (barbarianLevel >= 9) 3
     else 2
@@ -1455,7 +1390,7 @@ module battleRuntime {
     fighterConcentrationSaveSucceeded: bool,
     goblinConcentrationSaveSucceeded: bool,
   ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or hasRage(state))
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
     else
       {
@@ -1546,25 +1481,25 @@ module battleRuntime {
   }
 
   run test_goblin_turn_opens_stat_block_recharge_hole_before_attack = {
-    val spentRecharge = { ...initialState, statBlockRechargeAvailable: false }
+    val spentRecharge = { ...initialState, goblinRechargeAvailable: false }
     assert(openHoles(endTurn(spentRecharge)) == Set(StatBlockRechargeRoll))
   }
 
   run test_goblin_recharge_roll_restores_available_part_on_success = {
-    val spentRecharge = { ...initialState, statBlockRechargeAvailable: false }
-    val failed = endTurnWithStatBlockRechargeRoll(spentRecharge, 4)
-    val succeeded = endTurnWithStatBlockRechargeRoll(spentRecharge, 5)
+    val spentRecharge = { ...initialState, goblinRechargeAvailable: false }
+    val failed = endTurnWithGoblinRechargeRoll(spentRecharge, 4)
+    val succeeded = endTurnWithGoblinRechargeRoll(spentRecharge, 5)
     all {
-      assert(not(failed.statBlockRechargeAvailable)),
-      assert(succeeded.statBlockRechargeAvailable),
+      assert(not(failed.goblinRechargeAvailable)),
+      assert(succeeded.goblinRechargeAvailable),
     }
   }
 
   run test_legendary_action_window_excludes_initial_and_own_turn = {
     val goblinTurn = endTurn(initialState)
     all {
-      assert(not(statBlockCanUseLegendaryAction(initialState))),
-      assert(not(statBlockCanUseLegendaryAction(goblinTurn))),
+      assert(not(goblinCanUseLegendaryAction(initialState))),
+      assert(not(goblinCanUseLegendaryAction(goblinTurn))),
     }
   }
 
@@ -1573,11 +1508,11 @@ module battleRuntime {
       ...initialState,
       initiative: { round: 1, alreadyActed: [], stillToAct: [Fighter, Fighter, Goblin] },
     })
-    val spent = useStatBlockLegendaryAction(afterFighterTurnWithThirdActor)
+    val spent = useGoblinLegendaryAction(afterFighterTurnWithThirdActor)
     all {
-      assert(statBlockCanUseLegendaryAction(afterFighterTurnWithThirdActor)),
-      assert(spent.statBlockLegendaryUsesRemaining == 1),
-      assert(not(statBlockCanUseLegendaryAction(spent))),
+      assert(goblinCanUseLegendaryAction(afterFighterTurnWithThirdActor)),
+      assert(spent.goblinLegendaryUsesRemaining == 1),
+      assert(not(goblinCanUseLegendaryAction(spent))),
     }
   }
 
@@ -1612,44 +1547,36 @@ module battleRuntime {
   }
 
   run test_sneak_attack_optional_rider_applies_once_per_turn = {
-    val result = resolveAttackWithOptionalAttackDamageRider(withSupportedAttackDamageRider(initialState), 15, 10, 4, 6, true, true, true, false, false, true)
+    val result = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, true, false, false, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 0),
-      assert(attackDamageRiderUsedThisTurn(result)),
+      assert(result.fighterSneakAttackUsedThisTurn),
     }
   }
 
   run test_sneak_attack_adjacent_ally_branch_requires_no_disadvantage = {
-    val eligible = resolveAttackWithOptionalAttackDamageRider(withSupportedAttackDamageRider(initialState), 15, 10, 4, 6, true, true, false, true, false, true)
-    val disadvantaged = resolveAttackWithOptionalAttackDamageRider(withSupportedAttackDamageRider(initialState), 15, 10, 4, 6, true, true, false, true, true, true)
+    val eligible = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, false, true, false, true)
+    val disadvantaged = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, false, true, true, true)
     all {
       assert(eligible.goblin.hp == 0),
-      assert(attackDamageRiderUsedThisTurn(eligible)),
+      assert(eligible.fighterSneakAttackUsedThisTurn),
       assert(disadvantaged.goblin.hp == 3),
-      assert(not(attackDamageRiderUsedThisTurn(disadvantaged))),
-    }
-  }
-
-  run test_sneak_attack_projection_requires_finesse_or_ranged_weapon = {
-    val result = resolveAttackWithOptionalAttackDamageRider(withSupportedAttackDamageRider(initialState), 15, 10, 4, 6, true, false, true, false, false, true)
-    all {
-      assert(result.goblin.hp == 3),
-      assert(not(attackDamageRiderUsedThisTurn(result))),
+      assert(not(disadvantaged.fighterSneakAttackUsedThisTurn)),
     }
   }
 
   run test_sneak_attack_critical_uses_doubled_rider_dice_total = {
-    val result = resolveAttackWithOptionalAttackDamageRider(withSupportedAttackDamageRider(initialState), 20, 20, 2, 9, true, true, true, false, false, true)
+    val result = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 20, 20, 2, 9, true, true, false, false, true)
     all {
       assert(result.goblin.hp == 0),
-      assert(attackDamageRiderUsedThisTurn(result)),
+      assert(result.fighterSneakAttackUsedThisTurn),
     }
   }
 
   run test_sneak_attack_usage_resets_on_next_turn = {
-    val used = resolveAttackWithOptionalAttackDamageRider(withSupportedAttackDamageRider(initialState), 15, 10, 4, 6, true, true, true, false, false, true)
-    assert(not(attackDamageRiderUsedThisTurn(endTurn(used))))
+    val used = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, true, false, false, true)
+    assert(not(endTurn(used).fighterSneakAttackUsedThisTurn))
   }
 
   run test_goblin_attack_hit_applies_stat_block_damage_to_fighter = {
@@ -1704,7 +1631,7 @@ module battleRuntime {
     all {
       assert(raging.usesRemaining == 1),
       assert(not(raging.state.bonusActionAvailable)),
-      assert(hasRage(raging.state)),
+      assert(fighterHasRage(raging.state)),
       assert(hit.goblin.hp == 1),
       assert(levelNineHit.goblin.hp == 0),
       assert(resisted.fighter.hp == 9),
@@ -1717,8 +1644,8 @@ module battleRuntime {
     val raging = startRage(initialState, 2).state
     val incapacitated = { ...raging, fighter: { ...raging.fighter, incapacitated: true } }
     all {
-      assert(not(hasRage(cannotStart.state))),
-      assert(not(hasRage(endTurn(incapacitated)))),
+      assert(not(fighterHasRage(cannotStart.state))),
+      assert(not(fighterHasRage(endTurn(incapacitated)))),
     }
   }
 
@@ -1727,7 +1654,7 @@ module battleRuntime {
     val nextFighterTurn = endTurn(endTurn(raging.state))
     val extended = extendRageWithBonusAction(nextFighterTurn, raging.usesRemaining)
     all {
-      assert(hasRage(extended.state)),
+      assert(fighterHasRage(extended.state)),
       assert(not(extended.state.bonusActionAvailable)),
       assert(extended.usesRemaining == 1),
     }
@@ -1738,8 +1665,8 @@ module battleRuntime {
     val incapacitated = { ...raging, fighter: { ...raging.fighter, incapacitated: true } }
     val unconscious = { ...raging, fighter: { ...raging.fighter, unconscious: true } }
     all {
-      assert(hasRage(endTurn(incapacitated))),
-      assert(not(hasRage(endTurn(unconscious)))),
+      assert(fighterHasRage(endTurn(incapacitated))),
+      assert(not(fighterHasRage(endTurn(unconscious)))),
     }
   }
 
@@ -1747,13 +1674,13 @@ module battleRuntime {
     val raging = startRage(initialState, 2).state
     val nextFighterTurn = endTurn(endTurn(raging))
     val grappled = grappleFighterGoblin(nextFighterTurn, true)
-    val extendedToNextTurn = match rageOccurrence(grappled) {
+    val extendedToNextTurn = match fighterRageOccurrence(grappled) {
       | ActiveRoundExtendedOngoingFeature(data) =>
           data.expiresAtEndOfFighterTurnRound == nextFighterTurn.initiative.round + 1
       | _ => false
     }
     all {
-      assert(hasRage(grappled)),
+      assert(fighterHasRage(grappled)),
       assert(extendedToNextTurn),
     }
   }
@@ -1763,7 +1690,7 @@ module battleRuntime {
     val raging = startRage(concentrating, 2).state
     all {
       assert(not(raging.fighter.concentrating)),
-      assert(not(canDiscoverSpellActs(true, hasRage(raging)))),
+      assert(not(canDiscoverSpellActs(true, fighterHasRage(raging)))),
       assert(resolveRayOfFrost(raging, 15, 10, 4, true) == raging),
     }
   }
@@ -1783,14 +1710,14 @@ module battleRuntime {
     val recklessAfterSpell = activateRecklessAttackOnFirstAttackRoll(afterSpellAttack)
     all {
       assert(afterSpellAttack.attackRollMadeThisTurn),
-      assert(not(hasRecklessAttack(recklessAfterSpell))),
+      assert(not(fighterHasRecklessAttack(recklessAfterSpell))),
     }
   }
 
   run test_normal_rage_ends_when_drop_to_zero_sets_unconscious = {
     val raging = startRage(initialState, 2).state
     val dropped = { ...raging, fighter: applyDropToZeroHp(raging.fighter) }
-    assert(not(hasRage(endTurn(dropped))))
+    assert(not(fighterHasRage(endTurn(dropped))))
   }
 
   run test_reckless_attack_activates_on_first_attack_roll_boundary = {
@@ -1798,9 +1725,9 @@ module battleRuntime {
     val goblinTurn = endTurn(reckless)
     val fighterTurn = endTurn(goblinTurn)
     all {
-      assert(hasRecklessAttack(reckless)),
+      assert(fighterHasRecklessAttack(reckless)),
       assert(goblinAttackAgainstFighterHasAdvantage(goblinTurn)),
-      assert(not(hasRecklessAttack(fighterTurn))),
+      assert(not(fighterHasRecklessAttack(fighterTurn))),
     }
   }
 
@@ -1865,7 +1792,7 @@ module battleRuntime {
   }
 
   run test_authored_critical_range_19_weapon_attack_crits_on_natural_19 = {
-    val result = resolveAttack(withWeaponOrUnarmedStrikeImprovedCriticalRange19(initialState), 1, 19, 1, true)
+    val result = resolveAttack(withFighterImprovedCriticalRange19(initialState), 1, 19, 1, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 6),
@@ -1881,7 +1808,7 @@ module battleRuntime {
   }
 
   run test_authored_critical_range_keeps_natural_1_auto_miss = {
-    val result = resolveAttack(withWeaponOrUnarmedStrikeImprovedCriticalRange19(initialState), 99, 1, 9, true)
+    val result = resolveAttack(withFighterImprovedCriticalRange19(initialState), 99, 1, 9, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 10),

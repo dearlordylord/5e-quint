@@ -22,7 +22,6 @@ import {
   SkillSchema,
   SpeciesRecordKindSchema,
   StandardActionKindSchema,
-  UsageLimitSchema,
   WeaponCategorySchema,
   WeaponDamageSchema,
   WeaponMasteryNameSchema,
@@ -30,7 +29,7 @@ import {
   WeaponPropertyDetailSchema,
   WeaponUsageSchema,
 } from "./schema-base.ts";
-import { exactOptional } from "./schema-helpers.ts";
+import { exactOptional, strictStruct } from "./schema-helpers.ts";
 import {
   ActivationPhaseSchema,
   CreatureControlSchema,
@@ -479,46 +478,50 @@ export const WizardClassFeatureMechanicsSchema = Schema.Union(
 export const FighterClassFeatureMechanicsSchema = TacticalMindMechanicsSchema;
 
 export const MasteryTriggerSchema = Schema.Union(
-  Schema.Struct({ kind: Schema.Literal("weapon_hit") }),
-  Schema.Struct({ kind: Schema.Literal("weapon_hit_melee_only") }),
+  strictStruct({ kind: Schema.Literal("weapon_hit") }),
+  strictStruct({ kind: Schema.Literal("weapon_hit_melee_only") }),
+  strictStruct({ kind: Schema.Literal("weapon_hit_with_damage") }),
 );
 
-export const AttackDamageRiderTriggerSchema = Schema.Struct({
-  kind: Schema.Literal("attack_roll_hit"),
+export const AttackDamageRiderTriggerSchema = strictStruct({
+  kind: Schema.Literal("hit_with_attack_roll"),
   weaponFilter: Schema.Literal("finesse_or_ranged"),
-  rollRequirement: Schema.Literal(
-    "advantage_or_ally_adjacent_without_disadvantage",
+  eligibility: Schema.Literal(
+    "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
   ),
 });
 
-export const ClassLevelDamageDiceSchema = Schema.Struct({
+export const WeaponDamageDiceRerollTriggerSchema = strictStruct({
+  kind: Schema.Literal("weapon_hit"),
+});
+
+export const ClassLevelDamageDiceSchema = strictStruct({
   kind: Schema.Literal("class_level_table"),
-  className: ClassNameSchema,
   dieSize: PositiveIntegerSchema,
   dice: Schema.NonEmptyArray(
-    Schema.Struct({
+    strictStruct({
       atLevel: PositiveIntegerSchema,
       count: PositiveIntegerSchema,
     }),
   ),
 });
 
-export const AddAttackDamageDiceRiderSchema = Schema.Struct({
+export const AddAttackDamageDiceRiderSchema = strictStruct({
   kind: Schema.Literal("add_attack_damage_dice"),
   dice: ClassLevelDamageDiceSchema,
   damageType: Schema.Literal("same_as_attack"),
 });
 
-export const SecondaryTargetSelectionSchema = Schema.Struct({
+export const SecondaryTargetSelectionSchema = strictStruct({
   kind: Schema.Literal("adjacent_to_primary"),
   constraint: Schema.Literal("within_5ft_and_reach"),
 });
 
-export const GrantWeaponAttackRiderSchema = Schema.Struct({
+export const GrantWeaponAttackRiderSchema = strictStruct({
   kind: Schema.Literal("grant_weapon_attack"),
   attackKind: Schema.Literal("melee_weapon_attack"),
   secondaryTarget: SecondaryTargetSelectionSchema,
-  onHit: Schema.Struct({
+  onHit: strictStruct({
     kind: Schema.Literal("weapon_damage"),
     abilityModifier: Schema.Literal("negative_only"),
   }),
@@ -537,7 +540,7 @@ export const SaveGateRiderResultSchema = Schema.Union(
     kind: Schema.Literal("apply_condition"),
     condition: ConditionSchema,
   }),
-  Schema.Struct({ kind: Schema.Literal("none") }),
+  strictStruct({ kind: Schema.Literal("none") }),
 );
 
 export const SaveGateRiderSchema = Schema.Struct({
@@ -546,6 +549,40 @@ export const SaveGateRiderSchema = Schema.Struct({
   dc: DcSourceSchema,
   onFail: SaveGateRiderResultSchema,
   onSuccess: SaveGateRiderResultSchema,
+});
+
+export const SapMasteryEffectSchema = strictStruct({
+  kind: Schema.Literal("modify_roll_advantage"),
+  mode: Schema.Literal("disadvantage"),
+  on: Schema.Tuple(Schema.Literal("attack_roll")),
+  count: Schema.Literal(1),
+  expiresOn: strictStruct({
+    kind: Schema.Literal("target_uses_or_turn_start"),
+  }),
+});
+
+export const ToppleMasteryEffectSchema = strictStruct({
+  kind: Schema.Literal("save_gate"),
+  ability: Schema.Literal("con"),
+  dc: strictStruct({
+    kind: Schema.Literal("weapon_attack_dc"),
+    base: Schema.Literal(8),
+  }),
+  onFail: strictStruct({
+    kind: Schema.Literal("apply_condition"),
+    condition: Schema.Literal("prone"),
+  }),
+  onSuccess: strictStruct({ kind: Schema.Literal("none") }),
+});
+
+export const VexMasteryEffectSchema = strictStruct({
+  kind: Schema.Literal("modify_roll_advantage"),
+  mode: Schema.Literal("advantage"),
+  on: Schema.Tuple(Schema.Literal("attack_roll")),
+  count: Schema.Literal(1),
+  expiresOn: strictStruct({
+    kind: Schema.Literal("end_of_next_turn"),
+  }),
 });
 
 export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
@@ -567,15 +604,20 @@ export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
   ),
 });
 
-export const RerollWeaponDamageDiceRiderSchema = Schema.Struct({
+export const RerollWeaponDamageDiceRiderSchema = strictStruct({
   kind: Schema.Literal("reroll_weapon_damage_dice"),
   diceScope: Schema.Literal("weapon_damage_dice"),
   choose: Schema.Literal("either_roll"),
 });
 
+export const WeaponHitMasteryEffectSchema = Schema.Union(
+  SapMasteryEffectSchema,
+  ToppleMasteryEffectSchema,
+);
+
 export const MasteryEffectSchema = Schema.Union(
-  ModifyRollAdvantageRiderSchema,
-  SaveGateRiderSchema,
+  WeaponHitMasteryEffectSchema,
+  VexMasteryEffectSchema,
   GrantWeaponAttackRiderSchema,
 );
 
@@ -585,21 +627,75 @@ export const OnHitRiderEffectSchema = Schema.Union(
   AddAttackDamageDiceRiderSchema,
 );
 
-export const OnHitTriggerMechanicsSchema = Schema.Struct({
+const OnHitTriggerMechanicsBaseFields = {
   family: Schema.Literal("on_hit_trigger"),
-  trigger: Schema.Union(MasteryTriggerSchema, AttackDamageRiderTriggerSchema),
-  optional: Schema.Boolean,
-  effect: OnHitRiderEffectSchema,
-  usageLimit: exactOptional(UsageLimitSchema),
+};
+
+const OncePerTurnUsageLimitSchema = strictStruct({
+  kind: Schema.Literal("once_per_turn"),
 });
 
-export const MasteryMechanicsSchema = Schema.Struct({
-  family: Schema.Literal("on_hit_trigger"),
-  trigger: MasteryTriggerSchema,
-  optional: Schema.Boolean,
-  effect: MasteryEffectSchema,
-  usageLimit: exactOptional(UsageLimitSchema),
+export const SapMasteryMechanicsSchema = strictStruct({
+  ...OnHitTriggerMechanicsBaseFields,
+  optional: Schema.Literal(false),
+  trigger: strictStruct({ kind: Schema.Literal("weapon_hit") }),
+  effect: SapMasteryEffectSchema,
 });
+
+export const ToppleMasteryMechanicsSchema = strictStruct({
+  ...OnHitTriggerMechanicsBaseFields,
+  optional: Schema.Literal(true),
+  trigger: strictStruct({ kind: Schema.Literal("weapon_hit") }),
+  effect: ToppleMasteryEffectSchema,
+});
+
+export const VexMasteryMechanicsSchema = strictStruct({
+  ...OnHitTriggerMechanicsBaseFields,
+  optional: Schema.Literal(false),
+  trigger: strictStruct({ kind: Schema.Literal("weapon_hit_with_damage") }),
+  effect: VexMasteryEffectSchema,
+});
+
+export const CleaveMasteryMechanicsSchema = strictStruct({
+  ...OnHitTriggerMechanicsBaseFields,
+  optional: Schema.Literal(true),
+  trigger: strictStruct({ kind: Schema.Literal("weapon_hit_melee_only") }),
+  effect: GrantWeaponAttackRiderSchema,
+  usageLimit: OncePerTurnUsageLimitSchema,
+});
+
+export const MasteryMechanicsSchema = Schema.Union(
+  SapMasteryMechanicsSchema,
+  ToppleMasteryMechanicsSchema,
+  VexMasteryMechanicsSchema,
+  CleaveMasteryMechanicsSchema,
+);
+
+export const AttackDamageRiderMechanicsSchema = strictStruct({
+  ...OnHitTriggerMechanicsBaseFields,
+  optional: Schema.Literal(true),
+  trigger: AttackDamageRiderTriggerSchema,
+  effect: AddAttackDamageDiceRiderSchema,
+  usageLimit: OncePerTurnUsageLimitSchema,
+});
+
+export const WeaponDamageDiceRerollMechanicsSchema = strictStruct({
+  ...OnHitTriggerMechanicsBaseFields,
+  optional: Schema.Literal(true),
+  trigger: WeaponDamageDiceRerollTriggerSchema,
+  effect: RerollWeaponDamageDiceRiderSchema,
+  usageLimit: OncePerTurnUsageLimitSchema,
+});
+
+export const MasteryOrWeaponDamageDiceRerollMechanicsSchema = Schema.Union(
+  MasteryMechanicsSchema,
+  WeaponDamageDiceRerollMechanicsSchema,
+);
+
+export const OnHitTriggerMechanicsSchema = Schema.Union(
+  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  AttackDamageRiderMechanicsSchema,
+);
 
 export const HitPointReplacementTriggerSchema = Schema.Struct({
   kind: Schema.Literal("reduced_to_0_hp_not_killed_outright"),
@@ -691,7 +787,7 @@ export const ArmorTrainingSchema = Schema.Union(
     kind: Schema.Literal("trained"),
     categories: Schema.NonEmptyArray(ArmorTrainingCategorySchema),
   }),
-  Schema.Struct({ kind: Schema.Literal("none") }),
+  strictStruct({ kind: Schema.Literal("none") }),
 );
 
 const SpellSlotProjectionSchema = Schema.Struct({
@@ -873,7 +969,7 @@ export const MasteryRecordSchema = Schema.Struct({
 export const FeatMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
-  OnHitTriggerMechanicsSchema,
+  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
 );
 
 export const FeatRecordSchema = Schema.Struct({
@@ -945,7 +1041,7 @@ export const MagicItemComponentMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReactionAbilityMechanicsSchema,
-  OnHitTriggerMechanicsSchema,
+  MasteryOrWeaponDamageDiceRerollMechanicsSchema,
   MagicItemSpawnedCreatureMechanicsSchema,
 );
 
@@ -968,7 +1064,7 @@ export const MagicItemAttunementRestrictionSchema = Schema.Union(
 );
 
 export const ItemDestructionPolicySchema = Schema.Union(
-  Schema.Struct({ kind: Schema.Literal("none") }),
+  strictStruct({ kind: Schema.Literal("none") }),
   Schema.Struct({ kind: Schema.Literal("becomes_nonmagical_on_hit") }),
   Schema.Struct({
     kind: Schema.Literal("last_charge_roll"),

@@ -6785,7 +6785,7 @@ function traceOnHitTriggerMechanics(
   traceOnHitRiderEffect(m.effect, winId, targetId, nodes, edges, ids);
 
   const fenceId = traceUsageLimit(
-    m.usageLimit,
+    "usageLimit" in m ? m.usageLimit : undefined,
     winId,
     "consumes",
     nodes,
@@ -6812,8 +6812,10 @@ function describeOnHitTrigger(t: OnHitTriggerMechanics["trigger"]): string {
       return "(any weapon hit)";
     case "weapon_hit_melee_only":
       return "(melee weapon hit only)";
-    case "attack_roll_hit":
-      return `(attack-roll hit, ${t.weaponFilter}, ${t.rollRequirement})`;
+    case "weapon_hit_with_damage":
+      return "(weapon hit with damage)";
+    case "hit_with_attack_roll":
+      return `(hit with attack roll, ${t.weaponFilter}, ${t.eligibility})`;
     default: {
       const _: never = t;
       throw new Error(`unhandled on-hit trigger: ${String(_)}`);
@@ -6927,7 +6929,7 @@ function traceOnHitRiderEffect(
         atomKind: "damage",
         label:
           `add_attack_damage_dice\n` +
-          `${e.dice.className} level table d${e.dice.dieSize}\n` +
+          `class level table d${e.dice.dieSize}\n` +
           `type ${e.damageType}`,
       });
       edges.push({ from: winId, to: damageId, relation: "grants" });
