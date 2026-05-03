@@ -838,6 +838,13 @@ export type OngoingFeatureSource = {
   readonly kind: "unit";
   readonly unitId: UnitRecord["id"];
 };
+// Encounter relationship id, not creature provenance or a creature trait.
+// RAW defines allies/enemies by adventuring party, friendship, combat side,
+// hostile action, or GM/rule designation. This runtime currently projects that
+// relationship as side equality: same side = ally, different side = enemy.
+// Used by Help's ally/enemy picks, Rage extension against enemies, and Sneak
+// Attack's adjacent-ally branch. Widen this model before supporting rules that
+// need per-pair hostility, neutrality, or temporary designation.
 export const BattleCombatantSide = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("BattleCombatantSide"),
 );
