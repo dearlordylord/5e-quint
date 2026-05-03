@@ -8,6 +8,7 @@
     "family": "passive",
     "grants": [
       {
+        "attackRollFilter": "weapon_or_unarmed_strike",
         "kind": "modify_crit_range",
         "threshold": 19
       }

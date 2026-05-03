@@ -10,6 +10,9 @@ module battleRuntime {
   // - Playing-the-Game.md lines 582-589 and 700-703: an Attack chooses a
   //   target, resolves an attack roll, rolls damage on a hit, and rolls the
   //   attack's damage dice twice on a Critical Hit.
+  // - Classes/Fighter.md lines 136-138: the Champion Improved Critical
+  //   feature lets weapon and Unarmed Strike attack rolls score a Critical Hit
+  //   on a d20 roll of 19 or 20.
   // - Playing-the-Game.md lines 684-698 and 788-808: damage subtracts from HP,
   //   HP cannot go below 0, weapon damage adds the attack ability modifier, and
   //   Temporary Hit Points absorb damage before HP.
@@ -117,6 +120,7 @@ module battleRuntime {
   type ReactionTrigger = AttackHit | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
 
   type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
+  type FighterCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
 
   // Continuations carry the replay lane interrupted by a Reaction window. This
   // package-local QNT keeps representative deterministic fills for those lanes;
@@ -236,6 +240,7 @@ module battleRuntime {
     goblinLegendaryUsesRemaining: int,
     lastTurnActor: LastTurnActor,
     legendaryActionWindowConsumed: bool,
+    fighterCriticalRange: FighterCriticalRange,
   }
 
   type ActionSurgeResult = {
@@ -326,6 +331,7 @@ module battleRuntime {
     goblinLegendaryUsesRemaining: 2,
     lastTurnActor: NoTurnEnded,
     legendaryActionWindowConsumed: false,
+    fighterCriticalRange: DefaultCriticalRange,
   }
 
   // The battle runtime receives Initiative counts and the caller-resolved
@@ -556,7 +562,7 @@ module battleRuntime {
       | AttackNeedsTarget => Set(TargetChoice)
       | AttackNeedsAttackRoll => Set(AttackRoll)
       | AttackRollFilled(roll) =>
-          if (attackHits(roll.attackTotal, roll.naturalD20, attackTargetAc(state)))
+          if (attackHits(roll.attackTotal, roll.naturalD20, attackTargetAc(state), attackCriticalThreshold(state, currentActor(state))))
             Set(DamageRoll)
           else
             Set()
@@ -710,10 +716,25 @@ module battleRuntime {
       advanced
   }
 
-  pure def attackHits(total: int, naturalD20: int, armorClass: int): bool =
+  pure def attackHits(total: int, naturalD20: int, armorClass: int, criticalThreshold: int): bool =
     if (naturalD20 == 1) false
-    else if (naturalD20 == 20) true
+    else if (attackIsCritical(naturalD20, criticalThreshold)) true
     else total >= armorClass
+
+  pure def attackIsCritical(naturalD20: int, criticalThreshold: int): bool =
+    naturalD20 >= criticalThreshold
+
+  pure def fighterCriticalThreshold(state: BattleState): int =
+    match state.fighterCriticalRange {
+      | DefaultCriticalRange => 20
+      | ImprovedCriticalRange19 => 19
+    }
+
+  pure def attackCriticalThreshold(state: BattleState, attacker: Actor): int =
+    if (attacker == Fighter) fighterCriticalThreshold(state) else 20
+
+  pure def withFighterImprovedCriticalRange19(state: BattleState): BattleState =
+    { ...state, fighterCriticalRange: ImprovedCriticalRange19 }
 
   pure def withGoblinHp(state: BattleState, hp: int, tempHp: int): BattleState =
     { ...state, goblin: { ...state.goblin, hp: hp, tempHp: tempHp } }
@@ -743,10 +764,10 @@ module battleRuntime {
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
       val rageDamage = if (fighterHasRage(revealed)) fighterRageDamageBonus(barbarianLevel) else 0
-      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin))))
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
       else
-        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
+        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
     }
 
   pure def resolveAttackRecklessly(
@@ -767,11 +788,11 @@ module battleRuntime {
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Goblin or state.goblin.hp == 0)
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter))))
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
       { ...state, actionAvailable: false }
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
-      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
     }
 
   pure def resolveGoblinOpportunityAttack(
@@ -783,11 +804,11 @@ module battleRuntime {
   ): BattleState =
     if (state.goblin.hp == 0)
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter))))
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
       state
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
-      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded) }
+      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded) }
     }
 
   pure def resolveRayOfFrost(
@@ -799,13 +820,13 @@ module battleRuntime {
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin)))) {
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
-      val damaged = applyDamage(state.goblin, damageRoll, if (naturalD20 == 20) 2 else 1, concentrationSaveSucceeded)
+      val damaged = applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
       { ...rolled, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
     }
 
@@ -986,8 +1007,8 @@ module battleRuntime {
 
   pure def offHandAttackFighter(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int): BattleState =
     if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
-      if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin)))
-        { ...state, goblin: applyDamage(state.goblin, damageRoll, if (naturalD20 == 20) 2 else 1, false), bonusActionAvailable: false }
+      if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state)))
+        { ...state, goblin: applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false), bonusActionAvailable: false }
       else
         { ...state, bonusActionAvailable: false }
     else
@@ -1656,6 +1677,30 @@ module battleRuntime {
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 0),
+    }
+  }
+
+  run test_authored_critical_range_19_weapon_attack_crits_on_natural_19 = {
+    val result = resolveAttack(withFighterImprovedCriticalRange19(initialState), 1, 19, 1, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 6),
+    }
+  }
+
+  run test_default_critical_range_20_weapon_attack_does_not_crit_on_natural_19 = {
+    val result = resolveAttack(initialState, 1, 19, 9, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 10),
+    }
+  }
+
+  run test_authored_critical_range_keeps_natural_1_auto_miss = {
+    val result = resolveAttack(withFighterImprovedCriticalRange19(initialState), 99, 1, 9, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 10),
     }
   }
 

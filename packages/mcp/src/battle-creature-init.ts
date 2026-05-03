@@ -1,5 +1,4 @@
 import {
-  type BattleUnitSupportProfile,
   battleCreatureInitFromStatBlock,
   scoreModifier,
   startBattle,
@@ -39,15 +38,12 @@ import {
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match } from "effect";
+import { characterUnitRefsWithBattleSupportProfiles } from "./battle-support-profiles.ts";
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;
 // battle accepts battle-owned creature-init inputs. This mapper is where
 // selected Unit refs are read into the creature combat view, so neither runtime
 // has to import the other or grow an intermediate executable content model.
-
-const BONUS_ACTION_HIDE_SUPPORT_PROFILES = [
-  "bonusActionHide",
-] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
 
 export type CharacterBuildCreatureInput = {
   readonly combatantId: CombatantId;
@@ -90,12 +86,9 @@ export function battleCreatureInitFromCharacterBuild(
   },
 ): BattleCreatureInit {
   const maxHp = Hp(input.build.hitPoints.maximum);
-  const bonusActionHideClassUnitIds = supportedBonusActionHideClassUnitIds(
+  const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
     input.build,
     input.unitLibrary,
-  );
-  const characterUnitRefs = characterBuildUnitRefs(input.build).map((unitRef) =>
-    withBattleSupportProfiles(unitRef, bonusActionHideClassUnitIds),
   );
   const currentHp = input.currentHp ?? maxHp;
   const offHandAttack = characterOffHandAttackActionOption(
@@ -143,58 +136,6 @@ export function battleCreatureInitFromCharacterBuild(
           }),
     },
   };
-}
-
-function withBattleSupportProfiles(
-  unitRef: ReturnType<typeof characterBuildUnitRefs>[number],
-  bonusActionHideClassUnitIds: ReadonlySet<string>,
-): {
-  readonly unitId: ReturnType<typeof characterBuildUnitRefs>[number]["unitId"];
-  readonly supportProfiles?: readonly BattleUnitSupportProfile[];
-} {
-  const supportProfiles = battleSupportProfilesForUnit(
-    unitRef.unitId,
-    bonusActionHideClassUnitIds,
-  );
-  return supportProfiles.length === 0
-    ? { unitId: unitRef.unitId }
-    : {
-        unitId: unitRef.unitId,
-        supportProfiles,
-      };
-}
-
-function supportedBonusActionHideClassUnitIds(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): ReadonlySet<string> {
-  const supportedClassUnitIds = new Set<string>();
-  for (const entry of build.advancement.entries) {
-    const unit = unitLibrary.requireUnit(entry.classUnitId);
-    if (
-      unit.kind === "class" &&
-      unit.className === "rogue" &&
-      entry.level >= 2
-    ) {
-      supportedClassUnitIds.add(entry.classUnitId);
-    }
-  }
-  return supportedClassUnitIds;
-}
-
-function battleSupportProfilesForUnit(
-  unitId: ReturnType<typeof characterBuildUnitRefs>[number]["unitId"],
-  bonusActionHideClassUnitIds: ReadonlySet<string>,
-): readonly BattleUnitSupportProfile[] {
-  if (!bonusActionHideClassUnitIds.has(unitId)) {
-    return [];
-  }
-
-  // Class-feature records for Rogue Cunning Action are not yet present in the
-  // widened unit catalog. We assign a support profile to the admitted class
-  // advancement record so battle-runtime branches on support profile, not on
-  // class-name checks inside reducer discovery/resolution.
-  return BONUS_ACTION_HIDE_SUPPORT_PROFILES;
 }
 
 function characterBattleWalkSpeed(

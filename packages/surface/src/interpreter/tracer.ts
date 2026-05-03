@@ -628,7 +628,7 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "modify_crit_range",
-        label: `modify_crit_range\ncrits on ${e.threshold}-20${describeWeaponFilter(e.weaponFilter)}`,
+        label: `modify_crit_range\n${describeCriticalRangeAttackFilter(e.attackRollFilter)} crits on ${e.threshold}-20${describeWeaponFilter(e.weaponFilter)}`,
       });
       return id;
     }
@@ -7245,6 +7245,14 @@ function describeSavingThrowSourceFilter(
 ): string {
   if (!f) return "";
   return "\nsource: spells or other magical effects";
+}
+
+function describeCriticalRangeAttackFilter(
+  filter: "weapon_or_unarmed_strike",
+): string {
+  return filter === "weapon_or_unarmed_strike"
+    ? "weapons and Unarmed Strikes"
+    : filter satisfies never;
 }
 
 function describeDelta(d: DiceDelta): string {

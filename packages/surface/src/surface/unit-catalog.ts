@@ -13,6 +13,7 @@ import featDefenseInput from "../../content/feat_defense.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
 import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
 import fighterFightingStyleL1Input from "../../content/fighter_fighting_style_l1.json";
+import fighterImprovedCriticalInput from "../../content/fighter_improved_critical.json";
 import fighterSecondWindInput from "../../content/fighter_second_wind.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import fighterWeaponMasteryL1Input from "../../content/fighter_weapon_mastery_l1.json";
@@ -144,6 +145,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterWeaponMasteryL1Input,
     fighterActionSurgeInput,
     fighterTacticalMindInput,
+    fighterImprovedCriticalInput,
     barbarianRageInput,
     barbarianRecklessAttackInput,
     wizardRitualAdeptInput,
