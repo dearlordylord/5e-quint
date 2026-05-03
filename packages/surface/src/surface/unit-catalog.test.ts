@@ -22,6 +22,7 @@ const requiredFirstVerticalUnitIds = [
   "fighter_action_surge",
   "fighter_tactical_mind",
   "fighter_improved_critical",
+  "rogue_evasion",
   "wizard_ritual_adept",
   "wizard_arcane_recovery",
   "defense",

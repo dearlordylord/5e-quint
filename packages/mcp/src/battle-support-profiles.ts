@@ -1,5 +1,6 @@
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   type BattleUnitRef,
   type BattleUnitSupportProfile,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -19,6 +20,9 @@ const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILES = [
 ] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
 const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILES = [
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
+const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILES = [
+  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
 ] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
 
 export function characterUnitRefsWithBattleSupportProfiles(
@@ -111,6 +115,17 @@ function battleSupportProfilesForUnit(
     supportProfiles.push(...ATTACK_DAMAGE_RIDER_SUPPORT_PROFILES);
   }
 
+  const saveDamageReplacementSupport =
+    supportedSaveDamageReplacementProfileForUnit(unit);
+  if (saveDamageReplacementSupport === "unsupported") {
+    throw new Error(
+      `Unsupported battle save-damage replacement Unit hook: ${unit.id}.`,
+    );
+  }
+  if (saveDamageReplacementSupport === "saveDamageReplacement") {
+    supportProfiles.push(...SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILES);
+  }
+
   return supportProfiles;
 }
 
@@ -166,5 +181,32 @@ function supportedAttackDamageRiderProfileForUnit(
     mechanics.effect.dice.kind === "class_level_table" &&
     mechanics.effect.dice.className === unit.className
     ? "attackDamageRider"
+    : "unsupported";
+}
+
+type SaveDamageReplacementSupportProfile =
+  | "saveDamageReplacement"
+  | "unsupported"
+  | null;
+
+function supportedSaveDamageReplacementProfileForUnit(
+  unit: UnitRecord,
+): SaveDamageReplacementSupportProfile {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "save_damage_replacement"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  return mechanics.trigger.kind === "saving_throw_damage" &&
+    mechanics.trigger.ability === "dex" &&
+    mechanics.trigger.successDamage === "half_damage" &&
+    mechanics.replacement.onSuccess === "no_damage" &&
+    mechanics.replacement.onFail === "half_damage" &&
+    mechanics.suppressedBy.length === 1 &&
+    mechanics.suppressedBy[0]?.kind === "condition" &&
+    mechanics.suppressedBy[0].condition === "incapacitated"
+    ? "saveDamageReplacement"
     : "unsupported";
 }

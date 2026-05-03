@@ -5847,6 +5847,8 @@ function traceClassFeatureMechanics(
       return [tracePassiveMechanics(m, nodes, edges, ids)];
     case "on_hit_trigger":
       return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
+    case "save_damage_replacement":
+      return [traceSaveDamageReplacementMechanics(m, nodes, ids)];
     case "weapon_mastery_choice": {
       const masteryId = ids("mastery");
       nodes.push({
@@ -5907,6 +5909,8 @@ function traceClassFeatureMechanics(
             return tracePassiveMechanics(part, nodes, edges, ids);
           case "on_hit_trigger":
             return traceOnHitTriggerMechanics(part, nodes, edges, ids);
+          case "save_damage_replacement":
+            return traceSaveDamageReplacementMechanics(part, nodes, ids);
           default: {
             const _exhaustive: never = part;
             throw new Error(
@@ -5922,6 +5926,26 @@ function traceClassFeatureMechanics(
       );
     }
   }
+}
+
+function traceSaveDamageReplacementMechanics(
+  m: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "save_damage_replacement" }
+  >,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const replacementId = ids("save-damage-replacement");
+  nodes.push({
+    id: replacementId,
+    category: "resolution",
+    atomKind: "save_damage_replacement",
+    label:
+      `save_damage_replacement\n${m.trigger.ability} save\n` +
+      `success ${m.replacement.onSuccess}\nfail ${m.replacement.onFail}`,
+  });
+  return replacementId;
 }
 
 // Passive family — "grants" edge from a passive_grant procedure node to

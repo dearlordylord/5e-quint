@@ -179,10 +179,12 @@ export type BattleWeaponDamage = Extract<
 export const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE =
   "weaponOrUnarmedCriticalRange19";
 export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
+export const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE = "saveDamageReplacement";
 export const BATTLE_UNIT_SUPPORT_PROFILES = [
   "bonusActionHide",
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
 ] as const;
 export type BattleUnitSupportProfile =
   (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number];
@@ -683,6 +685,7 @@ export type SupportedSpellAct =
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
       };
+      readonly successDamage: "none" | "half";
       readonly rangeFeet: MovementFeet;
     }
   | {
@@ -1013,6 +1016,13 @@ export type BattleCreatureState = {
           Extract<
             SupportedUnitFeatureProfile,
             { readonly kind: "attackDamageRider" }
+          >
+        >;
+        readonly saveDamageReplacementProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "saveDamageReplacement" }
           >
         >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
@@ -1396,6 +1406,8 @@ export type BattleSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
 };
+const SAVE_DAMAGE_RESULTS = ["none", "half", "full"] as const;
+type SaveDamageResult = (typeof SAVE_DAMAGE_RESULTS)[number];
 export type BattleSpellAreaChoice = {
   readonly originAnchorId: CombatantId;
   readonly affectedTargetIds: readonly CombatantId[];
@@ -1577,6 +1589,7 @@ const SupportedSpellActSchema = Schema.Union(
       expr: BattleRuntimeObjectSchema,
       damageType: Schema.String,
     }),
+    successDamage: Schema.Literal("none", "half"),
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
@@ -2344,6 +2357,15 @@ type SupportedUnitFeatureProfile =
         readonly atLevel: number;
         readonly count: number;
       }[];
+    }
+  | {
+      readonly kind: "saveDamageReplacement";
+      readonly unit: UnitRecord;
+      readonly ability: "dex";
+      readonly requiredSuccessDamage: "half";
+      readonly onSuccess: "none";
+      readonly onFail: "half";
+      readonly suppressedByCondition: "incapacitated";
     };
 
 export function startBattle(input: {
@@ -3741,6 +3763,12 @@ function battleCreatureStateFromInit(
           creatureInit.unitFeatures ?? [],
           classLevels,
         ),
+        saveDamageReplacementProfiles: characterSaveDamageReplacementProfiles(
+          creatureInit.resources ?? [],
+          creatureInit.unitFeatures ?? [],
+          creatureInit.characterUnitRefs,
+          classLevels,
+        ),
         ...(creatureInit.spellcasting === undefined
           ? {}
           : {
@@ -4446,6 +4474,50 @@ function characterAttackDamageRiderProfiles(
         ? [[unit.id, profile] as const]
         : [];
     }),
+  );
+}
+
+function characterSaveDamageReplacementProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "saveDamageReplacement" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "saveDamageReplacement" &&
+        unitRefSupportsProfile(
+          unitRefs,
+          unit.id,
+          SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+function unitRefSupportsProfile(
+  unitRefs: readonly BattleUnitRef[],
+  unitId: UnitRecord["id"],
+  supportProfile: BattleUnitSupportProfile,
+): boolean {
+  return unitRefs.some(
+    (unitRef) =>
+      unitRef.unitId === unitId &&
+      unitRef.supportProfiles?.some((profile) => profile === supportProfile) ===
+        true,
   );
 }
 
@@ -8414,6 +8486,45 @@ function parseAttackDamageRiderUnitFeatureProfile(
   };
 }
 
+function parseSaveDamageReplacementUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "saveDamageReplacement" }
+> | null {
+  if (unit.kind !== "class_feature") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "save_damage_replacement" ||
+    mechanics.trigger.kind !== "saving_throw_damage" ||
+    mechanics.trigger.ability !== "dex" ||
+    mechanics.trigger.successDamage !== "half_damage" ||
+    mechanics.replacement.onSuccess !== "no_damage" ||
+    mechanics.replacement.onFail !== "half_damage" ||
+    mechanics.suppressedBy.length !== 1 ||
+    mechanics.suppressedBy[0]?.kind !== "condition" ||
+    mechanics.suppressedBy[0].condition !== "incapacitated"
+  ) {
+    return null;
+  }
+  const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
+    return null;
+  }
+  return {
+    kind: "saveDamageReplacement",
+    unit,
+    ability: mechanics.trigger.ability,
+    requiredSuccessDamage: "half",
+    onSuccess: "none",
+    onFail: "half",
+    suppressedByCondition: "incapacitated",
+  };
+}
+
 function parseOngoingFeatureInitialExpiration(
   expiration: "start_of_next_turn" | "end_of_next_turn",
 ): "startOfNextTurn" | "endOfNextTurn" {
@@ -8686,7 +8797,8 @@ function parseSupportedUnitFeatureProfile(
     parseExtraActionGrantUnitFeatureProfile(unit) ??
     parseSelfBonusActionHealingUnitFeatureProfile(unit, classLevels) ??
     parseOngoingFeatureUnitFeatureProfile(unit, classLevels) ??
-    parseAttackDamageRiderUnitFeatureProfile(unit, classLevels)
+    parseAttackDamageRiderUnitFeatureProfile(unit, classLevels) ??
+    parseSaveDamageReplacementUnitFeatureProfile(unit, classLevels)
   );
 }
 
@@ -9603,9 +9715,10 @@ function resolveSaveGateDamageSpellAct(input: {
       savingThrowHole,
     ]);
   }
+  const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
 
   const savingThrowValidation = validateSavingThrowOutcomes(
-    input.fillSet.savingThrowOutcomes,
+    savingThrowOutcomes,
     savingThrowHole,
   );
   if (savingThrowValidation !== null) {
@@ -9616,11 +9729,29 @@ function resolveSaveGateDamageSpellAct(input: {
     );
   }
 
-  const selectedTargetIds = input.fillSet.savingThrowOutcomes.map(
+  const selectedTargetIds = savingThrowOutcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = input.fillSet.savingThrowOutcomes.flatMap((outcome) =>
+  const failedTargets = savingThrowOutcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
+  );
+  const saveDamageResultByTargetId = new Map(
+    savingThrowOutcomes.map((outcome) => [
+      outcome.targetId,
+      saveGateDamageResultForOutcome(
+        input.input.state,
+        outcome.targetId,
+        input.invocation,
+        outcome.succeeded,
+      ),
+    ]),
+  );
+  const saveDamageResultForTarget = (targetId: CombatantId): SaveDamageResult =>
+    saveDamageResultByTargetId.get(targetId) ?? "none";
+  const damageTargets = savingThrowOutcomes.flatMap((outcome) =>
+    saveDamageResultForTarget(outcome.targetId) === "none"
+      ? []
+      : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
     const saveFailedReactionWindow = maybeOpenReactionWindow(
@@ -9642,12 +9773,12 @@ function resolveSaveGateDamageSpellAct(input: {
       return saveFailedReactionWindow;
     }
   }
-  if (failedTargets.length === 0) {
+  if (damageTargets.length === 0) {
     if (input.fillSet.damageRoll !== undefined) {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Save-gate spell damage can only be filled when at least one target failed its Saving Throw.",
+        "Save-gate spell damage can only be filled when at least one target takes damage.",
       );
     }
     return spendMagicAction(
@@ -9674,7 +9805,7 @@ function resolveSaveGateDamageSpellAct(input: {
     return invalidResult(input.input.state, "invalidFill", damageValidation);
   }
 
-  const concentrationSaves = failedTargets.flatMap((targetId) => {
+  const concentrationSaves = damageTargets.flatMap((targetId) => {
     const target = input.input.state.combatants.get(targetId);
     if (target === undefined) {
       return [];
@@ -9683,6 +9814,7 @@ function resolveSaveGateDamageSpellAct(input: {
       target,
       input.invocation,
       damageRoll,
+      saveDamageResultForTarget(targetId),
     );
     const hole = concentrationSavingThrowHole(target, damageAmount);
     return hole === null ? [] : [hole];
@@ -9724,7 +9856,7 @@ function resolveSaveGateDamageSpellAct(input: {
       ),
     ]),
   );
-  const damaged = failedTargets.reduce(
+  const damaged = damageTargets.reduce(
     (state, targetId) =>
       applySpellDamage(
         state,
@@ -9733,6 +9865,7 @@ function resolveSaveGateDamageSpellAct(input: {
         damageRoll,
         false,
         concentrationSaveByTargetId.get(targetId),
+        saveDamageResultForTarget(targetId),
       ),
     input.input.state,
   );
@@ -9755,12 +9888,13 @@ function resolveSaveGateDamageSpellAct(input: {
     {
       trigger: "afterDamage",
       damageSourceId: input.actorId,
-      damagedId: failedTargets[0]!,
+      damagedId: damageTargets[0]!,
       damageAmount: toDamageAmount(
         spellDamageAmountForTarget(
-          input.input.state.combatants.get(failedTargets[0]!)!,
+          input.input.state.combatants.get(damageTargets[0]!)!,
           input.invocation,
           damageRoll,
+          saveDamageResultForTarget(damageTargets[0]!),
         ),
       ),
       continuation: {
@@ -10595,7 +10729,8 @@ function supportedCantripSaveGateDamageProfile(
     phase.attachment.value.shape.kind !== "sphere" ||
     phase.attachment.value.shape.radiusFeet !==
       SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET ||
-    phase.onSuccess.kind !== "none" ||
+    (phase.onSuccess.kind !== "none" &&
+      phase.onSuccess.kind !== "half_damage") ||
     phase.onFail.kind !== "damage" ||
     typeof phase.onFail.damageType !== "string"
   ) {
@@ -10620,6 +10755,7 @@ function supportedCantripSaveGateDamageProfile(
         expr: damageExpr,
         damageType: phase.onFail.damageType,
       },
+      successDamage: phase.onSuccess.kind === "half_damage" ? "half" : "none",
       rangeFeet: movementFeet(spell.mechanics.range.feet),
     },
   ];
@@ -10895,6 +11031,7 @@ function applySpellDamage(
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >,
+  saveDamageResult: SaveDamageResult = "full",
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
@@ -10902,7 +11039,12 @@ function applySpellDamage(
   }
   const damaged = applyHpDamage(
     target,
-    spellDamageAmountForTarget(target, invocation, damageRoll),
+    spellDamageAmountForTarget(
+      target,
+      invocation,
+      damageRoll,
+      saveDamageResult,
+    ),
     { deathFailuresAtZeroHp: critical ? 2 : 1 },
   );
   const nextState = {
@@ -10919,6 +11061,7 @@ function spellDamageAmountForTarget(
   target: BattleCreatureState,
   invocation: SupportedDamageSpellAct,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  saveDamageResult: SaveDamageResult = "full",
 ): number {
   const diceTotal = damageRoll.value.reduce(
     (total, group) =>
@@ -10934,10 +11077,73 @@ function spellDamageAmountForTarget(
     (invocation.kind === "preparedSlotSpell"
       ? invocation.targeting.repeatedEffectCount
       : 1);
+  const saveAdjustedDamage = applySaveDamageResult(
+    diceTotal + flat,
+    saveDamageResult,
+  );
   return damageAmountAfterTargetAdjustments(
     target,
-    diceTotal + flat,
+    saveAdjustedDamage,
     invocation.damage.damageType,
+  );
+}
+
+function saveGateDamageResultForOutcome(
+  state: BattleState,
+  targetId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "cantripSaveGateDamage" }
+  >,
+  savingThrowSucceeded: boolean,
+): SaveDamageResult {
+  const target = state.combatants.get(targetId);
+  const baseResult: SaveDamageResult = savingThrowSucceeded
+    ? invocation.successDamage
+    : "full";
+  const replacement = saveDamageReplacementForInvocation(target, invocation);
+  if (replacement === null) {
+    return baseResult;
+  }
+  return savingThrowSucceeded ? replacement.onSuccess : replacement.onFail;
+}
+
+function saveDamageReplacementForInvocation(
+  target: BattleCreatureState | undefined,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "cantripSaveGateDamage" }
+  >,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "saveDamageReplacement" }
+> | null {
+  if (
+    target?.origin.kind !== "character" ||
+    invocation.successDamage !== "half" ||
+    isIncapacitated(target.conditions)
+  ) {
+    return null;
+  }
+  return (
+    [...target.origin.saveDamageReplacementProfiles.values()].find(
+      (profile) =>
+        profile.ability === invocation.ability &&
+        profile.requiredSuccessDamage === "half" &&
+        profile.suppressedByCondition === "incapacitated",
+    ) ?? null
+  );
+}
+
+function applySaveDamageResult(
+  amount: number,
+  saveDamageResult: SaveDamageResult,
+): number {
+  return Match.value(saveDamageResult).pipe(
+    Match.when("none", () => 0),
+    Match.when("half", () => Math.floor(amount / 2)),
+    Match.when("full", () => amount),
+    Match.exhaustive,
   );
 }
 

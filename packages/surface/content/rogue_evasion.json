@@ -1,0 +1,30 @@
+{
+  "acquiredAtLevel": 7,
+  "className": "rogue",
+  "description": "When a Dexterity Saving Throw would allow half damage, take no damage on success and half damage on failure.",
+  "id": "rogue_evasion",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "save_damage_replacement",
+    "replacement": {
+      "onFail": "half_damage",
+      "onSuccess": "no_damage"
+    },
+    "suppressedBy": [
+      {
+        "condition": "incapacitated",
+        "kind": "condition"
+      }
+    ],
+    "trigger": {
+      "ability": "dex",
+      "kind": "saving_throw_damage",
+      "successDamage": "half_damage"
+    }
+  },
+  "name": "Evasion",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue#Evasion"
+  }
+}

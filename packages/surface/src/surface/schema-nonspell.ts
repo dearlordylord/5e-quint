@@ -398,6 +398,7 @@ export const ClassFeatureComponentMechanicsSchema = Schema.Union(
   Schema.suspend(() => PassiveMechanicsSchema),
   ActivatedAbilityMechanicsSchema,
   Schema.suspend(() => OnHitTriggerMechanicsSchema),
+  Schema.suspend(() => SaveDamageReplacementMechanicsSchema),
 );
 
 export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
@@ -545,6 +546,25 @@ export const SaveGateRiderSchema = Schema.Struct({
   dc: DcSourceSchema,
   onFail: SaveGateRiderResultSchema,
   onSuccess: SaveGateRiderResultSchema,
+});
+
+export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("save_damage_replacement"),
+  trigger: Schema.Struct({
+    kind: Schema.Literal("saving_throw_damage"),
+    ability: AbilitySchema,
+    successDamage: Schema.Literal("half_damage"),
+  }),
+  replacement: Schema.Struct({
+    onSuccess: Schema.Literal("no_damage"),
+    onFail: Schema.Literal("half_damage"),
+  }),
+  suppressedBy: Schema.NonEmptyArray(
+    Schema.Struct({
+      kind: Schema.Literal("condition"),
+      condition: Schema.Literal("incapacitated"),
+    }),
+  ),
 });
 
 export const RerollWeaponDamageDiceRiderSchema = Schema.Struct({
