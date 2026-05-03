@@ -172,13 +172,17 @@ flowchart TD
   repeated darts at one target. `ray_of_frost` requires both its Cold damage and
   Speed-reduction rider before discovery. Save-gate damage cantrips such as
   `acid_splash` use a Saving Throw outcome hole that selects in-range targets;
-  damage is requested and applied only for failed outcomes.
+  damage is requested only for targets whose Saving Throw outcome and admitted
+  replacement riders still produce damage.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named
   reducer branches. The Attack replay exposes eligible rider choices on the
   damage hole and stores once-per-turn rider use in turn resources; Sneak Attack
   is the first admitted profile.
+- Save damage replacement riders are retained feature profiles, not named
+  reducer branches. Save-gate damage replay derives the final full, half, or no
+  damage result from the single Saving Throw outcome and the admitted profile.
 - Unsupported Stat Block attack branches such as Multiattack and unsupported
   conditional on-hit riders are filtered by support gates and are not copied
   into MCP state.
@@ -218,8 +222,8 @@ restoration pressure, not as active package architecture:
 - spell-slot and use-count gates;
 - generic Surface attachment projection and damage-type hole projection,
   including temporary attachment and damage-type reference fills;
-- leveled save-gate spell support with half damage on a successful save, if
-  not fully promoted when that work begins.
+- broader leveled save-gate spell support outside the currently admitted
+  cantrip save-gate damage profile.
 
 Future restorations belong in `@dnd/battle-runtime` implementation,
 package-local deterministic tests, and `battle-runtime.qnt`. Restore SRD

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleId,
   battleCombatantSide,
   characterId,
@@ -307,6 +308,83 @@ describe("MCP server route", () => {
         }),
       }),
     ).toThrow("Unsupported battle attack-damage rider Unit hook");
+  });
+
+  test("admits only save-damage replacement Unit hooks with Evasion-style mechanics", () => {
+    const root = createMcpCompositionRoot();
+    const evasionBuild = rogueCharacterBuild(root.unitLibrary, {
+      level: 7,
+      includeEvasion: true,
+    });
+    const supportedState = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle-supported-save-damage-replacement"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("rogue-character"),
+        displayName: "Orc Soldier Rogue",
+        build: evasionBuild,
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: rogueBattleUnitLibrary(root),
+    });
+
+    expect(
+      characterUnitRef(supportedState, fighterId, "rogue_evasion"),
+    ).toMatchObject({
+      supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
+    });
+
+    const evasionUnit = root.unitLibrary.requireUnit("rogue_evasion");
+    if (
+      evasionUnit.kind !== "class_feature" ||
+      evasionUnit.mechanics.family !== "save_damage_replacement"
+    ) {
+      throw new Error("Expected Evasion class-feature Unit.");
+    }
+    const unsupportedEvasionUnit: UnitRecord = {
+      ...evasionUnit,
+      mechanics: {
+        ...evasionUnit.mechanics,
+        trigger: {
+          ...evasionUnit.mechanics.trigger,
+          ability: "con",
+        },
+      },
+    };
+
+    expect(() =>
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("battle-unsupported-save-damage-replacement"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("rogue-character"),
+          displayName: "Unsupported Evasion Rogue",
+          build: evasionBuild,
+          initiative: initiativeScore(12),
+          side: partySide,
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(11),
+          side: oppositionSide,
+        },
+        unitLibrary: rogueBattleUnitLibrary(root, {
+          evasionUnit: unsupportedEvasionUnit,
+        }),
+      }),
+    ).toThrow("Unsupported battle save-damage replacement Unit hook");
   });
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
@@ -3211,15 +3289,20 @@ function initialClassHoleIds(): readonly CreationHoleIdText[] {
 
 function rogueCharacterBuild(
   unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  input: {
+    readonly level?: number;
+    readonly includeEvasion?: boolean;
+  } = {},
 ): CharacterBuild {
   const base = fighterCharacterBuild(unitLibrary);
+  const level = (input.level ?? 1) as CharacterClassLevel;
   return {
     ...base,
     advancement: {
       entries: [
         {
           classUnitId: "class_rogue",
-          level: 1 as CharacterClassLevel,
+          level,
         },
       ],
     },
@@ -3233,6 +3316,15 @@ function rogueCharacterBuild(
         unitId: "rogue_sneak_attack",
         level: 1 as CharacterClassLevel,
       },
+      ...(input.includeEvasion === true
+        ? [
+            {
+              kind: "classFeature" as const,
+              unitId: "rogue_evasion",
+              level: 7 as CharacterClassLevel,
+            },
+          ]
+        : []),
     ],
     resources: [],
     equipment: {
@@ -3249,6 +3341,7 @@ function rogueBattleUnitLibrary(
   root: ReturnType<typeof createMcpCompositionRoot>,
   overrides?: {
     readonly sneakAttackUnit?: UnitRecord;
+    readonly evasionUnit?: UnitRecord;
   },
 ): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
   const rogueClass = rogueClassUnit(root.unitLibrary);
@@ -3260,6 +3353,9 @@ function rogueBattleUnitLibrary(
         return (
           overrides?.sneakAttackUnit ?? root.unitLibrary.requireUnit(unitId)
         );
+      }
+      if (unitId === "rogue_evasion") {
+        return overrides?.evasionUnit ?? root.unitLibrary.requireUnit(unitId);
       }
       return root.unitLibrary.requireUnit(unitId);
     },

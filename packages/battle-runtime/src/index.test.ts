@@ -11,6 +11,7 @@ import { describe, expect, test } from "vitest";
 import {
   BATTLE_UNIT_SUPPORT_PROFILES,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   BattleFillSchema,
   battleCombatantSide,
   BattleSubjectSchema,
@@ -6828,9 +6829,11 @@ describe("battle runtime", () => {
             naturalD20: 10,
             rollMode: "advantage",
           }),
-          damageRollFillWithGroups(damage, [[4], [6]], [
-            "rogue_sneak_attack_typo",
-          ]),
+          damageRollFillWithGroups(
+            damage,
+            [[4], [6]],
+            ["rogue_sneak_attack_typo"],
+          ),
         ],
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
@@ -6871,9 +6874,14 @@ describe("battle runtime", () => {
             naturalD20: 20,
             rollMode: "advantage",
           }),
-          damageRollFillWithGroups(damage, [[1, 1], [2, 2]], [
-            "rogue_sneak_attack",
-          ]),
+          damageRollFillWithGroups(
+            damage,
+            [
+              [1, 1],
+              [2, 2],
+            ],
+            ["rogue_sneak_attack"],
+          ),
         ],
       }),
     );
@@ -8104,6 +8112,209 @@ describe("battle runtime", () => {
     });
   });
 
+  test("save-damage replacement riders reduce failed half-damage saves", () => {
+    const state = wizardVsRogueBattle({ evasion: true });
+    const subject = magicSubject("dex_half_cantrip");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: fighterId, succeeded: false },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: fighterId, succeeded: false },
+        ]),
+        damageRollFill(damage, 6),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: fighterId, hp: 9 },
+        ],
+      },
+    });
+  });
+
+  test("save-damage replacement riders replace successful half-damage saves with no damage", () => {
+    const state = wizardVsRogueBattle({ evasion: true });
+    const subject = magicSubject("dex_half_cantrip");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: fighterId, succeeded: true },
+        ]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: fighterId, hp: 12 },
+        ],
+      },
+    });
+  });
+
+  test("half-damage save gates still damage targets without replacement riders", () => {
+    const state = wizardVsRogueBattle({ evasion: false });
+    const subject = magicSubject("dex_half_cantrip");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: fighterId, succeeded: true },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: fighterId, succeeded: true },
+        ]),
+        damageRollFill(damage, 6),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: fighterId, hp: 9 },
+        ],
+      },
+    });
+  });
+
+  test("save-damage replacement riders require admitted Unit support", () => {
+    const state = wizardVsRogueBattle({
+      evasion: true,
+      saveDamageReplacementSupport: false,
+    });
+    const subject = magicSubject("dex_half_cantrip");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: fighterId, succeeded: true },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: fighterId, succeeded: true },
+        ]),
+        damageRollFill(damage, 6),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: fighterId, hp: 9 },
+        ],
+      },
+    });
+  });
+
+  test("save-damage replacement riders ignore non-Dexterity save mechanics", () => {
+    const state = wizardVsRogueBattle({
+      evasion: true,
+      evasionAbility: "con",
+    });
+    const subject = magicSubject("dex_half_cantrip");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: fighterId, succeeded: true },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: fighterId, succeeded: true },
+        ]),
+        damageRollFill(damage, 6),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: fighterId, hp: 9 },
+        ],
+      },
+    });
+  });
+
   test("Acid Splash damage requests and consumes Concentration saves", () => {
     const baseState = wizardVsSkeletonBattle();
     const skeleton = baseState.combatants.get(skeletonId);
@@ -8463,9 +8674,7 @@ function resolveSneakAttackParityFixture(): Extract<
           naturalD20: 10,
           rollMode: "advantage",
         }),
-        damageRollFillWithGroups(damage, [[4], [6]], [
-          "rogue_sneak_attack",
-        ]),
+        damageRollFillWithGroups(damage, [[4], [6]], ["rogue_sneak_attack"]),
       ],
     }),
   );
@@ -8695,7 +8904,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("75 passing");
+  expect(quintOutput).toContain("76 passing");
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
@@ -10081,6 +10290,17 @@ function sneakAttackFeature(): NonNullable<
   return { unit: rogueSneakAttackUnit() };
 }
 
+function evasionFeature(input?: {
+  readonly ability?: "dex" | "con";
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["unitFeatures"]
+>[number] {
+  return { unit: rogueEvasionUnit(input) };
+}
+
 function rogueSneakAttackUnit(): Extract<
   UnitRecord,
   { readonly kind: "class_feature" }
@@ -10127,6 +10347,34 @@ function rogueSneakAttackUnit(): Extract<
         },
         damageType: "same_as_attack",
       },
+    },
+  };
+}
+
+function rogueEvasionUnit(input?: {
+  readonly ability?: "dex" | "con";
+}): Extract<UnitRecord, { readonly kind: "class_feature" }> {
+  return {
+    id: "rogue_evasion",
+    kind: "class_feature",
+    name: "Evasion",
+    className: "rogue",
+    acquiredAtLevel: 7,
+    description:
+      "When a Dexterity Saving Throw would allow half damage, take no damage on success and half damage on failure.",
+    provenance: {
+      kind: "srd-5.2.1",
+      section: "Classes/Rogue#Evasion",
+    },
+    mechanics: {
+      family: "save_damage_replacement",
+      trigger: {
+        kind: "saving_throw_damage",
+        ability: input?.ability ?? "dex",
+        successDamage: "half_damage",
+      },
+      replacement: { onSuccess: "no_damage", onFail: "half_damage" },
+      suppressedBy: [{ kind: "condition", condition: "incapacitated" }],
     },
   };
 }
@@ -10374,6 +10622,55 @@ function wizardVsSkeletonBattle(input?: {
   });
 }
 
+function wizardVsRogueBattle(input: {
+  readonly evasion: boolean;
+  readonly saveDamageReplacementSupport?: boolean;
+  readonly evasionAbility?: "dex" | "con";
+}): BattleState {
+  const supportEvasion =
+    input.evasion && input.saveDamageReplacementSupport !== false;
+  return startBattle({
+    battleId: battleId("battle-wizard-rogue"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 20,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: [dexHalfDamageCantrip()],
+          preparedSpells: [],
+        }),
+      }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: input.evasion ? "Evasive Rogue" : "Rogue",
+        initiative: 10,
+        classLevels: [{ className: "rogue", level: 7 }],
+        attack: null,
+        unitFeatures: input.evasion
+          ? [
+              input.evasionAbility === undefined
+                ? evasionFeature()
+                : evasionFeature({ ability: input.evasionAbility }),
+            ]
+          : [],
+        characterUnitRefs: supportEvasion
+          ? [
+              {
+                unitId: "rogue_evasion",
+                supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
+              },
+            ]
+          : [],
+      }),
+    ],
+    combatantDistances: [
+      { combatantA: wizardId, combatantB: fighterId, feet: movementFeet(10) },
+    ],
+  });
+}
+
 function wizardSpellcasting(input?: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
@@ -10393,6 +10690,31 @@ function wizardSpellcasting(input?: {
     ],
     preparedSpells: input?.preparedSpells ?? [spellRecord("magic_missile")],
     spellSlots: [{ spellLevel: 1, count: 2 }],
+  };
+}
+
+function dexHalfDamageCantrip(): SpellRecord {
+  const spell = spellRecord("acid_splash");
+  if (spell.mechanics.family !== "activation") {
+    throw new Error("Expected Acid Splash activation spell.");
+  }
+  const phase = spell.mechanics.phases[0];
+  if (phase?.kind !== "save_gate") {
+    throw new Error("Expected Acid Splash save-gate phase.");
+  }
+  return {
+    ...spell,
+    id: "dex_half_cantrip",
+    name: "Dex Half Cantrip",
+    mechanics: {
+      ...spell.mechanics,
+      phases: [
+        {
+          ...phase,
+          onSuccess: { kind: "half_damage" },
+        },
+      ],
+    },
   };
 }
 
@@ -10444,7 +10766,12 @@ function spellRecord(
 }
 
 function magicSubject(
-  spellId: "magic_missile" | "mage_armor" | "ray_of_frost" | "acid_splash",
+  spellId:
+    | "magic_missile"
+    | "mage_armor"
+    | "ray_of_frost"
+    | "acid_splash"
+    | "dex_half_cantrip",
 ): BattleSubject {
   return {
     tag: "actionSpell",

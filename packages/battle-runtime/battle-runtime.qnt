@@ -34,6 +34,11 @@ module battleRuntime {
   //   Sneak Attack is an optional once-per-turn on-hit damage rider for an
   //   eligible Finesse/Ranged attack, and its extra damage dice are doubled on
   //   Critical Hits.
+  // - Classes/Rogue.md lines 113-115, Classes/Monk.md lines 132-134, and
+  //   Playing-the-Game.md lines 704-714: Evasion-style replacement riders
+  //   apply only to Dexterity Saving Throw damage procedures whose successful
+  //   save outcome is half damage; success becomes no damage and failure
+  //   becomes half damage.
   // - Spells/Gaining-and-Casting.md lines 3-65 and 92-96, Rules-Glossary.md
   //   lines 698-702, and Classes/Wizard.md lines 56-82: prepared level-1
   //   Wizard spells spend Spell Slots; cantrips do not.
@@ -1368,6 +1373,15 @@ module battleRuntime {
     else
       target
 
+  pure def dexHalfSaveDamageAfterReplacement(
+    damageRoll: int,
+    saveSucceeded: bool,
+    replacementApplies: bool,
+  ): int =
+    if (replacementApplies and saveSucceeded) 0
+    else if (replacementApplies or saveSucceeded) damageRoll / 2
+    else damageRoll
+
   pure def resolveAcidSplash(
     state: BattleState,
     fighterFailedSavingThrow: bool,
@@ -1757,6 +1771,15 @@ module battleRuntime {
       assert(result.actionAvailable == false),
       assert(result.fighter.hp == 12),
       assert(result.goblin.hp == 6),
+    }
+  }
+
+  run test_evasion_style_save_damage_replacement = {
+    all {
+      assert(dexHalfSaveDamageAfterReplacement(6, true, true) == 0),
+      assert(dexHalfSaveDamageAfterReplacement(6, false, true) == 3),
+      assert(dexHalfSaveDamageAfterReplacement(6, true, false) == 3),
+      assert(dexHalfSaveDamageAfterReplacement(6, false, false) == 6),
     }
   }
 
