@@ -1,21 +1,24 @@
-import tsParser from "@typescript-eslint/parser"
-import prettierConfig from "eslint-config-prettier"
+import tsParser from "@typescript-eslint/parser";
+import prettierConfig from "eslint-config-prettier";
 
-const maxLinesRule = (max) => ["error", { max, skipBlankLines: true, skipComments: true }]
+const maxLinesRule = (max) => [
+  "error",
+  { max, skipBlankLines: true, skipComments: true },
+];
 
 export default [
   {
-    ignores: ["**/dist", "**/build", "**/*.gen.*"]
+    ignores: ["**/dist", "**/build", "**/*.gen.*"],
   },
   {
     files: ["src/**/*.ts"],
     languageOptions: {
       parser: tsParser,
-      sourceType: "module"
+      sourceType: "module",
     },
     rules: {
-      "max-lines": maxLinesRule(420)
-    }
+      "max-lines": maxLinesRule(420),
+    },
   },
   {
     files: [
@@ -40,19 +43,16 @@ export default [
       "src/machine-helpers.ts",
       "src/battle-machine-creature.ts",
       "src/character-open-choice-payload.ts",
-      // Transitional projected Surface bridge; likely removed when core consumes
-      // Surface/shared reducer facts directly.
-      "src/projected-compiler.ts"
     ],
     rules: {
-      "max-lines": "off"
-    }
+      "max-lines": "off",
+    },
   },
   {
     files: ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.mbt.test.ts"],
     rules: {
-      "max-lines": "off"
-    }
+      "max-lines": "off",
+    },
   },
-  prettierConfig
-]
+  prettierConfig,
+];
