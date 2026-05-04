@@ -23,6 +23,8 @@ import {
   computeTotalLevel,
   startingClassUnitId,
   unitChoiceKey,
+  unitChoiceSourceHoleIdText,
+  unitChoiceSourceUnitId,
   type CharacterDraft,
   type CreationBatchIssueCode,
   type CreationBatchFillResult,
@@ -46,6 +48,14 @@ function unitChoiceKeyRight(value: string) {
   const result = unitChoiceKey(value);
   if (Either.isLeft(result)) {
     throw new Error(`Invalid MBT Unit choice key: ${value}`);
+  }
+  return result.right;
+}
+
+function unitChoiceSourceUnitIdRight(value: string) {
+  const result = unitChoiceSourceUnitId(value);
+  if (Either.isLeft(result)) {
+    throw new Error(`Invalid MBT Unit choice source Unit id: ${value}`);
   }
   return result.right;
 }
@@ -253,21 +263,22 @@ const holeIds = {
   HAbilityScores: "cc:draft:draft.abilityScoreGeneration",
   HLanguages: "cc:draft:draft.languages",
   HAlignment: "cc:draft:draft.alignment",
-  HClassSkills: "cc:unit:class_fighter:fighter_skill_choices",
+  HClassSkills: "cc:unit-source:u:13:class_fighter:c:fighter_skill_choices",
   HFighterFightingStyle:
-    "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+    "cc:unit-source:u:25:fighter_fighting_style_l1:c:fighter_fighting_style",
   HFighterWeaponMastery:
-    "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+    "cc:unit-source:u:25:fighter_weapon_mastery_l1:c:fighter_weapon_mastery_choices",
   HBackgroundAbilityScoreIncrease:
-    "cc:unit:background_soldier:background_ability_score_increase",
-  HBackgroundTool: "cc:unit:background_soldier:background_tool_choice",
-  HClassEquipment: "cc:unit:class_fighter:class_equipment_choice",
+    "cc:unit-source:u:18:background_soldier:c:background_ability_score_increase",
+  HBackgroundTool:
+    "cc:unit-source:u:18:background_soldier:c:background_tool_choice",
+  HClassEquipment: "cc:unit-source:u:13:class_fighter:c:class_equipment_choice",
   HBackgroundEquipment:
-    "cc:unit:background_soldier:background_equipment_choice",
-  HEquipmentPurchase: "cc:unit:class_fighter:equipment_purchase",
-  HLoadoutArmor: "cc:unit:armor_chain_mail:loadout_armor",
-  HLoadoutShield: "cc:unit:equipment_shield:loadout_shield",
-  HLoadoutWeapon: "cc:unit:weapon_longsword:loadout_weapon",
+    "cc:unit-source:u:18:background_soldier:c:background_equipment_choice",
+  HEquipmentPurchase: "cc:unit-source:u:13:class_fighter:c:equipment_purchase",
+  HLoadoutArmor: "cc:unit-source:u:16:armor_chain_mail:c:loadout_armor",
+  HLoadoutShield: "cc:unit-source:u:16:equipment_shield:c:loadout_shield",
+  HLoadoutWeapon: "cc:unit-source:u:16:weapon_longsword:c:loadout_weapon",
 } as const;
 
 assertUniqueHoleIds(holeIds);
@@ -538,7 +549,11 @@ function choiceFillForKnownProtocolHole(
     // This rejection case intentionally targets a valid protocol hole before
     // it is open, so it cannot derive the id from current hole discovery.
     holeId: creationHoleId(
-      `cc:unit:armor_chain_mail:${unitChoiceKeyRight("loadout_armor")}`,
+      unitChoiceSourceHoleIdText({
+        tag: "unit",
+        unitId: unitChoiceSourceUnitIdRight("armor_chain_mail"),
+        choiceKey: unitChoiceKeyRight("loadout_armor"),
+      }),
     ),
     optionIds: optionIds.map(creationChoiceOptionId),
   };

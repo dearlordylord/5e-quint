@@ -121,8 +121,8 @@ adds support-profile entries and projection logic.
 ## State Ownership Rules
 
 Draft-owned holes use stable ids such as `cc:draft:<draft path>`. Unit-granted
-holes use stable ids such as `cc:unit:<unit id>:<choice key>`. Hole ids are
-semantic addresses, not array positions.
+holes use stable ids derived from the reversible `UnitChoiceSourceKey` codec.
+Hole ids are semantic addresses, not array positions.
 
 Accepted option ids are protocol choices. When a selected option references a
 Unit, the draft records the Unit reference rather than treating the

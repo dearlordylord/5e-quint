@@ -395,7 +395,7 @@ export type CreationHoleSource =
 
 export type CreationHoleIdText =
   | `cc:draft:${CharacterDraftPath}`
-  | `cc:unit:${UnitRecord["id"]}:${UnitChoiceKey}`;
+  | `cc:unit-source:${UnitChoiceSourceKey}`;
 
 export type CreationHoleId = CreationHoleIdText & Brand<"CreationHoleId">;
 ```
@@ -403,7 +403,8 @@ export type CreationHoleId = CreationHoleIdText & Brand<"CreationHoleId">;
 Rules for hole ids:
 
 - Use `cc:draft:<path>` for holes opened by missing draft structure.
-- Use `cc:unit:<unitId>:<choiceKey>` for holes opened by authored Unit structure.
+- Use `cc:unit-source:<UnitChoiceSourceKey>` for holes opened by authored Unit
+  structure.
 - `choiceKey` must be a domain key from the Unit/source reader, not an array index.
 - If a domain has ordered entries, name the role rather than the current array position for phase 1, for example `draft.advancement.initial`.
 - Hole ids are stable across rediscovery from the same semantic draft, but the set of holes changes after accepted fills.

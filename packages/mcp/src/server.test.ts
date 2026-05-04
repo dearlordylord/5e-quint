@@ -55,6 +55,7 @@ import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_READY_TRIGGERS,
 } from "../test-support/battle-act-labels.ts";
+import { unitHoleId } from "../test-support/creation-hole-ids.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 function startBattleFromCharacterBuildAndStatBlockRight(
@@ -204,7 +205,9 @@ describe("MCP server route", () => {
       ...build,
       progression: {
         startingClass: expectRight(
-          classUnitIdFromClassUnit(root.unitLibrary.requireUnit("class_fighter")),
+          classUnitIdFromClassUnit(
+            root.unitLibrary.requireUnit("class_fighter"),
+          ),
         ),
         advancements: [
           {
@@ -738,9 +741,7 @@ describe("MCP server route", () => {
         followUpBattleHoles: "result.holes",
       },
       acceptedInputs: {
-        progressionFill: expect.stringContaining(
-          "draft.progression.initial",
-        ),
+        progressionFill: expect.stringContaining("draft.progression.initial"),
         choiceFill: expect.stringContaining('"kind":"choice"'),
         attackRollFill: expect.stringContaining('"kind":"attackRoll"'),
       },
@@ -3433,31 +3434,34 @@ function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
 function manifestChoiceFills(): readonly CreationFill[] {
   return [
     choiceFill(
-      "cc:unit:class_fighter:fighter_skill_choices",
+      unitHoleId("class_fighter", "fighter_skill_choices"),
       "perception",
       "survival",
     ),
     choiceFill(
-      "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+      unitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
       "defense",
     ),
     choiceFill(
-      "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+      unitHoleId("fighter_weapon_mastery_l1", "fighter_weapon_mastery_choices"),
       "weapon_longsword",
       "weapon_spear",
       "weapon_flail",
     ),
-    choiceFill("cc:unit:class_fighter:class_equipment_choice", "option_c"),
     choiceFill(
-      "cc:unit:background_soldier:background_ability_score_increase",
+      unitHoleId("class_fighter", "class_equipment_choice"),
+      "option_c",
+    ),
+    choiceFill(
+      unitHoleId("background_soldier", "background_ability_score_increase"),
       "two_and_one:str:con",
     ),
     choiceFill(
-      "cc:unit:background_soldier:background_tool_choice",
+      unitHoleId("background_soldier", "background_tool_choice"),
       "tool_dice_set",
     ),
     choiceFill(
-      "cc:unit:background_soldier:background_equipment_choice",
+      unitHoleId("background_soldier", "background_equipment_choice"),
       "option_b",
     ),
   ];
@@ -3466,7 +3470,7 @@ function manifestChoiceFills(): readonly CreationFill[] {
 function manifestPurchaseFills(): readonly CreationFill[] {
   return [
     choiceFill(
-      "cc:unit:class_fighter:equipment_purchase",
+      unitHoleId("class_fighter", "equipment_purchase"),
       "armor_chain_mail",
       "weapon_longsword",
       "equipment_shield",
@@ -3476,9 +3480,12 @@ function manifestPurchaseFills(): readonly CreationFill[] {
 
 function manifestLoadoutFills(): readonly CreationFill[] {
   return [
-    choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
-    choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
-    choiceFill("cc:unit:weapon_longsword:loadout_weapon", "wielded_one_handed"),
+    choiceFill(unitHoleId("armor_chain_mail", "loadout_armor"), "worn"),
+    choiceFill(unitHoleId("equipment_shield", "loadout_shield"), "wielded"),
+    choiceFill(
+      unitHoleId("weapon_longsword", "loadout_weapon"),
+      "wielded_one_handed",
+    ),
   ];
 }
 

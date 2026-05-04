@@ -26,8 +26,13 @@ import {
   draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
+  parseCreationHoleId,
+  parseUnitChoiceSourceKey,
   startingClassUnitId,
   unitChoiceKey,
+  unitChoiceSourceHoleIdText,
+  unitChoiceSourceKey,
+  unitChoiceSourceUnitId,
   type CharacterDraft,
   type CharacterChoiceSelection,
   type ChoiceCardinality,
@@ -116,6 +121,30 @@ function unitChoiceKeyRight(value: string) {
   return result.right;
 }
 
+function unitChoiceSourceUnitIdRight(value: string) {
+  const result = unitChoiceSourceUnitId(value);
+  if (Either.isLeft(result)) {
+    throw new Error(`Invalid test Unit choice source Unit id: ${value}`);
+  }
+  return result.right;
+}
+
+function testUnitChoiceSourceKey(unitId: string, choiceKey: string) {
+  return unitChoiceSourceKey({
+    tag: "unit",
+    unitId: unitChoiceSourceUnitIdRight(unitId),
+    choiceKey: unitChoiceKeyRight(choiceKey),
+  });
+}
+
+function testUnitHoleId(unitId: string, choiceKey: string): CreationHoleIdText {
+  return unitChoiceSourceHoleIdText({
+    tag: "unit",
+    unitId: unitChoiceSourceUnitIdRight(unitId),
+    choiceKey: unitChoiceKeyRight(choiceKey),
+  });
+}
+
 function choiceCardinalityRight(
   cardinality: ChoiceCardinality | undefined,
 ): ChoiceCardinality {
@@ -124,6 +153,41 @@ function choiceCardinalityRight(
   }
   return cardinality;
 }
+
+describe("UnitChoiceSourceKey", () => {
+  test("round-trips source facts through a length-prefixed key", () => {
+    const source = {
+      tag: "unit" as const,
+      unitId: unitChoiceSourceUnitIdRight("class:custom:fighter"),
+      choiceKey: unitChoiceKeyRight("fighter_skill_choices"),
+    };
+
+    const key = unitChoiceSourceKey(source);
+    const parsed = expectRight(parseUnitChoiceSourceKey(key));
+
+    expect(parsed).toEqual(source);
+    expect(unitChoiceSourceKey(parsed)).toBe(key);
+  });
+
+  test("rejects the old separator-based Unit-source hole id", () => {
+    expect(
+      parseCreationHoleId("cc:unit:class_fighter:fighter_skill_choices"),
+    ).toBeNull();
+  });
+
+  test("returns typed issues for invalid source keys", () => {
+    expect(
+      parseUnitChoiceSourceKey("u:13:class_fighter:c:not_a_choice"),
+    ).toEqual(
+      Either.left({
+        tag: "unitChoiceSourceKeyUnsupportedChoiceKey",
+        value: "u:13:class_fighter:c:not_a_choice",
+        choiceKey: "not_a_choice",
+      }),
+    );
+  });
+});
+
 const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
 const characterCreationRuntimeSlicePath = fileURLToPath(
   new URL("../character-creation-runtime-slice.qnt", import.meta.url),
@@ -254,7 +318,7 @@ describe("character creation hole discovery", () => {
       holeById(holes, "cc:draft:draft.progression.initial"),
     ).toBeUndefined();
     expect(
-      holeById(holes, "cc:unit:class_fighter:fighter_skill_choices"),
+      holeById(holes, testUnitHoleId("class_fighter", "fighter_skill_choices")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 2 },
@@ -273,7 +337,7 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+        testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
       ),
     ).toMatchObject({
       kind: "choice",
@@ -282,7 +346,10 @@ describe("character creation hole discovery", () => {
     });
     const weaponMasteryHole = holeById(
       holes,
-      "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+      testUnitHoleId(
+        "fighter_weapon_mastery_l1",
+        "fighter_weapon_mastery_choices",
+      ),
     );
     expect(weaponMasteryHole).toMatchObject({
       kind: "choice",
@@ -296,14 +363,20 @@ describe("character creation hole discovery", () => {
       ]),
     );
     expect(
-      holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
+      holeById(
+        holes,
+        testUnitHoleId("class_fighter", "class_equipment_choice"),
+      ),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
     });
     expect(
       optionIds(
-        holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
+        holeById(
+          holes,
+          testUnitHoleId("class_fighter", "class_equipment_choice"),
+        ),
       ),
     ).toEqual(["option_a", "option_b", "option_c"]);
   });
@@ -320,7 +393,7 @@ describe("character creation hole discovery", () => {
     expect(holeById(holes, "cc:draft:draft.background")).toBeUndefined();
     const backgroundIncreaseHole = holeById(
       holes,
-      "cc:unit:background_soldier:background_ability_score_increase",
+      testUnitHoleId("background_soldier", "background_ability_score_increase"),
     );
     expect(backgroundIncreaseHole).toMatchObject({
       kind: "choice",
@@ -331,7 +404,7 @@ describe("character creation hole discovery", () => {
     );
     const backgroundToolHole = holeById(
       holes,
-      "cc:unit:background_soldier:background_tool_choice",
+      testUnitHoleId("background_soldier", "background_tool_choice"),
     );
     expect(backgroundToolHole).toMatchObject({
       kind: "choice",
@@ -344,14 +417,17 @@ describe("character creation hole discovery", () => {
       "tool_three_dragon_ante_set",
     ]);
     expect(
-      holeById(holes, "cc:unit:background_soldier:background_equipment_choice"),
+      holeById(
+        holes,
+        testUnitHoleId("background_soldier", "background_equipment_choice"),
+      ),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "option_a" }, { optionId: "option_b" }],
     });
     expect(
-      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+      holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toBeUndefined();
   });
 
@@ -373,13 +449,19 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
+      holeById(
+        holes,
+        testUnitHoleId("class_fighter", "class_equipment_choice"),
+      ),
     ).toBeUndefined();
     expect(
-      holeById(holes, "cc:unit:background_soldier:background_equipment_choice"),
+      holeById(
+        holes,
+        testUnitHoleId("background_soldier", "background_equipment_choice"),
+      ),
     ).toBeUndefined();
     expect(
-      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+      holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "between", min: 1, max: 3 },
@@ -392,7 +474,7 @@ describe("character creation hole discovery", () => {
       ],
     });
     expect(
-      holeById(holes, "cc:unit:armor_chain_mail:loadout_armor"),
+      holeById(holes, testUnitHoleId("armor_chain_mail", "loadout_armor")),
     ).toBeUndefined();
   });
 
@@ -419,13 +501,16 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
+      holeById(
+        holes,
+        testUnitHoleId("class_fighter", "class_equipment_choice"),
+      ),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
     });
     expect(
-      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+      holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toBeUndefined();
   });
 
@@ -447,7 +532,7 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+      holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toBeUndefined();
   });
 
@@ -469,13 +554,16 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:class_fighter:class_equipment_choice"),
+      holeById(
+        holes,
+        testUnitHoleId("class_fighter", "class_equipment_choice"),
+      ),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
     });
     expect(
-      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+      holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toBeUndefined();
   });
 
@@ -505,20 +593,20 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+      holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toBeUndefined();
     expect(
-      holeById(holes, "cc:unit:armor_chain_mail:loadout_armor"),
+      holeById(holes, testUnitHoleId("armor_chain_mail", "loadout_armor")),
     ).toBeUndefined();
     expect(
-      holeById(holes, "cc:unit:equipment_shield:loadout_shield"),
+      holeById(holes, testUnitHoleId("equipment_shield", "loadout_shield")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "wielded" }],
     });
     expect(
-      holeById(holes, "cc:unit:weapon_longsword:loadout_weapon"),
+      holeById(holes, testUnitHoleId("weapon_longsword", "loadout_weapon")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -551,7 +639,7 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:weapon_flail:loadout_weapon"),
+      holeById(holes, testUnitHoleId("weapon_flail", "loadout_weapon")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -585,19 +673,19 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:class_fighter:equipment_purchase"),
+      holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "between", min: 1, max: 3 },
     });
     expect(
-      holeById(holes, "cc:unit:armor_chain_mail:loadout_armor"),
+      holeById(holes, testUnitHoleId("armor_chain_mail", "loadout_armor")),
     ).toBeUndefined();
     expect(
-      holeById(holes, "cc:unit:equipment_shield:loadout_shield"),
+      holeById(holes, testUnitHoleId("equipment_shield", "loadout_shield")),
     ).toBeUndefined();
     expect(
-      holeById(holes, "cc:unit:weapon_longsword:loadout_weapon"),
+      holeById(holes, testUnitHoleId("weapon_longsword", "loadout_weapon")),
     ).toBeUndefined();
   });
 
@@ -636,31 +724,40 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:class_fighter:fighter_skill_choices"),
+      holeById(holes, testUnitHoleId("class_fighter", "fighter_skill_choices")),
     ).toBeUndefined();
     expect(
       holeById(
         holes,
-        "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+        testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
       ),
     ).toBeUndefined();
     expect(
       holeById(
         holes,
-        "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+        testUnitHoleId(
+          "fighter_weapon_mastery_l1",
+          "fighter_weapon_mastery_choices",
+        ),
       ),
     ).toBeUndefined();
     expect(
       holeById(
         holes,
-        "cc:unit:background_soldier:background_ability_score_increase",
+        testUnitHoleId(
+          "background_soldier",
+          "background_ability_score_increase",
+        ),
       ),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
     });
     expect(
-      holeById(holes, "cc:unit:background_soldier:background_tool_choice"),
+      holeById(
+        holes,
+        testUnitHoleId("background_soldier", "background_tool_choice"),
+      ),
     ).toBeUndefined();
   });
 
@@ -680,7 +777,7 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, "cc:unit:class_fighter:fighter_skill_choices"),
+      holeById(holes, testUnitHoleId("class_fighter", "fighter_skill_choices")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 2 },
@@ -705,7 +802,7 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+        testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
       ),
     ).toMatchObject({
       kind: "choice",
@@ -730,7 +827,10 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        "cc:unit:background_soldier:background_ability_score_increase",
+        testUnitHoleId(
+          "background_soldier",
+          "background_ability_score_increase",
+        ),
       ),
     ).toBeUndefined();
   });
@@ -752,7 +852,10 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        "cc:unit:background_soldier:background_ability_score_increase",
+        testUnitHoleId(
+          "background_soldier",
+          "background_ability_score_increase",
+        ),
       ),
     ).toMatchObject({
       kind: "choice",
@@ -769,9 +872,12 @@ describe("character creation hole discovery", () => {
     });
 
     expect(holeById(holes, "cc:draft:draft.species")).toBeUndefined();
-    expect(holes.map((hole) => hole.holeId)).not.toContain(
-      "cc:unit:species_orc:species-derived-traits",
-    );
+    expect(
+      holes.some(
+        (hole) =>
+          hole.source.tag === "unit" && hole.source.unitId === "species_orc",
+      ),
+    ).toBe(false);
   });
 });
 
@@ -798,12 +904,12 @@ describe("character creation QNT slice parity", () => {
       expectedRevision: afterInitial.draft.revision,
       fills: [
         choiceFill(
-          "cc:unit:class_fighter:fighter_skill_choices",
+          testUnitHoleId("class_fighter", "fighter_skill_choices"),
           "perception",
           "athletics",
         ),
         choiceFill(
-          "cc:unit:background_soldier:background_equipment_choice",
+          testUnitHoleId("background_soldier", "background_equipment_choice"),
           "option_a",
         ),
       ],
@@ -1013,7 +1119,10 @@ describe("character creation batch fill", () => {
       holeById(result.holes, "cc:draft:draft.progression.initial"),
     ).toBeUndefined();
     expect(
-      holeById(result.holes, "cc:unit:class_fighter:fighter_skill_choices"),
+      holeById(
+        result.holes,
+        testUnitHoleId("class_fighter", "fighter_skill_choices"),
+      ),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 2 },
@@ -1037,16 +1146,19 @@ describe("character creation batch fill", () => {
       expectedRevision: afterInitial.revision,
       fills: [
         choiceFill(
-          "cc:unit:class_fighter:fighter_skill_choices",
+          testUnitHoleId("class_fighter", "fighter_skill_choices"),
           "perception",
           "survival",
         ),
         choiceFill(
-          "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
           "defense",
         ),
         choiceFill(
-          "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+          testUnitHoleId(
+            "fighter_weapon_mastery_l1",
+            "fighter_weapon_mastery_choices",
+          ),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
@@ -1122,7 +1234,10 @@ describe("character creation batch fill", () => {
       unitLibrary,
       expectedRevision: afterInitial.revision,
       fills: [
-        choiceFill("cc:unit:class_fighter:class_equipment_choice", "option_b"),
+        choiceFill(
+          testUnitHoleId("class_fighter", "class_equipment_choice"),
+          "option_b",
+        ),
       ],
     });
 
@@ -1402,7 +1517,7 @@ describe("character creation batch fill", () => {
       expectedRevision: draft.revision,
       fills: [
         choiceFill(
-          "cc:unit:background_soldier:background_tool_choice",
+          testUnitHoleId("background_soldier", "background_tool_choice"),
           "tool_dragonchess_set",
         ),
       ],
@@ -1418,8 +1533,10 @@ describe("character creation batch fill", () => {
         tag: "illegalFill",
         code: "unsupportedChoice",
         fillIndex: 0,
-        message:
-          "Unsupported choice tool_dragonchess_set for character creation hole: cc:unit:background_soldier:background_tool_choice",
+        message: `Unsupported choice tool_dragonchess_set for character creation hole: ${testUnitHoleId(
+          "background_soldier",
+          "background_tool_choice",
+        )}`,
       },
     ]);
   });
@@ -1734,7 +1851,11 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       tag: "incomplete",
-      holes: [{ holeId: "cc:unit:class_fighter:class_equipment_choice" }],
+      holes: [
+        {
+          holeId: testUnitHoleId("class_fighter", "class_equipment_choice"),
+        },
+      ],
     });
   });
 
@@ -1878,10 +1999,12 @@ describe("character creation finalization", () => {
     const merged = supportedChoiceHolesBySource([
       {
         kind: "choice",
-        holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+        holeId: creationHoleId(
+          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+        ),
         source: {
           tag: "unit",
-          unitId: "weapon_longsword",
+          unitId: unitChoiceSourceUnitIdRight("weapon_longsword"),
           choiceKey: unitChoiceKeyRight("loadout_weapon"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
@@ -1895,10 +2018,12 @@ describe("character creation finalization", () => {
       },
       {
         kind: "choice",
-        holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+        holeId: creationHoleId(
+          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+        ),
         source: {
           tag: "unit",
-          unitId: "weapon_longsword",
+          unitId: unitChoiceSourceUnitIdRight("weapon_longsword"),
           choiceKey: unitChoiceKeyRight("loadout_weapon"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
@@ -1917,7 +2042,9 @@ describe("character creation finalization", () => {
       },
     ]);
 
-    const mergedHole = merged.get("weapon_longsword:loadout_weapon");
+    const mergedHole = merged.get(
+      testUnitChoiceSourceKey("weapon_longsword", "loadout_weapon"),
+    );
     expect(mergedHole).toMatchObject({
       kind: "choice",
       source: {
@@ -1944,10 +2071,12 @@ describe("character creation finalization", () => {
     const merged = supportedChoiceHolesBySource([
       {
         kind: "choice",
-        holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+        holeId: creationHoleId(
+          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+        ),
         source: {
           tag: "unit",
-          unitId: "weapon_longsword",
+          unitId: unitChoiceSourceUnitIdRight("weapon_longsword"),
           choiceKey: unitChoiceKeyRight("loadout_weapon"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
@@ -1961,10 +2090,12 @@ describe("character creation finalization", () => {
       },
       {
         kind: "choice",
-        holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+        holeId: creationHoleId(
+          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+        ),
         source: {
           tag: "unit",
-          unitId: "weapon_longsword",
+          unitId: unitChoiceSourceUnitIdRight("weapon_longsword"),
           choiceKey: unitChoiceKeyRight("loadout_weapon"),
         },
         cardinality: choiceCardinalityRight(
@@ -1979,7 +2110,10 @@ describe("character creation finalization", () => {
         ],
       },
     ]);
-    expect(merged.get("weapon_longsword:loadout_weapon")?.options).toEqual([
+    expect(
+      merged.get(testUnitChoiceSourceKey("weapon_longsword", "loadout_weapon"))
+        ?.options,
+    ).toEqual([
       {
         optionId: "wielded_one_handed",
         label: "Wielded one-handed",
@@ -2040,8 +2174,10 @@ describe("character creation finalization", () => {
       tag: "incomplete",
       holes: [
         {
-          holeId:
-            "cc:unit:background_soldier:background_ability_score_increase",
+          holeId: testUnitHoleId(
+            "background_soldier",
+            "background_ability_score_increase",
+          ),
         },
       ],
     });
@@ -2136,7 +2272,10 @@ describe("character creation finalization", () => {
       tag: "incomplete",
       holes: [
         {
-          holeId: "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+          holeId: testUnitHoleId(
+            "fighter_fighting_style_l1",
+            "fighter_fighting_style",
+          ),
         },
       ],
     });
@@ -2178,7 +2317,7 @@ describe("character creation finalization", () => {
       tag: "incomplete",
       holes: [
         {
-          holeId: "cc:unit:class_fighter:equipment_purchase",
+          holeId: testUnitHoleId("class_fighter", "equipment_purchase"),
         },
       ],
     });
@@ -2188,7 +2327,7 @@ describe("character creation finalization", () => {
       tag: "incomplete",
       holes: [
         {
-          holeId: "cc:unit:class_fighter:equipment_purchase",
+          holeId: testUnitHoleId("class_fighter", "equipment_purchase"),
         },
       ],
     });
@@ -2322,31 +2461,40 @@ function completeManifestDraftAfterProgression(
       expectedRevision: afterProgression.revision,
       fills: [
         choiceFill(
-          "cc:unit:class_fighter:fighter_skill_choices",
+          testUnitHoleId("class_fighter", "fighter_skill_choices"),
           "perception",
           "survival",
         ),
         choiceFill(
-          "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
           "defense",
         ),
         choiceFill(
-          "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+          testUnitHoleId(
+            "fighter_weapon_mastery_l1",
+            "fighter_weapon_mastery_choices",
+          ),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
         ),
         choiceFill(
-          "cc:unit:background_soldier:background_ability_score_increase",
+          testUnitHoleId(
+            "background_soldier",
+            "background_ability_score_increase",
+          ),
           "two_and_one:str:con",
         ),
         choiceFill(
-          "cc:unit:background_soldier:background_tool_choice",
+          testUnitHoleId("background_soldier", "background_tool_choice"),
           "tool_dice_set",
         ),
-        choiceFill("cc:unit:class_fighter:class_equipment_choice", "option_c"),
         choiceFill(
-          "cc:unit:background_soldier:background_equipment_choice",
+          testUnitHoleId("class_fighter", "class_equipment_choice"),
+          "option_c",
+        ),
+        choiceFill(
+          testUnitHoleId("background_soldier", "background_equipment_choice"),
           "option_b",
         ),
       ],
@@ -2359,7 +2507,7 @@ function completeManifestDraftAfterProgression(
       expectedRevision: afterChoices.revision,
       fills: [
         choiceFill(
-          "cc:unit:class_fighter:equipment_purchase",
+          testUnitHoleId("class_fighter", "equipment_purchase"),
           "armor_chain_mail",
           "weapon_longsword",
           "equipment_shield",
@@ -2374,10 +2522,13 @@ function completeManifestDraftAfterProgression(
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
-        choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
+        choiceFill(testUnitHoleId("armor_chain_mail", "loadout_armor"), "worn"),
         choiceFill(
-          "cc:unit:weapon_longsword:loadout_weapon",
+          testUnitHoleId("equipment_shield", "loadout_shield"),
+          "wielded",
+        ),
+        choiceFill(
+          testUnitHoleId("weapon_longsword", "loadout_weapon"),
           "wielded_one_handed",
         ),
       ],
@@ -2424,18 +2575,18 @@ function completeWizardDraft(): CharacterDraft {
       expectedRevision: afterInitial.revision,
       fills: [
         choiceFill(
-          "cc:unit:class_wizard:wizard_skill_choices",
+          testUnitHoleId("class_wizard", "wizard_skill_choices"),
           "arcana",
           "history",
         ),
         choiceFill(
-          "cc:unit:class_wizard:wizard_cantrip_choices",
+          testUnitHoleId("class_wizard", "wizard_cantrip_choices"),
           "light",
           "fire_bolt",
           "ray_of_frost",
         ),
         choiceFill(
-          "cc:unit:class_wizard:wizard_spellbook_choices",
+          testUnitHoleId("class_wizard", "wizard_spellbook_choices"),
           "detect_magic",
           "mage_armor",
           "magic_missile",
@@ -2444,23 +2595,29 @@ function completeWizardDraft(): CharacterDraft {
           "thunderwave",
         ),
         choiceFill(
-          "cc:unit:class_wizard:wizard_prepared_spell_choices",
+          testUnitHoleId("class_wizard", "wizard_prepared_spell_choices"),
           "detect_magic",
           "mage_armor",
           "magic_missile",
           "sleep",
         ),
         choiceFill(
-          "cc:unit:background_soldier:background_ability_score_increase",
+          testUnitHoleId(
+            "background_soldier",
+            "background_ability_score_increase",
+          ),
           "two_and_one:str:con",
         ),
         choiceFill(
-          "cc:unit:background_soldier:background_tool_choice",
+          testUnitHoleId("background_soldier", "background_tool_choice"),
           "tool_dice_set",
         ),
-        choiceFill("cc:unit:class_wizard:class_equipment_choice", "option_b"),
         choiceFill(
-          "cc:unit:background_soldier:background_equipment_choice",
+          testUnitHoleId("class_wizard", "class_equipment_choice"),
+          "option_b",
+        ),
+        choiceFill(
+          testUnitHoleId("background_soldier", "background_equipment_choice"),
           "option_b",
         ),
       ],
@@ -2473,7 +2630,7 @@ function completeWizardDraft(): CharacterDraft {
       expectedRevision: afterChoices.revision,
       fills: [
         choiceFill(
-          "cc:unit:class_wizard:equipment_purchase",
+          testUnitHoleId("class_wizard", "equipment_purchase"),
           "weapon_longsword",
           "weapon_dagger",
           "equipment_shield",
@@ -2488,9 +2645,12 @@ function completeWizardDraft(): CharacterDraft {
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
         choiceFill(
-          "cc:unit:weapon_longsword:loadout_weapon",
+          testUnitHoleId("equipment_shield", "loadout_shield"),
+          "wielded",
+        ),
+        choiceFill(
+          testUnitHoleId("weapon_longsword", "loadout_weapon"),
           "wielded_one_handed",
         ),
       ],
@@ -2529,21 +2689,25 @@ const HOLE_ID_TO_QNT_VARIANT = {
   "cc:draft:draft.abilityScoreGeneration": "HAbilityScores",
   "cc:draft:draft.languages": "HLanguages",
   "cc:draft:draft.alignment": "HAlignment",
-  "cc:unit:class_fighter:fighter_skill_choices": "HClassSkills",
-  "cc:unit:fighter_fighting_style_l1:fighter_fighting_style":
+  [testUnitHoleId("class_fighter", "fighter_skill_choices")]: "HClassSkills",
+  [testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style")]:
     "HFighterFightingStyle",
-  "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices":
-    "HFighterWeaponMastery",
-  "cc:unit:background_soldier:background_ability_score_increase":
+  [testUnitHoleId(
+    "fighter_weapon_mastery_l1",
+    "fighter_weapon_mastery_choices",
+  )]: "HFighterWeaponMastery",
+  [testUnitHoleId("background_soldier", "background_ability_score_increase")]:
     "HBackgroundAbilityScoreIncrease",
-  "cc:unit:background_soldier:background_tool_choice": "HBackgroundTool",
-  "cc:unit:class_fighter:class_equipment_choice": "HClassEquipment",
-  "cc:unit:background_soldier:background_equipment_choice":
+  [testUnitHoleId("background_soldier", "background_tool_choice")]:
+    "HBackgroundTool",
+  [testUnitHoleId("class_fighter", "class_equipment_choice")]:
+    "HClassEquipment",
+  [testUnitHoleId("background_soldier", "background_equipment_choice")]:
     "HBackgroundEquipment",
-  "cc:unit:class_fighter:equipment_purchase": "HEquipmentPurchase",
-  "cc:unit:armor_chain_mail:loadout_armor": "HLoadoutArmor",
-  "cc:unit:equipment_shield:loadout_shield": "HLoadoutShield",
-  "cc:unit:weapon_longsword:loadout_weapon": "HLoadoutWeapon",
+  [testUnitHoleId("class_fighter", "equipment_purchase")]: "HEquipmentPurchase",
+  [testUnitHoleId("armor_chain_mail", "loadout_armor")]: "HLoadoutArmor",
+  [testUnitHoleId("equipment_shield", "loadout_shield")]: "HLoadoutShield",
+  [testUnitHoleId("weapon_longsword", "loadout_weapon")]: "HLoadoutWeapon",
 } as const satisfies Record<string, string>;
 const HOLE_ID_TO_QNT_VARIANT_LOOKUP: Readonly<Record<string, string>> =
   HOLE_ID_TO_QNT_VARIANT;
@@ -3008,7 +3172,7 @@ function selectedChoice(
   return {
     source: {
       tag: "unit",
-      unitId,
+      unitId: unitChoiceSourceUnitIdRight(unitId),
       choiceKey: unitChoiceKeyRight(choiceKey),
     },
     options: optionIds.map((optionId) => ({
@@ -3026,7 +3190,7 @@ function selectedChoiceWithUnitRef(
   return {
     source: {
       tag: "unit",
-      unitId,
+      unitId: unitChoiceSourceUnitIdRight(unitId),
       choiceKey: unitChoiceKeyRight(choiceKey),
     },
     options: [
@@ -3046,7 +3210,7 @@ function selectedUnitChoice(
   return {
     source: {
       tag: "unit",
-      unitId,
+      unitId: unitChoiceSourceUnitIdRight(unitId),
       choiceKey: unitChoiceKeyRight(choiceKey),
     },
     options: optionIds.map((optionId) => ({
@@ -3065,7 +3229,7 @@ function selectedLoadoutChoice(
   return {
     source: {
       tag: "unit",
-      unitId,
+      unitId: unitChoiceSourceUnitIdRight(unitId),
       choiceKey: unitChoiceKeyRight(choiceKey),
     },
     options: [

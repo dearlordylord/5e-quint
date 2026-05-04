@@ -211,7 +211,7 @@ export type CreationHoleSource =
   | { readonly tag: "draft"; readonly path: CharacterDraftPath }
   | {
       readonly tag: "unit";
-      readonly unitId: UnitRecord["id"];
+      readonly unitId: UnitChoiceSourceUnitId;
       readonly choiceKey: UnitChoiceKey;
     };
 export type UnitChoiceSource = Extract<
@@ -219,14 +219,146 @@ export type UnitChoiceSource = Extract<
   { readonly tag: "unit" }
 >;
 
+export type UnitChoiceSourceUnitId = UnitRecord["id"] &
+  Brand.Brand<"UnitChoiceSourceUnitId">;
+const UnitChoiceSourceUnitId = Brand.nominal<UnitChoiceSourceUnitId>();
+
+export type UnitChoiceSourceUnitIdIssue = {
+  readonly tag: "unitChoiceSourceUnitIdEmpty";
+  readonly value: UnitRecord["id"];
+};
+
+export function unitChoiceSourceUnitId(
+  value: UnitRecord["id"],
+): Either.Either<UnitChoiceSourceUnitId, UnitChoiceSourceUnitIdIssue> {
+  return value.length > 0
+    ? Either.right(UnitChoiceSourceUnitId(value))
+    : Either.left({ tag: "unitChoiceSourceUnitIdEmpty", value });
+}
+
+export type UnitChoiceSourceKeyText =
+  `u:${number}:${UnitChoiceSourceUnitId}:c:${UnitChoiceKey}`;
+export type UnitChoiceSourceKey = UnitChoiceSourceKeyText &
+  Brand.Brand<"UnitChoiceSourceKey">;
+const UnitChoiceSourceKey = Brand.nominal<UnitChoiceSourceKey>();
+
+export type UnitChoiceSourceKeyIssue =
+  | {
+      readonly tag: "unitChoiceSourceKeyPrefixMismatch";
+      readonly value: string;
+    }
+  | { readonly tag: "unitChoiceSourceKeyMissingLength"; readonly value: string }
+  | {
+      readonly tag: "unitChoiceSourceKeyInvalidLength";
+      readonly value: string;
+      readonly lengthText: string;
+    }
+  | {
+      readonly tag: "unitChoiceSourceKeyMissingChoicePrefix";
+      readonly value: string;
+    }
+  | {
+      readonly tag: "unitChoiceSourceKeyUnsupportedChoiceKey";
+      readonly value: string;
+      readonly choiceKey: string;
+    };
+
+export function unitChoiceSourceKey(
+  source: UnitChoiceSource,
+): UnitChoiceSourceKey {
+  // Template evidence is local to the codec: the parser below is the inverse.
+  return UnitChoiceSourceKey(
+    `u:${source.unitId.length}:${source.unitId}:c:${source.choiceKey}` as UnitChoiceSourceKeyText,
+  );
+}
+
+export function parseUnitChoiceSourceKey(
+  value: string,
+): Either.Either<UnitChoiceSource, UnitChoiceSourceKeyIssue> {
+  const prefix = "u:";
+  if (!value.startsWith(prefix)) {
+    return Either.left({ tag: "unitChoiceSourceKeyPrefixMismatch", value });
+  }
+
+  const lengthStart = prefix.length;
+  const lengthEnd = value.indexOf(":", lengthStart);
+  if (lengthEnd < 0) {
+    return Either.left({ tag: "unitChoiceSourceKeyMissingLength", value });
+  }
+
+  const lengthText = value.slice(lengthStart, lengthEnd);
+  const unitIdLength = Number(lengthText);
+  if (
+    !Number.isInteger(unitIdLength) ||
+    unitIdLength < 1 ||
+    String(unitIdLength) !== lengthText
+  ) {
+    return Either.left({
+      tag: "unitChoiceSourceKeyInvalidLength",
+      value,
+      lengthText,
+    });
+  }
+
+  const unitIdStart = lengthEnd + 1;
+  const unitIdEnd = unitIdStart + unitIdLength;
+  const unitId = value.slice(unitIdStart, unitIdEnd);
+  if (unitId.length !== unitIdLength) {
+    return Either.left({
+      tag: "unitChoiceSourceKeyInvalidLength",
+      value,
+      lengthText,
+    });
+  }
+  const sourceUnitId = unitChoiceSourceUnitId(unitId);
+  if (Either.isLeft(sourceUnitId)) {
+    return Either.left({
+      tag: "unitChoiceSourceKeyInvalidLength",
+      value,
+      lengthText,
+    });
+  }
+
+  const choicePrefix = ":c:";
+  if (!value.startsWith(choicePrefix, unitIdEnd)) {
+    return Either.left({
+      tag: "unitChoiceSourceKeyMissingChoicePrefix",
+      value,
+    });
+  }
+
+  const choiceKey = value.slice(unitIdEnd + choicePrefix.length);
+  if (!UNIT_CHOICE_KEYS.some((unitChoiceKey) => unitChoiceKey === choiceKey)) {
+    return Either.left({
+      tag: "unitChoiceSourceKeyUnsupportedChoiceKey",
+      value,
+      choiceKey,
+    });
+  }
+
+  return Either.right({
+    tag: "unit",
+    unitId: sourceUnitId.right,
+    // UNIT_CHOICE_KEYS membership check above establishes the literal union.
+    choiceKey: choiceKey as UnitChoiceKey,
+  });
+}
+
 export type CreationHoleIdText =
   | `cc:draft:${CharacterDraftPath}`
-  | `cc:unit:${UnitRecord["id"]}:${UnitChoiceKey}`;
+  | `cc:unit-source:${UnitChoiceSourceKeyText}`;
 
 export type CreationHoleId = CreationHoleIdText & Brand.Brand<"CreationHoleId">;
 const CreationHoleId = Brand.nominal<CreationHoleId>();
 export const creationHoleId: (value: CreationHoleIdText) => CreationHoleId =
   CreationHoleId;
+
+export function unitChoiceSourceHoleIdText(
+  source: UnitChoiceSource,
+): CreationHoleIdText {
+  // CreationHoleIdText composes the branded source-key codec with a fixed prefix.
+  return `cc:unit-source:${unitChoiceSourceKey(source)}` as CreationHoleIdText;
+}
 
 export function parseCreationHoleId(value: string): CreationHoleId | null {
   const text = parseCreationHoleIdText(value);
@@ -242,21 +374,12 @@ function parseCreationHoleIdText(value: string): CreationHoleIdText | null {
       : null;
   }
 
-  const unitPrefix = "cc:unit:";
+  const unitPrefix = "cc:unit-source:";
   if (!value.startsWith(unitPrefix)) return null;
-  const unitHoleText = value.slice(unitPrefix.length);
-  const choiceKeySeparator = unitHoleText.lastIndexOf(":");
-  if (choiceKeySeparator <= 0) return null;
-  const unitId = unitHoleText.slice(0, choiceKeySeparator);
-  const choiceKey = unitHoleText.slice(choiceKeySeparator + 1);
-  if (
-    unitId === "" ||
-    !UNIT_CHOICE_KEYS.some((unitChoiceKey) => unitChoiceKey === choiceKey)
-  ) {
-    return null;
-  }
-
-  return `cc:unit:${unitId}:${choiceKey as UnitChoiceKey}`;
+  const source = parseUnitChoiceSourceKey(value.slice(unitPrefix.length));
+  return Either.isRight(source)
+    ? unitChoiceSourceHoleIdText(source.right)
+    : null;
 }
 
 export type UnitRef = {

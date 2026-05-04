@@ -1,7 +1,11 @@
+import { Either } from "effect";
+
 import {
   creationChoiceOptionId,
   creationHoleId,
   choiceCardinalityMax,
+  unitChoiceSourceUnitId,
+  unitChoiceSourceHoleIdText,
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterDraftPath,
   type CharacterDraftSelections,
@@ -151,7 +155,12 @@ export function unitSource(
   unitId: UnitRecord["id"],
   choiceKey: UnitChoiceKey,
 ): UnitChoiceSource {
-  return { tag: "unit", unitId, choiceKey };
+  const sourceUnitId = unitChoiceSourceUnitId(unitId);
+  if (Either.isLeft(sourceUnitId)) {
+    throw new Error("Unit choice sources require a non-empty Unit id.");
+  }
+
+  return { tag: "unit", unitId: sourceUnitId.right, choiceKey };
 }
 
 export function holeIdForSource(source: CreationHoleSource): CreationHoleId {
@@ -159,7 +168,7 @@ export function holeIdForSource(source: CreationHoleSource): CreationHoleId {
     return creationHoleId(`cc:draft:${source.path}`);
   }
 
-  return creationHoleId(`cc:unit:${source.unitId}:${source.choiceKey}`);
+  return creationHoleId(unitChoiceSourceHoleIdText(source));
 }
 
 export function unitOption(unit: UnitRecord): CreationChoiceOption {

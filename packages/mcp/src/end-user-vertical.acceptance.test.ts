@@ -5,6 +5,7 @@ import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
 } from "../test-support/battle-act-labels.ts";
+import { unitHoleId } from "../test-support/creation-hole-ids.ts";
 
 describe("end-user promoted MCP vertical", () => {
   test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {
@@ -44,13 +45,13 @@ describe("end-user promoted MCP vertical", () => {
 
     const choices = callTool(root, "discover_creation_holes", { draftId });
     expect(holeIds(choices)).toEqual([
-      "cc:unit:class_fighter:fighter_skill_choices",
-      "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
-      "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
-      "cc:unit:class_fighter:class_equipment_choice",
-      "cc:unit:background_soldier:background_ability_score_increase",
-      "cc:unit:background_soldier:background_tool_choice",
-      "cc:unit:background_soldier:background_equipment_choice",
+      unitHoleId("class_fighter", "fighter_skill_choices"),
+      unitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+      unitHoleId("fighter_weapon_mastery_l1", "fighter_weapon_mastery_choices"),
+      unitHoleId("class_fighter", "class_equipment_choice"),
+      unitHoleId("background_soldier", "background_ability_score_increase"),
+      unitHoleId("background_soldier", "background_tool_choice"),
+      unitHoleId("background_soldier", "background_equipment_choice"),
     ]);
 
     callTool(root, "fill_creation_holes", {
@@ -58,31 +59,37 @@ describe("end-user promoted MCP vertical", () => {
       expectedRevision: 1,
       fills: [
         choiceFill(
-          "cc:unit:class_fighter:fighter_skill_choices",
+          unitHoleId("class_fighter", "fighter_skill_choices"),
           "perception",
           "survival",
         ),
         choiceFill(
-          "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+          unitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
           "defense",
         ),
         choiceFill(
-          "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+          unitHoleId(
+            "fighter_weapon_mastery_l1",
+            "fighter_weapon_mastery_choices",
+          ),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
         ),
-        choiceFill("cc:unit:class_fighter:class_equipment_choice", "option_c"),
         choiceFill(
-          "cc:unit:background_soldier:background_ability_score_increase",
+          unitHoleId("class_fighter", "class_equipment_choice"),
+          "option_c",
+        ),
+        choiceFill(
+          unitHoleId("background_soldier", "background_ability_score_increase"),
           "two_and_one:str:con",
         ),
         choiceFill(
-          "cc:unit:background_soldier:background_tool_choice",
+          unitHoleId("background_soldier", "background_tool_choice"),
           "tool_dice_set",
         ),
         choiceFill(
-          "cc:unit:background_soldier:background_equipment_choice",
+          unitHoleId("background_soldier", "background_equipment_choice"),
           "option_b",
         ),
       ],
@@ -93,7 +100,7 @@ describe("end-user promoted MCP vertical", () => {
       expectedRevision: 2,
       fills: [
         choiceFill(
-          "cc:unit:class_fighter:equipment_purchase",
+          unitHoleId("class_fighter", "equipment_purchase"),
           "armor_chain_mail",
           "weapon_longsword",
           "equipment_shield",
@@ -105,10 +112,10 @@ describe("end-user promoted MCP vertical", () => {
       draftId,
       expectedRevision: 3,
       fills: [
-        choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
-        choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
+        choiceFill(unitHoleId("armor_chain_mail", "loadout_armor"), "worn"),
+        choiceFill(unitHoleId("equipment_shield", "loadout_shield"), "wielded"),
         choiceFill(
-          "cc:unit:weapon_longsword:loadout_weapon",
+          unitHoleId("weapon_longsword", "loadout_weapon"),
           "wielded_one_handed",
         ),
       ],
@@ -700,31 +707,37 @@ function createAndFinalizeFighterTwo(
     expectedRevision: 1,
     fills: [
       choiceFill(
-        "cc:unit:class_fighter:fighter_skill_choices",
+        unitHoleId("class_fighter", "fighter_skill_choices"),
         "perception",
         "survival",
       ),
       choiceFill(
-        "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
+        unitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
         "defense",
       ),
       choiceFill(
-        "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
+        unitHoleId(
+          "fighter_weapon_mastery_l1",
+          "fighter_weapon_mastery_choices",
+        ),
         "weapon_longsword",
         "weapon_spear",
         "weapon_flail",
       ),
-      choiceFill("cc:unit:class_fighter:class_equipment_choice", "option_c"),
       choiceFill(
-        "cc:unit:background_soldier:background_ability_score_increase",
+        unitHoleId("class_fighter", "class_equipment_choice"),
+        "option_c",
+      ),
+      choiceFill(
+        unitHoleId("background_soldier", "background_ability_score_increase"),
         "two_and_one:str:con",
       ),
       choiceFill(
-        "cc:unit:background_soldier:background_tool_choice",
+        unitHoleId("background_soldier", "background_tool_choice"),
         "tool_dice_set",
       ),
       choiceFill(
-        "cc:unit:background_soldier:background_equipment_choice",
+        unitHoleId("background_soldier", "background_equipment_choice"),
         "option_b",
       ),
     ],
@@ -734,7 +747,7 @@ function createAndFinalizeFighterTwo(
     expectedRevision: 2,
     fills: [
       choiceFill(
-        "cc:unit:class_fighter:equipment_purchase",
+        unitHoleId("class_fighter", "equipment_purchase"),
         "armor_chain_mail",
         "weapon_flail",
         "equipment_shield",
@@ -745,9 +758,12 @@ function createAndFinalizeFighterTwo(
     draftId,
     expectedRevision: 3,
     fills: [
-      choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
-      choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
-      choiceFill("cc:unit:weapon_flail:loadout_weapon", "wielded_one_handed"),
+      choiceFill(unitHoleId("armor_chain_mail", "loadout_armor"), "worn"),
+      choiceFill(unitHoleId("equipment_shield", "loadout_shield"), "wielded"),
+      choiceFill(
+        unitHoleId("weapon_flail", "loadout_weapon"),
+        "wielded_one_handed",
+      ),
     ],
   });
   return callTool(root, "finalize_character", { draftId });
@@ -783,18 +799,18 @@ function createAndFinalizeWizardOne(
     expectedRevision: 1,
     fills: [
       choiceFill(
-        "cc:unit:class_wizard:wizard_skill_choices",
+        unitHoleId("class_wizard", "wizard_skill_choices"),
         "arcana",
         "history",
       ),
       choiceFill(
-        "cc:unit:class_wizard:wizard_cantrip_choices",
+        unitHoleId("class_wizard", "wizard_cantrip_choices"),
         "light",
         "fire_bolt",
         "ray_of_frost",
       ),
       choiceFill(
-        "cc:unit:class_wizard:wizard_spellbook_choices",
+        unitHoleId("class_wizard", "wizard_spellbook_choices"),
         "detect_magic",
         "mage_armor",
         "magic_missile",
@@ -803,23 +819,26 @@ function createAndFinalizeWizardOne(
         "thunderwave",
       ),
       choiceFill(
-        "cc:unit:class_wizard:wizard_prepared_spell_choices",
+        unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
         "detect_magic",
         "mage_armor",
         "magic_missile",
         "sleep",
       ),
       choiceFill(
-        "cc:unit:background_soldier:background_ability_score_increase",
+        unitHoleId("background_soldier", "background_ability_score_increase"),
         "two_and_one:str:con",
       ),
       choiceFill(
-        "cc:unit:background_soldier:background_tool_choice",
+        unitHoleId("background_soldier", "background_tool_choice"),
         "tool_dice_set",
       ),
-      choiceFill("cc:unit:class_wizard:class_equipment_choice", "option_b"),
       choiceFill(
-        "cc:unit:background_soldier:background_equipment_choice",
+        unitHoleId("class_wizard", "class_equipment_choice"),
+        "option_b",
+      ),
+      choiceFill(
+        unitHoleId("background_soldier", "background_equipment_choice"),
         "option_b",
       ),
     ],
@@ -829,7 +848,7 @@ function createAndFinalizeWizardOne(
     expectedRevision: 2,
     fills: [
       choiceFill(
-        "cc:unit:class_wizard:equipment_purchase",
+        unitHoleId("class_wizard", "equipment_purchase"),
         "weapon_longsword",
         "weapon_dagger",
         "equipment_shield",
@@ -840,9 +859,9 @@ function createAndFinalizeWizardOne(
     draftId,
     expectedRevision: 3,
     fills: [
-      choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
+      choiceFill(unitHoleId("equipment_shield", "loadout_shield"), "wielded"),
       choiceFill(
-        "cc:unit:weapon_longsword:loadout_weapon",
+        unitHoleId("weapon_longsword", "loadout_weapon"),
         "wielded_one_handed",
       ),
     ],

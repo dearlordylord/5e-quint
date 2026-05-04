@@ -60,6 +60,7 @@ import {
   hitDieSize,
   hitDieTotal,
   nonEmptyReadonlyArray,
+  unitChoiceSourceKey,
   type AbilityScoreAssignment,
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterBuild,
@@ -78,6 +79,7 @@ import {
   type FinalizedCharacterSelections,
   type NonEmptyReadonlyArray,
   type UnitCatalog,
+  type UnitChoiceSourceKey,
   type UnitChoiceSource,
   type UnitRef,
 } from "./types.ts";
@@ -645,14 +647,10 @@ export function allFinalizedChoicesSupported(
   );
 }
 
-function unitChoiceSourceKey(source: UnitChoiceSource): string {
-  return `${source.unitId}:${source.choiceKey}`;
-}
-
 export function supportedChoiceHolesBySource(
   holes: readonly UnitChoiceCreationHole[],
-): ReadonlyMap<string, UnitChoiceCreationHole> {
-  const bySource = new Map<string, UnitChoiceCreationHole>();
+): ReadonlyMap<UnitChoiceSourceKey, UnitChoiceCreationHole> {
+  const bySource = new Map<UnitChoiceSourceKey, UnitChoiceCreationHole>();
   for (const hole of holes) {
     const sourceKey = unitChoiceSourceKey(hole.source);
     const existing = bySource.get(sourceKey);
