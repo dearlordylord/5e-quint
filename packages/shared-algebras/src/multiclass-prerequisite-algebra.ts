@@ -1,6 +1,6 @@
 // Multiclass prerequisite algebra (SRD 5.2.1 Character Creation > Multiclassing)
 
-import { Brand, Match } from "effect";
+import { Match } from "effect";
 
 import {
   ABILITIES,
@@ -17,10 +17,7 @@ export const MULTICLASS_THRESHOLD = 13;
 
 export type MulticlassAbilityScores = Readonly<
   Record<Ability, AbilityScoreValue>
-> &
-  Brand.Brand<"MulticlassAbilityScores">;
-const MulticlassAbilityScores =
-  Brand.nominal<MulticlassAbilityScores>();
+>;
 
 export function multiclassAbilityScores(
   scores: unknown,
@@ -30,18 +27,16 @@ export function multiclassAbilityScores(
   }
 
   const record = scores as Partial<Record<Ability, unknown>>;
-  return MulticlassAbilityScores(
-    Object.fromEntries(
-      ABILITIES.map((ability) => {
-        const score = record[ability];
-        if (typeof score !== "number") {
-          throw new Error(`Missing numeric ability score: ${ability}`);
-        }
+  return Object.fromEntries(
+    ABILITIES.map((ability) => {
+      const score = record[ability];
+      if (typeof score !== "number") {
+        throw new Error(`Missing numeric ability score: ${ability}`);
+      }
 
-        return [ability, AbilityScore.make(score)];
-      }),
-    ) as Readonly<Record<Ability, AbilityScoreValue>>,
-  );
+      return [ability, AbilityScore.make(score)];
+    }),
+  ) as MulticlassAbilityScores;
 }
 
 export type MulticlassPrerequisite =

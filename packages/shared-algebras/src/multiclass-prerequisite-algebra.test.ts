@@ -98,7 +98,7 @@ describe("multiclass-prerequisite-algebra", () => {
     );
   });
 
-  it("rejects invalid score maps at the branded boundary", () => {
+  it("rejects invalid score maps at the parsing boundary", () => {
     expect(() => scores({ str: 31 })).toThrow();
   });
 });
