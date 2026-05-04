@@ -76,12 +76,25 @@ describe("character progression algebra", () => {
     const progression = characterProgressionFromUnitIds({
       unitLibrary,
       startingClassUnitId: "class_fighter",
-      advancementClassUnitIds: ["class_wizard"],
+      postStartAdvancementClassUnitIds: ["class_wizard"],
     });
 
     expect(progression).toEqual({
       startingClass: "fighter",
       advancements: ["wizard"],
+    });
+  });
+
+  it("requires an explicit empty post-start Unit-id list for level 1", () => {
+    const progression = characterProgressionFromUnitIds({
+      unitLibrary,
+      startingClassUnitId: "class_fighter",
+      postStartAdvancementClassUnitIds: [],
+    });
+
+    expect(progression).toEqual({
+      startingClass: "fighter",
+      advancements: [],
     });
   });
 

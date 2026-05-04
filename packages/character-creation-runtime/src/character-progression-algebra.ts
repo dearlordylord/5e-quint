@@ -21,13 +21,13 @@ export type CharacterProgressionClassLevels = Readonly<
 export type CharacterProgressionUnitIdInput = {
   readonly unitLibrary: UnitCatalog;
   readonly startingClassUnitId: UnitRecord["id"];
-  readonly advancementClassUnitIds?: readonly UnitRecord["id"][];
+  readonly postStartAdvancementClassUnitIds: readonly UnitRecord["id"][];
 };
 
 export type LegacyAdvancementProgressionInput = {
   readonly unitLibrary: UnitCatalog;
   readonly primaryClassUnitId: UnitRecord["id"];
-  readonly advancement?: CharacterAdvancementSelection;
+  readonly advancement: CharacterAdvancementSelection;
 };
 
 export function createCharacterProgression(input: {
@@ -119,7 +119,7 @@ export function characterProgressionFromUnitIds(
       unitLibrary: input.unitLibrary,
       classUnitId: input.startingClassUnitId,
     }),
-    advancements: (input.advancementClassUnitIds ?? []).map((classUnitId) =>
+    advancements: input.postStartAdvancementClassUnitIds.map((classUnitId) =>
       classUnitIdToClassName({ unitLibrary: input.unitLibrary, classUnitId }),
     ),
   });
@@ -132,17 +132,14 @@ export function characterProgressionFromLegacyAdvancement(
     unitLibrary: input.unitLibrary,
     classUnitId: input.primaryClassUnitId,
   });
-  const expandedClasses =
-    input.advancement == null
-      ? [startingClass]
-      : input.advancement.entries.flatMap((entry) =>
-          Array.from({ length: entry.level }, () =>
-            classUnitIdToClassName({
-              unitLibrary: input.unitLibrary,
-              classUnitId: entry.classUnitId,
-            }),
-          ),
-        );
+  const expandedClasses = input.advancement.entries.flatMap((entry) =>
+    Array.from({ length: entry.level }, () =>
+      classUnitIdToClassName({
+        unitLibrary: input.unitLibrary,
+        classUnitId: entry.classUnitId,
+      }),
+    ),
+  );
 
   if (expandedClasses[0] !== startingClass) {
     throw new Error(
