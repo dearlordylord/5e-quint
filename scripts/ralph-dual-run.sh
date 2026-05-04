@@ -52,6 +52,10 @@ Options:
                           ollama/* OpenCode models. Overrides
                           RALPH_OPENCODE_OLLAMA_BASE_URL.
                           Default: http://host.docker.internal:11434/v1
+  --opencode-agent <agent>
+                          OpenCode primary agent used for implementation.
+                          Overrides RALPH_OPENCODE_AGENT.
+                          Default: ralph-implementer
   --skip-decider          Stop each task after implementation and review.
   -h, --help              Show this help.
 
@@ -66,6 +70,8 @@ Environment:
                           the model uses the ollama/ provider.
                           Ollama-backed OpenCode implementers get 5
                           implement/review rounds; other implementers get 3.
+  RALPH_OPENCODE_AGENT    OpenCode primary agent for implementation.
+                          Default should deny task/subagent delegation.
   RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
                           Default is quiet: persist logs to files only.
 EOF
@@ -174,6 +180,7 @@ codex_model="${RALPH_CODEX_MODEL:-}"
 implementation_runner="${RALPH_IMPLEMENTATION_RUNNER:-codex}"
 opencode_model="${RALPH_OPENCODE_MODEL:-ollama/qwen3.6:35b-a3b-64k}"
 opencode_ollama_base_url="${RALPH_OPENCODE_OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}"
+opencode_agent="${RALPH_OPENCODE_AGENT:-ralph-implementer}"
 candidate_round_limit=3
 selected_tasks=()
 child_pids=()
@@ -294,6 +301,11 @@ while [[ $# -gt 0 ]]; do
       opencode_ollama_base_url="$2"
       shift 2
       ;;
+    --opencode-agent)
+      [[ $# -ge 2 ]] || die "--opencode-agent requires a value"
+      opencode_agent="$2"
+      shift 2
+      ;;
     --skip-decider)
       skip_decider=true
       shift
@@ -402,6 +414,7 @@ write_state() {
     printf 'MAX_TASK_ATTEMPTS=%q\n' "$max_task_attempts"
     printf 'IMPLEMENTATION_RUNNER=%q\n' "$implementation_runner"
     printf 'OPENCODE_MODEL=%q\n' "$opencode_model"
+    printf 'OPENCODE_AGENT=%q\n' "$opencode_agent"
   } >"$state_file"
 }
 
@@ -1192,7 +1205,7 @@ run_opencode() {
   local output_file="$4"
   local status=0
   local message
-  local -a args=(run --dir "$workspace" --model "$opencode_model" --dangerously-skip-permissions)
+  local -a args=(run --dir "$workspace" --model "$opencode_model" --agent "$opencode_agent" --dangerously-skip-permissions)
 
   message="$(<"$prompt")"
 

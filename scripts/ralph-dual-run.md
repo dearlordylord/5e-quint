@@ -206,6 +206,7 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
   --codex-only \
   --implementation-runner opencode \
   --opencode-model ollama/qwen3.6:35b-a3b-64k \
+  --opencode-agent ralph-implementer \
   --codex-model gpt-5.3-codex-spark \
   --max-task-attempts 3 \
   --test-command "pnpm --filter @dnd/core test" \
@@ -220,7 +221,7 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
 
 `--implementation-runner opencode` swaps only the Codex-path implementer onto OpenCode. The Codex-path review, queue chooser, and final decider still run through Codex. This is most useful with `--codex-only` when you want a single OpenCode implementation candidate with Codex review/decider gates. For `ollama/*` OpenCode models, the harness pings the configured Ollama OpenAI-compatible `/models` endpoint before starting; the default is `http://host.docker.internal:11434/v1`. Ollama-backed OpenCode implementers get up to 5 implement/review handback rounds; other implementers keep the normal 3-round limit.
 
-OpenCode implementer prompts inline the selected task body and add local-model guardrails to keep the implementation focused on that task, avoid todo-tool schema churn, avoid spawned explore/subagents, and prefer a small task-relevant product diff over long planning.
+OpenCode implementer prompts inline the selected task body and add local-model guardrails to keep the implementation focused on that task, avoid todo-tool schema churn, avoid spawned explore/subagents, and prefer a small task-relevant product diff over long planning. The default OpenCode agent is `ralph-implementer`; configure it with `permission.task: deny` so OpenCode removes subagent delegation from the implementation tool surface.
 
 `--max-task-attempts` bounds how many full decider-level attempts the same task may consume in one Ralph run. The final allowed attempt is special: the decider must either land the task or make it non-runnable in the plan. If it still tries to leave the task runnable, the harness treats that as a decider/harness contract failure.
 
@@ -275,6 +276,7 @@ For OpenCode-backed implementation:
 ```bash
 RALPH_IMPLEMENTATION_RUNNER=opencode \
 RALPH_OPENCODE_MODEL=ollama/qwen3.6:35b-a3b-64k \
+RALPH_OPENCODE_AGENT=ralph-implementer \
 RALPH_OPENCODE_OLLAMA_BASE_URL=http://host.docker.internal:11434/v1 \
 scripts/ralph-dual-run.sh plans/some-plan.md --codex-only
 ```
