@@ -64,6 +64,8 @@ Environment:
   RALPH_OPENCODE_OLLAMA_BASE_URL
                           Ollama base URL pinged before OpenCode runs when
                           the model uses the ollama/ provider.
+                          Ollama-backed OpenCode implementers get 5
+                          implement/review rounds; other implementers get 3.
   RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
                           Default is quiet: persist logs to files only.
 EOF
@@ -147,6 +149,10 @@ if (!models.some((model) => model?.id === modelId)) {
   throw new Error(`OpenCode Ollama model not found: ${modelId}`)
 }
 NODE
+}
+
+is_opencode_ollama_model() {
+  [[ "$opencode_model" == ollama/* ]]
 }
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
@@ -1021,11 +1027,15 @@ run_candidate_pipeline() {
   local previous_review=""
   local verdict="reject"
   local implementer_role="$candidate_name implementer"
+  local round_limit="$candidate_round_limit"
   if [[ "$runner" == "opencode" ]]; then
     implementer_role="$candidate_name implementer (running on OpenCode)"
+    if is_opencode_ollama_model; then
+      round_limit=5
+    fi
   fi
 
-  while (( round <= candidate_round_limit )); do
+  while (( round <= round_limit )); do
     local round_prefix="$attempt_root/$slug-round-$round"
     local implementer_prompt="$round_prefix-implementer.prompt.md"
     local implementer_log="$round_prefix-implementer.log"
@@ -1064,7 +1074,7 @@ run_candidate_pipeline() {
     if [[ "$verdict" == "accept" ]]; then
       break
     fi
-    if (( round >= candidate_round_limit )); then
+    if (( round >= round_limit )); then
       break
     fi
 

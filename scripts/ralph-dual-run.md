@@ -218,7 +218,7 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
 
 `--claude-only` is the symmetric mode: only the Claude implementer pipeline runs for each task, while the Codex decider remains the final gatekeeper. Ralph-launched Claude roles use `--effort max`.
 
-`--implementation-runner opencode` swaps only the Codex-path implementer onto OpenCode. The Codex-path review, queue chooser, and final decider still run through Codex. This is most useful with `--codex-only` when you want a single OpenCode implementation candidate with Codex review/decider gates. For `ollama/*` OpenCode models, the harness pings the configured Ollama OpenAI-compatible `/models` endpoint before starting; the default is `http://host.docker.internal:11434/v1`.
+`--implementation-runner opencode` swaps only the Codex-path implementer onto OpenCode. The Codex-path review, queue chooser, and final decider still run through Codex. This is most useful with `--codex-only` when you want a single OpenCode implementation candidate with Codex review/decider gates. For `ollama/*` OpenCode models, the harness pings the configured Ollama OpenAI-compatible `/models` endpoint before starting; the default is `http://host.docker.internal:11434/v1`. Ollama-backed OpenCode implementers get up to 5 implement/review handback rounds; other implementers keep the normal 3-round limit.
 
 `--max-task-attempts` bounds how many full decider-level attempts the same task may consume in one Ralph run. The final allowed attempt is special: the decider must either land the task or make it non-runnable in the plan. If it still tries to leave the task runnable, the harness treats that as a decider/harness contract failure.
 
