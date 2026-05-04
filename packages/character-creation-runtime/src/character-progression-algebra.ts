@@ -14,9 +14,8 @@ export type CharacterProgression = {
   readonly advancements: readonly ClassName[];
 };
 
-export type CharacterProgressionClassLevel = 0 | CharacterClassLevel;
 export type CharacterProgressionClassLevels = Readonly<
-  Record<ClassName, CharacterProgressionClassLevel>
+  Partial<Record<ClassName, CharacterClassLevel>>
 >;
 
 export type CharacterProgressionUnitIdInput = {
@@ -83,10 +82,11 @@ export function progressionClassLevels(
   }
 
   return Object.fromEntries(
-    CLASS_NAMES.map((className) => [
-      className,
-      classLevelCount(counts[className]),
-    ]),
+    CLASS_NAMES.flatMap((className) =>
+      counts[className] === 0
+        ? []
+        : [[className, characterClassLevel(counts[className])]],
+    ),
   ) as CharacterProgressionClassLevels;
 }
 
@@ -154,8 +154,4 @@ export function characterProgressionFromLegacyAdvancement(
     startingClass,
     advancements: expandedClasses.slice(1),
   });
-}
-
-function classLevelCount(count: number): CharacterProgressionClassLevel {
-  return count === 0 ? 0 : characterClassLevel(count);
 }

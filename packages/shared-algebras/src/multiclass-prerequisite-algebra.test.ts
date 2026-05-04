@@ -6,12 +6,22 @@ import {
   MULTICLASS_THRESHOLD,
   canMulticlass,
   meetsMulticlassPrerequisite,
+  multiclassAbilityScores,
+  type MulticlassAbilityScores,
 } from "@dnd/shared-algebras/multiclass-prerequisite-algebra";
 
 function scores(
   overrides: Partial<Record<Ability, number>> = {},
-): Readonly<Record<Ability, number>> {
-  return { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10, ...overrides };
+): MulticlassAbilityScores {
+  return multiclassAbilityScores({
+    str: 10,
+    dex: 10,
+    con: 10,
+    int: 10,
+    wis: 10,
+    cha: 10,
+    ...overrides,
+  });
 }
 
 describe("multiclass-prerequisite-algebra", () => {
@@ -86,5 +96,9 @@ describe("multiclass-prerequisite-algebra", () => {
     expect(canMulticlass(scores({ str: 13 }), "barbarian", "druid")).toBe(
       false,
     );
+  });
+
+  it("rejects invalid score maps at the branded boundary", () => {
+    expect(() => scores({ str: 31 })).toThrow();
   });
 });

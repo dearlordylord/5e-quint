@@ -1,13 +1,48 @@
 // Multiclass prerequisite algebra (SRD 5.2.1 Character Creation > Multiclassing)
 
-import { Match } from "effect";
+import { Brand, Match } from "effect";
 
-import type { Ability, ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  ABILITIES,
+  AbilityScore,
+  type Ability,
+  type AbilityScore as AbilityScoreValue,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { ClassName } from "@dnd/shared/game-facts";
 
 export { CLASS_NAMES, type ClassName } from "@dnd/shared/game-facts";
 
 export const MULTICLASS_THRESHOLD = 13;
+
+export type MulticlassAbilityScores = Readonly<
+  Record<Ability, AbilityScoreValue>
+> &
+  Brand.Brand<"MulticlassAbilityScores">;
+const MulticlassAbilityScores =
+  Brand.nominal<MulticlassAbilityScores>();
+
+export function multiclassAbilityScores(
+  scores: unknown,
+): MulticlassAbilityScores {
+  if (typeof scores !== "object" || scores == null) {
+    throw new Error("Multiclass ability scores must be an object.");
+  }
+
+  const record = scores as Partial<Record<Ability, unknown>>;
+  return MulticlassAbilityScores(
+    Object.fromEntries(
+      ABILITIES.map((ability) => {
+        const score = record[ability];
+        if (typeof score !== "number") {
+          throw new Error(`Missing numeric ability score: ${ability}`);
+        }
+
+        return [ability, AbilityScore.make(score)];
+      }),
+    ) as Readonly<Record<Ability, AbilityScoreValue>>,
+  );
+}
 
 export type MulticlassPrerequisite =
   | {
@@ -73,7 +108,7 @@ const byTag = Match.discriminator("tag");
  * Check if a single class multiclass prerequisite is met.
  */
 export function meetsMulticlassPrerequisite(
-  scores: Readonly<Record<Ability, number>>,
+  scores: MulticlassAbilityScores,
   className: ClassName,
 ): boolean {
   return evalPrereq(MULTICLASS_PREREQUISITES[className], scores);
@@ -81,7 +116,7 @@ export function meetsMulticlassPrerequisite(
 
 function evalPrereq(
   prereq: MulticlassPrerequisite,
-  scores: Readonly<Record<Ability, number>>,
+  scores: MulticlassAbilityScores,
 ): boolean {
   return Match.value(prereq).pipe(
     byTag(
@@ -102,7 +137,7 @@ function evalPrereq(
  * Must meet prerequisites for both current and new classes.
  */
 export function canMulticlass(
-  scores: Readonly<Record<Ability, number>>,
+  scores: MulticlassAbilityScores,
   currentClass: ClassName,
   newClass: ClassName,
 ): boolean {

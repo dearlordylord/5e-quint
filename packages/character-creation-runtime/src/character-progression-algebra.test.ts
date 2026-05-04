@@ -13,7 +13,7 @@ import {
   orderedProgressionClasses,
   postStartAdvancementLevel,
   progressionClassLevels,
-} from "./normalized-algebra.ts";
+} from "./character-progression-algebra.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -25,7 +25,7 @@ if (unitCatalogResult.tag !== "ok") {
 
 const unitLibrary = unitCatalogResult.catalog;
 
-describe("normalized character progression algebra", () => {
+describe("character progression algebra", () => {
   it("derives a level-1 Fighter without storing an advancement level", () => {
     const progression = createCharacterProgression({
       startingClass: "fighter",
@@ -36,9 +36,8 @@ describe("normalized character progression algebra", () => {
       advancements: [],
     });
     expect(computeTotalLevel(progression)).toBe(1);
-    expect(progressionClassLevels(progression)).toMatchObject({
+    expect(progressionClassLevels(progression)).toEqual({
       fighter: 1,
-      wizard: 0,
     });
   });
 
@@ -50,9 +49,8 @@ describe("normalized character progression algebra", () => {
 
     expect(computeTotalLevel(progression)).toBe(2);
     expect(postStartAdvancementLevel(progression, 0)).toBe(2);
-    expect(progressionClassLevels(progression)).toMatchObject({
+    expect(progressionClassLevels(progression)).toEqual({
       fighter: 2,
-      wizard: 0,
     });
   });
 
@@ -68,7 +66,7 @@ describe("normalized character progression algebra", () => {
     ]);
     expect(computeTotalLevel(progression)).toBe(2);
     expect(postStartAdvancementLevel(progression, 0)).toBe(2);
-    expect(progressionClassLevels(progression)).toMatchObject({
+    expect(progressionClassLevels(progression)).toEqual({
       fighter: 1,
       wizard: 1,
     });

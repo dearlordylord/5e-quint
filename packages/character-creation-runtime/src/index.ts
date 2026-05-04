@@ -101,8 +101,7 @@ export {
   postStartAdvancementLevel,
   progressionClassLevels,
   type CharacterProgression,
-  type CharacterProgressionClassLevel,
   type CharacterProgressionClassLevels,
   type CharacterProgressionUnitIdInput,
   type LegacyAdvancementProgressionInput,
-} from "./normalized-algebra.ts";
+} from "./character-progression-algebra.ts";
