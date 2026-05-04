@@ -45,54 +45,72 @@ Keep it synchronized with the DAG table and task details.
   "tasks": [
     {
       "number": 61,
-      "id": "PBA15A0",
+      "id": "PBA15A0A",
       "status": "ready-for-implementation-after-light-research",
-      "title": "Normalize Character Progression And Multiclass Algebra"
+      "title": "Promote Multiclass Prerequisite Algebra"
     },
     {
       "number": 62,
+      "id": "PBA15A0B",
+      "status": "blocked",
+      "title": "Introduce Character Progression Projection Helpers"
+    },
+    {
+      "number": 63,
+      "id": "PBA15A0C",
+      "status": "blocked",
+      "title": "Replace Level-One Advancement Workflow"
+    },
+    {
+      "number": 64,
+      "id": "PBA15A0D",
+      "status": "blocked",
+      "title": "Wire Progression And Multiclass Through MCP Docs"
+    },
+    {
+      "number": 65,
       "id": "PBA15A",
       "status": "blocked",
       "title": "Migrate Surface And Character-Creation Domain Primitives"
     },
     {
-      "number": 63,
+      "number": 66,
       "id": "PBA16",
       "status": "blocked",
       "title": "Add Death-Save Promoted MBT Coverage"
     },
     {
-      "number": 64,
+      "number": 67,
       "id": "PBA17",
       "status": "blocked",
       "title": "Restore Nonlethal Knockout And Zero-HP Handoff Width"
     },
     {
-      "number": 65,
+      "number": 68,
       "id": "PBA18",
       "status": "blocked",
       "title": "Widen Attack Range And Conditional Attack Riders"
     },
     {
-      "number": 66,
+      "number": 69,
       "id": "PBA19",
       "status": "blocked",
       "title": "Restore Stat Block Multiattack And Bonus Actions"
     },
     {
-      "number": 67,
+      "number": 70,
       "id": "PBA20",
       "status": "blocked",
       "title": "Restore Spell Targeting And Catalog Width"
     },
     {
-      "number": 68,
+      "number": 71,
       "id": "PBA21",
       "status": "blocked",
       "title": "Broaden Reaction Windows And Bonus-Action Subjects"
     },
     {
-      "number": 69,
+      "number": 72,
       "id": "PBA22",
       "status": "blocked",
       "title": "Stabilize Battle Snapshots Traces And App UI"
@@ -131,28 +149,81 @@ Keep it synchronized with the DAG table and task details.
 
 | Order | Task | Status | Depends on | Blocks | Research / plan | Next action |
 | ----- | ---- | ------ | ---------- | ------ | --------------- | ----------- |
-| 61 | PBA15A0 - Normalize Character Progression And Multiclass Algebra | ready-for-implementation-after-light-research | PBA15 | PBA15A | inline below | Finish progression normalization and shared multiclass prerequisite algebra integration. |
-| 62 | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked | PBA15A0 | PBA16 | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md) | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0. |
-| 63 | PBA16 - Add Death-Save Promoted MBT Coverage | blocked | PBA15A | PBA17 | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md) | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes. |
-| 64 | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width | blocked | PBA16 | PBA18 | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md) | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width. |
-| 65 | PBA18 - Widen Attack Range And Conditional Attack Riders | blocked | PBA17 | PBA19 | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md) | Restore long-range Disadvantage and supported conditional attack riders. |
-| 66 | PBA19 - Restore Stat Block Multiattack And Bonus Actions | blocked | PBA18 | PBA20 | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families. |
-| 67 | PBA20 - Restore Spell Targeting And Catalog Width | blocked | PBA19 | PBA21 | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md) | Restore Magic Missile split-target replay and broaden spell procedure pressure. |
-| 68 | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects | blocked | PBA20 | PBA22 | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md) | Broaden reaction windows and Bonus Action subjects after spell targeting width. |
-| 69 | PBA22 - Stabilize Battle Snapshots Traces And App UI | blocked | PBA21 | future tasks | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md) | Restore promoted snapshot/trace contracts and app battle UI workflows. |
+| 61 | PBA15A0A - Promote Multiclass Prerequisite Algebra | ready-for-implementation-after-light-research | PBA15 | PBA15A0B | inline below | Finish shared-algebras multiclass prerequisite extraction and Core compatibility wrappers only. |
+| 62 | PBA15A0B - Introduce Character Progression Projection Helpers | blocked | PBA15A0A | PBA15A0C | inline below | Add the canonical startingClass plus post-start advancements model and derivation helpers in character-creation-runtime. |
+| 63 | PBA15A0C - Replace Level-One Advancement Workflow | blocked | PBA15A0B | PBA15A0D | inline below | Replace runtime discovery/fill/finalization paths that expose a separate level-1 advancement choice. |
+| 64 | PBA15A0D - Wire Progression And Multiclass Through MCP Docs | blocked | PBA15A0C | PBA15A | inline below | Wire the normalized progression and prerequisite checks through MCP schemas/tests and package docs. |
+| 65 | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked | PBA15A0D | PBA16 | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md) | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D. |
+| 66 | PBA16 - Add Death-Save Promoted MBT Coverage | blocked | PBA15A | PBA17 | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md) | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes. |
+| 67 | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width | blocked | PBA16 | PBA18 | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md) | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width. |
+| 68 | PBA18 - Widen Attack Range And Conditional Attack Riders | blocked | PBA17 | PBA19 | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md) | Restore long-range Disadvantage and supported conditional attack riders. |
+| 69 | PBA19 - Restore Stat Block Multiattack And Bonus Actions | blocked | PBA18 | PBA20 | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families. |
+| 70 | PBA20 - Restore Spell Targeting And Catalog Width | blocked | PBA19 | PBA21 | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md) | Restore Magic Missile split-target replay and broaden spell procedure pressure. |
+| 71 | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects | blocked | PBA20 | PBA22 | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md) | Broaden reaction windows and Bonus Action subjects after spell targeting width. |
+| 72 | PBA22 - Stabilize Battle Snapshots Traces And App UI | blocked | PBA21 | future tasks | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md) | Restore promoted snapshot/trace contracts and app battle UI workflows. |
 
 ## Task Details
 
-### Task 61 - PBA15A0 - Normalize Character Progression And Multiclass Algebra
+### Task 61 - PBA15A0A - Promote Multiclass Prerequisite Algebra
 
 Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA15
-Blocks: PBA15A
+Blocks: PBA15A0B
 
-Next action: finish the in-progress character progression normalization and
-multiclass prerequisite extraction, then wire both into promoted
-`@dnd/character-creation-runtime` and MCP.
+Next action: finish the shared multiclass prerequisite algebra extraction and
+Core compatibility wrappers only. Do not change character-creation workflow,
+MCP schemas, or docs except package-local shared-algebras README/proof notes if
+needed.
+
+Context:
+
+- In-progress handoff files exist:
+  - `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`
+  - `packages/shared-algebras/src/multiclass-prerequisite-algebra.test.ts`
+  - `packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`
+  - `packages/core/src/features/class-tables.ts`
+- Keep the algebra Surface-free: it should speak in class names and ability
+  prerequisite facts, not Surface Unit ids such as `class_fighter`.
+- Core may retain compatibility wrappers, but must not own a duplicate
+  prerequisite table.
+
+Acceptance:
+
+- `@dnd/shared-algebras/multiclass-prerequisite-algebra` owns the canonical
+  multiclass prerequisite table and exported check helpers.
+- Tests cover passing and failing multiclass prerequisites for representative
+  classes and ability-score combinations.
+- The small Quint proof has deterministic `mc_` assertions for the same
+  canonical algebra facts.
+- Core class-table code either re-exports/adapts the shared algebra or clearly
+  delegates to it without duplicating the table.
+- No character-creation-runtime workflow or MCP schema changes are made in this
+  slice.
+
+Verification:
+
+- RAW/UL check for multiclass prerequisite wording in
+  `.references/srd-5.2.1/Classes/` and `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/shared-algebras typecheck`
+- `pnpm --filter @dnd/shared-algebras test`
+- `pnpm exec quint test --match "mc_" packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`
+- Focused Core tests only if Core wrappers are touched.
+- No battle MBT.
+- `/simplify` convergence, minimum two rounds.
+
+Plan Impact: if successful, unblock PBA15A0B.
+
+### Task 62 - PBA15A0B - Introduce Character Progression Projection Helpers
+
+Status: `blocked`
+
+Depends on: PBA15A0A
+Blocks: PBA15A0C
+
+Next action: add the canonical character progression model and derivation
+helpers in `@dnd/character-creation-runtime` without yet replacing every
+workflow caller.
 
 Context:
 
@@ -164,37 +235,54 @@ Context:
 - Target shape: `startingClass` plus post-start `advancements`; level 1 is
   implicit from `startingClass`; total level is `1 + advancements.length`;
   per-class levels derive by counting starting and later classes.
-- In-progress handoff files exist:
-  - `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`
-  - `packages/shared-algebras/src/multiclass-prerequisite-algebra.test.ts`
-  - `packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`
-  - `packages/core/src/features/class-tables.ts`
-  - `packages/character-creation-runtime/src/normalized-algebra.ts`
-- Keep the algebra Surface-free. If runtime inputs still use Surface Unit ids
-  such as `class_fighter`, add one explicit boundary adapter between Unit ids
-  and class names.
+- `packages/character-creation-runtime/src/normalized-algebra.ts` is the
+  handoff file for this slice.
 
-Implementation suggestions:
+Acceptance:
 
-- `@dnd/shared-algebras/multiclass-prerequisite-algebra` can own the
-  prerequisite table, focused TS tests, and small Quint proof.
-- Core can retain compatibility wrappers only; it should not own a duplicate
-  prerequisite table.
-- `@dnd/character-creation-runtime` can model progression as:
+- Character-creation-runtime exports a precise `CharacterProgression` model
+  or equivalent parsed type with `startingClass` and post-start
+  `advancements` only.
+- Runtime helpers derive total level, advancement level by position, and
+  per-class level summaries from the progression model.
+- Unit-id inputs such as `class_fighter` are converted through one explicit
+  boundary adapter; Surface Unit ids are not stored in the core progression
+  algebra.
+- Focused tests prove a level-1 Fighter, Fighter 2, and Fighter/Wizard
+  progression derive expected totals/class levels without storing contradictory
+  advancement levels.
+- Existing public workflow behavior is not broadly rewired in this slice; keep
+  compatibility projections where needed.
 
-  ```ts
-  type CharacterProgression = {
-    readonly startingClass: ClassName;
-    readonly advancements: readonly ClassName[];
-  };
-  ```
+Verification:
 
-- Runtime helpers can derive total level and class-level summaries from
-  progression. A stored post-start advancement `level` should not sit beside
-  position-derived level.
-- Discovery, fill reduction, support gates, finalization, QNT slice/MBT bridge,
-  MCP schemas/tests, README, and vocabulary docs should use the progression
-  model or derive legacy labels only at boundaries.
+- RAW/UL check for class creation and level advancement wording.
+- `pnpm --filter @dnd/character-creation-runtime typecheck`
+- `pnpm --filter @dnd/character-creation-runtime test`
+- No battle MBT.
+- `/simplify` convergence, minimum two rounds.
+
+Plan Impact: if successful, unblock PBA15A0C.
+
+### Task 63 - PBA15A0C - Replace Level-One Advancement Workflow
+
+Status: `blocked`
+
+Depends on: PBA15A0B
+Blocks: PBA15A0D
+
+Next action: replace character-creation-runtime discovery, fill reduction, and
+finalization paths that expose a separate level-1 advancement choice after the
+starting class is chosen.
+
+Context:
+
+- The current runtime can represent `primaryClass: Fighter` with first
+  advancement `Wizard`, then finalization checks and rejects that mismatch.
+- Task PBA15A0B creates the progression helpers that should make this mismatch
+  unrepresentable at the promoted runtime boundary.
+- Keep supported workflows available: Orc Soldier Fighter 1, Orc Soldier
+  Fighter 2, and Orc Soldier Wizard 1.
 
 Acceptance:
 
@@ -202,13 +290,54 @@ Acceptance:
   first advancement for Wizard.
 - Promoted character creation cannot represent a post-start advancement with a
   contradictory stored level.
-- Supported current workflows remain available: Orc Soldier Fighter 1, Orc
-  Soldier Fighter 2, Orc Soldier Wizard 1, and existing MCP creation/battle
-  handoff verticals.
-- Multiclass prerequisite checks are canonical outside Core and used by all TS
-  replay paths that validate multiclass entry.
-- Character-creation-runtime and MCP no longer expose "choose level 1" as a RAW
+- Character-creation-runtime no longer exposes "choose level 1" as a RAW
   creation step after choosing a starting class.
+- Discovery, fill reducer, support gates, finalization, QNT slice/MBT bridge,
+  and focused runtime tests use the progression model or derive legacy labels
+  only at boundaries.
+- Existing supported creation verticals still pass.
+
+Verification:
+
+- RAW/UL check for class creation and level advancement wording.
+- `pnpm --filter @dnd/character-creation-runtime typecheck`
+- `pnpm --filter @dnd/character-creation-runtime test`
+- Focused Core tests only if legacy replay compatibility wrappers are touched.
+- No battle MBT unless battle-runtime mappings change.
+- `/simplify` convergence, minimum two rounds.
+
+Plan Impact: if successful, unblock PBA15A0D.
+
+### Task 64 - PBA15A0D - Wire Progression And Multiclass Through MCP Docs
+
+Status: `blocked`
+
+Depends on: PBA15A0C
+Blocks: PBA15A
+
+Next action: wire the normalized progression model and shared multiclass
+prerequisite checks through MCP schemas/tests and update package docs.
+
+Context:
+
+- PBA15A0A owns canonical multiclass prerequisite checks in
+  `@dnd/shared-algebras`.
+- PBA15A0B and PBA15A0C normalize character-creation-runtime progression and
+  remove the separate level-1 advancement workflow.
+- This slice is the integration/docs closeout before PBA15A can resume durable
+  primitive migration.
+
+Acceptance:
+
+- MCP creation schemas and tests no longer expose "choose level 1" after a
+  starting class is selected.
+- All TS replay paths that validate multiclass entry use the shared
+  prerequisite algebra instead of a Core-owned duplicate table.
+- Existing MCP creation/battle handoff verticals remain available.
+- `packages/character-creation-runtime/README.md`,
+  `packages/character-creation-runtime/VOCABULARY.md`, and relevant
+  shared-algebras docs describe the new ownership/progression language.
+- Final plan closeout can unblock PBA15A.
 
 Verification:
 
@@ -216,30 +345,27 @@ Verification:
   prerequisite wording.
 - `pnpm --filter @dnd/shared-algebras typecheck`
 - `pnpm --filter @dnd/shared-algebras test`
-- `pnpm exec quint test --match "mc_" packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`
 - `pnpm --filter @dnd/character-creation-runtime typecheck`
 - `pnpm --filter @dnd/character-creation-runtime test`
 - `pnpm --filter @dnd/mcp typecheck`
 - `pnpm --filter @dnd/mcp test`
-- Focused Core tests only if Core compatibility wrappers or legacy replay tests
-  are touched.
 - No battle MBT unless battle-runtime mappings change.
 - `/simplify` convergence, minimum two rounds.
 
 Plan Impact: if successful, unblock PBA15A.
 
-### Task 62 - PBA15A - Migrate Surface And Character-Creation Domain Primitives
+### Task 65 - PBA15A - Migrate Surface And Character-Creation Domain Primitives
 
 Status: `blocked`
 
-Depends on: PBA15A0
+Depends on: PBA15A0D
 Blocks: PBA16
 
 Research plan:
 [pba15a-domain-primitives-research-plan.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)
 
 Next action: migrate remaining durable Surface-authored and
-character-creation-runtime primitive domain values after PBA15A0 leaves
+character-creation-runtime primitive domain values after PBA15A0D leaves
 progression and multiclass prerequisite facts in their durable owners.
 
 Acceptance summary: changed Surface and character-creation production types no
@@ -252,7 +378,7 @@ runtime mappings change, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA16.
 
-### Task 63 - PBA16 - Add Death-Save Promoted MBT Coverage
+### Task 66 - PBA16 - Add Death-Save Promoted MBT Coverage
 
 Status: `blocked`
 
@@ -273,7 +399,7 @@ no broad battle MBT/fuzz, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA17.
 
-### Task 64 - PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width
+### Task 67 - PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width
 
 Status: `blocked`
 
@@ -294,7 +420,7 @@ only if lifecycle mappings change beyond PBA16, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA18.
 
-### Task 65 - PBA18 - Widen Attack Range And Conditional Attack Riders
+### Task 68 - PBA18 - Widen Attack Range And Conditional Attack Riders
 
 Status: `blocked`
 
@@ -317,7 +443,7 @@ promoted QNT/MBT only if reusable attack procedure behavior changes,
 
 Plan Impact: if successful, unblock PBA19.
 
-### Task 66 - PBA19 - Restore Stat Block Multiattack And Bonus Actions
+### Task 69 - PBA19 - Restore Stat Block Multiattack And Bonus Actions
 
 Status: `blocked`
 
@@ -340,7 +466,7 @@ MCP tests, promoted QNT/MBT only for new reusable procedure behavior,
 
 Plan Impact: if successful, unblock PBA20.
 
-### Task 67 - PBA20 - Restore Spell Targeting And Catalog Width
+### Task 70 - PBA20 - Restore Spell Targeting And Catalog Width
 
 Status: `blocked`
 
@@ -363,7 +489,7 @@ coverage, promoted QNT/MBT only for new reusable spell procedure behavior,
 
 Plan Impact: if successful, unblock PBA21.
 
-### Task 68 - PBA21 - Broaden Reaction Windows And Bonus-Action Subjects
+### Task 71 - PBA21 - Broaden Reaction Windows And Bonus-Action Subjects
 
 Status: `blocked`
 
@@ -385,7 +511,7 @@ continuation changes, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA22.
 
-### Task 69 - PBA22 - Stabilize Battle Snapshots Traces And App UI
+### Task 72 - PBA22 - Stabilize Battle Snapshots Traces And App UI
 
 Status: `blocked`
 
