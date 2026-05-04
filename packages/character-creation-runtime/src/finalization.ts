@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { hp } from "@dnd/shared/types";
 import {
@@ -117,12 +117,20 @@ export function finalizeCharacterDraft(input: {
     };
   }
 
+  const build = buildCharacterBuild({
+    supportedSelections: supportedSelections.value,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(build)) {
+    return {
+      tag: "invalid",
+      issues: [build.left],
+    };
+  }
+
   return {
     tag: "ready",
-    build: buildCharacterBuild({
-      supportedSelections: supportedSelections.value,
-      unitLibrary: input.unitLibrary,
-    }),
+    build: build.right,
   };
 }
 
@@ -238,9 +246,9 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): boolean {
-  const classFacts = readClassCreationFacts(
-    unitLibrary.requireUnit(selections.primaryClass),
-  );
+  const classUnit = unitLibrary.getUnit(selections.primaryClass);
+  if (Option.isNone(classUnit)) return false;
+  const classFacts = readClassCreationFacts(classUnit.value);
   if (
     classFacts.tag !== "readable" ||
     !isWizardClassCreationFacts(classFacts.value)
@@ -391,7 +399,9 @@ export function isSupportedBackgroundAbilityScoreIncrease(
   backgroundUnitId: UnitRecord["id"],
   baseScores: AbilityScoreAssignment,
 ): boolean {
-  const background = unitLibrary.requireUnit(backgroundUnitId);
+  const backgroundOption = unitLibrary.getUnit(backgroundUnitId);
+  if (Option.isNone(backgroundOption)) return false;
+  const background = backgroundOption.value;
   const facts = readBackgroundCreationFacts(background);
   if (facts.tag !== "readable") {
     return false;
@@ -460,7 +470,7 @@ export function sameBackgroundAbilityScoreIncreaseSelection(
 export function buildCharacterBuild(input: {
   readonly supportedSelections: TemporarySupportedSliceSelections;
   readonly unitLibrary: UnitCatalog;
-}): CharacterBuild {
+}): Either.Either<CharacterBuild, CreationFinalizationIssue> {
   // Project the selected supported class level, not only level 1. The current
   // temporary gate is single-class, but Fighter 2 and Wizard 1 both flow through
   // this same build projection.
@@ -469,33 +479,53 @@ export function buildCharacterBuild(input: {
   const progressionLevels = progressionClassLevels(progression);
   const selectedClassLevel =
     progressionLevels[progression.startingClass] ?? characterClassLevel(1);
-  const classFacts = requireReadable(
-    readClassCreationFacts(
-      input.unitLibrary.requireUnit(selections.primaryClass),
-    ),
+  const classUnit = unitForFinalization(
+    input.unitLibrary,
+    selections.primaryClass,
     "class",
   );
-  const backgroundFacts = requireReadable(
-    readBackgroundCreationFacts(
-      input.unitLibrary.requireUnit(selections.background),
-    ),
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  const classFacts = readableForFinalization(
+    readClassCreationFacts(classUnit.right),
+    "class",
+  );
+  if (Either.isLeft(classFacts)) return Either.left(classFacts.left);
+  const backgroundUnit = unitForFinalization(
+    input.unitLibrary,
+    selections.background,
     "background",
   );
-  const speciesFacts = requireReadable(
-    readSpeciesCreationFacts(input.unitLibrary.requireUnit(selections.species)),
+  if (Either.isLeft(backgroundUnit)) return Either.left(backgroundUnit.left);
+  const backgroundFacts = readableForFinalization(
+    readBackgroundCreationFacts(backgroundUnit.right),
+    "background",
+  );
+  if (Either.isLeft(backgroundFacts)) return Either.left(backgroundFacts.left);
+  const speciesUnit = unitForFinalization(
+    input.unitLibrary,
+    selections.species,
     "species",
   );
+  if (Either.isLeft(speciesUnit)) return Either.left(speciesUnit.left);
+  const speciesFacts = readableForFinalization(
+    readSpeciesCreationFacts(speciesUnit.right),
+    "species",
+  );
+  if (Either.isLeft(speciesFacts)) return Either.left(speciesFacts.left);
   const baseScores = selections.abilityScoreGeneration.assignedScores;
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
     selections.backgroundAbilityScoreIncrease,
-    backgroundFacts.abilityScoreIncrease.abilities,
+    backgroundFacts.right.abilityScoreIncrease.abilities,
   );
-  const classFeatureGrants = classFacts.featureGrants.filter(
+  const classFeatureGrants = classFacts.right.featureGrants.filter(
     (grant) => grant.level <= selectedClassLevel,
   );
   const classFeatureUnitIds = classFeatureGrants.map((grant) => grant.unitId);
-  const buildSpellcasting = finalizedBuildSpellcasting(classFacts, selections);
+  const buildSpellcasting = finalizedBuildSpellcasting(
+    classFacts.right,
+    selections,
+  );
   const buildFeatures: readonly CharacterBuildFeature[] = [
     ...classFeatureGrants.map((grant) => ({
       kind: "classFeature" as const,
@@ -504,9 +534,9 @@ export function buildCharacterBuild(input: {
     })),
     {
       kind: "backgroundOriginFeat",
-      unitId: backgroundFacts.originFeatId,
+      unitId: backgroundFacts.right.originFeatId,
     },
-    ...Object.values(speciesFacts.traits).map((unitId) => ({
+    ...Object.values(speciesFacts.right.traits).map((unitId) => ({
       kind: "speciesTrait" as const,
       unitId,
     })),
@@ -514,7 +544,7 @@ export function buildCharacterBuild(input: {
   ];
   const buildEquipment = finalizedBuildEquipment(selections);
 
-  return {
+  return Either.right({
     progression,
     background: selections.background,
     species: selections.species,
@@ -523,39 +553,40 @@ export function buildCharacterBuild(input: {
     abilityScores: finalScores,
     hitPoints: {
       maximum: hp(
-        classFacts.hitPointDie +
+        classFacts.right.hitPointDie +
           abilityModifier(finalScores.con) +
           (selectedClassLevel - 1) *
             fixedHitPointsAfterLevelOne(
-              classFacts.hitPointDie,
+              classFacts.right.hitPointDie,
               finalScores.con,
             ),
       ),
       hitDice: [
         {
           classUnitId: selections.primaryClass,
-          dieSize: hitDieSize(classFacts.hitPointDie),
+          dieSize: hitDieSize(classFacts.right.hitPointDie),
           total: hitDieTotal(selectedClassLevel),
         },
       ],
     },
     proficiencies: {
-      savingThrows: classFacts.savingThrowProficiencies,
+      savingThrows: classFacts.right.savingThrowProficiencies,
       skills: uniqueValues([
-        ...finalizedBuildSkillProficiencies(selections, classFacts),
-        ...backgroundFacts.skillProficiencies,
+        ...finalizedBuildSkillProficiencies(selections, classFacts.right),
+        ...backgroundFacts.right.skillProficiencies,
       ]),
-      weapon: classFacts.weaponProficiencies,
+      weapon: classFacts.right.weaponProficiencies,
       tools: finalizedBuildToolProficiencies(selections),
     },
-    armorTraining: classFacts.armorTraining,
+    armorTraining: classFacts.right.armorTraining,
     features: buildFeatures,
-    resources: classFeatureUnitIds.flatMap((unitId) =>
-      resourceForFeature(input.unitLibrary.requireUnit(unitId)),
-    ),
+    resources: classFeatureUnitIds.flatMap((unitId) => {
+      const unit = input.unitLibrary.getUnit(unitId);
+      return Option.isSome(unit) ? resourceForFeature(unit.value) : [];
+    }),
     ...(buildSpellcasting == null ? {} : { spellcasting: buildSpellcasting }),
     equipment: buildEquipment,
-  };
+  });
 }
 
 function fixedHitPointsAfterLevelOne(
@@ -572,33 +603,39 @@ export function allFinalizedChoicesSupported(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): boolean {
-  const classFacts = requireReadable(
-    readClassCreationFacts(unitLibrary.requireUnit(selections.primaryClass)),
-    "class",
-  );
-  const backgroundFacts = requireReadable(
-    readBackgroundCreationFacts(unitLibrary.requireUnit(selections.background)),
-    "background",
-  );
+  const classUnit = unitLibrary.getUnit(selections.primaryClass);
+  if (Option.isNone(classUnit)) return false;
+  const classFacts = readClassCreationFacts(classUnit.value);
+  if (classFacts.tag !== "readable") return false;
+  const backgroundUnit = unitLibrary.getUnit(selections.background);
+  if (Option.isNone(backgroundUnit)) return false;
+  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
+  if (backgroundFacts.tag !== "readable") return false;
   const classLevel = selections.advancement.entries[0]?.level ?? 1;
   const classEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selections.primaryClass, CLASS_EQUIPMENT_CHOICE_KEY),
-      classFacts.startingEquipment,
+      classFacts.value.startingEquipment,
     ),
   );
   const backgroundEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selections.background, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-      backgroundFacts.startingEquipment,
+      backgroundFacts.value.startingEquipment,
     ),
   );
+  if (
+    classEquipmentHole === undefined ||
+    backgroundEquipmentHole === undefined
+  ) {
+    return false;
+  }
   const supportedHolesBySource = supportedChoiceHolesBySource(
     supportedFinalizationChoiceHoles({
       selections,
-      classFacts,
+      classFacts: classFacts.value,
       classLevel,
-      backgroundFacts,
+      backgroundFacts: backgroundFacts.value,
       unitLibrary,
       classEquipmentHole,
       backgroundEquipmentHole,
@@ -626,7 +663,7 @@ export function allFinalizedChoicesSupported(
           choice,
           selections.primaryClass,
           CLASS_EQUIPMENT_CHOICE_KEY,
-          classFacts.startingEquipment,
+          classFacts.value.startingEquipment,
         );
       }
 
@@ -637,7 +674,7 @@ export function allFinalizedChoicesSupported(
           choice,
           selections.background,
           BACKGROUND_EQUIPMENT_CHOICE_KEY,
-          backgroundFacts.startingEquipment,
+          backgroundFacts.value.startingEquipment,
         );
       }
 
@@ -665,7 +702,10 @@ export function supportedChoiceHolesBySource(
       continue;
     }
 
-    bySource.set(sourceKey, mergeChoiceHoles(existing, hole));
+    const merged = mergeChoiceHoles(existing, hole);
+    if (merged !== undefined) {
+      bySource.set(sourceKey, merged);
+    }
   }
 
   return bySource;
@@ -674,11 +714,9 @@ export function supportedChoiceHolesBySource(
 function mergeChoiceHoles(
   left: UnitChoiceCreationHole,
   right: UnitChoiceCreationHole,
-): UnitChoiceCreationHole {
+): UnitChoiceCreationHole | undefined {
   if (!sameChoiceCardinality(left, right)) {
-    throw new Error(
-      `Conflicting choice cardinality for source ${unitChoiceSourceKey(left.source)}.`,
-    );
+    return undefined;
   }
 
   return {
@@ -748,7 +786,10 @@ function supportedFinalizationChoiceHoles(input: {
     .flatMap((grant) =>
       classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary),
     )
-    .map((hole) => requireUnitChoiceCreationHole(hole));
+    .flatMap((hole) => {
+      const unitHole = requireUnitChoiceCreationHole(hole);
+      return unitHole === undefined ? [] : [unitHole];
+    });
   const wizardSpellHoles =
     input.classFacts.className === "wizard"
       ? wizardSpellcastingChoiceHoles(
@@ -767,7 +808,7 @@ function supportedFinalizationChoiceHoles(input: {
     ...wizardSpellHoles,
     ...(backgroundToolHole == null
       ? []
-      : [
+      : compact([
           requireUnitChoiceCreationHole(
             choiceHole({
               source: unitSource(
@@ -778,12 +819,12 @@ function supportedFinalizationChoiceHoles(input: {
               options: backgroundToolHole.options,
             }),
           ),
-        ]),
+        ])),
     input.classEquipmentHole,
     input.backgroundEquipmentHole,
     ...supportedLoadoutChoices().flatMap((loadoutChoice) =>
       selectedEquipment.has(loadoutChoice.unitId)
-        ? [
+        ? compact([
             requireUnitChoiceCreationHole(
               choiceHole({
                 source: unitSource(
@@ -800,10 +841,10 @@ function supportedFinalizationChoiceHoles(input: {
                 ],
               }),
             ),
-          ]
+          ])
         : [],
     ),
-  ];
+  ].filter(isPresent);
 }
 
 function wizardSpellcastingChoiceHoles(
@@ -811,7 +852,7 @@ function wizardSpellcastingChoiceHoles(
   classFacts: Extract<ClassCreationFacts, { readonly className: "wizard" }>,
 ): readonly UnitChoiceCreationHole[] {
   const spellcasting = classFacts.spellcasting;
-  return [
+  return compact([
     requireUnitChoiceCreationHole(
       choiceHole({
         source: unitSource(classUnitId, WIZARD_CANTRIP_CHOICE_KEY),
@@ -847,12 +888,14 @@ function wizardSpellcastingChoiceHoles(
         })),
       }),
     ),
-  ];
+  ]);
 }
 
-function requireChoiceCreationHole(hole: CreationHole): ChoiceCreationHole {
-  if (hole.kind !== "choice") {
-    throw new Error("Expected a choice creation hole.");
+function requireChoiceCreationHole(
+  hole: CreationHole | undefined,
+): ChoiceCreationHole | undefined {
+  if (hole?.kind !== "choice") {
+    return undefined;
   }
 
   return hole;
@@ -865,14 +908,22 @@ function isUnitChoiceCreationHole(
 }
 
 function requireUnitChoiceCreationHole(
-  hole: CreationHole,
-): UnitChoiceCreationHole {
+  hole: CreationHole | undefined,
+): UnitChoiceCreationHole | undefined {
   const choice = requireChoiceCreationHole(hole);
-  if (!isUnitChoiceCreationHole(choice)) {
-    throw new Error("Expected a unit-sourced choice creation hole.");
+  if (choice === undefined || !isUnitChoiceCreationHole(choice)) {
+    return undefined;
   }
 
   return choice;
+}
+
+function compact<T>(values: readonly (T | undefined)[]): readonly T[] {
+  return values.filter(isPresent);
+}
+
+function isPresent<T>(value: T | undefined): value is T {
+  return value !== undefined;
 }
 
 function supportedStartingEquipmentCoinGrantChoice(
@@ -894,6 +945,9 @@ function supportedStartingEquipmentCoinGrantChoice(
     unitSource(unitId, choiceKey),
     choices,
   );
+  if (hole === undefined) {
+    return false;
+  }
   if (!choiceSelectionMatchesHole(selection, hole)) {
     return false;
   }
@@ -931,7 +985,7 @@ export function characterBuildUnitRefs(
     [build.progression.startingClass, ...build.progression.advancements].map(
       (className) => classUnitIdForClassName(className, unitLibrary),
     ),
-  );
+  ).flatMap((unitId) => (unitId == null ? [] : [unitId]));
 
   return unitRefs(
     ...classUnitIds,
@@ -951,18 +1005,14 @@ export function characterBuildUnitRefs(
 function classUnitIdForClassName(
   className: CharacterProgression["startingClass"],
   unitLibrary: UnitCatalog,
-): UnitRecord["id"] {
+): UnitRecord["id"] | undefined {
   const unit = unitLibrary
     .listUnits()
     .find(
       (candidate) =>
         candidate.kind === "class" && candidate.className === className,
     );
-  if (unit == null) {
-    throw new Error(`Character build references unknown class ${className}.`);
-  }
-
-  return unit.id;
+  return unit?.id;
 }
 
 export function finalizedClassChoiceFeatures(
@@ -1083,16 +1133,35 @@ export function optionalUnitId(
   return unitId == null ? [] : [unitId];
 }
 
-export function requireReadable<T>(
+function readableForFinalization<T>(
   result: UnitReaderResult<T>,
   label: string,
-): T {
+): Either.Either<T, CreationFinalizationIssue> {
   if (result.tag === "unreadable") {
     const issueText = result.issues.map((issue) => issue.message).join("; ");
-    throw new Error(`Cannot finalize unreadable ${label} Unit: ${issueText}`);
+    return Either.left(
+      illegalFinalizationIssue(
+        `Cannot finalize unreadable ${label} Unit: ${issueText}`,
+      ),
+    );
   }
 
-  return result.value;
+  return Either.right(result.value);
+}
+
+function unitForFinalization(
+  unitLibrary: UnitCatalog,
+  unitId: UnitRecord["id"],
+  label: string,
+): Either.Either<UnitRecord, CreationFinalizationIssue> {
+  const unit = unitLibrary.getUnit(unitId);
+  return Option.isSome(unit)
+    ? Either.right(unit.value)
+    : Either.left(
+        illegalFinalizationIssue(
+          `Cannot finalize unknown ${label} Unit: ${unitId}`,
+        ),
+      );
 }
 
 export function applyBackgroundAbilityScoreIncrease(

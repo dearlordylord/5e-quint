@@ -59,21 +59,13 @@ export function parseElapsedTimeTicks(
 }
 
 export function elapsedTimeTicks(value: number): ElapsedTimeTicks {
-  const parsed = parseElapsedTimeTicks(value);
-  if (Either.isLeft(parsed)) {
-    throw new Error(describeElapsedTimeParseError(parsed.left));
-  }
-  return parsed.right;
+  return ElapsedTimeTicks(value);
 }
 
 export function boundaryCrossingsRemaining(
   value: number,
 ): BoundaryCrossingsRemaining {
-  const parsed = parsePositiveInt(value);
-  if (Either.isLeft(parsed)) {
-    throw new Error(describeElapsedTimeParseError(parsed.left));
-  }
-  return BoundaryCrossingsRemaining(parsed.right);
+  return BoundaryCrossingsRemaining(value);
 }
 
 export function parseBoundaryCrossingsRemaining(

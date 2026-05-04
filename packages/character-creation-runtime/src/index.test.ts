@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
+import { Either } from "effect";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -27,6 +28,7 @@ import {
   unitChoiceKey,
   type CharacterDraft,
   type CharacterChoiceSelection,
+  type ChoiceCardinality,
   type CreationFill,
   type CreationFillIssue,
   type CreationHole,
@@ -51,6 +53,23 @@ if (unitCatalogResult.tag !== "ok") {
 }
 
 const unitLibrary = unitCatalogResult.catalog;
+
+function unitChoiceKeyRight(value: string) {
+  const result = unitChoiceKey(value);
+  if (Either.isLeft(result)) {
+    throw new Error(`Invalid test Unit choice key: ${value}`);
+  }
+  return result.right;
+}
+
+function choiceCardinalityRight(
+  cardinality: ChoiceCardinality | undefined,
+): ChoiceCardinality {
+  if (cardinality === undefined) {
+    throw new Error("Invalid test choice cardinality.");
+  }
+  return cardinality;
+}
 const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
 const characterCreationRuntimeSlicePath = fileURLToPath(
   new URL("../character-creation-runtime-slice.qnt", import.meta.url),
@@ -58,8 +77,11 @@ const characterCreationRuntimeSlicePath = fileURLToPath(
 
 describe("character creation hole discovery", () => {
   test("rejects unknown Unit choice keys at the protocol boundary", () => {
-    expect(() => unitChoiceKey("future_choice")).toThrow(
-      "Unsupported creation unit choice key: future_choice",
+    expect(unitChoiceKey("future_choice")).toEqual(
+      Either.left({
+        tag: "unsupportedUnitChoiceKey",
+        value: "future_choice",
+      }),
     );
   });
 
@@ -1751,9 +1773,9 @@ describe("character creation finalization", () => {
         source: {
           tag: "unit",
           unitId: "weapon_longsword",
-          choiceKey: unitChoiceKey("loadout_weapon"),
+          choiceKey: unitChoiceKeyRight("loadout_weapon"),
         },
-        cardinality: exactChoiceCardinality(1),
+        cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
           {
             optionId: creationChoiceOptionId("wielded_one_handed"),
@@ -1768,9 +1790,9 @@ describe("character creation finalization", () => {
         source: {
           tag: "unit",
           unitId: "weapon_longsword",
-          choiceKey: unitChoiceKey("loadout_weapon"),
+          choiceKey: unitChoiceKeyRight("loadout_weapon"),
         },
-        cardinality: exactChoiceCardinality(1),
+        cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
           {
             optionId: creationChoiceOptionId("wielded_one_handed"),
@@ -1809,47 +1831,52 @@ describe("character creation finalization", () => {
     ]);
   });
 
-  test("throws when duplicate supported choice-hole sources disagree on cardinality", () => {
-    expect(() =>
-      supportedChoiceHolesBySource([
-        {
-          kind: "choice",
-          holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
-          source: {
-            tag: "unit",
-            unitId: "weapon_longsword",
-            choiceKey: unitChoiceKey("loadout_weapon"),
-          },
-          cardinality: exactChoiceCardinality(1),
-          options: [
-            {
-              optionId: creationChoiceOptionId("wielded_one_handed"),
-              label: "Wielded one-handed",
-              unitRef: { unitId: "weapon_longsword" },
-            },
-          ],
+  test("ignores duplicate supported choice-hole sources that disagree on cardinality", () => {
+    const merged = supportedChoiceHolesBySource([
+      {
+        kind: "choice",
+        holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+        source: {
+          tag: "unit",
+          unitId: "weapon_longsword",
+          choiceKey: unitChoiceKeyRight("loadout_weapon"),
         },
-        {
-          kind: "choice",
-          holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
-          source: {
-            tag: "unit",
-            unitId: "weapon_longsword",
-            choiceKey: unitChoiceKey("loadout_weapon"),
+        cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
+        options: [
+          {
+            optionId: creationChoiceOptionId("wielded_one_handed"),
+            label: "Wielded one-handed",
+            unitRef: { unitId: "weapon_longsword" },
           },
-          cardinality: boundedChoiceCardinality({ min: 1, max: 2 }),
-          options: [
-            {
-              optionId: creationChoiceOptionId("wielded_two_handed"),
-              label: "Wielded two-handed",
-              unitRef: { unitId: "weapon_longsword" },
-            },
-          ],
+        ],
+      },
+      {
+        kind: "choice",
+        holeId: creationHoleId("cc:unit:weapon_longsword:loadout_weapon"),
+        source: {
+          tag: "unit",
+          unitId: "weapon_longsword",
+          choiceKey: unitChoiceKeyRight("loadout_weapon"),
         },
-      ]),
-    ).toThrow(
-      "Conflicting choice cardinality for source weapon_longsword:loadout_weapon.",
-    );
+        cardinality: choiceCardinalityRight(
+          boundedChoiceCardinality({ min: 1, max: 2 }),
+        ),
+        options: [
+          {
+            optionId: creationChoiceOptionId("wielded_two_handed"),
+            label: "Wielded two-handed",
+            unitRef: { unitId: "weapon_longsword" },
+          },
+        ],
+      },
+    ]);
+    expect(merged.get("weapon_longsword:loadout_weapon")?.options).toEqual([
+      {
+        optionId: "wielded_one_handed",
+        label: "Wielded one-handed",
+        unitRef: { unitId: "weapon_longsword" },
+      },
+    ]);
   });
 
   test("does not finalize incomplete or illegal drafts", () => {
@@ -2895,7 +2922,7 @@ function selectedChoice(
     source: {
       tag: "unit",
       unitId,
-      choiceKey: unitChoiceKey(choiceKey),
+      choiceKey: unitChoiceKeyRight(choiceKey),
     },
     options: optionIds.map((optionId) => ({
       optionId: creationChoiceOptionId(optionId),
@@ -2913,7 +2940,7 @@ function selectedChoiceWithUnitRef(
     source: {
       tag: "unit",
       unitId,
-      choiceKey: unitChoiceKey(choiceKey),
+      choiceKey: unitChoiceKeyRight(choiceKey),
     },
     options: [
       {
@@ -2933,7 +2960,7 @@ function selectedUnitChoice(
     source: {
       tag: "unit",
       unitId,
-      choiceKey: unitChoiceKey(choiceKey),
+      choiceKey: unitChoiceKeyRight(choiceKey),
     },
     options: optionIds.map((optionId) => ({
       optionId: creationChoiceOptionId(optionId),
@@ -2952,7 +2979,7 @@ function selectedLoadoutChoice(
     source: {
       tag: "unit",
       unitId,
-      choiceKey: unitChoiceKey(choiceKey),
+      choiceKey: unitChoiceKeyRight(choiceKey),
     },
     options: [
       {

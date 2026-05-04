@@ -6,6 +6,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { describe, expect, it } from "vitest";
+import { Either } from "effect";
 import { z } from "zod";
 
 import {
@@ -38,6 +39,14 @@ if (unitCatalogResult.tag !== "ok") {
 }
 
 const unitLibrary = unitCatalogResult.catalog;
+
+function unitChoiceKeyRight(value: string) {
+  const result = unitChoiceKey(value);
+  if (Either.isLeft(result)) {
+    throw new Error(`Invalid MBT Unit choice key: ${value}`);
+  }
+  return result.right;
+}
 
 type DraftProjection = {
   readonly revision: number;
@@ -518,7 +527,7 @@ function choiceFillForKnownProtocolHole(
     // This rejection case intentionally targets a valid protocol hole before
     // it is open, so it cannot derive the id from current hole discovery.
     holeId: creationHoleId(
-      `cc:unit:armor_chain_mail:${unitChoiceKey("loadout_armor")}`,
+      `cc:unit:armor_chain_mail:${unitChoiceKeyRight("loadout_armor")}`,
     ),
     optionIds: optionIds.map(creationChoiceOptionId),
   };

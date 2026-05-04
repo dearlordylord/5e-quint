@@ -9,7 +9,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Match, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -289,14 +289,18 @@ export function handleCharacterToolCall(
         unitLibrary: root.unitLibrary,
       });
       if (finalization.tag === "ready") {
-        root.sessionStore.characters.set(
-          draftId,
-          availableCharacterSession({
-            characterId: characterId(draftId),
-            build: finalization.build,
-            currentHp: Hp(finalization.build.hitPoints.maximum),
-          }),
-        );
+        const session = availableCharacterSession({
+          characterId: characterId(draftId),
+          build: finalization.build,
+          currentHp: Hp(finalization.build.hitPoints.maximum),
+        });
+        if (Either.isLeft(session)) {
+          return errorContent("Character finalization session failed.", {
+            code: "CHARACTER_SESSION_INVALID",
+            message: session.left.message,
+          });
+        }
+        root.sessionStore.characters.set(draftId, session.right);
         root.sessionStore.drafts.delete(draftId);
       }
 

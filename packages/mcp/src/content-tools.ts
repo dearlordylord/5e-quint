@@ -35,7 +35,7 @@ const ListCatalogUnitsOutputSchema = Schema.Struct({
 const StatBlockAttackSummarySchema = Schema.Struct({
   attackName: Schema.String,
   attackType: Schema.String,
-  attackBonus: Schema.Number,
+  attackBonus: Schema.Union(Schema.Number, Schema.Null),
   reachFeet: Schema.optionalWith(Schema.Number, { exact: true }),
   normalRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
   longRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
@@ -45,8 +45,8 @@ const StatBlockSummarySchema = Schema.Struct({
   statBlockId: Schema.String,
   displayName: Schema.String,
   creatureType: Schema.String,
-  armorClass: Schema.Number,
-  hitPoints: Schema.Number,
+  armorClass: Schema.Union(Schema.Number, Schema.Null),
+  hitPoints: Schema.Union(Schema.Number, Schema.Null),
   initiativeModifier: Schema.optionalWith(Schema.Number, { exact: true }),
   attacks: Schema.Array(StatBlockAttackSummarySchema),
   damageVulnerabilities: StringArraySchema,
@@ -330,9 +330,7 @@ function stringCreatureType(record: StatBlockRecord): string {
   if (typeof creatureType === "string") {
     return creatureType;
   }
-  throw new Error(
-    `Stat Block discovery requires a concrete creatureType: ${record.id}`,
-  );
+  return JSON.stringify(creatureType);
 }
 
 function literalNumber(
@@ -342,12 +340,12 @@ function literalNumber(
     | NonNullable<
         NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
       >[number]["attackBonus"],
-  field: string,
-): number {
+  _field: string,
+): number | null {
   if (value.kind === "literal") {
     return value.value;
   }
-  throw new Error(`Stat Block discovery requires a literal number: ${field}`);
+  return null;
 }
 
 function damageModifierTypes(

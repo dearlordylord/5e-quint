@@ -116,17 +116,19 @@ export function handleBattleToolCall(
 ): BattleToolResult {
   return Match.value(call).pipe(
     Match.when({ name: battleToolNames.selectStatBlock }, (matched) => {
-      try {
-        const selected = root.sessionStore.selectStatBlock(
+      const selected = root.sessionStore.selectStatBlock(
+        matched.args.statBlockId,
+      );
+      if (Either.isLeft(selected)) {
+        return unknownStatBlockContent(
           matched.args.statBlockId,
+          selected.left.message,
         );
-        return schemaJsonContent(SelectStatBlockOutputSchema, {
-          selectedStatBlock: selected,
-          session: root.sessionStore.snapshot(),
-        });
-      } catch (error) {
-        return unknownStatBlockContent(matched.args.statBlockId, error);
       }
+      return schemaJsonContent(SelectStatBlockOutputSchema, {
+        selectedStatBlock: selected.right,
+        session: root.sessionStore.snapshot(),
+      });
     }),
     Match.when({ name: battleToolNames.startBattle }, (matched) =>
       handleStartBattleToolCall(root, matched.args),

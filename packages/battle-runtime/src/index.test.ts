@@ -82,6 +82,36 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 
+function startBattleRight(
+  input: Parameters<typeof startBattle>[0],
+): BattleState {
+  const result = startBattle(input);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function addBattleCombatantRight(
+  input: Parameters<typeof addBattleCombatant>[0],
+): BattleState {
+  const result = addBattleCombatant(input);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function removeBattleCombatantsRight(
+  input: Parameters<typeof removeBattleCombatants>[0],
+): BattleState {
+  const result = removeBattleCombatants(input);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const battleRuntimeSpecPath = fileURLToPath(
@@ -149,7 +179,7 @@ describe("battle runtime", () => {
   });
 
   test("startBattle creates sorted Initiative state and the MCP snapshot contract", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-1"),
       combatants: [
         characterSeed({ initiative: 12 }),
@@ -216,7 +246,7 @@ describe("battle runtime", () => {
   });
 
   test("startBattle preserves caller-supplied order among tied Initiative scores", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-tied-initiative"),
       combatants: [
         statBlockCreatureInit({ initiative: 12 }),
@@ -232,7 +262,7 @@ describe("battle runtime", () => {
 
   test("startBattle rejects current HP above max HP", () => {
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-overmax-hp"),
         combatants: [
           characterSeed({ initiative: 12, currentHp: 13 }),
@@ -242,7 +272,7 @@ describe("battle runtime", () => {
     ).toThrow("Battle initialization current HP exceeds max HP.");
 
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-statblock-overmax-hp"),
         combatants: [
           characterSeed({ initiative: 12 }),
@@ -259,7 +289,7 @@ describe("battle runtime", () => {
     ];
 
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-incomplete-distances"),
         combatants,
         combatantDistances: [],
@@ -267,7 +297,7 @@ describe("battle runtime", () => {
     ).toThrow("Battle combatant distances must include every combatant pair.");
 
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-duplicate-distances"),
         combatants,
         combatantDistances: [
@@ -288,7 +318,7 @@ describe("battle runtime", () => {
 
   test("startBattle rejects fractional expended Spell Slots", () => {
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-fractional-spell-slot"),
         combatants: [
           characterSeed({
@@ -308,7 +338,7 @@ describe("battle runtime", () => {
 
   test("startBattle rejects invalid Spell Slot level and count", () => {
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-fractional-spell-slot-count"),
         combatants: [
           characterSeed({
@@ -326,7 +356,7 @@ describe("battle runtime", () => {
     );
 
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-invalid-spell-slot-level"),
         combatants: [
           characterSeed({
@@ -346,7 +376,7 @@ describe("battle runtime", () => {
 
   test("startBattle rejects duplicate Spell Slot levels", () => {
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-duplicate-spell-slot-level"),
         combatants: [
           characterSeed({
@@ -372,7 +402,7 @@ describe("battle runtime", () => {
       ["battle-above-class-level-cap", 21],
     ] as const) {
       expect(() =>
-        startBattle({
+        startBattleRight({
           battleId: battleId(battle),
           combatants: [
             characterSeed({ initiative: 12, classLevel }),
@@ -385,7 +415,7 @@ describe("battle runtime", () => {
 
   test("startBattle rejects duplicate character class levels", () => {
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-duplicate-character-class-level"),
         combatants: [
           characterSeed({
@@ -403,7 +433,7 @@ describe("battle runtime", () => {
 
   test("startBattle rejects class-feature resources without an owning class level", () => {
     expect(() =>
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-second-wind-without-fighter-level"),
         combatants: [
           characterSeed({
@@ -421,7 +451,7 @@ describe("battle runtime", () => {
 
   test("discoverBattleActs exposes attack, movement, and endTurn for the current actor", () => {
     const acts = discoverBattleActs(
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-1"),
         combatants: [
           characterSeed({ initiative: 20 }),
@@ -454,7 +484,7 @@ describe("battle runtime", () => {
 
   test("discoverBattleActs omits attack when there is no target", () => {
     const acts = discoverBattleActs(
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-no-target"),
         combatants: [characterSeed({ initiative: 20 })],
       }),
@@ -472,7 +502,7 @@ describe("battle runtime", () => {
 
   test("mid-battle roster mutation preserves Initiative and current turn state", () => {
     const state = fighterVsGoblinBattle();
-    const added = addBattleCombatant({
+    const added = addBattleCombatantRight({
       state,
       combatant: statBlockCreatureInit({
         combatantId: skeletonId,
@@ -498,7 +528,7 @@ describe("battle runtime", () => {
       turnOrder: [fighterId, skeletonId, goblinId],
     });
 
-    const removedCurrent = removeBattleCombatants({
+    const removedCurrent = removeBattleCombatantsRight({
       state: added,
       combatantIds: [fighterId],
     });
@@ -736,7 +766,7 @@ describe("battle runtime", () => {
   });
 
   test("Help attack grants and consumes Advantage for the selected ally and target", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-help-attack"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -855,7 +885,7 @@ describe("battle runtime", () => {
 
   test("discoverBattleActs omits attack when the current character is Unconscious at 0 HP", () => {
     const acts = discoverBattleActs(
-      startBattle({
+      startBattleRight({
         battleId: battleId("battle-unconscious-actor"),
         combatants: [
           characterSeed({ initiative: 20, currentHp: 0 }),
@@ -1163,7 +1193,7 @@ describe("battle runtime", () => {
   });
 
   test("Grappled attack rolls have disadvantage against targets other than the grappler", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-grappled-attack-disadvantage"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -1295,7 +1325,7 @@ describe("battle runtime", () => {
   });
 
   test("Grappled spell attack rolls have disadvantage against targets other than the grappler", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-grappled-spell-attack-disadvantage"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -1663,7 +1693,7 @@ describe("battle runtime", () => {
   });
 
   test("Rogue Cunning Action exposes Hide as a Bonus Action", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rogue-cunning-action-hide"),
       combatants: [
         characterSeed({
@@ -1710,7 +1740,7 @@ describe("battle runtime", () => {
   });
 
   test("Off-Hand Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-off-hand"),
       combatants: [
         characterSeed({
@@ -1829,7 +1859,7 @@ describe("battle runtime", () => {
   });
 
   test("admitted authored critical-range support makes a natural 19 Off-Hand Attack critical", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-off-hand-critical-range"),
       combatants: [
         characterSeed({
@@ -1939,7 +1969,7 @@ describe("battle runtime", () => {
   });
 
   test("Off-Hand Attack distinguishes held weapon identity from weapon kind", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-off-hand-two-daggers"),
       combatants: [
         characterSeed({
@@ -2321,7 +2351,7 @@ describe("battle runtime", () => {
   });
 
   test("attack resolution rejects an Unconscious current character at 0 HP", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-unconscious-actor-resolve"),
       combatants: [
         characterSeed({ initiative: 20, currentHp: 0 }),
@@ -3397,7 +3427,7 @@ describe("battle runtime", () => {
   });
 
   test("admitted authored critical-range support makes a natural 19 Unarmed Strike critical", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-unarmed-critical-range"),
       combatants: [
         characterSeed({
@@ -3440,7 +3470,7 @@ describe("battle runtime", () => {
   });
 
   test("dice-based Unarmed Strike profiles request damage dice fills", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-unarmed-dice-profile"),
       combatants: [
         characterSeed({
@@ -3495,7 +3525,7 @@ describe("battle runtime", () => {
   });
 
   test("critical hits double dice-based Unarmed Strike profile dice", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-unarmed-dice-critical"),
       combatants: [
         characterSeed({
@@ -3662,7 +3692,7 @@ describe("battle runtime", () => {
   });
 
   test("attack damage removes Temporary Hit Points before HP", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-temp-hp"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -3700,7 +3730,7 @@ describe("battle runtime", () => {
   });
 
   test("attack damage clamps Stat Block creature HP at 0 and marks Goblin Warrior dead", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-stat-block-zero"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -3745,7 +3775,7 @@ describe("battle runtime", () => {
 
   test("character target at 0 HP enters the death-save lifecycle scaffold", () => {
     const targetCharacterId = combatantId("target-character");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-character-zero"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -3801,7 +3831,7 @@ describe("battle runtime", () => {
 
   test("massive damage kills a character when remaining damage equals maximum HP", () => {
     const targetCharacterId = combatantId("target-character");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-character-massive-damage"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -3857,7 +3887,7 @@ describe("battle runtime", () => {
 
   test("damage at 0 HP kills when damage equals maximum HP", () => {
     const targetCharacterId = combatantId("target-character");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-character-zero-massive-damage"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -3913,7 +3943,7 @@ describe("battle runtime", () => {
 
   test("admitted authored critical-range natural 19 damage at 0 HP causes two death-save failures", () => {
     const targetCharacterId = combatantId("target-character");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-character-zero-critical-range"),
       combatants: [
         characterSeed({
@@ -3972,7 +4002,7 @@ describe("battle runtime", () => {
 
   test("later critical attack damage at 0 HP projects a dead death-save lifecycle", () => {
     const targetCharacterId = combatantId("target-character");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-character-zero-damage"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -4034,7 +4064,7 @@ describe("battle runtime", () => {
 
   test("End Turn asks for a Death Saving Throw when the next actor starts at 0 HP", () => {
     const targetCharacterId = combatantId("target-character");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-character-start-turn-death-save"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -4069,7 +4099,7 @@ describe("battle runtime", () => {
 
   test("End Turn consumes a failed Death Saving Throw for the next actor", () => {
     const targetCharacterId = combatantId("target-character");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-character-start-turn-death-save-fail"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -4203,7 +4233,7 @@ describe("battle runtime", () => {
 
   test("snapshotBattle projects current acts from the supplied state", () => {
     const state = {
-      ...startBattle({
+      ...startBattleRight({
         battleId: battleId("battle-1"),
         combatants: [
           characterSeed({ initiative: 20 }),
@@ -4227,7 +4257,7 @@ describe("battle runtime", () => {
 
   test("endTurn advances to the next Initiative actor and refreshes turn resources", () => {
     const state = {
-      ...startBattle({
+      ...startBattleRight({
         battleId: battleId("battle-1"),
         combatants: [
           characterSeed({ initiative: 20 }),
@@ -4307,7 +4337,7 @@ describe("battle runtime", () => {
   });
 
   test("Stat Block limited-use resources are initialized from authored monster controls", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-monster-resource-init"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -4359,7 +4389,7 @@ describe("battle runtime", () => {
   test("Stat Block Bonus Action and Reaction attacks do not enter the Attack action lane", () => {
     const goblinTurn = requireResolved(
       endTurn({
-        state: startBattle({
+        state: startBattleRight({
           battleId: battleId("battle-monster-unsupported-sections"),
           combatants: [
             characterSeed({ initiative: 20 }),
@@ -4414,7 +4444,7 @@ describe("battle runtime", () => {
   test("Recharge attacks spend availability and use a start-turn d6 roll to return", () => {
     const firstGoblinTurn = requireResolved(
       endTurn({
-        state: startBattle({
+        state: startBattleRight({
           battleId: battleId("battle-monster-recharge"),
           combatants: [
             characterSeed({ initiative: 20 }),
@@ -4516,7 +4546,7 @@ describe("battle runtime", () => {
   test("Daily Stat Block attacks spend uses and are hidden when depleted", () => {
     const goblinTurn = requireResolved(
       endTurn({
-        state: startBattle({
+        state: startBattleRight({
           battleId: battleId("battle-monster-daily"),
           combatants: [
             characterSeed({ initiative: 20 }),
@@ -4579,7 +4609,7 @@ describe("battle runtime", () => {
   });
 
   test("Recharge rolls are independent for each unavailable Stat Block part", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-monster-multi-recharge"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -4669,7 +4699,7 @@ describe("battle runtime", () => {
   test("Legendary Action attacks are Stat Block acts after another creature's turn", () => {
     const state = requireResolved(
       endTurn({
-        state: startBattle({
+        state: startBattleRight({
           battleId: battleId("battle-monster-legendary"),
           combatants: [
             characterSeed({ initiative: 20 }),
@@ -4775,7 +4805,7 @@ describe("battle runtime", () => {
   test("Legendary Action window closes when the next actor proceeds", () => {
     const state = requireResolved(
       endTurn({
-        state: startBattle({
+        state: startBattleRight({
           battleId: battleId("battle-monster-legendary-window-close"),
           combatants: [
             characterSeed({ initiative: 20 }),
@@ -4854,7 +4884,7 @@ describe("battle runtime", () => {
   });
 
   test("Legendary Action attacks are not exposed before an eligible turn-end window", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-monster-legendary-negative-initial"),
       combatants: [
         characterSeed({ initiative: 20 }),
@@ -4888,7 +4918,7 @@ describe("battle runtime", () => {
   test("Legendary Action attacks are not exposed on the monster's own current turn", () => {
     const ownTurn = requireResolved(
       endTurn({
-        state: startBattle({
+        state: startBattleRight({
           battleId: battleId("battle-monster-legendary-negative-own-turn"),
           combatants: [
             characterSeed({ initiative: 20 }),
@@ -4969,7 +4999,7 @@ describe("battle runtime", () => {
   });
 
   test("Goblin Warrior target legality is derived from authored reach and range", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-goblin-target-legality"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -5187,7 +5217,7 @@ describe("battle runtime", () => {
   });
 
   test("same-type Stat Block attack damage applies Resistance once after combining components", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-combined-resistance-damage"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -5291,7 +5321,7 @@ describe("battle runtime", () => {
   });
 
   test("Skeleton Bludgeoning vulnerability and Poison immunity modify supported damage paths", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-skeleton-damage-modifiers"),
       combatants: [
         characterSeed({ initiative: 20, attack: testLightHammerAttack() }),
@@ -5330,7 +5360,7 @@ describe("battle runtime", () => {
       },
     });
 
-    const poisonState = startBattle({
+    const poisonState = startBattleRight({
       battleId: battleId("battle-skeleton-poison-immunity"),
       combatants: [
         characterSeed({ initiative: 20, attack: testPoisonWeaponAttack() }),
@@ -5375,7 +5405,7 @@ describe("battle runtime", () => {
 
   test("Action Surge grants one additional non-Magic action and cannot be used twice in one turn", () => {
     const state = {
-      ...startBattle({
+      ...startBattleRight({
         battleId: battleId("battle-action-surge"),
         combatants: [
           characterSeed({
@@ -5487,7 +5517,7 @@ describe("battle runtime", () => {
     });
 
     const defeatedActorState = {
-      ...startBattle({
+      ...startBattleRight({
         battleId: battleId("battle-action-surge-defeated-actor"),
         combatants: [
           characterSeed({
@@ -5522,7 +5552,7 @@ describe("battle runtime", () => {
 
   test("Action Surge discovery and resolution share the supported Unit feature shape", () => {
     const state = {
-      ...startBattle({
+      ...startBattleRight({
         battleId: battleId("battle-action-surge-unsupported-shape"),
         combatants: [
           characterSeed({
@@ -5564,7 +5594,7 @@ describe("battle runtime", () => {
   });
 
   test("Second Wind spends a Bonus Action and feature use to heal through the HP boundary", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-second-wind"),
       combatants: [
         characterSeed({
@@ -5642,7 +5672,7 @@ describe("battle runtime", () => {
 
   test("Second Wind is rejected without action capacity, resource uses, or the supported Unit shape", () => {
     const noBonusActionState = {
-      ...startBattle({
+      ...startBattleRight({
         battleId: battleId("battle-second-wind-no-bonus-action"),
         combatants: [
           characterSeed({
@@ -5674,7 +5704,7 @@ describe("battle runtime", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
 
-    const depletedState = startBattle({
+    const depletedState = startBattleRight({
       battleId: battleId("battle-second-wind-depleted"),
       combatants: [
         characterSeed({
@@ -5699,7 +5729,7 @@ describe("battle runtime", () => {
       ]),
     );
 
-    const unsupportedState = startBattle({
+    const unsupportedState = startBattleRight({
       battleId: battleId("battle-second-wind-unsupported-shape"),
       combatants: [
         characterSeed({
@@ -5726,7 +5756,7 @@ describe("battle runtime", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
 
-    const defeatedActorState = startBattle({
+    const defeatedActorState = startBattleRight({
       battleId: battleId("battle-second-wind-defeated-actor"),
       combatants: [
         characterSeed({
@@ -5751,7 +5781,7 @@ describe("battle runtime", () => {
   });
 
   test("Rage enters a reusable ongoing feature and applies damage and Resistance riders", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-ongoing-feature"),
       combatants: [
         characterSeed({
@@ -5863,7 +5893,7 @@ describe("battle runtime", () => {
   });
 
   test("Rage breaks Concentration and prevents spellcasting", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-spellcasting-restriction"),
       combatants: [
         characterSeed({
@@ -5931,7 +5961,7 @@ describe("battle runtime", () => {
   });
 
   test("Rage breaking Concentration dissipates a held readied spell", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-readied-spell-cleanup"),
       combatants: [
         characterSeed({
@@ -5976,7 +6006,7 @@ describe("battle runtime", () => {
   });
 
   test("Reckless Attack is unavailable after any earlier attack roll that turn", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-reckless-after-spell-attack"),
       combatants: [
         characterSeed({
@@ -6060,7 +6090,7 @@ describe("battle runtime", () => {
   });
 
   test("Rage Damage scales by Barbarian level", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-damage-scaling"),
       combatants: [
         characterSeed({
@@ -6111,7 +6141,7 @@ describe("battle runtime", () => {
   });
 
   test("Rage is unavailable in Heavy armor", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-heavy-armor-gated"),
       combatants: [
         characterSeed({
@@ -6139,7 +6169,7 @@ describe("battle runtime", () => {
   });
 
   test("Rage extension spends a Bonus Action without spending another use", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-bonus-action-extension"),
       combatants: [
         characterSeed({
@@ -6196,7 +6226,7 @@ describe("battle runtime", () => {
   });
 
   test("Rage extends when Grapple forces an enemy saving throw", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-grapple-saving-throw-extension"),
       combatants: [
         characterSeed({
@@ -6271,7 +6301,7 @@ describe("battle runtime", () => {
   });
 
   test("Incapacitated combatants cannot activate or extend Rage", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-incapacitated-action-gate"),
       combatants: [
         characterSeed({
@@ -6311,7 +6341,7 @@ describe("battle runtime", () => {
   });
 
   test("Persistent Rage uses ten-minute duration and Unconscious early end", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-persistent-rage"),
       combatants: [
         characterSeed({
@@ -6376,7 +6406,7 @@ describe("battle runtime", () => {
   });
 
   test("Rage early-end conditions remove the ongoing feature instead of hiding it", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-rage-early-end-removal"),
       combatants: [
         characterSeed({
@@ -6416,7 +6446,7 @@ describe("battle runtime", () => {
   });
 
   test("Reckless Attack ongoing feature grants reciprocal Advantage until the actor's next turn", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-reckless-ongoing-feature"),
       combatants: [
         characterSeed({
@@ -6521,7 +6551,7 @@ describe("battle runtime", () => {
   });
 
   test("Reckless Attack cannot be declared before the first attack roll", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-reckless-not-predeclared"),
       combatants: [
         characterSeed({
@@ -6546,7 +6576,7 @@ describe("battle runtime", () => {
   });
 
   test("Reckless Attack activation preserves straight rolls when modifiers already cancel", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-reckless-cancelled-modifiers"),
       combatants: [
         characterSeed({
@@ -6619,7 +6649,7 @@ describe("battle runtime", () => {
   });
 
   test("Reckless Attack replay stays valid after an attack-hit Reaction window", () => {
-    const baseState = startBattle({
+    const baseState = startBattleRight({
       battleId: battleId("battle-reckless-reaction-replay"),
       combatants: [
         characterSeed({
@@ -6685,7 +6715,7 @@ describe("battle runtime", () => {
   });
 
   test("Sneak Attack is exposed as an optional attack damage rider on eligible hits", () => {
-    const visibleState = startBattle({
+    const visibleState = startBattleRight({
       battleId: battleId("battle-sneak-attack-rider"),
       combatants: [
         characterSeed({
@@ -6757,7 +6787,7 @@ describe("battle runtime", () => {
   });
 
   test("Sneak Attack accepts caller-supplied Advantage as attack-roll Advantage", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-sneak-attack-caller-advantage"),
       combatants: [
         characterSeed({
@@ -6789,7 +6819,7 @@ describe("battle runtime", () => {
   });
 
   test("Sneak Attack is inactive before its acquired class level", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-sneak-attack-before-acquired-level"),
       combatants: [
         characterSeed({
@@ -6818,7 +6848,7 @@ describe("battle runtime", () => {
 
   test("Sneak Attack rider is gated by weapon, roll context, and once-per-turn usage", () => {
     const allyId = combatantId("ally");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-sneak-attack-rider-gates"),
       combatants: [
         characterSeed({
@@ -6893,7 +6923,7 @@ describe("battle runtime", () => {
 
   test("Sneak Attack can use the ally-within-5ft eligibility branch", () => {
     const allyId = combatantId("sneak-ally");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-sneak-attack-ally-within-5ft"),
       combatants: [
         characterSeed({
@@ -6938,7 +6968,7 @@ describe("battle runtime", () => {
 
   test("Sneak Attack ally-within-5ft branch uses resolved roll mode after Advantage and Disadvantage cancel", () => {
     const allyId = combatantId("sneak-cancel-ally");
-    const base = startBattle({
+    const base = startBattleRight({
       battleId: battleId("battle-sneak-attack-canceled-roll-mode"),
       combatants: [
         characterSeed({
@@ -7000,7 +7030,7 @@ describe("battle runtime", () => {
   });
 
   test("Sneak Attack rejects uneligible selected rider ids", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-sneak-attack-invalid-selected-rider"),
       combatants: [
         characterSeed({
@@ -7047,7 +7077,7 @@ describe("battle runtime", () => {
 
   test("Sneak Attack damage dice are doubled on critical hits", () => {
     const allyId = combatantId("critical-ally");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-sneak-attack-critical"),
       combatants: [
         characterSeed({
@@ -7114,7 +7144,7 @@ describe("battle runtime", () => {
   test("Sneak Attack once-per-turn usage is scoped to the attacking creature", () => {
     const secondRogueId = combatantId("second-rogue");
     const allyId = combatantId("second-rogue-ally");
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-sneak-attack-two-rogues"),
       combatants: [
         characterSeed({
@@ -7199,7 +7229,7 @@ describe("battle runtime", () => {
       ["rogue_uncanny_dodge", "Uncanny Dodge"],
       ["bard_cutting_words", "Cutting Words"],
     ] as const;
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-old-class-riders-support-gated"),
       combatants: [
         characterSeed({
@@ -7250,7 +7280,7 @@ describe("battle runtime", () => {
 
   test("Cutting Words attack-roll reduction can turn a hit into a miss and ignores stale damage fills", () => {
     const cuttingWordsAttackOnly = cuttingWordsAttackOnlyUnit();
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-cutting-words-attack-roll"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -7347,7 +7377,7 @@ describe("battle runtime", () => {
 
   test("Cutting Words damage-roll reduction applies before target damage adjustments", () => {
     const cuttingWordsDamageOnly = cuttingWordsDamageOnlyUnit();
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-cutting-words-damage-roll"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -7499,7 +7529,7 @@ describe("battle runtime", () => {
   });
 
   test("Uncanny Dodge can reduce visible ranged attack damage beyond 5 feet", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-uncanny-dodge-ranged"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -7622,7 +7652,7 @@ describe("battle runtime", () => {
 
   test("hit and damage reduction reactions use their separate RAW windows", () => {
     const cuttingWordsDamageOnly = cuttingWordsDamageOnlyUnit();
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-single-scalar-damage-modifier-choice"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -7807,7 +7837,7 @@ describe("battle runtime", () => {
   });
 
   test("attack-damage reduction rejects impossible stat-block reactor choices", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-attack-damage-reduction-before-vulnerability"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
@@ -8388,7 +8418,7 @@ describe("battle runtime", () => {
   });
 
   test("Acid Splash support is gated to the authored 5-foot point-origin Sphere", () => {
-    const unsupportedState = startBattle({
+    const unsupportedState = startBattleRight({
       battleId: battleId("battle-acid-splash-unsupported-area"),
       combatants: [
         characterSeed({
@@ -8457,7 +8487,7 @@ describe("battle runtime", () => {
         dex: abilityModifier(2),
       },
     };
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-mage-armor"),
       combatants: [
         characterSeed({
@@ -8538,7 +8568,7 @@ describe("battle runtime", () => {
         formula: { kind: "medium_dex_max_2" as const, base: 14 },
       },
     };
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-mage-armor-armored-target"),
       combatants: [
         characterSeed({
@@ -8625,7 +8655,7 @@ describe("battle runtime", () => {
   });
 
   test("breaking ordinary concentration does not clear a non-owned readied spell entry", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-ordinary-concentration-preserves-readied"),
       combatants: [
         characterSeed({
@@ -8707,7 +8737,7 @@ describe("battle runtime", () => {
   });
 
   test("attack damage requests and consumes a Concentration save for a readied spell", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-readied-concentration-damage"),
       combatants: [
         characterSeed({
@@ -8802,7 +8832,7 @@ describe("battle runtime", () => {
   });
 
   test("readied spell release uses the held spell and ends Concentration", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-readied-release"),
       combatants: [
         characterSeed({
@@ -8894,7 +8924,7 @@ describe("battle runtime", () => {
   });
 
   test("readied spells are held per caster", () => {
-    const state = startBattle({
+    const state = startBattleRight({
       battleId: battleId("battle-readied-per-caster"),
       combatants: [
         characterSeed({
@@ -9536,7 +9566,7 @@ function fighterVsGoblinBattle(input?: {
     { readonly kind: "character" }
   >["characterUnitRefs"];
 }): BattleState {
-  return startBattle({
+  return startBattleRight({
     battleId: battleId("battle-attack"),
     combatants: [
       characterSeed({
@@ -9613,7 +9643,7 @@ function fighterTurnWithReadiedRay(
   trigger: BattleReadiedSpellTrigger,
 ): BattleState {
   const wizardReady = resolveBattleSubject({
-    state: startBattle({
+    state: startBattleRight({
       battleId: battleId(`battle-readied-${trigger}`),
       combatants: [
         characterSeed({
@@ -9652,7 +9682,7 @@ function fighterTurnWithReadiedRay(
 function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
   const firstReady = requireResolved(
     resolveBattleSubject({
-      state: startBattle({
+      state: startBattleRight({
         battleId: battleId("battle-nested-readied-reactions"),
         combatants: [
           characterSeed({
@@ -9738,7 +9768,7 @@ function goblinTurnBattle(
   input: { readonly fighterHp?: number } = {},
 ): BattleState {
   const afterFighter = endTurn({
-    state: startBattle({
+    state: startBattleRight({
       battleId: battleId("battle-goblin-attack"),
       combatants: [
         characterSeed({
@@ -9903,7 +9933,7 @@ function characterWithDeathSaveCounters(input: {
   readonly successes: 0 | 1 | 2;
   readonly failures: 0 | 1 | 2;
 }): BattleState {
-  const state = startBattle({
+  const state = startBattleRight({
     battleId: battleId("battle-character-start-turn-death-save-counters"),
     combatants: [
       characterSeed({ initiative: 20 }),
@@ -10744,7 +10774,7 @@ function goblinAttacksReactionModifierCharacter(input: {
   readonly unitId: string;
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
 }): BattleState {
-  return startBattle({
+  return startBattleRight({
     battleId: battleId(`battle-${input.unitId}`),
     combatants: [
       statBlockCreatureInit({ initiative: 20 }),
@@ -11353,7 +11383,7 @@ function wizardVsSkeletonBattle(input?: {
     readonly feet: number;
   }[];
 }): BattleState {
-  return startBattle({
+  return startBattleRight({
     battleId: battleId("battle-wizard-skeleton"),
     combatants: [
       characterSeed({
@@ -11385,7 +11415,7 @@ function wizardVsRogueBattle(input: {
 }): BattleState {
   const supportEvasion =
     input.evasion && input.saveDamageReplacementSupport !== false;
-  return startBattle({
+  return startBattleRight({
     battleId: battleId("battle-wizard-rogue"),
     combatants: [
       characterSeed({

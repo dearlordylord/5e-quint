@@ -16,6 +16,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import { Either, Option } from "effect";
 
 const BONUS_ACTION_HIDE_SUPPORT_PROFILES = [
   "bonusActionHide",
@@ -36,36 +37,52 @@ const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILES = [
 export function characterUnitRefsWithBattleSupportProfiles(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): readonly BattleUnitRef[] {
+): Either.Either<readonly BattleUnitRef[], BattleSupportProfileIssue> {
   const bonusActionHideClassUnitIds = supportedBonusActionHideClassUnitIds(
     build,
     unitLibrary,
   );
-  return characterBuildUnitRefs(build, unitLibrary).map((unitRef) =>
-    withBattleSupportProfiles(
+  const refs: BattleUnitRef[] = [];
+  for (const unitRef of characterBuildUnitRefs(build, unitLibrary)) {
+    const profiled = withBattleSupportProfiles(
       unitRef,
       bonusActionHideClassUnitIds,
       unitLibrary,
-    ),
-  );
+    );
+    if (Either.isLeft(profiled)) return Either.left(profiled.left);
+    refs.push(profiled.right);
+  }
+  return Either.right(refs);
+}
+
+export type BattleSupportProfileIssue = {
+  readonly tag: "battleSupportProfileIssue";
+  readonly message: string;
+};
+
+function battleSupportProfileIssue(
+  message: string,
+): Either.Either<never, BattleSupportProfileIssue> {
+  return Either.left({ tag: "battleSupportProfileIssue", message });
 }
 
 function withBattleSupportProfiles(
   unitRef: ReturnType<typeof characterBuildUnitRefs>[number],
   bonusActionHideClassUnitIds: ReadonlySet<string>,
   unitLibrary: UnitCatalog,
-): BattleUnitRef {
+): Either.Either<BattleUnitRef, BattleSupportProfileIssue> {
   const supportProfiles = battleSupportProfilesForUnit(
     unitRef.unitId,
     bonusActionHideClassUnitIds,
     unitLibrary,
   );
-  return supportProfiles.length === 0
-    ? { unitId: unitRef.unitId }
-    : {
+  if (Either.isLeft(supportProfiles)) return Either.left(supportProfiles.left);
+  return supportProfiles.right.length === 0
+    ? Either.right({ unitId: unitRef.unitId })
+    : Either.right({
         unitId: unitRef.unitId,
-        supportProfiles,
-      };
+        supportProfiles: supportProfiles.right,
+      });
 }
 
 function supportedBonusActionHideClassUnitIds(
@@ -89,9 +106,18 @@ function battleSupportProfilesForUnit(
   unitId: ReturnType<typeof characterBuildUnitRefs>[number]["unitId"],
   bonusActionHideClassUnitIds: ReadonlySet<string>,
   unitLibrary: UnitCatalog,
-): readonly BattleUnitSupportProfile[] {
+): Either.Either<
+  readonly BattleUnitSupportProfile[],
+  BattleSupportProfileIssue
+> {
   const supportProfiles: BattleUnitSupportProfile[] = [];
-  const unit = unitLibrary.requireUnit(unitId);
+  const unitOption = unitLibrary.getUnit(unitId);
+  if (Option.isNone(unitOption)) {
+    return battleSupportProfileIssue(
+      `Unknown Unit for battle support profile: ${unitId}.`,
+    );
+  }
+  const unit = unitOption.value;
 
   if (bonusActionHideClassUnitIds.has(unitId)) {
     // Class-feature records for Rogue Cunning Action are not yet present in the
@@ -103,7 +129,9 @@ function battleSupportProfilesForUnit(
 
   const criticalRangeSupport = supportedCriticalRangeProfileForUnit(unit);
   if (criticalRangeSupport === "unsupported") {
-    throw new Error(`Unsupported battle critical-range Unit hook: ${unit.id}.`);
+    return battleSupportProfileIssue(
+      `Unsupported battle critical-range Unit hook: ${unit.id}.`,
+    );
   }
   if (criticalRangeSupport === "criticalRange19") {
     supportProfiles.push(
@@ -113,7 +141,7 @@ function battleSupportProfilesForUnit(
 
   const attackDamageRiderSupport = battleAttackDamageRiderSupportForUnit(unit);
   if (attackDamageRiderSupport === "unsupported") {
-    throw new Error(
+    return battleSupportProfileIssue(
       `Unsupported battle attack-damage rider Unit hook: ${unit.id}.`,
     );
   }
@@ -124,7 +152,7 @@ function battleSupportProfilesForUnit(
   const saveDamageReplacementSupport =
     battleSaveDamageReplacementSupportForUnit(unit);
   if (saveDamageReplacementSupport === "unsupported") {
-    throw new Error(
+    return battleSupportProfileIssue(
       `Unsupported battle save-damage replacement Unit hook: ${unit.id}.`,
     );
   }
@@ -135,7 +163,7 @@ function battleSupportProfilesForUnit(
   const reactionRollOrDamageReductionSupport =
     battleReactionRollOrDamageReductionSupportForUnit(unit);
   if (reactionRollOrDamageReductionSupport === "unsupported") {
-    throw new Error(
+    return battleSupportProfileIssue(
       `Unsupported battle reaction roll or damage reduction Unit hook: ${unit.id}.`,
     );
   }
@@ -145,7 +173,7 @@ function battleSupportProfilesForUnit(
     supportProfiles.push(...REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILES);
   }
 
-  return supportProfiles;
+  return Either.right(supportProfiles);
 }
 
 type CriticalRangeSupportProfile = "criticalRange19" | "unsupported" | null;

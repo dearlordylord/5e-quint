@@ -6,6 +6,7 @@ import type {
 } from "@dnd/battle-runtime";
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type { Hp } from "@dnd/shared/types";
+import { Either } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
@@ -48,11 +49,23 @@ export function finalizeCharacterSessionsFromBattle(
         sourceDraftId,
       });
     }
+    const zeroHpLifecycle =
+      combatant.hp === 0 ? characterZeroHpLifecycleFromBattle(combatant) : null;
+    if (zeroHpLifecycle != null && Either.isLeft(zeroHpLifecycle)) {
+      return errorContent(
+        "Battle character has unsupported zero-HP lifecycle.",
+        {
+          code: "CHARACTER_ZERO_HP_LIFECYCLE_UNSUPPORTED",
+          combatantId: combatant.combatantId,
+          characterId: combatant.origin.characterId,
+        },
+      );
+    }
     updates.push({
       sourceDraftId,
       currentHp: combatant.hp,
       ...(combatant.hp === 0
-        ? { zeroHpLifecycle: characterZeroHpLifecycleFromBattle(combatant) }
+        ? { zeroHpLifecycle: zeroHpLifecycle?.right }
         : {}),
       ...(combatant.origin.spellcasting === undefined
         ? {}
@@ -63,15 +76,23 @@ export function finalizeCharacterSessionsFromBattle(
   for (const update of updates) {
     const session = root.sessionStore.characters.get(update.sourceDraftId);
     if (session?.tag !== "inBattle") continue;
+    const availableSession = availableCharacterSession({
+      characterId: session.characterId,
+      build: session.build,
+      currentHp: update.currentHp,
+      zeroHpLifecycle: update.zeroHpLifecycle,
+      spellSlots: update.spellSlots,
+    });
+    if (Either.isLeft(availableSession)) {
+      return errorContent("Battle character session handoff failed.", {
+        code: "CHARACTER_SESSION_HANDOFF_INVALID",
+        sourceDraftId: update.sourceDraftId,
+        message: availableSession.left.message,
+      });
+    }
     root.sessionStore.characters.set(
       update.sourceDraftId,
-      availableCharacterSession({
-        characterId: session.characterId,
-        build: session.build,
-        currentHp: update.currentHp,
-        zeroHpLifecycle: update.zeroHpLifecycle,
-        spellSlots: update.spellSlots,
-      }),
+      availableSession.right,
     );
   }
 
@@ -80,23 +101,21 @@ export function finalizeCharacterSessionsFromBattle(
 
 function characterZeroHpLifecycleFromBattle(
   combatant: BattleCreatureState,
-): CharacterSessionZeroHpLifecycleInput {
+): Either.Either<CharacterSessionZeroHpLifecycleInput, "unsupportedLifecycle"> {
   if (combatant.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
-    throw new Error(
-      "Character combatant must use Death Saving Throw lifecycle.",
-    );
+    return Either.left("unsupportedLifecycle");
   }
   const lifecycle = combatant.zeroHpLifecycle.deathSaves;
   if (lifecycle.dead) {
-    return { tag: "dead", deathSaves: lifecycle.deathSaves };
+    return Either.right({ tag: "dead", deathSaves: lifecycle.deathSaves });
   }
   if (lifecycle.stable) {
-    return {
+    return Either.right({
       tag: "stable",
       recovery: { kind: "regains1HpAfter1d4Hours" },
-    };
+    });
   }
-  return { tag: "unstable", deathSaves: lifecycle.deathSaves };
+  return Either.right({ tag: "unstable", deathSaves: lifecycle.deathSaves });
 }
 
 function sourceDraftIdForInBattleCharacter(

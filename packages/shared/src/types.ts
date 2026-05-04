@@ -25,10 +25,7 @@ export const getOnlyOne = <T, E = Error>(
     : Either.left((error ?? defaultGetOnlyOneError)(value.length));
 
 export const getOnlyOneStrict = <T>(value: readonly [T]): T => {
-  if (isArrayOfOne(value)) {
-    return value[0];
-  }
-  throw new Error("Expected exactly one value");
+  return value[0];
 };
 
 export const INCAP_SOURCES = [

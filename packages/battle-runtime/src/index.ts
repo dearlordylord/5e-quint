@@ -1212,6 +1212,17 @@ export type BattleState = {
   readonly legendaryActionWindow: LegendaryActionWindow | null;
 };
 
+export type BattleStateInitIssue = {
+  readonly tag: "battleStateInitIssue";
+  readonly message: string;
+};
+
+function battleStateInitIssue(
+  message: string,
+): Either.Either<never, BattleStateInitIssue> {
+  return Either.left({ tag: "battleStateInitIssue", message });
+}
+
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
   "dash",
@@ -2605,25 +2616,28 @@ export function startBattle(input: {
   readonly combatants: readonly BattleCreatureInit[];
   readonly combatantDistances?: readonly BattleCombatantDistance[];
   readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
-}): BattleState {
+}): Either.Either<BattleState, BattleStateInitIssue> {
   if (input.combatants.length === 0) {
-    throw new Error("startBattle requires at least one combatant.");
+    return battleStateInitIssue("startBattle requires at least one combatant.");
   }
 
   const combatants = new Map<CombatantId, BattleCreatureState>();
   for (const combatant of input.combatants) {
     if (combatants.has(combatant.combatantId)) {
-      throw new Error(`Duplicate combatant id: ${combatant.combatantId}`);
+      return battleStateInitIssue(
+        `Duplicate combatant id: ${combatant.combatantId}`,
+      );
     }
     combatants.set(
       combatant.combatantId,
       battleCreatureStateFromInit(combatant),
     );
   }
-  assertHidePrerequisitesReferenceCombatants(
+  const hidePrerequisiteIssue = hidePrerequisitesReferenceCombatantsIssue(
     input.hidePrerequisites ?? new Map(),
     combatants,
   );
+  if (hidePrerequisiteIssue !== null) return hidePrerequisiteIssue;
 
   const orderedEntries = input.combatants
     .map((combatant, callerOrder) => ({ combatant, callerOrder }))
@@ -2637,7 +2651,7 @@ export function startBattle(input: {
       initiative: combatant.initiative,
     }));
   if (!isNonEmptyReadonlyArray(orderedEntries)) {
-    throw new Error("startBattle requires at least one combatant.");
+    return battleStateInitIssue("startBattle requires at least one combatant.");
   }
 
   const initiative = createScoredInitiativeStack<CombatantId>(
@@ -2645,15 +2659,19 @@ export function startBattle(input: {
     INITIAL_ROUND,
   );
   if (Either.isLeft(initiative)) {
-    throw new Error(initiative.left);
+    return battleStateInitIssue(initiative.left);
+  }
+  const combatantDistances = battleCombatantDistances(input);
+  if (Either.isLeft(combatantDistances)) {
+    return Either.left(combatantDistances.left);
   }
 
-  return {
+  return Either.right({
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),
-    combatantDistances: battleCombatantDistances(input),
+    combatantDistances: combatantDistances.right,
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
     readiedMovements: new Map(),
@@ -2661,7 +2679,7 @@ export function startBattle(input: {
     grapples: [],
     interruptStack: [],
     legendaryActionWindow: null,
-  };
+  });
 }
 
 export function addBattleCombatant(input: {
@@ -2669,9 +2687,11 @@ export function addBattleCombatant(input: {
   readonly combatant: BattleCreatureInit;
   readonly combatantDistances: readonly BattleCombatantDistance[];
   readonly tieOrderIndex?: number;
-}): BattleState {
+}): Either.Either<BattleState, BattleStateInitIssue> {
   if (input.state.combatants.has(input.combatant.combatantId)) {
-    throw new Error(`Duplicate combatant id: ${input.combatant.combatantId}`);
+    return battleStateInitIssue(
+      `Duplicate combatant id: ${input.combatant.combatantId}`,
+    );
   }
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,
@@ -2686,7 +2706,9 @@ export function addBattleCombatant(input: {
     requireCompletePairs: true,
   });
   if (distanceIssue !== null) {
-    throw new Error(battleCombatantDistanceValidationMessage(distanceIssue));
+    return battleStateInitIssue(
+      battleCombatantDistanceValidationMessage(distanceIssue),
+    );
   }
 
   const insertionIndex = combatantInitiativeInsertionIndex(
@@ -2719,34 +2741,38 @@ export function addBattleCombatant(input: {
     );
   }
 
-  return {
+  return Either.right({
     ...input.state,
     initiative,
     combatants: nextCombatants,
     combatantDistances: distances,
-  };
+  });
 }
 
 export function removeBattleCombatants(input: {
   readonly state: BattleState;
   readonly combatantIds: readonly CombatantId[];
-}): BattleState {
+}): Either.Either<BattleState, BattleStateInitIssue> {
   const removeIds = new Set(input.combatantIds);
-  if (removeIds.size === 0) return input.state;
+  if (removeIds.size === 0) return Either.right(input.state);
   for (const id of removeIds) {
     if (!input.state.combatants.has(id)) {
-      throw new Error("Cannot remove a combatant that is not in this battle.");
+      return battleStateInitIssue(
+        "Cannot remove a combatant that is not in this battle.",
+      );
     }
   }
   if (removeIds.size >= input.state.combatants.size) {
-    throw new Error("Cannot remove every combatant from a battle.");
+    return battleStateInitIssue("Cannot remove every combatant from a battle.");
   }
   const currentRemoved = removeIds.has(currentActorId(input.state));
   const initiativeOption = removeFromInitiative(input.state.initiative, (id) =>
     removeIds.has(id),
   );
   if (Option.isNone(initiativeOption)) {
-    throw new Error("Cannot remove every combatant from Initiative.");
+    return battleStateInitIssue(
+      "Cannot remove every combatant from Initiative.",
+    );
   }
   const combatants = new Map(
     [...input.state.combatants]
@@ -2769,40 +2795,43 @@ export function removeBattleCombatants(input: {
         new Map([...peers].filter(([peerId]) => !removeIds.has(peerId))),
       ]),
   );
-  return normalizeBattleGrapples({
-    ...input.state,
-    initiative: initiativeOption.value,
-    combatants,
-    currentTurnResources: currentRemoved
-      ? resetBattleTurnResources(input.state.currentTurnResources)
-      : input.state.currentTurnResources,
-    hidePrerequisites: new Map(
-      [...input.state.hidePrerequisites].filter(([id]) => !removeIds.has(id)),
-    ),
-    combatantDistances: distances,
-    readiedSpells: new Map(
-      [...input.state.readiedSpells].filter(([id]) => !removeIds.has(id)),
-    ),
-    readiedMovements: new Map(
-      [...input.state.readiedMovements].filter(([id]) => !removeIds.has(id)),
-    ),
-    helpAttacks: input.state.helpAttacks.filter(
-      (help) =>
-        !removeIds.has(help.helperId) &&
-        !removeIds.has(help.allyId) &&
-        !removeIds.has(help.targetEnemyId),
-    ),
-    grapples: input.state.grapples.filter(
-      (grapple) =>
-        !removeIds.has(grapple.grapplerId) && !removeIds.has(grapple.targetId),
-    ),
-    interruptStack: [],
-    legendaryActionWindow:
-      input.state.legendaryActionWindow === null ||
-      removeIds.has(input.state.legendaryActionWindow.afterTurnActorId)
-        ? null
-        : input.state.legendaryActionWindow,
-  });
+  return Either.right(
+    normalizeBattleGrapples({
+      ...input.state,
+      initiative: initiativeOption.value,
+      combatants,
+      currentTurnResources: currentRemoved
+        ? resetBattleTurnResources(input.state.currentTurnResources)
+        : input.state.currentTurnResources,
+      hidePrerequisites: new Map(
+        [...input.state.hidePrerequisites].filter(([id]) => !removeIds.has(id)),
+      ),
+      combatantDistances: distances,
+      readiedSpells: new Map(
+        [...input.state.readiedSpells].filter(([id]) => !removeIds.has(id)),
+      ),
+      readiedMovements: new Map(
+        [...input.state.readiedMovements].filter(([id]) => !removeIds.has(id)),
+      ),
+      helpAttacks: input.state.helpAttacks.filter(
+        (help) =>
+          !removeIds.has(help.helperId) &&
+          !removeIds.has(help.allyId) &&
+          !removeIds.has(help.targetEnemyId),
+      ),
+      grapples: input.state.grapples.filter(
+        (grapple) =>
+          !removeIds.has(grapple.grapplerId) &&
+          !removeIds.has(grapple.targetId),
+      ),
+      interruptStack: [],
+      legendaryActionWindow:
+        input.state.legendaryActionWindow === null ||
+        removeIds.has(input.state.legendaryActionWindow.afterTurnActorId)
+          ? null
+          : input.state.legendaryActionWindow,
+    }),
+  );
 }
 
 export function discoverBattleActs(
@@ -3763,7 +3792,8 @@ function reactionModifierReductionRoll(
   ) {
     return {
       tag: "invalid",
-      message: "Reaction modifier roll must provide one Bardic Inspiration die result.",
+      message:
+        "Reaction modifier roll must provide one Bardic Inspiration die result.",
     };
   }
   const value = fill.value.reduce(
@@ -3778,9 +3808,7 @@ function reactionModifierReductionRoll(
   return { tag: "ok", value };
 }
 
-function bardicInspirationDieSize(
-  classLevel: ClassLevel,
-): 6 | 8 | 10 | 12 {
+function bardicInspirationDieSize(classLevel: ClassLevel): 6 | 8 | 10 | 12 {
   if (classLevel >= 15) return 12;
   if (classLevel >= 10) return 10;
   if (classLevel >= 5) return 8;
@@ -4774,13 +4802,13 @@ function reactionRollOrDamageReductionChoiceForProfile(
         choice: {
           kind: "attackRollReduction",
           unitId: profile.unit.id,
-            label: profile.unit.name,
-            reduction: {
-              kind: "rolled",
-              flatModifier: 0,
-              dieSize: bardicInspirationDieSize(profile.classLevel),
-            },
+          label: profile.unit.name,
+          reduction: {
+            kind: "rolled",
+            flatModifier: 0,
+            dieSize: bardicInspirationDieSize(profile.classLevel),
           },
+        },
         initialHoles: [
           reactionModifierRollHole(profile, "attackRollReduction"),
         ],
@@ -5015,15 +5043,18 @@ function battleCreatureStateFromInit(
   });
 }
 
-function assertHidePrerequisitesReferenceCombatants(
+function hidePrerequisitesReferenceCombatantsIssue(
   hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
-): void {
+): Either.Either<never, BattleStateInitIssue> | null {
   for (const combatantId of hidePrerequisites.keys()) {
     if (!combatants.has(combatantId)) {
-      throw new Error("Hide prerequisite references unknown combatant.");
+      return battleStateInitIssue(
+        "Hide prerequisite references unknown combatant.",
+      );
     }
   }
+  return null;
 }
 
 function assertCharacterBattleResourcesHaveUniqueUnits(
@@ -5104,7 +5135,7 @@ function literalCreatureSize(
 function battleCombatantDistances(input: {
   readonly combatants: readonly BattleCreatureInit[];
   readonly combatantDistances?: readonly BattleCombatantDistance[];
-}): BattleState["combatantDistances"] {
+}): Either.Either<BattleState["combatantDistances"], BattleStateInitIssue> {
   const distances = new Map<CombatantId, Map<CombatantId, MovementFeet>>();
   const combatantIds = input.combatants.map(
     (combatant) => combatant.combatantId,
@@ -5124,7 +5155,9 @@ function battleCombatantDistances(input: {
     requireCompletePairs: input.combatantDistances !== undefined,
   });
   if (distanceIssue !== null) {
-    throw new Error(battleCombatantDistanceValidationMessage(distanceIssue));
+    return battleStateInitIssue(
+      battleCombatantDistanceValidationMessage(distanceIssue),
+    );
   }
 
   for (const distance of authoredDistances) {
@@ -5142,7 +5175,7 @@ function battleCombatantDistances(input: {
     );
   }
 
-  return distances;
+  return Either.right(distances);
 }
 
 function combatantDistancesAsPairs(

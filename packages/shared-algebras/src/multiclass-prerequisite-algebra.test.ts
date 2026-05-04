@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Either } from "effect";
 
 import type { Ability } from "@dnd/shared/types";
 import {
@@ -13,7 +14,7 @@ import {
 function scores(
   overrides: Partial<Record<Ability, number>> = {},
 ): MulticlassAbilityScores {
-  return multiclassAbilityScores({
+  const result = multiclassAbilityScores({
     str: 10,
     dex: 10,
     con: 10,
@@ -22,6 +23,10 @@ function scores(
     cha: 10,
     ...overrides,
   });
+  if (Either.isLeft(result)) {
+    throw new Error(`Invalid test scores: ${result.left.tag}`);
+  }
+  return result.right;
 }
 
 describe("multiclass-prerequisite-algebra", () => {
@@ -88,8 +93,9 @@ describe("multiclass-prerequisite-algebra", () => {
   });
 
   it("requires current and new class prerequisites for multiclassing", () => {
-    expect(canMulticlass(scores({ str: 13, wis: 13 }), "barbarian", "druid"))
-      .toBe(true);
+    expect(
+      canMulticlass(scores({ str: 13, wis: 13 }), "barbarian", "druid"),
+    ).toBe(true);
     expect(canMulticlass(scores({ wis: 13 }), "barbarian", "druid")).toBe(
       false,
     );

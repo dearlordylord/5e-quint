@@ -6,7 +6,7 @@ import {
   type BattleCreatureInit,
   type BattleCombatantDistanceValidationIssue,
 } from "@dnd/battle-runtime";
-import { Match } from "effect";
+import { Either, Match, Option } from "effect";
 
 import { battleCreatureInitFromCharacterBuild } from "./battle-creature-init.ts";
 import { battleStateProjection } from "./battle-state-projection.ts";
@@ -73,39 +73,41 @@ export function handleStartBattleToolCall(
     return distanceInput;
   }
 
-  try {
-    const state = startBattle({
-      battleId: input.battleId,
-      combatants: initialBattleCreatureInits({
-        root,
-        initialCombatants: input.initialCombatants,
-        characterSessions,
-      }),
-      combatantDistances: input.combatantDistances,
-    });
-    root.sessionStore.battleState = state;
-    root.sessionStore.transientBattleFills = null;
-    for (const { character, session } of characterSessions) {
-      if (session?.tag !== "available") continue;
-      root.sessionStore.characters.set(character.sourceDraftId, {
-        tag: "inBattle",
-        build: session.build,
-        battleId: input.battleId,
-        characterId: session.characterId,
-      });
-    }
+  const combatants = initialBattleCreatureInits({
+    root,
+    initialCombatants: input.initialCombatants,
+    characterSessions,
+  });
+  if (Either.isLeft(combatants)) return combatants.left;
 
-    return schemaJsonContent(StartBattleOutputSchema, {
-      battleState: battleStateProjection(state),
-      snapshot: snapshotBattle(state),
-      session: root.sessionStore.snapshot(),
-    });
-  } catch (error) {
+  const state = startBattle({
+    battleId: input.battleId,
+    combatants: combatants.right,
+    combatantDistances: input.combatantDistances,
+  });
+  if (Either.isLeft(state)) {
     return errorContent("Battle session start failed.", {
       code: "BATTLE_START_FAILED",
-      message: error instanceof Error ? error.message : String(error),
+      message: state.left.message,
     });
   }
+  root.sessionStore.battleState = state.right;
+  root.sessionStore.transientBattleFills = null;
+  for (const { character, session } of characterSessions) {
+    if (session?.tag !== "available") continue;
+    root.sessionStore.characters.set(character.sourceDraftId, {
+      tag: "inBattle",
+      build: session.build,
+      battleId: input.battleId,
+      characterId: session.characterId,
+    });
+  }
+
+  return schemaJsonContent(StartBattleOutputSchema, {
+    battleState: battleStateProjection(state.right),
+    snapshot: snapshotBattle(state.right),
+    session: root.sessionStore.snapshot(),
+  });
 }
 
 function startBattleCharacterSessions(
@@ -206,41 +208,64 @@ function initialBattleCreatureInits(input: {
   readonly root: McpCompositionRoot;
   readonly initialCombatants: readonly InitialBattleCombatantToolInput[];
   readonly characterSessions: ReturnType<typeof startBattleCharacterSessions>;
-}): readonly BattleCreatureInit[] {
-  return input.initialCombatants.map((combatant) =>
-    Match.value(combatant).pipe(
+}): Either.Either<
+  readonly BattleCreatureInit[],
+  ReturnType<typeof errorContent>
+> {
+  const inits: BattleCreatureInit[] = [];
+  for (const combatant of input.initialCombatants) {
+    const init = Match.value(combatant).pipe(
       Match.when({ kind: "characterSession" }, (character) => {
         const session = input.characterSessions.find(
           (entry) => entry.character.sourceDraftId === character.sourceDraftId,
         )?.session;
         if (session?.tag !== "available") {
-          throw new Error("Character session is not available.");
+          return Either.left(
+            errorContent("Character session is not available.", {
+              code: "CHARACTER_SESSION_NOT_AVAILABLE",
+              sourceDraftId: character.sourceDraftId,
+            }),
+          );
         }
-        return {
-          ...battleCreatureInitFromCharacterBuild({
-            combatantId: character.combatantId,
-            characterId: session.characterId,
-            displayName: characterBuildDisplayName(
-              input.root.unitLibrary,
-              session.build,
-            ),
-            build: session.build,
-            initiative: character.initiative,
-            side: character.side,
-            currentHp: characterSessionCurrentHp(session),
-            zeroHpLifecycle: characterBattleZeroHpLifecycle(session),
-            spellSlots: characterBattleSpellSlots(session),
-            unitLibrary: input.root.unitLibrary,
-          }),
-        };
+        const characterInit = battleCreatureInitFromCharacterBuild({
+          combatantId: character.combatantId,
+          characterId: session.characterId,
+          displayName: characterBuildDisplayName(
+            input.root.unitLibrary,
+            session.build,
+          ),
+          build: session.build,
+          initiative: character.initiative,
+          side: character.side,
+          currentHp: characterSessionCurrentHp(session),
+          zeroHpLifecycle: characterBattleZeroHpLifecycle(session),
+          spellSlots: characterBattleSpellSlots(session),
+          unitLibrary: input.root.unitLibrary,
+        });
+        return Either.isLeft(characterInit)
+          ? Either.left(
+              errorContent(characterInit.left.message, {
+                code: "CHARACTER_BATTLE_INIT_INVALID",
+              }),
+            )
+          : Either.right({ ...characterInit.right });
       }),
       Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
-        return {
+        const statBlock = input.root.statBlockCatalog.getStatBlock(
+          statBlockCombatant.statBlockId,
+        );
+        if (Option.isNone(statBlock)) {
+          return Either.left(
+            errorContent("Unknown Stat Block combatant.", {
+              code: "UNKNOWN_STAT_BLOCK_COMBATANT",
+              statBlockId: statBlockCombatant.statBlockId,
+            }),
+          );
+        }
+        return Either.right({
           ...battleCreatureInitFromStatBlock({
             combatantId: statBlockCombatant.combatantId,
-            statBlock: input.root.statBlockCatalog.requireStatBlock(
-              statBlockCombatant.statBlockId,
-            ),
+            statBlock: statBlock.value,
             initiative: statBlockCombatant.initiative,
             side: statBlockCombatant.side,
             ...(statBlockCombatant.currentHp === undefined
@@ -250,11 +275,15 @@ function initialBattleCreatureInits(input: {
               ? {}
               : { tempHp: statBlockCombatant.tempHp }),
           }),
-        };
+        });
       }),
       Match.exhaustive,
-    ),
-  );
+    );
+    if (Either.isLeft(init)) return Either.left(init.left);
+    inits.push(init.right);
+  }
+
+  return Either.right(inits);
 }
 
 function isCharacterSessionCombatant(

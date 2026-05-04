@@ -290,24 +290,18 @@ export const ALIGNMENT_CHOICES = ALIGNMENT_MORALITIES.flatMap((morality) =>
 
 export function alignmentFromAbbreviation(
   abbreviation: AlignmentAbbreviation,
-): Alignment {
-  const alignment = ALIGNMENT_CHOICES.find(
+): Alignment | undefined {
+  return ALIGNMENT_CHOICES.find(
     (choice) => alignmentAbbreviation(choice) === abbreviation,
   );
-  if (alignment == null) {
-    throw new Error(`Unknown alignment abbreviation: ${abbreviation}`);
-  }
-  return alignment;
 }
 
-export function alignmentFromOptionId(optionId: AlignmentOptionId): Alignment {
-  const alignment = ALIGNMENT_CHOICES.find(
+export function alignmentFromOptionId(
+  optionId: AlignmentOptionId,
+): Alignment | undefined {
+  return ALIGNMENT_CHOICES.find(
     (choice) => alignmentOptionId(choice) === optionId,
   );
-  if (alignment == null) {
-    throw new Error(`Unknown alignment option id: ${optionId}`);
-  }
-  return alignment;
 }
 
 export function parseAlignmentOptionId(

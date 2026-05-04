@@ -30,6 +30,7 @@ import type {
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { Either, Option } from "effect";
 
 type SpellcastingCharacterBuild = CharacterBuild & {
   readonly spellcasting: NonNullable<CharacterBuild["spellcasting"]>;
@@ -114,40 +115,61 @@ export type AvailableCharacterSessionInput = {
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
 
+export type CharacterSessionIssue = {
+  readonly tag: "characterSessionIssue";
+  readonly message: string;
+};
+
+function characterSessionIssue(
+  message: string,
+): Either.Either<never, CharacterSessionIssue> {
+  return Either.left({ tag: "characterSessionIssue", message });
+}
+
 export function availableCharacterSession(
   input: AvailableCharacterSessionInput,
-): AvailableCharacterSession {
+): Either.Either<AvailableCharacterSession, CharacterSessionIssue> {
   if (isNonSpellcastingBuild(input.build)) {
     if (input.spellSlots !== undefined) {
-      throw new Error(
+      return characterSessionIssue(
         "Non-spellcasting character session cannot carry Spell Slot state.",
       );
     }
-    return {
+    const hitPoints = characterSessionHitPoints(input);
+    if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+    return Either.right({
       tag: "available",
       characterId: input.characterId,
       build: input.build,
-      hitPoints: characterSessionHitPoints(input),
-    };
+      hitPoints: hitPoints.right,
+    });
   }
 
   if (!isSpellcastingBuild(input.build)) {
-    throw new Error("Character build spellcasting state is inconsistent.");
+    return characterSessionIssue(
+      "Character build spellcasting state is inconsistent.",
+    );
   }
   const build = input.build;
+  const hitPoints = characterSessionHitPoints(input);
+  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  const spellSlotExpenditures = spellSlotExpendituresFromInput({
+    characterId: input.characterId,
+    build,
+    currentHp: input.currentHp,
+    spellSlots: input.spellSlots,
+  });
+  if (Either.isLeft(spellSlotExpenditures)) {
+    return Either.left(spellSlotExpenditures.left);
+  }
 
-  return {
+  return Either.right({
     tag: "available",
     characterId: input.characterId,
     build,
-    hitPoints: characterSessionHitPoints(input),
-    spellSlotExpenditures: spellSlotExpendituresFromInput({
-      characterId: input.characterId,
-      build,
-      currentHp: input.currentHp,
-      spellSlots: input.spellSlots,
-    }),
-  };
+    hitPoints: hitPoints.right,
+    spellSlotExpenditures: spellSlotExpenditures.right,
+  });
 }
 
 export function characterSessionCurrentHp(
@@ -198,46 +220,49 @@ export function characterBattleZeroHpLifecycle(
 
 function characterSessionHitPoints(
   input: Pick<AvailableCharacterSessionInput, "currentHp" | "zeroHpLifecycle">,
-): CharacterSessionHitPoints {
+): Either.Either<CharacterSessionHitPoints, CharacterSessionIssue> {
   if (Number(input.currentHp) > 0) {
     if (input.zeroHpLifecycle !== undefined) {
-      throw new Error(
+      return characterSessionIssue(
         "Positive-HP character session cannot carry zero-HP state.",
       );
     }
-    return { tag: "positive", currentHp: input.currentHp };
+    return Either.right({ tag: "positive", currentHp: input.currentHp });
   }
-  return {
-    tag: "zero",
-    lifecycle: canonicalZeroHpLifecycle(
-      input.zeroHpLifecycle ?? {
-        tag: "unstable",
-        deathSaves: { successes: 0, failures: 0 },
-      },
-    ),
-  };
+  const lifecycle = canonicalZeroHpLifecycle(
+    input.zeroHpLifecycle ?? {
+      tag: "unstable",
+      deathSaves: { successes: 0, failures: 0 },
+    },
+  );
+  return Either.isLeft(lifecycle)
+    ? Either.left(lifecycle.left)
+    : Either.right({
+        tag: "zero",
+        lifecycle: lifecycle.right,
+      });
 }
 
 function canonicalZeroHpLifecycle(
   lifecycle: CharacterSessionZeroHpLifecycleInput,
-): CharacterSessionZeroHpLifecycle {
-  if (lifecycle.tag === "stable") return lifecycle;
+): Either.Either<CharacterSessionZeroHpLifecycle, CharacterSessionIssue> {
+  if (lifecycle.tag === "stable") return Either.right(lifecycle);
   if (lifecycle.tag === "dead") {
     const { successes, failures } = lifecycle.deathSaves;
     if (successes === 3 || failures !== 3) {
-      throw new Error(
+      return characterSessionIssue(
         "Dead character session requires exactly three death save failures.",
       );
     }
-    return { tag: "dead", deathSaves: { successes, failures } };
+    return Either.right({ tag: "dead", deathSaves: { successes, failures } });
   }
   const { successes, failures } = lifecycle.deathSaves;
   if (successes === 3 || failures === 3) {
-    throw new Error(
+    return characterSessionIssue(
       "Unstable character session cannot carry terminal death save counts.",
     );
   }
-  return { tag: "unstable", deathSaves: { successes, failures } };
+  return Either.right({ tag: "unstable", deathSaves: { successes, failures } });
 }
 
 export function characterBattleSpellSlots(
@@ -249,11 +274,7 @@ export function characterBattleSpellSlots(
       (candidate: CharacterSpellSlotExpenditure) =>
         candidate.spellLevel === slot.spellLevel,
     );
-    if (expenditure === undefined) {
-      throw new Error(
-        `Missing Spell Slot expenditure for level ${slot.spellLevel}.`,
-      );
-    }
+    if (expenditure === undefined) return undefined as never;
     return {
       spellLevel: spellSlotLevel(slot.spellLevel),
       count: resourceCount(slot.count),
@@ -266,7 +287,10 @@ function spellSlotExpendituresFromInput(
   input: AvailableCharacterSessionInput & {
     readonly build: SpellcastingCharacterBuild;
   },
-): readonly CharacterSpellSlotExpenditure[] {
+): Either.Either<
+  readonly CharacterSpellSlotExpenditure[],
+  CharacterSessionIssue
+> {
   const runtimeSlots =
     input.spellSlots ??
     input.build.spellcasting.spellSlots.map((slot) => ({
@@ -275,16 +299,21 @@ function spellSlotExpendituresFromInput(
       expended: resourceCount(0),
     }));
   if (runtimeSlots.length !== input.build.spellcasting.spellSlots.length) {
-    throw new Error("Spell Slot state must match build capacity exactly.");
+    return characterSessionIssue(
+      "Spell Slot state must match build capacity exactly.",
+    );
   }
   const runtimeLevels = new Set<number>();
   for (const runtimeSlot of runtimeSlots) {
     if (runtimeLevels.has(runtimeSlot.spellLevel)) {
-      throw new Error("Spell Slot state must not duplicate spell levels.");
+      return characterSessionIssue(
+        "Spell Slot state must not duplicate spell levels.",
+      );
     }
     runtimeLevels.add(runtimeSlot.spellLevel);
   }
-  return input.build.spellcasting.spellSlots.map((buildSlot) => {
+  const expenditures = [];
+  for (const buildSlot of input.build.spellcasting.spellSlots) {
     const runtimeSlot = runtimeSlots.find(
       (candidate) =>
         candidate.spellLevel === spellSlotLevel(buildSlot.spellLevel),
@@ -296,15 +325,16 @@ function spellSlotExpendituresFromInput(
       runtimeSlot.expended < 0 ||
       runtimeSlot.expended > buildSlot.count
     ) {
-      throw new Error(
+      return characterSessionIssue(
         `Spell Slot state does not match build capacity for level ${buildSlot.spellLevel}.`,
       );
     }
-    return {
+    expenditures.push({
       spellLevel: spellSlotLevel(buildSlot.spellLevel),
       expended: resourceCount(runtimeSlot.expended),
-    };
-  });
+    });
+  }
+  return Either.right(expenditures);
 }
 
 function isSpellcastingBuild(
@@ -355,7 +385,9 @@ export type McpSessionStore = {
   transientBattleFills: BattleFillSession | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): StatBlockRecord | null;
-  selectStatBlock(statBlockId: StatBlockId): StatBlockRecord;
+  selectStatBlock(
+    statBlockId: StatBlockId,
+  ): Either.Either<StatBlockRecord, CharacterSessionIssue>;
   snapshot(): McpSessionSnapshot;
 };
 
@@ -374,14 +406,17 @@ export function createMcpSessionStore(
       selectedStatBlockId = null;
     },
     getSelectedStatBlock(): StatBlockRecord | null {
-      return selectedStatBlockId === null
-        ? null
-        : statBlockCatalog.requireStatBlock(selectedStatBlockId);
+      if (selectedStatBlockId === null) return null;
+      const statBlock = statBlockCatalog.getStatBlock(selectedStatBlockId);
+      return Option.isSome(statBlock) ? statBlock.value : null;
     },
-    selectStatBlock(statBlockId: StatBlockId): StatBlockRecord {
-      const statBlock = statBlockCatalog.requireStatBlock(statBlockId);
-      selectedStatBlockId = statBlock.id;
-      return statBlock;
+    selectStatBlock(statBlockId: StatBlockId) {
+      const statBlock = statBlockCatalog.getStatBlock(statBlockId);
+      if (Option.isNone(statBlock)) {
+        return characterSessionIssue(`Unknown Stat Block id: ${statBlockId}`);
+      }
+      selectedStatBlockId = statBlock.value.id;
+      return Either.right(statBlock.value);
     },
     snapshot(): McpSessionSnapshot {
       const sourceDraftIds = Array.from(characters.keys());

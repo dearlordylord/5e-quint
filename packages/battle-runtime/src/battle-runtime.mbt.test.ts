@@ -1,7 +1,7 @@
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Match } from "effect";
+import { Either, Match } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -40,6 +40,16 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+
+function startBattleRight(
+  input: Parameters<typeof startBattle>[0],
+): BattleState {
+  const result = startBattle(input);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
 
 type MbtHole =
   | "TargetChoice"
@@ -317,7 +327,7 @@ function fighterAttackSubject(): Extract<
 }
 
 function fighterVsSkeletonBattle(): BattleState {
-  return startBattle({
+  return startBattleRight({
     battleId: battleId("battle-runtime-mbt-fighter-skeleton"),
     combatants: [
       rogueCreatureInit({ initiative: 20 }),

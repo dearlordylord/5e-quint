@@ -275,12 +275,6 @@ export function supportedDraftOptionIds(
     ];
   }
 
-  if (hole.kind === "choice") {
-    throw new Error(
-      `Draft choice path ${hole.source.path} has no support gate.`,
-    );
-  }
-
   return undefined;
 }
 

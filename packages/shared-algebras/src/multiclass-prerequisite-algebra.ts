@@ -1,6 +1,6 @@
 // Multiclass prerequisite algebra (SRD 5.2.1 Character Creation > Multiclassing)
 
-import { Match } from "effect";
+import { Either, Match } from "effect";
 
 import {
   ABILITIES,
@@ -19,24 +19,35 @@ export type MulticlassAbilityScores = Readonly<
   Record<Ability, AbilityScoreValue>
 >;
 
+export type MulticlassAbilityScoresIssue =
+  | { readonly tag: "multiclassAbilityScoresNotObject" }
+  | {
+      readonly tag: "missingNumericMulticlassAbilityScore";
+      readonly ability: Ability;
+    };
+
 export function multiclassAbilityScores(
   scores: unknown,
-): MulticlassAbilityScores {
+): Either.Either<MulticlassAbilityScores, MulticlassAbilityScoresIssue> {
   if (typeof scores !== "object" || scores == null) {
-    throw new Error("Multiclass ability scores must be an object.");
+    return Either.left({ tag: "multiclassAbilityScoresNotObject" });
   }
 
   const record = scores as Partial<Record<Ability, unknown>>;
-  return Object.fromEntries(
-    ABILITIES.map((ability) => {
-      const score = record[ability];
-      if (typeof score !== "number") {
-        throw new Error(`Missing numeric ability score: ${ability}`);
-      }
+  const entries = [];
+  for (const ability of ABILITIES) {
+    const score = record[ability];
+    if (typeof score !== "number") {
+      return Either.left({
+        tag: "missingNumericMulticlassAbilityScore",
+        ability,
+      });
+    }
 
-      return [ability, AbilityScore.make(score)];
-    }),
-  ) as MulticlassAbilityScores;
+    entries.push([ability, AbilityScore.make(score)] as const);
+  }
+
+  return Either.right(Object.fromEntries(entries) as MulticlassAbilityScores);
 }
 
 export type MulticlassPrerequisite =
@@ -54,14 +65,23 @@ export type MulticlassPrerequisite =
       readonly prerequisites: NonEmptyMulticlassPrerequisites;
     };
 
-export type NonEmptyMulticlassPrerequisites = ReadonlyNonEmptyArray<MulticlassPrerequisite>;
+export type NonEmptyMulticlassPrerequisites =
+  ReadonlyNonEmptyArray<MulticlassPrerequisite>;
 
 export const MULTICLASS_PREREQUISITES: Readonly<
   Record<ClassName, MulticlassPrerequisite>
 > = {
-  barbarian: { tag: "scoreAtLeast", ability: "str", minimum: MULTICLASS_THRESHOLD },
+  barbarian: {
+    tag: "scoreAtLeast",
+    ability: "str",
+    minimum: MULTICLASS_THRESHOLD,
+  },
   bard: { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
-  cleric: { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
+  cleric: {
+    tag: "scoreAtLeast",
+    ability: "wis",
+    minimum: MULTICLASS_THRESHOLD,
+  },
   druid: { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
   fighter: {
     tag: "anyOf",
@@ -92,9 +112,21 @@ export const MULTICLASS_PREREQUISITES: Readonly<
     ],
   },
   rogue: { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
-  sorcerer: { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
-  warlock: { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
-  wizard: { tag: "scoreAtLeast", ability: "int", minimum: MULTICLASS_THRESHOLD },
+  sorcerer: {
+    tag: "scoreAtLeast",
+    ability: "cha",
+    minimum: MULTICLASS_THRESHOLD,
+  },
+  warlock: {
+    tag: "scoreAtLeast",
+    ability: "cha",
+    minimum: MULTICLASS_THRESHOLD,
+  },
+  wizard: {
+    tag: "scoreAtLeast",
+    ability: "int",
+    minimum: MULTICLASS_THRESHOLD,
+  },
 } as const satisfies Record<ClassName, MulticlassPrerequisite>;
 
 const byTag = Match.discriminator("tag");

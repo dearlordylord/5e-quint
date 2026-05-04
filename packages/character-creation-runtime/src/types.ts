@@ -1,4 +1,4 @@
-import { Brand } from "effect";
+import { Brand, Either } from "effect";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -101,12 +101,17 @@ export const UNIT_CHOICE_KEYS = [
 ] as const;
 export type UnitChoiceKey = (typeof UNIT_CHOICE_KEYS)[number];
 
-export function unitChoiceKey(value: string): UnitChoiceKey {
-  if (!UNIT_CHOICE_KEYS.some((key) => key === value)) {
-    throw new Error(`Unsupported creation unit choice key: ${value}`);
-  }
+export type UnitChoiceKeyIssue = {
+  readonly tag: "unsupportedUnitChoiceKey";
+  readonly value: string;
+};
 
-  return value as UnitChoiceKey;
+export function unitChoiceKey(
+  value: string,
+): Either.Either<UnitChoiceKey, UnitChoiceKeyIssue> {
+  return UNIT_CHOICE_KEYS.some((key) => key === value)
+    ? Either.right(value as UnitChoiceKey)
+    : Either.left({ tag: "unsupportedUnitChoiceKey", value });
 }
 
 export type CreationChoiceOptionId = string &
@@ -155,9 +160,11 @@ export type ChoiceCardinality =
       readonly max: ChoiceCount;
     };
 
-export function exactChoiceCardinality(count: number): ChoiceCardinality {
+export function exactChoiceCardinality(
+  count: number,
+): ChoiceCardinality | undefined {
   if (!Number.isInteger(count) || count < 1) {
-    throw new Error(`Choice cardinality must be a positive integer: ${count}`);
+    return undefined;
   }
 
   return { tag: "exactly", count: ChoiceCount(count) };
@@ -166,7 +173,7 @@ export function exactChoiceCardinality(count: number): ChoiceCardinality {
 export function boundedChoiceCardinality(input: {
   readonly min: number;
   readonly max: number;
-}): ChoiceCardinality {
+}): ChoiceCardinality | undefined {
   if (
     !Number.isInteger(input.min) ||
     !Number.isInteger(input.max) ||
@@ -174,9 +181,7 @@ export function boundedChoiceCardinality(input: {
     input.max < 1 ||
     input.max < input.min
   ) {
-    throw new Error(
-      `Choice cardinality bounds must be non-negative minimum and positive maximum integers: ${input.min}..${input.max}`,
-    );
+    return undefined;
   }
 
   if (input.min === input.max) {

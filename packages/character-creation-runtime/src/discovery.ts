@@ -1,4 +1,4 @@
-import { Match } from "effect";
+import { Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
   STANDARD_LANGUAGES,
@@ -112,12 +112,16 @@ export function discoverInitialDraftHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
-  return INITIAL_CHARACTER_DRAFT_PATHS.flatMap((path) =>
-    hasDraftSelection(input.draft.selections, path) ||
-    isBlockedInitialDraftPath(input.draft, path)
-      ? []
-      : [draftHole(path, input.unitLibrary, input.draft)],
-  );
+  return INITIAL_CHARACTER_DRAFT_PATHS.flatMap((path) => {
+    if (
+      hasDraftSelection(input.draft.selections, path) ||
+      isBlockedInitialDraftPath(input.draft, path)
+    ) {
+      return [];
+    }
+    const hole = draftHole(path, input.unitLibrary, input.draft);
+    return hole === undefined ? [] : [hole];
+  });
 }
 
 function isBlockedInitialDraftPath(
@@ -143,8 +147,11 @@ export function discoverClassGrantedHoles(input: {
     return [];
   }
 
-  const classUnit = input.unitLibrary.requireUnit(classUnitId);
-  const facts = readClassCreationFacts(classUnit);
+  const classUnit = input.unitLibrary.getUnit(classUnitId);
+  if (Option.isNone(classUnit)) {
+    return [];
+  }
+  const facts = readClassCreationFacts(classUnit.value);
   const classLevel = selectedClassLevel(input.draft, classUnitId);
   if (facts.tag !== "readable") {
     return [];
@@ -273,8 +280,11 @@ export function discoverBackgroundGrantedHoles(input: {
     return [];
   }
 
-  const backgroundUnit = input.unitLibrary.requireUnit(backgroundUnitId);
-  const facts = readBackgroundCreationFacts(backgroundUnit);
+  const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
+  if (Option.isNone(backgroundUnit)) {
+    return [];
+  }
+  const facts = readBackgroundCreationFacts(backgroundUnit.value);
   if (facts.tag !== "readable") {
     return [];
   }
@@ -363,8 +373,9 @@ export function backgroundToolChoiceSpec(
   );
 
   return spec != null &&
+    spec.cardinality !== undefined &&
     choiceCardinalityMax(spec.cardinality) <= spec.options.length
-    ? spec
+    ? { cardinality: spec.cardinality, options: spec.options }
     : undefined;
 }
 
@@ -382,9 +393,10 @@ export function discoverEquipmentHoles(input: {
       min: 1,
       max: supportedEquipmentPurchaseChoiceCount(),
     }),
-    options: supportedPurchasableEquipmentUnitIds().map((unitId) =>
-      unitOption(input.unitLibrary.requireUnit(unitId)),
-    ),
+    options: supportedPurchasableEquipmentUnitIds().flatMap((unitId) => {
+      const unit = input.unitLibrary.getUnit(unitId);
+      return Option.isSome(unit) ? [unitOption(unit.value)] : [];
+    }),
   });
   const hasValidPurchaseSelection = hasValidEquipmentPurchaseSelectionForHole(
     input.draft,
@@ -417,7 +429,7 @@ export function discoverEquipmentHoles(input: {
 export function startingEquipmentChoiceHole(
   source: CreationHoleSource,
   choices: readonly StartingEquipmentChoice[],
-): CreationHole {
+): CreationHole | undefined {
   return choiceHole({
     source,
     cardinality: EXACTLY_ONE_CHOICE,
@@ -444,12 +456,13 @@ export function hasSupportedCoinEquipmentPath(input: {
     return false;
   }
 
-  const classFacts = readClassCreationFacts(
-    input.unitLibrary.requireUnit(classUnitId),
-  );
-  const backgroundFacts = readBackgroundCreationFacts(
-    input.unitLibrary.requireUnit(backgroundUnitId),
-  );
+  const classUnit = input.unitLibrary.getUnit(classUnitId);
+  const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
+  if (Option.isNone(classUnit) || Option.isNone(backgroundUnit)) {
+    return false;
+  }
+  const classFacts = readClassCreationFacts(classUnit.value);
+  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
   if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
     return false;
   }
@@ -476,7 +489,7 @@ export function hasSupportedCoinEquipmentPath(input: {
 
 export function selectedCoinGrantStartingEquipmentChoice(
   draft: CharacterDraft,
-  hole: CreationHole,
+  hole: CreationHole | undefined,
   choices: readonly StartingEquipmentChoice[],
 ): StartingEquipmentChoice | undefined {
   const selectedChoice = selectedStartingEquipmentChoice(draft, hole, choices);
@@ -485,9 +498,12 @@ export function selectedCoinGrantStartingEquipmentChoice(
 
 export function selectedStartingEquipmentChoice(
   draft: CharacterDraft,
-  hole: CreationHole,
+  hole: CreationHole | undefined,
   choices: readonly StartingEquipmentChoice[],
 ): StartingEquipmentChoice | undefined {
+  if (hole === undefined) {
+    return undefined;
+  }
   const selection = draft.selections.choices.find((candidate) =>
     choiceSelectionMatchesHole(candidate, hole),
   );
@@ -501,15 +517,21 @@ export function selectedStartingEquipmentChoice(
 
 export function unselectedUnitChoiceHole(
   draft: CharacterDraft,
-  hole: CreationHole,
+  hole: CreationHole | undefined,
 ): readonly CreationHole[] {
+  if (hole === undefined) {
+    return [];
+  }
   return hasValidSelectionForHole(draft, hole) ? [] : [hole];
 }
 
 export function unselectedBackgroundAbilityScoreIncreaseHole(
   draft: CharacterDraft,
-  hole: CreationHole,
+  hole: CreationHole | undefined,
 ): readonly CreationHole[] {
+  if (hole === undefined) {
+    return [];
+  }
   return hasValidBackgroundAbilityScoreIncreaseSelectionForHole(draft, hole)
     ? []
     : [hole];
@@ -517,17 +539,23 @@ export function unselectedBackgroundAbilityScoreIncreaseHole(
 
 export function unselectedPurchaseHole(
   draft: CharacterDraft,
-  hole: CreationHole,
+  hole: CreationHole | undefined,
 ): readonly CreationHole[] {
+  if (hole === undefined) {
+    return [];
+  }
   return hasValidEquipmentPurchaseSelectionForHole(draft, hole) ? [] : [hole];
 }
 
 export function unselectedLoadoutHole(
   draft: CharacterDraft,
-  hole: CreationHole,
+  hole: CreationHole | undefined,
   unitId: UnitRecord["id"],
   hasValidPurchaseSelection: boolean,
 ): readonly CreationHole[] {
+  if (hole === undefined) {
+    return [];
+  }
   return hasValidPurchaseSelection &&
     hasPurchasedUnit(draft, unitId) &&
     !hasValidSelectionForHole(draft, hole)
@@ -537,9 +565,9 @@ export function unselectedLoadoutHole(
 
 export function hasValidEquipmentPurchaseSelectionForHole(
   draft: CharacterDraft,
-  hole: CreationHole,
+  hole: CreationHole | undefined,
 ): boolean {
-  if (draft.selections.equipment == null) {
+  if (draft.selections.equipment == null || hole === undefined) {
     return false;
   }
 
@@ -738,6 +766,9 @@ export function classFeatureGrantChoiceHoles(
   unitLibrary: UnitCatalog,
 ): readonly ChoiceCreationHole[] {
   const feature = requireClassFeature(unitLibrary, featureUnitId);
+  if (feature === undefined) {
+    return [];
+  }
   const mechanics = feature.mechanics;
 
   if (
@@ -750,13 +781,13 @@ export function classFeatureGrantChoiceHoles(
           : grant.categories.includes("fighting_style")),
     )
   ) {
-    return [
-      fightingStyleFeatureHoleSource(featureUnitId, unitLibrary),
-    ] as const;
+    const hole = fightingStyleFeatureHoleSource(featureUnitId, unitLibrary);
+    return hole === undefined ? [] : [hole];
   }
 
   if (isWeaponMasteryChoiceFeature(feature)) {
-    return [weaponMasteryFeatureHoleSource(feature, unitLibrary)] as const;
+    const hole = weaponMasteryFeatureHoleSource(feature, unitLibrary);
+    return hole === undefined ? [] : [hole];
   }
 
   return [];
@@ -765,13 +796,13 @@ export function classFeatureGrantChoiceHoles(
 function requireClassFeature(
   unitLibrary: UnitCatalog,
   featureUnitId: UnitRecord["id"],
-): ClassFeatureRecord {
-  const feature = unitLibrary.requireUnit(featureUnitId);
-  if (feature.kind !== "class_feature") {
-    throw new Error(`Expected ${featureUnitId} to be a class feature Unit.`);
+): ClassFeatureRecord | undefined {
+  const feature = unitLibrary.getUnit(featureUnitId);
+  if (Option.isNone(feature) || feature.value.kind !== "class_feature") {
+    return undefined;
   }
 
-  return feature;
+  return feature.value;
 }
 
 function isWeaponMasteryChoiceFeature(
@@ -788,7 +819,7 @@ function isWeaponMasteryChoiceFeature(
 function fightingStyleFeatureHoleSource(
   featureUnitId: UnitRecord["id"],
   unitLibrary: UnitCatalog,
-): ChoiceCreationHole {
+): ChoiceCreationHole | undefined {
   const options = unitLibrary
     .listUnits()
     .filter(
@@ -814,7 +845,7 @@ function weaponMasteryFeatureHoleSource(
     >;
   },
   unitLibrary: UnitCatalog,
-): ChoiceCreationHole {
+): ChoiceCreationHole | undefined {
   const mechanics = feature.mechanics;
   const options = unitLibrary
     .listUnits()
@@ -834,9 +865,11 @@ function weaponMasteryFeatureHoleSource(
   );
 }
 
-function requireChoiceCreationHole(hole: CreationHole): ChoiceCreationHole {
-  if (hole.kind !== "choice") {
-    throw new Error("Expected a choice creation hole.");
+function requireChoiceCreationHole(
+  hole: CreationHole | undefined,
+): ChoiceCreationHole | undefined {
+  if (hole?.kind !== "choice") {
+    return undefined;
   }
 
   return hole;
@@ -846,7 +879,7 @@ export function draftHole(
   path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
   unitLibrary: UnitCatalog,
   draft?: CharacterDraft,
-): CreationHole {
+): CreationHole | undefined {
   if (path === "draft.primaryClass") {
     return choiceHole({
       source: draftSource(path),

@@ -1,9 +1,10 @@
 import {
   creationChoiceOptionId,
-  exactChoiceCardinality,
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterAdvancementEntry,
   type CharacterDraftPath,
+  type ChoiceCardinality,
+  type ChoiceCount,
   type CreationChoiceOptionId,
   type UnitChoiceKey,
 } from "./types.ts";
@@ -145,6 +146,9 @@ export const LOADOUT_SHIELD_CHOICE_KEY =
   "loadout_shield" satisfies UnitChoiceKey;
 export const LOADOUT_WEAPON_CHOICE_KEY =
   "loadout_weapon" satisfies UnitChoiceKey;
-export const EXACTLY_ONE_CHOICE = exactChoiceCardinality(1);
+export const EXACTLY_ONE_CHOICE = {
+  tag: "exactly",
+  count: 1 as ChoiceCount,
+} as const satisfies ChoiceCardinality;
 
 export { SURFACE_ABILITIES };

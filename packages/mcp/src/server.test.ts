@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Option } from "effect";
+import { Either, Option } from "effect";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -53,6 +53,26 @@ import {
 } from "../test-support/battle-act-labels.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
+function startBattleFromCharacterBuildAndStatBlockRight(
+  input: Parameters<typeof startBattleFromCharacterBuildAndStatBlock>[0],
+): BattleState {
+  const result = startBattleFromCharacterBuildAndStatBlock(input);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function availableCharacterSessionRight(
+  input: Parameters<typeof availableCharacterSession>[0],
+) {
+  const result = availableCharacterSession(input);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 const partySide = battleCombatantSide("party");
@@ -69,7 +89,9 @@ describe("MCP server route", () => {
     expect(
       root.statBlockCatalog.listStatBlocks().map((record) => record.id),
     ).toEqual(["stat_block_goblin_warrior", "stat_block_skeleton"]);
-    expect(selected.id).toBe("stat_block_goblin_warrior");
+    expect(Either.isRight(selected) ? selected.right.id : undefined).toBe(
+      "stat_block_goblin_warrior",
+    );
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
       selectedStatBlockId: "stat_block_goblin_warrior",
@@ -88,7 +110,7 @@ describe("MCP server route", () => {
 
   test("starts battle from Character Build at the MCP composition boundary", () => {
     const root = createMcpCompositionRoot();
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root"),
       character: {
         combatantId: fighterId,
@@ -159,7 +181,7 @@ describe("MCP server route", () => {
   test("derives base Unarmed Strike when no weapon is selected", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-unarmed"),
       character: {
         combatantId: fighterId,
@@ -217,7 +239,7 @@ describe("MCP server route", () => {
       "fighter_improved_critical",
       3,
     );
-    const supportedState = startBattleFromCharacterBuildAndStatBlock({
+    const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-critical-range"),
       character: {
         combatantId: fighterId,
@@ -277,7 +299,7 @@ describe("MCP server route", () => {
       3,
     );
     expect(() =>
-      startBattleFromCharacterBuildAndStatBlock({
+      startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle-unsupported-critical-range"),
         character: {
           combatantId: fighterId,
@@ -306,7 +328,7 @@ describe("MCP server route", () => {
     const root = createMcpCompositionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary);
     const supportedLibrary = rogueBattleUnitLibrary(root);
-    const supportedState = startBattleFromCharacterBuildAndStatBlock({
+    const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-attack-damage-rider"),
       character: {
         combatantId: fighterId,
@@ -353,7 +375,7 @@ describe("MCP server route", () => {
       level: 7,
       includeEvasion: true,
     });
-    const supportedState = startBattleFromCharacterBuildAndStatBlock({
+    const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-save-damage-replacement"),
       character: {
         combatantId: fighterId,
@@ -399,7 +421,7 @@ describe("MCP server route", () => {
     };
 
     expect(() =>
-      startBattleFromCharacterBuildAndStatBlock({
+      startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle-unsupported-save-damage-replacement"),
         character: {
           combatantId: fighterId,
@@ -430,7 +452,7 @@ describe("MCP server route", () => {
       level: 5,
       includeUncannyDodge: true,
     });
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-reaction-modifier"),
       character: {
         combatantId: fighterId,
@@ -492,7 +514,7 @@ describe("MCP server route", () => {
       features: rogueBuild.features,
     };
     expect(() =>
-      startBattleFromCharacterBuildAndStatBlock({
+      startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle-unsupported-reaction-modifier"),
         character: {
           combatantId: fighterId,
@@ -519,7 +541,7 @@ describe("MCP server route", () => {
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
     const root = createMcpCompositionRoot();
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-fighter-two"),
       character: {
         combatantId: fighterId,
@@ -553,7 +575,7 @@ describe("MCP server route", () => {
 
   test("starts battle from a CharacterBuild with two Light weapons for the off-hand runtime path", () => {
     const root = createMcpCompositionRoot();
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-off-hand"),
       character: {
         combatantId: fighterId,
@@ -1279,26 +1301,27 @@ describe("MCP server route", () => {
 
   test("replays visible Sneak Attack rider hole and fill shape through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleFromCharacterBuildAndStatBlock({
-      battleId: battleId("battle:mcp-sneak-attack-rider"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("rogue-character"),
-        displayName: "Orc Soldier Rogue",
-        build: rogueCharacterBuild(root.unitLibrary),
-        initiative: initiativeScore(18),
-        side: partySide,
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(7),
-        side: oppositionSide,
-      },
-      unitLibrary: rogueBattleUnitLibrary(root),
-    });
+    root.sessionStore.battleState =
+      startBattleFromCharacterBuildAndStatBlockRight({
+        battleId: battleId("battle:mcp-sneak-attack-rider"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("rogue-character"),
+          displayName: "Orc Soldier Rogue",
+          build: rogueCharacterBuild(root.unitLibrary),
+          initiative: initiativeScore(18),
+          side: partySide,
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(7),
+          side: oppositionSide,
+        },
+        unitLibrary: rogueBattleUnitLibrary(root),
+      });
     const allyId = combatantId("sneak-attack-ally");
     const battleState = root.sessionStore.battleState;
     const rogue = battleState.combatants.get(fighterId);
@@ -2208,7 +2231,7 @@ describe("MCP server route", () => {
     const build = createFinalizedFighterSheet(root, draftId);
     root.sessionStore.characters.set(
       characterDraftId(draftId),
-      availableCharacterSession({
+      availableCharacterSessionRight({
         characterId: characterId(draftId),
         build,
         currentHp: Hp(0),
@@ -2269,7 +2292,7 @@ describe("MCP server route", () => {
     const build = createFinalizedFighterSheet(root, draftId);
     root.sessionStore.characters.set(
       characterDraftId(draftId),
-      availableCharacterSession({
+      availableCharacterSessionRight({
         characterId: characterId(draftId),
         build,
         currentHp: Hp(0),
@@ -2342,7 +2365,7 @@ describe("MCP server route", () => {
     };
 
     expect(() =>
-      availableCharacterSession({
+      availableCharacterSessionRight({
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "unstable",
@@ -2353,7 +2376,7 @@ describe("MCP server route", () => {
       "Unstable character session cannot carry terminal death save counts.",
     );
     expect(() =>
-      availableCharacterSession({
+      availableCharacterSessionRight({
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "unstable",
@@ -2364,7 +2387,7 @@ describe("MCP server route", () => {
       "Unstable character session cannot carry terminal death save counts.",
     );
     expect(() =>
-      availableCharacterSession({
+      availableCharacterSessionRight({
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "dead",
@@ -2589,7 +2612,7 @@ describe("MCP server route", () => {
   test("does not apply Defense Fighting Style when no armor is worn", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-unarmored"),
       character: {
         combatantId: fighterId,
@@ -2629,7 +2652,7 @@ describe("MCP server route", () => {
   test("keeps spell slots but suppresses action-time spell acts when armor training blocks casting", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-armored-spellcaster"),
       character: {
         combatantId: fighterId,
@@ -2683,7 +2706,7 @@ describe("MCP server route", () => {
   test("keeps spell acts when only shield training is missing", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-shield-spellcaster"),
       character: {
         combatantId: fighterId,
@@ -2732,7 +2755,7 @@ describe("MCP server route", () => {
   test("replays Acid Splash save-gate damage through MCP battle fills", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-acid-splash"),
       character: {
         combatantId: fighterId,
@@ -2846,7 +2869,7 @@ describe("MCP server route", () => {
   test("preserves pending reaction state while MCP replays a readied spell procedure", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const state = startBattleFromCharacterBuildAndStatBlock({
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-reaction-replay"),
       character: {
         combatantId: fighterId,
@@ -2995,7 +3018,7 @@ describe("MCP server route", () => {
     };
 
     expect(() =>
-      availableCharacterSession({
+      availableCharacterSessionRight({
         characterId: characterId("character:spell-slot-duplicate-levels"),
         build: spellcastingBuild,
         currentHp: Hp(spellcastingBuild.hitPoints.maximum),
@@ -3014,7 +3037,7 @@ describe("MCP server route", () => {
       }),
     ).toThrow("Spell Slot state must match build capacity exactly.");
     expect(() =>
-      availableCharacterSession({
+      availableCharacterSessionRight({
         characterId: characterId("character:spell-slot-mismatched-capacity"),
         build: {
           ...spellcastingBuild,
@@ -3047,7 +3070,7 @@ describe("MCP server route", () => {
     const root = createMcpCompositionRoot();
 
     expect(() =>
-      startBattleFromCharacterBuildAndStatBlock({
+      startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle-root-overmax-hp"),
         character: {
           combatantId: fighterId,
@@ -3198,7 +3221,7 @@ function createFinalizedFighterSheet(
   const build = fighterCharacterBuild(root.unitLibrary);
   root.sessionStore.characters.set(
     characterDraftId(draftId),
-    availableCharacterSession({
+    availableCharacterSessionRight({
       characterId: characterId(draftId),
       build,
       currentHp: Hp(build.hitPoints.maximum),

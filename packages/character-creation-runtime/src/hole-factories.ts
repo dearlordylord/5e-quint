@@ -124,14 +124,15 @@ function isBackgroundAsiAbility(value: string | undefined): value is Ability {
 
 export function choiceHole(input: {
   readonly source: CreationHoleSource;
-  readonly cardinality: ChoiceCardinality;
+  readonly cardinality: ChoiceCardinality | undefined;
   readonly options: readonly CreationChoiceOption[];
-}): CreationHole {
+}): CreationHole | undefined {
+  if (input.cardinality === undefined) {
+    return undefined;
+  }
   const maxCount = choiceCardinalityMax(input.cardinality);
   if (maxCount > input.options.length) {
-    throw new Error(
-      `Choice cardinality ${maxCount} exceeds option count ${input.options.length} for ${holeIdForSource(input.source)}.`,
-    );
+    return undefined;
   }
 
   return {

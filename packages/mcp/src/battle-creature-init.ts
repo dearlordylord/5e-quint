@@ -9,8 +9,9 @@ import {
   type CharacterZeroHpLifecycleInit,
   type CharacterWeaponAttackActionOption,
   type BattleId,
-  type BattleState,
   type BattleCombatantSide,
+  type BattleState,
+  type BattleStateInitIssue,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
@@ -42,7 +43,7 @@ import {
 } from "@dnd/shared/types";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Match } from "effect";
+import { Either, Match, Option } from "effect";
 import { characterUnitRefsWithBattleSupportProfiles } from "./battle-support-profiles.ts";
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;
@@ -71,42 +72,101 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
   readonly combatantDistances?: Parameters<
     typeof startBattle
   >[0]["combatantDistances"];
-}): BattleState {
+}): Either.Either<BattleState, BattleStateInitIssue | BattleCreatureInitIssue> {
+  const characterInit = battleCreatureInitFromCharacterBuild({
+    ...input.character,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(characterInit)) {
+    return battleCreatureInitIssue(characterInit.left.message);
+  }
+
   return startBattle({
     battleId: input.battleId,
     combatants: [
-      battleCreatureInitFromCharacterBuild({
-        ...input.character,
-        unitLibrary: input.unitLibrary,
-      }),
+      characterInit.right,
       battleCreatureInitFromStatBlock(input.statBlockBattleInput),
     ],
     combatantDistances: input.combatantDistances,
   });
 }
 
+export type BattleCreatureInitIssue = {
+  readonly tag: "battleCreatureInitIssue";
+  readonly message: string;
+};
+
+function battleCreatureInitIssue(
+  message: string,
+): Either.Either<never, BattleCreatureInitIssue> {
+  return Either.left({ tag: "battleCreatureInitIssue", message });
+}
+
 export function battleCreatureInitFromCharacterBuild(
   input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
   },
-): BattleCreatureInit {
+): Either.Either<BattleCreatureInit, BattleCreatureInitIssue> {
   const maxHp = Hp(input.build.hitPoints.maximum);
   const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
     input.build,
     input.unitLibrary,
   );
+  if (Either.isLeft(characterUnitRefs)) {
+    return battleCreatureInitIssue(characterUnitRefs.left.message);
+  }
   const currentHp = input.currentHp ?? maxHp;
-  const offHandAttack = characterOffHandAttackActionOption(
-    input.build,
-    input.unitLibrary,
-  );
   if (currentHp > maxHp) {
-    throw new Error(
+    return battleCreatureInitIssue(
       "Character battle initialization current HP exceeds max HP.",
     );
   }
 
-  return {
+  const species = getRequiredUnit(input.unitLibrary, input.build.species);
+  if (Either.isLeft(species)) {
+    return battleCreatureInitIssue(species.left.message);
+  }
+  if (species.right.kind !== "species") {
+    return battleCreatureInitIssue(
+      `Expected species Unit: ${input.build.species}`,
+    );
+  }
+
+  const armorClass = characterArmorClassState(input.build, input.unitLibrary);
+  if (Either.isLeft(armorClass)) {
+    return battleCreatureInitIssue(armorClass.left.message);
+  }
+  const attack = characterAttackActionOption(input.build, input.unitLibrary);
+  if (Either.isLeft(attack))
+    return battleCreatureInitIssue(attack.left.message);
+  const offHandAttack = characterOffHandAttackActionOption(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(offHandAttack)) {
+    return battleCreatureInitIssue(offHandAttack.left.message);
+  }
+  const unitFeatures = characterBattleFeatures(input.build, input.unitLibrary);
+  if (Either.isLeft(unitFeatures)) {
+    return battleCreatureInitIssue(unitFeatures.left.message);
+  }
+  const resources = characterBattleResources(input.build, input.unitLibrary);
+  if (Either.isLeft(resources)) {
+    return battleCreatureInitIssue(resources.left.message);
+  }
+  const spellcasting =
+    input.build.spellcasting === undefined
+      ? undefined
+      : characterSpellcasting({
+          build: input.build,
+          unitLibrary: input.unitLibrary,
+          spellSlots: input.spellSlots,
+        });
+  if (spellcasting !== undefined && Either.isLeft(spellcasting)) {
+    return battleCreatureInitIssue(spellcasting.left.message);
+  }
+
+  return Either.right({
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: input.initiative,
@@ -114,11 +174,11 @@ export function battleCreatureInitFromCharacterBuild(
     creatureInit: {
       kind: "character",
       characterId: input.characterId,
-      characterUnitRefs,
+      characterUnitRefs: characterUnitRefs.right,
       classLevels: characterBattleClassLevels(input.build, input.unitLibrary),
-      armorClass: characterArmorClassState(input.build, input.unitLibrary),
-      size: characterBattleSize(input.build, input.unitLibrary),
-      speed: characterBattleWalkSpeed(input.build, input.unitLibrary),
+      armorClass: armorClass.right,
+      size: species.right.size.size,
+      speed: { walkFeet: movementFeet(species.right.speed.walkFeet) },
       currentHp,
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
@@ -126,41 +186,18 @@ export function battleCreatureInitFromCharacterBuild(
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout: input.build.equipment,
-      attack: characterAttackActionOption(input.build, input.unitLibrary),
+      attack: attack.right,
       unarmedStrike: characterBaseUnarmedStrikeActionOption(input.build),
-      ...(offHandAttack === undefined ? {} : { offHandAttack }),
-      unitFeatures: characterBattleFeatures(input.build, input.unitLibrary),
-      resources: characterBattleResources(input.build, input.unitLibrary),
-      ...(input.build.spellcasting === undefined
+      ...(offHandAttack.right === undefined
         ? {}
-        : {
-            spellcasting: characterSpellcasting({
-              build: input.build,
-              unitLibrary: input.unitLibrary,
-              spellSlots: input.spellSlots,
-            }),
-          }),
+        : { offHandAttack: offHandAttack.right }),
+      unitFeatures: unitFeatures.right,
+      resources: resources.right,
+      ...(spellcasting === undefined
+        ? {}
+        : { spellcasting: spellcasting.right }),
     },
-  };
-}
-
-function characterBattleWalkSpeed(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-) {
-  const species = unitLibrary.requireUnit(build.species);
-  if (species.kind !== "species") {
-    throw new Error(`Expected species Unit: ${build.species}`);
-  }
-  return { walkFeet: movementFeet(species.speed.walkFeet) };
-}
-
-function characterBattleSize(build: CharacterBuild, unitLibrary: UnitCatalog) {
-  const species = unitLibrary.requireUnit(build.species);
-  if (species.kind !== "species") {
-    throw new Error(`Expected species Unit: ${build.species}`);
-  }
-  return species.size.size;
+  });
 }
 
 function characterBattleClassLevels(
@@ -182,48 +219,90 @@ function characterBattleClassLevels(
 function characterBattleResources(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): readonly CharacterBattleResourceInit[] {
-  return build.resources.map((resource) => {
-    const unit = unitLibrary.requireUnit(resource.unitId);
-    if (unit.kind !== "class_feature") {
-      throw new Error(`Expected class feature Unit for resource: ${unit.id}`);
+): Either.Either<
+  readonly CharacterBattleResourceInit[],
+  BattleCreatureInitIssue
+> {
+  const resources: CharacterBattleResourceInit[] = [];
+  for (const resource of build.resources) {
+    const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    if (Either.isLeft(unit)) {
+      return battleCreatureInitIssue(unit.left.message);
+    }
+    if (unit.right.kind !== "class_feature") {
+      return battleCreatureInitIssue(
+        `Expected class feature Unit for resource: ${unit.right.id}`,
+      );
     }
 
-    return {
-      unit,
-    };
-  });
+    resources.push({ unit: unit.right });
+  }
+  return Either.right(resources);
 }
 
 function characterBattleFeatures(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): readonly CharacterBattleFeatureInit[] {
-  return build.features
-    .filter((feature) => feature.kind === "classFeature")
-    .map((feature) => {
-      const unit = unitLibrary.requireUnit(feature.unitId);
-      if (unit.kind !== "class_feature") {
-        throw new Error(`Expected class feature Unit for feature: ${unit.id}`);
-      }
-      return { unit };
-    });
+): Either.Either<
+  readonly CharacterBattleFeatureInit[],
+  BattleCreatureInitIssue
+> {
+  const features: CharacterBattleFeatureInit[] = [];
+  for (const feature of build.features) {
+    if (feature.kind !== "classFeature") continue;
+    const unit = getRequiredUnit(unitLibrary, feature.unitId);
+    if (Either.isLeft(unit)) {
+      return battleCreatureInitIssue(unit.left.message);
+    }
+    if (unit.right.kind !== "class_feature") {
+      return battleCreatureInitIssue(
+        `Expected class feature Unit for feature: ${unit.right.id}`,
+      );
+    }
+    features.push({ unit: unit.right });
+  }
+  return Either.right(features);
 }
 
 function characterArmorClassState(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): ArmorClassState {
+): Either.Either<ArmorClassState, BattleCreatureInitIssue> {
   const loadout = build.equipment;
   const defaultState = defaultArmorClassState();
-  const armor = loadout.armor
-    ? unitLibrary.requireUnit(loadout.armor)
-    : undefined;
-  const shield = loadout.shield
-    ? unitLibrary.requireUnit(loadout.shield)
-    : undefined;
+  const armor =
+    loadout.armor == null
+      ? undefined
+      : getRequiredUnit(unitLibrary, loadout.armor);
+  if (armor !== undefined && Either.isLeft(armor)) {
+    return battleCreatureInitIssue(armor.left.message);
+  }
+  const shield =
+    loadout.shield == null
+      ? undefined
+      : getRequiredUnit(unitLibrary, loadout.shield);
+  if (shield !== undefined && Either.isLeft(shield)) {
+    return battleCreatureInitIssue(shield.left.message);
+  }
+  const bonuses: ArmorClassState["bonuses"][number][] = [];
+  if (shield?.right.kind === "shield") {
+    bonuses.push({
+      kind: "shield",
+      bonus: armorClassDelta(shield.right.armorClassProjection.bonus),
+      handUse: shield.right.armorClassProjection.handUse,
+      trainingRequired: shield.right.armorClassProjection.trainingRequired,
+      sourceUnitId: shield.right.id,
+    });
+  }
+  for (const ref of characterBuildUnitRefs(build, unitLibrary)) {
+    const unit = getRequiredUnit(unitLibrary, ref.unitId);
+    if (Either.isLeft(unit)) {
+      return battleCreatureInitIssue(unit.left.message);
+    }
+    bonuses.push(...armorDefenseBonus(unit.right));
+  }
 
-  return {
+  return Either.right({
     ...defaultState,
     abilityModifiers: {
       ...zeroAbilityModifiers(),
@@ -235,35 +314,23 @@ function characterArmorClassState(
       cha: abilityModifier(scoreModifier(build.abilityScores.cha)),
     },
     base:
-      armor?.kind === "armor"
-        ? { kind: "armor", formula: armor.acFormula, category: armor.category }
+      armor?.right.kind === "armor"
+        ? {
+            kind: "armor",
+            formula: armor.right.acFormula,
+            category: armor.right.category,
+          }
         : defaultState.base,
-    bonuses: [
-      ...(shield?.kind === "shield"
-        ? [
-            {
-              kind: "shield" as const,
-              bonus: armorClassDelta(shield.armorClassProjection.bonus),
-              handUse: shield.armorClassProjection.handUse,
-              trainingRequired: shield.armorClassProjection.trainingRequired,
-              sourceUnitId: shield.id,
-            },
-          ]
-        : []),
-      ...characterBuildUnitRefs(build, unitLibrary).flatMap((ref) => {
-        const unit = unitLibrary.requireUnit(ref.unitId);
-        return armorDefenseBonus(unit);
-      }),
-    ],
+    bonuses,
     armorTraining: new Set(build.armorTraining),
     leftHandUse:
-      shield?.kind === "shield"
+      shield?.right.kind === "shield"
         ? "shield"
         : loadout.offHandWeapon == null
           ? "free"
           : "offWeapon",
     rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
-  };
+  });
 }
 
 function armorDefenseBonus(unit: UnitRecord): ArmorClassState["bonuses"] {
@@ -303,10 +370,13 @@ function armorDefenseBonus(unit: UnitRecord): ArmorClassState["bonuses"] {
 function characterAttackActionOption(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): CharacterWeaponAttackActionOption | null {
+): Either.Either<
+  CharacterWeaponAttackActionOption | null,
+  BattleCreatureInitIssue
+> {
   const selectedWeapon = build.equipment.weapon?.unitId;
   if (selectedWeapon == null) {
-    return null;
+    return Either.right(null);
   }
 
   return characterWeaponAttackActionOption(selectedWeapon, build, unitLibrary);
@@ -315,36 +385,49 @@ function characterAttackActionOption(
 function characterOffHandAttackActionOption(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): CharacterWeaponAttackActionOption | undefined {
+): Either.Either<
+  CharacterWeaponAttackActionOption | undefined,
+  BattleCreatureInitIssue
+> {
   const selectedWeapon = build.equipment.offHandWeapon?.unitId;
   if (selectedWeapon == null) {
-    return undefined;
+    return Either.right(undefined);
   }
 
-  return (
-    characterWeaponAttackActionOption(selectedWeapon, build, unitLibrary) ??
-    undefined
+  const option = characterWeaponAttackActionOption(
+    selectedWeapon,
+    build,
+    unitLibrary,
   );
+  return Either.isLeft(option)
+    ? battleCreatureInitIssue(option.left.message)
+    : Either.right(option.right ?? undefined);
 }
 
 function characterWeaponAttackActionOption(
   unitId: UnitRecord["id"],
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): CharacterWeaponAttackActionOption | null {
-  const unit = unitLibrary.requireUnit(unitId);
-  if (unit.kind !== "weapon" || unit.damage.kind !== "dice") {
-    return null;
+): Either.Either<
+  CharacterWeaponAttackActionOption | null,
+  BattleCreatureInitIssue
+> {
+  const unit = getRequiredUnit(unitLibrary, unitId);
+  if (Either.isLeft(unit)) {
+    return battleCreatureInitIssue(unit.left.message);
+  }
+  if (unit.right.kind !== "weapon" || unit.right.damage.kind !== "dice") {
+    return Either.right(null);
   }
 
-  return {
+  return Either.right({
     kind: "weapon",
-    weapon: unit,
+    weapon: unit.right,
     ability: "str",
     abilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores.str),
     ),
-  };
+  });
 }
 
 function characterBaseUnarmedStrikeActionOption(
@@ -372,12 +455,17 @@ function characterBaseUnarmedStrikeActionOption(
 function spellcastingAllowedByArmorTraining(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): boolean {
-  const armor = build.equipment.armor
-    ? unitLibrary.requireUnit(build.equipment.armor)
-    : undefined;
-  return (
-    armor?.kind !== "armor" || build.armorTraining.includes(armor.category)
+): Either.Either<boolean, BattleCreatureInitIssue> {
+  const armor =
+    build.equipment.armor == null
+      ? undefined
+      : getRequiredUnit(unitLibrary, build.equipment.armor);
+  if (armor !== undefined && Either.isLeft(armor)) {
+    return battleCreatureInitIssue(armor.left.message);
+  }
+  return Either.right(
+    armor?.right.kind !== "armor" ||
+      build.armorTraining.includes(armor.right.category),
   );
 }
 
@@ -385,29 +473,46 @@ function characterSpellcasting(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
-}): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["spellcasting"]
+}): Either.Either<
+  NonNullable<
+    Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["spellcasting"]
+  >,
+  BattleCreatureInitIssue
 > {
   const { build, unitLibrary } = input;
   const spellcasting = build.spellcasting;
   if (spellcasting === undefined) {
-    throw new Error("Character build does not have spellcasting.");
+    return battleCreatureInitIssue(
+      "Character build does not have spellcasting.",
+    );
+  }
+  const canCastSpells = spellcastingAllowedByArmorTraining(build, unitLibrary);
+  if (Either.isLeft(canCastSpells)) {
+    return battleCreatureInitIssue(canCastSpells.left.message);
+  }
+  const cantrips = spellRecordsForIds(unitLibrary, spellcasting.cantrips);
+  if (Either.isLeft(cantrips)) {
+    return battleCreatureInitIssue(cantrips.left.message);
+  }
+  const preparedSpells = spellRecordsForIds(
+    unitLibrary,
+    spellcasting.preparedSpells,
+  );
+  if (Either.isLeft(preparedSpells)) {
+    return battleCreatureInitIssue(preparedSpells.left.message);
   }
 
-  return {
+  return Either.right({
     spellcastingAbilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores[spellcasting.spellcastingAbility]),
     ),
     proficiencyBonus: proficiencyBonus(characterLevel(build)),
-    canCastSpells: spellcastingAllowedByArmorTraining(build, unitLibrary),
-    cantrips: spellRecordsForIds(unitLibrary, spellcasting.cantrips),
-    preparedSpells: spellRecordsForIds(
-      unitLibrary,
-      spellcasting.preparedSpells,
-    ),
+    canCastSpells: canCastSpells.right,
+    cantrips: cantrips.right,
+    preparedSpells: preparedSpells.right,
     spellSlots: spellcasting.spellSlots.map((slot) => ({
       spellLevel: spellSlotLevel(slot.spellLevel),
       count: resourceCount(slot.count),
@@ -420,7 +525,7 @@ function characterSpellcasting(input: {
             expended: slot.expended,
           })),
         }),
-  };
+  });
 }
 
 function characterLevel(build: CharacterBuild): number {
@@ -430,12 +535,27 @@ function characterLevel(build: CharacterBuild): number {
 function spellRecordsForIds(
   unitLibrary: UnitCatalog,
   unitIds: readonly UnitRecord["id"][],
-): readonly SpellRecord[] {
-  return unitIds.map((unitId) => {
-    const unit = unitLibrary.requireUnit(unitId);
-    if (unit.kind !== "spell") {
-      throw new Error(`Expected spell Unit: ${unitId}`);
+): Either.Either<readonly SpellRecord[], BattleCreatureInitIssue> {
+  const spells: SpellRecord[] = [];
+  for (const unitId of unitIds) {
+    const unit = getRequiredUnit(unitLibrary, unitId);
+    if (Either.isLeft(unit)) {
+      return battleCreatureInitIssue(unit.left.message);
     }
-    return unit;
-  });
+    if (unit.right.kind !== "spell") {
+      return battleCreatureInitIssue(`Expected spell Unit: ${unitId}`);
+    }
+    spells.push(unit.right);
+  }
+  return Either.right(spells);
+}
+
+function getRequiredUnit(
+  unitLibrary: UnitCatalog,
+  unitId: UnitRecord["id"],
+): Either.Either<UnitRecord, BattleCreatureInitIssue> {
+  const unit = unitLibrary.getUnit(unitId);
+  return Option.isSome(unit)
+    ? Either.right(unit.value)
+    : battleCreatureInitIssue(`Unknown Unit id: ${unitId}`);
 }

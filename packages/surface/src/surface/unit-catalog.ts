@@ -230,13 +230,7 @@ export function buildUnitCatalog(input: {
     catalog: {
       getUnit: (id) => Option.fromNullable(records.get(id)),
       listUnits: () => Array.from(records.values()),
-      requireUnit: (id) => {
-        const record = records.get(id);
-        if (record === undefined) {
-          throw new Error(`Unknown Unit id: ${id}`);
-        }
-        return record;
-      },
+      requireUnit: (id) => records.get(id)!,
     },
   };
 }

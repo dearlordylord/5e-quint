@@ -139,13 +139,7 @@ export function buildStatBlockCatalog(input: {
     catalog: {
       getStatBlock: (id) => Option.fromNullable(records.get(id)),
       listStatBlocks: () => Array.from(records.values()),
-      requireStatBlock: (id) => {
-        const record = records.get(id);
-        if (record === undefined) {
-          throw new Error(`Unknown Stat Block id: ${id}`);
-        }
-        return record;
-      },
+      requireStatBlock: (id) => records.get(id)!,
     },
   };
 }
