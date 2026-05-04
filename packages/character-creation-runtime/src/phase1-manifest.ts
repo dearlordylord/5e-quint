@@ -73,9 +73,11 @@ function progressionOptionClassPath(progression: CharacterProgression): string {
     startingClassUnitId(progression),
     ...progression.advancements.map((entry) => entry.classUnitId),
   ];
-  return classIds.every((classId) => classId === classIds[0])
+  const optionClassPathSeparator = "|";
+  return classIds.every((classId) => classId === classIds[0]) &&
+    !classIds[0].includes(optionClassPathSeparator)
     ? classIds[0]
-    : classIds.join("__then__");
+    : classIds.map(encodeURIComponent).join(optionClassPathSeparator);
 }
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID),

@@ -54,6 +54,11 @@ export type CharacterProgression = {
   readonly advancements: readonly CharacterProgressionEntry[];
 };
 
+export type CharacterProgressionClassLevel = {
+  readonly classUnitId: ClassUnitId;
+  readonly classLevel: CharacterClassLevel;
+};
+
 export type CharacterProgressionLevelIssue =
   | {
       readonly code: "invalidCharacterClassLevel";
@@ -202,4 +207,13 @@ export function progressionClassUnitIds(
       ...progression.advancements.map((entry) => entry.classUnitId),
     ]),
   ];
+}
+
+export function progressionClassLevels(
+  progression: CharacterProgression,
+): readonly CharacterProgressionClassLevel[] {
+  return progressionClassUnitIds(progression).map((unitId) => ({
+    classUnitId: unitId,
+    classLevel: characterClassLevel(classLevelForUnit(progression, unitId)),
+  }));
 }

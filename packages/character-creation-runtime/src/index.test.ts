@@ -20,15 +20,12 @@ import {
   computeTotalLevel,
   classUnitIdFromUnitId,
   createCharacterDraft,
-  createCharacterProgression,
-  createSingleClassProgression,
   creationChoiceOptionId,
   creationHoleId,
   discoverCreationHoles,
   draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
-  characterClassLevel,
   startingClassUnitId,
   unitChoiceKey,
   type CharacterDraft,
@@ -42,6 +39,8 @@ import {
   type CharacterProgression,
   type ClassHitPointRule,
 } from "./index.ts";
+import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
+import { classUnitId } from "./character-progression-types.ts";
 import {
   finalizedBuildEquipment,
   supportedChoiceHolesBySource,
@@ -87,10 +86,20 @@ function testProgression(
       `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.left)}`,
     );
   }
-  const result = createSingleClassProgression({
-    classUnitId: parsedClassUnitId.right,
-    classLevel: characterClassLevel(classLevel),
-    hitPointRule,
+  if (classLevel === 1 && hitPointRule.tag !== "levelOneMaximumHitDie") {
+    throw new Error("Invalid test progression: level 1 requires maximum HP.");
+  }
+  if (classLevel > 1 && hitPointRule.tag !== "fixedHigherLevelGain") {
+    throw new Error(
+      "Invalid test progression: post-start levels require fixed HP.",
+    );
+  }
+  const result = parseCharacterProgressionShape({
+    startingClass: parsedClassUnitId.right,
+    advancements: Array.from({ length: classLevel - 1 }, () => ({
+      classUnitId: parsedClassUnitId.right,
+      hitPointRule: { tag: "fixedHigherLevelGain" as const },
+    })),
   });
   if (Either.isLeft(result)) {
     throw new Error(`Invalid test progression: ${JSON.stringify(result.left)}`);
@@ -1588,7 +1597,7 @@ describe("character creation finalization", () => {
 
   test("does not treat Fighter followed by Wizard as supported Fighter 2", () => {
     const fighterThenWizard = expectRight(
-      createCharacterProgression({
+      parseCharacterProgressionShape({
         startingClass: expectRight(
           classUnitIdFromUnitId({
             unitLibrary,
@@ -1613,6 +1622,35 @@ describe("character creation finalization", () => {
     expect(isSupportedProgression(fighterThenWizard)).toBe(false);
     expect(progressionOptionId(fighterThenWizard)).not.toBe(
       progressionOptionId(fighterTwo),
+    );
+  });
+
+  test("uses collision-resistant progression option ids for class paths", () => {
+    const singleClassWithSeparator = expectRight(
+      parseCharacterProgressionShape({
+        startingClass: classUnitId("class_alpha|class_beta"),
+        advancements: [
+          {
+            classUnitId: classUnitId("class_alpha|class_beta"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      }),
+    );
+    const multiclassPath = expectRight(
+      parseCharacterProgressionShape({
+        startingClass: classUnitId("class_alpha"),
+        advancements: [
+          {
+            classUnitId: classUnitId("class_beta"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      }),
+    );
+
+    expect(progressionOptionId(singleClassWithSeparator)).not.toBe(
+      progressionOptionId(multiclassPath),
     );
   });
 

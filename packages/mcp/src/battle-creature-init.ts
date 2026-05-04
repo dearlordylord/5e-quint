@@ -20,9 +20,8 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
-  classLevelForUnit,
   computeTotalLevel,
-  startingClassUnitId,
+  progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -217,24 +216,29 @@ function characterBattleClassLevels(
   >["classLevels"],
   BattleCreatureInitIssue
 > {
-  const classUnitId = startingClassUnitId(build.progression);
-  const classUnit = getRequiredUnit(unitLibrary, classUnitId);
-  if (Either.isLeft(classUnit)) {
-    return battleCreatureInitIssue(classUnit.left.message);
-  }
-  if (classUnit.right.kind !== "class") {
-    return battleCreatureInitIssue(`Expected class Unit: ${classUnitId}`);
-  }
-
-  return Either.right([
-    {
-      className: classUnit.right.className,
-      level: classLevelForUnit(build.progression, classUnitId),
-    },
-  ] satisfies Extract<
+  type CharacterBattleClassLevels = Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
-  >["classLevels"]);
+  >["classLevels"];
+  const classLevels: CharacterBattleClassLevels[number][] = [];
+
+  for (const entry of progressionClassLevels(build.progression)) {
+    const classUnit = getRequiredUnit(unitLibrary, entry.classUnitId);
+    if (Either.isLeft(classUnit)) {
+      return battleCreatureInitIssue(classUnit.left.message);
+    }
+    if (classUnit.right.kind !== "class") {
+      return battleCreatureInitIssue(
+        `Expected class Unit: ${entry.classUnitId}`,
+      );
+    }
+    classLevels.push({
+      className: classUnit.right.className,
+      level: entry.classLevel,
+    });
+  }
+
+  return Either.right(classLevels satisfies CharacterBattleClassLevels);
 }
 
 function characterBattleResources(

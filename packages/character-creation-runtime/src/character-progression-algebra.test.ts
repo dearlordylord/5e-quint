@@ -5,18 +5,18 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 
-import { characterClassLevel } from "./types.ts";
 import {
   classNameFromClassUnit,
   classUnitIdFromUnitId,
   classUnitIdToClassName,
-  createCharacterProgression,
-  createSingleClassProgression,
+  parseCharacterProgressionShape,
 } from "./character-progression-algebra.ts";
 import {
   classLevelForUnit,
   computeTotalLevel,
+  characterTotalLevelHitPointRule,
 } from "./character-progression-types.ts";
+import { characterClassLevel } from "./types.ts";
 
 function expectRight<T, E>(result: Either.Either<T, E>): T {
   expect(Either.isRight(result)).toBe(true);
@@ -40,7 +40,7 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 describe("character progression algebra", () => {
-  it("derives a level-1 Fighter from a parsed class Unit id", () => {
+  it("parses level-1 Fighter progression from a parsed class Unit id", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
@@ -48,10 +48,9 @@ describe("character progression algebra", () => {
       }),
     );
     const progression = expectRight(
-      createSingleClassProgression({
-        classUnitId: fighterClassUnitId,
-        classLevel: characterClassLevel(1),
-        hitPointRule: { tag: "levelOneMaximumHitDie" },
+      parseCharacterProgressionShape({
+        startingClass: fighterClassUnitId,
+        advancements: [],
       }),
     );
 
@@ -62,7 +61,7 @@ describe("character progression algebra", () => {
     expect(computeTotalLevel(progression)).toBe(1);
   });
 
-  it("derives Fighter 2 with explicit fixed HP evidence", () => {
+  it("parses same-class post-start advancement with explicit fixed HP evidence", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
@@ -70,10 +69,14 @@ describe("character progression algebra", () => {
       }),
     );
     const progression = expectRight(
-      createSingleClassProgression({
-        classUnitId: fighterClassUnitId,
-        classLevel: characterClassLevel(2),
-        hitPointRule: { tag: "fixedHigherLevelGain" },
+      parseCharacterProgressionShape({
+        startingClass: fighterClassUnitId,
+        advancements: [
+          {
+            classUnitId: fighterClassUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
       }),
     );
 
@@ -104,7 +107,7 @@ describe("character progression algebra", () => {
     );
 
     const progression = expectRight(
-      createCharacterProgression({
+      parseCharacterProgressionShape({
         startingClass: fighterClassUnitId,
         advancements: [
           {
@@ -176,10 +179,12 @@ describe("character progression algebra", () => {
     );
 
     expect(
-      createSingleClassProgression({
-        classUnitId: fighterClassUnitId,
-        classLevel: 21 as ReturnType<typeof characterClassLevel>,
-        hitPointRule: { tag: "fixedHigherLevelGain" },
+      parseCharacterProgressionShape({
+        startingClass: fighterClassUnitId,
+        advancements: Array.from({ length: 20 }, () => ({
+          classUnitId: fighterClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        })),
       }),
     ).toEqual(
       Either.left({
@@ -190,17 +195,9 @@ describe("character progression algebra", () => {
   });
 
   it("returns typed issues for HP Hit Point rule evidence that contradicts level", () => {
-    const fighterClassUnitId = expectRight(
-      classUnitIdFromUnitId({
-        unitLibrary,
-        classUnitId: "class_fighter",
-      }),
-    );
-
     expect(
-      createSingleClassProgression({
-        classUnitId: fighterClassUnitId,
-        classLevel: characterClassLevel(2),
+      characterTotalLevelHitPointRule({
+        totalLevel: characterClassLevel(2),
         hitPointRule: { tag: "levelOneMaximumHitDie" },
       }),
     ).toEqual(

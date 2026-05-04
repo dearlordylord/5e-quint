@@ -161,15 +161,19 @@ function evalPrereq(
 }
 
 /**
- * Must meet prerequisites for both current and new classes.
+ * Must meet prerequisites for every class the character already has and the
+ * class they are adding.
  */
 export function canMulticlass(
   scores: MulticlassAbilityScores,
-  currentClass: ClassName,
+  currentClasses: readonly ClassName[],
   newClass: ClassName,
 ): boolean {
-  return (
-    meetsMulticlassPrerequisite(scores, currentClass) &&
-    meetsMulticlassPrerequisite(scores, newClass)
+  return uniqueClasses([...currentClasses, newClass]).every((className) =>
+    meetsMulticlassPrerequisite(scores, className),
   );
+}
+
+function uniqueClasses(classes: readonly ClassName[]): readonly ClassName[] {
+  return [...new Set(classes)];
 }

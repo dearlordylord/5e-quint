@@ -19,7 +19,6 @@ import {
   characterDraftId,
   characterClassLevel,
   classUnitIdFromClassUnit,
-  createSingleClassProgression,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
@@ -191,6 +190,78 @@ describe("MCP server route", () => {
         },
       ]),
     );
+  });
+
+  test("projects all progression class levels at the battle boundary", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const wizard = root.unitLibrary.requireUnit("class_wizard");
+    if (wizard.kind !== "class") {
+      throw new Error("Expected Wizard class Unit.");
+    }
+    const wizardClassUnitId = expectRight(classUnitIdFromClassUnit(wizard));
+    const multiclassBuild: CharacterBuild = {
+      ...build,
+      progression: {
+        startingClass: expectRight(
+          classUnitIdFromClassUnit(root.unitLibrary.requireUnit("class_fighter")),
+        ),
+        advancements: [
+          {
+            classUnitId: wizardClassUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      },
+      hitPoints: {
+        maximum: hp(
+          build.hitPoints.maximum +
+            Math.max(
+              1,
+              Math.floor(wizard.hitPointDie / 2) +
+                1 +
+                Math.floor((build.abilityScores.con - 10) / 2),
+            ),
+        ),
+        hitDice: [
+          ...build.hitPoints.hitDice,
+          {
+            classUnitId: wizard.id,
+            dieSize: hitDieSize(wizard.hitPointDie),
+            total: hitDieTotal(1),
+          },
+        ],
+      },
+    };
+
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
+      battleId: battleId("battle-root-multiclass"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-wizard-character"),
+        displayName: "Orc Soldier Fighter / Wizard",
+        build: multiclassBuild,
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: root.unitLibrary,
+    });
+
+    expect(state.combatants.get(fighterId)?.origin).toMatchObject({
+      kind: "character",
+      classLevels: [
+        { className: "fighter", level: 1 },
+        { className: "wizard", level: 1 },
+      ],
+    });
   });
 
   test("derives base Unarmed Strike when no weapon is selected", () => {
@@ -3561,16 +3632,14 @@ function characterBuildForClassProgression(input: {
   readonly keepClassChoices: boolean;
 }): CharacterBuild {
   const classLevel = characterClassLevel(input.level);
-  const progression = expectRight(
-    createSingleClassProgression({
-      classUnitId: expectRight(classUnitIdFromClassUnit(input.classUnit)),
-      classLevel,
-      hitPointRule:
-        classLevel === 1
-          ? { tag: "levelOneMaximumHitDie" }
-          : { tag: "fixedHigherLevelGain" },
-    }),
-  );
+  const classUnitId = expectRight(classUnitIdFromClassUnit(input.classUnit));
+  const progression = {
+    startingClass: classUnitId,
+    advancements: Array.from({ length: classLevel - 1 }, () => ({
+      classUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" as const },
+    })),
+  };
   return {
     ...input.base,
     progression,

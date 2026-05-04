@@ -2,7 +2,6 @@ import { Either, Option } from "effect";
 import {
   CHARACTER_CLASS_LEVELS,
   characterClassLevel,
-  type CharacterClassLevel,
   type ClassName,
 } from "@dnd/shared/game-facts";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
@@ -10,13 +9,11 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   characterProgressionEntry,
-  characterTotalLevelHitPointRule,
   classUnitId,
   type CharacterProgression,
   type CharacterProgressionLevelIssue,
   type CharacterProgressionEntry,
   type ClassUnitId,
-  type ClassHitPointRule,
   type FixedHigherLevelClassHitPointRule,
 } from "./character-progression-types.ts";
 
@@ -35,7 +32,7 @@ export type ClassUnitNameIssue =
       readonly unitKind: UnitRecord["kind"];
     };
 
-export function createCharacterProgression(input: {
+export function parseCharacterProgressionShape(input: {
   readonly startingClass: ClassUnitId;
   readonly advancements: readonly {
     readonly classUnitId: ClassUnitId;
@@ -66,44 +63,6 @@ export function createCharacterProgression(input: {
   return Either.right({
     startingClass: input.startingClass,
     advancements,
-  });
-}
-
-export function createSingleClassProgression(input: {
-  readonly classUnitId: ClassUnitId;
-  readonly classLevel: CharacterClassLevel;
-  readonly hitPointRule: ClassHitPointRule;
-}): Either.Either<CharacterProgression, CharacterProgressionIssue> {
-  const classLevelHitPointRule = characterTotalLevelHitPointRule({
-    totalLevel: input.classLevel,
-    hitPointRule: input.hitPointRule,
-  });
-  if (Either.isLeft(classLevelHitPointRule)) {
-    return Either.left(classLevelHitPointRule.left);
-  }
-  if (input.classLevel === 1) {
-    return createCharacterProgression({
-      startingClass: input.classUnitId,
-      advancements: [],
-    });
-  }
-  if (
-    classLevelHitPointRule.right.hitPointRule.tag !== "fixedHigherLevelGain"
-  ) {
-    return Either.left({
-      code: "invalidHitPointRuleForLevel",
-      totalLevel: input.classLevel,
-      hitPointRule: input.hitPointRule,
-    });
-  }
-
-  const hitPointRule = classLevelHitPointRule.right.hitPointRule;
-  return createCharacterProgression({
-    startingClass: input.classUnitId,
-    advancements: Array.from({ length: input.classLevel - 1 }, () => ({
-      classUnitId: input.classUnitId,
-      hitPointRule,
-    })),
   });
 }
 

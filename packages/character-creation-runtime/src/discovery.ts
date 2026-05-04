@@ -1,4 +1,4 @@
-import { Either, Match, Option } from "effect";
+import { Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
   STANDARD_LANGUAGES,
@@ -88,8 +88,6 @@ import {
   classUnitId,
   type CharacterProgression,
 } from "./character-progression-types.ts";
-import { createSingleClassProgression } from "./character-progression-algebra.ts";
-import { characterClassLevel } from "@dnd/shared/game-facts";
 
 const SRD_GAMING_SET_OPTIONS = [
   {
@@ -961,11 +959,5 @@ function progressionOptionsForClassUnit(
 function levelOneProgressionForClassUnit(
   unitId: UnitRecord["id"],
 ): readonly CharacterProgression[] {
-  const progression = createSingleClassProgression({
-    classUnitId: classUnitId(unitId),
-    classLevel: characterClassLevel(1),
-    hitPointRule: { tag: "levelOneMaximumHitDie" },
-  });
-
-  return Either.isRight(progression) ? [progression.right] : [];
+  return [{ startingClass: classUnitId(unitId), advancements: [] }];
 }

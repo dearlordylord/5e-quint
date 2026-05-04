@@ -94,14 +94,55 @@ describe("multiclass-prerequisite-algebra", () => {
 
   it("requires current and new class prerequisites for multiclassing", () => {
     expect(
-      canMulticlass(scores({ str: 13, wis: 13 }), "barbarian", "druid"),
+      canMulticlass(scores({ str: 13, wis: 13 }), ["barbarian"], "druid"),
     ).toBe(true);
-    expect(canMulticlass(scores({ wis: 13 }), "barbarian", "druid")).toBe(
-      false,
-    );
-    expect(canMulticlass(scores({ str: 13 }), "barbarian", "druid")).toBe(
-      false,
-    );
+    expect(
+      canMulticlass(scores({ wis: 13 }), ["barbarian"], "druid"),
+    ).toBe(false);
+    expect(
+      canMulticlass(scores({ str: 13 }), ["barbarian"], "druid"),
+    ).toBe(false);
+  });
+
+  it("requires all current class prerequisites for multiclassing", () => {
+    expect(
+      canMulticlass(
+        scores({ dex: 13, wis: 13, int: 13 }),
+        ["rogue", "druid"],
+        "wizard",
+      ),
+    ).toBe(true);
+    expect(
+      canMulticlass(
+        scores({ wis: 13, int: 13 }),
+        ["rogue", "druid"],
+        "wizard",
+      ),
+    ).toBe(false);
+    expect(
+      canMulticlass(
+        scores({ dex: 13, int: 13 }),
+        ["rogue", "druid"],
+        "wizard",
+      ),
+    ).toBe(false);
+    expect(
+      canMulticlass(
+        scores({ dex: 13, wis: 13 }),
+        ["rogue", "druid"],
+        "wizard",
+      ),
+    ).toBe(false);
+  });
+
+  it("does not double-count repeated class names", () => {
+    expect(
+      canMulticlass(
+        scores({ str: 13, dex: 13 }),
+        ["fighter", "fighter"],
+        "fighter",
+      ),
+    ).toBe(true);
   });
 
   it("rejects invalid score maps at the parsing boundary", () => {

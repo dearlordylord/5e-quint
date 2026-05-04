@@ -58,11 +58,10 @@ import type {
 import { creationChoiceOptionId } from "./types.ts";
 import {
   classUnitId,
+  characterProgressionEntry,
   startingClassUnitId,
   type CharacterProgression,
-  type ClassHitPointRule,
 } from "./character-progression-types.ts";
-import { createSingleClassProgression } from "./character-progression-algebra.ts";
 import { characterClassLevel } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -137,40 +136,38 @@ const SUPPORTED_DRAFT_CHOICE_PATHS = [
 type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
 const SUPPORTED_PROGRESSIONS = [
-  supportedProgression({
-    classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
-    classLevel: characterClassLevel(1),
-    hitPointRule: { tag: "levelOneMaximumHitDie" },
-  }),
-  supportedProgression({
-    classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
-    classLevel: characterClassLevel(2),
-    hitPointRule: { tag: "fixedHigherLevelGain" },
-  }),
-  supportedProgression({
-    classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID,
-    classLevel: characterClassLevel(1),
-    hitPointRule: { tag: "levelOneMaximumHitDie" },
-  }),
+  supportedLevelOneProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  supportedLevelOneProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
 ] as const satisfies ReadonlyArray<CharacterProgression>;
 
-function supportedProgression(input: {
-  readonly classUnitId: UnitRecord["id"];
-  readonly classLevel: ReturnType<typeof characterClassLevel>;
-  readonly hitPointRule: ClassHitPointRule;
-}): CharacterProgression {
-  const progression = createSingleClassProgression({
-    classUnitId: classUnitId(input.classUnitId),
-    classLevel: input.classLevel,
-    hitPointRule: input.hitPointRule,
+function supportedLevelOneProgression(
+  supportedClassUnitId: UnitRecord["id"],
+): CharacterProgression {
+  return {
+    startingClass: classUnitId(supportedClassUnitId),
+    advancements: [],
+  };
+}
+
+function supportedSameClassSecondLevelProgression(
+  supportedClassUnitId: UnitRecord["id"],
+): CharacterProgression {
+  const advancement = characterProgressionEntry({
+    classUnitId: classUnitId(supportedClassUnitId),
+    characterLevel: characterClassLevel(2),
+    hitPointRule: { tag: "fixedHigherLevelGain" },
   });
-  if (Either.isLeft(progression)) {
+  if (Either.isLeft(advancement)) {
     throw new Error(
-      `Invalid supported progression: ${JSON.stringify(progression.left)}`,
+      `Invalid supported progression advancement: ${JSON.stringify(advancement.left)}`,
     );
   }
 
-  return progression.right;
+  return {
+    startingClass: classUnitId(supportedClassUnitId),
+    advancements: [advancement.right],
+  };
 }
 
 const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
