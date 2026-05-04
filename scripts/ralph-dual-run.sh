@@ -905,6 +905,7 @@ OpenCode local-model guardrails:
 - Do not switch to another plan task, support-profile cleanup, phase-manifest cleanup, or broad architecture work unless the task body below explicitly requires it.
 - If a planning/todo tool rejects your schema, stop using that tool and continue with shell reads/edits.
 - Do not spawn Explore Agents, subagents, background agents, or delegated agents. Do the repository reads and edits directly in this process.
+- Do not ask the user what to do. Ralph already gave you the task. Implement it, leave a correct partial diff, or report Plan Impact: update-required with concrete narrowing guidance.
 - Start by making the smallest task-relevant product diff, then iterate with verification. Do not spend the whole run planning.
 - If the task is too large to complete, leave a focused partial diff only when it is correct and useful; otherwise report Plan Impact: update-required with concrete narrowing guidance.
 
