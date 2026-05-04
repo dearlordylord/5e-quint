@@ -103,4 +103,6 @@ export {
   type CharacterProgression,
   type CharacterProgressionClassLevels,
   type CharacterProgressionUnitIdInput,
+  type PostStartAdvancementLevelAbsent,
+  type PostStartAdvancementLevelResult,
 } from "./character-progression-algebra.ts";

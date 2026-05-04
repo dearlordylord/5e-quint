@@ -1,3 +1,4 @@
+import { Either } from "effect";
 import {
   CLASS_NAMES,
   characterClassLevel,
@@ -23,6 +24,15 @@ export type CharacterProgressionUnitIdInput = {
   readonly startingClassUnitId: UnitRecord["id"];
   readonly postStartAdvancementClassUnitIds: readonly UnitRecord["id"][];
 };
+
+export type PostStartAdvancementLevelAbsent = {
+  readonly tag: "postStartAdvancementAbsent";
+  readonly postStartAdvancementIndex: number;
+};
+export type PostStartAdvancementLevelResult = Either.Either<
+  CharacterClassLevel,
+  PostStartAdvancementLevelAbsent
+>;
 
 export type AdvancementSelectionProgressionInput = {
   readonly unitLibrary: UnitCatalog;
@@ -51,19 +61,20 @@ export function computeTotalLevel(
 
 export function postStartAdvancementLevel(
   progression: CharacterProgression,
-  postStartPosition: number,
-): CharacterClassLevel {
+  postStartAdvancementIndex: number,
+): PostStartAdvancementLevelResult {
   if (
-    !Number.isInteger(postStartPosition) ||
-    postStartPosition < 0 ||
-    postStartPosition >= progression.advancements.length
+    !Number.isInteger(postStartAdvancementIndex) ||
+    postStartAdvancementIndex < 0 ||
+    postStartAdvancementIndex >= progression.advancements.length
   ) {
-    throw new Error(
-      `Post-start advancement position is outside this progression: ${postStartPosition}`,
-    );
+    return Either.left({
+      tag: "postStartAdvancementAbsent",
+      postStartAdvancementIndex,
+    });
   }
 
-  return characterClassLevel(postStartPosition + 2);
+  return Either.right(characterClassLevel(postStartAdvancementIndex + 2));
 }
 
 export function progressionClassLevels(
