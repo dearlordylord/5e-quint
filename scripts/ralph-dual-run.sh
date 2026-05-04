@@ -56,6 +56,10 @@ Options:
                           OpenCode primary agent used for implementation.
                           Overrides RALPH_OPENCODE_AGENT.
                           Default: ralph-implementer
+  --opencode-timeout-seconds <n>
+                          Wall-clock timeout for each OpenCode implementer
+                          round. Overrides RALPH_OPENCODE_TIMEOUT_SECONDS.
+                          Default: 600
   --skip-decider          Stop each task after implementation and review.
   -h, --help              Show this help.
 
@@ -72,6 +76,11 @@ Environment:
                           implement/review rounds; other implementers get 3.
   RALPH_OPENCODE_AGENT    OpenCode primary agent for implementation.
                           Default should deny task/subagent delegation.
+  RALPH_OPENCODE_TIMEOUT_SECONDS
+                          Wall-clock timeout for each OpenCode implementer
+                          round. Timed-out rounds are reviewed from the
+                          current worktree diff instead of blocking forever.
+                          Default: 600.
   RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
                           Default is quiet: persist logs to files only.
 EOF
@@ -185,6 +194,7 @@ implementation_runner="${RALPH_IMPLEMENTATION_RUNNER:-codex}"
 opencode_model="${RALPH_OPENCODE_MODEL:-ollama/qwen3.6:35b-a3b-64k}"
 opencode_ollama_base_url="${RALPH_OPENCODE_OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}"
 opencode_agent="${RALPH_OPENCODE_AGENT:-ralph-implementer}"
+opencode_timeout_seconds="${RALPH_OPENCODE_TIMEOUT_SECONDS:-600}"
 candidate_round_limit=3
 selected_tasks=()
 child_pids=()
@@ -310,6 +320,12 @@ while [[ $# -gt 0 ]]; do
       opencode_agent="$2"
       shift 2
       ;;
+    --opencode-timeout-seconds)
+      [[ $# -ge 2 ]] || die "--opencode-timeout-seconds requires a value"
+      [[ "$2" =~ ^[1-9][0-9]*$ ]] || die "--opencode-timeout-seconds must be a positive integer"
+      opencode_timeout_seconds="$2"
+      shift 2
+      ;;
     --skip-decider)
       skip_decider=true
       shift
@@ -357,6 +373,8 @@ esac
 if [[ "$implementation_runner" == "opencode" ]]; then
   require_cmd opencode
   require_cmd curl
+  require_cmd timeout
+  [[ "$opencode_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_OPENCODE_TIMEOUT_SECONDS must be a positive integer"
   ping_opencode_ollama_model
 fi
 
@@ -1213,24 +1231,30 @@ run_opencode() {
   local status=0
   local message
   local -a args=(run --dir "$workspace" --model "$opencode_model" --agent "$opencode_agent" --dangerously-skip-permissions)
+  local -a timeout_args=(timeout -k 15s "${opencode_timeout_seconds}s")
 
   message="$(<"$prompt")"
   if is_opencode_qwen_model; then
     message=$'/no_think\n\n'"$message"
   fi
 
-  log "opencode: $(quote_cmd opencode "${args[@]}") < $prompt"
+  log "opencode: $(quote_cmd "${timeout_args[@]}" opencode "${args[@]}") < $prompt"
   set +e
   if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
-    opencode "${args[@]}" "$message" 2>&1 | tee "$log_file" "$output_file" >&2
+    "${timeout_args[@]}" opencode "${args[@]}" "$message" 2>&1 | tee "$log_file" "$output_file" >&2
     status=${PIPESTATUS[0]}
   else
-    opencode "${args[@]}" "$message" >"$output_file" 2>"$log_file"
+    "${timeout_args[@]}" opencode "${args[@]}" "$message" >"$output_file" 2>"$log_file"
     status=$?
   fi
   set -e
 
-  if [[ "$status" -ne 0 ]]; then
+  if [[ "$status" -eq 124 || "$status" -eq 137 ]]; then
+    {
+      printf '\nOpenCode implementer timed out after %ss. Ralph will review the current worktree diff.\n' "$opencode_timeout_seconds"
+    } | tee -a "$log_file" "$output_file" >/dev/null
+    log "opencode timed out after ${opencode_timeout_seconds}s; partial final: $output_file log: $log_file"
+  elif [[ "$status" -ne 0 ]]; then
     log "opencode exited $status; full log: $log_file"
   else
     log "opencode completed; final: $output_file log: $log_file"
@@ -1291,6 +1315,20 @@ bootstrap_worktree_install() {
     mkdir -p "$(dirname "$workspace/$path")"
     ln -s "$install_source_root/$path" "$workspace/$path"
   done
+
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    [[ -e "$install_source_root/$path" || -L "$install_source_root/$path" ]] || continue
+    if [[ -e "$workspace/$path" || -L "$workspace/$path" ]]; then
+      rm -rf "$workspace/$path"
+    fi
+    mkdir -p "$(dirname "$workspace/$path")"
+    ln -s "$install_source_root/$path" "$workspace/$path"
+  done < <(
+    find "$install_source_root/packages" -mindepth 2 -maxdepth 2 -type d -name node_modules |
+      sed "s#^$install_source_root/##" |
+      sort
+  )
 }
 
 worktree_has_install() {
