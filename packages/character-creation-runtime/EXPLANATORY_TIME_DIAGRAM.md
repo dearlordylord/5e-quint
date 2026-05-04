@@ -79,7 +79,7 @@ sequenceDiagram
   Caller->>Runtime: discoverCreationHoles({ draft, unitLibrary })
   Runtime->>Runtime: discoverInitialDraftHoles()
   Runtime->>Runtime: hasDraftSelection(...) for each initial path
-  Runtime->>Runtime: draftHole("draft.primaryClass", unitLibrary)
+  Runtime->>Runtime: draftHole("draft.progression.initial", unitLibrary)
   Runtime->>Catalog: listUnits()
   Runtime->>Runtime: unitOption(class_fighter)
   Runtime->>Runtime: choiceHole(...) -> holeIdForSource(draftSource(path))
@@ -107,7 +107,7 @@ sequenceDiagram
   Runtime->>Runtime: fillKindMatchesHole(...)
   Runtime->>Runtime: wrongFillKindIssue(...) for text into choice hole
   Runtime->>Runtime: choiceFillIssues(...)
-  Runtime->>Runtime: invalidChoiceIssue(...) for background_soldier as primaryClass
+  Runtime->>Runtime: invalidChoiceIssue(...) for background_soldier as progression
   Runtime->>Runtime: unsupportedChoiceIssue(...) for valid but unsupported options
   Runtime->>Runtime: finalizeCharacterDraft(original draft)
   Runtime->>Runtime: discoverCreationHoles(original draft)
@@ -234,14 +234,14 @@ flowchart TD
   Discover --> Background
   Discover --> Equipment
 
-  Initial --> PClass["draftHole(draft.primaryClass)<br/>list class Units<br/>choice: class_fighter"]
+  Initial --> Progression["draftHole(draft.progression.initial)<br/>list class-backed progressions<br/>choice: class_fighter:level_1:hit_point_maximum"]
   Initial --> Bg["draftHole(draft.background)<br/>list background Units<br/>choice: background_soldier"]
   Initial --> Species["draftHole(draft.species)<br/>list species Units<br/>choice: species_orc"]
   Initial --> Scores["draftHole(draft.abilityScoreGeneration)<br/>abilityScores hole<br/>methods: standardArray, pointBuy"]
   Initial --> Lang["draftHole(draft.languages)<br/>choice exactly 2<br/>all standard languages except Common"]
   Initial --> Align["draftHole(draft.alignment)<br/>choice exactly 1<br/>nine alignment ids"]
 
-  Class --> NoClass["[] because selections.primaryClass is missing"]
+  Class --> NoClass["[] because selections.progression is missing"]
   Background --> NoBg["[] because selections.background is missing"]
   Equipment --> NoEquip["[] because hasSupportedCoinEquipmentPath is false"]
 ```
@@ -249,7 +249,7 @@ flowchart TD
 Each choice hole is built through `choiceHole`, which calls
 `holeIdForSource`. That gives ids like:
 
-- `cc:draft:draft.primaryClass`
+- `cc:draft:draft.progression.initial`
 - `cc:draft:draft.background`
 - `cc:draft:draft.species`
 - `cc:draft:draft.languages`
@@ -291,17 +291,17 @@ flowchart TD
 
 Examples from the tests:
 
-| Bad caller action                                                   | Function path                                                                                        | Issue               |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------- |
-| Uses `expectedRevision: draft.revision + 1`                         | `creationFillIssues` -> `staleRevisionIssue`                                                         | `staleRevision`     |
-| Sends two fills for `cc:draft:draft.primaryClass`                   | fill loop -> duplicate check -> `duplicateFillIssue`                                                 | `duplicateFill`     |
-| Sends a future equipment hole before equipment path is open         | fill loop -> `holes.find(...)` fails -> `unknownHoleIssue`                                           | `unknownHole`       |
-| Sends `{ kind: "abilityScores" }` for the primary class choice hole | `fillKindMatchesHole` -> `wrongFillKindIssue`                                                        | `wrongFillKind`     |
-| Sends `background_soldier` as the primary class option              | `choiceFillIssues` -> option not in class hole                                                       | `invalidChoice`     |
-| Sends `neutral_good` alignment in the phase-1 manifest              | `supportedDraftOptionIds("draft.alignment")` allows only `lawful_good`                               | `unsupportedChoice` |
-| Sends `Dwarvish, Elvish` languages                                  | valid language options, but `supportedDraftOptionIds("draft.languages")` allows only Dwarvish/Goblin | `unsupportedChoice` |
-| Sends only one language                                             | `choiceFillIssues` compares length to cardinality 2                                                  | `tooFewChoices`     |
-| Sends three languages                                               | `choiceFillIssues` compares length to cardinality 2                                                  | `tooManyChoices`    |
+| Bad caller action                                                 | Function path                                                                                        | Issue               |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------- |
+| Uses `expectedRevision: draft.revision + 1`                       | `creationFillIssues` -> `staleRevisionIssue`                                                         | `staleRevision`     |
+| Sends two fills for `cc:draft:draft.progression.initial`          | fill loop -> duplicate check -> `duplicateFillIssue`                                                 | `duplicateFill`     |
+| Sends a future equipment hole before equipment path is open       | fill loop -> `holes.find(...)` fails -> `unknownHoleIssue`                                           | `unknownHole`       |
+| Sends `{ kind: "abilityScores" }` for the progression choice hole | `fillKindMatchesHole` -> `wrongFillKindIssue`                                                        | `wrongFillKind`     |
+| Sends `background_soldier` as the progression option              | `choiceFillIssues` -> option not in progression hole                                                 | `invalidChoice`     |
+| Sends `neutral_good` alignment in the phase-1 manifest            | `supportedDraftOptionIds("draft.alignment")` allows only `lawful_good`                               | `unsupportedChoice` |
+| Sends `Dwarvish, Elvish` languages                                | valid language options, but `supportedDraftOptionIds("draft.languages")` allows only Dwarvish/Goblin | `unsupportedChoice` |
+| Sends only one language                                           | `choiceFillIssues` compares length to cardinality 2                                                  | `tooFewChoices`     |
+| Sends three languages                                             | `choiceFillIssues` compares length to cardinality 2                                                  | `tooManyChoices`    |
 
 The rejection still includes `finalizeCharacterDraft(original draft)`, which is
 usually `incomplete` because the original draft still has open holes.
@@ -318,8 +318,7 @@ flowchart TD
   Apply["applyCreationFills"]
   Dispatch["applyCreationFill"]
   DraftFill["applyDraftFill"]
-  Class["primaryClass<br/>requireSelectedUnitId -> class_fighter"]
-  Advancement["advancement.initial<br/>class_fighter:level_1:hit_point_maximum"]
+  Progression["progression<br/>class_fighter:level_1:hit_point_maximum"]
   Background["background<br/>requireSelectedUnitId -> background_soldier"]
   Species["species<br/>requireSelectedUnitId -> species_orc"]
   Scores["abilityScoreGeneration<br/>method standardArray<br/>assigned scores"]
@@ -329,15 +328,13 @@ flowchart TD
   Next["rediscover next holes"]
 
   Batch --> Fill --> Validate --> Apply --> Dispatch --> DraftFill
-  DraftFill --> Class
-  DraftFill --> Advancement
+  DraftFill --> Progression
   DraftFill --> Background
   DraftFill --> Species
   DraftFill --> Scores
   DraftFill --> Languages
   DraftFill --> Alignment
-  Class --> Rev
-  Advancement --> Rev
+  Progression --> Rev
   Background --> Rev
   Species --> Rev
   Scores --> Rev
@@ -346,10 +343,10 @@ flowchart TD
   Rev --> Next
 ```
 
-Important detail: picking `class_fighter` writes only `primaryClass`. Advancement
-is a separate `draft.advancement.initial` fill whose selected option writes
-`advancement.entries`, such as
-`[{ classUnitId: "class_fighter", classLevel: 1, hitPointAdvancement: { tag: "levelOneMaximum" } }]`.
+Important detail: the `draft.progression.initial` fill writes one durable
+`CharacterProgression`, such as `{ classUnitId: "class_fighter", classLevel: 1,
+hitPointAdvancement: { tag: "levelOneMaximum" } }`. There is no separate
+primary-class field or level-1 advancement entry to keep in sync.
 
 ## Legal Batch 2: Unit-Granted Holes
 
@@ -411,7 +408,7 @@ hole option. The runtime does not infer a Unit from a raw option id later.
 flowchart TD
   Equipment["discoverEquipmentHoles"]
   Gate["hasSupportedCoinEquipmentPath"]
-  ClassBg["primaryClass and background selected<br/>and both are supported"]
+  ClassBg["progression and background selected<br/>and both are supported"]
   Read["readClassCreationFacts<br/>readBackgroundCreationFacts"]
   ClassChoice["hasValidSelectionForHole(class equipment option_c)"]
   BgChoice["hasValidSelectionForHole(background equipment option_b)"]
@@ -489,10 +486,10 @@ sequenceDiagram
   Runtime->>Narrow: finalizedSelections(draft)
   Narrow-->>Runtime: FinalizedCharacterSelections
   Runtime->>Legal: temporarySupportedSliceIssues(selections, unitLibrary)
-  Legal->>Legal: primaryClass is supported
+  Legal->>Legal: progression class is supported
   Legal->>Legal: background === background_soldier
   Legal->>Legal: species === species_orc
-  Legal->>Legal: isSupportedSingleClassAdvancement(...)
+  Legal->>Legal: isSupportedSingleClassProgression(...)
   Legal->>Legal: isValidAbilityScoreAssignment(...)
   Legal->>Legal: isSupportedManifestBackgroundAbilityScoreIncrease(...)
   Legal->>Legal: sameOptionIdMultiset(languages, Common/Dwarvish/Goblin)
@@ -528,7 +525,7 @@ If typed fields exist but contradict the current executable support slice, the
 
 The ready `CharacterBuild` contains durable build facts only:
 
-- `advancement`: one level-1 Fighter entry.
+- `progression`: one level-1 Fighter progression.
 - `background`: Soldier.
 - `species`: Orc.
 - `originLanguages`: Common, Dwarvish, and Goblin.
@@ -601,7 +598,7 @@ functions. This inventory groups them by responsibility.
 | Batch validation          | `creationFillIssues`, `fillIssuesForHole`, `fillKindMatchesHole`, `choiceFillIssues`, `abilityScoreFillIssues`, `unsupportedHoleSelectionOptionId`, `supportedHoleOptionIds`, `supportedDraftOptionIds`, `supportedUnitOptionIds`                                                                                                                                                                                                                                                                                                        |
 | Issue constructors        | `wrongFillKindIssue`, `invalidChoiceIssue`, `invalidAbilityScoresIssue`, `tooFewChoicesIssue`, `tooManyChoicesIssue`, `unsupportedChoiceIssue`, `staleRevisionIssue`, `duplicateFillIssue`, `unknownHoleIssue`                                                                                                                                                                                                                                                                                                                           |
 | Applying accepted fills   | `applyCreationFills`, `requireHole`, `applyCreationFill`, `applyDraftFill`, `applyUnitFill`, `selectedChoiceOption`, `requireSelectedUnitIds`, `requireOneOptionId`, `requireSelectedUnitId`, `requireAcceptedChoiceOption`, `requireStartingLanguages`, `requireAlignmentSelection`, `requireBackgroundAbilityScoreIncreaseSelection`                                                                                                                                                                                                   |
-| Final legality            | `finalizedSelections`, `temporarySupportedSliceIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedSingleClassAdvancement`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
+| Final legality            | `finalizedSelections`, `temporarySupportedSliceIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedSingleClassProgression`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
 | Build projection          | `buildCharacterBuild`, `characterBuildUnitRefs`, `requireReadable`, `applyBackgroundAbilityScoreIncrease`, `abilityModifier`, `finalizedBuildSkillProficiencies`, `finalizedBuildToolProficiencies`, `resourceForFeature`, `unitRefs`, `uniqueValues`, `nonEmptyReadonlyArray`                                                                                                                                                                                                                                                           |
 
 ## Connascence Notes For Future Readers
@@ -609,7 +606,7 @@ functions. This inventory groups them by responsibility.
 Several facts must change together:
 
 - Support-profile constants such as `SUPPORTED_CLASS_UNIT_IDS`,
-  `SUPPORTED_ADVANCEMENTS`, supported option ids, and
+  `SUPPORTED_PROGRESSIONS`, supported option ids, and
   `temporarySupportedSliceIssues` all encode the currently executable creation
   slice.
 - `CreationHoleSource` and `holeIdForSource` are coupled by name and meaning:
@@ -619,9 +616,9 @@ Several facts must change together:
   `choiceSelectionMatchesHole`.
 - Equipment purchase and loadout are intentionally ordered: loadout holes depend
   on a valid purchase selection and `hasPurchasedUnit`.
-- `applyDraftFill("draft.advancement.initial")` creates the single-class
-  advancement entry selected from `supportedAdvancements`; finalization later
-  checks that entry with `isSupportedSingleClassAdvancement`.
+- `applyDraftFill("draft.progression.initial")` creates the single-class
+  progression selected from `SUPPORTED_PROGRESSIONS`; finalization later checks
+  that value with `isSupportedSingleClassProgression`.
 
 When extending the runtime beyond this Orc Soldier Fighter vertical, update the
 runtime, tests, Surface records/readers if needed, and

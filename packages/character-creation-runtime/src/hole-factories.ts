@@ -37,8 +37,7 @@ export function hasDraftSelection(
   path: CharacterDraftPath,
 ): boolean {
   return (
-    (path === "draft.primaryClass" && selections.primaryClass != null) ||
-    (path === "draft.advancement.initial" && selections.advancement != null) ||
+    (path === "draft.progression.initial" && selections.progression != null) ||
     (path === "draft.background" && selections.background != null) ||
     (path === "draft.species" && selections.species != null) ||
     (path === "draft.abilityScoreGeneration" &&

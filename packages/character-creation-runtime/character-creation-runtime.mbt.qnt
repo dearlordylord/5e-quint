@@ -17,7 +17,7 @@ module characterCreationRuntimeMbt {
   }
 
   pure val initialChoicesOnlyFills: List[Fill] = [
-    FChoice({ hole: HPrimaryClass, options: [OClassFighter] }),
+    FChoice({ hole: HProgression, options: [OClassFighterLevel1] }),
     FChoice({ hole: HBackground, options: [OBackgroundSoldier] }),
     FChoice({ hole: HSpecies, options: [OSpeciesOrc] }),
     FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
@@ -114,7 +114,7 @@ module characterCreationRuntimeMbt {
 
   action doFillInitialChoicesOnly =
     all {
-      qHoles.contains(HPrimaryClass),
+      qHoles.contains(HProgression),
       qHoles.contains(HBackground),
       qHoles.contains(HSpecies),
       qHoles.contains(HLanguages),
@@ -128,15 +128,9 @@ module characterCreationRuntimeMbt {
       recordResult(fillCreationHoles(qDraft, qDraft.revision, abilityScoresOnlyFills)),
     }
 
-  action doFillManifestAdvancement =
-    all {
-      qHoles.contains(HAdvancement),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestAdvancementFills)),
-    }
-
   action doFillManifestChoices =
     all {
-      qHoles == afterManifestAdvancementHoleIds,
+      qHoles == afterInitialHoleIds,
       recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestChoiceFills)),
     }
 
@@ -192,10 +186,10 @@ module characterCreationRuntimeMbt {
 
   action doRejectWrongKindPrimaryClass =
     all {
-      qHoles.contains(HPrimaryClass),
+      qHoles.contains(HProgression),
       recordResult(fillCreationHoles(qDraft, qDraft.revision, [
         FAbilityScores({
-          hole: HPrimaryClass,
+          hole: HProgression,
           method: StandardArray,
           scores: fighterStandardArray,
         }),
@@ -222,7 +216,6 @@ module characterCreationRuntimeMbt {
     doFillInitialManifest,
     doFillInitialChoicesOnly,
     doFillAbilityScoresOnly,
-    doFillManifestAdvancement,
     doFillManifestChoices,
     doFillManifestPurchase,
     doFillManifestLoadout,
@@ -240,8 +233,7 @@ module characterCreationRuntimeMbt {
     Set("init", "accepted", "rejected").contains(result)
 
   pure def draftFillCount(draft: Draft): int =
-    (if (draft.primaryClass) 1 else 0)
-      + (if (draft.advancement) 1 else 0)
+    (if (draft.progression) 1 else 0)
       + (if (draft.background) 1 else 0)
       + (if (draft.species) 1 else 0)
       + (if (draft.abilityScores) 1 else 0)
@@ -260,11 +252,10 @@ module characterCreationRuntimeMbt {
       + (if (draft.loadoutWeapon) 1 else 0)
 
   pure def draftPrerequisitesHold(draft: Draft): bool =
-    (draft.advancement implies draft.primaryClass)
-      and (draft.fighterSkills implies draft.primaryClass)
-      and (draft.fighterFightingStyle implies draft.primaryClass)
-      and (draft.fighterWeaponMastery implies draft.primaryClass)
-      and (draft.classEquipment implies draft.primaryClass)
+    (draft.fighterSkills implies draft.progression)
+      and (draft.fighterFightingStyle implies draft.progression)
+      and (draft.fighterWeaponMastery implies draft.progression)
+      and (draft.classEquipment implies draft.progression)
       and (draft.backgroundAbilityScoreIncrease implies draft.background)
       and (draft.backgroundTool implies draft.background)
       and (draft.backgroundEquipment implies draft.background)
@@ -274,8 +265,7 @@ module characterCreationRuntimeMbt {
       and (draft.loadoutWeapon implies draft.equipmentPurchase)
 
   pure def draftReadyFieldsHold(draft: Draft): bool =
-    draft.primaryClass
-      and draft.advancement
+    draft.progression
       and draft.background
       and draft.species
       and draft.abilityScores
@@ -295,7 +285,7 @@ module characterCreationRuntimeMbt {
 
   val invariant =
     qDraft.revision >= 0
-      and qDraft.revision <= 6
+      and qDraft.revision <= 5
       and qDraft.revision <= draftFillCount(qDraft)
       and (qLastResult == "init" implies qDraft == emptyDraft)
       and draftPrerequisitesHold(qDraft)

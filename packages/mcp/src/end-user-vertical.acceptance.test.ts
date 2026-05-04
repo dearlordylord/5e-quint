@@ -13,7 +13,7 @@ describe("end-user promoted MCP vertical", () => {
 
     const created = callTool(root, "create_character_draft", { draftId });
     expect(holeIds(created)).toEqual([
-      "cc:draft:draft.primaryClass",
+      "cc:draft:draft.progression.initial",
       "cc:draft:draft.background",
       "cc:draft:draft.species",
       "cc:draft:draft.abilityScoreGeneration",
@@ -25,7 +25,10 @@ describe("end-user promoted MCP vertical", () => {
       draftId,
       expectedRevision: 0,
       fills: [
-        choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "class_fighter:level_1:hit_point_maximum",
+        ),
         choiceFill("cc:draft:draft.background", "background_soldier"),
         choiceFill("cc:draft:draft.species", "species_orc"),
         {
@@ -41,7 +44,6 @@ describe("end-user promoted MCP vertical", () => {
 
     const choices = callTool(root, "discover_creation_holes", { draftId });
     expect(holeIds(choices)).toEqual([
-      "cc:draft:draft.advancement.initial",
       "cc:unit:class_fighter:fighter_skill_choices",
       "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
       "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
@@ -54,28 +56,6 @@ describe("end-user promoted MCP vertical", () => {
     callTool(root, "fill_creation_holes", {
       draftId,
       expectedRevision: 1,
-      fills: [
-        choiceFill(
-          "cc:draft:draft.advancement.initial",
-          "class_fighter:level_1:hit_point_maximum",
-        ),
-      ],
-    });
-
-    const classChoices = callTool(root, "discover_creation_holes", { draftId });
-    expect(holeIds(classChoices)).toEqual([
-      "cc:unit:class_fighter:fighter_skill_choices",
-      "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
-      "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
-      "cc:unit:class_fighter:class_equipment_choice",
-      "cc:unit:background_soldier:background_ability_score_increase",
-      "cc:unit:background_soldier:background_tool_choice",
-      "cc:unit:background_soldier:background_equipment_choice",
-    ]);
-
-    callTool(root, "fill_creation_holes", {
-      draftId,
-      expectedRevision: 2,
       fills: [
         choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
@@ -110,7 +90,7 @@ describe("end-user promoted MCP vertical", () => {
 
     callTool(root, "fill_creation_holes", {
       draftId,
-      expectedRevision: 3,
+      expectedRevision: 2,
       fills: [
         choiceFill(
           "cc:unit:class_fighter:equipment_purchase",
@@ -123,7 +103,7 @@ describe("end-user promoted MCP vertical", () => {
 
     callTool(root, "fill_creation_holes", {
       draftId,
-      expectedRevision: 4,
+      expectedRevision: 3,
       fills: [
         choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
         choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
@@ -699,7 +679,10 @@ function createAndFinalizeFighterTwo(
     draftId,
     expectedRevision: 0,
     fills: [
-      choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+      choiceFill(
+        "cc:draft:draft.progression.initial",
+        "class_fighter:level_2:fixed_hit_points",
+      ),
       choiceFill("cc:draft:draft.background", "background_soldier"),
       choiceFill("cc:draft:draft.species", "species_orc"),
       {
@@ -715,16 +698,6 @@ function createAndFinalizeFighterTwo(
   callTool(root, "fill_creation_holes", {
     draftId,
     expectedRevision: 1,
-    fills: [
-      choiceFill(
-        "cc:draft:draft.advancement.initial",
-        "class_fighter:level_2:fixed_hit_points",
-      ),
-    ],
-  });
-  callTool(root, "fill_creation_holes", {
-    draftId,
-    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_fighter:fighter_skill_choices",
@@ -758,7 +731,7 @@ function createAndFinalizeFighterTwo(
   });
   callTool(root, "fill_creation_holes", {
     draftId,
-    expectedRevision: 3,
+    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_fighter:equipment_purchase",
@@ -770,7 +743,7 @@ function createAndFinalizeFighterTwo(
   });
   callTool(root, "fill_creation_holes", {
     draftId,
-    expectedRevision: 4,
+    expectedRevision: 3,
     fills: [
       choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
       choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
@@ -789,7 +762,10 @@ function createAndFinalizeWizardOne(
     draftId,
     expectedRevision: 0,
     fills: [
-      choiceFill("cc:draft:draft.primaryClass", "class_wizard"),
+      choiceFill(
+        "cc:draft:draft.progression.initial",
+        "class_wizard:level_1:hit_point_maximum",
+      ),
       choiceFill("cc:draft:draft.background", "background_soldier"),
       choiceFill("cc:draft:draft.species", "species_orc"),
       {
@@ -805,16 +781,6 @@ function createAndFinalizeWizardOne(
   callTool(root, "fill_creation_holes", {
     draftId,
     expectedRevision: 1,
-    fills: [
-      choiceFill(
-        "cc:draft:draft.advancement.initial",
-        "class_wizard:level_1:hit_point_maximum",
-      ),
-    ],
-  });
-  callTool(root, "fill_creation_holes", {
-    draftId,
-    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_wizard:wizard_skill_choices",
@@ -860,7 +826,7 @@ function createAndFinalizeWizardOne(
   });
   callTool(root, "fill_creation_holes", {
     draftId,
-    expectedRevision: 3,
+    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_wizard:equipment_purchase",
@@ -872,7 +838,7 @@ function createAndFinalizeWizardOne(
   });
   callTool(root, "fill_creation_holes", {
     draftId,
-    expectedRevision: 4,
+    expectedRevision: 3,
     fills: [
       choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
       choiceFill(

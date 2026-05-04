@@ -17,8 +17,9 @@ import {
   exactChoiceCardinality,
   boundedChoiceCardinality,
   characterBuildUnitRefs,
-  characterAdvancementEntry,
+  classUnitIdFromUnitId,
   createCharacterDraft,
+  createCharacterProgression,
   creationChoiceOptionId,
   creationHoleId,
   discoverCreationHoles,
@@ -35,7 +36,7 @@ import {
   type CreationHole,
   type CreationHoleIdText,
   type UnitCatalog,
-  type CharacterAdvancementEntry,
+  type CharacterProgression,
   type HitPointAdvancementMethod,
 } from "./index.ts";
 import {
@@ -57,16 +58,26 @@ if (unitCatalogResult.tag !== "ok") {
 
 const unitLibrary = unitCatalogResult.catalog;
 
-function testAdvancementEntry(input: {
-  readonly classUnitId: UnitRecord["id"];
-  readonly classLevel: ReturnType<typeof characterClassLevel>;
-  readonly hitPointAdvancement: HitPointAdvancementMethod;
-}): CharacterAdvancementEntry {
-  const result = characterAdvancementEntry(input);
-  if (Either.isLeft(result)) {
+function testProgression(
+  classUnitId: UnitRecord["id"],
+  classLevel: number,
+  hitPointAdvancement: HitPointAdvancementMethod = classLevel === 1
+    ? { tag: "levelOneMaximum" }
+    : { tag: "fixedAfterLevelOne" },
+): CharacterProgression {
+  const parsedClassUnitId = classUnitIdFromUnitId({ unitLibrary, classUnitId });
+  if (Either.isLeft(parsedClassUnitId)) {
     throw new Error(
-      `Invalid test advancement entry: ${JSON.stringify(result.left)}`,
+      `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.left)}`,
     );
+  }
+  const result = createCharacterProgression({
+    classUnitId: parsedClassUnitId.right,
+    classLevel: characterClassLevel(classLevel),
+    hitPointAdvancement,
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(`Invalid test progression: ${JSON.stringify(result.left)}`);
   }
 
   return result.right;
@@ -113,8 +124,12 @@ describe("character creation hole discovery", () => {
     expect(holeSummary(holes)).toEqual([
       [
         "choice",
-        "cc:draft:draft.primaryClass",
-        ["class_fighter", "class_wizard"],
+        "cc:draft:draft.progression.initial",
+        [
+          "class_fighter:level_1:hit_point_maximum",
+          "class_fighter:level_2:fixed_hit_points",
+          "class_wizard:level_1:hit_point_maximum",
+        ],
       ],
       ["choice", "cc:draft:draft.background", ["background_soldier"]],
       ["choice", "cc:draft:draft.species", ["species_orc"]],
@@ -167,9 +182,9 @@ describe("character creation hole discovery", () => {
       unitLibrary: widenedUnitCatalog,
     });
 
-    expect(optionIds(holeById(holes, "cc:draft:draft.primaryClass"))).toContain(
-      "class_unrelated_0",
-    );
+    expect(
+      optionIds(holeById(holes, "cc:draft:draft.progression.initial")),
+    ).toContain("class_unrelated_0:level_1:hit_point_maximum");
     expect(optionIds(holeById(holes, "cc:draft:draft.background"))).toContain(
       "background_unrelated_0",
     );
@@ -181,7 +196,12 @@ describe("character creation hole discovery", () => {
       draft,
       unitLibrary: widenedUnitCatalog,
       expectedRevision: draft.revision,
-      fills: [choiceFill("cc:draft:draft.primaryClass", "class_unrelated_0")],
+      fills: [
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "class_unrelated_0:level_1:hit_point_maximum",
+        ),
+      ],
     });
 
     expect(result).toMatchObject({
@@ -191,7 +211,7 @@ describe("character creation hole discovery", () => {
           tag: "illegalFill",
           code: "unsupportedChoice",
           message:
-            "Unsupported choice class_unrelated_0 for character creation hole: cc:draft:draft.primaryClass",
+            "Unsupported choice class_unrelated_0:level_1:hit_point_maximum for character creation hole: cc:draft:draft.progression.initial",
         },
       ],
     });
@@ -200,12 +220,14 @@ describe("character creation hole discovery", () => {
   test("opens Fighter holes after the class selection", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
       }),
       unitLibrary,
     });
 
-    expect(holeById(holes, "cc:draft:draft.primaryClass")).toBeUndefined();
+    expect(
+      holeById(holes, "cc:draft:draft.progression.initial"),
+    ).toBeUndefined();
     expect(
       holeById(holes, "cc:unit:class_fighter:fighter_skill_choices"),
     ).toMatchObject({
@@ -264,7 +286,7 @@ describe("character creation hole discovery", () => {
   test("opens Soldier holes after class and background selections", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
       }),
       unitLibrary,
@@ -311,7 +333,7 @@ describe("character creation hole discovery", () => {
   test("opens purchase after the manifest coin equipment path is selected", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -352,7 +374,7 @@ describe("character creation hole discovery", () => {
   test("does not open purchase from malformed equipment-path choice metadata", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         choices: [
           selectedChoiceWithUnitRef(
@@ -385,7 +407,7 @@ describe("character creation hole discovery", () => {
   test("does not open purchase for a non-manifest background equipment path", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -407,7 +429,7 @@ describe("character creation hole discovery", () => {
   test("does not open purchase for Fighter item-bundle equipment choices", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_b"),
@@ -435,7 +457,7 @@ describe("character creation hole discovery", () => {
   test("opens loadout only for purchased equipment and suppresses filled loadout choices", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -482,7 +504,7 @@ describe("character creation hole discovery", () => {
   test("opens Flail loadout when the Skeleton-pressure bludgeoning weapon is purchased", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -515,7 +537,7 @@ describe("character creation hole discovery", () => {
   test("keeps malformed equipment purchase selections fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -557,7 +579,7 @@ describe("character creation hole discovery", () => {
   test("suppresses already-filled class and background unit-choice holes", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         choices: [
           selectedChoice(
@@ -620,7 +642,7 @@ describe("character creation hole discovery", () => {
   test("keeps malformed existing choice selections fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         choices: [
           selectedChoice(
             "class_fighter",
@@ -643,7 +665,7 @@ describe("character creation hole discovery", () => {
   test("keeps existing choice selections with malformed unit refs fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         choices: [
           selectedChoice(
             "fighter_fighting_style_l1",
@@ -669,7 +691,7 @@ describe("character creation hole discovery", () => {
   test("suppresses Soldier ability-score increase from the typed draft field", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         backgroundAbilityScoreIncrease: {
           kind: "twoAndOne",
@@ -691,7 +713,7 @@ describe("character creation hole discovery", () => {
   test("keeps malformed typed Soldier ability-score increase fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        primaryClass: "class_fighter",
+        progression: testProgression("class_fighter", 1),
         background: "background_soldier",
         backgroundAbilityScoreIncrease: {
           kind: "twoAndOne",
@@ -746,21 +768,9 @@ describe("character creation QNT slice parity", () => {
     }
 
     const unsupportedLaterChoices = fillCreationHoles({
-      draft: requireAcceptedBatch(
-        fillCreationHoles({
-          draft: afterInitial.draft,
-          unitLibrary,
-          expectedRevision: afterInitial.draft.revision,
-          fills: [
-            choiceFill(
-              "cc:draft:draft.advancement.initial",
-              "class_fighter:level_1:hit_point_maximum",
-            ),
-          ],
-        }),
-      ),
+      draft: afterInitial.draft,
       unitLibrary,
-      expectedRevision: draftRevision(afterInitial.draft.revision + 1),
+      expectedRevision: afterInitial.draft.revision,
       fills: [
         choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
@@ -793,7 +803,9 @@ describe("character creation QNT slice parity", () => {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: [choiceFill("cc:draft:draft.primaryClass", "background_soldier")],
+      fills: [
+        choiceFill("cc:draft:draft.progression.initial", "background_soldier"),
+      ],
     });
     if (invalid.tag !== "rejected") {
       throw new Error(
@@ -955,7 +967,7 @@ describe("character creation batch fill", () => {
     expect(draft.revision).toBe(0);
     expect(result.draft.revision).toBe(1);
     expect(result.draft.selections).toMatchObject({
-      primaryClass: "class_fighter",
+      progression: testProgression("class_fighter", 1),
       background: "background_soldier",
       species: "species_orc",
       abilityScoreGeneration: {
@@ -973,11 +985,8 @@ describe("character creation batch fill", () => {
       alignment: { order: "lawful", morality: "good" },
     });
     expect(
-      holeById(result.holes, "cc:draft:draft.primaryClass"),
+      holeById(result.holes, "cc:draft:draft.progression.initial"),
     ).toBeUndefined();
-    expect(
-      holeById(result.holes, "cc:draft:draft.advancement.initial"),
-    ).toMatchObject({ kind: "choice" });
     expect(
       holeById(result.holes, "cc:unit:class_fighter:fighter_skill_choices"),
     ).toMatchObject({
@@ -1061,7 +1070,9 @@ describe("character creation batch fill", () => {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: [choiceFill("cc:draft:draft.primaryClass", "background_soldier")],
+      fills: [
+        choiceFill("cc:draft:draft.progression.initial", "background_soldier"),
+      ],
     });
 
     expect(result).toMatchObject({
@@ -1105,7 +1116,7 @@ describe("character creation batch fill", () => {
       expectedRevision: draft.revision,
       fills: [
         choiceFill(
-          "cc:draft:draft.primaryClass",
+          "cc:draft:draft.progression.initial",
           "background_soldier",
           "species_orc",
         ),
@@ -1128,8 +1139,8 @@ describe("character creation batch fill", () => {
         .filter((issue) => issue.code === "invalidChoice")
         .map((issue) => issue.message),
     ).toEqual([
-      "Invalid choice background_soldier for character creation hole: cc:draft:draft.primaryClass",
-      "Invalid choice species_orc for character creation hole: cc:draft:draft.primaryClass",
+      "Invalid choice background_soldier for character creation hole: cc:draft:draft.progression.initial",
+      "Invalid choice species_orc for character creation hole: cc:draft:draft.progression.initial",
     ]);
   });
 
@@ -1244,8 +1255,14 @@ describe("character creation batch fill", () => {
       unitLibrary,
       expectedRevision: draft.revision,
       fills: [
-        choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
-        choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "class_fighter:level_1:hit_point_maximum",
+        ),
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "class_fighter:level_1:hit_point_maximum",
+        ),
       ],
     });
 
@@ -1262,7 +1279,9 @@ describe("character creation batch fill", () => {
       draft,
       unitLibrary,
       expectedRevision: draftRevision(draft.revision + 1),
-      fills: [choiceFill("cc:draft:draft.primaryClass", "background_soldier")],
+      fills: [
+        choiceFill("cc:draft:draft.progression.initial", "background_soldier"),
+      ],
     });
 
     expect(result.tag).toBe("rejected");
@@ -1286,7 +1305,7 @@ describe("character creation batch fill", () => {
       fills: [
         {
           kind: "abilityScores",
-          holeId: creationHoleId("cc:draft:draft.primaryClass"),
+          holeId: creationHoleId("cc:draft:draft.progression.initial"),
           method: "standardArray",
           value: {
             str: 15,
@@ -1349,7 +1368,7 @@ describe("character creation batch fill", () => {
 
   test("reports unsupported Soldier gaming sets as unsupported, not invalid", () => {
     const draft = draftWithSelections({
-      primaryClass: "class_fighter",
+      progression: testProgression("class_fighter", 1),
       background: "background_soldier",
     });
     const result = fillCreationHoles({
@@ -1534,7 +1553,7 @@ describe("character creation finalization", () => {
     ]);
   });
 
-  test("accepts Fighter 2 through the runtime advancement fill", () => {
+  test("accepts Fighter 2 through the runtime progression fill", () => {
     const fighterTwo = completeFighterTwoDraft();
     const result = finalizeCharacterDraft({ draft: fighterTwo, unitLibrary });
 
@@ -1643,16 +1662,7 @@ describe("character creation finalization", () => {
     const complete = completeManifestDraft();
     const projection = finalizedBuildEquipment({
       ...complete.selections,
-      primaryClass: "class_fighter",
-      advancement: {
-        entries: [
-          testAdvancementEntry({
-            classUnitId: "class_fighter",
-            classLevel: characterClassLevel(1),
-            hitPointAdvancement: { tag: "levelOneMaximum" },
-          }),
-        ],
-      },
+      progression: testProgression("class_fighter", 1),
       background: "background_soldier",
       abilityScoreGeneration: {
         method: "standardArray",
@@ -1910,15 +1920,7 @@ describe("character creation finalization", () => {
       ...complete,
       selections: {
         ...complete.selections,
-        advancement: {
-          entries: [
-            testAdvancementEntry({
-              classUnitId: "class_fighter",
-              classLevel: characterClassLevel(3),
-              hitPointAdvancement: { tag: "fixedAfterLevelOne" },
-            }),
-          ],
-        },
+        progression: testProgression("class_fighter", 3),
       },
     };
     const illegal = finalizeCharacterDraft({
@@ -1933,7 +1935,7 @@ describe("character creation finalization", () => {
           tag: "unsupportedFinalization",
           code: "unsupportedFinalization",
           message:
-            "Finalized build advancement must match a supported class level.",
+            "Finalized build progression must match a supported class level.",
         },
       ],
     });
@@ -2168,9 +2170,11 @@ function unitLibraryWithUnrelatedUnits(count: number): UnitCatalog {
   };
 }
 
-function initialManifestFills(): readonly CreationFill[] {
+function initialManifestFills(
+  progressionOptionId = "class_fighter:level_1:hit_point_maximum",
+): readonly CreationFill[] {
   return [
-    choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+    choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
     choiceFill("cc:draft:draft.background", "background_soldier"),
     choiceFill("cc:draft:draft.species", "species_orc"),
     {
@@ -2208,58 +2212,32 @@ function completeManifestDraft(): CharacterDraft {
       fills: initialManifestFills(),
     }),
   );
-  const afterAdvancement = requireAcceptedBatch(
-    fillCreationHoles({
-      draft: afterInitial,
-      unitLibrary,
-      expectedRevision: afterInitial.revision,
-      fills: [
-        choiceFill(
-          "cc:draft:draft.advancement.initial",
-          "class_fighter:level_1:hit_point_maximum",
-        ),
-      ],
-    }),
-  );
 
-  return completeManifestDraftAfterAdvancement(afterAdvancement);
+  return completeManifestDraftAfterProgression(afterInitial);
 }
 
 function completeFighterTwoDraft(): CharacterDraft {
   const draft = createTestDraft("draft:complete-fighter-two");
-  const afterInitial = requireAcceptedBatch(
+  const afterProgression = requireAcceptedBatch(
     fillCreationHoles({
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills(),
-    }),
-  );
-  const afterAdvancement = requireAcceptedBatch(
-    fillCreationHoles({
-      draft: afterInitial,
-      unitLibrary,
-      expectedRevision: afterInitial.revision,
-      fills: [
-        choiceFill(
-          "cc:draft:draft.advancement.initial",
-          "class_fighter:level_2:fixed_hit_points",
-        ),
-      ],
+      fills: initialManifestFills("class_fighter:level_2:fixed_hit_points"),
     }),
   );
 
-  return completeManifestDraftAfterAdvancement(afterAdvancement);
+  return completeManifestDraftAfterProgression(afterProgression);
 }
 
-function completeManifestDraftAfterAdvancement(
-  afterAdvancement: CharacterDraft,
+function completeManifestDraftAfterProgression(
+  afterProgression: CharacterDraft,
 ): CharacterDraft {
   const afterChoices = requireAcceptedBatch(
     fillCreationHoles({
-      draft: afterAdvancement,
+      draft: afterProgression,
       unitLibrary,
-      expectedRevision: afterAdvancement.revision,
+      expectedRevision: afterProgression.revision,
       fills: [
         choiceFill(
           "cc:unit:class_fighter:fighter_skill_choices",
@@ -2333,7 +2311,10 @@ function completeWizardDraft(): CharacterDraft {
       unitLibrary,
       expectedRevision: draft.revision,
       fills: [
-        choiceFill("cc:draft:draft.primaryClass", "class_wizard"),
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "class_wizard:level_1:hit_point_maximum",
+        ),
         choiceFill("cc:draft:draft.background", "background_soldier"),
         choiceFill("cc:draft:draft.species", "species_orc"),
         {
@@ -2354,24 +2335,11 @@ function completeWizardDraft(): CharacterDraft {
       ],
     }),
   );
-  const afterAdvancement = requireAcceptedBatch(
+  const afterChoices = requireAcceptedBatch(
     fillCreationHoles({
       draft: afterInitial,
       unitLibrary,
       expectedRevision: afterInitial.revision,
-      fills: [
-        choiceFill(
-          "cc:draft:draft.advancement.initial",
-          "class_wizard:level_1:hit_point_maximum",
-        ),
-      ],
-    }),
-  );
-  const afterChoices = requireAcceptedBatch(
-    fillCreationHoles({
-      draft: afterAdvancement,
-      unitLibrary,
-      expectedRevision: afterAdvancement.revision,
       fills: [
         choiceFill(
           "cc:unit:class_wizard:wizard_skill_choices",
@@ -2473,8 +2441,7 @@ type MutableSupportProfile = {
 };
 
 const HOLE_ID_TO_QNT_VARIANT = {
-  "cc:draft:draft.primaryClass": "HPrimaryClass",
-  "cc:draft:draft.advancement.initial": "HAdvancement",
+  "cc:draft:draft.progression.initial": "HProgression",
   "cc:draft:draft.background": "HBackground",
   "cc:draft:draft.species": "HSpecies",
   "cc:draft:draft.abilityScoreGeneration": "HAbilityScores",
@@ -2659,7 +2626,7 @@ function renderQuintParityModule(input: {
 
   run parity_invalid_primary_class_matches_runtime = {
     match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HPrimaryClass, options: [OBackgroundSoldier] }),
+      FChoice({ hole: HProgression, options: [OBackgroundSoldier] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
@@ -2722,7 +2689,7 @@ function renderQuintParityModule(input: {
   }
 
   run parity_later_valid_but_unsupported_choices_match_runtime = {
-    match fillCreationHoles(afterManifestAdvancement, 2, [
+    match fillCreationHoles(afterInitialManifest, 1, [
       FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
       FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
     ]) {
@@ -2792,8 +2759,7 @@ function renderQntDraftProjection(draft: CharacterDraft): string {
 
   return `{
     revision: ${draft.revision},
-    primaryClass: ${qntBool(selections.primaryClass != null)},
-    advancement: ${qntBool(selections.advancement != null)},
+    progression: ${qntBool(selections.progression != null)},
     background: ${qntBool(selections.background != null)},
     species: ${qntBool(selections.species != null)},
     abilityScores: ${qntBool(selections.abilityScoreGeneration != null)},

@@ -47,10 +47,6 @@ export type CharacterProgression = {
   readonly classUnitId: ClassUnitId;
 } & CharacterLevelHitPointAdvancement;
 
-export type CharacterAdvancementEntry = {
-  readonly classUnitId: UnitRecord["id"];
-} & CharacterLevelHitPointAdvancement;
-
 export type CharacterProgressionLevelIssue =
   | {
       readonly code: "invalidCharacterClassLevel";
@@ -103,20 +99,6 @@ export function characterLevelHitPointAdvancement(input: {
     ),
     Match.exhaustive,
   );
-}
-
-export function characterAdvancementEntry(input: {
-  readonly classUnitId: UnitRecord["id"];
-  readonly classLevel: CharacterClassLevel;
-  readonly hitPointAdvancement: HitPointAdvancementMethod;
-}): Either.Either<CharacterAdvancementEntry, CharacterProgressionLevelIssue> {
-  const advancement = characterLevelHitPointAdvancement(input);
-  return Either.isLeft(advancement)
-    ? Either.left(advancement.left)
-    : Either.right({
-        classUnitId: input.classUnitId,
-        ...advancement.right,
-      });
 }
 
 export function hitPointAdvancementOptionSuffix(

@@ -37,13 +37,11 @@ import type {
   WeaponProficiencyCategory,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
-import type { CharacterProgression } from "./character-progression-algebra.ts";
-import type { CharacterAdvancementEntry } from "./character-progression-types.ts";
+import type { CharacterProgression } from "./character-progression-types.ts";
 
 export { SUPPORTED_ABILITY_SCORE_METHODS };
 export type { AbilityScoreAssignment, SupportedAbilityScoreMethod };
 export type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-export type { CharacterAdvancementEntry } from "./character-progression-types.ts";
 
 export type CreationSessionId = string & Brand.Brand<"CreationSessionId">;
 const CreationSessionId = Brand.nominal<CreationSessionId>();
@@ -71,8 +69,7 @@ export {
 };
 
 export const CHARACTER_DRAFT_PATHS = [
-  "draft.primaryClass",
-  "draft.advancement.initial",
+  "draft.progression.initial",
   "draft.background",
   "draft.abilityScoreGeneration",
   "draft.backgroundAbilityScoreIncrease",
@@ -285,17 +282,12 @@ export type BackgroundAbilityScoreIncreaseSelection =
       readonly kind: "oneEach";
     };
 
-export type CharacterAdvancementSelection = {
-  readonly entries: NonEmptyReadonlyArray<CharacterAdvancementEntry>;
-};
-
 export type CharacterEquipmentSelection = {
   readonly selectedUnitIds: readonly UnitRecord["id"][];
 };
 
 export type CharacterDraftSelections = {
-  readonly primaryClass?: UnitRecord["id"];
-  readonly advancement?: CharacterAdvancementSelection;
+  readonly progression?: CharacterProgression;
   readonly background?: UnitRecord["id"];
   readonly abilityScoreGeneration?: AbilityScoreGenerationSelection;
   readonly backgroundAbilityScoreIncrease?: BackgroundAbilityScoreIncreaseSelection;
@@ -456,8 +448,7 @@ export type CreationBatchFillResult =
 // creation-session holes have been filled and before durable CharacterBuild
 // facts are derived. Do not store this shape on CharacterBuild.
 export type FinalizedCharacterSelections = {
-  readonly primaryClass: UnitRecord["id"];
-  readonly advancement: CharacterAdvancementSelection;
+  readonly progression: CharacterProgression;
   readonly background: UnitRecord["id"];
   readonly abilityScoreGeneration: AbilityScoreGenerationSelection;
   readonly backgroundAbilityScoreIncrease: BackgroundAbilityScoreIncreaseSelection;

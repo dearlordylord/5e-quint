@@ -726,7 +726,9 @@ describe("MCP server route", () => {
     ).toMatchObject({
       draft: { revision: 0 },
       holes: expect.arrayContaining([
-        expect.objectContaining({ holeId: "cc:draft:draft.primaryClass" }),
+        expect.objectContaining({
+          holeId: "cc:draft:draft.progression.initial",
+        }),
       ]),
     });
   });
@@ -1828,7 +1830,7 @@ describe("MCP server route", () => {
       revision: 0,
     });
     expect(created.holes.map((hole: CreationHole) => hole.holeId)).toEqual([
-      "cc:draft:draft.primaryClass",
+      "cc:draft:draft.progression.initial",
       "cc:draft:draft.background",
       "cc:draft:draft.species",
       "cc:draft:draft.abilityScoreGeneration",
@@ -1837,14 +1839,13 @@ describe("MCP server route", () => {
     ]);
 
     fillThroughTool(root, draftId, 0, initialManifestFills());
-    fillThroughTool(root, draftId, 1, manifestAdvancementFills());
-    fillThroughTool(root, draftId, 2, manifestChoiceFills());
-    fillThroughTool(root, draftId, 3, manifestPurchaseFills());
-    const loadout = fillThroughTool(root, draftId, 4, manifestLoadoutFills());
+    fillThroughTool(root, draftId, 1, manifestChoiceFills());
+    fillThroughTool(root, draftId, 2, manifestPurchaseFills());
+    const loadout = fillThroughTool(root, draftId, 3, manifestLoadoutFills());
 
     expect(loadout.result).toMatchObject({
       tag: "accepted",
-      draft: { draftId, revision: 5 },
+      draft: { draftId, revision: 4 },
       holes: [],
       finalization: { tag: "ready" },
     });
@@ -2530,7 +2531,9 @@ describe("MCP server route", () => {
       handleToolCall(root, "fill_creation_holes", {
         draftId,
         expectedRevision: 0,
-        fills: [choiceFill("cc:draft:draft.primaryClass", "not_a_class")],
+        fills: [
+          choiceFill("cc:draft:draft.progression.initial", "not_a_class"),
+        ],
       }),
     );
 
@@ -2540,7 +2543,7 @@ describe("MCP server route", () => {
         {
           tag: "illegalFill",
           code: "invalidChoice",
-          holeId: "cc:draft:draft.primaryClass",
+          holeId: "cc:draft:draft.progression.initial",
         },
       ],
     });
@@ -2600,10 +2603,9 @@ describe("MCP server route", () => {
       }),
     );
     fillThroughTool(root, finalizedDraftId, 0, initialManifestFills());
-    fillThroughTool(root, finalizedDraftId, 1, manifestAdvancementFills());
-    fillThroughTool(root, finalizedDraftId, 2, manifestChoiceFills());
-    fillThroughTool(root, finalizedDraftId, 3, manifestPurchaseFills());
-    fillThroughTool(root, finalizedDraftId, 4, manifestLoadoutFills());
+    fillThroughTool(root, finalizedDraftId, 1, manifestChoiceFills());
+    fillThroughTool(root, finalizedDraftId, 2, manifestPurchaseFills());
+    fillThroughTool(root, finalizedDraftId, 3, manifestLoadoutFills());
     readPayload(
       handleToolCall(root, "finalize_character", {
         draftId: finalizedDraftId,
@@ -3138,27 +3140,14 @@ function fighterTwoCharacterBuild(
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills(),
-    }),
-  );
-  const afterAdvancement = requireAcceptedBatch(
-    fillCreationHoles({
-      draft: afterInitial,
-      unitLibrary,
-      expectedRevision: afterInitial.revision,
-      fills: [
-        choiceFill(
-          "cc:draft:draft.advancement.initial",
-          "class_fighter:level_2:fixed_hit_points",
-        ),
-      ],
+      fills: initialManifestFills("class_fighter:level_2:fixed_hit_points"),
     }),
   );
   const afterChoices = requireAcceptedBatch(
     fillCreationHoles({
-      draft: afterAdvancement,
+      draft: afterInitial,
       unitLibrary,
-      expectedRevision: afterAdvancement.revision,
+      expectedRevision: afterInitial.revision,
       fills: manifestChoiceFills(),
     }),
   );
@@ -3268,19 +3257,11 @@ function completeManifestDraft(
       fills: initialManifestFills(),
     }),
   );
-  const afterAdvancement = requireAcceptedBatch(
+  const afterChoices = requireAcceptedBatch(
     fillCreationHoles({
       draft: afterInitial,
       unitLibrary,
       expectedRevision: afterInitial.revision,
-      fills: manifestAdvancementFills(),
-    }),
-  );
-  const afterChoices = requireAcceptedBatch(
-    fillCreationHoles({
-      draft: afterAdvancement,
-      unitLibrary,
-      expectedRevision: afterAdvancement.revision,
       fills: manifestChoiceFills(),
     }),
   );
@@ -3303,9 +3284,11 @@ function completeManifestDraft(
   );
 }
 
-function initialManifestFills(): readonly CreationFill[] {
+function initialManifestFills(
+  progressionOptionId = "class_fighter:level_1:hit_point_maximum",
+): readonly CreationFill[] {
   return [
-    choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+    choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
     choiceFill("cc:draft:draft.background", "background_soldier"),
     choiceFill("cc:draft:draft.species", "species_orc"),
     {
@@ -3385,15 +3368,6 @@ function manifestChoiceFills(): readonly CreationFill[] {
   ];
 }
 
-function manifestAdvancementFills(): readonly CreationFill[] {
-  return [
-    choiceFill(
-      "cc:draft:draft.advancement.initial",
-      "class_fighter:level_1:hit_point_maximum",
-    ),
-  ];
-}
-
 function manifestPurchaseFills(): readonly CreationFill[] {
   return [
     choiceFill(
@@ -3436,7 +3410,7 @@ function createAndFinalizeManifestFighterThroughTools(
     handleToolCall(root, "create_character_draft", { draftId }),
   );
   expect(created.holes.map((hole: CreationHole) => hole.holeId)).toEqual([
-    "cc:draft:draft.primaryClass",
+    "cc:draft:draft.progression.initial",
     "cc:draft:draft.background",
     "cc:draft:draft.species",
     "cc:draft:draft.abilityScoreGeneration",
@@ -3452,10 +3426,9 @@ function createAndFinalizeManifestFighterThroughTools(
     discoveredChoices.holes.map((hole: CreationHole) => hole.holeId),
   ).toEqual(initialClassHoleIds());
 
-  fillThroughTool(root, draftId, 1, manifestAdvancementFills());
-  fillThroughTool(root, draftId, 2, manifestChoiceFills());
-  fillThroughTool(root, draftId, 3, manifestPurchaseFills());
-  fillThroughTool(root, draftId, 4, manifestLoadoutFills());
+  fillThroughTool(root, draftId, 1, manifestChoiceFills());
+  fillThroughTool(root, draftId, 2, manifestPurchaseFills());
+  fillThroughTool(root, draftId, 3, manifestLoadoutFills());
 
   return readPayload(handleToolCall(root, "finalize_character", { draftId }));
 }
@@ -3489,10 +3462,7 @@ function readPayload(response: CharacterToolResult | BattleToolResult) {
 }
 
 function initialClassHoleIds(): readonly CreationHoleIdText[] {
-  return [
-    ...manifestAdvancementFills().map((fill) => fill.holeId),
-    ...manifestChoiceFills().map((fill) => fill.holeId),
-  ];
+  return manifestChoiceFills().map((fill) => fill.holeId);
 }
 
 function rogueCharacterBuild(

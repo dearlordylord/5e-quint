@@ -183,26 +183,26 @@ Keep it synchronized with the DAG table and task details.
 
 ## DAG / Queue Order
 
-| Order | Task | Status | Depends on | Blocks | Research / plan | Next action |
-| ----- | ---- | ------ | ---------- | ------ | --------------- | ----------- |
-| 61 | PBA15A0A - Promote Multiclass Prerequisite Algebra | done | PBA15 | PBA15A0B | inline below | Shared algebra owns multiclass prerequisite facts; Core delegates through compatibility wrappers. |
-| 62 | PBA15A0B - Introduce Character Progression Projection Helpers | done | PBA15A0A | PBA15A0C | inline below | Character-creation-runtime exports character progression helpers and Unit-id boundary adapters. |
-| 63 | PBA15A0C - Replace Level-One Advancement Workflow | ready-for-implementation-after-light-research | PBA15A0B | PBA15A0D | inline below | Replace runtime discovery/fill/finalization paths that expose a separate level-1 advancement choice. |
-| 64 | PBA15A0D - Wire Progression And Multiclass Through MCP Docs | blocked | PBA15A0C | PBA15A | inline below | Wire the character progression model and prerequisite checks through MCP schemas/tests and package docs. |
-| 65 | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked | PBA15A0D | PBA16 | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md) | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D. |
-| 66 | PBA16 - Add Death-Save Promoted MBT Coverage | blocked | PBA15A | PBA17 | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md) | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes. |
-| 67 | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width | blocked | PBA16 | PBA18 | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md) | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width. |
-| 68 | PBA18 - Widen Attack Range And Conditional Attack Riders | blocked | PBA17 | PBA19 | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md) | Restore long-range Disadvantage and supported conditional attack riders. |
-| 69 | PBA19 - Restore Stat Block Multiattack And Bonus Actions | blocked | PBA18 | PBA20 | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families. |
-| 70 | PBA20 - Restore Spell Targeting And Catalog Width | blocked | PBA19 | PBA21 | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md) | Restore Magic Missile split-target replay and broaden spell procedure pressure. |
-| 71 | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects | blocked | PBA20 | PBA22 | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md) | Broaden reaction windows and Bonus Action subjects after spell targeting width. |
-| 72 | PBA22 - Stabilize Battle Snapshots Traces And App UI | blocked | PBA21 | PBA23 | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md) | Restore promoted snapshot/trace contracts and app battle UI workflows. |
-| 73 | PBA23 - Core Promotion Deletion Ledger | blocked | PBA22 | PBA25 | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md) | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work. |
-| 74 | PBA24 - Remove Rogue Cunning Action Support Workaround | blocked | PBA25 | PBA27 | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md) | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow. |
-| 75 | PBA25 - Promote Unit-Backed Character Choice Width | blocked | PBA23 | PBA24, PBA26 | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md) | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections. |
-| 76 | PBA26 - Define Character Sheet Session Boundary And Migrate App | blocked | PBA25 | PBA27 | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md) | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs. |
-| 77 | PBA27 - Core Quarantine And Deletion Cutover | blocked | PBA24, PBA26 | PBA28 | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md) | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior. |
-| 78 | PBA28 - MBT Consolidation And Shared Algebra Parity | blocked | PBA27 | future tasks | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md) | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT. |
+| Order | Task                                                              | Status                                        | Depends on   | Blocks       | Research / plan                                                                                              | Next action                                                                                                                      |
+| ----- | ----------------------------------------------------------------- | --------------------------------------------- | ------------ | ------------ | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| 61    | PBA15A0A - Promote Multiclass Prerequisite Algebra                | done                                          | PBA15        | PBA15A0B     | inline below                                                                                                 | Shared algebra owns multiclass prerequisite facts; Core delegates through compatibility wrappers.                                |
+| 62    | PBA15A0B - Introduce Character Progression Projection Helpers     | done                                          | PBA15A0A     | PBA15A0C     | inline below                                                                                                 | Character-creation-runtime exports character progression helpers and Unit-id boundary adapters.                                  |
+| 63    | PBA15A0C - Replace Level-One Advancement Workflow                 | done                                          | PBA15A0B     | PBA15A0D     | inline below                                                                                                 | Runtime progression fill now replaces separate primary-class and level-1 advancement workflow.                                   |
+| 64    | PBA15A0D - Wire Progression And Multiclass Through MCP Docs       | ready-for-implementation-after-light-research | PBA15A0C     | PBA15A       | inline below                                                                                                 | Wire the character progression model and prerequisite checks through MCP schemas/tests and package docs.                         |
+| 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked                                       | PBA15A0D     | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D.                                 |
+| 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | blocked                                       | PBA15A       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes.                                                |
+| 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | blocked                                       | PBA16        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width.                                                  |
+| 68    | PBA18 - Widen Attack Range And Conditional Attack Riders          | blocked                                       | PBA17        | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Restore long-range Disadvantage and supported conditional attack riders.                                                         |
+| 69    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | blocked                                       | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families.                                                              |
+| 70    | PBA20 - Restore Spell Targeting And Catalog Width                 | blocked                                       | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Restore Magic Missile split-target replay and broaden spell procedure pressure.                                                  |
+| 71    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | blocked                                       | PBA20        | PBA22        | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Broaden reaction windows and Bonus Action subjects after spell targeting width.                                                  |
+| 72    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | blocked                                       | PBA21        | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Restore promoted snapshot/trace contracts and app battle UI workflows.                                                           |
+| 73    | PBA23 - Core Promotion Deletion Ledger                            | blocked                                       | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                  |
+| 74    | PBA24 - Remove Rogue Cunning Action Support Workaround            | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                        |
+| 75    | PBA25 - Promote Unit-Backed Character Choice Width                | blocked                                       | PBA23        | PBA24, PBA26 | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)                 | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections.    |
+| 76    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs.                           |
+| 77    | PBA27 - Core Quarantine And Deletion Cutover                      | blocked                                       | PBA24, PBA26 | PBA28        | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior. |
+| 78    | PBA28 - MBT Consolidation And Shared Algebra Parity               | blocked                                       | PBA27        | future tasks | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT.         |
 
 ## Task Details
 
@@ -273,24 +273,19 @@ workflow caller.
 
 Context:
 
-- Current character-creation state duplicates starting class as
-  `selections.primaryClass` and
-  `selections.advancement.entries[0].classUnitId`.
-- Advancement entries also store `level`, even though level is derivable from
-  ordered progression.
-- Target shape: `startingClass` plus post-start `advancements`; level 1 is
-  implicit from `startingClass`; total level is `1 + advancements.length`;
-  per-class levels derive by counting starting and later classes.
+- Character-creation state previously duplicated starting class through a
+  separate class pick and a level-1 class entry.
+- Target promoted shape is one durable `CharacterProgression` selected at the
+  draft boundary. It carries class Unit id, class level, and Hit Point
+  advancement evidence as one value.
 - `packages/character-creation-runtime/src/character-progression-algebra.ts` is the
   handoff file for this slice.
 
 Acceptance:
 
-- Character-creation-runtime exports a precise `CharacterProgression` model
-  or equivalent parsed type with `startingClass` and post-start
-  `advancements` only.
-- Runtime helpers derive total level, advancement level by position, and
-  per-class level summaries from the progression model.
+- Character-creation-runtime exports a precise `CharacterProgression` model.
+- Runtime helpers derive total level and class-level facts from the progression
+  model.
 - Unit-id inputs such as `class_fighter` are converted through one explicit
   boundary adapter; Surface Unit ids are not stored in the core progression
   algebra.
@@ -310,26 +305,27 @@ Verification:
 
 Plan Impact: if successful, unblock PBA15A0C.
 
-Closeout: `@dnd/character-creation-runtime` exports
-`CharacterProgression` helpers with `startingClass` plus post-start class-name
-advancements, derived total/per-class/advancement levels, explicit Surface class
-Unit-id adapters, focused tests, and package README/VOCABULARY notes.
+Closeout: `@dnd/character-creation-runtime` exports `CharacterProgression`
+helpers with branded class Unit ids, explicit class level and Hit Point
+advancement evidence, derived total/class-level helpers, focused tests, and
+package README/VOCABULARY notes.
 
 ### Task 63 - PBA15A0C - Replace Level-One Advancement Workflow
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA15A0B
 Blocks: PBA15A0D
 
-Next action: replace character-creation-runtime discovery, fill reduction, and
-finalization paths that expose a separate level-1 advancement choice after the
-starting class is chosen.
+Closeout: character-creation-runtime discovery, fill reduction, finalization,
+QNT slice, MBT bridge, MCP tests, and package docs use one draft-owned
+`draft.progression.initial` fill. The old separate class-pick plus level-1
+class-entry workflow is removed from the promoted runtime.
 
 Context:
 
-- The current runtime can represent `primaryClass: Fighter` with first
-  advancement `Wizard`, then finalization checks and rejects that mismatch.
+- The former runtime could represent a separate Fighter class pick with a first
+  Wizard class-level entry, then finalization checked and rejected that mismatch.
 - Task PBA15A0B creates the progression helpers that should make this mismatch
   unrepresentable at the promoted runtime boundary.
 - Keep supported workflows available: Orc Soldier Fighter 1, Orc Soldier
@@ -337,8 +333,8 @@ Context:
 
 Acceptance:
 
-- Promoted character creation cannot represent `primaryClass: Fighter` with a
-  first advancement for Wizard.
+- Promoted character creation cannot represent a Fighter class pick separate
+  from a first Wizard class-level entry.
 - Promoted character creation cannot represent a post-start advancement with a
   contradictory stored level.
 - Character-creation-runtime no longer exposes "choose level 1" as a RAW
@@ -361,7 +357,7 @@ Plan Impact: if successful, unblock PBA15A0D.
 
 ### Task 64 - PBA15A0D - Wire Progression And Multiclass Through MCP Docs
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA15A0C
 Blocks: PBA15A

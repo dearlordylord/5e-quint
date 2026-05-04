@@ -25,8 +25,6 @@ export {
   type AlignmentMorality,
   type AlignmentOrder,
   type BackgroundAbilityScoreIncreaseSelection,
-  type CharacterAdvancementEntry,
-  type CharacterAdvancementSelection,
   type CharacterAlignment,
   type CharacterBuild,
   type CharacterBuildAbilityScores,
@@ -90,21 +88,17 @@ export {
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {
-  characterProgressionFromAdvancementSelection,
   classNameFromClassUnit,
   classUnitIdFromClassUnit,
   classUnitIdFromUnitId,
   classUnitIdToClassName,
   computeTotalLevel,
   createCharacterProgression,
-  type AdvancementSelectionProgressionInput,
-  type AdvancementSelectionProgressionIssue,
   type CharacterProgression,
   type CharacterProgressionIssue,
   type ClassUnitNameIssue,
 } from "./character-progression-algebra.ts";
 export {
-  characterAdvancementEntry,
   characterLevelHitPointAdvancement,
   hitPointAdvancementLabel,
   hitPointAdvancementOptionSuffix,

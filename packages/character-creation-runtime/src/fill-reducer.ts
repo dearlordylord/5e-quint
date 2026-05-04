@@ -15,7 +15,7 @@ import {
   selectedChoiceOption,
 } from "./hole-factories.ts";
 import {
-  supportedAdvancementForOptionId,
+  supportedProgressionForOptionId,
   unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
 import {
@@ -328,23 +328,11 @@ export function applyDraftFill(
   fillIndex: FillIndex,
 ): ApplyCreationFillResult<CharacterDraftSelections> {
   const path = hole.source.path;
-  if (path === "draft.primaryClass" && fill.kind === "choice") {
+  if (path === "draft.progression.initial" && fill.kind === "choice") {
     const optionId = oneOptionId(fill, fillIndex);
     if (Either.isLeft(optionId)) return applyCreationFillIssue(optionId.left);
-    const classUnitId = selectedUnitId(hole, fill, fillIndex, optionId.right);
-    if (Either.isLeft(classUnitId))
-      return applyCreationFillIssue(classUnitId.left);
-    return Either.right({
-      ...selections,
-      primaryClass: classUnitId.right,
-    });
-  }
-
-  if (path === "draft.advancement.initial" && fill.kind === "choice") {
-    const optionId = oneOptionId(fill, fillIndex);
-    if (Either.isLeft(optionId)) return applyCreationFillIssue(optionId.left);
-    const advancement = supportedAdvancementForOptionId(optionId.right);
-    if (advancement == null) {
+    const progression = supportedProgressionForOptionId(optionId.right);
+    if (progression == null) {
       return Either.left(
         unsupportedChoiceIssue(fill, fillIndex, optionId.right),
       );
@@ -352,9 +340,7 @@ export function applyDraftFill(
 
     return Either.right({
       ...selections,
-      advancement: {
-        entries: [advancement],
-      },
+      progression,
     });
   }
 

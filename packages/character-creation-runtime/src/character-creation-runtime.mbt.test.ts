@@ -50,8 +50,7 @@ function unitChoiceKeyRight(value: string) {
 
 type DraftProjection = {
   readonly revision: number;
-  readonly primaryClass: boolean;
-  readonly advancement: boolean;
+  readonly progression: boolean;
   readonly background: boolean;
   readonly species: boolean;
   readonly abilityScores: boolean;
@@ -89,8 +88,7 @@ type HoleVariant = keyof typeof holeIds;
 
 const quintDraftSchema = z.object({
   revision: z.bigint(),
-  primaryClass: z.boolean(),
-  advancement: z.boolean(),
+  progression: z.boolean(),
   background: z.boolean(),
   species: z.boolean(),
   abilityScores: z.boolean(),
@@ -230,8 +228,7 @@ function compareState(spec: RuntimeMbtState, impl: RuntimeMbtState): boolean {
 }
 
 const holeIds = {
-  HPrimaryClass: "cc:draft:draft.primaryClass",
-  HAdvancement: "cc:draft:draft.advancement.initial",
+  HProgression: "cc:draft:draft.progression.initial",
   HBackground: "cc:draft:draft.background",
   HSpecies: "cc:draft:draft.species",
   HAbilityScores: "cc:draft:draft.abilityScoreGeneration",
@@ -307,7 +304,9 @@ function initialManifestFills(
   holes: readonly CreationHole[],
 ): readonly CreationFill[] {
   return [
-    choiceFill(holes, "HPrimaryClass", ["class_fighter"]),
+    choiceFill(holes, "HProgression", [
+      "class_fighter:level_1:hit_point_maximum",
+    ]),
     choiceFill(holes, "HBackground", ["background_soldier"]),
     choiceFill(holes, "HSpecies", ["species_orc"]),
     standardArrayFill(holes, "HAbilityScores"),
@@ -320,7 +319,9 @@ function initialChoicesOnlyFills(
   holes: readonly CreationHole[],
 ): readonly CreationFill[] {
   return [
-    choiceFill(holes, "HPrimaryClass", ["class_fighter"]),
+    choiceFill(holes, "HProgression", [
+      "class_fighter:level_1:hit_point_maximum",
+    ]),
     choiceFill(holes, "HBackground", ["background_soldier"]),
     choiceFill(holes, "HSpecies", ["species_orc"]),
     choiceFill(holes, "HLanguages", ["Dwarvish", "Goblin"]),
@@ -332,16 +333,6 @@ function abilityScoresOnlyFills(
   holes: readonly CreationHole[],
 ): readonly CreationFill[] {
   return [standardArrayFill(holes, "HAbilityScores")];
-}
-
-function manifestAdvancementFills(
-  holes: readonly CreationHole[],
-): readonly CreationFill[] {
-  return [
-    choiceFill(holes, "HAdvancement", [
-      "class_fighter:level_1:hit_point_maximum",
-    ]),
-  ];
 }
 
 function manifestChoiceFills(
@@ -391,7 +382,6 @@ const driverSchema = {
   doFillInitialManifest: {},
   doFillInitialChoicesOnly: {},
   doFillAbilityScoresOnly: {},
-  doFillManifestAdvancement: {},
   doFillManifestChoices: {},
   doFillManifestPurchase: {},
   doFillManifestLoadout: {},
@@ -450,8 +440,6 @@ function createCharacterCreationDriver() {
         submit(draft.revision, initialChoicesOnlyFills(holes)),
       doFillAbilityScoresOnly: () =>
         submit(draft.revision, abilityScoresOnlyFills(holes)),
-      doFillManifestAdvancement: () =>
-        submit(draft.revision, manifestAdvancementFills(holes)),
       doFillManifestChoices: () =>
         submit(draft.revision, manifestChoiceFills(holes)),
       doFillManifestPurchase: () =>
@@ -475,7 +463,7 @@ function createCharacterCreationDriver() {
           choiceFill(holes, "HLanguages", ["Dwarvish", "Goblin", "Elvish"]),
         ]),
       doRejectWrongKindPrimaryClass: () =>
-        submit(draft.revision, [standardArrayFill(holes, "HPrimaryClass")]),
+        submit(draft.revision, [standardArrayFill(holes, "HProgression")]),
       doRejectUnknownLoadoutArmor: () =>
         submit(draft.revision, [
           choiceFillForKnownProtocolHole("HLoadoutArmor", ["worn"]),
@@ -567,8 +555,7 @@ function projectDraft(draft: CharacterDraft): DraftProjection {
   const selections = draft.selections;
   return {
     revision: draft.revision,
-    primaryClass: selections.primaryClass != null,
-    advancement: selections.advancement != null,
+    progression: selections.progression != null,
     background: selections.background != null,
     species: selections.species != null,
     abilityScores: selections.abilityScoreGeneration != null,

@@ -1,4 +1,4 @@
-import { Either, Match, Option } from "effect";
+import { Either, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { hp } from "@dnd/shared/types";
 import {
@@ -17,11 +17,7 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
-import {
-  characterProgressionFromAdvancementSelection,
-  type AdvancementSelectionProgressionIssue,
-  type CharacterProgression,
-} from "./character-progression-algebra.ts";
+import { type CharacterProgression } from "./character-progression-algebra.ts";
 import { hitPointsAfterLevelOneMultiplier } from "./character-progression-types.ts";
 import {
   backgroundToolChoiceSpec,
@@ -47,7 +43,7 @@ import {
 } from "./phase1-manifest.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
-  isSupportedAdvancement,
+  isSupportedProgression,
   supportedLoadoutChoiceForSource,
   supportedLoadoutChoices,
   unitRefsForSupportedClassChoice,
@@ -143,8 +139,7 @@ export function finalizedSelections(
   // shape instead of repeatedly re-checking draft fields for undefined.
   const selections = draft.selections;
   if (
-    selections.primaryClass == null ||
-    selections.advancement == null ||
+    selections.progression == null ||
     selections.background == null ||
     selections.abilityScoreGeneration == null ||
     selections.backgroundAbilityScoreIncrease == null ||
@@ -157,8 +152,7 @@ export function finalizedSelections(
   }
 
   return {
-    primaryClass: selections.primaryClass,
-    advancement: selections.advancement,
+    progression: selections.progression,
     background: selections.background,
     abilityScoreGeneration: selections.abilityScoreGeneration,
     backgroundAbilityScoreIncrease: selections.backgroundAbilityScoreIncrease,
@@ -182,7 +176,7 @@ export function temporarySupportedSliceIssues(
     ...expectedValueIssue(
       (
         CHARACTER_CREATION_SUPPORT_PROFILE.classUnitIds as readonly string[]
-      ).includes(selections.primaryClass),
+      ).includes(selections.progression.classUnitId),
       "Finalized build must use a supported class.",
     ),
     ...expectedValueIssue(
@@ -196,8 +190,8 @@ export function temporarySupportedSliceIssues(
       "Finalized build must use the supported manifest species.",
     ),
     ...expectedValueIssue(
-      isSupportedSingleClassAdvancement(selections),
-      "Finalized build advancement must match a supported class level.",
+      isSupportedSingleClassProgression(selections),
+      "Finalized build progression must match a supported class level.",
     ),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
@@ -247,7 +241,7 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): boolean {
-  const classUnit = unitLibrary.getUnit(selections.primaryClass);
+  const classUnit = unitLibrary.getUnit(selections.progression.classUnitId);
   if (Option.isNone(classUnit)) return false;
   const classFacts = readClassCreationFacts(classUnit.value);
   if (
@@ -309,66 +303,21 @@ function temporarySupportedSliceSelections(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): TemporarySupportedSliceSelectionsResult {
-  const progression = characterProgressionFromAdvancementSelection({
-    unitLibrary,
-    primaryClassUnitId: selections.primaryClass,
-    advancement: selections.advancement,
-  });
-  const progressionIssues = Either.isLeft(progression)
-    ? [finalizationIssueForProgressionIssue(progression.left)]
-    : [];
   const issues = nonEmptyReadonlyArray([
-    ...progressionIssues,
     ...temporarySupportedSliceIssues(selections, unitLibrary),
   ]);
   if (issues != null) {
     return { tag: "rejected", issues };
   }
 
-  if (Either.isLeft(progression)) {
-    return {
-      tag: "rejected",
-      issues: [finalizationIssueForProgressionIssue(progression.left)],
-    };
-  }
-
   return {
     tag: "accepted",
     value: {
       selections,
-      progression: progression.right,
+      progression: selections.progression,
       [TemporarySupportedSliceSelections]: true,
     },
   };
-}
-
-function finalizationIssueForProgressionIssue(
-  issue: AdvancementSelectionProgressionIssue,
-): CreationFinalizationIssue {
-  return Match.value(issue.code).pipe(
-    Match.when("unsupportedMulticlassProgression", () =>
-      unsupportedFinalizationIssue(
-        "Multiclass progression is SRD-legal when prerequisites are met, but is outside the current character-creation support profile.",
-      ),
-    ),
-    Match.when("unsupportedGroupedClassProgression", () =>
-      unsupportedFinalizationIssue(
-        "Grouped class progression entries are outside the current character-creation support profile.",
-      ),
-    ),
-    Match.whenOr(
-      "invalidCharacterClassLevel",
-      "invalidHitPointAdvancementForLevel",
-      "unknownUnitId",
-      "nonClassUnit",
-      "primaryClassMismatch",
-      () =>
-        illegalFinalizationIssue(
-          "Finalized build advancement is not a valid single-class character progression.",
-        ),
-    ),
-    Match.exhaustive,
-  );
 }
 
 export function expectedValueIssue(
@@ -398,22 +347,10 @@ export function unsupportedFinalizationIssue(
   };
 }
 
-export function isSupportedSingleClassAdvancement(
-  selections: Pick<
-    FinalizedCharacterSelections,
-    "primaryClass" | "advancement"
-  >,
+export function isSupportedSingleClassProgression(
+  selections: Pick<FinalizedCharacterSelections, "progression">,
 ): boolean {
-  return (
-    selections.advancement.entries.length === 1 &&
-    selections.advancement.entries[0]?.classUnitId ===
-      selections.primaryClass &&
-    isSupportedAdvancement(
-      selections.advancement.entries[0].classUnitId,
-      selections.advancement.entries[0].classLevel,
-      selections.advancement.entries[0].hitPointAdvancement,
-    )
-  );
+  return isSupportedProgression(selections.progression);
 }
 
 export function isSupportedBackgroundAbilityScoreIncrease(
@@ -502,7 +439,7 @@ export function buildCharacterBuild(input: {
   const selectedClassLevel = progression.classLevel;
   const classUnit = unitForFinalization(
     input.unitLibrary,
-    selections.primaryClass,
+    selections.progression.classUnitId,
     "class",
   );
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
@@ -583,7 +520,7 @@ export function buildCharacterBuild(input: {
       ),
       hitDice: [
         {
-          classUnitId: selections.primaryClass,
+          classUnitId: selections.progression.classUnitId,
           dieSize: hitDieSize(classFacts.right.hitPointDie),
           total: hitDieTotal(selectedClassLevel),
         },
@@ -625,7 +562,7 @@ export function allFinalizedChoicesSupported(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): boolean {
-  const classUnit = unitLibrary.getUnit(selections.primaryClass);
+  const classUnit = unitLibrary.getUnit(selections.progression.classUnitId);
   if (Option.isNone(classUnit)) return false;
   const classFacts = readClassCreationFacts(classUnit.value);
   if (classFacts.tag !== "readable") return false;
@@ -633,10 +570,13 @@ export function allFinalizedChoicesSupported(
   if (Option.isNone(backgroundUnit)) return false;
   const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
   if (backgroundFacts.tag !== "readable") return false;
-  const classLevel = selections.advancement.entries[0]?.classLevel ?? 1;
+  const classLevel = selections.progression.classLevel;
   const classEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
-      unitSource(selections.primaryClass, CLASS_EQUIPMENT_CHOICE_KEY),
+      unitSource(
+        selections.progression.classUnitId,
+        CLASS_EQUIPMENT_CHOICE_KEY,
+      ),
       classFacts.value.startingEquipment,
     ),
   );
@@ -683,7 +623,7 @@ export function allFinalizedChoicesSupported(
       if (sameCreationHoleSource(choice.source, classEquipmentHole.source)) {
         return supportedStartingEquipmentCoinGrantChoice(
           choice,
-          selections.primaryClass,
+          selections.progression.classUnitId,
           CLASS_EQUIPMENT_CHOICE_KEY,
           classFacts.value.startingEquipment,
         );
@@ -792,7 +732,7 @@ function supportedFinalizationChoiceHoles(input: {
   const classSkillHole = requireUnitChoiceCreationHole(
     choiceHole({
       source: unitSource(
-        input.selections.primaryClass,
+        input.selections.progression.classUnitId,
         input.classFacts.className === "wizard"
           ? WIZARD_SKILL_CHOICE_KEY
           : FIGHTER_SKILL_CHOICE_KEY,
@@ -815,7 +755,7 @@ function supportedFinalizationChoiceHoles(input: {
   const wizardSpellHoles =
     input.classFacts.className === "wizard"
       ? wizardSpellcastingChoiceHoles(
-          input.selections.primaryClass,
+          input.selections.progression.classUnitId,
           input.classFacts,
         )
       : [];
@@ -1203,7 +1143,7 @@ export function finalizedBuildSkillProficiencies(
   const skillSelection = selections.choices.find((selection) =>
     sameCreationHoleSource(
       selection.source,
-      unitSource(selections.primaryClass, skillChoiceKey),
+      unitSource(selections.progression.classUnitId, skillChoiceKey),
     ),
   );
 

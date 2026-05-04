@@ -3,7 +3,6 @@ import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
-  advancementOptionId,
   CLASS_EQUIPMENT_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
   FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
@@ -32,9 +31,9 @@ import {
   PHASE1_SPECIES_ORC_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  progressionOptionId,
   SUPPORTED_BACKGROUND_OPTION_IDS,
   SUPPORTED_BACKGROUND_UNIT_IDS,
-  SUPPORTED_CLASS_OPTION_IDS,
   SUPPORTED_CLASS_UNIT_IDS,
   SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
   SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
@@ -47,7 +46,6 @@ import {
 } from "./phase1-manifest.ts";
 import type {
   BackgroundAbilityScoreIncreaseSelection,
-  CharacterAdvancementEntry,
   CharacterAlignment,
   CharacterBuildEquipment,
   CharacterDraftPath,
@@ -59,7 +57,12 @@ import type {
   UnitRef,
 } from "./types.ts";
 import { creationChoiceOptionId } from "./types.ts";
-import { characterAdvancementEntry } from "./character-progression-types.ts";
+import {
+  classUnitId,
+  type CharacterProgression,
+  type HitPointAdvancementMethod,
+} from "./character-progression-types.ts";
+import { createCharacterProgression } from "./character-progression-algebra.ts";
 import { characterClassLevel } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -122,12 +125,11 @@ export type CharacterCreationSupportProfile = {
     readonly languages: CharacterStartingLanguages;
     readonly alignment: CharacterAlignment;
   };
-  readonly supportedAdvancements: readonly CharacterAdvancementEntry[];
+  readonly supportedProgressions: readonly CharacterProgression[];
 };
 
 const SUPPORTED_DRAFT_CHOICE_PATHS = [
-  "draft.primaryClass",
-  "draft.advancement.initial",
+  "draft.progression.initial",
   "draft.background",
   "draft.species",
   "draft.languages",
@@ -135,42 +137,45 @@ const SUPPORTED_DRAFT_CHOICE_PATHS = [
 ] as const satisfies ReadonlyArray<CharacterDraftPath>;
 type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
-const SUPPORTED_ADVANCEMENTS = [
-  supportedAdvancementEntry({
+const SUPPORTED_PROGRESSIONS = [
+  supportedProgression({
     classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
     classLevel: characterClassLevel(1),
     hitPointAdvancement: { tag: "levelOneMaximum" },
   }),
-  supportedAdvancementEntry({
+  supportedProgression({
     classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
     classLevel: characterClassLevel(2),
     hitPointAdvancement: { tag: "fixedAfterLevelOne" },
   }),
-  supportedAdvancementEntry({
+  supportedProgression({
     classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID,
     classLevel: characterClassLevel(1),
     hitPointAdvancement: { tag: "levelOneMaximum" },
   }),
-] as const satisfies ReadonlyArray<CharacterAdvancementEntry>;
+] as const satisfies ReadonlyArray<CharacterProgression>;
 
-function supportedAdvancementEntry(input: {
+function supportedProgression(input: {
   readonly classUnitId: UnitRecord["id"];
   readonly classLevel: ReturnType<typeof characterClassLevel>;
-  readonly hitPointAdvancement: CharacterAdvancementEntry["hitPointAdvancement"];
-}): CharacterAdvancementEntry {
-  const entry = characterAdvancementEntry(input);
-  if (Either.isLeft(entry)) {
+  readonly hitPointAdvancement: HitPointAdvancementMethod;
+}): CharacterProgression {
+  const progression = createCharacterProgression({
+    classUnitId: classUnitId(input.classUnitId),
+    classLevel: input.classLevel,
+    hitPointAdvancement: input.hitPointAdvancement,
+  });
+  if (Either.isLeft(progression)) {
     throw new Error(
-      `Invalid supported advancement entry: ${JSON.stringify(entry.left)}`,
+      `Invalid supported progression: ${JSON.stringify(progression.left)}`,
     );
   }
 
-  return entry.right;
+  return progression.right;
 }
 
 const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
-  "draft.primaryClass": SUPPORTED_CLASS_OPTION_IDS,
-  "draft.advancement.initial": SUPPORTED_ADVANCEMENTS.map(advancementOptionId),
+  "draft.progression.initial": SUPPORTED_PROGRESSIONS.map(progressionOptionId),
   "draft.background": SUPPORTED_BACKGROUND_OPTION_IDS,
   "draft.species": SUPPORTED_SPECIES_OPTION_IDS,
   "draft.languages": SUPPORTED_LANGUAGE_OPTION_IDS,
@@ -269,7 +274,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     languages: ["Common", "Dwarvish", "Goblin"],
     alignment: { order: "lawful", morality: "good" },
   },
-  supportedAdvancements: SUPPORTED_ADVANCEMENTS,
+  supportedProgressions: SUPPORTED_PROGRESSIONS,
 } as const satisfies CharacterCreationSupportProfile;
 
 export function unsupportedHoleSelectionOptionId(
@@ -370,32 +375,30 @@ export function supportedLoadoutChoices(): readonly SupportedLoadoutChoice[] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices;
 }
 
-export function isSupportedAdvancement(
-  classUnitId: UnitRecord["id"],
-  classLevel: number,
-  hitPointAdvancement: CharacterAdvancementEntry["hitPointAdvancement"],
+export function isSupportedProgression(
+  progression: CharacterProgression,
 ): boolean {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedAdvancements.some(
-    (advancement) =>
-      advancement.classUnitId === classUnitId &&
-      advancement.classLevel === classLevel &&
-      advancement.hitPointAdvancement.tag === hitPointAdvancement.tag,
+  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
+    (supported) =>
+      supported.classUnitId === progression.classUnitId &&
+      supported.classLevel === progression.classLevel &&
+      supported.hitPointAdvancement.tag === progression.hitPointAdvancement.tag,
   );
 }
 
-export function supportedAdvancementsForClass(
+export function supportedProgressionsForClass(
   classUnitId: UnitRecord["id"],
-): readonly CharacterAdvancementEntry[] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedAdvancements.filter(
-    (advancement) => advancement.classUnitId === classUnitId,
+): readonly CharacterProgression[] {
+  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.filter(
+    (progression) => progression.classUnitId === classUnitId,
   );
 }
 
-export function supportedAdvancementForOptionId(
+export function supportedProgressionForOptionId(
   optionId: CreationChoiceOptionId,
-): CharacterAdvancementEntry | undefined {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedAdvancements.find(
-    (advancement) => advancementOptionId(advancement) === optionId,
+): CharacterProgression | undefined {
+  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.find(
+    (progression) => progressionOptionId(progression) === optionId,
   );
 }
 

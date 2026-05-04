@@ -1,4 +1,4 @@
-import { Match, Option } from "effect";
+import { Either, Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
   STANDARD_LANGUAGES,
@@ -22,7 +22,6 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
-  advancementOptionId,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
@@ -32,6 +31,7 @@ import {
   FIGHTER_SKILL_CHOICE_KEY,
   FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
   INITIAL_CHARACTER_DRAFT_PATHS,
+  progressionOptionId,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SKILL_CHOICE_KEY,
@@ -72,12 +72,18 @@ import {
   supportedBackgroundUnitIds,
   supportedClassUnitIds,
   supportedEquipmentPurchaseChoiceCount,
-  supportedAdvancementsForClass,
   supportedLoadoutChoices,
+  supportedProgressionsForClass,
   supportedPurchasableEquipmentUnitIds,
   unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
 import { hitPointAdvancementLabel } from "./character-progression-types.ts";
+import {
+  classUnitId,
+  type CharacterProgression,
+} from "./character-progression-types.ts";
+import { createCharacterProgression } from "./character-progression-algebra.ts";
+import { characterClassLevel } from "@dnd/shared/game-facts";
 
 const SRD_GAMING_SET_OPTIONS = [
   {
@@ -126,34 +132,28 @@ export function discoverInitialDraftHoles(input: {
 }
 
 function isBlockedInitialDraftPath(
-  draft: CharacterDraft,
-  path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
+  _draft: CharacterDraft,
+  _path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
 ): boolean {
-  return (
-    path === "draft.advancement.initial" &&
-    (draft.selections.primaryClass == null ||
-      !isSupported(draft.selections.primaryClass, supportedClassUnitIds()))
-  );
+  return false;
 }
 
 export function discoverClassGrantedHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
-  const classUnitId = input.draft.selections.primaryClass;
-  if (
-    classUnitId == null ||
-    !isSupported(classUnitId, supportedClassUnitIds())
-  ) {
+  const progression = input.draft.selections.progression;
+  if (progression == null) {
     return [];
   }
+  const classUnitId = progression.classUnitId;
 
   const classUnit = input.unitLibrary.getUnit(classUnitId);
   if (Option.isNone(classUnit)) {
     return [];
   }
   const facts = readClassCreationFacts(classUnit.value);
-  const classLevel = selectedClassLevel(input.draft, classUnitId);
+  const classLevel = progression.classLevel;
   if (facts.tag !== "readable") {
     return [];
   }
@@ -193,17 +193,6 @@ type ReadableClassCreationFacts = Extract<
   ReturnType<typeof readClassCreationFacts>,
   { readonly tag: "readable" }
 >["value"];
-
-function selectedClassLevel(
-  draft: CharacterDraft,
-  classUnitId: UnitRecord["id"],
-): number {
-  return (
-    draft.selections.advancement?.entries.find(
-      (entry) => entry.classUnitId === classUnitId,
-    )?.classLevel ?? 1
-  );
-}
 
 function classSkillChoiceKey(facts: ReadableClassCreationFacts) {
   return facts.className === "wizard"
@@ -384,7 +373,7 @@ export function discoverEquipmentHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
-  const classUnitId = input.draft.selections.primaryClass;
+  const classUnitId = input.draft.selections.progression?.classUnitId;
   if (classUnitId == null || !hasSupportedCoinEquipmentPath(input)) {
     return [];
   }
@@ -446,7 +435,7 @@ export function hasSupportedCoinEquipmentPath(input: {
   readonly unitLibrary: UnitCatalog;
 }): boolean {
   const draft = input.draft;
-  const classUnitId = draft.selections.primaryClass;
+  const classUnitId = draft.selections.progression?.classUnitId;
   const backgroundUnitId = draft.selections.background;
   if (
     classUnitId == null ||
@@ -879,40 +868,16 @@ function requireChoiceCreationHole(
 export function draftHole(
   path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
   unitLibrary: UnitCatalog,
-  draft?: CharacterDraft,
+  _draft?: CharacterDraft,
 ): CreationHole | undefined {
-  if (path === "draft.primaryClass") {
+  if (path === "draft.progression.initial") {
     return choiceHole({
       source: draftSource(path),
       cardinality: EXACTLY_ONE_CHOICE,
       options: unitLibrary
         .listUnits()
         .filter((unit) => unit.kind === "class")
-        .map(unitOption),
-    });
-  }
-
-  if (path === "draft.advancement.initial") {
-    const classUnitIds =
-      draft?.selections.primaryClass == null
-        ? supportedClassUnitIds()
-        : [draft.selections.primaryClass];
-    const supportedClassIds = new Set(classUnitIds);
-    return choiceHole({
-      source: draftSource(path),
-      cardinality: EXACTLY_ONE_CHOICE,
-      options: unitLibrary
-        .listUnits()
-        .filter(
-          (unit) => unit.kind === "class" && supportedClassIds.has(unit.id),
-        )
-        .flatMap((unit) =>
-          supportedAdvancementsForClass(unit.id).map((advancement) => ({
-            optionId: advancementOptionId(advancement),
-            label: `${unit.name} ${advancement.classLevel} (${hitPointAdvancementLabel(advancement.hitPointAdvancement)})`,
-            unitRef: { unitId: unit.id },
-          })),
-        ),
+        .flatMap((unit) => progressionOptionsForClassUnit(unit)),
     });
   }
 
@@ -970,4 +935,35 @@ export function draftHole(
       label: alignmentLabel(alignment),
     })),
   });
+}
+
+function progressionOptionsForClassUnit(
+  unit: UnitRecord,
+): readonly CreationChoiceOption[] {
+  const optionsById = new Map<CreationChoiceOptionId, CreationChoiceOption>();
+  for (const progression of [
+    ...levelOneProgressionForClassUnit(unit.id),
+    ...supportedProgressionsForClass(unit.id),
+  ]) {
+    const optionId = progressionOptionId(progression);
+    optionsById.set(optionId, {
+      optionId,
+      label: `${unit.name} ${progression.classLevel} (${hitPointAdvancementLabel(progression.hitPointAdvancement)})`,
+      unitRef: { unitId: unit.id },
+    });
+  }
+
+  return [...optionsById.values()];
+}
+
+function levelOneProgressionForClassUnit(
+  unitId: UnitRecord["id"],
+): readonly CharacterProgression[] {
+  const progression = createCharacterProgression({
+    classUnitId: classUnitId(unitId),
+    classLevel: characterClassLevel(1),
+    hitPointAdvancement: { tag: "levelOneMaximum" },
+  });
+
+  return Either.isRight(progression) ? [progression.right] : [];
 }

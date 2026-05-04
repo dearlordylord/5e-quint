@@ -46,7 +46,7 @@ const agentConversationScenarios = [
     agentReads:
       "No tool accepts natural language character goals. The agent can call list_catalog_units and see Fighter as class_fighter, but the workflow guide says MCP does not own synonym lists.",
     agentDecision:
-      "It should either ask whether 'warrior' means Fighter or proceed only if its product vocabulary maps warrior to Fighter. It then fills primary class, background, species, ability scores, languages, alignment, class advancement, class/background choices, equipment purchase, and loadout using optionIds returned by discover_creation_holes.",
+      "It should either ask whether 'warrior' means Fighter or proceed only if its product vocabulary maps warrior to Fighter. It then fills progression, background, species, ability scores, languages, alignment, class/background choices, equipment purchase, and loadout using optionIds returned by discover_creation_holes.",
     executableCoverage: "createAndFinalizeFighterTwo",
     insufficiency:
       "The ambiguity is now explicit: a cold agent knows it should ask before mapping 'warrior' to Fighter.",
@@ -261,7 +261,7 @@ export async function verifyBaselineVertical(client: Client) {
   const draftId = "draft:stdio-accepted-orc-soldier-fighter";
   const created = await callTool(client, "create_character_draft", { draftId });
   assert.deepEqual(holeIds(created), [
-    "cc:draft:draft.primaryClass",
+    "cc:draft:draft.progression.initial",
     "cc:draft:draft.background",
     "cc:draft:draft.species",
     "cc:draft:draft.abilityScoreGeneration",
@@ -273,7 +273,10 @@ export async function verifyBaselineVertical(client: Client) {
     draftId,
     expectedRevision: 0,
     fills: [
-      choiceFill("cc:draft:draft.primaryClass", "class_fighter"),
+      choiceFill(
+        "cc:draft:draft.progression.initial",
+        "class_fighter:level_1:hit_point_maximum",
+      ),
       choiceFill("cc:draft:draft.background", "background_soldier"),
       choiceFill("cc:draft:draft.species", "species_orc"),
       {
@@ -291,7 +294,6 @@ export async function verifyBaselineVertical(client: Client) {
     draftId,
   });
   assert.deepEqual(holeIds(choices), [
-    "cc:draft:draft.advancement.initial",
     "cc:unit:class_fighter:fighter_skill_choices",
     "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
     "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices",
@@ -304,16 +306,6 @@ export async function verifyBaselineVertical(client: Client) {
   await callTool(client, "fill_creation_holes", {
     draftId,
     expectedRevision: 1,
-    fills: [
-      choiceFill(
-        "cc:draft:draft.advancement.initial",
-        "class_fighter:level_1:hit_point_maximum",
-      ),
-    ],
-  });
-  await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_fighter:fighter_skill_choices",
@@ -347,7 +339,7 @@ export async function verifyBaselineVertical(client: Client) {
   });
   await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 3,
+    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_fighter:equipment_purchase",
@@ -359,7 +351,7 @@ export async function verifyBaselineVertical(client: Client) {
   });
   await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 4,
+    expectedRevision: 3,
     fills: [
       choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
       choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
@@ -718,27 +710,22 @@ export async function verifyWidthVertical(client: Client) {
 
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
-  await fillBaseOrcSoldier(client, draftId, "class_fighter", {
-    str: 15,
-    dex: 14,
-    con: 13,
-    int: 8,
-    wis: 10,
-    cha: 12,
-  });
+  await fillBaseOrcSoldier(
+    client,
+    draftId,
+    "class_fighter:level_2:fixed_hit_points",
+    {
+      str: 15,
+      dex: 14,
+      con: 13,
+      int: 8,
+      wis: 10,
+      cha: 12,
+    },
+  );
   await callTool(client, "fill_creation_holes", {
     draftId,
     expectedRevision: 1,
-    fills: [
-      choiceFill(
-        "cc:draft:draft.advancement.initial",
-        "class_fighter:level_2:fixed_hit_points",
-      ),
-    ],
-  });
-  await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_fighter:fighter_skill_choices",
@@ -772,7 +759,7 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   });
   await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 3,
+    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_fighter:equipment_purchase",
@@ -784,7 +771,7 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   });
   await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 4,
+    expectedRevision: 3,
     fills: [
       choiceFill("cc:unit:armor_chain_mail:loadout_armor", "worn"),
       choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
@@ -796,27 +783,22 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
 
 async function createAndFinalizeWizardOne(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
-  await fillBaseOrcSoldier(client, draftId, "class_wizard", {
-    str: 8,
-    dex: 14,
-    con: 13,
-    int: 15,
-    wis: 10,
-    cha: 12,
-  });
+  await fillBaseOrcSoldier(
+    client,
+    draftId,
+    "class_wizard:level_1:hit_point_maximum",
+    {
+      str: 8,
+      dex: 14,
+      con: 13,
+      int: 15,
+      wis: 10,
+      cha: 12,
+    },
+  );
   await callTool(client, "fill_creation_holes", {
     draftId,
     expectedRevision: 1,
-    fills: [
-      choiceFill(
-        "cc:draft:draft.advancement.initial",
-        "class_wizard:level_1:hit_point_maximum",
-      ),
-    ],
-  });
-  await callTool(client, "fill_creation_holes", {
-    draftId,
-    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_wizard:wizard_skill_choices",
@@ -862,7 +844,7 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
   });
   await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 3,
+    expectedRevision: 2,
     fills: [
       choiceFill(
         "cc:unit:class_wizard:equipment_purchase",
@@ -874,7 +856,7 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
   });
   await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 4,
+    expectedRevision: 3,
     fills: [
       choiceFill("cc:unit:equipment_shield:loadout_shield", "wielded"),
       choiceFill(
@@ -889,14 +871,14 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
 async function fillBaseOrcSoldier(
   client: Client,
   draftId: string,
-  primaryClass: string,
+  progression: string,
   abilityScores: JsonObject,
 ) {
   await callTool(client, "fill_creation_holes", {
     draftId,
     expectedRevision: 0,
     fills: [
-      choiceFill("cc:draft:draft.primaryClass", primaryClass),
+      choiceFill("cc:draft:draft.progression.initial", progression),
       choiceFill("cc:draft:draft.background", "background_soldier"),
       choiceFill("cc:draft:draft.species", "species_orc"),
       {

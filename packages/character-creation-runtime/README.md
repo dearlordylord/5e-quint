@@ -90,7 +90,7 @@ Key boundary terms:
 This package supports the first legal character-creation vertical plus the
 POST3 class-width slice:
 
-- level-1 Fighter and level-2 Fighter advancement;
+- level-1 Fighter and level-2 Fighter progression;
 - level-1 Wizard spellcasting creation facts;
 - Orc species;
 - Soldier background;
@@ -158,8 +158,8 @@ is rejected at the finalization boundary until the runtime can carry SRD
 multiclass prerequisite evidence into the durable build shape.
 
 For class levels above 1, the current support profile projects fixed Hit Point
-gains after level 1. The selected advancement option carries explicit Hit Point
-advancement evidence into `CharacterAdvancementEntry`, and finalization rejects
+gains after level 1. The selected progression option carries explicit Hit Point
+advancement evidence into `CharacterProgression`, and finalization rejects
 level/evidence combinations that contradict the rules. Rolled HP advancement is
 outside this slice and must become an explicit creation choice before it can be
 finalized.

@@ -1,7 +1,6 @@
 import {
   creationChoiceOptionId,
   type BackgroundAbilityScoreIncreaseSelection,
-  type CharacterAdvancementEntry,
   type CharacterDraftPath,
   type ChoiceCardinality,
   type ChoiceCount,
@@ -10,12 +9,12 @@ import {
 } from "./types.ts";
 import { backgroundAbilityScoreIncreaseOptionId } from "./hole-factories.ts";
 import { hitPointAdvancementOptionSuffix } from "./character-progression-types.ts";
+import type { CharacterProgression } from "./character-progression-types.ts";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 export const INITIAL_CHARACTER_DRAFT_PATHS = [
-  "draft.primaryClass",
-  "draft.advancement.initial",
+  "draft.progression.initial",
   "draft.background",
   "draft.species",
   "draft.abilityScoreGeneration",
@@ -60,11 +59,11 @@ export const SUPPORTED_CLASS_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_CLASS_FIGHTER_UNIT_ID),
   creationChoiceOptionId(WIDTH_CLASS_WIZARD_UNIT_ID),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
-export function advancementOptionId(
-  advancement: CharacterAdvancementEntry,
+export function progressionOptionId(
+  progression: CharacterProgression,
 ): CreationChoiceOptionId {
   return creationChoiceOptionId(
-    `${advancement.classUnitId}:level_${advancement.classLevel}:${hitPointAdvancementOptionSuffix(advancement.hitPointAdvancement)}`,
+    `${progression.classUnitId}:level_${progression.classLevel}:${hitPointAdvancementOptionSuffix(progression.hitPointAdvancement)}`,
   );
 }
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [
