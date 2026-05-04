@@ -4,6 +4,48 @@ Task: PBA15A - Migrate Surface And Character-Creation Domain Primitives
 
 Status: pre-researched. This file is planning evidence and implementation guidance only.
 
+Scope clarification: PBA15A targets all Core-related primitive debt needed for
+promoted character creation, MCP/session migration, and eventual Core deletion.
+It does not require a whole-Surface/all-Units primitive cleanup before moving on.
+
+Core-removal relevance test: a primitive belongs in PBA15A only if at least one
+of these is true:
+
+- it is stored in `CharacterDraft`, `CharacterBuild`, creation holes/fills,
+  support profiles, MCP session handoff, or Surface records consumed by those
+  flows;
+- it is used to replace or avoid a Core helper, table, projection, or adapter;
+- it participates in identity, ordering, source addressing, support gates, or
+  replay/finalization contracts;
+- leaving it raw would force later PBA16-PBA27 work to preserve adapters,
+  duplicate maps, or comments explaining protocol shape.
+
+Primitive cleanup is out of PBA15A when a value is merely a broad Surface
+content scalar, descriptive label, or display string and does not affect Core
+removal.
+
+Composite-key isomorphism requirement: if a primitive is a composite protocol
+key, persisted key, exported key, or any key that callers may need to inspect,
+it must have an executable reversible codec rather than an informal string
+format. The codec must prove both directions with tests:
+
+- source facts -> key -> source facts equals the original source facts;
+- key -> source facts -> key equals the original key;
+- separator-like characters inside free-form components do not collide or
+  misparse;
+- invalid keys return typed parse failures rather than throwing.
+
+Opaque private map keys may remain non-reversible only when no caller can obtain
+or persist the key and the key is never parsed back into components. Prefer a
+length-prefixed encoding for reversible keys whose components include
+free-form authored ids.
+
+First implementation slice: make Unit-choice source identity isomorphic. Add a
+branded reversible `UnitChoiceSourceKey` for `UnitChoiceSource`, use it for
+finalization lookup maps, and migrate Unit-sourced `CreationHoleId` construction
+and parsing away from `cc:unit:${unitId}:${choiceKey}` separator parsing so the
+hole id can round-trip through the same source identity without ambiguity.
+
 ## Research Inputs
 
 - RAW lens: no new D&D rule behavior is expected. RAW is relevant only as range/vocabulary evidence for branded values: ability scores, HP, Hit Dice, point cost, languages, stat block AC/HP/Speed, Recharge, Legendary Action uses, and movement distances.
@@ -43,7 +85,8 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 
 ## Suggested Implementation Shape
 
-- A conservative implementation could inventory primitives first, then migrate by domain family rather than one broad scalar sweep.
+- Inventory primitives first by Core-removal relevance, then migrate by domain
+  family rather than one broad scalar sweep.
 - Shared brands would fit cross-package reducer facts already named by PBA13G: `MovementFeet`, `ClassLevel`, `SpellSlotLevel`, `ArmorClass`, `DifficultyClass`, `AttackBonus`, `ResourceCount`, `HP`, and `AbilityScore`.
 - Surface-local brands would fit authored-only facts such as `GoldPieceCost`, `WeightPounds`, `RechargeMinimumRoll`, `LegendaryActionUseCount`, `MonsterChallengeRating`, `RandomTableOrder`, and possibly `SurfaceHoleId`.
 - Character-creation-local brands would fit durable protocol/build identities such as `CharacterEquipmentItemId` and `UnitChoiceSourceKey`.

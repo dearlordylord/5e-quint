@@ -431,13 +431,16 @@ Blocks: PBA16
 Research plan:
 [pba15a-domain-primitives-research-plan.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)
 
-Next action: migrate remaining durable Surface-authored and
-character-creation-runtime primitive domain values after PBA15A0D leaves
-progression and multiclass prerequisite facts in their durable owners.
+Next action: migrate all Core-related durable Surface-authored and
+character-creation-runtime primitive domain debt after PBA15A0D leaves
+progression and multiclass prerequisite facts in their durable owners. This is
+not a whole-Surface/all-Units primitive cleanup; include primitive debt when it
+blocks or weakens promoted character creation, MCP/session migration, or Core
+deletion.
 
 Acceptance summary: changed Surface and character-creation production types no
-longer use bare primitives for durable domain values when an owned type or
-literal union should carry meaning.
+longer use bare primitives for Core-related durable domain values when an owned
+type or literal union should carry meaning.
 
 Verification summary: source primitive inventory, focused Surface and
 character-creation typechecks/tests, no battle MBT unless promoted battle
