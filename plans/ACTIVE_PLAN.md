@@ -176,6 +176,20 @@ Keep it synchronized with the DAG table and task details.
   vocabulary changes.
 - Shared algebra changes must update
   `packages/shared-algebras/README.md` or relevant package-local proof docs.
+- Optional fields and empty collections must represent distinct domain states.
+  Do not use `undefined` as a second spelling for an empty list. If a type can
+  represent unknown, omitted, and empty, document the domain meaning of each or
+  redesign the type so the invalid distinction is unrepresentable.
+- Avoid contrast names such as `normalized`, `legacy`, `current`, or `new`
+  unless the repo owns the opposite concept at the same boundary and the term is
+  domain-backed. Prefer names for the rule/domain object being modeled.
+- Recent modeling correction: `normalized-algebra` and
+  `LegacyAdvancementProgressionInput` were rejected because they named migration
+  mechanics rather than durable domain concepts. The corrected names are
+  `character-progression-algebra` and `AdvancementSelectionProgressionInput`.
+  Promoted packages may expose compatibility projections, but the public names
+  must describe the source shape or domain object, not the package's migration
+  history.
 - Do not run battle MBT for research-only tasks. Use the smallest MBT tier that
   actually validates a completed behavior change.
 - Implementation closeout must include `/simplify` convergence: minimum two

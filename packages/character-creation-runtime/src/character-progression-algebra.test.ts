@@ -6,7 +6,7 @@ import {
 
 import { characterClassLevel } from "./types.ts";
 import {
-  characterProgressionFromLegacyAdvancement,
+  characterProgressionFromAdvancementSelection,
   characterProgressionFromUnitIds,
   computeTotalLevel,
   createCharacterProgression,
@@ -29,6 +29,7 @@ describe("character progression algebra", () => {
   it("derives a level-1 Fighter without storing an advancement level", () => {
     const progression = createCharacterProgression({
       startingClass: "fighter",
+      advancements: [],
     });
 
     expect(progression).toEqual({
@@ -98,8 +99,8 @@ describe("character progression algebra", () => {
     });
   });
 
-  it("projects legacy advancement entries without keeping stored levels", () => {
-    const progression = characterProgressionFromLegacyAdvancement({
+  it("projects advancement selection entries without keeping stored levels", () => {
+    const progression = characterProgressionFromAdvancementSelection({
       unitLibrary,
       primaryClassUnitId: "class_fighter",
       advancement: {

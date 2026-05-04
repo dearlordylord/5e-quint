@@ -24,7 +24,7 @@ export type CharacterProgressionUnitIdInput = {
   readonly postStartAdvancementClassUnitIds: readonly UnitRecord["id"][];
 };
 
-export type LegacyAdvancementProgressionInput = {
+export type AdvancementSelectionProgressionInput = {
   readonly unitLibrary: UnitCatalog;
   readonly primaryClassUnitId: UnitRecord["id"];
   readonly advancement: CharacterAdvancementSelection;
@@ -32,19 +32,15 @@ export type LegacyAdvancementProgressionInput = {
 
 export function createCharacterProgression(input: {
   readonly startingClass: ClassName;
-  readonly advancements?: readonly ClassName[];
+  readonly advancements: readonly ClassName[];
 }): CharacterProgression {
-  const advancements = [...(input.advancements ?? [])];
+  const advancements = [...input.advancements];
   characterClassLevel(1 + advancements.length);
 
   return {
     startingClass: input.startingClass,
     advancements,
   };
-}
-
-export function getStartingClass(progression: CharacterProgression): ClassName {
-  return progression.startingClass;
 }
 
 export function computeTotalLevel(
@@ -125,8 +121,8 @@ export function characterProgressionFromUnitIds(
   });
 }
 
-export function characterProgressionFromLegacyAdvancement(
-  input: LegacyAdvancementProgressionInput,
+export function characterProgressionFromAdvancementSelection(
+  input: AdvancementSelectionProgressionInput,
 ): CharacterProgression {
   const startingClass = classUnitIdToClassName({
     unitLibrary: input.unitLibrary,
@@ -143,7 +139,7 @@ export function characterProgressionFromLegacyAdvancement(
 
   if (expandedClasses[0] !== startingClass) {
     throw new Error(
-      `Legacy advancement must begin with the primary class: ${input.primaryClassUnitId}`,
+      `Advancement selection must begin with the primary class: ${input.primaryClassUnitId}`,
     );
   }
 

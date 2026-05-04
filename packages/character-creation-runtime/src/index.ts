@@ -90,18 +90,17 @@ export {
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {
-  characterProgressionFromLegacyAdvancement,
+  characterProgressionFromAdvancementSelection,
   characterProgressionFromUnitIds,
   classNameFromClassUnit,
   classUnitIdToClassName,
   computeTotalLevel,
   createCharacterProgression,
-  getStartingClass,
   orderedProgressionClasses,
   postStartAdvancementLevel,
   progressionClassLevels,
+  type AdvancementSelectionProgressionInput,
   type CharacterProgression,
   type CharacterProgressionClassLevels,
   type CharacterProgressionUnitIdInput,
-  type LegacyAdvancementProgressionInput,
 } from "./character-progression-algebra.ts";
