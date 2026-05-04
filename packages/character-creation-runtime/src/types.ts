@@ -37,6 +37,7 @@ import type {
   WeaponProficiencyCategory,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
+import type { CharacterProgression } from "./character-progression-algebra.ts";
 
 export { SUPPORTED_ABILITY_SCORE_METHODS };
 export type { AbilityScoreAssignment, SupportedAbilityScoreMethod };
@@ -567,7 +568,7 @@ export type CharacterBuildEquipment = CharacterBuildLoadout;
 // In-play CharacterSheet state such as current HP, Temporary Hit Points, and
 // Hit Dice remaining belongs to the adventuring/rest boundary, not this package.
 export type CharacterBuild = {
-  readonly advancement: CharacterAdvancementSelection;
+  readonly progression: CharacterProgression;
   readonly background: UnitRecord["id"];
   readonly species: UnitRecord["id"];
   readonly originLanguages: CharacterStartingLanguages;

@@ -1,3 +1,4 @@
+import { Either } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { hp } from "@dnd/shared/types";
 import {
@@ -16,6 +17,11 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
+import {
+  characterProgressionFromAdvancementSelection,
+  progressionClassLevels,
+  type CharacterProgression,
+} from "./character-progression-algebra.ts";
 import {
   backgroundToolChoiceSpec,
   classFeatureGrantChoiceHoles,
@@ -276,6 +282,7 @@ const TemporarySupportedSliceSelections = Symbol(
 
 type TemporarySupportedSliceSelections = {
   readonly selections: FinalizedCharacterSelections;
+  readonly progression: CharacterProgression;
   readonly [TemporarySupportedSliceSelections]: true;
 };
 
@@ -293,18 +300,45 @@ function temporarySupportedSliceSelections(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): TemporarySupportedSliceSelectionsResult {
-  const issues = nonEmptyReadonlyArray(
-    temporarySupportedSliceIssues(selections, unitLibrary),
-  );
-  return issues == null
-    ? {
-        tag: "accepted",
-        value: {
-          selections,
-          [TemporarySupportedSliceSelections]: true,
-        },
-      }
-    : { tag: "rejected", issues };
+  const progression = characterProgressionFromAdvancementSelection({
+    unitLibrary,
+    primaryClassUnitId: selections.primaryClass,
+    advancement: selections.advancement,
+  });
+  const progressionIssues = Either.isLeft(progression)
+    ? [
+        illegalFinalizationIssue(
+          "Finalized build advancement is not a valid character progression.",
+        ),
+      ]
+    : [];
+  const issues = nonEmptyReadonlyArray([
+    ...progressionIssues,
+    ...temporarySupportedSliceIssues(selections, unitLibrary),
+  ]);
+  if (issues != null) {
+    return { tag: "rejected", issues };
+  }
+
+  if (Either.isLeft(progression)) {
+    return {
+      tag: "rejected",
+      issues: [
+        illegalFinalizationIssue(
+          "Finalized build advancement is not a valid character progression.",
+        ),
+      ],
+    };
+  }
+
+  return {
+    tag: "accepted",
+    value: {
+      selections,
+      progression: progression.right,
+      [TemporarySupportedSliceSelections]: true,
+    },
+  };
 }
 
 export function expectedValueIssue(
@@ -431,6 +465,10 @@ export function buildCharacterBuild(input: {
   // temporary gate is single-class, but Fighter 2 and Wizard 1 both flow through
   // this same build projection.
   const { selections } = input.supportedSelections;
+  const progression = input.supportedSelections.progression;
+  const progressionLevels = progressionClassLevels(progression);
+  const selectedClassLevel =
+    progressionLevels[progression.startingClass] ?? characterClassLevel(1);
   const classFacts = requireReadable(
     readClassCreationFacts(
       input.unitLibrary.requireUnit(selections.primaryClass),
@@ -453,7 +491,6 @@ export function buildCharacterBuild(input: {
     selections.backgroundAbilityScoreIncrease,
     backgroundFacts.abilityScoreIncrease.abilities,
   );
-  const selectedClassLevel = selections.advancement.entries[0]?.level ?? 1;
   const classFeatureGrants = classFacts.featureGrants.filter(
     (grant) => grant.level <= selectedClassLevel,
   );
@@ -478,7 +515,7 @@ export function buildCharacterBuild(input: {
   const buildEquipment = finalizedBuildEquipment(selections);
 
   return {
-    advancement: selections.advancement,
+    progression,
     background: selections.background,
     species: selections.species,
     originLanguages: selections.languages,
@@ -577,7 +614,10 @@ export function allFinalizedChoicesSupported(
       const supportedHole = supportedHolesBySource.get(
         unitChoiceSourceKey(choice.source),
       );
-      if (supportedHole == null || !choiceSelectionMatchesHole(choice, supportedHole)) {
+      if (
+        supportedHole == null ||
+        !choiceSelectionMatchesHole(choice, supportedHole)
+      ) {
         return false;
       }
 
@@ -590,7 +630,9 @@ export function allFinalizedChoicesSupported(
         );
       }
 
-      if (sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)) {
+      if (
+        sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)
+      ) {
         return supportedStartingEquipmentCoinGrantChoice(
           choice,
           selections.background,
@@ -607,12 +649,8 @@ export function allFinalizedChoicesSupported(
   );
 }
 
-function unitChoiceSourceKey(
-  source: UnitChoiceSource,
-): string {
-  return (
-    `${source.unitId}:${source.choiceKey}`
-  );
+function unitChoiceSourceKey(source: UnitChoiceSource): string {
+  return `${source.unitId}:${source.choiceKey}`;
 }
 
 export function supportedChoiceHolesBySource(
@@ -655,7 +693,9 @@ function sameChoiceCardinality(
 ): boolean {
   const leftBounds = choiceCardinalityBounds(left.cardinality);
   const rightBounds = choiceCardinalityBounds(right.cardinality);
-  return leftBounds.min === rightBounds.min && leftBounds.max === rightBounds.max;
+  return (
+    leftBounds.min === rightBounds.min && leftBounds.max === rightBounds.max
+  );
 }
 
 function mergeChoiceHoleOptions(
@@ -711,7 +751,10 @@ function supportedFinalizationChoiceHoles(input: {
     .map((hole) => requireUnitChoiceCreationHole(hole));
   const wizardSpellHoles =
     input.classFacts.className === "wizard"
-      ? wizardSpellcastingChoiceHoles(input.selections.primaryClass, input.classFacts)
+      ? wizardSpellcastingChoiceHoles(
+          input.selections.primaryClass,
+          input.classFacts,
+        )
       : [];
   const backgroundToolHole = backgroundToolChoiceSpec(
     input.backgroundFacts.toolProficiency,
@@ -743,7 +786,10 @@ function supportedFinalizationChoiceHoles(input: {
         ? [
             requireUnitChoiceCreationHole(
               choiceHole({
-                source: unitSource(loadoutChoice.unitId, loadoutChoice.choiceKey),
+                source: unitSource(
+                  loadoutChoice.unitId,
+                  loadoutChoice.choiceKey,
+                ),
                 cardinality: EXACTLY_ONE_CHOICE,
                 options: [
                   {
@@ -780,7 +826,9 @@ function wizardSpellcastingChoiceHoles(
     requireUnitChoiceCreationHole(
       choiceHole({
         source: unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(spellcasting.spellbookAccess.choose),
+        cardinality: exactChoiceCardinality(
+          spellcasting.spellbookAccess.choose,
+        ),
         options: spellcasting.spellbookAccess.spells.map((spell) => ({
           optionId: creationChoiceOptionId(spell.spellId),
           label: spell.spellId,
@@ -816,7 +864,9 @@ function isUnitChoiceCreationHole(
   return hole.source.tag === "unit";
 }
 
-function requireUnitChoiceCreationHole(hole: CreationHole): UnitChoiceCreationHole {
+function requireUnitChoiceCreationHole(
+  hole: CreationHole,
+): UnitChoiceCreationHole {
   const choice = requireChoiceCreationHole(hole);
   if (!isUnitChoiceCreationHole(choice)) {
     throw new Error("Expected a unit-sourced choice creation hole.");
@@ -868,16 +918,23 @@ export function isSupportedEquipmentSelection(
 export function characterBuildUnitRefs(
   build: Pick<
     CharacterBuild,
-    | "advancement"
+    | "progression"
     | "background"
     | "species"
     | "features"
     | "equipment"
     | "spellcasting"
   >,
+  unitLibrary: UnitCatalog,
 ): readonly UnitRef[] {
+  const classUnitIds = uniqueValues(
+    [build.progression.startingClass, ...build.progression.advancements].map(
+      (className) => classUnitIdForClassName(className, unitLibrary),
+    ),
+  );
+
   return unitRefs(
-    ...build.advancement.entries.map((entry) => entry.classUnitId),
+    ...classUnitIds,
     build.background,
     build.species,
     ...build.features.map((feature) => feature.unitId),
@@ -889,6 +946,23 @@ export function characterBuildUnitRefs(
     ...(build.spellcasting?.spellbook.map((spell) => spell.spellId) ?? []),
     ...(build.spellcasting?.preparedSpells ?? []),
   );
+}
+
+function classUnitIdForClassName(
+  className: CharacterProgression["startingClass"],
+  unitLibrary: UnitCatalog,
+): UnitRecord["id"] {
+  const unit = unitLibrary
+    .listUnits()
+    .find(
+      (candidate) =>
+        candidate.kind === "class" && candidate.className === className,
+    );
+  if (unit == null) {
+    throw new Error(`Character build references unknown class ${className}.`);
+  }
+
+  return unit.id;
 }
 
 export function finalizedClassChoiceFeatures(

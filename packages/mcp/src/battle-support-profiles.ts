@@ -11,6 +11,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
+  progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -40,7 +41,7 @@ export function characterUnitRefsWithBattleSupportProfiles(
     build,
     unitLibrary,
   );
-  return characterBuildUnitRefs(build).map((unitRef) =>
+  return characterBuildUnitRefs(build, unitLibrary).map((unitRef) =>
     withBattleSupportProfiles(
       unitRef,
       bonusActionHideClassUnitIds,
@@ -71,18 +72,17 @@ function supportedBonusActionHideClassUnitIds(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): ReadonlySet<string> {
-  const supportedClassUnitIds = new Set<string>();
-  for (const entry of build.advancement.entries) {
-    const unit = unitLibrary.requireUnit(entry.classUnitId);
-    if (
-      unit.kind === "class" &&
-      unit.className === "rogue" &&
-      entry.level >= 2
-    ) {
-      supportedClassUnitIds.add(entry.classUnitId);
-    }
+  const rogueLevel = progressionClassLevels(build.progression).rogue;
+  if (rogueLevel === undefined || rogueLevel < 2) {
+    return new Set();
   }
-  return supportedClassUnitIds;
+
+  return new Set(
+    unitLibrary
+      .listUnits()
+      .filter((unit) => unit.kind === "class" && unit.className === "rogue")
+      .map((unit) => unit.id),
+  );
 }
 
 function battleSupportProfilesForUnit(

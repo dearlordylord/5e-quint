@@ -99,7 +99,11 @@ export {
   orderedProgressionClasses,
   progressionClassLevels,
   type AdvancementSelectionProgressionInput,
+  type AdvancementSelectionProgressionIssue,
   type CharacterProgression,
   type CharacterProgressionClassLevels,
+  type CharacterProgressionIssue,
   type CharacterProgressionUnitIdInput,
+  type CharacterProgressionUnitIdIssue,
+  type ClassUnitNameIssue,
 } from "./character-progression-algebra.ts";

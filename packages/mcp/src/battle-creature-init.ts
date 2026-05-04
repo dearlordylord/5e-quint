@@ -19,6 +19,9 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
+  computeTotalLevel,
+  orderedProgressionClasses,
+  progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -162,18 +165,18 @@ function characterBattleSize(build: CharacterBuild, unitLibrary: UnitCatalog) {
 
 function characterBattleClassLevels(
   build: CharacterBuild,
-  unitLibrary: UnitCatalog,
+  _unitLibrary: UnitCatalog,
 ): Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
 >["classLevels"] {
-  return build.advancement.entries.map((entry) => {
-    const unit = unitLibrary.requireUnit(entry.classUnitId);
-    if (unit.kind !== "class") {
-      throw new Error(`Expected class Unit: ${entry.classUnitId}`);
-    }
-    return { className: unit.className, level: entry.level };
-  });
+  const classLevels = progressionClassLevels(build.progression);
+  return [...new Set(orderedProgressionClasses(build.progression))].flatMap(
+    (className) => {
+      const level = classLevels[className];
+      return level === undefined ? [] : [{ className, level }];
+    },
+  );
 }
 
 function characterBattleResources(
@@ -247,7 +250,7 @@ function characterArmorClassState(
             },
           ]
         : []),
-      ...characterBuildUnitRefs(build).flatMap((ref) => {
+      ...characterBuildUnitRefs(build, unitLibrary).flatMap((ref) => {
         const unit = unitLibrary.requireUnit(ref.unitId);
         return armorDefenseBonus(unit);
       }),
@@ -421,10 +424,7 @@ function characterSpellcasting(input: {
 }
 
 function characterLevel(build: CharacterBuild): number {
-  return build.advancement.entries.reduce(
-    (total, entry) => total + entry.level,
-    0,
-  );
+  return computeTotalLevel(build.progression);
 }
 
 function spellRecordsForIds(

@@ -133,17 +133,17 @@ checks all run against that indexed frontier instead of repeatedly scanning the
 hole list. This keeps the validation boundary stable as Surface catalogs gain
 more legal Units and options.
 
-The finalized `CharacterBuild` carries selected Unit refs plus derived build
-facts needed by later boundaries: final ability scores, Hit Point maximum and
-Hit Die pool, proficiencies, granted feature refs, activation resources,
-starting Wizard Spell Access and Spell Slot capacity, and equipment/loadout
-refs. Supported class-choice features, Wizard spellcasting facts, and loadout
-refs are projected from accepted draft selections and Unit readers, not
-reauthored as parallel constants. The remaining finalization gate rejects
-complete drafts whose selected class level, origin facts, choices, or equipment
-are outside the support profile. `CharacterBuild` does not carry current HP,
-Temporary Hit Points, expended resources or Spell Slots, Hit Dice remaining, or
-battle creature-init types.
+The finalized `CharacterBuild` carries Character Progression plus selected Unit
+refs and derived build facts needed by later boundaries: final ability scores,
+Hit Point maximum and Hit Die pool, proficiencies, granted feature refs,
+activation resources, starting Wizard Spell Access and Spell Slot capacity, and
+equipment/loadout refs. Supported class-choice features, Wizard spellcasting
+facts, and loadout refs are projected from accepted draft selections and Unit
+readers, not reauthored as parallel constants. The remaining finalization gate
+rejects complete drafts whose selected class level, origin facts, choices, or
+equipment are outside the support profile. `CharacterBuild` does not carry
+current HP, Temporary Hit Points, expended resources or Spell Slots, Hit Dice
+remaining, or battle creature-init types.
 
 Finalization support checks are source-shaped: they reconstruct expected
 choice-hole families from Surface readers plus the support profile and validate
@@ -152,10 +152,10 @@ hard-coded authored feature ids in finalization logic.
 
 `src/character-progression-algebra.ts` owns the promoted progression read model for
 follow-up migration work: `startingClass` plus post-start class advancements.
-It derives total level, per-class levels, and post-start advancement levels
-from that ordered progression. Surface class Unit ids such as `class_fighter`
-are converted to class names at explicit adapter functions and are not stored
-inside the character progression algebra.
+It derives total level and per-class levels from that ordered progression.
+Surface class Unit ids such as `class_fighter` are converted to class names at
+explicit adapter functions and are not stored inside the character progression
+algebra.
 
 Phase-1 manifest lock is still intentional in the current runtime. The lock ends
 only after the promoted-reachable shape inventory for character creation has been

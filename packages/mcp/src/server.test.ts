@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { Option } from "effect";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -3460,13 +3461,9 @@ function rogueCharacterBuild(
   const level = characterClassLevel(input.level ?? 1);
   return {
     ...base,
-    advancement: {
-      entries: [
-        {
-          classUnitId: "class_rogue",
-          level,
-        },
-      ],
+    progression: {
+      startingClass: "rogue",
+      advancements: Array.from({ length: level - 1 }, () => "rogue"),
     },
     features: [
       ...base.features.filter(
@@ -3519,6 +3516,11 @@ function rogueBattleUnitLibrary(
   const rogueClass = rogueClassUnit(root.unitLibrary);
   return {
     ...root.unitLibrary,
+    getUnit: (unitId: string) =>
+      unitId === "class_rogue"
+        ? Option.some(rogueClass)
+        : root.unitLibrary.getUnit(unitId),
+    listUnits: () => [...root.unitLibrary.listUnits(), rogueClass],
     requireUnit: (unitId: string) => {
       if (unitId === "class_rogue") return rogueClass;
       if (unitId === "rogue_sneak_attack") {
