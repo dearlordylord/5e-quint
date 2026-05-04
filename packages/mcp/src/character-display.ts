@@ -14,18 +14,14 @@ export function characterBuildDisplayName(
   const backgroundName = Option.isSome(background)
     ? background.value.name
     : build.background;
-  const className = [
-    build.progression.startingClass,
-    ...build.progression.advancements,
-  ]
-    .map(
-      (className) =>
-        unitLibrary
-          .listUnits()
-          .find((unit) => unit.kind === "class" && unit.className === className)
-          ?.name ?? className,
-    )
-    .join("/");
+  const classUnit = unitLibrary.getUnit(build.progression.classUnitId);
+  const className = Option.isSome(classUnit)
+    ? classUnit.value.name
+    : build.progression.classUnitId;
+  const classLabel =
+    build.progression.classLevel === 1
+      ? className
+      : `${className} ${build.progression.classLevel}`;
 
-  return `${speciesName} ${backgroundName} ${className}`;
+  return `${speciesName} ${backgroundName} ${classLabel}`;
 }

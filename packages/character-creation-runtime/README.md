@@ -22,12 +22,12 @@ not in-play Character Sheet state.
 
 ## Boundary
 
-| Source outside runtime                       | Runtime operation               | Runtime output                 |
-| -------------------------------------------- | ------------------------------- | ------------------------------ |
-| Unit catalog                                 | `discoverCreationHoles`         | fillable `CreationHole[]`      |
-| caller-submitted batch of `CreationFill`s    | `fillCreationHoles`             | accepted/rejected draft update |
-| complete legal draft plus Unit facts         | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
-| finalized `CharacterBuild`                   | application composition outside | battle creature initialization |
+| Source outside runtime                    | Runtime operation               | Runtime output                 |
+| ----------------------------------------- | ------------------------------- | ------------------------------ |
+| Unit catalog                              | `discoverCreationHoles`         | fillable `CreationHole[]`      |
+| caller-submitted batch of `CreationFill`s | `fillCreationHoles`             | accepted/rejected draft update |
+| complete legal draft plus Unit facts      | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
+| finalized `CharacterBuild`                | application composition outside | battle creature initialization |
 
 `@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or the
 legacy Core package. Battle initialization from a `CharacterBuild` belongs to
@@ -150,12 +150,15 @@ choice-hole families from Surface readers plus the support profile and validate
 selected choices against those hole shapes, instead of branching on
 hard-coded authored feature ids in finalization logic.
 
-`src/character-progression-algebra.ts` owns the promoted progression read model for
-follow-up migration work: `startingClass` plus post-start class advancements.
-It derives total level and per-class levels from that ordered progression.
-Surface class Unit ids such as `class_fighter` are converted to class names at
-explicit adapter functions and are not stored inside the character progression
-algebra.
+`src/character-progression-algebra.ts` owns the durable Character Progression
+read model. The current supported branch is single-class: it stores the selected
+class Unit id, class name, and class level. Multiclass progression is rejected at
+the finalization boundary until the runtime can carry SRD multiclass
+prerequisite evidence into the durable build shape.
+
+For class levels above 1, the current support profile projects fixed Hit Point
+gains after level 1. Rolled HP advancement is outside this slice and must become
+an explicit creation choice before it can be finalized.
 
 Phase-1 manifest lock is still intentional in the current runtime. The lock ends
 only after the promoted-reachable shape inventory for character creation has been

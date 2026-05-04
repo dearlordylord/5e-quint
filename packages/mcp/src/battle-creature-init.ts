@@ -21,8 +21,6 @@ import {
 import {
   characterBuildUnitRefs,
   computeTotalLevel,
-  orderedProgressionClasses,
-  progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -154,6 +152,13 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(resources)) {
     return battleCreatureInitIssue(resources.left.message);
   }
+  const classLevels = characterBattleClassLevels(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(classLevels)) {
+    return battleCreatureInitIssue(classLevels.left.message);
+  }
   const spellcasting =
     input.build.spellcasting === undefined
       ? undefined
@@ -175,7 +180,7 @@ export function battleCreatureInitFromCharacterBuild(
       kind: "character",
       characterId: input.characterId,
       characterUnitRefs: characterUnitRefs.right,
-      classLevels: characterBattleClassLevels(input.build, input.unitLibrary),
+      classLevels: classLevels.right,
       armorClass: armorClass.right,
       size: species.right.size.size,
       speed: { walkFeet: movementFeet(species.right.speed.walkFeet) },
@@ -202,18 +207,33 @@ export function battleCreatureInitFromCharacterBuild(
 
 function characterBattleClassLevels(
   build: CharacterBuild,
-  _unitLibrary: UnitCatalog,
-): Extract<
-  BattleCreatureInit["creatureInit"],
-  { readonly kind: "character" }
->["classLevels"] {
-  const classLevels = progressionClassLevels(build.progression);
-  return [...new Set(orderedProgressionClasses(build.progression))].flatMap(
-    (className) => {
-      const level = classLevels[className];
-      return level === undefined ? [] : [{ className, level }];
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"],
+  BattleCreatureInitIssue
+> {
+  const classUnit = getRequiredUnit(unitLibrary, build.progression.classUnitId);
+  if (Either.isLeft(classUnit)) {
+    return battleCreatureInitIssue(classUnit.left.message);
+  }
+  if (classUnit.right.kind !== "class") {
+    return battleCreatureInitIssue(
+      `Expected class Unit: ${build.progression.classUnitId}`,
+    );
+  }
+
+  return Either.right([
+    {
+      className: classUnit.right.className,
+      level: build.progression.classLevel,
     },
-  );
+  ] satisfies Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"]);
 }
 
 function characterBattleResources(
@@ -294,7 +314,7 @@ function characterArmorClassState(
       sourceUnitId: shield.right.id,
     });
   }
-  for (const ref of characterBuildUnitRefs(build, unitLibrary)) {
+  for (const ref of characterBuildUnitRefs(build)) {
     const unit = getRequiredUnit(unitLibrary, ref.unitId);
     if (Either.isLeft(unit)) {
       return battleCreatureInitIssue(unit.left.message);

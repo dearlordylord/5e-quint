@@ -42,51 +42,36 @@ describe("character progression algebra", () => {
   it("derives a level-1 Fighter without storing an advancement level", () => {
     const progression = expectRight(
       createCharacterProgression({
-        startingClass: "fighter",
-        advancements: [],
+        classUnitId: "class_fighter",
+        classLevel: characterClassLevel(1),
       }),
     );
 
     expect(progression).toEqual({
-      startingClass: "fighter",
-      advancements: [],
+      classUnitId: "class_fighter",
+      classLevel: 1,
     });
     expect(computeTotalLevel(progression)).toBe(1);
-    expect(progressionClassLevels(progression)).toEqual({
+    expect(
+      expectRight(progressionClassLevels({ progression, unitLibrary })),
+    ).toEqual({
       fighter: 1,
     });
   });
 
-  it("derives Fighter 2 from one post-start Fighter advancement", () => {
+  it("derives Fighter 2 from selected Fighter class level", () => {
     const progression = expectRight(
       createCharacterProgression({
-        startingClass: "fighter",
-        advancements: ["fighter"],
+        classUnitId: "class_fighter",
+        classLevel: characterClassLevel(2),
       }),
     );
 
     expect(computeTotalLevel(progression)).toBe(2);
-    expect(progressionClassLevels(progression)).toEqual({
+    expect(
+      expectRight(progressionClassLevels({ progression, unitLibrary })),
+    ).toEqual({
       fighter: 2,
-    });
-  });
-
-  it("derives a Fighter/Wizard progression from ordered class choices", () => {
-    const progression = expectRight(
-      createCharacterProgression({
-        startingClass: "fighter",
-        advancements: ["wizard"],
-      }),
-    );
-
-    expect(orderedProgressionClasses(progression)).toEqual([
-      "fighter",
-      "wizard",
-    ]);
-    expect(computeTotalLevel(progression)).toBe(2);
-    expect(progressionClassLevels(progression)).toEqual({
-      fighter: 1,
-      wizard: 1,
     });
   });
 
@@ -94,30 +79,33 @@ describe("character progression algebra", () => {
     const progression = expectRight(
       characterProgressionFromUnitIds({
         unitLibrary,
-        startingClassUnitId: "class_fighter",
-        postStartAdvancementClassUnitIds: ["class_wizard"],
+        classUnitId: "class_fighter",
+        classLevel: characterClassLevel(1),
       }),
     );
 
     expect(progression).toEqual({
-      startingClass: "fighter",
-      advancements: ["wizard"],
+      classUnitId: "class_fighter",
+      classLevel: 1,
     });
   });
 
-  it("requires an explicit empty post-start Unit-id list for level 1", () => {
+  it("preserves selected class Unit identity for higher levels", () => {
     const progression = expectRight(
       characterProgressionFromUnitIds({
         unitLibrary,
-        startingClassUnitId: "class_fighter",
-        postStartAdvancementClassUnitIds: [],
+        classUnitId: "class_fighter",
+        classLevel: characterClassLevel(2),
       }),
     );
 
     expect(progression).toEqual({
-      startingClass: "fighter",
-      advancements: [],
+      classUnitId: "class_fighter",
+      classLevel: 2,
     });
+    expect(
+      expectRight(orderedProgressionClasses({ progression, unitLibrary })),
+    ).toEqual(["fighter", "fighter"]);
   });
 
   it("projects advancement selection entries without keeping stored levels", () => {
@@ -134,8 +122,8 @@ describe("character progression algebra", () => {
     );
 
     expect(progression).toEqual({
-      startingClass: "fighter",
-      advancements: ["fighter"],
+      classUnitId: "class_fighter",
+      classLevel: 2,
     });
   });
 
@@ -180,13 +168,32 @@ describe("character progression algebra", () => {
   it("returns typed issues for invalid progression totals", () => {
     expect(
       createCharacterProgression({
-        startingClass: "fighter",
-        advancements: Array.from({ length: 20 }, () => "fighter"),
+        classUnitId: "class_fighter",
+        classLevel: 21 as ReturnType<typeof characterClassLevel>,
       }),
     ).toEqual(
       Either.left({
         code: "invalidTotalCharacterLevel",
         totalLevel: 21,
+      }),
+    );
+  });
+
+  it("returns a typed issue for source-shaped multiclass groups", () => {
+    expect(
+      characterProgressionFromAdvancementSelection({
+        unitLibrary,
+        primaryClassUnitId: "class_fighter",
+        advancement: {
+          entries: [
+            { classUnitId: "class_fighter", level: characterClassLevel(1) },
+            { classUnitId: "class_wizard", level: characterClassLevel(1) },
+          ],
+        },
+      }),
+    ).toEqual(
+      Either.left({
+        code: "unsupportedMulticlassProgression",
       }),
     );
   });

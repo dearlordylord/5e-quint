@@ -11,7 +11,6 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
-  progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -42,11 +41,14 @@ export function characterUnitRefsWithBattleSupportProfiles(
     build,
     unitLibrary,
   );
+  if (Either.isLeft(bonusActionHideClassUnitIds)) {
+    return Either.left(bonusActionHideClassUnitIds.left);
+  }
   const refs: BattleUnitRef[] = [];
-  for (const unitRef of characterBuildUnitRefs(build, unitLibrary)) {
+  for (const unitRef of characterBuildUnitRefs(build)) {
     const profiled = withBattleSupportProfiles(
       unitRef,
-      bonusActionHideClassUnitIds,
+      bonusActionHideClassUnitIds.right,
       unitLibrary,
     );
     if (Either.isLeft(profiled)) return Either.left(profiled.left);
@@ -88,17 +90,24 @@ function withBattleSupportProfiles(
 function supportedBonusActionHideClassUnitIds(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): ReadonlySet<string> {
-  const rogueLevel = progressionClassLevels(build.progression).rogue;
-  if (rogueLevel === undefined || rogueLevel < 2) {
-    return new Set();
+): Either.Either<ReadonlySet<string>, BattleSupportProfileIssue> {
+  if (build.progression.classLevel < 2) {
+    return Either.right(new Set());
   }
 
-  return new Set(
-    unitLibrary
-      .listUnits()
-      .filter((unit) => unit.kind === "class" && unit.className === "rogue")
-      .map((unit) => unit.id),
+  const unit = unitLibrary.getUnit(build.progression.classUnitId);
+  if (Option.isNone(unit)) {
+    return battleSupportProfileIssue(
+      `Unknown Unit for battle support profile: ${build.progression.classUnitId}.`,
+    );
+  }
+
+  return Either.right(
+    new Set(
+      unit.value.kind === "class" && unit.value.className === "rogue"
+        ? [build.progression.classUnitId]
+        : [],
+    ),
   );
 }
 

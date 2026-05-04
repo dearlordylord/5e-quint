@@ -19,7 +19,6 @@ import type {
 import { discoverCreationHoles } from "./discovery.ts";
 import {
   characterProgressionFromAdvancementSelection,
-  progressionClassLevels,
   type CharacterProgression,
 } from "./character-progression-algebra.ts";
 import {
@@ -476,9 +475,7 @@ export function buildCharacterBuild(input: {
   // this same build projection.
   const { selections } = input.supportedSelections;
   const progression = input.supportedSelections.progression;
-  const progressionLevels = progressionClassLevels(progression);
-  const selectedClassLevel =
-    progressionLevels[progression.startingClass] ?? characterClassLevel(1);
+  const selectedClassLevel = progression.classLevel;
   const classUnit = unitForFinalization(
     input.unitLibrary,
     selections.primaryClass,
@@ -593,6 +590,8 @@ function fixedHitPointsAfterLevelOne(
   hitPointDie: number,
   constitutionScore: number,
 ): number {
+  // Current support profile admits fixed HP gains after level 1. Rolled HP
+  // advancement needs an explicit creation choice before it can finalize.
   return Math.max(
     1,
     Math.floor(hitPointDie / 2) + 1 + abilityModifier(constitutionScore),
@@ -979,16 +978,9 @@ export function characterBuildUnitRefs(
     | "equipment"
     | "spellcasting"
   >,
-  unitLibrary: UnitCatalog,
 ): readonly UnitRef[] {
-  const classUnitIds = uniqueValues(
-    [build.progression.startingClass, ...build.progression.advancements].map(
-      (className) => classUnitIdForClassName(className, unitLibrary),
-    ),
-  ).flatMap((unitId) => (unitId == null ? [] : [unitId]));
-
   return unitRefs(
-    ...classUnitIds,
+    build.progression.classUnitId,
     build.background,
     build.species,
     ...build.features.map((feature) => feature.unitId),
@@ -1000,19 +992,6 @@ export function characterBuildUnitRefs(
     ...(build.spellcasting?.spellbook.map((spell) => spell.spellId) ?? []),
     ...(build.spellcasting?.preparedSpells ?? []),
   );
-}
-
-function classUnitIdForClassName(
-  className: CharacterProgression["startingClass"],
-  unitLibrary: UnitCatalog,
-): UnitRecord["id"] | undefined {
-  const unit = unitLibrary
-    .listUnits()
-    .find(
-      (candidate) =>
-        candidate.kind === "class" && candidate.className === className,
-    );
-  return unit?.id;
 }
 
 export function finalizedClassChoiceFeatures(

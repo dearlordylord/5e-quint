@@ -1393,8 +1393,8 @@ describe("character creation finalization", () => {
     }
 
     expect(result.build.progression).toEqual({
-      startingClass: "fighter",
-      advancements: [],
+      classUnitId: "class_fighter",
+      classLevel: 1,
     });
     expect(result.build.background).toBe("background_soldier");
     expect(result.build.species).toBe("species_orc");
@@ -1496,9 +1496,7 @@ describe("character creation finalization", () => {
       },
     ]);
     expect(
-      characterBuildUnitRefs(result.build, unitLibrary).map(
-        (ref) => ref.unitId,
-      ),
+      characterBuildUnitRefs(result.build).map((ref) => ref.unitId),
     ).toEqual([
       "class_fighter",
       "background_soldier",
@@ -1567,9 +1565,7 @@ describe("character creation finalization", () => {
       "intimidation",
     ]);
     expect(
-      characterBuildUnitRefs(result.build, unitLibrary).map(
-        (ref) => ref.unitId,
-      ),
+      characterBuildUnitRefs(result.build).map((ref) => ref.unitId),
     ).toEqual([
       "class_wizard",
       "background_soldier",

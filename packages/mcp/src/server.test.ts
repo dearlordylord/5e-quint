@@ -288,6 +288,14 @@ describe("MCP server route", () => {
     };
     const unsupportedLibrary = {
       ...root.unitLibrary,
+      getUnit: (unitId: string) =>
+        unitId === unsupportedCriticalRangeUnit.id
+          ? Option.some(unsupportedCriticalRangeUnit)
+          : root.unitLibrary.getUnit(unitId),
+      listUnits: () => [
+        ...root.unitLibrary.listUnits(),
+        unsupportedCriticalRangeUnit,
+      ],
       requireUnit: (unitId: string) =>
         unitId === unsupportedCriticalRangeUnit.id
           ? unsupportedCriticalRangeUnit
@@ -3485,8 +3493,8 @@ function rogueCharacterBuild(
   return {
     ...base,
     progression: {
-      startingClass: "rogue",
-      advancements: Array.from({ length: level - 1 }, () => "rogue"),
+      classUnitId: "class_rogue",
+      classLevel: level,
     },
     features: [
       ...base.features.filter(
@@ -3537,13 +3545,25 @@ function rogueBattleUnitLibrary(
   },
 ): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
   const rogueClass = rogueClassUnit(root.unitLibrary);
+  const overriddenUnits = [
+    rogueClass,
+    ...(overrides?.sneakAttackUnit === undefined
+      ? []
+      : [overrides.sneakAttackUnit]),
+    ...(overrides?.evasionUnit === undefined ? [] : [overrides.evasionUnit]),
+    ...(overrides?.uncannyDodgeUnit === undefined
+      ? []
+      : [overrides.uncannyDodgeUnit]),
+  ] as const;
   return {
     ...root.unitLibrary,
-    getUnit: (unitId: string) =>
-      unitId === "class_rogue"
-        ? Option.some(rogueClass)
-        : root.unitLibrary.getUnit(unitId),
-    listUnits: () => [...root.unitLibrary.listUnits(), rogueClass],
+    getUnit: (unitId: string) => {
+      const override = overriddenUnits.find((unit) => unit.id === unitId);
+      return override === undefined
+        ? root.unitLibrary.getUnit(unitId)
+        : Option.some(override);
+    },
+    listUnits: () => [...root.unitLibrary.listUnits(), ...overriddenUnits],
     requireUnit: (unitId: string) => {
       if (unitId === "class_rogue") return rogueClass;
       if (unitId === "rogue_sneak_attack") {
