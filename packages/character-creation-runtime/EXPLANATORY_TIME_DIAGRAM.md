@@ -234,7 +234,7 @@ flowchart TD
   Discover --> Background
   Discover --> Equipment
 
-  Initial --> Progression["draftHole(draft.progression.initial)<br/>list class-backed progressions<br/>choice: class_fighter:level_1:hit_point_maximum"]
+  Initial --> Progression["draftHole(draft.progression.initial)<br/>list class-backed progressions<br/>choice: class_fighter:level_1:maximum_hit_die"]
   Initial --> Bg["draftHole(draft.background)<br/>list background Units<br/>choice: background_soldier"]
   Initial --> Species["draftHole(draft.species)<br/>list species Units<br/>choice: species_orc"]
   Initial --> Scores["draftHole(draft.abilityScoreGeneration)<br/>abilityScores hole<br/>methods: standardArray, pointBuy"]
@@ -318,7 +318,7 @@ flowchart TD
   Apply["applyCreationFills"]
   Dispatch["applyCreationFill"]
   DraftFill["applyDraftFill"]
-  Progression["progression<br/>class_fighter:level_1:hit_point_maximum"]
+  Progression["progression<br/>class_fighter:level_1:maximum_hit_die"]
   Background["background<br/>requireSelectedUnitId -> background_soldier"]
   Species["species<br/>requireSelectedUnitId -> species_orc"]
   Scores["abilityScoreGeneration<br/>method standardArray<br/>assigned scores"]
@@ -345,8 +345,8 @@ flowchart TD
 
 Important detail: the `draft.progression.initial` fill writes one durable
 `CharacterProgression`, such as `{ classUnitId: "class_fighter", classLevel: 1,
-hitPointAdvancement: { tag: "levelOneMaximum" } }`. There is no separate
-primary-class field or level-1 advancement entry to keep in sync.
+hitPointRule: { tag: "levelOneMaximumHitDie" } }`. There is no separate
+primary-class field or level-1 class entry to keep in sync.
 
 ## Legal Batch 2: Unit-Granted Holes
 
@@ -605,7 +605,7 @@ functions. This inventory groups them by responsibility.
 
 Several facts must change together:
 
-- Support-profile constants such as `SUPPORTED_CLASS_UNIT_IDS`,
+- Support-profile constants such as `SUPPORTED_PROGRESSIONS`,
   `SUPPORTED_PROGRESSIONS`, supported option ids, and
   `temporarySupportedSliceIssues` all encode the currently executable creation
   slice.

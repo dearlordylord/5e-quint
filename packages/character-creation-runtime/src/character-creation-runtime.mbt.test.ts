@@ -50,13 +50,13 @@ function unitChoiceKeyRight(value: string) {
 
 type DraftProjection = {
   readonly revision: number;
-  readonly progression: boolean;
+  readonly progression: ProgressionSelectionProjection;
   readonly background: boolean;
   readonly species: boolean;
   readonly abilityScores: boolean;
   readonly languages: boolean;
   readonly alignment: boolean;
-  readonly fighterSkills: boolean;
+  readonly classSkills: boolean;
   readonly fighterFightingStyle: boolean;
   readonly fighterWeaponMastery: boolean;
   readonly backgroundAbilityScoreIncrease: boolean;
@@ -68,6 +68,11 @@ type DraftProjection = {
   readonly loadoutShield: boolean;
   readonly loadoutWeapon: boolean;
 };
+type ProgressionSelectionProjection =
+  | "NoProgression"
+  | "FighterLevel1"
+  | "FighterLevel2"
+  | "WizardLevel1";
 
 type RuntimeMbtState = {
   readonly draft: DraftProjection;
@@ -88,13 +93,25 @@ type HoleVariant = keyof typeof holeIds;
 
 const quintDraftSchema = z.object({
   revision: z.bigint(),
-  progression: z.boolean(),
+  progression: z.unknown().transform((value) => {
+    const progression = variantToString(value);
+    if (
+      progression === "NoProgression" ||
+      progression === "FighterLevel1" ||
+      progression === "FighterLevel2" ||
+      progression === "WizardLevel1"
+    ) {
+      return progression;
+    }
+
+    throw new Error(`Unknown Quint progression variant: ${progression}`);
+  }),
   background: z.boolean(),
   species: z.boolean(),
   abilityScores: z.boolean(),
   languages: z.boolean(),
   alignment: z.boolean(),
-  fighterSkills: z.boolean(),
+  classSkills: z.boolean(),
   fighterFightingStyle: z.boolean(),
   fighterWeaponMastery: z.boolean(),
   backgroundAbilityScoreIncrease: z.boolean(),
@@ -234,7 +251,7 @@ const holeIds = {
   HAbilityScores: "cc:draft:draft.abilityScoreGeneration",
   HLanguages: "cc:draft:draft.languages",
   HAlignment: "cc:draft:draft.alignment",
-  HFighterSkills: "cc:unit:class_fighter:fighter_skill_choices",
+  HClassSkills: "cc:unit:class_fighter:fighter_skill_choices",
   HFighterFightingStyle:
     "cc:unit:fighter_fighting_style_l1:fighter_fighting_style",
   HFighterWeaponMastery:
@@ -305,7 +322,7 @@ function initialManifestFills(
 ): readonly CreationFill[] {
   return [
     choiceFill(holes, "HProgression", [
-      "class_fighter:level_1:hit_point_maximum",
+      "class_fighter:level_1:maximum_hit_die",
     ]),
     choiceFill(holes, "HBackground", ["background_soldier"]),
     choiceFill(holes, "HSpecies", ["species_orc"]),
@@ -320,7 +337,7 @@ function initialChoicesOnlyFills(
 ): readonly CreationFill[] {
   return [
     choiceFill(holes, "HProgression", [
-      "class_fighter:level_1:hit_point_maximum",
+      "class_fighter:level_1:maximum_hit_die",
     ]),
     choiceFill(holes, "HBackground", ["background_soldier"]),
     choiceFill(holes, "HSpecies", ["species_orc"]),
@@ -339,7 +356,7 @@ function manifestChoiceFills(
   holes: readonly CreationHole[],
 ): readonly CreationFill[] {
   return [
-    choiceFill(holes, "HFighterSkills", ["perception", "survival"]),
+    choiceFill(holes, "HClassSkills", ["perception", "survival"]),
     choiceFill(holes, "HFighterFightingStyle", ["defense"]),
     choiceFill(holes, "HFighterWeaponMastery", [
       "weapon_longsword",
@@ -555,13 +572,13 @@ function projectDraft(draft: CharacterDraft): DraftProjection {
   const selections = draft.selections;
   return {
     revision: draft.revision,
-    progression: selections.progression != null,
+    progression: projectProgression(selections.progression),
     background: selections.background != null,
     species: selections.species != null,
     abilityScores: selections.abilityScoreGeneration != null,
     languages: selections.languages != null,
     alignment: selections.alignment != null,
-    fighterSkills: hasChoice(selections.choices, "fighter_skill_choices"),
+    classSkills: hasChoice(selections.choices, "fighter_skill_choices"),
     fighterFightingStyle: hasChoice(
       selections.choices,
       "fighter_fighting_style",
@@ -583,6 +600,20 @@ function projectDraft(draft: CharacterDraft): DraftProjection {
     loadoutShield: hasChoice(selections.choices, "loadout_shield"),
     loadoutWeapon: hasChoice(selections.choices, "loadout_weapon"),
   };
+}
+
+function projectProgression(
+  progression: CharacterDraft["selections"]["progression"],
+): ProgressionSelectionProjection {
+  if (progression == null) {
+    return "NoProgression";
+  }
+
+  if (progression.classUnitId === "class_wizard") {
+    return "WizardLevel1";
+  }
+
+  return progression.classLevel === 1 ? "FighterLevel1" : "FighterLevel2";
 }
 
 function hasChoice(

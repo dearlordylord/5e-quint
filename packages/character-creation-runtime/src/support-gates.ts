@@ -34,7 +34,6 @@ import {
   progressionOptionId,
   SUPPORTED_BACKGROUND_OPTION_IDS,
   SUPPORTED_BACKGROUND_UNIT_IDS,
-  SUPPORTED_CLASS_UNIT_IDS,
   SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
   SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
   SUPPORTED_LANGUAGE_OPTION_IDS,
@@ -60,7 +59,7 @@ import { creationChoiceOptionId } from "./types.ts";
 import {
   classUnitId,
   type CharacterProgression,
-  type HitPointAdvancementMethod,
+  type ClassHitPointRule,
 } from "./character-progression-types.ts";
 import { createCharacterProgression } from "./character-progression-algebra.ts";
 import { characterClassLevel } from "@dnd/shared/game-facts";
@@ -110,7 +109,6 @@ export type CharacterCreationSupportProfile = {
     SupportProfileUnitChoiceKey,
     readonly CreationChoiceOptionId[]
   >;
-  readonly classUnitIds: readonly UnitRecord["id"][];
   readonly backgroundUnitIds: readonly UnitRecord["id"][];
   readonly purchasableEquipmentUnitIds: readonly UnitRecord["id"][];
   readonly equipmentPurchaseChoiceCount: 3;
@@ -141,29 +139,29 @@ const SUPPORTED_PROGRESSIONS = [
   supportedProgression({
     classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
     classLevel: characterClassLevel(1),
-    hitPointAdvancement: { tag: "levelOneMaximum" },
+    hitPointRule: { tag: "levelOneMaximumHitDie" },
   }),
   supportedProgression({
     classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
     classLevel: characterClassLevel(2),
-    hitPointAdvancement: { tag: "fixedAfterLevelOne" },
+    hitPointRule: { tag: "fixedHigherLevelGain" },
   }),
   supportedProgression({
     classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID,
     classLevel: characterClassLevel(1),
-    hitPointAdvancement: { tag: "levelOneMaximum" },
+    hitPointRule: { tag: "levelOneMaximumHitDie" },
   }),
 ] as const satisfies ReadonlyArray<CharacterProgression>;
 
 function supportedProgression(input: {
   readonly classUnitId: UnitRecord["id"];
   readonly classLevel: ReturnType<typeof characterClassLevel>;
-  readonly hitPointAdvancement: HitPointAdvancementMethod;
+  readonly hitPointRule: ClassHitPointRule;
 }): CharacterProgression {
   const progression = createCharacterProgression({
     classUnitId: classUnitId(input.classUnitId),
     classLevel: input.classLevel,
-    hitPointAdvancement: input.hitPointAdvancement,
+    hitPointRule: input.hitPointRule,
   });
   if (Either.isLeft(progression)) {
     throw new Error(
@@ -223,7 +221,6 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [LOADOUT_SHIELD_CHOICE_KEY]: [PHASE1_LOADOUT_SHIELD_OPTION_ID],
     [LOADOUT_WEAPON_CHOICE_KEY]: [PHASE1_LOADOUT_WEAPON_OPTION_ID],
   },
-  classUnitIds: SUPPORTED_CLASS_UNIT_IDS,
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
   equipmentPurchaseChoiceCount: 3,
@@ -356,7 +353,11 @@ export function supportedHoleOptionIdSet(
 }
 
 export function supportedClassUnitIds(): readonly UnitRecord["id"][] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.classUnitIds;
+  return uniqueValues(
+    CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.map(
+      (progression) => progression.classUnitId,
+    ),
+  );
 }
 
 export function supportedBackgroundUnitIds(): readonly UnitRecord["id"][] {
@@ -382,7 +383,7 @@ export function isSupportedProgression(
     (supported) =>
       supported.classUnitId === progression.classUnitId &&
       supported.classLevel === progression.classLevel &&
-      supported.hitPointAdvancement.tag === progression.hitPointAdvancement.tag,
+      supported.hitPointRule.tag === progression.hitPointRule.tag,
   );
 }
 
@@ -400,6 +401,10 @@ export function supportedProgressionForOptionId(
   return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.find(
     (progression) => progressionOptionId(progression) === optionId,
   );
+}
+
+function uniqueValues<T>(values: readonly T[]): readonly T[] {
+  return [...new Set(values)];
 }
 
 export function supportedLoadoutChoiceForSource(

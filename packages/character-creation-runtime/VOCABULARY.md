@@ -30,7 +30,7 @@ than treating the submitted option id as authored truth.
 
 Character Progression - durable class-level read model for the current
 single-class support slice. It stores the parsed class Unit id, class level, and
-Hit Point advancement method. Class names are derived from the Unit catalog at
+Hit Point rule. Class names are derived from the Unit catalog at
 projection boundaries. Multiclass progression is a separate future branch that
 must carry prerequisite evidence before it can become durable build state.
 

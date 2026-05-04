@@ -152,15 +152,15 @@ hard-coded authored feature ids in finalization logic.
 
 `src/character-progression-algebra.ts` owns the durable Character Progression
 read model. The current supported branch is single-class: it stores the parsed
-class Unit id, class level, and Hit Point advancement method. Class names are
+class Unit id, class level, and Hit Point rule method. Class names are
 derived from the Unit catalog at projection boundaries. Multiclass progression
 is rejected at the finalization boundary until the runtime can carry SRD
 multiclass prerequisite evidence into the durable build shape.
 
 For class levels above 1, the current support profile projects fixed Hit Point
 gains after level 1. The selected progression option carries explicit Hit Point
-advancement evidence into `CharacterProgression`, and finalization rejects
-level/evidence combinations that contradict the rules. Rolled HP advancement is
+Hit Point rule evidence into `CharacterProgression`, and finalization rejects
+level/evidence combinations that contradict the rules. Rolled HP is
 outside this slice and must become an explicit creation choice before it can be
 finalized.
 

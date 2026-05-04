@@ -233,13 +233,13 @@ module characterCreationRuntimeMbt {
     Set("init", "accepted", "rejected").contains(result)
 
   pure def draftFillCount(draft: Draft): int =
-    (if (draft.progression) 1 else 0)
+    (if (hasProgression(draft)) 1 else 0)
       + (if (draft.background) 1 else 0)
       + (if (draft.species) 1 else 0)
       + (if (draft.abilityScores) 1 else 0)
       + (if (draft.languages) 1 else 0)
       + (if (draft.alignment) 1 else 0)
-      + (if (draft.fighterSkills) 1 else 0)
+      + (if (draft.classSkills) 1 else 0)
       + (if (draft.fighterFightingStyle) 1 else 0)
       + (if (draft.fighterWeaponMastery) 1 else 0)
       + (if (draft.backgroundAbilityScoreIncrease) 1 else 0)
@@ -252,10 +252,10 @@ module characterCreationRuntimeMbt {
       + (if (draft.loadoutWeapon) 1 else 0)
 
   pure def draftPrerequisitesHold(draft: Draft): bool =
-    (draft.fighterSkills implies draft.progression)
-      and (draft.fighterFightingStyle implies draft.progression)
-      and (draft.fighterWeaponMastery implies draft.progression)
-      and (draft.classEquipment implies draft.progression)
+    (draft.classSkills implies hasProgression(draft))
+      and (draft.fighterFightingStyle implies hasFighterProgression(draft))
+      and (draft.fighterWeaponMastery implies hasFighterProgression(draft))
+      and (draft.classEquipment implies hasProgression(draft))
       and (draft.backgroundAbilityScoreIncrease implies draft.background)
       and (draft.backgroundTool implies draft.background)
       and (draft.backgroundEquipment implies draft.background)
@@ -265,15 +265,17 @@ module characterCreationRuntimeMbt {
       and (draft.loadoutWeapon implies draft.equipmentPurchase)
 
   pure def draftReadyFieldsHold(draft: Draft): bool =
-    draft.progression
+    hasProgression(draft)
       and draft.background
       and draft.species
       and draft.abilityScores
       and draft.languages
       and draft.alignment
-      and draft.fighterSkills
-      and draft.fighterFightingStyle
-      and draft.fighterWeaponMastery
+      and draft.classSkills
+      and (
+        (hasFighterProgression(draft) and draft.fighterFightingStyle and draft.fighterWeaponMastery)
+        or hasWizardProgression(draft)
+      )
       and draft.backgroundAbilityScoreIncrease
       and draft.backgroundTool
       and draft.classEquipment

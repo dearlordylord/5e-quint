@@ -99,14 +99,14 @@ export {
   type ClassUnitNameIssue,
 } from "./character-progression-algebra.ts";
 export {
-  characterLevelHitPointAdvancement,
-  hitPointAdvancementLabel,
-  hitPointAdvancementOptionSuffix,
+  characterLevelHitPointRule,
+  hitPointRuleLabel,
+  hitPointRuleOptionSuffix,
   hitPointsAfterLevelOneMultiplier,
-  type CharacterLevelHitPointAdvancement,
+  type CharacterLevelHitPointRule,
   type CharacterProgressionLevelIssue,
   type ClassUnitId,
-  type FixedAfterLevelOneHitPointAdvancement,
-  type HitPointAdvancementMethod,
-  type LevelOneHitPointAdvancement,
+  type FixedHigherLevelClassHitPointRule,
+  type ClassHitPointRule,
+  type LevelOneClassHitPointRule,
 } from "./character-progression-types.ts";

@@ -21,31 +21,31 @@ export type PostLevelOneCharacterClassLevel = CharacterClassLevel &
 const PostLevelOneCharacterClassLevel =
   Brand.nominal<PostLevelOneCharacterClassLevel>();
 
-export type LevelOneHitPointAdvancement = {
-  readonly tag: "levelOneMaximum";
+export type LevelOneClassHitPointRule = {
+  readonly tag: "levelOneMaximumHitDie";
 };
 
-export type FixedAfterLevelOneHitPointAdvancement = {
-  readonly tag: "fixedAfterLevelOne";
+export type FixedHigherLevelClassHitPointRule = {
+  readonly tag: "fixedHigherLevelGain";
 };
 
-export type HitPointAdvancementMethod =
-  | LevelOneHitPointAdvancement
-  | FixedAfterLevelOneHitPointAdvancement;
+export type ClassHitPointRule =
+  | LevelOneClassHitPointRule
+  | FixedHigherLevelClassHitPointRule;
 
-export type CharacterLevelHitPointAdvancement =
+export type CharacterLevelHitPointRule =
   | {
       readonly classLevel: LevelOneCharacterClassLevel;
-      readonly hitPointAdvancement: LevelOneHitPointAdvancement;
+      readonly hitPointRule: LevelOneClassHitPointRule;
     }
   | {
       readonly classLevel: PostLevelOneCharacterClassLevel;
-      readonly hitPointAdvancement: FixedAfterLevelOneHitPointAdvancement;
+      readonly hitPointRule: FixedHigherLevelClassHitPointRule;
     };
 
 export type CharacterProgression = {
   readonly classUnitId: ClassUnitId;
-} & CharacterLevelHitPointAdvancement;
+} & CharacterLevelHitPointRule;
 
 export type CharacterProgressionLevelIssue =
   | {
@@ -53,18 +53,15 @@ export type CharacterProgressionLevelIssue =
       readonly classLevel: number;
     }
   | {
-      readonly code: "invalidHitPointAdvancementForLevel";
+      readonly code: "invalidHitPointRuleForLevel";
       readonly classLevel: CharacterClassLevel;
-      readonly hitPointAdvancement: HitPointAdvancementMethod;
+      readonly hitPointRule: ClassHitPointRule;
     };
 
-export function characterLevelHitPointAdvancement(input: {
+export function characterLevelHitPointRule(input: {
   readonly classLevel: CharacterClassLevel;
-  readonly hitPointAdvancement: HitPointAdvancementMethod;
-}): Either.Either<
-  CharacterLevelHitPointAdvancement,
-  CharacterProgressionLevelIssue
-> {
+  readonly hitPointRule: ClassHitPointRule;
+}): Either.Either<CharacterLevelHitPointRule, CharacterProgressionLevelIssue> {
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === input.classLevel)) {
     return Either.left({
       code: "invalidCharacterClassLevel",
@@ -72,56 +69,59 @@ export function characterLevelHitPointAdvancement(input: {
     });
   }
 
-  return Match.value(input.hitPointAdvancement).pipe(
-    Match.when({ tag: "levelOneMaximum" }, (hitPointAdvancement) =>
+  return Match.value(input.hitPointRule).pipe(
+    Match.when({ tag: "levelOneMaximumHitDie" }, (hitPointRule) =>
       input.classLevel === 1
         ? Either.right({
             classLevel: LevelOneCharacterClassLevel(input.classLevel),
-            hitPointAdvancement,
+            hitPointRule,
           })
         : Either.left({
-            code: "invalidHitPointAdvancementForLevel" as const,
+            code: "invalidHitPointRuleForLevel" as const,
             classLevel: input.classLevel,
-            hitPointAdvancement,
+            hitPointRule,
           }),
     ),
-    Match.when({ tag: "fixedAfterLevelOne" }, (hitPointAdvancement) =>
+    Match.when({ tag: "fixedHigherLevelGain" }, (hitPointRule) =>
       input.classLevel > 1
         ? Either.right({
             classLevel: PostLevelOneCharacterClassLevel(input.classLevel),
-            hitPointAdvancement,
+            hitPointRule,
           })
         : Either.left({
-            code: "invalidHitPointAdvancementForLevel" as const,
+            code: "invalidHitPointRuleForLevel" as const,
             classLevel: input.classLevel,
-            hitPointAdvancement,
+            hitPointRule,
           }),
     ),
     Match.exhaustive,
   );
 }
 
-export function hitPointAdvancementOptionSuffix(
-  advancement: HitPointAdvancementMethod,
-): "hit_point_maximum" | "fixed_hit_points" {
-  return Match.value(advancement).pipe(
-    Match.when({ tag: "levelOneMaximum" }, () => "hit_point_maximum" as const),
+export function hitPointRuleOptionSuffix(
+  rule: ClassHitPointRule,
+): "maximum_hit_die" | "fixed_hp_gain" {
+  return Match.value(rule).pipe(
     Match.when(
-      { tag: "fixedAfterLevelOne" },
-      () => "fixed_hit_points" as const,
+      { tag: "levelOneMaximumHitDie" },
+      () => "maximum_hit_die" as const,
     ),
+    Match.when({ tag: "fixedHigherLevelGain" }, () => "fixed_hp_gain" as const),
     Match.exhaustive,
   );
 }
 
-export function hitPointAdvancementLabel(
-  advancement: HitPointAdvancementMethod,
-): "Hit Point Maximum" | "Fixed Hit Points" {
-  return Match.value(advancement).pipe(
-    Match.when({ tag: "levelOneMaximum" }, () => "Hit Point Maximum" as const),
+export function hitPointRuleLabel(
+  rule: ClassHitPointRule,
+): "Level 1 maximum Hit Die" | "Fixed higher-level HP gain" {
+  return Match.value(rule).pipe(
     Match.when(
-      { tag: "fixedAfterLevelOne" },
-      () => "Fixed Hit Points" as const,
+      { tag: "levelOneMaximumHitDie" },
+      () => "Level 1 maximum Hit Die" as const,
+    ),
+    Match.when(
+      { tag: "fixedHigherLevelGain" },
+      () => "Fixed higher-level HP gain" as const,
     ),
     Match.exhaustive,
   );
@@ -131,9 +131,9 @@ export function hitPointsAfterLevelOneMultiplier(
   progression: CharacterProgression,
 ): number {
   return Match.value(progression).pipe(
-    Match.when({ hitPointAdvancement: { tag: "levelOneMaximum" } }, () => 0),
+    Match.when({ hitPointRule: { tag: "levelOneMaximumHitDie" } }, () => 0),
     Match.when(
-      { hitPointAdvancement: { tag: "fixedAfterLevelOne" } },
+      { hitPointRule: { tag: "fixedHigherLevelGain" } },
       (fixedProgression) => fixedProgression.classLevel - 1,
     ),
     Match.exhaustive,

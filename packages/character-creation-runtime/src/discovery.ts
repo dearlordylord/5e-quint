@@ -70,14 +70,14 @@ import {
 } from "./types.ts";
 import {
   supportedBackgroundUnitIds,
-  supportedClassUnitIds,
   supportedEquipmentPurchaseChoiceCount,
+  isSupportedProgression,
   supportedLoadoutChoices,
   supportedProgressionsForClass,
   supportedPurchasableEquipmentUnitIds,
   unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
-import { hitPointAdvancementLabel } from "./character-progression-types.ts";
+import { hitPointRuleLabel } from "./character-progression-types.ts";
 import {
   classUnitId,
   type CharacterProgression,
@@ -143,7 +143,7 @@ export function discoverClassGrantedHoles(input: {
   readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   const progression = input.draft.selections.progression;
-  if (progression == null) {
+  if (progression == null || !isSupportedProgression(progression)) {
     return [];
   }
   const classUnitId = progression.classUnitId;
@@ -435,12 +435,14 @@ export function hasSupportedCoinEquipmentPath(input: {
   readonly unitLibrary: UnitCatalog;
 }): boolean {
   const draft = input.draft;
-  const classUnitId = draft.selections.progression?.classUnitId;
+  const progression = draft.selections.progression;
+  const classUnitId = progression?.classUnitId;
   const backgroundUnitId = draft.selections.background;
   if (
+    progression == null ||
     classUnitId == null ||
     backgroundUnitId == null ||
-    !isSupported(classUnitId, supportedClassUnitIds()) ||
+    !isSupportedProgression(progression) ||
     !isSupported(backgroundUnitId, supportedBackgroundUnitIds())
   ) {
     return false;
@@ -948,7 +950,7 @@ function progressionOptionsForClassUnit(
     const optionId = progressionOptionId(progression);
     optionsById.set(optionId, {
       optionId,
-      label: `${unit.name} ${progression.classLevel} (${hitPointAdvancementLabel(progression.hitPointAdvancement)})`,
+      label: `${unit.name} ${progression.classLevel} (${hitPointRuleLabel(progression.hitPointRule)})`,
       unitRef: { unitId: unit.id },
     });
   }
@@ -962,7 +964,7 @@ function levelOneProgressionForClassUnit(
   const progression = createCharacterProgression({
     classUnitId: classUnitId(unitId),
     classLevel: characterClassLevel(1),
-    hitPointAdvancement: { tag: "levelOneMaximum" },
+    hitPointRule: { tag: "levelOneMaximumHitDie" },
   });
 
   return Either.isRight(progression) ? [progression.right] : [];

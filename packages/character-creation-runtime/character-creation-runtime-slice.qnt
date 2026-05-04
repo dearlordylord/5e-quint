@@ -31,7 +31,7 @@ module characterCreationRuntimeSlice {
     | HAbilityScores
     | HLanguages
     | HAlignment
-    | HFighterSkills
+    | HClassSkills
     | HFighterFightingStyle
     | HFighterWeaponMastery
     | HBackgroundAbilityScoreIncrease
@@ -46,8 +46,6 @@ module characterCreationRuntimeSlice {
   type HoleKind = ChoiceHole | AbilityScoreHole
 
   type ChoiceOptionId =
-    | OClassFighter
-    | OClassWizard
     | OClassFighterLevel1
     | OClassFighterLevel2
     | OClassWizardLevel1
@@ -116,6 +114,12 @@ module characterCreationRuntimeSlice {
 
   type SupportedAbilityScoreMethod = StandardArray | PointBuy
 
+  type ProgressionSelection =
+    | NoProgression
+    | FighterLevel1
+    | FighterLevel2
+    | WizardLevel1
+
   type Fill =
     | FChoice({ hole: HoleId, options: List[ChoiceOptionId] })
     | FAbilityScores({ hole: HoleId, method: SupportedAbilityScoreMethod, scores: AbilityScores })
@@ -145,13 +149,13 @@ module characterCreationRuntimeSlice {
 
   type Draft = {
     revision: int,
-    progression: bool,
+    progression: ProgressionSelection,
     background: bool,
     species: bool,
     abilityScores: bool,
     languages: bool,
     alignment: bool,
-    fighterSkills: bool,
+    classSkills: bool,
     fighterFightingStyle: bool,
     fighterWeaponMastery: bool,
     backgroundAbilityScoreIncrease: bool,
@@ -172,13 +176,13 @@ module characterCreationRuntimeSlice {
 
   pure val emptyDraft: Draft = {
     revision: 0,
-    progression: false,
+    progression: NoProgression,
     background: false,
     species: false,
     abilityScores: false,
     languages: false,
     alignment: false,
-    fighterSkills: false,
+    classSkills: false,
     fighterFightingStyle: false,
     fighterWeaponMastery: false,
     backgroundAbilityScoreIncrease: false,
@@ -190,6 +194,19 @@ module characterCreationRuntimeSlice {
     loadoutShield: false,
     loadoutWeapon: false,
   }
+
+  pure def hasProgression(draft: Draft): bool =
+    draft.progression != NoProgression
+
+  pure def hasFighterProgression(draft: Draft): bool =
+    match draft.progression {
+      | FighterLevel1 => true
+      | FighterLevel2 => true
+      | _ => false
+    }
+
+  pure def hasWizardProgression(draft: Draft): bool =
+    draft.progression == WizardLevel1
 
   pure val fighterStandardArray: AbilityScores = {
     strength: 15,
@@ -246,7 +263,7 @@ module characterCreationRuntimeSlice {
 
   pure def openCreationHoles(draft: Draft): Set[HoleId] = {
     val initial = Set(
-      if (draft.progression) Set() else Set(HProgression),
+      if (hasProgression(draft)) Set() else Set(HProgression),
       if (draft.background) Set() else Set(HBackground),
       if (draft.species) Set() else Set(HSpecies),
       if (draft.abilityScores) Set() else Set(HAbilityScores),
@@ -255,11 +272,16 @@ module characterCreationRuntimeSlice {
     ).flatten()
 
     val classGranted =
-      if (draft.progression)
+      if (hasFighterProgression(draft))
         Set(
-          if (draft.fighterSkills) Set() else Set(HFighterSkills),
+          if (draft.classSkills) Set() else Set(HClassSkills),
           if (draft.fighterFightingStyle) Set() else Set(HFighterFightingStyle),
           if (draft.fighterWeaponMastery) Set() else Set(HFighterWeaponMastery),
+          if (draft.classEquipment) Set() else Set(HClassEquipment),
+        ).flatten()
+      else if (hasWizardProgression(draft))
+        Set(
+          if (draft.classSkills) Set() else Set(HClassSkills),
           if (draft.classEquipment) Set() else Set(HClassEquipment),
         ).flatten()
       else Set()
@@ -289,10 +311,13 @@ module characterCreationRuntimeSlice {
   pure def finalizeDraft(draft: Draft): FinalizationStatus =
     if (openCreationHoles(draft) != Set()) Incomplete
     else if (
-      draft.progression and draft.background and draft.species
+      hasProgression(draft) and draft.background and draft.species
       and draft.abilityScores and draft.languages and draft.alignment
-      and draft.fighterSkills and draft.fighterFightingStyle
-      and draft.fighterWeaponMastery and draft.backgroundAbilityScoreIncrease
+      and (
+        (hasFighterProgression(draft) and draft.classSkills and draft.fighterFightingStyle and draft.fighterWeaponMastery)
+        or (hasWizardProgression(draft) and draft.classSkills)
+      )
+      and draft.backgroundAbilityScoreIncrease
       and draft.backgroundTool and draft.classEquipment and draft.backgroundEquipment
       and draft.equipmentPurchase and draft.loadoutArmor and draft.loadoutShield
       and draft.loadoutWeapon
@@ -340,7 +365,7 @@ module characterCreationRuntimeSlice {
         OAlignmentNeutralEvil,
         OAlignmentChaoticEvil,
       )
-    | HFighterSkills => Set(
+    | HClassSkills => Set(
         OSkillAcrobatics,
         OSkillAnimalHandling,
         OSkillAthletics,
@@ -376,7 +401,7 @@ module characterCreationRuntimeSlice {
     | HProgression => Set(OClassFighterLevel1, OClassFighterLevel2, OClassWizardLevel1)
     | HLanguages => Set(OLanguageDwarvish, OLanguageGoblin)
     | HAlignment => Set(OAlignmentLawfulGood)
-    | HFighterSkills => Set(OSkillPerception, OSkillSurvival)
+    | HClassSkills => Set(OSkillPerception, OSkillSurvival)
     | HFighterWeaponMastery => Set(OWeaponLongsword, OWeaponSpear, OWeaponFlail)
     | HBackgroundAbilityScoreIncrease => Set(OBackgroundAsiStrCon)
     | HClassEquipment => Set(OClassEquipmentCoins)
@@ -386,7 +411,7 @@ module characterCreationRuntimeSlice {
 
   pure def requiredChoiceCount(hole: HoleId): int = match hole {
     | HLanguages => 2
-    | HFighterSkills => 2
+    | HClassSkills => 2
     | HFighterWeaponMastery => 3
     | HEquipmentPurchase => 3
     | _ => 1
@@ -440,14 +465,23 @@ module characterCreationRuntimeSlice {
         issues: acc.issues.union(fillIssue(fill, acc.fillIndex, open, acc.prior)),
       }).issues
 
+  pure def optionSelected(options: List[ChoiceOptionId], target: ChoiceOptionId): bool =
+    options.foldl(false, (found, option) => found or option == target)
+
+  pure def progressionSelection(options: List[ChoiceOptionId]): ProgressionSelection =
+    if (optionSelected(options, OClassFighterLevel1)) FighterLevel1
+    else if (optionSelected(options, OClassFighterLevel2)) FighterLevel2
+    else if (optionSelected(options, OClassWizardLevel1)) WizardLevel1
+    else NoProgression
+
   pure def applyFill(draft: Draft, fill: Fill): Draft = match fill {
       | FChoice(v) => match v.hole {
-        | HProgression => draft.with("progression", true)
+        | HProgression => draft.with("progression", progressionSelection(v.options))
         | HBackground => draft.with("background", true)
         | HSpecies => draft.with("species", true)
         | HLanguages => draft.with("languages", true)
         | HAlignment => draft.with("alignment", true)
-        | HFighterSkills => draft.with("fighterSkills", true)
+        | HClassSkills => draft.with("classSkills", true)
         | HFighterFightingStyle => draft.with("fighterFightingStyle", true)
         | HFighterWeaponMastery => draft.with("fighterWeaponMastery", true)
         | HBackgroundAbilityScoreIncrease => draft.with("backgroundAbilityScoreIncrease", true)
@@ -491,7 +525,7 @@ module characterCreationRuntimeSlice {
   ]
 
   pure val manifestChoiceFills: List[Fill] = [
-    FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillSurvival] }),
+    FChoice({ hole: HClassSkills, options: [OSkillPerception, OSkillSurvival] }),
     FChoice({ hole: HFighterFightingStyle, options: [OFightingStyleDefense] }),
     FChoice({ hole: HFighterWeaponMastery, options: [OWeaponLongsword, OWeaponSpear, OWeaponFlail] }),
     FChoice({ hole: HBackgroundAbilityScoreIncrease, options: [OBackgroundAsiStrCon] }),
@@ -532,7 +566,7 @@ module characterCreationRuntimeSlice {
 
   pure val afterInitialHoleIds: Set[HoleId] =
     Set(
-      HFighterSkills,
+      HClassSkills,
       HFighterFightingStyle,
       HFighterWeaponMastery,
       HBackgroundAbilityScoreIncrease,
@@ -550,7 +584,7 @@ module characterCreationRuntimeSlice {
       | Accepted(v) =>
           all {
             assert(v.draft.revision == 1),
-            assert(v.draft.progression),
+            assert(hasProgression(v.draft)),
             assert(v.holes == afterInitialHoleIds),
             assert(v.finalization == Incomplete),
           }
@@ -656,13 +690,13 @@ module characterCreationRuntimeSlice {
 
   run test_later_hole_valid_but_unsupported_options_are_distinct = {
     match fillCreationHoles(afterInitialManifest, 1, [
-      FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
+      FChoice({ hole: HClassSkills, options: [OSkillPerception, OSkillAthletics] }),
       FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
     ]) {
       | Accepted(_) => assert(false)
       | Rejected(v) =>
           assert(v.issues.fills == Set(
-            { fillIndex: 0, hole: HFighterSkills, code: UnsupportedChoice },
+            { fillIndex: 0, hole: HClassSkills, code: UnsupportedChoice },
             { fillIndex: 1, hole: HBackgroundEquipment, code: UnsupportedChoice },
           ))
     }

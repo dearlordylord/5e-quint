@@ -67,7 +67,7 @@ const agentConversationScenarios = [
     userSays:
       "Create an Orc Soldier Wizard 1 with Ray of Frost and Magic Missile.",
     agentReads:
-      "After class_wizard and class_wizard:level_1:hit_point_maximum, discovery returns wizard skill, cantrip, spellbook, prepared spell, background, equipment, and loadout holes.",
+      "After the class_wizard:level_1:maximum_hit_die progression fill, discovery returns wizard skill, cantrip, spellbook, prepared spell, background, equipment, and loadout holes.",
     agentDecision:
       "It selects ray_of_frost in wizard_cantrip_choices, magic_missile in both spellbook and prepared spell choices, and verifies finalization exposes spellSlots before entering battle.",
     executableCoverage: "createAndFinalizeWizardOne",
@@ -275,7 +275,7 @@ export async function verifyBaselineVertical(client: Client) {
     fills: [
       choiceFill(
         "cc:draft:draft.progression.initial",
-        "class_fighter:level_1:hit_point_maximum",
+        "class_fighter:level_1:maximum_hit_die",
       ),
       choiceFill("cc:draft:draft.background", "background_soldier"),
       choiceFill("cc:draft:draft.species", "species_orc"),
@@ -713,7 +713,7 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await fillBaseOrcSoldier(
     client,
     draftId,
-    "class_fighter:level_2:fixed_hit_points",
+    "class_fighter:level_2:fixed_hp_gain",
     {
       str: 15,
       dex: 14,
@@ -786,7 +786,7 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
   await fillBaseOrcSoldier(
     client,
     draftId,
-    "class_wizard:level_1:hit_point_maximum",
+    "class_wizard:level_1:maximum_hit_die",
     {
       str: 8,
       dex: 14,

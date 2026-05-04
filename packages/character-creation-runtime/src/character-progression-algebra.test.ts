@@ -47,14 +47,14 @@ describe("character progression algebra", () => {
       createCharacterProgression({
         classUnitId: fighterClassUnitId,
         classLevel: characterClassLevel(1),
-        hitPointAdvancement: { tag: "levelOneMaximum" },
+        hitPointRule: { tag: "levelOneMaximumHitDie" },
       }),
     );
 
     expect(progression).toEqual({
       classUnitId: "class_fighter",
       classLevel: 1,
-      hitPointAdvancement: { tag: "levelOneMaximum" },
+      hitPointRule: { tag: "levelOneMaximumHitDie" },
     });
     expect(computeTotalLevel(progression)).toBe(1);
   });
@@ -70,7 +70,7 @@ describe("character progression algebra", () => {
       createCharacterProgression({
         classUnitId: fighterClassUnitId,
         classLevel: characterClassLevel(2),
-        hitPointAdvancement: { tag: "fixedAfterLevelOne" },
+        hitPointRule: { tag: "fixedHigherLevelGain" },
       }),
     );
 
@@ -78,7 +78,7 @@ describe("character progression algebra", () => {
     expect(progression).toEqual({
       classUnitId: "class_fighter",
       classLevel: 2,
-      hitPointAdvancement: { tag: "fixedAfterLevelOne" },
+      hitPointRule: { tag: "fixedHigherLevelGain" },
     });
   });
 
@@ -132,7 +132,7 @@ describe("character progression algebra", () => {
       createCharacterProgression({
         classUnitId: fighterClassUnitId,
         classLevel: 21 as ReturnType<typeof characterClassLevel>,
-        hitPointAdvancement: { tag: "fixedAfterLevelOne" },
+        hitPointRule: { tag: "fixedHigherLevelGain" },
       }),
     ).toEqual(
       Either.left({
@@ -142,7 +142,7 @@ describe("character progression algebra", () => {
     );
   });
 
-  it("returns typed issues for HP advancement evidence that contradicts level", () => {
+  it("returns typed issues for HP Hit Point rule evidence that contradicts level", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
@@ -154,13 +154,13 @@ describe("character progression algebra", () => {
       createCharacterProgression({
         classUnitId: fighterClassUnitId,
         classLevel: characterClassLevel(2),
-        hitPointAdvancement: { tag: "levelOneMaximum" },
+        hitPointRule: { tag: "levelOneMaximumHitDie" },
       }),
     ).toEqual(
       Either.left({
-        code: "invalidHitPointAdvancementForLevel",
+        code: "invalidHitPointRuleForLevel",
         classLevel: 2,
-        hitPointAdvancement: { tag: "levelOneMaximum" },
+        hitPointRule: { tag: "levelOneMaximumHitDie" },
       }),
     );
   });

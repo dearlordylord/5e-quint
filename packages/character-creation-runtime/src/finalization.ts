@@ -107,15 +107,15 @@ export function finalizeCharacterDraft(input: {
     selections,
     input.unitLibrary,
   );
-  if (supportedSelections.tag === "rejected") {
+  if (Either.isLeft(supportedSelections)) {
     return {
       tag: "invalid",
-      issues: supportedSelections.issues,
+      issues: supportedSelections.left,
     };
   }
 
   const build = buildCharacterBuild({
-    supportedSelections: supportedSelections.value,
+    supportedSelections: supportedSelections.right,
     unitLibrary: input.unitLibrary,
   });
   if (Either.isLeft(build)) {
@@ -173,12 +173,6 @@ export function temporarySupportedSliceIssues(
   unitLibrary: UnitCatalog,
 ): readonly CreationFinalizationIssue[] {
   return [
-    ...expectedValueIssue(
-      (
-        CHARACTER_CREATION_SUPPORT_PROFILE.classUnitIds as readonly string[]
-      ).includes(selections.progression.classUnitId),
-      "Finalized build must use a supported class.",
-    ),
     ...expectedValueIssue(
       selections.background ===
         CHARACTER_CREATION_SUPPORT_PROFILE.manifest.backgroundUnitId,
@@ -289,35 +283,25 @@ type TemporarySupportedSliceSelections = {
   readonly [TemporarySupportedSliceSelections]: true;
 };
 
-type TemporarySupportedSliceSelectionsResult =
-  | {
-      readonly tag: "accepted";
-      readonly value: TemporarySupportedSliceSelections;
-    }
-  | {
-      readonly tag: "rejected";
-      readonly issues: NonEmptyReadonlyArray<CreationFinalizationIssue>;
-    };
-
 function temporarySupportedSliceSelections(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
-): TemporarySupportedSliceSelectionsResult {
+): Either.Either<
+  TemporarySupportedSliceSelections,
+  NonEmptyReadonlyArray<CreationFinalizationIssue>
+> {
   const issues = nonEmptyReadonlyArray([
     ...temporarySupportedSliceIssues(selections, unitLibrary),
   ]);
   if (issues != null) {
-    return { tag: "rejected", issues };
+    return Either.left(issues);
   }
 
-  return {
-    tag: "accepted",
-    value: {
-      selections,
-      progression: selections.progression,
-      [TemporarySupportedSliceSelections]: true,
-    },
-  };
+  return Either.right({
+    selections,
+    progression: selections.progression,
+    [TemporarySupportedSliceSelections]: true,
+  });
 }
 
 export function expectedValueIssue(
@@ -550,8 +534,8 @@ function fixedHitPointsAfterLevelOne(
   hitPointDie: number,
   constitutionScore: number,
 ): number {
-  // Current support profile admits fixed HP gains after level 1. Rolled HP
-  // advancement needs an explicit creation choice before it can finalize.
+  // Current support profile admits fixed HP gains after level 1. Rolled HP needs
+  // an explicit creation choice before it can finalize.
   return Math.max(
     1,
     Math.floor(hitPointDie / 2) + 1 + abilityModifier(constitutionScore),

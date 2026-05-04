@@ -4,12 +4,12 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
-  characterLevelHitPointAdvancement,
+  characterLevelHitPointRule,
   classUnitId,
   type CharacterProgression,
   type CharacterProgressionLevelIssue,
   type ClassUnitId,
-  type HitPointAdvancementMethod,
+  type ClassHitPointRule,
 } from "./character-progression-types.ts";
 
 export type { CharacterProgression } from "./character-progression-types.ts";
@@ -30,16 +30,16 @@ export type ClassUnitNameIssue =
 export function createCharacterProgression(input: {
   readonly classUnitId: ClassUnitId;
   readonly classLevel: CharacterClassLevel;
-  readonly hitPointAdvancement: HitPointAdvancementMethod;
+  readonly hitPointRule: ClassHitPointRule;
 }): Either.Either<CharacterProgression, CharacterProgressionIssue> {
-  const advancement = characterLevelHitPointAdvancement(input);
-  if (Either.isLeft(advancement)) {
-    return Either.left(advancement.left);
+  const classLevelHitPointRule = characterLevelHitPointRule(input);
+  if (Either.isLeft(classLevelHitPointRule)) {
+    return Either.left(classLevelHitPointRule.left);
   }
 
   return Either.right({
     classUnitId: input.classUnitId,
-    ...advancement.right,
+    ...classLevelHitPointRule.right,
   });
 }
 

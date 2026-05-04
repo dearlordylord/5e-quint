@@ -59,7 +59,7 @@ Keep it synchronized with the DAG table and task details.
       "number": 63,
       "id": "PBA15A0C",
       "status": "ready-for-implementation-after-light-research",
-      "title": "Replace Level-One Advancement Workflow"
+      "title": "Replace Level-One Class-Entry Workflow"
     },
     {
       "number": 64,
@@ -187,7 +187,7 @@ Keep it synchronized with the DAG table and task details.
 | ----- | ----------------------------------------------------------------- | --------------------------------------------- | ------------ | ------------ | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | 61    | PBA15A0A - Promote Multiclass Prerequisite Algebra                | done                                          | PBA15        | PBA15A0B     | inline below                                                                                                 | Shared algebra owns multiclass prerequisite facts; Core delegates through compatibility wrappers.                                |
 | 62    | PBA15A0B - Introduce Character Progression Projection Helpers     | done                                          | PBA15A0A     | PBA15A0C     | inline below                                                                                                 | Character-creation-runtime exports character progression helpers and Unit-id boundary adapters.                                  |
-| 63    | PBA15A0C - Replace Level-One Advancement Workflow                 | done                                          | PBA15A0B     | PBA15A0D     | inline below                                                                                                 | Runtime progression fill now replaces separate primary-class and level-1 advancement workflow.                                   |
+| 63    | PBA15A0C - Replace Level-One Class-Entry Workflow                 | done                                          | PBA15A0B     | PBA15A0D     | inline below                                                                                                 | Runtime progression fill now replaces separate primary-class and level-1 class-entry workflow.                                   |
 | 64    | PBA15A0D - Wire Progression And Multiclass Through MCP Docs       | ready-for-implementation-after-light-research | PBA15A0C     | PBA15A       | inline below                                                                                                 | Wire the character progression model and prerequisite checks through MCP schemas/tests and package docs.                         |
 | 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked                                       | PBA15A0D     | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D.                                 |
 | 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | blocked                                       | PBA15A       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes.                                                |
@@ -277,7 +277,7 @@ Context:
   separate class pick and a level-1 class entry.
 - Target promoted shape is one durable `CharacterProgression` selected at the
   draft boundary. It carries class Unit id, class level, and Hit Point
-  advancement evidence as one value.
+  Hit Point rule evidence as one value.
 - `packages/character-creation-runtime/src/character-progression-algebra.ts` is the
   handoff file for this slice.
 
@@ -291,13 +291,13 @@ Acceptance:
   algebra.
 - Focused tests prove a level-1 Fighter, Fighter 2, and Fighter/Wizard
   progression derive expected totals/class levels without storing contradictory
-  advancement levels.
+  class levels.
 - Existing public workflow behavior is not broadly rewired in this slice; keep
   compatibility projections where needed.
 
 Verification:
 
-- RAW/UL check for class creation and level advancement wording.
+- RAW/UL check for class creation and class level and Hit Point rule wording.
 - `pnpm --filter @dnd/character-creation-runtime typecheck`
 - `pnpm --filter @dnd/character-creation-runtime test`
 - No battle MBT.
@@ -307,10 +307,10 @@ Plan Impact: if successful, unblock PBA15A0C.
 
 Closeout: `@dnd/character-creation-runtime` exports `CharacterProgression`
 helpers with branded class Unit ids, explicit class level and Hit Point
-advancement evidence, derived total/class-level helpers, focused tests, and
+Hit Point rule evidence, derived total/class-level helpers, focused tests, and
 package README/VOCABULARY notes.
 
-### Task 63 - PBA15A0C - Replace Level-One Advancement Workflow
+### Task 63 - PBA15A0C - Replace Level-One Class-Entry Workflow
 
 Status: `done`
 
@@ -335,18 +335,17 @@ Acceptance:
 
 - Promoted character creation cannot represent a Fighter class pick separate
   from a first Wizard class-level entry.
-- Promoted character creation cannot represent a post-start advancement with a
+- Promoted character creation cannot represent a post-start class entry with a
   contradictory stored level.
 - Character-creation-runtime no longer exposes "choose level 1" as a RAW
   creation step after choosing a starting class.
 - Discovery, fill reducer, support gates, finalization, QNT slice/MBT bridge,
-  and focused runtime tests use the progression model or derive legacy labels
-  only at boundaries.
+  and focused runtime tests use the progression model.
 - Existing supported creation verticals still pass.
 
 Verification:
 
-- RAW/UL check for class creation and level advancement wording.
+- RAW/UL check for class creation and class level and Hit Point rule wording.
 - `pnpm --filter @dnd/character-creation-runtime typecheck`
 - `pnpm --filter @dnd/character-creation-runtime test`
 - Focused Core tests only if legacy replay compatibility wrappers are touched.
@@ -370,7 +369,7 @@ Context:
 - PBA15A0A owns canonical multiclass prerequisite checks in
   `@dnd/shared-algebras`.
 - PBA15A0B and PBA15A0C normalize character-creation-runtime progression and
-  remove the separate level-1 advancement workflow.
+  remove the separate level-1 class-entry workflow.
 - This slice is the integration/docs closeout before PBA15A can resume durable
   primitive migration.
 
@@ -388,7 +387,7 @@ Acceptance:
 
 Verification:
 
-- RAW/UL check for class creation, level advancement, and multiclass
+- RAW/UL check for class creation, class level progression, and multiclass
   prerequisite wording.
 - `pnpm --filter @dnd/shared-algebras typecheck`
 - `pnpm --filter @dnd/shared-algebras test`

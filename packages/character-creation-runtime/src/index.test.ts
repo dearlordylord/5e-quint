@@ -37,7 +37,7 @@ import {
   type CreationHoleIdText,
   type UnitCatalog,
   type CharacterProgression,
-  type HitPointAdvancementMethod,
+  type ClassHitPointRule,
 } from "./index.ts";
 import {
   finalizedBuildEquipment,
@@ -61,9 +61,9 @@ const unitLibrary = unitCatalogResult.catalog;
 function testProgression(
   classUnitId: UnitRecord["id"],
   classLevel: number,
-  hitPointAdvancement: HitPointAdvancementMethod = classLevel === 1
-    ? { tag: "levelOneMaximum" }
-    : { tag: "fixedAfterLevelOne" },
+  hitPointRule: ClassHitPointRule = classLevel === 1
+    ? { tag: "levelOneMaximumHitDie" }
+    : { tag: "fixedHigherLevelGain" },
 ): CharacterProgression {
   const parsedClassUnitId = classUnitIdFromUnitId({ unitLibrary, classUnitId });
   if (Either.isLeft(parsedClassUnitId)) {
@@ -74,7 +74,7 @@ function testProgression(
   const result = createCharacterProgression({
     classUnitId: parsedClassUnitId.right,
     classLevel: characterClassLevel(classLevel),
-    hitPointAdvancement,
+    hitPointRule,
   });
   if (Either.isLeft(result)) {
     throw new Error(`Invalid test progression: ${JSON.stringify(result.left)}`);
@@ -126,9 +126,9 @@ describe("character creation hole discovery", () => {
         "choice",
         "cc:draft:draft.progression.initial",
         [
-          "class_fighter:level_1:hit_point_maximum",
-          "class_fighter:level_2:fixed_hit_points",
-          "class_wizard:level_1:hit_point_maximum",
+          "class_fighter:level_1:maximum_hit_die",
+          "class_fighter:level_2:fixed_hp_gain",
+          "class_wizard:level_1:maximum_hit_die",
         ],
       ],
       ["choice", "cc:draft:draft.background", ["background_soldier"]],
@@ -184,7 +184,7 @@ describe("character creation hole discovery", () => {
 
     expect(
       optionIds(holeById(holes, "cc:draft:draft.progression.initial")),
-    ).toContain("class_unrelated_0:level_1:hit_point_maximum");
+    ).toContain("class_unrelated_0:level_1:maximum_hit_die");
     expect(optionIds(holeById(holes, "cc:draft:draft.background"))).toContain(
       "background_unrelated_0",
     );
@@ -199,7 +199,7 @@ describe("character creation hole discovery", () => {
       fills: [
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_unrelated_0:level_1:hit_point_maximum",
+          "class_unrelated_0:level_1:maximum_hit_die",
         ),
       ],
     });
@@ -211,7 +211,7 @@ describe("character creation hole discovery", () => {
           tag: "illegalFill",
           code: "unsupportedChoice",
           message:
-            "Unsupported choice class_unrelated_0:level_1:hit_point_maximum for character creation hole: cc:draft:draft.progression.initial",
+            "Unsupported choice class_unrelated_0:level_1:maximum_hit_die for character creation hole: cc:draft:draft.progression.initial",
         },
       ],
     });
@@ -1257,11 +1257,11 @@ describe("character creation batch fill", () => {
       fills: [
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_fighter:level_1:hit_point_maximum",
+          "class_fighter:level_1:maximum_hit_die",
         ),
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_fighter:level_1:hit_point_maximum",
+          "class_fighter:level_1:maximum_hit_die",
         ),
       ],
     });
@@ -1432,7 +1432,7 @@ describe("character creation finalization", () => {
     expect(result.build.progression).toEqual({
       classUnitId: "class_fighter",
       classLevel: 1,
-      hitPointAdvancement: { tag: "levelOneMaximum" },
+      hitPointRule: { tag: "levelOneMaximumHitDie" },
     });
     expect(result.build.background).toBe("background_soldier");
     expect(result.build.species).toBe("species_orc");
@@ -2171,7 +2171,7 @@ function unitLibraryWithUnrelatedUnits(count: number): UnitCatalog {
 }
 
 function initialManifestFills(
-  progressionOptionId = "class_fighter:level_1:hit_point_maximum",
+  progressionOptionId = "class_fighter:level_1:maximum_hit_die",
 ): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
@@ -2223,7 +2223,7 @@ function completeFighterTwoDraft(): CharacterDraft {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills("class_fighter:level_2:fixed_hit_points"),
+      fills: initialManifestFills("class_fighter:level_2:fixed_hp_gain"),
     }),
   );
 
@@ -2313,7 +2313,7 @@ function completeWizardDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_wizard:level_1:hit_point_maximum",
+          "class_wizard:level_1:maximum_hit_die",
         ),
         choiceFill("cc:draft:draft.background", "background_soldier"),
         choiceFill("cc:draft:draft.species", "species_orc"),
@@ -2447,7 +2447,7 @@ const HOLE_ID_TO_QNT_VARIANT = {
   "cc:draft:draft.abilityScoreGeneration": "HAbilityScores",
   "cc:draft:draft.languages": "HLanguages",
   "cc:draft:draft.alignment": "HAlignment",
-  "cc:unit:class_fighter:fighter_skill_choices": "HFighterSkills",
+  "cc:unit:class_fighter:fighter_skill_choices": "HClassSkills",
   "cc:unit:fighter_fighting_style_l1:fighter_fighting_style":
     "HFighterFightingStyle",
   "cc:unit:fighter_weapon_mastery_l1:fighter_weapon_mastery_choices":
@@ -2690,7 +2690,7 @@ function renderQuintParityModule(input: {
 
   run parity_later_valid_but_unsupported_choices_match_runtime = {
     match fillCreationHoles(afterInitialManifest, 1, [
-      FChoice({ hole: HFighterSkills, options: [OSkillPerception, OSkillAthletics] }),
+      FChoice({ hole: HClassSkills, options: [OSkillPerception, OSkillAthletics] }),
       FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
     ]) {
       | Accepted(_) => assert(false)
@@ -2759,13 +2759,13 @@ function renderQntDraftProjection(draft: CharacterDraft): string {
 
   return `{
     revision: ${draft.revision},
-    progression: ${qntBool(selections.progression != null)},
+    progression: ${qntProgressionSelection(selections.progression)},
     background: ${qntBool(selections.background != null)},
     species: ${qntBool(selections.species != null)},
     abilityScores: ${qntBool(selections.abilityScoreGeneration != null)},
     languages: ${qntBool(selections.languages != null)},
     alignment: ${qntBool(selections.alignment != null)},
-    fighterSkills: ${qntBool(hasChoiceSelection(draft, "class_fighter", "fighter_skill_choices"))},
+    classSkills: ${qntBool(hasChoiceSelection(draft, "class_fighter", "fighter_skill_choices"))},
     fighterFightingStyle: ${qntBool(hasChoiceSelection(draft, "fighter_fighting_style_l1", "fighter_fighting_style"))},
     fighterWeaponMastery: ${qntBool(hasChoiceSelection(draft, "fighter_weapon_mastery_l1", "fighter_weapon_mastery_choices"))},
     backgroundAbilityScoreIncrease: ${qntBool(selections.backgroundAbilityScoreIncrease != null)},
@@ -2777,6 +2777,20 @@ function renderQntDraftProjection(draft: CharacterDraft): string {
     loadoutShield: ${qntBool(hasChoiceSelection(draft, "equipment_shield", "loadout_shield"))},
     loadoutWeapon: ${qntBool(hasChoiceSelection(draft, "weapon_longsword", "loadout_weapon"))},
   }`;
+}
+
+function qntProgressionSelection(
+  progression: CharacterDraft["selections"]["progression"],
+): string {
+  if (progression == null) {
+    return "NoProgression";
+  }
+
+  if (progression.classUnitId === "class_wizard") {
+    return "WizardLevel1";
+  }
+
+  return progression.classLevel === 1 ? "FighterLevel1" : "FighterLevel2";
 }
 
 function renderQntHoleSet(holes: readonly CreationHole[]): string {

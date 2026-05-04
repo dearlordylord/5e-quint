@@ -3140,7 +3140,7 @@ function fighterTwoCharacterBuild(
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills("class_fighter:level_2:fixed_hit_points"),
+      fills: initialManifestFills("class_fighter:level_2:fixed_hp_gain"),
     }),
   );
   const afterChoices = requireAcceptedBatch(
@@ -3285,7 +3285,7 @@ function completeManifestDraft(
 }
 
 function initialManifestFills(
-  progressionOptionId = "class_fighter:level_1:hit_point_maximum",
+  progressionOptionId = "class_fighter:level_1:maximum_hit_die",
 ): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
@@ -3482,10 +3482,10 @@ function rogueCharacterBuild(
     createCharacterProgression({
       classUnitId: rogueClassUnitId,
       classLevel: level,
-      hitPointAdvancement:
+      hitPointRule:
         level === 1
-          ? { tag: "levelOneMaximum" }
-          : { tag: "fixedAfterLevelOne" },
+          ? { tag: "levelOneMaximumHitDie" }
+          : { tag: "fixedHigherLevelGain" },
     }),
   );
   return {
