@@ -223,6 +223,8 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
 
 OpenCode implementer prompts inline the selected task body and add local-model guardrails to keep the implementation focused on that task, avoid todo-tool schema churn, avoid spawned explore/subagents, and prefer a small task-relevant product diff over long planning. The default OpenCode agent is `ralph-implementer`; configure it with `permission.task: deny` so OpenCode removes subagent delegation from the implementation tool surface.
 
+For Qwen-family OpenCode models, Ralph prefixes implementation prompts with `/no_think` to keep local runs from spending the whole attempt in hidden reasoning before making a product diff.
+
 `--max-task-attempts` bounds how many full decider-level attempts the same task may consume in one Ralph run. The final allowed attempt is special: the decider must either land the task or make it non-runnable in the plan. If it still tries to leave the task runnable, the harness treats that as a decider/harness contract failure.
 
 Candidate execution is pipeline-based. In dual mode, Claude and Codex still run in parallel, but each candidate follows:

@@ -161,6 +161,10 @@ is_opencode_ollama_model() {
   [[ "$opencode_model" == ollama/* ]]
 }
 
+is_opencode_qwen_model() {
+  [[ "${opencode_model,,}" == *qwen* ]]
+}
+
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -n "$repo_root" ]] || die "must be run inside a git repository"
 cd "$repo_root"
@@ -1208,6 +1212,9 @@ run_opencode() {
   local -a args=(run --dir "$workspace" --model "$opencode_model" --agent "$opencode_agent" --dangerously-skip-permissions)
 
   message="$(<"$prompt")"
+  if is_opencode_qwen_model; then
+    message=$'/no_think\n\n'"$message"
+  fi
 
   log "opencode: $(quote_cmd opencode "${args[@]}") < $prompt"
   set +e
