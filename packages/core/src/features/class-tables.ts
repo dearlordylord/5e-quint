@@ -10,7 +10,9 @@ import {
   meetsMulticlassPrerequisite as sharedMeetsPrereq,
   canMulticlass as sharedCanMulticlass,
   multiclassAbilityScores,
+  multiclassClassChange,
 } from "@dnd/shared-algebras/multiclass-prerequisite-algebra";
+import { Either } from "effect";
 
 // --- Types ---
 
@@ -70,7 +72,10 @@ export function meetsMulticlassPrereq(
   scores: Record<Ability, number>,
   className: ClassName,
 ): boolean {
-  return sharedMeetsPrereq(multiclassAbilityScores(scores), className);
+  const parsedScores = multiclassAbilityScores(scores);
+  return Either.isRight(parsedScores)
+    ? sharedMeetsPrereq(parsedScores.right, className)
+    : false;
 }
 
 /** @deprecated use `canMulticlass` from shared-algebras */
@@ -79,11 +84,15 @@ export function canMulticlass(
   currentClass: ClassName,
   newClass: ClassName,
 ): boolean {
-  return sharedCanMulticlass(
-    multiclassAbilityScores(scores),
-    currentClass,
+  const parsedScores = multiclassAbilityScores(scores);
+  const classChange = multiclassClassChange({
+    currentClasses: [currentClass],
     newClass,
-  );
+  });
+
+  return Either.isRight(parsedScores) && Either.isRight(classChange)
+    ? sharedCanMulticlass(parsedScores.right, classChange.right)
+    : false;
 }
 
 // --- Multiclass Proficiency Gains (SRD 5.2.1) ---
