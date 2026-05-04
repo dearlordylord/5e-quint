@@ -62,6 +62,27 @@ Flag:
 
 Correct pattern: "Brands are erased at runtime; both values are `string`, so this cast is safe because ..."
 
+## Assertion And Either Boundaries
+
+Assertions are only for facts that have already been established at compile time or by an immediately preceding parser/type guard/support gate, where a failure means the caller violated an internal invariant. Runtime domain failures, absent lookup results, unsupported authored content, invalid tool input, and user/session state conflicts must be represented with `Either`, `Option`, a parser result, or a precise discriminated union instead of throwing.
+
+Flag:
+
+- functions that throw while parsing, decoding, looking up, or normalizing external/authored/runtime data;
+- `require*` helpers that accept weak input and discover ordinary domain failure themselves;
+- constructors from primitive values that throw for invalid values instead of exposing a total parse/constructor result;
+- support-gate or catalog/readability failures that a caller could report, recover from, or compose with other errors;
+- catchable workflow errors modeled as exceptions instead of typed results.
+
+Accept:
+
+- named assertion helpers that check an invariant already proven by the current type, parser, support gate, exhaustive match, or narrowed workflow state;
+- defensive throws in test helpers, CLI scripts, and process bootstrap where there is no meaningful typed caller;
+- exhaustive-match impossible branches and projection/interpreter harness "unhandled" branches, provided the branch is asserting that the harness has already handled every compile-time-known variant and would fail to compile or stay correct when the union widens.
+
+Required reviewer question:
+"Is this throw asserting an already-established compile-time fact, or is it discovering a runtime/domain failure that should be data?"
+
 ## State Space Minimality
 
 For every product type, interface, type alias, Schema struct, Quint record, and machine context shape, verify: can every combination of field values occur in practice?

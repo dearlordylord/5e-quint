@@ -91,6 +91,8 @@ Code review agents must consult `.claude/review-rules.md` for project-specific q
 
 When the user asks for a review, findings are the primary output. Enforce the review rules strictly and cite file/line references for every finding.
 
+Assertions are only for facts already established at compile time or by an immediately preceding parser, type guard, support gate, exhaustive match, or narrowed workflow state. Runtime/domain failures such as absent lookups, unsupported authored data, invalid tool input, unreadable content, or session conflicts must be represented as `Either`, `Option`, parser results, or precise discriminated unions rather than exceptions. A throwing helper named `require*` is acceptable only when it asserts an already-proven internal invariant; if it discovers ordinary failure, make the failure typed. Exhaustive/impossible-branch harness throws are acceptable when they assert that every compile-time-known variant has already been handled.
+
 ## Memory
 
 Do not write to the memory system unless explicitly asked.
