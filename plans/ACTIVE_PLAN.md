@@ -114,6 +114,36 @@ Keep it synchronized with the DAG table and task details.
       "id": "PBA22",
       "status": "blocked",
       "title": "Stabilize Battle Snapshots Traces And App UI"
+    },
+    {
+      "number": 73,
+      "id": "PBA23",
+      "status": "blocked",
+      "title": "Core Promotion Deletion Ledger"
+    },
+    {
+      "number": 74,
+      "id": "PBA24",
+      "status": "blocked",
+      "title": "Remove Rogue Cunning Action Support Workaround"
+    },
+    {
+      "number": 75,
+      "id": "PBA25",
+      "status": "blocked",
+      "title": "Promote Unit-Backed Character Choice Width"
+    },
+    {
+      "number": 76,
+      "id": "PBA26",
+      "status": "blocked",
+      "title": "Define Character Sheet Session Boundary And Migrate App"
+    },
+    {
+      "number": 77,
+      "id": "PBA27",
+      "status": "blocked",
+      "title": "Core Quarantine And Deletion Cutover"
     }
   ]
 }
@@ -160,7 +190,12 @@ Keep it synchronized with the DAG table and task details.
 | 69 | PBA19 - Restore Stat Block Multiattack And Bonus Actions | blocked | PBA18 | PBA20 | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families. |
 | 70 | PBA20 - Restore Spell Targeting And Catalog Width | blocked | PBA19 | PBA21 | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md) | Restore Magic Missile split-target replay and broaden spell procedure pressure. |
 | 71 | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects | blocked | PBA20 | PBA22 | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md) | Broaden reaction windows and Bonus Action subjects after spell targeting width. |
-| 72 | PBA22 - Stabilize Battle Snapshots Traces And App UI | blocked | PBA21 | future tasks | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md) | Restore promoted snapshot/trace contracts and app battle UI workflows. |
+| 72 | PBA22 - Stabilize Battle Snapshots Traces And App UI | blocked | PBA21 | PBA23 | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md) | Restore promoted snapshot/trace contracts and app battle UI workflows. |
+| 73 | PBA23 - Core Promotion Deletion Ledger | blocked | PBA22 | PBA25 | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md) | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work. |
+| 74 | PBA24 - Remove Rogue Cunning Action Support Workaround | blocked | PBA25 | PBA27 | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md) | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow. |
+| 75 | PBA25 - Promote Unit-Backed Character Choice Width | blocked | PBA23 | PBA24, PBA26 | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md) | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections. |
+| 76 | PBA26 - Define Character Sheet Session Boundary And Migrate App | blocked | PBA25 | PBA27 | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md) | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs. |
+| 77 | PBA27 - Core Quarantine And Deletion Cutover | blocked | PBA24, PBA26 | future tasks | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md) | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior. |
 
 ## Task Details
 
@@ -516,7 +551,7 @@ Plan Impact: if successful, unblock PBA22.
 Status: `blocked`
 
 Depends on: PBA21
-Blocks: future tasks
+Blocks: PBA23
 
 Research plan:
 [pba22-snapshots-traces-app-ui-research-plan.md](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)
@@ -531,6 +566,140 @@ Surface records.
 Verification summary: app/source tests, MCP/runtime snapshot contract tests,
 Playwright screenshots for changed visual surfaces, no battle MBT unless
 runtime semantics change, `/simplify` convergence.
+
+Plan Impact: if successful, unblock PBA23.
+
+### Task 73 - PBA23 - Core Promotion Deletion Ledger
+
+Status: `blocked`
+
+Depends on: PBA22
+Blocks: PBA25
+
+Research plan:
+[pba23-core-promotion-deletion-ledger.md](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)
+
+Next action: inventory every remaining Core consumer, proof artifact, root
+Quint lane, package dependency, app import, and restore-source artifact before
+any Core deletion work.
+
+Acceptance summary: a single ledger classifies every remaining Core character,
+battle, app, root-QNT, MBT, script, and package-config dependency as promoted,
+legacy proof, active app debt, blocked restore work, obsolete, or deletion
+residue. The ledger explicitly covers battle reducer replacement; a
+character-only ledger is insufficient.
+
+Verification summary: import and projected-vocabulary searches, promoted
+runtime Core-free checks, package-local promoted test commands only if docs or
+manifests require them, no old Core battle MBT, `/simplify` convergence.
+
+Plan Impact: if successful, unblock PBA25.
+
+### Task 74 - PBA24 - Remove Rogue Cunning Action Support Workaround
+
+Status: `blocked`
+
+Depends on: PBA25
+Blocks: PBA27
+
+Research plan:
+[pba24-remove-rogue-cunning-action-workaround.md](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)
+
+Next action: after PBA25 provides the retained feature-Unit path, replace MCP's
+Rogue class-name/level support-profile inference with real Surface Unit content
+and support-profile parsing for Cunning Action.
+
+Acceptance summary: Cunning Action support is derived from retained Surface Unit
+refs and parsed mechanics, never from `className === "rogue"` or a fake class
+Unit support profile. Rogue level 2 with the real feature can use admitted
+Bonus Action standard-action support; Rogue level 1 or missing feature Units
+cannot. This task may add the Cunning Action support-profile reader/runtime
+mapping, but must not rebuild generic class-feature grant or retained-Unit
+machinery owned by PBA25.
+
+Verification summary: RAW/UL check for Rogue Cunning Action and Bonus Actions,
+focused Surface/character-creation/battle-runtime/MCP tests,
+`pnpm check:authored-id-dispatch`, promoted QNT only if reusable bonus-action
+standard-action behavior changes, no broad battle MBT, `/simplify` convergence.
+
+Plan Impact: if successful, unblock the Rogue-workaround prerequisite for
+PBA27.
+
+### Task 75 - PBA25 - Promote Unit-Backed Character Choice Width
+
+Status: `blocked`
+
+Depends on: PBA23
+Blocks: PBA24, PBA26
+
+Research plan:
+[pba25-unit-backed-character-choice-width.md](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)
+
+Next action: move remaining Core direct character-choice width into Surface
+Unit records/readers, Unit-backed creation holes, selected Unit refs, and
+`CharacterBuild` projections.
+
+Acceptance summary: subclass, feat/ASI/Epic Boon, multiclass skill/tool, and
+proficiency choice families that remain needed for promoted workflows are
+represented through Surface language and runtime support gates, not Core enums,
+parallel tables, or authored-id dispatch in non-Surface packages. This task
+owns the generic feature-grant and retained-Unit path needed by PBA24, but does
+not attach Cunning Action battle support from MCP.
+
+Verification summary: RAW/UL check per widened choice family, Surface
+schema/reader tests, character-creation reducer and finalization tests, QNT/MBT
+updates only for changed reducer behavior or bridge shapes,
+`pnpm check:authored-id-dispatch`, `/simplify` convergence.
+
+Plan Impact: if successful, unblock PBA24 and PBA26.
+
+### Task 76 - PBA26 - Define Character Sheet Session Boundary And Migrate App
+
+Status: `blocked`
+
+Depends on: PBA25
+Blocks: PBA27
+
+Research plan:
+[pba26-character-sheet-session-app-migration.md](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)
+
+Next action: decide the promoted replacement for Core `CharacterSheet`
+consumers and migrate app character workflows from Core direct APIs to promoted
+runtime/MCP read models.
+
+Acceptance summary: app character creation and character-session UI no longer
+depend on `@dnd/core/character-domain.ts`; in-play state ownership is explicit
+as `CharacterBuild + MCP CharacterSession`, a promoted read model, or another
+named owner that does not put current HP/spent resources into character
+creation.
+
+Verification summary: app and MCP Core-import searches, app typecheck/tests,
+MCP typecheck/tests, Playwright screenshots for changed app flows, no battle
+MBT unless snapshot semantics change, `/simplify` convergence.
+
+Plan Impact: if successful, unblock PBA27 when PBA24 is also complete.
+
+### Task 77 - PBA27 - Core Quarantine And Deletion Cutover
+
+Status: `blocked`
+
+Depends on: PBA24, PBA26
+Blocks: future tasks
+
+Research plan:
+[pba27-core-quarantine-deletion-cutover.md](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)
+
+Next action: remove or quarantine Core only after the PBA23 ledger has no
+production blockers and promoted package gates own replacement behavior.
+
+Acceptance summary: no production package imports `@dnd/core`; old Core battle,
+creature, and character behavior is either promoted, explicitly restore-source
+only, or obsolete; workspace scripts and package metadata no longer keep Core in
+the active promoted build/test path.
+
+Verification summary: workspace Core-import searches, package manifest/script
+checks, promoted Surface/character-creation/battle-runtime/MCP/app checks, no
+legacy Core MBT as a gate, `/simplify` convergence.
 
 Plan Impact: if successful, append the next active queue or record an explicit
 owner decision that no further active work is desired.
