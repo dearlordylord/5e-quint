@@ -1,6 +1,8 @@
-// Multiclass prerequisite algebra (SRD 5.2.1 Ch18.4)
+// Multiclass prerequisite algebra (SRD 5.2.1 Character Creation > Multiclassing)
 
-import type { Ability, ReadonlyNonEmptyArray } from '@dnd/shared/types';
+import { Match } from "effect";
+
+import type { Ability, ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { ClassName } from "@dnd/shared/game-facts";
 
 export { CLASS_NAMES, type ClassName } from "@dnd/shared/game-facts";
@@ -65,37 +67,42 @@ export const MULTICLASS_PREREQUISITES: Readonly<
   wizard: { tag: "scoreAtLeast", ability: "int", minimum: MULTICLASS_THRESHOLD },
 } as const satisfies Record<ClassName, MulticlassPrerequisite>;
 
+const byTag = Match.discriminator("tag");
+
 /**
- * Check if a single class multiclass prerequisite is met (SRD 5.2.1 Ch18.4).
+ * Check if a single class multiclass prerequisite is met.
  */
 export function meetsMulticlassPrerequisite(
-  scores: Record<Ability, number>,
+  scores: Readonly<Record<Ability, number>>,
   className: ClassName,
 ): boolean {
-  const prereq = MULTICLASS_PREREQUISITES[className];
-  if (!prereq) return false;
-  return evalPrereq(prereq, scores);
+  return evalPrereq(MULTICLASS_PREREQUISITES[className], scores);
 }
 
 function evalPrereq(
   prereq: MulticlassPrerequisite,
-  scores: Record<Ability, number>,
+  scores: Readonly<Record<Ability, number>>,
 ): boolean {
-  switch (prereq.tag) {
-    case "scoreAtLeast":
-      return scores[prereq.ability] >= prereq.minimum;
-    case "allOf":
-      return prereq.prerequisites.every((p) => evalPrereq(p, scores));
-    case "anyOf":
-      return prereq.prerequisites.some((p) => evalPrereq(p, scores));
-  }
+  return Match.value(prereq).pipe(
+    byTag(
+      "scoreAtLeast",
+      (requirement) => scores[requirement.ability] >= requirement.minimum,
+    ),
+    byTag("allOf", (requirement) =>
+      requirement.prerequisites.every((p) => evalPrereq(p, scores)),
+    ),
+    byTag("anyOf", (requirement) =>
+      requirement.prerequisites.some((p) => evalPrereq(p, scores)),
+    ),
+    Match.exhaustive,
+  );
 }
 
 /**
- * Must meet prereqs for BOTH current and new class (SRD 5.2.1 Ch18.4).
+ * Must meet prerequisites for both current and new classes.
  */
 export function canMulticlass(
-  scores: Record<Ability, number>,
+  scores: Readonly<Record<Ability, number>>,
   currentClass: ClassName,
   newClass: ClassName,
 ): boolean {

@@ -32,6 +32,8 @@ should not contain algebra modules.
 - `conditions-algebra` - condition set operations.
 - `death-saves-algebra` - death-save counter state.
 - `initiative-algebra` - Initiative order and turn advancement.
+- `multiclass-prerequisite-algebra` - SRD multiclass ability prerequisite facts
+  and checks.
 - `runtime-dice-algebra` - rolled-dice validation and totaling.
 - `runtime-hole-algebra` - shared hole identity/refill vocabulary.
 - `validation-algebra` - small validation/result helpers.

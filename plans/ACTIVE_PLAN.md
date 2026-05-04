@@ -46,13 +46,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 61,
       "id": "PBA15A0A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Multiclass Prerequisite Algebra"
     },
     {
       "number": 62,
       "id": "PBA15A0B",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Introduce Character Progression Projection Helpers"
     },
     {
@@ -185,8 +185,8 @@ Keep it synchronized with the DAG table and task details.
 
 | Order | Task | Status | Depends on | Blocks | Research / plan | Next action |
 | ----- | ---- | ------ | ---------- | ------ | --------------- | ----------- |
-| 61 | PBA15A0A - Promote Multiclass Prerequisite Algebra | ready-for-implementation-after-light-research | PBA15 | PBA15A0B | inline below | Finish shared-algebras multiclass prerequisite extraction and Core compatibility wrappers only. |
-| 62 | PBA15A0B - Introduce Character Progression Projection Helpers | blocked | PBA15A0A | PBA15A0C | inline below | Add the canonical startingClass plus post-start advancements model and derivation helpers in character-creation-runtime. |
+| 61 | PBA15A0A - Promote Multiclass Prerequisite Algebra | done | PBA15 | PBA15A0B | inline below | Shared algebra owns multiclass prerequisite facts; Core delegates through compatibility wrappers. |
+| 62 | PBA15A0B - Introduce Character Progression Projection Helpers | ready-for-implementation-after-light-research | PBA15A0A | PBA15A0C | inline below | Add the canonical startingClass plus post-start advancements model and derivation helpers in character-creation-runtime. |
 | 63 | PBA15A0C - Replace Level-One Advancement Workflow | blocked | PBA15A0B | PBA15A0D | inline below | Replace runtime discovery/fill/finalization paths that expose a separate level-1 advancement choice. |
 | 64 | PBA15A0D - Wire Progression And Multiclass Through MCP Docs | blocked | PBA15A0C | PBA15A | inline below | Wire the normalized progression and prerequisite checks through MCP schemas/tests and package docs. |
 | 65 | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked | PBA15A0D | PBA16 | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md) | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D. |
@@ -208,7 +208,7 @@ Keep it synchronized with the DAG table and task details.
 
 ### Task 61 - PBA15A0A - Promote Multiclass Prerequisite Algebra
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA15
 Blocks: PBA15A0B
@@ -256,9 +256,13 @@ Verification:
 
 Plan Impact: if successful, unblock PBA15A0B.
 
+Closeout: shared-algebras owns the canonical multiclass prerequisite table and
+checks, with focused TS tests and `mc_` Quint assertions passing. Core
+class-table compatibility wrappers delegate to shared-algebras.
+
 ### Task 62 - PBA15A0B - Introduce Character Progression Projection Helpers
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA15A0A
 Blocks: PBA15A0C

@@ -1,5 +1,6 @@
 // Quint proof for multiclass prerequisite algebra (SRD 5.2.1 Ch18.4)
-// Verifies: class prereq thresholds match SRD — all use 13, Fighter/Wizard use anyOf with different abilities.
+// Verifies: class prereq thresholds match SRD primary ability shapes,
+// including either/or and paired-ability classes.
 //
 // Run: quint test --match "mc_" packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt
 
