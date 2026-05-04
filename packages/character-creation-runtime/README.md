@@ -150,6 +150,13 @@ choice-hole families from Surface readers plus the support profile and validate
 selected choices against those hole shapes, instead of branching on
 hard-coded authored feature ids in finalization logic.
 
+`src/normalized-algebra.ts` owns the promoted progression read model for
+follow-up migration work: `startingClass` plus post-start class advancements.
+It derives total level, per-class levels, and post-start advancement levels
+from that ordered progression. Surface class Unit ids such as `class_fighter`
+are converted to class names at explicit adapter functions and are not stored
+inside the normalized progression algebra.
+
 Phase-1 manifest lock is still intentional in the current runtime. The lock ends
 only after the promoted-reachable shape inventory for character creation has been
 closed: every promoted-reachable shape from Core/correction is either admitted by

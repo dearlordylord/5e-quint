@@ -89,3 +89,20 @@ export {
   finalizeCharacterDraft,
   characterBuildUnitRefs,
 } from "./finalization.ts";
+export {
+  characterProgressionFromLegacyAdvancement,
+  characterProgressionFromUnitIds,
+  classNameFromClassUnit,
+  classUnitIdToClassName,
+  computeTotalLevel,
+  createCharacterProgression,
+  getStartingClass,
+  orderedProgressionClasses,
+  postStartAdvancementLevel,
+  progressionClassLevels,
+  type CharacterProgression,
+  type CharacterProgressionClassLevel,
+  type CharacterProgressionClassLevels,
+  type CharacterProgressionUnitIdInput,
+  type LegacyAdvancementProgressionInput,
+} from "./normalized-algebra.ts";

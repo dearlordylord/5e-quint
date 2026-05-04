@@ -52,13 +52,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 62,
       "id": "PBA15A0B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Introduce Character Progression Projection Helpers"
     },
     {
       "number": 63,
       "id": "PBA15A0C",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Replace Level-One Advancement Workflow"
     },
     {
@@ -186,8 +186,8 @@ Keep it synchronized with the DAG table and task details.
 | Order | Task | Status | Depends on | Blocks | Research / plan | Next action |
 | ----- | ---- | ------ | ---------- | ------ | --------------- | ----------- |
 | 61 | PBA15A0A - Promote Multiclass Prerequisite Algebra | done | PBA15 | PBA15A0B | inline below | Shared algebra owns multiclass prerequisite facts; Core delegates through compatibility wrappers. |
-| 62 | PBA15A0B - Introduce Character Progression Projection Helpers | ready-for-implementation-after-light-research | PBA15A0A | PBA15A0C | inline below | Add the canonical startingClass plus post-start advancements model and derivation helpers in character-creation-runtime. |
-| 63 | PBA15A0C - Replace Level-One Advancement Workflow | blocked | PBA15A0B | PBA15A0D | inline below | Replace runtime discovery/fill/finalization paths that expose a separate level-1 advancement choice. |
+| 62 | PBA15A0B - Introduce Character Progression Projection Helpers | done | PBA15A0A | PBA15A0C | inline below | Character-creation-runtime exports normalized progression helpers and Unit-id boundary adapters. |
+| 63 | PBA15A0C - Replace Level-One Advancement Workflow | ready-for-implementation-after-light-research | PBA15A0B | PBA15A0D | inline below | Replace runtime discovery/fill/finalization paths that expose a separate level-1 advancement choice. |
 | 64 | PBA15A0D - Wire Progression And Multiclass Through MCP Docs | blocked | PBA15A0C | PBA15A | inline below | Wire the normalized progression and prerequisite checks through MCP schemas/tests and package docs. |
 | 65 | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked | PBA15A0D | PBA16 | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md) | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D. |
 | 66 | PBA16 - Add Death-Save Promoted MBT Coverage | blocked | PBA15A | PBA17 | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md) | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes. |
@@ -262,7 +262,7 @@ class-table compatibility wrappers delegate to shared-algebras.
 
 ### Task 62 - PBA15A0B - Introduce Character Progression Projection Helpers
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA15A0A
 Blocks: PBA15A0C
@@ -310,9 +310,14 @@ Verification:
 
 Plan Impact: if successful, unblock PBA15A0C.
 
+Closeout: `@dnd/character-creation-runtime` exports normalized
+`CharacterProgression` helpers with `startingClass` plus post-start class-name
+advancements, derived total/per-class/advancement levels, explicit Surface class
+Unit-id adapters, focused tests, and package README/VOCABULARY notes.
+
 ### Task 63 - PBA15A0C - Replace Level-One Advancement Workflow
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA15A0B
 Blocks: PBA15A0D
