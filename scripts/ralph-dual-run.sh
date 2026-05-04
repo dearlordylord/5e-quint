@@ -903,6 +903,8 @@ write_candidate_prompt() {
 OpenCode local-model guardrails:
 - The task body below is the primary scope. Use the full plan only for dependency/context checks.
 - Do not switch to another plan task, support-profile cleanup, phase-manifest cleanup, or broad architecture work unless the task body below explicitly requires it.
+- Use the Workspace path above as the repository root for all reads, greps, and edits. When reading local RAW, use $workspace/.references/srd-5.2.1/ and $workspace/UBIQUITOUS_LANGUAGE.md explicitly; do not walk out through parent directories.
+- If a repo path lookup returns no results, first verify the absolute path under Workspace before concluding the source text or file is missing.
 - If a planning/todo tool rejects your schema, stop using that tool and continue with shell reads/edits.
 - Do not spawn Explore Agents, subagents, background agents, or delegated agents. Do the repository reads and edits directly in this process.
 - Do not ask the user what to do. Ralph already gave you the task. Implement it, leave a correct partial diff, or report Plan Impact: update-required with concrete narrowing guidance.
