@@ -1455,7 +1455,7 @@ describe("character creation finalization", () => {
     });
     expect(result.build.hitPoints).toEqual({
       maximum: 12,
-      hitDice: [{ classUnitId: "class_fighter", dieSize: 10, total: 1 }],
+      hitDice: [{ classUnitId: "class_fighter", dieSize: 10 }],
     });
     expect(result.build.proficiencies).toEqual({
       savingThrows: ["str", "con"],
@@ -1558,7 +1558,7 @@ describe("character creation finalization", () => {
     if (result.tag !== "ready") return;
 
     expect(result.build.hitPoints.hitDice).toEqual([
-      { classUnitId: "class_fighter", dieSize: 10, total: 2 },
+      { classUnitId: "class_fighter", dieSize: 10 },
     ]);
     expect(result.build.features).toEqual(
       expect.arrayContaining([

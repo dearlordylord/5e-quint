@@ -25,6 +25,7 @@ import {
   creationHoleId,
   fillCreationHoles,
   finalizeCharacterDraft,
+  hitDieSize,
   type CharacterDraft,
   type CharacterBuild,
   type CreationFill,
@@ -33,6 +34,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   Hp,
+  hp,
   movementFeet,
   resourceCount,
   spellSlotLevel,
@@ -246,9 +248,19 @@ describe("MCP server route", () => {
 
   test("admits only supported authored critical-range Unit hooks at the battle support boundary", () => {
     const root = createMcpCompositionRoot();
-    const supportedBuild = characterBuildWithFeature(
-      fighterCharacterBuild(root.unitLibrary),
+    const improvedCriticalUnit = root.unitLibrary.requireUnit(
       "fighter_improved_critical",
+    );
+    if (improvedCriticalUnit.kind !== "class_feature") {
+      throw new Error("Expected Improved Critical class-feature Unit.");
+    }
+    const supportedLibrary = fighterUnitLibraryWithClassFeatureGrant(
+      root.unitLibrary,
+      improvedCriticalUnit,
+    );
+    const supportedBuild = fighterCharacterBuildAtLevel(
+      supportedLibrary,
+      improvedCriticalUnit.acquiredAtLevel,
     );
     const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-critical-range"),
@@ -268,7 +280,7 @@ describe("MCP server route", () => {
         initiative: initiativeScore(11),
         side: oppositionSide,
       },
-      unitLibrary: root.unitLibrary,
+      unitLibrary: supportedLibrary,
     });
 
     expect(
@@ -277,12 +289,6 @@ describe("MCP server route", () => {
       supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
     });
 
-    const improvedCriticalUnit = root.unitLibrary.requireUnit(
-      "fighter_improved_critical",
-    );
-    if (improvedCriticalUnit.kind !== "class_feature") {
-      throw new Error("Expected Improved Critical class-feature Unit.");
-    }
     const unsupportedCriticalRangeUnit: UnitRecord = {
       ...improvedCriticalUnit,
       id: "fighter_unsupported_critical_range",
@@ -297,24 +303,13 @@ describe("MCP server route", () => {
         ],
       },
     };
-    const unsupportedLibrary = {
-      ...root.unitLibrary,
-      getUnit: (unitId: string) =>
-        unitId === unsupportedCriticalRangeUnit.id
-          ? Option.some(unsupportedCriticalRangeUnit)
-          : root.unitLibrary.getUnit(unitId),
-      listUnits: () => [
-        ...root.unitLibrary.listUnits(),
-        unsupportedCriticalRangeUnit,
-      ],
-      requireUnit: (unitId: string) =>
-        unitId === unsupportedCriticalRangeUnit.id
-          ? unsupportedCriticalRangeUnit
-          : root.unitLibrary.requireUnit(unitId),
-    } as typeof root.unitLibrary;
-    const unsupportedBuild = characterBuildWithFeature(
-      fighterCharacterBuild(root.unitLibrary),
-      unsupportedCriticalRangeUnit.id,
+    const unsupportedLibrary = fighterUnitLibraryWithClassFeatureGrant(
+      root.unitLibrary,
+      unsupportedCriticalRangeUnit,
+    );
+    const unsupportedBuild = fighterCharacterBuildAtLevel(
+      unsupportedLibrary,
+      unsupportedCriticalRangeUnit.acquiredAtLevel,
     );
     expect(() =>
       startBattleFromCharacterBuildAndStatBlockRight({
@@ -391,7 +386,6 @@ describe("MCP server route", () => {
     const root = createMcpCompositionRoot();
     const evasionBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 7,
-      includeEvasion: true,
     });
     const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-save-damage-replacement"),
@@ -468,7 +462,6 @@ describe("MCP server route", () => {
     const root = createMcpCompositionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 5,
-      includeUncannyDodge: true,
     });
     const state = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-reaction-modifier"),
@@ -1420,7 +1413,7 @@ describe("MCP server route", () => {
     expect(afterDamage.result).toMatchObject({ tag: "resolved" });
     expect(afterDamage.battleState.combatants).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ combatantId: "fighter", hp: 12 }),
+        expect.objectContaining({ combatantId: "fighter", hp: 10 }),
         expect.objectContaining({ combatantId: "goblin", hp: 2 }),
       ]),
     );
@@ -3173,19 +3166,6 @@ function fighterTwoCharacterBuild(
   return result.build;
 }
 
-function characterBuildWithFeature(
-  build: CharacterBuild,
-  unitId: string,
-): CharacterBuild {
-  return {
-    ...build,
-    features: [
-      ...build.features,
-      { kind: "classFeature", unitId },
-    ],
-  };
-}
-
 function characterUnitRef(
   state: BattleState,
   combatantId: typeof fighterId,
@@ -3462,59 +3442,62 @@ function initialClassHoleIds(): readonly CreationHoleIdText[] {
   return manifestChoiceFills().map((fill) => fill.holeId);
 }
 
+function fighterUnitLibraryWithClassFeatureGrant(
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  featureUnit: Extract<UnitRecord, { readonly kind: "class_feature" }>,
+): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
+  const fighter = unitLibrary.requireUnit("class_fighter");
+  if (fighter.kind !== "class") {
+    throw new Error("Expected Fighter class Unit.");
+  }
+
+  return unitLibraryWithOverrides(unitLibrary, [
+    {
+      ...fighter,
+      featureGrants: fighter.featureGrants.some(
+        (grant) => grant.unitId === featureUnit.id,
+      )
+        ? fighter.featureGrants
+        : [
+            ...fighter.featureGrants,
+            { level: featureUnit.acquiredAtLevel, unitId: featureUnit.id },
+          ],
+    },
+    featureUnit,
+  ]);
+}
+
+function fighterCharacterBuildAtLevel(
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  level: number,
+): CharacterBuild {
+  const classUnit = unitLibrary.requireUnit("class_fighter");
+  if (classUnit.kind !== "class") {
+    throw new Error("Expected Fighter class Unit.");
+  }
+
+  return characterBuildForClassProgression({
+    base: fighterCharacterBuild(unitLibrary),
+    classUnit,
+    level,
+    keepClassChoices: true,
+  });
+}
+
 function rogueCharacterBuild(
   unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
   input: {
     readonly level?: number;
-    readonly includeEvasion?: boolean;
-    readonly includeUncannyDodge?: boolean;
   } = {},
 ): CharacterBuild {
-  const base = fighterCharacterBuild(unitLibrary);
-  const level = characterClassLevel(input.level ?? 1);
-  const rogueClassUnitId = expectRight(
-    classUnitIdFromClassUnit(rogueClassUnit(unitLibrary)),
-  );
-  const progression = expectRight(
-    createCharacterProgression({
-      classUnitId: rogueClassUnitId,
-      classLevel: level,
-      hitPointRule:
-        level === 1
-          ? { tag: "levelOneMaximumHitDie" }
-          : { tag: "fixedHigherLevelGain" },
-    }),
-  );
+  const classUnit = rogueClassUnit(unitLibrary);
   return {
-    ...base,
-    progression,
-    features: [
-      ...base.features.filter(
-        (feature) =>
-          feature.kind !== "classFeature" && feature.kind !== "classChoice",
-      ),
-      {
-        kind: "classFeature",
-        unitId: "rogue_sneak_attack",
-      },
-      ...(input.includeEvasion === true
-        ? [
-            {
-              kind: "classFeature" as const,
-              unitId: "rogue_evasion",
-            },
-          ]
-        : []),
-      ...(input.includeUncannyDodge === true
-        ? [
-            {
-              kind: "classFeature" as const,
-              unitId: "rogue_uncanny_dodge",
-            },
-          ]
-        : []),
-    ],
-    resources: [],
+    ...characterBuildForClassProgression({
+      base: fighterCharacterBuild(unitLibrary),
+      classUnit,
+      level: input.level ?? 1,
+      keepClassChoices: false,
+    }),
     equipment: {
       weapon: {
         itemId: "main:weapon_dagger",
@@ -3544,33 +3527,7 @@ function rogueBattleUnitLibrary(
       ? []
       : [overrides.uncannyDodgeUnit]),
   ] as const;
-  return {
-    ...root.unitLibrary,
-    getUnit: (unitId: string) => {
-      const override = overriddenUnits.find((unit) => unit.id === unitId);
-      return override === undefined
-        ? root.unitLibrary.getUnit(unitId)
-        : Option.some(override);
-    },
-    listUnits: () => [...root.unitLibrary.listUnits(), ...overriddenUnits],
-    requireUnit: (unitId: string) => {
-      if (unitId === "class_rogue") return rogueClass;
-      if (unitId === "rogue_sneak_attack") {
-        return (
-          overrides?.sneakAttackUnit ?? root.unitLibrary.requireUnit(unitId)
-        );
-      }
-      if (unitId === "rogue_evasion") {
-        return overrides?.evasionUnit ?? root.unitLibrary.requireUnit(unitId);
-      }
-      if (unitId === "rogue_uncanny_dodge") {
-        return (
-          overrides?.uncannyDodgeUnit ?? root.unitLibrary.requireUnit(unitId)
-        );
-      }
-      return root.unitLibrary.requireUnit(unitId);
-    },
-  };
+  return unitLibraryWithOverrides(root.unitLibrary, overriddenUnits);
 }
 
 function rogueClassUnit(
@@ -3588,6 +3545,99 @@ function rogueClassUnit(
     name: "Rogue",
     className: "rogue",
     hitPointDie: 8,
-    featureGrants: [{ level: 1, unitId: "rogue_sneak_attack" }],
+    featureGrants: [
+      { level: 1, unitId: "rogue_sneak_attack" },
+      { level: 5, unitId: "rogue_uncanny_dodge" },
+      { level: 7, unitId: "rogue_evasion" },
+    ],
+  };
+}
+
+function characterBuildForClassProgression(input: {
+  readonly base: CharacterBuild;
+  readonly classUnit: Extract<UnitRecord, { readonly kind: "class" }>;
+  readonly level: number;
+  readonly keepClassChoices: boolean;
+}): CharacterBuild {
+  const classLevel = characterClassLevel(input.level);
+  const progression = expectRight(
+    createCharacterProgression({
+      classUnitId: expectRight(classUnitIdFromClassUnit(input.classUnit)),
+      classLevel,
+      hitPointRule:
+        classLevel === 1
+          ? { tag: "levelOneMaximumHitDie" }
+          : { tag: "fixedHigherLevelGain" },
+    }),
+  );
+  return {
+    ...input.base,
+    progression,
+    hitPoints: {
+      maximum: fixedClassHitPointMaximum(
+        input.classUnit.hitPointDie,
+        input.base.abilityScores.con,
+        classLevel,
+      ),
+      hitDice: [
+        {
+          classUnitId: input.classUnit.id,
+          dieSize: hitDieSize(input.classUnit.hitPointDie),
+        },
+      ],
+    },
+    features: [
+      ...input.base.features.filter(
+        (feature) =>
+          feature.kind !== "classFeature" &&
+          (input.keepClassChoices || feature.kind !== "classChoice"),
+      ),
+      ...input.classUnit.featureGrants
+        .filter((grant) => grant.level <= classLevel)
+        .map((grant) => ({
+          kind: "classFeature" as const,
+          unitId: grant.unitId,
+        })),
+    ],
+    resources: [],
+  };
+}
+
+function fixedClassHitPointMaximum(
+  hitPointDie: number,
+  constitutionScore: number,
+  classLevel: number,
+): ReturnType<typeof hp> {
+  const constitutionModifier = Math.floor((constitutionScore - 10) / 2);
+  return hp(
+    hitPointDie +
+      constitutionModifier +
+      (classLevel - 1) *
+        Math.max(1, Math.floor(hitPointDie / 2) + 1 + constitutionModifier),
+  );
+}
+
+function unitLibraryWithOverrides(
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  overrides: readonly UnitRecord[],
+): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
+  const unitById = new Map(
+    unitLibrary.listUnits().map((unit) => [unit.id, unit]),
+  );
+  for (const override of overrides) {
+    unitById.set(override.id, override);
+  }
+
+  return {
+    ...unitLibrary,
+    getUnit: (unitId: string) => {
+      const unit = unitById.get(unitId);
+      return unit === undefined ? Option.none() : Option.some(unit);
+    },
+    listUnits: () => [...unitById.values()],
+    requireUnit: (unitId: string) => {
+      const unit = unitById.get(unitId);
+      return unit === undefined ? unitLibrary.requireUnit(unitId) : unit;
+    },
   };
 }

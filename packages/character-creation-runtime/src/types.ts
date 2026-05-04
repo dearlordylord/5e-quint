@@ -144,10 +144,6 @@ export type HitDieSize = PositiveIntegerType & Brand.Brand<"HitDieSize">;
 const HitDieSize = Brand.all(PositiveInteger, Brand.nominal<HitDieSize>());
 export const hitDieSize: (value: number) => HitDieSize = HitDieSize;
 
-export type HitDieTotal = PositiveIntegerType & Brand.Brand<"HitDieTotal">;
-const HitDieTotal = Brand.all(PositiveInteger, Brand.nominal<HitDieTotal>());
-export const hitDieTotal: (value: number) => HitDieTotal = HitDieTotal;
-
 export type ChoiceCardinality =
   | {
       readonly tag: "exactly";
@@ -477,7 +473,6 @@ export type CharacterBuildHitPoints = {
 export type CharacterBuildHitDiePool = {
   readonly classUnitId: UnitRecord["id"];
   readonly dieSize: HitDieSize;
-  readonly total: HitDieTotal;
 };
 
 export type CharacterBuildProficiencies = {
