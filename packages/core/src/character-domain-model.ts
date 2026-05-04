@@ -14,7 +14,7 @@ import type {
   CharacterBuildChoices,
   CharacterSheetBuildChoices,
 } from "#/character-feature-types.ts";
-import { CLASS_NAMES, type ClassName } from "#/features/class-tables.ts";
+import type { ClassName } from "#/features/class-tables.ts";
 import type {
   CharacterSheetSpellcastingChoices,
   CharacterSpellcastingChoices,
@@ -29,6 +29,7 @@ import {
   type AlignmentAbbreviation,
   type StandardLanguage,
 } from "@dnd/shared/game-facts";
+import { ZERO_CLASS_LEVELS as SHARED_ZERO_CLASS_LEVELS } from "@dnd/shared-algebras/character-advancement-algebra";
 
 export const CHARACTER_SPECIES = [
   "dragonborn",
@@ -54,9 +55,7 @@ export type CharacterClassLevels = Readonly<Record<ClassName, number>>;
 export type CharacterDraftClassLevels = Partial<Record<ClassName, number>>;
 export type CharacterAdvancement = ReadonlyArray<CharacterAdvancementEntry>;
 
-export const ZERO_CLASS_LEVELS = Object.fromEntries(
-  CLASS_NAMES.map((className) => [className, 0]),
-) as CharacterClassLevels;
+export const ZERO_CLASS_LEVELS: CharacterClassLevels = SHARED_ZERO_CLASS_LEVELS;
 
 export interface CharacterDraft {
   readonly primaryClass?: ClassName;

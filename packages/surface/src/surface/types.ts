@@ -1,45 +1,15 @@
 import { Schema } from "effect";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  CREATURE_TYPES as SHARED_CREATURE_TYPES,
+  SURFACE_CONDITIONS,
+  SURFACE_SKILLS,
+} from "@dnd/shared/game-facts";
 import * as SurfaceSchema from "./schema.ts";
 
 // Runtime literal sets kept as values; concrete surface types derive from the Effect schemas.
-export const SKILLS = [
-  "acrobatics",
-  "animal_handling",
-  "arcana",
-  "athletics",
-  "deception",
-  "history",
-  "insight",
-  "intimidation",
-  "investigation",
-  "medicine",
-  "nature",
-  "perception",
-  "performance",
-  "persuasion",
-  "religion",
-  "sleight_of_hand",
-  "stealth",
-  "survival",
-] as const satisfies ReadonlyArray<Skill>;
-export const CONDITIONS = [
-  "blinded",
-  "charmed",
-  "deafened",
-  "exhaustion",
-  "frightened",
-  "grappled",
-  "incapacitated",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious",
-] as const satisfies ReadonlyArray<Condition>;
+export const SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
+export const CONDITIONS = SURFACE_CONDITIONS satisfies ReadonlyArray<Condition>;
 export const AREA_SHAPES = [
   "sphere",
   "cone",
@@ -48,22 +18,8 @@ export const AREA_SHAPES = [
   "emanation",
   "line",
 ] as const satisfies ReadonlyArray<AreaShape>;
-export const CREATURE_TYPES = [
-  "aberration",
-  "beast",
-  "celestial",
-  "construct",
-  "dragon",
-  "elemental",
-  "fey",
-  "fiend",
-  "giant",
-  "humanoid",
-  "monstrosity",
-  "ooze",
-  "plant",
-  "undead",
-] as const satisfies ReadonlyArray<CreatureType>;
+export const CREATURE_TYPES =
+  SHARED_CREATURE_TYPES satisfies ReadonlyArray<CreatureType>;
 export const ILLUSION_SENSORY_CHANNELS = [
   "visual",
   "sound",

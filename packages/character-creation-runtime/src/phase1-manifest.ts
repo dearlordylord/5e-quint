@@ -8,7 +8,8 @@ import {
   type UnitChoiceKey,
 } from "./types.ts";
 import { backgroundAbilityScoreIncreaseOptionId } from "./hole-factories.ts";
-import type { Ability, UnitRecord } from "@dnd/surface/surface/types";
+import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 export const INITIAL_CHARACTER_DRAFT_PATHS = [
   "draft.primaryClass",
@@ -146,11 +147,4 @@ export const LOADOUT_WEAPON_CHOICE_KEY =
   "loadout_weapon" satisfies UnitChoiceKey;
 export const EXACTLY_ONE_CHOICE = exactChoiceCardinality(1);
 
-export const SURFACE_ABILITIES = [
-  "str",
-  "dex",
-  "con",
-  "int",
-  "wis",
-  "cha",
-] as const satisfies ReadonlyArray<Ability>;
+export { SURFACE_ABILITIES };

@@ -58,6 +58,7 @@ import type {
   UnitRef,
 } from "./types.ts";
 import { creationChoiceOptionId } from "./types.ts";
+import { characterClassLevel } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 type DraftSourcedCreationHole = CreationHole & {
@@ -133,9 +134,9 @@ const SUPPORTED_DRAFT_CHOICE_PATHS = [
 type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
 const SUPPORTED_ADVANCEMENTS = [
-  { classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID, level: 1 },
-  { classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID, level: 2 },
-  { classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID, level: 1 },
+  { classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID, level: characterClassLevel(1) },
+  { classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID, level: characterClassLevel(2) },
+  { classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID, level: characterClassLevel(1) },
 ] as const satisfies ReadonlyArray<CharacterAdvancementEntry>;
 
 const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {

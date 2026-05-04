@@ -7,6 +7,7 @@ import {
   type CharacterDraftClassLevels,
   ZERO_CLASS_LEVELS,
 } from "#/character-domain-model.ts";
+import { normalizeClassLevels as sharedNormalizeClassLevels } from "@dnd/shared-algebras/character-advancement-algebra";
 import {
   ownedCombatEquipment,
   type CharacterEquipmentChoicesDraft,
@@ -29,10 +30,7 @@ type MutableCharacterLoadout = {
 export function normalizeClassLevels(
   partial: CharacterDraftClassLevels,
 ): CharacterClassLevels {
-  return {
-    ...ZERO_CLASS_LEVELS,
-    ...partial,
-  };
+  return sharedNormalizeClassLevels(partial);
 }
 
 function sanitizeEquipmentChoices(

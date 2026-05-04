@@ -9,6 +9,7 @@ export {
   STANDARD_LANGUAGES,
   SUPPORTED_ABILITY_SCORE_METHODS,
   characterDraftId,
+  characterClassLevel,
   boundedChoiceCardinality,
   choiceCardinalityBounds,
   choiceCardinalityMax,

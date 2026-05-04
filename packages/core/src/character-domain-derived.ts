@@ -9,11 +9,11 @@ import { BACKGROUND_FIXED_ORIGIN_FEATS } from "#/character-proficiencies.ts";
 import { deriveCharacterProficiencies } from "#/character-proficiencies.ts";
 import { deriveCharacterClassResources } from "#/character-resources.ts";
 import type { CharacterClassResourcePool } from "#/character-feature-types.ts";
-import { CLASS_NAMES, type ClassName } from "#/features/class-tables.ts";
-
-const ZERO_CLASS_LEVELS = Object.fromEntries(
-  CLASS_NAMES.map((className) => [className, 0]),
-) as Readonly<Record<ClassName, number>>;
+import type { ClassName } from "#/features/class-tables.ts";
+import {
+  ZERO_CLASS_LEVELS,
+  totalClassLevels as sharedTotalClassLevels,
+} from "@dnd/shared-algebras/character-advancement-algebra";
 
 export function finalAbilityModifiers(
   sheet: Pick<CharacterSheet, "abilityScores">,
@@ -24,10 +24,7 @@ export function finalAbilityModifiers(
 export function totalClassLevels(
   classLevels: Readonly<Record<ClassName, number>>,
 ): number {
-  return CLASS_NAMES.reduce(
-    (total, className) => total + classLevels[className],
-    0,
-  );
+  return sharedTotalClassLevels(classLevels);
 }
 
 export function singleClassLevels(

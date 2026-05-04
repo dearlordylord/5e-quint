@@ -1,4 +1,10 @@
 import { Brand, Either, Schema } from "effect";
+export {
+  ABILITIES,
+  CONDITIONS,
+  type Ability,
+  type Condition,
+} from "./game-facts.ts";
 
 export type NonEmptyArray<T> = [T, ...T[]];
 export type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
@@ -25,24 +31,6 @@ export const getOnlyOneStrict = <T>(value: readonly [T]): T => {
   throw new Error("Expected exactly one value");
 };
 
-export const CONDITIONS = [
-  "blinded",
-  "charmed",
-  "deafened",
-  "frightened",
-  "grappled",
-  "incapacitated",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious",
-] as const;
-export type Condition = (typeof CONDITIONS)[number];
-
 export const INCAP_SOURCES = [
   "paralyzed",
   "petrified",
@@ -51,9 +39,6 @@ export const INCAP_SOURCES = [
   "direct",
 ] as const;
 export type IncapSource = (typeof INCAP_SOURCES)[number];
-
-export const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const;
-export type Ability = (typeof ABILITIES)[number];
 
 export const HAND_USES = [
   "free",
@@ -91,8 +76,9 @@ export const DAMAGE_TYPES = [
 ] as const;
 export type DamageType = (typeof DAMAGE_TYPES)[number];
 
-export const DAMAGE_DIE_SIZES = [4, 6, 8, 10, 12] as const satisfies
-  ReadonlyArray<number>;
+export const DAMAGE_DIE_SIZES = [
+  4, 6, 8, 10, 12,
+] as const satisfies ReadonlyArray<number>;
 export type DamageDieSize = (typeof DAMAGE_DIE_SIZES)[number];
 export const DamageDieSizeSchema = Schema.Literal(...DAMAGE_DIE_SIZES);
 

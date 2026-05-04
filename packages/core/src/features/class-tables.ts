@@ -4,7 +4,9 @@
 import type { Ability } from "#/types.ts";
 import {
   CLASS_NAMES as SHARED_CLASS_NAMES,
-  MULTICLASS_THRESHOLD as SHARED_THRESHOLD,
+  type ClassName as SharedClassName,
+} from "@dnd/shared/game-facts";
+import {
   meetsMulticlassPrerequisite as sharedMeetsPrereq,
   canMulticlass as sharedCanMulticlass,
 } from "@dnd/shared-algebras/multiclass-prerequisite-algebra";
@@ -12,7 +14,7 @@ import {
 // --- Types ---
 
 export const CLASS_NAMES = SHARED_CLASS_NAMES;
-export type ClassName = (typeof SHARED_CLASS_NAMES)[number];
+export type ClassName = SharedClassName;
 
 // --- Hit Dice (PHB class tables) ---
 
@@ -61,9 +63,6 @@ export function hitDiceFromClassLevels(
 }
 
 // --- Multiclass Prerequisites (PHB Ch6) — delegated to shared-algebras ---
-
-/** @deprecated use `@dnd/shared-algebras/multiclass-prerequisite-algebra` directly */
-export const MULTICLASS_THRESHOLD = SHARED_THRESHOLD;
 
 /** @deprecated use `meetsMulticlassPrerequisite` from shared-algebras */
 export function meetsMulticlassPrereq(

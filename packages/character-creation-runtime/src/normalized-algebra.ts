@@ -3,7 +3,7 @@
 // Starting class is declared explicitly and is the source of truth.
 // Advancements store no level — computeTotalLevel = 1 + advancements.length.
 
-import type { ClassName } from "@dnd/shared-algebras/multiclass-prerequisite-algebra";
+import type { ClassName } from "@dnd/shared-algebras/character-advancement-algebra";
 
 // ── Starting class is explicitly declared ──
 

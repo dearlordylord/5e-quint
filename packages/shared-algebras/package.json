@@ -15,6 +15,7 @@
     "./runtime-dice-algebra": "./src/runtime-dice-algebra.ts",
     "./runtime-hole-algebra": "./src/runtime-hole-algebra.ts",
     "./validation-algebra": "./src/validation-algebra.ts",
+    "./character-advancement-algebra": "./src/character-advancement-algebra.ts",
     "./multiclass-prerequisite-algebra": "./src/multiclass-prerequisite-algebra.ts"
   },
   "imports": {

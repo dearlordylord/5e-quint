@@ -1,70 +1,72 @@
 // Multiclass prerequisite algebra (SRD 5.2.1 Ch18.4)
-// Canonical implementation — owned by @dnd/shared-algebras.
-// @dnd/core consumers import this instead of defining their own table.
 
-import type { Ability } from "@dnd/shared/types";
+import type { Ability, ReadonlyNonEmptyArray } from '@dnd/shared/types';
+import type { ClassName } from "@dnd/shared/game-facts";
 
-export const CLASS_NAMES = [
-  "barbarian",
-  "bard",
-  "cleric",
-  "druid",
-  "fighter",
-  "monk",
-  "paladin",
-  "ranger",
-  "rogue",
-  "sorcerer",
-  "warlock",
-  "wizard",
-] as const satisfies ReadonlyArray<string>;
-
-export type ClassName = (typeof CLASS_NAMES)[number];
+export { CLASS_NAMES, type ClassName } from "@dnd/shared/game-facts";
 
 export const MULTICLASS_THRESHOLD = 13;
 
-// ── Discriminated prerequisite expression ──
-
 export type MulticlassPrerequisite =
-  | { readonly tag: "scoreAtLeast"; readonly ability: Ability; readonly minimum: 13 }
-  | { readonly tag: "allOf"; readonly prerequisites: NonEmptyMulticlassPrerequisites }
-  | { readonly tag: "anyOf"; readonly prerequisites: NonEmptyMulticlassPrerequisites };
+  | {
+      readonly tag: "scoreAtLeast";
+      readonly ability: Ability;
+      readonly minimum: typeof MULTICLASS_THRESHOLD;
+    }
+  | {
+      readonly tag: "allOf";
+      readonly prerequisites: NonEmptyMulticlassPrerequisites;
+    }
+  | {
+      readonly tag: "anyOf";
+      readonly prerequisites: NonEmptyMulticlassPrerequisites;
+    };
 
-export type NonEmptyMulticlassPrerequisites = readonly [
-  MulticlassPrerequisite,
-  ...MulticlassPrerequisite[],
-];
+export type NonEmptyMulticlassPrerequisites = ReadonlyNonEmptyArray<MulticlassPrerequisite>;
 
-export const MULTICLASS_PREREQUISITES: Readonly<Record<ClassName, MulticlassPrerequisite>> = {
-  barbarian: { tag: "scoreAtLeast", ability: "str", minimum: 13 },
-  bard: { tag: "scoreAtLeast", ability: "cha", minimum: 13 },
-  cleric: { tag: "scoreAtLeast", ability: "wis", minimum: 13 },
-  druid: { tag: "scoreAtLeast", ability: "wis", minimum: 13 },
-  fighter: { tag: "anyOf", prerequisites: [
-    { tag: "scoreAtLeast", ability: "str", minimum: 13 },
-    { tag: "scoreAtLeast", ability: "dex", minimum: 13 },
-  ]},
-  monk: { tag: "allOf", prerequisites: [
-    { tag: "scoreAtLeast", ability: "dex", minimum: 13 },
-    { tag: "scoreAtLeast", ability: "wis", minimum: 13 },
-  ]},
-  paladin: { tag: "allOf", prerequisites: [
-    { tag: "scoreAtLeast", ability: "str", minimum: 13 },
-    { tag: "scoreAtLeast", ability: "cha", minimum: 13 },
-  ]},
-  ranger: { tag: "allOf", prerequisites: [
-    { tag: "scoreAtLeast", ability: "dex", minimum: 13 },
-    { tag: "scoreAtLeast", ability: "wis", minimum: 13 },
-  ]},
-  rogue: { tag: "scoreAtLeast", ability: "dex", minimum: 13 },
-  sorcerer: { tag: "scoreAtLeast", ability: "cha", minimum: 13 },
-  warlock: { tag: "scoreAtLeast", ability: "cha", minimum: 13 },
-  wizard: { tag: "scoreAtLeast", ability: "int", minimum: 13 },
+export const MULTICLASS_PREREQUISITES: Readonly<
+  Record<ClassName, MulticlassPrerequisite>
+> = {
+  barbarian: { tag: "scoreAtLeast", ability: "str", minimum: MULTICLASS_THRESHOLD },
+  bard: { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
+  cleric: { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
+  druid: { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
+  fighter: {
+    tag: "anyOf",
+    prerequisites: [
+      { tag: "scoreAtLeast", ability: "str", minimum: MULTICLASS_THRESHOLD },
+      { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
+    ],
+  },
+  monk: {
+    tag: "allOf",
+    prerequisites: [
+      { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
+      { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
+    ],
+  },
+  paladin: {
+    tag: "allOf",
+    prerequisites: [
+      { tag: "scoreAtLeast", ability: "str", minimum: MULTICLASS_THRESHOLD },
+      { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
+    ],
+  },
+  ranger: {
+    tag: "allOf",
+    prerequisites: [
+      { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
+      { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
+    ],
+  },
+  rogue: { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
+  sorcerer: { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
+  warlock: { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
+  wizard: { tag: "scoreAtLeast", ability: "int", minimum: MULTICLASS_THRESHOLD },
 } as const satisfies Record<ClassName, MulticlassPrerequisite>;
 
 /**
  * Check if a single class multiclass prerequisite is met (SRD 5.2.1 Ch18.4).
- * Threshold is always 13.
  */
 export function meetsMulticlassPrerequisite(
   scores: Record<Ability, number>,
@@ -75,7 +77,10 @@ export function meetsMulticlassPrerequisite(
   return evalPrereq(prereq, scores);
 }
 
-function evalPrereq(prereq: MulticlassPrerequisite, scores: Record<Ability, number>): boolean {
+function evalPrereq(
+  prereq: MulticlassPrerequisite,
+  scores: Record<Ability, number>,
+): boolean {
   switch (prereq.tag) {
     case "scoreAtLeast":
       return scores[prereq.ability] >= prereq.minimum;

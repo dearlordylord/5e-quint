@@ -10,6 +10,14 @@ import {
   meetsMulticlassPrereq,
   type ClassName,
 } from "#/features/class-tables.ts";
+import {
+  ZERO_CLASS_LEVELS,
+  advancementToClassLevels as sharedAdvancementToClassLevels,
+  normalizeClassLevels as sharedNormalizeClassLevels,
+  primaryClassFromAdvancement,
+  singleClassAdvancement as sharedSingleClassAdvancement,
+  totalClassLevels,
+} from "@dnd/shared-algebras/character-advancement-algebra";
 import type {
   CharacterClassLevels,
   CharacterDraft,
@@ -21,10 +29,6 @@ import type { Ability } from "#/types.ts";
 export type CharacterAdvancement = ReadonlyArray<CharacterAdvancementEntry>;
 
 type MutableCharacterAbilityScores = Record<Ability, number>;
-
-const ZERO_CLASS_LEVELS = Object.fromEntries(
-  CLASS_NAMES.map((className) => [className, 0]),
-) as CharacterClassLevels;
 
 const BASE_FEAT_LEVELS = new Set([4, 8, 12, 16]);
 const EXTRA_FEAT_LEVELS: Readonly<
@@ -45,22 +49,10 @@ const EPIC_BOON_FEAT_IDS: ReadonlySet<string> = new Set([
   "boon_of_truesight",
 ]);
 
-function normalizeClassLevels(
+function normalizeCoreClassLevels(
   partial: Partial<Record<ClassName, number>>,
 ): CharacterClassLevels {
-  return {
-    ...ZERO_CLASS_LEVELS,
-    ...partial,
-  };
-}
-
-function totalClassLevels(
-  classLevels: Readonly<Record<ClassName, number>>,
-): number {
-  return CLASS_NAMES.reduce(
-    (total, className) => total + classLevels[className],
-    0,
-  );
+  return sharedNormalizeClassLevels(partial);
 }
 
 function classGainsFeatChoice(
@@ -159,11 +151,7 @@ function applyAdvancementChoice(
 export function advancementToClassLevels(
   advancement: CharacterAdvancement,
 ): CharacterClassLevels {
-  const classLevels = { ...ZERO_CLASS_LEVELS };
-  for (const entry of advancement) {
-    classLevels[entry.className] += 1;
-  }
-  return classLevels;
+  return sharedAdvancementToClassLevels(advancement);
 }
 
 export function sheetClassLevels(
@@ -212,7 +200,7 @@ export function singleClassAdvancement(
   className: ClassName,
   level: number,
 ): CharacterAdvancement {
-  return Array.from({ length: level }, () => ({ className }));
+  return sharedSingleClassAdvancement(className, level);
 }
 
 export function characterSubclassSelections(
@@ -227,7 +215,7 @@ function levelOneAdvancementFromLegacyDraft(
   draft: CharacterDraft,
 ): CharacterAdvancement | undefined {
   if (draft.primaryClass == null || draft.classLevels == null) return undefined;
-  const classLevels = normalizeClassLevels(draft.classLevels);
+  const classLevels = normalizeCoreClassLevels(draft.classLevels);
   if (
     totalClassLevels(classLevels) === 1 &&
     classLevels[draft.primaryClass] === 1
@@ -257,14 +245,15 @@ export function validateAndReplayAdvancement(
       classLevels:
         draft.classLevels == null
           ? ZERO_CLASS_LEVELS
-          : normalizeClassLevels(draft.classLevels),
+          : normalizeCoreClassLevels(draft.classLevels),
       primaryClass: draft.primaryClass,
       issues: [],
     };
   }
 
   const issues: CharacterFinalizationIssue[] = [];
-  if (advancement.length === 0) {
+  const primaryClass = primaryClassFromAdvancement(advancement);
+  if (primaryClass == null) {
     issues.push({
       code: "invalidAdvancement",
       message: "Advancement history must contain at least one class level.",
@@ -280,7 +269,9 @@ export function validateAndReplayAdvancement(
 
   const derivedClassLevels = advancementToClassLevels(advancement);
   if (draft.classLevels != null) {
-    const normalizedDraftClassLevels = normalizeClassLevels(draft.classLevels);
+    const normalizedDraftClassLevels = normalizeCoreClassLevels(
+      draft.classLevels,
+    );
     for (const className of CLASS_NAMES) {
       if (
         normalizedDraftClassLevels[className] !== derivedClassLevels[className]
@@ -295,7 +286,6 @@ export function validateAndReplayAdvancement(
     }
   }
 
-  const primaryClass = advancement[0].className;
   if (draft.primaryClass != null && draft.primaryClass !== primaryClass) {
     issues.push({
       code: "invalidAdvancement",

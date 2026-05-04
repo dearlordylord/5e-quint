@@ -1,5 +1,13 @@
 import { Schema } from "effect";
-import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
+import {
+  ABILITIES,
+  CLASS_NAMES as SHARED_CLASS_NAMES,
+  CREATURE_TYPES,
+  STANDARD_ACTION_KINDS,
+  SURFACE_CONDITIONS,
+  SURFACE_SKILLS,
+  type ClassName,
+} from "@dnd/shared/game-facts";
 
 import { exactOptional } from "./schema-helpers.ts";
 
@@ -48,14 +56,7 @@ export const SavingThrowSourceFilterSchema = Schema.Struct({
   kind: Schema.Literal("spell_or_other_magical_effect"),
 });
 
-export const AbilitySchema = Schema.Literal(
-  "str",
-  "dex",
-  "con",
-  "int",
-  "wis",
-  "cha",
-);
+export const AbilitySchema = Schema.Literal(...ABILITIES);
 
 export const DamageTypeSchema = Schema.Literal(
   "acid",
@@ -102,25 +103,19 @@ export const StandardActionKindSchema = Schema.Literal(
   ...STANDARD_ACTION_KINDS,
 );
 
-export const NON_FIGHTER_NON_WIZARD_CLASS_NAMES = [
-  "barbarian",
-  "bard",
-  "cleric",
-  "druid",
-  "monk",
-  "paladin",
-  "ranger",
-  "rogue",
-  "sorcerer",
-  "warlock",
-] as const;
+export const CLASS_NAMES = SHARED_CLASS_NAMES;
 
-export const NON_WIZARD_CLASS_NAMES = [
-  ...NON_FIGHTER_NON_WIZARD_CLASS_NAMES,
-  "fighter",
-] as const;
+type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 
-export const CLASS_NAMES = [...NON_WIZARD_CLASS_NAMES, "wizard"] as const;
+export const NON_FIGHTER_NON_WIZARD_CLASS_NAMES = CLASS_NAMES.filter(
+  (className): className is Exclude<ClassName, "fighter" | "wizard"> =>
+    className !== "fighter" && className !== "wizard",
+) as unknown as NonEmptyReadonlyArray<Exclude<ClassName, "fighter" | "wizard">>;
+
+export const NON_WIZARD_CLASS_NAMES = CLASS_NAMES.filter(
+  (className): className is Exclude<ClassName, "wizard"> =>
+    className !== "wizard",
+) as unknown as NonEmptyReadonlyArray<Exclude<ClassName, "wizard">>;
 
 export const ClassNameSchema = Schema.Literal(...CLASS_NAMES);
 
@@ -220,26 +215,7 @@ export const TimeSpanDurationValueSchema = Schema.Struct({
 
 export const DurationValueSchema = TimeSpanDurationValueSchema;
 
-export const SkillSchema = Schema.Literal(
-  "acrobatics",
-  "animal_handling",
-  "arcana",
-  "athletics",
-  "deception",
-  "history",
-  "insight",
-  "intimidation",
-  "investigation",
-  "medicine",
-  "nature",
-  "perception",
-  "performance",
-  "persuasion",
-  "religion",
-  "sleight_of_hand",
-  "stealth",
-  "survival",
-);
+export const SkillSchema = Schema.Literal(...SURFACE_SKILLS);
 
 export const ReadonlyNonEmptyArraySkillSchema =
   Schema.NonEmptyArray(SkillSchema);
@@ -384,23 +360,7 @@ export const ProficiencyGrantSchema = Schema.Union(
   }),
 );
 
-export const ConditionSchema = Schema.Literal(
-  "blinded",
-  "charmed",
-  "deafened",
-  "exhaustion",
-  "frightened",
-  "grappled",
-  "incapacitated",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious",
-);
+export const ConditionSchema = Schema.Literal(...SURFACE_CONDITIONS);
 
 export const ReadonlyNonEmptyArrayConditionSchema =
   Schema.NonEmptyArray(ConditionSchema);
@@ -421,22 +381,7 @@ export const SenseKindSchema = Schema.Literal(
   "truesight",
 );
 
-export const CreatureTypeSchema = Schema.Literal(
-  "aberration",
-  "beast",
-  "celestial",
-  "construct",
-  "dragon",
-  "elemental",
-  "fey",
-  "fiend",
-  "giant",
-  "humanoid",
-  "monstrosity",
-  "ooze",
-  "plant",
-  "undead",
-);
+export const CreatureTypeSchema = Schema.Literal(...CREATURE_TYPES);
 
 export const ReadonlyNonEmptyArrayCreatureTypeSchema =
   Schema.NonEmptyArray(CreatureTypeSchema);

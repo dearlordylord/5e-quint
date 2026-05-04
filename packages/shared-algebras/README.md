@@ -28,6 +28,7 @@ should not contain algebra modules.
 - `action-economy-algebra` - turn resource availability, spending, and reset.
 - `armor-class-algebra` - structured Armor Class state and current AC reading.
 - `attack-roll-algebra` - d20 attack-roll hit adjudication.
+- `character-advancement-algebra` - ordered class progression and derived class-level facts.
 - `conditions-algebra` - condition set operations.
 - `death-saves-algebra` - death-save counter state.
 - `initiative-algebra` - Initiative order and turn advancement.

@@ -1,3 +1,4 @@
+import { Brand } from "effect";
 import {
   difficultyClass,
   type AbilityModifier,
@@ -42,6 +43,146 @@ export type RareLanguage = (typeof RARE_LANGUAGES)[number];
 export const LANGUAGES = [...STANDARD_LANGUAGES, ...RARE_LANGUAGES] as const;
 export type Language = (typeof LANGUAGES)[number];
 
+export const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const;
+export type Ability = (typeof ABILITIES)[number];
+
+export const CLASS_NAMES = [
+  "barbarian",
+  "bard",
+  "cleric",
+  "druid",
+  "fighter",
+  "monk",
+  "paladin",
+  "ranger",
+  "rogue",
+  "sorcerer",
+  "warlock",
+  "wizard",
+] as const satisfies ReadonlyArray<string>;
+export type ClassName = (typeof CLASS_NAMES)[number];
+
+export const CONDITIONS = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious",
+] as const;
+export type Condition = (typeof CONDITIONS)[number];
+
+export const SURFACE_CONDITIONS = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "exhaustion",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious",
+] as const satisfies ReadonlyArray<Condition | "exhaustion">;
+export type SurfaceCondition = (typeof SURFACE_CONDITIONS)[number];
+
+export const SKILLS = [
+  "acrobatics",
+  "animalHandling",
+  "arcana",
+  "athletics",
+  "deception",
+  "history",
+  "insight",
+  "intimidation",
+  "investigation",
+  "medicine",
+  "nature",
+  "perception",
+  "performance",
+  "persuasion",
+  "religion",
+  "sleightOfHand",
+  "stealth",
+  "survival",
+] as const;
+export type Skill = (typeof SKILLS)[number];
+
+const SURFACE_SKILL_OVERRIDES = {
+  animalHandling: "animal_handling",
+  sleightOfHand: "sleight_of_hand",
+} as const satisfies Partial<Record<Skill, SurfaceSkill>>;
+
+export function surfaceSkillId(skill: Skill): SurfaceSkill {
+  return Object.hasOwn(SURFACE_SKILL_OVERRIDES, skill)
+    ? SURFACE_SKILL_OVERRIDES[skill as keyof typeof SURFACE_SKILL_OVERRIDES]
+    : (skill as SurfaceSkill);
+}
+
+export const SURFACE_SKILLS = SKILLS.map(
+  surfaceSkillId,
+) as unknown as readonly [SurfaceSkill, ...SurfaceSkill[]];
+export type SurfaceSkill =
+  | Exclude<Skill, "animalHandling" | "sleightOfHand">
+  | "animal_handling"
+  | "sleight_of_hand";
+
+export const CREATURE_TYPES = [
+  "aberration",
+  "beast",
+  "celestial",
+  "construct",
+  "dragon",
+  "elemental",
+  "fey",
+  "fiend",
+  "giant",
+  "humanoid",
+  "monstrosity",
+  "ooze",
+  "plant",
+  "undead",
+] as const;
+export type CreatureType = (typeof CREATURE_TYPES)[number];
+
+export const SPEED_TYPES = ["walk", "fly", "swim", "climb", "burrow"] as const;
+export type SpeedType = (typeof SPEED_TYPES)[number];
+
+export const SURFACE_ABILITIES = ABILITIES;
+export type SurfaceAbility = Ability;
+
+export const CHARACTER_CLASS_LEVELS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+] as const satisfies ReadonlyArray<number>;
+
+export type CharacterClassLevel = number & Brand.Brand<"CharacterClassLevel">;
+
+export const CharacterClassLevel = Brand.all(
+  Brand.refined<CharacterClassLevel>(
+    (value) =>
+      Number.isInteger(value) &&
+      CHARACTER_CLASS_LEVELS.some((level) => level === value),
+    (value) =>
+      Brand.error(`Character class level must be from 1 through 20: ${value}`),
+  ),
+);
+
+export const characterClassLevel: (value: number) => CharacterClassLevel =
+  CharacterClassLevel;
+
 export const ALIGNMENT_MORALITIES = ["good", "neutral", "evil"] as const;
 export type AlignmentMorality = (typeof ALIGNMENT_MORALITIES)[number];
 
@@ -70,8 +211,7 @@ export const STANDARD_ACTION_KINDS = [
 export type StandardActionKind = (typeof STANDARD_ACTION_KINDS)[number];
 export type SrdActionKind = StandardActionKind;
 
-export type AlignmentOptionId =
-  `${AlignmentOrder}_${AlignmentMorality}`;
+export type AlignmentOptionId = `${AlignmentOrder}_${AlignmentMorality}`;
 
 type OrderInitial = {
   readonly lawful: "L";
@@ -160,9 +300,7 @@ export function alignmentFromAbbreviation(
   return alignment;
 }
 
-export function alignmentFromOptionId(
-  optionId: AlignmentOptionId,
-): Alignment {
+export function alignmentFromOptionId(optionId: AlignmentOptionId): Alignment {
   const alignment = ALIGNMENT_CHOICES.find(
     (choice) => alignmentOptionId(choice) === optionId,
   );

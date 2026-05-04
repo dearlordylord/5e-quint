@@ -16,6 +16,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterDraftId,
+  characterClassLevel,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
@@ -23,7 +24,6 @@ import {
   finalizeCharacterDraft,
   type CharacterDraft,
   type CharacterBuild,
-  type CharacterClassLevel,
   type CreationFill,
   type CreationHole,
   type CreationHoleIdText,
@@ -3151,7 +3151,7 @@ function characterBuildWithFeature(
     ...build,
     features: [
       ...build.features,
-      { kind: "classFeature", unitId, level: level as CharacterClassLevel },
+      { kind: "classFeature", unitId, level: characterClassLevel(level) },
     ],
   };
 }
@@ -3457,7 +3457,7 @@ function rogueCharacterBuild(
   } = {},
 ): CharacterBuild {
   const base = fighterCharacterBuild(unitLibrary);
-  const level = (input.level ?? 1) as CharacterClassLevel;
+  const level = characterClassLevel(input.level ?? 1);
   return {
     ...base,
     advancement: {
@@ -3476,14 +3476,14 @@ function rogueCharacterBuild(
       {
         kind: "classFeature",
         unitId: "rogue_sneak_attack",
-        level: 1 as CharacterClassLevel,
+        level: characterClassLevel(1),
       },
       ...(input.includeEvasion === true
         ? [
             {
               kind: "classFeature" as const,
               unitId: "rogue_evasion",
-              level: 7 as CharacterClassLevel,
+              level: characterClassLevel(7),
             },
           ]
         : []),
@@ -3492,7 +3492,7 @@ function rogueCharacterBuild(
             {
               kind: "classFeature" as const,
               unitId: "rogue_uncanny_dodge",
-              level: 5 as CharacterClassLevel,
+              level: characterClassLevel(5),
             },
           ]
         : []),

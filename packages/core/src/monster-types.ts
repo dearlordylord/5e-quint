@@ -16,6 +16,17 @@ import type {
   SpellId,
   WeaponProperty,
 } from "./types";
+import {
+  CREATURE_TYPES,
+  SKILLS,
+  SPEED_TYPES,
+  type CreatureType,
+  type Skill,
+  type SpeedType,
+} from "@dnd/shared/game-facts";
+
+export { CREATURE_TYPES, SKILLS, SPEED_TYPES };
+export type { CreatureType, Skill, SpeedType };
 
 // --- Phase L: Legendary / Recharge / X-Day types ---
 
@@ -89,27 +100,6 @@ export interface MonsterResourceState {
   readonly rechargeAvailable: Readonly<Record<string, boolean>>;
   readonly dailyUsesRemaining: Readonly<Record<string, number>>;
 }
-
-// --- SRD 5.2.1 Creature Types (14 types, Monsters > Overview) ---
-
-export const CREATURE_TYPES = [
-  "aberration",
-  "beast",
-  "celestial",
-  "construct",
-  "dragon",
-  "elemental",
-  "fey",
-  "fiend",
-  "giant",
-  "humanoid",
-  "monstrosity",
-  "ooze",
-  "plant",
-  "undead",
-] as const;
-
-export type CreatureType = (typeof CREATURE_TYPES)[number];
 
 // --- SRD 5.2.1 Senses ---
 
@@ -406,37 +396,6 @@ export type MonsterLegendaryAction =
   | MonsterExecutableAbility
   | MonsterTextAbility
   | MonsterSpellcastingAbility;
-
-// --- Speed Types ---
-
-export const SPEED_TYPES = ["walk", "fly", "swim", "climb", "burrow"] as const;
-
-export type SpeedType = (typeof SPEED_TYPES)[number];
-
-// --- Skill (18 SRD skills) ---
-
-export const SKILLS = [
-  "acrobatics",
-  "animalHandling",
-  "arcana",
-  "athletics",
-  "deception",
-  "history",
-  "insight",
-  "intimidation",
-  "investigation",
-  "medicine",
-  "nature",
-  "perception",
-  "performance",
-  "persuasion",
-  "religion",
-  "sleightOfHand",
-  "stealth",
-  "survival",
-] as const;
-
-export type Skill = (typeof SKILLS)[number];
 
 // --- Stat Block (SRD 5.2.1: "contains the game statistics of a monster") ---
 

@@ -23,6 +23,7 @@ import {
   draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
+  characterClassLevel,
   unitChoiceKey,
   type CharacterDraft,
   type CharacterChoiceSelection,
@@ -1601,7 +1602,11 @@ describe("character creation finalization", () => {
     const projection = finalizedBuildEquipment({
       ...complete.selections,
       primaryClass: "class_fighter",
-      advancement: { entries: [{ classUnitId: "class_fighter", level: 1 }] },
+      advancement: {
+        entries: [
+          { classUnitId: "class_fighter", level: characterClassLevel(1) },
+        ],
+      },
       background: "background_soldier",
       abilityScoreGeneration: {
         method: "standardArray",
@@ -1855,7 +1860,9 @@ describe("character creation finalization", () => {
       selections: {
         ...complete.selections,
         advancement: {
-          entries: [{ classUnitId: "class_fighter", level: 3 }],
+          entries: [
+            { classUnitId: "class_fighter", level: characterClassLevel(3) },
+          ],
         },
       },
     };

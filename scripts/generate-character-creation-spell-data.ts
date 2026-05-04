@@ -4,6 +4,10 @@ import { fileURLToPath } from "node:url";
 
 import { SRD_SUBCLASSES } from "../packages/core/src/character-feature-types.ts";
 import { SRD_SPELLS } from "../packages/core/src/features/spell-registry.ts";
+import {
+  CLASS_NAMES,
+  type ClassName,
+} from "../packages/shared/src/game-facts.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -12,22 +16,6 @@ const spellcastingDataSourcePath = path.join(
   repoRoot,
   "packages/core/src/character-spellcasting-data.ts",
 );
-
-const CLASS_NAMES = [
-  "barbarian",
-  "bard",
-  "cleric",
-  "druid",
-  "fighter",
-  "monk",
-  "paladin",
-  "ranger",
-  "rogue",
-  "sorcerer",
-  "warlock",
-  "wizard",
-] as const;
-type ClassName = (typeof CLASS_NAMES)[number];
 
 function normalizeSpellName(name: string): string {
   return name
@@ -73,8 +61,9 @@ function buildIfChain<T>(
 ): string {
   if (entries.length === 0) return fallback;
   return entries
-    .map(([key, value], index) =>
-      `${index === 0 ? "if" : "else if"} (spellId == "${key}") ${renderValue(value)}`,
+    .map(
+      ([key, value], index) =>
+        `${index === 0 ? "if" : "else if"} (spellId == "${key}") ${renderValue(value)}`,
     )
     .concat(`else ${fallback}`)
     .join("\n    ");
@@ -85,10 +74,12 @@ function buildClassLevelIfChain(
 ): string {
   const lines: string[] = [];
   CLASS_NAMES.forEach((className, classIndex) => {
-    const levelValues = values.get(className) ?? Array.from({ length: 20 }, () => 0);
+    const levelValues =
+      values.get(className) ?? Array.from({ length: 20 }, () => 0);
     const levelExpr = levelValues
-      .map((value, index) =>
-        `${index === 0 ? "if" : "else if"} (level == ${index + 1}) ${value}`,
+      .map(
+        (value, index) =>
+          `${index === 0 ? "if" : "else if"} (level == ${index + 1}) ${value}`,
       )
       .concat("else 0")
       .join("\n        ");
@@ -107,8 +98,9 @@ function buildSubclassIfChain(): string {
       subclasses.length === 0
         ? "false"
         : subclasses
-            .map((subclass, subclassIndex) =>
-              `${subclassIndex === 0 ? "subclass ==" : "or subclass =="} "${subclass}"`,
+            .map(
+              (subclass, subclassIndex) =>
+                `${subclassIndex === 0 ? "subclass ==" : "or subclass =="} "${subclass}"`,
             )
             .join(" ");
     return `${classIndex === 0 ? "if" : "else if"} (className == ${qntClassName(className)}) ${expr}`;
@@ -140,9 +132,10 @@ async function loadSpellcastingCountTables(): Promise<{
     fullCasterCantripCounts: Function(
       `return (${cantripMatch[1]})`,
     )() as Record<string, ReadonlyArray<number>>,
-    preparedSpellCounts: Function(
-      `return (${preparedMatch[1]})`,
-    )() as Record<string, ReadonlyArray<number>>,
+    preparedSpellCounts: Function(`return (${preparedMatch[1]})`)() as Record<
+      string,
+      ReadonlyArray<number>
+    >,
   };
 }
 
@@ -158,8 +151,7 @@ async function main(): Promise<void> {
   const baseCantripCounts = new Map<ClassName, ReadonlyArray<number>>(
     CLASS_NAMES.map((className) => [
       className,
-      fullCasterCantripCounts[className] ??
-        Array.from({ length: 20 }, () => 0),
+      fullCasterCantripCounts[className] ?? Array.from({ length: 20 }, () => 0),
     ]),
   );
 
@@ -208,8 +200,10 @@ module characterCreationSpellData {
     ${buildClassLevelIfChain(preparedCounts)}
 
   pure def pWizardSpellbookCount(level: int): int =
-    if (level <= 0) 0 else ${Array.from({ length: 20 }, (_, levelIndex) =>
-      `${levelIndex === 0 ? "if" : "else if"} (level == ${levelIndex + 1}) ${6 + levelIndex * 2}`,
+    if (level <= 0) 0 else ${Array.from(
+      { length: 20 },
+      (_, levelIndex) =>
+        `${levelIndex === 0 ? "if" : "else if"} (level == ${levelIndex + 1}) ${6 + levelIndex * 2}`,
     )
       .concat("else 0")
       .join("\n    ")}
@@ -240,7 +234,8 @@ module characterCreationSpellData {
   pure def pSpellAvailableForClass(spellId: str, className: ClassName): bool =
     ${buildIfChain(
       spellEntries.map((spell) => [spell.id, spell.classes] as const),
-      (classes) => classes.map((className) => `className == ${className}`).join(" or "),
+      (classes) =>
+        classes.map((className) => `className == ${className}`).join(" or "),
       "false",
     )}
 }

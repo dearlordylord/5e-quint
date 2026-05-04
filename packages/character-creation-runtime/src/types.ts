@@ -2,13 +2,16 @@ import { Brand } from "effect";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
+  CHARACTER_CLASS_LEVELS,
   STANDARD_LANGUAGES,
   type Alignment as CharacterAlignment,
   type AlignmentMorality,
   type AlignmentOrder,
+  type CharacterClassLevel,
   type CharacterStartingLanguages,
   type SelectableStandardLanguage,
   type StandardLanguage,
+  characterClassLevel,
 } from "@dnd/shared/game-facts";
 import {
   SUPPORTED_ABILITY_SCORE_METHODS,
@@ -52,13 +55,16 @@ export const characterDraftId: (value: string) => CharacterDraftId =
 export {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
+  CHARACTER_CLASS_LEVELS,
   STANDARD_LANGUAGES,
   type AlignmentMorality,
   type AlignmentOrder,
   type CharacterAlignment,
+  type CharacterClassLevel,
   type CharacterStartingLanguages,
   type SelectableStandardLanguage,
   type StandardLanguage,
+  characterClassLevel,
 };
 
 export const CHARACTER_DRAFT_PATHS = [
@@ -270,21 +276,6 @@ export type BackgroundAbilityScoreIncreaseSelection =
   | {
       readonly kind: "oneEach";
     };
-
-export const CHARACTER_CLASS_LEVELS = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-] as const;
-export type CharacterClassLevel = (typeof CHARACTER_CLASS_LEVELS)[number];
-
-export function characterClassLevel(value: number): CharacterClassLevel {
-  if (!CHARACTER_CLASS_LEVELS.some((level) => level === value)) {
-    throw new Error(
-      `Character class level must be from 1 through 20: ${value}`,
-    );
-  }
-
-  return value as CharacterClassLevel;
-}
 
 export type CharacterAdvancementSelection = {
   readonly entries: NonEmptyReadonlyArray<CharacterAdvancementEntry>;
