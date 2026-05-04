@@ -25,12 +25,17 @@ export const MULTICLASS_THRESHOLD = 13;
 
 // ── Discriminated prerequisite expression ──
 
-type AbilityPrerequisite =
+export type MulticlassPrerequisite =
   | { readonly tag: "scoreAtLeast"; readonly ability: Ability; readonly minimum: 13 }
-  | { readonly tag: "allOf"; readonly prerequisites: readonly AbilityPrerequisite[] }
-  | { readonly tag: "anyOf"; readonly prerequisites: readonly AbilityPrerequisite[] };
+  | { readonly tag: "allOf"; readonly prerequisites: NonEmptyMulticlassPrerequisites }
+  | { readonly tag: "anyOf"; readonly prerequisites: NonEmptyMulticlassPrerequisites };
 
-const CLASS_PREREQUISITES: Readonly<Record<ClassName, AbilityPrerequisite>> = {
+export type NonEmptyMulticlassPrerequisites = readonly [
+  MulticlassPrerequisite,
+  ...MulticlassPrerequisite[],
+];
+
+export const MULTICLASS_PREREQUISITES: Readonly<Record<ClassName, MulticlassPrerequisite>> = {
   barbarian: { tag: "scoreAtLeast", ability: "str", minimum: 13 },
   bard: { tag: "scoreAtLeast", ability: "cha", minimum: 13 },
   cleric: { tag: "scoreAtLeast", ability: "wis", minimum: 13 },
@@ -55,7 +60,7 @@ const CLASS_PREREQUISITES: Readonly<Record<ClassName, AbilityPrerequisite>> = {
   sorcerer: { tag: "scoreAtLeast", ability: "cha", minimum: 13 },
   warlock: { tag: "scoreAtLeast", ability: "cha", minimum: 13 },
   wizard: { tag: "scoreAtLeast", ability: "int", minimum: 13 },
-} as const satisfies Record<ClassName, AbilityPrerequisite>;
+} as const satisfies Record<ClassName, MulticlassPrerequisite>;
 
 /**
  * Check if a single class multiclass prerequisite is met (SRD 5.2.1 Ch18.4).
@@ -65,12 +70,12 @@ export function meetsMulticlassPrerequisite(
   scores: Record<Ability, number>,
   className: ClassName,
 ): boolean {
-  const prereq = CLASS_PREREQUISITES[className];
+  const prereq = MULTICLASS_PREREQUISITES[className];
   if (!prereq) return false;
   return evalPrereq(prereq, scores);
 }
 
-function evalPrereq(prereq: AbilityPrerequisite, scores: Record<Ability, number>): boolean {
+function evalPrereq(prereq: MulticlassPrerequisite, scores: Record<Ability, number>): boolean {
   switch (prereq.tag) {
     case "scoreAtLeast":
       return scores[prereq.ability] >= prereq.minimum;

@@ -3,6 +3,7 @@ import {
   meetsMulticlassPrerequisite,
   canMulticlass,
   CLASS_NAMES,
+  MULTICLASS_PREREQUISITES,
   MULTICLASS_THRESHOLD,
 } from "@dnd/shared-algebras/multiclass-prerequisite-algebra";
 
@@ -46,6 +47,30 @@ describe("multiclass-prerequisite-algebra", () => {
       "wizard",
     ];
     expect(CLASS_NAMES).toEqual(expected);
+  });
+
+  it("exports the canonical prerequisite table for every class", () => {
+    expect(Object.keys(MULTICLASS_PREREQUISITES).sort()).toEqual([...CLASS_NAMES].sort());
+  });
+
+  it("canonical table models fighter as STR or DEX", () => {
+    expect(MULTICLASS_PREREQUISITES.fighter).toEqual({
+      tag: "anyOf",
+      prerequisites: [
+        { tag: "scoreAtLeast", ability: "str", minimum: MULTICLASS_THRESHOLD },
+        { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
+      ],
+    });
+  });
+
+  it("canonical table models monk as DEX and WIS", () => {
+    expect(MULTICLASS_PREREQUISITES.monk).toEqual({
+      tag: "allOf",
+      prerequisites: [
+        { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
+        { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
+      ],
+    });
   });
 
   // ── Single-class prereqs ──
