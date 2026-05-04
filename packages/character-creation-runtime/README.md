@@ -164,8 +164,9 @@ projection boundaries.
 Multiclass prerequisite facts are deliberately outside this package's support
 profile tables. They live in
 `@dnd/shared-algebras/multiclass-prerequisite-algebra`; replay or widening code
-that validates adding a new class must parse the current/new class change there
-and then use that shared check instead of reauthoring prerequisite rules here.
+that validates adding a new class must establish the character's non-empty set
+of current classes plus the class being added through that shared algebra before
+calling its prerequisite check. Do not reauthor prerequisite rules here.
 
 For total character levels after 1, the current support profile projects fixed
 Hit Point gains. Post-start advancement entries carry explicit Hit Point rule

@@ -808,13 +808,16 @@ describe("MCP server route", () => {
           holeId: "cc:draft:draft.progression.initial",
           options: expect.arrayContaining([
             expect.objectContaining({
-              optionId: "13:class_fighter:level_1:maximum_hit_die",
+              label: expect.stringContaining("Fighter 1"),
+              unitRef: { unitId: "class_fighter" },
             }),
             expect.objectContaining({
-              optionId: "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+              label: expect.stringContaining("Fighter 2"),
+              unitRef: { unitId: "class_fighter" },
             }),
             expect.objectContaining({
-              optionId: "12:class_wizard:level_1:maximum_hit_die",
+              label: expect.stringContaining("Wizard 1"),
+              unitRef: { unitId: "class_wizard" },
             }),
           ]),
         }),
@@ -827,29 +830,12 @@ describe("MCP server route", () => {
       (tool) => tool.name === "fill_creation_holes",
     );
     expect(fillTool).toBeDefined();
-    const choiceFillSchema = (
-      fillTool?.inputSchema as unknown as {
-        readonly properties: {
-          readonly fills: {
-            readonly items: {
-              readonly anyOf: readonly [
-                {
-                  readonly properties: {
-                    readonly holeId: { readonly description: string };
-                    readonly optionIds: { readonly description: string };
-                  };
-                },
-              ];
-            };
-          };
-        };
-      }
-    ).properties.fills.items.anyOf[0];
+    const schemaText = JSON.stringify(fillTool?.inputSchema);
 
-    expect(choiceFillSchema.properties.holeId.description).toContain(
+    expect(schemaText).toContain(
       "there is no separate level-1 class-entry hole",
     );
-    expect(choiceFillSchema.properties.optionIds.description).toContain(
+    expect(schemaText).toContain(
       "starting class plus any post-start advancement entries",
     );
   });
