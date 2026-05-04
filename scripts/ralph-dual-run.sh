@@ -877,8 +877,24 @@ write_candidate_prompt() {
   local task_base_sha="$7"
   local feedback_file="${8:-}"
   local round_label="${9:-1}"
+  local runner="${10:-codex}"
 
   write_prompt "$role" "$output_file" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
+  if [[ "$runner" == "opencode" ]]; then
+    cat >>"$output_file" <<EOF
+
+OpenCode local-model guardrails:
+- The task body below is the primary scope. Use the full plan only for dependency/context checks.
+- Do not switch to another plan task, support-profile cleanup, phase-manifest cleanup, or broad architecture work unless the task body below explicitly requires it.
+- If a planning/todo tool rejects your schema, stop using that tool and continue with shell reads/edits.
+- Start by making the smallest task-relevant product diff, then iterate with verification. Do not spend the whole run planning.
+- If the task is too large to complete, leave a focused partial diff only when it is correct and useful; otherwise report Plan Impact: update-required with concrete narrowing guidance.
+
+Task $task_no body:
+
+$(cat "$task_file")
+EOF
+  fi
   if [[ -n "$feedback_file" && -f "$feedback_file" ]]; then
     cat >>"$output_file" <<EOF
 
@@ -1049,7 +1065,7 @@ run_candidate_pipeline() {
     local after_review_diff="$round_prefix.after-review.diff"
 
     note "task" "candidate-start task=$task_no candidate=$slug round=$round"
-    write_candidate_prompt "$implementer_role" "$implementer_prompt" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$previous_review" "$round"
+    write_candidate_prompt "$implementer_role" "$implementer_prompt" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$previous_review" "$round" "$runner"
 
     local implementer_status=0
     if [[ "$runner" == "claude" ]]; then
