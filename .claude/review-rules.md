@@ -69,6 +69,7 @@ For every product type, interface, type alias, Schema struct, Quint record, and 
 Flag:
 
 - sentinel values such as `""`, `0`, `null`, or `undefined` meaning "not applicable";
+- optional fields and empty collections that are second spellings for the same domain state;
 - booleans alongside fields only meaningful for one boolean value;
 - optional fields that must all be present-or-absent together;
 - status enums or metadata labels with no type or runtime consequence;
@@ -76,6 +77,14 @@ Flag:
 - impossible provenance, ownership, support-status, or phase combinations.
 
 Prefer discriminated unions, nested types, `Option`, branded/domain values, or stronger parser outputs that make invalid states unrepresentable.
+
+Optional fields and empty collections must represent distinct domain states. Do not use `undefined` as a second spelling for an empty list. If a type can represent unknown, omitted, and empty, document the domain meaning of each or redesign the type so the invalid distinction is unrepresentable.
+
+## Domain Naming
+
+Avoid contrast names such as `normalized`, `legacy`, `current`, or `new` unless the repo owns the opposite concept at the same boundary and the term is domain-backed.
+
+Prefer names for the rule, source shape, or domain object being modeled, not names that describe migration mechanics or implementation history.
 
 ## Temporal State And Lifecycle
 

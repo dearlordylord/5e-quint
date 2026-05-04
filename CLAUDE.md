@@ -37,8 +37,10 @@ For monster data in this repo:
 General design rule:
 
 - **Make invalid states irrepresentable.** This is mandatory before proposing or implementing any data shape. If a proposed type can represent contradictory provenance, contradictory ownership, mismatched derived facts, support-status markers with no type/runtime consequence, or any field combination that is impossible in the code or rules domain, redesign the type before presenting it.
+- Optional fields and empty collections must represent distinct domain states. Do not use `undefined` as a second spelling for an empty list. If a type can represent unknown, omitted, and empty, document the domain meaning of each or redesign the type so the invalid distinction is unrepresentable.
 - Do not store derivable facts beside their source facts unless the duplication is executable at the boundary that matters. Prefer deriving labels, abbreviations, display names, option ids, and projections from one canonical value or table, so mismatches cannot be represented.
 - Do not add status enums or metadata labels that neither affect the type system nor runtime behavior unless there is a specific, durable reason the repo needs them.
+- Avoid contrast names such as `normalized`, `legacy`, `current`, or `new` unless the repo owns the opposite concept at the same boundary and the term is domain-backed. Prefer names for the rule, source shape, or domain object being modeled, not names that describe migration mechanics or implementation history.
 
 ## Domain-language reflex (extends SRD-parity rules above)
 
