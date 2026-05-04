@@ -249,7 +249,6 @@ describe("MCP server route", () => {
     const supportedBuild = characterBuildWithFeature(
       fighterCharacterBuild(root.unitLibrary),
       "fighter_improved_critical",
-      3,
     );
     const supportedState = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-supported-critical-range"),
@@ -316,7 +315,6 @@ describe("MCP server route", () => {
     const unsupportedBuild = characterBuildWithFeature(
       fighterCharacterBuild(root.unitLibrary),
       unsupportedCriticalRangeUnit.id,
-      3,
     );
     expect(() =>
       startBattleFromCharacterBuildAndStatBlockRight({
@@ -3178,13 +3176,12 @@ function fighterTwoCharacterBuild(
 function characterBuildWithFeature(
   build: CharacterBuild,
   unitId: string,
-  level: number,
 ): CharacterBuild {
   return {
     ...build,
     features: [
       ...build.features,
-      { kind: "classFeature", unitId, level: characterClassLevel(level) },
+      { kind: "classFeature", unitId },
     ],
   };
 }
@@ -3499,14 +3496,12 @@ function rogueCharacterBuild(
       {
         kind: "classFeature",
         unitId: "rogue_sneak_attack",
-        level: characterClassLevel(1),
       },
       ...(input.includeEvasion === true
         ? [
             {
               kind: "classFeature" as const,
               unitId: "rogue_evasion",
-              level: characterClassLevel(7),
             },
           ]
         : []),
@@ -3515,7 +3510,6 @@ function rogueCharacterBuild(
             {
               kind: "classFeature" as const,
               unitId: "rogue_uncanny_dodge",
-              level: characterClassLevel(5),
             },
           ]
         : []),

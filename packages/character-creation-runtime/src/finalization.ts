@@ -50,7 +50,6 @@ import {
 } from "./support-gates.ts";
 import {
   creationChoiceOptionId,
-  characterClassLevel,
   choiceCardinalityBounds,
   exactChoiceCardinality,
   hitDieSize,
@@ -472,7 +471,6 @@ export function buildCharacterBuild(input: {
     ...classFeatureGrants.map((grant) => ({
       kind: "classFeature" as const,
       unitId: grant.unitId,
-      level: characterClassLevel(grant.level),
     })),
     {
       kind: "backgroundOriginFeat",

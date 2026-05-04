@@ -491,7 +491,6 @@ export type CharacterBuildFeature =
   | {
       readonly kind: "classFeature";
       readonly unitId: UnitRecord["id"];
-      readonly level: CharacterClassLevel;
     }
   | {
       readonly kind: "backgroundOriginFeat";

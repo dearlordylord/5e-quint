@@ -1472,17 +1472,14 @@ describe("character creation finalization", () => {
     expect(result.build.features).toEqual([
       {
         kind: "classFeature",
-        level: 1,
         unitId: "fighter_fighting_style_l1",
       },
       {
         kind: "classFeature",
-        level: 1,
         unitId: "fighter_second_wind",
       },
       {
         kind: "classFeature",
-        level: 1,
         unitId: "fighter_weapon_mastery_l1",
       },
       {
@@ -1565,8 +1562,8 @@ describe("character creation finalization", () => {
     ]);
     expect(result.build.features).toEqual(
       expect.arrayContaining([
-        { kind: "classFeature", level: 2, unitId: "fighter_action_surge" },
-        { kind: "classFeature", level: 2, unitId: "fighter_tactical_mind" },
+        { kind: "classFeature", unitId: "fighter_action_surge" },
+        { kind: "classFeature", unitId: "fighter_tactical_mind" },
       ]),
     );
     expect(result.build.resources.map((resource) => resource.unitId)).toContain(
