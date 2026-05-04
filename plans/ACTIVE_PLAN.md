@@ -144,6 +144,12 @@ Keep it synchronized with the DAG table and task details.
       "id": "PBA27",
       "status": "blocked",
       "title": "Core Quarantine And Deletion Cutover"
+    },
+    {
+      "number": 78,
+      "id": "PBA28",
+      "status": "blocked",
+      "title": "MBT Consolidation And Shared Algebra Parity"
     }
   ]
 }
@@ -195,7 +201,8 @@ Keep it synchronized with the DAG table and task details.
 | 74 | PBA24 - Remove Rogue Cunning Action Support Workaround | blocked | PBA25 | PBA27 | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md) | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow. |
 | 75 | PBA25 - Promote Unit-Backed Character Choice Width | blocked | PBA23 | PBA24, PBA26 | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md) | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections. |
 | 76 | PBA26 - Define Character Sheet Session Boundary And Migrate App | blocked | PBA25 | PBA27 | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md) | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs. |
-| 77 | PBA27 - Core Quarantine And Deletion Cutover | blocked | PBA24, PBA26 | future tasks | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md) | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior. |
+| 77 | PBA27 - Core Quarantine And Deletion Cutover | blocked | PBA24, PBA26 | PBA28 | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md) | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior. |
+| 78 | PBA28 - MBT Consolidation And Shared Algebra Parity | blocked | PBA27 | future tasks | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md) | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT. |
 
 ## Task Details
 
@@ -684,7 +691,7 @@ Plan Impact: if successful, unblock PBA27 when PBA24 is also complete.
 Status: `blocked`
 
 Depends on: PBA24, PBA26
-Blocks: future tasks
+Blocks: PBA28
 
 Research plan:
 [pba27-core-quarantine-deletion-cutover.md](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)
@@ -701,5 +708,29 @@ Verification summary: workspace Core-import searches, package manifest/script
 checks, promoted Surface/character-creation/battle-runtime/MCP/app checks, no
 legacy Core MBT as a gate, `/simplify` convergence.
 
-Plan Impact: if successful, append the next active queue or record an explicit
-owner decision that no further active work is desired.
+Plan Impact: if successful, unblock PBA28.
+
+### Task 78 - PBA28 - MBT Consolidation And Shared Algebra Parity
+
+Status: `blocked`
+
+Depends on: PBA27
+Blocks: future tasks
+
+Research plan:
+[pba28-mbt-consolidation-shared-algebra-parity.md](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)
+
+Next action: after Core quarantine/deletion, consolidate the active proof graph
+around package-local shared algebra MBT/proofs and selective promoted runtime
+MBT.
+
+Acceptance summary: `@dnd/shared-algebras` has a durable package-local parity
+pattern for stateful semantic algebras; each state-transition algebra has
+focused deterministic TS tests plus Quint MBT replay or documented
+Quint invariant/proof coverage; battle-runtime integrated MBT remains
+selective; broad authored-record width remains deterministic contract tests.
+
+Verification summary: package-local shared-algebras typecheck/tests and
+selected Quint proof/MBT commands, promoted runtime documentation checks, no
+legacy Core MBT as a gate, no broad battle MBT unless a promoted integrated
+slice is intentionally changed, `/simplify` convergence.
