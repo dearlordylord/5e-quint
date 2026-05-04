@@ -38,12 +38,32 @@ Options:
                           implementation and review.
   --codex-model <model>   Model passed to codex exec --model. Overrides
                           RALPH_CODEX_MODEL.
+  --implementation-runner <codex|opencode>
+                          Runner for the Codex implementer path only.
+                          Reviews, chooser, and decider always use Codex.
+                          Default: codex
+  --opencode-model <model>
+                          Model passed to opencode run --model when
+                          --implementation-runner opencode is used. Overrides
+                          RALPH_OPENCODE_MODEL.
+                          Default: ollama/qwen3.6:35b-a3b-64k
+  --opencode-ollama-base-url <url>
+                          Ollama OpenAI-compatible base URL to ping for
+                          ollama/* OpenCode models. Overrides
+                          RALPH_OPENCODE_OLLAMA_BASE_URL.
+                          Default: http://host.docker.internal:11434/v1
   --skip-decider          Stop each task after implementation and review.
   -h, --help              Show this help.
 
 Environment:
   RALPH_CLAUDE_MODEL      Optional model passed to claude --model.
   RALPH_CODEX_MODEL       Optional model passed to codex exec --model.
+  RALPH_IMPLEMENTATION_RUNNER
+                          codex or opencode for the Codex implementer path.
+  RALPH_OPENCODE_MODEL    Optional model passed to opencode run --model.
+  RALPH_OPENCODE_OLLAMA_BASE_URL
+                          Ollama base URL pinged before OpenCode runs when
+                          the model uses the ollama/ provider.
   RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
                           Default is quiet: persist logs to files only.
 EOF
@@ -107,6 +127,28 @@ load_openrouter_key_from_dotenv() {
   fi
 }
 
+ping_opencode_ollama_model() {
+  local provider="${opencode_model%%/*}"
+  local model_id="${opencode_model#*/}"
+  local models_json
+
+  [[ "$provider" == "ollama" ]] || return 0
+  [[ "$model_id" != "$opencode_model" && -n "$model_id" ]] || die "ollama OpenCode model must use provider/model form"
+
+  log "pinging Ollama for OpenCode model $model_id at $opencode_ollama_base_url"
+  models_json="$(curl -fsS --max-time 5 "$opencode_ollama_base_url/models")"
+  node - "$model_id" "$models_json" <<'NODE'
+const fs = require("fs")
+const modelId = process.argv[2]
+const body = process.argv[3] ?? fs.readFileSync(0, "utf8")
+const parsed = JSON.parse(body)
+const models = Array.isArray(parsed.data) ? parsed.data : []
+if (!models.some((model) => model?.id === modelId)) {
+  throw new Error(`OpenCode Ollama model not found: ${modelId}`)
+}
+NODE
+}
+
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -n "$repo_root" ]] || die "must be run inside a git repository"
 cd "$repo_root"
@@ -123,6 +165,9 @@ skip_decider=false
 codex_only=false
 claude_only=false
 codex_model="${RALPH_CODEX_MODEL:-}"
+implementation_runner="${RALPH_IMPLEMENTATION_RUNNER:-codex}"
+opencode_model="${RALPH_OPENCODE_MODEL:-ollama/qwen3.6:35b-a3b-64k}"
+opencode_ollama_base_url="${RALPH_OPENCODE_OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}"
 candidate_round_limit=3
 selected_tasks=()
 child_pids=()
@@ -228,6 +273,21 @@ while [[ $# -gt 0 ]]; do
       codex_model="$2"
       shift 2
       ;;
+    --implementation-runner)
+      [[ $# -ge 2 ]] || die "--implementation-runner requires a value"
+      implementation_runner="$2"
+      shift 2
+      ;;
+    --opencode-model)
+      [[ $# -ge 2 ]] || die "--opencode-model requires a value"
+      opencode_model="$2"
+      shift 2
+      ;;
+    --opencode-ollama-base-url)
+      [[ $# -ge 2 ]] || die "--opencode-ollama-base-url requires a value"
+      opencode_ollama_base_url="$2"
+      shift 2
+      ;;
     --skip-decider)
       skip_decider=true
       shift
@@ -262,6 +322,20 @@ load_openrouter_key_from_dotenv
 
 if [[ "$codex_only" == true && "$claude_only" == true ]]; then
   die "--codex-only and --claude-only are mutually exclusive"
+fi
+
+case "$implementation_runner" in
+  codex|opencode)
+    ;;
+  *)
+    die "--implementation-runner must be codex or opencode"
+    ;;
+esac
+
+if [[ "$implementation_runner" == "opencode" ]]; then
+  require_cmd opencode
+  require_cmd curl
+  ping_opencode_ollama_model
 fi
 
 [[ -f "$plan_file" ]] || die "plan file not found: $plan_file"
@@ -320,6 +394,8 @@ write_state() {
     printf 'PLAN_SNAPSHOT=%q\n' "$plan_snapshot"
     printf 'TASK_INDEX=%q\n' "$task_index"
     printf 'MAX_TASK_ATTEMPTS=%q\n' "$max_task_attempts"
+    printf 'IMPLEMENTATION_RUNNER=%q\n' "$implementation_runner"
+    printf 'OPENCODE_MODEL=%q\n' "$opencode_model"
   } >"$state_file"
 }
 
@@ -857,6 +933,7 @@ Claude worktree: $claude_worktree
 Codex worktree: $codex_worktree
 Claude implementer exit: $attempt_root/claude-implementer.exit
 Codex implementer exit: $attempt_root/codex-implementer.exit
+Codex implementer runner: $implementation_runner
 Claude review: $attempt_root/claude-review.md
 Codex review: $attempt_root/codex-review.md
 Claude review exit: $attempt_root/claude-review.exit
@@ -944,6 +1021,9 @@ run_candidate_pipeline() {
   local previous_review=""
   local verdict="reject"
   local implementer_role="$candidate_name implementer"
+  if [[ "$runner" == "opencode" ]]; then
+    implementer_role="$candidate_name implementer (running on OpenCode)"
+  fi
 
   while (( round <= candidate_round_limit )); do
     local round_prefix="$attempt_root/$slug-round-$round"
@@ -964,6 +1044,8 @@ run_candidate_pipeline() {
     local implementer_status=0
     if [[ "$runner" == "claude" ]]; then
       run_claude "$workspace" "$implementer_prompt" "$implementer_log" || implementer_status=$?
+    elif [[ "$runner" == "opencode" ]]; then
+      run_opencode "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" || implementer_status=$?
     else
       run_codex "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" || implementer_status=$?
     fi
@@ -1000,7 +1082,7 @@ run_candidate_pipeline() {
   cp -f "$attempt_root/$slug-round-$round-review.md" "$attempt_root/$slug-review.md"
   cp -f "$attempt_root/$slug-round-$round-review.exit" "$attempt_root/$slug-review.exit"
   cp -f "$attempt_root/$slug-round-$round.after-review.diff" "$attempt_root/$slug.after-review.diff"
-  if [[ "$runner" == "codex" && -f "$attempt_root/$slug-round-$round-implementer.final.md" ]]; then
+  if [[ "$runner" != "claude" && -f "$attempt_root/$slug-round-$round-implementer.final.md" ]]; then
     cp -f "$attempt_root/$slug-round-$round-implementer.final.md" "$attempt_root/$slug-implementer.final.md"
   fi
 }
@@ -1072,6 +1154,36 @@ run_codex() {
     log "codex exited $status; full log: $log_file"
   else
     log "codex completed; final: $output_file log: $log_file"
+  fi
+  return "$status"
+}
+
+run_opencode() {
+  local workspace="$1"
+  local prompt="$2"
+  local log_file="$3"
+  local output_file="$4"
+  local status=0
+  local message
+  local -a args=(run --dir "$workspace" --model "$opencode_model" --dangerously-skip-permissions)
+
+  message="$(<"$prompt")"
+
+  log "opencode: $(quote_cmd opencode "${args[@]}") < $prompt"
+  set +e
+  if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
+    opencode "${args[@]}" "$message" 2>&1 | tee "$log_file" "$output_file" >&2
+    status=${PIPESTATUS[0]}
+  else
+    opencode "${args[@]}" "$message" >"$output_file" 2>"$log_file"
+    status=$?
+  fi
+  set -e
+
+  if [[ "$status" -ne 0 ]]; then
+    log "opencode exited $status; full log: $log_file"
+  else
+    log "opencode completed; final: $output_file log: $log_file"
   fi
   return "$status"
 }
@@ -1562,7 +1674,7 @@ run_task_attempt() {
   fi
   local codex_pid=""
   if [[ "$claude_only" != true ]]; then
-    run_candidate_pipeline "Codex" "codex" "$codex_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" &
+    run_candidate_pipeline "Codex" "$implementation_runner" "$codex_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" &
     codex_pid=$!
     child_pids+=("$codex_pid")
   fi
