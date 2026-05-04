@@ -120,22 +120,12 @@ export function discoverInitialDraftHoles(input: {
   readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
   return INITIAL_CHARACTER_DRAFT_PATHS.flatMap((path) => {
-    if (
-      hasDraftSelection(input.draft.selections, path) ||
-      isBlockedInitialDraftPath(input.draft, path)
-    ) {
+    if (hasDraftSelection(input.draft.selections, path)) {
       return [];
     }
     const hole = draftHole(path, input.unitLibrary, input.draft);
     return hole === undefined ? [] : [hole];
   });
-}
-
-function isBlockedInitialDraftPath(
-  _draft: CharacterDraft,
-  _path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
-): boolean {
-  return false;
 }
 
 export function discoverClassGrantedHoles(input: {
