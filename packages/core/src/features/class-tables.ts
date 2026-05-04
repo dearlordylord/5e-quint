@@ -2,25 +2,17 @@
 // SRD 5.2.1 class hit dice and multiclass prerequisites
 
 import type { Ability } from "#/types.ts";
+import {
+  CLASS_NAMES as SHARED_CLASS_NAMES,
+  MULTICLASS_THRESHOLD as SHARED_THRESHOLD,
+  meetsMulticlassPrerequisite as sharedMeetsPrereq,
+  canMulticlass as sharedCanMulticlass,
+} from "@dnd/shared-algebras/multiclass-prerequisite-algebra";
 
 // --- Types ---
 
-export const CLASS_NAMES = [
-  "barbarian",
-  "bard",
-  "cleric",
-  "druid",
-  "fighter",
-  "monk",
-  "paladin",
-  "ranger",
-  "rogue",
-  "sorcerer",
-  "warlock",
-  "wizard",
-] as const;
-
-export type ClassName = (typeof CLASS_NAMES)[number];
+export const CLASS_NAMES = SHARED_CLASS_NAMES;
+export type ClassName = (typeof SHARED_CLASS_NAMES)[number];
 
 // --- Hit Dice (PHB class tables) ---
 
@@ -68,56 +60,29 @@ export function hitDiceFromClassLevels(
   return result;
 }
 
-// --- Multiclass Prerequisites (PHB Ch6) ---
+// --- Multiclass Prerequisites (PHB Ch6) — delegated to shared-algebras ---
 
-const MULTICLASS_THRESHOLD = 13;
+/** @deprecated use `@dnd/shared-algebras/multiclass-prerequisite-algebra` directly */
+export const MULTICLASS_THRESHOLD = SHARED_THRESHOLD;
 
+/** @deprecated use `meetsMulticlassPrerequisite` from shared-algebras */
 export function meetsMulticlassPrereq(
   scores: Record<Ability, number>,
   className: ClassName,
 ): boolean {
-  const t = MULTICLASS_THRESHOLD;
-  switch (className) {
-    case "barbarian":
-      return scores.str >= t;
-    case "bard":
-      return scores.cha >= t;
-    case "cleric":
-      return scores.wis >= t;
-    case "druid":
-      return scores.wis >= t;
-    case "fighter":
-      return scores.str >= t || scores.dex >= t;
-    case "monk":
-      return scores.dex >= t && scores.wis >= t;
-    case "paladin":
-      return scores.str >= t && scores.cha >= t;
-    case "ranger":
-      return scores.dex >= t && scores.wis >= t;
-    case "rogue":
-      return scores.dex >= t;
-    case "sorcerer":
-      return scores.cha >= t;
-    case "warlock":
-      return scores.cha >= t;
-    case "wizard":
-      return scores.int >= t;
-  }
+  return sharedMeetsPrereq(scores, className);
 }
 
-/** Must meet prereqs for BOTH current and new class (PHB Ch6). */
+/** @deprecated use `canMulticlass` from shared-algebras */
 export function canMulticlass(
   scores: Record<Ability, number>,
   currentClass: ClassName,
   newClass: ClassName,
 ): boolean {
-  return (
-    meetsMulticlassPrereq(scores, currentClass) &&
-    meetsMulticlassPrereq(scores, newClass)
-  );
+  return sharedCanMulticlass(scores, currentClass, newClass);
 }
+
 // --- Multiclass Proficiency Gains (SRD 5.2.1) ---
-// When multiclassing INTO a class (not starting class), you gain only
 // partial proficiencies. Attacking without proficiency: no prof bonus (NOT disadvantage).
 
 export const ARMOR_TRAININGS = ["light", "medium"] as const;

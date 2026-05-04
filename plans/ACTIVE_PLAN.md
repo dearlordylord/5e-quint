@@ -439,14 +439,62 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 60,
       "id": "PBA15",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Plan Broader Battle Widening Queue"
     },
     {
       "number": 61,
+      "id": "PBA15A0",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Normalize Character Progression And Multiclass Algebra"
+    },
+    {
+      "number": 62,
       "id": "PBA15A",
       "status": "blocked",
       "title": "Migrate Surface And Character-Creation Domain Primitives"
+    },
+    {
+      "number": 63,
+      "id": "PBA16",
+      "status": "blocked",
+      "title": "Add Death-Save Promoted MBT Coverage"
+    },
+    {
+      "number": 64,
+      "id": "PBA17",
+      "status": "blocked",
+      "title": "Restore Nonlethal Knockout And Zero-HP Handoff Width"
+    },
+    {
+      "number": 65,
+      "id": "PBA18",
+      "status": "blocked",
+      "title": "Widen Attack Range And Conditional Attack Riders"
+    },
+    {
+      "number": 66,
+      "id": "PBA19",
+      "status": "blocked",
+      "title": "Restore Stat Block Multiattack And Bonus Actions"
+    },
+    {
+      "number": 67,
+      "id": "PBA20",
+      "status": "blocked",
+      "title": "Restore Spell Targeting And Catalog Width"
+    },
+    {
+      "number": 68,
+      "id": "PBA21",
+      "status": "blocked",
+      "title": "Broaden Reaction Windows And Bonus-Action Subjects"
+    },
+    {
+      "number": 69,
+      "id": "PBA22",
+      "status": "blocked",
+      "title": "Stabilize Battle Snapshots Traces And App UI"
     }
   ]
 }
@@ -550,8 +598,16 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 57    | PBA14B - Restore Attack Rider Procedure Family                       | done                                          | PBA14A1              | PBA14C                              | Restored reusable optional attack damage rider hooks for Sneak Attack through support profiles, damage holes, once-per-turn usage, MCP replay, and promoted QNT/MBT coverage.                                                   | Completed in Task 57 run; PBA14C is unblocked for save-damage replacement rider restoration.                                                         |
 | 58    | PBA14C - Restore Save Damage Replacement Riders                      | done                                          | PBA14B               | PBA14D                              | Restored reusable save-damage replacement procedure support for Evasion-style riders through support profiles, save-gate replay, Surface catalog records, MCP admission, and promoted QNT coverage.                           | Completed in Task 58 run; PBA14D is unblocked for reaction roll/damage modification rider restoration.                                                |
 | 59    | PBA14D - Restore Reaction Roll Damage Modification Riders            | done                                          | PBA14C               | PBA15                               | Restored reusable reaction roll/damage reduction procedure support for Uncanny Dodge and the promoted attack-roll / damage-roll branches of Cutting Words through support profiles; full Deflect Attacks remains gated.       | Completed in Task 59 run; PBA15 is unblocked, with broader non-main-Attack reaction-window widening called out for planning.                          |
-| 60    | PBA15 - Plan Broader Battle Widening Queue                           | ready-for-research                            | PBA14D               | PBA15A                              | Replan broader Surface/catalog and UI battle widening after parity/composition archive and explicit feature-parity restoration queue.                                                                                          | Unblocked by PBA14D; start by converting remaining proof gaps and explicitly deferred reaction-window breadth into ordered successor tasks.            |
-| 61    | PBA15A - Migrate Surface And Character-Creation Domain Primitives    | blocked                                       | PBA15                | future tasks                        | Replace remaining Surface-authored and character-creation-runtime durable domain primitives with owned shared, Surface, or package-local types after the promoted battle feature-parity queue.                                 | Blocked behind PBA15 so broader Surface/catalog migration is ordered after feature parity.                                                           |
+| 60    | PBA15 - Plan Broader Battle Widening Queue                           | done                                          | PBA14D               | PBA15A0                             | Reconciled the remaining battle-runtime "not modeled yet" list, Restore Ledger rows, PBA14D deferrals, and proof caveats into the ordered PBA15A-PBA22 queue.                                                                | Completed; PBA15A0 is the first unblocked task before broader primitive migration.                                                                    |
+| 61    | PBA15A0 - Normalize Character Progression And Multiclass Algebra     | ready-for-implementation-after-light-research | PBA15                | PBA15A                              | Finish extracting multiclass prerequisite ownership to shared algebra and replace promoted character-creation advancement with `startingClass` plus post-start advancements so levels/class summaries are derived.             | Ready; start from the in-progress shared-algebra spike and wire the progression shape into the promoted runtime/MCP path.                             |
+| 62    | PBA15A - Migrate Surface And Character-Creation Domain Primitives    | blocked                                       | PBA15A0              | PBA16                               | Replace remaining Surface-authored and character-creation-runtime durable domain primitives with owned shared, Surface, or package-local types before broader Surface/catalog widening consumes those facts.                    | Blocked behind PBA15A0 so primitive migration does not build on duplicated progression/class facts.                                                   |
+| 63    | PBA16 - Add Death-Save Promoted MBT Coverage                         | blocked                                       | PBA15A               | PBA17                               | Add selective promoted `@dnd/battle-runtime` integrated MBT/QNT coverage for the restored death-save hole and lifecycle path, without restoring old Core MBT as an active gate.                                               | Blocked behind PBA15A so proof work uses the settled Surface/runtime primitive boundary.                                                             |
+| 64    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width         | blocked                                       | PBA16                | PBA18                               | Restore nonlethal melee knockout and the remaining durable zero-HP/dead/Stable/rest character-session handoff width without duplicating battle-runtime zero-HP state.                                                        | Blocked behind PBA16 so lifecycle behavior has promoted proof coverage before wider handoff state is added.                                          |
+| 65    | PBA18 - Widen Attack Range And Conditional Attack Riders             | blocked                                       | PBA17                | PBA19                               | Restore ranged attacks beyond normal range with Disadvantage and support-profile handling for conditional attack riders that are still filtered by current support gates.                                                     | Blocked behind zero-HP handoff so attack widening builds on the settled HP/lifecycle boundary.                                                       |
+| 66    | PBA19 - Restore Stat Block Multiattack And Bonus Actions             | blocked                                       | PBA18                | PBA20                               | Restore Stat Block Multiattack and Stat Block bonus-action options as monster procedure families selected by Surface support profiles, not monster ids.                                                                      | Blocked behind attack-range/rider widening because Multiattack composes multiple supported attack branches.                                           |
+| 67    | PBA20 - Restore Spell Targeting And Catalog Width                    | blocked                                       | PBA19                | PBA21                               | Restore Magic Missile split-target replay and broaden spell effects/catalog pressure beyond the first Wizard spells through reusable spell support profiles.                                                                 | Blocked behind monster action widening; spell catalog breadth remains table-driven unless a new reusable procedure family is required.                |
+| 68    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects           | blocked                                       | PBA20                | PBA22                               | Broaden reactions beyond interrupt/readied/OA/attack reduction lanes, including Deflect redirect-on-zero and broader bonus-action spell, monster, and generic subjects beyond Second Wind/Cunning Action.                    | Blocked behind spell widening so reaction-spell and bonus-action spell subjects have an admitted spell procedure surface.                             |
+| 69    | PBA22 - Stabilize Battle Snapshots Traces And App UI                 | blocked                                       | PBA21                | future tasks                        | Restore trace/snapshot contracts and app battle UI workflows over the promoted runtime after the broader runtime procedure families have stabilized.                                                                          | Blocked behind runtime widening so UI and trace contracts are not built over temporary runtime shapes.                                                |
 
 ## Task Details
 
@@ -4109,10 +4165,10 @@ Plan Impact:
 
 ### Task 60 - PBA15 - Plan Broader Battle Widening Queue
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA14D
-Blocks: PBA15A
+Blocks: PBA15A0
 
 Batch: broader widening after parity/composition archive and explicit
 feature-parity queue.
@@ -4125,7 +4181,7 @@ Input:
 - PBA0-PBA4 archive/protocol/corrector outputs.
 - PBA5-PBA14D feature-parity restoration outcomes and any explicitly deferred
   owner decisions.
-- PBA13G primitive inventory, especially deferred Surface-authored and
+- PBA13G closeout, especially deferred Surface-authored and
   character-creation-runtime primitive-domain migration.
 - Restore Ledger rows that are still intentionally omitted.
 - The `@dnd/battle-runtime` README "Not modeled in this package yet" list and
@@ -4172,27 +4228,166 @@ Verification:
 
 Plan Impact:
 
-- If successful, append the next concrete broad-widening tasks and unblock the
-  first one.
+- Status: applied.
+- PBA15A0: unblocked to `ready-for-implementation-after-light-research` as
+  the first broader-widening task.
+- PBA15A: blocked behind PBA15A0 so primitive migration does not build on the
+  duplicated character progression shape.
+- PBA16-PBA22: added as the ordered successor queue for remaining proof,
+  runtime, MCP, snapshot, and app widening.
 
-### Task 61 - PBA15A - Migrate Surface And Character-Creation Domain Primitives
+Closeout:
+
+- Reconciled the `@dnd/battle-runtime` README "Not modeled in this package yet"
+  list against the Restore Ledger and PBA14D closeout. Every still-true item is
+  now assigned to PBA16-PBA22: death-save promoted MBT proof, nonlethal
+  knockout and zero-HP handoff width, ranged attacks beyond normal range,
+  conditional attack riders, Stat Block Multiattack and bonus actions, Magic
+  Missile split-target replay, broad spell effects, broader reactions and
+  bonus-action subjects, and trace/snapshot/app UI restoration.
+- Preserved character-creation primitive cleanup as the first unblocked area
+  because PBA13G explicitly deferred Surface-authored and character-creation
+  primitive migration before later Surface/catalog widening consumes those
+  facts. PBA15A0 now isolates the narrower progression/multiclass blocker
+  before broader PBA15A primitive migration proceeds.
+- Corrected the PBA15A handoff source: the previously referenced
+  `packages/battle-runtime/PRIMITIVE_INVENTORY.md` does not exist; PBA15A must
+  start from the PBA13G closeout in this file plus source `rg` evidence.
+- No new SRD rule behavior was modeled by this planning task.
+- `/simplify` round 1 checked the battle-runtime README gap list, Restore
+  Ledger rows, and PBA14D follow-ups against the new task queue; it found the
+  stale primitive-inventory file reference and moved death-save promoted MBT
+  proof ahead of further zero-HP handoff widening.
+- `/simplify` round 2 rechecked Ralph Task Index, DAG table, and task details
+  for synchronization and verified that no broad runtime/UI work is ready ahead
+  of the character-creation primitive cleanup lane.
+
+### Task 61 - PBA15A0 - Normalize Character Progression And Multiclass Algebra
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: PBA15
+Blocks: PBA15A
+
+Batch: character-creation primitive cleanup before broader widening.
+
+Next action: finish the in-progress character progression normalization and
+multiclass prerequisite extraction, then wire both into promoted
+`@dnd/character-creation-runtime` and MCP.
+
+Context:
+
+- The promoted character-creation runtime currently stores the starting class
+  fact twice: `selections.primaryClass` and
+  `selections.advancement.entries[0].classUnitId`.
+- The old advancement entry also stores `level`, even though the level can be
+  derived from ordered progression. That admits contradictory states and forces
+  finalization to reconcile them after the fact.
+- The target domain shape is `startingClass` plus post-start `advancements`.
+  Level 1 is implicit from `startingClass`; total level is
+  `1 + advancements.length`; per-class levels are derived by counting
+  `startingClass` and later advancement classes.
+- A shared multiclass prerequisite algebra spike exists under
+  `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`, with Core
+  temporarily delegating from `packages/core/src/features/class-tables.ts`.
+  Keep the canonical implementation outside Core.
+- In-progress code is intentionally committed with this task as a half-done
+  handoff: `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`,
+  its focused test, its small Quint proof, Core compatibility delegation in
+  `packages/core/src/features/class-tables.ts`, and the standalone
+  `packages/character-creation-runtime/src/normalized-algebra.ts` progression
+  shape. Continue from these files; do not treat the standalone progression
+  file as integrated runtime behavior yet.
+- Keep the algebra Surface-free. If the promoted runtime still receives
+  Surface Unit ids such as `class_fighter`, add one explicit boundary adapter
+  between Unit ids and class names. Do not spread ad hoc string conversion
+  across discovery, fill, finalization, MCP, or tests.
+
+Output:
+
+- `@dnd/shared-algebras/multiclass-prerequisite-algebra` owns the multiclass
+  prerequisite table, focused TS tests, and a small passing Quint proof.
+- Core no longer owns a duplicate multiclass prerequisite table; any remaining
+  Core exports are compatibility wrappers only.
+- `@dnd/character-creation-runtime` draft selections use a progression shape
+  equivalent to:
+
+  ```ts
+  type CharacterProgression = {
+    readonly startingClass: ClassName;
+    readonly advancements: readonly ClassName[];
+  };
+  ```
+
+- Runtime helpers derive total level and class-level summaries from
+  progression. Do not store a `level` beside an advancement entry when position
+  already derives it.
+- Discovery, fill reduction, support gates, finalization, QNT slice/MBT bridge,
+  package tests, MCP schemas/tests, README, and vocabulary docs use the
+  progression model or derive legacy labels from it at the boundary.
+
+Acceptance:
+
+- Promoted character creation cannot represent `primaryClass: Fighter` with a
+  first advancement for Wizard.
+- Promoted character creation cannot represent a post-start advancement with a
+  contradictory stored level.
+- Supported current workflows remain available: Orc Soldier Fighter 1, Orc
+  Soldier Fighter 2, Orc Soldier Wizard 1, and the existing MCP creation and
+  battle handoff verticals.
+- Multiclass prerequisite checks are canonical outside Core and used by all TS
+  replay paths that validate multiclass entry.
+- Character-creation-runtime and MCP no longer expose "choose level 1" as a RAW
+  creation step after choosing a starting class.
+
+Verification:
+
+- RAW traceability check against `.references/srd-5.2.1/` for class creation,
+  level advancement, and multiclass prerequisite wording; check
+  `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/shared-algebras typecheck`
+- `pnpm --filter @dnd/shared-algebras test`
+- `pnpm exec quint test --match "mc_" packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`
+- `pnpm --filter @dnd/character-creation-runtime typecheck`
+- `pnpm --filter @dnd/character-creation-runtime test`
+- `pnpm --filter @dnd/mcp typecheck`
+- `pnpm --filter @dnd/mcp test`
+- If Core compatibility wrappers or legacy replay tests are touched, run focused
+  Core tests for `class-tables`, character finalization/replay, and Quint
+  character parity. Do not run battle MBT for this task unless battle-runtime
+  mappings change.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA15A.
+
+### Task 62 - PBA15A - Migrate Surface And Character-Creation Domain Primitives
 
 Status: `blocked`
 
-Depends on: PBA15
-Blocks: future tasks
+Depends on: PBA15A0
+Blocks: PBA16
 
 Batch: broader widening after parity/composition archive and explicit
 feature-parity queue.
 
 Next action: migrate remaining durable Surface-authored and
 character-creation-runtime domain primitives to owned shared, Surface, or
-package-local types after PBA15 has ordered the broader widening queue.
+package-local types after PBA15A0 has normalized progression and multiclass
+ownership.
+
+Research plan:
+[pba15a-domain-primitives-research-plan.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)
 
 Input:
 
-- PBA13G primitive inventory in
-  [packages/battle-runtime/PRIMITIVE_INVENTORY.md](/workspace/typescript/dnd/packages/battle-runtime/PRIMITIVE_INVENTORY.md).
+- PBA13G closeout in this file, which records the promoted runtime primitive
+  migration and explicitly defers Surface-authored and
+  character-creation-runtime primitive migration to PBA15A.
+- PBA15A0 closeout, which should leave character progression and multiclass
+  prerequisite facts in their durable owner packages before broader primitive
+  migration begins.
 - Surface schema and reader numeric fields such as Stat Block reach/range,
   attack bonus values, limited-use counts, and authored numeric facts that
   survive parsing as durable content facts.
@@ -4234,7 +4429,362 @@ Verification:
 Plan Impact:
 
 - If successful, clear the remaining broad primitive-domain debt discovered by
-  PBA13G before later Surface/catalog widening tasks consume those types.
+  PBA13G and unblock PBA16.
+
+### Task 63 - PBA16 - Add Death-Save Promoted MBT Coverage
+
+Status: `blocked`
+
+Depends on: PBA15A
+Blocks: PBA17
+
+Batch: broader widening after primitive-domain cleanup.
+
+Next action: add selective promoted battle-runtime QNT/MBT coverage for the
+restored death-save hole and zero-HP lifecycle path.
+
+Research plan:
+[pba16-death-save-promoted-mbt-research-plan.md](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)
+
+Input:
+
+- PBA5 death-save lifecycle implementation and closeout.
+- BA10 promoted runtime MBT strategy.
+- `packages/battle-runtime/battle-runtime.qnt` and
+  `packages/battle-runtime/src/battle-runtime.mbt.test.ts`.
+- `packages/battle-runtime/README.md` "Not modeled in this package yet" proof
+  caveat for death-save holes not being covered by promoted MBT.
+
+Output:
+
+- A narrow integrated promoted MBT/QNT scenario covering turn-start Death Saving
+  Throw holes and one lifecycle outcome without reviving old Core battle MBT as
+  an active authority.
+- Runtime docs updated if the promoted proof boundary changes.
+
+Acceptance:
+
+- Death-save hole replay is covered by promoted `@dnd/battle-runtime` proof.
+- The old Core MBT remains quarantined legacy reference material.
+
+Verification:
+
+- RAW traceability check for any modeled lifecycle rule touched.
+- Use the smallest promoted MBT tier that exercises the new scenario; no broad
+  battle MBT or fuzz runs.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA17.
+
+### Task 64 - PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width
+
+Status: `blocked`
+
+Depends on: PBA16
+Blocks: PBA18
+
+Batch: broader zero-HP and handoff widening.
+
+Next action: restore nonlethal melee knockout and the remaining durable
+zero-HP/dead/Stable/rest character-session handoff width.
+
+Research plan:
+[pba17-knockout-zero-hp-handoff-research-plan.md](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)
+
+Input:
+
+- Restore Ledger "Post-battle adventuring-state handoff".
+- PBA5 death-save lifecycle and PBA16 promoted proof.
+- `packages/mcp` character-session closeout and character list storage.
+- RAW topics: `.references/srd-5.2.1/Playing-the-Game.md` Dropping to 0 Hit
+  Points, Death Saving Throws, Stabilizing a Creature, and Knocking a Creature
+  Out; `UBIQUITOUS_LANGUAGE.md` Death Saving Throw, Stable, Hit Points, and
+  related terms.
+
+Output:
+
+- Nonlethal melee knockout support at the HP mutation boundary.
+- Durable character-session handoff for zero-HP/dead/Stable/rest facts that does
+  not duplicate battle-runtime state or collapse battle state into character
+  provenance.
+- MCP workflow coverage for ending a battle with non-positive HP outcomes.
+
+Acceptance:
+
+- Positive-HP, zero-HP, Stable, dead, and nonlethal knockout handoffs are
+  explicit and type-representable without contradictory states.
+- Runtime and character-session ownership boundaries remain documented.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused runtime/MCP tests for nonlethal and zero-HP handoff paths.
+- No battle MBT unless QNT/MBT lifecycle mappings change beyond PBA16.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA18.
+
+### Task 65 - PBA18 - Widen Attack Range And Conditional Attack Riders
+
+Status: `blocked`
+
+Depends on: PBA17
+Blocks: PBA19
+
+Batch: broader attack procedure widening.
+
+Next action: restore ranged attacks beyond normal range with Disadvantage and
+support-profile handling for conditional attack riders still filtered by current
+support gates.
+
+Research plan:
+[pba18-attack-range-riders-research-plan.md](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)
+
+Input:
+
+- `packages/battle-runtime/README.md` "Not modeled in this package yet" entries
+  for ranged attacks beyond normal range and unsupported conditional attack
+  riders.
+- PBA10 movement/positioning, PBA14A1 critical range, PBA14B attack rider, and
+  PBA14D reaction roll/damage reduction outputs.
+- RAW topics: `.references/srd-5.2.1/Playing-the-Game.md` Making an Attack,
+  Range, Advantage/Disadvantage, Critical Hits, and relevant class/monster
+  rider passages; `UBIQUITOUS_LANGUAGE.md` Attack Roll, Range, Disadvantage.
+
+Output:
+
+- Attack target legality distinguishes normal range, long range, and out of
+  range with Disadvantage applied where RAW permits.
+- Conditional attack riders are admitted through support profiles when their
+  condition is representable by existing battle state; unsupported conditions
+  stay rejected with precise support-gate issues.
+
+Acceptance:
+
+- No attack branch dispatches on authored ids, names, or monster slugs.
+- Range and rider facts are derived from retained Surface records and runtime
+  state, not duplicated as parallel MCP state.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime, MCP, and Surface contract tests for changed readers
+  and attack procedures.
+- Promoted QNT/MBT only if the reusable attack procedure changes require it.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA19.
+
+### Task 66 - PBA19 - Restore Stat Block Multiattack And Bonus Actions
+
+Status: `blocked`
+
+Depends on: PBA18
+Blocks: PBA20
+
+Batch: broader monster procedure widening.
+
+Next action: restore Stat Block Multiattack and Stat Block bonus-action options
+as reusable monster procedure families.
+
+Research plan:
+[pba19-stat-block-multiattack-bonus-actions-research-plan.md](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md)
+
+Input:
+
+- Restore Ledger "Monster legendary/recharge/daily controls".
+- `packages/battle-runtime/README.md` "Not modeled in this package yet" entries
+  for Stat Block Multiattack and Stat Block bonus-action options.
+- PBA11 monster resource controls and PBA18 widened attack procedures.
+- RAW topics: `.references/srd-5.2.1/Monsters/Overview.md` stat-block actions,
+  Multiattack, Recharge, Limited Use, Bonus Actions, and Legendary Actions;
+  `UBIQUITOUS_LANGUAGE.md` Action and Bonus Action.
+
+Output:
+
+- Surface support profiles for supported Stat Block Multiattack and bonus-action
+  shapes.
+- Runtime replay that composes multiple admitted attack/action branches without
+  using monster ids as semantic switches.
+- MCP workflow coverage for at least one SRD Stat Block pressure case.
+
+Acceptance:
+
+- Multiattack composes supported actions and resources rather than copying a
+  monster-specific script into the reducer.
+- Unsupported Stat Block action shapes remain support-gated.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused Surface contract, battle-runtime, and MCP tests.
+- Promoted QNT/MBT only for new reusable procedure behavior, not catalog width.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA20.
+
+### Task 67 - PBA20 - Restore Spell Targeting And Catalog Width
+
+Status: `blocked`
+
+Depends on: PBA19
+Blocks: PBA21
+
+Batch: broader spell procedure widening.
+
+Next action: restore Magic Missile split-target replay and broaden spell
+effects/catalog pressure beyond the first Wizard spells.
+
+Research plan:
+[pba20-spell-targeting-catalog-width-research-plan.md](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)
+
+Input:
+
+- Restore Ledger "Spellcasting and Mage/Wizard creation" and "Spells and
+  reactions".
+- `packages/battle-runtime/README.md` "Not modeled in this package yet" entries
+  for Magic Missile split-target replay and broad spell effects.
+- PBA7 save-gate spells, PBA8 persistent effects/concentration, and PBA9
+  reaction/readied spell outputs.
+- RAW topics: `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`,
+  `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Magic Missile, and
+  selected local SRD spell passages for the first broadened pressure cases.
+
+Output:
+
+- Split-target spell replay for supported repeated-damage spell profiles.
+- Ordered spell-width pressure cases that prove reusable spell procedures before
+  catalog breadth.
+- MCP workflow coverage for selected spell-width cases.
+
+Acceptance:
+
+- Spell targeting, slot spend, concentration, and effect lifecycles remain
+  distinct runtime facts.
+- Catalog spell additions are table-driven when they fit existing profiles and
+  become reducer work only for new SRD procedure families.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused Surface, battle-runtime, MCP, and typecheck coverage.
+- Promoted QNT/MBT only for new reusable spell procedure behavior.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA21.
+
+### Task 68 - PBA21 - Broaden Reaction Windows And Bonus-Action Subjects
+
+Status: `blocked`
+
+Depends on: PBA20
+Blocks: PBA22
+
+Batch: broader timing-window widening.
+
+Next action: broaden reactions beyond interrupt/readied/OA/attack reduction
+lanes and broaden bonus-action subjects beyond Second Wind/Cunning Action.
+
+Research plan:
+[pba21-reaction-bonus-action-width-research-plan.md](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)
+
+Input:
+
+- PBA9 reaction windows, PBA14D reaction roll/damage modification closeout, and
+  PBA20 spell-width output.
+- PBA14D follow-up for Deflect Attacks redirect-on-zero and non-main-Attack
+  reaction windows.
+- `packages/battle-runtime/README.md` "Not modeled in this package yet" entries
+  for broad reactions and broad bonus-action subjects.
+- RAW topics for each selected reaction/bonus-action pressure case; start with
+  `.references/srd-5.2.1/Classes/Monk.md` Deflect Attacks and local spell/action
+  passages if a spell reaction or bonus-action spell is selected.
+
+Output:
+
+- Reaction-window support profiles for at least one non-main-Attack or
+  follow-up reaction procedure, including Deflect redirect-on-zero if still
+  support-gated.
+- Broadened Bonus Action subject protocol for supported Unit, spell, monster, or
+  generic subjects.
+
+Acceptance:
+
+- Reaction and Bonus Action resources stay represented in turn resources with
+  typed replay, not caller sequencing conventions.
+- Unsupported reaction and bonus-action shapes fail at support gates.
+
+Verification:
+
+- RAW traceability check before rules edits.
+- Focused battle-runtime/MCP tests for new timing windows and pending-state
+  replay.
+- Promoted QNT/MBT for high-risk interrupt-stack or reaction continuation
+  changes.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, unblock PBA22.
+
+### Task 69 - PBA22 - Stabilize Battle Snapshots Traces And App UI
+
+Status: `blocked`
+
+Depends on: PBA21
+Blocks: future tasks
+
+Batch: promoted runtime consumer widening.
+
+Next action: restore trace/snapshot contracts and app battle UI workflows over
+the promoted runtime after the broader runtime procedure families have
+stabilized.
+
+Research plan:
+[pba22-snapshots-traces-app-ui-research-plan.md](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)
+
+Input:
+
+- Restore Ledger "App simulator and trace visualizers" and "Advanced battle
+  scene polish".
+- Promoted MCP/battle-runtime snapshot outputs after PBA16-PBA21.
+- Old app references listed in the Restore Ledger for trace visualizers and
+  battle scene workflows.
+
+Output:
+
+- Stable promoted battle snapshot/trace contract for UI consumers.
+- App battle UI workflows for the widened promoted runtime surface.
+- Tests or screenshots appropriate for changed UI flows.
+
+Acceptance:
+
+- UI consumes promoted runtime/MCP snapshots instead of old Core/projected
+  state.
+- Snapshot facts derive from runtime state and retained Surface records without
+  duplicating provenance, structured input, or runtime projection.
+
+Verification:
+
+- Source/UI tests for changed app/runtime snapshot contracts.
+- Playwright screenshot checks if visual app surfaces are changed.
+- No battle MBT unless runtime semantics change during this task.
+- `/simplify` convergence, minimum 2 rounds.
+
+Plan Impact:
+
+- If successful, append the next active queue or record an explicit owner
+  decision that no further active work is currently desired.
 
 ## Deferred Previous Queue
 
