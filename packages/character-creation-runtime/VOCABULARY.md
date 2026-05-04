@@ -31,7 +31,9 @@ than treating the submitted option id as authored truth.
 Character Progression - durable class-level read model. It stores the parsed
 starting class Unit id and ordered post-start class advancement entries. Total
 character level and per-class levels are derived from that history. Class names
-are derived from the Unit catalog at projection boundaries.
+are derived from the Unit catalog at projection boundaries. The initial
+progression fill selects this whole profile; a level-1 class entry is not a
+separate promoted creation concept.
 
 Support Profile - package-private runtime boundary that says which discovered
 Unit-backed draft choices, Unit choice families, option ids, equipment
@@ -45,6 +47,11 @@ keeps finalizable builds inside the current support profile: Orc/Soldier origin
 facts, supported progression profiles, supported Unit choice families, and supported
 equipment/loadout facts. It rejects complete drafts outside that profile before
 producing a `CharacterBuild`.
+
+Multiclass Prerequisite Check - shared-algebras rule check for adding a new
+class to a character that already has at least one class. Character creation
+uses this as a reusable rule algebra when it admits multiclass progressions; MCP
+does not own or duplicate the prerequisite table.
 
 Source-shaped finalization checks - finalization reconstructs expected
 choice-hole families from Surface readers and support-profile entries, then

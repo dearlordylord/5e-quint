@@ -42,11 +42,12 @@ const CreateCharacterDraftArgsSchema = Schema.Struct({
 const ChoiceCreationFillArgsSchema = Schema.Struct({
   kind: Schema.Literal("choice"),
   holeId: Schema.String.annotations({
-    description: "Creation hole id from holes[].holeId.",
+    description:
+      "Creation hole id from holes[].holeId. For draft.progression.initial, this is the one progression-profile hole; there is no separate level-1 class-entry hole.",
   }),
   optionIds: Schema.Array(Schema.String).annotations({
     description:
-      "Choice option ids from the matching holes[].options[].optionId. Respect the hole cardinality returned by discovery.",
+      "Choice option ids from the matching holes[].options[].optionId. A progression option id names the whole Character Progression profile: starting class plus any post-start advancement entries. Respect the hole cardinality returned by discovery.",
   }),
 });
 

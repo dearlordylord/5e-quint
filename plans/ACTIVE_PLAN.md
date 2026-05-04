@@ -58,19 +58,19 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 63,
       "id": "PBA15A0C",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Replace Level-One Class-Entry Workflow"
     },
     {
       "number": 64,
       "id": "PBA15A0D",
-      "status": "blocked",
+      "status": "done",
       "title": "Wire Progression And Multiclass Through MCP Docs"
     },
     {
       "number": 65,
       "id": "PBA15A",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Migrate Surface And Character-Creation Domain Primitives"
     },
     {
@@ -188,8 +188,8 @@ Keep it synchronized with the DAG table and task details.
 | 61    | PBA15A0A - Promote Multiclass Prerequisite Algebra                | done                                          | PBA15        | PBA15A0B     | inline below                                                                                                 | Shared algebra owns multiclass prerequisite facts; Core delegates through compatibility wrappers.                                |
 | 62    | PBA15A0B - Introduce Character Progression Projection Helpers     | done                                          | PBA15A0A     | PBA15A0C     | inline below                                                                                                 | Character-creation-runtime exports character progression helpers and Unit-id boundary adapters.                                  |
 | 63    | PBA15A0C - Replace Level-One Class-Entry Workflow                 | done                                          | PBA15A0B     | PBA15A0D     | inline below                                                                                                 | Runtime progression fill now replaces separate primary-class and level-1 class-entry workflow.                                   |
-| 64    | PBA15A0D - Wire Progression And Multiclass Through MCP Docs       | ready-for-implementation-after-light-research | PBA15A0C     | PBA15A       | inline below                                                                                                 | Wire the character progression model and prerequisite checks through MCP schemas/tests and package docs.                         |
-| 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | blocked                                       | PBA15A0D     | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D.                                 |
+| 64    | PBA15A0D - Wire Progression And Multiclass Through MCP Docs       | done                                          | PBA15A0C     | PBA15A       | inline below                                                                                                 | MCP schema/workflow/docs now expose progression as one atomic profile choice and point multiclass validation at shared-algebras. |
+| 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | ready-for-research                            | PBA15A0D     | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D.                                 |
 | 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | blocked                                       | PBA15A       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes.                                                |
 | 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | blocked                                       | PBA16        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width.                                                  |
 | 68    | PBA18 - Widen Attack Range And Conditional Attack Riders          | blocked                                       | PBA17        | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Restore long-range Disadvantage and supported conditional attack riders.                                                         |
@@ -360,7 +360,7 @@ Plan Impact: if successful, unblock PBA15A0D.
 
 ### Task 64 - PBA15A0D - Wire Progression And Multiclass Through MCP Docs
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA15A0C
 Blocks: PBA15A
@@ -404,9 +404,26 @@ Verification:
 
 Plan Impact: if successful, unblock PBA15A.
 
+Closeout: MCP fill schema descriptions, workflow output, README, and focused
+tests now present `draft.progression.initial` as the single atomic Character
+Progression profile fill. The docs identify `@dnd/character-creation-runtime`
+as the progression owner and
+`@dnd/shared-algebras/multiclass-prerequisite-algebra` as the multiclass
+prerequisite owner. Character-creation-runtime and shared-algebras docs carry
+the same ownership language. Verification passed:
+`pnpm --filter @dnd/shared-algebras typecheck`,
+`pnpm --filter @dnd/shared-algebras test`,
+`pnpm --filter @dnd/character-creation-runtime typecheck`,
+`pnpm --filter @dnd/character-creation-runtime test`,
+`pnpm --filter @dnd/mcp typecheck`, and `pnpm --filter @dnd/mcp test`.
+`/simplify` converged in two rounds: round 1 weakened a brittle exact workflow
+text assertion to invariant phrase checks; round 2 rechecked task-index
+synchronization and MCP contract ownership with no further changes. PBA15A is
+unblocked for research.
+
 ### Task 65 - PBA15A - Migrate Surface And Character-Creation Domain Primitives
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA15A0D
 Blocks: PBA16

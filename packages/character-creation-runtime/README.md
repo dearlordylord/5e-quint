@@ -55,6 +55,11 @@ sheet only after `finalizeCharacterDraft` returns `ready`. A rejected fill batch
 does not mutate the stored draft. MCP does not use presets or direct selection
 patches; callers must answer the holes exposed by this package.
 
+The progression fill is atomic. `draft.progression.initial` selects the durable
+Character Progression profile in one choice: starting class plus any post-start
+advancement entries. There is no later promoted level-1 class-entry hole for MCP
+or replay callers to keep synchronized with a starting-class field.
+
 ## Fill Issue Vocabulary
 
 Creation fill issue codes are deliberately local to this package. They validate
@@ -155,6 +160,12 @@ read model. It stores the parsed starting class Unit id and ordered post-start
 class advancement entries. Total character level and per-class levels are
 derived from that history; class names are derived from the Unit catalog at
 projection boundaries.
+
+Multiclass prerequisite facts are deliberately outside this package's support
+profile tables. They live in
+`@dnd/shared-algebras/multiclass-prerequisite-algebra`; replay or widening code
+that validates adding a new class must parse the current/new class change there
+and then use that shared check instead of reauthoring prerequisite rules here.
 
 For total character levels after 1, the current support profile projects fixed
 Hit Point gains. Post-start advancement entries carry explicit Hit Point rule

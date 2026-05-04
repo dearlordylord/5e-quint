@@ -41,7 +41,10 @@ The character-creation tool boundary exposes these user-facing tools:
 - `fill_creation_holes` submits one atomic batch of `CreationFill` values
   against the expected draft revision. Accepted batches replace the stored
   draft; rejected batches return runtime issues and leave the stored draft
-  unchanged.
+  unchanged. The `draft.progression.initial` fill is one selected Character
+  Progression profile. It carries the starting class and any post-start
+  advancement entries together; MCP does not expose a separate level-1 class
+  entry after that fill.
 - `finalize_character` finalizes only when the runtime reports a supported
   character draft is ready. The promoted path currently supports the Orc
   Soldier Fighter 1/Fighter 2 and Orc Soldier Wizard 1 slice. A ready result
@@ -55,6 +58,14 @@ The character-creation tool boundary exposes these user-facing tools:
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
 character helpers in the promoted runtime path.
+
+Character Progression and multiclass prerequisites are not MCP-owned facts.
+`@dnd/character-creation-runtime` owns the progression shape and support gate,
+while `@dnd/shared-algebras/multiclass-prerequisite-algebra` owns the SRD
+prerequisite table and check. MCP may project finalized progression class
+levels into battle initialization, but the current finalization slice remains
+single-class until character-creation projection supports multiclass features,
+HP, Hit Dice, proficiencies, and spellcasting end to end.
 
 The battle-session tool boundary exposes these user-facing tools:
 

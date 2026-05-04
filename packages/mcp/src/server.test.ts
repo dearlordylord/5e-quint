@@ -738,10 +738,25 @@ describe("MCP server route", () => {
         followUpBattleHoles: "result.holes",
       },
       acceptedInputs: {
+        progressionFill: expect.stringContaining(
+          "draft.progression.initial",
+        ),
         choiceFill: expect.stringContaining('"kind":"choice"'),
         attackRollFill: expect.stringContaining('"kind":"attackRoll"'),
       },
     });
+    expect(workflow.lifecycle).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "draft.progression.initial choice is the whole Character Progression profile",
+        ),
+      ]),
+    );
+    expect(workflow.limits).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("does not expose a later level-1 class-entry"),
+      ]),
+    );
 
     const units = readPayload(handleToolCall(root, "list_catalog_units", {}));
     expect(units.unitsByKind.class).toEqual(
@@ -791,9 +806,52 @@ describe("MCP server route", () => {
       holes: expect.arrayContaining([
         expect.objectContaining({
           holeId: "cc:draft:draft.progression.initial",
+          options: expect.arrayContaining([
+            expect.objectContaining({
+              optionId: "13:class_fighter:level_1:maximum_hit_die",
+            }),
+            expect.objectContaining({
+              optionId: "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+            }),
+            expect.objectContaining({
+              optionId: "12:class_wizard:level_1:maximum_hit_die",
+            }),
+          ]),
         }),
       ]),
     });
+  });
+
+  test("documents progression fills as atomic profiles in the MCP input schema", () => {
+    const fillTool = characterToolDefinitions.find(
+      (tool) => tool.name === "fill_creation_holes",
+    );
+    expect(fillTool).toBeDefined();
+    const choiceFillSchema = (
+      fillTool?.inputSchema as unknown as {
+        readonly properties: {
+          readonly fills: {
+            readonly items: {
+              readonly anyOf: readonly [
+                {
+                  readonly properties: {
+                    readonly holeId: { readonly description: string };
+                    readonly optionIds: { readonly description: string };
+                  };
+                },
+              ];
+            };
+          };
+        };
+      }
+    ).properties.fills.items.anyOf[0];
+
+    expect(choiceFillSchema.properties.holeId.description).toContain(
+      "there is no separate level-1 class-entry hole",
+    );
+    expect(choiceFillSchema.properties.optionIds.description).toContain(
+      "starting class plus any post-start advancement entries",
+    );
   });
 
   test("selects Goblin Warrior and starts a stored partial battle shell through tools", () => {

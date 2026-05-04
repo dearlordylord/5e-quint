@@ -33,7 +33,9 @@ should not contain algebra modules.
 - `death-saves-algebra` - death-save counter state.
 - `initiative-algebra` - Initiative order and turn advancement.
 - `multiclass-prerequisite-algebra` - SRD multiclass ability prerequisite facts
-  and checks.
+  and checks. It owns the canonical table for adding a new class to a character
+  that already has current classes; runtime and replay callers should parse the
+  current/new class-change fact here before calling the check.
 - `runtime-dice-algebra` - rolled-dice validation and totaling.
 - `runtime-hole-algebra` - shared hole identity/refill vocabulary.
 - `validation-algebra` - small validation/result helpers.

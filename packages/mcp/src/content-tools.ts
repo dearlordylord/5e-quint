@@ -207,7 +207,7 @@ function workflowGuide() {
   return {
     lifecycle: [
       "Call list_catalog_units for catalog ids or create_character_draft to discover currently legal character choices.",
-      "Call create_character_draft, then fill only holeIds and optionIds returned in holes.",
+      "Call create_character_draft, then fill only holeIds and optionIds returned in holes. The draft.progression.initial choice is the whole Character Progression profile: starting class plus any post-start advancement entries.",
       "After every accepted fill_creation_holes call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
       "Call list_stat_blocks for Stat Block ids. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
@@ -232,6 +232,8 @@ function workflowGuide() {
     acceptedInputs: {
       choiceFill:
         '{"kind":"choice","holeId":"copy from holes[].holeId","optionIds":["copy from holes[].options[].optionId"]}',
+      progressionFill:
+        '{"kind":"choice","holeId":"cc:draft:draft.progression.initial","optionIds":["copy one progression profile optionId from holes[].options[]"]}',
       abilityScoresFill:
         '{"kind":"abilityScores","holeId":"copy from holes[].holeId","method":"standardArray","value":{"str":15,"dex":14,"con":13,"int":8,"wis":10,"cha":12}}',
       targetChoiceFill:
@@ -254,6 +256,7 @@ function workflowGuide() {
     ],
     limits: [
       "The current slice supports Orc Soldier Fighter 1, Orc Soldier Fighter 2, Orc Soldier Wizard 1, Goblin Warrior, and Skeleton workflows.",
+      "Character creation exposes one draft.progression.initial fill for the selected progression profile; MCP does not expose a later level-1 class-entry fill.",
       "MCP does not roll dice. Use user-provided or external dice results.",
       "Rest and revival workflows remain outside this slice after typed zero-HP character closeout.",
     ],
