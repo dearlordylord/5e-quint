@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { Either } from "effect";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -12,7 +11,6 @@ import {
   computeTotalLevel,
   createCharacterProgression,
   orderedProgressionClasses,
-  postStartAdvancementLevel,
   progressionClassLevels,
 } from "./character-progression-algebra.ts";
 
@@ -50,7 +48,6 @@ describe("character progression algebra", () => {
     });
 
     expect(computeTotalLevel(progression)).toBe(2);
-    expect(postStartAdvancementLevel(progression, 0)).toEqual(Either.right(2));
     expect(progressionClassLevels(progression)).toEqual({
       fighter: 2,
     });
@@ -67,7 +64,6 @@ describe("character progression algebra", () => {
       "wizard",
     ]);
     expect(computeTotalLevel(progression)).toBe(2);
-    expect(postStartAdvancementLevel(progression, 0)).toEqual(Either.right(2));
     expect(progressionClassLevels(progression)).toEqual({
       fighter: 1,
       wizard: 1,
@@ -98,20 +94,6 @@ describe("character progression algebra", () => {
       startingClass: "fighter",
       advancements: [],
     });
-  });
-
-  it("represents missing post-start advancement levels without throwing", () => {
-    const progression = createCharacterProgression({
-      startingClass: "fighter",
-      advancements: [],
-    });
-
-    expect(postStartAdvancementLevel(progression, 0)).toEqual(
-      Either.left({
-        tag: "postStartAdvancementAbsent",
-        postStartAdvancementIndex: 0,
-      }),
-    );
   });
 
   it("projects advancement selection entries without keeping stored levels", () => {

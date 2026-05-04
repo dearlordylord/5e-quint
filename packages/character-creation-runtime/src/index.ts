@@ -97,12 +97,9 @@ export {
   computeTotalLevel,
   createCharacterProgression,
   orderedProgressionClasses,
-  postStartAdvancementLevel,
   progressionClassLevels,
   type AdvancementSelectionProgressionInput,
   type CharacterProgression,
   type CharacterProgressionClassLevels,
   type CharacterProgressionUnitIdInput,
-  type PostStartAdvancementLevelAbsent,
-  type PostStartAdvancementLevelResult,
 } from "./character-progression-algebra.ts";
