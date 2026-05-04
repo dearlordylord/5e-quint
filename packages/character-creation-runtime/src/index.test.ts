@@ -17,6 +17,7 @@ import {
   exactChoiceCardinality,
   boundedChoiceCardinality,
   characterBuildUnitRefs,
+  characterAdvancementEntry,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
@@ -34,6 +35,8 @@ import {
   type CreationHole,
   type CreationHoleIdText,
   type UnitCatalog,
+  type CharacterAdvancementEntry,
+  type HitPointAdvancementMethod,
 } from "./index.ts";
 import {
   finalizedBuildEquipment,
@@ -53,6 +56,21 @@ if (unitCatalogResult.tag !== "ok") {
 }
 
 const unitLibrary = unitCatalogResult.catalog;
+
+function testAdvancementEntry(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly classLevel: ReturnType<typeof characterClassLevel>;
+  readonly hitPointAdvancement: HitPointAdvancementMethod;
+}): CharacterAdvancementEntry {
+  const result = characterAdvancementEntry(input);
+  if (Either.isLeft(result)) {
+    throw new Error(
+      `Invalid test advancement entry: ${JSON.stringify(result.left)}`,
+    );
+  }
+
+  return result.right;
+}
 
 function unitChoiceKeyRight(value: string) {
   const result = unitChoiceKey(value);
@@ -736,7 +754,7 @@ describe("character creation QNT slice parity", () => {
           fills: [
             choiceFill(
               "cc:draft:draft.advancement.initial",
-              "class_fighter:level_1:level_one_max_hp",
+              "class_fighter:level_1:hit_point_maximum",
             ),
           ],
         }),
@@ -1628,11 +1646,11 @@ describe("character creation finalization", () => {
       primaryClass: "class_fighter",
       advancement: {
         entries: [
-          {
+          testAdvancementEntry({
             classUnitId: "class_fighter",
-            level: characterClassLevel(1),
+            classLevel: characterClassLevel(1),
             hitPointAdvancement: { tag: "levelOneMaximum" },
-          },
+          }),
         ],
       },
       background: "background_soldier",
@@ -1894,11 +1912,11 @@ describe("character creation finalization", () => {
         ...complete.selections,
         advancement: {
           entries: [
-            {
+            testAdvancementEntry({
               classUnitId: "class_fighter",
-              level: characterClassLevel(3),
+              classLevel: characterClassLevel(3),
               hitPointAdvancement: { tag: "fixedAfterLevelOne" },
-            },
+            }),
           ],
         },
       },
@@ -2198,7 +2216,7 @@ function completeManifestDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_fighter:level_1:level_one_max_hp",
+          "class_fighter:level_1:hit_point_maximum",
         ),
       ],
     }),
@@ -2225,7 +2243,7 @@ function completeFighterTwoDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_fighter:level_2:fixed_hp",
+          "class_fighter:level_2:fixed_hit_points",
         ),
       ],
     }),
@@ -2344,7 +2362,7 @@ function completeWizardDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_wizard:level_1:level_one_max_hp",
+          "class_wizard:level_1:hit_point_maximum",
         ),
       ],
     }),

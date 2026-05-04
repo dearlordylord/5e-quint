@@ -319,7 +319,7 @@ flowchart TD
   Dispatch["applyCreationFill"]
   DraftFill["applyDraftFill"]
   Class["primaryClass<br/>requireSelectedUnitId -> class_fighter"]
-  Advancement["advancement.initial<br/>class_fighter:level_1:level_one_max_hp"]
+  Advancement["advancement.initial<br/>class_fighter:level_1:hit_point_maximum"]
   Background["background<br/>requireSelectedUnitId -> background_soldier"]
   Species["species<br/>requireSelectedUnitId -> species_orc"]
   Scores["abilityScoreGeneration<br/>method standardArray<br/>assigned scores"]
@@ -349,7 +349,7 @@ flowchart TD
 Important detail: picking `class_fighter` writes only `primaryClass`. Advancement
 is a separate `draft.advancement.initial` fill whose selected option writes
 `advancement.entries`, such as
-`[{ classUnitId: "class_fighter", level: 1 }]`.
+`[{ classUnitId: "class_fighter", classLevel: 1, hitPointAdvancement: { tag: "levelOneMaximum" } }]`.
 
 ## Legal Batch 2: Unit-Granted Holes
 

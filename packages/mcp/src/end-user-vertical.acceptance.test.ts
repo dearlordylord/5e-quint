@@ -57,7 +57,7 @@ describe("end-user promoted MCP vertical", () => {
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_fighter:level_1:level_one_max_hp",
+          "class_fighter:level_1:hit_point_maximum",
         ),
       ],
     });
@@ -718,7 +718,7 @@ function createAndFinalizeFighterTwo(
     fills: [
       choiceFill(
         "cc:draft:draft.advancement.initial",
-        "class_fighter:level_2:fixed_hp",
+        "class_fighter:level_2:fixed_hit_points",
       ),
     ],
   });
@@ -808,7 +808,7 @@ function createAndFinalizeWizardOne(
     fills: [
       choiceFill(
         "cc:draft:draft.advancement.initial",
-        "class_wizard:level_1:level_one_max_hp",
+        "class_wizard:level_1:hit_point_maximum",
       ),
     ],
   });

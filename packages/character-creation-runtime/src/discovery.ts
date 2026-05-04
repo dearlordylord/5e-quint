@@ -77,6 +77,7 @@ import {
   supportedPurchasableEquipmentUnitIds,
   unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
+import { hitPointAdvancementLabel } from "./character-progression-types.ts";
 
 const SRD_GAMING_SET_OPTIONS = [
   {
@@ -200,7 +201,7 @@ function selectedClassLevel(
   return (
     draft.selections.advancement?.entries.find(
       (entry) => entry.classUnitId === classUnitId,
-    )?.level ?? 1
+    )?.classLevel ?? 1
   );
 }
 
@@ -908,10 +909,7 @@ export function draftHole(
         .flatMap((unit) =>
           supportedAdvancementsForClass(unit.id).map((advancement) => ({
             optionId: advancementOptionId(advancement),
-            label:
-              advancement.hitPointAdvancement.tag === "levelOneMaximum"
-                ? `${unit.name} ${advancement.level} (Level 1 maximum HP)`
-                : `${unit.name} ${advancement.level} (Fixed HP)`,
+            label: `${unit.name} ${advancement.classLevel} (${hitPointAdvancementLabel(advancement.hitPointAdvancement)})`,
             unitRef: { unitId: unit.id },
           })),
         ),

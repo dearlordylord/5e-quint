@@ -339,7 +339,7 @@ function manifestAdvancementFills(
 ): readonly CreationFill[] {
   return [
     choiceFill(holes, "HAdvancement", [
-      "class_fighter:level_1:level_one_max_hp",
+      "class_fighter:level_1:hit_point_maximum",
     ]),
   ];
 }

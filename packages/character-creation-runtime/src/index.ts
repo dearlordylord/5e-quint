@@ -99,9 +99,20 @@ export {
   createCharacterProgression,
   type AdvancementSelectionProgressionInput,
   type AdvancementSelectionProgressionIssue,
-  type ClassUnitId,
   type CharacterProgression,
   type CharacterProgressionIssue,
   type ClassUnitNameIssue,
-  type HitPointAdvancementMethod,
 } from "./character-progression-algebra.ts";
+export {
+  characterAdvancementEntry,
+  characterLevelHitPointAdvancement,
+  hitPointAdvancementLabel,
+  hitPointAdvancementOptionSuffix,
+  hitPointsAfterLevelOneMultiplier,
+  type CharacterLevelHitPointAdvancement,
+  type CharacterProgressionLevelIssue,
+  type ClassUnitId,
+  type FixedAfterLevelOneHitPointAdvancement,
+  type HitPointAdvancementMethod,
+  type LevelOneHitPointAdvancement,
+} from "./character-progression-types.ts";

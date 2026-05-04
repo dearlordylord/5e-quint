@@ -1,3 +1,4 @@
+import { Either } from "effect";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
@@ -58,6 +59,7 @@ import type {
   UnitRef,
 } from "./types.ts";
 import { creationChoiceOptionId } from "./types.ts";
+import { characterAdvancementEntry } from "./character-progression-types.ts";
 import { characterClassLevel } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -134,22 +136,37 @@ const SUPPORTED_DRAFT_CHOICE_PATHS = [
 type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
 const SUPPORTED_ADVANCEMENTS = [
-  {
+  supportedAdvancementEntry({
     classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
-    level: characterClassLevel(1),
+    classLevel: characterClassLevel(1),
     hitPointAdvancement: { tag: "levelOneMaximum" },
-  },
-  {
+  }),
+  supportedAdvancementEntry({
     classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
-    level: characterClassLevel(2),
+    classLevel: characterClassLevel(2),
     hitPointAdvancement: { tag: "fixedAfterLevelOne" },
-  },
-  {
+  }),
+  supportedAdvancementEntry({
     classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID,
-    level: characterClassLevel(1),
+    classLevel: characterClassLevel(1),
     hitPointAdvancement: { tag: "levelOneMaximum" },
-  },
+  }),
 ] as const satisfies ReadonlyArray<CharacterAdvancementEntry>;
+
+function supportedAdvancementEntry(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly classLevel: ReturnType<typeof characterClassLevel>;
+  readonly hitPointAdvancement: CharacterAdvancementEntry["hitPointAdvancement"];
+}): CharacterAdvancementEntry {
+  const entry = characterAdvancementEntry(input);
+  if (Either.isLeft(entry)) {
+    throw new Error(
+      `Invalid supported advancement entry: ${JSON.stringify(entry.left)}`,
+    );
+  }
+
+  return entry.right;
+}
 
 const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
   "draft.primaryClass": SUPPORTED_CLASS_OPTION_IDS,
@@ -355,13 +372,13 @@ export function supportedLoadoutChoices(): readonly SupportedLoadoutChoice[] {
 
 export function isSupportedAdvancement(
   classUnitId: UnitRecord["id"],
-  level: number,
+  classLevel: number,
   hitPointAdvancement: CharacterAdvancementEntry["hitPointAdvancement"],
 ): boolean {
   return CHARACTER_CREATION_SUPPORT_PROFILE.supportedAdvancements.some(
     (advancement) =>
       advancement.classUnitId === classUnitId &&
-      advancement.level === level &&
+      advancement.classLevel === classLevel &&
       advancement.hitPointAdvancement.tag === hitPointAdvancement.tag,
   );
 }

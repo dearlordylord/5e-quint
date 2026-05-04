@@ -37,14 +37,13 @@ import type {
   WeaponProficiencyCategory,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
-import type {
-  CharacterProgression,
-  HitPointAdvancementMethod,
-} from "./character-progression-algebra.ts";
+import type { CharacterProgression } from "./character-progression-algebra.ts";
+import type { CharacterAdvancementEntry } from "./character-progression-types.ts";
 
 export { SUPPORTED_ABILITY_SCORE_METHODS };
 export type { AbilityScoreAssignment, SupportedAbilityScoreMethod };
 export type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+export type { CharacterAdvancementEntry } from "./character-progression-types.ts";
 
 export type CreationSessionId = string & Brand.Brand<"CreationSessionId">;
 const CreationSessionId = Brand.nominal<CreationSessionId>();
@@ -288,12 +287,6 @@ export type BackgroundAbilityScoreIncreaseSelection =
 
 export type CharacterAdvancementSelection = {
   readonly entries: NonEmptyReadonlyArray<CharacterAdvancementEntry>;
-};
-
-export type CharacterAdvancementEntry = {
-  readonly classUnitId: UnitRecord["id"];
-  readonly level: CharacterClassLevel;
-  readonly hitPointAdvancement: HitPointAdvancementMethod;
 };
 
 export type CharacterEquipmentSelection = {

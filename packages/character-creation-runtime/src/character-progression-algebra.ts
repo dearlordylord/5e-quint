@@ -1,37 +1,21 @@
-import { Brand, Either, Option } from "effect";
-import {
-  CHARACTER_CLASS_LEVELS,
-  type CharacterClassLevel,
-  type ClassName,
-} from "@dnd/shared/game-facts";
+import { Either, Option } from "effect";
+import type { CharacterClassLevel, ClassName } from "@dnd/shared/game-facts";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import type { CharacterAdvancementSelection } from "./types.ts";
+import {
+  characterLevelHitPointAdvancement,
+  classUnitId,
+  type CharacterProgression,
+  type CharacterProgressionLevelIssue,
+  type ClassUnitId,
+  type HitPointAdvancementMethod,
+} from "./character-progression-types.ts";
 
-export type ClassUnitId = UnitRecord["id"] & Brand.Brand<"ClassUnitId">;
-const ClassUnitId = Brand.nominal<ClassUnitId>();
+export type { CharacterProgression } from "./character-progression-types.ts";
 
-export type HitPointAdvancementMethod =
-  | { readonly tag: "levelOneMaximum" }
-  | { readonly tag: "fixedAfterLevelOne" };
-
-export type CharacterProgression = {
-  readonly classUnitId: ClassUnitId;
-  readonly classLevel: CharacterClassLevel;
-  readonly hitPointAdvancement: HitPointAdvancementMethod;
-};
-
-export type CharacterProgressionIssue =
-  | {
-      readonly code: "invalidTotalCharacterLevel";
-      readonly totalLevel: number;
-    }
-  | {
-      readonly code: "invalidHitPointAdvancementForLevel";
-      readonly classLevel: CharacterClassLevel;
-      readonly hitPointAdvancement: HitPointAdvancementMethod;
-    };
+export type CharacterProgressionIssue = CharacterProgressionLevelIssue;
 
 export type ClassUnitNameIssue =
   | {
@@ -77,30 +61,14 @@ export function createCharacterProgression(input: {
   readonly classLevel: CharacterClassLevel;
   readonly hitPointAdvancement: HitPointAdvancementMethod;
 }): Either.Either<CharacterProgression, CharacterProgressionIssue> {
-  if (!CHARACTER_CLASS_LEVELS.some((level) => level === input.classLevel)) {
-    return Either.left({
-      code: "invalidTotalCharacterLevel",
-      totalLevel: input.classLevel,
-    });
-  }
-
-  if (
-    (input.classLevel === 1 &&
-      input.hitPointAdvancement.tag !== "levelOneMaximum") ||
-    (input.classLevel > 1 &&
-      input.hitPointAdvancement.tag !== "fixedAfterLevelOne")
-  ) {
-    return Either.left({
-      code: "invalidHitPointAdvancementForLevel",
-      classLevel: input.classLevel,
-      hitPointAdvancement: input.hitPointAdvancement,
-    });
+  const advancement = characterLevelHitPointAdvancement(input);
+  if (Either.isLeft(advancement)) {
+    return Either.left(advancement.left);
   }
 
   return Either.right({
     classUnitId: input.classUnitId,
-    classLevel: input.classLevel,
-    hitPointAdvancement: input.hitPointAdvancement,
+    ...advancement.right,
   });
 }
 
@@ -128,7 +96,7 @@ export function classUnitIdFromClassUnit(
   unit: UnitRecord,
 ): Either.Either<ClassUnitId, ClassUnitNameIssue> {
   return unit.kind === "class"
-    ? Either.right(ClassUnitId(unit.id))
+    ? Either.right(classUnitId(unit.id))
     : Either.left({
         code: "nonClassUnit",
         unitId: unit.id,
@@ -171,13 +139,13 @@ export function classUnitIdFromUnitId(input: {
 export function characterProgressionFromAdvancementSelection(
   input: AdvancementSelectionProgressionInput,
 ): Either.Either<CharacterProgression, AdvancementSelectionProgressionIssue> {
-  const startingClass = classUnitIdToClassName({
+  const startingClassUnitId = classUnitIdFromUnitId({
     unitLibrary: input.unitLibrary,
     classUnitId: input.primaryClassUnitId,
   });
 
-  if (Either.isLeft(startingClass)) {
-    return Either.left(startingClass.left);
+  if (Either.isLeft(startingClassUnitId)) {
+    return Either.left(startingClassUnitId.left);
   }
 
   const parsedEntries: ParsedAdvancementEntry[] = [];
@@ -206,7 +174,7 @@ export function characterProgressionFromAdvancementSelection(
   }
 
   const firstEntry = parsedEntries[0];
-  if (firstEntry.className !== startingClass.right) {
+  if (firstEntry.classUnitId !== startingClassUnitId.right) {
     return Either.left({
       code: "primaryClassMismatch",
       primaryClassUnitId: input.primaryClassUnitId,
@@ -230,7 +198,7 @@ export function characterProgressionFromAdvancementSelection(
 
   return createCharacterProgression({
     classUnitId: firstEntry.classUnitId,
-    classLevel: firstEntry.entry.level,
+    classLevel: firstEntry.entry.classLevel,
     hitPointAdvancement: firstEntry.entry.hitPointAdvancement,
   });
 }

@@ -22,6 +22,7 @@ import {
   type AdvancementSelectionProgressionIssue,
   type CharacterProgression,
 } from "./character-progression-algebra.ts";
+import { hitPointsAfterLevelOneMultiplier } from "./character-progression-types.ts";
 import {
   backgroundToolChoiceSpec,
   classFeatureGrantChoiceHoles,
@@ -356,7 +357,7 @@ function finalizationIssueForProgressionIssue(
       ),
     ),
     Match.whenOr(
-      "invalidTotalCharacterLevel",
+      "invalidCharacterClassLevel",
       "invalidHitPointAdvancementForLevel",
       "unknownUnitId",
       "nonClassUnit",
@@ -409,7 +410,7 @@ export function isSupportedSingleClassAdvancement(
       selections.primaryClass &&
     isSupportedAdvancement(
       selections.advancement.entries[0].classUnitId,
-      selections.advancement.entries[0].level,
+      selections.advancement.entries[0].classLevel,
       selections.advancement.entries[0].hitPointAdvancement,
     )
   );
@@ -564,13 +565,8 @@ export function buildCharacterBuild(input: {
   ];
   const buildEquipment = finalizedBuildEquipment(selections);
   const hitPointsAfterLevelOne =
-    progression.hitPointAdvancement.tag === "fixedAfterLevelOne"
-      ? (selectedClassLevel - 1) *
-        fixedHitPointsAfterLevelOne(
-          classFacts.right.hitPointDie,
-          finalScores.con,
-        )
-      : 0;
+    hitPointsAfterLevelOneMultiplier(progression) *
+    fixedHitPointsAfterLevelOne(classFacts.right.hitPointDie, finalScores.con);
 
   return Either.right({
     progression,
@@ -637,7 +633,7 @@ export function allFinalizedChoicesSupported(
   if (Option.isNone(backgroundUnit)) return false;
   const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
   if (backgroundFacts.tag !== "readable") return false;
-  const classLevel = selections.advancement.entries[0]?.level ?? 1;
+  const classLevel = selections.advancement.entries[0]?.classLevel ?? 1;
   const classEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selections.primaryClass, CLASS_EQUIPMENT_CHOICE_KEY),

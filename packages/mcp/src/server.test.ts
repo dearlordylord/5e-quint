@@ -19,6 +19,7 @@ import {
   characterDraftId,
   characterClassLevel,
   classUnitIdFromClassUnit,
+  createCharacterProgression,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
@@ -3148,7 +3149,7 @@ function fighterTwoCharacterBuild(
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_fighter:level_2:fixed_hp",
+          "class_fighter:level_2:fixed_hit_points",
         ),
       ],
     }),
@@ -3388,7 +3389,7 @@ function manifestAdvancementFills(): readonly CreationFill[] {
   return [
     choiceFill(
       "cc:draft:draft.advancement.initial",
-      "class_fighter:level_1:level_one_max_hp",
+      "class_fighter:level_1:hit_point_maximum",
     ),
   ];
 }
@@ -3507,16 +3508,19 @@ function rogueCharacterBuild(
   const rogueClassUnitId = expectRight(
     classUnitIdFromClassUnit(rogueClassUnit(unitLibrary)),
   );
-  return {
-    ...base,
-    progression: {
+  const progression = expectRight(
+    createCharacterProgression({
       classUnitId: rogueClassUnitId,
       classLevel: level,
       hitPointAdvancement:
         level === 1
           ? { tag: "levelOneMaximum" }
           : { tag: "fixedAfterLevelOne" },
-    },
+    }),
+  );
+  return {
+    ...base,
+    progression,
     features: [
       ...base.features.filter(
         (feature) =>

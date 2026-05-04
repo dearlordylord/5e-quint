@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   buildUnitCatalog,
@@ -14,6 +14,12 @@ import {
   computeTotalLevel,
   createCharacterProgression,
 } from "./character-progression-algebra.ts";
+import {
+  characterAdvancementEntry,
+  type CharacterAdvancementEntry,
+  type HitPointAdvancementMethod,
+} from "./character-progression-types.ts";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 function expectRight<T, E>(result: Either.Either<T, E>): T {
   expect(Either.isRight(result)).toBe(true);
@@ -24,6 +30,14 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   }
 
   return result.right;
+}
+
+function testAdvancementEntry(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly classLevel: ReturnType<typeof characterClassLevel>;
+  readonly hitPointAdvancement: HitPointAdvancementMethod;
+}): CharacterAdvancementEntry {
+  return expectRight(characterAdvancementEntry(input));
 }
 
 const unitCatalogResult = buildUnitCatalog({
@@ -90,11 +104,11 @@ describe("character progression algebra", () => {
         primaryClassUnitId: "class_fighter",
         advancement: {
           entries: [
-            {
+            testAdvancementEntry({
               classUnitId: "class_fighter",
-              level: characterClassLevel(2),
+              classLevel: characterClassLevel(2),
               hitPointAdvancement: { tag: "fixedAfterLevelOne" },
-            },
+            }),
           ],
         },
       }),
@@ -161,8 +175,8 @@ describe("character progression algebra", () => {
       }),
     ).toEqual(
       Either.left({
-        code: "invalidTotalCharacterLevel",
-        totalLevel: 21,
+        code: "invalidCharacterClassLevel",
+        classLevel: 21,
       }),
     );
   });
@@ -197,16 +211,16 @@ describe("character progression algebra", () => {
         primaryClassUnitId: "class_fighter",
         advancement: {
           entries: [
-            {
+            testAdvancementEntry({
               classUnitId: "class_fighter",
-              level: characterClassLevel(1),
+              classLevel: characterClassLevel(1),
               hitPointAdvancement: { tag: "levelOneMaximum" },
-            },
-            {
+            }),
+            testAdvancementEntry({
               classUnitId: "class_wizard",
-              level: characterClassLevel(1),
+              classLevel: characterClassLevel(1),
               hitPointAdvancement: { tag: "levelOneMaximum" },
-            },
+            }),
           ],
         },
       }),
@@ -224,16 +238,16 @@ describe("character progression algebra", () => {
         primaryClassUnitId: "class_fighter",
         advancement: {
           entries: [
-            {
+            testAdvancementEntry({
               classUnitId: "class_fighter",
-              level: characterClassLevel(1),
+              classLevel: characterClassLevel(1),
               hitPointAdvancement: { tag: "levelOneMaximum" },
-            },
-            {
+            }),
+            testAdvancementEntry({
               classUnitId: "class_fighter",
-              level: characterClassLevel(2),
+              classLevel: characterClassLevel(2),
               hitPointAdvancement: { tag: "fixedAfterLevelOne" },
-            },
+            }),
           ],
         },
       }),
@@ -252,11 +266,11 @@ describe("character progression algebra", () => {
         primaryClassUnitId: "class_fighter",
         advancement: {
           entries: [
-            {
+            testAdvancementEntry({
               classUnitId: "class_wizard",
-              level: characterClassLevel(1),
+              classLevel: characterClassLevel(1),
               hitPointAdvancement: { tag: "levelOneMaximum" },
-            },
+            }),
           ],
         },
       }),
@@ -265,6 +279,51 @@ describe("character progression algebra", () => {
         code: "primaryClassMismatch",
         primaryClassUnitId: "class_fighter",
         firstAdvancementClassName: "wizard",
+      }),
+    );
+  });
+
+  it("compares primary and advancement class identity by Unit id, not class name", () => {
+    const fighter = unitLibrary.requireUnit("class_fighter");
+    const alternateFighter = {
+      ...fighter,
+      id: "class_fighter_alternate",
+    } satisfies UnitRecord;
+    const duplicateClassNameLibrary = {
+      getUnit: (unitId: UnitRecord["id"]) =>
+        unitId === alternateFighter.id
+          ? Option.some(alternateFighter)
+          : unitLibrary.getUnit(unitId),
+      listUnits: () => [...unitLibrary.listUnits(), alternateFighter],
+      requireUnit: (unitId: UnitRecord["id"]) => {
+        const unit = duplicateClassNameLibrary.getUnit(unitId);
+        if (Option.isNone(unit)) {
+          throw new Error(`Missing test Unit: ${unitId}`);
+        }
+
+        return unit.value;
+      },
+    };
+
+    expect(
+      characterProgressionFromAdvancementSelection({
+        unitLibrary: duplicateClassNameLibrary,
+        primaryClassUnitId: "class_fighter",
+        advancement: {
+          entries: [
+            testAdvancementEntry({
+              classUnitId: alternateFighter.id,
+              classLevel: characterClassLevel(1),
+              hitPointAdvancement: { tag: "levelOneMaximum" },
+            }),
+          ],
+        },
+      }),
+    ).toEqual(
+      Either.left({
+        code: "primaryClassMismatch",
+        primaryClassUnitId: "class_fighter",
+        firstAdvancementClassName: "fighter",
       }),
     );
   });

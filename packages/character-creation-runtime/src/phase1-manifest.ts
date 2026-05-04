@@ -9,6 +9,7 @@ import {
   type UnitChoiceKey,
 } from "./types.ts";
 import { backgroundAbilityScoreIncreaseOptionId } from "./hole-factories.ts";
+import { hitPointAdvancementOptionSuffix } from "./character-progression-types.ts";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -62,12 +63,8 @@ export const SUPPORTED_CLASS_OPTION_IDS = [
 export function advancementOptionId(
   advancement: CharacterAdvancementEntry,
 ): CreationChoiceOptionId {
-  const hitPointPart =
-    advancement.hitPointAdvancement.tag === "levelOneMaximum"
-      ? "level_one_max_hp"
-      : "fixed_hp";
   return creationChoiceOptionId(
-    `${advancement.classUnitId}:level_${advancement.level}:${hitPointPart}`,
+    `${advancement.classUnitId}:level_${advancement.classLevel}:${hitPointAdvancementOptionSuffix(advancement.hitPointAdvancement)}`,
   );
 }
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [

@@ -67,7 +67,7 @@ const agentConversationScenarios = [
     userSays:
       "Create an Orc Soldier Wizard 1 with Ray of Frost and Magic Missile.",
     agentReads:
-      "After class_wizard and class_wizard:level_1:level_one_max_hp, discovery returns wizard skill, cantrip, spellbook, prepared spell, background, equipment, and loadout holes.",
+      "After class_wizard and class_wizard:level_1:hit_point_maximum, discovery returns wizard skill, cantrip, spellbook, prepared spell, background, equipment, and loadout holes.",
     agentDecision:
       "It selects ray_of_frost in wizard_cantrip_choices, magic_missile in both spellbook and prepared spell choices, and verifies finalization exposes spellSlots before entering battle.",
     executableCoverage: "createAndFinalizeWizardOne",
@@ -307,7 +307,7 @@ export async function verifyBaselineVertical(client: Client) {
     fills: [
       choiceFill(
         "cc:draft:draft.advancement.initial",
-        "class_fighter:level_1:level_one_max_hp",
+        "class_fighter:level_1:hit_point_maximum",
       ),
     ],
   });
@@ -732,7 +732,7 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
     fills: [
       choiceFill(
         "cc:draft:draft.advancement.initial",
-        "class_fighter:level_2:fixed_hp",
+        "class_fighter:level_2:fixed_hit_points",
       ),
     ],
   });
@@ -810,7 +810,7 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
     fills: [
       choiceFill(
         "cc:draft:draft.advancement.initial",
-        "class_wizard:level_1:level_one_max_hp",
+        "class_wizard:level_1:hit_point_maximum",
       ),
     ],
   });
