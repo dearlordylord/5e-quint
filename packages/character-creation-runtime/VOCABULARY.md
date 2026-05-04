@@ -32,8 +32,7 @@ Character Progression - class-level read model with one
 `startingClass` and zero or more post-start class names. Level 1 is
 implicit in `startingClass`; total level, post-start advancement level, and
 per-class levels are derived from the ordered progression rather than stored on
-advancement entries. Classes not present in the progression are omitted from the
-per-class level summary.
+advancement entries. 
 
 Support Profile - package-private runtime boundary that says which discovered
 Unit-backed draft choices, Unit choice families, option ids, equipment
