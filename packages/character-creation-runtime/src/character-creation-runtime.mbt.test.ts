@@ -337,7 +337,11 @@ function abilityScoresOnlyFills(
 function manifestAdvancementFills(
   holes: readonly CreationHole[],
 ): readonly CreationFill[] {
-  return [choiceFill(holes, "HAdvancement", ["class_fighter:level_1"])];
+  return [
+    choiceFill(holes, "HAdvancement", [
+      "class_fighter:level_1:level_one_max_hp",
+    ]),
+  ];
 }
 
 function manifestChoiceFills(

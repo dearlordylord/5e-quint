@@ -62,8 +62,12 @@ export const SUPPORTED_CLASS_OPTION_IDS = [
 export function advancementOptionId(
   advancement: CharacterAdvancementEntry,
 ): CreationChoiceOptionId {
+  const hitPointPart =
+    advancement.hitPointAdvancement.tag === "levelOneMaximum"
+      ? "level_one_max_hp"
+      : "fixed_hp";
   return creationChoiceOptionId(
-    `${advancement.classUnitId}:level_${advancement.level}`,
+    `${advancement.classUnitId}:level_${advancement.level}:${hitPointPart}`,
   );
 }
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [

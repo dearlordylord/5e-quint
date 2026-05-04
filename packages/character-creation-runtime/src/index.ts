@@ -91,19 +91,17 @@ export {
 } from "./finalization.ts";
 export {
   characterProgressionFromAdvancementSelection,
-  characterProgressionFromUnitIds,
   classNameFromClassUnit,
+  classUnitIdFromClassUnit,
+  classUnitIdFromUnitId,
   classUnitIdToClassName,
   computeTotalLevel,
   createCharacterProgression,
-  orderedProgressionClasses,
-  progressionClassLevels,
   type AdvancementSelectionProgressionInput,
   type AdvancementSelectionProgressionIssue,
+  type ClassUnitId,
   type CharacterProgression,
-  type CharacterProgressionClassLevels,
   type CharacterProgressionIssue,
-  type CharacterProgressionUnitIdInput,
-  type CharacterProgressionUnitIdIssue,
   type ClassUnitNameIssue,
+  type HitPointAdvancementMethod,
 } from "./character-progression-algebra.ts";

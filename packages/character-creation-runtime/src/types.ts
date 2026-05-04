@@ -37,7 +37,10 @@ import type {
   WeaponProficiencyCategory,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
-import type { CharacterProgression } from "./character-progression-algebra.ts";
+import type {
+  CharacterProgression,
+  HitPointAdvancementMethod,
+} from "./character-progression-algebra.ts";
 
 export { SUPPORTED_ABILITY_SCORE_METHODS };
 export type { AbilityScoreAssignment, SupportedAbilityScoreMethod };
@@ -290,6 +293,7 @@ export type CharacterAdvancementSelection = {
 export type CharacterAdvancementEntry = {
   readonly classUnitId: UnitRecord["id"];
   readonly level: CharacterClassLevel;
+  readonly hitPointAdvancement: HitPointAdvancementMethod;
 };
 
 export type CharacterEquipmentSelection = {

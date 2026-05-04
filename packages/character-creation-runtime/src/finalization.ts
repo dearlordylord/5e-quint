@@ -1,4 +1,4 @@
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { hp } from "@dnd/shared/types";
 import {
@@ -19,6 +19,7 @@ import type {
 import { discoverCreationHoles } from "./discovery.ts";
 import {
   characterProgressionFromAdvancementSelection,
+  type AdvancementSelectionProgressionIssue,
   type CharacterProgression,
 } from "./character-progression-algebra.ts";
 import {
@@ -313,11 +314,7 @@ function temporarySupportedSliceSelections(
     advancement: selections.advancement,
   });
   const progressionIssues = Either.isLeft(progression)
-    ? [
-        illegalFinalizationIssue(
-          "Finalized build advancement is not a valid character progression.",
-        ),
-      ]
+    ? [finalizationIssueForProgressionIssue(progression.left)]
     : [];
   const issues = nonEmptyReadonlyArray([
     ...progressionIssues,
@@ -330,11 +327,7 @@ function temporarySupportedSliceSelections(
   if (Either.isLeft(progression)) {
     return {
       tag: "rejected",
-      issues: [
-        illegalFinalizationIssue(
-          "Finalized build advancement is not a valid character progression.",
-        ),
-      ],
+      issues: [finalizationIssueForProgressionIssue(progression.left)],
     };
   }
 
@@ -346,6 +339,35 @@ function temporarySupportedSliceSelections(
       [TemporarySupportedSliceSelections]: true,
     },
   };
+}
+
+function finalizationIssueForProgressionIssue(
+  issue: AdvancementSelectionProgressionIssue,
+): CreationFinalizationIssue {
+  return Match.value(issue.code).pipe(
+    Match.when("unsupportedMulticlassProgression", () =>
+      unsupportedFinalizationIssue(
+        "Multiclass progression is SRD-legal when prerequisites are met, but is outside the current character-creation support profile.",
+      ),
+    ),
+    Match.when("unsupportedGroupedClassProgression", () =>
+      unsupportedFinalizationIssue(
+        "Grouped class progression entries are outside the current character-creation support profile.",
+      ),
+    ),
+    Match.whenOr(
+      "invalidTotalCharacterLevel",
+      "invalidHitPointAdvancementForLevel",
+      "unknownUnitId",
+      "nonClassUnit",
+      "primaryClassMismatch",
+      () =>
+        illegalFinalizationIssue(
+          "Finalized build advancement is not a valid single-class character progression.",
+        ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function expectedValueIssue(
@@ -388,6 +410,7 @@ export function isSupportedSingleClassAdvancement(
     isSupportedAdvancement(
       selections.advancement.entries[0].classUnitId,
       selections.advancement.entries[0].level,
+      selections.advancement.entries[0].hitPointAdvancement,
     )
   );
 }
@@ -540,6 +563,14 @@ export function buildCharacterBuild(input: {
     ...finalizedClassChoiceFeatures(selections),
   ];
   const buildEquipment = finalizedBuildEquipment(selections);
+  const hitPointsAfterLevelOne =
+    progression.hitPointAdvancement.tag === "fixedAfterLevelOne"
+      ? (selectedClassLevel - 1) *
+        fixedHitPointsAfterLevelOne(
+          classFacts.right.hitPointDie,
+          finalScores.con,
+        )
+      : 0;
 
   return Either.right({
     progression,
@@ -552,11 +583,7 @@ export function buildCharacterBuild(input: {
       maximum: hp(
         classFacts.right.hitPointDie +
           abilityModifier(finalScores.con) +
-          (selectedClassLevel - 1) *
-            fixedHitPointsAfterLevelOne(
-              classFacts.right.hitPointDie,
-              finalScores.con,
-            ),
+          hitPointsAfterLevelOne,
       ),
       hitDice: [
         {

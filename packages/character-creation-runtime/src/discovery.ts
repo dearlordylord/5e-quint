@@ -908,7 +908,10 @@ export function draftHole(
         .flatMap((unit) =>
           supportedAdvancementsForClass(unit.id).map((advancement) => ({
             optionId: advancementOptionId(advancement),
-            label: `${unit.name} ${advancement.level}`,
+            label:
+              advancement.hitPointAdvancement.tag === "levelOneMaximum"
+                ? `${unit.name} ${advancement.level} (Level 1 maximum HP)`
+                : `${unit.name} ${advancement.level} (Fixed HP)`,
             unitRef: { unitId: unit.id },
           })),
         ),

@@ -151,14 +151,18 @@ selected choices against those hole shapes, instead of branching on
 hard-coded authored feature ids in finalization logic.
 
 `src/character-progression-algebra.ts` owns the durable Character Progression
-read model. The current supported branch is single-class: it stores the selected
-class Unit id, class name, and class level. Multiclass progression is rejected at
-the finalization boundary until the runtime can carry SRD multiclass
-prerequisite evidence into the durable build shape.
+read model. The current supported branch is single-class: it stores the parsed
+class Unit id, class level, and Hit Point advancement method. Class names are
+derived from the Unit catalog at projection boundaries. Multiclass progression
+is rejected at the finalization boundary until the runtime can carry SRD
+multiclass prerequisite evidence into the durable build shape.
 
 For class levels above 1, the current support profile projects fixed Hit Point
-gains after level 1. Rolled HP advancement is outside this slice and must become
-an explicit creation choice before it can be finalized.
+gains after level 1. The selected advancement option carries explicit Hit Point
+advancement evidence into `CharacterAdvancementEntry`, and finalization rejects
+level/evidence combinations that contradict the rules. Rolled HP advancement is
+outside this slice and must become an explicit creation choice before it can be
+finalized.
 
 Phase-1 manifest lock is still intentional in the current runtime. The lock ends
 only after the promoted-reachable shape inventory for character creation has been

@@ -736,7 +736,7 @@ describe("character creation QNT slice parity", () => {
           fills: [
             choiceFill(
               "cc:draft:draft.advancement.initial",
-              "class_fighter:level_1",
+              "class_fighter:level_1:level_one_max_hp",
             ),
           ],
         }),
@@ -1395,6 +1395,7 @@ describe("character creation finalization", () => {
     expect(result.build.progression).toEqual({
       classUnitId: "class_fighter",
       classLevel: 1,
+      hitPointAdvancement: { tag: "levelOneMaximum" },
     });
     expect(result.build.background).toBe("background_soldier");
     expect(result.build.species).toBe("species_orc");
@@ -1627,7 +1628,11 @@ describe("character creation finalization", () => {
       primaryClass: "class_fighter",
       advancement: {
         entries: [
-          { classUnitId: "class_fighter", level: characterClassLevel(1) },
+          {
+            classUnitId: "class_fighter",
+            level: characterClassLevel(1),
+            hitPointAdvancement: { tag: "levelOneMaximum" },
+          },
         ],
       },
       background: "background_soldier",
@@ -1889,7 +1894,11 @@ describe("character creation finalization", () => {
         ...complete.selections,
         advancement: {
           entries: [
-            { classUnitId: "class_fighter", level: characterClassLevel(3) },
+            {
+              classUnitId: "class_fighter",
+              level: characterClassLevel(3),
+              hitPointAdvancement: { tag: "fixedAfterLevelOne" },
+            },
           ],
         },
       },
@@ -2189,7 +2198,7 @@ function completeManifestDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_fighter:level_1",
+          "class_fighter:level_1:level_one_max_hp",
         ),
       ],
     }),
@@ -2216,7 +2225,7 @@ function completeFighterTwoDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_fighter:level_2",
+          "class_fighter:level_2:fixed_hp",
         ),
       ],
     }),
@@ -2335,7 +2344,7 @@ function completeWizardDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_wizard:level_1",
+          "class_wizard:level_1:level_one_max_hp",
         ),
       ],
     }),

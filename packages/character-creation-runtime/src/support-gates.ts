@@ -134,9 +134,21 @@ const SUPPORTED_DRAFT_CHOICE_PATHS = [
 type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
 const SUPPORTED_ADVANCEMENTS = [
-  { classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID, level: characterClassLevel(1) },
-  { classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID, level: characterClassLevel(2) },
-  { classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID, level: characterClassLevel(1) },
+  {
+    classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
+    level: characterClassLevel(1),
+    hitPointAdvancement: { tag: "levelOneMaximum" },
+  },
+  {
+    classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
+    level: characterClassLevel(2),
+    hitPointAdvancement: { tag: "fixedAfterLevelOne" },
+  },
+  {
+    classUnitId: WIDTH_CLASS_WIZARD_UNIT_ID,
+    level: characterClassLevel(1),
+    hitPointAdvancement: { tag: "levelOneMaximum" },
+  },
 ] as const satisfies ReadonlyArray<CharacterAdvancementEntry>;
 
 const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
@@ -344,10 +356,13 @@ export function supportedLoadoutChoices(): readonly SupportedLoadoutChoice[] {
 export function isSupportedAdvancement(
   classUnitId: UnitRecord["id"],
   level: number,
+  hitPointAdvancement: CharacterAdvancementEntry["hitPointAdvancement"],
 ): boolean {
   return CHARACTER_CREATION_SUPPORT_PROFILE.supportedAdvancements.some(
     (advancement) =>
-      advancement.classUnitId === classUnitId && advancement.level === level,
+      advancement.classUnitId === classUnitId &&
+      advancement.level === level &&
+      advancement.hitPointAdvancement.tag === hitPointAdvancement.tag,
   );
 }
 

@@ -29,9 +29,10 @@ references a Unit. The draft records the selected Unit reference rather
 than treating the submitted option id as authored truth.
 
 Character Progression - durable class-level read model for the current
-single-class support slice. It stores the selected class Unit id, class name,
-and class level. Multiclass progression is a separate future branch that must
-carry prerequisite evidence before it can become durable build state.
+single-class support slice. It stores the parsed class Unit id, class level, and
+Hit Point advancement method. Class names are derived from the Unit catalog at
+projection boundaries. Multiclass progression is a separate future branch that
+must carry prerequisite evidence before it can become durable build state.
 
 Support Profile - package-private runtime boundary that says which discovered
 Unit-backed draft choices, Unit choice families, option ids, equipment

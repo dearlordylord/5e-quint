@@ -8,13 +8,11 @@ import {
 import { characterClassLevel } from "./types.ts";
 import {
   classNameFromClassUnit,
+  classUnitIdFromUnitId,
   classUnitIdToClassName,
   characterProgressionFromAdvancementSelection,
-  characterProgressionFromUnitIds,
   computeTotalLevel,
   createCharacterProgression,
-  orderedProgressionClasses,
-  progressionClassLevels,
 } from "./character-progression-algebra.ts";
 
 function expectRight<T, E>(result: Either.Either<T, E>): T {
@@ -39,83 +37,64 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 describe("character progression algebra", () => {
-  it("derives a level-1 Fighter without storing an advancement level", () => {
+  it("derives a level-1 Fighter from a parsed class Unit id", () => {
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
     const progression = expectRight(
       createCharacterProgression({
-        classUnitId: "class_fighter",
+        classUnitId: fighterClassUnitId,
         classLevel: characterClassLevel(1),
+        hitPointAdvancement: { tag: "levelOneMaximum" },
       }),
     );
 
     expect(progression).toEqual({
       classUnitId: "class_fighter",
       classLevel: 1,
+      hitPointAdvancement: { tag: "levelOneMaximum" },
     });
     expect(computeTotalLevel(progression)).toBe(1);
-    expect(
-      expectRight(progressionClassLevels({ progression, unitLibrary })),
-    ).toEqual({
-      fighter: 1,
-    });
   });
 
-  it("derives Fighter 2 from selected Fighter class level", () => {
+  it("derives Fighter 2 with explicit fixed HP evidence", () => {
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
     const progression = expectRight(
       createCharacterProgression({
-        classUnitId: "class_fighter",
+        classUnitId: fighterClassUnitId,
         classLevel: characterClassLevel(2),
+        hitPointAdvancement: { tag: "fixedAfterLevelOne" },
       }),
     );
 
     expect(computeTotalLevel(progression)).toBe(2);
-    expect(
-      expectRight(progressionClassLevels({ progression, unitLibrary })),
-    ).toEqual({
-      fighter: 2,
-    });
-  });
-
-  it("converts Surface class Unit ids at one explicit boundary", () => {
-    const progression = expectRight(
-      characterProgressionFromUnitIds({
-        unitLibrary,
-        classUnitId: "class_fighter",
-        classLevel: characterClassLevel(1),
-      }),
-    );
-
-    expect(progression).toEqual({
-      classUnitId: "class_fighter",
-      classLevel: 1,
-    });
-  });
-
-  it("preserves selected class Unit identity for higher levels", () => {
-    const progression = expectRight(
-      characterProgressionFromUnitIds({
-        unitLibrary,
-        classUnitId: "class_fighter",
-        classLevel: characterClassLevel(2),
-      }),
-    );
-
     expect(progression).toEqual({
       classUnitId: "class_fighter",
       classLevel: 2,
+      hitPointAdvancement: { tag: "fixedAfterLevelOne" },
     });
-    expect(
-      expectRight(orderedProgressionClasses({ progression, unitLibrary })),
-    ).toEqual(["fighter", "fighter"]);
   });
 
-  it("projects advancement selection entries without keeping stored levels", () => {
+  it("projects single-class advancement selection entries", () => {
     const progression = expectRight(
       characterProgressionFromAdvancementSelection({
         unitLibrary,
         primaryClassUnitId: "class_fighter",
         advancement: {
           entries: [
-            { classUnitId: "class_fighter", level: characterClassLevel(2) },
+            {
+              classUnitId: "class_fighter",
+              level: characterClassLevel(2),
+              hitPointAdvancement: { tag: "fixedAfterLevelOne" },
+            },
           ],
         },
       }),
@@ -124,6 +103,7 @@ describe("character progression algebra", () => {
     expect(progression).toEqual({
       classUnitId: "class_fighter",
       classLevel: 2,
+      hitPointAdvancement: { tag: "fixedAfterLevelOne" },
     });
   });
 
@@ -166,15 +146,46 @@ describe("character progression algebra", () => {
   });
 
   it("returns typed issues for invalid progression totals", () => {
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
+
     expect(
       createCharacterProgression({
-        classUnitId: "class_fighter",
+        classUnitId: fighterClassUnitId,
         classLevel: 21 as ReturnType<typeof characterClassLevel>,
+        hitPointAdvancement: { tag: "fixedAfterLevelOne" },
       }),
     ).toEqual(
       Either.left({
         code: "invalidTotalCharacterLevel",
         totalLevel: 21,
+      }),
+    );
+  });
+
+  it("returns typed issues for HP advancement evidence that contradicts level", () => {
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
+
+    expect(
+      createCharacterProgression({
+        classUnitId: fighterClassUnitId,
+        classLevel: characterClassLevel(2),
+        hitPointAdvancement: { tag: "levelOneMaximum" },
+      }),
+    ).toEqual(
+      Either.left({
+        code: "invalidHitPointAdvancementForLevel",
+        classLevel: 2,
+        hitPointAdvancement: { tag: "levelOneMaximum" },
       }),
     );
   });
@@ -186,14 +197,50 @@ describe("character progression algebra", () => {
         primaryClassUnitId: "class_fighter",
         advancement: {
           entries: [
-            { classUnitId: "class_fighter", level: characterClassLevel(1) },
-            { classUnitId: "class_wizard", level: characterClassLevel(1) },
+            {
+              classUnitId: "class_fighter",
+              level: characterClassLevel(1),
+              hitPointAdvancement: { tag: "levelOneMaximum" },
+            },
+            {
+              classUnitId: "class_wizard",
+              level: characterClassLevel(1),
+              hitPointAdvancement: { tag: "levelOneMaximum" },
+            },
           ],
         },
       }),
     ).toEqual(
       Either.left({
         code: "unsupportedMulticlassProgression",
+      }),
+    );
+  });
+
+  it("returns typed issues for grouped same-class advancement entries", () => {
+    expect(
+      characterProgressionFromAdvancementSelection({
+        unitLibrary,
+        primaryClassUnitId: "class_fighter",
+        advancement: {
+          entries: [
+            {
+              classUnitId: "class_fighter",
+              level: characterClassLevel(1),
+              hitPointAdvancement: { tag: "levelOneMaximum" },
+            },
+            {
+              classUnitId: "class_fighter",
+              level: characterClassLevel(2),
+              hitPointAdvancement: { tag: "fixedAfterLevelOne" },
+            },
+          ],
+        },
+      }),
+    ).toEqual(
+      Either.left({
+        code: "unsupportedGroupedClassProgression",
+        classUnitId: "class_fighter",
       }),
     );
   });
@@ -205,7 +252,11 @@ describe("character progression algebra", () => {
         primaryClassUnitId: "class_fighter",
         advancement: {
           entries: [
-            { classUnitId: "class_wizard", level: characterClassLevel(1) },
+            {
+              classUnitId: "class_wizard",
+              level: characterClassLevel(1),
+              hitPointAdvancement: { tag: "levelOneMaximum" },
+            },
           ],
         },
       }),

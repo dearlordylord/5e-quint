@@ -18,6 +18,7 @@ import {
 import {
   characterDraftId,
   characterClassLevel,
+  classUnitIdFromClassUnit,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
@@ -70,6 +71,16 @@ function availableCharacterSessionRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
+  return result.right;
+}
+
+function expectRight<T, E>(result: Either.Either<T, E>): T {
+  if (Either.isLeft(result)) {
+    throw new Error(
+      `Expected Either.right, received ${JSON.stringify(result.left)}`,
+    );
+  }
+
   return result.right;
 }
 
@@ -3137,7 +3148,7 @@ function fighterTwoCharacterBuild(
       fills: [
         choiceFill(
           "cc:draft:draft.advancement.initial",
-          "class_fighter:level_2",
+          "class_fighter:level_2:fixed_hp",
         ),
       ],
     }),
@@ -3375,7 +3386,10 @@ function manifestChoiceFills(): readonly CreationFill[] {
 
 function manifestAdvancementFills(): readonly CreationFill[] {
   return [
-    choiceFill("cc:draft:draft.advancement.initial", "class_fighter:level_1"),
+    choiceFill(
+      "cc:draft:draft.advancement.initial",
+      "class_fighter:level_1:level_one_max_hp",
+    ),
   ];
 }
 
@@ -3490,11 +3504,18 @@ function rogueCharacterBuild(
 ): CharacterBuild {
   const base = fighterCharacterBuild(unitLibrary);
   const level = characterClassLevel(input.level ?? 1);
+  const rogueClassUnitId = expectRight(
+    classUnitIdFromClassUnit(rogueClassUnit(unitLibrary)),
+  );
   return {
     ...base,
     progression: {
-      classUnitId: "class_rogue",
+      classUnitId: rogueClassUnitId,
       classLevel: level,
+      hitPointAdvancement:
+        level === 1
+          ? { tag: "levelOneMaximum" }
+          : { tag: "fixedAfterLevelOne" },
     },
     features: [
       ...base.features.filter(

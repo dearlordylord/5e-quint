@@ -131,8 +131,8 @@ function battleSupportProfilesForUnit(
   if (bonusActionHideClassUnitIds.has(unitId)) {
     // Class-feature records for Rogue Cunning Action are not yet present in the
     // widened unit catalog. We assign a support profile to the admitted class
-    // advancement record so battle-runtime branches on support profile, not on
-    // class-name checks inside reducer discovery/resolution.
+    // Unit hook so battle-runtime branches on support profile, not on class-name
+    // checks inside reducer discovery/resolution.
     supportProfiles.push(...BONUS_ACTION_HIDE_SUPPORT_PROFILES);
   }
 
