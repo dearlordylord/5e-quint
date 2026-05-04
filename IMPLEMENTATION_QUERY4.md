@@ -18,8 +18,7 @@ The current durable sheet still stores creation-finalization state as a bundle:
 
 ```ts
 export type FinalizedCharacterSelections = {
-  readonly primaryClass: UnitRecord["id"];
-  readonly advancement: CharacterAdvancementSelection;
+  readonly progression: CharacterProgression;
   readonly background: UnitRecord["id"];
   readonly abilityScoreGeneration: AbilityScoreGenerationSelection;
   readonly backgroundAbilityScoreIncrease: BackgroundAbilityScoreIncreaseSelection;
@@ -120,8 +119,7 @@ Prefer a durable `CharacterSheet` shape along these lines, using Unit ids where 
 
 ```ts
 export type CharacterSheet = {
-  readonly primaryClass: UnitRecord["id"];
-  readonly advancement: CharacterAdvancementSelection;
+  readonly progression: CharacterProgression;
   readonly background: UnitRecord["id"];
   readonly species: UnitRecord["id"];
   readonly originLanguages: CharacterStartingLanguages;
@@ -142,7 +140,7 @@ The exact names can differ, but avoid `selections` for durable sheet state.
 
 Use domain names:
 
-- `primaryClass`, not `selectedClass`;
+- `progression`, not separate `primaryClass` plus a level-1 advancement entry;
 - `background`, not `selectedBackground`;
 - `species`, not `selectedSpecies`;
 - `originLanguages` or `startingLanguages` if the field is only the origin language choice, not total known languages;

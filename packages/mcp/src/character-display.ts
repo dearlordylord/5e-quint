@@ -1,4 +1,8 @@
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
+import {
+  classLevelForUnit,
+  startingClassUnitId,
+} from "@dnd/character-creation-runtime";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Option } from "effect";
 
@@ -14,14 +18,14 @@ export function characterBuildDisplayName(
   const backgroundName = Option.isSome(background)
     ? background.value.name
     : build.background;
-  const classUnit = unitLibrary.getUnit(build.progression.classUnitId);
+  const classUnitId = startingClassUnitId(build.progression);
+  const classUnit = unitLibrary.getUnit(classUnitId);
   const className = Option.isSome(classUnit)
     ? classUnit.value.name
-    : build.progression.classUnitId;
+    : classUnitId;
+  const classLevel = classLevelForUnit(build.progression, classUnitId);
   const classLabel =
-    build.progression.classLevel === 1
-      ? className
-      : `${className} ${build.progression.classLevel}`;
+    classLevel === 1 ? className : `${className} ${classLevel}`;
 
   return `${speciesName} ${backgroundName} ${classLabel}`;
 }

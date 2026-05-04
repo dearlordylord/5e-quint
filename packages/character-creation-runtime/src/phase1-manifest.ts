@@ -8,7 +8,12 @@ import {
   type UnitChoiceKey,
 } from "./types.ts";
 import { backgroundAbilityScoreIncreaseOptionId } from "./hole-factories.ts";
-import { hitPointRuleOptionSuffix } from "./character-progression-types.ts";
+import {
+  computeTotalLevel,
+  finalAdvancementEntry,
+  hitPointRuleOptionSuffix,
+  startingClassUnitId,
+} from "./character-progression-types.ts";
 import type { CharacterProgression } from "./character-progression-types.ts";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -54,8 +59,12 @@ export const SUPPORTED_PURCHASE_UNIT_IDS = [
 export function progressionOptionId(
   progression: CharacterProgression,
 ): CreationChoiceOptionId {
+  const totalLevel = computeTotalLevel(progression);
+  const rule =
+    finalAdvancementEntry(progression)?.hitPointRule ??
+    ({ tag: "levelOneMaximumHitDie" } as const);
   return creationChoiceOptionId(
-    `${progression.classUnitId}:level_${progression.classLevel}:${hitPointRuleOptionSuffix(progression.hitPointRule)}`,
+    `${startingClassUnitId(progression)}:level_${totalLevel}:${hitPointRuleOptionSuffix(rule)}`,
   );
 }
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [

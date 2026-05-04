@@ -11,6 +11,8 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
+  classLevelForUnit,
+  startingClassUnitId,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -91,21 +93,22 @@ function supportedBonusActionHideClassUnitIds(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): Either.Either<ReadonlySet<string>, BattleSupportProfileIssue> {
-  if (build.progression.classLevel < 2) {
+  const classUnitId = startingClassUnitId(build.progression);
+  if (classLevelForUnit(build.progression, classUnitId) < 2) {
     return Either.right(new Set());
   }
 
-  const unit = unitLibrary.getUnit(build.progression.classUnitId);
+  const unit = unitLibrary.getUnit(classUnitId);
   if (Option.isNone(unit)) {
     return battleSupportProfileIssue(
-      `Unknown Unit for battle support profile: ${build.progression.classUnitId}.`,
+      `Unknown Unit for battle support profile: ${classUnitId}.`,
     );
   }
 
   return Either.right(
     new Set(
       unit.value.kind === "class" && unit.value.className === "rogue"
-        ? [build.progression.classUnitId]
+        ? [classUnitId]
         : [],
     ),
   );

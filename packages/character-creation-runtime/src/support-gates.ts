@@ -58,10 +58,13 @@ import type {
 import { creationChoiceOptionId } from "./types.ts";
 import {
   classUnitId,
+  computeTotalLevel,
+  finalAdvancementEntry,
+  startingClassUnitId,
   type CharacterProgression,
   type ClassHitPointRule,
 } from "./character-progression-types.ts";
-import { createCharacterProgression } from "./character-progression-algebra.ts";
+import { createSingleClassProgression } from "./character-progression-algebra.ts";
 import { characterClassLevel } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -158,7 +161,7 @@ function supportedProgression(input: {
   readonly classLevel: ReturnType<typeof characterClassLevel>;
   readonly hitPointRule: ClassHitPointRule;
 }): CharacterProgression {
-  const progression = createCharacterProgression({
+  const progression = createSingleClassProgression({
     classUnitId: classUnitId(input.classUnitId),
     classLevel: input.classLevel,
     hitPointRule: input.hitPointRule,
@@ -355,7 +358,7 @@ export function supportedHoleOptionIdSet(
 export function supportedClassUnitIds(): readonly UnitRecord["id"][] {
   return uniqueValues(
     CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.map(
-      (progression) => progression.classUnitId,
+      (progression) => startingClassUnitId(progression),
     ),
   );
 }
@@ -380,10 +383,7 @@ export function isSupportedProgression(
   progression: CharacterProgression,
 ): boolean {
   return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
-    (supported) =>
-      supported.classUnitId === progression.classUnitId &&
-      supported.classLevel === progression.classLevel &&
-      supported.hitPointRule.tag === progression.hitPointRule.tag,
+    (supported) => sameProgression(supported, progression),
   );
 }
 
@@ -391,7 +391,7 @@ export function supportedProgressionsForClass(
   classUnitId: UnitRecord["id"],
 ): readonly CharacterProgression[] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.filter(
-    (progression) => progression.classUnitId === classUnitId,
+    (progression) => startingClassUnitId(progression) === classUnitId,
   );
 }
 
@@ -405,6 +405,20 @@ export function supportedProgressionForOptionId(
 
 function uniqueValues<T>(values: readonly T[]): readonly T[] {
   return [...new Set(values)];
+}
+
+function sameProgression(
+  left: CharacterProgression,
+  right: CharacterProgression,
+): boolean {
+  return (
+    startingClassUnitId(left) === startingClassUnitId(right) &&
+    computeTotalLevel(left) === computeTotalLevel(right) &&
+    (finalAdvancementEntry(left)?.hitPointRule.tag ??
+      "levelOneMaximumHitDie") ===
+      (finalAdvancementEntry(right)?.hitPointRule.tag ??
+        "levelOneMaximumHitDie")
+  );
 }
 
 export function supportedLoadoutChoiceForSource(

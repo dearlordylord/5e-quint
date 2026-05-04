@@ -20,6 +20,8 @@ import {
   draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
+  computeTotalLevel,
+  startingClassUnitId,
   unitChoiceKey,
   type CharacterDraft,
   type CreationBatchIssueCode,
@@ -609,11 +611,13 @@ function projectProgression(
     return "NoProgression";
   }
 
-  if (progression.classUnitId === "class_wizard") {
+  if (startingClassUnitId(progression) === "class_wizard") {
     return "WizardLevel1";
   }
 
-  return progression.classLevel === 1 ? "FighterLevel1" : "FighterLevel2";
+  return computeTotalLevel(progression) === 1
+    ? "FighterLevel1"
+    : "FighterLevel2";
 }
 
 function hasChoice(

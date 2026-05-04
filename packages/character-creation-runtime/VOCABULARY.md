@@ -28,11 +28,10 @@ Unit-backed selection - a character-creation choice whose accepted option
 references a Unit. The draft records the selected Unit reference rather
 than treating the submitted option id as authored truth.
 
-Character Progression - durable class-level read model for the current
-single-class support slice. It stores the parsed class Unit id, class level, and
-Hit Point rule. Class names are derived from the Unit catalog at
-projection boundaries. Multiclass progression is a separate future branch that
-must carry prerequisite evidence before it can become durable build state.
+Character Progression - durable class-level read model. It stores the parsed
+starting class Unit id and ordered post-start class advancement entries. Total
+character level and per-class levels are derived from that history. Class names
+are derived from the Unit catalog at projection boundaries.
 
 Support Profile - package-private runtime boundary that says which discovered
 Unit-backed draft choices, Unit choice families, option ids, equipment

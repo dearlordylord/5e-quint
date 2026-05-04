@@ -83,7 +83,9 @@ The remaining work should make that pipeline operationally explicit too:
 - Make level advancement Quint-driven rather than only Quint-aligned.
 - Keep character creation distinct from combat semantics.
 - Keep level-1 creation distinct from level advancement.
-- Make higher-level starts semantically equal to legal level-1 creation followed by repeated legal level-ups.
+- Make higher-level starts use legal level-1 creation plus repeated legal
+  level-ups for class progression, while modeling higher-level-start XP and
+  starting-equipment policy at the higher-level-start boundary.
 - Keep the UI and adapter layers thin and non-authoritative.
 - Preserve one-way projection from character semantics into runtime.
 - Support all SRD 5.2.1 character-creation facts as first-class formal concepts, including non-combat facts the runtime may later ignore.
@@ -216,7 +218,9 @@ Responsibilities:
 
 - own finalized character-sheet semantics;
 - own legal advancement transitions over finalized sheets;
-- explain higher-level starts as repeated legal advancement transitions from a legal level-1 sheet;
+- explain higher-level-start class progression as repeated legal advancement
+  transitions from a legal level-1 sheet, with XP initialization and
+  higher-level starting equipment handled by the higher-level-start boundary;
 - project finalized character semantics into creature-facing execution semantics.
 
 Required formal outputs:

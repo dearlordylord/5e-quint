@@ -276,14 +276,16 @@ Context:
 - Character-creation state previously duplicated starting class through a
   separate class pick and a level-1 class entry.
 - Target promoted shape is one durable `CharacterProgression` selected at the
-  draft boundary. It carries class Unit id, class level, and Hit Point
-  Hit Point rule evidence as one value.
+  draft boundary. It carries an explicit starting class plus ordered post-start
+  class advancement entries. Total character level and per-class levels are
+  derived from that history.
 - `packages/character-creation-runtime/src/character-progression-algebra.ts` is the
   handoff file for this slice.
 
 Acceptance:
 
-- Character-creation-runtime exports a precise `CharacterProgression` model.
+- Character-creation-runtime exports a precise `CharacterProgression` model with
+  starting-class facts distinct from post-start advancement entries.
 - Runtime helpers derive total level and class-level facts from the progression
   model.
 - Unit-id inputs such as `class_fighter` are converted through one explicit
@@ -306,9 +308,9 @@ Verification:
 Plan Impact: if successful, unblock PBA15A0C.
 
 Closeout: `@dnd/character-creation-runtime` exports `CharacterProgression`
-helpers with branded class Unit ids, explicit class level and Hit Point
-Hit Point rule evidence, derived total/class-level helpers, focused tests, and
-package README/VOCABULARY notes.
+helpers with branded class Unit ids, explicit starting class, ordered post-start
+advancement entries with Hit Point rule evidence, derived total/class-level
+helpers, focused tests, and package README/VOCABULARY notes.
 
 ### Task 63 - PBA15A0C - Replace Level-One Class-Entry Workflow
 
@@ -324,21 +326,23 @@ class-entry workflow is removed from the promoted runtime.
 
 Context:
 
-- The former runtime could represent a separate Fighter class pick with a first
-  Wizard class-level entry, then finalization checked and rejected that mismatch.
-- Task PBA15A0B creates the progression helpers that should make this mismatch
-  unrepresentable at the promoted runtime boundary.
+- The former runtime stored both a separate starting-class pick and a level-1
+  class entry. That duplicated the same level-1 fact and made callers keep two
+  fields synchronized.
+- Task PBA15A0B creates the progression helpers that should make duplicate
+  level-1 class ownership unrepresentable at the promoted runtime boundary.
 - Keep supported workflows available: Orc Soldier Fighter 1, Orc Soldier
   Fighter 2, and Orc Soldier Wizard 1.
 
 Acceptance:
 
-- Promoted character creation cannot represent a Fighter class pick separate
-  from a first Wizard class-level entry.
+- Promoted character creation cannot represent a starting-class pick separate
+  from a separate level-1 class entry. Fighter followed by Wizard remains a valid
+  ordered multiclass shape when prerequisites are satisfied.
 - Promoted character creation cannot represent a post-start class entry with a
   contradictory stored level.
-- Character-creation-runtime no longer exposes "choose level 1" as a RAW
-  creation step after choosing a starting class.
+- Character-creation-runtime no longer exposes a separate post-class level-1
+  class-entry fill after choosing a starting class.
 - Discovery, fill reducer, support gates, finalization, QNT slice/MBT bridge,
   and focused runtime tests use the progression model.
 - Existing supported creation verticals still pass.
@@ -375,8 +379,8 @@ Context:
 
 Acceptance:
 
-- MCP creation schemas and tests no longer expose "choose level 1" after a
-  starting class is selected.
+- MCP creation schemas and tests no longer expose a separate level-1 class-entry
+  fill after a starting class is selected.
 - All TS replay paths that validate multiclass entry use the shared
   prerequisite algebra instead of a Core-owned duplicate table.
 - Existing MCP creation/battle handoff verticals remain available.

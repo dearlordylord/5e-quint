@@ -19,7 +19,7 @@ import {
   characterDraftId,
   characterClassLevel,
   classUnitIdFromClassUnit,
-  createCharacterProgression,
+  createSingleClassProgression,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
@@ -3561,7 +3561,7 @@ function characterBuildForClassProgression(input: {
 }): CharacterBuild {
   const classLevel = characterClassLevel(input.level);
   const progression = expectRight(
-    createCharacterProgression({
+    createSingleClassProgression({
       classUnitId: expectRight(classUnitIdFromClassUnit(input.classUnit)),
       classLevel,
       hitPointRule:

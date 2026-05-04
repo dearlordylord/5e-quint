@@ -20,7 +20,9 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
+  classLevelForUnit,
   computeTotalLevel,
+  startingClassUnitId,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -215,20 +217,19 @@ function characterBattleClassLevels(
   >["classLevels"],
   BattleCreatureInitIssue
 > {
-  const classUnit = getRequiredUnit(unitLibrary, build.progression.classUnitId);
+  const classUnitId = startingClassUnitId(build.progression);
+  const classUnit = getRequiredUnit(unitLibrary, classUnitId);
   if (Either.isLeft(classUnit)) {
     return battleCreatureInitIssue(classUnit.left.message);
   }
   if (classUnit.right.kind !== "class") {
-    return battleCreatureInitIssue(
-      `Expected class Unit: ${build.progression.classUnitId}`,
-    );
+    return battleCreatureInitIssue(`Expected class Unit: ${classUnitId}`);
   }
 
   return Either.right([
     {
       className: classUnit.right.className,
-      level: build.progression.classLevel,
+      level: classLevelForUnit(build.progression, classUnitId),
     },
   ] satisfies Extract<
     BattleCreatureInit["creatureInit"],

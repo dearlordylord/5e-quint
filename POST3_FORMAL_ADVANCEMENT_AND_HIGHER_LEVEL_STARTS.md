@@ -39,7 +39,9 @@ The existing TypeScript helper in [packages/core/src/character-sheet-advancement
 The relevant SRD text says:
 
 - when a character gains a level, they choose a class and adjust hit points / Hit Point Dice;
-- starting at a higher level uses the same creation steps plus the level-advancement rules;
+- starting at a higher level uses the same creation steps plus the
+  level-advancement rules, with separate RAW setup for starting XP and
+  higher-level starting equipment;
 - multiclass entry is checked when taking the new class level, not only on the terminal sheet.
 
 ## Decision
@@ -50,7 +52,8 @@ POST3 keeps higher-level starts on the same owned `CharacterSheet` boundary as l
 - The durable explanation is:
   1. finalize a legal level-1 sheet;
   2. append one legal advancement entry at a time;
-  3. re-finalize through the same canonical draft/sheet path.
+  3. re-finalize through the same canonical draft/sheet path;
+  4. apply higher-level-start XP and starting-equipment policy at that boundary.
 - Ordered `advancement` remains the single legality history for multiclass entry, subclass timing, feat / ASI timing, and Epic Boon timing.
 
 ## Landed Surface

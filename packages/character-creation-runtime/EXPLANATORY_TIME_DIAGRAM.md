@@ -344,9 +344,9 @@ flowchart TD
 ```
 
 Important detail: the `draft.progression.initial` fill writes one durable
-`CharacterProgression`, such as `{ classUnitId: "class_fighter", classLevel: 1,
-hitPointRule: { tag: "levelOneMaximumHitDie" } }`. There is no separate
-primary-class field or level-1 class entry to keep in sync.
+`CharacterProgression`, such as
+`{ startingClass: "class_fighter", advancements: [] }`. Post-start entries
+record later class choices and their Hit Point rule evidence in order.
 
 ## Legal Batch 2: Unit-Granted Holes
 

@@ -17,9 +17,10 @@ import {
   exactChoiceCardinality,
   boundedChoiceCardinality,
   characterBuildUnitRefs,
+  computeTotalLevel,
   classUnitIdFromUnitId,
   createCharacterDraft,
-  createCharacterProgression,
+  createSingleClassProgression,
   creationChoiceOptionId,
   creationHoleId,
   discoverCreationHoles,
@@ -27,6 +28,7 @@ import {
   fillCreationHoles,
   finalizeCharacterDraft,
   characterClassLevel,
+  startingClassUnitId,
   unitChoiceKey,
   type CharacterDraft,
   type CharacterChoiceSelection,
@@ -71,7 +73,7 @@ function testProgression(
       `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.left)}`,
     );
   }
-  const result = createCharacterProgression({
+  const result = createSingleClassProgression({
     classUnitId: parsedClassUnitId.right,
     classLevel: characterClassLevel(classLevel),
     hitPointRule,
@@ -1430,9 +1432,8 @@ describe("character creation finalization", () => {
     }
 
     expect(result.build.progression).toEqual({
-      classUnitId: "class_fighter",
-      classLevel: 1,
-      hitPointRule: { tag: "levelOneMaximumHitDie" },
+      startingClass: "class_fighter",
+      advancements: [],
     });
     expect(result.build.background).toBe("background_soldier");
     expect(result.build.species).toBe("species_orc");
@@ -2783,11 +2784,13 @@ function qntProgressionSelection(
     return "NoProgression";
   }
 
-  if (progression.classUnitId === "class_wizard") {
+  if (startingClassUnitId(progression) === "class_wizard") {
     return "WizardLevel1";
   }
 
-  return progression.classLevel === 1 ? "FighterLevel1" : "FighterLevel2";
+  return computeTotalLevel(progression) === 1
+    ? "FighterLevel1"
+    : "FighterLevel2";
 }
 
 function renderQntHoleSet(holes: readonly CreationHole[]): string {

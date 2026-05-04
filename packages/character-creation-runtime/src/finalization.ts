@@ -18,7 +18,12 @@ import type {
 } from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
-import { hitPointsAfterLevelOneMultiplier } from "./character-progression-types.ts";
+import {
+  classLevelForUnit,
+  hitPointsAfterLevelOneMultiplier,
+  progressionClassUnitIds,
+  startingClassUnitId,
+} from "./character-progression-types.ts";
 import {
   backgroundToolChoiceSpec,
   classFeatureGrantChoiceHoles,
@@ -233,7 +238,9 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): boolean {
-  const classUnit = unitLibrary.getUnit(selections.progression.classUnitId);
+  const classUnit = unitLibrary.getUnit(
+    startingClassUnitId(selections.progression),
+  );
   if (Option.isNone(classUnit)) return false;
   const classFacts = readClassCreationFacts(classUnit.value);
   if (
@@ -418,10 +425,14 @@ export function buildCharacterBuild(input: {
   // this same build projection.
   const { selections } = input.supportedSelections;
   const progression = input.supportedSelections.progression;
-  const selectedClassLevel = progression.classLevel;
+  const selectedClassUnitId = startingClassUnitId(progression);
+  const selectedClassLevel = classLevelForUnit(
+    progression,
+    selectedClassUnitId,
+  );
   const classUnit = unitForFinalization(
     input.unitLibrary,
-    selections.progression.classUnitId,
+    selectedClassUnitId,
     "class",
   );
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
@@ -501,7 +512,7 @@ export function buildCharacterBuild(input: {
       ),
       hitDice: [
         {
-          classUnitId: selections.progression.classUnitId,
+          classUnitId: selectedClassUnitId,
           dieSize: hitDieSize(classFacts.right.hitPointDie),
         },
       ],
@@ -542,7 +553,8 @@ export function allFinalizedChoicesSupported(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): boolean {
-  const classUnit = unitLibrary.getUnit(selections.progression.classUnitId);
+  const selectedClassUnitId = startingClassUnitId(selections.progression);
+  const classUnit = unitLibrary.getUnit(selectedClassUnitId);
   if (Option.isNone(classUnit)) return false;
   const classFacts = readClassCreationFacts(classUnit.value);
   if (classFacts.tag !== "readable") return false;
@@ -550,13 +562,13 @@ export function allFinalizedChoicesSupported(
   if (Option.isNone(backgroundUnit)) return false;
   const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
   if (backgroundFacts.tag !== "readable") return false;
-  const classLevel = selections.progression.classLevel;
+  const classLevel = classLevelForUnit(
+    selections.progression,
+    selectedClassUnitId,
+  );
   const classEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
-      unitSource(
-        selections.progression.classUnitId,
-        CLASS_EQUIPMENT_CHOICE_KEY,
-      ),
+      unitSource(selectedClassUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
       classFacts.value.startingEquipment,
     ),
   );
@@ -603,7 +615,7 @@ export function allFinalizedChoicesSupported(
       if (sameCreationHoleSource(choice.source, classEquipmentHole.source)) {
         return supportedStartingEquipmentCoinGrantChoice(
           choice,
-          selections.progression.classUnitId,
+          selectedClassUnitId,
           CLASS_EQUIPMENT_CHOICE_KEY,
           classFacts.value.startingEquipment,
         );
@@ -712,7 +724,7 @@ function supportedFinalizationChoiceHoles(input: {
   const classSkillHole = requireUnitChoiceCreationHole(
     choiceHole({
       source: unitSource(
-        input.selections.progression.classUnitId,
+        startingClassUnitId(input.selections.progression),
         input.classFacts.className === "wizard"
           ? WIZARD_SKILL_CHOICE_KEY
           : FIGHTER_SKILL_CHOICE_KEY,
@@ -735,7 +747,7 @@ function supportedFinalizationChoiceHoles(input: {
   const wizardSpellHoles =
     input.classFacts.className === "wizard"
       ? wizardSpellcastingChoiceHoles(
-          input.selections.progression.classUnitId,
+          startingClassUnitId(input.selections.progression),
           input.classFacts,
         )
       : [];
@@ -923,7 +935,7 @@ export function characterBuildUnitRefs(
   >,
 ): readonly UnitRef[] {
   return unitRefs(
-    build.progression.classUnitId,
+    ...progressionClassUnitIds(build.progression),
     build.background,
     build.species,
     ...build.features.map((feature) => feature.unitId),
@@ -1123,7 +1135,7 @@ export function finalizedBuildSkillProficiencies(
   const skillSelection = selections.choices.find((selection) =>
     sameCreationHoleSource(
       selection.source,
-      unitSource(selections.progression.classUnitId, skillChoiceKey),
+      unitSource(startingClassUnitId(selections.progression), skillChoiceKey),
     ),
   );
 

@@ -77,12 +77,18 @@ import {
   supportedPurchasableEquipmentUnitIds,
   unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
-import { hitPointRuleLabel } from "./character-progression-types.ts";
+import {
+  classLevelForUnit,
+  computeTotalLevel,
+  finalAdvancementEntry,
+  hitPointRuleLabel,
+  startingClassUnitId,
+} from "./character-progression-types.ts";
 import {
   classUnitId,
   type CharacterProgression,
 } from "./character-progression-types.ts";
-import { createCharacterProgression } from "./character-progression-algebra.ts";
+import { createSingleClassProgression } from "./character-progression-algebra.ts";
 import { characterClassLevel } from "@dnd/shared/game-facts";
 
 const SRD_GAMING_SET_OPTIONS = [
@@ -136,14 +142,14 @@ export function discoverClassGrantedHoles(input: {
   if (progression == null || !isSupportedProgression(progression)) {
     return [];
   }
-  const classUnitId = progression.classUnitId;
+  const classUnitId = startingClassUnitId(progression);
 
   const classUnit = input.unitLibrary.getUnit(classUnitId);
   if (Option.isNone(classUnit)) {
     return [];
   }
   const facts = readClassCreationFacts(classUnit.value);
-  const classLevel = progression.classLevel;
+  const classLevel = classLevelForUnit(progression, classUnitId);
   if (facts.tag !== "readable") {
     return [];
   }
@@ -363,7 +369,10 @@ export function discoverEquipmentHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
 }): readonly CreationHole[] {
-  const classUnitId = input.draft.selections.progression?.classUnitId;
+  const classUnitId =
+    input.draft.selections.progression == null
+      ? undefined
+      : startingClassUnitId(input.draft.selections.progression);
   if (classUnitId == null || !hasSupportedCoinEquipmentPath(input)) {
     return [];
   }
@@ -426,7 +435,8 @@ export function hasSupportedCoinEquipmentPath(input: {
 }): boolean {
   const draft = input.draft;
   const progression = draft.selections.progression;
-  const classUnitId = progression?.classUnitId;
+  const classUnitId =
+    progression == null ? undefined : startingClassUnitId(progression);
   const backgroundUnitId = draft.selections.background;
   if (
     progression == null ||
@@ -940,7 +950,7 @@ function progressionOptionsForClassUnit(
     const optionId = progressionOptionId(progression);
     optionsById.set(optionId, {
       optionId,
-      label: `${unit.name} ${progression.classLevel} (${hitPointRuleLabel(progression.hitPointRule)})`,
+      label: `${unit.name} ${computeTotalLevel(progression)} (${hitPointRuleLabel(finalAdvancementEntry(progression)?.hitPointRule ?? { tag: "levelOneMaximumHitDie" })})`,
       unitRef: { unitId: unit.id },
     });
   }
@@ -951,7 +961,7 @@ function progressionOptionsForClassUnit(
 function levelOneProgressionForClassUnit(
   unitId: UnitRecord["id"],
 ): readonly CharacterProgression[] {
-  const progression = createCharacterProgression({
+  const progression = createSingleClassProgression({
     classUnitId: classUnitId(unitId),
     classLevel: characterClassLevel(1),
     hitPointRule: { tag: "levelOneMaximumHitDie" },
