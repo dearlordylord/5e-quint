@@ -489,7 +489,7 @@ sequenceDiagram
   Legal->>Legal: progression class is supported
   Legal->>Legal: background === background_soldier
   Legal->>Legal: species === species_orc
-  Legal->>Legal: isSupportedSingleClassProgression(...)
+  Legal->>Legal: isSupportedFinalizableProgression(...)
   Legal->>Legal: isValidAbilityScoreAssignment(...)
   Legal->>Legal: isSupportedManifestBackgroundAbilityScoreIncrease(...)
   Legal->>Legal: sameOptionIdMultiset(languages, Common/Dwarvish/Goblin)
@@ -598,7 +598,7 @@ functions. This inventory groups them by responsibility.
 | Batch validation          | `creationFillIssues`, `fillIssuesForHole`, `fillKindMatchesHole`, `choiceFillIssues`, `abilityScoreFillIssues`, `unsupportedHoleSelectionOptionId`, `supportedHoleOptionIds`, `supportedDraftOptionIds`, `supportedUnitOptionIds`                                                                                                                                                                                                                                                                                                        |
 | Issue constructors        | `wrongFillKindIssue`, `invalidChoiceIssue`, `invalidAbilityScoresIssue`, `tooFewChoicesIssue`, `tooManyChoicesIssue`, `unsupportedChoiceIssue`, `staleRevisionIssue`, `duplicateFillIssue`, `unknownHoleIssue`                                                                                                                                                                                                                                                                                                                           |
 | Applying accepted fills   | `applyCreationFills`, `requireHole`, `applyCreationFill`, `applyDraftFill`, `applyUnitFill`, `selectedChoiceOption`, `requireSelectedUnitIds`, `requireOneOptionId`, `requireSelectedUnitId`, `requireAcceptedChoiceOption`, `requireStartingLanguages`, `requireAlignmentSelection`, `requireBackgroundAbilityScoreIncreaseSelection`                                                                                                                                                                                                   |
-| Final legality            | `finalizedSelections`, `temporarySupportedSliceIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedSingleClassProgression`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
+| Final legality            | `finalizedSelections`, `temporarySupportedSliceIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedFinalizableProgression`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
 | Build projection          | `buildCharacterBuild`, `characterBuildUnitRefs`, `requireReadable`, `applyBackgroundAbilityScoreIncrease`, `abilityModifier`, `finalizedBuildSkillProficiencies`, `finalizedBuildToolProficiencies`, `resourceForFeature`, `unitRefs`, `uniqueValues`, `nonEmptyReadonlyArray`                                                                                                                                                                                                                                                           |
 
 ## Connascence Notes For Future Readers
@@ -616,9 +616,9 @@ Several facts must change together:
   `choiceSelectionMatchesHole`.
 - Equipment purchase and loadout are intentionally ordered: loadout holes depend
   on a valid purchase selection and `hasPurchasedUnit`.
-- `applyDraftFill("draft.progression.initial")` creates the single-class
-  progression selected from `SUPPORTED_PROGRESSIONS`; finalization later checks
-  that value with `isSupportedSingleClassProgression`.
+- `applyDraftFill("draft.progression.initial")` creates the progression selected
+  from `SUPPORTED_PROGRESSIONS`; finalization later checks that value with
+  `isSupportedFinalizableProgression`.
 
 When extending the runtime beyond this Orc Soldier Fighter vertical, update the
 runtime, tests, Surface records/readers if needed, and

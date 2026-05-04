@@ -28,8 +28,12 @@ module mcPrereqProof::Impl {
     | Wizard => scores.get(Int_) >= MULTICLASS_THRESHOLD
   }
 
+  pure def validMulticlassClassChange(currentClasses: Set[ClassName], newClass: ClassName): bool =
+    currentClasses.size() > 0 and not(currentClasses.contains(newClass))
+
   pure def canMulticlass(scores: Ability -> int, currentClasses: Set[ClassName], newClass: ClassName): bool =
-    currentClasses.union(Set(newClass)).forall(cls => mcPrereq(scores, cls))
+    validMulticlassClassChange(currentClasses, newClass)
+    and currentClasses.union(Set(newClass)).forall(cls => mcPrereq(scores, cls))
 
   // ── Score sets ──
 
@@ -110,5 +114,7 @@ module mcPrereqProof::Impl {
   run mc_can_pass = assert(canMulticlass(ALL_13, Set(Rogue, Druid), Wizard))
   run mc_can_fail_current = assert(not(canMulticlass(BASE, Set(Bard), Cleric))) // Bard needs CHA 13, BASE has CHA 8
   run mc_can_fail_second_current = assert(not(canMulticlass(BASE, Set(Rogue, Druid), Wizard))) // Wizard needs INT 13, BASE has INT 10
+  run mc_can_fail_empty_current = assert(not(canMulticlass(ALL_13, Set(), Fighter)))
+  run mc_can_fail_same_class = assert(not(canMulticlass(ALL_13, Set(Fighter), Fighter)))
 
 }

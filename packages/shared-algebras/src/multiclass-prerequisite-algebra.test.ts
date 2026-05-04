@@ -8,7 +8,9 @@ import {
   canMulticlass,
   meetsMulticlassPrerequisite,
   multiclassAbilityScores,
+  multiclassClassChange,
   type MulticlassAbilityScores,
+  type MulticlassClassChange,
 } from "@dnd/shared-algebras/multiclass-prerequisite-algebra";
 
 function scores(
@@ -25,6 +27,16 @@ function scores(
   });
   if (Either.isLeft(result)) {
     throw new Error(`Invalid test scores: ${result.left.tag}`);
+  }
+  return result.right;
+}
+
+function classChange(
+  input: Parameters<typeof multiclassClassChange>[0],
+): MulticlassClassChange {
+  const result = multiclassClassChange(input);
+  if (Either.isLeft(result)) {
+    throw new Error(`Invalid test class change: ${result.left.tag}`);
   }
   return result.right;
 }
@@ -94,13 +106,22 @@ describe("multiclass-prerequisite-algebra", () => {
 
   it("requires current and new class prerequisites for multiclassing", () => {
     expect(
-      canMulticlass(scores({ str: 13, wis: 13 }), ["barbarian"], "druid"),
+      canMulticlass(
+        scores({ str: 13, wis: 13 }),
+        classChange({ currentClasses: ["barbarian"], newClass: "druid" }),
+      ),
     ).toBe(true);
     expect(
-      canMulticlass(scores({ wis: 13 }), ["barbarian"], "druid"),
+      canMulticlass(
+        scores({ wis: 13 }),
+        classChange({ currentClasses: ["barbarian"], newClass: "druid" }),
+      ),
     ).toBe(false);
     expect(
-      canMulticlass(scores({ str: 13 }), ["barbarian"], "druid"),
+      canMulticlass(
+        scores({ str: 13 }),
+        classChange({ currentClasses: ["barbarian"], newClass: "druid" }),
+      ),
     ).toBe(false);
   });
 
@@ -108,41 +129,64 @@ describe("multiclass-prerequisite-algebra", () => {
     expect(
       canMulticlass(
         scores({ dex: 13, wis: 13, int: 13 }),
-        ["rogue", "druid"],
-        "wizard",
+        classChange({
+          currentClasses: ["rogue", "druid"],
+          newClass: "wizard",
+        }),
       ),
     ).toBe(true);
     expect(
       canMulticlass(
         scores({ wis: 13, int: 13 }),
-        ["rogue", "druid"],
-        "wizard",
+        classChange({
+          currentClasses: ["rogue", "druid"],
+          newClass: "wizard",
+        }),
       ),
     ).toBe(false);
     expect(
       canMulticlass(
         scores({ dex: 13, int: 13 }),
-        ["rogue", "druid"],
-        "wizard",
+        classChange({
+          currentClasses: ["rogue", "druid"],
+          newClass: "wizard",
+        }),
       ),
     ).toBe(false);
     expect(
       canMulticlass(
         scores({ dex: 13, wis: 13 }),
-        ["rogue", "druid"],
-        "wizard",
+        classChange({
+          currentClasses: ["rogue", "druid"],
+          newClass: "wizard",
+        }),
       ),
     ).toBe(false);
   });
 
-  it("does not double-count repeated class names", () => {
+  it("rejects non-multiclass class changes at the parsing boundary", () => {
     expect(
-      canMulticlass(
-        scores({ str: 13, dex: 13 }),
-        ["fighter", "fighter"],
-        "fighter",
-      ),
-    ).toBe(true);
+      multiclassClassChange({
+        currentClasses: [],
+        newClass: "fighter",
+      }),
+    ).toEqual(Either.left({ tag: "missingCurrentClass" }));
+    expect(
+      multiclassClassChange({
+        currentClasses: ["fighter", "fighter"],
+        newClass: "wizard",
+      }),
+    ).toEqual(
+      Either.left({ tag: "duplicateCurrentClass", className: "fighter" }),
+    );
+    expect(
+      multiclassClassChange({
+        currentClasses: ["fighter"],
+        newClass: "fighter",
+      }),
+    ).toEqual(
+      Either.left({ tag: "newClassAlreadyCurrent", className: "fighter" }),
+    );
   });
 
   it("rejects invalid score maps at the parsing boundary", () => {

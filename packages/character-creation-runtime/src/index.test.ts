@@ -1626,12 +1626,12 @@ describe("character creation finalization", () => {
   });
 
   test("uses collision-resistant progression option ids for class paths", () => {
-    const singleClassWithSeparator = expectRight(
+    const singleClassWithRawEncodedSeparator = expectRight(
       parseCharacterProgressionShape({
-        startingClass: classUnitId("class_alpha|class_beta"),
+        startingClass: classUnitId("class_alpha%7Cclass_beta"),
         advancements: [
           {
-            classUnitId: classUnitId("class_alpha|class_beta"),
+            classUnitId: classUnitId("class_alpha%7Cclass_beta"),
             hitPointRule: { tag: "fixedHigherLevelGain" },
           },
         ],
@@ -1649,7 +1649,7 @@ describe("character creation finalization", () => {
       }),
     );
 
-    expect(progressionOptionId(singleClassWithSeparator)).not.toBe(
+    expect(progressionOptionId(singleClassWithRawEncodedSeparator)).not.toBe(
       progressionOptionId(multiclassPath),
     );
   });
@@ -2015,7 +2015,7 @@ describe("character creation finalization", () => {
           tag: "unsupportedFinalization",
           code: "unsupportedFinalization",
           message:
-            "Finalized build progression must match a supported class level.",
+            "Finalized build progression must match a supported progression profile.",
         },
       ],
     });
@@ -2087,7 +2087,7 @@ describe("character creation finalization", () => {
           tag: "unsupportedFinalization",
           code: "unsupportedFinalization",
           message:
-            "Finalized build must carry exactly the supported choices for the selected class level.",
+            "Finalized build must carry exactly the supported choices for the selected progression.",
         },
       ],
     });
@@ -2100,7 +2100,7 @@ describe("character creation finalization", () => {
           tag: "unsupportedFinalization",
           code: "unsupportedFinalization",
           message:
-            "Finalized build must carry exactly the supported choices for the selected class level.",
+            "Finalized build must carry exactly the supported choices for the selected progression.",
         },
       ],
     });

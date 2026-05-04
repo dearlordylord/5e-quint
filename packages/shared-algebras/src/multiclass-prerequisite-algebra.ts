@@ -1,6 +1,6 @@
 // Multiclass prerequisite algebra (SRD 5.2.1 Character Creation > Multiclassing)
 
-import { Either, Match } from "effect";
+import { Brand, Either, Match } from "effect";
 
 import {
   ABILITIES,
@@ -25,6 +25,54 @@ export type MulticlassAbilityScoresIssue =
       readonly tag: "missingNumericMulticlassAbilityScore";
       readonly ability: Ability;
     };
+
+export type MulticlassClassChange = {
+  readonly currentClasses: ReadonlyNonEmptyArray<ClassName>;
+  readonly newClass: ClassName;
+} & Brand.Brand<"MulticlassClassChange">;
+const MulticlassClassChange = Brand.nominal<MulticlassClassChange>();
+
+export type MulticlassClassChangeIssue =
+  | { readonly tag: "missingCurrentClass" }
+  | {
+      readonly tag: "duplicateCurrentClass";
+      readonly className: ClassName;
+    }
+  | {
+      readonly tag: "newClassAlreadyCurrent";
+      readonly className: ClassName;
+    };
+
+export function multiclassClassChange(input: {
+  readonly currentClasses: readonly ClassName[];
+  readonly newClass: ClassName;
+}): Either.Either<MulticlassClassChange, MulticlassClassChangeIssue> {
+  if (input.currentClasses.length === 0) {
+    return Either.left({ tag: "missingCurrentClass" });
+  }
+
+  const currentClasses = new Set<ClassName>();
+  for (const className of input.currentClasses) {
+    if (currentClasses.has(className)) {
+      return Either.left({ tag: "duplicateCurrentClass", className });
+    }
+    currentClasses.add(className);
+  }
+
+  if (currentClasses.has(input.newClass)) {
+    return Either.left({
+      tag: "newClassAlreadyCurrent",
+      className: input.newClass,
+    });
+  }
+
+  return Either.right(
+    MulticlassClassChange({
+      currentClasses: input.currentClasses as ReadonlyNonEmptyArray<ClassName>,
+      newClass: input.newClass,
+    }),
+  );
+}
 
 export function multiclassAbilityScores(
   scores: unknown,
@@ -166,14 +214,9 @@ function evalPrereq(
  */
 export function canMulticlass(
   scores: MulticlassAbilityScores,
-  currentClasses: readonly ClassName[],
-  newClass: ClassName,
+  classChange: MulticlassClassChange,
 ): boolean {
-  return uniqueClasses([...currentClasses, newClass]).every((className) =>
-    meetsMulticlassPrerequisite(scores, className),
+  return [...classChange.currentClasses, classChange.newClass].every(
+    (className) => meetsMulticlassPrerequisite(scores, className),
   );
-}
-
-function uniqueClasses(classes: readonly ClassName[]): readonly ClassName[] {
-  return [...new Set(classes)];
 }

@@ -42,7 +42,7 @@ until widening work adds support and projection behavior.
 
 Finalization Gate - the readiness check after all holes are filled. The gate
 keeps finalizable builds inside the current support profile: Orc/Soldier origin
-facts, supported class levels, supported Unit choice families, and supported
+facts, supported progression profiles, supported Unit choice families, and supported
 equipment/loadout facts. It rejects complete drafts outside that profile before
 producing a `CharacterBuild`.
 

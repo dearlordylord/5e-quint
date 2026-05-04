@@ -146,11 +146,11 @@ export function hitPointRuleOptionSuffix(
 
 export function hitPointRuleLabel(
   rule: ClassHitPointRule,
-): "Level 1 maximum Hit Die" | "Fixed higher-level HP gain" {
+): "Level 1 Hit Point maximum" | "Fixed higher-level HP gain" {
   return Match.value(rule).pipe(
     Match.when(
       { tag: "levelOneMaximumHitDie" },
-      () => "Level 1 maximum Hit Die" as const,
+      () => "Level 1 Hit Point maximum" as const,
     ),
     Match.when(
       { tag: "fixedHigherLevelGain" },

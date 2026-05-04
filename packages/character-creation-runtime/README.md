@@ -108,7 +108,7 @@ Support gates are package-private runtime narrowings. They must not become
 public Surface classifications or new source rules. The current
 `src/support-gates.ts` support profile owns the supported
 class/background/species ids, Unit choice keys, option ids, purchasable
-equipment, loadout choices, supported class levels, and remaining fixed
+equipment, loadout choices, supported progression profiles, and remaining fixed
 origin facts. Legal Surface options can be discovered outside that profile, but
 fill validation rejects them at this one runtime boundary until widening work
 adds support-profile entries and projection logic.
@@ -140,7 +140,7 @@ activation resources, starting Wizard Spell Access and Spell Slot capacity, and
 equipment/loadout refs. Supported class-choice features, Wizard spellcasting
 facts, and loadout refs are projected from accepted draft selections and Unit
 readers, not reauthored as parallel constants. The remaining finalization gate
-rejects complete drafts whose selected class level, origin facts, choices, or
+rejects complete drafts whose progression profile, origin facts, choices, or
 equipment are outside the support profile. `CharacterBuild` does not carry
 current HP, Temporary Hit Points, expended resources or Spell Slots, Hit Dice
 remaining, or battle creature-init types.

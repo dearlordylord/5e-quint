@@ -188,8 +188,8 @@ export function temporarySupportedSliceIssues(
       "Finalized build must use the supported manifest species.",
     ),
     ...expectedValueIssue(
-      isSupportedSingleClassProgression(selections),
-      "Finalized build progression must match a supported class level.",
+      isSupportedFinalizableProgression(selections),
+      "Finalized build progression must match a supported progression profile.",
     ),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
@@ -222,7 +222,7 @@ export function temporarySupportedSliceIssues(
     ),
     ...expectedValueIssue(
       allFinalizedChoicesSupported(selections, unitLibrary),
-      "Finalized build must carry exactly the supported choices for the selected class level.",
+      "Finalized build must carry exactly the supported choices for the selected progression.",
     ),
     ...expectedValueIssue(
       selectedPreparedSpellsAreInSelectedSpellbook(selections, unitLibrary),
@@ -337,10 +337,13 @@ export function unsupportedFinalizationIssue(
   };
 }
 
-export function isSupportedSingleClassProgression(
+export function isSupportedFinalizableProgression(
   selections: Pick<FinalizedCharacterSelections, "progression">,
 ): boolean {
-  return isSupportedProgression(selections.progression);
+  return (
+    isSupportedProgression(selections.progression) &&
+    progressionClassUnitIds(selections.progression).length === 1
+  );
 }
 
 export function isSupportedBackgroundAbilityScoreIncrease(
@@ -421,9 +424,9 @@ export function buildCharacterBuild(input: {
   readonly supportedSelections: TemporarySupportedSliceSelections;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterBuild, CreationFinalizationIssue> {
-  // Project the selected supported class level, not only level 1. The current
-  // temporary gate is single-class, but Fighter 2 and Wizard 1 both flow through
-  // this same build projection.
+  // Project the selected supported single-class progression, not only level 1.
+  // The temporary finalization gate rejects multiclass progressions until this
+  // projection derives features, HP, and Hit Dice from every class entry.
   const { selections } = input.supportedSelections;
   const progression = input.supportedSelections.progression;
   const selectedClassUnitId = startingClassUnitId(progression);
