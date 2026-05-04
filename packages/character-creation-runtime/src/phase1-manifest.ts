@@ -64,8 +64,18 @@ export function progressionOptionId(
     finalAdvancementEntry(progression)?.hitPointRule ??
     ({ tag: "levelOneMaximumHitDie" } as const);
   return creationChoiceOptionId(
-    `${startingClassUnitId(progression)}:level_${totalLevel}:${hitPointRuleOptionSuffix(rule)}`,
+    `${progressionOptionClassPath(progression)}:level_${totalLevel}:${hitPointRuleOptionSuffix(rule)}`,
   );
+}
+
+function progressionOptionClassPath(progression: CharacterProgression): string {
+  const classIds = [
+    startingClassUnitId(progression),
+    ...progression.advancements.map((entry) => entry.classUnitId),
+  ];
+  return classIds.every((classId) => classId === classIds[0])
+    ? classIds[0]
+    : classIds.join("__then__");
 }
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID),

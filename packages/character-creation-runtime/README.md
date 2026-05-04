@@ -156,11 +156,11 @@ class advancement entries. Total character level and per-class levels are
 derived from that history; class names are derived from the Unit catalog at
 projection boundaries.
 
-For class levels above 1, the current support profile projects fixed Hit Point
-gains after level 1. Post-start advancement entries carry explicit Hit Point
-rule evidence into `CharacterProgression`, and finalization rejects
-level/evidence combinations that contradict the rules. Rolled HP is outside this
-slice and must become an explicit creation choice before it can be finalized.
+For total character levels after 1, the current support profile projects fixed
+Hit Point gains. Post-start advancement entries carry explicit Hit Point rule
+evidence into `CharacterProgression`, and finalization rejects level/evidence
+combinations that contradict the rules. Rolled HP is outside this slice and must
+become an explicit creation choice before it can be finalized.
 
 Phase-1 manifest lock is still intentional in the current runtime. The lock ends
 only after the promoted-reachable shape inventory for character creation has been

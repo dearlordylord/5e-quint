@@ -58,6 +58,7 @@ import {
   choiceCardinalityBounds,
   exactChoiceCardinality,
   hitDieSize,
+  hitDieTotal,
   nonEmptyReadonlyArray,
   type AbilityScoreAssignment,
   type BackgroundAbilityScoreIncreaseSelection,
@@ -514,6 +515,7 @@ export function buildCharacterBuild(input: {
         {
           classUnitId: selectedClassUnitId,
           dieSize: hitDieSize(classFacts.right.hitPointDie),
+          total: hitDieTotal(selectedClassLevel),
         },
       ],
     },

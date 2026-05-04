@@ -26,6 +26,7 @@ import {
   fillCreationHoles,
   finalizeCharacterDraft,
   hitDieSize,
+  hitDieTotal,
   type CharacterDraft,
   type CharacterBuild,
   type CreationFill,
@@ -3583,6 +3584,7 @@ function characterBuildForClassProgression(input: {
         {
           classUnitId: input.classUnit.id,
           dieSize: hitDieSize(input.classUnit.hitPointDie),
+          total: hitDieTotal(classLevel),
         },
       ],
     },

@@ -34,13 +34,13 @@ export type ClassHitPointRule =
   | LevelOneClassHitPointRule
   | FixedHigherLevelClassHitPointRule;
 
-export type CharacterLevelHitPointRule =
+export type CharacterTotalLevelHitPointRule =
   | {
-      readonly classLevel: LevelOneCharacterClassLevel;
+      readonly totalLevel: LevelOneCharacterClassLevel;
       readonly hitPointRule: LevelOneClassHitPointRule;
     }
   | {
-      readonly classLevel: PostLevelOneCharacterClassLevel;
+      readonly totalLevel: PostLevelOneCharacterClassLevel;
       readonly hitPointRule: FixedHigherLevelClassHitPointRule;
     };
 
@@ -61,43 +61,46 @@ export type CharacterProgressionLevelIssue =
     }
   | {
       readonly code: "invalidHitPointRuleForLevel";
-      readonly classLevel: CharacterClassLevel;
+      readonly totalLevel: CharacterClassLevel;
       readonly hitPointRule: ClassHitPointRule;
     };
 
-export function characterLevelHitPointRule(input: {
-  readonly classLevel: CharacterClassLevel;
+export function characterTotalLevelHitPointRule(input: {
+  readonly totalLevel: CharacterClassLevel;
   readonly hitPointRule: ClassHitPointRule;
-}): Either.Either<CharacterLevelHitPointRule, CharacterProgressionLevelIssue> {
-  if (!CHARACTER_CLASS_LEVELS.some((level) => level === input.classLevel)) {
+}): Either.Either<
+  CharacterTotalLevelHitPointRule,
+  CharacterProgressionLevelIssue
+> {
+  if (!CHARACTER_CLASS_LEVELS.some((level) => level === input.totalLevel)) {
     return Either.left({
       code: "invalidCharacterClassLevel",
-      classLevel: input.classLevel,
+      classLevel: input.totalLevel,
     });
   }
 
   return Match.value(input.hitPointRule).pipe(
     Match.when({ tag: "levelOneMaximumHitDie" }, (hitPointRule) =>
-      input.classLevel === 1
+      input.totalLevel === 1
         ? Either.right({
-            classLevel: LevelOneCharacterClassLevel(input.classLevel),
+            totalLevel: LevelOneCharacterClassLevel(input.totalLevel),
             hitPointRule,
           })
         : Either.left({
             code: "invalidHitPointRuleForLevel" as const,
-            classLevel: input.classLevel,
+            totalLevel: input.totalLevel,
             hitPointRule,
           }),
     ),
     Match.when({ tag: "fixedHigherLevelGain" }, (hitPointRule) =>
-      input.classLevel > 1
+      input.totalLevel > 1
         ? Either.right({
-            classLevel: PostLevelOneCharacterClassLevel(input.classLevel),
+            totalLevel: PostLevelOneCharacterClassLevel(input.totalLevel),
             hitPointRule,
           })
         : Either.left({
             code: "invalidHitPointRuleForLevel" as const,
-            classLevel: input.classLevel,
+            totalLevel: input.totalLevel,
             hitPointRule,
           }),
     ),
@@ -110,8 +113,8 @@ export function characterProgressionEntry(input: {
   readonly characterLevel: CharacterClassLevel;
   readonly hitPointRule: FixedHigherLevelClassHitPointRule;
 }): Either.Either<CharacterProgressionEntry, CharacterProgressionLevelIssue> {
-  const levelRule = characterLevelHitPointRule({
-    classLevel: input.characterLevel,
+  const levelRule = characterTotalLevelHitPointRule({
+    totalLevel: input.characterLevel,
     hitPointRule: input.hitPointRule,
   });
 
@@ -170,14 +173,6 @@ export function startingClassUnitId(
   progression: CharacterProgression,
 ): ClassUnitId {
   return progression.startingClass;
-}
-
-export function finalClassUnitId(
-  progression: CharacterProgression,
-): ClassUnitId {
-  return (
-    progression.advancements.at(-1)?.classUnitId ?? progression.startingClass
-  );
 }
 
 export function finalAdvancementEntry(

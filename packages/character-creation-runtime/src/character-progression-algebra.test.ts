@@ -206,7 +206,7 @@ describe("character progression algebra", () => {
     ).toEqual(
       Either.left({
         code: "invalidHitPointRuleForLevel",
-        classLevel: 2,
+        totalLevel: 2,
         hitPointRule: { tag: "levelOneMaximumHitDie" },
       }),
     );

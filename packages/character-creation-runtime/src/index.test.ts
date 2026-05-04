@@ -20,6 +20,7 @@ import {
   computeTotalLevel,
   classUnitIdFromUnitId,
   createCharacterDraft,
+  createCharacterProgression,
   createSingleClassProgression,
   creationChoiceOptionId,
   creationHoleId,
@@ -47,8 +48,10 @@ import {
 } from "./finalization.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
+  isSupportedProgression,
   type SupportedLoadoutChoice,
 } from "./support-gates.ts";
+import { progressionOptionId } from "./phase1-manifest.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -59,6 +62,17 @@ if (unitCatalogResult.tag !== "ok") {
 }
 
 const unitLibrary = unitCatalogResult.catalog;
+
+function expectRight<T, E>(result: Either.Either<T, E>): T {
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(
+      `Expected Either.right, received ${JSON.stringify(result.left)}`,
+    );
+  }
+
+  return result.right;
+}
 
 function testProgression(
   classUnitId: UnitRecord["id"],
@@ -1456,7 +1470,7 @@ describe("character creation finalization", () => {
     });
     expect(result.build.hitPoints).toEqual({
       maximum: 12,
-      hitDice: [{ classUnitId: "class_fighter", dieSize: 10 }],
+      hitDice: [{ classUnitId: "class_fighter", dieSize: 10, total: 1 }],
     });
     expect(result.build.proficiencies).toEqual({
       savingThrows: ["str", "con"],
@@ -1559,7 +1573,7 @@ describe("character creation finalization", () => {
     if (result.tag !== "ready") return;
 
     expect(result.build.hitPoints.hitDice).toEqual([
-      { classUnitId: "class_fighter", dieSize: 10 },
+      { classUnitId: "class_fighter", dieSize: 10, total: 2 },
     ]);
     expect(result.build.features).toEqual(
       expect.arrayContaining([
@@ -1569,6 +1583,36 @@ describe("character creation finalization", () => {
     );
     expect(result.build.resources.map((resource) => resource.unitId)).toContain(
       "fighter_action_surge",
+    );
+  });
+
+  test("does not treat Fighter followed by Wizard as supported Fighter 2", () => {
+    const fighterThenWizard = expectRight(
+      createCharacterProgression({
+        startingClass: expectRight(
+          classUnitIdFromUnitId({
+            unitLibrary,
+            classUnitId: "class_fighter",
+          }),
+        ),
+        advancements: [
+          {
+            classUnitId: expectRight(
+              classUnitIdFromUnitId({
+                unitLibrary,
+                classUnitId: "class_wizard",
+              }),
+            ),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      }),
+    );
+    const fighterTwo = testProgression("class_fighter", 2);
+
+    expect(isSupportedProgression(fighterThenWizard)).toBe(false);
+    expect(progressionOptionId(fighterThenWizard)).not.toBe(
+      progressionOptionId(fighterTwo),
     );
   });
 

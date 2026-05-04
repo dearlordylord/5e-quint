@@ -58,8 +58,6 @@ import type {
 import { creationChoiceOptionId } from "./types.ts";
 import {
   classUnitId,
-  computeTotalLevel,
-  finalAdvancementEntry,
   startingClassUnitId,
   type CharacterProgression,
   type ClassHitPointRule,
@@ -413,11 +411,15 @@ function sameProgression(
 ): boolean {
   return (
     startingClassUnitId(left) === startingClassUnitId(right) &&
-    computeTotalLevel(left) === computeTotalLevel(right) &&
-    (finalAdvancementEntry(left)?.hitPointRule.tag ??
-      "levelOneMaximumHitDie") ===
-      (finalAdvancementEntry(right)?.hitPointRule.tag ??
-        "levelOneMaximumHitDie")
+    left.advancements.length === right.advancements.length &&
+    left.advancements.every((leftEntry, index) => {
+      const rightEntry = right.advancements[index];
+      return (
+        rightEntry != null &&
+        leftEntry.classUnitId === rightEntry.classUnitId &&
+        leftEntry.hitPointRule.tag === rightEntry.hitPointRule.tag
+      );
+    })
   );
 }
 

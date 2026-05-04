@@ -10,7 +10,7 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   characterProgressionEntry,
-  characterLevelHitPointRule,
+  characterTotalLevelHitPointRule,
   classUnitId,
   type CharacterProgression,
   type CharacterProgressionLevelIssue,
@@ -74,7 +74,10 @@ export function createSingleClassProgression(input: {
   readonly classLevel: CharacterClassLevel;
   readonly hitPointRule: ClassHitPointRule;
 }): Either.Either<CharacterProgression, CharacterProgressionIssue> {
-  const classLevelHitPointRule = characterLevelHitPointRule(input);
+  const classLevelHitPointRule = characterTotalLevelHitPointRule({
+    totalLevel: input.classLevel,
+    hitPointRule: input.hitPointRule,
+  });
   if (Either.isLeft(classLevelHitPointRule)) {
     return Either.left(classLevelHitPointRule.left);
   }
@@ -89,7 +92,7 @@ export function createSingleClassProgression(input: {
   ) {
     return Either.left({
       code: "invalidHitPointRuleForLevel",
-      classLevel: input.classLevel,
+      totalLevel: input.classLevel,
       hitPointRule: input.hitPointRule,
     });
   }
