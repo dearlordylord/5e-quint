@@ -27,7 +27,7 @@ describe("end-user promoted MCP vertical", () => {
       fills: [
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_fighter:level_1:maximum_hit_die",
+          "13:class_fighter:level_1:maximum_hit_die",
         ),
         choiceFill("cc:draft:draft.background", "background_soldier"),
         choiceFill("cc:draft:draft.species", "species_orc"),
@@ -681,7 +681,7 @@ function createAndFinalizeFighterTwo(
     fills: [
       choiceFill(
         "cc:draft:draft.progression.initial",
-        "class_fighter:level_2:fixed_hp_gain",
+        "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
       ),
       choiceFill("cc:draft:draft.background", "background_soldier"),
       choiceFill("cc:draft:draft.species", "species_orc"),
@@ -764,7 +764,7 @@ function createAndFinalizeWizardOne(
     fills: [
       choiceFill(
         "cc:draft:draft.progression.initial",
-        "class_wizard:level_1:maximum_hit_die",
+        "12:class_wizard:level_1:maximum_hit_die",
       ),
       choiceFill("cc:draft:draft.background", "background_soldier"),
       choiceFill("cc:draft:draft.species", "species_orc"),

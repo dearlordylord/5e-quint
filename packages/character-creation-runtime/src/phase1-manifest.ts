@@ -74,16 +74,9 @@ function progressionOptionClassPath(progression: CharacterProgression): string {
     ...progression.advancements.map((entry) => entry.classUnitId),
   ];
   const optionClassPathSeparator = "|";
-  return classIds.every((classId) => classId === classIds[0]) &&
-    optionClassPathLegacySafe(classIds[0])
-    ? classIds[0]
-    : classIds
-        .map((classId) => `${classId.length}:${classId}`)
-        .join(optionClassPathSeparator);
-}
-
-function optionClassPathLegacySafe(classId: string): boolean {
-  return !classId.includes("|") && !classId.includes(":");
+  return classIds
+    .map((classId) => `${classId.length}:${classId}`)
+    .join(optionClassPathSeparator);
 }
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID),

@@ -324,7 +324,7 @@ function initialManifestFills(
 ): readonly CreationFill[] {
   return [
     choiceFill(holes, "HProgression", [
-      "class_fighter:level_1:maximum_hit_die",
+      "13:class_fighter:level_1:maximum_hit_die",
     ]),
     choiceFill(holes, "HBackground", ["background_soldier"]),
     choiceFill(holes, "HSpecies", ["species_orc"]),
@@ -339,7 +339,7 @@ function initialChoicesOnlyFills(
 ): readonly CreationFill[] {
   return [
     choiceFill(holes, "HProgression", [
-      "class_fighter:level_1:maximum_hit_die",
+      "13:class_fighter:level_1:maximum_hit_die",
     ]),
     choiceFill(holes, "HBackground", ["background_soldier"]),
     choiceFill(holes, "HSpecies", ["species_orc"]),

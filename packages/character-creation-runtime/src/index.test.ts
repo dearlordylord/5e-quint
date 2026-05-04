@@ -151,9 +151,9 @@ describe("character creation hole discovery", () => {
         "choice",
         "cc:draft:draft.progression.initial",
         [
-          "class_fighter:level_1:maximum_hit_die",
-          "class_fighter:level_2:fixed_hp_gain",
-          "class_wizard:level_1:maximum_hit_die",
+          "13:class_fighter:level_1:maximum_hit_die",
+          "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+          "12:class_wizard:level_1:maximum_hit_die",
         ],
       ],
       ["choice", "cc:draft:draft.background", ["background_soldier"]],
@@ -209,7 +209,7 @@ describe("character creation hole discovery", () => {
 
     expect(
       optionIds(holeById(holes, "cc:draft:draft.progression.initial")),
-    ).toContain("class_unrelated_0:level_1:maximum_hit_die");
+    ).toContain("17:class_unrelated_0:level_1:maximum_hit_die");
     expect(optionIds(holeById(holes, "cc:draft:draft.background"))).toContain(
       "background_unrelated_0",
     );
@@ -224,7 +224,7 @@ describe("character creation hole discovery", () => {
       fills: [
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_unrelated_0:level_1:maximum_hit_die",
+          "17:class_unrelated_0:level_1:maximum_hit_die",
         ),
       ],
     });
@@ -236,7 +236,7 @@ describe("character creation hole discovery", () => {
           tag: "illegalFill",
           code: "unsupportedChoice",
           message:
-            "Unsupported choice class_unrelated_0:level_1:maximum_hit_die for character creation hole: cc:draft:draft.progression.initial",
+            "Unsupported choice 17:class_unrelated_0:level_1:maximum_hit_die for character creation hole: cc:draft:draft.progression.initial",
         },
       ],
     });
@@ -1282,11 +1282,11 @@ describe("character creation batch fill", () => {
       fills: [
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_fighter:level_1:maximum_hit_die",
+          "13:class_fighter:level_1:maximum_hit_die",
         ),
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_fighter:level_1:maximum_hit_die",
+          "13:class_fighter:level_1:maximum_hit_die",
         ),
       ],
     });
@@ -2251,7 +2251,7 @@ function unitLibraryWithUnrelatedUnits(count: number): UnitCatalog {
 }
 
 function initialManifestFills(
-  progressionOptionId = "class_fighter:level_1:maximum_hit_die",
+  progressionOptionId = "13:class_fighter:level_1:maximum_hit_die",
 ): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
@@ -2303,7 +2303,9 @@ function completeFighterTwoDraft(): CharacterDraft {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills("class_fighter:level_2:fixed_hp_gain"),
+      fills: initialManifestFills(
+        "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+      ),
     }),
   );
 
@@ -2393,7 +2395,7 @@ function completeWizardDraft(): CharacterDraft {
       fills: [
         choiceFill(
           "cc:draft:draft.progression.initial",
-          "class_wizard:level_1:maximum_hit_die",
+          "12:class_wizard:level_1:maximum_hit_die",
         ),
         choiceFill("cc:draft:draft.background", "background_soldier"),
         choiceFill("cc:draft:draft.species", "species_orc"),

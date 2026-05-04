@@ -3203,7 +3203,9 @@ function fighterTwoCharacterBuild(
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills("class_fighter:level_2:fixed_hp_gain"),
+      fills: initialManifestFills(
+        "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+      ),
     }),
   );
   const afterChoices = requireAcceptedBatch(
@@ -3334,7 +3336,7 @@ function completeManifestDraft(
 }
 
 function initialManifestFills(
-  progressionOptionId = "class_fighter:level_1:maximum_hit_die",
+  progressionOptionId = "13:class_fighter:level_1:maximum_hit_die",
 ): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
