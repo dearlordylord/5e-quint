@@ -942,9 +942,14 @@ Retry Guidance:
 - For generic `grant_proficiency` choices, finalization must project selected
   class-feature proficiency grants into build proficiencies. Do not stop at
   hole discovery or support-gate admission.
-- When adding authored Surface facts for multiclass or proficiency grants,
-  update the record provenance span so every newly modeled SRD fact is covered
-  by the cited local SRD passage.
+- Do not admit Ability Score Improvement as a supported feat option until the
+  Ability Score Improvement feat opens executable ability-score choice holes
+  and finalization projects the selected increases into `CharacterBuild`
+  ability scores with the SRD cap enforced.
+- When adding authored Surface facts for subclass, Ability Score Improvement,
+  Epic Boon, multiclass, or proficiency grants, update each record provenance
+  span so every newly modeled SRD fact is covered by the cited local SRD
+  passage.
 
 Plan Impact: if successful, unblock PBA24 and PBA26.
 
