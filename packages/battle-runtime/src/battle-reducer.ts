@@ -110,6 +110,7 @@ import type {
   CreatureNamedMultiattack,
   DamageType,
   DcSource,
+  DiceAmount as SurfaceDiceAmount,
   DiceExpr,
   Size,
   SpellRecord,
@@ -12775,34 +12776,24 @@ function supportedRepeatedEffectCount(
     base + Math.max(0, Number(slotLevel) - baseLevel) * perSlotAboveBase;
 }
 
-function supportedDamageAmountExpr(amount: {
-  readonly kind: string;
-  readonly expr?: DiceExpr;
-  readonly base?: DiceExpr;
-}): DiceExpr | null {
-  if (amount.kind === "fixed" && amount.expr !== undefined) {
+function supportedDamageAmountExpr(amount: SurfaceDiceAmount): DiceExpr | null {
+  if (amount.kind === "fixed") {
     return amount.expr;
   }
-  if (amount.kind === "threshold_tiers" && amount.base !== undefined) {
+  if (amount.kind === "threshold_tiers") {
     return amount.base;
   }
   return null;
 }
 
 function supportedHealingAmountExpr(
-  amount: {
-    readonly kind: string;
-    readonly base?: DiceExpr;
-    readonly perLevel?: Partial<DiceExpr>;
-    readonly startingAtLevel?: number;
-  },
+  amount: SurfaceDiceAmount,
   spellLevel: number,
   slotLevel: SpellSlotLevel,
   spellcastingAbilityModifier: AbilityModifier,
 ): DiceExpr | null {
   if (
     amount.kind !== "linear_per_level" ||
-    amount.base === undefined ||
     amount.startingAtLevel !== spellLevel ||
     amount.base.spellcastingMod !== true ||
     amount.base.dieSize === undefined
