@@ -933,6 +933,19 @@ schema/reader tests, character-creation reducer and finalization tests, QNT/MBT
 updates only for changed reducer behavior or bridge shapes,
 `pnpm check:authored-id-dispatch`, `/simplify` convergence.
 
+Retry Guidance:
+
+- Keep subclass choice width executable, not schema-only: discover subclass
+  holes from Surface Unit facts, retain the selected subclass Unit ref, and
+  project selected subclass feature grants into `CharacterBuild` where the
+  promoted workflow needs them.
+- For generic `grant_proficiency` choices, finalization must project selected
+  class-feature proficiency grants into build proficiencies. Do not stop at
+  hole discovery or support-gate admission.
+- When adding authored Surface facts for multiclass or proficiency grants,
+  update the record provenance span so every newly modeled SRD fact is covered
+  by the cited local SRD passage.
+
 Plan Impact: if successful, unblock PBA24 and PBA26.
 
 ### Task 79 - PBA26 - Define Character Sheet Session Boundary And Migrate App
