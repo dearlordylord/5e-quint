@@ -4,6 +4,7 @@ import {
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
+  type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type BattleId,
   type BattleCombatantSide,
@@ -50,6 +51,9 @@ export type CharacterBuildCreatureInput = {
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly conditions?: readonly Condition[];
+  readonly positiveHpConditionRecovery?: CharacterBattleCreatureInit[
+    "positiveHpConditionRecovery"
+  ];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
@@ -168,6 +172,9 @@ export function battleCreatureInitFromCharacterBuild(
       ...(input.conditions === undefined
         ? {}
         : { conditions: input.conditions }),
+      ...(input.positiveHpConditionRecovery === undefined
+        ? {}
+        : { positiveHpConditionRecovery: input.positiveHpConditionRecovery }),
       ...(input.zeroHpLifecycle === undefined
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),

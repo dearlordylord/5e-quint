@@ -29,6 +29,7 @@ import {
   characterSessionHitPoints,
   characterSessionHitPointsCurrentHp,
   characterSessionHitPointsInitialConditions,
+  characterSessionHitPointsPositiveHpConditionRecovery,
   characterSessionHitPointsZeroHpLifecycle,
   characterSessionIssue,
   type CharacterSessionHitPoints,
@@ -144,6 +145,12 @@ export function characterBattleInitialConditions(
   session: AvailableCharacterSession,
 ): ReturnType<typeof characterSessionHitPointsInitialConditions> {
   return characterSessionHitPointsInitialConditions(session.hitPoints);
+}
+
+export function characterBattlePositiveHpConditionRecovery(
+  session: AvailableCharacterSession,
+): ReturnType<typeof characterSessionHitPointsPositiveHpConditionRecovery> {
+  return characterSessionHitPointsPositiveHpConditionRecovery(session.hitPoints);
 }
 
 export function characterBattleSpellSlots(

@@ -68,6 +68,7 @@ export type {
 } from "./battle-action-options.ts";
 export type {
   BattleCreatureInit,
+  BattlePositiveHpConditionRecovery,
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleCreatureInit,
@@ -75,6 +76,7 @@ export type {
   StatBlockBattleCreatureInit,
   StatBlockBattleInitInput,
 } from "./battle-init.ts";
+export { KNOCK_OUT_SHORT_REST_RECOVERY } from "./battle-init.ts";
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BATTLE_INVALID_REASON_CODES,

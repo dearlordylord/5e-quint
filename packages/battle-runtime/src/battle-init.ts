@@ -47,6 +47,12 @@ export type BattleWalkSpeed = {
   readonly walkFeet: MovementFeet;
 };
 
+export const KNOCK_OUT_SHORT_REST_RECOVERY = {
+  kind: "knockOutShortRest",
+} as const;
+export type BattlePositiveHpConditionRecovery =
+  typeof KNOCK_OUT_SHORT_REST_RECOVERY;
+
 export type CharacterBattleCreatureInit = {
   readonly kind: "character";
   readonly characterId: CharacterId;
@@ -59,6 +65,7 @@ export type CharacterBattleCreatureInit = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly conditions?: readonly Condition[];
+  readonly positiveHpConditionRecovery?: BattlePositiveHpConditionRecovery;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly attack: CharacterWeaponAttackActionOption | null;

@@ -67,11 +67,13 @@ export function finalizeCharacterSessionsFromBattle(
     updates.push({
       sourceDraftId,
       currentHp: combatant.hp,
-      ...(combatant.hp > 0 && hasCondition(combatant.conditions, "unconscious")
+      ...(combatant.hp > 0 &&
+      hasCondition(combatant.conditions, "unconscious") &&
+      combatant.positiveHpConditionRecovery !== null
         ? {
             positiveHpCondition: {
               tag: "unconscious",
-              recovery: { kind: "knockOutShortRest" },
+              recovery: combatant.positiveHpConditionRecovery,
             },
           }
         : {}),

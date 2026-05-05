@@ -163,8 +163,9 @@ flowchart TD
   assembled at the composition boundary.
 - Supported melee attack damage can carry the attacker's Knock Out choice into
   the HP mutation boundary. The choice leaves the target at 1 HP with
-  Unconscious when the damage would otherwise reduce positive HP to 0 without
-  Massive Damage; it is not a zero-HP lifecycle state.
+  Unconscious and explicit Knock Out Short Rest recovery provenance when the
+  damage would otherwise reduce positive HP to 0 without Massive Damage; it is
+  not a zero-HP lifecycle state.
 - Character-derived Action Surge comes from a retained Unit admitted by the
   shared Action Surge support parser plus runtime use-count state. It grants a
   Unit-sourced action resource carrying the authored non-Magic restriction.

@@ -21,6 +21,7 @@ const BattleCombatantProjectionSchema = Schema.Struct({
   reactionAvailable: Schema.Boolean,
   movementSpentFeet: Schema.Number,
   hidden: Schema.Union(JsonObjectSchema, Schema.Null),
+  positiveHpConditionRecovery: Schema.Union(JsonObjectSchema, Schema.Null),
   activeOngoingFeatureOccurrences: Schema.Array(
     ActiveOngoingFeatureOccurrenceSnapshotSchema,
   ),
@@ -54,6 +55,7 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
   defeated: Schema.Boolean,
   zeroHpLifecycle: JsonObjectSchema,
   conditions: Schema.Array(Schema.String),
+  positiveHpConditionRecovery: Schema.Union(JsonObjectSchema, Schema.Null),
   hidden: Schema.Union(JsonObjectSchema, Schema.Null),
   activeEffects: Schema.Array(JsonObjectSchema),
   activeOngoingFeatureOccurrences: Schema.Array(

@@ -154,6 +154,7 @@ import {
   type BattleSubject,
   type BonusActionHideSubject,
 } from "./battle-subjects.ts";
+import { KNOCK_OUT_SHORT_REST_RECOVERY } from "./battle-init.ts";
 import type {
   BattleWeaponDamage,
   CharacterUnarmedStrikeActionOption,
@@ -171,6 +172,7 @@ import type {
 } from "./battle-action-options.ts";
 import type {
   BattleCreatureInit,
+  BattlePositiveHpConditionRecovery,
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleCreatureInit,
@@ -839,6 +841,7 @@ export type BattleCreatureState = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly conditions: ConditionState;
+  readonly positiveHpConditionRecovery: BattlePositiveHpConditionRecovery | null;
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly activeOngoingFeatureOccurrences: ReadonlyMap<
     OngoingFeatureSourceKey,
@@ -2079,6 +2082,7 @@ export type BattleCreatureSnapshot = {
   readonly defeated: boolean;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;
   readonly conditions: readonly Condition[];
+  readonly positiveHpConditionRecovery: BattlePositiveHpConditionRecovery | null;
   readonly hidden: BattleHiddenState | null;
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly activeOngoingFeatureOccurrences: readonly ActiveOngoingFeatureOccurrenceSnapshot[];
@@ -4942,6 +4946,14 @@ function battleCreatureStateFromInit(
     maxHp: creatureInit.maxHp,
     tempHp: creatureInit.tempHp,
     conditions: initialConditions,
+    positiveHpConditionRecovery: activePositiveHpConditionRecovery({
+      hp: creatureInit.currentHp,
+      conditions: initialConditions,
+      recovery:
+        creatureInit.kind === "character"
+          ? (creatureInit.positiveHpConditionRecovery ?? null)
+          : null,
+    }),
     activeEffects: [],
     activeOngoingFeatureOccurrences: new Map(),
     concentration: null,
@@ -5246,6 +5258,7 @@ function combatantSnapshot(
       sourceGrapple !== null,
       combatant.hidden !== null,
     ),
+    positiveHpConditionRecovery: combatantPositiveHpConditionRecovery(combatant),
     hidden: combatant.hidden,
     activeEffects: combatant.activeEffects,
     activeOngoingFeatureOccurrences:
@@ -5335,6 +5348,28 @@ function combatantZeroHpLifecycleSnapshot(
     })),
     Match.exhaustive,
   );
+}
+
+function combatantPositiveHpConditionRecovery(
+  combatant: BattleCreatureState,
+): BattlePositiveHpConditionRecovery | null {
+  return activePositiveHpConditionRecovery({
+    hp: combatant.hp,
+    conditions: combatant.conditions,
+    recovery: combatant.positiveHpConditionRecovery,
+  });
+}
+
+function activePositiveHpConditionRecovery(input: {
+  readonly hp: Hp;
+  readonly conditions: ConditionState;
+  readonly recovery: BattlePositiveHpConditionRecovery | null;
+}): BattlePositiveHpConditionRecovery | null {
+  return input.recovery !== null &&
+    Number(input.hp) > 0 &&
+    hasCondition(input.conditions, "unconscious")
+    ? input.recovery
+    : null;
 }
 
 function combatantCanTakeActions(
@@ -11915,6 +11950,7 @@ function applyKnockOut(combatant: BattleCreatureState): BattleCreatureState {
     ...withoutConcentration(combatant),
     hp: Hp(1),
     conditions: applyCondition(combatant.conditions, "unconscious"),
+    positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
   };
 }
 
@@ -11931,11 +11967,13 @@ function applyHpHealing(
   const nextHp = Hp(
     Math.min(Number(combatant.maxHp), currentHp + effectiveHealing),
   );
+  const regainedHitPoints = Number(nextHp) > currentHp;
   if (currentHp <= 0 && Number(nextHp) > 0) {
     return {
       ...combatant,
       hp: nextHp,
       conditions: removeCondition(combatant.conditions, "unconscious"),
+      positiveHpConditionRecovery: null,
       zeroHpLifecycle:
         combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows"
           ? {
@@ -11943,6 +11981,14 @@ function applyHpHealing(
               deathSaves: resetDeathSaveRuntimeState(),
             }
           : combatant.zeroHpLifecycle,
+    };
+  }
+  if (regainedHitPoints && combatant.positiveHpConditionRecovery !== null) {
+    return {
+      ...combatant,
+      hp: nextHp,
+      conditions: removeCondition(combatant.conditions, "unconscious"),
+      positiveHpConditionRecovery: null,
     };
   }
 
@@ -11972,12 +12018,14 @@ function applyDropToZeroHpLifecycle(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
-    Match.when({ policy: "diesAtZeroHp" }, () =>
-      withoutConcentration(combatant),
-    ),
+    Match.when({ policy: "diesAtZeroHp" }, () => ({
+      ...withoutConcentration(combatant),
+      positiveHpConditionRecovery: null,
+    })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
       ...withoutConcentration(combatant),
       conditions: applyCondition(combatant.conditions, "unconscious"),
+      positiveHpConditionRecovery: null,
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: resetDeathSaveRuntimeState(),
@@ -11992,12 +12040,14 @@ function applyDamageAtZeroHp(
   context: BattleDamageContext,
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
-    Match.when({ policy: "diesAtZeroHp" }, () =>
-      withoutConcentration(combatant),
-    ),
+    Match.when({ policy: "diesAtZeroHp" }, () => ({
+      ...withoutConcentration(combatant),
+      positiveHpConditionRecovery: null,
+    })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
       ...withoutConcentration(combatant),
       conditions: applyCondition(combatant.conditions, "unconscious"),
+      positiveHpConditionRecovery: null,
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: addDeathFailures(
@@ -12152,12 +12202,14 @@ function applyInstantDeath(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
-    Match.when({ policy: "diesAtZeroHp" }, () =>
-      withoutConcentration(combatant),
-    ),
+    Match.when({ policy: "diesAtZeroHp" }, () => ({
+      ...withoutConcentration(combatant),
+      positiveHpConditionRecovery: null,
+    })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
       ...withoutConcentration(combatant),
       conditions: applyCondition(combatant.conditions, "unconscious"),
+      positiveHpConditionRecovery: null,
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: addDeathFailures(lifecycle.deathSaves, 3),

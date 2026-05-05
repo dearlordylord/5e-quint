@@ -15,6 +15,7 @@ import {
   battleCombatantSide,
   BattleSubjectSchema,
   BATTLE_READIED_SPELL_TRIGGERS,
+  KNOCK_OUT_SHORT_REST_RECOVERY,
   addBattleCombatant,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleId,
@@ -4758,6 +4759,7 @@ describe("battle runtime", () => {
             hp: 1,
             defeated: false,
             conditions: expect.arrayContaining(["unconscious", "prone"]),
+            positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
               deathSaves: { successes: 0, failures: 0 },
@@ -4768,6 +4770,159 @@ describe("battle runtime", () => {
         ],
       },
     });
+  });
+
+  test("healing a Knocked Out positive-HP creature ends Unconscious recovery", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-healing-knock-out-recovery"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Healer",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("healing_word")],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          initiative: 10,
+          currentHp: 1,
+          conditions: ["unconscious"],
+          positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
+        }),
+      ],
+    });
+    const healingWordAct = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.spellId === "healing_word",
+    );
+    if (healingWordAct === undefined) {
+      throw new Error("Expected Healing Word bonus action spell act.");
+    }
+    const healingWordTarget = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: healingWordAct.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const healingWordRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: healingWordAct.subject,
+        fills: [
+          targetFill(healingWordTarget, fighterId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: fighterId,
+              spellId: "healing_word",
+            },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: healingWordAct.subject,
+        fills: [
+          targetFill(healingWordTarget, fighterId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: fighterId,
+              spellId: "healing_word",
+            },
+          ]),
+          damageRollFillWithGroups(healingWordRoll, [[1, 1]]),
+        ],
+      }),
+    );
+
+    expect(result.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hp: 6,
+          conditions: ["prone"],
+          positiveHpConditionRecovery: null,
+        }),
+      ]),
+    );
+  });
+
+  test("positive-HP Unconscious without Knock Out provenance projects no recovery", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-positive-unconscious-no-recovery"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Sleeping Wizard",
+          initiative: 10,
+          conditions: ["unconscious"],
+        }),
+      ],
+    });
+
+    expect(snapshotBattle(state).combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: wizardId,
+          hp: 12,
+          conditions: expect.arrayContaining(["unconscious", "prone"]),
+          positiveHpConditionRecovery: null,
+        }),
+      ]),
+    );
+  });
+
+  test("authored Knock Out recovery is discarded unless positive-HP Unconscious is present", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-invalid-authored-recovery-canonicalized"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Recovered Wizard",
+          initiative: 10,
+          conditions: ["prone"],
+          positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
+        }),
+        characterSeed({
+          combatantId: secondWizardId,
+          displayName: "Zero HP Wizard",
+          initiative: 5,
+          currentHp: 0,
+          conditions: ["unconscious"],
+          positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
+        }),
+      ],
+    });
+
+    expect(snapshotBattle(state).combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: wizardId,
+          hp: 12,
+          conditions: ["prone"],
+          positiveHpConditionRecovery: null,
+        }),
+        expect.objectContaining({
+          combatantId: secondWizardId,
+          hp: 0,
+          conditions: expect.arrayContaining(["unconscious", "prone"]),
+          positiveHpConditionRecovery: null,
+        }),
+      ]),
+    );
   });
 
   test("melee Knock Out leaves a Stat Block target at 1 HP and Unconscious", () => {
@@ -4816,6 +4971,7 @@ describe("battle runtime", () => {
             hp: 1,
             defeated: false,
             conditions: expect.arrayContaining(["unconscious", "prone"]),
+            positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
             zeroHpLifecycle: { policy: "diesAtZeroHp", dead: false },
           },
         ],
@@ -11604,7 +11760,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("87 passing");
+  expect(quintOutput).toContain("88 passing");
 }
 
 function hidePrerequisites(
@@ -12560,6 +12716,14 @@ function characterSeed(input: {
   readonly currentHp?: number;
   readonly maxHp?: number;
   readonly tempHp?: number;
+  readonly conditions?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["conditions"];
+  readonly positiveHpConditionRecovery?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["positiveHpConditionRecovery"];
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly selectedLoadout?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -12625,6 +12789,12 @@ function characterSeed(input: {
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(input.maxHp ?? 12),
       tempHp: Hp(input.tempHp ?? 0),
+      ...(input.conditions === undefined
+        ? {}
+        : { conditions: input.conditions }),
+      ...(input.positiveHpConditionRecovery === undefined
+        ? {}
+        : { positiveHpConditionRecovery: input.positiveHpConditionRecovery }),
       selectedLoadout,
       attack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),

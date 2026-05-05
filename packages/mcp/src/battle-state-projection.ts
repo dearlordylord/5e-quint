@@ -49,6 +49,7 @@ function battleCreatureStateProjection(
     activeEffects: combatant.activeEffects,
     activeOngoingFeatureOccurrences:
       snapshot?.activeOngoingFeatureOccurrences ?? [],
+    positiveHpConditionRecovery: snapshot?.positiveHpConditionRecovery ?? null,
     concentration: combatant.concentration,
     size: combatant.size,
     hands: snapshot?.hands,

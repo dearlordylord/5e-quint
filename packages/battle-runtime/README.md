@@ -489,8 +489,10 @@ Zero-HP lifecycle:
   lifecycle is marked dead.
 - If supported melee attack damage would reduce a creature from positive HP to
   `0` without Massive Damage, the attacker can choose **Knock Out**: the target
-  is left at `1` HP, gains Unconscious, and does not enter or advance a
-  zero-HP lifecycle. Ranged attacks, spell damage, save damage, and damage that
+  is left at `1` HP, gains Unconscious, carries explicit Knock Out Short Rest
+  recovery provenance, and does not enter or advance a zero-HP lifecycle. Any
+  later HP healing that actually restores Hit Points ends that Knock Out
+  Unconscious state. Ranged attacks, spell damage, save damage, and damage that
   does not come from melee attack damage cannot carry this choice.
 - End Turn asks for a Death Saving Throw fill when the next actor starts their
   turn at `0` HP and is neither Stable nor dead. A failed roll adds one failure,
@@ -499,8 +501,13 @@ Zero-HP lifecycle:
 
 Zero-HP lifecycle intentionally stops before broad adventuring recovery in this
 package. Stable recovery after `1d4` hours and durable zero-HP/dead character
-closeout are represented by the MCP character-session handoff, not by adding
-provenance labels or a parallel post-battle state model.
+closeout are represented by the MCP character-session handoff, not by adding a
+parallel post-battle state model.
+
+Unconscious still has one promoted display debt: the SRD says the creature drops
+whatever it is holding, but the current hand-use snapshot remains loadout-based.
+Do not promote `hands` as an Unconscious-aware view contract until that behavior
+is either modeled or the hand field is removed from that contract.
 
 Not modeled in this package yet: unsupported conditional attack riders, broad
 spell effects beyond the first Wizard pressure spells, broad reactions beyond

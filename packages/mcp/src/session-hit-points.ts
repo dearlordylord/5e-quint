@@ -1,4 +1,7 @@
-import type { CharacterZeroHpLifecycleInit } from "@dnd/battle-runtime";
+import type {
+  BattlePositiveHpConditionRecovery,
+  CharacterZeroHpLifecycleInit,
+} from "@dnd/battle-runtime";
 import { Hp, type Condition, type Hp as HpType } from "@dnd/shared/types";
 import type {
   DeathSaveCount,
@@ -8,7 +11,7 @@ import { Either } from "effect";
 
 export type CharacterSessionPositiveHpCondition = {
   readonly tag: "unconscious";
-  readonly recovery: { readonly kind: "knockOutShortRest" };
+  readonly recovery: BattlePositiveHpConditionRecovery;
 };
 type CharacterSessionPendingDeathSaveCount = Exclude<DeathSaveCount, 3>;
 type CharacterSessionPendingDeathSaves = {
@@ -114,6 +117,14 @@ export function characterSessionHitPointsInitialConditions(
   return hitPoints.tag === "positiveWithCondition"
     ? [hitPoints.condition.tag]
     : [];
+}
+
+export function characterSessionHitPointsPositiveHpConditionRecovery(
+  hitPoints: CharacterSessionHitPoints,
+): CharacterSessionPositiveHpCondition["recovery"] | undefined {
+  return hitPoints.tag === "positiveWithCondition"
+    ? hitPoints.condition.recovery
+    : undefined;
 }
 
 export function characterSessionHitPointsZeroHpLifecycle(

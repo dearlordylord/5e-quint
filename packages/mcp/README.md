@@ -140,6 +140,9 @@ Zero-HP handoff:
 - `end_battle` persists Character-session HP as either positive HP or typed
   zero-HP lifecycle state. The zero-HP branch distinguishes unstable Death
   Saving Throw counters, Stable recovery after `1d4` hours, and dead state.
+- Positive-HP Knock Out recovery is persisted only when the battle runtime
+  supplies explicit Knock Out Short Rest recovery provenance. MCP does not infer
+  that recovery from a positive-HP Unconscious condition.
 - Battle runtime remains the HP mutation authority during combat. The character
   session stores the closeout fact needed for `list_characters`, rest/recovery,
   or revival workflows; it does not keep a second combat HP total.

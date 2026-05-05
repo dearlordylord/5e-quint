@@ -12,6 +12,7 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
+  KNOCK_OUT_SHORT_REST_RECOVERY,
   snapshotBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleState,
@@ -2529,6 +2530,7 @@ describe("MCP server route", () => {
         ...fighter,
         hp: Hp(1),
         conditions: applyCondition(fighter.conditions, "unconscious"),
+        positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
       }),
     } satisfies BattleState;
 
@@ -2542,7 +2544,7 @@ describe("MCP server route", () => {
           currentHp: 1,
           condition: {
             tag: "unconscious",
-            recovery: { kind: "knockOutShortRest" },
+            recovery: KNOCK_OUT_SHORT_REST_RECOVERY,
           },
         },
       }),
@@ -2560,7 +2562,7 @@ describe("MCP server route", () => {
                 currentHp: 1,
                 condition: {
                   tag: "unconscious",
-                  recovery: { kind: "knockOutShortRest" },
+                  recovery: KNOCK_OUT_SHORT_REST_RECOVERY,
                 },
               },
             }),
@@ -2568,6 +2570,113 @@ describe("MCP server route", () => {
         ],
       }),
     );
+  });
+
+  test("ends battle without inferring Knock Out recovery from positive-HP Unconscious", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-positive-unconscious-closeout";
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-positive-unconscious-closeout",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            sourceDraftId: draftId,
+            combatantId: "fighter",
+            initiative: 12,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 10,
+            side: "opposition",
+          },
+        ],
+      }),
+    );
+    const battleState = root.sessionStore.battleState;
+    const fighter = battleState?.combatants.get(fighterId);
+    if (battleState === null || fighter === undefined) {
+      throw new Error("Expected in-battle Fighter character combatant.");
+    }
+    root.sessionStore.battleState = {
+      ...battleState,
+      combatants: new Map(battleState.combatants).set(fighterId, {
+        ...fighter,
+        hp: Hp(1),
+        conditions: applyCondition(fighter.conditions, "unconscious"),
+        positiveHpConditionRecovery: null,
+      }),
+    } satisfies BattleState;
+
+    readPayload(handleToolCall(root, "end_battle", {}));
+
+    expect(root.sessionStore.characters.get(characterDraftId(draftId))).toEqual(
+      expect.objectContaining({
+        tag: "available",
+        hitPoints: { tag: "positive", currentHp: 1 },
+      }),
+    );
+  });
+
+  test("starts battle with Knock Out recovery from positive-HP character session state", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-knocked-out-start";
+    const build = createFinalizedFighterSheet(root, draftId);
+    root.sessionStore.characters.set(
+      characterDraftId(draftId),
+      availableCharacterSessionRight({
+        characterId: characterId(draftId),
+        build,
+        currentHp: Hp(1),
+        positiveHpCondition: {
+          tag: "unconscious",
+          recovery: KNOCK_OUT_SHORT_REST_RECOVERY,
+        },
+      }),
+    );
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-knocked-out-start",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            sourceDraftId: draftId,
+            combatantId: "fighter",
+            initiative: 12,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 10,
+            side: "opposition",
+          },
+        ],
+      }),
+    );
+
+    expect(started.snapshot.combatants).toEqual([
+      expect.objectContaining({
+        combatantId: "fighter",
+        hp: 1,
+        conditions: expect.arrayContaining(["unconscious"]),
+        positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
+      }),
+      expect.objectContaining({ combatantId: "goblin" }),
+    ]);
+    expect(started.battleState.combatants).toEqual([
+      expect.objectContaining({
+        combatantId: "fighter",
+        positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
+      }),
+      expect.objectContaining({ combatantId: "goblin" }),
+    ]);
   });
 
   test("starts battle from a Stable zero-HP character session without resetting death saves", () => {
