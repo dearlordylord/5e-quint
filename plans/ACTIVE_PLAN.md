@@ -222,7 +222,7 @@ Keep it synchronized with the DAG table and task details.
 | 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | done                                          | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Magic Missile split-target replay and higher-slot dart count are restored through spell target allocation fills.                                              |
 | 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | done                                          | PBA20        | PBA21A       | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Attack host Reaction windows and prepared Bonus Action healing spell subjects are restored in the promoted runtime.                                           |
 | 73    | PBA21A - Fix Knock Out Lifecycle Provenance                       | ready-for-implementation-after-light-research | PBA21        | PBA21B       | inline below                                                                                                 | Fix the RAW Knock Out healing/provenance defects before promoted snapshots expose lifecycle facts to app/MCP.                                                 |
-| 74    | PBA21B - Promote BattleSnapshot Into Battle View Contract         | blocked                                       | PBA21A       | PBA22        | inline below                                                                                                 | Reshape existing promoted `BattleSnapshot` into the finite `/battle` and MCP view contract; do not add a permanent parallel read model.                       |
+| 74    | PBA21B - Promote BattleSnapshot Into Battle View Contract         | blocked                                       | PBA21A       | PBA22        | inline below                                                                                                 | Reshape, rename, or replace existing `BattleSnapshot` into one finite `/battle` and MCP view contract; delete the old loose snapshot shape.                   |
 | 75    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | blocked                                       | PBA21B       | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Move active `/battle` and MCP battle output to the promoted snapshot contract; temporarily quarantine Core-backed trace routes only to advance Core deletion. |
 | 76    | PBA23 - Core Promotion Deletion Ledger                            | blocked                                       | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                                               |
 | 77    | PBA24 - Remove Rogue Cunning Action Support Workaround            | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                                                     |
@@ -763,13 +763,16 @@ surface, stop and reconsider.
 
 Next action: promote the existing `@dnd/battle-runtime` `BattleSnapshot` into
 the finite `/battle` and MCP battle view contract. Do not add a permanent
-parallel `BattleReadModel`; field-by-field, reshape or rename `BattleSnapshot`
-so it becomes the canonical promoted contract.
+parallel `BattleReadModel`; field-by-field, reshape and rename `BattleSnapshot`
+if it is the right base shape, or replace it with a new promoted contract. The
+old loose/internal `BattleSnapshot` shape must not survive completion as a
+second read model.
 
 Acceptance summary:
 
-- `BattleSnapshot` is the single promoted battle view contract for active
-  `/battle` UI and MCP battle output.
+- Exactly one promoted battle view contract exists for active `/battle` UI and
+  MCP battle output. If it keeps the `BattleSnapshot` name, that name refers to
+  the promoted finite contract, not the old loose/internal projection.
 - MCP uses the battle facts from that contract directly, with only MCP
   session/tool wrappers around it; no weak parallel MCP snapshot subset for
   fields the app/MCP consume.
@@ -781,6 +784,9 @@ Acceptance summary:
 - No permanent coexistence of `BattleSnapshot` plus another promoted battle read
   model. Temporary adapters are allowed only inside the task and must be removed
   before completion or converted into a follow-up blocker.
+- The previous loose/internal `BattleSnapshot` shape is deleted, renamed into
+  the promoted contract, or fully replaced; it is not kept as legacy runtime
+  snapshot storage behind the view contract.
 
 Verification summary: focused battle-runtime schema/type tests, focused MCP
 structured-content tests that prove the contract is encodable without stack
@@ -811,8 +817,9 @@ Blocks: PBA23
 Research plan:
 [pba22-snapshots-traces-app-ui-research-plan.md](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)
 
-Next action: move active `/battle` app UI and MCP battle output to the promoted
-`BattleSnapshot` contract. Temporarily quarantine Core-backed `/trace` and
+Next action: move active `/battle` app UI and MCP battle output to the single
+promoted battle view contract from PBA21B. Temporarily quarantine Core-backed
+`/trace` and
 `/embed/trace` from the active promoted app surface only if doing so directly
 advances Core deletion.
 
@@ -838,8 +845,8 @@ Retry Guidance:
 - Do not present runtime-projected literals as promoted QNT/spec parity
   evidence. A promoted trace viewer is later work unless explicitly pulled
   forward.
-- Consume the `BattleSnapshot` contract from PBA21B; do not recreate an
-  MCP-local or app-local snapshot subset for fields the UI depends on.
+- Consume the single promoted battle view contract from PBA21B; do not recreate
+  an MCP-local or app-local snapshot subset for fields the UI depends on.
 - Include focused runtime/MCP snapshot contract tests, app typecheck or focused
   app tests, and Playwright screenshot evidence for changed battle UI surfaces
   when browser tooling is available.
