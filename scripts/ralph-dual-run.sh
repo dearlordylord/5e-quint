@@ -721,6 +721,17 @@ NODE
   fi
 }
 
+commit_plan_automation_change() {
+  local message="$1"
+
+  if git diff --quiet -- "$plan_file" && git diff --cached --quiet -- "$plan_file"; then
+    return 0
+  fi
+
+  git add "$plan_file"
+  HUSKY=0 git commit -m "$message"
+}
+
 lookup_task_row() {
   local task_no="$1"
   awk -F $'\t' -v selected="$task_no" '
@@ -1593,6 +1604,7 @@ choose_next_task() {
 
   refresh_plan_snapshot
   auto_unblock_blocked_tasks "$plan_file"
+  commit_plan_automation_change "Auto-unblock ready Ralph tasks"
   refresh_plan_snapshot
 
   if [[ ${#selected_tasks[@]} -gt 0 ]]; then
@@ -1874,6 +1886,7 @@ run_task_attempt() {
   if [[ "$decider_disposition" == "done" && "$authoritative_disposition" != "done" ]]; then
     if set_task_status_in_plan "$task_no" "$task_id" "done" "$plan_file"; then
       note "task" "warning-autorepaired-task-done-status task=$task_no attempt=$attempt_no previous_status=$refreshed_task_status"
+      commit_plan_automation_change "Mark Ralph task $task_no done"
       refresh_plan_snapshot
       refreshed_task_row="$(lookup_task_row "$task_no" || true)"
       if [[ -z "$refreshed_task_row" ]]; then
