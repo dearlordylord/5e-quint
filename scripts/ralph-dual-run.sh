@@ -351,7 +351,6 @@ done
 }
 
 require_cmd git
-require_cmd claude
 require_cmd codex
 require_cmd node
 require_cmd pnpm
@@ -360,6 +359,10 @@ load_openrouter_key_from_dotenv
 
 if [[ "$codex_only" == true && "$claude_only" == true ]]; then
   die "--codex-only and --claude-only are mutually exclusive"
+fi
+
+if [[ "$codex_only" != true ]]; then
+  require_cmd claude
 fi
 
 case "$implementation_runner" in
