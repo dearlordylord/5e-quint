@@ -159,6 +159,7 @@ export {
 export {
   ActivationResourceSchema,
   ActivatedAbilityMechanicsSchema,
+  AlternateActionCostMechanicsSchema,
   ArmorRecordSchema,
   ArmorTemplateRecordSchema,
   ArmorTrainingSchema,

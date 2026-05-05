@@ -501,6 +501,104 @@ describe("MCP server route", () => {
     });
   });
 
+  test("admits Cunning Action Bonus Action Hide through the retained feature Unit", () => {
+    const root = createMcpCompositionRoot();
+    const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
+      level: 2,
+    });
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
+      battleId: battleId("battle-supported-cunning-action"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("rogue-character"),
+        displayName: "Orc Soldier Rogue",
+        build: rogueBuild,
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: rogueBattleUnitLibrary(root),
+    });
+
+    expect(
+      characterUnitRef(state, fighterId, "rogue_cunning_action"),
+    ).toMatchObject({
+      supportProfiles: ["bonusActionHide"],
+    });
+    expect(characterUnitRef(state, fighterId, "class_rogue")).toMatchObject({
+      supportProfiles: [],
+    });
+  });
+
+  test("does not infer Cunning Action support from Rogue class name or level", () => {
+    const root = createMcpCompositionRoot();
+    const rogueOneState = startBattleFromCharacterBuildAndStatBlockRight({
+      battleId: battleId("battle-rogue-one-no-cunning-action"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("rogue-character"),
+        displayName: "Orc Soldier Rogue",
+        build: rogueCharacterBuild(root.unitLibrary),
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: rogueBattleUnitLibrary(root),
+    });
+    const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
+      level: 2,
+    });
+    const buildWithoutCunningAction: CharacterBuild = {
+      ...rogueBuild,
+      features: rogueBuild.features.filter(
+        (feature) => feature.unitId !== "rogue_cunning_action",
+      ),
+    };
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
+      battleId: battleId("battle-no-inferred-cunning-action"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("rogue-character"),
+        displayName: "Orc Soldier Rogue",
+        build: buildWithoutCunningAction,
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: rogueBattleUnitLibrary(root),
+    });
+
+    expect(
+      characterUnitRef(rogueOneState, fighterId, "class_rogue"),
+    ).toMatchObject({
+      supportProfiles: [],
+    });
+    expect(characterUnitRef(state, fighterId, "class_rogue")).toMatchObject({
+      supportProfiles: [],
+    });
+  });
+
   test("admits only save-damage replacement Unit hooks with Evasion-style mechanics", () => {
     const root = createMcpCompositionRoot();
     const evasionBuild = rogueCharacterBuild(root.unitLibrary, {
@@ -4032,6 +4130,7 @@ function rogueCharacterBuild(
 function rogueBattleUnitLibrary(
   root: ReturnType<typeof createMcpCompositionRoot>,
   overrides?: {
+    readonly cunningActionUnit?: UnitRecord;
     readonly sneakAttackUnit?: UnitRecord;
     readonly evasionUnit?: UnitRecord;
     readonly uncannyDodgeUnit?: UnitRecord;
@@ -4040,6 +4139,9 @@ function rogueBattleUnitLibrary(
   const rogueClass = rogueClassUnit(root.unitLibrary);
   const overriddenUnits = [
     rogueClass,
+    ...(overrides?.cunningActionUnit === undefined
+      ? []
+      : [overrides.cunningActionUnit]),
     ...(overrides?.sneakAttackUnit === undefined
       ? []
       : [overrides.sneakAttackUnit]),
@@ -4068,6 +4170,7 @@ function rogueClassUnit(
     hitPointDie: 8,
     featureGrants: [
       { level: 1, unitId: "rogue_sneak_attack" },
+      { level: 2, unitId: "rogue_cunning_action" },
       { level: 5, unitId: "rogue_uncanny_dodge" },
       { level: 7, unitId: "rogue_evasion" },
     ],

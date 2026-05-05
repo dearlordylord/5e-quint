@@ -5,6 +5,7 @@ import backgroundSoldierInput from "../../content/background_soldier.json";
 import classFighterInput from "../../content/class_fighter.json";
 import classWizardInput from "../../content/class_wizard.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
+import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
 import {
@@ -126,6 +127,27 @@ describe("character-creation Surface records", () => {
             slots: [{ count: 2, spellLevel: 1 }],
           },
           spellcastingFocuses: ["arcane_focus", "spellbook"],
+        },
+      },
+    });
+  });
+
+  test("decodes Rogue Cunning Action as alternate Bonus Action cost facts", () => {
+    const unit = decodeUnitRecordSync(rogueCunningActionInput);
+
+    expect(unit).toMatchObject({
+      id: "rogue_cunning_action",
+      kind: "class_feature",
+      className: "rogue",
+      acquiredAtLevel: 2,
+      mechanics: {
+        family: "alternate_action_cost",
+        from: {
+          kind: "standard_action",
+          actions: ["dash", "disengage", "hide"],
+        },
+        to: {
+          kind: "bonus_action",
         },
       },
     });

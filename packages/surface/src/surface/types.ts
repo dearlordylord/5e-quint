@@ -332,6 +332,9 @@ export type OngoingEffectMechanics = Schema.Schema.Type<
 export type ActivationMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ActivationMechanicsSchema
 >;
+export type AlternateActionCostMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.AlternateActionCostMechanicsSchema
+>;
 export type TriggeredReactionMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.TriggeredReactionMechanicsSchema
 >;

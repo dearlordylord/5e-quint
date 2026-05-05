@@ -145,7 +145,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 77,
       "id": "PBA24",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Remove Rogue Cunning Action Support Workaround"
     },
     {
@@ -231,7 +231,7 @@ Keep it synchronized with the DAG table and task details.
 | 74    | PBA21B - Promote BattleSnapshot Into Battle View Contract         | done                                          | PBA21A       | PBA22        | inline below                                                                                                 | Reshape, rename, or replace existing `BattleSnapshot` into one finite `/battle` and MCP view contract; delete the old loose snapshot shape.                   |
 | 75    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | done                                          | PBA21B       | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Active `/battle` and MCP battle output now use the promoted snapshot contract; Core-backed trace routes are quarantined from the active promoted app surface. |
 | 76    | PBA23 - Core Promotion Deletion Ledger                            | done                                          | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                                               |
-| 77    | PBA24 - Remove Rogue Cunning Action Support Workaround            | ready-for-research                           | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                                                     |
+| 77    | PBA24 - Remove Rogue Cunning Action Support Workaround            | done                                         | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                                                     |
 | 78    | PBA25 - Promote Unit-Backed Character Choice Width                | done                                         | PBA23        | PBA24, PBA26 | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)                 | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections.                                 |
 | 79    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | ready-for-research                           | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs.                                                        |
 | 80    | PBA27 - Core Quarantine And Deletion Cutover                      | blocked                                       | PBA24, PBA26 | PBA28        | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior.                              |
@@ -879,7 +879,7 @@ Plan Impact: PBA25 is unblocked.
 
 ### Task 77 - PBA24 - Remove Rogue Cunning Action Support Workaround
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA25
 Blocks: PBA27
@@ -904,8 +904,7 @@ focused Surface/character-creation/battle-runtime/MCP tests,
 `pnpm check:authored-id-dispatch`, promoted QNT only if reusable bonus-action
 standard-action behavior changes, no broad battle MBT, `/simplify` convergence.
 
-Plan Impact: if successful, unblock the Rogue-workaround prerequisite for
-PBA27.
+Plan Impact: PBA24 is done. PBA27 remains blocked on PBA26.
 
 ### Task 78 - PBA25 - Promote Unit-Backed Character Choice Width
 

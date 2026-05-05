@@ -5320,7 +5320,9 @@ function traceClassUnit(unit: ClassRecord): Trace {
   return traceFromNodes(unit, nodes, edges);
 }
 
-function traceSubclassUnit(unit: Extract<UnitRecord, { kind: "subclass" }>): Trace {
+function traceSubclassUnit(
+  unit: Extract<UnitRecord, { kind: "subclass" }>,
+): Trace {
   const nodes: TraceNode[] = [];
   const edges: TraceEdge[] = [];
   const ids = idGen();
@@ -5890,6 +5892,8 @@ function traceClassFeatureMechanics(
       return [traceActivatedAbility(m, nodes, edges, ids)];
     case "passive":
       return [tracePassiveMechanics(m, nodes, edges, ids)];
+    case "alternate_action_cost":
+      return [traceAlternateActionCostMechanics(m, nodes, ids)];
     case "on_hit_trigger":
       return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
     case "save_damage_replacement":
@@ -5954,6 +5958,8 @@ function traceClassFeatureMechanics(
             return traceActivatedAbility(part, nodes, edges, ids);
           case "passive":
             return tracePassiveMechanics(part, nodes, edges, ids);
+          case "alternate_action_cost":
+            return traceAlternateActionCostMechanics(part, nodes, ids);
           case "on_hit_trigger":
             return traceOnHitTriggerMechanics(part, nodes, edges, ids);
           case "save_damage_replacement":
@@ -5979,6 +5985,24 @@ function traceClassFeatureMechanics(
       );
     }
   }
+}
+
+function traceAlternateActionCostMechanics(
+  m: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "alternate_action_cost" }
+  >,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const alternateCostId = ids("alternate-cost");
+  nodes.push({
+    id: alternateCostId,
+    category: "procedure",
+    atomKind: "alternate_action_cost",
+    label: `alternate_action_cost\n${m.from.actions.join(", ")}\nas ${m.to.kind}`,
+  });
+  return alternateCostId;
 }
 
 function traceSaveDamageReplacementMechanics(

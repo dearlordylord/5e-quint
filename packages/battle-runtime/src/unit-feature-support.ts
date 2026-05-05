@@ -15,6 +15,7 @@ import type {
   ClassName,
   DamageType,
   EffectAtom,
+  StandardActionKind,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
@@ -42,39 +43,34 @@ export type BattleUnitSupportProfileIssue = {
   readonly message: string;
 };
 
+const CUNNING_ACTION_STANDARD_ACTIONS = [
+  "dash",
+  "disengage",
+  "hide",
+] as const satisfies ReadonlyArray<StandardActionKind>;
+
 function battleUnitSupportProfileIssue(
   message: string,
 ): Either.Either<never, BattleUnitSupportProfileIssue> {
   return Either.left({ tag: "battleUnitSupportProfileIssue", message });
 }
 
-export function battleBonusActionHideSupportForClassUnit(input: {
-  readonly unit: UnitRecord;
-  readonly classLevel: number;
-}): "bonusActionHide" | "none" {
-  return input.unit.kind === "class" &&
-    input.unit.className === "rogue" &&
-    input.classLevel >= 2
-    ? "bonusActionHide"
-    : "none";
-}
-
 export function battleUnitSupportProfilesForUnit(input: {
   readonly unit: UnitRecord;
-  readonly classLevel?: number;
 }): Either.Either<
   readonly BattleUnitSupportProfile[],
   BattleUnitSupportProfileIssue
 > {
   const supportProfiles: BattleUnitSupportProfile[] = [];
 
-  if (
-    input.classLevel !== undefined &&
-    battleBonusActionHideSupportForClassUnit({
-      unit: input.unit,
-      classLevel: input.classLevel,
-    }) === "bonusActionHide"
-  ) {
+  const bonusActionStandardActionSupport =
+    battleBonusActionStandardActionSupportForUnit(input.unit);
+  if (bonusActionStandardActionSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle bonus-action standard-action Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (bonusActionStandardActionSupport === "bonusActionHide") {
     supportProfiles.push("bonusActionHide");
   }
 
@@ -131,7 +127,6 @@ export function battleUnitSupportProfilesForUnit(input: {
 export function battleUnitRefWithSupportProfiles(input: {
   readonly unitRef: Pick<BattleUnitRef, "unitId">;
   readonly unit: UnitRecord;
-  readonly classLevel?: number;
 }): Either.Either<BattleUnitRef, BattleUnitSupportProfileIssue> {
   if (input.unitRef.unitId !== input.unit.id) {
     return battleUnitSupportProfileIssue(
@@ -140,7 +135,6 @@ export function battleUnitRefWithSupportProfiles(input: {
   }
   const supportProfiles = battleUnitSupportProfilesForUnit({
     unit: input.unit,
-    ...(input.classLevel === undefined ? {} : { classLevel: input.classLevel }),
   });
   if (Either.isLeft(supportProfiles)) return Either.left(supportProfiles.left);
   return Either.right({
@@ -283,6 +277,31 @@ export type BattleWeaponOrUnarmedCriticalRange19Support =
   | "unsupported"
   | null;
 
+export type BattleBonusActionStandardActionSupport =
+  | "bonusActionHide"
+  | "unsupported"
+  | null;
+
+export function battleBonusActionStandardActionSupportForUnit(
+  unit: UnitRecord,
+): BattleBonusActionStandardActionSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "alternate_action_cost"
+  ) {
+    return null;
+  }
+
+  return unit.mechanics.from.kind === "standard_action" &&
+    sameStringSet(
+      unit.mechanics.from.actions,
+      CUNNING_ACTION_STANDARD_ACTIONS,
+    ) &&
+    unit.mechanics.to.kind === "bonus_action"
+    ? "bonusActionHide"
+    : "unsupported";
+}
+
 export function battleWeaponOrUnarmedCriticalRange19SupportForUnit(
   unit: UnitRecord,
 ): BattleWeaponOrUnarmedCriticalRange19Support {
@@ -357,6 +376,17 @@ function attackDamageRiderMechanicsProjection(
     dieSize: mechanics.effect.dice.dieSize,
     dice: mechanics.effect.dice.dice,
   };
+}
+
+function sameStringSet(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((leftValue) => right.includes(leftValue)) &&
+    right.every((rightValue) => left.includes(rightValue))
+  );
 }
 
 export type BattleSaveDamageReplacementSupport =

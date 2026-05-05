@@ -34,6 +34,7 @@ import speciesOrcInput from "../../content/species_orc.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
+import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
 import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
@@ -169,6 +170,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianRecklessAttackInput,
     bardCuttingWordsInput,
     monkDeflectAttacksInput,
+    rogueCunningActionInput,
     rogueEvasionInput,
     rogueUncannyDodgeInput,
     rogueSneakAttackInput,

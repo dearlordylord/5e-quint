@@ -396,9 +396,21 @@ export const MagicItemSpawnedCreatureMechanicsSchema = Schema.Struct({
 export const ClassFeatureActivationMechanicsSchema =
   ActivatedAbilityMechanicsSchema;
 
+export const AlternateActionCostMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("alternate_action_cost"),
+  from: Schema.Struct({
+    kind: Schema.Literal("standard_action"),
+    actions: Schema.NonEmptyArray(StandardActionKindSchema),
+  }),
+  to: Schema.Struct({
+    kind: Schema.Literal("bonus_action"),
+  }),
+});
+
 export const ClassFeatureComponentMechanicsSchema = Schema.Union(
   Schema.suspend(() => PassiveMechanicsSchema),
   ActivatedAbilityMechanicsSchema,
+  AlternateActionCostMechanicsSchema,
   Schema.suspend(() => OnHitTriggerMechanicsSchema),
   Schema.suspend(() => SaveDamageReplacementMechanicsSchema),
   Schema.suspend(() => ReactionRollOrDamageReductionMechanicsSchema),

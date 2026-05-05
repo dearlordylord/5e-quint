@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
-  BATTLE_UNIT_SUPPORT_PROFILES,
+  battleBonusActionStandardActionSupportForUnit,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -18,6 +18,7 @@ import {
   BATTLE_READIED_SPELL_TRIGGERS,
   addBattleCombatant,
   battleReactionRollOrDamageReductionSupportForUnit,
+  battleUnitSupportProfilesForUnit,
   battleId,
   breakBattleConcentration,
   characterBattleResourceUsage,
@@ -1650,8 +1651,8 @@ describe("battle runtime", () => {
           classLevels: [{ className: "fighter", level: 1 }],
           characterUnitRefs: [
             {
-              unitId: "class_rogue",
-              supportProfiles: BATTLE_UNIT_SUPPORT_PROFILES,
+              unitId: "rogue_cunning_action",
+              supportProfiles: ["bonusActionHide"],
             },
           ],
         }),
@@ -1686,6 +1687,17 @@ describe("battle runtime", () => {
     expect(hidden.state.combatants.get(fighterId)?.hidden).toEqual({
       discoveryDc: difficultyClass(16),
     });
+  });
+
+  test("Rogue Cunning Action support comes from alternate action cost mechanics", () => {
+    const unit = unitLibrary.requireUnit("rogue_cunning_action");
+
+    expect(battleBonusActionStandardActionSupportForUnit(unit)).toBe(
+      "bonusActionHide",
+    );
+    expect(battleUnitSupportProfilesForUnit({ unit })).toEqual(
+      Either.right(["bonusActionHide"]),
+    );
   });
 
   test("Light Property Bonus Action Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
