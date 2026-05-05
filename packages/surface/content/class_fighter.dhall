@@ -32,10 +32,19 @@ let fighter =
       , hitPointDie = 10
       , id = "class_fighter"
       , kind = "class"
+      , multiclassProficiencies =
+          { kind = "fixed"
+          , proficiencies =
+            [ { category = "martial", kind = "weapon_category" }
+            , { category = "light", kind = "armor_category" }
+            , { category = "medium", kind = "armor_category" }
+            , { category = "shield", kind = "armor_category" }
+            ]
+          }
       , name = "Fighter"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Fighter.md:3-13,17-20,29-32,56-84"
+        , section = "Classes/Fighter.md:3-24,29-32,56-92"
         }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =
@@ -52,6 +61,8 @@ let fighter =
           , "survival"
           ]
         }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_fighter_champion" ] } ]
       , startingEquipment =
         [ { coinsGp = 4
           , id = "option_a"

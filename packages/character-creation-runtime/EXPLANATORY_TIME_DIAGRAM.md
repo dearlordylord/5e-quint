@@ -358,8 +358,8 @@ flowchart TD
   D["discoverCreationHoles(revision 1 draft)"]
   Class["discoverClassGrantedHoles"]
   ClassRead["requireUnit(class_fighter)<br/>readClassCreationFacts"]
-  Skills["choiceHole(class_fighter, fighter_skill_choices)<br/>exactly 2"]
-  Style["discoverClassFeatureGrantHoles(fighter_fighting_style)<br/>read grant_feat fighting_style<br/>list fighting_style feats<br/>exactly 1"]
+  Skills["choiceHole(class_fighter, class_skill_proficiency_choice)<br/>exactly 2"]
+  Style["discoverClassFeatureGrantHoles(fighter_fighting_style)<br/>read grant_feat fighting_style<br/>class_feature_feat_choice<br/>exactly 1"]
   Mastery["discoverClassFeatureGrantHoles(fighter_weapon_mastery)<br/>read weapon_mastery_choice<br/>list eligible simple/martial weapons"]
   ClassEquip["startingEquipmentChoiceHole(class_fighter)<br/>option_c coin grant"]
 

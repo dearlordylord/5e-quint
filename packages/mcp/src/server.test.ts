@@ -3796,12 +3796,12 @@ function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
 function manifestChoiceFills(): readonly CreationFill[] {
   return [
     choiceFill(
-      unitHoleId("class_fighter", "fighter_skill_choices"),
+      unitHoleId("class_fighter", "class_skill_proficiency_choice"),
       "perception",
       "survival",
     ),
     choiceFill(
-      unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+      unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
       "defense",
     ),
     choiceFill(

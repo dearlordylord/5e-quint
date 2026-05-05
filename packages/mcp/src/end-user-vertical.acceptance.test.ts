@@ -48,8 +48,8 @@ describe("end-user promoted MCP vertical", () => {
 
     const choices = callTool(root, "discover_creation_holes", { draftId });
     expect(holeIds(choices)).toEqual([
-      unitHoleId("class_fighter", "fighter_skill_choices"),
-      unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+      unitHoleId("class_fighter", "class_skill_proficiency_choice"),
+      unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
       unitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
       unitHoleId("class_fighter", "class_equipment_choice"),
       unitHoleId("background_soldier", "background_ability_score_increase"),
@@ -62,12 +62,12 @@ describe("end-user promoted MCP vertical", () => {
       expectedRevision: 1,
       fills: [
         choiceFill(
-          unitHoleId("class_fighter", "fighter_skill_choices"),
+          unitHoleId("class_fighter", "class_skill_proficiency_choice"),
           "perception",
           "survival",
         ),
         choiceFill(
-          unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+          unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
           "defense",
         ),
         choiceFill(
@@ -594,13 +594,13 @@ describe("end-user promoted MCP vertical", () => {
         value: [{ results: [2] }],
       },
     );
-    expect(
-      callTool(root, "read_battle_state", {}).snapshot.combatants,
-    ).toEqual([
-      expect.objectContaining({ combatantId: "fighter", hp: 20 }),
-      expect.objectContaining({ combatantId: "wizard", hp: 8 }),
-      expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
-    ]);
+    expect(callTool(root, "read_battle_state", {}).snapshot.combatants).toEqual(
+      [
+        expect.objectContaining({ combatantId: "fighter", hp: 20 }),
+        expect.objectContaining({ combatantId: "wizard", hp: 8 }),
+        expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
+      ],
+    );
 
     expect(
       callTool(root, "end_turn", { actorId: "fighter" }).snapshot,
@@ -724,12 +724,12 @@ function createAndFinalizeFighterTwo(
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_fighter", "fighter_skill_choices"),
+        unitHoleId("class_fighter", "class_skill_proficiency_choice"),
         "perception",
         "survival",
       ),
       choiceFill(
-        unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         "defense",
       ),
       choiceFill(
@@ -810,7 +810,7 @@ function createAndFinalizeWizardOne(
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_wizard", "wizard_skill_choices"),
+        unitHoleId("class_wizard", "class_skill_proficiency_choice"),
         "arcana",
         "history",
       ),

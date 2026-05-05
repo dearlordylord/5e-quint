@@ -15,6 +15,7 @@ import type {
   WizardSpellcastingCreation,
   WeaponProficiencyCategory,
   Skill,
+  ProficiencyGrant,
 } from "./types.ts";
 
 export type SurfaceReadIssueCode = "unsupportedUnitKind";
@@ -45,6 +46,11 @@ type CommonClassCreationFacts<TClassRecord extends ClassRecord> = {
   readonly armorTraining: readonly ArmorTrainingCategory[];
   readonly startingEquipment: readonly StartingEquipmentChoice[];
   readonly featureGrants: readonly ClassFeatureGrant[];
+  readonly multiclassProficiencies: ProficiencyGrant;
+  readonly subclassChoices: readonly {
+    readonly level: number;
+    readonly options: readonly UnitRecord["id"][];
+  }[];
 };
 
 export type WizardClassCreationFacts =
@@ -127,6 +133,8 @@ function readCommonClassCreationFacts<TClassRecord extends ClassRecord>(
         : [],
     startingEquipment: unit.startingEquipment,
     featureGrants: unit.featureGrants,
+    multiclassProficiencies: unit.multiclassProficiencies,
+    subclassChoices: unit.subclassChoices,
   };
 }
 

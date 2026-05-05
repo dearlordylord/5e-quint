@@ -121,6 +121,8 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
       return `https://5e.tools/spells.html#${encodeHashParts(unit.name, source)}`;
     case "class":
       return null;
+    case "subclass":
+      return null;
     case "class_feature":
       return `https://5e.tools/classfeatures.html#${encodeHashParts(
         unit.name,

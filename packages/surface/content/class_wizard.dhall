@@ -28,10 +28,11 @@ let wizard =
       , hitPointDie = 6
       , id = "class_wizard"
       , kind = "class"
+      , multiclassProficiencies = { kind = "none" }
       , name = "Wizard"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Wizard.md:3-25,31-35,56-82,94-102,134-190"
+        , section = "Classes/Wizard.md:3-25,31-35,56-82,94-114,134-190"
         }
       , savingThrowProficiencies = [ "int", "wis" ]
       , skillProficiencyChoice =
@@ -81,6 +82,8 @@ let wizard =
               }
           , spellcastingFocuses = [ "arcane_focus", "spellbook" ]
           }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_wizard_evoker" ] } ]
       , startingEquipment =
         [ { coinsGp = 5
           , id = "option_a"

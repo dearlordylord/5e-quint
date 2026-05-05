@@ -12,20 +12,23 @@ import {
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   Ability,
+  ArmorTrainingCategory,
+  ProficiencyGrantSubject,
   Skill,
   StartingEquipmentChoice,
   UnitRecord,
+  WeaponProficiencyCategory,
 } from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
   classLevelForUnit,
-  hitPointsAfterLevelOneMultiplier,
   progressionClassUnitIds,
   startingClassUnitId,
 } from "./character-progression-types.ts";
 import {
   backgroundToolChoiceSpec,
+  abilityScoreIncreaseOptions,
   classFeatureGrantChoiceHoles,
   choiceSelectionOptionIds,
   choiceSelectionMatchesHole,
@@ -42,12 +45,15 @@ import {
 import {
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
+  CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  CLASS_FEATURE_FEAT_CHOICE_KEY,
+  CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
-  FIGHTER_SKILL_CHOICE_KEY,
+  CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   EXACTLY_ONE_CHOICE,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
-  WIZARD_SKILL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import {
@@ -119,6 +125,8 @@ type BackgroundAbilityScoreIncreaseDelta = {
   readonly ability: Ability;
   readonly increase: number;
 };
+
+type ClassFactsByUnitId = ReadonlyMap<UnitRecord["id"], ClassCreationFacts>;
 
 export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
@@ -395,10 +403,7 @@ export function unsupportedFinalizationIssue(
 export function isSupportedFinalizableProgression(
   selections: Pick<FinalizedCharacterSelections, "progression">,
 ): boolean {
-  return (
-    isSupportedProgression(selections.progression) &&
-    progressionClassUnitIds(selections.progression).length === 1
-  );
+  return isSupportedProgression(selections.progression);
 }
 
 export function isSupportedBackgroundAbilityScoreIncrease(
@@ -454,6 +459,38 @@ export function isSupportedManifestBackgroundAbilityScoreIncrease(
   );
 }
 
+function allClassFactsForFinalization(
+  progression: CharacterProgression,
+  unitLibrary: UnitCatalog,
+): Either.Either<ClassFactsByUnitId, CreationFinalizationIssue> {
+  const factsByUnitId = new Map<UnitRecord["id"], ClassCreationFacts>();
+  for (const classUnitId of progressionClassUnitIds(progression)) {
+    const classUnit = unitForFinalization(unitLibrary, classUnitId, "class");
+    if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+    const facts = readableForFinalization(
+      readClassCreationFacts(classUnit.right),
+      "class",
+    );
+    if (Either.isLeft(facts)) return Either.left(facts.left);
+    factsByUnitId.set(classUnitId, facts.right);
+  }
+
+  return Either.right(factsByUnitId);
+}
+
+function fixedMulticlassProficiencySubjects(
+  selections: FinalizedCharacterSelections,
+  classFactsByUnitId: ClassFactsByUnitId,
+): readonly ProficiencyGrantSubject[] {
+  const startingUnitId = startingClassUnitId(selections.progression);
+  return [...classFactsByUnitId].flatMap(([classUnitId, facts]) =>
+    classUnitId !== startingUnitId &&
+    facts.multiclassProficiencies.kind === "fixed"
+      ? facts.multiclassProficiencies.proficiencies
+      : [],
+  );
+}
+
 export function sameBackgroundAbilityScoreIncreaseSelection(
   left: BackgroundAbilityScoreIncreaseSelection,
   right: BackgroundAbilityScoreIncreaseSelection,
@@ -477,27 +514,24 @@ export function buildCharacterBuild(input: {
   readonly supportedSelections: TemporarySupportedSliceSelections;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterBuild, CreationFinalizationIssue> {
-  // Project the selected supported single-class progression, not only level 1.
-  // The temporary finalization gate rejects multiclass progressions until this
-  // projection derives features, HP, and Hit Dice from every class entry.
   const { selections } = input.supportedSelections;
   const progression = input.supportedSelections.progression;
   const selectedClassUnitId = startingClassUnitId(progression);
-  const selectedClassLevel = classLevelForUnit(
+  const classFactsByUnitId = allClassFactsForFinalization(
     progression,
-    selectedClassUnitId,
-  );
-  const classUnit = unitForFinalization(
     input.unitLibrary,
-    selectedClassUnitId,
-    "class",
   );
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  const classFacts = readableForFinalization(
-    readClassCreationFacts(classUnit.right),
-    "class",
-  );
-  if (Either.isLeft(classFacts)) return Either.left(classFacts.left);
+  if (Either.isLeft(classFactsByUnitId)) {
+    return Either.left(classFactsByUnitId.left);
+  }
+  const classFacts = classFactsByUnitId.right.get(selectedClassUnitId);
+  if (classFacts == null) {
+    return Either.left(
+      illegalFinalizationIssue(
+        `Cannot finalize class progression without starting class facts: ${selectedClassUnitId}`,
+      ),
+    );
+  }
   const backgroundUnit = unitForFinalization(
     input.unitLibrary,
     selections.background,
@@ -527,13 +561,21 @@ export function buildCharacterBuild(input: {
     backgroundFacts.right.abilityScoreIncrease.abilities,
   );
   if (Either.isLeft(finalScores)) return Either.left(finalScores.left);
-  const finalAbilityScores = finalScores.right;
-  const classFeatureGrants = classFacts.right.featureGrants.filter(
-    (grant) => grant.level <= selectedClassLevel,
+  const featureScores = applyClassFeatureAbilityScoreIncreases(
+    finalScores.right,
+    selections,
+  );
+  if (Either.isLeft(featureScores)) return Either.left(featureScores.left);
+  const finalAbilityScores = featureScores.right;
+  const classFeatureGrants = [...classFactsByUnitId.right].flatMap(
+    ([classUnitId, facts]) =>
+      facts.featureGrants.filter(
+        (grant) => grant.level <= classLevelForUnit(progression, classUnitId),
+      ),
   );
   const classFeatureUnitIds = classFeatureGrants.map((grant) => grant.unitId);
   const buildSpellcasting = finalizedBuildSpellcasting(
-    classFacts.right,
+    classFacts,
     input.supportedSelections,
   );
   const buildFeatures: readonly CharacterBuildFeature[] = [
@@ -556,12 +598,25 @@ export function buildCharacterBuild(input: {
   const buildEquipment = finalizedBuildEquipmentForSupportedLoadoutChoices(
     input.supportedSelections.loadoutChoices,
   );
+  const multiclassProficiencySubjects = fixedMulticlassProficiencySubjects(
+    selections,
+    classFactsByUnitId.right,
+  );
   const hitPointsAfterLevelOne =
-    hitPointsAfterLevelOneMultiplier(progression) *
-    fixedHitPointsAfterLevelOne(
-      classFacts.right.hitPointDie,
-      finalAbilityScores.con,
-    );
+    progression.advancements.reduce((total, advancement) => {
+      const advancementClassFacts = classFactsByUnitId.right.get(
+        advancement.classUnitId,
+      );
+      return (
+        total +
+        (advancementClassFacts == null
+          ? 0
+          : fixedHitPointsAfterLevelOne(
+              advancementClassFacts.hitPointDie,
+              finalAbilityScores.con,
+            ))
+      );
+    }, 0);
 
   return Either.right({
     progression,
@@ -572,28 +627,48 @@ export function buildCharacterBuild(input: {
     abilityScores: finalAbilityScores,
     hitPoints: {
       maximum: hp(
-        classFacts.right.hitPointDie +
+        classFacts.hitPointDie +
           abilityModifier(finalAbilityScores.con) +
           hitPointsAfterLevelOne,
       ),
-      hitDice: [
-        {
-          classUnitId: selectedClassUnitId,
-          dieSize: hitDieSize(classFacts.right.hitPointDie),
-          total: hitDieTotal(selectedClassLevel),
-        },
-      ],
+      hitDice: [...classFactsByUnitId.right].map(([classUnitId, facts]) => ({
+        classUnitId,
+        dieSize: hitDieSize(facts.hitPointDie),
+        total: hitDieTotal(classLevelForUnit(progression, classUnitId)),
+      })),
     },
     proficiencies: {
-      savingThrows: classFacts.right.savingThrowProficiencies,
+      savingThrows: classFacts.savingThrowProficiencies,
       skills: uniqueValues([
-        ...finalizedBuildSkillProficiencies(selections, classFacts.right),
+        ...finalizedBuildSkillProficiencies(selections),
         ...backgroundFacts.right.skillProficiencies,
+        ...multiclassProficiencySubjects.flatMap((subject) =>
+          subject.kind === "skill" ? [subject.skill] : [],
+        ),
       ]),
-      weapon: classFacts.right.weaponProficiencies,
-      tools: finalizedBuildToolProficiencies(selections),
+      weapon: uniqueValues([
+        ...classFacts.weaponProficiencies,
+        ...finalizedBuildWeaponProficiencies(selections),
+        ...multiclassProficiencySubjects.flatMap((subject) =>
+          subject.kind === "weapon_category" ? [subject.category] : [],
+        ),
+      ]),
+      tools: uniqueValues([
+        ...finalizedBuildToolProficiencies(selections),
+        ...multiclassProficiencySubjects.flatMap((subject) =>
+          subject.kind === "tool"
+            ? [creationChoiceOptionId(`tool:${subject.toolId}`)]
+            : [],
+        ),
+      ]),
     },
-    armorTraining: classFacts.right.armorTraining,
+    armorTraining: uniqueValues([
+      ...classFacts.armorTraining,
+      ...finalizedBuildArmorTraining(selections),
+      ...multiclassProficiencySubjects.flatMap((subject) =>
+        subject.kind === "armor_category" ? [subject.category] : [],
+      ),
+    ]),
     features: buildFeatures,
     resources: classFeatureUnitIds.flatMap((unitId) => {
       const unit = input.unitLibrary.getUnit(unitId);
@@ -625,14 +700,15 @@ export function allFinalizedChoicesSupported(
   if (Option.isNone(classUnit)) return false;
   const classFacts = readClassCreationFacts(classUnit.value);
   if (classFacts.tag !== "readable") return false;
+  const classFactsByUnitId = allClassFactsForFinalization(
+    selections.progression,
+    unitLibrary,
+  );
+  if (Either.isLeft(classFactsByUnitId)) return false;
   const backgroundUnit = unitLibrary.getUnit(selections.background);
   if (Option.isNone(backgroundUnit)) return false;
   const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
   if (backgroundFacts.tag !== "readable") return false;
-  const classLevel = classLevelForUnit(
-    selections.progression,
-    selectedClassUnitId,
-  );
   const classEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selectedClassUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
@@ -654,7 +730,7 @@ export function allFinalizedChoicesSupported(
   const supportedHoles = supportedFinalizationChoiceHoles({
     selections,
     classFacts: classFacts.value,
-    classLevel,
+    classFactsByUnitId: classFactsByUnitId.right,
     backgroundFacts: backgroundFacts.value,
     unitLibrary,
     classEquipmentHole,
@@ -815,7 +891,7 @@ function mergeChoiceHoleOptions(
 function supportedFinalizationChoiceHoles(input: {
   readonly selections: FinalizedCharacterSelections;
   readonly classFacts: ClassCreationFacts;
-  readonly classLevel: number;
+  readonly classFactsByUnitId: ClassFactsByUnitId;
   readonly backgroundFacts: Extract<
     ReturnType<typeof readBackgroundCreationFacts>,
     { readonly tag: "readable" }
@@ -828,9 +904,7 @@ function supportedFinalizationChoiceHoles(input: {
     choiceHole({
       source: unitSource(
         startingClassUnitId(input.selections.progression),
-        input.classFacts.className === "wizard"
-          ? WIZARD_SKILL_CHOICE_KEY
-          : FIGHTER_SKILL_CHOICE_KEY,
+        CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
       ),
       cardinality: exactChoiceCardinality(
         input.classFacts.skillProficiencyChoice.choose,
@@ -838,8 +912,13 @@ function supportedFinalizationChoiceHoles(input: {
       options: input.classFacts.skillProficiencyChoice.options.map(skillOption),
     }),
   );
-  const classFeatureHoles = input.classFacts.featureGrants
-    .filter((grant) => grant.level <= input.classLevel)
+  const classFeatureHoles = [...input.classFactsByUnitId]
+    .flatMap(([classUnitId, facts]) =>
+      facts.featureGrants.filter(
+        (grant) =>
+          grant.level <= classLevelForUnit(input.selections.progression, classUnitId),
+      ),
+    )
     .flatMap((grant) =>
       classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary),
     )
@@ -847,6 +926,47 @@ function supportedFinalizationChoiceHoles(input: {
       const unitHole = requireUnitChoiceCreationHole(hole);
       return unitHole === undefined ? [] : [unitHole];
     });
+  const subclassHoles = [...input.classFactsByUnitId].flatMap(
+    ([classUnitId, facts]) =>
+      facts.subclassChoices
+        .filter(
+          (choice) =>
+            choice.level <=
+            classLevelForUnit(input.selections.progression, classUnitId),
+        )
+        .flatMap((choice) =>
+          compact([
+            requireUnitChoiceCreationHole(
+              choiceHole({
+                source: unitSource(classUnitId, CLASS_SUBCLASS_CHOICE_KEY),
+                cardinality: EXACTLY_ONE_CHOICE,
+                options: choice.options.flatMap((unitId) => {
+                  const unit = input.unitLibrary.getUnit(unitId);
+                  return Option.isSome(unit)
+                    ? [
+                        {
+                          optionId: creationChoiceOptionId(unit.value.id),
+                          label: unit.value.name,
+                          unitRef: { unitId: unit.value.id },
+                        },
+                      ]
+                    : [];
+                }),
+              }),
+            ),
+          ]),
+        ),
+  );
+  const multiclassProficiencyHoles = [...input.classFactsByUnitId].flatMap(
+    ([classUnitId, facts]) =>
+      classUnitId === startingClassUnitId(input.selections.progression)
+        ? []
+        : multiclassProficiencyChoiceHoles(classUnitId, facts),
+  );
+  const selectedFeatAbilityScoreHoles = selectedFeatAbilityScoreChoiceHoles(
+    input.selections,
+    input.unitLibrary,
+  );
   const wizardSpellHoles =
     input.classFacts.className === "wizard"
       ? wizardSpellcastingChoiceHoles(
@@ -862,6 +982,9 @@ function supportedFinalizationChoiceHoles(input: {
   return [
     classSkillHole,
     ...classFeatureHoles,
+    ...subclassHoles,
+    ...multiclassProficiencyHoles,
+    ...selectedFeatAbilityScoreHoles,
     ...wizardSpellHoles,
     ...(backgroundToolHole == null
       ? []
@@ -903,7 +1026,7 @@ function supportedFinalizationChoiceHoles(input: {
 
 function wizardSpellcastingChoiceHoles(
   classUnitId: UnitRecord["id"],
-  classFacts: Extract<ClassCreationFacts, { readonly className: "wizard" }>,
+  classFacts: WizardClassCreationFacts,
 ): readonly UnitChoiceCreationHole[] {
   const spellcasting = classFacts.spellcasting;
   return compact([
@@ -943,6 +1066,90 @@ function wizardSpellcastingChoiceHoles(
       }),
     ),
   ]);
+}
+
+function multiclassProficiencyChoiceHoles(
+  classUnitId: UnitRecord["id"],
+  classFacts: ClassCreationFacts,
+): readonly UnitChoiceCreationHole[] {
+  const proficiency = classFacts.multiclassProficiencies;
+  if (proficiency.kind !== "choice") {
+    return [];
+  }
+
+  return compact([
+    requireUnitChoiceCreationHole(
+      choiceHole({
+        source: unitSource(classUnitId, CLASS_FEATURE_PROFICIENCY_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(proficiency.count),
+        options: proficiency.options.map(proficiencyGrantSubjectOption),
+      }),
+    ),
+  ]);
+}
+
+function proficiencyGrantSubjectOption(
+  subject: ProficiencyGrantSubject,
+): CreationChoiceOption {
+  if (subject.kind === "skill") {
+    return skillOption(subject.skill);
+  }
+  if (subject.kind === "weapon_category") {
+    return {
+      optionId: creationChoiceOptionId(`weapon_category:${subject.category}`),
+      label: `Weapon category: ${subject.category}`,
+    };
+  }
+  if (subject.kind === "armor_category") {
+    return {
+      optionId: creationChoiceOptionId(`armor_category:${subject.category}`),
+      label: `Armor category: ${subject.category}`,
+    };
+  }
+
+  return {
+    optionId: creationChoiceOptionId(`tool:${subject.toolId}`),
+    label: subject.toolId,
+  };
+}
+
+function selectedFeatAbilityScoreChoiceHoles(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): readonly UnitChoiceCreationHole[] {
+  return unitChoiceSelections(selections).flatMap((selection) => {
+    if (selection.source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY) {
+      return [];
+    }
+
+    return selection.options.flatMap((option) => {
+      const featUnitId = option.unitRef?.unitId;
+      if (featUnitId == null) return [];
+      const unit = unitLibrary.getUnit(featUnitId);
+      if (
+        Option.isNone(unit) ||
+        unit.value.kind !== "feat" ||
+        unit.value.abilityScoreIncreaseChoice == null
+      ) {
+        return [];
+      }
+
+      return compact([
+        requireUnitChoiceCreationHole(
+          choiceHole({
+            source: unitSource(
+              selection.source.unitId,
+              CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+            ),
+            cardinality: EXACTLY_ONE_CHOICE,
+            options: abilityScoreIncreaseOptions(
+              unit.value as Parameters<typeof abilityScoreIncreaseOptions>[0],
+            ),
+          }),
+        ),
+      ]);
+    });
+  });
 }
 
 function requireChoiceCreationHole(
@@ -1282,6 +1489,78 @@ export function applyBackgroundAbilityScoreIncrease(
   });
 }
 
+function applyClassFeatureAbilityScoreIncreases(
+  baseScores: AbilityScoreAssignment,
+  selections: FinalizedCharacterSelections,
+): Either.Either<AbilityScoreAssignment, CreationFinalizationIssue> {
+  const deltasWithCaps = selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" &&
+    selection.source.choiceKey ===
+      CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY
+      ? choiceSelectionOptionIds(selection).flatMap((optionId) =>
+          abilityScoreIncreaseDeltasFromOptionId(String(optionId)),
+        )
+      : [],
+  );
+  let scores = baseScores;
+  for (const delta of deltasWithCaps) {
+    const currentScore = scores[delta.ability];
+    if (currentScore + delta.increase > delta.maxScore) {
+      return Either.left(
+        illegalFinalizationIssue(
+          `Cannot apply class-feature ability-score increase: ${delta.ability} ${
+            currentScore
+          } + ${delta.increase} would exceed ${delta.maxScore}.`,
+        ),
+      );
+    }
+
+    scores = {
+      ...scores,
+      [delta.ability]: abilityScore(currentScore + delta.increase),
+    };
+  }
+
+  return Either.right(scores);
+}
+
+function abilityScoreIncreaseDeltasFromOptionId(
+  optionId: string,
+): readonly (BackgroundAbilityScoreIncreaseDelta & {
+  readonly maxScore: number;
+})[] {
+  const oneScore = optionId.match(
+    /^ability_score:(str|dex|con|int|wis|cha):\+(\d+):max(\d+)$/,
+  );
+  if (oneScore != null) {
+    return [
+      {
+        ability: oneScore[1] as Ability,
+        increase: Number(oneScore[2]),
+        maxScore: Number(oneScore[3]),
+      },
+    ];
+  }
+
+  const twoScores = optionId.match(
+    /^ability_scores:(str|dex|con|int|wis|cha):\+(\d+);(str|dex|con|int|wis|cha):\+(\d+):max(\d+)$/,
+  );
+  if (twoScores != null) {
+    return totalBackgroundAbilityScoreIncreaseDeltas([
+      {
+        ability: twoScores[1] as Ability,
+        increase: Number(twoScores[2]),
+      },
+      {
+        ability: twoScores[3] as Ability,
+        increase: Number(twoScores[4]),
+      },
+    ]).map((delta) => ({ ...delta, maxScore: Number(twoScores[5]) }));
+  }
+
+  return [];
+}
+
 function backgroundAbilityScoreIncreaseDeltas(
   selection: BackgroundAbilityScoreIncreaseSelection,
   eligibleAbilities: readonly Ability[],
@@ -1351,24 +1630,38 @@ export function abilityModifier(score: number): number {
 
 export function finalizedBuildSkillProficiencies(
   selections: FinalizedCharacterSelections,
-  classFacts?: ClassCreationFacts,
 ): readonly Skill[] {
-  const skillChoiceKey =
-    classFacts?.className === "wizard"
-      ? WIZARD_SKILL_CHOICE_KEY
-      : FIGHTER_SKILL_CHOICE_KEY;
   const skillSelection = selections.choices.find(
-    (selection) =>
+    (selection): selection is UnitChoiceSelection =>
       selection.kind === "unitChoice" &&
       sameCreationHoleSource(
         selection.source,
-        unitSource(startingClassUnitId(selections.progression), skillChoiceKey),
+        unitSource(
+          startingClassUnitId(selections.progression),
+          CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+        ),
       ),
   );
 
-  return skillSelection == null
+  return uniqueValues([
+    ...skillsFromChoiceSelection(skillSelection),
+    ...selections.choices.flatMap((selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY
+        ? proficiencySubjectsFromChoiceSelection(selection).flatMap((subject) =>
+            subject.kind === "skill" ? [subject.skill] : [],
+          )
+        : [],
+    ),
+  ]);
+}
+
+function skillsFromChoiceSelection(
+  selection: UnitChoiceSelection | undefined,
+): readonly Skill[] {
+  return selection == null
     ? []
-    : choiceSelectionOptionIds(skillSelection).flatMap((optionId) => {
+    : choiceSelectionOptionIds(selection).flatMap((optionId) => {
         const skill = SKILLS.find((candidate) => candidate === optionId);
         return skill == null ? [] : [skill];
       });
@@ -1386,7 +1679,81 @@ export function finalizedBuildToolProficiencies(
       ),
   );
 
-  return toolSelection == null ? [] : choiceSelectionOptionIds(toolSelection);
+  return uniqueValues([
+    ...(toolSelection == null ? [] : choiceSelectionOptionIds(toolSelection)),
+    ...selections.choices.flatMap((selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY
+        ? proficiencySubjectsFromChoiceSelection(selection).flatMap((subject) =>
+            subject.kind === "tool"
+              ? [creationChoiceOptionId(`tool:${subject.toolId}`)]
+              : [],
+          )
+        : [],
+    ),
+  ]);
+}
+
+function finalizedBuildWeaponProficiencies(
+  selections: FinalizedCharacterSelections,
+): readonly WeaponProficiencyCategory[] {
+  return selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" &&
+    selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY
+      ? proficiencySubjectsFromChoiceSelection(selection).flatMap((subject) =>
+          subject.kind === "weapon_category" ? [subject.category] : [],
+        )
+      : [],
+  );
+}
+
+function finalizedBuildArmorTraining(
+  selections: FinalizedCharacterSelections,
+): readonly ArmorTrainingCategory[] {
+  return selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" &&
+    selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY
+      ? proficiencySubjectsFromChoiceSelection(selection).flatMap((subject) =>
+          subject.kind === "armor_category" ? [subject.category] : [],
+        )
+      : [],
+  );
+}
+
+function proficiencySubjectsFromChoiceSelection(
+  selection: UnitChoiceSelection,
+): readonly ProficiencyGrantSubject[] {
+  return choiceSelectionOptionIds(selection).flatMap((optionId) =>
+    proficiencyGrantSubjectFromOptionId(String(optionId)),
+  );
+}
+
+function proficiencyGrantSubjectFromOptionId(
+  optionId: string,
+): readonly ProficiencyGrantSubject[] {
+  if ((SKILLS as readonly string[]).includes(optionId)) {
+    return [{ kind: "skill", skill: optionId as Skill }];
+  }
+  if (optionId.startsWith("weapon_category:")) {
+    const category = optionId.slice("weapon_category:".length);
+    return category === "simple" || category === "martial"
+      ? [{ kind: "weapon_category", category }]
+      : [];
+  }
+  if (optionId.startsWith("armor_category:")) {
+    const category = optionId.slice("armor_category:".length);
+    return category === "light" ||
+      category === "medium" ||
+      category === "heavy" ||
+      category === "shield"
+      ? [{ kind: "armor_category", category }]
+      : [];
+  }
+  if (optionId.startsWith("tool:")) {
+    return [{ kind: "tool", toolId: optionId.slice("tool:".length) }];
+  }
+
+  return [];
 }
 
 export function resourceForFeature(

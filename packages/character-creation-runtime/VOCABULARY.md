@@ -66,3 +66,13 @@ Source-shaped finalization checks - finalization reconstructs expected
 choice-hole families from Surface readers and support-profile entries, then
 matches selected choices against those hole shapes. This avoids authored-id
 semantic dispatch in finalization.
+
+Subclass Choice - a class-owned Unit choice opened by Surface class creation
+facts once the selected progression reaches the subclass level. The selected
+subclass Unit ref is retained as a `classChoice` build feature; subclass feature
+grants stay owned by the subclass Unit boundary.
+
+Class-feature Ability Score Increase Choice - a follow-up Unit choice opened
+when a selected feat Unit carries an executable ability-score increase choice.
+Finalization applies the selected increases to `CharacterBuild.abilityScores`
+and enforces the feat's SRD maximum score.

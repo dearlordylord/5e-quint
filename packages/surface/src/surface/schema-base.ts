@@ -121,6 +121,8 @@ export const ClassNameSchema = Schema.Literal(...CLASS_NAMES);
 
 export const ClassRecordKindSchema = Schema.Literal("class");
 
+export const SubclassRecordKindSchema = Schema.Literal("subclass");
+
 export const BackgroundRecordKindSchema = Schema.Literal("background");
 
 export const SpeciesRecordKindSchema = Schema.Literal("species");
@@ -343,12 +345,19 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
     kind: Schema.Literal("armor_category"),
     category: ArmorTrainingCategorySchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("tool"),
+    toolId: Schema.String,
+  }),
 );
 
 export const ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema =
   Schema.NonEmptyArray(ProficiencyGrantSubjectSchema);
 
 export const ProficiencyGrantSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("none"),
+  }),
   Schema.Struct({
     kind: Schema.Literal("fixed"),
     proficiencies: ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,

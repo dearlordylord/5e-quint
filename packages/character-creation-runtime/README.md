@@ -149,10 +149,11 @@ The finalized `CharacterBuild` carries Character Progression plus selected Unit
 refs and derived build facts needed by later boundaries: final ability scores,
 Hit Point maximum and Hit Die pool, proficiencies, granted feature refs,
 activation resources, starting Wizard Spell Access and Spell Slot capacity, and
-equipment/loadout refs. Supported class-choice features, Wizard spellcasting
-facts, loadout refs, and equipment item ids are projected from accepted draft
-selections and Unit readers, not reauthored as parallel constants. The remaining
-finalization gate
+equipment/loadout refs. Supported subclass choices, class-feature feat grants
+including Ability Score Improvement and Epic Boon ability-score increases,
+proficiency grants, Wizard spellcasting facts, loadout refs, and equipment item
+ids are projected from accepted draft selections and Unit readers, not
+reauthored as parallel constants. The remaining finalization gate
 rejects complete drafts whose progression profile, origin facts, choices, or
 equipment are outside the support profile. `CharacterBuild` does not carry
 current HP, Temporary Hit Points, expended resources or Spell Slots, Hit Dice

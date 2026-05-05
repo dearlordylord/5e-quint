@@ -134,6 +134,9 @@ export type ClassName = Schema.Schema.Type<
 export type ClassRecordKind = Schema.Schema.Type<
   typeof SurfaceSchema.ClassRecordKindSchema
 >;
+export type SubclassRecordKind = Schema.Schema.Type<
+  typeof SurfaceSchema.SubclassRecordKindSchema
+>;
 export type BackgroundRecordKind = Schema.Schema.Type<
   typeof SurfaceSchema.BackgroundRecordKindSchema
 >;
@@ -644,6 +647,9 @@ export type TacticalMindMechanics = Schema.Schema.Type<
 >;
 export type ClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassRecordSchema
+>;
+export type SubclassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.SubclassRecordSchema
 >;
 export type WizardClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.WizardClassRecordSchema

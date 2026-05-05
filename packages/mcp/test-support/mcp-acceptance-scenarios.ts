@@ -295,8 +295,8 @@ export async function verifyBaselineVertical(client: Client) {
     draftId,
   });
   assert.deepEqual(holeIds(choices), [
-    unitHoleId("class_fighter", "fighter_skill_choices"),
-    unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+    unitHoleId("class_fighter", "class_skill_proficiency_choice"),
+    unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
     unitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
     unitHoleId("class_fighter", "class_equipment_choice"),
     unitHoleId("background_soldier", "background_ability_score_increase"),
@@ -309,12 +309,12 @@ export async function verifyBaselineVertical(client: Client) {
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_fighter", "fighter_skill_choices"),
+        unitHoleId("class_fighter", "class_skill_proficiency_choice"),
         "perception",
         "survival",
       ),
       choiceFill(
-        unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         "defense",
       ),
       choiceFill(
@@ -751,12 +751,12 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_fighter", "fighter_skill_choices"),
+        unitHoleId("class_fighter", "class_skill_proficiency_choice"),
         "perception",
         "survival",
       ),
       choiceFill(
-        unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         "defense",
       ),
       choiceFill(
@@ -827,7 +827,7 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_wizard", "wizard_skill_choices"),
+        unitHoleId("class_wizard", "class_skill_proficiency_choice"),
         "arcana",
         "history",
       ),

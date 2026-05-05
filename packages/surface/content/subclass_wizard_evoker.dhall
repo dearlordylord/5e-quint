@@ -1,0 +1,13 @@
+let evoker =
+      { className = "wizard"
+      , description =
+          "The Evoker Wizard subclass choice. Subclass feature Units are promoted separately from the choice boundary."
+      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , id = "subclass_wizard_evoker"
+      , kind = "subclass"
+      , name = "Evoker"
+      , provenance =
+          { kind = "srd-5.2.1", section = "Classes/Wizard.md:108-110,405" }
+      }
+
+in  evoker
