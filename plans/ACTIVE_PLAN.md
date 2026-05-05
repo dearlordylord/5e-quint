@@ -79,13 +79,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 66,
       "id": "PBA16",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Death-Save Promoted MBT Coverage"
     },
     {
       "number": 67,
       "id": "PBA17",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Restore Nonlethal Knockout And Zero-HP Handoff Width"
     },
     {
@@ -202,8 +202,8 @@ Keep it synchronized with the DAG table and task details.
 | 63    | PBA15A0C - Replace Level-One Class-Entry Workflow                 | done                                          | PBA15A0B     | PBA15A0D     | inline below                                                                                                 | Runtime progression fill now replaces separate primary-class and level-1 class-entry workflow.                                   |
 | 64    | PBA15A0D - Wire Progression And Multiclass Through MCP Docs       | done                                          | PBA15A0C     | PBA15A       | inline below                                                                                                 | MCP schema/workflow/docs now expose progression as one atomic profile choice and point multiclass validation at shared-algebras. |
 | 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | done                                          | PBA15A0D     | PBA15B       | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Character-creation ability-score assignments are parsed into shared AbilityScore values before durable runtime storage.           |
-| 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | ready-for-implementation-after-light-research | PBA15B       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes.                                                |
-| 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | blocked                                       | PBA16        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width.                                                  |
+| 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | done                                          | PBA15B       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Promoted battle-runtime MBT/QNT now covers Death Saving Throw holes for a Character Build combatant.                              |
+| 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | ready-for-implementation-after-light-research | PBA16        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width.                                                  |
 | 68    | PBA15B - Remove Runtime-Owned Spatiality And Distances            | done                                          | PBA15A       | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)              | Promoted runtime and MCP now consume table/caller spatial facts instead of owning combatant distances. |
 | 69    | PBA18 - Widen Attack Range And Conditional Attack Riders          | ready-for-implementation-after-light-research | PBA15B       | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Restore long-range Disadvantage and supported conditional attack riders.                                                         |
 | 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | blocked                                       | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families.                                                              |
@@ -485,7 +485,7 @@ because promoted battle-runtime mappings were not touched. PBA15B is unblocked.
 
 ### Task 66 - PBA16 - Add Death-Save Promoted MBT Coverage
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA15B
 Blocks: PBA17
@@ -506,9 +506,17 @@ no broad battle MBT/fuzz, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA17.
 
+Closeout: promoted `@dnd/battle-runtime` MBT now models and replays the
+`DeathSavingThrow` hole for a Character Build combatant starting its turn at 0
+HP. The dedicated promoted MBT scenario compares current actor role, pending
+holes, HP, Unconscious, Stable, dead, and Death Saving Throw success/failure
+counters across QNT and TS. Verification covered RAW/UBIQUITOUS_LANGUAGE
+anchors, QNT typechecks, focused battle-runtime TypeScript typecheck, and the
+Tier 1 promoted MBT test. PBA17 is unblocked.
+
 ### Task 67 - PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA16
 Blocks: PBA18

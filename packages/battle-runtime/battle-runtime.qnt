@@ -123,6 +123,7 @@ module battleRuntime {
     | TargetChoice
     | AttackRoll
     | DamageRoll
+    | DeathSavingThrow
     | SavingThrowOutcome
     | GrappleOutcome
     | EscapeGrappleOutcome

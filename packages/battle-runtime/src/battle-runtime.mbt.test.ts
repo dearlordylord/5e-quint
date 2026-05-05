@@ -55,9 +55,11 @@ type MbtHole =
   | "TargetChoice"
   | "AttackRoll"
   | "DamageRoll"
+  | "DeathSavingThrow"
   | "StatBlockRechargeRoll";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
-type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject";
+type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
+type DeathSavingThrowMbtTurnRole = "actor" | "target";
 
 type MbtProjection = {
   readonly skeletonHp: number;
@@ -69,8 +71,22 @@ type MbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
+type DeathSavingThrowMbtProjection = {
+  readonly currentTurnRole: DeathSavingThrowMbtTurnRole;
+  readonly targetHp: number;
+  readonly targetUnconscious: boolean;
+  readonly targetStable: boolean;
+  readonly targetDead: boolean;
+  readonly targetDeathSuccesses: number;
+  readonly targetDeathFailures: number;
+  readonly holes: readonly MbtHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
+const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
@@ -99,6 +115,17 @@ const driverSchema = {
   doFillDamageLowSneakAttack: {},
   doFillDamageHighSneakAttack: {},
   doRejectStaleAfterResolved: {},
+  step: {},
+} as const;
+
+const deathSavingThrowDriverSchema = {
+  init: {},
+  doDiscoverEndTurnDeathSavingThrow: {},
+  doFillDeathSavingThrowNaturalOne: {},
+  doFillDeathSavingThrowFailure: {},
+  doFillDeathSavingThrowSuccess: {},
+  doFillDeathSavingThrowNaturalTwenty: {},
+  doRejectWrongActorEndTurnAfterResolved: {},
   step: {},
 } as const;
 
@@ -213,6 +240,84 @@ function createBattleRuntimeDriver() {
   });
 }
 
+function createDeathSavingThrowDriver() {
+  return defineDriver(deathSavingThrowDriverSchema, () => {
+    let state = deathSavingThrowBattle();
+    const subject = endTurnSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let lastResult: DeathSavingThrowMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: DeathSavingThrowMbtProjection["lastInvalidReason"] =
+      "";
+
+    function reset(): void {
+      state = deathSavingThrowBattle();
+      fills = [];
+      holes = [];
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function submit(nextFills: readonly BattleFill[]): void {
+      fills = nextFills;
+      const result = resolveBattleSubject({ state, subject, fills });
+      recordResult(result);
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    function fillDeathSavingThrow(roll: number): void {
+      const deathSavingThrow = requireHole(holes, "deathSavingThrow");
+      submit([deathSavingThrowFill(deathSavingThrow, roll)]);
+    }
+
+    return {
+      init: reset,
+      doDiscoverEndTurnDeathSavingThrow: () => {
+        submit([]);
+      },
+      doFillDeathSavingThrowNaturalOne: () => {
+        fillDeathSavingThrow(1);
+      },
+      doFillDeathSavingThrowFailure: () => {
+        fillDeathSavingThrow(5);
+      },
+      doFillDeathSavingThrowSuccess: () => {
+        fillDeathSavingThrow(10);
+      },
+      doFillDeathSavingThrowNaturalTwenty: () => {
+        fillDeathSavingThrow(20);
+      },
+      doRejectWrongActorEndTurnAfterResolved: () => {
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      step: () => {},
+      getState: () =>
+        projectDeathSavingThrowMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const state = quintStateRecord(raw);
 
@@ -227,7 +332,43 @@ function normalizeQuintState(raw: unknown): MbtProjection {
   };
 }
 
+function normalizeDeathSavingThrowQuintState(
+  raw: unknown,
+): DeathSavingThrowMbtProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    currentTurnRole: deathSavingThrowMbtTurnRole(
+      state["qCurrentTurnRole"],
+      "qCurrentTurnRole",
+    ),
+    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
+    targetUnconscious: booleanField(state, "qTargetUnconscious"),
+    targetStable: booleanField(state, "qTargetStable"),
+    targetDead: booleanField(state, "qTargetDead"),
+    targetDeathSuccesses: numberFromQuintInt(
+      state["qTargetDeathSuccesses"],
+      "qTargetDeathSuccesses",
+    ),
+    targetDeathFailures: numberFromQuintInt(
+      state["qTargetDeathFailures"],
+      "qTargetDeathFailures",
+    ),
+    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+  };
+}
+
 function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
+  expect(impl).toEqual(spec);
+  return true;
+}
+
+function compareDeathSavingThrowState(
+  spec: DeathSavingThrowMbtProjection,
+  impl: DeathSavingThrowMbtProjection,
+): boolean {
   expect(impl).toEqual(spec);
   return true;
 }
@@ -238,7 +379,11 @@ function mbtInvalidReason(
     { readonly tag: "invalid" }
   >["reason"],
 ): MbtProjection["lastInvalidReason"] {
-  if (reason === "invalidFill" || reason === "staleSubject") {
+  if (
+    reason === "invalidFill" ||
+    reason === "staleSubject" ||
+    reason === "wrongActor"
+  ) {
     return reason;
   }
 
@@ -246,6 +391,10 @@ function mbtInvalidReason(
 }
 
 const battleRuntimeStateCheck = stateCheck(normalizeQuintState, compareState);
+const deathSavingThrowStateCheck = stateCheck(
+  normalizeDeathSavingThrowQuintState,
+  compareDeathSavingThrowState,
+);
 
 describe("battle-runtime MBT", () => {
   it("replays Rogue weapon Attack and Sneak Attack traces against a Skeleton target", async () => {
@@ -258,6 +407,22 @@ describe("battle-runtime MBT", () => {
       nTraces: Number(process.env["MBT_TRACES"] ?? 1),
       maxSteps: Number(process.env["MBT_STEPS"] ?? 6),
       stateCheck: battleRuntimeStateCheck,
+    });
+  }, 120_000);
+
+  it("replays start-turn Death Saving Throw holes for a Character Build combatant", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../battle-runtime-death-saving-throw.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createDeathSavingThrowDriver(),
+      backend: "typescript",
+      nTraces: Number(process.env["MBT_TRACES"] ?? 4),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? 3),
+      stateCheck: deathSavingThrowStateCheck,
     });
   }, 120_000);
 });
@@ -290,6 +455,38 @@ function projectMbtState(input: {
           usage.attackerId === fighterId &&
           usage.unitId === "rogue_sneak_attack",
       ),
+    holes: input.holes.map(projectHole).sort(),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function projectDeathSavingThrowMbtState(input: {
+  readonly state: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly lastResult: DeathSavingThrowMbtProjection["lastResult"];
+  readonly lastInvalidReason: DeathSavingThrowMbtProjection["lastInvalidReason"];
+}): DeathSavingThrowMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const target = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === deathSavingThrowTargetId,
+  );
+  if (target == null) {
+    throw new Error("Expected Death Saving Throw target in battle snapshot.");
+  }
+  if (target.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
+    throw new Error("Expected target to use Death Saving Throws.");
+  }
+
+  return {
+    currentTurnRole:
+      snapshot.currentActorId === deathSavingThrowTargetId ? "target" : "actor",
+    targetHp: target.hp,
+    targetUnconscious: target.conditions.includes("unconscious"),
+    targetStable: target.zeroHpLifecycle.stable,
+    targetDead: target.zeroHpLifecycle.dead,
+    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
+    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
     holes: input.holes.map(projectHole).sort(),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
@@ -334,6 +531,87 @@ function fighterVsSkeletonBattle(): BattleState {
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
+}
+
+function deathSavingThrowBattle(): BattleState {
+  const state = startBattleRight({
+    battleId: battleId("battle-runtime-mbt-death-saving-throw"),
+    combatants: [
+      mbtCharacterCreatureInit({
+        combatantId: fighterId,
+        characterId: "death-saving-throw-actor-character",
+        displayName: "Actor",
+        initiative: 20,
+        currentHp: 12,
+      }),
+      mbtCharacterCreatureInit({
+        combatantId: deathSavingThrowTargetId,
+        characterId: "death-saving-throw-target-character",
+        displayName: "Target",
+        initiative: 10,
+        currentHp: 0,
+        zeroHpLifecycle: {
+          policy: "usesDeathSavingThrows",
+          deathSaves: {
+            deathSaves: { successes: 2, failures: 1 },
+            stable: false,
+            dead: false,
+            hpRegained: false,
+          },
+        },
+      }),
+    ],
+  });
+
+  return state;
+}
+
+function mbtCharacterCreatureInit(input: {
+  readonly combatantId: CombatantId;
+  readonly characterId: string;
+  readonly displayName: string;
+  readonly initiative: number;
+  readonly currentHp: number;
+  readonly zeroHpLifecycle?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["zeroHpLifecycle"];
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId(input.characterId),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 1 }],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(input.currentHp),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      ...(input.zeroHpLifecycle === undefined
+        ? {}
+        : { zeroHpLifecycle: input.zeroHpLifecycle }),
+    },
+  };
+}
+
+function endTurnSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
+> {
+  return {
+    tag: "runtimeCommand",
+    actorId: fighterId,
+    command: "endTurn",
+  };
 }
 
 function rogueCreatureInit(input: {
@@ -560,7 +838,7 @@ function projectHole(hole: BattleHole): MbtHole {
       return "DamageRoll" as const;
     }),
     Match.when({ kind: "deathSavingThrow" }, () => {
-      throw new Error("Battle runtime MBT does not model death-save holes.");
+      return "DeathSavingThrow" as const;
     }),
     Match.when({ kind: "statBlockRechargeRoll" }, () => {
       return "StatBlockRechargeRoll" as const;
@@ -597,6 +875,7 @@ function holeName(raw: unknown): MbtHole {
     tag === "TargetChoice" ||
     tag === "AttackRoll" ||
     tag === "DamageRoll" ||
+    tag === "DeathSavingThrow" ||
     tag === "StatBlockRechargeRoll"
   ) {
     return tag;
@@ -605,12 +884,38 @@ function holeName(raw: unknown): MbtHole {
   throw new Error(`Unknown Quint battle hole variant: ${tag}`);
 }
 
+function deathSavingThrowMbtTurnRole(
+  raw: unknown,
+  field: string,
+): DeathSavingThrowMbtTurnRole {
+  if (raw === "actor" || raw === "target") {
+    return raw;
+  }
+
+  throw new Error(`Expected Death Saving Throw MBT turn role field ${field}.`);
+}
+
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
   if (!isRecord(raw)) {
     throw new Error("Expected Quint state to be an object.");
   }
 
   return raw;
+}
+
+function deathSavingThrowFill(
+  hole: BattleHole,
+  roll: number,
+): Extract<BattleFill, { readonly kind: "deathSavingThrow" }> {
+  if (hole.kind !== "deathSavingThrow") {
+    throw new Error("Expected Death Saving Throw hole.");
+  }
+
+  return {
+    kind: "deathSavingThrow",
+    holeId: hole.holeId,
+    value: DieRollResult(roll),
+  };
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -658,7 +963,12 @@ function mbtLastResult(raw: unknown): MbtLastResult {
 }
 
 function mbtLastInvalidReason(raw: unknown): MbtLastInvalidReason {
-  if (raw === "" || raw === "invalidFill" || raw === "staleSubject") {
+  if (
+    raw === "" ||
+    raw === "invalidFill" ||
+    raw === "staleSubject" ||
+    raw === "wrongActor"
+  ) {
     return raw;
   }
 
