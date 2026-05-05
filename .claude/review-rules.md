@@ -192,6 +192,32 @@ Examples:
 
 - Parse-don't-validate means parse or narrow once at the boundary and carry the stronger type forward; it does not require hiding the assumptions a downstream algorithm consumes. When an algorithm depends on a cardinality invariant already proven by a narrowed type, reify that dependency at the algorithm boundary with a named helper or assertion rather than anonymous positional access. This is not repeated validation; it makes the compile-time invariant visible at the semantic boundary that must change if the narrowed shape later widens.
 
+Shotgun validation example:
+
+```typescript
+// Bad: wide input comes in, the function checks it, but the type system forgets.
+function apply(input: Command): State {
+  if (input.kind !== "choice") return invalidState();
+  return applyChoice(input.optionIds);
+}
+
+// Good: pre-narrow when callers must already know the fact.
+function apply(input: Command & { readonly kind: "choice" }): State {
+  return applyChoice(input.optionIds);
+}
+
+// Good: post-narrow when this function discovers the fact.
+function accept(
+  input: Command,
+): Either<Issue, Command & { readonly kind: "choice" }> {
+  return input.kind === "choice"
+    ? Either.right(input)
+    : Either.left(wrongKind());
+}
+```
+
+If code checks a domain fact internally, either require that fact in the input type, return a narrowed output type that carries the fact, or both. Do not accept wide input, check it, then continue or return with the same wide type unless the remaining algorithm genuinely handles every variant.
+
 ## Holistic Fix Requirement
 
 When reviewing a fix made in response to prior review feedback, do not only verify that the cited line changed. Review whether the fix preserves the surrounding domain model, lifecycle, timing, provenance, and support boundary.
