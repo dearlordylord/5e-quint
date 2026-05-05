@@ -127,7 +127,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 74,
       "id": "PBA21B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote BattleSnapshot Into Battle View Contract"
     },
     {
@@ -228,7 +228,7 @@ Keep it synchronized with the DAG table and task details.
 | 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | done                                          | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Magic Missile split-target replay and higher-slot dart count are restored through spell target allocation fills.                                              |
 | 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | done                                          | PBA20        | PBA21A       | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Attack host Reaction windows and prepared Bonus Action healing spell subjects are restored in the promoted runtime.                                           |
 | 73    | PBA21A - Fix Knock Out Lifecycle Provenance                       | done                                          | PBA21        | PBA21B       | inline below                                                                                                 | Knock Out recovery provenance is runtime-owned, healing clears Knock Out Unconscious, and MCP no longer infers recovery from positive-HP Unconscious.         |
-| 74    | PBA21B - Promote BattleSnapshot Into Battle View Contract         | ready-for-implementation-after-light-research | PBA21A       | PBA22        | inline below                                                                                                 | Reshape, rename, or replace existing `BattleSnapshot` into one finite `/battle` and MCP view contract; delete the old loose snapshot shape.                   |
+| 74    | PBA21B - Promote BattleSnapshot Into Battle View Contract         | done                                          | PBA21A       | PBA22        | inline below                                                                                                 | Reshape, rename, or replace existing `BattleSnapshot` into one finite `/battle` and MCP view contract; delete the old loose snapshot shape.                   |
 | 75    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | blocked                                       | PBA21B       | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Move active `/battle` and MCP battle output to the promoted snapshot contract; temporarily quarantine Core-backed trace routes only to advance Core deletion. |
 | 76    | PBA23 - Core Promotion Deletion Ledger                            | blocked                                       | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                                               |
 | 77    | PBA24 - Remove Rogue Cunning Action Support Workaround            | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                                                     |
@@ -759,7 +759,7 @@ Plan Impact: PBA21B is unblocked.
 
 ### Task 74 - PBA21B - Promote BattleSnapshot Into Battle View Contract
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA21A
 Blocks: PBA22
