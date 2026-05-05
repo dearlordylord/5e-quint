@@ -434,12 +434,12 @@ Research plan:
 Inventory evidence:
 [pba15a-domain-primitives-inventory.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-inventory.md)
 
-Next action: migrate all Core-related durable Surface-authored and
-character-creation-runtime primitive domain debt after PBA15A0D leaves
-progression and multiclass prerequisite facts in their durable owners. This is
-not a whole-Surface/all-Units primitive cleanup; include primitive debt when it
-blocks or weakens promoted character creation, MCP/session migration, or Core
-deletion.
+Next action: migrate `AbilityScoreAssignment` from raw `number` values to an
+owned parsed ability-score assignment type before it is stored in
+`CreationFill`, `CharacterDraft`, or `CharacterBuild`. This should use the
+existing shared `AbilityScore` primitive or a narrower creation-assignment type
+that contains shared `AbilityScore` values. Do not widen this slice into broad
+Surface Unit id or whole-Surface numeric cleanup.
 
 Acceptance summary: changed Surface and character-creation production types no
 longer use bare primitives for Core-related durable domain values when an owned
@@ -453,8 +453,10 @@ Implementation note: the first PBA15A source-identity slices are integrated:
 Unit-choice and selected-equipment loadout sources use distinct source/key
 isomorphisms; `ChoiceCreationHole.source` excludes the ability-score draft
 source; MCP creation-hole schemas use runtime-owned literal domains and the
-canonical ability-score draft-path constant. RAW and UL/domain checker
-convergence passed in the parallel worktree review lanes before integration.
+canonical ability-score draft-path constant. `CharacterBuildLoadout.itemId` is
+also already represented by `CharacterEquipmentItemId`, a package-owned
+source/key isomorphism. RAW and UL/domain checker convergence passed in the
+parallel worktree review lanes before integration.
 
 Plan Impact: if successful, unblock PBA16.
 

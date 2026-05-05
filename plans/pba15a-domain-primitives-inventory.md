@@ -65,7 +65,7 @@ UL evidence:
 | Candidate | Current evidence | Classification and rationale |
 | --- | --- | --- |
 | `AbilityScoreAssignment` values in draft/fill/build | `packages/shared-algebras/src/ability-score-algebra.ts` defines `Readonly<Record<Ability, number>>`; `packages/character-creation-runtime/src/types.ts` stores it in ability-score fills, draft selections, and `CharacterBuildAbilityScores`. `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts` already parses multiclass scores to shared `AbilityScore`. | **In scope.** RAW gives ability scores a 1-20 creature range with monsters up to 30, Point Buy scores 8-15, and background ASI cap 20. This is durable `CharacterDraft`/`CharacterBuild` state and directly participates in Core removal. Recommended owner: shared-algebras should parse ability-score assignments to `AbilityScore` or a narrower creation-assignment type, then character creation should store the parsed type. |
-| `CharacterBuildLoadout.itemId` | `packages/character-creation-runtime/src/types.ts` has `itemId: string` for weapon/off-hand equipment; `packages/character-creation-runtime/src/finalization.ts` currently constructs ``main:${selectedUnitId}``. | **In scope. Baseline issue for an implementation lane.** This is durable `CharacterBuild` equipment identity. The current string is a composite protocol key without the source/key isomorphism required by the research plan. Either brand and parse `CharacterEquipmentItemId`, or remove the stored item id if the unit id and slot fully derive it. |
+| `CharacterBuildLoadout.itemId` | Current `packages/character-creation-runtime/src/types.ts` uses `CharacterEquipmentItemId<"main">` and `CharacterEquipmentItemId<"off">`; `finalization.ts` constructs item ids through `characterEquipmentItemId`; MCP and battle handoff use `characterEquipmentItemSourceFromId`. | **In scope and currently satisfied.** This durable build equipment identity is no longer an unparsed composite string. Keep the source/key isomorphism tests and do not reintroduce string composition in downstream packages. |
 | Unit-choice and loadout source identities | `packages/character-creation-runtime/src/types.ts` already has `UnitChoiceSourceUnitId`, `LoadoutEquipmentUnitId`, `UnitChoiceSourceKey`, `LoadoutSourceKey`, and `CreationHoleIdText` branches for `cc:unit-source:` and `cc:loadout-source:`. `packages/character-creation-runtime/src/finalization.ts` keys finalization maps by the branded source keys. | **In scope and currently satisfied in the dirty baseline.** This is exactly the first/second implementation slice from the research plan: creation-hole identity is now source-shaped rather than separator-parsing `cc:unit:${unitId}:${choiceKey}`. Keep property/isomorphism tests with the implementing lane. |
 | Support-profile ids and option ids | `packages/character-creation-runtime/src/support-gates.ts` stores `CreationChoiceOptionId` for options but still uses `UnitRecord["id"]` for supported background, equipment, manifest, and loadout Unit ids. `packages/character-creation-runtime/src/phase1-manifest.ts` owns many Unit id constants as plain literals satisfying `UnitRecord["id"]`. | **In scope, sequence after Surface id ownership.** Support Profile is explicitly not provenance, but it is a durable support/finalization boundary. The option ids are already branded. Unit ids should not get a character-creation-local duplicate brand if Surface can own `UnitId`; migrate after deciding whether Surface Unit ids become branded at the schema/catalog boundary. |
 | Surface Unit ids and Unit-sourced choice ids | `packages/surface/src/surface/schema-nonspell.ts` uses `NonEmptyStringSchema` for Unit metadata ids, starting-equipment choice ids, `unitId`, `spellId`, `originFeatId`, and class feature grant ids. `packages/surface/src/surface/unit-catalog.ts` defines `UnitId = UnitRecord["id"]` and validates duplicate/unknown refs in the catalog. | **In scope, high leverage.** Unit ids flow into `CharacterDraft`, holes/fills, support gates, finalization, and `CharacterBuild`. A Surface-owned `UnitId`/choice-id parse boundary would avoid duplicate character-creation brands. Preserve the existing SRD collection provenance boundary when doing this. |
@@ -95,34 +95,30 @@ UL evidence:
 
 ## Current Baseline Issues To Hand Off
 
-1. `CharacterBuildLoadout.itemId` should not remain an unparsed composite string.
-   It is durable build equipment identity and currently derives from
-   ``main:${selectedUnitId}``.
-2. `AbilityScoreAssignment` still stores raw `number` while adjacent multiclass
+1. `AbilityScoreAssignment` still stores raw `number` while adjacent multiclass
    algebra already uses shared `AbilityScore`. This is the highest-value scalar
    migration for PBA15A after source identity.
-3. Surface `UnitId` is only an alias for `UnitRecord["id"]`. Character creation
+2. Surface `UnitId` is only an alias for `UnitRecord["id"]`. Character creation
    should not add more local Unit id brands until Surface owns that id at the
    schema/catalog boundary.
-4. `spellSlotProjection` is runtime-projection language inside authored class
+3. `spellSlotProjection` is runtime-projection language inside authored class
    content. The value itself is in scope for `SpellSlotLevel`/`ResourceCount`;
    the name should move toward authored creation language such as
    `startingSpellSlotCapacity`.
 
 ## Recommended Migration Order
 
-1. Finish/verify source-key isomorphism tests for `UnitChoiceSourceKey`,
-   `LoadoutSourceKey`, and `CreationHoleId`.
-2. Parse `AbilityScoreAssignment` into shared `AbilityScore` values before
+1. Done: source-key isomorphism tests and production flow for
+   `UnitChoiceSourceKey`, `LoadoutSourceKey`, `CreationHoleId`, and
+   `CharacterEquipmentItemId`.
+2. Next: parse `AbilityScoreAssignment` into shared `AbilityScore` values before
    storing it in `CharacterDraft`, `CreationFill`, or `CharacterBuild`.
-3. Replace or remove `CharacterBuildLoadout.itemId`; if it remains, make it a
-   branded key with executable source/key isomorphism.
-4. Move Surface Unit ids and Unit-sourced choice ids to Surface-owned branded
+3. Move Surface Unit ids and Unit-sourced choice ids to Surface-owned branded
    types, then thread them through support gates and Character Build.
-5. Migrate `spellSlotProjection` values to `SpellSlotLevel`/`ResourceCount` and
+4. Migrate `spellSlotProjection` values to `SpellSlotLevel`/`ResourceCount` and
    rename the authored Surface field when the content migration lane can own the
    JSON/Dhall churn.
-6. Schedule equipment and Stat Block scalar brands by Surface family, not as a
+5. Schedule equipment and Stat Block scalar brands by Surface family, not as a
    single repository-wide primitive sweep.
 
 ## Verification

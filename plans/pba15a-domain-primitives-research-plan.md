@@ -51,22 +51,32 @@ Remove loadout slot keys from `UNIT_CHOICE_KEYS`, add a distinct
 `LoadoutSource` and branded `LoadoutSourceKey` source/key isomorphism, and use
 `cc:loadout-source:<LoadoutSourceKey>` for selected-equipment loadout holes.
 
-Remaining slice estimate after the loadout split: about four to five domain
-family slices, not one broad primitive sweep.
+Remaining slice estimate after the source-identity and loadout item-id slices:
+about three to four domain family slices, not one broad primitive sweep.
 
-1. Completed slice: CharacterBuild equipment item identity replaced raw durable
+1. Completed slice: Unit-choice and selected-equipment loadout source identity
+   are distinct. `UNIT_CHOICE_KEYS` no longer includes loadout slots, loadout
+   holes use `LoadoutSource` and `LoadoutSourceKey`, and MCP creation-hole
+   schemas expose the same narrowed source domains.
+2. Completed slice: CharacterBuild equipment item identity replaced raw durable
    `itemId: string` and `main:${selectedUnitId}` composition with a
    package-owned `CharacterEquipmentItemId` source/key isomorphism.
-2. Character progression level primitives: converge remaining raw
-   character-creation level numbers on shared level/domain types where they
-   carry class-level meaning.
-3. Surface class/level authored facts: brand or narrow `startingAtLevel`,
+3. Next implementation slice: `AbilityScoreAssignment` should stop carrying raw
+   `number` values after boundary parsing. Use shared `AbilityScore` values or a
+   narrower creation-assignment type that contains shared `AbilityScore` values,
+   then thread that parsed type through ability-score fills, draft selections,
+   `CharacterBuildAbilityScores`, background ASI application, MCP decode, and
+   finalization.
+4. Surface id ownership: move Surface Unit ids and Unit-sourced choice ids to
+   Surface-owned branded/catalog-boundary types before adding more local
+   character-creation Unit-id brands.
+5. Surface class/level authored facts: brand or narrow `startingAtLevel`,
    `atLevel`, and `baseLevel` where they drive promoted creation/runtime
    behavior.
-4. Surface authored numeric facts consumed by promoted flows: migrate
+6. Surface authored numeric facts consumed by promoted flows: migrate
    Core-removal-relevant costs, weights, ranges, HP/DC-like facts, and similar
    values by domain family.
-5. Split the Surface numeric slice further if equipment, spell, and Stat Block
+7. Split the Surface numeric slice further if equipment, spell, and Stat Block
    facts cause separate compile/test fallout. Do not include broad descriptive
    labels or whole-Surface cleanup unless the Core-removal relevance test above
    is met.
