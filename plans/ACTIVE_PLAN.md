@@ -712,6 +712,22 @@ Verification summary: app/source tests, MCP/runtime snapshot contract tests,
 Playwright screenshots for changed visual surfaces, no battle MBT unless
 runtime semantics change, `/simplify` convergence.
 
+Retry Guidance:
+
+- Keep all product implementation files tracked; do not leave imports/exports
+  depending on untracked generated files.
+- Build promoted trace rows from a single chronological runtime state sequence.
+  Later snapshots must preserve earlier resolved damage, pending Reaction
+  windows, resource spends, and Initiative advancement.
+- Do not present runtime-projected literals as promoted QNT/spec parity
+  evidence. Either consume real promoted spec trace evidence or label the view
+  as runtime-only.
+- Tighten the executable snapshot contract for exposed acts/holes/fills; avoid
+  `Any`-shaped MCP/UI fields for facts the UI depends on.
+- Include focused runtime/MCP snapshot contract tests, app typecheck or focused
+  app tests, and Playwright screenshot evidence for changed battle/trace UI
+  surfaces when browser tooling is available.
+
 Plan Impact: if successful, unblock PBA23.
 
 ### Task 74 - PBA23 - Core Promotion Deletion Ledger
