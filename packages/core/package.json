@@ -16,7 +16,7 @@
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
     "@dnd/surface": "workspace:*",
-    "@firfi/quint-connect": "^1.0.0",
+    "@firfi/quint-connect": "^2.0.0",
     "@statelyai/graph": "^0.8.0",
     "@statelyai/inspect": "^0.4.0",
     "effect": "^3.21.0",
