@@ -729,7 +729,7 @@ commit_plan_automation_change() {
   fi
 
   git add "$plan_file"
-  HUSKY=0 git commit -m "$message"
+  HUSKY=0 git commit -m "$message" >/dev/null
 }
 
 lookup_task_row() {
