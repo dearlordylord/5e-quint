@@ -4,7 +4,6 @@ import {
   combatantId,
   initiativeScore,
   type BattleId,
-  type BattleCombatantDistance,
   type CombatantId,
   type InitiativeScore,
 } from "@dnd/battle-runtime";
@@ -12,7 +11,7 @@ import {
   characterDraftId,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
-import { Hp, movementFeet, type Hp as HpType } from "@dnd/shared/types";
+import { Hp, type Hp as HpType } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Schema } from "effect";
 
@@ -81,19 +80,9 @@ const InitialBattleCombatantArgsSchema = Schema.Union(
   InitialCharacterSessionCombatantArgsSchema,
   InitialStatBlockCombatantArgsSchema,
 );
-const StartBattleCombatantDistanceArgsSchema = Schema.Struct({
-  combatantA: Schema.NonEmptyTrimmedString,
-  combatantB: Schema.NonEmptyTrimmedString,
-  feet: NonNegativeIntegerSchema,
-});
-
 const StartBattleToolArgsSchema = Schema.Struct({
   battleId: BattleIdSchema,
   initialCombatants: Schema.NonEmptyArray(InitialBattleCombatantArgsSchema),
-  combatantDistances: Schema.optionalWith(
-    Schema.Array(StartBattleCombatantDistanceArgsSchema),
-    { exact: true },
-  ),
 });
 
 type StartBattleToolArgs = Schema.Schema.Type<typeof StartBattleToolArgsSchema>;
@@ -108,7 +97,6 @@ export type StartBattleToolInput = {
     InitialBattleCombatantToolInput,
     ...InitialBattleCombatantToolInput[],
   ];
-  readonly combatantDistances?: readonly BattleCombatantDistance[];
 };
 
 export type InitialBattleCombatantToolInput =
@@ -146,17 +134,6 @@ export function decodeStartBattleArgs(
   return Either.right({
     battleId: record.right.battleId,
     initialCombatants: decodeInitialCombatants(record.right.initialCombatants),
-    ...(record.right.combatantDistances === undefined
-      ? {}
-      : {
-          combatantDistances: record.right.combatantDistances.map(
-            (distance) => ({
-              combatantA: combatantId(distance.combatantA),
-              combatantB: combatantId(distance.combatantB),
-              feet: movementFeet(distance.feet),
-            }),
-          ),
-        }),
   });
 }
 
@@ -212,11 +189,6 @@ function describeStartBattleInputSchema(
         ...objectProperty(properties.initialCombatants),
         description:
           "Non-empty initial combatant roster. Each combatant comes from a finalized character session or an SRD Stat Block.",
-      },
-      combatantDistances: {
-        ...objectProperty(properties.combatantDistances),
-        description:
-          "Optional explicit encounter distances in feet for combatant pairs. Omit only for the runtime's first-vertical default distance model.",
       },
     },
   };

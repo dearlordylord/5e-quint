@@ -237,11 +237,11 @@ function workflowGuide() {
       abilityScoresFill:
         '{"kind":"abilityScores","holeId":"copy from holes[].holeId","method":"standardArray","value":{"str":15,"dex":14,"con":13,"int":8,"wis":10,"cha":12}}',
       targetChoiceFill:
-        '{"kind":"targetChoice","holeId":"copy from result.holes[] or initialHoles[]","value":"target combatantId"}',
+        '{"kind":"targetChoice","holeId":"copy from result.holes[] or initialHoles[]","value":"target combatantId","spatialFacts":[{"kind":"attackTargetInMeleeReach | attackTargetInRangedRange | spellTarget | helpAttackTargetWithin5Feet | grappleTargetWithinReach | sneakAttackAllyWithin5FeetOfTarget","actorId":"table/caller combatantId when required","targetId":"table/caller combatantId when required","attackName":"selected attack name when required","rangeBand":"normal | long when required"}]}',
       attackRollFill:
         '{"kind":"attackRoll","holeId":"copy from result.holes[] or initialHoles[]","value":{"total":16,"naturalD20":14,"rollMode":"normal | advantage | disadvantage optional"}}',
       savingThrowOutcomeFill:
-        '{"kind":"savingThrowOutcome","holeId":"copy from result.holes[] or initialHoles[]","value":[{"targetId":"copy every affected target from one areaChoices[].affectedTargetIds","succeeded":false}]}',
+        '{"kind":"savingThrowOutcome","holeId":"copy from result.holes[] or initialHoles[]","value":{"area":{"originAnchorId":"table-supplied origin combatantId","affectedTargetIds":["table-supplied affected combatantId"]},"outcomes":[{"targetId":"same affected combatantId","succeeded":false}]}}',
       rolledDiceFill:
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
     },

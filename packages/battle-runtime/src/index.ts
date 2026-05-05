@@ -32,17 +32,6 @@ export {
   type CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
 export {
-  battleCombatantDistanceValidationMessage,
-  battleCombatantDistances,
-  combatantDistanceFeet,
-  combatantDistancesAsPairs,
-  validateBattleCombatantDistances,
-  type AcceptedBattleCombatantDistances,
-  type BattleCombatantDistance,
-  type BattleCombatantDistanceMap,
-  type BattleCombatantDistanceValidationIssue,
-} from "./distances.ts";
-export {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
   type BattleReactionTrigger,
@@ -136,7 +125,6 @@ export {
   type BattleHoleInstanceKey,
   type BattleInterruptedProcedure,
   type BattleInvalidReasonCode,
-  type BattleMovementDistanceUpdate,
   type BattleMovementFillValue,
   type BattleMovementHole,
   type BattleReactionDecision,

@@ -36,13 +36,7 @@ import {
   type CreationHoleIdText,
   type CharacterEquipmentItemSlot,
 } from "@dnd/character-creation-runtime";
-import {
-  Hp,
-  hp,
-  movementFeet,
-  resourceCount,
-  spellSlotLevel,
-} from "@dnd/shared/types";
+import { Hp, hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import {
   battleToolDefinitions,
   characterToolDefinitions,
@@ -1034,25 +1028,17 @@ describe("MCP server route", () => {
           holeId: "battle:movement",
           value: {
             movementCostFeet: 10,
-            distanceMovedFeet: 10,
-            destinationDistances: [{ combatantId: "goblin", feet: 4 }],
+            provokedOpportunityAttacks: [],
           },
         },
       }),
     );
-
     expect(moved.result.tag).toBe("resolved");
     expect(moved.battleState.combatants).toContainEqual(
       expect.objectContaining({
         combatantId: "fighter",
         movementSpentFeet: 10,
       }),
-    );
-    expect(moved.battleState.combatantDistances).toEqual(
-      expect.arrayContaining([
-        { from: "fighter", to: "goblin", feet: 4 },
-        { from: "goblin", to: "fighter", feet: 4 },
-      ]),
     );
   });
 
@@ -1275,6 +1261,14 @@ describe("MCP server route", () => {
           kind: "targetChoice",
           holeId: "battle:attack:target",
           value: "goblin",
+          spatialFacts: [
+            {
+              kind: "attackTargetInMeleeReach",
+              actorId: "fighter",
+              targetId: "goblin",
+              attackName: "Longsword",
+            },
+          ],
         },
       }),
     );
@@ -1414,6 +1408,14 @@ describe("MCP server route", () => {
           kind: "targetChoice",
           holeId: "battle:attack:target",
           value: "fighter",
+          spatialFacts: [
+            {
+              kind: "attackTargetInMeleeReach",
+              actorId: "goblin",
+              targetId: "fighter",
+              attackName: "Scimitar",
+            },
+          ],
         },
       }),
     );
@@ -1502,27 +1504,9 @@ describe("MCP server route", () => {
       combatantId: allyId,
       displayName: "Sneak Attack Ally",
     });
-    const combatantDistances = new Map(battleState.combatantDistances);
-    const setDistance = (
-      from: typeof fighterId,
-      to: typeof fighterId,
-      feet: ReturnType<typeof movementFeet>,
-    ): void => {
-      combatantDistances.set(
-        from,
-        new Map(combatantDistances.get(from)).set(to, feet),
-      );
-    };
-    setDistance(fighterId, goblinId, movementFeet(5));
-    setDistance(goblinId, fighterId, movementFeet(5));
-    setDistance(fighterId, allyId, movementFeet(5));
-    setDistance(allyId, fighterId, movementFeet(5));
-    setDistance(allyId, goblinId, movementFeet(5));
-    setDistance(goblinId, allyId, movementFeet(5));
     root.sessionStore.battleState = {
       ...battleState,
       combatants,
-      combatantDistances,
     };
     root.sessionStore.transientBattleFills = null;
 
@@ -1720,57 +1704,6 @@ describe("MCP server route", () => {
         code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
         sourceDraftId: "draft:mcp-missing-additional-secondary",
       },
-    });
-    expect(root.sessionStore.battleState).toBeNull();
-  });
-
-  test("start_battle rejects incomplete or duplicate explicit combatant distances", () => {
-    const root = createMcpCompositionRoot();
-    const draftId = "draft:mcp-invalid-distances";
-    createFinalizedFighterSheet(root, draftId);
-
-    const baseStart = {
-      battleId: "battle:mcp-invalid-distances",
-      initialCombatants: [
-        {
-          kind: "characterSession",
-          sourceDraftId: draftId,
-          combatantId: "fighter",
-          initiative: 18,
-          side: "party",
-        },
-        {
-          kind: "statBlock",
-          statBlockId: "stat_block_goblin_warrior",
-          combatantId: "goblin",
-          initiative: 7,
-          side: "opposition",
-        },
-      ],
-    } as const;
-
-    expect(
-      readPayload(
-        handleToolCall(root, "start_battle", {
-          ...baseStart,
-          combatantDistances: [],
-        }),
-      ),
-    ).toMatchObject({
-      details: { code: "INCOMPLETE_BATTLE_DISTANCE_PAIRS" },
-    });
-    expect(
-      readPayload(
-        handleToolCall(root, "start_battle", {
-          ...baseStart,
-          combatantDistances: [
-            { combatantA: "fighter", combatantB: "goblin", feet: 5 },
-            { combatantA: "goblin", combatantB: "fighter", feet: 10 },
-          ],
-        }),
-      ),
-    ).toMatchObject({
-      details: { code: "DUPLICATE_BATTLE_DISTANCE_PAIR" },
     });
     expect(root.sessionStore.battleState).toBeNull();
   });
@@ -2955,9 +2888,6 @@ describe("MCP server route", () => {
         initiative: initiativeScore(10),
         side: oppositionSide,
       },
-      combatantDistances: [
-        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(30) },
-      ],
       unitLibrary: root.unitLibrary,
     });
     root.sessionStore.battleState = state;
@@ -2979,12 +2909,7 @@ describe("MCP server route", () => {
           initialHoles: [
             expect.objectContaining({
               kind: "savingThrowOutcome",
-              areaChoices: expect.arrayContaining([
-                {
-                  originAnchorId: "goblin",
-                  affectedTargetIds: ["goblin"],
-                },
-              ]),
+              areaChoices: [],
             }),
           ],
         }),
@@ -2997,7 +2922,13 @@ describe("MCP server route", () => {
         fill: {
           kind: "savingThrowOutcome",
           holeId: "battle:spell:saving-throw-outcome:acid_splash",
-          value: [{ targetId: "goblin", succeeded: false }],
+          value: {
+            area: {
+              originAnchorId: "fighter",
+              affectedTargetIds: ["goblin"],
+            },
+            outcomes: [{ targetId: "goblin", succeeded: false }],
+          },
         },
       }),
     );
@@ -3067,9 +2998,6 @@ describe("MCP server route", () => {
         initiative: initiativeScore(10),
         side: oppositionSide,
       },
-      combatantDistances: [
-        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(30) },
-      ],
       unitLibrary: root.unitLibrary,
     });
     root.sessionStore.battleState = state;
@@ -3105,6 +3033,15 @@ describe("MCP server route", () => {
           kind: "targetChoice",
           holeId: "battle:attack:target",
           value: "fighter",
+          spatialFacts: [
+            {
+              kind: "attackTargetInRangedRange",
+              actorId: "goblin",
+              targetId: "fighter",
+              attackName: "Shortbow",
+              rangeBand: "normal",
+            },
+          ],
         },
       }),
     );
@@ -3578,10 +3515,45 @@ function fillBattleHoleThroughTool(
   fill: {
     readonly kind: "targetChoice" | "attackRoll" | "rolledDice";
     readonly holeId: string;
+    readonly spatialFacts?: readonly unknown[];
     readonly selectedAttackDamageRiderUnitIds?: readonly string[];
     readonly value: unknown;
   },
 ) {
+  const battleFill =
+    fill.kind === "targetChoice" && fill.spatialFacts === undefined
+      ? {
+          ...fill,
+          spatialFacts: [
+            attackName === "Shortbow"
+              ? {
+                  kind: "attackTargetInRangedRange",
+                  actorId,
+                  targetId: String(fill.value),
+                  attackName,
+                  rangeBand: "normal",
+                }
+              : {
+                  kind: "attackTargetInMeleeReach",
+                  actorId,
+                  targetId: String(fill.value),
+                  attackName,
+                },
+            {
+              kind: "sneakAttackAllyWithin5FeetOfTarget",
+              attackerId: actorId,
+              targetId: String(fill.value),
+              allyId: "ally",
+            },
+            {
+              kind: "sneakAttackAllyWithin5FeetOfTarget",
+              attackerId: actorId,
+              targetId: String(fill.value),
+              allyId: "sneak-attack-ally",
+            },
+          ],
+        }
+      : fill;
   return readPayload(
     handleToolCall(root, "fill_battle_hole", {
       subject: {
@@ -3590,7 +3562,7 @@ function fillBattleHoleThroughTool(
         action: "attack",
         attackName,
       },
-      fill,
+      fill: battleFill,
     }),
   );
 }

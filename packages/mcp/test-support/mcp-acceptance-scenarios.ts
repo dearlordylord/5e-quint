@@ -90,7 +90,7 @@ const agentConversationScenarios = [
     name: "Start battle with Initiative",
     userSays: "Start battle with these characters and initiative scores.",
     agentReads:
-      "start_battle exposes battleId, a non-empty initialCombatants roster, optional combatant distances, and per-combatant Initiative.",
+      "start_battle exposes battleId, a non-empty initialCombatants roster, and per-combatant Initiative.",
     agentDecision:
       "It uses sourceDraftIds from finalized character sessions, statBlock roster entries with Stat Block ids from list_stat_blocks, caller-chosen combatantIds for table actors, and rejects/repairs an empty initialCombatants array.",
     executableCoverage:
@@ -957,7 +957,49 @@ function magicSubject(actorId: string, spellId: string) {
 }
 
 function targetFill(value: string) {
-  return { kind: "targetChoice", holeId: "battle:attack:target", value };
+  return {
+    kind: "targetChoice",
+    holeId: "battle:attack:target",
+    value,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: "fighter",
+        targetId: value,
+        attackName: "Longsword",
+      },
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: "fighter",
+        targetId: value,
+        attackName: "Flail",
+      },
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: "goblin",
+        targetId: value,
+        attackName: "Scimitar",
+      },
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: "skeleton",
+        targetId: value,
+        attackName: "Shortsword",
+      },
+      {
+        kind: "spellTarget",
+        casterId: "wizard",
+        targetId: value,
+        spellId: "ray_of_frost",
+      },
+      {
+        kind: "spellTarget",
+        casterId: "wizard",
+        targetId: value,
+        spellId: "magic_missile",
+      },
+    ],
+  };
 }
 
 function attackRollFill(total: number, naturalD20: number) {

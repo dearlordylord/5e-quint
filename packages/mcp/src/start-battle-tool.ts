@@ -1,11 +1,8 @@
 import {
   battleCreatureInitFromStatBlock,
-  battleCombatantDistances,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
-  type AcceptedBattleCombatantDistances,
-  type BattleCombatantDistanceValidationIssue,
 } from "@dnd/battle-runtime";
 import { Either, Match, Option } from "effect";
 
@@ -55,9 +52,6 @@ export function handleStartBattleToolCall(
   );
   if (duplicateInput !== null) return duplicateInput;
 
-  const distanceInput = acceptedInitialCombatantDistances(input);
-  if (Either.isLeft(distanceInput)) return distanceInput.left;
-
   const combatants = startableBattleCombatants({
     root,
     initialCombatants: input.initialCombatants,
@@ -65,10 +59,8 @@ export function handleStartBattleToolCall(
   if (Either.isLeft(combatants)) return combatants.left;
 
   const state = startBattle({
-    tag: "acceptedDistances",
     battleId: input.battleId,
     combatants: combatants.right.creatureInits,
-    combatantDistances: distanceInput.right,
   });
   if (Either.isLeft(state)) {
     return errorContent("Battle session start failed.", {
@@ -119,67 +111,6 @@ function duplicateStartBattleInputContent(
   }
 
   return null;
-}
-
-function acceptedInitialCombatantDistances(
-  input: StartBattleToolInput,
-): Either.Either<
-  AcceptedBattleCombatantDistances,
-  ReturnType<typeof errorContent>
-> {
-  const combatantIds = new Set(
-    input.initialCombatants.map((combatant) => combatant.combatantId),
-  );
-  const distances = battleCombatantDistances({
-    combatantIds: [...combatantIds],
-    ...(input.combatantDistances === undefined
-      ? {}
-      : { combatantDistances: input.combatantDistances }),
-  });
-  return Either.isLeft(distances)
-    ? Either.left(distanceIssueContent(distances.left))
-    : Either.right(distances.right);
-}
-
-function distanceIssueContent(issue: BattleCombatantDistanceValidationIssue) {
-  return Match.value(issue).pipe(
-    Match.when({ tag: "invalidFeet" }, () =>
-      errorContent("Combatant distance must be a non-negative integer.", {
-        code: "INVALID_BATTLE_DISTANCE_FEET",
-      }),
-    ),
-    Match.when({ tag: "unknownCombatant" }, (unknown) =>
-      errorContent("Combatant distance references an unknown combatant.", {
-        code: "UNKNOWN_BATTLE_DISTANCE_COMBATANT",
-        combatantA: unknown.combatantA,
-        combatantB: unknown.combatantB,
-      }),
-    ),
-    Match.when({ tag: "selfDistance" }, (self) =>
-      errorContent("Combatant distance requires two combatants.", {
-        code: "SELF_BATTLE_DISTANCE",
-        combatantId: self.combatantId,
-      }),
-    ),
-    Match.when({ tag: "duplicatePair" }, (duplicate) =>
-      errorContent("Duplicate combatant distance pair.", {
-        code: "DUPLICATE_BATTLE_DISTANCE_PAIR",
-        combatantA: duplicate.combatantA,
-        combatantB: duplicate.combatantB,
-      }),
-    ),
-    Match.when({ tag: "incompletePairs" }, (incomplete) =>
-      errorContent(
-        "Explicit combatant distances must include every combatant pair.",
-        {
-          code: "INCOMPLETE_BATTLE_DISTANCE_PAIRS",
-          expectedPairCount: incomplete.expectedPairCount,
-          actualPairCount: incomplete.actualPairCount,
-        },
-      ),
-    ),
-    Match.exhaustive,
-  );
 }
 
 function startableBattleCombatants(input: {

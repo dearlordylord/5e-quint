@@ -42,7 +42,7 @@ flowchart TD
   CharacterBuild["Character Build + selected Unit refs<br/>owner: composition layer<br/>why: finalized PC facts enter battle without importing character creation"]
   StatBlock["StatBlockRecord<br/>owner: @dnd/surface catalog/composition<br/>why: monster/NPC authored facts enter battle without Core catalogs"]
   Init["BattleCreatureInit[]<br/>input to startBattle; includes caller-supplied Initiative scores<br/>why: one-time battle initialization boundary<br/>without: battle would import source package state directly"]
-  State["BattleState<br/>data: battle id, initiative, combatants, table-supplied pairwise distance facts, current-turn resources<br/>why: durable legality/replay input<br/>without: discovery and resolution would not share one combat snapshot"]
+  State["BattleState<br/>data: battle id, initiative, combatants, current-turn resources<br/>why: durable non-spatial legality/replay input<br/>without: discovery and resolution would not share one combat snapshot"]
   Creature["BattleCreatureState<br/>data: HP, temp HP, AC state, conditions, zero-HP lifecycle, origin<br/>why: shared combat view for Character-derived and Stat Block-derived creatures<br/>without: runtime branches on source objects instead of combat facts"]
   Origin["origin<br/>data: Character or Stat Block origin facts retained for supported act discovery<br/>why: source attribution without a second executable content language<br/>without: battle either loses selected capability facts or imports source package state"]
   MonsterResources["StatBlockMutableResourceState<br/>source: mutable execution facts for authored StatBlockRecord controls<br/>data: remaining X/Day uses, unavailable Recharge parts, Legendary Action uses remaining<br/>why: monster resources are execution state, not Unit facts"]
@@ -106,7 +106,7 @@ flowchart TD
   UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
   Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
   AttackOption["supported Attack action option<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
-  Target["target choice<br/>choices filtered by selected attack reach or normal range and table-supplied combatant distance<br/>needsHoles until caller selects a legal combatant"]
+  Target["target choice<br/>caller/table supplies spatially legal target using authored reach/range metadata<br/>needsHoles until caller selects a combatant"]
   Roll["attack roll<br/>needsHoles until caller supplies AttackRollResult"]
   HitCheck["attackRollHits(roll, target AC)<br/>hit: ask/apply damage<br/>miss: spend action"]
   DamageHole["damage roll<br/>needsHoles only after a hit"]
@@ -140,10 +140,9 @@ flowchart TD
   after-damage procedures.
 - Initiative scores are caller-supplied in `BattleCreatureInit`; this runtime
   orders turns from those scores but does not derive them from Stat Blocks.
-- Attack replay uses target, attack-roll, and on-hit damage holes. Target
-  choices are filtered from the selected attack's melee reach or normal range
-  and table-supplied pairwise combatant distance facts stored on the battle
-  state.
+- Attack replay uses target, attack-roll, and on-hit damage holes. Authored
+  reach/range remains content metadata; the caller/table supplies spatially
+  legal targets and the runtime does not store pairwise distances.
 - Hide/Search replay is gated by battle-owned Hide prerequisite state: the GM
   adjudicated that the actor is Heavily Obscured or behind enough cover and out
   of enemy line of sight. Successful Hide then records one executable fact, the

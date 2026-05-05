@@ -78,8 +78,8 @@ module battleRuntime {
   //   738-740, 904-910, and UBIQUITOUS_LANGUAGE.md: Movement spends a
   //   per-turn movement budget derived from Speed; Difficult Terrain and
   //   other spatial costs are caller-authored Movement costs at this runtime
-  //   boundary; leaving melee Reach opens an Opportunity Attack Reaction
-  //   window before the distance mutation is committed.
+  //   boundary; table-supplied reach-exit facts open an Opportunity Attack
+  //   Reaction window before Movement is committed.
   // - Monsters/Overview.md lines 253-265 and ASSUMPTIONS.md A21-A24: Stat
   //   Block monster controls own Legendary Action uses and limited-use
   //   resources. This spec models the Stat Block resource boundary with a
@@ -143,7 +143,7 @@ module battleRuntime {
     | ResumeSpell
     | ResumeSaveGateDamage
     | ResumeAfterDamage
-    | ResumeMovement({ movementCost: int, distanceMoved: int, destinationDistance: int })
+    | ResumeMovement({ movementCost: int })
 
   type PendingReactionFrame = {
     trigger: ReactionTrigger,
@@ -255,7 +255,6 @@ module battleRuntime {
     fighterHelpAttackGoblinForGoblin: bool,
     grapple: GrappleState,
     interruptStack: List[InterruptFrame],
-    fighterGoblinDistance: int,
     fighterHidePrerequisite: bool,
     goblinRechargeAvailable: bool,
     goblinLegendaryUsesRemaining: int,
@@ -348,7 +347,6 @@ module battleRuntime {
     fighterHelpAttackGoblinForGoblin: false,
     grapple: NoGrapple,
     interruptStack: [],
-    fighterGoblinDistance: 5,
     fighterHidePrerequisite: false,
     goblinRechargeAvailable: true,
     goblinLegendaryUsesRemaining: 2,
@@ -774,7 +772,7 @@ module battleRuntime {
       | ResumeSpell => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
-      | ResumeMovement(movement) => applyFighterMovement(state, movement.movementCost, movement.distanceMoved, movement.destinationDistance)
+      | ResumeMovement(movement) => applyFighterMovement(state, movement.movementCost)
     }
 
   pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
@@ -1038,7 +1036,7 @@ module battleRuntime {
       state
 
   pure def helpFighterAttack(state: BattleState): BattleState =
-    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated) and state.fighterGoblinDistance <= 5)
+    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
       { ...state, actionAvailable: false, fighterHelpAttackGoblinForGoblin: true }
     else
       state
@@ -1069,20 +1067,12 @@ module battleRuntime {
       | FighterGrapplesGoblin(link) => link.targetDragCostExempt
     }
 
-  pure def grappleDragMovementCostSatisfied(state: BattleState, movementCost: int, distanceMoved: int): bool =
-    not(fighterGoblinGrappleExists(state)) or
-    fighterGoblinGrappleTargetDragCostExempt(state) or
-    movementCost >= 2 * distanceMoved
-
-  pure def fighterCanMove(state: BattleState, movementCost: int, distanceMoved: int): bool =
+  pure def fighterCanMove(state: BattleState, movementCost: int): bool =
     currentActor(state) == Fighter and
     not(state.fighter.unconscious) and
     not(state.fighter.incapacitated) and
     movementCost > 0 and
-    distanceMoved > 0 and
-    distanceMoved <= movementCost and
-    movementCost <= movementRemainingForFighter(state) and
-    grappleDragMovementCostSatisfied(state, movementCost, distanceMoved)
+    movementCost <= movementRemainingForFighter(state)
 
   pure def fighterCanGrappleGoblin(state: BattleState): bool =
     currentActor(state) == Fighter and
@@ -1090,7 +1080,6 @@ module battleRuntime {
     not(state.fighter.unconscious) and
     not(state.fighter.incapacitated) and
     not(fighterGoblinGrappleExists(state)) and
-    state.fighterGoblinDistance <= 5 and
     state.fighter.leftHandUse == HFree
 
   pure def grappleFighterGoblin(state: BattleState, targetFailedSave: bool): BattleState =
@@ -1141,35 +1130,33 @@ module battleRuntime {
     else
       state
 
-  pure def goblinCanOpportunityAttack(state: BattleState, destinationDistance: int): bool =
+  pure def goblinCanOpportunityAttack(state: BattleState, provokedByTable: bool): bool =
     state.goblin.hp > 0 and
     state.goblin.reactionAvailable and
     not(state.disengaged) and
-    state.fighterGoblinDistance <= 5 and
-    destinationDistance > 5
+    provokedByTable
 
-  pure def applyFighterMovement(state: BattleState, movementCost: int, distanceMoved: int, destinationDistance: int): BattleState =
-    if (fighterCanMove(state, movementCost, distanceMoved))
+  pure def applyFighterMovement(state: BattleState, movementCost: int): BattleState =
+    if (fighterCanMove(state, movementCost))
       {
         ...state,
         fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + movementCost },
-        fighterGoblinDistance: destinationDistance,
       }
     else
       state
 
-  pure def moveFighter(state: BattleState, movementCost: int, distanceMoved: int, destinationDistance: int): BattleState =
-    if (not(fighterCanMove(state, movementCost, distanceMoved)))
+  pure def moveFighter(state: BattleState, movementCost: int, provokedByTable: bool): BattleState =
+    if (not(fighterCanMove(state, movementCost)))
       state
-    else if (goblinCanOpportunityAttack(state, destinationDistance))
+    else if (goblinCanOpportunityAttack(state, provokedByTable))
       openReactionWindow(state, {
         trigger: OpportunityAttack,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
-        continuation: ResumeMovement({ movementCost: movementCost, distanceMoved: distanceMoved, destinationDistance: destinationDistance }),
+        continuation: ResumeMovement({ movementCost: movementCost }),
       })
     else
-      applyFighterMovement(state, movementCost, distanceMoved, destinationDistance)
+      applyFighterMovement(state, movementCost)
 
   pure def applyHealing(target: Combatant, healing: int): Combatant = {
     val effectiveHealing = if (healing < 0) 0 else healing
@@ -2096,11 +2083,10 @@ module battleRuntime {
     }
   }
 
-  run test_movement_spends_budget_and_updates_distance = {
-    val moved = moveFighter(initialState, 10, 10, 4)
+  run test_movement_spends_budget = {
+    val moved = moveFighter(initialState, 10, 4 > 5)
     all {
       assert(moved.fighter.movementSpent == 10),
-      assert(moved.fighterGoblinDistance == 4),
       assert(movementRemaining(moved.fighter) == 20),
     }
   }
@@ -2134,16 +2120,15 @@ module battleRuntime {
 
   run test_disengage_suppresses_opportunity_attack_window = {
     val disengaged = disengageFighter({ ...initialState, actionAvailable: true })
-    val moved = moveFighter(disengaged, 5, 5, 10)
+    val moved = moveFighter(disengaged, 5, 10 > 5)
     all {
       assert(moved.interruptStack == []),
-      assert(moved.fighterGoblinDistance == 10),
       assert(moved.fighter.movementSpent == 5),
     }
   }
 
   run test_movement_over_budget_is_rejected = {
-    assert(moveFighter(initialState, 35, 35, 40) == initialState)
+    assert(moveFighter(initialState, 35, 40 > 5) == initialState)
   }
 
   run test_grapple_release_and_escape_update_link_state = {
@@ -2178,56 +2163,48 @@ module battleRuntime {
     }
   }
 
-  run test_grapple_drag_cost_is_enforced = {
+  run test_grapple_drag_cost_is_table_supplied = {
     val grappled = grappleFighterGoblin(initialState, true)
-    val underpaid = moveFighter(grappled, 1, 1, 4)
-    val paid = moveFighter(grappled, 2, 1, 4)
-    val underpaidSameDistance = moveFighter(grappled, 5, 5, 5)
-    val paidSameDistance = moveFighter(grappled, 10, 5, 5)
+    val oneFootCost = moveFighter(grappled, 1, false)
+    val tenFootCost = moveFighter(grappled, 10, false)
     all {
-      assert(underpaid == grappled),
-      assert(paid.fighter.movementSpent == 2),
-      assert(paid.fighterGoblinDistance == 4),
-      assert(underpaidSameDistance == grappled),
-      assert(paidSameDistance.fighter.movementSpent == 10),
+      assert(oneFootCost.fighter.movementSpent == 1),
+      assert(tenFootCost.fighter.movementSpent == 10),
     }
   }
 
   run test_movement_leaving_reach_opens_opportunity_attack_window_before_position_commit = {
-    val awaiting = moveFighter(initialState, 5, 5, 10)
+    val awaiting = moveFighter(initialState, 5, 10 > 5)
     all {
       assert(awaiting.fighter.movementSpent == 0),
-      assert(awaiting.fighterGoblinDistance == 5),
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: OpportunityAttack,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
-        continuation: ResumeMovement({ movementCost: 5, distanceMoved: 5, destinationDistance: 10 }),
+        continuation: ResumeMovement({ movementCost: 5 }),
       })),
     }
   }
 
   run test_declined_opportunity_attack_resumes_movement = {
-    val awaiting = moveFighter(initialState, 5, 5, 10)
+    val awaiting = moveFighter(initialState, 5, 10 > 5)
     val resumed = declineReactionAndResume(awaiting, Goblin)
     all {
       assert(resumed.interruptStack == []),
       assert(resumed.fighter.movementSpent == 5),
-      assert(resumed.fighterGoblinDistance == 10),
       assert(resumed.goblin.reactionAvailable),
     }
   }
 
   run test_resolved_opportunity_attack_spends_reaction_damages_then_resumes_movement = {
-    val awaiting = moveFighter(initialState, 5, 5, 10)
+    val awaiting = moveFighter(initialState, 5, 10 > 5)
     val resolved = resolveReaction(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(resolved.goblin.reactionAvailable == false),
       assert(resolved.fighter.hp == 6),
       assert(resolved.fighter.movementSpent == 5),
-      assert(resolved.fighterGoblinDistance == 10),
     }
   }
 

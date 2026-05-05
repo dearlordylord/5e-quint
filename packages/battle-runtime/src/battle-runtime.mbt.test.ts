@@ -451,6 +451,20 @@ function targetFill(
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: fighterId,
+        targetId,
+        attackName: "Dagger",
+      },
+      {
+        kind: "sneakAttackAllyWithin5FeetOfTarget",
+        attackerId: fighterId,
+        targetId,
+        allyId: combatantId("ally"),
+      },
+    ],
   };
 }
 

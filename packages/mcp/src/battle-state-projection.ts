@@ -18,9 +18,6 @@ export function battleStateProjection(state: BattleState) {
         snapshotsById.get(combatant.combatantId),
       ),
     ),
-    combatantDistances: Array.from(state.combatantDistances, ([from, peers]) =>
-      Array.from(peers, ([to, feet]) => ({ from, to, feet })),
-    ).flat(),
     currentTurnResources: state.currentTurnResources,
     pendingReaction: snapshot.pendingReaction,
     readiedSpells: Array.from(

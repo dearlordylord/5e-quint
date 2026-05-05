@@ -137,19 +137,6 @@ import {
   type CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
 import {
-  battleCombatantDistanceValidationMessage,
-  battleCombatantDistances,
-  cloneCombatantDistances,
-  combatantDistanceFeet as combatantDistanceFeetFromDistances,
-  combatantDistancesAsPairs,
-  setBattleCombatantDistance,
-  validateBattleCombatantDistances,
-  type AcceptedBattleCombatantDistances,
-  type BattleCombatantDistance,
-  type BattleCombatantDistanceMap,
-  type BattleCombatantDistanceValidationIssue,
-} from "./distances.ts";
-import {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
   type BattleReactionTrigger,
@@ -437,7 +424,7 @@ export type BattleReactionFrame =
   | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "opportunityAttack";
       readonly moverId: CombatantId;
-      readonly reactorIds: readonly CombatantId[];
+      readonly threats: readonly BattleOpportunityAttackThreat[];
     });
 type BattleInterruptFrame =
   | { readonly kind: "reaction"; readonly frame: BattleReactionFrame }
@@ -484,6 +471,8 @@ type AttackTargetConstraint =
       readonly kind: "rangedRange";
       readonly normalFeet: MovementFeet;
     };
+const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
+export type BattleAttackRangeBand = (typeof BATTLE_ATTACK_RANGE_BANDS)[number];
 export type BattleHand = "left" | "right";
 export type BattleGrappleLink = {
   readonly grapplerId: CombatantId;
@@ -504,19 +493,54 @@ export type BattleHidePrerequisite =
       readonly kind: "coverOutOfEnemyLineOfSight";
       readonly cover: "threeQuarters" | "total";
     };
-export type BattleMovementDistanceUpdate = {
-  readonly combatantId: CombatantId;
-  readonly feet: MovementFeet;
-};
 export type BattleMovementFillValue = {
   readonly movementCostFeet: MovementFeet;
-  readonly distanceMovedFeet: MovementFeet;
-  readonly destinationDistances: readonly BattleMovementDistanceUpdate[];
+  readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
 };
+export type BattleOpportunityAttackThreat = {
+  readonly reactorId: CombatantId;
+  readonly attackName: string;
+};
+export type BattleTargetSpatialFact =
+  | {
+      readonly kind: "attackTargetInMeleeReach";
+      readonly actorId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly attackName: string;
+    }
+  | {
+      readonly kind: "attackTargetInRangedRange";
+      readonly actorId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly attackName: string;
+      readonly rangeBand: BattleAttackRangeBand;
+    }
+  | {
+      readonly kind: "spellTarget";
+      readonly casterId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+    }
+  | {
+      readonly kind: "helpAttackTargetWithin5Feet";
+      readonly helperId: CombatantId;
+      readonly targetEnemyId: CombatantId;
+    }
+  | {
+      readonly kind: "grappleTargetWithinReach";
+      readonly grapplerId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
+      readonly attackerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly allyId: CombatantId;
+    };
 type BattleResolvedMovement = {
   readonly moverId: CombatantId;
   readonly movementCostFeet: MovementFeet;
-  readonly destinationDistances: readonly BattleMovementDistanceUpdate[];
+  readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly spendsTurnMovement: boolean;
 };
 // SupportedAttackActionOption is a currently executable option for spending an
@@ -840,7 +864,6 @@ export type BattleState = {
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
-  readonly combatantDistances: BattleCombatantDistanceMap;
   readonly currentTurnResources: BattleTurnResources;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
   readonly readiedMovements: ReadonlyMap<CombatantId, BattleReadiedMovement>;
@@ -877,6 +900,7 @@ export type BattleTargetChoiceHole = Extract<
   { readonly kind: "targetChoice" }
 > & {
   readonly choices: readonly CombatantId[];
+  readonly requiresTableSpatialFact?: boolean;
 };
 export type BattleAttackRollHole = Extract<
   RuntimeHole,
@@ -918,6 +942,10 @@ export type BattleSpellDamageRollHole = Extract<
 export type BattleSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
+};
+export type BattleSavingThrowOutcomeValue = {
+  readonly area: BattleSpellAreaChoice;
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
 };
 const SAVE_DAMAGE_RESULTS = ["none", "half", "full"] as const;
 type SaveDamageResult = (typeof SAVE_DAMAGE_RESULTS)[number];
@@ -1145,6 +1173,9 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("targetChoice"),
     choices: Schema.Array(CombatantId),
+    requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1293,12 +1324,13 @@ export type BattleFill =
   | {
       readonly kind: "savingThrowOutcome";
       readonly holeId: BattleHoleId;
-      readonly value: readonly BattleSavingThrowOutcome[];
+      readonly value: BattleSavingThrowOutcomeValue;
     }
   | {
       readonly kind: "targetChoice";
       readonly holeId: BattleHoleId;
       readonly value: CombatantId;
+      readonly spatialFacts?: readonly BattleTargetSpatialFact[];
     }
   | {
       readonly kind: "deathSavingThrow";
@@ -1373,6 +1405,43 @@ type BattleFillEncoded =
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
+      readonly spatialFacts?: readonly (
+        | {
+            readonly kind: "attackTargetInMeleeReach";
+            readonly actorId: string;
+            readonly targetId: string;
+            readonly attackName: string;
+          }
+        | {
+            readonly kind: "attackTargetInRangedRange";
+            readonly actorId: string;
+            readonly targetId: string;
+            readonly attackName: string;
+            readonly rangeBand: BattleAttackRangeBand;
+          }
+        | {
+            readonly kind: "spellTarget";
+            readonly casterId: string;
+            readonly targetId: string;
+            readonly spellId: string;
+          }
+        | {
+            readonly kind: "helpAttackTargetWithin5Feet";
+            readonly helperId: string;
+            readonly targetEnemyId: string;
+          }
+        | {
+            readonly kind: "grappleTargetWithinReach";
+            readonly grapplerId: string;
+            readonly targetId: string;
+          }
+        | {
+            readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
+            readonly attackerId: string;
+            readonly targetId: string;
+            readonly allyId: string;
+          }
+      )[];
     }
   | {
       readonly kind: "attackRoll";
@@ -1387,10 +1456,16 @@ type BattleFillEncoded =
   | {
       readonly kind: "savingThrowOutcome";
       readonly holeId: string;
-      readonly value: readonly {
-        readonly targetId: string;
-        readonly succeeded: boolean;
-      }[];
+      readonly value: {
+        readonly area: {
+          readonly originAnchorId: string;
+          readonly affectedTargetIds: readonly string[];
+        };
+        readonly outcomes: readonly {
+          readonly targetId: string;
+          readonly succeeded: boolean;
+        }[];
+      };
     }
   | {
       readonly kind: "rolledDice";
@@ -1471,10 +1546,9 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly movementCostFeet: number;
-        readonly distanceMovedFeet: number;
-        readonly destinationDistances: readonly {
-          readonly combatantId: string;
-          readonly feet: number;
+        readonly provokedOpportunityAttacks: readonly {
+          readonly reactorId: string;
+          readonly attackName: string;
         }[];
       };
     }
@@ -1503,6 +1577,48 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("targetChoice"),
       holeId: BattleHoleIdSchema,
       value: CombatantId,
+      spatialFacts: Schema.optionalWith(
+        Schema.Array(
+          Schema.Union(
+            Schema.Struct({
+              kind: Schema.Literal("attackTargetInMeleeReach"),
+              actorId: CombatantId,
+              targetId: CombatantId,
+              attackName: Schema.String,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("attackTargetInRangedRange"),
+              actorId: CombatantId,
+              targetId: CombatantId,
+              attackName: Schema.String,
+              rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("spellTarget"),
+              casterId: CombatantId,
+              targetId: CombatantId,
+              spellId: Schema.String,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("helpAttackTargetWithin5Feet"),
+              helperId: CombatantId,
+              targetEnemyId: CombatantId,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("grappleTargetWithinReach"),
+              grapplerId: CombatantId,
+              targetId: CombatantId,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("sneakAttackAllyWithin5FeetOfTarget"),
+              attackerId: CombatantId,
+              targetId: CombatantId,
+              allyId: CombatantId,
+            }),
+          ),
+        ),
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("attackRoll"),
@@ -1512,12 +1628,18 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("savingThrowOutcome"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Array(
-        Schema.Struct({
-          targetId: CombatantId,
-          succeeded: Schema.Boolean,
+      value: Schema.Struct({
+        area: Schema.Struct({
+          originAnchorId: CombatantId,
+          affectedTargetIds: Schema.Array(CombatantId),
         }),
-      ),
+        outcomes: Schema.Array(
+          Schema.Struct({
+            targetId: CombatantId,
+            succeeded: Schema.Boolean,
+          }),
+        ),
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("rolledDice"),
@@ -1604,11 +1726,10 @@ export const BattleFillSchema: Schema.Schema<
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         movementCostFeet: MovementFeet,
-        distanceMovedFeet: MovementFeet,
-        destinationDistances: Schema.Array(
+        provokedOpportunityAttacks: Schema.Array(
           Schema.Struct({
-            combatantId: CombatantId,
-            feet: MovementFeet,
+            reactorId: CombatantId,
+            attackName: Schema.String,
           }),
         ),
       }),
@@ -1846,59 +1967,11 @@ const REACTION_MODIFIER_ROLL_HOLE_INSTANCE = holeInstanceKey(
 );
 const HIDE_DC = difficultyClass(15);
 
-type StartBattleDistanceInput =
-  | {
-      readonly tag?: "rawDistances";
-      readonly combatantDistances?: readonly BattleCombatantDistance[];
-      readonly combatantDistanceMap?: never;
-    }
-  | {
-      readonly tag: "acceptedDistances";
-      readonly combatantDistances: AcceptedBattleCombatantDistances;
-      readonly combatantDistanceMap?: never;
-    };
-
-function acceptedDistancesMatchCombatants(input: {
+export function startBattle(input: {
+  readonly battleId: BattleId;
   readonly combatants: readonly BattleCreatureInit[];
-  readonly combatantDistances: AcceptedBattleCombatantDistances;
-}): boolean {
-  const combatantIds = input.combatants.map(
-    (combatant) => combatant.combatantId,
-  );
-  return (
-    combatantIds.length === input.combatantDistances.combatantIds.length &&
-    combatantIds.every((combatantId) =>
-      input.combatantDistances.combatantIds.includes(combatantId),
-    )
-  );
-}
-
-function acceptedDistancesForStartBattle(input: {
-  readonly combatants: readonly BattleCreatureInit[];
-  readonly combatantDistances: AcceptedBattleCombatantDistances;
-}): Either.Either<
-  AcceptedBattleCombatantDistances,
-  BattleCombatantDistanceValidationIssue
-> {
-  return acceptedDistancesMatchCombatants(input)
-    ? Either.right(input.combatantDistances)
-    : Either.left({
-        tag: "incompletePairs",
-        expectedPairCount:
-          (input.combatants.length * (input.combatants.length - 1)) / 2,
-        actualPairCount: 0,
-      });
-}
-export function startBattle(
-  input: {
-    readonly battleId: BattleId;
-    readonly combatants: readonly BattleCreatureInit[];
-    readonly hidePrerequisites?: ReadonlyMap<
-      CombatantId,
-      BattleHidePrerequisite
-    >;
-  } & StartBattleDistanceInput,
-): Either.Either<BattleState, BattleStateInitIssue> {
+  readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
+}): Either.Either<BattleState, BattleStateInitIssue> {
   if (input.combatants.length === 0) {
     return battleStateInitIssue("startBattle requires at least one combatant.");
   }
@@ -1943,32 +2016,11 @@ export function startBattle(
   if (Either.isLeft(initiative)) {
     return battleStateInitIssue(initiative.left);
   }
-  const combatantDistances =
-    input.tag !== "acceptedDistances"
-      ? battleCombatantDistances({
-          combatantIds: input.combatants.map(
-            (combatant) => combatant.combatantId,
-          ),
-          ...(input.combatantDistances === undefined
-            ? {}
-            : { combatantDistances: input.combatantDistances }),
-        })
-      : acceptedDistancesForStartBattle({
-          combatants: input.combatants,
-          combatantDistances: input.combatantDistances,
-        });
-  if (Either.isLeft(combatantDistances)) {
-    return battleStateInitIssue(
-      battleCombatantDistanceValidationMessage(combatantDistances.left),
-    );
-  }
-
   return Either.right({
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),
-    combatantDistances: combatantDistances.right.distances,
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
     readiedMovements: new Map(),
@@ -1982,7 +2034,6 @@ export function startBattle(
 export function addBattleCombatant(input: {
   readonly state: BattleState;
   readonly combatant: BattleCreatureInit;
-  readonly combatantDistances: readonly BattleCombatantDistance[];
   readonly tieOrderIndex?: number;
 }): Either.Either<BattleState, BattleStateInitIssue> {
   if (input.state.combatants.has(input.combatant.combatantId)) {
@@ -1994,20 +2045,6 @@ export function addBattleCombatant(input: {
     input.combatant.combatantId,
     battleCreatureStateFromInit(input.combatant),
   );
-  const distanceIssue = validateBattleCombatantDistances({
-    combatantIds: [...nextCombatants.keys()],
-    combatantDistances: [
-      ...combatantDistancesAsPairs(input.state.combatantDistances),
-      ...input.combatantDistances,
-    ],
-    requireCompletePairs: true,
-  });
-  if (distanceIssue !== null) {
-    return battleStateInitIssue(
-      battleCombatantDistanceValidationMessage(distanceIssue),
-    );
-  }
-
   const insertionIndex = combatantInitiativeInsertionIndex(
     input.state,
     input.combatant.initiative,
@@ -2022,27 +2059,10 @@ export function addBattleCombatant(input: {
     },
   );
 
-  const distances = cloneCombatantDistances(input.state.combatantDistances);
-  for (const distance of input.combatantDistances) {
-    setBattleCombatantDistance(
-      distances,
-      distance.combatantA,
-      distance.combatantB,
-      distance.feet,
-    );
-    setBattleCombatantDistance(
-      distances,
-      distance.combatantB,
-      distance.combatantA,
-      distance.feet,
-    );
-  }
-
   return Either.right({
     ...input.state,
     initiative,
     combatants: nextCombatants,
-    combatantDistances: distances,
   });
 }
 
@@ -2084,14 +2104,6 @@ export function removeBattleCombatants(input: {
         },
       ]),
   );
-  const distances = new Map(
-    [...input.state.combatantDistances]
-      .filter(([id]) => !removeIds.has(id))
-      .map(([id, peers]) => [
-        id,
-        new Map([...peers].filter(([peerId]) => !removeIds.has(peerId))),
-      ]),
-  );
   return Either.right(
     normalizeBattleGrapples({
       ...input.state,
@@ -2103,7 +2115,6 @@ export function removeBattleCombatants(input: {
       hidePrerequisites: new Map(
         [...input.state.hidePrerequisites].filter(([id]) => !removeIds.has(id)),
       ),
-      combatantDistances: distances,
       readiedSpells: new Map(
         [...input.state.readiedSpells].filter(([id]) => !removeIds.has(id)),
       ),
@@ -2338,7 +2349,7 @@ export function discoverBattleActs(
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "move" },
       label: "Move",
-      summary: "Spend Movement and update combatant distances.",
+      summary: "Spend Movement using table-supplied movement cost.",
       initialHoles: [movementHoleForActor],
     });
   }
@@ -4002,7 +4013,7 @@ function reactionChoices(
         ...opportunityAttackReactionChoices(
           state,
           frame.moverId,
-          frame.reactorIds,
+          frame.threats,
         ),
       ]
     : [...readiedChoices, ...modifierChoices];
@@ -4054,12 +4065,6 @@ function reactionRollOrDamageReductionChoiceForProfile(
   if (
     frame.trigger === "attackHit" &&
     ((modifier.kind === "attackRollReduction" &&
-      combatantWithinFeet(
-        state,
-        reactorId,
-        frame.attackerId,
-        modifier.rangeFeet,
-      ) &&
       combatantCanSee(state, reactorId, frame.attackerId)) ||
       (modifier.kind === "attackDamageReduction" &&
         reactorId === frame.targetId &&
@@ -4118,12 +4123,6 @@ function reactionRollOrDamageReductionChoiceForProfile(
   if (
     modifier.kind === "attackDamageRollReduction" &&
     frame.continuation.damageEvent.kind === "rolledDamage" &&
-    combatantWithinFeet(
-      state,
-      reactorId,
-      frame.continuation.attackerId,
-      modifier.rangeFeet,
-    ) &&
     combatantCanSee(state, reactorId, frame.continuation.attackerId)
   ) {
     return [
@@ -4147,20 +4146,6 @@ function reactionRollOrDamageReductionChoiceForProfile(
     ];
   }
   return [];
-}
-
-function combatantWithinFeet(
-  state: BattleState,
-  a: CombatantId,
-  b: CombatantId,
-  feet: MovementFeet,
-): boolean {
-  const distance = combatantDistanceFeetFromDistances(
-    state.combatantDistances,
-    a,
-    b,
-  );
-  return distance !== undefined && distance <= Number(feet);
 }
 
 function combatantCanSee(
@@ -4215,14 +4200,20 @@ function reactionModifierResourceAvailable(
 function opportunityAttackReactionChoices(
   state: BattleState,
   moverId: CombatantId,
-  reactorIds: readonly CombatantId[],
+  threats: readonly BattleOpportunityAttackThreat[],
 ): readonly BattleReactionProcedureChoice[] {
-  return reactorIds.flatMap((reactorId) => {
+  return threats.flatMap((threat) => {
+    const reactorId = threat.reactorId;
     const reactor = state.combatants.get(reactorId);
     if (reactor === undefined) {
       return [];
     }
-    const attack = opportunityAttackOptionForReactor(state, reactorId, moverId);
+    const attack = opportunityAttackOptionForReactor(
+      state,
+      reactorId,
+      moverId,
+      threat.attackName,
+    );
     if (attack === undefined) return [];
     return [
       {
@@ -5012,6 +5003,7 @@ function resolveAttack(
       input.subject.actorId,
       target.combatantId,
       attack,
+      fillSet.targetSpatialFacts,
     )
   ) {
     return invalidResult(
@@ -5128,6 +5120,7 @@ function resolveAttack(
         target.combatantId,
         attack,
         fillSet.attackRoll,
+        fillSet.targetSpatialFacts,
       )
     : [];
   const selectedDamageRiders =
@@ -5716,7 +5709,12 @@ function resolveHelpAttack(
       input.state,
       input.subject.actorId,
       allyId,
-    ).includes(targetEnemyId)
+    ).includes(targetEnemyId) ||
+    !hasHelpAttackTargetSpatialFact(
+      targetFillValue.spatialFacts ?? [],
+      input.subject.actorId,
+      targetEnemyId,
+    )
   ) {
     return invalidResult(
       input.state,
@@ -5917,6 +5915,7 @@ function helpAttackTargetHole(
     holeInstanceKey: HELP_ATTACK_TARGET_HOLE_INSTANCE,
     holeId: HELP_ATTACK_TARGET_HOLE_ID,
     label: "Help attack target",
+    requiresTableSpatialFact: true,
     choices: helpAttackTargetChoices(state, helperId, allyId),
   };
 }
@@ -5942,22 +5941,27 @@ function helpAttackTargetChoices(
 ): readonly CombatantId[] {
   if (!helpAttackAllyChoices(state, helperId).includes(allyId)) return [];
   return [...state.combatants]
-    .filter(([id, combatant]) => {
-      const distance = combatantDistanceFeetFromDistances(
-        state.combatantDistances,
-        helperId,
-        id,
-      );
-      return (
+    .filter(
+      ([id, combatant]) =>
         id !== helperId &&
         id !== allyId &&
         combatantsAreEnemies(state, helperId, id) &&
-        !zeroHpLifecycleIsTerminal(combatant) &&
-        distance !== undefined &&
-        distance <= 5
-      );
-    })
+        !zeroHpLifecycleIsTerminal(combatant),
+    )
     .map(([id]) => id);
+}
+
+function hasHelpAttackTargetSpatialFact(
+  facts: readonly BattleTargetSpatialFact[],
+  helperId: CombatantId,
+  targetEnemyId: CombatantId,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "helpAttackTargetWithin5Feet" &&
+      fact.helperId === helperId &&
+      fact.targetEnemyId === targetEnemyId,
+  );
 }
 
 function resolveOffHandAttack(
@@ -5997,6 +6001,7 @@ function resolveOffHandAttack(
       input.subject.actorId,
       target.combatantId,
       attack,
+      fillSet.targetSpatialFacts,
     )
   ) {
     return invalidResult(
@@ -6102,6 +6107,7 @@ function resolveOffHandAttack(
         target.combatantId,
         attack,
         fillSet.attackRoll,
+        fillSet.targetSpatialFacts,
       )
     : [];
   const selectedDamageRiders =
@@ -6228,6 +6234,7 @@ function resolveGrapple(
     input.state,
     input.subject.actorId,
     fillSet.targetId,
+    fillSet.targetSpatialFacts,
   );
   if (link.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", link.message);
@@ -6371,6 +6378,7 @@ type AttackFillSet =
   | {
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
+      readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly attackRoll: BattleAttackRollResult | undefined;
       readonly concentrationSavingThrow:
         | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
@@ -6384,6 +6392,7 @@ type GrappleFillSet =
   | {
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
+      readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly outcome:
         | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
         | undefined;
@@ -6392,6 +6401,7 @@ type GrappleFillSet =
 
 function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let targetId: CombatantId | undefined;
+  let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let attackRoll: BattleAttackRollResult | undefined;
   let concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
@@ -6405,6 +6415,7 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         return { tag: "invalid", message: "Attack target was filled twice." };
       }
       targetId = fill.value;
+      targetSpatialFacts = fill.spatialFacts ?? [];
       continue;
     }
 
@@ -6444,6 +6455,7 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   return {
     tag: "ok",
     targetId,
+    targetSpatialFacts,
     attackRoll,
     concentrationSavingThrow,
     damageRoll,
@@ -6505,6 +6517,7 @@ function searchAbilityCheckHole(dc: DifficultyClass): BattleAbilityCheckHole {
 
 function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
   let targetId: CombatantId | undefined;
+  let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let outcome:
     | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
     | undefined;
@@ -6514,6 +6527,7 @@ function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
         return { tag: "invalid", message: "Grapple target was filled twice." };
       }
       targetId = fill.value;
+      targetSpatialFacts = fill.spatialFacts ?? [];
       continue;
     }
     if (fill.kind === "grappleOutcome") {
@@ -6531,7 +6545,7 @@ function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
       message: `Fill ${fill.kind} does not match the Grapple replay holes.`,
     };
   }
-  return { tag: "ok", targetId, outcome };
+  return { tag: "ok", targetId, targetSpatialFacts, outcome };
 }
 
 function validateAttackDamageFill(
@@ -7112,17 +7126,17 @@ function resolveMoveCommand(
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
-  const reactors = opportunityAttackReactorsForMovement(
+  const threats = opportunityAttackThreatsForMovement(
     input.state,
     movement.movement,
   );
-  if (reactors.length > 0) {
+  if (threats.length > 0) {
     const reactionWindow = maybeOpenReactionWindow(
       input.state,
       {
         trigger: "opportunityAttack",
         moverId: input.subject.actorId,
-        reactorIds: reactors,
+        threats,
         continuation: {
           kind: "movement",
           subject: input.subject,
@@ -7211,6 +7225,7 @@ function resolveOpportunityAttackCommand(
     input.state,
     subject.reactorId,
     subject.targetId,
+    subject.attackName,
   );
   if (target === undefined || attack === undefined) {
     return invalidResult(
@@ -7299,6 +7314,7 @@ function resolveOpportunityAttackCommand(
         subject.targetId,
         attack,
         fillSet.attackRoll,
+        [],
       )
     : [];
   const selectedDamageRiders =
@@ -7516,101 +7532,66 @@ function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
-  if (
-    fill.value.distanceMovedFeet <= 0 ||
-    !Number.isInteger(fill.value.distanceMovedFeet)
-  ) {
-    return {
-      tag: "invalid",
-      message: "Distance moved must be a positive integer.",
-    };
-  }
-  if (fill.value.distanceMovedFeet > fill.value.movementCostFeet) {
-    return {
-      tag: "invalid",
-      message: "Distance moved cannot exceed Movement cost.",
-    };
-  }
   if (fill.value.movementCostFeet > Number(movementBudgetFeet)) {
     return {
       tag: "invalid",
       message: "Movement cost exceeds the combatant's remaining Movement.",
     };
   }
-  const grappleMovementCost = validateGrappleMovementCost(state, moverId, fill);
-  if (grappleMovementCost !== null) {
-    return { tag: "invalid", message: grappleMovementCost };
-  }
-  const expectedIds = [...state.combatants.keys()].filter(
-    (id) => id !== moverId,
-  );
-  const seen = new Set<CombatantId>();
-  for (const distance of fill.value.destinationDistances) {
-    if (distance.combatantId === moverId) {
-      return {
-        tag: "invalid",
-        message: "Movement destination distances cannot target the mover.",
-      };
-    }
-    if (!state.combatants.has(distance.combatantId)) {
+  const seen = new Set<string>();
+  const provokedOpportunityAttacks: BattleOpportunityAttackThreat[] = [];
+  for (const threat of fill.value.provokedOpportunityAttacks) {
+    const reactorId = threat.reactorId;
+    if (reactorId === moverId) {
       return {
         tag: "invalid",
         message:
-          "Movement destination distance references an unknown combatant.",
+          "Movement Opportunity Attack threat cannot name the mover as reactor.",
       };
     }
-    if (seen.has(distance.combatantId)) {
-      return {
-        tag: "invalid",
-        message: "Movement destination distance repeats a combatant.",
-      };
-    }
-    if (distance.feet < 0 || !Number.isInteger(distance.feet)) {
+    if (!state.combatants.has(reactorId)) {
       return {
         tag: "invalid",
         message:
-          "Movement destination distances must be non-negative integers.",
+          "Movement Opportunity Attack threat references an unknown combatant.",
       };
     }
-    seen.add(distance.combatantId);
-  }
-  if (
-    expectedIds.length !== seen.size ||
-    !expectedIds.every((id) => seen.has(id))
-  ) {
-    return {
-      tag: "invalid",
-      message:
-        "Movement destination distances must include every other combatant.",
-    };
+    const attack = attackActionOptionsForActor(state, reactorId).find(
+      (option) => attackActionOptionName(option) === threat.attackName,
+    );
+    if (attack === undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Movement Opportunity Attack threat references an unknown attack option.",
+      };
+    }
+    if (attackTargetConstraint(attack).kind !== "meleeReach") {
+      return {
+        tag: "invalid",
+        message:
+          "Movement Opportunity Attack threat must name a melee attack option.",
+      };
+    }
+    const threatKey = `${reactorId}\u0000${threat.attackName}`;
+    if (seen.has(threatKey)) {
+      return {
+        tag: "invalid",
+        message: "Movement Opportunity Attack threat repeats an attack option.",
+      };
+    }
+    seen.add(threatKey);
+    provokedOpportunityAttacks.push(threat);
   }
   return {
     tag: "ok",
     movement: {
       moverId,
       movementCostFeet: movementFeet(fill.value.movementCostFeet),
-      destinationDistances: fill.value.destinationDistances,
+      provokedOpportunityAttacks,
       spendsTurnMovement: options.spendsTurnMovement ?? true,
     },
   };
-}
-
-function validateGrappleMovementCost(
-  state: BattleState,
-  moverId: CombatantId,
-  fill: Extract<BattleFill, { readonly kind: "movement" }>,
-): string | null {
-  const nonExemptDraggedTargets = state.grapples.filter(
-    (grapple) =>
-      grapple.grapplerId === moverId && !grapple.targetExemptFromDragCost,
-  );
-  if (nonExemptDraggedTargets.length === 0) return null;
-
-  const requiredCostFeet = fill.value.distanceMovedFeet * 2;
-  if (fill.value.movementCostFeet < requiredCostFeet) {
-    return "Dragging a grappled target costs 1 extra foot per foot moved.";
-  }
-  return null;
 }
 
 function applyBattleMovement(
@@ -7639,25 +7620,9 @@ function applyBattleMovement(
       }
     : mover;
   const combatants = new Map(state.combatants).set(movement.moverId, nextMover);
-  const distances = cloneCombatantDistances(state.combatantDistances);
-  for (const destination of movement.destinationDistances) {
-    setBattleCombatantDistance(
-      distances,
-      movement.moverId,
-      destination.combatantId,
-      destination.feet,
-    );
-    setBattleCombatantDistance(
-      distances,
-      destination.combatantId,
-      movement.moverId,
-      destination.feet,
-    );
-  }
   return normalizeBattleGrapples({
     ...state,
     combatants,
-    combatantDistances: distances,
   });
 }
 
@@ -7665,19 +7630,12 @@ function normalizeBattleGrapples(state: BattleState): BattleState {
   const grapples = state.grapples.filter((grapple) => {
     const grappler = state.combatants.get(grapple.grapplerId);
     const target = state.combatants.get(grapple.targetId);
-    const distance = combatantDistanceFeetFromDistances(
-      state.combatantDistances,
-      grapple.grapplerId,
-      grapple.targetId,
-    );
     return (
       grappler !== undefined &&
       target !== undefined &&
       !isIncapacitated(grappler.conditions) &&
       !zeroHpLifecycleIsTerminal(grappler) &&
-      !zeroHpLifecycleIsTerminal(target) &&
-      distance !== undefined &&
-      distance <= grapple.reachFeet
+      !zeroHpLifecycleIsTerminal(target)
     );
   });
   return grapples.length === state.grapples.length
@@ -7844,17 +7802,17 @@ function resolveReleaseReadiedMovementCommand(
   const readiedMovements = new Map(input.state.readiedMovements);
   readiedMovements.delete(readiedMovementActorId);
   const stateWithoutReadied = { ...input.state, readiedMovements };
-  const reactors = opportunityAttackReactorsForMovement(
+  const threats = opportunityAttackThreatsForMovement(
     stateWithoutReadied,
     movement.movement,
   );
-  if (reactors.length > 0) {
+  if (threats.length > 0) {
     const reactionWindow = maybeOpenReactionWindow(
       stateWithoutReadied,
       {
         trigger: "opportunityAttack",
         moverId: readiedMovementActorId,
-        reactorIds: reactors,
+        threats,
         continuation: {
           kind: "movement",
           subject: input.subject,
@@ -8636,22 +8594,19 @@ function discoverSupportedSpellActs(
           actorId,
           invocation,
         );
-        const castActs =
-          savingThrowHole.areaChoices.length === 0
-            ? []
-            : [
-                {
-                  subject: {
-                    tag: "actionSpell" as const,
-                    actorId,
-                    spellId: invocation.spell.id,
-                    spellActId: supportedSpellActId(invocation),
-                  },
-                  label: invocation.spell.name,
-                  summary: `Cast ${invocation.spell.name} as a cantrip; creatures in one ${invocation.area.radiusFeet}-foot point-origin Sphere make ${invocation.ability.toUpperCase()} Saving Throws.`,
-                  initialHoles: [savingThrowHole],
-                },
-              ];
+        const castActs = [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              spellId: invocation.spell.id,
+              spellActId: supportedSpellActId(invocation),
+            },
+            label: invocation.spell.name,
+            summary: `Cast ${invocation.spell.name} as a cantrip; table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
+            initialHoles: [savingThrowHole],
+          },
+        ];
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
       const targetHole = spellTargetHole(state, actorId, invocation);
@@ -8821,6 +8776,7 @@ function resolveSpellAct(
       subject.actorId,
       target.combatantId,
       invocation,
+      fillSet.targetSpatialFacts,
     )
   ) {
     return invalidResult(
@@ -9194,6 +9150,7 @@ function resolveSpellRelease(
       input.subject.actorId,
       target.combatantId,
       invocation,
+      fillSet.targetSpatialFacts,
     )
   ) {
     return invalidResult(
@@ -9371,10 +9328,9 @@ type SpellFillSet =
   | {
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
+      readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly attackRoll: AttackRollResult | undefined;
-      readonly savingThrowOutcomes:
-        | readonly BattleSavingThrowOutcome[]
-        | undefined;
+      readonly savingThrowOutcomes: BattleSavingThrowOutcomeValue | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
@@ -9390,8 +9346,9 @@ function spellFillSet(
   invocation: SupportedSpellAct,
 ): SpellFillSet {
   let targetId: CombatantId | undefined;
+  let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let attackRoll: AttackRollResult | undefined;
-  let savingThrowOutcomes: readonly BattleSavingThrowOutcome[] | undefined;
+  let savingThrowOutcomes: BattleSavingThrowOutcomeValue | undefined;
   const concentrationSavingThrows: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
@@ -9405,6 +9362,7 @@ function spellFillSet(
         return { tag: "invalid", message: "Spell target was filled twice." };
       }
       targetId = fill.value;
+      targetSpatialFacts = fill.spatialFacts ?? [];
       continue;
     }
 
@@ -9475,6 +9433,7 @@ function spellFillSet(
   return {
     tag: "ok",
     targetId,
+    targetSpatialFacts,
     attackRoll,
     savingThrowOutcomes,
     concentrationSavingThrows,
@@ -9532,6 +9491,7 @@ function resolveSaveGateDamageSpellAct(input: {
   const savingThrowValidation = validateSavingThrowOutcomes(
     savingThrowOutcomes,
     savingThrowHole,
+    input.input.state,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -9541,14 +9501,14 @@ function resolveSaveGateDamageSpellAct(input: {
     );
   }
 
-  const selectedTargetIds = savingThrowOutcomes.map(
+  const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = savingThrowOutcomes.flatMap((outcome) =>
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
   const saveDamageResultByTargetId = new Map(
-    savingThrowOutcomes.map((outcome) => [
+    savingThrowOutcomes.outcomes.map((outcome) => [
       outcome.targetId,
       saveGateDamageResultForOutcome(
         input.input.state,
@@ -9560,7 +9520,7 @@ function resolveSaveGateDamageSpellAct(input: {
   );
   const saveDamageResultForTarget = (targetId: CombatantId): SaveDamageResult =>
     saveDamageResultByTargetId.get(targetId) ?? "none";
-  const damageTargets = savingThrowOutcomes.flatMap((outcome) =>
+  const damageTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     saveDamageResultForTarget(outcome.targetId) === "none"
       ? []
       : [outcome.targetId],
@@ -9728,37 +9688,41 @@ function resolveSaveGateDamageSpellAct(input: {
 }
 
 function validateSavingThrowOutcomes(
-  outcomes: readonly BattleSavingThrowOutcome[],
-  hole: BattleSpellSavingThrowOutcomeHole,
+  value: BattleSavingThrowOutcomeValue,
+  _hole: BattleSpellSavingThrowOutcomeHole,
+  state: BattleState,
 ): string | null {
+  const outcomes = value.outcomes;
   if (outcomes.length === 0) {
     return "Save-gate spell must include at least one affected target Saving Throw outcome.";
+  }
+  if (!state.combatants.has(value.area.originAnchorId)) {
+    return "Save-gate spell area origin anchor must be a combatant in this battle.";
+  }
+  const affectedTargets = new Set(value.area.affectedTargetIds);
+  if (affectedTargets.size !== value.area.affectedTargetIds.length) {
+    return "Save-gate spell area affected targets must not duplicate targets.";
+  }
+  for (const targetId of affectedTargets) {
+    if (!state.combatants.has(targetId)) {
+      return "Save-gate spell area affected target must be a combatant in this battle.";
+    }
   }
   const seenTargets = new Set<CombatantId>();
   for (const outcome of outcomes) {
     const targetId = outcome.targetId;
+    if (!affectedTargets.has(targetId)) {
+      return "Save-gate spell Saving Throw outcomes must match the table-supplied area affected targets.";
+    }
     if (seenTargets.has(targetId)) {
       return "Save-gate spell Saving Throw outcomes must not duplicate targets.";
     }
     seenTargets.add(targetId);
   }
-  const matchesOneArea = hole.areaChoices.some((choice) =>
-    sameCombatantIdSet(seenTargets, choice.affectedTargetIds),
-  );
-  if (!matchesOneArea) {
-    return "Save-gate spell Saving Throw outcomes must exactly match one legal point-origin Sphere area.";
+  if (seenTargets.size !== affectedTargets.size) {
+    return "Save-gate spell Saving Throw outcomes must cover every table-supplied area affected target.";
   }
   return null;
-}
-
-function sameCombatantIdSet(
-  actual: ReadonlySet<CombatantId>,
-  expected: readonly CombatantId[],
-): boolean {
-  return (
-    actual.size === expected.length &&
-    expected.every((targetId) => actual.has(targetId))
-  );
 }
 
 function spendMagicAction(
@@ -10768,13 +10732,35 @@ function spellTargetHole(
       invocation.kind === "preparedSlotSpell"
         ? `${invocation.spell.name} all-darts target`
         : `${invocation.spell.name} target`,
+    requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter((id) =>
-      spellTargetIsLegal(state, actorId, id, invocation),
+      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
     ),
   };
 }
 
 function spellTargetIsLegal(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  invocation: SupportedSpellAct,
+  facts: readonly BattleTargetSpatialFact[],
+): boolean {
+  if (
+    !spellTargetHasNonSpatialPrerequisites(state, actorId, targetId, invocation)
+  ) {
+    return false;
+  }
+  return facts.some(
+    (fact) =>
+      fact.kind === "spellTarget" &&
+      fact.casterId === actorId &&
+      fact.targetId === targetId &&
+      fact.spellId === invocation.spell.id,
+  );
+}
+
+function spellTargetHasNonSpatialPrerequisites(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
@@ -10788,15 +10774,7 @@ function spellTargetIsLegal(
   ) {
     return false;
   }
-  const distanceFeet =
-    actorId === targetId
-      ? 0
-      : combatantDistanceFeetFromDistances(
-          state.combatantDistances,
-          actorId,
-          targetId,
-        );
-  return distanceFeet !== undefined && distanceFeet <= invocation.rangeFeet;
+  return target !== undefined;
 }
 
 function persistentSpellTargetIsKnownWilling(
@@ -10873,14 +10851,13 @@ function spellSavingThrowOutcomeHoleId(
 
 function spellSavingThrowOutcomeHole(
   state: BattleState,
-  actorId: CombatantId,
+  _actorId: CombatantId,
   invocation: Extract<
     SupportedSpellAct,
     { readonly kind: "cantripSaveGateDamage" }
   >,
 ): BattleSpellSavingThrowOutcomeHole {
   const holeKey = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
-  const areaChoices = spellPointSphereAreaChoices(state, actorId, invocation);
   return {
     kind: "savingThrowOutcome",
     holeId: spellSavingThrowOutcomeHoleId(invocation),
@@ -10889,7 +10866,7 @@ function spellSavingThrowOutcomeHole(
     spell: invocation,
     ability: invocation.ability,
     dc: invocation.dc,
-    areaChoices,
+    areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(state, invocation.ability),
   };
 }
@@ -10907,47 +10884,6 @@ function savingThrowRollModeProjections(
       targetId,
       rollMode: "advantage" as const,
     }));
-}
-
-function spellPointSphereAreaChoices(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: Extract<
-    SupportedSpellAct,
-    { readonly kind: "cantripSaveGateDamage" }
-  >,
-): readonly BattleSpellAreaChoice[] {
-  return [...state.combatants.keys()]
-    .filter((originAnchorId) =>
-      spellTargetIsLegal(state, actorId, originAnchorId, invocation),
-    )
-    .map((originAnchorId) => ({
-      originAnchorId,
-      affectedTargetIds: combatantsWithinFeet(
-        state,
-        originAnchorId,
-        invocation.area.radiusFeet,
-      ),
-    }))
-    .filter((choice) => choice.affectedTargetIds.length > 0);
-}
-
-function combatantsWithinFeet(
-  state: BattleState,
-  originAnchorId: CombatantId,
-  radiusFeet: MovementFeet,
-): readonly CombatantId[] {
-  return [...state.combatants.keys()].filter((targetId) => {
-    const distanceFeet =
-      originAnchorId === targetId
-        ? 0
-        : combatantDistanceFeetFromDistances(
-            state.combatantDistances,
-            originAnchorId,
-            targetId,
-          );
-    return distanceFeet !== undefined && distanceFeet <= radiusFeet;
-  });
 }
 
 function validateSpellDamageFill(
@@ -11242,6 +11178,7 @@ function attackTargetHole(
     holeId: ATTACK_TARGET_HOLE_ID,
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
     label: "Attack target",
+    requiresTableSpatialFact: true,
     choices: attackTargetChoices(state, actorId, attack),
   };
 }
@@ -11268,6 +11205,7 @@ function grappleTargetHole(
     holeId: GRAPPLE_TARGET_HOLE_ID,
     holeInstanceKey: GRAPPLE_TARGET_HOLE_INSTANCE,
     label: "Grapple target",
+    requiresTableSpatialFact: true,
     choices: grappleTargetChoices(state, actorId),
   };
 }
@@ -11304,10 +11242,10 @@ function escapeGrappleOutcomeHole(
 function attackTargetChoices(
   state: BattleState,
   actorId: CombatantId,
-  attack: SupportedAttackActionOption,
+  _attack: SupportedAttackActionOption,
 ): readonly CombatantId[] {
   return [...state.combatants.keys()].filter(
-    (id) => id !== actorId && attackTargetIsLegal(state, actorId, id, attack),
+    (id) => id !== actorId && state.combatants.has(id),
   );
 }
 
@@ -11376,7 +11314,13 @@ function grappleTargetChoices(
     return [];
   }
   return [...state.combatants.keys()].filter((targetId) => {
-    const link = grappleLinkForTarget(state, actorId, targetId);
+    const link = grappleLinkForTarget(state, actorId, targetId, [
+      {
+        kind: "grappleTargetWithinReach",
+        grapplerId: actorId,
+        targetId,
+      },
+    ]);
     return link.tag === "ok";
   });
 }
@@ -11482,76 +11426,42 @@ function combatantCanMoveWithBudget(
   );
 }
 
-function opportunityAttackReactorsForMovement(
+function opportunityAttackThreatsForMovement(
   state: BattleState,
   movement: BattleResolvedMovement,
-): readonly CombatantId[] {
+): readonly BattleOpportunityAttackThreat[] {
   if (
     movement.moverId === currentActorId(state) &&
     state.currentTurnResources.disengaged
   ) {
     return [];
   }
-  const destinationById = new Map(
-    movement.destinationDistances.map((distance) => [
-      distance.combatantId,
-      distance.feet,
-    ]),
+  return movement.provokedOpportunityAttacks.filter(
+    (threat) =>
+      opportunityAttackOptionForReactor(
+        state,
+        threat.reactorId,
+        movement.moverId,
+        threat.attackName,
+      ) !== undefined &&
+      combatantCanSee(state, threat.reactorId, movement.moverId),
   );
-  return [...state.combatants.keys()].filter((reactorId) => {
-    const oldDistance = combatantDistanceFeetFromDistances(
-      state.combatantDistances,
-      reactorId,
-      movement.moverId,
-    );
-    const newDistance = destinationById.get(reactorId);
-    const reach = opportunityAttackReachFeet(
-      state,
-      reactorId,
-      movement.moverId,
-    );
-    return (
-      oldDistance !== undefined &&
-      newDistance !== undefined &&
-      reach !== undefined &&
-      oldDistance <= reach &&
-      newDistance > reach
-    );
-  });
 }
 
 function opportunityAttackOptionForReactor(
   state: BattleState,
   reactorId: CombatantId,
   targetId: CombatantId,
+  attackName: string,
 ): SupportedAttackActionOption | undefined {
   return attackActionOptionsForActor(state, reactorId).find((attack) => {
     const constraint = attackTargetConstraint(attack);
     return (
+      attackActionOptionName(attack) === attackName &&
       constraint.kind === "meleeReach" &&
-      attackTargetIsLegal(state, reactorId, targetId, attack)
+      state.combatants.has(targetId)
     );
   });
-}
-
-function opportunityAttackReachFeet(
-  state: BattleState,
-  reactorId: CombatantId,
-  targetId: CombatantId,
-): number | undefined {
-  const reactor = state.combatants.get(reactorId);
-  if (
-    reactor === undefined ||
-    reactorId === targetId ||
-    !combatantCanTakeReactions(reactor) ||
-    hasCondition(reactor.conditions, "blinded")
-  ) {
-    return undefined;
-  }
-  const attack = opportunityAttackOptionForReactor(state, reactorId, targetId);
-  if (attack === undefined) return undefined;
-  const constraint = attackTargetConstraint(attack);
-  return constraint.kind === "meleeReach" ? constraint.reachFeet : undefined;
 }
 
 function attackTargetIsLegal(
@@ -11559,26 +11469,35 @@ function attackTargetIsLegal(
   actorId: CombatantId,
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
+  facts: readonly BattleTargetSpatialFact[],
 ): boolean {
-  const distanceFeet = combatantDistanceFeetFromDistances(
-    state.combatantDistances,
-    actorId,
-    targetId,
-  );
-  if (distanceFeet == null) {
-    return false;
-  }
-
-  return Match.value(attackTargetConstraint(attack)).pipe(
-    Match.when(
-      { kind: "meleeReach" },
-      (constraint) => distanceFeet <= constraint.reachFeet,
-    ),
-    Match.when(
-      { kind: "rangedRange" },
-      (constraint) => distanceFeet <= constraint.normalFeet,
-    ),
-    Match.exhaustive,
+  const attackName = attackActionOptionName(attack);
+  const constraint = attackTargetConstraint(attack);
+  return (
+    actorId !== targetId &&
+    state.combatants.has(targetId) &&
+    facts.some((fact) => {
+      if (
+        fact.kind !== "attackTargetInMeleeReach" &&
+        fact.kind !== "attackTargetInRangedRange"
+      ) {
+        return false;
+      }
+      if (
+        fact.actorId === actorId &&
+        fact.targetId === targetId &&
+        fact.attackName === attackName
+      ) {
+        if (constraint.kind === "meleeReach") {
+          return fact.kind === "attackTargetInMeleeReach";
+        }
+        return (
+          fact.kind === "attackTargetInRangedRange" &&
+          fact.rangeBand === "normal"
+        );
+      }
+      return false;
+    })
   );
 }
 
@@ -11586,6 +11505,7 @@ function grappleLinkForTarget(
   state: BattleState,
   grapplerId: CombatantId,
   targetId: CombatantId,
+  facts: readonly BattleTargetSpatialFact[],
 ):
   | { readonly tag: "ok"; readonly link: BattleGrappleLink }
   | { readonly tag: "invalid"; readonly message: string } {
@@ -11608,18 +11528,23 @@ function grappleLinkForTarget(
   if (hand === undefined) {
     return { tag: "invalid", message: "Grapple requires a free hand." };
   }
-  const distanceFeet = combatantDistanceFeetFromDistances(
-    state.combatantDistances,
-    grapplerId,
-    targetId,
-  );
-  if (distanceFeet === undefined || distanceFeet > 5) {
-    return { tag: "invalid", message: "Grapple target must be within 5 feet." };
-  }
   if (!targetIsNoMoreThanOneSizeLarger(grappler.size, target.size)) {
     return {
       tag: "invalid",
       message: "Grapple target cannot be more than one size larger.",
+    };
+  }
+  if (
+    !facts.some(
+      (fact) =>
+        fact.kind === "grappleTargetWithinReach" &&
+        fact.grapplerId === grapplerId &&
+        fact.targetId === targetId,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message: "Grapple target must be within reach by table-supplied fact.",
     };
   }
   return {
@@ -13061,20 +12986,23 @@ function targetHasAdjacentNonIncapacitatedAlly(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
+  facts: readonly BattleTargetSpatialFact[],
 ): boolean {
-  return [...state.combatants].some(([allyId, ally]) => {
-    const distance = combatantDistanceFeetFromDistances(
-      state.combatantDistances,
-      allyId,
-      targetId,
-    );
+  return facts.some((fact) => {
+    if (
+      fact.kind !== "sneakAttackAllyWithin5FeetOfTarget" ||
+      fact.attackerId !== attackerId ||
+      fact.targetId !== targetId
+    ) {
+      return false;
+    }
+    const ally = state.combatants.get(fact.allyId);
     return (
-      allyId !== attackerId &&
-      allyId !== targetId &&
-      combatantsAreAllies(state, attackerId, allyId) &&
-      !isIncapacitated(ally.conditions) &&
-      distance !== undefined &&
-      distance <= 5
+      ally !== undefined &&
+      fact.allyId !== attackerId &&
+      fact.allyId !== targetId &&
+      combatantsAreAllies(state, attackerId, fact.allyId) &&
+      !isIncapacitated(ally.conditions)
     );
   });
 }
@@ -13085,6 +13013,7 @@ function eligibleAttackDamageRiders(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
   attackRoll: AttackRollResult,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): readonly AttackDamageRider[] {
   const attacker = state.combatants.get(attackerId);
   if (
@@ -13095,7 +13024,12 @@ function eligibleAttackDamageRiders(
   }
   const hasRequiredRollContext =
     attackRoll.rollMode === "advantage" ||
-    (targetHasAdjacentNonIncapacitatedAlly(state, attackerId, targetId) &&
+    (targetHasAdjacentNonIncapacitatedAlly(
+      state,
+      attackerId,
+      targetId,
+      targetSpatialFacts,
+    ) &&
       attackRoll.rollMode !== "disadvantage");
   if (!hasRequiredRollContext) {
     return [];

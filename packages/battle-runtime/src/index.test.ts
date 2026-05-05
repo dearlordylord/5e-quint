@@ -282,40 +282,6 @@ describe("battle runtime", () => {
     ).toThrow("Battle initialization current HP exceeds max HP.");
   });
 
-  test("startBattle rejects incomplete or duplicate explicit combatant distances", () => {
-    const combatants = [
-      characterSeed({ initiative: 12 }),
-      statBlockCreatureInit({ initiative: 10 }),
-    ];
-
-    expect(() =>
-      startBattleRight({
-        battleId: battleId("battle-incomplete-distances"),
-        combatants,
-        combatantDistances: [],
-      }),
-    ).toThrow("Battle combatant distances must include every combatant pair.");
-
-    expect(() =>
-      startBattleRight({
-        battleId: battleId("battle-duplicate-distances"),
-        combatants,
-        combatantDistances: [
-          {
-            combatantA: fighterId,
-            combatantB: goblinId,
-            feet: movementFeet(5),
-          },
-          {
-            combatantA: goblinId,
-            combatantB: fighterId,
-            feet: movementFeet(10),
-          },
-        ],
-      }),
-    ).toThrow("Duplicate battle combatant distance pair.");
-  });
-
   test("startBattle rejects fractional expended Spell Slots", () => {
     expect(() =>
       startBattleRight({
@@ -509,18 +475,6 @@ describe("battle runtime", () => {
         displayName: "Skeleton",
         initiative: 15,
       }),
-      combatantDistances: [
-        {
-          combatantA: skeletonId,
-          combatantB: fighterId,
-          feet: movementFeet(10),
-        },
-        {
-          combatantA: skeletonId,
-          combatantB: goblinId,
-          feet: movementFeet(15),
-        },
-      ],
     });
 
     expect(snapshotBattle(added)).toMatchObject({
@@ -537,9 +491,6 @@ describe("battle runtime", () => {
       currentActorId: skeletonId,
       turnOrder: [skeletonId, goblinId],
     });
-    expect(
-      removedCurrent.combatantDistances.get(skeletonId)?.has(fighterId),
-    ).toBe(false);
   });
 
   test("generic combat actions spend the Action and expose typed battle state", () => {
@@ -626,8 +577,7 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 10,
-            distanceMovedFeet: 10,
-            destinationDistances: [{ combatantId: goblinId, feet: 30 }],
+            provokedOpportunityAttacks: [],
           }),
         ],
       }),
@@ -732,8 +682,7 @@ describe("battle runtime", () => {
     }
     const readiedMove = movementFill(readiedMovementHole, {
       movementCostFeet: 5,
-      distanceMovedFeet: 5,
-      destinationDistances: [{ combatantId: goblinId, feet: 0 }],
+      provokedOpportunityAttacks: [],
     });
 
     const decision = requireHole(awaitingReaction, "reactionDecision");
@@ -760,9 +709,6 @@ describe("battle runtime", () => {
       reactionAvailable: false,
       movementSpentFeet: movementFeet(0),
     });
-    expect(
-      released.state.combatantDistances.get(fighterId)?.get(goblinId),
-    ).toBe(movementFeet(0));
   });
 
   test("Help attack grants and consumes Advantage for the selected ally and target", () => {
@@ -899,7 +845,7 @@ describe("battle runtime", () => {
     ]);
   });
 
-  test("movement replay spends Movement and updates combatant distances", () => {
+  test("movement replay spends Movement from caller-provided movement cost", () => {
     const state = fighterVsGoblinBattle();
     const subject: BattleSubject = {
       tag: "runtimeCommand",
@@ -922,8 +868,7 @@ describe("battle runtime", () => {
       fills: [
         movementFill(hole, {
           movementCostFeet: 10,
-          distanceMovedFeet: 10,
-          destinationDistances: [{ combatantId: goblinId, feet: 4 }],
+          provokedOpportunityAttacks: [],
         }),
       ],
     });
@@ -946,12 +891,6 @@ describe("battle runtime", () => {
     if (moved.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${moved.tag}.`);
     }
-    expect(moved.state.combatantDistances.get(fighterId)?.get(goblinId)).toBe(
-      4,
-    );
-    expect(moved.state.combatantDistances.get(goblinId)?.get(fighterId)).toBe(
-      4,
-    );
   });
 
   test("movement cost cannot exceed the derived remaining Movement budget", () => {
@@ -973,8 +912,7 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 35,
-            distanceMovedFeet: 35,
-            destinationDistances: [{ combatantId: goblinId, feet: 40 }],
+            provokedOpportunityAttacks: [],
           }),
         ],
       }),
@@ -1123,7 +1061,7 @@ describe("battle runtime", () => {
     );
   });
 
-  test("grapple drag movement must pay the Grappled Movable extra cost", () => {
+  test("grapple drag movement accepts table-supplied Movement cost", () => {
     const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle());
     const subject: BattleSubject = {
       tag: "runtimeCommand",
@@ -1142,12 +1080,11 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 1,
-            distanceMovedFeet: 1,
-            destinationDistances: [{ combatantId: goblinId, feet: 4 }],
+            provokedOpportunityAttacks: [],
           }),
         ],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    ).toMatchObject({ tag: "resolved" });
 
     expect(
       resolveBattleSubject({
@@ -1156,8 +1093,7 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 2,
-            distanceMovedFeet: 1,
-            destinationDistances: [{ combatantId: goblinId, feet: 4 }],
+            provokedOpportunityAttacks: [],
           }),
         ],
       }),
@@ -1170,12 +1106,11 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 5,
-            distanceMovedFeet: 5,
-            destinationDistances: [{ combatantId: goblinId, feet: 5 }],
+            provokedOpportunityAttacks: [],
           }),
         ],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    ).toMatchObject({ tag: "resolved" });
 
     expect(
       resolveBattleSubject({
@@ -1184,8 +1119,7 @@ describe("battle runtime", () => {
         fills: [
           movementFill(hole, {
             movementCostFeet: 10,
-            distanceMovedFeet: 5,
-            destinationDistances: [{ combatantId: goblinId, feet: 5 }],
+            provokedOpportunityAttacks: [],
           }),
         ],
       }),
@@ -2030,7 +1964,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("movement out of melee reach opens an Opportunity Attack window before distance changes", () => {
+  test("table-provided reach-exit movement facts open an Opportunity Attack window", () => {
     const state = fighterVsGoblinBattle();
     const subject: BattleSubject = {
       tag: "runtimeCommand",
@@ -2047,8 +1981,9 @@ describe("battle runtime", () => {
       fills: [
         movementFill(hole, {
           movementCostFeet: 5,
-          distanceMovedFeet: 5,
-          destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
         }),
       ],
     });
@@ -2078,9 +2013,80 @@ describe("battle runtime", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
+  });
+
+  test("attack target facts are scoped to the selected attack option and range band", () => {
+    const state = requireResolved(
+      endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
+    ).state;
+    const subject = goblinAttackSubject("Shortbow");
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+
     expect(
-      awaitingReaction.state.combatantDistances.get(fighterId)?.get(goblinId),
-    ).toBe(5);
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, fighterId, [
+            {
+              kind: "attackTargetInMeleeReach",
+              actorId: goblinId,
+              targetId: fighterId,
+              attackName: "Scimitar",
+            },
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, fighterId, [
+            {
+              kind: "attackTargetInRangedRange",
+              actorId: goblinId,
+              targetId: fighterId,
+              attackName: "Shortbow",
+              rangeBand: "normal",
+            },
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "attackRoll" }] });
+  });
+
+  test("Opportunity Attack movement facts must name a qualifying melee option", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [
+              { reactorId: goblinId, attackName: "Shortbow" },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
   test("stale movement fill data cannot suppress an Opportunity Attack", () => {
@@ -2096,8 +2102,9 @@ describe("battle runtime", () => {
     );
     const staleMovementValue = {
       movementCostFeet: 5,
-      distanceMovedFeet: 5,
-      destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+      provokedOpportunityAttacks: [
+        { reactorId: goblinId, attackName: "Scimitar" },
+      ],
       provokesOpportunityAttacks: false,
     };
     const staleSuppressionFill = movementFill(hole, staleMovementValue);
@@ -2115,9 +2122,6 @@ describe("battle runtime", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
-    expect(
-      awaitingReaction.state.combatantDistances.get(fighterId)?.get(goblinId),
-    ).toBe(5);
   });
 
   test("declining an Opportunity Attack resumes the interrupted movement", () => {
@@ -2137,8 +2141,9 @@ describe("battle runtime", () => {
       fills: [
         movementFill(hole, {
           movementCostFeet: 5,
-          distanceMovedFeet: 5,
-          destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
         }),
       ],
     });
@@ -2173,9 +2178,6 @@ describe("battle runtime", () => {
         }),
       ]),
     );
-    expect(
-      declined.state.combatantDistances.get(fighterId)?.get(goblinId),
-    ).toBe(10);
   });
 
   test("resolving an Opportunity Attack spends reaction, applies damage, then resumes movement", () => {
@@ -2195,8 +2197,9 @@ describe("battle runtime", () => {
       fills: [
         movementFill(moveHole, {
           movementCostFeet: 5,
-          distanceMovedFeet: 5,
-          destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
         }),
       ],
     });
@@ -2268,9 +2271,6 @@ describe("battle runtime", () => {
         }),
       ]),
     );
-    expect(
-      completed.state.combatantDistances.get(fighterId)?.get(goblinId),
-    ).toBe(10);
   });
 
   test("hidden opportunity attackers roll with Advantage and reveal after the attack roll", () => {
@@ -2298,8 +2298,9 @@ describe("battle runtime", () => {
       fills: [
         movementFill(moveHole, {
           movementCostFeet: 5,
-          distanceMovedFeet: 5,
-          destinationDistances: [{ combatantId: goblinId, feet: 10 }],
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
         }),
       ],
     });
@@ -2420,15 +2421,16 @@ describe("battle runtime", () => {
 
   test("attack replay asks for an attack roll after target selection", () => {
     const state = fighterVsGoblinBattle();
+    const subject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Longsword",
+    } as const satisfies Extract<BattleSubject, { readonly tag: "action" }>;
     const targetHole = requireHole(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "attack",
-          attackName: "Longsword",
-        },
+        subject,
         fills: [],
       }),
       "targetChoice",
@@ -2436,19 +2438,35 @@ describe("battle runtime", () => {
 
     const result = resolveBattleSubject({
       state,
-      subject: {
-        tag: "action",
-        actorId: fighterId,
-        action: "attack",
-        attackName: "Longsword",
-      },
-      fills: [targetFill(targetHole, goblinId)],
+      subject,
+      fills: [
+        attackTargetFill(
+          targetHole,
+          subject.actorId,
+          goblinId,
+          subject.attackName,
+        ),
+      ],
     });
 
     expect(result).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "attackRoll", label: "Longsword attack roll" }],
     });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "targetChoice",
+            holeId: targetHole.holeId,
+            value: goblinId,
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
   test("attack hit asks for Longsword damage dice before spending the action", () => {
@@ -2720,9 +2738,10 @@ describe("battle runtime", () => {
     if (saveHole.kind !== "savingThrowOutcome") {
       throw new Error("Expected Saving Throw outcome hole.");
     }
-    const failedOutcomes = saveHole.areaChoices[0]!.affectedTargetIds.map(
-      (targetId) => ({ targetId, succeeded: false }),
-    );
+    const failedOutcomes = [...released.state.combatants.keys()]
+      .filter((targetId) => targetId !== wizardId)
+      .slice(0, 1)
+      .map((targetId) => ({ targetId, succeeded: false }));
     const nestedReaction = resolveBattleSubject({
       state: released.state,
       subject: releaseChoice.subject,
@@ -2858,9 +2877,7 @@ describe("battle runtime", () => {
     if (saveHole.kind !== "savingThrowOutcome") {
       throw new Error("Expected Saving Throw outcome hole.");
     }
-    const saveOutcomes = saveHole.areaChoices[0]!.affectedTargetIds.map(
-      (targetId) => ({ targetId, succeeded: false }),
-    );
+    const saveOutcomes = [{ targetId: skeletonId, succeeded: false }];
     const failedSave = resolveBattleSubject({
       state: saveState,
       subject,
@@ -2879,9 +2896,7 @@ describe("battle runtime", () => {
     if (damageSaveHole.kind !== "savingThrowOutcome") {
       throw new Error("Expected Saving Throw outcome hole.");
     }
-    const damageOutcomes = damageSaveHole.areaChoices[0]!.affectedTargetIds.map(
-      (targetId) => ({ targetId, succeeded: false }),
-    );
+    const damageOutcomes = [{ targetId: skeletonId, succeeded: false }];
     const damageHole = requireHole(
       resolveBattleSubject({
         state: damageState,
@@ -4713,23 +4728,6 @@ describe("battle runtime", () => {
               statBlock: monsterResourceStatBlock(),
             }),
           ],
-          combatantDistances: [
-            {
-              combatantA: fighterId,
-              combatantB: goblinId,
-              feet: movementFeet(5),
-            },
-            {
-              combatantA: distantFighterId,
-              combatantB: goblinId,
-              feet: movementFeet(5),
-            },
-            {
-              combatantA: fighterId,
-              combatantB: distantFighterId,
-              feet: movementFeet(5),
-            },
-          ],
         }),
         actorId: fighterId,
       }),
@@ -4746,7 +4744,7 @@ describe("battle runtime", () => {
     }
     const subject = legendaryAct.subject as Extract<
       BattleSubject,
-      { readonly tag: "action" }
+      { readonly tag: "action"; readonly action: "attack" }
     >;
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(
@@ -4819,23 +4817,6 @@ describe("battle runtime", () => {
               statBlock: monsterResourceStatBlock(),
             }),
           ],
-          combatantDistances: [
-            {
-              combatantA: fighterId,
-              combatantB: goblinId,
-              feet: movementFeet(5),
-            },
-            {
-              combatantA: distantFighterId,
-              combatantB: goblinId,
-              feet: movementFeet(5),
-            },
-            {
-              combatantA: fighterId,
-              combatantB: distantFighterId,
-              feet: movementFeet(5),
-            },
-          ],
         }),
         actorId: fighterId,
       }),
@@ -4866,7 +4847,12 @@ describe("battle runtime", () => {
         state,
         subject: distantSubject,
         fills: [
-          targetFill(targetHole, goblinId),
+          attackTargetFill(
+            targetHole,
+            distantSubject.actorId,
+            goblinId,
+            distantSubject.attackName,
+          ),
           attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
           damageRollFillWithGroups(damageHole, [[2]]),
         ],
@@ -4998,7 +4984,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("Goblin Warrior target legality is derived from authored reach and range", () => {
+  test("Goblin Warrior target holes expose caller-selected table targets", () => {
     const state = startBattleRight({
       battleId: battleId("battle-goblin-target-legality"),
       combatants: [
@@ -5014,34 +5000,6 @@ describe("battle runtime", () => {
           displayName: "Long Range Fighter",
           initiative: 8,
         }),
-      ],
-      combatantDistances: [
-        { combatantA: goblinId, combatantB: fighterId, feet: movementFeet(5) },
-        {
-          combatantA: goblinId,
-          combatantB: distantFighterId,
-          feet: movementFeet(10),
-        },
-        {
-          combatantA: goblinId,
-          combatantB: longRangeFighterId,
-          feet: movementFeet(100),
-        },
-        {
-          combatantA: fighterId,
-          combatantB: distantFighterId,
-          feet: movementFeet(10),
-        },
-        {
-          combatantA: fighterId,
-          combatantB: longRangeFighterId,
-          feet: movementFeet(100),
-        },
-        {
-          combatantA: distantFighterId,
-          combatantB: longRangeFighterId,
-          feet: movementFeet(90),
-        },
       ],
     });
 
@@ -5068,33 +5026,16 @@ describe("battle runtime", () => {
       throw new Error("Expected targetChoice holes.");
     }
 
-    expect(scimitarTargetHole.choices).toEqual([fighterId]);
-    expect(shortbowTargetHole.choices).toEqual([fighterId, distantFighterId]);
-
-    expect(
-      resolveBattleSubject({
-        state,
-        subject: goblinAttackSubject("Scimitar"),
-        fills: [targetFill(scimitarTargetHole, distantFighterId)],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "Attack target is outside the selected attack's supported target constraint.",
-    });
-    expect(
-      resolveBattleSubject({
-        state,
-        subject: goblinAttackSubject("Shortbow"),
-        fills: [targetFill(shortbowTargetHole, longRangeFighterId)],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "Attack target is outside the selected attack's supported target constraint.",
-    });
+    expect(scimitarTargetHole.choices).toEqual([
+      fighterId,
+      distantFighterId,
+      longRangeFighterId,
+    ]);
+    expect(shortbowTargetHole.choices).toEqual([
+      fighterId,
+      distantFighterId,
+      longRangeFighterId,
+    ]);
   });
 
   test("Goblin Warrior Shortbow attack keeps its authored identity separate from Scimitar", () => {
@@ -6512,7 +6453,12 @@ describe("battle runtime", () => {
         state: reckless.state,
         subject: attackSubject,
         fills: [
-          targetFill(target, goblinId),
+          attackTargetFill(
+            target,
+            attackSubject.actorId,
+            goblinId,
+            attackSubject.attackName,
+          ),
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
@@ -6636,7 +6582,12 @@ describe("battle runtime", () => {
         state: reckless.state,
         subject: attackSubject,
         fills: [
-          targetFill(target, goblinId),
+          attackTargetFill(
+            target,
+            attackSubject.actorId,
+            goblinId,
+            attackSubject.attackName,
+          ),
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
@@ -6866,11 +6817,6 @@ describe("battle runtime", () => {
         }),
         statBlockCreatureInit({ initiative: 5 }),
       ],
-      combatantDistances: [
-        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(5) },
-        { combatantA: fighterId, combatantB: allyId, feet: movementFeet(5) },
-        { combatantA: allyId, combatantB: goblinId, feet: movementFeet(5) },
-      ],
     });
     const longswordSubject = fighterAttackSubject("Longsword");
     const target = attackInitialTargetHole(state, longswordSubject);
@@ -6941,11 +6887,6 @@ describe("battle runtime", () => {
         }),
         statBlockCreatureInit({ initiative: 5 }),
       ],
-      combatantDistances: [
-        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(5) },
-        { combatantA: fighterId, combatantB: allyId, feet: movementFeet(5) },
-        { combatantA: allyId, combatantB: goblinId, feet: movementFeet(5) },
-      ],
     });
     const subject = fighterAttackSubject("Dagger");
     const target = attackInitialTargetHole(state, subject);
@@ -6985,11 +6926,6 @@ describe("battle runtime", () => {
           attack: null,
         }),
         statBlockCreatureInit({ initiative: 5 }),
-      ],
-      combatantDistances: [
-        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(5) },
-        { combatantA: fighterId, combatantB: allyId, feet: movementFeet(5) },
-        { combatantA: allyId, combatantB: goblinId, feet: movementFeet(5) },
       ],
     });
     const rogue = base.combatants.get(fighterId);
@@ -7059,7 +6995,12 @@ describe("battle runtime", () => {
         state,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          attackTargetFill(
+            target,
+            subject.actorId,
+            goblinId,
+            subject.attackName,
+          ),
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
@@ -7095,11 +7036,6 @@ describe("battle runtime", () => {
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
-      combatantDistances: [
-        { combatantA: fighterId, combatantB: goblinId, feet: movementFeet(5) },
-        { combatantA: fighterId, combatantB: allyId, feet: movementFeet(5) },
-        { combatantA: allyId, combatantB: goblinId, feet: movementFeet(5) },
-      ],
     });
     const subject = fighterAttackSubject("Dagger");
     const target = attackInitialTargetHole(state, subject);
@@ -7117,7 +7053,20 @@ describe("battle runtime", () => {
         state,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          attackTargetFill(
+            target,
+            subject.actorId,
+            goblinId,
+            subject.attackName,
+            [
+              {
+                kind: "sneakAttackAllyWithin5FeetOfTarget",
+                attackerId: subject.actorId,
+                targetId: goblinId,
+                allyId,
+              },
+            ],
+          ),
           attackRollFill(roll, {
             total: 20,
             naturalD20: 20,
@@ -7163,19 +7112,6 @@ describe("battle runtime", () => {
           attack: null,
         }),
         statBlockCreatureInit({ initiative: 10 }),
-      ],
-      combatantDistances: [
-        {
-          combatantA: secondRogueId,
-          combatantB: goblinId,
-          feet: movementFeet(5),
-        },
-        {
-          combatantA: secondRogueId,
-          combatantB: allyId,
-          feet: movementFeet(5),
-        },
-        { combatantA: allyId, combatantB: goblinId, feet: movementFeet(5) },
       ],
     });
     const secondRogueSubject = {
@@ -7394,15 +7330,6 @@ describe("battle runtime", () => {
           ],
         }),
       ],
-      combatantDistances: [
-        { combatantA: goblinId, combatantB: skeletonId, feet: movementFeet(5) },
-        { combatantA: goblinId, combatantB: fighterId, feet: movementFeet(30) },
-        {
-          combatantA: fighterId,
-          combatantB: skeletonId,
-          feet: movementFeet(30),
-        },
-      ],
     });
     const subject = goblinAttackSubject("Scimitar");
     const target = attackInitialTargetHole(state, subject);
@@ -7543,9 +7470,6 @@ describe("battle runtime", () => {
           characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
         }),
       ],
-      combatantDistances: [
-        { combatantA: goblinId, combatantB: fighterId, feet: movementFeet(30) },
-      ],
     });
     const subject = goblinAttackSubject("Shortbow");
     const target = attackInitialTargetHole(state, subject);
@@ -7674,9 +7598,6 @@ describe("battle runtime", () => {
             reactionModifierUnitRef(cuttingWordsDamageOnly.id),
           ],
         }),
-      ],
-      combatantDistances: [
-        { combatantA: goblinId, combatantB: fighterId, feet: movementFeet(5) },
       ],
     });
     const hitReaction = goblinScimitarHitReactionSetup(state);
@@ -8169,7 +8090,13 @@ describe("battle runtime", () => {
           {
             kind: "savingThrowOutcome",
             holeId: holeId("battle:spell:saving-throw-outcome:magic_missile"),
-            value: [{ targetId: skeletonId, succeeded: false }],
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [skeletonId],
+              },
+              outcomes: [{ targetId: skeletonId, succeeded: false }],
+            },
           },
         ],
       }),
@@ -9000,19 +8927,6 @@ describe("battle runtime", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
         }),
       ],
-      combatantDistances: [
-        { combatantA: wizardId, combatantB: skeletonId, feet: 30 },
-        {
-          combatantA: wizardId,
-          combatantB: secondSkeletonId,
-          feet: 60,
-        },
-        {
-          combatantA: skeletonId,
-          combatantB: secondSkeletonId,
-          feet: 5,
-        },
-      ],
     });
     const subject = magicSubject("acid_splash");
     const savingThrows = requireHole(
@@ -9027,50 +8941,7 @@ describe("battle runtime", () => {
       label: "Acid Splash point-origin Sphere Saving Throw outcomes",
       ability: "dex",
       dc: { kind: "caster_spell_save_dc" },
-      areaChoices: expect.arrayContaining([
-        {
-          originAnchorId: wizardId,
-          affectedTargetIds: [wizardId],
-        },
-        {
-          originAnchorId: skeletonId,
-          affectedTargetIds: [skeletonId, secondSkeletonId],
-        },
-      ]),
-    });
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          savingThrowOutcomeFill(savingThrows, [
-            { targetId: wizardId, succeeded: true },
-            { targetId: skeletonId, succeeded: false },
-          ]),
-        ],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "Save-gate spell Saving Throw outcomes must exactly match one legal point-origin Sphere area.",
-    });
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          savingThrowOutcomeFill(savingThrows, [
-            { targetId: wizardId, succeeded: false },
-            { targetId: skeletonId, succeeded: false },
-          ]),
-        ],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "Save-gate spell Saving Throw outcomes must exactly match one legal point-origin Sphere area.",
+      areaChoices: [],
     });
     const damage = requireHole(
       resolveBattleSubject({
@@ -9791,7 +9662,10 @@ function goblinTurnBattle(
 
 function fighterAttackSubject(
   attackName: string = "Longsword",
-): Extract<BattleSubject, { readonly tag: "action" }> {
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
   return {
     tag: "action",
     actorId: fighterId,
@@ -9802,7 +9676,10 @@ function fighterAttackSubject(
 
 function goblinAttackSubject(
   attackName: "Scimitar" | "Shortbow",
-): Extract<BattleSubject, { readonly tag: "action" }> {
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
   return {
     tag: "action",
     actorId: goblinId,
@@ -9814,7 +9691,10 @@ function goblinAttackSubject(
 function monsterAttackSubject(
   attackName: "Cinder Breath" | "Dread Gaze" | "Tail Swipe",
   statBlockSection: "actions" | "legendaryActions" = "actions",
-): Extract<BattleSubject, { readonly tag: "action" }> {
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
   return {
     tag: "action",
     actorId: goblinId,
@@ -9828,7 +9708,7 @@ function attackInitialTargetHole(
   state: BattleState,
   subject: Extract<
     BattleSubject,
-    { readonly tag: "action" }
+    { readonly tag: "action"; readonly action: "attack" }
   > = fighterAttackSubject(),
 ): BattleHole {
   return requireHole(
@@ -9846,7 +9726,7 @@ function attackRollHoleAfterTarget(
   targetHole: BattleHole,
   subject: Extract<
     BattleSubject,
-    { readonly tag: "action" }
+    { readonly tag: "action"; readonly action: "attack" }
   > = fighterAttackSubject(),
   targetId: CombatantId = targetHole.kind === "targetChoice"
     ? (targetHole.choices[0] ?? goblinId)
@@ -9859,7 +9739,14 @@ function attackRollHoleAfterTarget(
     resolveBattleSubject({
       state,
       subject,
-      fills: [targetFill(targetHole, targetId)],
+      fills: [
+        attackTargetFill(
+          targetHole,
+          subject.actorId,
+          targetId,
+          subject.attackName,
+        ),
+      ],
     }),
     "attackRoll",
   );
@@ -9879,7 +9766,7 @@ function attackDamageHoleAfterHit(
   },
   subject: Extract<
     BattleSubject,
-    { readonly tag: "action" }
+    { readonly tag: "action"; readonly action: "attack" }
   > = fighterAttackSubject(),
   targetId: CombatantId = targetHole.kind === "targetChoice"
     ? (targetHole.choices[0] ?? goblinId)
@@ -9893,7 +9780,12 @@ function attackDamageHoleAfterHit(
       state,
       subject,
       fills: [
-        targetFill(targetHole, targetId),
+        attackTargetFill(
+          targetHole,
+          subject.actorId,
+          targetId,
+          subject.attackName,
+        ),
         attackRollFill(rollHole, attackRoll),
       ],
     }),
@@ -10017,15 +9909,158 @@ function findAct(
   return act;
 }
 
-function targetFill(hole: BattleHole, targetId: CombatantId): BattleFill {
+function targetFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+  spatialFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"],
+): BattleFill {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
   }
+  const defaultSpatialFacts =
+    hole.requiresTableSpatialFact === true
+      ? [
+          ...defaultAttackTargetSpatialFacts(targetId),
+          ...[wizardId, fighterId].map((casterId) => ({
+            kind: "spellTarget" as const,
+            casterId,
+            targetId,
+            spellId: spellIdFromTargetHoleLabel(hole.label),
+          })),
+          {
+            kind: "helpAttackTargetWithin5Feet" as const,
+            helperId: fighterId,
+            targetEnemyId: targetId,
+          },
+          {
+            kind: "grappleTargetWithinReach" as const,
+            grapplerId: fighterId,
+            targetId,
+          },
+          ...[
+            combatantId("ally"),
+            combatantId("sneak-ally"),
+            combatantId("sneak-cancel-ally"),
+            combatantId("second-rogue-ally"),
+          ].map((allyId) => ({
+            kind: "sneakAttackAllyWithin5FeetOfTarget" as const,
+            attackerId: targetId === goblinId ? fighterId : goblinId,
+            targetId,
+            allyId,
+          })),
+          {
+            kind: "sneakAttackAllyWithin5FeetOfTarget" as const,
+            attackerId: combatantId("second-rogue"),
+            targetId,
+            allyId: combatantId("second-rogue-ally"),
+          },
+        ]
+      : [];
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
+    ...((spatialFacts ?? defaultSpatialFacts).length === 0
+      ? {}
+      : { spatialFacts: spatialFacts ?? defaultSpatialFacts }),
   };
+}
+
+function attackTargetFill(
+  hole: BattleHole,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  attackName = defaultAttackNameForActor(actorId),
+  extraFacts: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"] = [],
+): BattleFill {
+  return targetFill(hole, targetId, [
+    attackTargetSpatialFact(actorId, targetId, attackName),
+    ...commonSneakAttackSpatialFacts(actorId, targetId),
+    ...(extraFacts ?? []),
+  ]);
+}
+
+function attackTargetSpatialFact(
+  actorId: CombatantId,
+  targetId: CombatantId,
+  attackName: string,
+): NonNullable<
+  Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+>[number] {
+  return attackName === "Shortbow" || attackName === "Longbow"
+    ? {
+        kind: "attackTargetInRangedRange" as const,
+        actorId,
+        targetId,
+        attackName,
+        rangeBand: "normal" as const,
+      }
+    : {
+        kind: "attackTargetInMeleeReach" as const,
+        actorId,
+        targetId,
+        attackName,
+      };
+}
+
+function defaultAttackNameForActor(actorId: CombatantId): string {
+  if (actorId === goblinId) return "Scimitar";
+  if (actorId === skeletonId) return "Shortsword";
+  return "Longsword";
+}
+
+function defaultAttackTargetSpatialFacts(
+  targetId: CombatantId,
+): readonly NonNullable<
+  Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+>[number][] {
+  return [
+    attackTargetSpatialFact(fighterId, targetId, "Longsword"),
+    attackTargetSpatialFact(fighterId, targetId, "Dagger"),
+    attackTargetSpatialFact(fighterId, targetId, "Shortsword"),
+    attackTargetSpatialFact(fighterId, targetId, "Flail"),
+    attackTargetSpatialFact(fighterId, targetId, "Unarmed Strike"),
+    attackTargetSpatialFact(wizardId, targetId, "Longsword"),
+    attackTargetSpatialFact(goblinId, targetId, "Scimitar"),
+    attackTargetSpatialFact(goblinId, targetId, "Shortbow"),
+    attackTargetSpatialFact(goblinId, targetId, "Cinder Breath"),
+    attackTargetSpatialFact(goblinId, targetId, "Dread Gaze"),
+    attackTargetSpatialFact(goblinId, targetId, "Tail Swipe"),
+    attackTargetSpatialFact(skeletonId, targetId, "Shortsword"),
+    attackTargetSpatialFact(combatantId("second-rogue"), targetId, "Longsword"),
+  ];
+}
+
+function commonSneakAttackSpatialFacts(
+  attackerId: CombatantId,
+  targetId: CombatantId,
+): readonly NonNullable<
+  Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+>[number][] {
+  return [
+    combatantId("ally"),
+    combatantId("sneak-ally"),
+    combatantId("sneak-cancel-ally"),
+    combatantId("second-rogue-ally"),
+  ].map((allyId) => ({
+    kind: "sneakAttackAllyWithin5FeetOfTarget" as const,
+    attackerId,
+    targetId,
+    allyId,
+  }));
+}
+
+function spellIdFromTargetHoleLabel(label: string | undefined): string {
+  if (label?.startsWith("Magic Missile") === true) return "magic_missile";
+  if (label?.startsWith("Ray of Frost") === true) return "ray_of_frost";
+  if (label?.startsWith("Mage Armor") === true) return "mage_armor";
+  return "";
 }
 
 function abilityCheckFill(hole: BattleHole, total: number): BattleFill {
@@ -10110,10 +10145,9 @@ function movementFill(
   hole: BattleHole,
   value: {
     readonly movementCostFeet: number;
-    readonly distanceMovedFeet: number;
-    readonly destinationDistances: readonly {
-      readonly combatantId: CombatantId;
-      readonly feet: number;
+    readonly provokedOpportunityAttacks: readonly {
+      readonly reactorId: CombatantId;
+      readonly attackName: string;
     }[];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
@@ -10125,11 +10159,7 @@ function movementFill(
     holeId: hole.holeId,
     value: {
       movementCostFeet: movementFeet(value.movementCostFeet),
-      distanceMovedFeet: movementFeet(value.distanceMovedFeet),
-      destinationDistances: value.destinationDistances.map((distance) => ({
-        combatantId: distance.combatantId,
-        feet: movementFeet(distance.feet),
-      })),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };
 }
@@ -10161,7 +10191,13 @@ function savingThrowOutcomeFill(
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
-    value: outcomes,
+    value: {
+      area: {
+        originAnchorId: wizardId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+      },
+      outcomes,
+    },
   };
 }
 
@@ -11377,11 +11413,6 @@ function secondWindWithAdditionalDirectEffect(): UnitRecord {
 
 function wizardVsSkeletonBattle(input?: {
   readonly extraCombatants?: readonly BattleCreatureInit[];
-  readonly combatantDistances?: readonly {
-    readonly combatantA: CombatantId;
-    readonly combatantB: CombatantId;
-    readonly feet: number;
-  }[];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle-wizard-skeleton"),
@@ -11396,15 +11427,6 @@ function wizardVsSkeletonBattle(input?: {
       skeletonCreatureInit({ initiative: 10 }),
       ...(input?.extraCombatants ?? []),
     ],
-    ...(input?.combatantDistances === undefined
-      ? {}
-      : {
-          combatantDistances: input.combatantDistances.map((distance) => ({
-            combatantA: distance.combatantA,
-            combatantB: distance.combatantB,
-            feet: movementFeet(distance.feet),
-          })),
-        }),
   });
 }
 
@@ -11450,9 +11472,6 @@ function wizardVsRogueBattle(input: {
             ]
           : [],
       }),
-    ],
-    combatantDistances: [
-      { combatantA: wizardId, combatantB: fighterId, feet: movementFeet(10) },
     ],
   });
 }

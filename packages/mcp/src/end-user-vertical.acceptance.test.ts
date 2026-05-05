@@ -188,6 +188,14 @@ describe("end-user promoted MCP vertical", () => {
         kind: "targetChoice",
         holeId: "battle:attack:target",
         value: "goblin",
+        spatialFacts: [
+          {
+            kind: "attackTargetInMeleeReach",
+            actorId: "fighter",
+            targetId: "goblin",
+            attackName: "Longsword",
+          },
+        ],
       },
     });
     callTool(root, "fill_battle_hole", {
@@ -246,6 +254,14 @@ describe("end-user promoted MCP vertical", () => {
         kind: "targetChoice",
         holeId: "battle:attack:target",
         value: "fighter",
+        spatialFacts: [
+          {
+            kind: "attackTargetInMeleeReach",
+            actorId: "goblin",
+            targetId: "fighter",
+            attackName: "Scimitar",
+          },
+        ],
       },
     });
     callTool(root, "fill_battle_hole", {
@@ -884,8 +900,35 @@ function fillBattleSubject(
   fill: {
     readonly kind: "targetChoice" | "attackRoll" | "rolledDice";
     readonly holeId: string;
+    readonly spatialFacts?: readonly unknown[];
     readonly value: unknown;
   },
 ) {
-  return callTool(root, "fill_battle_hole", { subject, fill });
+  const battleFill =
+    fill.kind === "targetChoice" && fill.spatialFacts === undefined
+      ? {
+          ...fill,
+          spatialFacts:
+            "spellId" in subject
+              ? [
+                  {
+                    kind: "spellTarget",
+                    casterId: subject.actorId,
+                    targetId: String(fill.value),
+                    spellId: subject.spellId,
+                  },
+                ]
+              : "attackName" in subject
+                ? [
+                    {
+                      kind: "attackTargetInMeleeReach",
+                      actorId: subject.actorId,
+                      targetId: String(fill.value),
+                      attackName: subject.attackName,
+                    },
+                  ]
+                : [],
+        }
+      : fill;
+  return callTool(root, "fill_battle_hole", { subject, fill: battleFill });
 }
