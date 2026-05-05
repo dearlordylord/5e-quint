@@ -162,6 +162,7 @@ module battleRuntime {
     | HasPendingReactionFrame(PendingReactionFrame)
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows
+  type DamageDisposition = OrdinaryDamage | KnockOut
 
   type HiddenDiscoveryDc =
     | HiddenDc15
@@ -823,6 +824,25 @@ module battleRuntime {
   ): BattleState =
     resolveAttackAtBarbarianLevel(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, 1)
 
+  pure def resolveAttackKnockOut(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    resolveAttackWithDisposition(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, KnockOut)
+
+  pure def resolveAttackWithDisposition(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    damageDisposition: DamageDisposition,
+  ): BattleState =
+    resolveAttackAtBarbarianLevelWithDisposition(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, 1, damageDisposition)
+
   pure def resolveAttackAtBarbarianLevel(
     state: BattleState,
     attackTotal: int,
@@ -830,6 +850,17 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
     barbarianLevel: int,
+  ): BattleState =
+    resolveAttackAtBarbarianLevelWithDisposition(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, barbarianLevel, OrdinaryDamage)
+
+  pure def resolveAttackAtBarbarianLevelWithDisposition(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    barbarianLevel: int,
+    damageDisposition: DamageDisposition,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
       state
@@ -839,7 +870,7 @@ module battleRuntime {
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
       else
-        { ...revealed, goblin: applyDamage(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false, lightWeaponAttackMade: true }
+        { ...revealed, goblin: applyDamageWithDisposition(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), actionAvailable: false, lightWeaponAttackMade: true }
     }
 
   pure def fighterSneakAttackEligible(
@@ -928,13 +959,23 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveGoblinOpportunityAttackWithDisposition(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, OrdinaryDamage)
+
+  pure def resolveGoblinOpportunityAttackWithDisposition(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    damageDisposition: DamageDisposition,
+  ): BattleState =
     if (state.goblin.hp == 0)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
       state
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
-      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded) }
+      { ...state, fighter: applyDamageWithDisposition(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition) }
     }
 
   pure def resolveRayOfFrost(
@@ -965,7 +1006,10 @@ module battleRuntime {
   pure def breakConcentration(target: Combatant): Combatant =
     { ...target, concentrating: false, activeEffects: target.activeEffects.exclude(Set(MageArmor)) }
 
-  pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant = {
+  pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant =
+    applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, OrdinaryDamage)
+
+  pure def applyDamageWithDisposition(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool, damageDisposition: DamageDisposition): Combatant = {
     val effectiveDamage = if (damage < 0) 0 else damage
     val tempHpAbsorbed = if (target.tempHp < effectiveDamage) target.tempHp else effectiveDamage
     val hpDamage = effectiveDamage - tempHpAbsorbed
@@ -983,13 +1027,17 @@ module battleRuntime {
       else if (nextHp > 0)
         damaged
       else
-        if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
+        if (damageDisposition == KnockOut and not(massiveDamageKills)) applyKnockOut(damaged)
+        else if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
 
     if (target.concentrating and effectiveDamage > 0 and not(concentrationSaveSucceeded))
       breakConcentration(afterDamage)
     else
       afterDamage
   }
+
+  pure def applyKnockOut(target: Combatant): Combatant =
+    { ...breakConcentration(target), hp: 1, unconscious: true }
 
   pure def applyMageArmor(target: Combatant): Combatant =
     if (target.activeEffects.contains(MageArmor))
@@ -1928,6 +1976,25 @@ module battleRuntime {
     }
   }
 
+  run test_melee_knock_out_leaves_stat_block_at_one_hp_unconscious = {
+    val result = resolveAttackKnockOut(withGoblinHp(initialState, 3, 0), 15, 10, 8, true)
+    all {
+      assert(result.goblin.hp == 1),
+      assert(result.goblin.unconscious),
+      assert(result.goblin.lifecycle == DiesAtZeroHp),
+    }
+  }
+
+  run test_melee_knock_out_leaves_character_at_one_hp_unconscious = {
+    val result = applyDamageWithDisposition(withFighterHp(initialState, 3, 0).fighter, 8, 1, true, KnockOut)
+    all {
+      assert(result.hp == 1),
+      assert(result.unconscious),
+      assert(result.lifecycle == UsesDeathSavingThrows),
+      assert(result.deathFailures == 0),
+    }
+  }
+
   run test_massive_damage_kills_character_on_drop_to_zero = {
     val result = applyDamage(withFighterHp(initialState, 3, 0).fighter, 19, 2, true)
     all {
@@ -2206,6 +2273,14 @@ module battleRuntime {
       assert(resolved.goblin.reactionAvailable == false),
       assert(resolved.fighter.hp == 6),
       assert(resolved.fighter.movementSpent == 5),
+    }
+  }
+
+  run test_goblin_opportunity_attack_can_knock_out = {
+    val result = resolveGoblinOpportunityAttackWithDisposition(withFighterHp(initialState, 3, 0), 20, 18, 1, true, KnockOut)
+    all {
+      assert(result.fighter.hp == 1),
+      assert(result.fighter.unconscious),
     }
   }
 

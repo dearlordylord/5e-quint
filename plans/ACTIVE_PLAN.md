@@ -85,7 +85,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 67,
       "id": "PBA17",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Restore Nonlethal Knockout And Zero-HP Handoff Width"
     },
     {
@@ -203,7 +203,7 @@ Keep it synchronized with the DAG table and task details.
 | 64    | PBA15A0D - Wire Progression And Multiclass Through MCP Docs       | done                                          | PBA15A0C     | PBA15A       | inline below                                                                                                 | MCP schema/workflow/docs now expose progression as one atomic profile choice and point multiclass validation at shared-algebras. |
 | 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | done                                          | PBA15A0D     | PBA15B       | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Character-creation ability-score assignments are parsed into shared AbilityScore values before durable runtime storage.           |
 | 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | done                                          | PBA15B       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Promoted battle-runtime MBT/QNT now covers Death Saving Throw holes for a Character Build combatant.                              |
-| 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | ready-for-implementation-after-light-research | PBA16        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width.                                                  |
+| 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | done                                          | PBA16        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Knock Out and durable positive/zero-HP handoffs are now explicit in promoted battle-runtime and MCP session state.               |
 | 68    | PBA15B - Remove Runtime-Owned Spatiality And Distances            | done                                          | PBA15A       | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)              | Promoted runtime and MCP now consume table/caller spatial facts instead of owning combatant distances. |
 | 69    | PBA18 - Widen Attack Range And Conditional Attack Riders          | ready-for-implementation-after-light-research | PBA15B       | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Restore long-range Disadvantage and supported conditional attack riders.                                                         |
 | 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | blocked                                       | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families.                                                              |
@@ -516,7 +516,7 @@ Tier 1 promoted MBT test. PBA17 is unblocked.
 
 ### Task 67 - PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA16
 Blocks: PBA18
@@ -534,6 +534,17 @@ Verification summary: RAW/UL check, focused battle-runtime/MCP tests, QNT/MBT
 only if lifecycle mappings change beyond PBA16, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA18.
+
+Closeout: promoted battle-runtime now exposes melee Knock Out as an
+attack-damage disposition when damage would reduce a creature from positive HP
+to 0 without Massive Damage, applying the SRD 1 HP plus Unconscious outcome for
+Character and Stat Block combatants. MCP character sessions now preserve
+positive-HP Unconscious Knock Out handoff separately from zero-HP unstable,
+Stable, and dead lifecycles, and can start a later battle from those explicit
+session states. Verification covered RAW/UBIQUITOUS_LANGUAGE anchors, focused
+battle-runtime and MCP tests, QNT self-tests through the battle-runtime suite,
+and `pnpm quality` until unrelated app/Core baseline typecheck failures.
+PBA18 remains runnable.
 
 ### Task 68 - PBA15B - Remove Runtime-Owned Spatiality And Distances
 

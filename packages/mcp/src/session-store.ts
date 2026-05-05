@@ -9,12 +9,10 @@ import type {
   CharacterBattleSpellSlotState,
   BattleState,
   BattleSubject,
-  CharacterZeroHpLifecycleInit,
   CharacterId,
 } from "@dnd/battle-runtime";
 import { snapshotBattle } from "@dnd/battle-runtime";
 import {
-  Hp,
   resourceCount,
   spellSlotLevel,
   type Hp as HpType,
@@ -22,15 +20,29 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
-  DeathSaveCount,
-  DeathSaves,
-} from "@dnd/shared-algebras/death-saves-algebra";
-import type {
   StatBlockCatalog,
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
+import {
+  characterSessionHitPoints,
+  characterSessionHitPointsCurrentHp,
+  characterSessionHitPointsInitialConditions,
+  characterSessionHitPointsZeroHpLifecycle,
+  characterSessionIssue,
+  type CharacterSessionHitPoints,
+  type CharacterSessionIssue,
+  type CharacterSessionPositiveHpCondition,
+  type CharacterSessionZeroHpLifecycleInput,
+} from "./session-hit-points.ts";
+export type {
+  CharacterSessionHitPoints,
+  CharacterSessionIssue,
+  CharacterSessionPositiveHpCondition,
+  CharacterSessionZeroHpLifecycle,
+  CharacterSessionZeroHpLifecycleInput,
+} from "./session-hit-points.ts";
 
 type SpellcastingCharacterBuild = CharacterBuild & {
   readonly spellcasting: NonNullable<CharacterBuild["spellcasting"]>;
@@ -56,52 +68,6 @@ export type AvailableCharacterSession =
       readonly spellSlots?: never;
     };
 
-export type CharacterSessionHitPoints =
-  | {
-      readonly tag: "positive";
-      readonly currentHp: HpType;
-    }
-  | {
-      readonly tag: "zero";
-      readonly lifecycle: CharacterSessionZeroHpLifecycle;
-    };
-
-type CharacterSessionPendingDeathSaveCount = Exclude<DeathSaveCount, 3>;
-type CharacterSessionPendingDeathSaves = {
-  readonly successes: CharacterSessionPendingDeathSaveCount;
-  readonly failures: CharacterSessionPendingDeathSaveCount;
-};
-type CharacterSessionDeadDeathSaves = {
-  readonly successes: CharacterSessionPendingDeathSaveCount;
-  readonly failures: 3;
-};
-type CharacterSessionStableZeroHpLifecycle = {
-  readonly tag: "stable";
-  readonly recovery: { readonly kind: "regains1HpAfter1d4Hours" };
-};
-
-export type CharacterSessionZeroHpLifecycle =
-  | {
-      readonly tag: "unstable";
-      readonly deathSaves: CharacterSessionPendingDeathSaves;
-    }
-  | CharacterSessionStableZeroHpLifecycle
-  | {
-      readonly tag: "dead";
-      readonly deathSaves: CharacterSessionDeadDeathSaves;
-    };
-
-export type CharacterSessionZeroHpLifecycleInput =
-  | {
-      readonly tag: "unstable";
-      readonly deathSaves: DeathSaves;
-    }
-  | CharacterSessionStableZeroHpLifecycle
-  | {
-      readonly tag: "dead";
-      readonly deathSaves: DeathSaves;
-    };
-
 export type CharacterSpellSlotExpenditure = {
   readonly spellLevel: SpellSlotLevel;
   readonly expended: ResourceCount;
@@ -111,20 +77,10 @@ export type AvailableCharacterSessionInput = {
   readonly characterId: CharacterId;
   readonly build: CharacterBuild;
   readonly currentHp: HpType;
+  readonly positiveHpCondition?: CharacterSessionPositiveHpCondition;
   readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
-
-export type CharacterSessionIssue = {
-  readonly tag: "characterSessionIssue";
-  readonly message: string;
-};
-
-function characterSessionIssue(
-  message: string,
-): Either.Either<never, CharacterSessionIssue> {
-  return Either.left({ tag: "characterSessionIssue", message });
-}
 
 export function availableCharacterSession(
   input: AvailableCharacterSessionInput,
@@ -175,94 +131,19 @@ export function availableCharacterSession(
 export function characterSessionCurrentHp(
   session: AvailableCharacterSession,
 ): HpType {
-  return session.hitPoints.tag === "positive"
-    ? session.hitPoints.currentHp
-    : Hp(0);
+  return characterSessionHitPointsCurrentHp(session.hitPoints);
 }
 
 export function characterBattleZeroHpLifecycle(
   session: AvailableCharacterSession,
-): CharacterZeroHpLifecycleInit | undefined {
-  if (session.hitPoints.tag === "positive") return undefined;
-  const lifecycle = session.hitPoints.lifecycle;
-  if (lifecycle.tag === "stable") {
-    return {
-      policy: "usesDeathSavingThrows",
-      deathSaves: {
-        deathSaves: { successes: 0, failures: 0 },
-        stable: true,
-        dead: false,
-        hpRegained: false,
-      },
-    };
-  }
-  if (lifecycle.tag === "dead") {
-    return {
-      policy: "usesDeathSavingThrows",
-      deathSaves: {
-        deathSaves: lifecycle.deathSaves,
-        stable: false,
-        dead: true,
-        hpRegained: false,
-      },
-    };
-  }
-  return {
-    policy: "usesDeathSavingThrows",
-    deathSaves: {
-      deathSaves: lifecycle.deathSaves,
-      stable: false,
-      dead: false,
-      hpRegained: false,
-    },
-  };
+): ReturnType<typeof characterSessionHitPointsZeroHpLifecycle> {
+  return characterSessionHitPointsZeroHpLifecycle(session.hitPoints);
 }
 
-function characterSessionHitPoints(
-  input: Pick<AvailableCharacterSessionInput, "currentHp" | "zeroHpLifecycle">,
-): Either.Either<CharacterSessionHitPoints, CharacterSessionIssue> {
-  if (Number(input.currentHp) > 0) {
-    if (input.zeroHpLifecycle !== undefined) {
-      return characterSessionIssue(
-        "Positive-HP character session cannot carry zero-HP state.",
-      );
-    }
-    return Either.right({ tag: "positive", currentHp: input.currentHp });
-  }
-  const lifecycle = canonicalZeroHpLifecycle(
-    input.zeroHpLifecycle ?? {
-      tag: "unstable",
-      deathSaves: { successes: 0, failures: 0 },
-    },
-  );
-  return Either.isLeft(lifecycle)
-    ? Either.left(lifecycle.left)
-    : Either.right({
-        tag: "zero",
-        lifecycle: lifecycle.right,
-      });
-}
-
-function canonicalZeroHpLifecycle(
-  lifecycle: CharacterSessionZeroHpLifecycleInput,
-): Either.Either<CharacterSessionZeroHpLifecycle, CharacterSessionIssue> {
-  if (lifecycle.tag === "stable") return Either.right(lifecycle);
-  if (lifecycle.tag === "dead") {
-    const { successes, failures } = lifecycle.deathSaves;
-    if (successes === 3 || failures !== 3) {
-      return characterSessionIssue(
-        "Dead character session requires exactly three death save failures.",
-      );
-    }
-    return Either.right({ tag: "dead", deathSaves: { successes, failures } });
-  }
-  const { successes, failures } = lifecycle.deathSaves;
-  if (successes === 3 || failures === 3) {
-    return characterSessionIssue(
-      "Unstable character session cannot carry terminal death save counts.",
-    );
-  }
-  return Either.right({ tag: "unstable", deathSaves: { successes, failures } });
+export function characterBattleInitialConditions(
+  session: AvailableCharacterSession,
+): ReturnType<typeof characterSessionHitPointsInitialConditions> {
+  return characterSessionHitPointsInitialConditions(session.hitPoints);
 }
 
 export function characterBattleSpellSlots(

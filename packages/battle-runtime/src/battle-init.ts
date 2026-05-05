@@ -1,5 +1,5 @@
 import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import type { Hp, MovementFeet } from "@dnd/shared/types";
+import type { Condition, Hp, MovementFeet } from "@dnd/shared/types";
 import type {
   Size,
   StatBlockRecord,
@@ -58,6 +58,7 @@ export type CharacterBattleCreatureInit = {
   readonly currentHp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
+  readonly conditions?: readonly Condition[];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly attack: CharacterWeaponAttackActionOption | null;

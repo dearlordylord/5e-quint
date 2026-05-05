@@ -6,11 +6,13 @@ import type {
 } from "@dnd/battle-runtime";
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type { Hp } from "@dnd/shared/types";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { Either } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
   availableCharacterSession,
+  type CharacterSessionPositiveHpCondition,
   type CharacterSessionZeroHpLifecycleInput,
 } from "./session-store.ts";
 import { errorContent } from "./tool-content.ts";
@@ -22,6 +24,7 @@ export function finalizeCharacterSessionsFromBattle(
   const updates: {
     readonly sourceDraftId: CharacterDraftId;
     readonly currentHp: Hp;
+    readonly positiveHpCondition?: CharacterSessionPositiveHpCondition;
     readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
     readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   }[] = [];
@@ -64,6 +67,14 @@ export function finalizeCharacterSessionsFromBattle(
     updates.push({
       sourceDraftId,
       currentHp: combatant.hp,
+      ...(combatant.hp > 0 && hasCondition(combatant.conditions, "unconscious")
+        ? {
+            positiveHpCondition: {
+              tag: "unconscious",
+              recovery: { kind: "knockOutShortRest" },
+            },
+          }
+        : {}),
       ...(combatant.hp === 0
         ? { zeroHpLifecycle: zeroHpLifecycle?.right }
         : {}),
@@ -80,6 +91,7 @@ export function finalizeCharacterSessionsFromBattle(
       characterId: session.characterId,
       build: session.build,
       currentHp: update.currentHp,
+      positiveHpCondition: update.positiveHpCondition,
       zeroHpLifecycle: update.zeroHpLifecycle,
       spellSlots: update.spellSlots,
     });

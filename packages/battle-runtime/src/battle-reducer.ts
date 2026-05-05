@@ -279,11 +279,18 @@ export type BattleInterruptedProcedure =
         { readonly kind: "concentrationSavingThrow" }
       >;
       readonly deathFailuresAtZeroHp: 1 | 2;
+      readonly damageDisposition: BattleAttackDamageDisposition;
       readonly attackDamageRiders: readonly AttackDamageRider[];
     };
 type BattleAttackDamagePrefixFill = Extract<
   BattleFill,
-  { readonly kind: "targetChoice" | "attackRoll" | "rolledDice" }
+  {
+    readonly kind:
+      | "targetChoice"
+      | "attackRoll"
+      | "rolledDice"
+      | "attackDamageDisposition";
+  }
 >;
 type BattlePendingAttackDamageReduction = {
   readonly reactorId: CombatantId;
@@ -348,6 +355,9 @@ type BattleAttackDamageEvent =
       readonly kind: "rolledDamage";
       readonly damageRollByType: readonly DamageAmountByTypeEntry[];
     };
+export type BattleAttackDamageDisposition =
+  | { readonly kind: "ordinaryDamage" }
+  | { readonly kind: "knockOut" };
 type BattleReactionProcedureModifierChoice = {
   readonly kind: "reactionRollOrDamageReduction";
   readonly reactorId: CombatantId;
@@ -1046,6 +1056,15 @@ export type BattleGrappleOutcomeHole = {
   readonly dc: DifficultyClass;
   readonly mode: "grappleSave" | "escapeCheck";
 };
+export type BattleAttackDamageDispositionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "attackDamageDisposition";
+  readonly label: string;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly choices: readonly BattleAttackDamageDisposition[];
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleAttackRollHole
@@ -1060,7 +1079,8 @@ export type BattleHole =
   | BattleReactionDecisionHole
   | BattleMovementHole
   | BattleAbilityCheckHole
-  | BattleGrappleOutcomeHole;
+  | BattleGrappleOutcomeHole
+  | BattleAttackDamageDispositionHole;
 
 const BattleHoleIdSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("HoleId"),
@@ -1303,6 +1323,19 @@ export const BattleHoleSchema = Schema.Union(
     dc: DifficultyClass,
     mode: Schema.Literal("grappleSave", "escapeCheck"),
   }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("attackDamageDisposition"),
+    label: Schema.String,
+    attackerId: CombatantId,
+    targetId: CombatantId,
+    choices: Schema.Array(
+      Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
+        Schema.Struct({ kind: Schema.Literal("knockOut") }),
+      ),
+    ),
+  }),
 );
 
 export type BattleAttackRollResult = AttackRollResult & {
@@ -1348,6 +1381,11 @@ export type BattleFill =
       readonly value: {
         readonly succeeded: boolean;
       };
+    }
+  | {
+      readonly kind: "attackDamageDisposition";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleAttackDamageDisposition;
     }
   | {
       readonly kind: "reactionDecision";
@@ -1502,6 +1540,13 @@ type BattleFillEncoded =
       readonly value: {
         readonly succeeded: boolean;
       };
+    }
+  | {
+      readonly kind: "attackDamageDisposition";
+      readonly holeId: string;
+      readonly value:
+        | { readonly kind: "ordinaryDamage" }
+        | { readonly kind: "knockOut" };
     }
   | {
       readonly kind: "reactionDecision";
@@ -1679,6 +1724,14 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Struct({
         succeeded: Schema.Boolean,
       }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("attackDamageDisposition"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
+        Schema.Struct({ kind: Schema.Literal("knockOut") }),
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("reactionDecision"),
@@ -1915,8 +1968,14 @@ const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
 });
 const ATTACK_TARGET_HOLE_ID = holeId("battle:attack:target");
 const ATTACK_ROLL_HOLE_ID = holeId("battle:attack:roll");
+const ATTACK_DAMAGE_DISPOSITION_HOLE_ID = holeId(
+  "battle:attack:damage-disposition",
+);
 const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:attack:target");
 const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
+const ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:attack:damage-disposition",
+);
 const HELP_ATTACK_ALLY_HOLE_ID = holeId("battle:help-attack:ally");
 const HELP_ATTACK_TARGET_HOLE_ID = holeId("battle:help-attack:target");
 const HELP_ATTACK_ALLY_HOLE_INSTANCE = holeInstanceKey(
@@ -3288,7 +3347,8 @@ function attackDamagePrefixFills(
     (fill): fill is BattleAttackDamagePrefixFill =>
       fill.kind === "targetChoice" ||
       fill.kind === "attackRoll" ||
-      fill.kind === "rolledDice",
+      fill.kind === "rolledDice" ||
+      fill.kind === "attackDamageDisposition",
   );
 }
 
@@ -3467,6 +3527,7 @@ function resumeInterruptedProcedure(
       continuation.targetId,
       damageAmount,
       continuation.deathFailuresAtZeroHp,
+      continuation.damageDisposition,
       continuation.attackDamageRiders,
       continuation.concentrationSavingThrow,
     );
@@ -3734,6 +3795,12 @@ function battleFillEquals(
         b.selectedAttackDamageRiderUnitIds,
       )
     );
+  }
+  if (
+    a.kind === "attackDamageDisposition" &&
+    b.kind === "attackDamageDisposition"
+  ) {
+    return a.value.kind === b.value.kind;
   }
   return false;
 }
@@ -4239,6 +4306,13 @@ function battleCreatureStateFromInit(
   const creatureInit = input.creatureInit;
   assertCurrentHpWithinMaxHp(creatureInit);
   const zeroHpLifecycle = initialZeroHpLifecycleForCreatureOrigin(creatureInit);
+  const initialConditions =
+    creatureInit.kind === "character"
+      ? (creatureInit.conditions?.reduce(
+          (conditions, condition) => applyCondition(conditions, condition),
+          EMPTY_CONDITION_STATE,
+        ) ?? EMPTY_CONDITION_STATE)
+      : EMPTY_CONDITION_STATE;
   const base = {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -4247,7 +4321,7 @@ function battleCreatureStateFromInit(
     hp: creatureInit.currentHp,
     maxHp: creatureInit.maxHp,
     tempHp: creatureInit.tempHp,
-    conditions: EMPTY_CONDITION_STATE,
+    conditions: initialConditions,
     activeEffects: [],
     activeOngoingFeatureOccurrences: new Map(),
     concentration: null,
@@ -4929,6 +5003,24 @@ export function breakBattleConcentration(
   };
 }
 
+function breakBattleConcentrationAfterDamage(input: {
+  readonly state: BattleState;
+  readonly combatantId: CombatantId;
+  readonly priorConcentration: BattleConcentration | null;
+}): BattleState {
+  const currentConcentration =
+    input.state.combatants.get(input.combatantId)?.concentration ?? null;
+  if (currentConcentration !== null) {
+    return breakBattleConcentration(input.state, input.combatantId);
+  }
+  if (input.priorConcentration?.effectKind !== "readiedSpell") {
+    return input.state;
+  }
+  const readiedSpells = new Map(input.state.readiedSpells);
+  readiedSpells.delete(input.combatantId);
+  return { ...input.state, readiedSpells };
+}
+
 export function concentrationSavingThrowDc(
   damageAmount: number,
 ): DifficultyClass {
@@ -5012,9 +5104,19 @@ function resolveAttack(
       "Attack target is outside the selected attack's supported target constraint.",
     );
   }
+  if (
+    fillSet.damageDisposition.kind === "knockOut" &&
+    !attackCanCarryKnockOutChoice(attack)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Knock Out can only be chosen for melee attack damage.",
+    );
+  }
 
   if (fillSet.attackRoll == null) {
-    if (fillSet.damageRoll != null) {
+    if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -5196,6 +5298,25 @@ function resolveAttack(
       target,
       reducedDamageEvent,
     );
+    const damageDispositionHole = attackDamageDispositionHole({
+      attack,
+      attackerId: input.subject.actorId,
+      target,
+      damageAmount: reducedFixedDamageAmount,
+    });
+    if (damageDispositionHole !== null) {
+      if (!fillSet.damageDispositionFilled) {
+        return needsHolesResult(attackRolledState, input.subject, [
+          damageDispositionHole,
+        ]);
+      }
+    } else if (fillSet.damageDispositionFilled) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
+      );
+    }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
       attackRolledState,
       {
@@ -5208,6 +5329,7 @@ function resolveAttack(
           damageEvent: reducedDamageEvent,
           fills: attackDamagePrefixFills(input.fills),
           deathFailuresAtZeroHp: critical ? 2 : 1,
+          damageDisposition: fillSet.damageDisposition,
           attackDamageRiders: [],
         },
       },
@@ -5245,6 +5367,7 @@ function resolveAttack(
             damageEvent: reducedDamageEvent,
             fills: attackDamagePrefixFills(input.fills),
             deathFailuresAtZeroHp: critical ? 2 : 1,
+            damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: [],
           },
           concentrationSave,
@@ -5273,6 +5396,7 @@ function resolveAttack(
         target.combatantId,
         toDamageAmount(reducedFixedDamageAmount),
         critical ? 2 : 1,
+        fillSet.damageDisposition,
         [],
         fillSet.concentrationSavingThrow,
       ),
@@ -5315,7 +5439,7 @@ function resolveAttack(
       ),
     ]);
   }
-  if (!hit && fillSet.damageRoll != null) {
+  if (!hit && (fillSet.damageRoll != null || fillSet.damageDispositionFilled)) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -5357,6 +5481,25 @@ function resolveAttack(
       target,
       reducedDamageEvent,
     );
+    const damageDispositionHole = attackDamageDispositionHole({
+      attack,
+      attackerId: input.subject.actorId,
+      target,
+      damageAmount: reducedDamageAmount,
+    });
+    if (damageDispositionHole !== null) {
+      if (!fillSet.damageDispositionFilled) {
+        return needsHolesResult(attackRolledState, input.subject, [
+          damageDispositionHole,
+        ]);
+      }
+    } else if (fillSet.damageDispositionFilled) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
+      );
+    }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
       attackRolledState,
       {
@@ -5369,6 +5512,7 @@ function resolveAttack(
           damageEvent: reducedDamageEvent,
           fills: attackDamagePrefixFills(input.fills),
           deathFailuresAtZeroHp: critical ? 2 : 1,
+          damageDisposition: fillSet.damageDisposition,
           attackDamageRiders: selectedDamageRiders,
         },
       },
@@ -5406,6 +5550,7 @@ function resolveAttack(
             damageEvent: reducedDamageEvent,
             fills: attackDamagePrefixFills(input.fills),
             deathFailuresAtZeroHp: critical ? 2 : 1,
+            damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: selectedDamageRiders,
           },
           concentrationSave,
@@ -5434,6 +5579,7 @@ function resolveAttack(
         target.combatantId,
         toDamageAmount(reducedDamageAmount),
         critical ? 2 : 1,
+        fillSet.damageDisposition,
         selectedDamageRiders,
         fillSet.concentrationSavingThrow,
       ),
@@ -6011,6 +6157,13 @@ function resolveOffHandAttack(
     );
   }
   if (fillSet.attackRoll == null) {
+    if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Off-Hand Attack roll must be filled before damage.",
+      );
+    }
     return needsHolesResult(input.state, input.subject, [
       attackRollHole(
         attack,
@@ -6131,7 +6284,7 @@ function resolveOffHandAttack(
       ),
     ]);
   }
-  if (!hit && fillSet.damageRoll != null) {
+  if (!hit && (fillSet.damageRoll != null || fillSet.damageDispositionFilled)) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -6383,6 +6536,8 @@ type AttackFillSet =
       readonly concentrationSavingThrow:
         | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
         | undefined;
+      readonly damageDisposition: BattleAttackDamageDisposition;
+      readonly damageDispositionFilled: boolean;
       readonly damageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
@@ -6406,6 +6561,10 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  let damageDisposition: BattleAttackDamageDisposition = {
+    kind: "ordinaryDamage",
+  };
+  let damageDispositionFilled = false;
   let damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
@@ -6446,6 +6605,24 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       continue;
     }
 
+    if (fill.kind === "attackDamageDisposition") {
+      if (fill.holeId !== ATTACK_DAMAGE_DISPOSITION_HOLE_ID) {
+        return {
+          tag: "invalid",
+          message: "Attack damage disposition fill uses the wrong hole.",
+        };
+      }
+      if (damageDispositionFilled) {
+        return {
+          tag: "invalid",
+          message: "Attack damage disposition was filled twice.",
+        };
+      }
+      damageDispositionFilled = true;
+      damageDisposition = fill.value;
+      continue;
+    }
+
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Attack replay holes.`,
@@ -6458,6 +6635,8 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     targetSpatialFacts,
     attackRoll,
     concentrationSavingThrow,
+    damageDisposition,
+    damageDispositionFilled,
     damageRoll,
   };
 }
@@ -6674,6 +6853,7 @@ function applyFixedAttackDamage(
   }
   const damaged = applyHpDamage(target, damageAmount, {
     deathFailuresAtZeroHp: critical ? 2 : 1,
+    damageDisposition: fillSet.damageDisposition,
   });
   const combatants = new Map(state.combatants).set(targetId, damaged);
 
@@ -6684,7 +6864,11 @@ function applyFixedAttackDamage(
   const concentrated =
     fillSet.concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
-      ? breakBattleConcentration(nextState, targetId)
+      ? breakBattleConcentrationAfterDamage({
+          state: nextState,
+          combatantId: targetId,
+          priorConcentration: target.concentration,
+        })
       : nextState;
   return normalizeBattleGrapples(concentrated);
 }
@@ -7259,7 +7443,7 @@ function resolveOpportunityAttackCommand(
     attack,
   );
   if (fillSet.attackRoll == null) {
-    if (fillSet.damageRoll != null) {
+    if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -7324,7 +7508,7 @@ function resolveOpportunityAttackCommand(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
-  if (!hit && fillSet.damageRoll != null) {
+  if (!hit && (fillSet.damageRoll != null || fillSet.damageDispositionFilled)) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -7349,6 +7533,25 @@ function resolveOpportunityAttackCommand(
         input.state,
         "invalidFill",
         "Opportunity Attack Fixed Unarmed Strike damage does not use a rolled damage fill.",
+      );
+    }
+    const damageDispositionHole = attackDamageDispositionHole({
+      attack,
+      attackerId: subject.reactorId,
+      target,
+      damageAmount: fixedDamageAmount,
+    });
+    if (damageDispositionHole !== null) {
+      if (!fillSet.damageDispositionFilled) {
+        return needsHolesResult(attackRolledState, input.subject, [
+          damageDispositionHole,
+        ]);
+      }
+    } else if (fillSet.damageDispositionFilled) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
       );
     }
     const concentrationSave = concentrationSavingThrowHole(
@@ -7428,6 +7631,25 @@ function resolveOpportunityAttackCommand(
     fillSet.attackRoll,
     selectedDamageRiders,
   );
+  const damageDispositionHole = attackDamageDispositionHole({
+    attack,
+    attackerId: subject.reactorId,
+    target,
+    damageAmount,
+  });
+  if (damageDispositionHole !== null) {
+    if (!fillSet.damageDispositionFilled) {
+      return needsHolesResult(attackRolledState, input.subject, [
+        damageDispositionHole,
+      ]);
+    }
+  } else if (fillSet.damageDispositionFilled) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
+    );
+  }
   const concentrationSave = concentrationSavingThrowHole(target, damageAmount);
   if (concentrationSave !== null) {
     if (fillSet.concentrationSavingThrow === undefined) {
@@ -9773,6 +9995,7 @@ function applyAttackDamage(
   );
   const damaged = applyHpDamage(target, damageAmount, {
     deathFailuresAtZeroHp: critical ? 2 : 1,
+    damageDisposition: fillSet.damageDisposition,
   });
   const combatants = new Map(state.combatants).set(targetId, damaged);
 
@@ -9783,7 +10006,11 @@ function applyAttackDamage(
   const concentrated =
     fillSet.concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
-      ? breakBattleConcentration(nextState, targetId)
+      ? breakBattleConcentrationAfterDamage({
+          state: nextState,
+          combatantId: targetId,
+          priorConcentration: target.concentration,
+        })
       : nextState;
   return normalizeBattleGrapples(
     recordAttackDamageRidersUsed(concentrated, attackDamageRiders),
@@ -9796,6 +10023,7 @@ function applyAttackDamageAmount(
   targetId: CombatantId,
   damageAmount: DamageAmount,
   deathFailuresAtZeroHp: 1 | 2,
+  damageDisposition: BattleAttackDamageDisposition,
   attackDamageRiders: readonly AttackDamageRider[],
   concentrationSavingThrow?: Extract<
     BattleFill,
@@ -9808,6 +10036,7 @@ function applyAttackDamageAmount(
   }
   const damaged = applyHpDamage(target, Number(damageAmount), {
     deathFailuresAtZeroHp,
+    damageDisposition,
   });
   const combatants = new Map(state.combatants).set(targetId, damaged);
   const nextState = {
@@ -9818,7 +10047,11 @@ function applyAttackDamageAmount(
     Number(damageAmount) > 0 &&
     (concentrationSavingThrow?.value.succeeded === false ||
       (target.concentration !== null && damaged.concentration === null))
-      ? breakBattleConcentration(nextState, targetId)
+      ? breakBattleConcentrationAfterDamage({
+          state: nextState,
+          combatantId: targetId,
+          priorConcentration: target.concentration,
+        })
       : nextState;
   return normalizeBattleGrapples(
     recordAttackDamageRidersUsed(
@@ -9852,6 +10085,16 @@ function recordAttackDamageRidersUsed(
 
 type BattleDamageContext = {
   readonly deathFailuresAtZeroHp: 1 | 2;
+  readonly damageDisposition?: BattleAttackDamageDisposition;
+};
+type HpDamageProjection = {
+  readonly effectiveDamage: number;
+  readonly currentTempHp: number;
+  readonly tempHpAbsorbed: number;
+  readonly currentHp: number;
+  readonly hpDamage: number;
+  readonly nextHp: Hp;
+  readonly massiveDamageKills: boolean;
 };
 
 function applyHpDamage(
@@ -9859,39 +10102,81 @@ function applyHpDamage(
   damageAmount: number,
   context: BattleDamageContext,
 ): BattleCreatureState {
-  const effectiveDamage = Math.max(0, Math.floor(damageAmount));
-  if (effectiveDamage <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
+  const projection = hpDamageProjection(combatant, damageAmount);
+  if (projection.effectiveDamage <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
     return combatant;
   }
 
+  const damaged = {
+    ...combatant,
+    hp: projection.nextHp,
+    tempHp: Hp(projection.currentTempHp - projection.tempHpAbsorbed),
+  };
+
+  if (projection.currentHp <= 0) {
+    return projection.massiveDamageKills
+      ? applyInstantDeath(damaged)
+      : applyDamageAtZeroHp(damaged, context);
+  }
+
+  if (Number(projection.nextHp) > 0) {
+    return damaged;
+  }
+
+  if (
+    context.damageDisposition?.kind === "knockOut" &&
+    !projection.massiveDamageKills
+  ) {
+    return applyKnockOut(damaged);
+  }
+
+  return projection.massiveDamageKills
+    ? applyInstantDeath(damaged)
+    : applyDropToZeroHpLifecycle(damaged);
+}
+
+function hpDamageProjection(
+  combatant: BattleCreatureState,
+  damageAmount: number,
+): HpDamageProjection {
+  const effectiveDamage = Math.max(0, Math.floor(damageAmount));
   const currentTempHp = Number(combatant.tempHp);
   const currentHp = Number(combatant.hp);
   const tempHpAbsorbed = Math.min(currentTempHp, effectiveDamage);
   const hpDamage = effectiveDamage - tempHpAbsorbed;
   const nextHp = Hp(Math.max(0, currentHp - hpDamage));
-  const massiveDamageKills =
-    hpDamage > 0 &&
-    (currentHp <= 0 ? hpDamage : hpDamage - currentHp) >=
-      Number(combatant.maxHp);
-  const damaged = {
-    ...combatant,
-    hp: nextHp,
-    tempHp: Hp(currentTempHp - tempHpAbsorbed),
+  return {
+    effectiveDamage,
+    currentTempHp,
+    tempHpAbsorbed,
+    currentHp,
+    hpDamage,
+    nextHp,
+    massiveDamageKills:
+      hpDamage > 0 &&
+      (currentHp <= 0 ? hpDamage : hpDamage - currentHp) >=
+        Number(combatant.maxHp),
   };
+}
 
-  if (currentHp <= 0) {
-    return massiveDamageKills
-      ? applyInstantDeath(damaged)
-      : applyDamageAtZeroHp(damaged, context);
-  }
+function damageAllowsKnockOut(
+  combatant: BattleCreatureState,
+  damageAmount: number,
+): boolean {
+  const projection = hpDamageProjection(combatant, damageAmount);
+  return (
+    projection.currentHp > 0 &&
+    Number(projection.nextHp) === 0 &&
+    !projection.massiveDamageKills
+  );
+}
 
-  if (Number(nextHp) > 0) {
-    return damaged;
-  }
-
-  return massiveDamageKills
-    ? applyInstantDeath(damaged)
-    : applyDropToZeroHpLifecycle(damaged);
+function applyKnockOut(combatant: BattleCreatureState): BattleCreatureState {
+  return {
+    ...withoutConcentration(combatant),
+    hp: Hp(1),
+    conditions: applyCondition(combatant.conditions, "unconscious"),
+  };
 }
 
 function applyHpHealing(
@@ -10939,7 +11224,11 @@ function applySpellDamage(
   };
   return concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
-    ? breakBattleConcentration(nextState, targetId)
+    ? breakBattleConcentrationAfterDamage({
+        state: nextState,
+        combatantId: targetId,
+        priorConcentration: target.concentration,
+      })
     : nextState;
 }
 
@@ -12127,6 +12416,26 @@ function attackDamageHole(
   };
 }
 
+function attackDamageDispositionHole(input: {
+  readonly attack: SupportedAttackActionOption;
+  readonly attackerId: CombatantId;
+  readonly target: BattleCreatureState;
+  readonly damageAmount: number;
+}): BattleAttackDamageDispositionHole | null {
+  return attackCanCarryKnockOutChoice(input.attack) &&
+    damageAllowsKnockOut(input.target, input.damageAmount)
+    ? {
+        kind: "attackDamageDisposition",
+        holeId: ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
+        holeInstanceKey: ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
+        label: "Attack damage disposition",
+        attackerId: input.attackerId,
+        targetId: input.target.combatantId,
+        choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+      }
+    : null;
+}
+
 function attackDamageHoleId(
   attack: SupportedAttackActionOption,
   critical = false,
@@ -12816,6 +13125,12 @@ function attackTargetConstraint(
     })),
     Match.exhaustive,
   );
+}
+
+function attackCanCarryKnockOutChoice(
+  attack: SupportedAttackActionOption,
+): boolean {
+  return attackTargetConstraint(attack).kind === "meleeReach";
 }
 
 function weaponTargetConstraint(weapon: WeaponRecord): AttackTargetConstraint {

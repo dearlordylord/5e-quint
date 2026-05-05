@@ -61,7 +61,7 @@ flowchart TD
   UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals"]
   SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect; Acid Splash save-gate damage applies to failed saves"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
-  Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle applied<br/>why: one HP mutation boundary"]
+  Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle or melee Knock Out applied<br/>why: one HP mutation boundary"]
   Hidden["Hidden state<br/>source: Hide/Search procedure<br/>data: discovery DC<br/>why: battle-owned execution fact for Invisible projection, Search, and reveal triggers"]
   Snapshot["snapshotBattle(state)<br/>success: JSON-friendly read model<br/>why: callers do not depend on internal Map state"]
 
@@ -159,6 +159,10 @@ flowchart TD
   is inferred from UnitRecord facts.
 - Character-derived attacks come from a supported weapon Attack action option
   assembled at the composition boundary.
+- Supported melee attack damage can carry the attacker's Knock Out choice into
+  the HP mutation boundary. The choice leaves the target at 1 HP with
+  Unconscious when the damage would otherwise reduce positive HP to 0 without
+  Massive Damage; it is not a zero-HP lifecycle state.
 - Character-derived Action Surge comes from a retained Unit admitted by the
   shared Action Surge support parser plus runtime use-count state. It grants a
   Unit-sourced action resource carrying the authored non-Magic restriction.

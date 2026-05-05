@@ -2273,6 +2273,117 @@ describe("battle runtime", () => {
     );
   });
 
+  test("Opportunity Attack exposes Knock Out as an attack damage disposition", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-opportunity-attack-knock-out"),
+      combatants: [
+        characterSeed({ initiative: 20, currentHp: 3 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
+        }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    const choice = reactionChoiceWithSubject(
+      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+    );
+    const startedReaction = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        {
+          kind: "resolve",
+          reactorId: goblinId,
+          choice: {
+            kind: "opportunityAttack",
+            reactorId: goblinId,
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (startedReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
+    }
+
+    const attackRoll = findHole(startedReaction.holes, "attackRoll");
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [attackRollFill(attackRoll, { total: 20, naturalD20: 18 })],
+      }),
+      "rolledDice",
+    );
+    const disposition = requireHole(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [
+          attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+          damageRollFill(damage, 1),
+        ],
+      }),
+      "attackDamageDisposition",
+    );
+
+    expect(disposition).toMatchObject({
+      kind: "attackDamageDisposition",
+      attackerId: goblinId,
+      targetId: fighterId,
+      choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+    });
+
+    const completed = resolveBattleSubject({
+      state: startedReaction.state,
+      subject: choice.subject,
+      fills: [
+        attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+        damageRollFill(damage, 1),
+        attackDamageDispositionFill(disposition, { kind: "knockOut" }),
+      ],
+    });
+
+    expect(completed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        pendingReaction: null,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: fighterId,
+            hp: 1,
+            conditions: expect.arrayContaining(["unconscious", "prone"]),
+          }),
+          expect.objectContaining({
+            combatantId: goblinId,
+            reactionAvailable: false,
+          }),
+        ]),
+      },
+    });
+  });
+
   test("hidden opportunity attackers roll with Advantage and reveal after the attack roll", () => {
     const base = fighterVsGoblinBattle();
     const goblin = base.combatants.get(goblinId)!;
@@ -3372,6 +3483,15 @@ describe("battle runtime", () => {
       total: 20,
       naturalD20: 20,
     });
+    const dispositionHole = attackDamageDispositionHoleAfterFills(
+      state,
+      fighterAttackSubject(),
+      [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
+        damageRollFillWithGroups(damageHole, [[4, 5]]),
+      ],
+    );
 
     const result = resolveBattleSubject({
       state,
@@ -3385,6 +3505,9 @@ describe("battle runtime", () => {
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
         damageRollFillWithGroups(damageHole, [[4, 5]]),
+        attackDamageDispositionFill(dispositionHole, {
+          kind: "ordinaryDamage",
+        }),
       ],
     });
 
@@ -3414,6 +3537,15 @@ describe("battle runtime", () => {
       critical: true,
       label: "Longsword damage (2d8+3-slashing)",
     });
+    const dispositionHole = attackDamageDispositionHoleAfterFills(
+      state,
+      fighterAttackSubject(),
+      [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 1, naturalD20: 19 }),
+        damageRollFillWithGroups(damageHole, [[4, 5]]),
+      ],
+    );
 
     const result = resolveBattleSubject({
       state,
@@ -3427,6 +3559,9 @@ describe("battle runtime", () => {
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 1, naturalD20: 19 }),
         damageRollFillWithGroups(damageHole, [[4, 5]]),
+        attackDamageDispositionFill(dispositionHole, {
+          kind: "ordinaryDamage",
+        }),
       ],
     });
 
@@ -3572,6 +3707,15 @@ describe("battle runtime", () => {
       critical: true,
       label: "Unarmed Strike damage (2d4+3-bludgeoning)",
     });
+    const dispositionHole = attackDamageDispositionHoleAfterFills(
+      state,
+      subject,
+      [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
+        damageRollFillWithGroups(damageHole, [[4, 4]]),
+      ],
+    );
 
     const result = resolveBattleSubject({
       state,
@@ -3580,6 +3724,9 @@ describe("battle runtime", () => {
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
         damageRollFillWithGroups(damageHole, [[4, 4]]),
+        attackDamageDispositionFill(dispositionHole, {
+          kind: "ordinaryDamage",
+        }),
       ],
     });
 
@@ -3755,6 +3902,14 @@ describe("battle runtime", () => {
     const targetHole = attackInitialTargetHole(state);
     const rollHole = attackRollHoleAfterTarget(state, targetHole);
     const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+    const dispositionHole = attackDamageDispositionHoleAfterDamage(
+      state,
+      targetHole,
+      rollHole,
+      damageHole,
+      goblinId,
+      8,
+    );
 
     const result = resolveBattleSubject({
       state,
@@ -3768,6 +3923,9 @@ describe("battle runtime", () => {
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
         damageRollFill(damageHole, 8),
+        attackDamageDispositionFill(dispositionHole, {
+          kind: "ordinaryDamage",
+        }),
       ],
     });
 
@@ -3806,6 +3964,14 @@ describe("battle runtime", () => {
     const targetHole = attackInitialTargetHole(state);
     const rollHole = attackRollHoleAfterTarget(state, targetHole);
     const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+    const dispositionHole = attackDamageDispositionHoleAfterDamage(
+      state,
+      targetHole,
+      rollHole,
+      damageHole,
+      targetCharacterId,
+      8,
+    );
 
     const result = resolveBattleSubject({
       state,
@@ -3819,6 +3985,9 @@ describe("battle runtime", () => {
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
         damageRollFill(damageHole, 8),
+        attackDamageDispositionFill(dispositionHole, {
+          kind: "ordinaryDamage",
+        }),
       ],
     });
 
@@ -3841,6 +4010,296 @@ describe("battle runtime", () => {
           },
         ],
       },
+    });
+  });
+
+  test("melee Knock Out leaves a Character target at 1 HP and Unconscious", () => {
+    const targetCharacterId = combatantId("knocked-out-character");
+    const state = startBattleRight({
+      battleId: battleId("battle-character-knock-out"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 3,
+          attack: null,
+        }),
+      ],
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+    const dispositionHole = attackDamageDispositionHoleAfterDamage(
+      state,
+      targetHole,
+      rollHole,
+      damageHole,
+      targetCharacterId,
+      8,
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, targetCharacterId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 8),
+        attackDamageDispositionFill(dispositionHole, { kind: "knockOut" }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 1,
+            defeated: false,
+            conditions: expect.arrayContaining(["unconscious", "prone"]),
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 0 },
+              stable: false,
+              dead: false,
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  test("melee Knock Out leaves a Stat Block target at 1 HP and Unconscious", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-stat-block-knock-out"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10, currentHp: 3 }),
+      ],
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+    const dispositionHole = attackDamageDispositionHoleAfterDamage(
+      state,
+      targetHole,
+      rollHole,
+      damageHole,
+      goblinId,
+      8,
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 8),
+        attackDamageDispositionFill(dispositionHole, { kind: "knockOut" }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: goblinId,
+            hp: 1,
+            defeated: false,
+            conditions: expect.arrayContaining(["unconscious", "prone"]),
+            zeroHpLifecycle: { policy: "diesAtZeroHp", dead: false },
+          },
+        ],
+      },
+    });
+  });
+
+  test("ranged attacks cannot carry Knock Out", () => {
+    const state = goblinTurnBattle({ fighterHp: 3 });
+    const subject = goblinAttackSubject("Shortbow");
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const rollHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(targetHole, fighterId)],
+      }),
+      "attackRoll",
+    );
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(targetHole, fighterId),
+          attackRollFill(rollHole, { total: 14, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, fighterId),
+        attackRollFill(rollHole, { total: 14, naturalD20: 10 }),
+        damageRollFill(damageHole, 6),
+        {
+          kind: "attackDamageDisposition",
+          holeId: holeId("battle:attack:damage-disposition"),
+          value: { kind: "knockOut" },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Knock Out can only be chosen for melee attack damage.",
+    });
+  });
+
+  test("melee Knock Out is exposed as an attack damage disposition hole", () => {
+    const targetCharacterId = combatantId("knock-out-hole-character");
+    const state = startBattleRight({
+      battleId: battleId("battle-character-knock-out-hole"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 3,
+          attack: null,
+        }),
+      ],
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, targetCharacterId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 8),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "attackDamageDisposition",
+          holeId: "battle:attack:damage-disposition",
+          attackerId: fighterId,
+          targetId: targetCharacterId,
+          choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+        },
+      ],
+    });
+  });
+
+  test("massive damage does not expose or accept Knock Out", () => {
+    const targetCharacterId = combatantId("massive-knock-out-character");
+    const state = startBattleRight({
+      battleId: battleId("battle-massive-knock-out"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 3,
+          maxHp: 8,
+          attack: null,
+        }),
+      ],
+    });
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+
+    const withoutDisposition = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, targetCharacterId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 8),
+      ],
+    });
+    expect(withoutDisposition).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 0,
+            zeroHpLifecycle: expect.objectContaining({ dead: true }),
+          },
+        ],
+      },
+    });
+
+    const withDisposition = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, targetCharacterId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 8),
+        {
+          kind: "attackDamageDisposition",
+          holeId: holeId("battle:attack:damage-disposition"),
+          value: { kind: "knockOut" },
+        },
+      ],
+    });
+    expect(withDisposition).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
     });
   });
 
@@ -6063,6 +6522,15 @@ describe("battle runtime", () => {
       { total: 15, naturalD20: 10 },
       attackSubject,
     );
+    const disposition = attackDamageDispositionHoleAfterFills(
+      raging.state,
+      attackSubject,
+      [
+        targetFill(target, goblinId),
+        attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    );
     const hit = requireResolved(
       resolveBattleSubject({
         state: raging.state,
@@ -6071,6 +6539,9 @@ describe("battle runtime", () => {
           targetFill(target, goblinId),
           attackRollFill(roll, { total: 15, naturalD20: 10 }),
           damageRollFill(damage, 4),
+          attackDamageDispositionFill(disposition, {
+            kind: "ordinaryDamage",
+          }),
         ],
       }),
     );
@@ -6711,6 +7182,19 @@ describe("battle runtime", () => {
         },
       ],
     });
+    const disposition = attackDamageDispositionHoleAfterFills(
+      state,
+      attackSubject,
+      [
+        targetFill(target, goblinId),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          rollMode: "advantage",
+        }),
+        damageRollFillWithGroups(damage, [[4], [6]], ["rogue_sneak_attack"]),
+      ],
+    );
 
     const hit = requireResolved(
       resolveBattleSubject({
@@ -6724,6 +7208,9 @@ describe("battle runtime", () => {
             rollMode: "advantage",
           }),
           damageRollFillWithGroups(damage, [[4], [6]], ["rogue_sneak_attack"]),
+          attackDamageDispositionFill(disposition, {
+            kind: "ordinaryDamage",
+          }),
         ],
       }),
     );
@@ -7721,6 +8208,7 @@ describe("battle runtime", () => {
         },
         fills: [],
         deathFailuresAtZeroHp: 1,
+        damageDisposition: { kind: "ordinaryDamage" },
         attackDamageRiders: [],
       },
     };
@@ -7821,6 +8309,7 @@ describe("battle runtime", () => {
         },
         fills: [],
         deathFailuresAtZeroHp: 1,
+        damageDisposition: { kind: "ordinaryDamage" },
         attackDamageRiders: [],
       },
     };
@@ -8758,6 +9247,110 @@ describe("battle runtime", () => {
     });
   });
 
+  test("attack damage disposition replay accepts the following Concentration save", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-knock-out-concentration-damage"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          currentHp: 3,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const readySubject = {
+      tag: "actionSpell" as const,
+      actorId: wizardId,
+      spellId: "ray_of_frost",
+      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+      readyTrigger: "spellCast" as const,
+    };
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: wizardId }),
+    );
+    const subject = goblinAttackSubject("Scimitar");
+    const target = attackInitialTargetHole(goblinTurn.state, subject);
+    const roll = attackRollHoleAfterTarget(
+      goblinTurn.state,
+      target,
+      subject,
+      wizardId,
+    );
+    const damage = attackDamageHoleAfterHit(
+      goblinTurn.state,
+      target,
+      roll,
+      { total: 14, naturalD20: 10 },
+      subject,
+      wizardId,
+    );
+    const disposition = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject,
+        fills: [
+          targetFill(target, wizardId),
+          attackRollFill(roll, { total: 14, naturalD20: 10 }),
+          damageRollFill(damage, 3),
+        ],
+      }),
+      "attackDamageDisposition",
+    );
+    const needsConcentration = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject,
+      fills: [
+        targetFill(target, wizardId),
+        attackRollFill(roll, { total: 14, naturalD20: 10 }),
+        damageRollFill(damage, 3),
+        attackDamageDispositionFill(disposition, { kind: "knockOut" }),
+      ],
+    });
+    const concentration = requireHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+
+    const completed = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject,
+      fills: [
+        targetFill(target, wizardId),
+        attackRollFill(roll, { total: 14, naturalD20: 10 }),
+        damageRollFill(damage, 3),
+        attackDamageDispositionFill(disposition, { kind: "knockOut" }),
+        concentrationSavingThrowFill(concentration, true),
+      ],
+    });
+
+    expect(completed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        readiedSpells: [],
+        combatants: [
+          {
+            combatantId: wizardId,
+            hp: 1,
+            concentration: null,
+            conditions: expect.arrayContaining(["unconscious", "prone"]),
+          },
+          { combatantId: goblinId },
+        ],
+      },
+    });
+  });
+
   test("readied spell release uses the held spell and ends Concentration", () => {
     const state = startBattleRight({
       battleId: battleId("battle-readied-release"),
@@ -9421,7 +10014,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("79 passing");
+  expect(quintOutput).toContain("82 passing");
 }
 
 function hidePrerequisites(
@@ -10226,6 +10819,49 @@ function damageRollFillWithGroups(
   };
 }
 
+function attackDamageDispositionHoleAfterDamage(
+  state: BattleState,
+  targetHole: BattleHole,
+  rollHole: BattleHole,
+  damageHole: BattleHole,
+  targetId: CombatantId,
+  damage: number,
+): BattleHole {
+  return attackDamageDispositionHoleAfterFills(state, fighterAttackSubject(), [
+    targetFill(targetHole, targetId),
+    attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+    damageRollFill(damageHole, damage),
+  ]);
+}
+
+function attackDamageDispositionHoleAfterFills(
+  state: BattleState,
+  subject: BattleSubject,
+  fills: readonly BattleFill[],
+): BattleHole {
+  return requireHole(
+    resolveBattleSubject({ state, subject, fills }),
+    "attackDamageDisposition",
+  );
+}
+
+function attackDamageDispositionFill(
+  hole: BattleHole,
+  value: Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >["value"],
+): Extract<BattleFill, { readonly kind: "attackDamageDisposition" }> {
+  if (hole.kind !== "attackDamageDisposition") {
+    throw new Error("Expected attackDamageDisposition hole.");
+  }
+  return {
+    kind: "attackDamageDisposition",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
 function rolledDiceGroups(
   groups: readonly (readonly number[])[],
 ): DamageRollValue {
@@ -10264,6 +10900,7 @@ function characterSeed(input: {
     { readonly kind: "character" }
   >["classLevels"];
   readonly currentHp?: number;
+  readonly maxHp?: number;
   readonly tempHp?: number;
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly selectedLoadout?: Extract<
@@ -10328,7 +10965,7 @@ function characterSeed(input: {
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(input.currentHp ?? 12),
-      maxHp: Hp(12),
+      maxHp: Hp(input.maxHp ?? 12),
       tempHp: Hp(input.tempHp ?? 0),
       selectedLoadout,
       attack,

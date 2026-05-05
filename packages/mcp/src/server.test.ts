@@ -37,6 +37,7 @@ import {
   type CharacterEquipmentItemSlot,
 } from "@dnd/character-creation-runtime";
 import { Hp, hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   battleToolDefinitions,
   characterToolDefinitions,
@@ -2317,6 +2318,83 @@ describe("MCP server route", () => {
                 lifecycle: {
                   tag: "stable",
                   recovery: { kind: "regains1HpAfter1d4Hours" },
+                },
+              },
+            }),
+          }),
+        ],
+      }),
+    );
+  });
+
+  test("ends battle with a Knocked Out positive-HP character session state", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-knocked-out-closeout";
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-knocked-out-closeout",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            sourceDraftId: draftId,
+            combatantId: "fighter",
+            initiative: 12,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 10,
+            side: "opposition",
+          },
+        ],
+      }),
+    );
+    const battleState = root.sessionStore.battleState;
+    const fighter = battleState?.combatants.get(fighterId);
+    if (battleState === null || fighter === undefined) {
+      throw new Error("Expected in-battle Fighter character combatant.");
+    }
+    root.sessionStore.battleState = {
+      ...battleState,
+      combatants: new Map(battleState.combatants).set(fighterId, {
+        ...fighter,
+        hp: Hp(1),
+        conditions: applyCondition(fighter.conditions, "unconscious"),
+      }),
+    } satisfies BattleState;
+
+    readPayload(handleToolCall(root, "end_battle", {}));
+
+    expect(root.sessionStore.characters.get(characterDraftId(draftId))).toEqual(
+      expect.objectContaining({
+        tag: "available",
+        hitPoints: {
+          tag: "positiveWithCondition",
+          currentHp: 1,
+          condition: {
+            tag: "unconscious",
+            recovery: { kind: "knockOutShortRest" },
+          },
+        },
+      }),
+    );
+    expect(readPayload(handleToolCall(root, "list_characters", {}))).toEqual(
+      expect.objectContaining({
+        characters: [
+          expect.objectContaining({
+            sourceDraftId: draftId,
+            hitPoints: expect.objectContaining({
+              current: 1,
+              maximum: 12,
+              state: {
+                tag: "positiveWithCondition",
+                currentHp: 1,
+                condition: {
+                  tag: "unconscious",
+                  recovery: { kind: "knockOutShortRest" },
                 },
               },
             }),

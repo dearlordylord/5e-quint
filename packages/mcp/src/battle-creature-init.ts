@@ -19,7 +19,7 @@ import {
   progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
-import { Hp, movementFeet } from "@dnd/shared/types";
+import { Hp, movementFeet, type Condition } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 import {
@@ -49,6 +49,7 @@ export type CharacterBuildCreatureInput = {
   readonly side: BattleCombatantSide;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
+  readonly conditions?: readonly Condition[];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
@@ -164,6 +165,9 @@ export function battleCreatureInitFromCharacterBuild(
       currentHp,
       maxHp,
       tempHp: input.tempHp ?? Hp(0),
+      ...(input.conditions === undefined
+        ? {}
+        : { conditions: input.conditions }),
       ...(input.zeroHpLifecycle === undefined
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),

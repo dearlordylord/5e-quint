@@ -865,6 +865,11 @@ function projectHole(hole: BattleHole): MbtHole {
     Match.when({ kind: "grappleOutcome" }, () => {
       throw new Error("Battle runtime MBT does not model Grapple holes.");
     }),
+    Match.when({ kind: "attackDamageDisposition" }, () => {
+      throw new Error(
+        "Battle runtime MBT does not model attack damage disposition holes.",
+      );
+    }),
     Match.exhaustive,
   );
 }

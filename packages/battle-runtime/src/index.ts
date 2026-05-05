@@ -97,6 +97,7 @@ export {
   type ActiveOngoingFeatureOccurrence,
   type ActiveOngoingFeatureOccurrenceSnapshot,
   type ActiveOngoingFeatureOccurrenceSnapshotEncoded,
+  type BattleAttackDamageDisposition,
   type AttackDamageRider,
   type AttackDamageRiderUsage,
   type AttackRollFeatureActivation,

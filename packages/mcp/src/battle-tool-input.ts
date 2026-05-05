@@ -36,7 +36,7 @@ const FillBattleHoleArgsSchema = Schema.Struct({
   fill: BattleFillSchema.annotations({
     identifier: "BattleFill",
     description:
-      "One BattleFill for the current act replay: targetChoice, attackRoll, savingThrowOutcome, grappleOutcome, deathSavingThrow, abilityCheck, movement, reactionDecision, concentrationSavingThrow, statBlockRechargeRoll, or rolledDice.",
+      "One BattleFill for the current act replay: targetChoice, attackRoll, attackDamageDisposition, savingThrowOutcome, grappleOutcome, deathSavingThrow, abilityCheck, movement, reactionDecision, concentrationSavingThrow, statBlockRechargeRoll, or rolledDice.",
   }),
 });
 const ResolveBattleActArgsSchema = Schema.Struct({

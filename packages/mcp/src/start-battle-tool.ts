@@ -11,6 +11,7 @@ import { battleStateProjection } from "./battle-state-projection.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
+  characterBattleInitialConditions,
   characterBattleSpellSlots,
   characterBattleZeroHpLifecycle,
   characterSessionCurrentHp,
@@ -157,6 +158,7 @@ function startableBattleCombatants(input: {
           initiative: character.initiative,
           side: character.side,
           currentHp: characterSessionCurrentHp(session),
+          conditions: characterBattleInitialConditions(session),
           zeroHpLifecycle: characterBattleZeroHpLifecycle(session),
           spellSlots: characterBattleSpellSlots(session),
           unitLibrary: input.root.unitLibrary,
