@@ -56,7 +56,7 @@ flowchart TD
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
   Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
-  AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach or normal range, and attack identity derive from authored inputs"]
+  AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals"]
   SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect; Acid Splash save-gate damage applies to failed saves"]
@@ -106,7 +106,7 @@ flowchart TD
   UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
   Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
   AttackOption["supported Attack action option<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
-  Target["target choice<br/>caller/table supplies spatially legal target using authored reach/range metadata<br/>needsHoles until caller selects a combatant"]
+  Target["target choice<br/>caller/table supplies spatially legal target using authored reach/range metadata; ranged facts carry normal or long range band<br/>needsHoles until caller selects a combatant"]
   Roll["attack roll<br/>needsHoles until caller supplies AttackRollResult"]
   HitCheck["attackRollHits(roll, target AC)<br/>hit: ask/apply damage<br/>miss: spend action"]
   DamageHole["damage roll<br/>needsHoles only after a hit"]
@@ -142,7 +142,9 @@ flowchart TD
   orders turns from those scores but does not derive them from Stat Blocks.
 - Attack replay uses target, attack-roll, and on-hit damage holes. Authored
   reach/range remains content metadata; the caller/table supplies spatially
-  legal targets and the runtime does not store pairwise distances.
+  legal targets and the runtime does not store pairwise distances. Ranged target
+  facts carry a single selected range band; long range feeds the shared
+  Advantage/Disadvantage roll-mode path.
 - Hide/Search replay is gated by battle-owned Hide prerequisite state: the GM
   adjudicated that the actor is Heavily Obscured or behind enough cover and out
   of enemy line of sight. Successful Hide then records one executable fact, the

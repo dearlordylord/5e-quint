@@ -2061,6 +2061,168 @@ describe("battle runtime", () => {
     ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "attackRoll" }] });
   });
 
+  test("long-range attack target facts are legal and require Disadvantage", () => {
+    const state = requireResolved(
+      endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
+    ).state;
+    const subject = goblinAttackSubject("Shortbow");
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const longRangeTargetFill = targetFill(target, fighterId, [
+      {
+        kind: "attackTargetInRangedRange",
+        actorId: goblinId,
+        targetId: fighterId,
+        attackName: "Shortbow",
+        rangeBand: "long",
+      },
+    ]);
+
+    const afterTarget = resolveBattleSubject({
+      state,
+      subject,
+      fills: [longRangeTargetFill],
+    });
+
+    expect(afterTarget).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "attackRoll", rollMode: "disadvantage" }],
+    });
+    const attackRoll = requireHole(afterTarget, "attackRoll");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          longRangeTargetFill,
+          attackRollFill(attackRoll, {
+            total: 16,
+            naturalD20: 14,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Attack roll mode does not match the current attack-roll rule.",
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          longRangeTargetFill,
+          attackRollFill(attackRoll, {
+            total: 16,
+            naturalD20: 14,
+            rollMode: "disadvantage",
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+    });
+  });
+
+  test("contradictory range bands for the same attack target are rejected", () => {
+    const state = requireResolved(
+      endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
+    ).state;
+    const subject = goblinAttackSubject("Shortbow");
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const normalRangeFact = {
+      kind: "attackTargetInRangedRange" as const,
+      actorId: goblinId,
+      targetId: fighterId,
+      attackName: "Shortbow",
+      rangeBand: "normal" as const,
+    };
+    const longRangeFact = {
+      ...normalRangeFact,
+      rangeBand: "long" as const,
+    };
+
+    for (const spatialFacts of [
+      [normalRangeFact, longRangeFact],
+      [longRangeFact, normalRangeFact],
+    ] as const) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [targetFill(target, fighterId, spatialFacts)],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message:
+          "Attack target range facts must contain at most one range band for each actor, target, and attack.",
+      });
+    }
+  });
+
+  test("long-range Disadvantage cancels with an Advantage source", () => {
+    const goblinTurn = requireResolved(
+      endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
+    ).state;
+    const goblin = goblinTurn.combatants.get(goblinId);
+    if (goblin === undefined) {
+      throw new Error("Expected Goblin combatant.");
+    }
+    const hiddenGoblinTurn: BattleState = {
+      ...goblinTurn,
+      combatants: new Map(goblinTurn.combatants).set(goblinId, {
+        ...goblin,
+        hidden: { discoveryDc: difficultyClass(16) },
+      }),
+    };
+    const subject = goblinAttackSubject("Shortbow");
+    const target = requireHole(
+      resolveBattleSubject({ state: hiddenGoblinTurn, subject, fills: [] }),
+      "targetChoice",
+    );
+    const longRangeTargetFill = targetFill(target, fighterId, [
+      {
+        kind: "attackTargetInRangedRange",
+        actorId: goblinId,
+        targetId: fighterId,
+        attackName: "Shortbow",
+        rangeBand: "long",
+      },
+    ]);
+
+    const afterTarget = resolveBattleSubject({
+      state: hiddenGoblinTurn,
+      subject,
+      fills: [longRangeTargetFill],
+    });
+
+    const attackRoll = requireHole(afterTarget, "attackRoll");
+    expect(attackRoll).not.toHaveProperty("rollMode");
+    expect(
+      resolveBattleSubject({
+        state: hiddenGoblinTurn,
+        subject,
+        fills: [
+          longRangeTargetFill,
+          attackRollFill(attackRoll, {
+            total: 16,
+            naturalD20: 14,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+    });
+  });
+
   test("Opportunity Attack movement facts must name a qualifying melee option", () => {
     const state = fighterVsGoblinBattle();
     const subject: BattleSubject = {

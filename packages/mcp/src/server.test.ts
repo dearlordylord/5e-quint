@@ -1471,6 +1471,120 @@ describe("MCP server route", () => {
     ]);
   });
 
+  test("replays long-range attack target facts into a Disadvantage attack-roll hole", () => {
+    const root = createMcpCompositionRoot();
+    root.sessionStore.battleState =
+      startBattleFromCharacterBuildAndStatBlockRight({
+        battleId: battleId("battle:mcp-long-range-attack"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("fighter-character"),
+          displayName: "Orc Soldier Fighter",
+          build: fighterCharacterBuild(root.unitLibrary),
+          initiative: initiativeScore(7),
+          side: partySide,
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(18),
+          side: oppositionSide,
+        },
+        unitLibrary: root.unitLibrary,
+      });
+    root.sessionStore.transientBattleFills = null;
+
+    const afterTarget = fillBattleHoleThroughTool(root, "goblin", "Shortbow", {
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "fighter",
+      spatialFacts: [
+        {
+          kind: "attackTargetInRangedRange",
+          actorId: "goblin",
+          targetId: "fighter",
+          attackName: "Shortbow",
+          rangeBand: "long",
+        },
+      ],
+    });
+
+    expect(afterTarget.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "attackRoll", rollMode: "disadvantage" }],
+    });
+    expect(afterTarget.session.transientBattleFills).toMatchObject({
+      fills: [
+        {
+          kind: "targetChoice",
+          spatialFacts: [
+            {
+              kind: "attackTargetInRangedRange",
+              rangeBand: "long",
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  test("rejects contradictory long-range and normal-range attack target facts", () => {
+    const root = createMcpCompositionRoot();
+    root.sessionStore.battleState =
+      startBattleFromCharacterBuildAndStatBlockRight({
+        battleId: battleId("battle:mcp-contradictory-range-attack"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("fighter-character"),
+          displayName: "Orc Soldier Fighter",
+          build: fighterCharacterBuild(root.unitLibrary),
+          initiative: initiativeScore(7),
+          side: partySide,
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(18),
+          side: oppositionSide,
+        },
+        unitLibrary: root.unitLibrary,
+      });
+    root.sessionStore.transientBattleFills = null;
+
+    const afterTarget = fillBattleHoleThroughTool(root, "goblin", "Shortbow", {
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "fighter",
+      spatialFacts: [
+        {
+          kind: "attackTargetInRangedRange",
+          actorId: "goblin",
+          targetId: "fighter",
+          attackName: "Shortbow",
+          rangeBand: "normal",
+        },
+        {
+          kind: "attackTargetInRangedRange",
+          actorId: "goblin",
+          targetId: "fighter",
+          attackName: "Shortbow",
+          rangeBand: "long",
+        },
+      ],
+    });
+
+    expect(afterTarget.result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack target range facts must contain at most one range band for each actor, target, and attack.",
+    });
+  });
+
   test("replays visible Sneak Attack rider hole and fill shape through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
     root.sessionStore.battleState =

@@ -147,10 +147,10 @@ Remaining first-vertical gates:
 
 - broader rest/revival workflows remain deferred beyond the typed closeout
   state;
-- broader character choices, monster spellcasting, Multiattack, long-range
-  Disadvantage, reactions, casting spells with higher-level Spell Slots,
-  persistent spell effects such as Mage Armor, and post-turn lifecycle subjects
-  remain outside this widened slice.
+- broader character choices, monster spellcasting, Multiattack, reactions,
+  casting spells with higher-level Spell Slots, persistent spell effects such as
+  Mage Armor, and post-turn lifecycle subjects remain outside this widened
+  slice.
 
 Normal package tests cover the promoted MCP server route. The
 old Core-backed MCP route has been removed from this package; omitted behavior

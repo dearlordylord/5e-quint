@@ -480,6 +480,7 @@ type AttackTargetConstraint =
   | {
       readonly kind: "rangedRange";
       readonly normalFeet: MovementFeet;
+      readonly longFeet: MovementFeet;
     };
 const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
 export type BattleAttackRangeBand = (typeof BATTLE_ATTACK_RANGE_BANDS)[number];
@@ -5131,6 +5132,7 @@ function resolveAttack(
           input.subject.actorId,
           target.combatantId,
           attack,
+          fillSet.targetSpatialFacts,
         ),
         attackRollOngoingFeatureActivations(
           input.state,
@@ -5172,6 +5174,7 @@ function resolveAttack(
     input.subject.actorId,
     target.combatantId,
     attack,
+    fillSet.targetSpatialFacts,
     fillSet.attackRoll.activatedOngoingFeatureUnitId,
   );
   if (
@@ -6172,6 +6175,7 @@ function resolveOffHandAttack(
           input.subject.actorId,
           target.combatantId,
           attack,
+          fillSet.targetSpatialFacts,
         ),
         attackRollOngoingFeatureActivations(
           input.state,
@@ -6211,6 +6215,7 @@ function resolveOffHandAttack(
     input.subject.actorId,
     target.combatantId,
     attack,
+    fillSet.targetSpatialFacts,
     fillSet.attackRoll.activatedOngoingFeatureUnitId,
   );
   if (
@@ -6575,6 +6580,11 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       }
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
+      const rangeFactValidation =
+        validateUniqueAttackTargetRangeFacts(targetSpatialFacts);
+      if (rangeFactValidation !== null) {
+        return { tag: "invalid", message: rangeFactValidation };
+      }
       continue;
     }
 
@@ -6639,6 +6649,28 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     damageDispositionFilled,
     damageRoll,
   };
+}
+
+function validateUniqueAttackTargetRangeFacts(
+  facts: readonly BattleTargetSpatialFact[],
+): string | null {
+  const rangeFacts = facts.filter(
+    (fact) => fact.kind === "attackTargetInRangedRange",
+  );
+  const duplicate = rangeFacts.find((fact, factIndex) =>
+    rangeFacts
+      .slice(0, factIndex)
+      .some(
+        (previous) =>
+          previous.actorId === fact.actorId &&
+          previous.targetId === fact.targetId &&
+          previous.attackName === fact.attackName,
+      ),
+  );
+  if (duplicate === undefined) {
+    return null;
+  }
+  return "Attack target range facts must contain at most one range band for each actor, target, and attack.";
 }
 
 function abilityCheckFill(
@@ -11765,29 +11797,39 @@ function attackTargetIsLegal(
   return (
     actorId !== targetId &&
     state.combatants.has(targetId) &&
-    facts.some((fact) => {
-      if (
-        fact.kind !== "attackTargetInMeleeReach" &&
-        fact.kind !== "attackTargetInRangedRange"
-      ) {
-        return false;
-      }
-      if (
-        fact.actorId === actorId &&
-        fact.targetId === targetId &&
-        fact.attackName === attackName
-      ) {
-        if (constraint.kind === "meleeReach") {
-          return fact.kind === "attackTargetInMeleeReach";
-        }
-        return (
-          fact.kind === "attackTargetInRangedRange" &&
-          fact.rangeBand === "normal"
-        );
-      }
-      return false;
-    })
+    (constraint.kind === "meleeReach"
+      ? facts.some(
+          (fact) =>
+            fact.kind === "attackTargetInMeleeReach" &&
+            fact.actorId === actorId &&
+            fact.targetId === targetId &&
+            fact.attackName === attackName,
+        )
+      : attackTargetRangeBand(facts, actorId, targetId, attack) !== null)
   );
+}
+
+function attackTargetRangeBand(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): BattleAttackRangeBand | null {
+  if (attackTargetConstraint(attack).kind !== "rangedRange") {
+    return null;
+  }
+  const attackName = attackActionOptionName(attack);
+  for (const fact of facts) {
+    if (
+      fact.kind === "attackTargetInRangedRange" &&
+      fact.actorId === actorId &&
+      fact.targetId === targetId &&
+      fact.attackName === attackName
+    ) {
+      return fact.rangeBand;
+    }
+  }
+  return null;
 }
 
 function grappleLinkForTarget(
@@ -11932,6 +11974,7 @@ function requiredAttackRollMode(
   attackerId: CombatantId,
   targetId: CombatantId,
   attack?: SupportedAttackActionOption,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[] = [],
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
   const target = state.combatants.get(targetId);
@@ -11944,6 +11987,10 @@ function requiredAttackRollMode(
     hasDodgeAttackRollBenefit(state, target, attacker);
   const grappleDisadvantage =
     grapple !== undefined && grapple.grapplerId !== targetId;
+  const longRangeDisadvantage =
+    attack !== undefined &&
+    attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
+      "long";
   const hasAdvantage =
     (attacker?.hidden !== null && attacker?.hidden !== undefined) ||
     state.helpAttacks.some(
@@ -11954,6 +12001,7 @@ function requiredAttackRollMode(
     hiddenTargetDisadvantage ||
     dodgeDisadvantage ||
     grappleDisadvantage ||
+    longRangeDisadvantage ||
     ongoingFeatureGrantsAttackRollMode(
       attacker,
       target,
@@ -11987,9 +12035,16 @@ function attackRollModeWithOptionalOngoingFeature(
   attackerId: CombatantId,
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
   activatedOngoingFeatureUnitId: UnitRecord["id"] | undefined,
 ): AttackRollMode | undefined {
-  const baseline = requiredAttackRollMode(state, attackerId, targetId, attack);
+  const baseline = requiredAttackRollMode(
+    state,
+    attackerId,
+    targetId,
+    attack,
+    targetSpatialFacts,
+  );
   if (activatedOngoingFeatureUnitId === undefined) {
     return baseline;
   }
@@ -13085,6 +13140,7 @@ function supportedStatBlockAttackTargetConstraint(
     return {
       kind: "rangedRange",
       normalFeet: movementFeet(attack.rangeFeet.normal),
+      longFeet: movementFeet(attack.rangeFeet.long),
     };
   }
 
@@ -13147,6 +13203,7 @@ function weaponTargetConstraint(weapon: WeaponRecord): AttackTargetConstraint {
     return {
       kind: "rangedRange",
       normalFeet: movementFeet(range.normal),
+      longFeet: movementFeet(range.long),
     };
   }
 

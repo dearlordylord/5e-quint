@@ -97,13 +97,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 69,
       "id": "PBA18",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Widen Attack Range And Conditional Attack Riders"
     },
     {
       "number": 70,
       "id": "PBA19",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Restore Stat Block Multiattack And Bonus Actions"
     },
     {
@@ -205,8 +205,8 @@ Keep it synchronized with the DAG table and task details.
 | 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | done                                          | PBA15B       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Promoted battle-runtime MBT/QNT now covers Death Saving Throw holes for a Character Build combatant.                              |
 | 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | done                                          | PBA16        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Knock Out and durable positive/zero-HP handoffs are now explicit in promoted battle-runtime and MCP session state.               |
 | 68    | PBA15B - Remove Runtime-Owned Spatiality And Distances            | done                                          | PBA15A       | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)              | Promoted runtime and MCP now consume table/caller spatial facts instead of owning combatant distances. |
-| 69    | PBA18 - Widen Attack Range And Conditional Attack Riders          | ready-for-implementation-after-light-research | PBA15B       | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Restore long-range Disadvantage and supported conditional attack riders.                                                         |
-| 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | blocked                                       | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families.                                                              |
+| 69    | PBA18 - Widen Attack Range And Conditional Attack Riders          | done                                          | PBA15B       | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Long-range attack target facts are legal and feed Disadvantage through the shared roll-mode path; supported conditional attack riders remain Surface-derived. |
+| 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | ready-for-implementation-after-light-research | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families.                                                              |
 | 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | blocked                                       | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Restore Magic Missile split-target replay and broaden spell procedure pressure.                                                  |
 | 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | blocked                                       | PBA20        | PBA22        | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Broaden reaction windows and Bonus Action subjects after spell targeting width.                                                  |
 | 73    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | blocked                                       | PBA21        | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Restore promoted snapshot/trace contracts and app battle UI workflows.                                                           |
@@ -584,7 +584,7 @@ content metadata.
 
 ### Task 69 - PBA18 - Widen Attack Range And Conditional Attack Riders
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA15B
 Blocks: PBA19
@@ -606,9 +606,17 @@ promoted QNT/MBT only if reusable attack procedure behavior changes,
 
 Plan Impact: if successful, unblock PBA19.
 
+Closeout: ranged attack target facts now distinguish normal and long range.
+Long-range target fills are legal and contribute Disadvantage through the shared
+attack-roll mode path, including Advantage/Disadvantage cancellation. The
+runtime continues to derive authored normal/long range and supported
+conditional attack rider facts from retained Surface records, with MCP replay
+preserving table-supplied target range bands rather than storing distances or
+copying authored range metadata.
+
 ### Task 70 - PBA19 - Restore Stat Block Multiattack And Bonus Actions
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA18
 Blocks: PBA20
