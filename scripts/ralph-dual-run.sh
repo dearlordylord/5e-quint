@@ -565,8 +565,8 @@ NODE
 auto_unblock_blocked_tasks() {
   local target_file="$1"
 
-  local promoted_tasks
-  promoted_tasks="$(node - "$target_file" <<'NODE'
+  local unblocked_tasks
+  unblocked_tasks="$(node - "$target_file" <<'NODE'
 const fs = require("fs")
 
 const path = process.argv[2]
@@ -659,7 +659,7 @@ for (let i = 0; i < lines.length; i += 1) {
   }
 }
 
-const promoted = []
+const unblocked = []
 
 for (const [number, deps] of dependsByNumber.entries()) {
   const task = index.tasks.find((entry) => entry.number === number)
@@ -675,15 +675,15 @@ for (const [number, deps] of dependsByNumber.entries()) {
   if (task.status === "blocked") {
     task.status = "ready-for-research"
     statusById.set(task.id, "ready-for-research")
-    promoted.push(task)
+    unblocked.push(task)
   }
 }
 
-if (promoted.length === 0) {
+if (unblocked.length === 0) {
   process.exit(0)
 }
 
-for (const task of promoted) {
+for (const task of unblocked) {
   const rowIndex = rowIndexByNumber.get(task.number)
   if (typeof rowIndex !== "number") {
     throw new Error(`missing DAG row index for #${task.number}`)
@@ -695,7 +695,7 @@ for (const task of promoted) {
 }
 
 let updatedText = lines.join("\n")
-for (const task of promoted) {
+for (const task of unblocked) {
   const headingPattern = new RegExp("(^### Task " + task.number + "[^\\n]*\\n\\nStatus: `)([^`]+)(`)", "m")
   const headingReplacement = `$1${task.status}$3`
 
@@ -708,15 +708,15 @@ for (const task of promoted) {
 updatedText = updatedText.replace(/<!-- ralph-task-index\n[\s\S]*?\n-->/, `<!-- ralph-task-index\n${JSON.stringify(index, null, 2)}\n-->`)
 
 fs.writeFileSync(path, updatedText)
-for (const task of promoted) {
+for (const task of unblocked) {
   const safe = `${task.number}|${task.id}`
   console.log(safe)
 }
 NODE
   )"
 
-  if [[ -n "$promoted_tasks" ]]; then
-    note "plan" "auto-unblocked-from-dependencies tasks=$(echo "$promoted_tasks" | tr '\n' ',')"
+  if [[ -n "$unblocked_tasks" ]]; then
+    note "plan" "auto-unblocked-from-dependencies tasks=$(echo "$unblocked_tasks" | tr '\n' ',')"
   fi
 }
 

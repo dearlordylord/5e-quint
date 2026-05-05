@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest"
 
-import { promotedBattleSceneSnapshot, STATIC_BATTLE_CUES } from "./battle-snapshot-scene.ts"
-import { PROMOTED_BATTLE_DEMO_META, PROMOTED_BATTLE_DEMO_SNAPSHOT } from "./promoted-battle-demo.ts"
+import { battleSceneFromSnapshot, STATIC_BATTLE_CUES } from "./battle-snapshot-scene.ts"
+import { STAT_BLOCK_BATTLE_DEMO_META, STAT_BLOCK_BATTLE_DEMO_SNAPSHOT } from "./stat-block-battle-demo.ts"
 
-describe("promoted battle scene projection", () => {
-  test("active battle page consumes promoted BattleSnapshot fields", () => {
-    const scene = promotedBattleSceneSnapshot(PROMOTED_BATTLE_DEMO_SNAPSHOT, PROMOTED_BATTLE_DEMO_META)
+describe("battle snapshot scene projection", () => {
+  test("active battle page consumes BattleSnapshot fields", () => {
+    const scene = battleSceneFromSnapshot(STAT_BLOCK_BATTLE_DEMO_SNAPSHOT, STAT_BLOCK_BATTLE_DEMO_META)
 
     expect(scene).toMatchObject({
       round: 1,
@@ -31,10 +31,10 @@ describe("promoted battle scene projection", () => {
         }
       ]
     })
-    expect(PROMOTED_BATTLE_DEMO_SNAPSHOT.acts.map((act) => act.label)).toEqual(
+    expect(STAT_BLOCK_BATTLE_DEMO_SNAPSHOT.acts.map((act) => act.label)).toEqual(
       expect.arrayContaining(["Attack", "Attack", "Nimble Escape", "Move", "End Turn"])
     )
-    expect(PROMOTED_BATTLE_DEMO_SNAPSHOT.turn).toMatchObject({
+    expect(STAT_BLOCK_BATTLE_DEMO_SNAPSHOT.turn).toMatchObject({
       actionResources: [{ kind: "action", source: "turn" }],
       bonusActionAvailable: true
     })

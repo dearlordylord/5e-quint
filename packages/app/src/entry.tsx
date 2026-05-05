@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client"
 
 import { appRouteTarget } from "#/app-routes.ts"
 import { BattlePage } from "#/battle-scene/BattlePage.tsx"
-import { PROMOTED_BATTLE_DEMO_META, PROMOTED_BATTLE_DEMO_STATE } from "#/battle-scene/promoted-battle-demo.ts"
+import { STAT_BLOCK_BATTLE_DEMO_META, STAT_BLOCK_BATTLE_DEMO_STATE } from "#/battle-scene/stat-block-battle-demo.ts"
 import { App } from "#/components/App.tsx"
 import { CharacterCreationPage } from "#/components/character-creation/CharacterCreationPage.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
@@ -44,13 +44,11 @@ export function HomePage() {
   )
 }
 
-export function PromotedTracePlaceholder() {
+export function TracePlaceholder() {
   return (
-    <PageShell title="Promoted Trace Viewer Pending">
+    <PageShell title="Battle Runtime Trace Viewer Pending">
       <div className="mx-auto max-w-2xl text-center text-gray-300">
-        <p>
-          The Core-backed trace replay surface is quarantined while battle views move to promoted runtime snapshots.
-        </p>
+        <p>The Core-backed trace replay surface is quarantined while battle views move to battle-runtime snapshots.</p>
         <p className="mt-3 text-sm text-gray-500">
           A restored trace/debug viewer should consume battle-runtime and MCP snapshot evidence.
         </p>
@@ -61,13 +59,13 @@ export function PromotedTracePlaceholder() {
 
 export function RootApp({ path = pathname }: { readonly path?: string }) {
   return Match.value(appRouteTarget(path)).pipe(
-    Match.when("battle", () => <BattlePage state={PROMOTED_BATTLE_DEMO_STATE} meta={PROMOTED_BATTLE_DEMO_META} />),
+    Match.when("battle", () => <BattlePage state={STAT_BLOCK_BATTLE_DEMO_STATE} meta={STAT_BLOCK_BATTLE_DEMO_META} />),
     Match.when("character", () => <CharacterCreationPage />),
     Match.when("home", () => <HomePage />),
     Match.when("machineViz", () => <MachineVizPage />),
     Match.when("machineVizEmbed", () => <EmbedMachineVizPage />),
     Match.when("machines", () => <FullMachineVizPage />),
-    Match.when("promotedTracePlaceholder", () => <PromotedTracePlaceholder />),
+    Match.when("tracePlaceholder", () => <TracePlaceholder />),
     Match.when("simulator", () => <App />),
     Match.exhaustive
   )

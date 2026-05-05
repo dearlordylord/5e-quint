@@ -10,7 +10,7 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 
-describe("end-user promoted MCP vertical", () => {
+describe("end-user MCP vertical", () => {
   test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:accepted-orc-soldier-fighter";

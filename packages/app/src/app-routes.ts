@@ -5,7 +5,7 @@ const _APP_ROUTE_TARGETS = [
   "machineViz",
   "machineVizEmbed",
   "machines",
-  "promotedTracePlaceholder",
+  "tracePlaceholder",
   "simulator"
 ] as const
 
@@ -21,8 +21,8 @@ const ROUTE_TARGET_BY_PATH: Readonly<Record<string, AppRouteTarget>> = {
   "/battle/machine": "battle",
   "/battle/interrupts": "battle",
   "/embed/battle": "battle",
-  "/trace": "promotedTracePlaceholder",
-  "/embed/trace": "promotedTracePlaceholder"
+  "/trace": "tracePlaceholder",
+  "/embed/trace": "tracePlaceholder"
 }
 
 export function appRouteTarget(path: string): AppRouteTarget {

@@ -1154,7 +1154,7 @@ describe("MCP server route", () => {
     expect(read.snapshot.combatants).toHaveLength(2);
   });
 
-  test("fills a promoted battle movement hole through MCP", () => {
+  test("fills a battle movement hole through MCP", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-battle-movement";
     createFinalizedFighterSheet(root, draftId);

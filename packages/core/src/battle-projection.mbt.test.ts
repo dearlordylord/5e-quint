@@ -3,7 +3,7 @@
  * per-creature state against existing creatureMachine XState actors.
  *
  * Proof-source material for the legacy Core lane. It is opt-in and is not a
- * promoted @dnd/battle-runtime verification gate.
+ * @dnd/battle-runtime verification gate.
  *
  */
 import * as fs from "node:fs";

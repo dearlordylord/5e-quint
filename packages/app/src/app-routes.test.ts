@@ -4,11 +4,11 @@ import { appRouteTarget } from "./app-routes.ts"
 
 describe("app route boundary", () => {
   test("quarantines Core-backed trace visualizer routes", () => {
-    expect(appRouteTarget("/trace")).toBe("promotedTracePlaceholder")
-    expect(appRouteTarget("/embed/trace")).toBe("promotedTracePlaceholder")
+    expect(appRouteTarget("/trace")).toBe("tracePlaceholder")
+    expect(appRouteTarget("/embed/trace")).toBe("tracePlaceholder")
   })
 
-  test("selects promoted battle snapshots for active battle routes", () => {
+  test("selects battle-runtime snapshots for active battle routes", () => {
     expect(appRouteTarget("/battle")).toBe("battle")
     expect(appRouteTarget("/battle/machine")).toBe("battle")
     expect(appRouteTarget("/battle/interrupts")).toBe("battle")

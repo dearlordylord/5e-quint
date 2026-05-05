@@ -240,7 +240,7 @@ export type BattleReadiedSpell = {
   readonly expiresAt: BattleActiveEffectExpiration;
 };
 // SRD 5.2.1 Ready [Action]: Ready can hold a chosen action, or the special
-// alternative to move up to Speed. This promoted slice models only that
+// alternative to move up to Speed. This runtime slice models only that
 // movement alternative for non-spell Ready responses.
 export type BattleReadiedMovement = {
   // supported runtime trigger buckets, not the RAW Ready trigger taxonomy; RAW is closer to "table decision" and probably shall be modeled like that
@@ -250,7 +250,7 @@ export type BattleReadiedMovement = {
 // SRD 5.2.1 Help [Action], "Assist an Attack Roll": helper distracts an
 // enemy within 5 feet, granting Advantage to one ally's next attack roll
 // against that enemy; the benefit expires at the start of the helper's
-// next turn. This promoted slice models that attack-roll branch only, not
+// next turn. This runtime slice models that attack-roll branch only, not
 // Help's ability-check branch or first-aid action summary.
 export type BattleHelpAttack = {
   readonly helperId: CombatantId;

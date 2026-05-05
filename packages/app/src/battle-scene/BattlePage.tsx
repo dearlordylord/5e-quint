@@ -4,17 +4,13 @@ import { useMemo } from "react"
 
 import { PageShell } from "#/components/PageShell.tsx"
 
-import {
-  type PromotedBattleSceneMeta,
-  promotedBattleSceneSnapshot,
-  STATIC_BATTLE_CUES
-} from "./battle-snapshot-scene.ts"
+import { battleSceneFromSnapshot, type BattleSnapshotSceneMeta, STATIC_BATTLE_CUES } from "./battle-snapshot-scene.ts"
 import { BattleField } from "./BattleField.tsx"
 import { InitiativeTracker } from "./InitiativeTracker.tsx"
 
-export function BattlePage({ meta, state }: { state: BattleState; meta: PromotedBattleSceneMeta }) {
+export function BattlePage({ meta, state }: { state: BattleState; meta: BattleSnapshotSceneMeta }) {
   const snapshot = useMemo(() => snapshotBattle(state), [state])
-  const sceneSnapshot = useMemo(() => promotedBattleSceneSnapshot(snapshot, meta), [snapshot, meta])
+  const sceneSnapshot = useMemo(() => battleSceneFromSnapshot(snapshot, meta), [snapshot, meta])
   const layout = useMemo(() => computeLayout(sceneSnapshot, STATIC_BATTLE_CUES), [sceneSnapshot])
   const currentActor = snapshot.combatants.find((combatant) => combatant.combatantId === snapshot.currentActorId)
 

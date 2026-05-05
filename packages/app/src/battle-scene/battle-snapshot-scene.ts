@@ -2,7 +2,7 @@ import type { BattleSnapshot } from "@dnd/battle-runtime"
 import type { CreatureCue, VisualCueState } from "@dnd/core/battle-scene/director.ts"
 import type { LayoutSceneSnapshot } from "@dnd/core/battle-scene/layout.ts"
 
-export interface PromotedBattleSceneMeta {
+export interface BattleSnapshotSceneMeta {
   names: Record<string, string>
   gridPositions: Record<string, { row: number; col: number }>
   sprites?: Record<string, SpriteRect>
@@ -20,7 +20,7 @@ export interface SpriteRect {
 }
 
 const EMPTY_CREATURE_CUES: Record<string, CreatureCue> = {}
-const PROMOTED_PARTY_SIDE = "party"
+const PARTY_SIDE = "party"
 
 export const STATIC_BATTLE_CUES: VisualCueState = {
   castBar: null,
@@ -32,15 +32,15 @@ export const STATIC_BATTLE_CUES: VisualCueState = {
   diceRolls: []
 }
 
-export function promotedBattleSceneSnapshot(
+export function battleSceneFromSnapshot(
   snapshot: BattleSnapshot,
-  meta: PromotedBattleSceneMeta
+  meta: BattleSnapshotSceneMeta
 ): LayoutSceneSnapshot & { readonly round: number; readonly activeCreatureId: string } {
   return {
     creatures: snapshot.combatants.map((combatant) => ({
       id: combatant.combatantId,
       name: meta.names[combatant.combatantId] ?? combatant.displayName,
-      team: combatant.side === PROMOTED_PARTY_SIDE ? ("blue" as const) : ("red" as const),
+      team: combatant.side === PARTY_SIDE ? ("blue" as const) : ("red" as const),
       sprite: meta.sprites?.[combatant.combatantId] ?? null,
       gridPos: meta.gridPositions[combatant.combatantId] ?? { row: 0, col: 0 },
       hpRatio: combatant.maxHp > 0 ? combatant.hp / combatant.maxHp : 0,

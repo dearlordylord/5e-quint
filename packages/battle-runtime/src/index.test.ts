@@ -8884,7 +8884,7 @@ describe("battle runtime", () => {
     }
   });
 
-  test("full SRD Cutting Words remains gated until ability-check reactions are promoted", () => {
+  test("full SRD Cutting Words remains gated until ability-check reactions are supported", () => {
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(
         unitLibrary.requireUnit("bard_cutting_words"),
@@ -8892,7 +8892,7 @@ describe("battle runtime", () => {
     ).toBe("unsupported");
   });
 
-  test("full SRD Deflect Attacks remains gated until redirect-on-zero is promoted", () => {
+  test("full SRD Deflect Attacks remains gated until redirect-on-zero is supported", () => {
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(
         unitLibrary.requireUnit("monk_deflect_attacks"),

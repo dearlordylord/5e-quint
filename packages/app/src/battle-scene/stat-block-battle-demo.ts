@@ -12,13 +12,13 @@ import {
 import { buildStatBlockCatalog, srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog"
 import { Either } from "effect"
 
-import type { PromotedBattleSceneMeta } from "./battle-snapshot-scene.ts"
+import type { BattleSnapshotSceneMeta } from "./battle-snapshot-scene.ts"
 
 const warriorId = combatantId("warrior")
 const skeletonId = combatantId("skeleton")
-const statBlockCatalog = requirePromotedDemoStatBlockCatalog()
+const statBlockCatalog = requireStatBlockDemoCatalog()
 
-export const PROMOTED_BATTLE_DEMO_META: PromotedBattleSceneMeta = {
+export const STAT_BLOCK_BATTLE_DEMO_META: BattleSnapshotSceneMeta = {
   names: {
     [warriorId]: "Goblin Warrior",
     [skeletonId]: "Skeleton"
@@ -29,20 +29,20 @@ export const PROMOTED_BATTLE_DEMO_META: PromotedBattleSceneMeta = {
   }
 }
 
-function requirePromotedDemoStatBlockCatalog() {
+function requireStatBlockDemoCatalog() {
   const result = buildStatBlockCatalog({ collections: [srdStatBlockCollection] })
   if (result.tag !== "ok") {
-    throw new Error("Promoted battle demo Stat Block catalog is invalid.")
+    throw new Error("Stat Block battle demo SRD catalog is invalid.")
   }
   return result.catalog
 }
 
-export const PROMOTED_BATTLE_DEMO_STATE: BattleState = requirePromotedBattleDemoState()
-export const PROMOTED_BATTLE_DEMO_SNAPSHOT: BattleSnapshot = snapshotBattle(PROMOTED_BATTLE_DEMO_STATE)
+export const STAT_BLOCK_BATTLE_DEMO_STATE: BattleState = requireStatBlockBattleDemoState()
+export const STAT_BLOCK_BATTLE_DEMO_SNAPSHOT: BattleSnapshot = snapshotBattle(STAT_BLOCK_BATTLE_DEMO_STATE)
 
-function requirePromotedBattleDemoState(): BattleState {
+function requireStatBlockBattleDemoState(): BattleState {
   const state = startBattle({
-    battleId: battleId("battle:promoted-demo"),
+    battleId: battleId("battle:stat-block-demo"),
     combatants: [
       battleCreatureInitFromStatBlock({
         combatantId: warriorId,
@@ -59,7 +59,7 @@ function requirePromotedBattleDemoState(): BattleState {
     ]
   })
   if (Either.isLeft(state)) {
-    throw new Error(`Promoted battle demo fixture is invalid: ${state.left.message}`)
+    throw new Error(`Stat Block battle demo fixture is invalid: ${state.left.message}`)
   }
   return state.right
 }
