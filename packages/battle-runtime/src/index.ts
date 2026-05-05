@@ -144,6 +144,7 @@ export {
   type BattleSpellAreaChoice,
   type BattleSpellAttackRollHole,
   type BattleSpellDamageRollHole,
+  type BattleSpellHealingRollHole,
   type BattleSpellEffectEarlyEnd,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleStatBlockRechargeRollHole,

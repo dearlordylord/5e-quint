@@ -48,8 +48,10 @@ module battleRuntime {
   //   Wizard spells spend Spell Slots; cantrips do not.
   // - Spells/Gaining-and-Casting.md lines 176-182 and Playing-the-Game.md
   //   lines 219-222: spell attacks add Proficiency Bonus.
-  // - Spells/Descriptions-M-P.md lines 85-96 and Spells/Descriptions-Q-R.md
-  //   lines 41-52: Magic Missile can allocate darts to one creature or
+  // - Spells/Descriptions-E-L.md lines 1121-1132,
+  //   Spells/Descriptions-M-P.md lines 85-96, and
+  //   Spells/Descriptions-Q-R.md lines 41-52: Healing Word is a Bonus Action
+  //   healing spell; Magic Missile can allocate darts to one creature or
   //   several and gains one dart per slot level above 1; Ray of Frost reduces
   //   Speed until the start of the caster's next turn.
   // - Spells/Descriptions-M-P.md lines 5-15 and
@@ -116,7 +118,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | HealingWord
 
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta
 
@@ -255,6 +257,7 @@ module battleRuntime {
     goblin: Combatant,
     actionAvailable: bool,
     bonusActionAvailable: bool,
+    spellSlotExpendedThisTurn: bool,
     attackRollMadeThisTurn: bool,
     dashMovementBonus: int,
     disengaged: bool,
@@ -348,6 +351,7 @@ module battleRuntime {
     },
     actionAvailable: true,
     bonusActionAvailable: true,
+    spellSlotExpendedThisTurn: false,
     attackRollMadeThisTurn: false,
     dashMovementBonus: 0,
     disengaged: false,
@@ -624,6 +628,7 @@ module battleRuntime {
       initiative: advancedInitiative,
       actionAvailable: true,
       bonusActionAvailable: true,
+      spellSlotExpendedThisTurn: false,
       attackRollMadeThisTurn: false,
       dashMovementBonus: 0,
       disengaged: false,
@@ -1014,6 +1019,22 @@ module battleRuntime {
       { ...state, fighter: applyDamageWithDisposition(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition) }
     }
 
+  pure def resolveGoblinOpportunityAttackWithUncannyDodge(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (state.goblin.hp == 0)
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
+      state
+    else {
+      val adjustedDamage = damageAfterAdjustments(uncannyDodgeDamage(damageRoll + 2), Slashing, fighterRageResistances(state), Set(), Set())
+      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded) }
+    }
+
   pure def resolveRayOfFrost(
     state: BattleState,
     attackTotal: int,
@@ -1215,6 +1236,17 @@ module battleRuntime {
     else
       state
 
+  pure def offHandAttackFighterWithDamageReduction(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int, reduction: int): BattleState =
+    if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
+      if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))) {
+        val reducedDamage = if (damageRoll - reduction < 0) 0 else damageRoll - reduction
+        { ...state, goblin: applyDamage(state.goblin, reducedDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false), bonusActionAvailable: false }
+      }
+      else
+        { ...state, bonusActionAvailable: false }
+    else
+      state
+
   pure def goblinCanOpportunityAttack(state: BattleState, provokedByTable: bool): bool =
     state.goblin.hp > 0 and
     state.goblin.reactionAvailable and
@@ -1265,6 +1297,28 @@ module battleRuntime {
     else
       { ...target, hp: nextHp }
   }
+
+  pure def resolveHealingWord(
+    state: BattleState,
+    healingRoll: int,
+    spellcastingAbilityModifier: int,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        ...state,
+        fighter: applyHealing(state.fighter, healingWordHealing(healingRoll, spellcastingAbilityModifier)),
+        bonusActionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    else
+      state
 
   pure def damageAfterAdjustments(
     damage: int,
@@ -1457,7 +1511,11 @@ module battleRuntime {
       | MagicMissile => expendedLevelOneSlots + 1
       | RayOfFrost => expendedLevelOneSlots
       | AcidSplash => expendedLevelOneSlots
+      | HealingWord => expendedLevelOneSlots + 1
     }
+
+  pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
+    not(state.spellSlotExpendedThisTurn)
 
   pure def canDiscoverSpellActs(canCastSpells: bool, raging: bool): bool =
     canCastSpells and not(raging)
@@ -1475,6 +1533,9 @@ module battleRuntime {
 
   pure def magicMissileDartCount(slotLevel: int): int =
     3 + (slotLevel - 1)
+
+  pure def healingWordHealing(healingRoll: int, spellcastingAbilityModifier: int): int =
+    healingRoll + spellcastingAbilityModifier
 
   pure def magicMissileAllocatedDamage(
     dieTotal: int,
@@ -1744,6 +1805,23 @@ module battleRuntime {
     }
   }
 
+  run test_off_hand_attack_host_accepts_damage_reduction = {
+    val afterAttack = { ...initialState, lightWeaponAttackMade: true }
+    val result = offHandAttackFighterWithDamageReduction(afterAttack, 15, 10, 6, 3)
+    all {
+      assert(result.bonusActionAvailable == false),
+      assert(result.goblin.hp == 7),
+    }
+  }
+
+  run test_opportunity_attack_host_accepts_hit_damage_reduction = {
+    val result = resolveGoblinOpportunityAttackWithUncannyDodge(initialState, 20, 18, 6, true)
+    all {
+      assert(result.fighter.hp == 8),
+      assert(result.fighter.movementSpent == 0),
+    }
+  }
+
   run test_attack_damage_concentration_interrupt_resolves_before_damage = {
     val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
     val pending = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 4 }))
@@ -1925,7 +2003,23 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(MagicMissile, 0) == 1),
       assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
       assert(expendedSlotsAfterInvocation(AcidSplash, 0) == 0),
+      assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
     }
+  }
+
+  run test_healing_word_spends_bonus_action_slot_and_heals = {
+    val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 } }
+    val result = resolveHealingWord(wounded, 7, 3)
+    all {
+      assert(result.fighter.hp == 12),
+      assert(not(result.bonusActionAvailable)),
+      assert(result.spellSlotExpendedThisTurn),
+    }
+  }
+
+  run test_healing_word_rejects_second_slot_spell_in_same_turn = {
+    val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 }, spellSlotExpendedThisTurn: true }
+    assert(resolveHealingWord(wounded, 7, 3) == wounded)
   }
 
   run test_spell_act_discovery_respects_spellcasting_gate = {

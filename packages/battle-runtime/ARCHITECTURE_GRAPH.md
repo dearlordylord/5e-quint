@@ -197,11 +197,14 @@ flowchart TD
   procedure families. Widen readers or support gates when the authored shape is
   legal but unsupported. Add reducer state or QNT/MBT behavior only for a
   reusable SRD procedure family, not for catalog breadth.
-- Bonus-action availability is represented in turn resources. Second Wind,
-  Rogue Cunning Action Hide, and admitted Stat Block Bonus Action options spend
-  the same Bonus Action resource while reusing package-owned procedures such as
-  Disengage and Hide.
-  Broader bonus-action spell and generic subjects remain future width.
+- Bonus-action availability is represented in turn resources. Off-Hand Attack,
+  prepared Bonus Action healing spells, Second Wind, Rogue Cunning Action Hide,
+  and admitted Stat Block Bonus Action options spend the same Bonus Action
+  resource while reusing package-owned procedures where applicable. Slot-spent
+  spell procedures also share a turn-resource fact for the SRD one-Spell-Slot
+  per-turn rule. Off-Hand Attack uses the shared attack host Reaction windows
+  before the Bonus Action resource is committed for damage replay.
+  Broader generic Bonus Action subjects remain future width.
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
   source material, not the target for new promoted behavior.

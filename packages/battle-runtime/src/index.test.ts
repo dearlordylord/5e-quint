@@ -75,6 +75,7 @@ import magicMissileInput from "../../surface/content/magic_missile.json";
 import mageArmorInput from "../../surface/content/mage_armor.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import acidSplashInput from "../../surface/content/acid_splash.json";
+import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   SpellRecord,
@@ -161,7 +162,13 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const testSpellRecords = new Map(
-  [magicMissileInput, mageArmorInput, rayOfFrostInput, acidSplashInput]
+  [
+    magicMissileInput,
+    mageArmorInput,
+    rayOfFrostInput,
+    acidSplashInput,
+    healingWordInput,
+  ]
     .map((input) => decodeUnitRecordSync(input))
     .flatMap((unit) => (unit.kind === "spell" ? [[unit.id, unit]] : [])),
 );
@@ -237,6 +244,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: true,
+        spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -1796,6 +1804,152 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Off-Hand Attack opens hit-triggered Reaction replay and spends the Bonus Action", () => {
+    const rogueTargetId = combatantId("rogue-target");
+    const state = startBattleRight({
+      battleId: battleId("battle-off-hand-hit-reaction"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: testShortswordAttack(),
+          offHandAttack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: "main:weapon_shortsword",
+              unitId: "weapon_shortsword",
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: "off:weapon_dagger",
+              unitId: "weapon_dagger",
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 15 }),
+        characterSeed({
+          combatantId: rogueTargetId,
+          displayName: "Rogue Target",
+          initiative: 10,
+          side: oppositionSide,
+          classLevels: [{ className: "rogue", level: 5 }],
+          attack: null,
+          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
+        }),
+      ],
+    });
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Shortsword",
+    };
+    const attackTarget = requireHole(
+      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(attackTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterQualifyingAttack = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, goblinId),
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "bonusAction",
+      actorId: fighterId,
+      action: "offHandAttack",
+      attackName: "Dagger",
+    };
+    const target = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [targetFill(target, rogueTargetId)],
+      }),
+      "attackRoll",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state: afterQualifyingAttack,
+      subject,
+      fills: [
+        targetFill(target, rogueTargetId),
+        attackRollFill(roll, { total: 15, naturalD20: 10 }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Off-Hand Attack hit Reaction window.");
+    }
+    expect(awaitingReaction).toMatchObject({
+      holes: [{ kind: "reactionDecision", trigger: "attackHit" }],
+    });
+
+    const afterReaction = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: rogueTargetId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: "rogue_uncanny_dodge",
+            modifierKind: "attackDamageReduction",
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected Off-Hand Attack damage roll after Reaction.");
+    }
+    const damage = requireHole(afterReaction, "rolledDice");
+    const completed = resolveBattleSubject({
+      state: afterReaction.state,
+      subject,
+      fills: [
+        targetFill(target, rogueTargetId),
+        attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+
+    if (completed.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${completed.tag}.`);
+    }
+    expect(completed.snapshot.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(completed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: rogueTargetId,
+          hp: 10,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+  });
+
   test("admitted authored critical-range support makes a natural 19 Off-Hand Attack critical", () => {
     const state = startBattleRight({
       battleId: battleId("battle-off-hand-critical-range"),
@@ -2434,6 +2588,376 @@ describe("battle runtime", () => {
         expect.objectContaining({
           combatantId: goblinId,
           reactionAvailable: false,
+        }),
+      ]),
+    );
+  });
+
+  test("Opportunity Attack opens attack-damage Reaction windows before movement resumes", () => {
+    const cuttingWordsDamageOnly = cuttingWordsDamageOnlyUnit();
+    const state = startBattleRight({
+      battleId: battleId("battle-opportunity-attack-damage-reaction"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "bard", level: 3 }],
+          resources: [cuttingWordsResource({ unit: cuttingWordsDamageOnly })],
+          unitFeatures: [cuttingWordsDamageOnly].map((unit) => ({ unit })),
+          characterUnitRefs: [
+            reactionModifierUnitRef(cuttingWordsDamageOnly.id),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
+        }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    const choice = reactionChoiceWithSubject(
+      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+    );
+    const startedReaction = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        {
+          kind: "resolve",
+          reactorId: goblinId,
+          choice: {
+            kind: "opportunityAttack",
+            reactorId: goblinId,
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (startedReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
+    }
+    const attackRoll = findHole(startedReaction.holes, "attackRoll");
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [attackRollFill(attackRoll, { total: 20, naturalD20: 18 })],
+      }),
+      "rolledDice",
+    );
+
+    const awaitingDamageReaction = resolveBattleSubject({
+      state: startedReaction.state,
+      subject: choice.subject,
+      fills: [
+        attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+        damageRollFill(damage, 6),
+      ],
+    });
+    if (awaitingDamageReaction.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack damage Reaction window.");
+    }
+    expect(awaitingDamageReaction).toMatchObject({
+      holes: [{ kind: "reactionDecision", trigger: "attackDamage" }],
+    });
+
+    const damageChoice = reactionModifierChoice(
+      awaitingDamageReaction.snapshot.pendingReaction!.frame.choices,
+      cuttingWordsDamageOnly.id,
+      "damageRollReduction",
+    );
+    const completed = resolveBattleReaction({
+      state: awaitingDamageReaction.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingDamageReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: cuttingWordsDamageOnly.id,
+            modifierKind: "damageRollReduction",
+            fills: [
+              {
+                kind: "rolledDice",
+                holeId: damageChoice.initialHoles[0]!.holeId,
+                value: [rolledDiceGroup([3])],
+              },
+            ],
+          },
+        },
+      ),
+    });
+
+    if (completed.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${completed.tag}.`);
+    }
+    expect(completed.snapshot.pendingReaction).toBeNull();
+    expect(completed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hp: 7,
+          reactionAvailable: false,
+          movement: expect.objectContaining({
+            spentFeet: 5,
+            remainingFeet: 25,
+          }),
+        }),
+        expect.objectContaining({
+          combatantId: goblinId,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+  });
+
+  test("Opportunity Attack attack-hit damage reductions apply before movement resumes", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-opportunity-attack-hit-reduction"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "rogue", level: 5 }],
+          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const awaitingOpportunityAttack = resolveBattleSubject({
+      state,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
+        }),
+      ],
+    });
+    if (awaitingOpportunityAttack.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack Reaction window.");
+    }
+    const opportunityAttackChoice = reactionChoiceWithSubject(
+      awaitingOpportunityAttack.snapshot.pendingReaction!.frame.choices,
+    );
+    const startedOpportunityAttack = resolveBattleReaction({
+      state: awaitingOpportunityAttack.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingOpportunityAttack.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: goblinId,
+          choice: {
+            kind: "opportunityAttack",
+            reactorId: goblinId,
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (startedOpportunityAttack.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack roll hole.");
+    }
+    const attackRoll = findHole(startedOpportunityAttack.holes, "attackRoll");
+    const awaitingHitReaction = resolveBattleSubject({
+      state: startedOpportunityAttack.state,
+      subject: opportunityAttackChoice.subject,
+      fills: [attackRollFill(attackRoll, { total: 20, naturalD20: 18 })],
+    });
+    if (awaitingHitReaction.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack hit Reaction window.");
+    }
+    const afterUncannyDodge = resolveBattleReaction({
+      state: awaitingHitReaction.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingHitReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: "rogue_uncanny_dodge",
+            modifierKind: "attackDamageReduction",
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (afterUncannyDodge.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Opportunity Attack damage roll after Uncanny Dodge.",
+      );
+    }
+    const damage = requireHole(afterUncannyDodge, "rolledDice");
+    const completed = resolveBattleSubject({
+      state: afterUncannyDodge.state,
+      subject: opportunityAttackChoice.subject,
+      fills: [
+        attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+        damageRollFill(damage, 6),
+      ],
+    });
+
+    if (completed.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${completed.tag}.`);
+    }
+    expect(completed.snapshot.pendingReaction).toBeNull();
+    expect(completed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hp: 8,
+          reactionAvailable: false,
+          movement: expect.objectContaining({ spentFeet: 5 }),
+        }),
+        expect.objectContaining({
+          combatantId: goblinId,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+  });
+
+  test("Opportunity Attack attack-hit damage reductions narrow Knock Out disposition eligibility", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-opportunity-attack-hit-reduction-ko-gate"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          currentHp: 5,
+          classLevels: [{ className: "rogue", level: 5 }],
+          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const awaitingOpportunityAttack = resolveBattleSubject({
+      state,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
+        }),
+      ],
+    });
+    if (awaitingOpportunityAttack.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack Reaction window.");
+    }
+    const opportunityAttackChoice = reactionChoiceWithSubject(
+      awaitingOpportunityAttack.snapshot.pendingReaction!.frame.choices,
+    );
+    const startedOpportunityAttack = resolveBattleReaction({
+      state: awaitingOpportunityAttack.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingOpportunityAttack.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: goblinId,
+          choice: {
+            kind: "opportunityAttack",
+            reactorId: goblinId,
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (startedOpportunityAttack.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack roll hole.");
+    }
+    const attackRoll = findHole(startedOpportunityAttack.holes, "attackRoll");
+    const awaitingHitReaction = resolveBattleSubject({
+      state: startedOpportunityAttack.state,
+      subject: opportunityAttackChoice.subject,
+      fills: [attackRollFill(attackRoll, { total: 20, naturalD20: 18 })],
+    });
+    if (awaitingHitReaction.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack hit Reaction window.");
+    }
+    const afterUncannyDodge = resolveBattleReaction({
+      state: awaitingHitReaction.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingHitReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: "rogue_uncanny_dodge",
+            modifierKind: "attackDamageReduction",
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (afterUncannyDodge.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Opportunity Attack damage roll after Uncanny Dodge.",
+      );
+    }
+    const damage = requireHole(afterUncannyDodge, "rolledDice");
+    const completed = resolveBattleSubject({
+      state: afterUncannyDodge.state,
+      subject: opportunityAttackChoice.subject,
+      fills: [
+        attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+        damageRollFill(damage, 6),
+      ],
+    });
+
+    if (completed.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${completed.tag}.`);
+    }
+    expect(completed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fighterId,
+          hp: 1,
+          reactionAvailable: false,
+          conditions: [],
         }),
       ]),
     );
@@ -4671,6 +5195,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: true,
+        spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -4885,6 +5410,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: false,
+        spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -4909,6 +5435,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: false,
+        spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -6342,6 +6869,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -6455,6 +6983,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -6493,6 +7022,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -6610,6 +7140,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: false,
+        spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -9161,6 +9692,248 @@ describe("battle runtime", () => {
       1,
     );
 
+    const healingWordState = startBattleRight({
+      battleId: battleId("battle-healing-word-bonus-action"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Healer",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("healing_word")],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          initiative: 10,
+          currentHp: 4,
+        }),
+      ],
+    });
+    const healingWordAct = discoverBattleActs(healingWordState).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.spellId === "healing_word",
+    );
+    expect(healingWordAct).toMatchObject({
+      subject: {
+        tag: "bonusActionSpell",
+        actorId: wizardId,
+        spellId: "healing_word",
+        spellActId: "preparedHealingSpell:healing_word:slot:1",
+      },
+      initialHoles: [{ kind: "targetChoice" }],
+    });
+    if (healingWordAct === undefined) {
+      throw new Error("Expected Healing Word Bonus Action spell act.");
+    }
+    const healingWordTarget = findHole(
+      healingWordAct.initialHoles,
+      "targetChoice",
+    );
+    const healingWordRoll = requireHole(
+      resolveBattleSubject({
+        state: healingWordState,
+        subject: healingWordAct.subject,
+        fills: [
+          targetFill(healingWordTarget, fighterId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: fighterId,
+              spellId: "healing_word",
+            },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    const healingWord = requireResolved(
+      resolveBattleSubject({
+        state: healingWordState,
+        subject: healingWordAct.subject,
+        fills: [
+          targetFill(healingWordTarget, fighterId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: fighterId,
+              spellId: "healing_word",
+            },
+          ]),
+          damageRollFillWithGroups(healingWordRoll, [[4, 3]]),
+        ],
+      }),
+    );
+    expect(
+      healingWord.snapshot.currentTurnResources.currentHasBonusAction,
+    ).toBe(false);
+    expect(healingWord.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: fighterId, hp: 12 }),
+      ]),
+    );
+    expect(expendedLevelOneSlots(healingWord, wizardId)).toBe(1);
+    expect(
+      resolveBattleSubject({
+        state: healingWordState,
+        subject: {
+          tag: "bonusActionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "preparedSlotSpell:magic_missile:slot:1",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+
+    const slotTurnState = startBattleRight({
+      battleId: battleId("battle-one-slot-spell-per-turn"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Healer",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [
+              spellRecord("magic_missile"),
+              spellRecord("healing_word"),
+            ],
+          }),
+        }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          initiative: 10,
+          currentHp: 10,
+        }),
+      ],
+    });
+    const slotTurnMissileTarget = requireHole(
+      resolveBattleSubject({
+        state: slotTurnState,
+        subject: magicSubject("magic_missile"),
+        fills: [],
+      }),
+      "spellTargetAllocation",
+    );
+    const slotTurnMissileDamage = requireHole(
+      resolveBattleSubject({
+        state: slotTurnState,
+        subject: magicSubject("magic_missile"),
+        fills: [
+          spellTargetAllocationFill(slotTurnMissileTarget, [
+            { targetId: skeletonId, count: 3 },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    const afterSlotSpell = requireResolved(
+      resolveBattleSubject({
+        state: slotTurnState,
+        subject: magicSubject("magic_missile"),
+        fills: [
+          spellTargetAllocationFill(slotTurnMissileTarget, [
+            { targetId: skeletonId, count: 3 },
+          ]),
+          damageRollFillWithGroups(slotTurnMissileDamage, [[1, 1, 1]]),
+        ],
+      }),
+    ).state;
+    expect(afterSlotSpell.currentTurnResources).toMatchObject({
+      currentHasBonusAction: true,
+      spellSlotExpendedThisTurn: true,
+    });
+    expect(
+      discoverBattleActs(afterSlotSpell).map((act) => act.subject),
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tag: "bonusActionSpell",
+          spellId: "healing_word",
+        }),
+      ]),
+    );
+    expect(
+      resolveBattleSubject({
+        state: afterSlotSpell,
+        subject: {
+          tag: "bonusActionSpell",
+          actorId: wizardId,
+          spellId: "healing_word",
+          spellActId: "preparedHealingSpell:healing_word:slot:1",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "This turn has already expended a Spell Slot.",
+    });
+
+    const healingWordReactionState =
+      fighterTurnWithReadiedRayAndHealer("spellCast");
+    const healingWordReactionAct = discoverBattleActs(
+      healingWordReactionState,
+    ).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.spellId === "healing_word",
+    );
+    if (healingWordReactionAct === undefined) {
+      throw new Error("Expected Healing Word Bonus Action spell act.");
+    }
+    const reactionTarget = findHole(
+      healingWordReactionAct.initialHoles,
+      "targetChoice",
+    );
+    const reactionTargetFill = targetFill(reactionTarget, fighterId, [
+      {
+        kind: "spellTarget",
+        casterId: fighterId,
+        targetId: fighterId,
+        spellId: "healing_word",
+      },
+    ]);
+    const awaitingSpellCastReaction = resolveBattleSubject({
+      state: healingWordReactionState,
+      subject: healingWordReactionAct.subject,
+      fills: [reactionTargetFill],
+    });
+    expect(awaitingSpellCastReaction).toMatchObject({
+      tag: "needsHoles",
+      subject: healingWordReactionAct.subject,
+      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      snapshot: {
+        pendingReaction: {
+          frame: { trigger: "spellCast" },
+        },
+      },
+    });
+    if (awaitingSpellCastReaction.tag !== "needsHoles") {
+      throw new Error(
+        `Expected needsHoles, got ${awaitingSpellCastReaction.tag}.`,
+      );
+    }
+    const afterDecline = resolveBattleReaction({
+      state: awaitingSpellCastReaction.state,
+      fill: reactionDecisionFill(
+        awaitingSpellCastReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: wizardId },
+      ),
+    });
+    expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      subject: healingWordReactionAct.subject,
+      holes: [{ kind: "rolledDice", label: "Healing Word healing (2d4+3)" }],
+      snapshot: { pendingReaction: null },
+    });
+
     const levelTwoState = startBattleRight({
       battleId: battleId("battle-magic-missile-split-targets"),
       combatants: [
@@ -10789,6 +11562,7 @@ function subjectName(
   | "offHandAttack"
   | "statBlockActionOption"
   | "actionSpell"
+  | "bonusActionSpell"
   | "unitFeature"
   | "endTurn"
   | "move"
@@ -10805,6 +11579,9 @@ function subjectName(
   }
   if (subject.tag === "actionSpell") {
     return "actionSpell";
+  }
+  if (subject.tag === "bonusActionSpell") {
+    return "bonusActionSpell";
   }
   if (subject.tag === "unitFeature") {
     return "unitFeature";
@@ -10827,7 +11604,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("83 passing");
+  expect(quintOutput).toContain("87 passing");
 }
 
 function hidePrerequisites(
@@ -10948,6 +11725,50 @@ function fighterTurnWithReadiedRay(
   }
   if (wizardReady.state.readiedSpells.get(wizardId) === undefined) {
     throw new Error("Expected Wizard to hold a readied spell.");
+  }
+  const fighterTurn = endTurn({ state: wizardReady.state, actorId: wizardId });
+  if (fighterTurn.tag !== "resolved") {
+    throw new Error(`Expected resolved End Turn, got ${fighterTurn.tag}.`);
+  }
+  return fighterTurn.state;
+}
+
+function fighterTurnWithReadiedRayAndHealer(
+  trigger: BattleReadiedSpellTrigger,
+): BattleState {
+  const wizardReady = resolveBattleSubject({
+    state: startBattleRight({
+      battleId: battleId(`battle-readied-${trigger}-healing-word`),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 30,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        characterSeed({
+          initiative: 20,
+          currentHp: 4,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("healing_word")],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    }),
+    subject: {
+      tag: "actionSpell",
+      actorId: wizardId,
+      spellId: "ray_of_frost",
+      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+      readyTrigger: trigger,
+    },
+    fills: [],
+  });
+  if (wizardReady.tag !== "resolved") {
+    throw new Error(`Expected resolved Ready Spell, got ${wizardReady.tag}.`);
   }
   const fighterTurn = endTurn({ state: wizardReady.state, actorId: wizardId });
   if (fighterTurn.tag !== "resolved") {
@@ -11730,6 +12551,7 @@ function characterSeed(input: {
   readonly combatantId?: CombatantId;
   readonly displayName?: string;
   readonly initiative: number;
+  readonly side?: typeof partySide | typeof oppositionSide;
   readonly classLevel?: number;
   readonly classLevels?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -11788,7 +12610,7 @@ function characterSeed(input: {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
     initiative: initiativeScore(input.initiative),
-    side: partySide,
+    side: input.side ?? partySide,
     creatureInit: {
       kind: "character",
       characterId: characterId("fighter-character"),
@@ -13085,7 +13907,12 @@ function acidSplashWithRadius(radiusFeet: number): SpellRecord {
 }
 
 function spellRecord(
-  spellId: "magic_missile" | "mage_armor" | "ray_of_frost" | "acid_splash",
+  spellId:
+    | "magic_missile"
+    | "mage_armor"
+    | "ray_of_frost"
+    | "acid_splash"
+    | "healing_word",
 ) {
   const unit = testSpellRecords.get(spellId);
   if (unit === undefined) {

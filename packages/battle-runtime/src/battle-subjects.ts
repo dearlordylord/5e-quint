@@ -162,6 +162,12 @@ export const BattleSubjectSchema = Schema.Union(
     ),
   }),
   Schema.Struct({
+    tag: Schema.Literal("bonusActionSpell"),
+    actorId: CombatantId,
+    spellId: BattleSubjectTextSchema,
+    spellActId: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
+  }),
+  Schema.Struct({
     tag: Schema.Literal("unitFeature"),
     actorId: CombatantId,
     unitId: BattleSubjectTextSchema,
@@ -324,6 +330,13 @@ function battleSubjectKey(subject: BattleSubject): string {
         spell.actorId,
         spell.spellActId ?? spell.spellId,
         spell.readyTrigger ?? null,
+      ]),
+    ),
+    Match.when({ tag: "bonusActionSpell" }, (spell) =>
+      JSON.stringify([
+        spell.tag,
+        spell.actorId,
+        spell.spellActId ?? spell.spellId,
       ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>

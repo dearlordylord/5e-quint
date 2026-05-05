@@ -274,10 +274,7 @@ export type BattleInterruptedProcedure =
     }
   | {
       readonly kind: "attackDamage";
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "action"; readonly action: "attack" }
-      >;
+      readonly subject: BattleAttackHostSubject;
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly damageEvent: BattleAttackDamageEvent;
@@ -290,6 +287,19 @@ export type BattleInterruptedProcedure =
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly attackDamageRiders: readonly AttackDamageRider[];
     };
+type BattleAttackHostSubject =
+  | Extract<
+      BattleSubject,
+      { readonly tag: "action"; readonly action: "attack" }
+    >
+  | Extract<
+      BattleSubject,
+      { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
+    >
+  | Extract<
+      BattleSubject,
+      { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
+    >;
 type BattleAttackDamagePrefixFill = Extract<
   BattleFill,
   {
@@ -406,6 +416,9 @@ type BattleActiveReactionProcedure = {
   readonly subject: BattleReactionProcedureChoiceWithSubject["subject"];
   readonly fills: readonly BattleFill[];
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly pendingAttackDamageReductions?:
+    | readonly BattlePendingAttackDamageReduction[]
+    | undefined;
 };
 type BattleReactionFrameBase = {
   readonly eligibleReactors: readonly CombatantId[];
@@ -622,16 +635,26 @@ export type SupportedSpellAct =
         BattleActiveEffect,
         { readonly kind: "spellBaseArmorClass" }
       >;
+    }
+  | {
+      readonly kind: "preparedHealingSpell";
+      readonly spell: SpellRecord;
+      readonly slotLevel: SpellSlotLevel;
+      readonly healing: {
+        readonly expr: DiceExpr;
+      };
+      readonly rangeFeet: MovementFeet;
     };
 
 type SupportedDamageSpellAct = Exclude<
   SupportedSpellAct,
-  { readonly kind: "preparedPersistentSpell" }
+  { readonly kind: "preparedPersistentSpell" | "preparedHealingSpell" }
 >;
 
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
+  readonly spellSlotExpendedThisTurn: boolean;
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly lightWeaponAttackMade?: {
@@ -974,8 +997,17 @@ export type BattleSpellDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly spell: SupportedSpellAct;
+  readonly spell: SupportedDamageSpellAct;
   readonly critical: boolean;
+};
+export type BattleSpellHealingRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly spell: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >;
 };
 export type BattleSavingThrowOutcome = {
   readonly targetId: CombatantId;
@@ -1100,6 +1132,7 @@ export type BattleHole =
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
+  | BattleSpellHealingRollHole
   | BattleSpellSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole
@@ -1164,6 +1197,16 @@ const SupportedAttackActionOptionSchema = Schema.Union(
     attack: BattleRuntimeObjectSchema,
   }),
 );
+const SupportedHealingSpellActSchema = Schema.Struct({
+  kind: Schema.Literal("preparedHealingSpell"),
+  spell: BattleRuntimeObjectSchema,
+  slotLevel: SpellSlotLevel,
+  healing: Schema.Struct({
+    expr: BattleRuntimeObjectSchema,
+  }),
+  rangeFeet: MovementFeet,
+});
+
 const SupportedSpellActSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("preparedSlotSpell"),
@@ -1215,6 +1258,7 @@ const SupportedSpellActSchema = Schema.Union(
     rangeFeet: MovementFeet,
     activeEffect: BattleRuntimeObjectSchema,
   }),
+  SupportedHealingSpellActSchema,
 );
 
 export const BattleHoleSchema = Schema.Union(
@@ -1288,6 +1332,11 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("rolledDice"),
     spell: SupportedSpellActSchema,
     critical: Schema.Boolean,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    spell: SupportedHealingSpellActSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1919,7 +1968,13 @@ type OffHandAttackBattleResolutionInput = BattleResolutionInputForSubject<
     BattleSubject,
     { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
   >
->;
+> & {
+  readonly replayingInterruptedProcedure?: boolean;
+  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly pendingAttackDamageReductions?:
+    | readonly BattlePendingAttackDamageReduction[]
+    | undefined;
+};
 type StatBlockBonusActionOptionBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
@@ -1949,6 +2004,11 @@ type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
 > & {
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
   readonly reactionContinuationSubject?: BattleSubject | undefined;
+};
+type BonusActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
+> & {
+  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
 };
 type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "unitFeature" }>
@@ -2067,6 +2127,7 @@ const INITIAL_ROUND: RoundType = Round(1);
 const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
+  spellSlotExpendedThisTurn: false,
   attackRollMadeThisTurn: false,
   attackDamageRidersUsedThisTurn: [],
   dashMovementBonusFeet: movementFeet(0),
@@ -2526,10 +2587,7 @@ export function discoverBattleActs(
   }
   acts.push(...statBlockBonusActionOptionActs(state, actorId));
   acts.push(...supportedUnitFeatureActs(state, actorId));
-  if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    canSpendAction(state.currentTurnResources, "magic")
-  ) {
+  if (combatantCanTakeActions(state.combatants.get(actorId))) {
     acts.push(...discoverSupportedSpellActs(state, actorId));
   }
   const movementHoleForActor = movementHole(state, actorId);
@@ -2921,6 +2979,12 @@ function resolveBattleSubjectInternal(
                 suppressedReactionTrigger:
                   activeReaction.suppressedReactionTrigger,
               }),
+          ...(activeReaction.pendingAttackDamageReductions === undefined
+            ? {}
+            : {
+                pendingAttackDamageReductions:
+                  activeReaction.pendingAttackDamageReductions,
+              }),
         });
         return reactionResult.tag === "resolved"
           ? completeActiveReactionProcedure(reactionResult.state)
@@ -3020,6 +3084,17 @@ function resolveBattleSubjectInternal(
       "Magic action is no longer available for the current actor.",
     );
   }
+  if (
+    input.subject.tag === "bonusActionSpell" &&
+    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
+      !input.state.currentTurnResources.currentHasBonusAction)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action spell is no longer available for the current actor.",
+    );
+  }
 
   if (
     input.subject.tag === "unitFeature" &&
@@ -3086,7 +3161,25 @@ function resolveBattleSubjectInternal(
       return resolveEscapeGrapple({ ...input, subject });
     }
     if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
-      return resolveOffHandAttack({ ...input, subject });
+      return resolveOffHandAttack({
+        ...input,
+        subject,
+        ...(options.replayingInterruptedProcedure === undefined
+          ? {}
+          : {
+              replayingInterruptedProcedure:
+                options.replayingInterruptedProcedure,
+            }),
+        ...(options.suppressedReactionTrigger === undefined
+          ? {}
+          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+        ...(options.pendingAttackDamageReductions === undefined
+          ? {}
+          : {
+              pendingAttackDamageReductions:
+                options.pendingAttackDamageReductions,
+            }),
+      });
     }
     if (subject.tag === "bonusAction" && subject.action === "hide") {
       return resolveHide({
@@ -3102,6 +3195,13 @@ function resolveBattleSubjectInternal(
     }
     if (subject.tag === "actionSpell") {
       return resolveSpellAct({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      });
+    }
+    if (subject.tag === "bonusActionSpell") {
+      return resolveBonusActionSpellAct({
         ...input,
         subject,
         suppressedReactionTrigger: options.suppressedReactionTrigger,
@@ -3146,7 +3246,12 @@ function resolveBattleSubjectInternal(
       subject.tag === "runtimeCommand" &&
       subject.command === "opportunityAttack"
     ) {
-      return resolveOpportunityAttackCommand({ ...input, subject });
+      return resolveOpportunityAttackCommand({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        pendingAttackDamageReductions: options.pendingAttackDamageReductions,
+      });
     }
     const _exhaustive: never = subject;
     return _exhaustive;
@@ -3379,7 +3484,13 @@ export function resolveBattleReaction(input: {
       : closedState;
 
   return remainingReactors.length === 0
-    ? resumeInterruptedProcedure(nextState, frame.continuation, frame.trigger)
+    ? completeResolvedActiveReactionIfPending(
+        resumeInterruptedProcedure(
+          nextState,
+          frame.continuation,
+          frame.trigger,
+        ),
+      )
     : {
         tag: "resolved",
         state: nextState,
@@ -3517,16 +3628,29 @@ function resolveReactionRollOrDamageReduction(input: {
         };
 
   return remainingReactors.length === 0
-    ? resumeInterruptedProcedure(
-        nextState,
-        completedFrame.continuation,
-        completedFrame.trigger,
+    ? completeResolvedActiveReactionIfPending(
+        resumeInterruptedProcedure(
+          nextState,
+          completedFrame.continuation,
+          completedFrame.trigger,
+        ),
       )
     : {
         tag: "resolved",
         state: nextState,
         snapshot: snapshotBattle(nextState),
       };
+}
+
+function completeResolvedActiveReactionIfPending(
+  result: BattleResolutionResult,
+): BattleResolutionResult {
+  if (result.tag !== "resolved") {
+    return result;
+  }
+  return currentReactionFrame(result.state)?.activeReaction === undefined
+    ? result
+    : completeActiveReactionProcedure(result.state);
 }
 
 function reactionModifierReductionRoll(
@@ -4086,7 +4210,16 @@ function resolveReplayContinuationFromState(
     activeReaction !== undefined &&
     sameBattleSubject(activeReaction.subject, continuation.subject)
   ) {
-    return result;
+    const pendingState =
+      activeReactionWithReplayContinuationAttackDamageReductions(
+        result.state,
+        continuation,
+      );
+    return {
+      ...result,
+      state: pendingState,
+      snapshot: snapshotBattle(pendingState),
+    };
   }
   const pendingState = {
     ...result.state,
@@ -4099,6 +4232,35 @@ function resolveReplayContinuationFromState(
     ...result,
     state: pendingState,
     snapshot: snapshotBattle(pendingState),
+  };
+}
+
+function activeReactionWithReplayContinuationAttackDamageReductions(
+  state: BattleState,
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "replay" }
+  >,
+): BattleState {
+  if (continuation.attackDamageReductions === undefined) {
+    return state;
+  }
+  const frame = currentReactionFrame(state);
+  if (frame?.activeReaction === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    interruptStack: [
+      ...state.interruptStack.slice(0, -1),
+      reactionInterruptFrame({
+        ...frame,
+        activeReaction: {
+          ...frame.activeReaction,
+          pendingAttackDamageReductions: continuation.attackDamageReductions,
+        },
+      }),
+    ],
   };
 }
 
@@ -6085,10 +6247,7 @@ function resolveAttack(
 
 function needsAttackDamageConcentrationResult(input: {
   readonly state: BattleState;
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "action"; readonly action: "attack" }
-  >;
+  readonly subject: BattleAttackHostSubject;
   readonly attack: SupportedAttackActionOption;
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
   readonly concentrationSave: BattleConcentrationSavingThrowHole;
@@ -6652,6 +6811,8 @@ function hasHelpAttackTargetSpatialFact(
 function resolveOffHandAttack(
   input: OffHandAttackBattleResolutionInput,
 ): BattleResolutionResult {
+  const pendingAttackDamageReductions =
+    input.pendingAttackDamageReductions ?? [];
   const attack = offHandAttackActionOptionForActor(
     input.state,
     input.subject.actorId,
@@ -6811,6 +6972,32 @@ function resolveOffHandAttack(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
+  if (hit && input.suppressedReactionTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenReactionWindow(
+      attackRolledState,
+      {
+        trigger: "attackHit",
+        attackerId: input.subject.actorId,
+        targetId: target.combatantId,
+        attackRoll: fillSet.attackRoll,
+        damageTypes: attackPotentialDamageTypes(
+          attack,
+          critical,
+          fillSet.attackRoll,
+          eligibleDamageRiders,
+        ),
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: attackFillsThroughAttackRoll(input.fills),
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
+  }
   if (hit && fillSet.damageRoll == null) {
     return needsHolesResult(attackRolledState, input.subject, [
       attackDamageHole(
@@ -6832,6 +7019,9 @@ function resolveOffHandAttack(
       "Off-Hand Attack damage can only be filled after a hit.",
     );
   }
+  if (!hit) {
+    return spendOffHandBonusAction(attackRolledState);
+  }
   if (hit && fillSet.damageRoll != null) {
     const damageValidation = validateAttackDamageFill(
       fillSet.damageRoll,
@@ -6847,15 +7037,73 @@ function resolveOffHandAttack(
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
-    const damageAmount = attackDamageAmount(
+    const damageRollByType = attackDamageByTypeEntries(
       attackRolledState.combatants.get(input.subject.actorId),
-      target,
       attack,
       fillSet.damageRoll,
       critical,
       fillSet.attackRoll,
       selectedDamageRiders,
     );
+    const damageEvent = {
+      kind: "rolledDamage" as const,
+      damageRollByType,
+    } satisfies BattleAttackDamageEvent;
+    const reducedDamageEvent = attackDamageEventAfterPendingReductions(
+      damageEvent,
+      pendingAttackDamageReductions,
+    );
+    const damageAmount = attackDamageEventAmountForTarget(
+      target,
+      reducedDamageEvent,
+    );
+    const damageDispositionHole = attackDamageDispositionHole({
+      attack,
+      attackerId: input.subject.actorId,
+      target,
+      damageAmount,
+    });
+    if (damageDispositionHole !== null) {
+      if (!fillSet.damageDispositionFilled) {
+        return needsHolesResult(attackRolledState, input.subject, [
+          damageDispositionHole,
+        ]);
+      }
+    } else if (fillSet.damageDispositionFilled) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
+      );
+    }
+    const attackDamageReactionWindow = maybeOpenReactionWindow(
+      attackRolledState,
+      {
+        trigger: "attackDamage",
+        continuation: {
+          kind: "attackDamage",
+          subject: input.subject,
+          attackerId: input.subject.actorId,
+          targetId: target.combatantId,
+          damageEvent: reducedDamageEvent,
+          fills: attackDamagePrefixFills(input.fills),
+          deathFailuresAtZeroHp: critical ? 2 : 1,
+          damageDisposition: fillSet.damageDisposition,
+          attackDamageRiders: selectedDamageRiders,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (attackDamageReactionWindow !== null) {
+      const spent = spendOffHandBonusAction(attackDamageReactionWindow.state);
+      return spent.tag === "invalid"
+        ? spent
+        : {
+            ...attackDamageReactionWindow,
+            state: spent.state,
+            snapshot: snapshotBattle(spent.state),
+          };
+    }
     const concentrationSave = concentrationSavingThrowHole(
       target,
       damageAmount,
@@ -6882,26 +7130,65 @@ function resolveOffHandAttack(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
+    const damaged = applyAttackDamageAmount(
+      attackRolledState,
+      input.subject.actorId,
+      target.combatantId,
+      damageAmount,
+      critical ? 2 : 1,
+      fillSet.damageDisposition,
+      selectedDamageRiders,
+      fillSet.concentrationSavingThrow,
+    );
+    const spent = spendOffHandBonusAction(damaged);
+    if (spent.tag === "invalid") {
+      return spent;
+    }
+    const reactionWindow = maybeOpenReactionWindow(
+      spent.state,
+      {
+        trigger: "afterDamage",
+        damageSourceId: input.subject.actorId,
+        damagedId: target.combatantId,
+        damageAmount,
+        continuation: {
+          kind: "resolved",
+          subject: input.subject,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
+    return spent;
   }
-  const nextState = hit
-    ? applyAttackDamage(
-        attackRolledState,
-        input.subject.actorId,
-        target.combatantId,
-        attack,
-        fillSet,
-        critical,
-        selectedDamageRiders,
-      )
-    : attackRolledState;
-  const state = normalizeBattleGrapples({
-    ...nextState,
-    currentTurnResources: {
-      ...nextState.currentTurnResources,
-      currentHasBonusAction: false,
-    },
+
+  return spendOffHandBonusAction(attackRolledState);
+}
+
+function spendOffHandBonusAction(
+  state: BattleState,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const spent = spendActivationResource(state.currentTurnResources, {
+    kind: "bonusAction",
   });
-  return { tag: "resolved", state, snapshot: snapshotBattle(state) };
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      state,
+      "staleSubject",
+      "Bonus Action is no longer available for the current actor.",
+    );
+  }
+  const nextState = normalizeBattleGrapples({
+    ...state,
+    currentTurnResources: spent.right,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveStatBlockBonusActionOption(
@@ -7583,48 +7870,6 @@ function fixedAttackDamageByTypeEntries(
   );
 }
 
-function applyFixedAttackDamage(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
-  critical: boolean,
-): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target == null) {
-    return state;
-  }
-  const damageAmount = fixedAttackDamageAmount(
-    state.combatants.get(attackerId),
-    target,
-    attack,
-  );
-  if (damageAmount === null) {
-    return state;
-  }
-  const damaged = applyHpDamage(target, damageAmount, {
-    deathFailuresAtZeroHp: critical ? 2 : 1,
-    damageDisposition: fillSet.damageDisposition,
-  });
-  const combatants = new Map(state.combatants).set(targetId, damaged);
-
-  const nextState = {
-    ...state,
-    combatants,
-  };
-  const concentrated =
-    fillSet.concentrationSavingThrow?.value.succeeded === false ||
-    (target.concentration !== null && damaged.concentration === null)
-      ? breakBattleConcentrationAfterDamage({
-          state: nextState,
-          combatantId: targetId,
-          priorConcentration: target.concentration,
-        })
-      : nextState;
-  return normalizeBattleGrapples(concentrated);
-}
-
 function attackRollHitsWithCriticalThreshold(
   roll: AttackRollResult,
   armorClass: number,
@@ -7917,6 +8162,7 @@ function resetBattleTurnResources(
     resetTurnActionEconomy(resources);
   return {
     ...base,
+    spellSlotExpendedThisTurn: false,
     attackRollMadeThisTurn: false,
     attackDamageRidersUsedThisTurn: [],
     dashMovementBonusFeet: movementFeet(0),
@@ -8172,8 +8418,15 @@ function resolveOpportunityAttackCommand(
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
     >
-  >,
+  > & {
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly pendingAttackDamageReductions?:
+      | readonly BattlePendingAttackDamageReduction[]
+      | undefined;
+  },
 ): BattleResolutionResult {
+  const pendingAttackDamageReductions =
+    input.pendingAttackDamageReductions ?? [];
   const subject = input.subject;
   const target = input.state.combatants.get(subject.targetId);
   const attack = opportunityAttackOptionForReactor(
@@ -8279,6 +8532,32 @@ function resolveOpportunityAttackCommand(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
+  if (hit && input.suppressedReactionTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenReactionWindow(
+      attackRolledState,
+      {
+        trigger: "attackHit",
+        attackerId: subject.reactorId,
+        targetId: subject.targetId,
+        attackRoll: fillSet.attackRoll,
+        damageTypes: attackPotentialDamageTypes(
+          attack,
+          critical,
+          fillSet.attackRoll,
+          eligibleDamageRiders,
+        ),
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: attackFillsThroughAttackRoll(input.fills),
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
+  }
   if (!hit && (fillSet.damageRoll != null || fillSet.damageDispositionFilled)) {
     return invalidResult(
       input.state,
@@ -8306,11 +8585,36 @@ function resolveOpportunityAttackCommand(
         "Opportunity Attack Fixed Unarmed Strike damage does not use a rolled damage fill.",
       );
     }
+    const fixedDamageByTypeBeforeTargetAdjustments =
+      fixedAttackDamageByTypeEntries(
+        attackRolledState.combatants.get(subject.reactorId),
+        attack,
+      );
+    if (fixedDamageByTypeBeforeTargetAdjustments === null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Opportunity Attack fixed damage is no longer available.",
+      );
+    }
+    const damageEvent = {
+      kind: "aggregateDamage" as const,
+      damageByTypeBeforeTargetAdjustments:
+        fixedDamageByTypeBeforeTargetAdjustments,
+    } satisfies BattleAttackDamageEvent;
+    const reducedDamageEvent = attackDamageEventAfterPendingReductions(
+      damageEvent,
+      pendingAttackDamageReductions,
+    );
+    const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
+      target,
+      reducedDamageEvent,
+    );
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: subject.reactorId,
       target,
-      damageAmount: fixedDamageAmount,
+      damageAmount: reducedFixedDamageAmount,
     });
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
@@ -8325,9 +8629,30 @@ function resolveOpportunityAttackCommand(
         "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
       );
     }
+    const attackDamageReactionWindow = maybeOpenReactionWindow(
+      attackRolledState,
+      {
+        trigger: "attackDamage",
+        continuation: {
+          kind: "attackDamage",
+          subject: input.subject,
+          attackerId: subject.reactorId,
+          targetId: subject.targetId,
+          damageEvent: reducedDamageEvent,
+          fills: attackDamagePrefixFills(input.fills),
+          deathFailuresAtZeroHp: critical ? 2 : 1,
+          damageDisposition: fillSet.damageDisposition,
+          attackDamageRiders: [],
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (attackDamageReactionWindow !== null) {
+      return attackDamageReactionWindow;
+    }
     const concentrationSave = concentrationSavingThrowHole(
       target,
-      fixedDamageAmount,
+      reducedFixedDamageAmount,
     );
     if (concentrationSave !== null) {
       if (fillSet.concentrationSavingThrow === undefined) {
@@ -8351,14 +8676,33 @@ function resolveOpportunityAttackCommand(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
-    const nextState = applyFixedAttackDamage(
+    const nextState = applyAttackDamageAmount(
       attackRolledState,
       subject.reactorId,
       subject.targetId,
-      attack,
-      fillSet,
-      critical,
+      reducedFixedDamageAmount,
+      critical ? 2 : 1,
+      fillSet.damageDisposition,
+      [],
+      fillSet.concentrationSavingThrow,
     );
+    const reactionWindow = maybeOpenReactionWindow(
+      nextState,
+      {
+        trigger: "afterDamage",
+        damageSourceId: subject.reactorId,
+        damagedId: subject.targetId,
+        damageAmount: reducedFixedDamageAmount,
+        continuation: {
+          kind: "resolved",
+          subject: input.subject,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
     return {
       tag: "resolved",
       state: nextState,
@@ -8393,20 +8737,31 @@ function resolveOpportunityAttackCommand(
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
-  const damageAmount = attackDamageAmount(
+  const damageRollByType = attackDamageByTypeEntries(
     attackRolledState.combatants.get(subject.reactorId),
-    target,
     attack,
     fillSet.damageRoll,
     critical,
     fillSet.attackRoll,
     selectedDamageRiders,
   );
+  const damageEvent = {
+    kind: "rolledDamage" as const,
+    damageRollByType,
+  } satisfies BattleAttackDamageEvent;
+  const reducedDamageEvent = attackDamageEventAfterPendingReductions(
+    damageEvent,
+    pendingAttackDamageReductions,
+  );
+  const reducedDamageAmount = attackDamageEventAmountForTarget(
+    target,
+    reducedDamageEvent,
+  );
   const damageDispositionHole = attackDamageDispositionHole({
     attack,
     attackerId: subject.reactorId,
     target,
-    damageAmount,
+    damageAmount: reducedDamageAmount,
   });
   if (damageDispositionHole !== null) {
     if (!fillSet.damageDispositionFilled) {
@@ -8421,7 +8776,31 @@ function resolveOpportunityAttackCommand(
       "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
     );
   }
-  const concentrationSave = concentrationSavingThrowHole(target, damageAmount);
+  const attackDamageReactionWindow = maybeOpenReactionWindow(
+    attackRolledState,
+    {
+      trigger: "attackDamage",
+      continuation: {
+        kind: "attackDamage",
+        subject: input.subject,
+        attackerId: subject.reactorId,
+        targetId: subject.targetId,
+        damageEvent: reducedDamageEvent,
+        fills: attackDamagePrefixFills(input.fills),
+        deathFailuresAtZeroHp: critical ? 2 : 1,
+        damageDisposition: fillSet.damageDisposition,
+        attackDamageRiders: selectedDamageRiders,
+      },
+    },
+    input.suppressedReactionTrigger,
+  );
+  if (attackDamageReactionWindow !== null) {
+    return attackDamageReactionWindow;
+  }
+  const concentrationSave = concentrationSavingThrowHole(
+    target,
+    reducedDamageAmount,
+  );
   if (concentrationSave !== null) {
     if (fillSet.concentrationSavingThrow === undefined) {
       return needsHolesResult(attackRolledState, input.subject, [
@@ -8436,15 +8815,33 @@ function resolveOpportunityAttackCommand(
       );
     }
   }
-  const nextState = applyAttackDamage(
+  const nextState = applyAttackDamageAmount(
     attackRolledState,
     subject.reactorId,
     subject.targetId,
-    attack,
-    fillSet,
-    critical,
+    reducedDamageAmount,
+    critical ? 2 : 1,
+    fillSet.damageDisposition,
     selectedDamageRiders,
+    fillSet.concentrationSavingThrow,
   );
+  const reactionWindow = maybeOpenReactionWindow(
+    nextState,
+    {
+      trigger: "afterDamage",
+      damageSourceId: subject.reactorId,
+      damagedId: subject.targetId,
+      damageAmount: reducedDamageAmount,
+      continuation: {
+        kind: "resolved",
+        subject: input.subject,
+      },
+    },
+    input.suppressedReactionTrigger,
+  );
+  if (reactionWindow !== null) {
+    return reactionWindow;
+  }
   return {
     tag: "resolved",
     state: nextState,
@@ -9585,6 +9982,11 @@ function discoverSupportedSpellActs(
       if (!spellHasAvailableSpend(actor, invocation)) {
         return [];
       }
+      if (
+        !spellActTurnResourceAvailable(state.currentTurnResources, invocation)
+      ) {
+        return [];
+      }
       if (invocation.kind === "cantripSaveGateDamage") {
         const savingThrowHole = spellSavingThrowOutcomeHole(
           state,
@@ -9616,7 +10018,7 @@ function discoverSupportedSpellActs(
           : [
               {
                 subject: {
-                  tag: "actionSpell" as const,
+                  tag: spellSubjectTagForInvocation(invocation),
                   actorId,
                   spellId: invocation.spell.id,
                   spellActId: supportedSpellActId(invocation),
@@ -9625,13 +10027,23 @@ function discoverSupportedSpellActs(
                 summary:
                   invocation.kind === "preparedSlotSpell"
                     ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`
-                    : `Cast ${invocation.spell.name} as a cantrip.`,
+                    : invocation.kind === "preparedHealingSpell"
+                      ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot as a Bonus Action.`
+                      : `Cast ${invocation.spell.name} as a cantrip.`,
                 initialHoles: [targetHole],
               },
             ];
       return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
     },
   );
+}
+
+function spellSubjectTagForInvocation(
+  invocation: SupportedSpellAct,
+): "actionSpell" | "bonusActionSpell" {
+  return invocation.kind === "preparedHealingSpell"
+    ? "bonusActionSpell"
+    : "actionSpell";
 }
 
 function activeOngoingFeaturesPreventSpellcasting(
@@ -9659,6 +10071,7 @@ function readiedSpellAct(
 ): readonly AvailableBattleAct[] {
   if (
     invocation.kind === "preparedPersistentSpell" ||
+    invocation.kind === "preparedHealingSpell" ||
     state.readiedSpells.has(actorId)
   ) {
     return [];
@@ -9725,6 +10138,22 @@ function resolveSpellAct(
       input.state,
       "staleSubject",
       "Action-time spell act is unavailable while an active ongoing feature prevents spellcasting.",
+    );
+  }
+  if (invocation.kind === "preparedHealingSpell") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Prepared Bonus Action healing spells must use the Bonus Action spell subject.",
+    );
+  }
+  if (
+    !spellActTurnResourceAvailable(input.state.currentTurnResources, invocation)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
     );
   }
 
@@ -9820,12 +10249,23 @@ function resolveSpellAct(
         "Magic action is no longer available for the current actor.",
       );
     }
+    const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+    if (Either.isLeft(slotTurnResources)) {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "This turn has already expended a Spell Slot.",
+      );
+    }
     const slotted = expendSpellSlot(
       effected,
       subject.actorId,
       invocation.slotLevel,
     );
-    const nextState = { ...slotted, currentTurnResources: spent.right };
+    const nextState = {
+      ...slotted,
+      currentTurnResources: slotTurnResources.right,
+    };
     return {
       tag: "resolved",
       state: nextState,
@@ -10028,6 +10468,172 @@ function resolveSpellAct(
   };
 }
 
+function resolveBonusActionSpellAct(
+  input: BonusActionSpellBattleResolutionInput,
+): BattleResolutionResult {
+  const subject = input.subject;
+  const actor = input.state.combatants.get(subject.actorId);
+  const invocation =
+    actor?.origin.kind === "character"
+      ? supportedSpellActs(actor).find((candidate) =>
+          subject.spellActId === undefined
+            ? candidate.spell.id === subject.spellId
+            : supportedSpellActId(candidate) === subject.spellActId,
+        )
+      : undefined;
+  if (actor?.origin.kind !== "character" || invocation == null) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Bonus Action spell act requires a supported prepared spell.",
+    );
+  }
+  if (invocation.kind !== "preparedHealingSpell") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Bonus Action spell subject requires a supported Bonus Action spell act.",
+    );
+  }
+  if (!spellHasAvailableSpend(actor, invocation)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action spell act no longer has its required runtime spell resource.",
+    );
+  }
+  if (
+    !spellActTurnResourceAvailable(input.state.currentTurnResources, invocation)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action spell act is unavailable while an active ongoing feature prevents spellcasting.",
+    );
+  }
+
+  const castingState = spellRequiresVerbal(invocation.spell)
+    ? revealHidden(input.state, subject.actorId)
+    : input.state;
+  const fillSet = spellFillSet(input.fills, invocation);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (
+    fillSet.attackRoll !== undefined ||
+    fillSet.targetAllocation !== undefined ||
+    fillSet.damageRoll !== undefined
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bonus Action healing spells use one target fill and one healing roll.",
+    );
+  }
+  if (fillSet.targetId == null) {
+    return needsHolesResult(castingState, input.subject, [
+      spellTargetHole(castingState, subject.actorId, invocation),
+    ]);
+  }
+  const target = castingState.combatants.get(fillSet.targetId);
+  if (
+    target == null ||
+    !spellTargetIsLegal(
+      castingState,
+      subject.actorId,
+      target.combatantId,
+      invocation,
+      fillSet.targetSpatialFacts,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell target must be a combatant within the selected spell's supported range.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    castingState,
+    {
+      trigger: "spellCast",
+      casterId: subject.actorId,
+      spellId: invocation.spell.id,
+      continuation: {
+        kind: "replay",
+        subject: input.subject,
+        fills: input.fills,
+      },
+    },
+    input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  if (fillSet.healingRoll == null) {
+    return needsHolesResult(castingState, input.subject, [
+      spellHealingRollHole(invocation),
+    ]);
+  }
+  const healingValidation = validateSpellHealingFill(
+    fillSet.healingRoll,
+    invocation,
+  );
+  if (healingValidation !== null) {
+    return invalidResult(input.state, "invalidFill", healingValidation);
+  }
+  const healed = {
+    ...castingState,
+    combatants: new Map(castingState.combatants).set(
+      target.combatantId,
+      applyHpHealing(
+        target,
+        spellHealingAmount(invocation, fillSet.healingRoll),
+      ),
+    ),
+  };
+  const spent = spendActivationResource(healed.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action spell is no longer available for the current actor.",
+    );
+  }
+  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  if (Either.isLeft(slotTurnResources)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const slotted = expendSpellSlot(
+    healed,
+    subject.actorId,
+    invocation.slotLevel,
+  );
+  const nextState = {
+    ...slotted,
+    currentTurnResources: slotTurnResources.right,
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function resolveReadySpellAct(
   input: ActionSpellBattleResolutionInput,
   invocation: SupportedSpellAct,
@@ -10037,6 +10643,13 @@ function resolveReadySpellAct(
       input.state,
       "unsupportedActOption",
       "Persistent spell effects cannot be readied by this runtime lane.",
+    );
+  }
+  if (invocation.kind === "preparedHealingSpell") {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Bonus Action healing spells cannot be readied by this runtime lane.",
     );
   }
   if (input.fills.length > 0) {
@@ -10116,7 +10729,21 @@ function resolveReadySpellAct(
           invocation.slotLevel,
         )
       : withConcentration;
-  const nextState = { ...slotted, currentTurnResources: spent.right };
+  const nextTurnResources =
+    invocation.kind === "preparedSlotSpell"
+      ? markSpellSlotExpendedThisTurn(spent.right)
+      : Either.right(spent.right);
+  if (Either.isLeft(nextTurnResources)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const nextState = {
+    ...slotted,
+    currentTurnResources: nextTurnResources.right,
+  };
   return {
     tag: "resolved",
     state: nextState,
@@ -10359,6 +10986,9 @@ type SpellFillSet =
       readonly damageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
+      readonly healingRoll:
+        | Extract<BattleFill, { readonly kind: "rolledDice" }>
+        | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -10384,6 +11014,9 @@ function spellFillSet(
     { readonly kind: "concentrationSavingThrow" }
   >[] = [];
   let damageRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  let healingRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   for (const fill of fills) {
@@ -10459,6 +11092,13 @@ function spellFillSet(
     }
 
     if (fill.kind === "rolledDice") {
+      if (invocation.kind === "preparedHealingSpell") {
+        if (healingRoll !== undefined) {
+          return { tag: "invalid", message: "Spell healing was filled twice." };
+        }
+        healingRoll = fill;
+        continue;
+      }
       if (damageRoll !== undefined) {
         return { tag: "invalid", message: "Spell damage was filled twice." };
       }
@@ -10496,6 +11136,7 @@ function spellFillSet(
     savingThrowOutcomes,
     concentrationSavingThrows,
     damageRoll,
+    healingRoll,
   };
 }
 
@@ -10711,12 +11352,23 @@ function resolvePreparedSlotSpellAct(input: {
       "Magic action is no longer available for the current actor.",
     );
   }
+  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  if (Either.isLeft(slotTurnResources)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
   const slotted = expendSpellSlot(
     damaged,
     input.actorId,
     input.invocation.slotLevel,
   );
-  const nextState = { ...slotted, currentTurnResources: spent.right };
+  const nextState = {
+    ...slotted,
+    currentTurnResources: slotTurnResources.right,
+  };
   if (input.opensAfterDamageReactionWindow !== false) {
     const damageRoll = input.fillSet.damageRoll;
     const afterDamageEvents =
@@ -11814,6 +12466,13 @@ function supportedSpellActs(
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
     ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedHealingSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+        spellcasting.spellcastingAbilityModifier,
+      ),
+    ),
     ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripSpellAttackProfile(
         spell,
@@ -11825,6 +12484,54 @@ function supportedSpellActs(
       supportedCantripSaveGateDamageProfile(spell),
     ),
   ];
+}
+
+function supportedPreparedHealingSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+): readonly SupportedSpellAct[] {
+  if (spell.mechanics.family !== "activation") {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+  if (
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.effects?.length !== 1 ||
+    effect?.kind !== "heal_hp"
+  ) {
+    return [];
+  }
+  const rangeFeet = movementFeet(spell.mechanics.range.feet);
+  return spellSlots.flatMap((slot): readonly SupportedSpellAct[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const healingExpr = supportedHealingAmountExpr(
+      effect.amount,
+      spell.mechanics.level,
+      slot.spellLevel,
+      spellcastingAbilityModifier,
+    );
+    return healingExpr === null
+      ? []
+      : [
+          {
+            kind: "preparedHealingSpell",
+            spell,
+            slotLevel: slot.spellLevel,
+            healing: { expr: healingExpr },
+            rangeFeet,
+          },
+        ];
+  });
 }
 
 function supportedPreparedSlotSpellProfile(
@@ -12099,6 +12806,34 @@ function supportedDamageAmountExpr(amount: {
   return null;
 }
 
+function supportedHealingAmountExpr(
+  amount: {
+    readonly kind: string;
+    readonly base?: DiceExpr;
+    readonly perLevel?: Partial<DiceExpr>;
+    readonly startingAtLevel?: number;
+  },
+  spellLevel: number,
+  slotLevel: SpellSlotLevel,
+  spellcastingAbilityModifier: AbilityModifier,
+): DiceExpr | null {
+  if (
+    amount.kind !== "linear_per_level" ||
+    amount.base === undefined ||
+    amount.startingAtLevel !== spellLevel ||
+    amount.base.spellcastingMod !== true ||
+    amount.base.dieSize === undefined
+  ) {
+    return null;
+  }
+  const slotDelta = Math.max(0, Number(slotLevel) - amount.startingAtLevel);
+  return {
+    dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
+    dieSize: amount.base.dieSize,
+    flat: Number(spellcastingAbilityModifier),
+  };
+}
+
 function spellHasAvailableSpend(
   actor: BattleCreatureState,
   invocation: SupportedSpellAct,
@@ -12118,6 +12853,32 @@ function spellHasAvailableSpend(
         slot.spellLevel === invocation.slotLevel && slot.expended < slot.count,
     ) === true
   );
+}
+
+function spellActTurnResourceAvailable(
+  resources: BattleTurnResources,
+  invocation: SupportedSpellAct,
+): boolean {
+  if (
+    invocation.kind === "cantripSpellAttack" ||
+    invocation.kind === "cantripSaveGateDamage"
+  ) {
+    return canSpendAction(resources, "magic");
+  }
+  if (resources.spellSlotExpendedThisTurn) {
+    return false;
+  }
+  return invocation.kind === "preparedHealingSpell"
+    ? resources.currentHasBonusAction
+    : canSpendAction(resources, "magic");
+}
+
+function markSpellSlotExpendedThisTurn(
+  resources: BattleTurnResources,
+): Either.Either<BattleTurnResources, "spell slot already expended this turn"> {
+  return resources.spellSlotExpendedThisTurn
+    ? Either.left("spell slot already expended this turn" as const)
+    : Either.right({ ...resources, spellSlotExpendedThisTurn: true });
 }
 
 function spellTargetHole(
@@ -12278,6 +13039,11 @@ function supportedSpellActId(invocation: SupportedSpellAct): string {
       (persistent) =>
         `${persistent.kind}:${persistent.spell.id}:slot:${persistent.slotLevel}`,
     ),
+    Match.when(
+      { kind: "preparedHealingSpell" },
+      (healing) =>
+        `${healing.kind}:${healing.spell.id}:slot:${healing.slotLevel}`,
+    ),
     Match.exhaustive,
   );
 }
@@ -12314,6 +13080,26 @@ function spellDamageHole(
     label: `${invocation.spell.name} damage (${expr})`,
     spell: invocation,
     critical,
+  };
+}
+
+function spellHealingRollHole(
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >,
+): BattleSpellHealingRollHole {
+  const expr = spellHealingExpression(invocation);
+  return {
+    kind: "rolledDice",
+    holeId: holeId(
+      `battle:spell:healing-result:${invocation.spell.id}:${expr}`,
+    ),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:healing-result:${invocation.spell.id}:${expr}`,
+    ),
+    label: `${invocation.spell.name} healing (${expr})`,
+    spell: invocation,
   };
 }
 
@@ -12377,6 +13163,23 @@ function validateSpellDamageFill(
         : invocation.damage.expr.dice *
           (invocation.kind === "cantripSpellAttack" && critical ? 2 : 1),
     dieSize: invocation.damage.expr.dieSize,
+  });
+  return validation?.reason ?? null;
+}
+
+function validateSpellHealingFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >,
+): string | null {
+  if (fill.holeId !== spellHealingRollHole(invocation).holeId) {
+    return "Spell healing must use the selected Bonus Action spell act healing hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, {
+    dice: invocation.healing.expr.dice,
+    dieSize: invocation.healing.expr.dieSize,
   });
   return validation?.reason ?? null;
 }
@@ -12700,6 +13503,34 @@ function spellDamageExpression(
       ? invocation.targeting.repeatedEffectCount
       : 1);
   return `${dice}d${invocation.damage.expr.dieSize}${signedModifier(flat)}-${invocation.damage.damageType}`;
+}
+
+function spellHealingExpression(
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >,
+): string {
+  return `${invocation.healing.expr.dice}d${invocation.healing.expr.dieSize}${signedModifier(invocation.healing.expr.flat ?? 0)}`;
+}
+
+function spellHealingAmount(
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >,
+  healingRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): number {
+  const diceTotal = healingRoll.value.reduce(
+    (total, group) =>
+      total +
+      group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      ),
+    0,
+  );
+  return diceTotal + (invocation.healing.expr.flat ?? 0);
 }
 
 function needsHolesResult(
