@@ -38,13 +38,23 @@ export type BattleCombatantDistanceMap = ReadonlyMap<
   ReadonlyMap<CombatantId, MovementFeet>
 >;
 
+const AcceptedBattleCombatantDistances = Symbol(
+  "AcceptedBattleCombatantDistances",
+);
+
+export type AcceptedBattleCombatantDistances = {
+  readonly combatantIds: readonly CombatantId[];
+  readonly distances: BattleCombatantDistanceMap;
+  readonly [AcceptedBattleCombatantDistances]: true;
+};
+
 const DEFAULT_INITIAL_COMBATANT_DISTANCE_FEET = movementFeet(5);
 
 export function battleCombatantDistances(input: {
   readonly combatantIds: readonly CombatantId[];
   readonly combatantDistances?: readonly BattleCombatantDistance[];
 }): Either.Either<
-  Map<CombatantId, Map<CombatantId, MovementFeet>>,
+  AcceptedBattleCombatantDistances,
   BattleCombatantDistanceValidationIssue
 > {
   const distances = new Map<CombatantId, Map<CombatantId, MovementFeet>>();
@@ -81,7 +91,13 @@ export function battleCombatantDistances(input: {
     );
   }
 
-  return Either.right(distances);
+  // The private symbol makes this accepted value unconstructable outside this
+  // module; this parser has checked every combatant pair for these ids.
+  return Either.right({
+    combatantIds: input.combatantIds,
+    distances,
+    [AcceptedBattleCombatantDistances]: true,
+  });
 }
 
 export function combatantDistancesAsPairs(

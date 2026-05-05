@@ -33,9 +33,11 @@ export {
 } from "./character-battle-resources.ts";
 export {
   battleCombatantDistanceValidationMessage,
+  battleCombatantDistances,
   combatantDistanceFeet,
   combatantDistancesAsPairs,
   validateBattleCombatantDistances,
+  type AcceptedBattleCombatantDistances,
   type BattleCombatantDistance,
   type BattleCombatantDistanceMap,
   type BattleCombatantDistanceValidationIssue,

@@ -68,7 +68,28 @@ export type CreationHoleIndex = {
   >;
 };
 
+type AcceptedCreationFillEntry = {
+  readonly fillIndex: FillIndex;
+  readonly acceptedFill: AcceptedCreationFill;
+};
+
+type CreationFillAcceptance = {
+  readonly issues: readonly CreationBatchFillIssue[];
+  readonly acceptedFills: readonly AcceptedCreationFillEntry[];
+};
+
 type DraftSourcedCreationHole = CreationHole & {
+  readonly source: DraftCreationHoleSource;
+};
+
+type DraftSourcedChoiceCreationHole = ChoiceCreationHole & {
+  readonly source: DraftCreationHoleSource;
+};
+
+type DraftSourcedAbilityScoreCreationHole = Extract<
+  CreationHole,
+  { readonly kind: "abilityScores" }
+> & {
   readonly source: DraftCreationHoleSource;
 };
 
@@ -76,7 +97,15 @@ type UnitSourcedCreationHole = CreationHole & {
   readonly source: UnitChoiceSource;
 };
 
+type UnitSourcedChoiceCreationHole = ChoiceCreationHole & {
+  readonly source: UnitChoiceSource;
+};
+
 type LoadoutSourcedCreationHole = CreationHole & {
+  readonly source: LoadoutSource;
+};
+
+type LoadoutSourcedChoiceCreationHole = ChoiceCreationHole & {
   readonly source: LoadoutSource;
 };
 
@@ -87,9 +116,9 @@ export function fillCreationHoles(
 ): CreationBatchFillResult {
   const holes = discoverCreationHoles(input);
   const holeIndex = indexCreationHoles(holes);
-  const issues = creationFillIssues(input, holeIndex);
+  const fillAcceptance = acceptedCreationFills(input, holeIndex);
   const finalization = finalizeCharacterDraft(input);
-  const rejectedIssues = nonEmptyReadonlyArray(issues);
+  const rejectedIssues = nonEmptyReadonlyArray(fillAcceptance.issues);
 
   if (rejectedIssues != null) {
     return {
@@ -101,7 +130,10 @@ export function fillCreationHoles(
     };
   }
 
-  const nextDraft = applyCreationFills(input.draft, holeIndex, input.fills);
+  const nextDraft = applyCreationFills(
+    input.draft,
+    fillAcceptance.acceptedFills,
+  );
   if (Either.isLeft(nextDraft)) {
     return {
       tag: "rejected",
@@ -125,31 +157,45 @@ export function creationFillIssues(
   input: CreationBatchFillInput,
   holeIndex: CreationHoleIndex,
 ): readonly CreationBatchFillIssue[] {
+  return acceptedCreationFills(input, holeIndex).issues;
+}
+
+function acceptedCreationFills(
+  input: CreationBatchFillInput,
+  holeIndex: CreationHoleIndex,
+): CreationFillAcceptance {
   const batchIssues =
     input.expectedRevision === input.draft.revision
       ? []
       : [staleRevisionIssue(input)];
 
-  return [
-    ...batchIssues,
-    ...input.fills.flatMap((fill, fillIndexValue) => {
-      const fillIndex = creationFillIndex(fillIndexValue);
-      const matchingHole = holeIndex.holesById.get(fill.holeId);
-      const isDuplicate = input.fills
-        .slice(0, fillIndexValue)
-        .some((priorFill) => priorFill.holeId === fill.holeId);
+  const acceptedFills: AcceptedCreationFillEntry[] = [];
+  const fillIssues = input.fills.flatMap((fill, fillIndexValue) => {
+    const fillIndex = creationFillIndex(fillIndexValue);
+    const matchingHole = holeIndex.holesById.get(fill.holeId);
+    const isDuplicate = input.fills
+      .slice(0, fillIndexValue)
+      .some((priorFill) => priorFill.holeId === fill.holeId);
 
-      if (isDuplicate) {
-        return [duplicateFillIssue(fill, fillIndex)];
-      }
+    if (isDuplicate) {
+      return [duplicateFillIssue(fill, fillIndex)];
+    }
 
-      if (matchingHole == null) {
-        return [unknownHoleIssue(fill, fillIndex)];
-      }
+    if (matchingHole == null) {
+      return [unknownHoleIssue(fill, fillIndex)];
+    }
 
-      return fillIssuesForHole(fill, fillIndex, matchingHole, holeIndex);
-    }),
-  ];
+    const issues = fillIssuesForHole(fill, fillIndex, matchingHole, holeIndex);
+    const rejectedIssues = nonEmptyReadonlyArray(issues);
+    if (rejectedIssues != null) return rejectedIssues;
+
+    const acceptedFill = acceptedCreationFill(matchingHole, fill, fillIndex);
+    if (Either.isLeft(acceptedFill)) return [acceptedFill.left];
+    acceptedFills.push({ fillIndex, acceptedFill: acceptedFill.right });
+    return [];
+  });
+
+  return { issues: [...batchIssues, ...fillIssues], acceptedFills };
 }
 
 export function fillIssuesForHole(
@@ -228,6 +274,84 @@ export function choiceFillIssues(
 }
 
 type ChoiceFill = Extract<CreationFill, { readonly kind: "choice" }>;
+type AbilityScoreFill = Extract<
+  CreationFill,
+  { readonly kind: "abilityScores" }
+>;
+
+type SingleChoiceFill = ChoiceFill & {
+  readonly optionIds: readonly [CreationChoiceOptionId];
+};
+
+type AcceptedDraftFill =
+  | {
+      readonly tag: "initialProgression";
+      readonly hole: DraftSourcedChoiceCreationHole;
+      readonly fill: SingleChoiceFill;
+      readonly progression: NonNullable<
+        CharacterDraftSelections["progression"]
+      >;
+    }
+  | {
+      readonly tag: "background";
+      readonly hole: DraftSourcedChoiceCreationHole;
+      readonly fill: SingleChoiceFill;
+      readonly background: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "species";
+      readonly hole: DraftSourcedChoiceCreationHole;
+      readonly fill: SingleChoiceFill;
+      readonly species: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "abilityScoreGeneration";
+      readonly hole: DraftSourcedAbilityScoreCreationHole;
+      readonly fill: AbilityScoreFill;
+    }
+  | {
+      readonly tag: "languages";
+      readonly hole: DraftSourcedChoiceCreationHole;
+      readonly fill: ChoiceFill;
+      readonly languages: CharacterStartingLanguages;
+    }
+  | {
+      readonly tag: "alignment";
+      readonly hole: DraftSourcedChoiceCreationHole;
+      readonly fill: SingleChoiceFill;
+      readonly alignment: CharacterAlignment;
+    };
+
+type AcceptedUnitFill =
+  | {
+      readonly tag: "backgroundAbilityScoreIncrease";
+      readonly hole: UnitSourcedChoiceCreationHole;
+      readonly fill: SingleChoiceFill;
+      readonly selection: BackgroundAbilityScoreIncreaseSelection;
+    }
+  | {
+      readonly tag: "equipmentPurchase";
+      readonly hole: UnitSourcedChoiceCreationHole;
+      readonly fill: ChoiceFill;
+      readonly unitIds: readonly UnitRecord["id"][];
+    }
+  | {
+      readonly tag: "unitChoice";
+      readonly hole: UnitSourcedChoiceCreationHole;
+      readonly fill: ChoiceFill;
+      readonly options: readonly ReturnType<typeof selectedChoiceOption>[];
+    };
+
+type AcceptedLoadoutFill = {
+  readonly hole: LoadoutSourcedChoiceCreationHole;
+  readonly fill: SingleChoiceFill;
+  readonly selectedOption: LoadoutSelectedChoiceOption;
+};
+
+type AcceptedCreationFill =
+  | { readonly tag: "draft"; readonly acceptedFill: AcceptedDraftFill }
+  | { readonly tag: "unitChoice"; readonly acceptedFill: AcceptedUnitFill }
+  | { readonly tag: "loadout"; readonly acceptedFill: AcceptedLoadoutFill };
 
 export function abilityScoreFillIssues(
   fill: Extract<CreationFill, { readonly kind: "abilityScores" }>,
@@ -242,22 +366,17 @@ export function abilityScoreFillIssues(
 
 export function applyCreationFills(
   draft: CharacterDraft,
-  holeIndex: CreationHoleIndex,
-  fills: readonly CreationFill[],
+  acceptedFills: readonly AcceptedCreationFillEntry[],
 ): Either.Either<
   CharacterDraft,
   NonEmptyReadonlyArray<CreationBatchFillIssue>
 > {
   let selections = draft.selections;
-  for (const [fillIndexValue, fill] of fills.entries()) {
-    const fillIndex = creationFillIndex(fillIndexValue);
-    const hole = getHole(holeIndex, fill, fillIndex);
-    if (Either.isLeft(hole)) return Either.left([hole.left]);
+  for (const acceptedFill of acceptedFills) {
     const nextSelections = applyCreationFill(
       selections,
-      hole.right,
-      fill,
-      fillIndex,
+      acceptedFill.acceptedFill,
+      acceptedFill.fillIndex,
     );
     if (Either.isLeft(nextSelections))
       return Either.left([nextSelections.left]);
@@ -316,23 +435,14 @@ export function requireChoiceOptionIndex(
 
 export function applyCreationFill(
   selections: CharacterDraftSelections,
-  hole: CreationHole,
-  fill: CreationFill,
+  acceptedFill: AcceptedCreationFill,
   fillIndex: FillIndex,
 ): ApplyCreationFillResult<CharacterDraftSelections> {
-  if (isDraftSourcedCreationHole(hole)) {
-    return applyDraftFill(selections, hole, fill, fillIndex);
-  }
-
-  if (isUnitSourcedCreationHole(hole)) {
-    return applyUnitFill(selections, hole, fill, fillIndex);
-  }
-
-  if (isLoadoutSourcedCreationHole(hole)) {
-    return applyLoadoutFill(selections, hole, fill, fillIndex);
-  }
-
-  return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+  return acceptedFill.tag === "draft"
+    ? applyDraftFill(selections, acceptedFill.acceptedFill)
+    : acceptedFill.tag === "unitChoice"
+      ? applyUnitFill(selections, acceptedFill.acceptedFill)
+      : applyLoadoutFill(selections, acceptedFill.acceptedFill, fillIndex);
 }
 
 function isDraftSourcedCreationHole(
@@ -353,140 +463,362 @@ function isLoadoutSourcedCreationHole(
   return hole.source.tag === "loadout";
 }
 
-export function applyDraftFill(
-  selections: CharacterDraftSelections,
-  hole: DraftSourcedCreationHole,
+function acceptedCreationFill(
+  hole: CreationHole,
   fill: CreationFill,
   fillIndex: FillIndex,
-): ApplyCreationFillResult<CharacterDraftSelections> {
-  const path = hole.source.path;
-  if (path === "draft.progression.initial" && fill.kind === "choice") {
-    const optionId = oneOptionId(fill, fillIndex);
-    if (Either.isLeft(optionId)) return applyCreationFillIssue(optionId.left);
-    const progression = supportedProgressionForOptionId(optionId.right);
-    if (progression == null) {
-      return Either.left(
-        unsupportedChoiceIssue(fill, fillIndex, optionId.right),
-      );
-    }
-
-    return Either.right({
-      ...selections,
-      progression,
-    });
+): ApplyCreationFillResult<AcceptedCreationFill> {
+  if (isDraftSourcedCreationHole(hole)) {
+    const acceptedFill = acceptedDraftFill(hole, fill, fillIndex);
+    return Either.isLeft(acceptedFill)
+      ? Either.left(acceptedFill.left)
+      : Either.right({ tag: "draft", acceptedFill: acceptedFill.right });
   }
 
-  if (path === "draft.background" && fill.kind === "choice") {
-    const optionId = oneOptionId(fill, fillIndex);
-    if (Either.isLeft(optionId)) return applyCreationFillIssue(optionId.left);
-    const background = selectedUnitId(hole, fill, fillIndex, optionId.right);
-    if (Either.isLeft(background))
-      return applyCreationFillIssue(background.left);
-    return Either.right({
-      ...selections,
-      background: background.right,
-    });
+  if (isUnitSourcedCreationHole(hole)) {
+    const acceptedFill = acceptedUnitFill(hole, fill, fillIndex);
+    return Either.isLeft(acceptedFill)
+      ? Either.left(acceptedFill.left)
+      : Either.right({ tag: "unitChoice", acceptedFill: acceptedFill.right });
   }
 
-  if (path === "draft.species" && fill.kind === "choice") {
-    const optionId = oneOptionId(fill, fillIndex);
-    if (Either.isLeft(optionId)) return applyCreationFillIssue(optionId.left);
-    const species = selectedUnitId(hole, fill, fillIndex, optionId.right);
-    if (Either.isLeft(species)) return applyCreationFillIssue(species.left);
-    return Either.right({
-      ...selections,
-      species: species.right,
-    });
-  }
-
-  if (
-    path === "draft.abilityScoreGeneration" &&
-    fill.kind === "abilityScores"
-  ) {
-    return Either.right({
-      ...selections,
-      abilityScoreGeneration: {
-        method: fill.method,
-        assignedScores: fill.value,
-      },
-    });
-  }
-
-  if (path === "draft.languages" && fill.kind === "choice") {
-    const languages = startingLanguages(fill, fillIndex);
-    if (Either.isLeft(languages)) return applyCreationFillIssue(languages.left);
-    return Either.right({
-      ...selections,
-      languages: languages.right,
-    });
-  }
-
-  if (path === "draft.alignment" && fill.kind === "choice") {
-    const optionId = oneOptionId(fill, fillIndex);
-    if (Either.isLeft(optionId)) return applyCreationFillIssue(optionId.left);
-    const alignment = alignmentSelection(fill, fillIndex, optionId.right);
-    if (Either.isLeft(alignment)) return applyCreationFillIssue(alignment.left);
-    return Either.right({
-      ...selections,
-      alignment: alignment.right,
-    });
+  if (isLoadoutSourcedCreationHole(hole)) {
+    const acceptedFill = acceptedLoadoutFill(hole, fill, fillIndex);
+    return Either.isLeft(acceptedFill)
+      ? Either.left(acceptedFill.left)
+      : Either.right({ tag: "loadout", acceptedFill: acceptedFill.right });
   }
 
   return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
 }
 
-export function applyUnitFill(
-  selections: CharacterDraftSelections,
+function acceptedDraftFill(
+  hole: DraftSourcedCreationHole,
+  fill: CreationFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<AcceptedDraftFill> {
+  const path = hole.source.path;
+  if (path === "draft.abilityScoreGeneration") {
+    if (hole.kind !== "abilityScores" || fill.kind !== "abilityScores") {
+      return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+    }
+
+    return Either.right({
+      tag: "abilityScoreGeneration",
+      hole,
+      fill,
+    });
+  }
+
+  const choiceFill = acceptedDraftChoiceFillForHole(hole, fill, fillIndex);
+  if (Either.isLeft(choiceFill)) return applyCreationFillIssue(choiceFill.left);
+
+  if (path === "draft.progression.initial") {
+    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    if (Either.isLeft(singleFill))
+      return applyCreationFillIssue(singleFill.left);
+    const optionId = singleFill.right.optionIds[0];
+    const progression = supportedProgressionForOptionId(optionId);
+    return progression == null
+      ? Either.left(unsupportedChoiceIssue(fill, fillIndex, optionId))
+      : Either.right({
+          tag: "initialProgression",
+          hole: choiceFill.right.hole,
+          fill: singleFill.right,
+          progression,
+        });
+  }
+
+  if (path === "draft.background") {
+    const unitId = selectedSingleUnitId(
+      choiceFill.right.hole,
+      choiceFill.right.fill,
+      fillIndex,
+    );
+    return Either.isLeft(unitId)
+      ? applyCreationFillIssue(unitId.left)
+      : Either.right({
+          tag: "background",
+          hole: choiceFill.right.hole,
+          fill: unitId.right.fill,
+          background: unitId.right.unitId,
+        });
+  }
+
+  if (path === "draft.species") {
+    const unitId = selectedSingleUnitId(
+      choiceFill.right.hole,
+      choiceFill.right.fill,
+      fillIndex,
+    );
+    return Either.isLeft(unitId)
+      ? applyCreationFillIssue(unitId.left)
+      : Either.right({
+          tag: "species",
+          hole: choiceFill.right.hole,
+          fill: unitId.right.fill,
+          species: unitId.right.unitId,
+        });
+  }
+
+  if (path === "draft.languages") {
+    const languages = startingLanguages(choiceFill.right.fill, fillIndex);
+    return Either.isLeft(languages)
+      ? applyCreationFillIssue(languages.left)
+      : Either.right({
+          tag: "languages",
+          hole: choiceFill.right.hole,
+          fill: choiceFill.right.fill,
+          languages: languages.right,
+        });
+  }
+
+  if (path === "draft.alignment") {
+    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    if (Either.isLeft(singleFill))
+      return applyCreationFillIssue(singleFill.left);
+    const alignment = alignmentSelection(
+      singleFill.right,
+      fillIndex,
+      singleFill.right.optionIds[0],
+    );
+    return Either.isLeft(alignment)
+      ? applyCreationFillIssue(alignment.left)
+      : Either.right({
+          tag: "alignment",
+          hole: choiceFill.right.hole,
+          fill: singleFill.right,
+          alignment: alignment.right,
+        });
+  }
+
+  return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+}
+
+function acceptedUnitFill(
   hole: UnitSourcedCreationHole,
   fill: CreationFill,
   fillIndex: FillIndex,
-): ApplyCreationFillResult<CharacterDraftSelections> {
-  const source = hole.source;
-  if (
-    source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY &&
-    fill.kind === "choice"
-  ) {
-    const optionId = oneOptionId(fill, fillIndex);
-    if (Either.isLeft(optionId)) return applyCreationFillIssue(optionId.left);
+): ApplyCreationFillResult<AcceptedUnitFill> {
+  const choiceFill = acceptedUnitChoiceFillForHole(hole, fill, fillIndex);
+  if (Either.isLeft(choiceFill)) return applyCreationFillIssue(choiceFill.left);
+
+  if (hole.source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY) {
+    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    if (Either.isLeft(singleFill))
+      return applyCreationFillIssue(singleFill.left);
     const selection = backgroundAbilityScoreIncreaseSelection(
-      fill,
+      singleFill.right,
       fillIndex,
-      optionId.right,
+      singleFill.right.optionIds[0],
     );
-    if (Either.isLeft(selection)) return applyCreationFillIssue(selection.left);
-    return Either.right({
-      ...selections,
-      backgroundAbilityScoreIncrease: selection.right,
-    });
+    return Either.isLeft(selection)
+      ? applyCreationFillIssue(selection.left)
+      : Either.right({
+          tag: "backgroundAbilityScoreIncrease",
+          hole: choiceFill.right.hole,
+          fill: singleFill.right,
+          selection: selection.right,
+        });
   }
 
-  if (
-    source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY &&
-    fill.kind === "choice"
-  ) {
-    const unitIds = selectedUnitIds(hole, fill, fillIndex, fill.optionIds);
-    if (Either.isLeft(unitIds)) return applyCreationFillIssue(unitIds.left);
-    return Either.right({
-      ...selections,
-      equipment: {
-        selectedUnitIds: unitIds.right,
-      },
-    });
+  if (hole.source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY) {
+    const unitIds = selectedUnitIds(
+      choiceFill.right.hole,
+      choiceFill.right.fill,
+      fillIndex,
+      choiceFill.right.fill.optionIds,
+    );
+    return Either.isLeft(unitIds)
+      ? applyCreationFillIssue(unitIds.left)
+      : Either.right({
+          tag: "equipmentPurchase",
+          hole: choiceFill.right.hole,
+          fill: choiceFill.right.fill,
+          unitIds: unitIds.right,
+        });
   }
 
-  if (fill.kind !== "choice") {
-    return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
-  }
-
-  if (fill.optionIds.length === 0) {
+  if (choiceFill.right.fill.optionIds.length === 0) {
     return Either.left(tooFewChoicesIssue(fill, fillIndex, 1));
   }
 
   const options = [];
-  for (const optionId of fill.optionIds) {
-    const option = acceptedChoiceOption(hole, fill, fillIndex, optionId);
+  for (const optionId of choiceFill.right.fill.optionIds) {
+    const option = acceptedChoiceOption(
+      choiceFill.right.hole,
+      choiceFill.right.fill,
+      fillIndex,
+      optionId,
+    );
     if (Either.isLeft(option)) return applyCreationFillIssue(option.left);
     options.push(selectedChoiceOption(option.right));
+  }
+
+  return Either.right({
+    tag: "unitChoice",
+    hole: choiceFill.right.hole,
+    fill: choiceFill.right.fill,
+    options,
+  });
+}
+
+function acceptedLoadoutFill(
+  hole: LoadoutSourcedCreationHole,
+  fill: CreationFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<AcceptedLoadoutFill> {
+  const choiceFill = acceptedLoadoutChoiceFillForHole(hole, fill, fillIndex);
+  if (Either.isLeft(choiceFill)) return applyCreationFillIssue(choiceFill.left);
+  const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+  if (Either.isLeft(singleFill)) return applyCreationFillIssue(singleFill.left);
+  const option = acceptedChoiceOption(
+    choiceFill.right.hole,
+    singleFill.right,
+    fillIndex,
+    singleFill.right.optionIds[0],
+  );
+  if (Either.isLeft(option)) return applyCreationFillIssue(option.left);
+  const selectedOption = selectedLoadoutChoiceOption(
+    choiceFill.right.hole.source,
+    option.right,
+    singleFill.right,
+    fillIndex,
+  );
+  return Either.isLeft(selectedOption)
+    ? applyCreationFillIssue(selectedOption.left)
+    : Either.right({
+        hole: choiceFill.right.hole,
+        fill: singleFill.right,
+        selectedOption: selectedOption.right,
+      });
+}
+
+function acceptedDraftChoiceFillForHole(
+  hole: DraftSourcedCreationHole,
+  fill: CreationFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<{
+  readonly hole: DraftSourcedChoiceCreationHole;
+  readonly fill: ChoiceFill;
+}> {
+  return hole.kind === "choice" && fill.kind === "choice"
+    ? Either.right({ hole, fill })
+    : Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+}
+
+function acceptedUnitChoiceFillForHole(
+  hole: UnitSourcedCreationHole,
+  fill: CreationFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<{
+  readonly hole: UnitSourcedChoiceCreationHole;
+  readonly fill: ChoiceFill;
+}> {
+  return hole.kind === "choice" && fill.kind === "choice"
+    ? Either.right({ hole, fill })
+    : Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+}
+
+function acceptedLoadoutChoiceFillForHole(
+  hole: LoadoutSourcedCreationHole,
+  fill: CreationFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<{
+  readonly hole: LoadoutSourcedChoiceCreationHole;
+  readonly fill: ChoiceFill;
+}> {
+  return hole.kind === "choice" && fill.kind === "choice"
+    ? Either.right({ hole, fill })
+    : Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+}
+
+function singleChoiceFill(
+  fill: ChoiceFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<SingleChoiceFill> {
+  const optionId = fill.optionIds[0];
+  if (optionId == null) {
+    return Either.left(tooFewChoicesIssue(fill, fillIndex, 1));
+  }
+  if (fill.optionIds.length > 1) {
+    return Either.left(tooManyChoicesIssue(fill, fillIndex, 1));
+  }
+
+  return Either.right({ ...fill, optionIds: [optionId] });
+}
+
+export function applyDraftFill(
+  selections: CharacterDraftSelections,
+  acceptedFill: AcceptedDraftFill,
+): ApplyCreationFillResult<CharacterDraftSelections> {
+  if (acceptedFill.tag === "initialProgression") {
+    return Either.right({
+      ...selections,
+      progression: acceptedFill.progression,
+    });
+  }
+
+  if (acceptedFill.tag === "background") {
+    return Either.right({
+      ...selections,
+      background: acceptedFill.background,
+    });
+  }
+
+  if (acceptedFill.tag === "species") {
+    return Either.right({
+      ...selections,
+      species: acceptedFill.species,
+    });
+  }
+
+  if (acceptedFill.tag === "abilityScoreGeneration") {
+    return Either.right({
+      ...selections,
+      abilityScoreGeneration: {
+        method: acceptedFill.fill.method,
+        assignedScores: acceptedFill.fill.value,
+      },
+    });
+  }
+
+  if (acceptedFill.tag === "languages") {
+    return Either.right({
+      ...selections,
+      languages: acceptedFill.languages,
+    });
+  }
+
+  if (acceptedFill.tag === "alignment") {
+    return Either.right({
+      ...selections,
+      alignment: acceptedFill.alignment,
+    });
+  }
+
+  const exhaustive: never = acceptedFill;
+  return exhaustive;
+}
+
+export function applyUnitFill(
+  selections: CharacterDraftSelections,
+  acceptedFill: AcceptedUnitFill,
+): ApplyCreationFillResult<CharacterDraftSelections> {
+  if (acceptedFill.tag === "backgroundAbilityScoreIncrease") {
+    return Either.right({
+      ...selections,
+      backgroundAbilityScoreIncrease: acceptedFill.selection,
+    });
+  }
+
+  if (acceptedFill.tag === "equipmentPurchase") {
+    return Either.right({
+      ...selections,
+      equipment: {
+        selectedUnitIds: acceptedFill.unitIds,
+      },
+    });
   }
 
   return Either.right({
@@ -495,8 +827,8 @@ export function applyUnitFill(
       ...selections.choices,
       {
         kind: "unitChoice",
-        source,
-        options,
+        source: acceptedFill.hole.source,
+        options: acceptedFill.options,
       },
     ],
   });
@@ -504,45 +836,17 @@ export function applyUnitFill(
 
 export function applyLoadoutFill(
   selections: CharacterDraftSelections,
-  hole: LoadoutSourcedCreationHole,
-  fill: CreationFill,
+  acceptedFill: AcceptedLoadoutFill,
   fillIndex: FillIndex,
 ): ApplyCreationFillResult<CharacterDraftSelections> {
-  if (fill.kind !== "choice") {
-    return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
-  }
-
   if (
     selections.choices.some(
       (selection) =>
         selection.kind === "loadout" &&
-        selection.source.slot === hole.source.slot,
+        selection.source.slot === acceptedFill.hole.source.slot,
     )
   ) {
-    return Either.left(duplicateFillIssue(fill, fillIndex));
-  }
-
-  if (fill.optionIds.length < 1) {
-    return Either.left(tooFewChoicesIssue(fill, fillIndex, 1));
-  }
-  if (fill.optionIds.length > 1) {
-    return Either.left(tooManyChoicesIssue(fill, fillIndex, 1));
-  }
-
-  const optionId = fill.optionIds[0];
-  if (optionId == null) {
-    return Either.left(tooFewChoicesIssue(fill, fillIndex, 1));
-  }
-  const option = acceptedChoiceOption(hole, fill, fillIndex, optionId);
-  if (Either.isLeft(option)) return applyCreationFillIssue(option.left);
-  const selectedOption = selectedLoadoutChoiceOption(
-    hole.source,
-    option.right,
-    fill,
-    fillIndex,
-  );
-  if (Either.isLeft(selectedOption)) {
-    return applyCreationFillIssue(selectedOption.left);
+    return Either.left(duplicateFillIssue(acceptedFill.fill, fillIndex));
   }
 
   return Either.right({
@@ -551,8 +855,8 @@ export function applyLoadoutFill(
       ...selections.choices,
       {
         kind: "loadout",
-        source: hole.source,
-        options: [selectedOption.right],
+        source: acceptedFill.hole.source,
+        options: [acceptedFill.selectedOption],
       },
     ],
   });
@@ -571,18 +875,8 @@ function selectedLoadoutChoiceOption(
       });
 }
 
-function oneOptionId(
-  fill: ChoiceFill,
-  fillIndex: FillIndex,
-): ApplyCreationFillResult<CreationChoiceOptionId> {
-  const optionId = fill.optionIds[0];
-  return optionId == null || fill.optionIds.length !== 1
-    ? Either.left(tooFewChoicesIssue(fill, fillIndex, 1))
-    : Either.right(optionId);
-}
-
 function selectedUnitIds(
-  hole: CreationHole,
+  hole: ChoiceCreationHole,
   fill: ChoiceFill,
   fillIndex: FillIndex,
   optionIds: readonly CreationChoiceOptionId[],
@@ -596,8 +890,29 @@ function selectedUnitIds(
   return Either.right(unitIds);
 }
 
+function selectedSingleUnitId(
+  hole: ChoiceCreationHole,
+  fill: ChoiceFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<{
+  readonly fill: SingleChoiceFill;
+  readonly unitId: UnitRecord["id"];
+}> {
+  const singleFill = singleChoiceFill(fill, fillIndex);
+  if (Either.isLeft(singleFill)) return applyCreationFillIssue(singleFill.left);
+  const unitId = selectedUnitId(
+    hole,
+    singleFill.right,
+    fillIndex,
+    singleFill.right.optionIds[0],
+  );
+  return Either.isLeft(unitId)
+    ? applyCreationFillIssue(unitId.left)
+    : Either.right({ fill: singleFill.right, unitId: unitId.right });
+}
+
 function selectedUnitId(
-  hole: CreationHole,
+  hole: ChoiceCreationHole,
   fill: ChoiceFill,
   fillIndex: FillIndex,
   optionId: CreationChoiceOptionId,
@@ -610,14 +925,11 @@ function selectedUnitId(
 }
 
 function acceptedChoiceOption(
-  hole: CreationHole,
+  hole: ChoiceCreationHole,
   fill: ChoiceFill,
   fillIndex: FillIndex,
   optionId: CreationChoiceOptionId,
 ): ApplyCreationFillResult<CreationChoiceOption> {
-  if (!("options" in hole)) {
-    return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
-  }
   const option = hole.options.find(
     (candidate) => candidate.optionId === optionId,
   );

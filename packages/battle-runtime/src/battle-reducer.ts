@@ -144,8 +144,10 @@ import {
   combatantDistancesAsPairs,
   setBattleCombatantDistance,
   validateBattleCombatantDistances,
+  type AcceptedBattleCombatantDistances,
   type BattleCombatantDistance,
   type BattleCombatantDistanceMap,
+  type BattleCombatantDistanceValidationIssue,
 } from "./distances.ts";
 import {
   BATTLE_REACTION_TRIGGERS,
@@ -1844,12 +1846,59 @@ const REACTION_MODIFIER_ROLL_HOLE_INSTANCE = holeInstanceKey(
 );
 const HIDE_DC = difficultyClass(15);
 
-export function startBattle(input: {
-  readonly battleId: BattleId;
+type StartBattleDistanceInput =
+  | {
+      readonly tag?: "rawDistances";
+      readonly combatantDistances?: readonly BattleCombatantDistance[];
+      readonly combatantDistanceMap?: never;
+    }
+  | {
+      readonly tag: "acceptedDistances";
+      readonly combatantDistances: AcceptedBattleCombatantDistances;
+      readonly combatantDistanceMap?: never;
+    };
+
+function acceptedDistancesMatchCombatants(input: {
   readonly combatants: readonly BattleCreatureInit[];
-  readonly combatantDistances?: readonly BattleCombatantDistance[];
-  readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
-}): Either.Either<BattleState, BattleStateInitIssue> {
+  readonly combatantDistances: AcceptedBattleCombatantDistances;
+}): boolean {
+  const combatantIds = input.combatants.map(
+    (combatant) => combatant.combatantId,
+  );
+  return (
+    combatantIds.length === input.combatantDistances.combatantIds.length &&
+    combatantIds.every((combatantId) =>
+      input.combatantDistances.combatantIds.includes(combatantId),
+    )
+  );
+}
+
+function acceptedDistancesForStartBattle(input: {
+  readonly combatants: readonly BattleCreatureInit[];
+  readonly combatantDistances: AcceptedBattleCombatantDistances;
+}): Either.Either<
+  AcceptedBattleCombatantDistances,
+  BattleCombatantDistanceValidationIssue
+> {
+  return acceptedDistancesMatchCombatants(input)
+    ? Either.right(input.combatantDistances)
+    : Either.left({
+        tag: "incompletePairs",
+        expectedPairCount:
+          (input.combatants.length * (input.combatants.length - 1)) / 2,
+        actualPairCount: 0,
+      });
+}
+export function startBattle(
+  input: {
+    readonly battleId: BattleId;
+    readonly combatants: readonly BattleCreatureInit[];
+    readonly hidePrerequisites?: ReadonlyMap<
+      CombatantId,
+      BattleHidePrerequisite
+    >;
+  } & StartBattleDistanceInput,
+): Either.Either<BattleState, BattleStateInitIssue> {
   if (input.combatants.length === 0) {
     return battleStateInitIssue("startBattle requires at least one combatant.");
   }
@@ -1894,12 +1943,20 @@ export function startBattle(input: {
   if (Either.isLeft(initiative)) {
     return battleStateInitIssue(initiative.left);
   }
-  const combatantDistances = battleCombatantDistances({
-    combatantIds: input.combatants.map((combatant) => combatant.combatantId),
-    ...(input.combatantDistances === undefined
-      ? {}
-      : { combatantDistances: input.combatantDistances }),
-  });
+  const combatantDistances =
+    input.tag !== "acceptedDistances"
+      ? battleCombatantDistances({
+          combatantIds: input.combatants.map(
+            (combatant) => combatant.combatantId,
+          ),
+          ...(input.combatantDistances === undefined
+            ? {}
+            : { combatantDistances: input.combatantDistances }),
+        })
+      : acceptedDistancesForStartBattle({
+          combatants: input.combatants,
+          combatantDistances: input.combatantDistances,
+        });
   if (Either.isLeft(combatantDistances)) {
     return battleStateInitIssue(
       battleCombatantDistanceValidationMessage(combatantDistances.left),
@@ -1911,7 +1968,7 @@ export function startBattle(input: {
     initiative: initiative.right,
     combatants,
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),
-    combatantDistances: combatantDistances.right,
+    combatantDistances: combatantDistances.right.distances,
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
     readiedMovements: new Map(),

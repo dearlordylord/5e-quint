@@ -12,6 +12,7 @@ import {
   type BattleCombatantSide,
   type BattleState,
   type BattleStateInitIssue,
+  type BattleCombatantDistance,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
@@ -70,9 +71,7 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
   readonly character: CharacterBuildCreatureInput;
   readonly statBlockBattleInput: StatBlockBattleInitInput;
   readonly unitLibrary: UnitCatalog;
-  readonly combatantDistances?: Parameters<
-    typeof startBattle
-  >[0]["combatantDistances"];
+  readonly combatantDistances?: readonly BattleCombatantDistance[];
 }): Either.Either<BattleState, BattleStateInitIssue | BattleCreatureInitIssue> {
   const characterInit = battleCreatureInitFromCharacterBuild({
     ...input.character,
@@ -83,6 +82,7 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
   }
 
   return startBattle({
+    tag: "rawDistances",
     battleId: input.battleId,
     combatants: [
       characterInit.right,

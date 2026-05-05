@@ -104,6 +104,16 @@ type LoadoutCreationHole = ChoiceCreationHole & {
   readonly source: Extract<ChoiceCreationHole["source"], { tag: "loadout" }>;
 };
 
+type UnitChoiceSelection = Extract<
+  CharacterChoiceSelection,
+  { readonly kind: "unitChoice" }
+>;
+
+type LoadoutChoiceSelection = Extract<
+  CharacterChoiceSelection,
+  { readonly kind: "loadout" }
+>;
+
 export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
@@ -270,11 +280,12 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
   }
 
   const spellcasting = classFacts.value.spellcasting;
+  const unitChoices = unitChoiceSelections(selections);
   const selectedSpellbook = new Set(
-    selectedUnitRefsForChoice(selections, WIZARD_SPELLBOOK_CHOICE_KEY),
+    selectedUnitRefsForChoice(unitChoices, WIZARD_SPELLBOOK_CHOICE_KEY),
   );
   const selectedPrepared = selectedUnitRefsForChoice(
-    selections,
+    unitChoices,
     WIZARD_PREPARED_SPELL_CHOICE_KEY,
   );
   const slotLevels = new Set(
@@ -304,6 +315,8 @@ const TemporarySupportedSliceSelections = Symbol(
 type TemporarySupportedSliceSelections = {
   readonly selections: FinalizedCharacterSelections;
   readonly progression: CharacterProgression;
+  readonly unitChoices: readonly UnitChoiceSelection[];
+  readonly loadoutChoices: readonly LoadoutChoiceSelection[];
   readonly [TemporarySupportedSliceSelections]: true;
 };
 
@@ -324,8 +337,26 @@ function temporarySupportedSliceSelections(
   return Either.right({
     selections,
     progression: selections.progression,
+    unitChoices: unitChoiceSelections(selections),
+    loadoutChoices: loadoutChoiceSelections(selections),
     [TemporarySupportedSliceSelections]: true,
   });
+}
+
+function unitChoiceSelections(
+  selections: FinalizedCharacterSelections,
+): readonly UnitChoiceSelection[] {
+  return selections.choices.flatMap((choice) =>
+    choice.kind === "unitChoice" ? [choice] : [],
+  );
+}
+
+function loadoutChoiceSelections(
+  selections: FinalizedCharacterSelections,
+): readonly LoadoutChoiceSelection[] {
+  return selections.choices.flatMap((choice) =>
+    choice.kind === "loadout" ? [choice] : [],
+  );
 }
 
 export function expectedValueIssue(
@@ -497,7 +528,7 @@ export function buildCharacterBuild(input: {
   const classFeatureUnitIds = classFeatureGrants.map((grant) => grant.unitId);
   const buildSpellcasting = finalizedBuildSpellcasting(
     classFacts.right,
-    selections,
+    input.supportedSelections,
   );
   const buildFeatures: readonly CharacterBuildFeature[] = [
     ...classFeatureGrants.map((grant) => ({
@@ -512,9 +543,13 @@ export function buildCharacterBuild(input: {
       kind: "speciesTrait" as const,
       unitId,
     })),
-    ...finalizedClassChoiceFeatures(selections),
+    ...finalizedClassChoiceFeaturesForSupportedChoices(
+      input.supportedSelections.unitChoices,
+    ),
   ];
-  const buildEquipment = finalizedBuildEquipment(selections);
+  const buildEquipment = finalizedBuildEquipmentForSupportedLoadoutChoices(
+    input.supportedSelections.loadoutChoices,
+  );
   const hitPointsAfterLevelOne =
     hitPointsAfterLevelOneMultiplier(progression) *
     fixedHitPointsAfterLevelOne(classFacts.right.hitPointDie, finalScores.con);
@@ -1025,28 +1060,38 @@ export function characterBuildUnitRefs(
 export function finalizedClassChoiceFeatures(
   selections: FinalizedCharacterSelections,
 ): readonly CharacterBuildFeature[] {
-  return selections.choices.flatMap((selection) =>
-    selection.kind === "unitChoice"
-      ? unitRefsForSupportedClassChoice(
-          selection.source,
-          selection.options,
-        ).map((unitId) => ({
-          kind: "classChoice" as const,
-          unitId,
-          choiceKey: selection.source.choiceKey,
-        }))
-      : [],
+  return finalizedClassChoiceFeaturesForSupportedChoices(
+    unitChoiceSelections(selections),
+  );
+}
+
+function finalizedClassChoiceFeaturesForSupportedChoices(
+  unitChoices: readonly UnitChoiceSelection[],
+): readonly CharacterBuildFeature[] {
+  return unitChoices.flatMap((selection) =>
+    unitRefsForSupportedClassChoice(selection.source, selection.options).map(
+      (unitId) => ({
+        kind: "classChoice" as const,
+        unitId,
+        choiceKey: selection.source.choiceKey,
+      }),
+    ),
   );
 }
 
 export function finalizedBuildEquipment(
   selections: FinalizedCharacterSelections,
 ): CharacterBuildEquipment {
-  return selections.choices.reduce<CharacterBuildEquipment>(
+  return finalizedBuildEquipmentForSupportedLoadoutChoices(
+    loadoutChoiceSelections(selections),
+  );
+}
+
+function finalizedBuildEquipmentForSupportedLoadoutChoices(
+  loadoutChoices: readonly LoadoutChoiceSelection[],
+): CharacterBuildEquipment {
+  return loadoutChoices.reduce<CharacterBuildEquipment>(
     (equipment, selection) => {
-      if (selection.kind !== "loadout") {
-        return equipment;
-      }
       const loadoutChoice = supportedLoadoutChoiceForSource(selection.source);
       const selectedUnitId = selectedUnitIdForLoadoutChoice(
         selection,
@@ -1084,7 +1129,7 @@ export function finalizedBuildEquipment(
 
 export function finalizedBuildSpellcasting(
   classFacts: ClassCreationFacts,
-  selections: FinalizedCharacterSelections,
+  supportedSelections: TemporarySupportedSliceSelections,
 ): CharacterBuildSpellcasting | undefined {
   if (!isWizardClassCreationFacts(classFacts)) {
     return undefined;
@@ -1093,15 +1138,18 @@ export function finalizedBuildSpellcasting(
   const spellcasting = classFacts.spellcasting;
   return {
     spellcastingAbility: spellcasting.spellcastingAbility,
-    cantrips: selectedUnitRefsForChoice(selections, WIZARD_CANTRIP_CHOICE_KEY),
+    cantrips: selectedUnitRefsForChoice(
+      supportedSelections.unitChoices,
+      WIZARD_CANTRIP_CHOICE_KEY,
+    ),
     spellbook: spellcasting.spellbookAccess.spells.filter((spell) =>
       selectedUnitRefsForChoice(
-        selections,
+        supportedSelections.unitChoices,
         WIZARD_SPELLBOOK_CHOICE_KEY,
       ).includes(spell.spellId),
     ),
     preparedSpells: selectedUnitRefsForChoice(
-      selections,
+      supportedSelections.unitChoices,
       WIZARD_PREPARED_SPELL_CHOICE_KEY,
     ),
     spellSlots: spellcasting.spellSlotProjection.slots,
@@ -1116,22 +1164,14 @@ function isWizardClassCreationFacts(
 }
 
 function selectedUnitRefsForChoice(
-  selections: FinalizedCharacterSelections,
+  unitChoices: readonly UnitChoiceSelection[],
   choiceKey:
     | typeof WIZARD_CANTRIP_CHOICE_KEY
     | typeof WIZARD_SPELLBOOK_CHOICE_KEY
     | typeof WIZARD_PREPARED_SPELL_CHOICE_KEY,
 ): readonly UnitRecord["id"][] {
-  return selections.choices
-    .filter(
-      (
-        choice,
-      ): choice is Extract<
-        CharacterChoiceSelection,
-        { readonly kind: "unitChoice" }
-      > =>
-        choice.kind === "unitChoice" && choice.source.choiceKey === choiceKey,
-    )
+  return unitChoices
+    .filter((choice) => choice.source.choiceKey === choiceKey)
     .flatMap((choice) =>
       choice.options.flatMap((option) =>
         option.unitRef == null ? [] : [option.unitRef.unitId],
@@ -1140,7 +1180,7 @@ function selectedUnitRefsForChoice(
 }
 
 function selectedUnitIdForLoadoutChoice(
-  selection: Extract<CharacterChoiceSelection, { readonly kind: "loadout" }>,
+  selection: LoadoutChoiceSelection,
   loadoutChoice: ReturnType<typeof supportedLoadoutChoiceForSource>,
 ): LoadoutEquipmentUnitId | undefined {
   if (loadoutChoice == null) {

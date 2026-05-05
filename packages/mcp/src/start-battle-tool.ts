@@ -1,9 +1,10 @@
 import {
   battleCreatureInitFromStatBlock,
+  battleCombatantDistances,
   snapshotBattle,
   startBattle,
-  validateBattleCombatantDistances,
   type BattleCreatureInit,
+  type AcceptedBattleCombatantDistances,
   type BattleCombatantDistanceValidationIssue,
 } from "@dnd/battle-runtime";
 import { Either, Match, Option } from "effect";
@@ -16,6 +17,7 @@ import {
   characterBattleSpellSlots,
   characterBattleZeroHpLifecycle,
   characterSessionCurrentHp,
+  type AvailableCharacterSession,
 } from "./session-store.ts";
 import {
   type InitialBattleCombatantToolInput,
@@ -25,6 +27,16 @@ import {
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
+
+type StartableCharacterSessionCombatant = {
+  readonly character: InitialCharacterSessionCombatantToolInput;
+  readonly session: AvailableCharacterSession;
+};
+
+type StartableBattleCombatants = {
+  readonly creatureInits: readonly BattleCreatureInit[];
+  readonly characterSessions: readonly StartableCharacterSessionCombatant[];
+};
 
 export function handleStartBattleToolCall(
   root: McpCompositionRoot,
@@ -43,47 +55,20 @@ export function handleStartBattleToolCall(
   );
   if (duplicateInput !== null) return duplicateInput;
 
-  const characterSessions = startBattleCharacterSessions(root, input);
-  const missingCharacter = characterSessions.find(
-    (entry) => entry.session == null,
-  );
-  if (missingCharacter !== undefined) {
-    return errorContent(
-      `Unknown finalized character session: ${missingCharacter.character.sourceDraftId}`,
-      {
-        code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
-        sourceDraftId: missingCharacter.character.sourceDraftId,
-      },
-    );
-  }
+  const distanceInput = acceptedInitialCombatantDistances(input);
+  if (Either.isLeft(distanceInput)) return distanceInput.left;
 
-  const unavailableCharacter = characterSessions.find(
-    (entry) => entry.session?.tag !== "available",
-  );
-  if (unavailableCharacter?.session?.tag === "inBattle") {
-    return errorContent("Character is already assigned to a battle.", {
-      code: "CHARACTER_ALREADY_IN_BATTLE",
-      sourceDraftId: unavailableCharacter.character.sourceDraftId,
-      battleId: unavailableCharacter.session.battleId,
-    });
-  }
-
-  const distanceInput = validInitialCombatantDistances(input);
-  if (distanceInput !== null) {
-    return distanceInput;
-  }
-
-  const combatants = initialBattleCreatureInits({
+  const combatants = startableBattleCombatants({
     root,
     initialCombatants: input.initialCombatants,
-    characterSessions,
   });
   if (Either.isLeft(combatants)) return combatants.left;
 
   const state = startBattle({
+    tag: "acceptedDistances",
     battleId: input.battleId,
-    combatants: combatants.right,
-    combatantDistances: input.combatantDistances,
+    combatants: combatants.right.creatureInits,
+    combatantDistances: distanceInput.right,
   });
   if (Either.isLeft(state)) {
     return errorContent("Battle session start failed.", {
@@ -93,8 +78,7 @@ export function handleStartBattleToolCall(
   }
   root.sessionStore.battleState = state.right;
   root.sessionStore.transientBattleFills = null;
-  for (const { character, session } of characterSessions) {
-    if (session?.tag !== "available") continue;
+  for (const { character, session } of combatants.right.characterSessions) {
     root.sessionStore.characters.set(character.sourceDraftId, {
       tag: "inBattle",
       build: session.build,
@@ -108,18 +92,6 @@ export function handleStartBattleToolCall(
     snapshot: snapshotBattle(state.right),
     session: root.sessionStore.snapshot(),
   });
-}
-
-function startBattleCharacterSessions(
-  root: McpCompositionRoot,
-  decoded: StartBattleToolInput,
-) {
-  return decoded.initialCombatants
-    .filter(isCharacterSessionCombatant)
-    .map((character) => ({
-      character,
-      session: root.sessionStore.characters.get(character.sourceDraftId),
-    }));
 }
 
 function duplicateStartBattleInputContent(
@@ -149,18 +121,24 @@ function duplicateStartBattleInputContent(
   return null;
 }
 
-function validInitialCombatantDistances(input: StartBattleToolInput) {
-  if (input.combatantDistances === undefined) return null;
-
+function acceptedInitialCombatantDistances(
+  input: StartBattleToolInput,
+): Either.Either<
+  AcceptedBattleCombatantDistances,
+  ReturnType<typeof errorContent>
+> {
   const combatantIds = new Set(
     input.initialCombatants.map((combatant) => combatant.combatantId),
   );
-  const issue = validateBattleCombatantDistances({
+  const distances = battleCombatantDistances({
     combatantIds: [...combatantIds],
-    combatantDistances: input.combatantDistances,
-    requireCompletePairs: true,
+    ...(input.combatantDistances === undefined
+      ? {}
+      : { combatantDistances: input.combatantDistances }),
   });
-  return issue === null ? null : distanceIssueContent(issue);
+  return Either.isLeft(distances)
+    ? Either.left(distanceIssueContent(distances.left))
+    : Either.right(distances.right);
 }
 
 function distanceIssueContent(issue: BattleCombatantDistanceValidationIssue) {
@@ -204,29 +182,39 @@ function distanceIssueContent(issue: BattleCombatantDistanceValidationIssue) {
   );
 }
 
-function initialBattleCreatureInits(input: {
+function startableBattleCombatants(input: {
   readonly root: McpCompositionRoot;
   readonly initialCombatants: readonly InitialBattleCombatantToolInput[];
-  readonly characterSessions: ReturnType<typeof startBattleCharacterSessions>;
-}): Either.Either<
-  readonly BattleCreatureInit[],
-  ReturnType<typeof errorContent>
-> {
+}): Either.Either<StartableBattleCombatants, ReturnType<typeof errorContent>> {
   const inits: BattleCreatureInit[] = [];
+  const characterSessions: StartableCharacterSessionCombatant[] = [];
   for (const combatant of input.initialCombatants) {
     const init = Match.value(combatant).pipe(
       Match.when({ kind: "characterSession" }, (character) => {
-        const session = input.characterSessions.find(
-          (entry) => entry.character.sourceDraftId === character.sourceDraftId,
-        )?.session;
-        if (session?.tag !== "available") {
+        const session = input.root.sessionStore.characters.get(
+          character.sourceDraftId,
+        );
+        if (session === undefined) {
           return Either.left(
-            errorContent("Character session is not available.", {
-              code: "CHARACTER_SESSION_NOT_AVAILABLE",
+            errorContent(
+              `Unknown finalized character session: ${character.sourceDraftId}`,
+              {
+                code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
+                sourceDraftId: character.sourceDraftId,
+              },
+            ),
+          );
+        }
+        if (session.tag === "inBattle") {
+          return Either.left(
+            errorContent("Character is already assigned to a battle.", {
+              code: "CHARACTER_ALREADY_IN_BATTLE",
               sourceDraftId: character.sourceDraftId,
+              battleId: session.battleId,
             }),
           );
         }
+        characterSessions.push({ character, session });
         const characterInit = battleCreatureInitFromCharacterBuild({
           combatantId: character.combatantId,
           characterId: session.characterId,
@@ -283,7 +271,7 @@ function initialBattleCreatureInits(input: {
     inits.push(init.right);
   }
 
-  return Either.right(inits);
+  return Either.right({ creatureInits: inits, characterSessions });
 }
 
 function isCharacterSessionCombatant(
