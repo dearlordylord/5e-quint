@@ -659,7 +659,30 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 
 ## Files And Verification
 
-- `src/index.ts` - public API and reducer implementation.
+- `src/index.ts` - public API facade.
+- `src/identity.ts` - battle id, combatant id, side, Initiative score, and
+  replay stack-depth brands and constructors.
+- `src/zero-hp-lifecycle.ts` - stat-block and character zero-HP lifecycle
+  policies used by battle initialization and HP mutation.
+- `src/character-class-level.ts` - shared character class-level battle runtime
+  type used by reducer state and Unit feature support parsing.
+- `src/character-battle-resources.ts` - character Unit resource state,
+  class-level parsing, use spending, and Spell Slot state parsing.
+- `src/distances.ts` - pairwise combatant distance validation, projection, and
+  symmetric map mutation helpers.
+- `src/battle-reaction-triggers.ts` - battle-owned Reaction trigger vocabulary
+  used by readied acts and Reaction windows.
+- `src/battle-subjects.ts` - public replay subject schema, subject action
+  vocabulary, runtime command vocabulary, and subject identity comparison.
+- `src/battle-action-options.ts` - character, unarmed, weapon, and supported
+  Stat Block attack option shapes plus Stat Block resource snapshots/state.
+- `src/battle-init.ts` - caller-supplied battle initialization contracts for
+  character-origin and stat-block-origin combatants.
+- `src/battle-reducer.ts` - reducer implementation retained as the current
+  orchestration authority while domain modules are extracted.
+- `src/unit-feature-support.ts` - Unit feature support-profile boundary:
+  profile types, support gates, and parsers that classify authored Surface
+  mechanics into battle-runtime procedure families.
 - `src/index.test.ts` - deterministic reducer tests and package-local Quint
   spec checks.
 - `src/battle-runtime.mbt.test.ts` - narrow integrated promoted MBT bridge

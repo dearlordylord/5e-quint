@@ -1,0 +1,35 @@
+import { Brand, Schema } from "effect";
+import { CreatureId, Initiative, ResourceCount } from "@dnd/shared/types";
+
+export const CombatantId = CreatureId.pipe(Schema.brand("CombatantId"));
+export type CombatantId = typeof CombatantId.Type;
+export const combatantId: (value: string) => CombatantId = CombatantId.make;
+
+export const BattleId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleId"),
+);
+export type BattleId = typeof BattleId.Type;
+export const battleId: (value: string) => BattleId = BattleId.make;
+
+export type CharacterId = string & Brand.Brand<"CharacterId">;
+const CharacterId = Brand.nominal<CharacterId>();
+export const characterId: (value: string) => CharacterId = CharacterId;
+
+export type InitiativeScore = Initiative & Brand.Brand<"InitiativeScore">;
+const InitiativeScore = Brand.all(Initiative, Brand.nominal<InitiativeScore>());
+export const initiativeScore: (value: number) => InitiativeScore =
+  InitiativeScore;
+
+export const BattleReplayStackDepth = ResourceCount.pipe(
+  Schema.brand("BattleReplayStackDepth"),
+);
+export type BattleReplayStackDepth = typeof BattleReplayStackDepth.Type;
+export const battleReplayStackDepth: (value: number) => BattleReplayStackDepth =
+  BattleReplayStackDepth.make;
+
+export const BattleCombatantSide = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleCombatantSide"),
+);
+export type BattleCombatantSide = typeof BattleCombatantSide.Type;
+export const battleCombatantSide: (value: string) => BattleCombatantSide =
+  BattleCombatantSide.make;
