@@ -581,7 +581,10 @@ included targets.
 Acceptance summary: promoted battle runtime and MCP do not store, default,
 project, or compute combatant distances, adjacency, reach exit, target range, or
 area membership. Authored reach/range/radius facts remain content metadata that
-the table uses to provide executable spatial facts.
+the table uses to provide executable spatial facts. Public fills carry the
+adjudicated procedure fact, such as attack `normal`/`long` range band or
+Grapple-adjacent legality, not raw measured distances for runtime geometry
+calculation.
 
 Verification summary: RAW/UL check for every touched movement, targeting, reach,
 Help, Grapple, and area rule; focused battle-runtime and MCP typechecks/tests;

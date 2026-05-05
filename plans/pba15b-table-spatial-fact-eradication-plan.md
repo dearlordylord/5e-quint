@@ -22,6 +22,35 @@ who is in reach, who is in range, who left reach, or who is inside an area.
 Movement budget remains a battle-runtime economy in feet. That is distinct from
 owning combatant-to-combatant spatial distance.
 
+## Spatial Fact API Form
+
+Promoted APIs consume adjudicated spatial facts, not raw table measurements.
+The table, UI, VTT, or caller may use coordinates, templates, line tools,
+measured distances, authored reach/range, and cover rules internally, but those
+measurements are not submitted as a second runtime geometry API.
+
+The public form is the narrow fact that the current procedure needs:
+
+- melee attack target: the selected target is legal for the selected attack's
+  reach;
+- ranged attack target: the selected target is in `normal` or `long` range for
+  the selected attack; out of range means no legal target fact is submitted;
+- spell target: spell-specific targetability evidence, not attack-style range
+  bands;
+- AoE/save-gate: event-scoped included target ids after the table applies
+  origin, shape, Total Cover, and other area rules; this is not an "area
+  membership" fact;
+- movement and Opportunity Attacks: movement cost in feet plus scoped
+  provocation/reach-exit/threat facts; movement cost is an action-economy spend,
+  not pairwise combatant geometry.
+
+Fixed RAW thresholds such as "within 5 feet" may appear in names, branded
+identities, or constants when they identify the rule condition. They must not be
+passed as unbranded numbers for runtime distance calculation. For example, a
+Grapple-adjacent fact may be named around the immutable 5-foot requirement, but
+the runtime receives the fact that the target is legal for the Grapple procedure,
+not a measured distance to recompute.
+
 ## Current Runtime-Owned Spatial Surfaces
 
 - `packages/battle-runtime/src/distances.ts` owns `BattleCombatantDistance`,
@@ -64,7 +93,7 @@ owning combatant-to-combatant spatial distance.
   reaction availability, creature lifecycle, incapacitation, Disengage, and
   effects that block opportunity attacks. It does not compare feet.
 - Attack target legality consumes table-provided melee reach legality or ranged
-  normal/long/out-of-range facts. Spell target legality consumes spell-specific
+  `normal`/`long` range-band facts. Spell target legality consumes spell-specific
   targetability facts such as selected target/source/origin validity, clear path,
   and Total Cover legality; spell targetability does not use attack-style range
   bands. Runtime still owns authored reach/range metadata and non-spatial

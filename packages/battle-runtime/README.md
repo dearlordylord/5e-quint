@@ -338,7 +338,9 @@ Available acts:
 - discover Attack for supported character weapon attacks and supported
   Stat Block named attacks when the current actor can take actions. Authored
   reach/range remains metadata for the table; target spatial legality is a
-  caller/table fact, not a runtime distance derivation.
+  caller/table fact, not a runtime distance derivation. Fixed RAW spatial
+  thresholds may be named as rule identities, but they are not passed as raw
+  numbers for runtime geometry calculation.
 - discover Grapple for supported character combatants with a free hand and a
   legal table-supplied adjacent target. The battle state stores the Grapple link,
   escape DC, occupied hand, and drag-cost exemption derived from creature Sizes.
@@ -453,7 +455,10 @@ Attack and damage:
   callers supply table-legal targets using authored reach/range metadata. For
   ranged attacks, the target spatial fact carries the selected range band:
   normal range is legal without range Disadvantage, and long range is legal with
-  Disadvantage through the shared attack-roll mode path.
+  Disadvantage through the shared attack-roll mode path. The caller/table may
+  measure privately, but the public fill is the adjudicated `normal`/`long`
+  fact; out-of-range means no legal target fact is submitted, not a distance for
+  the runtime to recheck.
 - resolve hit/miss through the shared attack-roll algebra;
 - apply character weapon damage or supported Stat Block attack damage including
   the Goblin Warrior's advantage-triggered on-hit bonus damage, Critical Hit
