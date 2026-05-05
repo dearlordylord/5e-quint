@@ -63,6 +63,7 @@ import {
   type CharacterSelectedChoiceOption,
   type ChoiceCardinality,
   type ChoiceCreationHole,
+  type ChoiceCreationHoleSource,
   type CreationChoiceOption,
   type CreationChoiceOptionId,
   type CreationHole,
@@ -305,7 +306,7 @@ export function discoverBackgroundGrantedHoles(input: {
 
 export function backgroundToolChoiceHole(
   draft: CharacterDraft,
-  source: CreationHoleSource,
+  source: ChoiceCreationHoleSource,
   proficiency: BackgroundToolProficiency,
 ): readonly CreationHole[] {
   const spec = backgroundToolChoiceSpec(proficiency);
@@ -415,7 +416,7 @@ export function discoverEquipmentHoles(input: {
 }
 
 export function startingEquipmentChoiceHole(
-  source: CreationHoleSource,
+  source: ChoiceCreationHoleSource,
   choices: readonly StartingEquipmentChoice[],
 ): CreationHole | undefined {
   return choiceHole({

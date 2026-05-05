@@ -1,6 +1,10 @@
 import { characterId } from "@dnd/battle-runtime";
 import {
+  ABILITY_SCORE_GENERATION_DRAFT_PATH,
+  CHARACTER_DRAFT_CHOICE_PATHS,
   LOADOUT_SLOTS,
+  SUPPORTED_ABILITY_SCORE_METHODS,
+  UNIT_CHOICE_KEYS,
   createCharacterDraft,
   discoverCreationHoles,
   fillCreationHoles,
@@ -50,21 +54,36 @@ const McpSessionSnapshotSchema = Schema.Struct({
   ),
   transientBattleFills: Schema.Union(JsonObjectSchema, Schema.Null),
 });
-const CreationHoleSourceSchema = Schema.Union(
-  Schema.Struct({
-    tag: Schema.Literal("draft"),
-    path: Schema.String,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("unitChoice"),
-    unitId: Schema.String,
-    choiceKey: Schema.String,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("loadout"),
-    equipmentUnitId: Schema.String,
-    slot: Schema.Literal(...LOADOUT_SLOTS),
-  }),
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
+const DraftChoiceCreationHoleSourceSchema = Schema.Struct({
+  tag: Schema.Literal("draft"),
+  path: Schema.Literal(...CHARACTER_DRAFT_CHOICE_PATHS),
+});
+const AbilityScoresCreationHoleSourceSchema = Schema.Struct({
+  tag: Schema.Literal("draft"),
+  path: Schema.Literal(ABILITY_SCORE_GENERATION_DRAFT_PATH),
+});
+const UnitChoiceCreationHoleSourceSchema = Schema.Struct({
+  tag: Schema.Literal("unitChoice"),
+  unitId: Schema.String,
+  choiceKey: Schema.Literal(...UNIT_CHOICE_KEYS),
+});
+const LoadoutCreationHoleSourceSchema = Schema.Struct({
+  tag: Schema.Literal("loadout"),
+  equipmentUnitId: Schema.String,
+  slot: Schema.Literal(...LOADOUT_SLOTS),
+});
+const ChoiceCreationHoleSourceSchema = Schema.Union(
+  DraftChoiceCreationHoleSourceSchema,
+  UnitChoiceCreationHoleSourceSchema,
+  LoadoutCreationHoleSourceSchema,
 );
 const CreationChoiceOptionSchema = Schema.Struct({
   optionId: Schema.String,
@@ -76,27 +95,27 @@ const CreationChoiceOptionSchema = Schema.Struct({
 const ChoiceCardinalitySchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("exactly"),
-    count: Schema.Number,
+    count: PositiveIntegerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("between"),
-    min: Schema.Number,
-    max: Schema.Number,
+    min: NonNegativeIntegerSchema,
+    max: PositiveIntegerSchema,
   }),
 );
 const CreationHoleSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("choice"),
     holeId: Schema.String,
-    source: CreationHoleSourceSchema,
+    source: ChoiceCreationHoleSourceSchema,
     cardinality: ChoiceCardinalitySchema,
     options: Schema.Array(CreationChoiceOptionSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("abilityScores"),
     holeId: Schema.String,
-    source: CreationHoleSourceSchema,
-    methods: Schema.Array(Schema.String),
+    source: AbilityScoresCreationHoleSourceSchema,
+    methods: Schema.Array(Schema.Literal(...SUPPORTED_ABILITY_SCORE_METHODS)),
   }),
 );
 const CreationFinalizationIssueSchema = Schema.Struct({

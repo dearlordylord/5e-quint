@@ -80,6 +80,19 @@ export const CHARACTER_DRAFT_PATHS = [
   "draft.equipment",
 ] as const;
 export type CharacterDraftPath = (typeof CHARACTER_DRAFT_PATHS)[number];
+export const ABILITY_SCORE_GENERATION_DRAFT_PATH =
+  "draft.abilityScoreGeneration" as const satisfies CharacterDraftPath;
+export const CHARACTER_DRAFT_CHOICE_PATHS = [
+  "draft.progression.initial",
+  "draft.background",
+  "draft.species",
+  "draft.languages",
+  "draft.alignment",
+] as const satisfies ReadonlyArray<
+  Exclude<CharacterDraftPath, typeof ABILITY_SCORE_GENERATION_DRAFT_PATH>
+>;
+export type CharacterDraftChoicePath =
+  (typeof CHARACTER_DRAFT_CHOICE_PATHS)[number];
 
 export const UNIT_CHOICE_KEYS = [
   "background_ability_score_increase",
@@ -227,6 +240,20 @@ export type LoadoutSource = Extract<
   CreationHoleSource,
   { readonly tag: "loadout" }
 >;
+export type DraftCreationHoleSource = Extract<
+  CreationHoleSource,
+  { readonly tag: "draft" }
+>;
+export type DraftChoiceCreationHoleSource = DraftCreationHoleSource & {
+  readonly path: CharacterDraftChoicePath;
+};
+export type AbilityScoreGenerationSource = DraftCreationHoleSource & {
+  readonly path: typeof ABILITY_SCORE_GENERATION_DRAFT_PATH;
+};
+export type ChoiceCreationHoleSource =
+  | DraftChoiceCreationHoleSource
+  | UnitChoiceSource
+  | LoadoutSource;
 
 export type UnitChoiceSourceUnitId = UnitRecord["id"] &
   Brand.Brand<"UnitChoiceSourceUnitId">;
@@ -718,14 +745,14 @@ export type CreationHole =
   | {
       readonly kind: "choice";
       readonly holeId: CreationHoleId;
-      readonly source: CreationHoleSource;
+      readonly source: ChoiceCreationHoleSource;
       readonly cardinality: ChoiceCardinality;
       readonly options: readonly CreationChoiceOption[];
     }
   | {
       readonly kind: "abilityScores";
       readonly holeId: CreationHoleId;
-      readonly source: CreationHoleSource;
+      readonly source: AbilityScoreGenerationSource;
       readonly methods: readonly SupportedAbilityScoreMethod[];
     };
 

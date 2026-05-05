@@ -431,6 +431,9 @@ Blocks: PBA16
 Research plan:
 [pba15a-domain-primitives-research-plan.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)
 
+Inventory evidence:
+[pba15a-domain-primitives-inventory.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-inventory.md)
+
 Next action: migrate all Core-related durable Surface-authored and
 character-creation-runtime primitive domain debt after PBA15A0D leaves
 progression and multiclass prerequisite facts in their durable owners. This is
@@ -445,6 +448,13 @@ type or literal union should carry meaning.
 Verification summary: source primitive inventory, focused Surface and
 character-creation typechecks/tests, no battle MBT unless promoted battle
 runtime mappings change, `/simplify` convergence.
+
+Implementation note: the first PBA15A source-identity slices are integrated:
+Unit-choice and selected-equipment loadout sources use distinct source/key
+isomorphisms; `ChoiceCreationHole.source` excludes the ability-score draft
+source; MCP creation-hole schemas use runtime-owned literal domains and the
+canonical ability-score draft-path constant. RAW and UL/domain checker
+convergence passed in the parallel worktree review lanes before integration.
 
 Plan Impact: if successful, unblock PBA16.
 

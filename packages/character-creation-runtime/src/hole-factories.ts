@@ -12,11 +12,13 @@ import {
   type CharacterDraftPath,
   type CharacterDraftSelections,
   type ChoiceCardinality,
+  type ChoiceCreationHoleSource,
   type CreationChoiceOption,
   type CreationChoiceOptionId,
   type CreationHole,
   type CreationHoleId,
   type CreationHoleSource,
+  type DraftCreationHoleSource,
   type CharacterSelectedChoiceOption,
   type LoadoutSlot,
   type LoadoutSource,
@@ -130,7 +132,7 @@ function isBackgroundAsiAbility(value: string | undefined): value is Ability {
 }
 
 export function choiceHole(input: {
-  readonly source: CreationHoleSource;
+  readonly source: ChoiceCreationHoleSource;
   readonly cardinality: ChoiceCardinality | undefined;
   readonly options: readonly CreationChoiceOption[];
 }): CreationHole | undefined {
@@ -151,7 +153,9 @@ export function choiceHole(input: {
   };
 }
 
-export function draftSource(path: CharacterDraftPath): CreationHoleSource {
+export function draftSource<Path extends CharacterDraftPath>(
+  path: Path,
+): DraftCreationHoleSource & { readonly path: Path } {
   return { tag: "draft", path };
 }
 

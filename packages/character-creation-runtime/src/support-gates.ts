@@ -51,6 +51,7 @@ import type {
   CharacterStartingLanguages,
   CreationChoiceOptionId,
   CreationHole,
+  DraftCreationHoleSource,
   LoadoutSource,
   UnitChoiceKey,
   UnitChoiceSource,
@@ -65,10 +66,6 @@ import {
 } from "./character-progression-types.ts";
 import { characterClassLevel } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-
-type DraftSourcedCreationHole = CreationHole & {
-  readonly source: Extract<CreationHole["source"], { readonly tag: "draft" }>;
-};
 
 export type SupportedLoadoutChoice =
   | {
@@ -287,7 +284,7 @@ export function supportedHoleOptionIds(
 ): readonly CreationChoiceOptionId[] | undefined {
   const source = hole.source;
   if (source.tag === "draft") {
-    return supportedDraftOptionIds({ ...hole, source });
+    return supportedDraftOptionIds(source);
   }
 
   if (source.tag === "loadout") {
@@ -299,11 +296,11 @@ export function supportedHoleOptionIds(
 }
 
 export function supportedDraftOptionIds(
-  hole: DraftSourcedCreationHole,
+  source: DraftCreationHoleSource,
 ): readonly CreationChoiceOptionId[] | undefined {
-  if (isSupportedDraftChoicePath(hole.source.path)) {
+  if (isSupportedDraftChoicePath(source.path)) {
     return CHARACTER_CREATION_SUPPORT_PROFILE.draftOptionIdsByPath[
-      hole.source.path
+      source.path
     ];
   }
 

@@ -42,12 +42,13 @@ import {
   type CreationFillIssue,
   type CreationHole,
   type CreationHoleId,
-  type CreationHoleSource,
+  type DraftCreationHoleSource,
   type FillIndex,
   type LoadoutSource,
   type LoadoutSelectedChoiceOption,
   type NonEmptyReadonlyArray,
   type UnitCatalog,
+  type UnitChoiceSource,
 } from "./types.ts";
 
 type ApplyCreationFillIssue = CreationFillIssue;
@@ -68,15 +69,15 @@ export type CreationHoleIndex = {
 };
 
 type DraftSourcedCreationHole = CreationHole & {
-  readonly source: Extract<CreationHoleSource, { readonly tag: "draft" }>;
+  readonly source: DraftCreationHoleSource;
 };
 
 type UnitSourcedCreationHole = CreationHole & {
-  readonly source: Extract<CreationHoleSource, { readonly tag: "unitChoice" }>;
+  readonly source: UnitChoiceSource;
 };
 
 type LoadoutSourcedCreationHole = CreationHole & {
-  readonly source: Extract<CreationHoleSource, { readonly tag: "loadout" }>;
+  readonly source: LoadoutSource;
 };
 
 export function fillCreationHoles(
@@ -319,16 +320,37 @@ export function applyCreationFill(
   fill: CreationFill,
   fillIndex: FillIndex,
 ): ApplyCreationFillResult<CharacterDraftSelections> {
-  const source = hole.source;
-  if (source.tag === "draft") {
-    return applyDraftFill(selections, { ...hole, source }, fill, fillIndex);
+  if (isDraftSourcedCreationHole(hole)) {
+    return applyDraftFill(selections, hole, fill, fillIndex);
   }
 
-  if (source.tag === "unitChoice") {
-    return applyUnitFill(selections, { ...hole, source }, fill, fillIndex);
+  if (isUnitSourcedCreationHole(hole)) {
+    return applyUnitFill(selections, hole, fill, fillIndex);
   }
 
-  return applyLoadoutFill(selections, { ...hole, source }, fill, fillIndex);
+  if (isLoadoutSourcedCreationHole(hole)) {
+    return applyLoadoutFill(selections, hole, fill, fillIndex);
+  }
+
+  return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+}
+
+function isDraftSourcedCreationHole(
+  hole: CreationHole,
+): hole is DraftSourcedCreationHole {
+  return hole.source.tag === "draft";
+}
+
+function isUnitSourcedCreationHole(
+  hole: CreationHole,
+): hole is UnitSourcedCreationHole {
+  return hole.source.tag === "unitChoice";
+}
+
+function isLoadoutSourcedCreationHole(
+  hole: CreationHole,
+): hole is LoadoutSourcedCreationHole {
+  return hole.source.tag === "loadout";
 }
 
 export function applyDraftFill(
