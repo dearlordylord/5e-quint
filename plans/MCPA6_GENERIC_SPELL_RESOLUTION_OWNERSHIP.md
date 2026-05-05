@@ -145,10 +145,10 @@ Generic spell casting should surface as battle-scoped action tokens in
 - Owner: battle state.
 - Public surface: one cast token starts the spell; MCP must not send a second
   spell-cast command for each target in the area.
-- If geometry remains external, the boundary should accept one bounded
-  area-membership projection up front or one runtime bundle of target save
-  results keyed to a battle-owned target set. It should not move loop ownership
-  into MCP.
+- If geometry remains external, the boundary should accept event-scoped included
+  target facts after the table applies AoE origin, shape, Total Cover, and any
+  ongoing-area trigger rules, or one runtime bundle of target save results keyed
+  to a battle-owned target set. It should not move loop ownership into MCP.
 
 ## Recommended Follow-Up Slice Shape
 
@@ -156,8 +156,8 @@ Generic spell casting should surface as battle-scoped action tokens in
   payloads, reusing the existing counterspell and save-failed windows.
 - Slice 2: add a concentration-spell token family backed by the same spell
   payload owner, keeping concentration state wholly battle-owned.
-- Slice 3: add an AoE spell token family that accepts only bounded
-  area-membership/runtime-save inputs while battle owns the per-target loop.
+- Slice 3: add an AoE spell token family that accepts only bounded event-scoped
+  included-target/runtime-save inputs while battle owns the per-target loop.
 
 These should stay separate tasks because AoE targeting ownership and generic
 concentration follow-through widen the blast radius beyond single-target save

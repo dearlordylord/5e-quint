@@ -65,11 +65,12 @@ Implementation-ready bounded contracts:
   identity, action availability, dead/incapacitated checks, distinct/alive
   participant validation, help expiry at the helper's next turn, and one-shot
   consumption by the first qualifying attack.
-- `BATTLE_MOVE` public token should represent one 5-foot movement checkpoint
-  rather than a pathfinding request or persistent destination model.
+- `BATTLE_MOVE` public token should represent one table-supplied movement
+  segment/checkpoint with explicit movement cost rather than a pathfinding
+  request or persistent destination model.
 - `BATTLE_MOVE` execute-time/session fact surface should stay minimal:
-  `provocationKind` plus the set of threatening creatures for that specific
-  reach-exit checkpoint.
+  `movementCostFeet`, `provocationKind`, and qualifying opportunity threats for
+  that specific reach-exit segment/checkpoint.
 - `BATTLE_MOVE` battle-owned legality stays internal: mover dead/incapacitated
   checks, remaining movement spend, grapple-drag extra-cost handling, Disengage
   suppression, opportunity-attack reaction availability, and the existing
@@ -85,7 +86,12 @@ Implementation-ready bounded contracts:
 
 - The first safe public slice is the active creature's Attack-action `BATTLE_ATTACK` using its already-derived main-hand weapon or Unarmed Strike. Off-hand, grapple, legendary, movement-OA, and rider flows remain separate follow-up surfaces.
 - The public token is caller-owned and minimal: `scope`, `actorId`, `type`, `targetId`, and `knockOut`.
-- The execute-time runtime envelope is limited to explicit battle-external facts: `attackRoll`, `targetAc`, rolled `weaponDamage`, `attackerWithin5ft`, `attackerWithin60ft` when the target is not within 5 feet, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, `hasAllyAdjacentToTarget`, and `hitReactionCandidates`.
+- The execute-time runtime envelope is limited to explicit battle-external facts:
+  `attackRoll`, `targetAc`, rolled `weaponDamage`, attack-specific table
+  spatial facts such as melee reach legality or ranged normal/long/out-of-range
+  band, ranged-attack-nearby-enemy Disadvantage, `targetCanSeeAttacker`,
+  `attackerCanSeeTarget`, `frightSourceInLOS`, Sneak Attack adjacent-ally
+  eligibility, and `hitReactionCandidates`.
 - Battle owns attacker state, action/attack spend, weapon or unarmed profile derivation, crit range and crit derivation, melee-versus-ranged classification, target legality, knock-out legality, Sneak Attack legality/state, rider timing, and damage aggregation semantics.
 - Do not expose caller-supplied attack payload fields such as damage type, damage dice, weapon properties, finesse, reach, legendary-action metadata, or rider damage totals inside the base attack payload.
 
@@ -168,11 +174,11 @@ These are the public-facing items that still matter. Keep this table current.
 
 | Item | Intended MCP surface | Current blocker(s) | Notes |
 | --- | --- | --- | --- |
-| `BATTLE_ATTACK` | `get_available_actions` | Contract finalized (MCPA1). Remaining work is MCPA2: wire the token as a public `get_available_actions` entry and confirm end-to-end MCP dispatch. | Public contract: caller supplies `targetId`, `knockOut`, `attackRoll` (1–20), `targetAc` (≥0), `weaponDamage` (≥0), spatial/visibility booleans (`attackerWithin5ft`, `attackerWithin60ft?`, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, `hasAllyAdjacentToTarget`), `hitReactionCandidates` (valid creature IDs). Battle derives weapon profile, damage type, crit, weapon properties, Sneak Attack legality, and damage bonuses. |
+| `BATTLE_ATTACK` | `get_available_actions` | Contract finalized (MCPA1), but PBA15B/PBA18 must replace fixed-foot spatial booleans with attack-specific table legality facts. Remaining work is MCPA2: wire the token as a public `get_available_actions` entry and confirm end-to-end MCP dispatch. | Public contract: caller supplies `targetId`, `knockOut`, `attackRoll` (1-20), `targetAc` (>=0), `weaponDamage` (>=0), table spatial/visibility facts such as melee reach legality or ranged normal/long/out-of-range band, ranged-attack-nearby-enemy Disadvantage, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, Sneak Attack adjacent-ally eligibility, and `hitReactionCandidates` (valid creature IDs). Battle derives weapon profile, damage type, crit, weapon properties, Sneak Attack state, and damage bonuses. |
 | `BATTLE_OFF_HAND_ATTACK` | `get_available_actions` | Needs Light-property pairing plus battle-owned ability-modifier and extra-attack sequencing on top of the finalized `battleAttack` contract. | Reuse the same target/roll/session-fact contract as `BATTLE_ATTACK`; do not add a second attack payload schema. |
 | `BATTLE_LEGENDARY_ATTACK` | battle follow-up on `get_available_actions` after a monster-control choice | Depends on a named `USE_LEGENDARY_ACTION` control command keyed by `monsterId` + stat-block `abilityId`, plus reuse of the finalized `battleAttack` contract for the attack-shaped follow-up. | Do not accept arbitrary caller-supplied monster attack payloads or monster-authored attack data. |
 | `BATTLE_HELP_ATTACK` | `get_available_actions` | Contract defined (MCPA3). Remaining work: wire the token as a public `get_available_actions` entry. | Public contract: caller supplies `allyId`, `targetId`, and execute-time table fact `helperWithin5ftOfTarget`. Battle owns action economy, identity validation, help-target tracking, and expiry. Geometry comes from the table, not core/MCP/battle. See `MCPA3_SPATIAL_ACTION_CONTRACTS.md`. |
-| `BATTLE_MOVE` | `get_available_actions` | Contract defined (MCPA3). Remaining work: wire the token plus battle-driven OA follow-up entries as public surfaces. | Public contract: caller supplies one 5-foot checkpoint plus execute-time table facts `provocationKind` and `threatened`. Battle owns movement budget, grapple drag cost, Disengage suppression, and OA eligibility filtering. The OA attack follow-up contract remains future work. Geometry comes from the table, not core/MCP/battle. See `MCPA3_SPATIAL_ACTION_CONTRACTS.md`. |
+| `BATTLE_MOVE` | `get_available_actions` | Contract defined (MCPA3), with PBA15B tightening around table-supplied movement cost and OA threat facts. Remaining work: wire the token plus battle-driven OA follow-up entries as public surfaces. | Public contract: caller supplies one table-supplied movement segment/checkpoint plus execute-time table facts `movementCostFeet`, `provocationKind`, and qualifying `opportunityThreats`. Battle owns movement budget, Disengage suppression, and OA eligibility filtering. Grapple drag/carry cost is included in the table-supplied movement cost. The OA attack follow-up contract remains future work. Geometry comes from the table, not core/MCP/battle. See `MCPA3_SPATIAL_ACTION_CONTRACTS.md`. |
 | `BATTLE_GRAPPLE` | `get_available_actions` | Public contract still needs `targetId` plus resolved save outcome wiring on a non-attack-roll contract. | Size ownership is already solved in battle state; do not copy the `battleAttack` payload just because grapple is attack-shaped in prose. |
 | `USE_BRUTAL_STRIKE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs a battle-owned pre-roll reservation window keyed to a specific Reckless qualifying attack. | Pre-roll declaration rider. |
 | `STUNNING_STRIKE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs a post-hit token plus explicit target save runtime. | Post-hit rider. |

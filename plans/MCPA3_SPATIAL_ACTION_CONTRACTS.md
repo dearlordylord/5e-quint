@@ -75,29 +75,41 @@ and applies mechanical consequences.
 }
 ```
 
-Each public move token represents one 5-foot movement checkpoint, not a
-pathfinding request or persistent destination model.
+Each public move token represents one table-supplied movement segment/checkpoint
+with an explicit movement cost, not a pathfinding request or persistent
+destination model. A 5-foot checkpoint is one valid grid-table convention, not a
+runtime-owned movement unit.
 
 ### Execute-Time Session Fact Surface
 
 ```typescript
 {
+  movementCostFeet: number;
   provocationKind:
     | "provokesOpportunityAttacks"
     | "doesNotProvokeOpportunityAttacks";
-  threatened: ReadonlyArray<string>;
+  opportunityThreats: ReadonlyArray<{
+    reactorId: string;
+    canSeeMoverLeavingReach: true;
+    leftReachOfAtLeastOneLegalOpportunityAttack: true;
+  }>;
 }
 ```
 
 ### Ownership Boundary
 
-- The table/caller/session supplies the reach-exit classification for that
-  5-foot checkpoint:
-  whether the move provokes, and which threatening creatures' reach is being
-  left on that checkpoint.
-- Battle owns movement-budget spend, dead/incapacitated gating, grapple-drag
-  extra cost, Disengage suppression, and filtering the threatened set against
-  battle-owned OA eligibility such as reaction availability.
+- The table/caller/session supplies movement cost and reach-exit classification
+  for that segment: whether the movement can provoke Opportunity Attacks, and
+  which reactors can see the mover leave reach for at least one legal OA attack
+  option. `doesNotProvokeOpportunityAttacks` includes table-adjudicated causes
+  such as teleportation or movement that does not use the creature's movement,
+  action, Bonus Action, Reaction, or Speed.
+- Battle owns movement-budget spend, dead/incapacitated gating, Disengage
+  suppression, and filtering the supplied opportunity threats against
+  battle-owned OA eligibility such as reaction availability and effects that
+  block Opportunity Attacks. Grapple drag/carry cost is represented in the
+  table-supplied total movement cost; battle validates budget spend rather than
+  recomputing geometric distance moved.
 - Core, battle, and MCP do not derive coordinates, path traces, terrain geometry, or
   persistent adjacency/reach caches.
 
@@ -113,6 +125,7 @@ implementation slice that actually wires those reaction tokens.
 
 - `BATTLE_HELP_ATTACK` stays bounded to `allyId`, `targetId`, and one explicit
   helper-target proximity fact.
-- `BATTLE_MOVE` stays bounded to one 5-foot checkpoint plus explicit
-  provocation/threat facts for that checkpoint.
+- `BATTLE_MOVE` stays bounded to one table-supplied movement segment/checkpoint
+  plus explicit movement-cost and Opportunity Attack threat facts for that
+  segment.
 - Geometry ownership remains at the table, outside core, battle, and MCP.

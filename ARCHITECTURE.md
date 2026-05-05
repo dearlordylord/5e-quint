@@ -162,11 +162,12 @@ the boundary where the procedure needs them:
   resulting help link, expiry, and consumption by the later qualifying attack.
 
 If a package stores an explicit spatial fact, the type must name that fact rather
-than imply ownership of geometry. For example, a caller-supplied pairwise
-distance can support range filtering, but it is not a coordinate model, a path
-model, or proof that the runtime computes map geometry. Do not derive new geometry
-from stored spatial facts; if a reducer needs another spatial relation, ask the
-table/caller/session for that relation explicitly and name it at the boundary.
+than imply ownership of geometry. For example, a caller-supplied attack range
+band, reach-exit fact, clear-path/cover fact, grapple-out-of-range fact, or
+affected-target set can support rule legality without giving the runtime a
+distance model. Do not derive new geometry from stored spatial facts; if a
+reducer needs another spatial relation, ask the table/caller/session for that
+relation explicitly and name it at the boundary.
 
 Detailed historical decisions live in
 `plans/MOVEMENT_GEOMETRY_OWNERSHIP.md` and

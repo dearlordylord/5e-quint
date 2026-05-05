@@ -119,9 +119,10 @@ Severity: medium (partly intentional).
 
 **Observation.** `execute_action` for `BATTLE_ATTACK` requires a
 `runtime: { runtime: "battleAttack", values: {...} }` record with
-`attackRoll`, `targetAc`, `weaponDamage`, `attackerWithin5ft`,
-`hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`,
-`frightSourceInLOS`, `hasAllyAdjacentToTarget`, `hitReactionCandidates`.
+`attackRoll`, `targetAc`, `weaponDamage`, table-supplied attack-specific
+spatial facts such as melee reach legality or ranged range band,
+`targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`,
+Sneak Attack adjacent-ally eligibility, and `hitReactionCandidates`.
 None of these are discoverable through MCP — the shape lives only in
 `packages/mcp/src/server-battle-attack-runtime.ts` and the test fixtures.
 

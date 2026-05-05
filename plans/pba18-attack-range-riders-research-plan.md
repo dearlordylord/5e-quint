@@ -49,6 +49,9 @@ Status: pre-researched. This file is planning evidence and implementation guidan
   - long range: legal, range Disadvantage;
   - out of range: illegal.
 - Range-derived Disadvantage could flow through the same roll-mode aggregation path as hidden, Dodge, grapple, and ongoing features so RAW cancellation remains centralized.
+- Ranged-attack Disadvantage from a nearby non-incapacitated enemy who can see the
+  attacker should enter the same aggregation path as a table-supplied spatial
+  roll-mode fact, not a runtime distance lookup.
 - Surface attack readers should remain the source for normal/long range metadata.
   The table supplies the selected target's range band; MCP should not copy
   authored range facts, accept target distances, or infer geometry into session
@@ -68,6 +71,8 @@ Status: pre-researched. This file is planning evidence and implementation guidan
   - normal-range target appears and rolls normally;
   - long-range target appears and requires Disadvantage;
   - beyond-long target is rejected;
+  - nearby-enemy ranged Disadvantage is applied from a table fact and cancels with
+    Advantage normally;
   - existing Disadvantage/Advantage sources cancel correctly;
   - conditional rider applies only under its resolved context;
   - Critical Hit doubles conditional attack damage dice consistently.

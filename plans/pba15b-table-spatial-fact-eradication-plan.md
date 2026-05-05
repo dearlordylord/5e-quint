@@ -7,10 +7,12 @@ only.
 
 ## Decision
 
-Spatiality is table-provided. Promoted battle code, MCP, and legacy Core must not
-own coordinates, pairwise distance state, adjacency caches, pathfinding, line of
+Spatiality is table-provided. Promoted battle code and MCP must not own
+coordinates, pairwise distance state, adjacency caches, pathfinding, line of
 sight, cover derivation, or area inclusion. They may consume explicit
-table/caller/session facts and apply non-spatial rules to them.
+table/caller/session facts and apply non-spatial rules to them. Legacy Core
+coordinate derivations are restore-source debt for the later Core ledger and
+deletion tasks unless they still sit on a production path touched by this slice.
 
 Authoritative rule dimensions such as weapon reach, weapon range, spell range,
 and spell area radius remain authored content facts. The runtime may expose them
@@ -53,34 +55,43 @@ owning combatant-to-combatant spatial distance.
 - `startBattle` accepts combatants and non-spatial encounter facts only. It does
   not accept or default encounter distances.
 - Movement fills carry battle-runtime movement cost plus table-provided spatial
-  consequences, not destination distances. Opportunity attacks consume a
-  table-provided reach-exit/threatened set such as `leftReachOf` or
-  `opportunityThreats`.
+  consequences, not destination distances. Opportunity attacks consume
+  table-provided movement-cause/provocation and reach-exit threat facts. A threat
+  fact means a reactor can see the mover leave reach for at least one legal OA
+  attack option; battle still filters battle-owned reaction/effect/lifecycle
+  eligibility.
 - Opportunity-attack runtime logic filters table-provided threateners by
   reaction availability, creature lifecycle, incapacitation, Disengage, and
   effects that block opportunity attacks. It does not compare feet.
-- Attack and spell target legality consumes table-provided legality/range-band
-  facts. Runtime still owns authored reach/range metadata and non-spatial
+- Attack target legality consumes table-provided melee reach legality or ranged
+  normal/long/out-of-range facts. Spell target legality consumes spell-specific
+  targetability facts such as selected target/source/origin validity, clear path,
+  and Total Cover legality; spell targetability does not use attack-style range
+  bands. Runtime still owns authored reach/range metadata and non-spatial
   mechanics such as disadvantage, reactions, resources, and damage.
-- AoE resolution fills carry `affectedTargetIds` supplied by the table. Runtime
-  validates participant ids and spell/rule constraints that are not geometry,
-  but never computes area membership.
+- AoE resolution fills carry event-scoped included targets supplied by the table
+  after origin, shape, Total Cover, and other area rules are applied. Runtime
+  validates participant ids and spell/rule constraints that are not geometry, but
+  never computes area membership.
 - Grapple, Help, Sneak Attack, Sentinel-like future triggers, and similar
   spatially-triggered mechanics consume explicit table facts. Where runtime must
   verify creature state, side, incapacitation, or resource facts, it still does.
-- Grapples do not auto-end from pairwise distance. Spatial separation becomes a
-  table/session event or movement consequence.
-- Legacy Core coordinate-derived availability is either removed, quarantined as
-  restore-source only, or rewritten to consume explicit table facts before Core
-  deletion work.
+- Grapples do not auto-end from pairwise distance. The RAW out-of-range end
+  condition becomes a required table/session `grappleOutOfRange`-style event or
+  movement consequence.
+- Legacy Core coordinate-derived availability is cataloged here only as spatial
+  debt. Do not expand PBA15B into broad Core cleanup before the Core deletion
+  ledger unless a production path touched by this slice still depends on the
+  derivation.
 
 ## Implementation Slices
 
 1. Promote table spatial fact vocabulary in `@dnd/battle-runtime`.
    Define narrow fill/fact types for movement reach-exit, attack target spatial
-   legality, spell target spatial legality, AoE affected targets, Help proximity,
-   Grapple reach, and adjacent-ally facts. Make invalid states unrepresentable:
-   do not carry both raw distances and table-derived facts.
+   legality, spell targetability, event-scoped AoE included targets, Help
+   proximity, Grapple reach/out-of-range, and adjacent-ally facts. Make invalid
+   states unrepresentable: do not carry both raw distances and table-derived
+   facts.
 
 2. Remove start-battle and state-owned distances.
    Delete `distances.ts`, `BattleState.combatantDistances`,
@@ -89,7 +100,8 @@ owning combatant-to-combatant spatial distance.
 
 3. Rewrite movement and opportunity attacks.
    Replace `distanceMovedFeet`/`destinationDistances` with movement cost plus
-   table-provided reach-exit facts. Preserve movement budget and grapple drag
+   table-provided movement-cause/provocation, reach-exit, visibility, and
+   qualifying OA attack-option facts. Preserve movement budget and grapple drag
    cost semantics without deriving from geometric distance; the table-supplied
    movement cost is the executable boundary fact.
 
@@ -112,9 +124,10 @@ owning combatant-to-combatant spatial distance.
    `destinationDistances`, and runtime-generated `areaChoices`.
 
 7. Quarantine or remove legacy Core spatial derivation.
-   Remove `squaresBetween`/`battlePosition` availability derivations from
-   production paths if those paths still execute. If a path remains only as
-   restore-source material, mark it clearly so no new work depends on it.
+   Do not perform broad legacy Core deletion in this task. Remove
+   `squaresBetween`/`battlePosition` availability derivations only if a production
+   path touched by PBA15B still executes them; otherwise mark them as restore
+   source for the later Core ledger/quarantine tasks.
 
 8. Audit downstream plans.
    Remove or rewrite stale "table-supplied distance" language in later PBA/MCP
@@ -130,6 +143,13 @@ owning combatant-to-combatant spatial distance.
   or AoE area membership from combatant geometry.
 - Movement, OA, Help, Grapple, attack targeting, spell targeting, AoE, and Sneak
   Attack consume table-provided spatial facts where spatial legality is needed.
+- Opportunity Attack facts preserve RAW visibility and movement-cause limits:
+  teleportation/forced movement that does not qualify for OA is represented by
+  the table-provided provocation classification, and threat facts are already
+  scoped to a reactor seeing the mover leave reach for at least one legal OA
+  attack option.
+- Grapple out-of-range ending is still representable as an explicit
+  table/session event or movement consequence.
 - Authored reach/range/radius facts remain content metadata, not runtime
   geometry ownership.
 - Legacy Core production availability no longer derives geometry, or remaining

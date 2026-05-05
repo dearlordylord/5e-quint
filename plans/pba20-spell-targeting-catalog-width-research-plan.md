@@ -45,6 +45,10 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 
 - A profile rename/widening could separate current behavior from the broader family, for example a direct repeated-damage spell profile with typed target allocation.
 - A runtime Spell Invocation allocation could carry selected slot level plus a multiset of `{ targetId, count }` entries.
+- Spell target allocation must carry table-provided spell targetability facts for
+  the selected spell shape, such as range/source/origin validity, clear path, and
+  Total Cover legality. These are not target distances and are not attack
+  normal/long range bands.
 - Total dart count should derive from selected slot level and Surface target selection count, not from a hardcoded Magic Missile branch.
 - Damage replay could keep one rolled damage protocol for simultaneous darts while applying per-target totals from allocation counts.
 - Per-target consequences should derive from actual damaged targets: Shield, resistance/immunity, concentration saves, zero-HP effects, and after-damage reactions.
@@ -57,9 +61,10 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 - Shield as a reaction to Magic Missile, likely deferred to PBA21 if reaction machinery is required.
 - Scorching Ray as multi-target spell attack pressure.
 - Bless as multi-target concentration support pressure.
-- Chain Lightning as primary/secondary target shape, probably later than Magic
-  Missile because of no-duplicate constraints and table-supplied secondary-target
-  eligibility/allocation facts.
+- Chain Lightning as typed primary/secondary target selection, probably later
+  than Magic Missile because of no-duplicate constraints and table-supplied
+  secondary-target eligibility/allocation facts. Do not model it as flat AoE
+  membership or a generic `{ targetId, count }` allocation.
 
 ## Verification Suggestions
 
