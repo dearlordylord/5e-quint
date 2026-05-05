@@ -5,6 +5,7 @@ import {
   type ChoiceCardinality,
   type ChoiceCount,
   type CreationChoiceOptionId,
+  type LoadoutSlot,
   type UnitChoiceKey,
 } from "./types.ts";
 import { backgroundAbilityScoreIncreaseOptionId } from "./hole-factories.ts";
@@ -153,11 +154,9 @@ export const WIZARD_SPELLBOOK_CHOICE_KEY =
   "wizard_spellbook_choices" satisfies UnitChoiceKey;
 export const WIZARD_PREPARED_SPELL_CHOICE_KEY =
   "wizard_prepared_spell_choices" satisfies UnitChoiceKey;
-export const LOADOUT_ARMOR_CHOICE_KEY = "loadout_armor" satisfies UnitChoiceKey;
-export const LOADOUT_SHIELD_CHOICE_KEY =
-  "loadout_shield" satisfies UnitChoiceKey;
-export const LOADOUT_WEAPON_CHOICE_KEY =
-  "loadout_weapon" satisfies UnitChoiceKey;
+export const LOADOUT_ARMOR_SLOT = "armor" satisfies LoadoutSlot;
+export const LOADOUT_SHIELD_SLOT = "shield" satisfies LoadoutSlot;
+export const LOADOUT_WEAPON_SLOT = "weapon" satisfies LoadoutSlot;
 export const EXACTLY_ONE_CHOICE = {
   tag: "exactly",
   count: 1 as ChoiceCount,

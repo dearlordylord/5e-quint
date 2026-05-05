@@ -21,10 +21,9 @@ import {
   fillCreationHoles,
   finalizeCharacterDraft,
   computeTotalLevel,
+  loadoutEquipmentUnitId,
+  loadoutSourceHoleIdText,
   startingClassUnitId,
-  unitChoiceKey,
-  unitChoiceSourceHoleIdText,
-  unitChoiceSourceUnitId,
   type CharacterDraft,
   type CreationBatchIssueCode,
   type CreationBatchFillResult,
@@ -33,6 +32,7 @@ import {
   type CreationHole,
   type DraftRevision,
 } from "./index.ts";
+import { qntLoadoutSlot } from "./qnt-loadout-bridge.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -44,18 +44,10 @@ if (unitCatalogResult.tag !== "ok") {
 
 const unitLibrary = unitCatalogResult.catalog;
 
-function unitChoiceKeyRight(value: string) {
-  const result = unitChoiceKey(value);
+function loadoutEquipmentUnitIdRight(value: string) {
+  const result = loadoutEquipmentUnitId(value);
   if (Either.isLeft(result)) {
-    throw new Error(`Invalid MBT Unit choice key: ${value}`);
-  }
-  return result.right;
-}
-
-function unitChoiceSourceUnitIdRight(value: string) {
-  const result = unitChoiceSourceUnitId(value);
-  if (Either.isLeft(result)) {
-    throw new Error(`Invalid MBT Unit choice source Unit id: ${value}`);
+    throw new Error(`Invalid MBT loadout equipment Unit id: ${value}`);
   }
   return result.right;
 }
@@ -276,9 +268,9 @@ const holeIds = {
   HBackgroundEquipment:
     "cc:unit-source:u:18:background_soldier:c:background_equipment_choice",
   HEquipmentPurchase: "cc:unit-source:u:13:class_fighter:c:equipment_purchase",
-  HLoadoutArmor: "cc:unit-source:u:16:armor_chain_mail:c:loadout_armor",
-  HLoadoutShield: "cc:unit-source:u:16:equipment_shield:c:loadout_shield",
-  HLoadoutWeapon: "cc:unit-source:u:16:weapon_longsword:c:loadout_weapon",
+  HLoadoutArmor: "cc:loadout-source:e:16:armor_chain_mail:s:armor",
+  HLoadoutShield: "cc:loadout-source:e:16:equipment_shield:s:shield",
+  HLoadoutWeapon: "cc:loadout-source:e:16:weapon_longsword:s:weapon",
 } as const;
 
 assertUniqueHoleIds(holeIds);
@@ -549,10 +541,10 @@ function choiceFillForKnownProtocolHole(
     // This rejection case intentionally targets a valid protocol hole before
     // it is open, so it cannot derive the id from current hole discovery.
     holeId: creationHoleId(
-      unitChoiceSourceHoleIdText({
-        tag: "unit",
-        unitId: unitChoiceSourceUnitIdRight("armor_chain_mail"),
-        choiceKey: unitChoiceKeyRight("loadout_armor"),
+      loadoutSourceHoleIdText({
+        tag: "loadout",
+        equipmentUnitId: loadoutEquipmentUnitIdRight("armor_chain_mail"),
+        slot: "armor",
       }),
     ),
     optionIds: optionIds.map(creationChoiceOptionId),
@@ -639,10 +631,12 @@ function hasChoice(
   choices: CharacterDraft["selections"]["choices"],
   choiceKey: string,
 ): boolean {
+  const loadoutSlot = qntLoadoutSlot(choiceKey);
   return choices.some(
     (choice) =>
-      choice.source.tag === "unit" &&
-      String(choice.source.choiceKey) === choiceKey,
+      (choice.kind === "unitChoice" &&
+        String(choice.source.choiceKey) === choiceKey) ||
+      (choice.kind === "loadout" && choice.source.slot === loadoutSlot),
   );
 }
 

@@ -1,8 +1,11 @@
 import { Either } from "effect";
 import {
+  loadoutEquipmentUnitId,
+  loadoutSourceHoleIdText,
   unitChoiceSourceHoleIdText,
   unitChoiceSourceUnitId,
   type CreationHoleIdText,
+  type LoadoutSlot,
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -17,8 +20,24 @@ export function unitHoleId(
   }
 
   return unitChoiceSourceHoleIdText({
-    tag: "unit",
+    tag: "unitChoice",
     unitId: sourceUnitId.right,
     choiceKey,
+  });
+}
+
+export function loadoutHoleId(
+  equipmentUnitId: UnitRecord["id"],
+  slot: LoadoutSlot,
+): CreationHoleIdText {
+  const sourceEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId);
+  if (Either.isLeft(sourceEquipmentUnitId)) {
+    throw new Error("Loadout sources require a non-empty equipment Unit id.");
+  }
+
+  return loadoutSourceHoleIdText({
+    tag: "loadout",
+    equipmentUnitId: sourceEquipmentUnitId.right,
+    slot,
   });
 }

@@ -17,7 +17,7 @@ loadout. It is not a Stat Block and not in-play Character Sheet state.
 
 Creation Hole - a fillable requirement in a Character Draft. Holes can come
 from draft structure or from selected authored Units. Hole ids are stable
-runtime ids derived by the owning codec, not SRD terms.
+runtime ids derived by the owning source/key isomorphism, not SRD terms.
 
 Creation Fill - caller-submitted answer for one Creation Hole. Fills are
 applied in atomic batches by `fillCreationHoles`; a rejected batch leaves the
@@ -36,7 +36,7 @@ separate promoted creation concept.
 
 Support Profile - package-private runtime boundary that says which discovered
 Unit-backed draft choices, Unit choice families, option ids, equipment
-purchases, and loadout choices this package can currently finalize. It is not
+purchases, and selected-equipment loadout slots this package can currently finalize. It is not
 authored provenance and not a Surface content classification. Legal choices
 outside the profile can appear in holes, but fills are rejected as unsupported
 until widening work adds support and projection behavior.

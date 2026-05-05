@@ -26,8 +26,8 @@ removal.
 
 Composite-key isomorphism requirement: if a primitive is a composite protocol
 key, persisted key, exported key, or any key that callers may need to inspect,
-it must have an executable reversible codec rather than an informal string
-format. The codec must prove both directions with tests:
+it must have an executable source/key isomorphism rather than an informal string
+format. Property tests must prove both inverse laws:
 
 - source facts -> key -> source facts equals the original source facts;
 - key -> source facts -> key equals the original key;
@@ -35,16 +35,21 @@ format. The codec must prove both directions with tests:
   misparse;
 - invalid keys return typed parse failures rather than throwing.
 
-Opaque private map keys may remain non-reversible only when no caller can obtain
+Opaque private map keys may remain non-isomorphic only when no caller can obtain
 or persist the key and the key is never parsed back into components. Prefer a
-length-prefixed encoding for reversible keys whose components include
+length-prefixed encoding for isomorphic keys whose components include
 free-form authored ids.
 
 First implementation slice: make Unit-choice source identity isomorphic. Add a
-branded reversible `UnitChoiceSourceKey` for `UnitChoiceSource`, use it for
+branded `UnitChoiceSourceKey` source/key isomorphism for `UnitChoiceSource`, use it for
 finalization lookup maps, and migrate Unit-sourced `CreationHoleId` construction
 and parsing away from `cc:unit:${unitId}:${choiceKey}` separator parsing so the
-hole id can round-trip through the same source identity without ambiguity.
+hole id preserves the same source identity without ambiguity.
+
+Second implementation slice: split loadout identity out of Unit-choice identity.
+Remove loadout slot keys from `UNIT_CHOICE_KEYS`, add a distinct
+`LoadoutSource` and branded `LoadoutSourceKey` source/key isomorphism, and use
+`cc:loadout-source:<LoadoutSourceKey>` for selected-equipment loadout holes.
 
 ## Research Inputs
 
@@ -65,7 +70,7 @@ hole id can round-trip through the same source identity without ambiguity.
 - "Origin" is overloaded across feat category, background-origin feat, origin languages, and support-profile origin facts. A future implementation could either define Origin in `UBIQUITOUS_LANGUAGE.md` or use narrower names such as `backgroundOriginFeat`, `startingLanguages`, and `fixedCreationFacts`.
 - Surface `draft_owned_item` sounds like runtime draft state even though it is authored starting-equipment shape. A name like `non_unitized_item` or `authored_item_text` would better preserve provenance.
 - Surface `spellSlotProjection` is runtime-flavored language inside authored content. `startingSpellSlotCapacity` would better describe the authored creation fact.
-- `UNIT_CHOICE_KEYS` mixes authored Unit-backed choices with runtime loadout choices. The loadout branch would be clearer as a separate source kind.
+- Completed split: `UNIT_CHOICE_KEYS` now describes authored Unit-backed choice families only, while selected-equipment loadout slots use `LoadoutSource` and `LoadoutSourceKey`.
 
 ## Architecture Findings
 
@@ -92,7 +97,7 @@ hole id can round-trip through the same source identity without ambiguity.
 - Character-creation-local brands would fit durable protocol/build identities such as `CharacterEquipmentItemId` and `UnitChoiceSourceKey`.
 - `CharacterClassLevel` could converge on shared `ClassLevel` unless character creation needs a narrower phase-specific type.
 - `unitChoiceSourceKey` could return a branded key or hide the composite string behind a helper returning a complete `ReadonlyMap<UnitChoiceSourceKey, ...>`.
-- Loadout holes could use a distinct `CreationHoleSource` branch for runtime projection/loadout instead of treating equipment posture as a Unit-granted authored choice.
+- Completed split: selected-equipment loadout holes use a distinct `LoadoutSource` branch and source/key isomorphism instead of treating loadout slots as Unit-granted authored choices.
 - Labels, descriptions, display names, and diagnostic messages can remain plain strings unless they become stable identifiers or parser inputs.
 
 ## Connascence Checks

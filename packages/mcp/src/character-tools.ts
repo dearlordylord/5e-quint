@@ -1,5 +1,6 @@
 import { characterId } from "@dnd/battle-runtime";
 import {
+  LOADOUT_SLOTS,
   createCharacterDraft,
   discoverCreationHoles,
   fillCreationHoles,
@@ -55,9 +56,14 @@ const CreationHoleSourceSchema = Schema.Union(
     path: Schema.String,
   }),
   Schema.Struct({
-    tag: Schema.Literal("unit"),
+    tag: Schema.Literal("unitChoice"),
     unitId: Schema.String,
     choiceKey: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("loadout"),
+    equipmentUnitId: Schema.String,
+    slot: Schema.Literal(...LOADOUT_SLOTS),
   }),
 );
 const CreationChoiceOptionSchema = Schema.Struct({

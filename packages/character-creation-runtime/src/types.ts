@@ -94,11 +94,11 @@ export const UNIT_CHOICE_KEYS = [
   "wizard_cantrip_choices",
   "wizard_spellbook_choices",
   "wizard_prepared_spell_choices",
-  "loadout_armor",
-  "loadout_shield",
-  "loadout_weapon",
 ] as const;
 export type UnitChoiceKey = (typeof UNIT_CHOICE_KEYS)[number];
+
+export const LOADOUT_SLOTS = ["armor", "shield", "weapon"] as const;
+export type LoadoutSlot = (typeof LOADOUT_SLOTS)[number];
 
 export type UnitChoiceKeyIssue = {
   readonly tag: "unsupportedUnitChoiceKey";
@@ -210,13 +210,22 @@ export function choiceCardinalityMax(cardinality: ChoiceCardinality): number {
 export type CreationHoleSource =
   | { readonly tag: "draft"; readonly path: CharacterDraftPath }
   | {
-      readonly tag: "unit";
+      readonly tag: "unitChoice";
       readonly unitId: UnitChoiceSourceUnitId;
       readonly choiceKey: UnitChoiceKey;
+    }
+  | {
+      readonly tag: "loadout";
+      readonly equipmentUnitId: LoadoutEquipmentUnitId;
+      readonly slot: LoadoutSlot;
     };
 export type UnitChoiceSource = Extract<
   CreationHoleSource,
-  { readonly tag: "unit" }
+  { readonly tag: "unitChoice" }
+>;
+export type LoadoutSource = Extract<
+  CreationHoleSource,
+  { readonly tag: "loadout" }
 >;
 
 export type UnitChoiceSourceUnitId = UnitRecord["id"] &
@@ -234,6 +243,23 @@ export function unitChoiceSourceUnitId(
   return value.length > 0
     ? Either.right(UnitChoiceSourceUnitId(value))
     : Either.left({ tag: "unitChoiceSourceUnitIdEmpty", value });
+}
+
+export type LoadoutEquipmentUnitId = UnitRecord["id"] &
+  Brand.Brand<"LoadoutEquipmentUnitId">;
+const LoadoutEquipmentUnitId = Brand.nominal<LoadoutEquipmentUnitId>();
+
+export type LoadoutEquipmentUnitIdIssue = {
+  readonly tag: "loadoutEquipmentUnitIdEmpty";
+  readonly value: UnitRecord["id"];
+};
+
+export function loadoutEquipmentUnitId(
+  value: UnitRecord["id"],
+): Either.Either<LoadoutEquipmentUnitId, LoadoutEquipmentUnitIdIssue> {
+  return value.length > 0
+    ? Either.right(LoadoutEquipmentUnitId(value))
+    : Either.left({ tag: "loadoutEquipmentUnitIdEmpty", value });
 }
 
 export type UnitChoiceSourceKeyText =
@@ -266,7 +292,7 @@ export type UnitChoiceSourceKeyIssue =
 export function unitChoiceSourceKey(
   source: UnitChoiceSource,
 ): UnitChoiceSourceKey {
-  // Template evidence is local to the codec: the parser below is the inverse.
+  // Template evidence is local to the source/key isomorphism.
   return UnitChoiceSourceKey(
     `u:${source.unitId.length}:${source.unitId}:c:${source.choiceKey}` as UnitChoiceSourceKeyText,
   );
@@ -337,16 +363,123 @@ export function parseUnitChoiceSourceKey(
   }
 
   return Either.right({
-    tag: "unit",
+    tag: "unitChoice",
     unitId: sourceUnitId.right,
     // UNIT_CHOICE_KEYS membership check above establishes the literal union.
     choiceKey: choiceKey as UnitChoiceKey,
   });
 }
 
+export type LoadoutSourceKeyText =
+  `e:${number}:${LoadoutEquipmentUnitId}:s:${LoadoutSlot}`;
+export type LoadoutSourceKey = LoadoutSourceKeyText &
+  Brand.Brand<"LoadoutSourceKey">;
+const LoadoutSourceKey = Brand.nominal<LoadoutSourceKey>();
+
+export type LoadoutSourceKeyIssue =
+  | {
+      readonly tag: "loadoutSourceKeyPrefixMismatch";
+      readonly value: string;
+    }
+  | { readonly tag: "loadoutSourceKeyMissingLength"; readonly value: string }
+  | {
+      readonly tag: "loadoutSourceKeyInvalidLength";
+      readonly value: string;
+      readonly lengthText: string;
+    }
+  | {
+      readonly tag: "loadoutSourceKeyMissingSlotPrefix";
+      readonly value: string;
+    }
+  | {
+      readonly tag: "loadoutSourceKeyUnsupportedSlot";
+      readonly value: string;
+      readonly slot: string;
+    };
+
+export function loadoutSourceKey(source: LoadoutSource): LoadoutSourceKey {
+  // Template evidence is local to the source/key isomorphism.
+  return LoadoutSourceKey(
+    `e:${source.equipmentUnitId.length}:${source.equipmentUnitId}:s:${source.slot}` as LoadoutSourceKeyText,
+  );
+}
+
+export function parseLoadoutSourceKey(
+  value: string,
+): Either.Either<LoadoutSource, LoadoutSourceKeyIssue> {
+  const prefix = "e:";
+  if (!value.startsWith(prefix)) {
+    return Either.left({ tag: "loadoutSourceKeyPrefixMismatch", value });
+  }
+
+  const lengthStart = prefix.length;
+  const lengthEnd = value.indexOf(":", lengthStart);
+  if (lengthEnd < 0) {
+    return Either.left({ tag: "loadoutSourceKeyMissingLength", value });
+  }
+
+  const lengthText = value.slice(lengthStart, lengthEnd);
+  const equipmentUnitIdLength = Number(lengthText);
+  if (
+    !Number.isInteger(equipmentUnitIdLength) ||
+    equipmentUnitIdLength < 1 ||
+    String(equipmentUnitIdLength) !== lengthText
+  ) {
+    return Either.left({
+      tag: "loadoutSourceKeyInvalidLength",
+      value,
+      lengthText,
+    });
+  }
+
+  const equipmentUnitIdStart = lengthEnd + 1;
+  const equipmentUnitIdEnd = equipmentUnitIdStart + equipmentUnitIdLength;
+  const equipmentUnitIdText = value.slice(
+    equipmentUnitIdStart,
+    equipmentUnitIdEnd,
+  );
+  if (equipmentUnitIdText.length !== equipmentUnitIdLength) {
+    return Either.left({
+      tag: "loadoutSourceKeyInvalidLength",
+      value,
+      lengthText,
+    });
+  }
+  const equipmentUnitId = loadoutEquipmentUnitId(equipmentUnitIdText);
+  if (Either.isLeft(equipmentUnitId)) {
+    return Either.left({
+      tag: "loadoutSourceKeyInvalidLength",
+      value,
+      lengthText,
+    });
+  }
+
+  const slotPrefix = ":s:";
+  if (!value.startsWith(slotPrefix, equipmentUnitIdEnd)) {
+    return Either.left({ tag: "loadoutSourceKeyMissingSlotPrefix", value });
+  }
+
+  const slot = value.slice(equipmentUnitIdEnd + slotPrefix.length);
+  if (!LOADOUT_SLOTS.some((candidate) => candidate === slot)) {
+    return Either.left({
+      tag: "loadoutSourceKeyUnsupportedSlot",
+      value,
+      slot,
+    });
+  }
+
+  return Either.right({
+    tag: "loadout",
+    equipmentUnitId: equipmentUnitId.right,
+    // LOADOUT_SLOTS membership check above establishes the literal union.
+    slot: slot as LoadoutSlot,
+  });
+}
+
 export type CreationHoleIdText =
   | `cc:draft:${CharacterDraftPath}`
-  | `cc:unit-source:${UnitChoiceSourceKeyText}`;
+  | `cc:unit-source:${UnitChoiceSourceKeyText}`
+  | `cc:loadout-source:${LoadoutSourceKeyText}`;
 
 export type CreationHoleId = CreationHoleIdText & Brand.Brand<"CreationHoleId">;
 const CreationHoleId = Brand.nominal<CreationHoleId>();
@@ -356,8 +489,15 @@ export const creationHoleId: (value: CreationHoleIdText) => CreationHoleId =
 export function unitChoiceSourceHoleIdText(
   source: UnitChoiceSource,
 ): CreationHoleIdText {
-  // CreationHoleIdText composes the branded source-key codec with a fixed prefix.
+  // CreationHoleIdText composes the branded source/key isomorphism with a fixed prefix.
   return `cc:unit-source:${unitChoiceSourceKey(source)}` as CreationHoleIdText;
+}
+
+export function loadoutSourceHoleIdText(
+  source: LoadoutSource,
+): CreationHoleIdText {
+  // CreationHoleIdText composes the branded source/key isomorphism with a fixed prefix.
+  return `cc:loadout-source:${loadoutSourceKey(source)}` as CreationHoleIdText;
 }
 
 export function parseCreationHoleId(value: string): CreationHoleId | null {
@@ -375,11 +515,17 @@ function parseCreationHoleIdText(value: string): CreationHoleIdText | null {
   }
 
   const unitPrefix = "cc:unit-source:";
-  if (!value.startsWith(unitPrefix)) return null;
-  const source = parseUnitChoiceSourceKey(value.slice(unitPrefix.length));
-  return Either.isRight(source)
-    ? unitChoiceSourceHoleIdText(source.right)
-    : null;
+  if (value.startsWith(unitPrefix)) {
+    const source = parseUnitChoiceSourceKey(value.slice(unitPrefix.length));
+    return Either.isRight(source)
+      ? unitChoiceSourceHoleIdText(source.right)
+      : null;
+  }
+
+  const loadoutPrefix = "cc:loadout-source:";
+  if (!value.startsWith(loadoutPrefix)) return null;
+  const source = parseLoadoutSourceKey(value.slice(loadoutPrefix.length));
+  return Either.isRight(source) ? loadoutSourceHoleIdText(source.right) : null;
 }
 
 export type UnitRef = {
@@ -445,10 +591,21 @@ export type CharacterSelectedChoiceOption = {
   readonly unitRef?: UnitRef;
 };
 
-export type CharacterChoiceSelection = {
-  readonly source: UnitChoiceSource;
-  readonly options: readonly CharacterSelectedChoiceOption[];
+export type LoadoutSelectedChoiceOption = {
+  readonly optionId: CreationChoiceOptionId;
 };
+
+export type CharacterChoiceSelection =
+  | {
+      readonly kind: "unitChoice";
+      readonly source: UnitChoiceSource;
+      readonly options: readonly CharacterSelectedChoiceOption[];
+    }
+  | {
+      readonly kind: "loadout";
+      readonly source: LoadoutSource;
+      readonly options: readonly [LoadoutSelectedChoiceOption];
+    };
 
 export type CreationHole =
   | {

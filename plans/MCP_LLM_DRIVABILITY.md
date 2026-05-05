@@ -234,11 +234,9 @@ Status: **DONE**. New resolvers in
   index 1 = plusOne); `lift` builds the plusTwoPlusOne variant.
 - `languages` — 3-pick over `CHARACTER_LANGUAGES` (the current
   character-creation slice expects exactly three starting languages).
-- `loadout_worn_armor`, `loadout_wielded_weapon`,
-  `loadout_wielded_weapon_grip`, `loadout_shield` — all emitted by a
-  single consolidated `loadoutPickers` call that caches the
-  `ownedCombatEquipment` lookup. Shield picker uses a `yes`/`no` lift to
-  boolean.
+- selected-equipment loadout slots (`armor`, `shield`, `weapon`) — all emitted
+  by a single consolidated loadout picker that caches the
+  `ownedCombatEquipment` lookup.
 
 Severity: medium.
 

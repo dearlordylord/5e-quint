@@ -55,7 +55,10 @@ import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_READY_TRIGGERS,
 } from "../test-support/battle-act-labels.ts";
-import { unitHoleId } from "../test-support/creation-hole-ids.ts";
+import {
+  loadoutHoleId,
+  unitHoleId,
+} from "../test-support/creation-hole-ids.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 function startBattleFromCharacterBuildAndStatBlockRight(
@@ -3480,10 +3483,10 @@ function manifestPurchaseFills(): readonly CreationFill[] {
 
 function manifestLoadoutFills(): readonly CreationFill[] {
   return [
-    choiceFill(unitHoleId("armor_chain_mail", "loadout_armor"), "worn"),
-    choiceFill(unitHoleId("equipment_shield", "loadout_shield"), "wielded"),
+    choiceFill(loadoutHoleId("armor_chain_mail", "armor"), "worn"),
+    choiceFill(loadoutHoleId("equipment_shield", "shield"), "wielded"),
     choiceFill(
-      unitHoleId("weapon_longsword", "loadout_weapon"),
+      loadoutHoleId("weapon_longsword", "weapon"),
       "wielded_one_handed",
     ),
   ];

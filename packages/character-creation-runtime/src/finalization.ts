@@ -33,7 +33,12 @@ import {
   sameOptionIdMultiset,
   startingEquipmentChoiceHole,
 } from "./discovery.ts";
-import { choiceHole, skillOption, unitSource } from "./hole-factories.ts";
+import {
+  choiceHole,
+  loadoutSource,
+  skillOption,
+  unitSource,
+} from "./hole-factories.ts";
 import {
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
@@ -60,6 +65,7 @@ import {
   hitDieSize,
   hitDieTotal,
   nonEmptyReadonlyArray,
+  loadoutSourceKey,
   unitChoiceSourceKey,
   type AbilityScoreAssignment,
   type BackgroundAbilityScoreIncreaseSelection,
@@ -79,6 +85,7 @@ import {
   type FinalizedCharacterSelections,
   type NonEmptyReadonlyArray,
   type UnitCatalog,
+  type LoadoutSourceKey,
   type UnitChoiceSourceKey,
   type UnitChoiceSource,
   type UnitRef,
@@ -86,6 +93,10 @@ import {
 
 type UnitChoiceCreationHole = ChoiceCreationHole & {
   readonly source: UnitChoiceSource;
+};
+
+type LoadoutCreationHole = ChoiceCreationHole & {
+  readonly source: Extract<ChoiceCreationHole["source"], { tag: "loadout" }>;
 };
 
 export function finalizeCharacterDraft(input: {
@@ -591,25 +602,45 @@ export function allFinalizedChoicesSupported(
   ) {
     return false;
   }
-  const supportedHolesBySource = supportedChoiceHolesBySource(
-    supportedFinalizationChoiceHoles({
-      selections,
-      classFacts: classFacts.value,
-      classLevel,
-      backgroundFacts: backgroundFacts.value,
-      unitLibrary,
-      classEquipmentHole,
-      backgroundEquipmentHole,
-    }),
+  const supportedHoles = supportedFinalizationChoiceHoles({
+    selections,
+    classFacts: classFacts.value,
+    classLevel,
+    backgroundFacts: backgroundFacts.value,
+    unitLibrary,
+    classEquipmentHole,
+    backgroundEquipmentHole,
+  });
+  const supportedUnitHolesBySource = supportedChoiceHolesBySource(
+    supportedHoles.flatMap((hole) =>
+      isUnitChoiceCreationHole(hole) ? [hole] : [],
+    ),
   );
-  const choiceSourceKeys = selections.choices.map((choice) =>
+  const supportedLoadoutHoles = supportedLoadoutHolesBySource(
+    supportedHoles.flatMap((hole) =>
+      isLoadoutCreationHole(hole) ? [hole] : [],
+    ),
+  );
+  const unitChoices = selections.choices.flatMap((choice) =>
+    choice.kind === "unitChoice" ? [choice] : [],
+  );
+  const loadoutChoices = selections.choices.flatMap((choice) =>
+    choice.kind === "loadout" ? [choice] : [],
+  );
+  const unitChoiceSourceKeys = unitChoices.map((choice) =>
     unitChoiceSourceKey(choice.source),
   );
+  const loadoutSourceKeys = loadoutChoices.map((choice) =>
+    loadoutSourceKey(choice.source),
+  );
+  const loadoutSlots = loadoutChoices.map((choice) => choice.source.slot);
 
   return (
-    new Set(choiceSourceKeys).size === choiceSourceKeys.length &&
-    selections.choices.every((choice) => {
-      const supportedHole = supportedHolesBySource.get(
+    new Set(unitChoiceSourceKeys).size === unitChoiceSourceKeys.length &&
+    new Set(loadoutSourceKeys).size === loadoutSourceKeys.length &&
+    new Set(loadoutSlots).size === loadoutSlots.length &&
+    unitChoices.every((choice) => {
+      const supportedHole = supportedUnitHolesBySource.get(
         unitChoiceSourceKey(choice.source),
       );
       if (
@@ -643,6 +674,15 @@ export function allFinalizedChoicesSupported(
         !sameCreationHoleSource(choice.source, classEquipmentHole.source) &&
         !sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)
       );
+    }) &&
+    loadoutChoices.every((choice) => {
+      const supportedHole = supportedLoadoutHoles.get(
+        loadoutSourceKey(choice.source),
+      );
+      return (
+        supportedHole != null &&
+        choiceSelectionMatchesHole(choice, supportedHole)
+      );
     })
   );
 }
@@ -663,6 +703,17 @@ export function supportedChoiceHolesBySource(
     if (merged !== undefined) {
       bySource.set(sourceKey, merged);
     }
+  }
+
+  return bySource;
+}
+
+export function supportedLoadoutHolesBySource(
+  holes: readonly LoadoutCreationHole[],
+): ReadonlyMap<LoadoutSourceKey, LoadoutCreationHole> {
+  const bySource = new Map<LoadoutSourceKey, LoadoutCreationHole>();
+  for (const hole of holes) {
+    bySource.set(loadoutSourceKey(hole.source), hole);
   }
 
   return bySource;
@@ -723,7 +774,7 @@ function supportedFinalizationChoiceHoles(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classEquipmentHole: UnitChoiceCreationHole;
   readonly backgroundEquipmentHole: UnitChoiceCreationHole;
-}): readonly UnitChoiceCreationHole[] {
+}): readonly ChoiceCreationHole[] {
   const classSkillHole = requireUnitChoiceCreationHole(
     choiceHole({
       source: unitSource(
@@ -782,12 +833,9 @@ function supportedFinalizationChoiceHoles(input: {
     ...supportedLoadoutChoices().flatMap((loadoutChoice) =>
       selectedEquipment.has(loadoutChoice.unitId)
         ? compact([
-            requireUnitChoiceCreationHole(
+            requireLoadoutCreationHole(
               choiceHole({
-                source: unitSource(
-                  loadoutChoice.unitId,
-                  loadoutChoice.choiceKey,
-                ),
+                source: loadoutSource(loadoutChoice.unitId, loadoutChoice.slot),
                 cardinality: EXACTLY_ONE_CHOICE,
                 options: [
                   {
@@ -861,7 +909,7 @@ function requireChoiceCreationHole(
 function isUnitChoiceCreationHole(
   hole: ChoiceCreationHole,
 ): hole is UnitChoiceCreationHole {
-  return hole.source.tag === "unit";
+  return hole.source.tag === "unitChoice";
 }
 
 function requireUnitChoiceCreationHole(
@@ -869,6 +917,23 @@ function requireUnitChoiceCreationHole(
 ): UnitChoiceCreationHole | undefined {
   const choice = requireChoiceCreationHole(hole);
   if (choice === undefined || !isUnitChoiceCreationHole(choice)) {
+    return undefined;
+  }
+
+  return choice;
+}
+
+function isLoadoutCreationHole(
+  hole: ChoiceCreationHole,
+): hole is LoadoutCreationHole {
+  return hole.source.tag === "loadout";
+}
+
+function requireLoadoutCreationHole(
+  hole: CreationHole | undefined,
+): LoadoutCreationHole | undefined {
+  const choice = requireChoiceCreationHole(hole);
+  if (choice === undefined || !isLoadoutCreationHole(choice)) {
     return undefined;
   }
 
@@ -884,7 +949,7 @@ function isPresent<T>(value: T | undefined): value is T {
 }
 
 function supportedStartingEquipmentCoinGrantChoice(
-  selection: CharacterChoiceSelection,
+  selection: Extract<CharacterChoiceSelection, { readonly kind: "unitChoice" }>,
   unitId: UnitRecord["id"],
   choiceKey:
     | typeof CLASS_EQUIPMENT_CHOICE_KEY
@@ -956,13 +1021,16 @@ export function finalizedClassChoiceFeatures(
   selections: FinalizedCharacterSelections,
 ): readonly CharacterBuildFeature[] {
   return selections.choices.flatMap((selection) =>
-    unitRefsForSupportedClassChoice(selection.source, selection.options).map(
-      (unitId) => ({
-        kind: "classChoice" as const,
-        unitId,
-        choiceKey: selection.source.choiceKey,
-      }),
-    ),
+    selection.kind === "unitChoice"
+      ? unitRefsForSupportedClassChoice(
+          selection.source,
+          selection.options,
+        ).map((unitId) => ({
+          kind: "classChoice" as const,
+          unitId,
+          choiceKey: selection.source.choiceKey,
+        }))
+      : [],
   );
 }
 
@@ -971,6 +1039,9 @@ export function finalizedBuildEquipment(
 ): CharacterBuildEquipment {
   return selections.choices.reduce<CharacterBuildEquipment>(
     (equipment, selection) => {
+      if (selection.kind !== "loadout") {
+        return equipment;
+      }
       const loadoutChoice = supportedLoadoutChoiceForSource(selection.source);
       const selectedUnitId = selectedUnitIdForLoadoutChoice(
         selection,
@@ -1042,7 +1113,15 @@ function selectedUnitRefsForChoice(
     | typeof WIZARD_PREPARED_SPELL_CHOICE_KEY,
 ): readonly UnitRecord["id"][] {
   return selections.choices
-    .filter((choice) => choice.source.choiceKey === choiceKey)
+    .filter(
+      (
+        choice,
+      ): choice is Extract<
+        CharacterChoiceSelection,
+        { readonly kind: "unitChoice" }
+      > =>
+        choice.kind === "unitChoice" && choice.source.choiceKey === choiceKey,
+    )
     .flatMap((choice) =>
       choice.options.flatMap((option) =>
         option.unitRef == null ? [] : [option.unitRef.unitId],
@@ -1051,16 +1130,16 @@ function selectedUnitRefsForChoice(
 }
 
 function selectedUnitIdForLoadoutChoice(
-  selection: CharacterChoiceSelection,
+  selection: Extract<CharacterChoiceSelection, { readonly kind: "loadout" }>,
   loadoutChoice: ReturnType<typeof supportedLoadoutChoiceForSource>,
 ): UnitRecord["id"] | undefined {
-  if (loadoutChoice == null || selection.options.length !== 1) {
+  if (loadoutChoice == null) {
     return undefined;
   }
 
   const option = selection.options[0];
   return option?.optionId === loadoutChoice.optionId
-    ? option.unitRef?.unitId
+    ? selection.source.equipmentUnitId
     : undefined;
 }
 
@@ -1135,11 +1214,13 @@ export function finalizedBuildSkillProficiencies(
     classFacts?.className === "wizard"
       ? WIZARD_SKILL_CHOICE_KEY
       : FIGHTER_SKILL_CHOICE_KEY;
-  const skillSelection = selections.choices.find((selection) =>
-    sameCreationHoleSource(
-      selection.source,
-      unitSource(startingClassUnitId(selections.progression), skillChoiceKey),
-    ),
+  const skillSelection = selections.choices.find(
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      sameCreationHoleSource(
+        selection.source,
+        unitSource(startingClassUnitId(selections.progression), skillChoiceKey),
+      ),
   );
 
   return skillSelection == null
@@ -1153,11 +1234,13 @@ export function finalizedBuildSkillProficiencies(
 export function finalizedBuildToolProficiencies(
   selections: FinalizedCharacterSelections,
 ): readonly CreationChoiceOptionId[] {
-  const toolSelection = selections.choices.find((selection) =>
-    sameCreationHoleSource(
-      selection.source,
-      unitSource(selections.background, BACKGROUND_TOOL_CHOICE_KEY),
-    ),
+  const toolSelection = selections.choices.find(
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      sameCreationHoleSource(
+        selection.source,
+        unitSource(selections.background, BACKGROUND_TOOL_CHOICE_KEY),
+      ),
   );
 
   return toolSelection == null ? [] : choiceSelectionOptionIds(toolSelection);

@@ -6,7 +6,7 @@ import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
 } from "./battle-act-labels.ts";
-import { unitHoleId } from "./creation-hole-ids.ts";
+import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 
 type JsonObject = Record<string, unknown>;
 
@@ -360,10 +360,10 @@ export async function verifyBaselineVertical(client: Client) {
     draftId,
     expectedRevision: 3,
     fills: [
-      choiceFill(unitHoleId("armor_chain_mail", "loadout_armor"), "worn"),
-      choiceFill(unitHoleId("equipment_shield", "loadout_shield"), "wielded"),
+      choiceFill(loadoutHoleId("armor_chain_mail", "armor"), "worn"),
+      choiceFill(loadoutHoleId("equipment_shield", "shield"), "wielded"),
       choiceFill(
-        unitHoleId("weapon_longsword", "loadout_weapon"),
+        loadoutHoleId("weapon_longsword", "weapon"),
         "wielded_one_handed",
       ),
     ],
@@ -786,12 +786,9 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
     draftId,
     expectedRevision: 3,
     fills: [
-      choiceFill(unitHoleId("armor_chain_mail", "loadout_armor"), "worn"),
-      choiceFill(unitHoleId("equipment_shield", "loadout_shield"), "wielded"),
-      choiceFill(
-        unitHoleId("weapon_flail", "loadout_weapon"),
-        "wielded_one_handed",
-      ),
+      choiceFill(loadoutHoleId("armor_chain_mail", "armor"), "worn"),
+      choiceFill(loadoutHoleId("equipment_shield", "shield"), "wielded"),
+      choiceFill(loadoutHoleId("weapon_flail", "weapon"), "wielded_one_handed"),
     ],
   });
   return callTool(client, "finalize_character", { draftId });
@@ -877,9 +874,9 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
     draftId,
     expectedRevision: 3,
     fills: [
-      choiceFill(unitHoleId("equipment_shield", "loadout_shield"), "wielded"),
+      choiceFill(loadoutHoleId("equipment_shield", "shield"), "wielded"),
       choiceFill(
-        unitHoleId("weapon_longsword", "loadout_weapon"),
+        loadoutHoleId("weapon_longsword", "weapon"),
         "wielded_one_handed",
       ),
     ],

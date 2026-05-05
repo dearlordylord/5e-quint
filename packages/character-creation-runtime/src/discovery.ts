@@ -44,6 +44,7 @@ import {
   draftSource,
   hasDraftSelection,
   isSupported,
+  loadoutSource,
   selectedChoiceOption,
   skillOption,
   startingEquipmentLabel,
@@ -396,7 +397,7 @@ export function discoverEquipmentHoles(input: {
       unselectedLoadoutHole(
         input.draft,
         choiceHole({
-          source: unitSource(loadoutChoice.unitId, loadoutChoice.choiceKey),
+          source: loadoutSource(loadoutChoice.unitId, loadoutChoice.slot),
           cardinality: EXACTLY_ONE_CHOICE,
           options: [
             {
@@ -548,9 +549,24 @@ export function unselectedLoadoutHole(
   }
   return hasValidPurchaseSelection &&
     hasPurchasedUnit(draft, unitId) &&
-    !hasValidSelectionForHole(draft, hole)
+    !hasValidLoadoutSlotSelectionForHole(draft, hole)
     ? [hole]
     : [];
+}
+
+function hasValidLoadoutSlotSelectionForHole(
+  draft: CharacterDraft,
+  hole: CreationHole,
+): boolean {
+  if (hole.source.tag !== "loadout") {
+    return false;
+  }
+
+  const slot = hole.source.slot;
+  return draft.selections.choices.some(
+    (selection) =>
+      selection.kind === "loadout" && selection.source.slot === slot,
+  );
 }
 
 export function hasValidEquipmentPurchaseSelectionForHole(
@@ -599,9 +615,13 @@ export function choiceSelectionMatchesHole(
   const optionIds = choiceSelectionOptionIds(selection);
   return (
     choiceOptionIdsFitHole(hole, optionIds) &&
-    selection.options.every((selectedOption) =>
-      selectedChoiceOptionMatchesHole(selectedOption, hole),
-    )
+    (selection.kind === "loadout"
+      ? selection.options.every((selectedOption) =>
+          loadoutSelectionOptionMatchesHole(selection, selectedOption, hole),
+        )
+      : selection.options.every((selectedOption) =>
+          selectedChoiceOptionMatchesHole(selectedOption, hole),
+        ))
   );
 }
 
@@ -647,6 +667,18 @@ export function selectedChoiceOptionMatchesHole(
   );
 }
 
+function loadoutSelectionOptionMatchesHole(
+  selection: Extract<CharacterChoiceSelection, { readonly kind: "loadout" }>,
+  selectedOption: CharacterChoiceSelection["options"][number],
+  hole: ChoiceCreationHole,
+): boolean {
+  return hole.options.some(
+    (option) =>
+      option.optionId === selectedOption.optionId &&
+      option.unitRef?.unitId === selection.source.equipmentUnitId,
+  );
+}
+
 export function hasDuplicateOptionIds(
   optionIds: readonly CreationChoiceOptionId[],
 ): boolean {
@@ -663,8 +695,14 @@ export function sameCreationHoleSource(
     return left.path === right.path;
   }
 
-  if (left.tag === "unit" && right.tag === "unit") {
+  if (left.tag === "unitChoice" && right.tag === "unitChoice") {
     return left.unitId === right.unitId && left.choiceKey === right.choiceKey;
+  }
+
+  if (left.tag === "loadout" && right.tag === "loadout") {
+    return (
+      left.equipmentUnitId === right.equipmentUnitId && left.slot === right.slot
+    );
   }
 
   return false;
@@ -687,9 +725,18 @@ export function sameChoiceSelection(
   left: CharacterChoiceSelection,
   right: CharacterChoiceSelection,
 ): boolean {
+  if (left.kind !== right.kind) {
+    return false;
+  }
+
   return (
     sameCreationHoleSource(left.source, right.source) &&
-    sameSelectedChoiceOptionMultiset(left.options, right.options)
+    (left.kind === "loadout" && right.kind === "loadout"
+      ? sameOptionIdMultiset(
+          choiceSelectionOptionIds(left),
+          choiceSelectionOptionIds(right),
+        )
+      : sameSelectedChoiceOptionMultiset(left.options, right.options))
   );
 }
 

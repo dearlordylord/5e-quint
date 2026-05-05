@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
+import fc from "fast-check";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -18,6 +19,8 @@ import {
   boundedChoiceCardinality,
   characterBuildUnitRefs,
   computeTotalLevel,
+  LOADOUT_SLOTS,
+  UNIT_CHOICE_KEYS,
   classUnitIdFromUnitId,
   createCharacterDraft,
   creationChoiceOptionId,
@@ -26,7 +29,11 @@ import {
   draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
+  loadoutEquipmentUnitId,
+  loadoutSourceHoleIdText,
+  loadoutSourceKey,
   parseCreationHoleId,
+  parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
   startingClassUnitId,
   unitChoiceKey,
@@ -40,6 +47,7 @@ import {
   type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
+  type LoadoutSlot,
   type UnitCatalog,
   type CharacterProgression,
   type ClassHitPointRule,
@@ -50,6 +58,7 @@ import {
   finalizedBuildEquipment,
   supportedChoiceHolesBySource,
 } from "./finalization.ts";
+import { qntLoadoutSlot } from "./qnt-loadout-bridge.test-support.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   isSupportedProgression,
@@ -129,17 +138,36 @@ function unitChoiceSourceUnitIdRight(value: string) {
   return result.right;
 }
 
+function loadoutEquipmentUnitIdRight(value: string) {
+  const result = loadoutEquipmentUnitId(value);
+  if (Either.isLeft(result)) {
+    throw new Error(`Invalid test loadout equipment Unit id: ${value}`);
+  }
+  return result.right;
+}
+
 function testUnitChoiceSourceKey(unitId: string, choiceKey: string) {
   return unitChoiceSourceKey({
-    tag: "unit",
+    tag: "unitChoice",
     unitId: unitChoiceSourceUnitIdRight(unitId),
     choiceKey: unitChoiceKeyRight(choiceKey),
   });
 }
 
+function testLoadoutHoleId(
+  equipmentUnitId: string,
+  slot: LoadoutSlot,
+): CreationHoleIdText {
+  return loadoutSourceHoleIdText({
+    tag: "loadout",
+    equipmentUnitId: loadoutEquipmentUnitIdRight(equipmentUnitId),
+    slot,
+  });
+}
+
 function testUnitHoleId(unitId: string, choiceKey: string): CreationHoleIdText {
   return unitChoiceSourceHoleIdText({
-    tag: "unit",
+    tag: "unitChoice",
     unitId: unitChoiceSourceUnitIdRight(unitId),
     choiceKey: unitChoiceKeyRight(choiceKey),
   });
@@ -155,9 +183,12 @@ function choiceCardinalityRight(
 }
 
 describe("UnitChoiceSourceKey", () => {
-  test("round-trips source facts through a length-prefixed key", () => {
+  const sourceUnitIdText = fc.string({ minLength: 1, maxLength: 40 });
+  const unitChoiceKeyText = fc.constantFrom(...UNIT_CHOICE_KEYS);
+
+  test("preserves source facts through the source/key isomorphism", () => {
     const source = {
-      tag: "unit" as const,
+      tag: "unitChoice" as const,
       unitId: unitChoiceSourceUnitIdRight("class:custom:fighter"),
       choiceKey: unitChoiceKeyRight("fighter_skill_choices"),
     };
@@ -183,6 +214,59 @@ describe("UnitChoiceSourceKey", () => {
         tag: "unitChoiceSourceKeyUnsupportedChoiceKey",
         value: "u:13:class_fighter:c:not_a_choice",
         choiceKey: "not_a_choice",
+      }),
+    );
+  });
+
+  test("satisfies source/key isomorphism laws", () => {
+    fc.assert(
+      fc.property(
+        sourceUnitIdText,
+        unitChoiceKeyText,
+        (unitIdText, choiceKey) => {
+          const source = {
+            tag: "unitChoice" as const,
+            unitId: unitChoiceSourceUnitIdRight(unitIdText),
+            choiceKey,
+          };
+          const key = unitChoiceSourceKey(source);
+          const parsed = expectRight(parseUnitChoiceSourceKey(key));
+
+          expect(parsed).toEqual(source);
+          expect(unitChoiceSourceKey(parsed)).toBe(key);
+        },
+      ),
+    );
+  });
+});
+
+describe("LoadoutSourceKey", () => {
+  const equipmentUnitIdText = fc.string({ minLength: 1, maxLength: 40 });
+  const loadoutSlot = fc.constantFrom(...LOADOUT_SLOTS);
+
+  test("satisfies source/key isomorphism laws", () => {
+    fc.assert(
+      fc.property(equipmentUnitIdText, loadoutSlot, (equipmentUnitId, slot) => {
+        const source = {
+          tag: "loadout" as const,
+          equipmentUnitId: loadoutEquipmentUnitIdRight(equipmentUnitId),
+          slot,
+        };
+        const key = loadoutSourceKey(source);
+        const parsed = expectRight(parseLoadoutSourceKey(key));
+
+        expect(parsed).toEqual(source);
+        expect(loadoutSourceKey(parsed)).toBe(key);
+      }),
+    );
+  });
+
+  test("rejects unsupported loadout slots with typed issues", () => {
+    expect(parseLoadoutSourceKey("e:16:armor_chain_mail:s:carried")).toEqual(
+      Either.left({
+        tag: "loadoutSourceKeyUnsupportedSlot",
+        value: "e:16:armor_chain_mail:s:carried",
+        slot: "carried",
       }),
     );
   });
@@ -474,7 +558,7 @@ describe("character creation hole discovery", () => {
       ],
     });
     expect(
-      holeById(holes, testUnitHoleId("armor_chain_mail", "loadout_armor")),
+      holeById(holes, testLoadoutHoleId("armor_chain_mail", "armor")),
     ).toBeUndefined();
   });
 
@@ -567,7 +651,7 @@ describe("character creation hole discovery", () => {
     ).toBeUndefined();
   });
 
-  test("opens loadout only for purchased equipment and suppresses filled loadout choices", () => {
+  test("opens loadout only for purchased equipment and suppresses filled loadout slots", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
         progression: testProgression("class_fighter", 1),
@@ -579,7 +663,7 @@ describe("character creation hole discovery", () => {
             "background_equipment_choice",
             "option_b",
           ),
-          selectedLoadoutChoice("armor_chain_mail", "loadout_armor", "worn"),
+          selectedLoadoutChoice("armor_chain_mail", "armor", "worn"),
         ],
         equipment: {
           selectedUnitIds: [
@@ -596,17 +680,17 @@ describe("character creation hole discovery", () => {
       holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toBeUndefined();
     expect(
-      holeById(holes, testUnitHoleId("armor_chain_mail", "loadout_armor")),
+      holeById(holes, testLoadoutHoleId("armor_chain_mail", "armor")),
     ).toBeUndefined();
     expect(
-      holeById(holes, testUnitHoleId("equipment_shield", "loadout_shield")),
+      holeById(holes, testLoadoutHoleId("equipment_shield", "shield")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
       options: [{ optionId: "wielded" }],
     });
     expect(
-      holeById(holes, testUnitHoleId("weapon_longsword", "loadout_weapon")),
+      holeById(holes, testLoadoutHoleId("weapon_longsword", "weapon")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -639,7 +723,7 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, testUnitHoleId("weapon_flail", "loadout_weapon")),
+      holeById(holes, testLoadoutHoleId("weapon_flail", "weapon")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -679,13 +763,13 @@ describe("character creation hole discovery", () => {
       cardinality: { tag: "between", min: 1, max: 3 },
     });
     expect(
-      holeById(holes, testUnitHoleId("armor_chain_mail", "loadout_armor")),
+      holeById(holes, testLoadoutHoleId("armor_chain_mail", "armor")),
     ).toBeUndefined();
     expect(
-      holeById(holes, testUnitHoleId("equipment_shield", "loadout_shield")),
+      holeById(holes, testLoadoutHoleId("equipment_shield", "shield")),
     ).toBeUndefined();
     expect(
-      holeById(holes, testUnitHoleId("weapon_longsword", "loadout_weapon")),
+      holeById(holes, testLoadoutHoleId("weapon_longsword", "weapon")),
     ).toBeUndefined();
   });
 
@@ -875,7 +959,8 @@ describe("character creation hole discovery", () => {
     expect(
       holes.some(
         (hole) =>
-          hole.source.tag === "unit" && hole.source.unitId === "species_orc",
+          hole.source.tag === "unitChoice" &&
+          hole.source.unitId === "species_orc",
       ),
     ).toBe(false);
   });
@@ -1832,6 +1917,7 @@ describe("character creation finalization", () => {
       selections: {
         ...complete.selections,
         choices: complete.selections.choices.map((choice) =>
+          choice.kind === "unitChoice" &&
           choice.source.unitId === "class_fighter" &&
           choice.source.choiceKey === "class_equipment_choice"
             ? selectedChoice(
@@ -1859,7 +1945,7 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("derives build loadout projection from selected loadout Unit refs", () => {
+  test("derives build loadout projection from selected loadout source equipment", () => {
     const complete = completeManifestDraft();
     const projection = finalizedBuildEquipment({
       ...complete.selections,
@@ -1892,23 +1978,75 @@ describe("character creation finalization", () => {
         ],
       },
       choices: complete.selections.choices.map((choice) =>
-        choice.source.unitId === "weapon_longsword" &&
-        choice.source.choiceKey === "loadout_weapon"
+        choice.kind === "loadout" &&
+        choice.source.equipmentUnitId === "weapon_longsword" &&
+        choice.source.slot === "weapon"
           ? selectedLoadoutChoice(
               "weapon_longsword",
-              "loadout_weapon",
+              "weapon",
               "wielded_one_handed",
-              "weapon_test_selected",
             )
           : choice,
       ),
     });
 
     expect(projection.weapon).toEqual({
-      itemId: "main:weapon_test_selected",
-      unitId: "weapon_test_selected",
+      itemId: "main:weapon_longsword",
+      unitId: "weapon_longsword",
       grip: "one_handed",
     });
+  });
+
+  test("rejects finalized drafts with duplicate selected-equipment loadout slots", () => {
+    const complete = completeManifestDraft();
+    const mutableProfile =
+      CHARACTER_CREATION_SUPPORT_PROFILE as unknown as MutableSupportProfile;
+    const originalEquipmentPurchaseChoiceCount =
+      mutableProfile.equipmentPurchaseChoiceCount;
+    mutableProfile.equipmentPurchaseChoiceCount = 4;
+
+    try {
+      const duplicateWeaponSlotDraft: CharacterDraft = {
+        ...complete,
+        selections: {
+          ...complete.selections,
+          equipment: {
+            selectedUnitIds: [
+              "armor_chain_mail",
+              "weapon_longsword",
+              "weapon_flail",
+              "equipment_shield",
+            ],
+          },
+          choices: [
+            ...complete.selections.choices,
+            selectedLoadoutChoice(
+              "weapon_flail",
+              "weapon",
+              "wielded_one_handed",
+            ),
+          ],
+        },
+      };
+
+      expect(
+        finalizeCharacterDraft({
+          draft: duplicateWeaponSlotDraft,
+          unitLibrary,
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        issues: [
+          {
+            tag: "unsupportedFinalization",
+            code: "unsupportedFinalization",
+          },
+        ],
+      });
+    } finally {
+      mutableProfile.equipmentPurchaseChoiceCount =
+        originalEquipmentPurchaseChoiceCount;
+    }
   });
 
   test("finalizes public builds from support-profile-selected loadout Unit refs", () => {
@@ -1921,7 +2059,7 @@ describe("character creation finalization", () => {
       mutableProfile.purchasableEquipmentUnitIds;
     const originalLoadoutChoices = mutableProfile.loadoutChoices;
     const spearWeaponLoadout: SupportedLoadoutChoice = {
-      choiceKey: "loadout_weapon",
+      slot: "weapon",
       unitId: "weapon_spear",
       optionId: creationChoiceOptionId("wielded_one_handed"),
       label: "Wielded one-handed",
@@ -1958,11 +2096,12 @@ describe("character creation finalization", () => {
             ],
           },
           choices: complete.selections.choices.map((choice) =>
-            choice.source.unitId === "weapon_longsword" &&
-            choice.source.choiceKey === "loadout_weapon"
+            choice.kind === "loadout" &&
+            choice.source.equipmentUnitId === "weapon_longsword" &&
+            choice.source.slot === "weapon"
               ? selectedLoadoutChoice(
                   "weapon_spear",
-                  "loadout_weapon",
+                  "weapon",
                   "wielded_one_handed",
                 )
               : choice,
@@ -2000,69 +2139,72 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
         ),
         source: {
-          tag: "unit",
-          unitId: unitChoiceSourceUnitIdRight("weapon_longsword"),
-          choiceKey: unitChoiceKeyRight("loadout_weapon"),
+          tag: "unitChoice",
+          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style_l1"),
+          choiceKey: unitChoiceKeyRight("fighter_fighting_style"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
           {
-            optionId: creationChoiceOptionId("wielded_one_handed"),
-            label: "Wielded one-handed",
-            unitRef: { unitId: "weapon_longsword" },
+            optionId: creationChoiceOptionId("defense"),
+            label: "Defense",
+            unitRef: { unitId: "defense" },
           },
         ],
       },
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
         ),
         source: {
-          tag: "unit",
-          unitId: unitChoiceSourceUnitIdRight("weapon_longsword"),
-          choiceKey: unitChoiceKeyRight("loadout_weapon"),
+          tag: "unitChoice",
+          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style_l1"),
+          choiceKey: unitChoiceKeyRight("fighter_fighting_style"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
           {
-            optionId: creationChoiceOptionId("wielded_one_handed"),
-            label: "Wielded one-handed",
-            unitRef: { unitId: "weapon_longsword" },
+            optionId: creationChoiceOptionId("defense"),
+            label: "Defense",
+            unitRef: { unitId: "defense" },
           },
           {
-            optionId: creationChoiceOptionId("wielded_two_handed"),
-            label: "Wielded two-handed",
-            unitRef: { unitId: "weapon_longsword" },
+            optionId: creationChoiceOptionId("dueling"),
+            label: "Dueling",
+            unitRef: { unitId: "dueling" },
           },
         ],
       },
     ]);
 
     const mergedHole = merged.get(
-      testUnitChoiceSourceKey("weapon_longsword", "loadout_weapon"),
+      testUnitChoiceSourceKey(
+        "fighter_fighting_style_l1",
+        "fighter_fighting_style",
+      ),
     );
     expect(mergedHole).toMatchObject({
       kind: "choice",
       source: {
-        tag: "unit",
-        unitId: "weapon_longsword",
-        choiceKey: "loadout_weapon",
+        tag: "unitChoice",
+        unitId: "fighter_fighting_style_l1",
+        choiceKey: "fighter_fighting_style",
       },
     });
     expect(mergedHole?.options).toEqual([
       {
-        optionId: "wielded_one_handed",
-        label: "Wielded one-handed",
-        unitRef: { unitId: "weapon_longsword" },
+        optionId: "defense",
+        label: "Defense",
+        unitRef: { unitId: "defense" },
       },
       {
-        optionId: "wielded_two_handed",
-        label: "Wielded two-handed",
-        unitRef: { unitId: "weapon_longsword" },
+        optionId: "dueling",
+        label: "Dueling",
+        unitRef: { unitId: "dueling" },
       },
     ]);
   });
@@ -2072,52 +2214,56 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
         ),
         source: {
-          tag: "unit",
-          unitId: unitChoiceSourceUnitIdRight("weapon_longsword"),
-          choiceKey: unitChoiceKeyRight("loadout_weapon"),
+          tag: "unitChoice",
+          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style_l1"),
+          choiceKey: unitChoiceKeyRight("fighter_fighting_style"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
           {
-            optionId: creationChoiceOptionId("wielded_one_handed"),
-            label: "Wielded one-handed",
-            unitRef: { unitId: "weapon_longsword" },
+            optionId: creationChoiceOptionId("defense"),
+            label: "Defense",
+            unitRef: { unitId: "defense" },
           },
         ],
       },
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
         ),
         source: {
-          tag: "unit",
-          unitId: unitChoiceSourceUnitIdRight("weapon_longsword"),
-          choiceKey: unitChoiceKeyRight("loadout_weapon"),
+          tag: "unitChoice",
+          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style_l1"),
+          choiceKey: unitChoiceKeyRight("fighter_fighting_style"),
         },
         cardinality: choiceCardinalityRight(
           boundedChoiceCardinality({ min: 1, max: 2 }),
         ),
         options: [
           {
-            optionId: creationChoiceOptionId("wielded_two_handed"),
-            label: "Wielded two-handed",
-            unitRef: { unitId: "weapon_longsword" },
+            optionId: creationChoiceOptionId("dueling"),
+            label: "Dueling",
+            unitRef: { unitId: "dueling" },
           },
         ],
       },
     ]);
     expect(
-      merged.get(testUnitChoiceSourceKey("weapon_longsword", "loadout_weapon"))
-        ?.options,
+      merged.get(
+        testUnitChoiceSourceKey(
+          "fighter_fighting_style_l1",
+          "fighter_fighting_style",
+        ),
+      )?.options,
     ).toEqual([
       {
-        optionId: "wielded_one_handed",
-        label: "Wielded one-handed",
-        unitRef: { unitId: "weapon_longsword" },
+        optionId: "defense",
+        label: "Defense",
+        unitRef: { unitId: "defense" },
       },
     ]);
   });
@@ -2249,7 +2395,7 @@ describe("character creation finalization", () => {
       selections: {
         ...complete.selections,
         choices: complete.selections.choices.map((choice) =>
-          choice.source.tag === "unit" &&
+          choice.kind === "unitChoice" &&
           choice.source.unitId === "fighter_fighting_style_l1" &&
           choice.source.choiceKey === "fighter_fighting_style"
             ? {
@@ -2522,13 +2668,10 @@ function completeManifestDraftAfterProgression(
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        choiceFill(testUnitHoleId("armor_chain_mail", "loadout_armor"), "worn"),
+        choiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        choiceFill(testLoadoutHoleId("equipment_shield", "shield"), "wielded"),
         choiceFill(
-          testUnitHoleId("equipment_shield", "loadout_shield"),
-          "wielded",
-        ),
-        choiceFill(
-          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+          testLoadoutHoleId("weapon_longsword", "weapon"),
           "wielded_one_handed",
         ),
       ],
@@ -2645,12 +2788,9 @@ function completeWizardDraft(): CharacterDraft {
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
+        choiceFill(testLoadoutHoleId("equipment_shield", "shield"), "wielded"),
         choiceFill(
-          testUnitHoleId("equipment_shield", "loadout_shield"),
-          "wielded",
-        ),
-        choiceFill(
-          testUnitHoleId("weapon_longsword", "loadout_weapon"),
+          testLoadoutHoleId("weapon_longsword", "weapon"),
           "wielded_one_handed",
         ),
       ],
@@ -2660,7 +2800,9 @@ function completeWizardDraft(): CharacterDraft {
 
 function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
   if (result.tag !== "accepted") {
-    throw new Error("Expected accepted character-creation fill batch.");
+    throw new Error(
+      `Expected accepted character-creation fill batch, received ${JSON.stringify(result.issues)}`,
+    );
   }
 
   return result.draft;
@@ -2680,6 +2822,7 @@ type MutableSupportProfile = {
   };
   purchasableEquipmentUnitIds: UnitRecord["id"][];
   loadoutChoices: SupportedLoadoutChoice[];
+  equipmentPurchaseChoiceCount: number;
 };
 
 const HOLE_ID_TO_QNT_VARIANT = {
@@ -2705,9 +2848,9 @@ const HOLE_ID_TO_QNT_VARIANT = {
   [testUnitHoleId("background_soldier", "background_equipment_choice")]:
     "HBackgroundEquipment",
   [testUnitHoleId("class_fighter", "equipment_purchase")]: "HEquipmentPurchase",
-  [testUnitHoleId("armor_chain_mail", "loadout_armor")]: "HLoadoutArmor",
-  [testUnitHoleId("equipment_shield", "loadout_shield")]: "HLoadoutShield",
-  [testUnitHoleId("weapon_longsword", "loadout_weapon")]: "HLoadoutWeapon",
+  [testLoadoutHoleId("armor_chain_mail", "armor")]: "HLoadoutArmor",
+  [testLoadoutHoleId("equipment_shield", "shield")]: "HLoadoutShield",
+  [testLoadoutHoleId("weapon_longsword", "weapon")]: "HLoadoutWeapon",
 } as const satisfies Record<string, string>;
 const HOLE_ID_TO_QNT_VARIANT_LOOKUP: Readonly<Record<string, string>> =
   HOLE_ID_TO_QNT_VARIANT;
@@ -3116,11 +3259,15 @@ function selectedChoiceBySource(
   unitId: string,
   choiceKey: string,
 ): CharacterChoiceSelection | undefined {
+  const loadoutSlot = qntLoadoutSlot(choiceKey);
   return draft.selections.choices.find(
     (choice) =>
-      choice.source.tag === "unit" &&
-      choice.source.unitId === unitId &&
-      choice.source.choiceKey === choiceKey,
+      (choice.kind === "unitChoice" &&
+        choice.source.unitId === unitId &&
+        choice.source.choiceKey === choiceKey) ||
+      (choice.kind === "loadout" &&
+        choice.source.equipmentUnitId === unitId &&
+        choice.source.slot === loadoutSlot),
   );
 }
 
@@ -3170,8 +3317,9 @@ function selectedChoice(
   ...optionIds: readonly string[]
 ): CharacterChoiceSelection {
   return {
+    kind: "unitChoice",
     source: {
-      tag: "unit",
+      tag: "unitChoice",
       unitId: unitChoiceSourceUnitIdRight(unitId),
       choiceKey: unitChoiceKeyRight(choiceKey),
     },
@@ -3188,8 +3336,9 @@ function selectedChoiceWithUnitRef(
   optionUnitId: string,
 ): CharacterChoiceSelection {
   return {
+    kind: "unitChoice",
     source: {
-      tag: "unit",
+      tag: "unitChoice",
       unitId: unitChoiceSourceUnitIdRight(unitId),
       choiceKey: unitChoiceKeyRight(choiceKey),
     },
@@ -3208,8 +3357,9 @@ function selectedUnitChoice(
   ...optionIds: readonly string[]
 ): CharacterChoiceSelection {
   return {
+    kind: "unitChoice",
     source: {
-      tag: "unit",
+      tag: "unitChoice",
       unitId: unitChoiceSourceUnitIdRight(unitId),
       choiceKey: unitChoiceKeyRight(choiceKey),
     },
@@ -3222,20 +3372,19 @@ function selectedUnitChoice(
 
 function selectedLoadoutChoice(
   unitId: string,
-  choiceKey: string,
+  slot: LoadoutSlot,
   optionId: string,
-  selectedUnitId: string = unitId,
 ): CharacterChoiceSelection {
   return {
+    kind: "loadout",
     source: {
-      tag: "unit",
-      unitId: unitChoiceSourceUnitIdRight(unitId),
-      choiceKey: unitChoiceKeyRight(choiceKey),
+      tag: "loadout",
+      equipmentUnitId: loadoutEquipmentUnitIdRight(unitId),
+      slot,
     },
     options: [
       {
         optionId: creationChoiceOptionId(optionId),
-        unitRef: { unitId: selectedUnitId },
       },
     ],
   };

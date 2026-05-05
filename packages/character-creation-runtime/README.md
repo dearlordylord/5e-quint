@@ -104,7 +104,7 @@ POST3 class-width slice:
 - Common plus selected standard languages;
 - structured alignment;
 - class-owned choices needed by the supported vertical;
-- equipment ownership and loadout choices needed by finalization.
+- equipment ownership and selected-equipment loadout slots needed by finalization.
 
 Loadout is a runtime projection precondition for the first supported build, not
 an SRD-authored character-creation choice. See `../../ASSUMPTIONS.md` A40.
@@ -113,16 +113,18 @@ Support gates are package-private runtime narrowings. They must not become
 public Surface classifications or new source rules. The current
 `src/support-gates.ts` support profile owns the supported
 class/background/species ids, Unit choice keys, option ids, purchasable
-equipment, loadout choices, supported progression profiles, and remaining fixed
-origin facts. Legal Surface options can be discovered outside that profile, but
-fill validation rejects them at this one runtime boundary until widening work
-adds support-profile entries and projection logic.
+equipment, selected-equipment loadout slots, supported progression profiles, and
+remaining fixed origin facts. Legal Surface options can be discovered outside
+that profile, but fill validation rejects them at this one runtime boundary
+until widening work adds support-profile entries and projection logic.
 
 ## State Ownership Rules
 
-Draft-owned holes use stable ids such as `cc:draft:<draft path>`. Unit-granted
-holes use stable ids derived from the reversible `UnitChoiceSourceKey` codec.
-Hole ids are semantic addresses, not array positions.
+Draft-owned holes use stable ids such as `cc:draft:<draft path>`.
+Unit-choice holes use stable ids derived from the `UnitChoiceSourceKey`
+source/key isomorphism. Loadout holes use stable ids derived from the
+`LoadoutSourceKey` source/key isomorphism. Hole ids are semantic addresses, not
+array positions.
 
 Accepted option ids are protocol choices. When a selected option references a
 Unit, the draft records the Unit reference rather than treating the
@@ -229,7 +231,7 @@ runtime module, focused tests, `character-creation-runtime-slice.qnt`, and
 - `src/discovery.ts` - current creation-hole frontier discovery.
 - `src/fill-reducer.ts` - batch fill validation and draft mutation.
 - `src/finalization.ts` - draft finalization and `CharacterBuild` projection.
-- `src/hole-factories.ts` - hole ids, sources, option builders, and choice codecs.
+- `src/hole-factories.ts` - hole ids, sources, option builders, and choice source projections.
 - `src/phase1-manifest.ts` - Phase 1 manifest facts and supported option ids.
 - `src/support-gates.ts` - current support-slice gates, not RAW legality.
 - `src/index.test.ts` - deterministic reducer tests and Quint-slice checks.

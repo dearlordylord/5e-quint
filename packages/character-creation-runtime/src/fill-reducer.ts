@@ -44,6 +44,8 @@ import {
   type CreationHoleId,
   type CreationHoleSource,
   type FillIndex,
+  type LoadoutSource,
+  type LoadoutSelectedChoiceOption,
   type NonEmptyReadonlyArray,
   type UnitCatalog,
 } from "./types.ts";
@@ -70,7 +72,11 @@ type DraftSourcedCreationHole = CreationHole & {
 };
 
 type UnitSourcedCreationHole = CreationHole & {
-  readonly source: Extract<CreationHoleSource, { readonly tag: "unit" }>;
+  readonly source: Extract<CreationHoleSource, { readonly tag: "unitChoice" }>;
+};
+
+type LoadoutSourcedCreationHole = CreationHole & {
+  readonly source: Extract<CreationHoleSource, { readonly tag: "loadout" }>;
 };
 
 export function fillCreationHoles(
@@ -318,7 +324,11 @@ export function applyCreationFill(
     return applyDraftFill(selections, { ...hole, source }, fill, fillIndex);
   }
 
-  return applyUnitFill(selections, { ...hole, source }, fill, fillIndex);
+  if (source.tag === "unitChoice") {
+    return applyUnitFill(selections, { ...hole, source }, fill, fillIndex);
+  }
+
+  return applyLoadoutFill(selections, { ...hole, source }, fill, fillIndex);
 }
 
 export function applyDraftFill(
@@ -462,11 +472,81 @@ export function applyUnitFill(
     choices: [
       ...selections.choices,
       {
+        kind: "unitChoice",
         source,
         options,
       },
     ],
   });
+}
+
+export function applyLoadoutFill(
+  selections: CharacterDraftSelections,
+  hole: LoadoutSourcedCreationHole,
+  fill: CreationFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<CharacterDraftSelections> {
+  if (fill.kind !== "choice") {
+    return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+  }
+
+  if (
+    selections.choices.some(
+      (selection) =>
+        selection.kind === "loadout" &&
+        selection.source.slot === hole.source.slot,
+    )
+  ) {
+    return Either.left(duplicateFillIssue(fill, fillIndex));
+  }
+
+  if (fill.optionIds.length < 1) {
+    return Either.left(tooFewChoicesIssue(fill, fillIndex, 1));
+  }
+  if (fill.optionIds.length > 1) {
+    return Either.left(tooManyChoicesIssue(fill, fillIndex, 1));
+  }
+
+  const optionId = fill.optionIds[0];
+  if (optionId == null) {
+    return Either.left(tooFewChoicesIssue(fill, fillIndex, 1));
+  }
+  const option = acceptedChoiceOption(hole, fill, fillIndex, optionId);
+  if (Either.isLeft(option)) return applyCreationFillIssue(option.left);
+  const selectedOption = selectedLoadoutChoiceOption(
+    hole.source,
+    option.right,
+    fill,
+    fillIndex,
+  );
+  if (Either.isLeft(selectedOption)) {
+    return applyCreationFillIssue(selectedOption.left);
+  }
+
+  return Either.right({
+    ...selections,
+    choices: [
+      ...selections.choices,
+      {
+        kind: "loadout",
+        source: hole.source,
+        options: [selectedOption.right],
+      },
+    ],
+  });
+}
+
+function selectedLoadoutChoiceOption(
+  source: LoadoutSource,
+  option: CreationChoiceOption,
+  fill: ChoiceFill,
+  fillIndex: FillIndex,
+): ApplyCreationFillResult<LoadoutSelectedChoiceOption> {
+  return option.unitRef?.unitId !== source.equipmentUnitId
+    ? Either.left(invalidChoiceIssue(fill, fillIndex, option.optionId))
+    : Either.right({
+        optionId: option.optionId,
+      });
 }
 
 function oneOptionId(

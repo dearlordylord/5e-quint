@@ -396,9 +396,11 @@ The legal phase-1 fill chooses:
 - Other choice holes append to `selections.choices` with the original hole
   `source` and accepted option metadata.
 
-That last point matters for Unit-backed selections. For Fighting Style,
-Weapon Mastery, and loadout, `selectedChoiceOption` preserves `unitRef` from the
-hole option. The runtime does not infer a Unit from a raw option id later.
+That last point matters for Unit-backed selections. For Fighting Style and
+Weapon Mastery, `selectedChoiceOption` preserves `unitRef` from the hole option.
+Selected-equipment loadout fills store the loadout source plus selected option
+only; fill validation proves the option belongs to the source equipment before
+the durable selection is written.
 
 ## Legal Batch 3: Equipment Purchase Opens Only After Coin Path
 
@@ -453,9 +455,9 @@ equipment: {
 ```mermaid
 flowchart TD
   Purchased["hasValidPurchaseSelection = true"]
-  Armor["hasPurchasedUnit(armor_chain_mail)<br/>loadout_armor -> worn"]
-  Shield["hasPurchasedUnit(equipment_shield)<br/>loadout_shield -> wielded"]
-  Weapon["hasPurchasedUnit(weapon_longsword)<br/>loadout_weapon -> wielded_one_handed"]
+  Armor["hasPurchasedUnit(armor_chain_mail)<br/>slot armor -> worn"]
+  Shield["hasPurchasedUnit(equipment_shield)<br/>slot shield -> wielded"]
+  Weapon["hasPurchasedUnit(weapon_longsword)<br/>slot weapon -> wielded_one_handed"]
   Suppress["hasValidSelectionForHole suppresses already-filled loadout"]
 
   Purchased --> Armor --> Suppress
@@ -463,8 +465,9 @@ flowchart TD
   Purchased --> Weapon --> Suppress
 ```
 
-The loadout fills are stored in `selections.choices` as Unit-backed selections,
-again preserving the `unitRef` from the accepted hole option.
+The loadout fills are stored in `selections.choices` as loadout selections keyed
+by selected-equipment source and slot. They store the selected option only; source
+equipment identity is not duplicated into the selected option.
 
 ## Finalization Time Diagram
 
@@ -555,17 +558,20 @@ runtime intentionally supports only the first vertical. That is why
 flowchart TD
   Hole["CreationHole"]
   Draft["source.tag === draft<br/>supportedDraftOptionIds(path)"]
-  Unit["source.tag === unit<br/>supportedUnitOptionIds(choiceKey)"]
+  UnitChoice["source.tag === unitChoice<br/>supportedUnitOptionIds(choiceKey)"]
+  Loadout["source.tag === loadout<br/>supportedLoadoutChoiceForSource(slot)"]
   None["undefined means no support narrowing"]
   Empty["[] means this Unit choice key is unsupported"]
   Unsupported["unsupportedHoleSelectionOptionId<br/>first selected option not in supported list"]
 
   Hole --> Draft
-  Hole --> Unit
+  Hole --> UnitChoice
+  Hole --> Loadout
   Draft --> None
   Draft --> Unsupported
-  Unit --> Empty
-  Unit --> Unsupported
+  UnitChoice --> Empty
+  UnitChoice --> Unsupported
+  Loadout --> Unsupported
 ```
 
 Examples:

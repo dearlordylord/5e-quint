@@ -388,14 +388,20 @@ export type CreationChoiceOptionId = string & Brand<"CreationChoiceOptionId">;
 export type CreationHoleSource =
   | { readonly tag: "draft"; readonly path: CharacterDraftPath }
   | {
-      readonly tag: "unit";
+      readonly tag: "unitChoice";
       readonly unitId: UnitRecord["id"];
       readonly choiceKey: UnitChoiceKey;
+    }
+  | {
+      readonly tag: "loadout";
+      readonly equipmentUnitId: UnitRecord["id"];
+      readonly slot: "armor" | "shield" | "weapon";
     };
 
 export type CreationHoleIdText =
   | `cc:draft:${CharacterDraftPath}`
-  | `cc:unit-source:${UnitChoiceSourceKey}`;
+  | `cc:unit-source:${UnitChoiceSourceKey}`
+  | `cc:loadout-source:${LoadoutSourceKey}`;
 
 export type CreationHoleId = CreationHoleIdText & Brand<"CreationHoleId">;
 ```
@@ -405,7 +411,9 @@ Rules for hole ids:
 - Use `cc:draft:<path>` for holes opened by missing draft structure.
 - Use `cc:unit-source:<UnitChoiceSourceKey>` for holes opened by authored Unit
   structure.
-- `choiceKey` must be a domain key from the Unit/source reader, not an array index.
+- Use `cc:loadout-source:<LoadoutSourceKey>` for holes opened by selected
+  equipment loadout slots.
+- `choiceKey` must be a `UnitChoiceKey` from authored Unit choice data, not an array index.
 - If a domain has ordered entries, name the role rather than the current array position for phase 1, for example `draft.advancement.initial`.
 - Hole ids are stable across rediscovery from the same semantic draft, but the set of holes changes after accepted fills.
 

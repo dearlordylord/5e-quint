@@ -12,9 +12,9 @@ import {
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SKILL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
-  LOADOUT_ARMOR_CHOICE_KEY,
-  LOADOUT_SHIELD_CHOICE_KEY,
-  LOADOUT_WEAPON_CHOICE_KEY,
+  LOADOUT_ARMOR_SLOT,
+  LOADOUT_SHIELD_SLOT,
+  LOADOUT_WEAPON_SLOT,
   PHASE1_ALIGNMENT_OPTION_ID,
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
   PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID,
@@ -51,6 +51,7 @@ import type {
   CharacterStartingLanguages,
   CreationChoiceOptionId,
   CreationHole,
+  LoadoutSource,
   UnitChoiceKey,
   UnitChoiceSource,
   UnitRef,
@@ -71,21 +72,21 @@ type DraftSourcedCreationHole = CreationHole & {
 
 export type SupportedLoadoutChoice =
   | {
-      readonly choiceKey: typeof LOADOUT_ARMOR_CHOICE_KEY;
+      readonly slot: typeof LOADOUT_ARMOR_SLOT;
       readonly unitId: UnitRecord["id"];
       readonly optionId: CreationChoiceOptionId;
       readonly label: string;
       readonly buildSlot: "armor";
     }
   | {
-      readonly choiceKey: typeof LOADOUT_SHIELD_CHOICE_KEY;
+      readonly slot: typeof LOADOUT_SHIELD_SLOT;
       readonly unitId: UnitRecord["id"];
       readonly optionId: CreationChoiceOptionId;
       readonly label: string;
       readonly buildSlot: "shield";
     }
   | {
-      readonly choiceKey: typeof LOADOUT_WEAPON_CHOICE_KEY;
+      readonly slot: typeof LOADOUT_WEAPON_SLOT;
       readonly unitId: UnitRecord["id"];
       readonly optionId: CreationChoiceOptionId;
       readonly label: string;
@@ -215,9 +216,6 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     ],
     [BACKGROUND_TOOL_CHOICE_KEY]: [PHASE1_BACKGROUND_TOOL_OPTION_ID],
     [EQUIPMENT_PURCHASE_CHOICE_KEY]: SUPPORTED_PURCHASE_OPTION_IDS,
-    [LOADOUT_ARMOR_CHOICE_KEY]: [PHASE1_LOADOUT_ARMOR_OPTION_ID],
-    [LOADOUT_SHIELD_CHOICE_KEY]: [PHASE1_LOADOUT_SHIELD_OPTION_ID],
-    [LOADOUT_WEAPON_CHOICE_KEY]: [PHASE1_LOADOUT_WEAPON_OPTION_ID],
   },
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
@@ -231,21 +229,21 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   },
   loadoutChoices: [
     {
-      choiceKey: LOADOUT_ARMOR_CHOICE_KEY,
+      slot: LOADOUT_ARMOR_SLOT,
       unitId: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
       optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
       label: "Worn",
       buildSlot: "armor",
     },
     {
-      choiceKey: LOADOUT_SHIELD_CHOICE_KEY,
+      slot: LOADOUT_SHIELD_SLOT,
       unitId: PHASE1_SHIELD_UNIT_ID,
       optionId: PHASE1_LOADOUT_SHIELD_OPTION_ID,
       label: "Wielded",
       buildSlot: "shield",
     },
     {
-      choiceKey: LOADOUT_WEAPON_CHOICE_KEY,
+      slot: LOADOUT_WEAPON_SLOT,
       unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
@@ -253,7 +251,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       grip: "one_handed",
     },
     {
-      choiceKey: LOADOUT_WEAPON_CHOICE_KEY,
+      slot: LOADOUT_WEAPON_SLOT,
       unitId: PHASE1_WEAPON_FLAIL_UNIT_ID,
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
@@ -290,6 +288,11 @@ export function supportedHoleOptionIds(
   const source = hole.source;
   if (source.tag === "draft") {
     return supportedDraftOptionIds({ ...hole, source });
+  }
+
+  if (source.tag === "loadout") {
+    const loadoutChoice = supportedLoadoutChoiceForSource(source);
+    return loadoutChoice == null ? undefined : [loadoutChoice.optionId];
   }
 
   return supportedUnitOptionIdsForSource(source);
@@ -421,11 +424,11 @@ function sameProgression(
 }
 
 export function supportedLoadoutChoiceForSource(
-  source: UnitChoiceSource,
+  source: LoadoutSource,
 ): SupportedLoadoutChoice | undefined {
   return CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices.find(
     (choice) =>
-      choice.unitId === source.unitId && choice.choiceKey === source.choiceKey,
+      choice.unitId === source.equipmentUnitId && choice.slot === source.slot,
   );
 }
 

@@ -4,6 +4,8 @@ import {
   creationChoiceOptionId,
   creationHoleId,
   choiceCardinalityMax,
+  loadoutEquipmentUnitId,
+  loadoutSourceHoleIdText,
   unitChoiceSourceUnitId,
   unitChoiceSourceHoleIdText,
   type BackgroundAbilityScoreIncreaseSelection,
@@ -16,6 +18,8 @@ import {
   type CreationHoleId,
   type CreationHoleSource,
   type CharacterSelectedChoiceOption,
+  type LoadoutSlot,
+  type LoadoutSource,
   type UnitChoiceKey,
   type UnitChoiceSource,
 } from "./types.ts";
@@ -160,7 +164,23 @@ export function unitSource(
     throw new Error("Unit choice sources require a non-empty Unit id.");
   }
 
-  return { tag: "unit", unitId: sourceUnitId.right, choiceKey };
+  return { tag: "unitChoice", unitId: sourceUnitId.right, choiceKey };
+}
+
+export function loadoutSource(
+  equipmentUnitId: UnitRecord["id"],
+  slot: LoadoutSlot,
+): LoadoutSource {
+  const sourceEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId);
+  if (Either.isLeft(sourceEquipmentUnitId)) {
+    throw new Error("Loadout sources require a non-empty equipment Unit id.");
+  }
+
+  return {
+    tag: "loadout",
+    equipmentUnitId: sourceEquipmentUnitId.right,
+    slot,
+  };
 }
 
 export function holeIdForSource(source: CreationHoleSource): CreationHoleId {
@@ -168,7 +188,11 @@ export function holeIdForSource(source: CreationHoleSource): CreationHoleId {
     return creationHoleId(`cc:draft:${source.path}`);
   }
 
-  return creationHoleId(unitChoiceSourceHoleIdText(source));
+  return creationHoleId(
+    source.tag === "unitChoice"
+      ? unitChoiceSourceHoleIdText(source)
+      : loadoutSourceHoleIdText(source),
+  );
 }
 
 export function unitOption(unit: UnitRecord): CreationChoiceOption {
