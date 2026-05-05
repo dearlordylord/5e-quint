@@ -29,7 +29,7 @@ Ownership rule:
 Battle-owned projected facts fall into these categories:
 
 - mutable combat state: vitals, conditions, grapple links, active effects, turn economy, spell-slot state, concentration, and monster per-encounter resources;
-- durable combatant facts battle rules read directly: creature kind, size, base AC, side, position, walk speed, projected weapon profiles, hand occupancy, resistances/vulnerabilities/immunities, and reaction/bonus-action option payloads;
+- durable combatant facts battle rules read directly: creature kind, size, base AC, side, walk speed, projected weapon profiles, hand occupancy, resistances/vulnerabilities/immunities, and reaction/bonus-action option payloads;
 - projected class and modifier facts needed by battle-resolved rules: tracked class levels, `dexMod`, save bonuses, crit range, sneak-attack dice, melee damage bonus, parry bonus, and similar rule inputs already read from combatant state.
 
 The authoritative field list is the code itself: `battle.qnt:Combatant` plus
@@ -39,7 +39,7 @@ duplicate registry.
 Caller/session-owned facts remain outside the battle projection when they are
 transient runtime qualifiers or external adjudication:
 
-- spatial and geometry facts such as cover, distance, adjacency, threatened sets, line of sight, and pathing;
+- table/caller/session-supplied spatial and geometry facts such as cover, distance, adjacency, threatened sets, line of sight, and pathing;
 - DM or table adjudication facts such as initiative tie ordering and whether a ready trigger actually occurred;
 - session routing metadata such as encounter drafts, active host selection, and character-list references;
 - full creature-sheet structures that battle does not read directly.

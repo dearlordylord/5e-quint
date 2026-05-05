@@ -131,6 +131,86 @@ records. Units are capability records, not participant identity. A
 Stat Block-derived battle creature comes from the Stat Block record and does not
 own Units merely because Stat Blocks may reuse shared Surface sub-shapes.
 
+## Spatial Modeling Frontier
+
+Spatial modeling is table-owned. Runtimes and MCP may consume explicit spatial
+facts submitted by the table/caller/session, and a runtime may store one of
+those submitted facts when a reducer procedure needs it for later replay, but no
+package computes geometry inference. Do not add a grid engine, pathfinding layer,
+persistent map model, coordinate system, line-of-sight engine, cover-geometry
+engine, or adjacency/reach cache to Core, promoted runtime packages, or MCP as a
+workaround for a rule needing spatial context.
+
+The SRD defines mechanical consequences for spatial relations, but it often does
+not prescribe how the table determines those relations. The runtime therefore
+models the mechanical consequence and consumes table-supplied spatial facts at
+the boundary where the procedure needs them:
+
+- Visibility, line of sight, cover level, and hidden-position prerequisites are
+  table-supplied facts carried through caller/session inputs.
+- Path, destination, difficult terrain, terrain geometry, and movement route
+  facts are table-supplied facts carried through caller/session inputs.
+- Reach as an authored creature or weapon statistic is runtime-readable content;
+  "within reach now", "within 5 feet now", "adjacent now", and "left reach on
+  this movement step" are spatial relations and remain table-supplied
+  facts.
+- Opportunity Attack provocation classification and threatened-creature sets are
+  table-supplied spatial facts; battle owns downstream rule filters
+  such as reaction availability, incapacitation, Disengage suppression, and the
+  attack/reaction procedure once a threat fact is supplied.
+- Help attack proximity is a table-supplied fact; battle owns the
+  resulting help link, expiry, and consumption by the later qualifying attack.
+
+If a package stores an explicit spatial fact, the type must name that fact rather
+than imply ownership of geometry. For example, a caller-supplied pairwise
+distance can support range filtering, but it is not a coordinate model, a path
+model, or proof that the runtime computes map geometry. Do not derive new geometry
+from stored spatial facts; if a reducer needs another spatial relation, ask the
+table/caller/session for that relation explicitly and name it at the boundary.
+
+Detailed historical decisions live in
+`plans/MOVEMENT_GEOMETRY_OWNERSHIP.md` and
+`plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md`. Those documents remain binding unless
+this section is intentionally changed with the corresponding package docs and
+tests.
+
+## Designing Ownership
+
+Design starts from the rule and its state-transition consequence, not from the
+current TypeScript surface. Before adding a field, parser output, reducer branch,
+or tool payload, decide which fact is canonical and which package is responsible
+for proving it.
+
+Use this workflow:
+
+1. Read the relevant local SRD passage and `UBIQUITOUS_LANGUAGE.md`. If RAW
+   leaves a modeling choice open, record or reference the choice in
+   `ASSUMPTIONS.md` before encoding behavior.
+2. Classify the fact:
+   authored content belongs to Surface; character draft/finalization facts
+   belong to character creation; durable battle execution facts belong to
+   battle runtime; transient table adjudication and spatial relations come from
+   the table through caller/session/tool composition.
+3. If correctness depends on state transitions, put the semantic rule in the
+   owning package's formal model first: package-local Quint for promoted reducer
+   packages, broad `battle.qnt`/`creature.qnt` for legacy Core, or a shared
+   algebra spec when the behavior is reusable outside one reducer.
+4. Mirror the formal boundary in TypeScript with the narrowest runtime type that
+   can represent only valid states. Do not keep a weaker TS type and repair it
+   downstream with adapters, duplicate registries, or parallel state.
+5. Add parity proof at the owning boundary. Core state-machine behavior uses
+   Quint trace replay through MBT. Promoted reducer packages use package-local
+   QNT tests, focused reducer tests, and integrated MBT only for selected flows
+   where trace generation adds cross-step coverage.
+6. Thread the stronger fact through callers directly. If MCP or another
+   composition layer needs a stronger lower-layer fact, change the lower layer
+   and its proof owner; do not compensate with private MCP state.
+
+The shorthand is "formal model first, parity next, TypeScript as the executable
+mirror", but the exact proof tool is package-owned. MBT is mandatory for Core
+state-machine parity and selected high-risk promoted flows; it is not required
+per authored Unit, Spell, weapon, feature, or Stat Block.
+
 ## Package Ownership
 
 | Package | Owns | Does not own |
@@ -138,8 +218,8 @@ own Units merely because Stat Blocks may reuse shared Surface sub-shapes.
 | `@dnd/surface` | Provenance-bearing authored Unit and Stat Block records, structural readers, SRD collections, and decode/catalog boundaries. | Runtime state, reducer legality, character draft sessions, battle sessions, or projected executable IR. |
 | `@dnd/shared-algebras` | Reusable reducer algebras such as action economy, Initiative, Armor Class, attack rolls, conditions, Death Saving Throw counters, runtime dice, and runtime hole identity. | Unit support gates, act subjects, authored-content catalogs, MCP sessions, or complete character/battle reducers. |
 | `@dnd/character-creation-runtime` | Character Draft mutation, creation holes/fills, support gates, finalization, and `CharacterBuild` projection from Surface Unit facts. | Battle initialization, battle state, current HP, in-play resource expenditure, or authored content provenance. |
-| `@dnd/battle-runtime` | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, and snapshots. | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, or old Core authority. |
-| `@dnd/mcp` | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, and cross-runtime workflow tests. | Reducer semantics, authored content rules, package-local QNT authority, or duplicated executable content. |
+| `@dnd/battle-runtime` | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, table-supplied spatial facts consumed or stored by those procedures, and snapshots. | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, old Core authority, or geometry inference such as grids, coordinates, LOS, pathfinding, cover calculation, and adjacency caches. |
+| `@dnd/mcp` | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, table/caller-provided spatial facts for tool calls, and cross-runtime workflow tests. | Reducer semantics, authored content rules, package-local QNT authority, duplicated executable content, or private geometry state that substitutes for table-supplied spatial facts. |
 
 The composition rule is direct use of owned package APIs, not an adapter layer.
 If a future task needs a lower layer to expose a stronger fact, change that

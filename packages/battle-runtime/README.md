@@ -263,7 +263,9 @@ runtime choice rather than patched into state later.
   It is identified by `CombatantId`.
 - `hidePrerequisites` - GM-adjudicated battle state for whether a combatant is
   currently Heavily Obscured or behind Three-Quarters/Total Cover and out of
-  enemy line of sight. Hide is not discoverable without this prerequisite.
+  enemy line of sight. The table supplies this spatial prerequisite; battle
+  stores the submitted fact and does not infer cover or line of sight. Hide is
+  not discoverable without this prerequisite.
 - `hidden` - battle-owned Hide state. A successful Hide stores the Dexterity
   (Stealth) check total as the Search DC. The snapshot projects the Invisible
   condition while this state is present; it is cleared by Search, making an
@@ -319,13 +321,15 @@ Available acts:
 - discover End Turn for the current actor;
 - discover Attack for supported character weapon attacks and supported
   Stat Block named attacks when the current actor can take actions and at least
-  one target is legal for the selected attack's melee reach or normal range.
+  one target is legal for the selected attack's melee reach or normal range from
+  table-supplied combatant distance facts.
 - discover Grapple for supported character combatants with a free hand and a
-  legal adjacent target. The battle state stores the Grapple link, escape DC,
-  occupied hand, and drag-cost exemption derived from creature Sizes.
+  legal table-supplied adjacent target. The battle state stores the Grapple link,
+  escape DC, occupied hand, and drag-cost exemption derived from creature Sizes.
 - movement fills carry both the Movement cost paid and the actual distance
-  moved. Grappled Movable extra cost is derived from actual distance moved, not
-  from the change in pairwise distance to the dragged target.
+  moved as table-supplied facts. Grappled Movable extra cost is derived from the
+  submitted actual distance moved, not from the change in pairwise distance to
+  the dragged target.
 - discover Escape Grapple for a Grappled current actor and Release Grapple for a
   grappler. Release spends no action; Escape spends the action on success or
   failure.
@@ -427,7 +431,7 @@ Attack and damage:
 - carry the selected attack name in the Attack subject so authored Stat Block
   attacks such as Scimitar and Shortbow cannot be confused during replay;
 - derive target choices from the selected attack's authored reach or normal
-  range and the battle's pairwise combatant distance facts;
+  range and table-supplied combatant distance facts stored on the battle state;
 - resolve hit/miss through the shared attack-roll algebra;
 - apply character weapon damage or supported Stat Block attack damage including
   the Goblin Warrior's advantage-triggered on-hit bonus damage, Critical Hit
@@ -668,8 +672,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   type used by reducer state and Unit feature support parsing.
 - `src/character-battle-resources.ts` - character Unit resource state,
   class-level parsing, use spending, and Spell Slot state parsing.
-- `src/distances.ts` - pairwise combatant distance validation, projection, and
-  symmetric map mutation helpers.
+- `src/distances.ts` - table-supplied pairwise combatant distance validation,
+  projection, and symmetric map mutation helpers.
 - `src/battle-reaction-triggers.ts` - battle-owned Reaction trigger vocabulary
   used by readied acts and Reaction windows.
 - `src/battle-subjects.ts` - public replay subject schema, subject action

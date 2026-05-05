@@ -20,6 +20,8 @@ Primary context links:
 
 - [CORRECTION_APPLICATION_MIGRATION_PLAN.md](/workspace/typescript/dnd/plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md)
 - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
+- [MOVEMENT_GEOMETRY_OWNERSHIP.md](/workspace/typescript/dnd/plans/MOVEMENT_GEOMETRY_OWNERSHIP.md)
+- [MCPA3_SPATIAL_ACTION_CONTRACTS.md](/workspace/typescript/dnd/plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md)
 - [packages/battle-runtime/README.md](/workspace/typescript/dnd/packages/battle-runtime/README.md)
 - [packages/battle-runtime/ARCHITECTURE_GRAPH.md](/workspace/typescript/dnd/packages/battle-runtime/ARCHITECTURE_GRAPH.md)
 - [packages/character-creation-runtime/README.md](/workspace/typescript/dnd/packages/character-creation-runtime/README.md)
@@ -170,6 +172,9 @@ Keep it synchronized with the DAG table and task details.
   `packages/battle-runtime/README.md` and
   `packages/battle-runtime/ARCHITECTURE_GRAPH.md` when architecture or public
   behavior changes.
+- Spatial facts always come from the table/caller/session. Do not plan grid
+  state, LOS/pathfinding/cover derivation, or adjacency caches in Core, promoted
+  runtimes, or MCP; plan explicit table-supplied facts instead.
 - Character-creation behavior changes must update
   `packages/character-creation-runtime/README.md` and
   `packages/character-creation-runtime/VOCABULARY.md` when architecture or

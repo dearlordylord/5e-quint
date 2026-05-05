@@ -3,14 +3,15 @@
 ## Purpose
 
 Define the bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE`
-over explicit caller/session-owned spatial facts.
+over explicit table/caller/session-supplied spatial facts.
 
 ## Non-Goal
 
-Core and MCP do not gain a geometry owner, pathfinder, or persistent map model.
+Core, battle, and MCP do not gain pathfinders or persistent map models. Geometry
+always comes from the table.
 This remains aligned with [MOVEMENT_GEOMETRY_OWNERSHIP.md](./MOVEMENT_GEOMETRY_OWNERSHIP.md).
-Caller/session code owns spatial relations; battle consumes those facts and
-applies mechanical consequences.
+Table/caller/session code supplies spatial relations; battle consumes those facts
+and applies mechanical consequences.
 
 ## RAW Anchors
 
@@ -52,12 +53,13 @@ applies mechanical consequences.
 
 ### Ownership Boundary
 
-- Caller/session owns `allyId`, `targetId`, and the single proximity fact
+- Caller/session owns `allyId` and `targetId`; the table/caller/session supplies
+  the single proximity fact
   `helperWithin5ftOfTarget`.
 - Battle owns action availability, dead/incapacitated checks, distinct/alive
   participant validation, help-target tracking, expiry at the helper's next
   turn, and consumption by the first qualifying attack.
-- Core/MCP do not derive helper-target distance.
+- Core, battle, and MCP do not derive helper-target distance.
 
 ## Contract: `BATTLE_MOVE`
 
@@ -89,13 +91,14 @@ pathfinding request or persistent destination model.
 
 ### Ownership Boundary
 
-- Caller/session owns the reach-exit classification for that 5-foot checkpoint:
+- The table/caller/session supplies the reach-exit classification for that
+  5-foot checkpoint:
   whether the move provokes, and which threatening creatures' reach is being
   left on that checkpoint.
 - Battle owns movement-budget spend, dead/incapacitated gating, grapple-drag
   extra cost, Disengage suppression, and filtering the threatened set against
   battle-owned OA eligibility such as reaction availability.
-- Core/MCP do not derive coordinates, path traces, terrain geometry, or
+- Core, battle, and MCP do not derive coordinates, path traces, terrain geometry, or
   persistent adjacency/reach caches.
 
 ## Opportunity Attack Follow-Up
@@ -112,4 +115,4 @@ implementation slice that actually wires those reaction tokens.
   helper-target proximity fact.
 - `BATTLE_MOVE` stays bounded to one 5-foot checkpoint plus explicit
   provocation/threat facts for that checkpoint.
-- Geometry ownership remains outside core and MCP.
+- Geometry ownership remains at the table, outside core, battle, and MCP.

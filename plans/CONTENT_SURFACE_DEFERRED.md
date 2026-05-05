@@ -418,8 +418,8 @@ deferrals:
 
 ## B. Consciously deferred mechanics (DM / session agenda)
 
-Per ARCHITECTURE.md §1, spatial relationships, DM rulings, and
-session-owned information flow are not modeled in the content surface.
+Per ARCHITECTURE.md, spatial relationships come from the table, and DM rulings
+or session-owned information flow are not modeled in the content surface.
 The following RAW clauses are intentionally omitted from the spec side:
 
 - **Alarm** — cast-time choice between door/window location and a cube

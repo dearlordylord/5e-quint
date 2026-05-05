@@ -112,7 +112,7 @@ runtime inputs. `INVALID_RUNTIME_INPUT` error messages include the
 expected field list. Schema descriptors live in
 `packages/mcp/src/server-battle-attack-runtime.ts`
 (`BATTLE_ATTACK_RUNTIME_SCHEMA`, `BATTLE_GRAPPLE_RUNTIME_SCHEMA`,
-`RUNTIME_SCHEMAS_BY_TAG`). The session-owned-facts boundary remains
+`RUNTIME_SCHEMAS_BY_TAG`). The table-supplied-facts boundary remains
 intact — MCP still doesn't roll dice or compute geometry.
 
 Severity: medium (partly intentional).
@@ -125,10 +125,10 @@ Severity: medium (partly intentional).
 None of these are discoverable through MCP — the shape lives only in
 `packages/mcp/src/server-battle-attack-runtime.ts` and the test fixtures.
 
-**Why it's partly intentional.** The session-owned-facts boundary
+**Why it's partly intentional.** The table-supplied-facts boundary
 ([MCPA3](./MCPA3_SPATIAL_ACTION_CONTRACTS.md),
 [MOVEMENT_GEOMETRY_OWNERSHIP.md](./MOVEMENT_GEOMETRY_OWNERSHIP.md)) says MCP
-does not roll dice, own geometry, or infer visibility. The LLM must
+does not roll dice, compute geometry, or infer visibility. The LLM must
 compute or be told these. That design is fine; the discoverability is not.
 
 **Fix options.**
@@ -272,8 +272,8 @@ Each is bounded and mirrors the CHARUI2 pattern.
 ## Out of Scope
 
 - Expanding the `execute_action` schema beyond the current
-  session-owned-facts boundary. Dice/geometry/visibility ownership stays
-  with the caller per MCPA3 and MOVEMENT_GEOMETRY_OWNERSHIP.
+  table-supplied-facts boundary. Dice, geometry, and visibility facts come from
+  the table/caller per MCPA3 and MOVEMENT_GEOMETRY_OWNERSHIP.
 - Mutating the core type shape of `CharacterDraft` to eliminate branch
   fields — deep-merge at apply time is the cheaper fix for F1.
 - Replacing the MCP stdio transport or changing the SDK version.

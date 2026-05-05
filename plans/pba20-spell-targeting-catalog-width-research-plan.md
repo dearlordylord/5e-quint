@@ -57,7 +57,9 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 - Shield as a reaction to Magic Missile, likely deferred to PBA21 if reaction machinery is required.
 - Scorching Ray as multi-target spell attack pressure.
 - Bless as multi-target concentration support pressure.
-- Chain Lightning as primary/secondary target shape, probably later than Magic Missile because of no-duplicate and distance-from-primary constraints.
+- Chain Lightning as primary/secondary target shape, probably later than Magic
+  Missile because of no-duplicate constraints and table-supplied
+  distance-from-primary facts.
 
 ## Verification Suggestions
 

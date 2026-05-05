@@ -24,7 +24,8 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 
 - RAW Reaction trigger clauses, runtime Reaction window kinds, and admitted Reaction procedure choices should remain distinct.
 - Runtime `BATTLE_REACTION_TRIGGERS` are closer to window kinds than authored trigger text.
-- Opportunity Attack has before-the-creature-leaves-reach timing, unlike normal after-trigger reactions.
+- Opportunity Attack has before-the-creature-leaves-reach timing, unlike normal
+  after-trigger reactions; the reach-exit fact itself comes from the table.
 - Bonus Action is a turn-scoped allowance granted by a rule, not an interrupt window.
 - `Decline` is the canonical player choice when not taking an offered Reaction.
 

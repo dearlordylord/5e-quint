@@ -43,12 +43,15 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 ## Suggested Implementation Shape
 
 - `AttackTargetConstraint` could widen from `{ kind: "rangedRange"; normalFeet }` to `{ kind: "rangedRange"; normalFeet; longFeet }`.
-- Target legality could derive three states from one source:
+- Target legality could classify table-supplied target distance against the
+  selected attack's authored range:
   - within normal range: legal, no range Disadvantage;
   - beyond normal and within long range: legal, range Disadvantage;
   - beyond long range: illegal.
 - Range-derived Disadvantage could flow through the same roll-mode aggregation path as hidden, Dodge, grapple, and ongoing features so RAW cancellation remains centralized.
-- Surface attack readers should remain the source for normal/long range. MCP should not copy range facts into session state.
+- Surface attack readers should remain the source for normal/long range. The
+  target distance itself remains table-supplied; MCP should not copy authored
+  range facts or infer geometry into session state.
 - Conditional Stat Block riders could parse from existing attack `onHit` / `EffectAtom` data into damage components derived from the resolved attack context.
 - Unit feature riders and Stat Block on-hit effects should stay separate provenance/profile domains, though they may share lower-level damage component helpers.
 
