@@ -834,9 +834,9 @@ write_prompt() {
   cat >"$output_file" <<EOF
 You are the $role agent in a Ralph-style fresh-context implementation run for this repository.
 
-Before starting, run 'git log --oneline -1 master' and 'git log --oneline -1 HEAD'. Treat this as a branch-base check, not an exact-match requirement.
-If HEAD is missing master's tip as an ancestor, run 'git rebase master'.
-If HEAD is ahead of master because earlier reconciled task commits are already present on the integration branch, continue after confirming master is still the branch base.
+Before starting, run 'git log --oneline -1 $task_base_ref', 'git log --oneline -1 HEAD', and 'git merge-base --is-ancestor $task_base_sha HEAD'. Treat this as a task-base check.
+If the merge-base command fails, stop and report the branch-base mismatch. Do not rebase onto master; Ralph task worktrees must stay based on the task Base SHA below.
+If HEAD is ahead of the Base SHA because this is a later implement/review round in the same task worktree, continue after confirming the Base SHA is still an ancestor.
 
 Workspace: $workspace
 Base ref: $task_base_ref
@@ -890,9 +890,9 @@ write_review_prompt() {
   cat >"$output_file" <<EOF
 You are reviewing the $implementation implementation for Task $task_no in this Ralph run.
 
-Before starting, run 'git log --oneline -1 master' and 'git log --oneline -1 HEAD'. Treat this as a branch-base check, not an exact-match requirement.
-If HEAD is missing master's tip as an ancestor, run 'git rebase master'.
-If HEAD is ahead of master because earlier reconciled task commits are already present on the integration branch, continue after confirming master is still the branch base.
+Before starting, run 'git log --oneline -1 $base_ref', 'git log --oneline -1 HEAD', and 'git merge-base --is-ancestor $task_base_sha HEAD'. Treat this as a task-base check.
+If the merge-base command fails, stop and report the branch-base mismatch. Do not rebase onto master; Ralph task worktrees must stay based on the task Base SHA below.
+If HEAD is ahead of the Base SHA because the implementation committed task changes, continue after confirming the Base SHA is still an ancestor.
 
 Workspace: $workspace
 Base ref: $base_ref
