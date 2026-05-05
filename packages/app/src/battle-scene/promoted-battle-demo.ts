@@ -23,7 +23,6 @@ export const PROMOTED_BATTLE_DEMO_META: PromotedBattleSceneMeta = {
     [warriorId]: "Goblin Warrior",
     [skeletonId]: "Skeleton"
   },
-  teams: { blue: [warriorId], red: [skeletonId] },
   gridPositions: {
     [warriorId]: { row: 5, col: 3 },
     [skeletonId]: { row: 5, col: 7 }

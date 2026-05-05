@@ -60,7 +60,7 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.readBattleState,
     description:
-      "Return the stored battle state projection and current battle snapshot, including discoverable battle acts.",
+      "Return the current promoted battle snapshot, including discoverable battle acts, and the MCP session summary.",
     inputSchema: readBattleStateInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
   },

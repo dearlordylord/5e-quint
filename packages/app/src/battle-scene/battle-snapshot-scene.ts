@@ -4,7 +4,6 @@ import type { LayoutSceneSnapshot } from "@dnd/core/battle-scene/layout.ts"
 
 export interface PromotedBattleSceneMeta {
   names: Record<string, string>
-  teams: { blue: ReadonlyArray<string>; red: ReadonlyArray<string> }
   gridPositions: Record<string, { row: number; col: number }>
   sprites?: Record<string, SpriteRect>
 }
@@ -21,6 +20,7 @@ export interface SpriteRect {
 }
 
 const EMPTY_CREATURE_CUES: Record<string, CreatureCue> = {}
+const PROMOTED_PARTY_SIDE = "party"
 
 export const STATIC_BATTLE_CUES: VisualCueState = {
   castBar: null,
@@ -36,12 +36,11 @@ export function promotedBattleSceneSnapshot(
   snapshot: BattleSnapshot,
   meta: PromotedBattleSceneMeta
 ): LayoutSceneSnapshot & { readonly round: number; readonly activeCreatureId: string } {
-  const blue = new Set(meta.teams.blue)
   return {
     creatures: snapshot.combatants.map((combatant) => ({
       id: combatant.combatantId,
       name: meta.names[combatant.combatantId] ?? combatant.displayName,
-      team: blue.has(combatant.combatantId) ? ("blue" as const) : ("red" as const),
+      team: combatant.side === PROMOTED_PARTY_SIDE ? ("blue" as const) : ("red" as const),
       sprite: meta.sprites?.[combatant.combatantId] ?? null,
       gridPos: meta.gridPositions[combatant.combatantId] ?? { row: 0, col: 0 },
       hpRatio: combatant.maxHp > 0 ? combatant.hp / combatant.maxHp : 0,
