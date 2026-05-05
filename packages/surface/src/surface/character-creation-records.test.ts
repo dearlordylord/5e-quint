@@ -35,7 +35,7 @@ describe("character-creation Surface records", () => {
         hitPointDie: 10,
         skillProficiencyChoice: { choose: 2 },
         featureGrants: expect.arrayContaining([
-          { level: 1, unitId: "fighter_weapon_mastery_l1" },
+          { level: 1, unitId: "fighter_weapon_mastery" },
           { level: 2, unitId: "fighter_action_surge" },
           { level: 2, unitId: "fighter_tactical_mind" },
         ]),

@@ -13,11 +13,11 @@ import equipmentShieldInput from "../../content/equipment_shield.json";
 import featDefenseInput from "../../content/feat_defense.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
 import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
-import fighterFightingStyleL1Input from "../../content/fighter_fighting_style_l1.json";
+import fighterFightingStyleInput from "../../content/fighter_fighting_style.json";
 import fighterImprovedCriticalInput from "../../content/fighter_improved_critical.json";
 import fighterSecondWindInput from "../../content/fighter_second_wind.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
-import fighterWeaponMasteryL1Input from "../../content/fighter_weapon_mastery_l1.json";
+import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
 import detectMagicInput from "../../content/detect_magic.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import lightInput from "../../content/light.json";
@@ -145,9 +145,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     classWizardInput,
     backgroundSoldierInput,
     speciesOrcInput,
-    fighterFightingStyleL1Input,
+    fighterFightingStyleInput,
     fighterSecondWindInput,
-    fighterWeaponMasteryL1Input,
+    fighterWeaponMasteryInput,
     fighterActionSurgeInput,
     fighterTacticalMindInput,
     fighterImprovedCriticalInput,

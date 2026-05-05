@@ -257,9 +257,9 @@ const holeIds = {
   HAlignment: "cc:draft:draft.alignment",
   HClassSkills: "cc:unit-source:u:13:class_fighter:c:fighter_skill_choices",
   HFighterFightingStyle:
-    "cc:unit-source:u:25:fighter_fighting_style_l1:c:fighter_fighting_style",
+    "cc:unit-source:u:22:fighter_fighting_style:c:fighting_style_feat",
   HFighterWeaponMastery:
-    "cc:unit-source:u:25:fighter_weapon_mastery_l1:c:fighter_weapon_mastery_choices",
+    "cc:unit-source:u:22:fighter_weapon_mastery:c:weapon_mastery_options",
   HBackgroundAbilityScoreIncrease:
     "cc:unit-source:u:18:background_soldier:c:background_ability_score_increase",
   HBackgroundTool:
@@ -588,13 +588,10 @@ function projectDraft(draft: CharacterDraft): DraftProjection {
     languages: selections.languages != null,
     alignment: selections.alignment != null,
     classSkills: hasChoice(selections.choices, "fighter_skill_choices"),
-    fighterFightingStyle: hasChoice(
-      selections.choices,
-      "fighter_fighting_style",
-    ),
+    fighterFightingStyle: hasChoice(selections.choices, "fighting_style_feat"),
     fighterWeaponMastery: hasChoice(
       selections.choices,
-      "fighter_weapon_mastery_choices",
+      "weapon_mastery_options",
     ),
     backgroundAbilityScoreIncrease:
       selections.backgroundAbilityScoreIncrease != null,

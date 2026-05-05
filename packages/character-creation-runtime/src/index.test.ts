@@ -421,7 +421,7 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+        testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
       ),
     ).toMatchObject({
       kind: "choice",
@@ -430,10 +430,7 @@ describe("character creation hole discovery", () => {
     });
     const weaponMasteryHole = holeById(
       holes,
-      testUnitHoleId(
-        "fighter_weapon_mastery_l1",
-        "fighter_weapon_mastery_choices",
-      ),
+      testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
     );
     expect(weaponMasteryHole).toMatchObject({
       kind: "choice",
@@ -786,13 +783,13 @@ describe("character creation hole discovery", () => {
             "survival",
           ),
           selectedUnitChoice(
-            "fighter_fighting_style_l1",
             "fighter_fighting_style",
+            "fighting_style_feat",
             "defense",
           ),
           selectedUnitChoice(
-            "fighter_weapon_mastery_l1",
-            "fighter_weapon_mastery_choices",
+            "fighter_weapon_mastery",
+            "weapon_mastery_options",
             "weapon_longsword",
             "weapon_spear",
             "weapon_flail",
@@ -813,16 +810,13 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+        testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
       ),
     ).toBeUndefined();
     expect(
       holeById(
         holes,
-        testUnitHoleId(
-          "fighter_weapon_mastery_l1",
-          "fighter_weapon_mastery_choices",
-        ),
+        testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
       ),
     ).toBeUndefined();
     expect(
@@ -874,8 +868,8 @@ describe("character creation hole discovery", () => {
         progression: testProgression("class_fighter", 1),
         choices: [
           selectedChoice(
-            "fighter_fighting_style_l1",
             "fighter_fighting_style",
+            "fighting_style_feat",
             "defense",
           ),
         ],
@@ -886,7 +880,7 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+        testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
       ),
     ).toMatchObject({
       kind: "choice",
@@ -1236,14 +1230,11 @@ describe("character creation batch fill", () => {
           "survival",
         ),
         choiceFill(
-          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
           "defense",
         ),
         choiceFill(
-          testUnitHoleId(
-            "fighter_weapon_mastery_l1",
-            "fighter_weapon_mastery_choices",
-          ),
+          testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
@@ -1266,15 +1257,15 @@ describe("character creation batch fill", () => {
     expect(
       selectedChoiceBySource(
         result.draft,
-        "fighter_fighting_style_l1",
         "fighter_fighting_style",
+        "fighting_style_feat",
       )?.options,
     ).toEqual([{ optionId: "defense", unitRef: { unitId: "defense" } }]);
     expect(
       selectedChoiceBySource(
         result.draft,
-        "fighter_weapon_mastery_l1",
-        "fighter_weapon_mastery_choices",
+        "fighter_weapon_mastery",
+        "weapon_mastery_options",
       )?.options,
     ).toEqual([
       {
@@ -1698,7 +1689,7 @@ describe("character creation finalization", () => {
     expect(result.build.features).toEqual([
       {
         kind: "classFeature",
-        unitId: "fighter_fighting_style_l1",
+        unitId: "fighter_fighting_style",
       },
       {
         kind: "classFeature",
@@ -1706,7 +1697,7 @@ describe("character creation finalization", () => {
       },
       {
         kind: "classFeature",
-        unitId: "fighter_weapon_mastery_l1",
+        unitId: "fighter_weapon_mastery",
       },
       {
         kind: "backgroundOriginFeat",
@@ -1725,7 +1716,7 @@ describe("character creation finalization", () => {
         unitId: "orc_relentless_endurance",
       },
       {
-        choiceKey: "fighter_fighting_style",
+        choiceKey: "fighting_style_feat",
         kind: "classChoice",
         unitId: "defense",
       },
@@ -1762,9 +1753,9 @@ describe("character creation finalization", () => {
       "class_fighter",
       "background_soldier",
       "species_orc",
-      "fighter_fighting_style_l1",
+      "fighter_fighting_style",
       "fighter_second_wind",
-      "fighter_weapon_mastery_l1",
+      "fighter_weapon_mastery",
       "feat_savage_attacker",
       "orc_adrenaline_rush",
       "orc_darkvision",
@@ -2139,12 +2130,12 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
         ),
         source: {
           tag: "unitChoice",
-          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style_l1"),
-          choiceKey: unitChoiceKeyRight("fighter_fighting_style"),
+          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style"),
+          choiceKey: unitChoiceKeyRight("fighting_style_feat"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
@@ -2158,12 +2149,12 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
         ),
         source: {
           tag: "unitChoice",
-          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style_l1"),
-          choiceKey: unitChoiceKeyRight("fighter_fighting_style"),
+          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style"),
+          choiceKey: unitChoiceKeyRight("fighting_style_feat"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
@@ -2182,17 +2173,14 @@ describe("character creation finalization", () => {
     ]);
 
     const mergedHole = merged.get(
-      testUnitChoiceSourceKey(
-        "fighter_fighting_style_l1",
-        "fighter_fighting_style",
-      ),
+      testUnitChoiceSourceKey("fighter_fighting_style", "fighting_style_feat"),
     );
     expect(mergedHole).toMatchObject({
       kind: "choice",
       source: {
         tag: "unitChoice",
-        unitId: "fighter_fighting_style_l1",
-        choiceKey: "fighter_fighting_style",
+        unitId: "fighter_fighting_style",
+        choiceKey: "fighting_style_feat",
       },
     });
     expect(mergedHole?.options).toEqual([
@@ -2214,12 +2202,12 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
         ),
         source: {
           tag: "unitChoice",
-          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style_l1"),
-          choiceKey: unitChoiceKeyRight("fighter_fighting_style"),
+          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style"),
+          choiceKey: unitChoiceKeyRight("fighting_style_feat"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
@@ -2233,12 +2221,12 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
         ),
         source: {
           tag: "unitChoice",
-          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style_l1"),
-          choiceKey: unitChoiceKeyRight("fighter_fighting_style"),
+          unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style"),
+          choiceKey: unitChoiceKeyRight("fighting_style_feat"),
         },
         cardinality: choiceCardinalityRight(
           boundedChoiceCardinality({ min: 1, max: 2 }),
@@ -2255,8 +2243,8 @@ describe("character creation finalization", () => {
     expect(
       merged.get(
         testUnitChoiceSourceKey(
-          "fighter_fighting_style_l1",
           "fighter_fighting_style",
+          "fighting_style_feat",
         ),
       )?.options,
     ).toEqual([
@@ -2338,8 +2326,8 @@ describe("character creation finalization", () => {
         choices: [
           ...complete.selections.choices,
           selectedChoice(
-            "fighter_fighting_style_l1",
             "fighter_fighting_style",
+            "fighting_style_feat",
             "weapon_longsword",
           ),
         ],
@@ -2352,8 +2340,8 @@ describe("character creation finalization", () => {
         choices: [
           ...complete.selections.choices,
           selectedChoice(
-            "fighter_fighting_style_l1",
             "fighter_fighting_style",
+            "fighting_style_feat",
             "defense",
           ),
         ],
@@ -2396,8 +2384,8 @@ describe("character creation finalization", () => {
         ...complete.selections,
         choices: complete.selections.choices.map((choice) =>
           choice.kind === "unitChoice" &&
-          choice.source.unitId === "fighter_fighting_style_l1" &&
-          choice.source.choiceKey === "fighter_fighting_style"
+          choice.source.unitId === "fighter_fighting_style" &&
+          choice.source.choiceKey === "fighting_style_feat"
             ? {
                 ...choice,
                 options: choice.options.map((option) => ({
@@ -2419,8 +2407,8 @@ describe("character creation finalization", () => {
       holes: [
         {
           holeId: testUnitHoleId(
-            "fighter_fighting_style_l1",
             "fighter_fighting_style",
+            "fighting_style_feat",
           ),
         },
       ],
@@ -2612,14 +2600,11 @@ function completeManifestDraftAfterProgression(
           "survival",
         ),
         choiceFill(
-          testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
           "defense",
         ),
         choiceFill(
-          testUnitHoleId(
-            "fighter_weapon_mastery_l1",
-            "fighter_weapon_mastery_choices",
-          ),
+          testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
@@ -2833,12 +2818,10 @@ const HOLE_ID_TO_QNT_VARIANT = {
   "cc:draft:draft.languages": "HLanguages",
   "cc:draft:draft.alignment": "HAlignment",
   [testUnitHoleId("class_fighter", "fighter_skill_choices")]: "HClassSkills",
-  [testUnitHoleId("fighter_fighting_style_l1", "fighter_fighting_style")]:
+  [testUnitHoleId("fighter_fighting_style", "fighting_style_feat")]:
     "HFighterFightingStyle",
-  [testUnitHoleId(
-    "fighter_weapon_mastery_l1",
-    "fighter_weapon_mastery_choices",
-  )]: "HFighterWeaponMastery",
+  [testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options")]:
+    "HFighterWeaponMastery",
   [testUnitHoleId("background_soldier", "background_ability_score_increase")]:
     "HBackgroundAbilityScoreIncrease",
   [testUnitHoleId("background_soldier", "background_tool_choice")]:
@@ -3155,8 +3138,8 @@ function renderQntDraftProjection(draft: CharacterDraft): string {
     languages: ${qntBool(selections.languages != null)},
     alignment: ${qntBool(selections.alignment != null)},
     classSkills: ${qntBool(hasChoiceSelection(draft, "class_fighter", "fighter_skill_choices"))},
-    fighterFightingStyle: ${qntBool(hasChoiceSelection(draft, "fighter_fighting_style_l1", "fighter_fighting_style"))},
-    fighterWeaponMastery: ${qntBool(hasChoiceSelection(draft, "fighter_weapon_mastery_l1", "fighter_weapon_mastery_choices"))},
+    fighterFightingStyle: ${qntBool(hasChoiceSelection(draft, "fighter_fighting_style", "fighting_style_feat"))},
+    fighterWeaponMastery: ${qntBool(hasChoiceSelection(draft, "fighter_weapon_mastery", "weapon_mastery_options"))},
     backgroundAbilityScoreIncrease: ${qntBool(selections.backgroundAbilityScoreIncrease != null)},
     backgroundTool: ${qntBool(hasChoiceSelection(draft, "background_soldier", "background_tool_choice"))},
     classEquipment: ${qntBool(hasChoiceSelection(draft, "class_fighter", "class_equipment_choice"))},

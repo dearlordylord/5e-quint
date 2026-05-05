@@ -27,9 +27,9 @@ import {
   CLASS_EQUIPMENT_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
   EXACTLY_ONE_CHOICE,
-  FIGHTER_FIGHTING_STYLE_CHOICE_KEY,
+  FIGHTING_STYLE_FEAT_CHOICE_KEY,
   FIGHTER_SKILL_CHOICE_KEY,
-  FIGHTER_WEAPON_MASTERY_CHOICE_KEY,
+  WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   INITIAL_CHARACTER_DRAFT_PATHS,
   progressionOptionId,
   WIZARD_CANTRIP_CHOICE_KEY,
@@ -867,7 +867,7 @@ function fightingStyleFeatureHoleSource(
 
   return requireChoiceCreationHole(
     choiceHole({
-      source: unitSource(featureUnitId, FIGHTER_FIGHTING_STYLE_CHOICE_KEY),
+      source: unitSource(featureUnitId, FIGHTING_STYLE_FEAT_CHOICE_KEY),
       cardinality: EXACTLY_ONE_CHOICE,
       options,
     }),
@@ -895,7 +895,7 @@ function weaponMasteryFeatureHoleSource(
 
   return requireChoiceCreationHole(
     choiceHole({
-      source: unitSource(feature.id, FIGHTER_WEAPON_MASTERY_CHOICE_KEY),
+      source: unitSource(feature.id, WEAPON_MASTERY_OPTIONS_CHOICE_KEY),
       cardinality: exactChoiceCardinality(mechanics.choose),
       options,
     }),

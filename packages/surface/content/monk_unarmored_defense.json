@@ -1,0 +1,35 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "monk",
+  "description": "While you aren't wearing armor or wielding a Shield, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers.",
+  "id": "monk_unarmored_defense",
+  "kind": "class_feature",
+  "mechanics": {
+    "condition": {
+      "kind": "all_of",
+      "predicates": [
+        {
+          "kind": "unarmored"
+        },
+        {
+          "kind": "not_wielding_shield"
+        }
+      ]
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "formula": {
+          "base": 10,
+          "kind": "base_plus_dex_wis"
+        },
+        "kind": "modify_ac_set_base"
+      }
+    ]
+  },
+  "name": "Unarmored Defense",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk#Unarmored Defense"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "paladin",
+  "description": "You gain a Fighting Style feat of your choice (see \"Feats\" for feats). Instead of choosing one of those feats, you can choose the option below.\n\nBlessed Warrior. You learn two Cleric cantrips of your choice. The chosen cantrips count as Paladin spells for you, and Charisma is your spellcasting ability for them. Whenever you gain a Paladin level, you can replace one of these cantrips with another Cleric cantrip.",
+  "id": "paladin_fighting_style",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "category": "fighting_style",
+        "kind": "grant_feat"
+      }
+    ]
+  },
+  "name": "Fighting Style",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin#Fighting Style"
+  }
+}

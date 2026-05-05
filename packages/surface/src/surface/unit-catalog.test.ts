@@ -21,9 +21,9 @@ const requiredFirstVerticalUnitIds = [
   "class_wizard",
   "background_soldier",
   "species_orc",
-  "fighter_fighting_style_l1",
+  "fighter_fighting_style",
   "fighter_second_wind",
-  "fighter_weapon_mastery_l1",
+  "fighter_weapon_mastery",
   "fighter_action_surge",
   "fighter_tactical_mind",
   "fighter_improved_critical",
@@ -92,13 +92,13 @@ describe("SRD Unit catalog boundary", () => {
     if (result.tag === "ok") {
       const fighter = result.catalog.requireUnit("class_fighter");
       const weaponMastery = result.catalog.requireUnit(
-        "fighter_weapon_mastery_l1",
+        "fighter_weapon_mastery",
       );
 
       expect(fighter).toMatchObject({
         kind: "class",
         featureGrants: expect.arrayContaining([
-          { level: 1, unitId: "fighter_weapon_mastery_l1" },
+          { level: 1, unitId: "fighter_weapon_mastery" },
         ]),
       });
       expect(fighter).not.toHaveProperty("weaponMastery");

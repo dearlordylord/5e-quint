@@ -1,0 +1,29 @@
+{
+  "acquiredAtLevel": 20,
+  "className": "barbarian",
+  "description": "You embody primal power. Your Strength and Constitution scores increase by 4, to a maximum of 25.",
+  "id": "barbarian_primal_champion",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "ability": "str",
+        "delta": 4,
+        "kind": "modify_ability_score",
+        "maximum": 25
+      },
+      {
+        "ability": "con",
+        "delta": 4,
+        "kind": "modify_ability_score",
+        "maximum": 25
+      }
+    ]
+  },
+  "name": "Primal Champion",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Barbarian#Primal Champion"
+  }
+}

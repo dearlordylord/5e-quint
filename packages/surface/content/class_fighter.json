@@ -13,7 +13,7 @@
   "featureGrants": [
     {
       "level": 1,
-      "unitId": "fighter_fighting_style_l1"
+      "unitId": "fighter_fighting_style"
     },
     {
       "level": 1,
@@ -21,7 +21,7 @@
     },
     {
       "level": 1,
-      "unitId": "fighter_weapon_mastery_l1"
+      "unitId": "fighter_weapon_mastery"
     },
     {
       "level": 2,

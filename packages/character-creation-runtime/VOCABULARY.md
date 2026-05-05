@@ -27,6 +27,11 @@ Unit-backed selection - a character-creation choice whose accepted option
 references a Unit. The draft records the selected Unit reference rather
 than treating the submitted option id as authored truth.
 
+Unit choice key - runtime-owned name for a fillable slot exposed by an authored
+Unit. It is not the source Unit id. The source Unit id answers "which authored
+thing opened this hole"; the choice key answers "which slot on that thing is
+being filled."
+
 Character Progression - durable class-level read model. It stores the parsed
 starting class Unit id and ordered post-start class advancement entries. Total
 character level and per-class levels are derived from that history. Class names

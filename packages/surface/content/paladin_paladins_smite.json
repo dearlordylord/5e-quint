@@ -1,0 +1,27 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "paladin",
+  "description": "You always have the Divine Smite spell prepared. In addition, you can cast it without expending a spell slot, but you must finish a Long Rest before you can cast it in this way again.",
+  "id": "paladin_paladins_smite",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_spell_access",
+        "mode": "prepared",
+        "spellId": "divine_smite"
+      },
+      {
+        "kind": "grant_spell_access",
+        "mode": "once_per_long_rest",
+        "spellId": "divine_smite"
+      }
+    ]
+  },
+  "name": "Paladin's Smite",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin#Paladin's Smite"
+  }
+}

@@ -49,8 +49,8 @@ describe("end-user promoted MCP vertical", () => {
     const choices = callTool(root, "discover_creation_holes", { draftId });
     expect(holeIds(choices)).toEqual([
       unitHoleId("class_fighter", "fighter_skill_choices"),
-      unitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
-      unitHoleId("fighter_weapon_mastery_l1", "fighter_weapon_mastery_choices"),
+      unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+      unitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
       unitHoleId("class_fighter", "class_equipment_choice"),
       unitHoleId("background_soldier", "background_ability_score_increase"),
       unitHoleId("background_soldier", "background_tool_choice"),
@@ -67,14 +67,11 @@ describe("end-user promoted MCP vertical", () => {
           "survival",
         ),
         choiceFill(
-          unitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+          unitHoleId("fighter_fighting_style", "fighting_style_feat"),
           "defense",
         ),
         choiceFill(
-          unitHoleId(
-            "fighter_weapon_mastery_l1",
-            "fighter_weapon_mastery_choices",
-          ),
+          unitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
@@ -715,14 +712,11 @@ function createAndFinalizeFighterTwo(
         "survival",
       ),
       choiceFill(
-        unitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+        unitHoleId("fighter_fighting_style", "fighting_style_feat"),
         "defense",
       ),
       choiceFill(
-        unitHoleId(
-          "fighter_weapon_mastery_l1",
-          "fighter_weapon_mastery_choices",
-        ),
+        unitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
         "weapon_longsword",
         "weapon_spear",
         "weapon_flail",

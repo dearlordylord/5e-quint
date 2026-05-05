@@ -142,10 +142,10 @@ export const EQUIPMENT_PURCHASE_CHOICE_KEY =
   "equipment_purchase" satisfies UnitChoiceKey;
 export const FIGHTER_SKILL_CHOICE_KEY =
   "fighter_skill_choices" satisfies UnitChoiceKey;
-export const FIGHTER_FIGHTING_STYLE_CHOICE_KEY =
-  "fighter_fighting_style" satisfies UnitChoiceKey;
-export const FIGHTER_WEAPON_MASTERY_CHOICE_KEY =
-  "fighter_weapon_mastery_choices" satisfies UnitChoiceKey;
+export const FIGHTING_STYLE_FEAT_CHOICE_KEY =
+  "fighting_style_feat" satisfies UnitChoiceKey;
+export const WEAPON_MASTERY_OPTIONS_CHOICE_KEY =
+  "weapon_mastery_options" satisfies UnitChoiceKey;
 export const WIZARD_SKILL_CHOICE_KEY =
   "wizard_skill_choices" satisfies UnitChoiceKey;
 export const WIZARD_CANTRIP_CHOICE_KEY =

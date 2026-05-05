@@ -3442,11 +3442,11 @@ function manifestChoiceFills(): readonly CreationFill[] {
       "survival",
     ),
     choiceFill(
-      unitHoleId("fighter_fighting_style_l1", "fighter_fighting_style"),
+      unitHoleId("fighter_fighting_style", "fighting_style_feat"),
       "defense",
     ),
     choiceFill(
-      unitHoleId("fighter_weapon_mastery_l1", "fighter_weapon_mastery_choices"),
+      unitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
       "weapon_longsword",
       "weapon_spear",
       "weapon_flail",

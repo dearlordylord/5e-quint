@@ -89,6 +89,21 @@ starting equipment bundles, and species aggregate facts. Item-bundle entries are
 `unit_ref`s only when the referenced item is installed in the Unit collection;
 noncombat bundle facts that are not Unitized yet are `draft_owned_item`s.
 
+Authored Unit ids name the rules object, not the grant occurrence. Do not encode
+trailing level text such as `_l1` or `_l4` in a `class_feature` Unit id when
+`class.featureGrants[].level` and `class_feature.acquiredAtLevel` already
+represent that level. Keep level or occurrence text in the id only when it
+distinguishes a domain object that would otherwise collide, such as repeated
+grants modeled as separate authored Units. `Ability Score Improvement` is a
+repeated class feature, so its level text is occurrence identity when the
+occurrence is authored as its own Unit.
+
+Runtime choice keys are slot names, not authored Unit ids. A Unit-backed choice
+source is identified by the source Unit id plus the choice key; the key should
+name the fillable slot or choice family from the player's perspective. Reuse a
+choice key across source Units only when the slot semantics are the same; split
+keys when cardinality, eligibility, timing, or projection differs.
+
 Spellcasting creation facts stay inside the class record when they are class
 legality facts. Wizard 1 uses one `spellcasting` aggregate that keeps Spell
 Access and runtime projection separate: known cantrips, spellbook Spell Access,

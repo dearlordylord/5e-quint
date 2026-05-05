@@ -28,8 +28,8 @@ The important architectural idea is this:
   - `../surface/content/class_fighter.json`
   - `../surface/content/background_soldier.json`
   - `../surface/content/species_orc.json`
-  - `../surface/content/fighter_fighting_style_l1.json`
-  - `../surface/content/fighter_weapon_mastery_l1.json`
+  - `../surface/content/fighter_fighting_style.json`
+  - `../surface/content/fighter_weapon_mastery.json`
   - `../surface/content/feat_defense.json`
 
 ## Runtime Cast
@@ -139,10 +139,10 @@ sequenceDiagram
   Runtime->>Runtime: discoverClassGrantedHoles(...)
   Runtime->>Catalog: requireUnit("class_fighter")
   Runtime->>Surface: readClassCreationFacts(class_fighter)
-  Runtime->>Runtime: discoverClassFeatureGrantHoles(fighter_fighting_style_l1)
+  Runtime->>Runtime: discoverClassFeatureGrantHoles(fighter_fighting_style)
   Runtime->>Catalog: listUnits()
-  Runtime->>Runtime: discoverClassFeatureGrantHoles(fighter_weapon_mastery_l1)
-  Runtime->>Catalog: requireUnit("fighter_weapon_mastery_l1")
+  Runtime->>Runtime: discoverClassFeatureGrantHoles(fighter_weapon_mastery)
+  Runtime->>Catalog: requireUnit("fighter_weapon_mastery")
   Runtime->>Catalog: listUnits()
   Runtime->>Runtime: startingEquipmentChoiceHole(class_fighter option_c)
   Runtime->>Runtime: discoverBackgroundGrantedHoles(...)
@@ -359,8 +359,8 @@ flowchart TD
   Class["discoverClassGrantedHoles"]
   ClassRead["requireUnit(class_fighter)<br/>readClassCreationFacts"]
   Skills["choiceHole(class_fighter, fighter_skill_choices)<br/>exactly 2"]
-  Style["discoverClassFeatureGrantHoles(fighter_fighting_style_l1)<br/>read grant_feat fighting_style<br/>list fighting_style feats<br/>exactly 1"]
-  Mastery["discoverClassFeatureGrantHoles(fighter_weapon_mastery_l1)<br/>read weapon_mastery_choice<br/>list eligible simple/martial weapons"]
+  Style["discoverClassFeatureGrantHoles(fighter_fighting_style)<br/>read grant_feat fighting_style<br/>list fighting_style feats<br/>exactly 1"]
+  Mastery["discoverClassFeatureGrantHoles(fighter_weapon_mastery)<br/>read weapon_mastery_choice<br/>list eligible simple/martial weapons"]
   ClassEquip["startingEquipmentChoiceHole(class_fighter)<br/>option_c coin grant"]
 
   Background["discoverBackgroundGrantedHoles"]

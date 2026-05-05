@@ -1,0 +1,21 @@
+{
+  "acquiredAtLevel": 5,
+  "className": "ranger",
+  "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+  "id": "ranger_extra_attack",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "additional": 1,
+        "kind": "scale_attack_count"
+      }
+    ]
+  },
+  "name": "Extra Attack",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Ranger#Extra Attack"
+  }
+}

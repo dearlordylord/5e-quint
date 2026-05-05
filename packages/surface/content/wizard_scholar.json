@@ -1,0 +1,38 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "wizard",
+  "description": "While studying magic, you also specialized in another field of study. Choose one of the following skills in which you have proficiency: Arcana, History, Investigation, Medicine, Nature, or Religion. You have Expertise in the chosen skill.",
+  "id": "wizard_scholar",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "kind": "proficiency_bonus",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "ability_check"
+        ],
+        "skillFilter": {
+          "kind": "choice",
+          "options": [
+            "arcana",
+            "history",
+            "investigation",
+            "medicine",
+            "nature",
+            "religion"
+          ]
+        }
+      }
+    ]
+  },
+  "name": "Scholar",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Wizard#Scholar"
+  }
+}

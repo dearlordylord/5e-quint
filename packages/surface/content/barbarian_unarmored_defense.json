@@ -1,0 +1,27 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "barbarian",
+  "description": "While you aren't wearing any armor, your base Armor Class equals 10 plus your Dexterity and Constitution modifiers. You can use a Shield and still gain this benefit.",
+  "id": "barbarian_unarmored_defense",
+  "kind": "class_feature",
+  "mechanics": {
+    "condition": {
+      "kind": "unarmored"
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "formula": {
+          "base": 10,
+          "kind": "base_plus_dex_con"
+        },
+        "kind": "modify_ac_set_base"
+      }
+    ]
+  },
+  "name": "Unarmored Defense",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Barbarian#Unarmored Defense"
+  }
+}

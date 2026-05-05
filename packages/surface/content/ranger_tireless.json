@@ -1,0 +1,50 @@
+{
+  "acquiredAtLevel": 10,
+  "className": "ranger",
+  "description": "Primal forces now help fuel you on your journeys. Temporary Hit Points: As a Magic action, you can give yourself a number of Temporary Hit Points equal to 1d8 plus your Wisdom modifier (minimum of 1). You can use this action a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest. Decrease Exhaustion: Whenever you finish a Short Rest, your Exhaustion level, if any, decreases by 1.",
+  "id": "ranger_tireless",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "amount": {
+              "expr": {
+                "abilityModifier": "wis",
+                "dice": 1,
+                "dieSize": 8
+              },
+              "kind": "fixed"
+            },
+            "kind": "grant_temp_hp"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "long_rest"
+    },
+    "resource": {
+      "cap": {
+        "ability": "wis",
+        "kind": "ability_modifier"
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Tireless",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Ranger#Tireless"
+  }
+}
