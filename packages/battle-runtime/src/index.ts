@@ -82,6 +82,7 @@ export {
   BATTLE_INVALID_REASON_CODES,
   BattleFillSchema,
   BattleHoleSchema,
+  BattleSnapshotSchema,
   addBattleCombatant,
   battleCreatureInitFromStatBlock,
   breakBattleConcentration,

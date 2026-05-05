@@ -47,12 +47,21 @@ importers:
 
   packages/app:
     dependencies:
+      '@dnd/battle-runtime':
+        specifier: workspace:*
+        version: link:../battle-runtime
       '@dnd/core':
         specifier: workspace:*
         version: link:../core
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
+      '@dnd/surface':
+        specifier: workspace:*
+        version: link:../surface
       '@firfi/quint-connect':
         specifier: ^2.0.0
         version: 2.0.0(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)

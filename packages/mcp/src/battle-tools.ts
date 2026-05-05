@@ -32,7 +32,6 @@ import {
   SelectStatBlockOutputSchema,
   StartBattleOutputSchema,
 } from "./battle-tool-output.ts";
-import { battleStateProjection } from "./battle-state-projection.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 import type { BattleFillSession } from "./session-store.ts";
@@ -286,7 +285,6 @@ function battleSessionPayload(
   state: BattleState | null,
 ) {
   return {
-    battleState: state === null ? null : battleStateProjection(state),
     snapshot: state === null ? null : snapshotBattle(state),
     session: root.sessionStore.snapshot(),
   };
@@ -298,8 +296,6 @@ function battleResolutionPayload(
 ) {
   return {
     result: battleResolutionResultPayload(result),
-    battleState:
-      result.tag === "invalid" ? null : battleStateProjection(result.state),
     snapshot: result.snapshot,
     session: root.sessionStore.snapshot(),
   };

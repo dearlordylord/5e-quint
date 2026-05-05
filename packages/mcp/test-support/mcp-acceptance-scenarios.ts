@@ -202,7 +202,7 @@ export async function verifyToolContract(client: Client) {
   assert.match(schemaText, /statBlockId/);
   assert.doesNotMatch(schemaText, /characterCombatantId/);
   assert.doesNotMatch(schemaText, /additionalCharacters/);
-  assert.match(startBattleOutputSchemaText, /battleState/);
+  assert.doesNotMatch(startBattleOutputSchemaText, /battleState/);
   assert.match(startBattleOutputSchemaText, /snapshot/);
   assert.match(startBattleOutputSchemaText, /session/);
 
@@ -441,7 +441,14 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(endedFighterTurn, "snapshot.currentActorId"), "goblin");
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
-    ["Attack", "Attack", ...GENERIC_COMBAT_ACTION_LABELS, "Move", "End Turn"],
+    [
+      "Attack",
+      "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Nimble Escape",
+      "Move",
+      "End Turn",
+    ],
   );
 
   await callTool(client, "fill_battle_hole", {
@@ -594,7 +601,7 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(get(surged, "result.tag"), "resolved");
   const resources = get(
     surged,
-    "battleState.combatants.0.origin.resources",
+    "snapshot.combatants.0.origin.resources",
   ) as JsonObject[];
   assert.ok(
     resources.some(
@@ -682,7 +689,19 @@ export async function verifyWidthVertical(client: Client) {
 
   await callTool(client, "fill_battle_hole", {
     subject: magicSubject("wizard", "magic_missile"),
-    fill: targetFill("skeleton"),
+    fill: {
+      kind: "spellTargetAllocation",
+      holeId: "battle:spell:target-allocation:magic_missile",
+      value: { allocations: [{ targetId: "skeleton", count: 3 }] },
+      spatialFacts: [
+        {
+          kind: "spellTarget",
+          casterId: "wizard",
+          targetId: "skeleton",
+          spellId: "magic_missile",
+        },
+      ],
+    },
   });
   const afterMagicMissile = await callTool(client, "fill_battle_hole", {
     subject: magicSubject("wizard", "magic_missile"),
@@ -1034,7 +1053,7 @@ function actionLabels(payload: JsonObject) {
 }
 
 function combatantHp(payload: JsonObject, combatantId: string) {
-  const combatants = get(payload, "battleState.combatants") as ReadonlyArray<{
+  const combatants = get(payload, "snapshot.combatants") as ReadonlyArray<{
     readonly combatantId: string;
     readonly hp: number;
   }>;
@@ -1046,7 +1065,7 @@ function combatantHp(payload: JsonObject, combatantId: string) {
 }
 
 function wizardSpellSlots(payload: JsonObject) {
-  const combatants = get(payload, "battleState.combatants") as ReadonlyArray<{
+  const combatants = get(payload, "snapshot.combatants") as ReadonlyArray<{
     readonly combatantId: string;
     readonly origin: {
       readonly spellcasting?: {

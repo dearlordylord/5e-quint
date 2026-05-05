@@ -1,7 +1,7 @@
 import {
-  ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BattleFillSchema,
   BattleHoleSchema,
+  BattleSnapshotSchema,
   BattleSubjectSchema,
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
@@ -9,75 +9,6 @@ import { Schema } from "effect";
 const JsonObjectSchema = Schema.Record({
   key: Schema.String,
   value: Schema.Any,
-});
-const BattleCombatantProjectionSchema = Schema.Struct({
-  combatantId: Schema.String,
-  displayName: Schema.String,
-  initiative: Schema.Number,
-  side: Schema.String,
-  hp: Schema.Number,
-  maxHp: Schema.Number,
-  tempHp: Schema.Number,
-  reactionAvailable: Schema.Boolean,
-  movementSpentFeet: Schema.Number,
-  hidden: Schema.Union(JsonObjectSchema, Schema.Null),
-  positiveHpConditionRecovery: Schema.Union(JsonObjectSchema, Schema.Null),
-  activeOngoingFeatureOccurrences: Schema.Array(
-    ActiveOngoingFeatureOccurrenceSnapshotSchema,
-  ),
-  origin: JsonObjectSchema,
-  zeroHpLifecycle: JsonObjectSchema,
-});
-const InitiativeEntrySchema = Schema.Struct({
-  creature: Schema.String,
-  initiative: Schema.Number,
-});
-const InitiativeStackSchema = Schema.Struct({
-  round: Schema.Number,
-  alreadyActed: Schema.Array(InitiativeEntrySchema),
-  stillToAct: Schema.NonEmptyArray(InitiativeEntrySchema),
-});
-const BattleStateProjectionSchema = Schema.Struct({
-  battleId: Schema.String,
-  initiative: InitiativeStackSchema,
-  combatants: Schema.Array(BattleCombatantProjectionSchema),
-  currentTurnResources: JsonObjectSchema,
-  pendingReaction: Schema.Union(JsonObjectSchema, Schema.Null),
-});
-const BattleCreatureSnapshotSchema = Schema.Struct({
-  combatantId: Schema.String,
-  displayName: Schema.String,
-  originKind: Schema.String,
-  hp: Schema.Number,
-  maxHp: Schema.Number,
-  tempHp: Schema.Number,
-  armorClass: Schema.Number,
-  defeated: Schema.Boolean,
-  zeroHpLifecycle: JsonObjectSchema,
-  conditions: Schema.Array(Schema.String),
-  positiveHpConditionRecovery: Schema.Union(JsonObjectSchema, Schema.Null),
-  hidden: Schema.Union(JsonObjectSchema, Schema.Null),
-  activeEffects: Schema.Array(JsonObjectSchema),
-  activeOngoingFeatureOccurrences: Schema.Array(
-    ActiveOngoingFeatureOccurrenceSnapshotSchema,
-  ),
-  reactionAvailable: Schema.Boolean,
-});
-const AvailableBattleActSchema = Schema.Struct({
-  subject: BattleSubjectSchema,
-  label: Schema.String,
-  summary: Schema.String,
-  initialHoles: Schema.Array(BattleHoleSchema),
-});
-const BattleSnapshotSchema = Schema.Struct({
-  battleId: Schema.String,
-  round: Schema.Number,
-  currentActorId: Schema.String,
-  turnOrder: Schema.Array(Schema.String),
-  combatants: Schema.Array(BattleCreatureSnapshotSchema),
-  acts: Schema.Array(AvailableBattleActSchema),
-  currentTurnResources: JsonObjectSchema,
-  pendingReaction: Schema.Union(JsonObjectSchema, Schema.Null),
 });
 const McpSessionSnapshotSchema = Schema.Struct({
   draftIds: Schema.Array(Schema.String),
@@ -123,20 +54,17 @@ export const SelectStatBlockOutputSchema = Schema.Struct({
 });
 
 export const BattleSessionOutputSchema = Schema.Struct({
-  battleState: Schema.Union(BattleStateProjectionSchema, Schema.Null),
   snapshot: Schema.Union(BattleSnapshotSchema, Schema.Null),
   session: McpSessionSnapshotSchema,
 });
 
 export const StartBattleOutputSchema = Schema.Struct({
-  battleState: BattleStateProjectionSchema,
   snapshot: BattleSnapshotSchema,
   session: McpSessionSnapshotSchema,
 });
 
 export const BattleResolutionOutputSchema = Schema.Struct({
   result: BattleResolutionResultSchema,
-  battleState: Schema.Union(BattleStateProjectionSchema, Schema.Null),
   snapshot: BattleSnapshotSchema,
   session: McpSessionSnapshotSchema,
 });

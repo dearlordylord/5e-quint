@@ -227,7 +227,7 @@ function workflowGuide() {
       battleActs: "snapshot.acts",
       followUpBattleHoles: "result.holes",
       pendingBattleFills: "session.transientBattleFills",
-      battleCombatants: "battleState.combatants",
+      battleCombatants: "snapshot.combatants",
     },
     acceptedInputs: {
       choiceFill:

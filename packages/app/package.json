@@ -26,8 +26,11 @@
     ]
   },
   "dependencies": {
+    "@dnd/battle-runtime": "workspace:*",
     "@dnd/core": "workspace:*",
+    "@dnd/shared-algebras": "workspace:*",
     "@dnd/shared": "workspace:*",
+    "@dnd/surface": "workspace:*",
     "@firfi/quint-connect": "^2.0.0",
     "@statelyai/graph": "^0.8.0",
     "@statelyai/inspect": "^0.4.0",

@@ -769,12 +769,6 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    expect(snapshotBattle(state).combatants).toContainEqual(
-      expect.objectContaining({
-        combatantId: fighterId,
-        hands: { left: "offWeapon", right: "mainWeapon" },
-      }),
-    );
     expect(
       discoverBattleActs(state).map((act) => act.subject),
     ).not.toContainEqual({
@@ -946,27 +940,26 @@ describe("MCP server route", () => {
       session: { selectedStatBlockId: "stat_block_goblin_warrior" },
     });
 
-    const started = readPayload(
-      handleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-shell",
-        initialCombatants: [
-          {
-            kind: "characterSession",
-            sourceDraftId: draftId,
-            combatantId: "fighter",
-            initiative: 18,
-            side: "party",
-          },
-          {
-            kind: "statBlock",
-            statBlockId: "stat_block_goblin_warrior",
-            combatantId: "goblin",
-            initiative: 7,
-            side: "opposition",
-          },
-        ],
-      }),
-    );
+    const startResponse = handleToolCall(root, "start_battle", {
+      battleId: "battle:mcp-shell",
+      initialCombatants: [
+        {
+          kind: "characterSession",
+          sourceDraftId: draftId,
+          combatantId: "fighter",
+          initiative: 18,
+          side: "party",
+        },
+        {
+          kind: "statBlock",
+          statBlockId: "stat_block_goblin_warrior",
+          combatantId: "goblin",
+          initiative: 7,
+          side: "opposition",
+        },
+      ],
+    });
+    const started = readPayload(startResponse);
 
     expect(root.sessionStore.battleState).not.toBeNull();
     expect(
@@ -977,8 +970,10 @@ describe("MCP server route", () => {
       hp: 10,
     });
     expect(started).toMatchObject({
-      battleState: {
+      snapshot: {
         battleId: "battle:mcp-shell",
+        currentActorId: "fighter",
+        turnOrder: ["fighter", "goblin"],
         combatants: [
           {
             combatantId: "fighter",
@@ -991,11 +986,9 @@ describe("MCP server route", () => {
             initiative: 7,
           },
         ],
-      },
-      snapshot: {
-        battleId: "battle:mcp-shell",
-        currentActorId: "fighter",
-        turnOrder: ["fighter", "goblin"],
+        readiedResponses: { spells: [], movements: [] },
+        helpAttackMarkers: [],
+        pendingReaction: null,
       },
       session: {
         selectedStatBlockId: "stat_block_goblin_warrior",
@@ -1004,6 +997,26 @@ describe("MCP server route", () => {
           currentActorId: "fighter",
         },
         transientBattleFills: null,
+      },
+    });
+    expect(started.snapshot.combatants[0]).toMatchObject({
+      combatantId: "fighter",
+      movement: { speedFeet: 30, spentFeet: 0, remainingFeet: 30 },
+    });
+    expect(started.snapshot.combatants[0]).not.toHaveProperty("defeated");
+    if ("isError" in startResponse) {
+      throw new Error("Expected start_battle to return structured content.");
+    }
+    expect(startResponse.structuredContent).toMatchObject({
+      snapshot: {
+        combatants: [
+          {
+            combatantId: "fighter",
+          },
+          {
+            combatantId: "goblin",
+          },
+        ],
       },
     });
 
@@ -1040,7 +1053,7 @@ describe("MCP server route", () => {
             act.subject.readyTrigger,
         ),
     ).toEqual([...GENERIC_READY_TRIGGERS]);
-    expect(read.battleState.combatants).toHaveLength(2);
+    expect(read.snapshot.combatants).toHaveLength(2);
   });
 
   test("fills a promoted battle movement hole through MCP", () => {
@@ -1088,10 +1101,10 @@ describe("MCP server route", () => {
       }),
     );
     expect(moved.result.tag).toBe("resolved");
-    expect(moved.battleState.combatants).toContainEqual(
+    expect(moved.snapshot.combatants).toContainEqual(
       expect.objectContaining({
         combatantId: "fighter",
-        movementSpentFeet: 10,
+        movement: expect.objectContaining({ spentFeet: 10 }),
       }),
     );
   });
@@ -1391,7 +1404,7 @@ describe("MCP server route", () => {
       }),
     );
     expect(afterDamage.result.tag).toBe("resolved");
-    expect(afterDamage.battleState.combatants).toEqual([
+    expect(afterDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 12 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -1446,6 +1459,7 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Nimble Escape",
       "Move",
       "End Turn",
     ]);
@@ -1518,7 +1532,7 @@ describe("MCP server route", () => {
       }),
     );
     expect(afterGoblinDamage.result.tag).toBe("resolved");
-    expect(afterGoblinDamage.battleState.combatants).toEqual([
+    expect(afterGoblinDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 5 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -1719,16 +1733,15 @@ describe("MCP server route", () => {
     });
 
     expect(afterDamage.result).toMatchObject({ tag: "resolved" });
-    expect(afterDamage.battleState.combatants).toEqual(
+    expect(afterDamage.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ combatantId: "fighter", hp: 10 }),
         expect.objectContaining({ combatantId: "goblin", hp: 2 }),
       ]),
     );
-    expect(
-      afterDamage.battleState.currentTurnResources
-        .attackDamageRidersUsedThisTurn,
-    ).toEqual([{ attackerId: "fighter", unitId: "rogue_sneak_attack" }]);
+    expect(afterDamage.snapshot.turn.attackDamageRidersUsedThisTurn).toEqual([
+      { attackerId: "fighter", unitId: "rogue_sneak_attack" },
+    ]);
     expect(afterDamage.session).toMatchObject({ transientBattleFills: null });
   });
 
@@ -2280,7 +2293,7 @@ describe("MCP server route", () => {
     );
 
     expect(afterFighterDamage.result.tag).toBe("resolved");
-    expect(afterFighterDamage.battleState.combatants).toEqual([
+    expect(afterFighterDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 12 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -2325,6 +2338,7 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Nimble Escape",
       "Move",
       "End Turn",
     ]);
@@ -2351,7 +2365,7 @@ describe("MCP server route", () => {
     );
 
     expect(afterGoblinDamage.result.tag).toBe("resolved");
-    expect(afterGoblinDamage.battleState.combatants).toEqual([
+    expect(afterGoblinDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 5 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -2608,7 +2622,6 @@ describe("MCP server route", () => {
         ...fighter,
         hp: Hp(1),
         conditions: applyCondition(fighter.conditions, "unconscious"),
-        positiveHpConditionRecovery: null,
       }),
     } satisfies BattleState;
 
@@ -2666,14 +2679,12 @@ describe("MCP server route", () => {
         combatantId: "fighter",
         hp: 1,
         conditions: expect.arrayContaining(["unconscious"]),
-        positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
       }),
       expect.objectContaining({ combatantId: "goblin" }),
     ]);
-    expect(started.battleState.combatants).toEqual([
+    expect(started.snapshot.combatants).toEqual([
       expect.objectContaining({
         combatantId: "fighter",
-        positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
       }),
       expect.objectContaining({ combatantId: "goblin" }),
     ]);
@@ -3312,7 +3323,7 @@ describe("MCP server route", () => {
           { combatantId: "fighter", hp: 12 },
           { combatantId: "goblin", hp: 6 },
         ],
-        currentTurnResources: { actionResources: [] },
+        turn: { actionResources: [] },
       },
     });
     expect(root.sessionStore.transientBattleFills).toBeNull();
@@ -3413,8 +3424,8 @@ describe("MCP server route", () => {
         tag: "needsHoles",
         holes: [{ kind: "reactionDecision", trigger: "attackHit" }],
       },
-      battleState: {
-        pendingReaction: { frame: { trigger: "attackHit" } },
+      snapshot: {
+        pendingReaction: { trigger: "attackHit" },
       },
     });
 
@@ -3446,10 +3457,8 @@ describe("MCP server route", () => {
         },
         holes: [{ kind: "targetChoice" }],
       },
-      battleState: {
-        pendingReaction: {
-          frame: { activeReaction: { reactorId: "fighter" } },
-        },
+      snapshot: {
+        pendingReaction: { trigger: "attackHit" },
       },
     });
     expect(root.sessionStore.battleState?.interruptStack).toHaveLength(1);

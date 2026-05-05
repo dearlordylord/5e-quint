@@ -7,7 +7,6 @@ import {
 import { Either, Match, Option } from "effect";
 
 import { battleCreatureInitFromCharacterBuild } from "./battle-creature-init.ts";
-import { battleStateProjection } from "./battle-state-projection.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
@@ -82,7 +81,6 @@ export function handleStartBattleToolCall(
   }
 
   return schemaJsonContent(StartBattleOutputSchema, {
-    battleState: battleStateProjection(state.right),
     snapshot: snapshotBattle(state.right),
     session: root.sessionStore.snapshot(),
   });

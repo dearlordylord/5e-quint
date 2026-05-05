@@ -185,6 +185,8 @@ The support-profile parser surface should cover these profile families:
 - `SpellProfile.preparedSlotSpell`: an action-cast, slot-spent, repeated
   automatic damage spell profile such as Magic Missile, with target allocation
   carried by Spell Invocation fills.
+  The profile id remains narrower than its name: it is not a general prepared
+  spell execution family until additional slot-spent spell shapes are promoted.
 - `SpellProfile.preparedHealingSpell`: a bonus-action, slot-spent, single-target
   healing spell such as Healing Word. Slot-spent spell profiles share the
   turn-resource fact that only one Spell Slot can be expended to cast a spell on
@@ -256,20 +258,21 @@ as releasing a readied spell, spends the reactor's Reaction, replays that
 procedure through its own holes if needed, and then resumes the interrupted
 subject without caller-side sequencing conventions.
 
-The promoted attack host set includes Attack action attacks, Off-Hand Attack,
-and Opportunity Attack. Host-specific resource costs stay with the host: Attack
-spends the matching action resource, Off-Hand Attack spends the turn Bonus
-Action, and Opportunity Attack spends the reactor's Reaction before any nested
-attack-hit, attack-damage, or after-damage Reaction window is offered.
+The promoted attack host set includes Attack action attacks, Light Property
+Bonus Action Attack, and Opportunity Attack. Host-specific resource costs stay
+with the host: Attack spends the matching action resource, Light Property Bonus
+Action Attack spends the turn Bonus Action, and Opportunity Attack spends the
+reactor's Reaction before any nested attack-hit, attack-damage, or after-damage
+Reaction window is offered.
 
 Ready spell acts carry the selected supported trigger on the subject as
 `readyTrigger`; the stored `BattleReadiedSpell.trigger` is derived from that
 runtime choice rather than patched into state later.
 Prepared Bonus Action healing spells use `bonusActionSpell` subjects and spend
-the same turn Bonus Action resource as Off-Hand Attack, Second Wind, Cunning
-Action Hide, and admitted Stat Block Bonus Action options. They also mark the
-turn's Spell Slot expenditure, so a later Magic-action or Bonus-action spell on
-that turn cannot spend another Spell Slot.
+the same turn Bonus Action resource as Light Property Bonus Action Attack,
+Second Wind, Cunning Action Hide, and admitted Stat Block Bonus Action options.
+They also mark the turn's Spell Slot expenditure, so a later Magic-action or
+Bonus-action spell on that turn cannot spend another Spell Slot.
 
 ## Terms
 
@@ -311,8 +314,12 @@ that turn cannot spend another Spell Slot.
 - `origin` - the Character or Stat Block origin data retained on a
   `BattleCreatureState`. Origin is not provenance. Provenance is the canonical
   rules/content source claimed by authored Surface records.
-- Snapshot - JSON-friendly read model for callers. Snapshots do not expose
-  internal `Map` state.
+- `BattleSnapshot` - promoted JSON-friendly battle view contract for callers,
+  exported with `BattleSnapshotSchema` for MCP and app output encoding. It
+  carries turn order, combatant facts, available acts with public holes, pending
+  Reaction decisions, readied responses, Help attack markers, and the current
+  turn resource projection needed by caller/debug displays. Snapshots do not
+  expose internal `Map` state or loadout-based hand occupancy.
 
 ## Implemented Behavior
 
@@ -385,11 +392,12 @@ Available acts:
   procedures whose successful-save result is half damage: success becomes no
   damage and failure becomes half damage. Reaction class riders remain
   support-gated until their reusable procedure family exists.
-- discover Off-Hand Attack for character combatants holding Light melee weapons
-  in both hands. The extra attack spends the Bonus Action and derives weapon
-  damage from the off-hand `WeaponRecord`, omitting a positive ability modifier
-  from damage per the Light property. Off-Hand Attack uses the same attack-hit,
-  attack-damage, and after-damage Reaction replay windows as the Attack action.
+- discover Light Property Bonus Action Attack for character combatants holding
+  Light melee weapons in both hands. The extra attack spends the Bonus Action
+  and derives weapon damage from the off-hand `WeaponRecord`, omitting a
+  positive ability modifier from damage per the Light property. Light Property
+  Bonus Action Attack uses the same attack-hit, attack-damage, and after-damage
+  Reaction replay windows as the Attack action.
 - discover supported Stat Block Legendary Action attacks after another
   creature's turn ends for monsters that can act, have remaining Legendary
   Action uses, and have a legal target. These spend only monster Legendary
@@ -678,7 +686,7 @@ FIXME: it is not going to be expandable because there are thousands of features.
 | Active ongoing feature occurrences       | SRD 5.2.1 `Classes/Barbarian.md` "Rage" / "Reckless Attack"; `Playing-the-Game.md` "Attack Rolls"; `UBIQUITOUS_LANGUAGE.md` "Bonus Action", "Advantage", "Resistance", and "Turn"                                                                                                                                                                                                                                   | Rage and Reckless Attack are restored through reusable active ongoing feature occurrence state. Rage spends a Bonus Action/use, is blocked and ended by Heavy armor, ends on Incapacitated before level 15, breaks and prevents Concentration/spellcasting, extends by attack roll, enemy Saving Throw, or Bonus Action up to 10 minutes, grants Bludgeoning, Piercing, and Slashing Resistance, and adds damage for supported Strength weapon attack damage. Persistent Rage lasts 10 minutes without round extension and ends early on Unconscious or Heavy armor. Reckless Attack is chosen at the first supported Strength weapon attack roll and expires at the start of the barbarian's next turn; non-weapon Strength attack roll support, Rage Damage on damage-dealing Unarmed Strike attacks, Rage Advantage on Strength ability checks/Saving Throws, and Persistent Rage's Initiative-time resource restoration remain gated until those promoted runtime hooks exist. |
 | Attack damage riders                     | SRD 5.2.1 `Classes/Rogue.md` "Sneak Attack"; `Playing-the-Game.md` "Making an Attack", "Damage Rolls", and "Critical Hits"; `UBIQUITOUS_LANGUAGE.md` "Weapon Property", "Finesse", "Critical Hit", and "Encounter Side"                                                                                                                                                                                             | Sneak Attack is an optional once-per-turn attack damage rider exposed on eligible Finesse or Ranged weapon hits made with attack rolls. The rider uses the attack's damage type, doubles its dice on Critical Hits through the same damage-roll protocol, and the non-Incapacitated ally-within-5ft branch is treated as a caller/table spatial fact combined with encounter-side and condition facts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Save damage replacement riders           | SRD 5.2.1 `Classes/Rogue.md` "Evasion"; `Classes/Monk.md` "Evasion"; `Playing-the-Game.md` "Saving Throws and Damage"; `UBIQUITOUS_LANGUAGE.md` "Saving Throw" and "Damage"                                                                                                                                                                                                                                         | Evasion-style riders are admitted as passive save-damage replacement profiles. For Dexterity Saving Throw damage procedures whose normal success result is half damage, a successful save deals no damage and a failed save deals half damage; the damage result is derived during save-gate damage replay from the single Saving Throw outcome.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Reaction roll or damage reductions       | SRD 5.2.1 `Classes/Rogue.md` "Uncanny Dodge"; `Classes/Bard.md` "Cutting Words"; `Playing-the-Game.md` "Damage Resistance and Vulnerability"; `Playing-the-Game.md` / `Rules-Glossary.md` "Opportunity Attacks"; `ASSUMPTIONS.md` A43                                                                                                                                                                               | Uncanny Dodge and the promoted attack-roll / damage-roll branches of Cutting Words are modeled as reusable Reaction reductions. Attack-damage reductions apply before Resistance, Vulnerability, and Immunity; when a scalar reduction applies to mixed damage entries, the runtime reduces entries proportionally while preserving the total reduced damage. The same attack-hit, attack-damage, and after-damage windows are used by Attack action attacks, Off-Hand Attack, and Opportunity Attack while preserving each host's resource spend. Full SRD Cutting Words remains support-gated until ability-check reaction triggers are promoted. Full SRD Deflect Attacks remains support-gated until the redirect-on-zero follow-up is promoted.                                                                                                                                                                                                                               |
+| Reaction roll or damage reductions       | SRD 5.2.1 `Classes/Rogue.md` "Uncanny Dodge"; `Classes/Bard.md` "Cutting Words"; `Playing-the-Game.md` "Damage Resistance and Vulnerability"; `Playing-the-Game.md` / `Rules-Glossary.md` "Opportunity Attacks"; `ASSUMPTIONS.md` A43                                                                                                                                                                               | Uncanny Dodge and the promoted attack-roll / damage-roll branches of Cutting Words are modeled as reusable Reaction reductions. Attack-damage reductions apply before Resistance, Vulnerability, and Immunity; when a scalar reduction applies to mixed damage entries, the runtime reduces entries proportionally while preserving the total reduced damage. The same attack-hit, attack-damage, and after-damage windows are used by Attack action attacks, Light Property Bonus Action Attack, and Opportunity Attack while preserving each host's resource spend. Full SRD Cutting Words remains support-gated until ability-check reaction triggers are promoted. Full SRD Deflect Attacks remains support-gated until the redirect-on-zero follow-up is promoted.                                                                                                                                                                                                            |
 | Spell acts                               | SRD 5.2.1 `Classes/Wizard.md` "Spellcasting"; `Rules-Glossary.md` "Magic [Action]" / "Armor Training"; `Spells/Gaining-and-Casting.md` "Spell Slots" / "One Spell with a Spell Slot per Turn" / "Using a Higher-Level Spell Slot" / "Targets" / "Cantrips" / "Attack Rolls"; `Spells/Descriptions-E-L.md` "Healing Word"; `Spells/Descriptions-M-P.md` "Magic Missile"; `Spells/Descriptions-Q-R.md` "Ray of Frost" | Prepared `magic_missile` spends a runtime Spell Slot at the selected level and allocates its simultaneous darts among one or several table-legal spell targets. Prepared `healing_word` spends the Bonus Action and a runtime Spell Slot, then restores target HP through the same HP clamp boundary as other healing. Slot-spent spells mark the current turn's Spell Slot expenditure so Magic-action and Bonus-action spell subjects cannot spend two Spell Slots in the same turn. Cantrip `ray_of_frost` uses spellcasting ability modifier + Proficiency Bonus for the attack and records its Speed reduction. Untrained worn armor suppresses spell acts without deleting Spell Slot state.                                                                                                                                                                                                                                                                                 |
 | Skeleton damage modifiers                | SRD 5.2.1 `Monsters/Monsters-P-S.md` "Skeleton"; `UBIQUITOUS_LANGUAGE.md` "Damage"                                                                                                                                                                                                                                                                                                                                  | Skeleton's Bludgeoning vulnerability and Poison damage immunity modify supported damage before HP mutation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Zero-HP lifecycle                        | SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points", "Instant Death", "Falling Unconscious", "Death Saving Throws", "Damage at 0 Hit Points", "Stabilizing a Character"; `Rules-Glossary.md` "Stable"; `UBIQUITOUS_LANGUAGE.md` "Knock Out", "Death Saving Throw", "Stable", "Instant Death"; `ASSUMPTIONS.md` A12                                                                                           | Stat Block combatants use `diesAtZeroHp`; Character Build combatants use `usesDeathSavingThrows`. Implemented behavior covers drop to `0` HP, damage at `0` HP, Critical Hit damage at `0` HP, Massive Damage, melee Knock Out to `1` HP plus Unconscious, and start-turn Death Saving Throw rolls through Stable/dead/natural-20 outcomes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |

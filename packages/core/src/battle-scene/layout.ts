@@ -9,8 +9,7 @@ import {
 } from "./director.ts";
 import type {
   AoEZoneSnapshot,
-  CreatureSnapshot,
-  SceneSnapshot,
+  PhaseSnapshot,
   SpriteRect,
 } from "./scene-snapshot.ts";
 import { damageTypeVisuals } from "./visual-catalog.ts";
@@ -111,6 +110,43 @@ export interface LayoutState {
   spellAnnouncement: { spellName: string; casterId: string } | null;
 }
 
+export type LayoutPhaseSnapshot =
+  | { readonly type: "interrupt"; readonly reactorId?: string }
+  | { readonly type: Exclude<PhaseSnapshot["type"], "interrupt"> };
+
+export interface LayoutCreatureSnapshot {
+  readonly id: string;
+  readonly name: string;
+  readonly team: "blue" | "red";
+  readonly sprite: SpriteRect | null;
+  readonly gridPos: { readonly row: number; readonly col: number };
+  readonly hpRatio: number;
+  readonly currentHp: number;
+  readonly maxHp: number;
+  readonly tempHp: number;
+  readonly unconscious: boolean;
+  readonly dead: boolean;
+  readonly slotsByLevel: ReadonlyArray<{
+    readonly current: number;
+    readonly max: number;
+  }>;
+  readonly deathSaves: {
+    readonly successes: number;
+    readonly failures: number;
+  };
+  readonly isActive: boolean;
+}
+
+export interface LayoutSceneSnapshot {
+  readonly creatures: ReadonlyArray<LayoutCreatureSnapshot>;
+  readonly phase: LayoutPhaseSnapshot;
+  readonly aoeZones: ReadonlyArray<AoEZoneSnapshot>;
+  readonly aoeTargetPoint: {
+    readonly row: number;
+    readonly col: number;
+  } | null;
+}
+
 // --- Pure computation ---
 
 const TEAM_COLORS = { blue: "#3b82f6", red: "#ef4444" } as const;
@@ -147,7 +183,7 @@ function computeGridLines(config: LayoutConfig): LayoutState["gridLines"] {
 }
 
 function computeCreatureLayout(
-  creature: CreatureSnapshot,
+  creature: LayoutCreatureSnapshot,
   cues: VisualCueState,
   config: LayoutConfig,
   reactorId: string | undefined,
@@ -279,7 +315,7 @@ function computeAoELayout(
 }
 
 export function computeLayout(
-  snapshot: SceneSnapshot,
+  snapshot: LayoutSceneSnapshot,
   cues: VisualCueState,
   config: LayoutConfig = DEFAULT_LAYOUT_CONFIG,
 ): LayoutState {
@@ -310,7 +346,7 @@ export function computeLayout(
 }
 
 function computeCastLine(
-  snapshot: SceneSnapshot,
+  snapshot: LayoutSceneSnapshot,
   cues: VisualCueState,
   config: LayoutConfig,
 ): CastLineLayout | null {

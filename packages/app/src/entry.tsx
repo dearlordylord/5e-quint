@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client"
 
 import { BattlePage } from "#/battle-scene/BattlePage.tsx"
 import { EmbedBattlePage } from "#/battle-scene/EmbedBattlePage.tsx"
+import { PROMOTED_BATTLE_DEMO_META, PROMOTED_BATTLE_DEMO_STATE } from "#/battle-scene/promoted-battle-demo.ts"
 import { App } from "#/components/App.tsx"
 import { CharacterCreationPage } from "#/components/character-creation/CharacterCreationPage.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
@@ -57,7 +58,7 @@ function RootApp() {
   if (pathname === "/embed/trace") return <EmbedTraceVisualizer />
   if (pathname === "/embed/machine-viz") return <EmbedMachineVizPage />
   if (pathname === "/battle" || pathname === "/battle/machine" || pathname === "/battle/interrupts")
-    return <BattlePage scenario={{ events: FIREBALL_BATTLE, meta: FIREBALL_BATTLE_META }} />
+    return <BattlePage state={PROMOTED_BATTLE_DEMO_STATE} meta={PROMOTED_BATTLE_DEMO_META} />
   if (pathname === "/trace") return <TraceVisualizer />
   return <HomePage />
 }

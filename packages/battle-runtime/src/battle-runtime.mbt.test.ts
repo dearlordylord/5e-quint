@@ -589,17 +589,17 @@ function projectMbtState(input: {
     skeletonDead:
       skeleton.zeroHpLifecycle.policy === "diesAtZeroHp" &&
       skeleton.zeroHpLifecycle.dead,
-    actionAvailable: snapshot.currentTurnResources.actionResources.some(
+    actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
     multiattackDispatchesAvailable:
-      snapshot.currentTurnResources.actionResources.filter(
+      snapshot.turn.actionResources.filter(
         (resource) =>
           resource.source === "statBlockMultiattack" &&
           resource.sourceOwnerId === skeletonId,
       ).length,
     sneakAttackUsedThisTurn:
-      snapshot.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+      snapshot.turn.attackDamageRidersUsedThisTurn.some(
         (usage) =>
           usage.attackerId === fighterId &&
           usage.unitId === "rogue_sneak_attack",

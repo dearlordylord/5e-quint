@@ -12,10 +12,10 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   BattleFillSchema,
+  BattleSnapshotSchema,
   battleCombatantSide,
   BattleSubjectSchema,
   BATTLE_READIED_SPELL_TRIGGERS,
-  KNOCK_OUT_SHORT_REST_RECOVERY,
   addBattleCombatant,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleId,
@@ -204,24 +204,20 @@ describe("battle runtime", () => {
         {
           combatantId: goblinId,
           displayName: "Goblin Warrior",
-          originKind: "statBlock",
           hp: 0,
           maxHp: 10,
           tempHp: 0,
           armorClass: 15,
-          defeated: true,
           zeroHpLifecycle: { policy: "diesAtZeroHp", dead: true },
           conditions: [],
         },
         {
           combatantId: fighterId,
           displayName: "Fighter",
-          originKind: "character",
           hp: 12,
           maxHp: 12,
           tempHp: 0,
           armorClass: 10,
-          defeated: false,
           zeroHpLifecycle: {
             policy: "usesDeathSavingThrows",
             deathSaves: { successes: 0, failures: 0 },
@@ -242,15 +238,33 @@ describe("battle runtime", () => {
           initialHoles: [],
         },
       ],
-      currentTurnResources: {
+      turn: {
         actionResources: [{ kind: "action", source: "turn" }],
-        currentHasBonusAction: true,
+        bonusActionAvailable: true,
         spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
         disengaged: false,
       },
+    });
+
+    expect(
+      Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(state)),
+    ).toMatchObject({
+      battleId: "battle-1",
+      combatants: [
+        {
+          combatantId: "goblin",
+          movement: { speedFeet: 30, spentFeet: 0, remainingFeet: 30 },
+        },
+        {
+          combatantId: "fighter",
+        },
+      ],
+      readiedResponses: { spells: [], movements: [] },
+      helpAttackMarkers: [],
+      pendingReaction: null,
     });
   });
 
@@ -512,8 +526,8 @@ describe("battle runtime", () => {
         fills: [],
       }),
     );
-    expect(dashed.snapshot.currentTurnResources.actionResources).toEqual([]);
-    expect(dashed.snapshot.currentTurnResources.dashMovementBonusFeet).toBe(30);
+    expect(dashed.snapshot.turn.actionResources).toEqual([]);
+    expect(dashed.snapshot.turn.dashMovementBonusFeet).toBe(30);
     expect(dashed.snapshot.combatants).toContainEqual(
       expect.objectContaining({
         combatantId: fighterId,
@@ -542,7 +556,7 @@ describe("battle runtime", () => {
         fills: [],
       }),
     );
-    expect(readied.snapshot.readiedMovements).toEqual([
+    expect(readied.snapshot.readiedResponses.movements).toEqual([
       expect.objectContaining({
         actorId: fighterId,
         trigger: "attackHit",
@@ -668,12 +682,12 @@ describe("battle runtime", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const readiedChoice =
-      awaitingReaction.snapshot.pendingReaction?.frame.choices.find(
+      awaitingReaction.snapshot.pendingReaction?.choices.find(
         (choice) =>
           choice.kind === "releaseReadiedMovement" &&
           choice.readiedMovementActorId === fighterId,
       );
-    expect(awaitingReaction.snapshot.pendingReaction?.frame.choices).toEqual(
+    expect(awaitingReaction.snapshot.pendingReaction?.choices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "releaseReadiedMovement",
@@ -801,7 +815,7 @@ describe("battle runtime", () => {
         ],
       }),
     );
-    expect(missed.snapshot.helpAttacks).toEqual([]);
+    expect(missed.snapshot.helpAttackMarkers).toEqual([]);
   });
 
   test("Stand from Prone spends half Speed as Movement and clears Prone", () => {
@@ -931,14 +945,8 @@ describe("battle runtime", () => {
     });
   });
 
-  test("battle state projects held hands and Grapple occupies a free hand", () => {
+  test("battle state projects typed Grapple links", () => {
     const state = fighterVsGoblinBattle();
-    expect(snapshotBattle(state).combatants).toContainEqual(
-      expect.objectContaining({
-        combatantId: fighterId,
-        hands: { left: "free", right: "mainWeapon" },
-      }),
-    );
 
     const subject: BattleSubject = {
       tag: "action",
@@ -970,25 +978,21 @@ describe("battle runtime", () => {
 
     expect(grappled.snapshot.combatants).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          combatantId: fighterId,
-          hands: { left: "grapple", right: "mainWeapon" },
-          grappling: [
-            expect.objectContaining({
-              grapplerId: fighterId,
-              targetId: goblinId,
-              targetExemptFromDragCost: false,
-            }),
-          ],
-        }),
+        expect.objectContaining({ combatantId: fighterId }),
         expect.objectContaining({
           combatantId: goblinId,
           conditions: expect.arrayContaining(["grappled"]),
-          grappledBy: expect.objectContaining({ grapplerId: fighterId }),
           movement: expect.objectContaining({ speedFeet: 0 }),
         }),
       ]),
     );
+    expect(grappled.state.grapples).toEqual([
+      expect.objectContaining({
+        grapplerId: fighterId,
+        targetId: goblinId,
+        targetExemptFromDragCost: false,
+      }),
+    ]);
   });
 
   test("release and Escape Grapple end the typed grapple link", () => {
@@ -1009,18 +1013,14 @@ describe("battle runtime", () => {
     );
     expect(released.snapshot.combatants).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          combatantId: fighterId,
-          hands: { left: "free", right: "mainWeapon" },
-          grappling: [],
-        }),
+        expect.objectContaining({ combatantId: fighterId }),
         expect.objectContaining({
           combatantId: goblinId,
           conditions: expect.not.arrayContaining(["grappled"]),
-          grappledBy: null,
         }),
       ]),
     );
+    expect(released.state.grapples).toEqual([]);
 
     const goblinTurn = requireResolved(
       endTurn({ state: grappled.state, actorId: fighterId }),
@@ -1064,10 +1064,14 @@ describe("battle runtime", () => {
     );
     expect(escaped.snapshot.combatants).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ combatantId: fighterId, grappling: [] }),
-        expect.objectContaining({ combatantId: goblinId, grappledBy: null }),
+        expect.objectContaining({ combatantId: fighterId }),
+        expect.objectContaining({
+          combatantId: goblinId,
+          conditions: expect.not.arrayContaining(["grappled"]),
+        }),
       ]),
     );
+    expect(escaped.state.grapples).toEqual([]);
   });
 
   test("grapple drag movement accepts table-supplied Movement cost", () => {
@@ -1369,11 +1373,13 @@ describe("battle runtime", () => {
       expect.arrayContaining([
         expect.objectContaining({
           combatantId: fighterId,
-          hidden: { discoveryDc: difficultyClass(18) },
           conditions: expect.arrayContaining(["invisible"]),
         }),
       ]),
     );
+    expect(hidden.combatants.get(fighterId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(18),
+    });
 
     const goblinTurn = requireResolved(
       endTurn({ state: hidden, actorId: fighterId }),
@@ -1420,11 +1426,11 @@ describe("battle runtime", () => {
       expect.arrayContaining([
         expect.objectContaining({
           combatantId: fighterId,
-          hidden: null,
           conditions: expect.not.arrayContaining(["invisible"]),
         }),
       ]),
     );
+    expect(found.state.combatants.get(fighterId)?.hidden).toBeNull();
   });
 
   test("Hide is unavailable without the RAW obscured/cover and sight prerequisite", () => {
@@ -1472,12 +1478,11 @@ describe("battle runtime", () => {
     });
     expect(damageHoleResult).toMatchObject({
       tag: "needsHoles",
-      snapshot: {
-        combatants: expect.arrayContaining([
-          expect.objectContaining({ combatantId: fighterId, hidden: null }),
-        ]),
-      },
     });
+    if (damageHoleResult.tag !== "needsHoles") {
+      throw new Error("Expected hidden attack damage holes.");
+    }
+    expect(damageHoleResult.state.combatants.get(fighterId)?.hidden).toBeNull();
 
     const missed = requireResolved(
       resolveBattleSubject({
@@ -1495,9 +1500,10 @@ describe("battle runtime", () => {
     );
     expect(missed.snapshot.combatants).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ combatantId: fighterId, hidden: null }),
+        expect.objectContaining({ combatantId: fighterId }),
       ]),
     );
+    expect(missed.state.combatants.get(fighterId)?.hidden).toBeNull();
   });
 
   test("hidden verbal spell attackers reveal through staged no-reaction spell-attack holes", () => {
@@ -1524,12 +1530,11 @@ describe("battle runtime", () => {
     expect(attackHoleResult).toMatchObject({
       tag: "needsHoles",
       holes: [expect.not.objectContaining({ rollMode: "advantage" })],
-      snapshot: {
-        combatants: expect.arrayContaining([
-          expect.objectContaining({ combatantId: wizardId, hidden: null }),
-        ]),
-      },
     });
+    if (attackHoleResult.tag !== "needsHoles") {
+      throw new Error("Expected hidden spell attack holes.");
+    }
+    expect(attackHoleResult.state.combatants.get(wizardId)?.hidden).toBeNull();
     const attackHole = requireHole(attackHoleResult, "attackRoll");
     const damageHoleResult = resolveBattleSubject({
       state: hiddenState,
@@ -1541,12 +1546,11 @@ describe("battle runtime", () => {
     });
     expect(damageHoleResult).toMatchObject({
       tag: "needsHoles",
-      snapshot: {
-        combatants: expect.arrayContaining([
-          expect.objectContaining({ combatantId: wizardId, hidden: null }),
-        ]),
-      },
     });
+    if (damageHoleResult.tag !== "needsHoles") {
+      throw new Error("Expected hidden spell damage holes.");
+    }
+    expect(damageHoleResult.state.combatants.get(wizardId)?.hidden).toBeNull();
   });
 
   test("readied verbal spells reveal hidden casters when the spell is cast into readiness", () => {
@@ -1574,12 +1578,11 @@ describe("battle runtime", () => {
 
     expect(readied).toMatchObject({
       tag: "resolved",
-      snapshot: {
-        combatants: expect.arrayContaining([
-          expect.objectContaining({ combatantId: wizardId, hidden: null }),
-        ]),
-      },
     });
+    if (readied.tag !== "resolved") {
+      throw new Error("Expected readied hidden spell to resolve.");
+    }
+    expect(readied.state.combatants.get(wizardId)?.hidden).toBeNull();
   });
 
   test("staged verbal spell damage keeps the caster revealed while requesting Concentration saves", () => {
@@ -1631,12 +1634,11 @@ describe("battle runtime", () => {
     expect(concentration).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "concentrationSavingThrow" }],
-      snapshot: {
-        combatants: expect.arrayContaining([
-          expect.objectContaining({ combatantId: wizardId, hidden: null }),
-        ]),
-      },
     });
+    if (concentration.tag !== "needsHoles") {
+      throw new Error("Expected hidden caster concentration holes.");
+    }
+    expect(concentration.state.combatants.get(wizardId)?.hidden).toBeNull();
   });
 
   test("Rogue Cunning Action exposes Hide as a Bonus Action", () => {
@@ -1676,17 +1678,17 @@ describe("battle runtime", () => {
       }),
     );
     expect(hidden.snapshot).toMatchObject({
-      currentTurnResources: { currentHasBonusAction: false },
+      turn: { bonusActionAvailable: false },
       combatants: expect.arrayContaining([
-        expect.objectContaining({
-          combatantId: fighterId,
-          hidden: { discoveryDc: difficultyClass(16) },
-        }),
+        expect.objectContaining({ combatantId: fighterId }),
       ]),
+    });
+    expect(hidden.state.combatants.get(fighterId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(16),
     });
   });
 
-  test("Off-Hand Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
+  test("Light Property Bonus Action Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
     const state = startBattleRight({
       battleId: battleId("battle-off-hand"),
       combatants: [
@@ -1797,7 +1799,7 @@ describe("battle runtime", () => {
     ).toMatchObject({
       tag: "resolved",
       snapshot: {
-        currentTurnResources: { currentHasBonusAction: false },
+        turn: { bonusActionAvailable: false },
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 6 }),
         ]),
@@ -1805,7 +1807,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("Off-Hand Attack opens hit-triggered Reaction replay and spends the Bonus Action", () => {
+  test("Light Property Bonus Action Attack opens hit-triggered Reaction replay and spends the Bonus Action", () => {
     const rogueTargetId = combatantId("rogue-target");
     const state = startBattleRight({
       battleId: battleId("battle-off-hand-hit-reaction"),
@@ -1898,7 +1900,9 @@ describe("battle runtime", () => {
       ],
     });
     if (awaitingReaction.tag !== "needsHoles") {
-      throw new Error("Expected Off-Hand Attack hit Reaction window.");
+      throw new Error(
+        "Expected Light Property Bonus Action Attack hit Reaction window.",
+      );
     }
     expect(awaitingReaction).toMatchObject({
       holes: [{ kind: "reactionDecision", trigger: "attackHit" }],
@@ -1921,7 +1925,9 @@ describe("battle runtime", () => {
       ),
     });
     if (afterReaction.tag !== "needsHoles") {
-      throw new Error("Expected Off-Hand Attack damage roll after Reaction.");
+      throw new Error(
+        "Expected Light Property Bonus Action Attack damage roll after Reaction.",
+      );
     }
     const damage = requireHole(afterReaction, "rolledDice");
     const completed = resolveBattleSubject({
@@ -1937,9 +1943,7 @@ describe("battle runtime", () => {
     if (completed.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${completed.tag}.`);
     }
-    expect(completed.snapshot.currentTurnResources.currentHasBonusAction).toBe(
-      false,
-    );
+    expect(completed.snapshot.turn.bonusActionAvailable).toBe(false);
     expect(completed.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1951,7 +1955,7 @@ describe("battle runtime", () => {
     );
   });
 
-  test("admitted authored critical-range support makes a natural 19 Off-Hand Attack critical", () => {
+  test("admitted authored critical-range support makes a natural 19 Light Property Bonus Action Attack critical", () => {
     const state = startBattleRight({
       battleId: battleId("battle-off-hand-critical-range"),
       combatants: [
@@ -2061,7 +2065,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("Off-Hand Attack distinguishes held weapon identity from weapon kind", () => {
+  test("Light Property Bonus Action Attack distinguishes held weapon identity from weapon kind", () => {
     const state = startBattleRight({
       battleId: battleId("battle-off-hand-two-daggers"),
       combatants: [
@@ -2152,20 +2156,18 @@ describe("battle runtime", () => {
       holes: [{ kind: "reactionDecision", trigger: "opportunityAttack" }],
       snapshot: {
         pendingReaction: {
-          frame: {
-            choices: [
-              {
-                kind: "opportunityAttack",
+          choices: [
+            {
+              kind: "opportunityAttack",
+              reactorId: goblinId,
+              subject: {
+                command: "opportunityAttack",
                 reactorId: goblinId,
-                subject: {
-                  command: "opportunityAttack",
-                  reactorId: goblinId,
-                  targetId: fighterId,
-                  attackName: "Scimitar",
-                },
+                targetId: fighterId,
+                attackName: "Scimitar",
               },
-            ],
-          },
+            },
+          ],
         },
       },
     });
@@ -2528,7 +2530,7 @@ describe("battle runtime", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingReaction.snapshot.pendingReaction!.choices,
     );
     const startedReaction = resolveBattleReaction({
       state: awaitingReaction.state,
@@ -2636,7 +2638,7 @@ describe("battle runtime", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingReaction.snapshot.pendingReaction!.choices,
     );
     const startedReaction = resolveBattleReaction({
       state: awaitingReaction.state,
@@ -2682,7 +2684,7 @@ describe("battle runtime", () => {
     });
 
     const damageChoice = reactionModifierChoice(
-      awaitingDamageReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingDamageReaction.snapshot.pendingReaction!.choices,
       cuttingWordsDamageOnly.id,
       "damageRollReduction",
     );
@@ -2770,7 +2772,7 @@ describe("battle runtime", () => {
       throw new Error("Expected Opportunity Attack Reaction window.");
     }
     const opportunityAttackChoice = reactionChoiceWithSubject(
-      awaitingOpportunityAttack.snapshot.pendingReaction!.frame.choices,
+      awaitingOpportunityAttack.snapshot.pendingReaction!.choices,
     );
     const startedOpportunityAttack = resolveBattleReaction({
       state: awaitingOpportunityAttack.state,
@@ -2889,7 +2891,7 @@ describe("battle runtime", () => {
       throw new Error("Expected Opportunity Attack Reaction window.");
     }
     const opportunityAttackChoice = reactionChoiceWithSubject(
-      awaitingOpportunityAttack.snapshot.pendingReaction!.frame.choices,
+      awaitingOpportunityAttack.snapshot.pendingReaction!.choices,
     );
     const startedOpportunityAttack = resolveBattleReaction({
       state: awaitingOpportunityAttack.state,
@@ -2997,7 +2999,7 @@ describe("battle runtime", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingReaction.snapshot.pendingReaction!.choices,
     );
     const startedReaction = resolveBattleReaction({
       state: awaitingReaction.state,
@@ -3110,7 +3112,7 @@ describe("battle runtime", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingReaction.snapshot.pendingReaction!.choices,
     );
     const startedReaction = resolveBattleReaction({
       state: awaitingReaction.state,
@@ -3148,9 +3150,10 @@ describe("battle runtime", () => {
     );
     expect(missed.snapshot.combatants).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ combatantId: goblinId, hidden: null }),
+        expect.objectContaining({ combatantId: goblinId }),
       ]),
     );
+    expect(missed.state.combatants.get(goblinId)?.hidden).toBeNull();
   });
 
   test("attack resolution rejects an Unconscious current character at 0 HP", () => {
@@ -3328,7 +3331,7 @@ describe("battle runtime", () => {
         },
       ],
       snapshot: {
-        currentTurnResources: {
+        turn: {
           actionResources: [{ kind: "action", source: "turn" }],
         },
       },
@@ -3409,7 +3412,7 @@ describe("battle runtime", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingReaction.snapshot.pendingReaction!.choices,
     );
 
     const resolved = resolveBattleReaction({
@@ -3433,13 +3436,7 @@ describe("battle runtime", () => {
       subject: choice.subject,
       holes: [{ kind: "targetChoice" }],
       snapshot: {
-        pendingReaction: {
-          frame: {
-            activeReaction: {
-              reactorId: wizardId,
-            },
-          },
-        },
+        pendingReaction: { trigger: "attackHit" },
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: wizardId,
@@ -3486,7 +3483,7 @@ describe("battle runtime", () => {
       holes: [{ kind: "rolledDice" }],
       snapshot: {
         pendingReaction: null,
-        readiedSpells: [],
+        readiedResponses: { spells: [] },
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: wizardId,
@@ -3516,7 +3513,7 @@ describe("battle runtime", () => {
       );
     }
     const releaseChoice = reactionChoiceWithSubject(
-      awaitingAttackReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingAttackReaction.snapshot.pendingReaction!.choices,
     );
     const released = resolveBattleReaction({
       state: awaitingAttackReaction.state,
@@ -3556,12 +3553,10 @@ describe("battle runtime", () => {
       snapshot: {
         pendingReaction: {
           stackDepth: 2,
-          frame: {
-            trigger: "saveFailed",
-            choices: [
-              expect.objectContaining({ readiedSpellCasterId: secondWizardId }),
-            ],
-          },
+          trigger: "saveFailed",
+          choices: [
+            expect.objectContaining({ readiedSpellCasterId: secondWizardId }),
+          ],
         },
       },
     });
@@ -3584,9 +3579,7 @@ describe("battle runtime", () => {
       snapshot: {
         pendingReaction: {
           stackDepth: 1,
-          frame: {
-            activeReaction: { reactorId: wizardId },
-          },
+          trigger: "attackHit",
         },
       },
     });
@@ -3629,12 +3622,12 @@ describe("battle runtime", () => {
       holes: [{ kind: "rolledDice" }],
       snapshot: {
         pendingReaction: null,
-        readiedSpells: [{ casterId: secondWizardId }],
+        readiedResponses: { spells: [{ casterId: secondWizardId }] },
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: wizardId,
             reactionAvailable: false,
-            concentration: null,
+            concentrating: false,
           }),
           expect.objectContaining({
             combatantId: secondWizardId,
@@ -3664,9 +3657,7 @@ describe("battle runtime", () => {
       tag: "needsHoles",
       holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingReaction: {
-          frame: { trigger: "spellCast" },
-        },
+        pendingReaction: { trigger: "spellCast" },
       },
     });
   });
@@ -3851,7 +3842,7 @@ describe("battle runtime", () => {
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 3 }),
         ]),
-        currentTurnResources: { actionResources: [] },
+        turn: { actionResources: [] },
       },
     });
     if (awaitingReaction.tag !== "needsHoles") {
@@ -3859,7 +3850,7 @@ describe("battle runtime", () => {
     }
 
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingReaction.snapshot.pendingReaction!.choices,
     );
     const resolved = resolveBattleReaction({
       state: awaitingReaction.state,
@@ -3934,7 +3925,7 @@ describe("battle runtime", () => {
     expect(result).toMatchObject({
       tag: "resolved",
       snapshot: {
-        currentTurnResources: {
+        turn: {
           actionResources: [],
         },
         combatants: [
@@ -3966,7 +3957,7 @@ describe("battle runtime", () => {
 
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { currentTurnResources: { actionResources: [] } },
+      snapshot: { turn: { actionResources: [] } },
     });
   });
 
@@ -3995,7 +3986,7 @@ describe("battle runtime", () => {
         { kind: "rolledDice", label: "Longsword damage (2d8+3-slashing)" },
       ],
       snapshot: {
-        currentTurnResources: {
+        turn: {
           actionResources: [{ kind: "action", source: "turn" }],
         },
       },
@@ -4025,7 +4016,7 @@ describe("battle runtime", () => {
       tag: "invalid",
       reason: "invalidFill",
       snapshot: {
-        currentTurnResources: {
+        turn: {
           actionResources: [{ kind: "action", source: "turn" }],
         },
       },
@@ -4114,7 +4105,7 @@ describe("battle runtime", () => {
       tag: "invalid",
       reason: "invalidFill",
       snapshot: {
-        currentTurnResources: {
+        turn: {
           actionResources: [{ kind: "action", source: "turn" }],
         },
       },
@@ -4161,7 +4152,7 @@ describe("battle runtime", () => {
       tag: "invalid",
       reason: "invalidFill",
       snapshot: {
-        currentTurnResources: {
+        turn: {
           actionResources: [{ kind: "action", source: "turn" }],
         },
       },
@@ -4209,7 +4200,7 @@ describe("battle runtime", () => {
       snapshot: {
         combatants: [
           { combatantId: fighterId },
-          { combatantId: goblinId, hp: 0, defeated: true },
+          { combatantId: goblinId, hp: 0 },
         ],
       },
     });
@@ -4263,7 +4254,7 @@ describe("battle runtime", () => {
       snapshot: {
         combatants: [
           { combatantId: fighterId },
-          { combatantId: goblinId, hp: 0, defeated: true },
+          { combatantId: goblinId, hp: 0 },
         ],
       },
     });
@@ -4306,7 +4297,7 @@ describe("battle runtime", () => {
       snapshot: {
         combatants: [
           { combatantId: fighterId },
-          { combatantId: goblinId, hp: 6, defeated: false },
+          { combatantId: goblinId, hp: 6 },
         ],
       },
     });
@@ -4361,7 +4352,7 @@ describe("battle runtime", () => {
       snapshot: {
         combatants: [
           { combatantId: fighterId },
-          { combatantId: goblinId, hp: 3, defeated: false },
+          { combatantId: goblinId, hp: 3 },
         ],
       },
     });
@@ -4428,7 +4419,7 @@ describe("battle runtime", () => {
       snapshot: {
         combatants: [
           { combatantId: fighterId },
-          { combatantId: goblinId, hp: 0, defeated: true },
+          { combatantId: goblinId, hp: 0 },
         ],
       },
     });
@@ -4472,7 +4463,7 @@ describe("battle runtime", () => {
 
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { currentTurnResources: { actionResources: [] } },
+      snapshot: { turn: { actionResources: [] } },
     });
   });
 
@@ -4535,12 +4526,12 @@ describe("battle runtime", () => {
     expect(result).toMatchObject({
       tag: "resolved",
       snapshot: {
-        currentTurnResources: {
+        turn: {
           actionResources: [],
         },
         combatants: [
           { combatantId: fighterId },
-          { combatantId: goblinId, hp: 3, tempHp: 0, defeated: false },
+          { combatantId: goblinId, hp: 3, tempHp: 0 },
         ],
       },
     });
@@ -4578,7 +4569,7 @@ describe("battle runtime", () => {
       snapshot: {
         combatants: [
           { combatantId: fighterId },
-          { combatantId: goblinId, hp: 8, tempHp: 0, defeated: false },
+          { combatantId: goblinId, hp: 8, tempHp: 0 },
         ],
       },
     });
@@ -4631,7 +4622,6 @@ describe("battle runtime", () => {
             combatantId: goblinId,
             hp: 0,
             tempHp: 0,
-            defeated: true,
             zeroHpLifecycle: { policy: "diesAtZeroHp", dead: true },
           },
         ],
@@ -4692,7 +4682,6 @@ describe("battle runtime", () => {
           {
             combatantId: targetCharacterId,
             hp: 0,
-            defeated: true,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
               deathSaves: { successes: 0, failures: 0 },
@@ -4757,9 +4746,7 @@ describe("battle runtime", () => {
           {
             combatantId: targetCharacterId,
             hp: 1,
-            defeated: false,
             conditions: expect.arrayContaining(["unconscious", "prone"]),
-            positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
               deathSaves: { successes: 0, failures: 0 },
@@ -4790,7 +4777,6 @@ describe("battle runtime", () => {
           initiative: 10,
           currentHp: 1,
           conditions: ["unconscious"],
-          positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
         }),
       ],
     });
@@ -4851,8 +4837,7 @@ describe("battle runtime", () => {
         expect.objectContaining({
           combatantId: fighterId,
           hp: 6,
-          conditions: ["prone"],
-          positiveHpConditionRecovery: null,
+          conditions: expect.arrayContaining(["unconscious", "prone"]),
         }),
       ]),
     );
@@ -4878,7 +4863,6 @@ describe("battle runtime", () => {
           combatantId: wizardId,
           hp: 12,
           conditions: expect.arrayContaining(["unconscious", "prone"]),
-          positiveHpConditionRecovery: null,
         }),
       ]),
     );
@@ -4894,7 +4878,6 @@ describe("battle runtime", () => {
           displayName: "Recovered Wizard",
           initiative: 10,
           conditions: ["prone"],
-          positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
         }),
         characterSeed({
           combatantId: secondWizardId,
@@ -4902,7 +4885,6 @@ describe("battle runtime", () => {
           initiative: 5,
           currentHp: 0,
           conditions: ["unconscious"],
-          positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
         }),
       ],
     });
@@ -4913,13 +4895,11 @@ describe("battle runtime", () => {
           combatantId: wizardId,
           hp: 12,
           conditions: ["prone"],
-          positiveHpConditionRecovery: null,
         }),
         expect.objectContaining({
           combatantId: secondWizardId,
           hp: 0,
           conditions: expect.arrayContaining(["unconscious", "prone"]),
-          positiveHpConditionRecovery: null,
         }),
       ]),
     );
@@ -4969,9 +4949,7 @@ describe("battle runtime", () => {
           {
             combatantId: goblinId,
             hp: 1,
-            defeated: false,
             conditions: expect.arrayContaining(["unconscious", "prone"]),
-            positiveHpConditionRecovery: KNOCK_OUT_SHORT_REST_RECOVERY,
             zeroHpLifecycle: { policy: "diesAtZeroHp", dead: false },
           },
         ],
@@ -5372,7 +5350,6 @@ describe("battle runtime", () => {
           {
             combatantId: targetCharacterId,
             hp: 0,
-            defeated: true,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
               deathSaves: { successes: 0, failures: 3 },
@@ -5607,9 +5584,9 @@ describe("battle runtime", () => {
         currentActorId: goblinId,
         round: 1,
         turnOrder: [fighterId, goblinId],
-        currentTurnResources: {
+        turn: {
           actionResources: [{ kind: "action", source: "turn" }],
-          currentHasBonusAction: true,
+          bonusActionAvailable: true,
         },
       },
     });
@@ -5748,11 +5725,13 @@ describe("battle runtime", () => {
       expect.arrayContaining([
         expect.objectContaining({
           combatantId: goblinId,
-          hidden: { discoveryDc: difficultyClass(17) },
           conditions: expect.arrayContaining(["invisible"]),
         }),
       ]),
     );
+    expect(result.combatants.get(goblinId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(17),
+    });
   });
 
   test("Stat Block Multiattack spends the Attack action and grants named dispatch attacks", () => {
@@ -6046,22 +6025,26 @@ describe("battle runtime", () => {
     expect(snapshotBattle(state).combatants).toContainEqual(
       expect.objectContaining({
         combatantId: goblinId,
-        statBlockResources: {
-          legendaryActions: { usesMax: 2, usesRemaining: 2 },
-          limitedUses: expect.arrayContaining([
-            {
-              key: { section: "actions", name: "Cinder Breath" },
-              kind: "recharge",
-              minimumRoll: 5,
-              available: true,
-            },
-            {
-              key: { section: "actions", name: "Dread Gaze" },
-              kind: "daily",
-              usesMax: 1,
-              usesRemaining: 1,
-            },
-          ]),
+        origin: {
+          kind: "statBlock",
+          statBlockId: "stat_block_resource_test_monster",
+          resources: {
+            legendaryActions: { usesMax: 2, usesRemaining: 2 },
+            limitedUses: expect.arrayContaining([
+              {
+                key: { section: "actions", name: "Cinder Breath" },
+                kind: "recharge",
+                minimumRoll: 5,
+                available: true,
+              },
+              {
+                key: { section: "actions", name: "Dread Gaze" },
+                kind: "daily",
+                usesMax: 1,
+                usesRemaining: 1,
+              },
+            ]),
+          },
         },
       }),
     );
@@ -6909,7 +6892,7 @@ describe("battle runtime", () => {
       tag: "resolved",
       snapshot: {
         currentActorId: goblinId,
-        currentTurnResources: { actionResources: [] },
+        turn: { actionResources: [] },
         combatants: [
           {
             combatantId: fighterId,
@@ -7056,7 +7039,7 @@ describe("battle runtime", () => {
     expect(surged).toMatchObject({
       tag: "resolved",
       snapshot: {
-        currentTurnResources: {
+        turn: {
           actionResources: [
             {
               kind: "action",
@@ -7124,9 +7107,9 @@ describe("battle runtime", () => {
       resources: [expect.objectContaining({ usedThisTurn: false })],
     });
 
-    const defeatedActorState = {
+    const zeroHpActorState = {
       ...startBattleRight({
-        battleId: battleId("battle-action-surge-defeated-actor"),
+        battleId: battleId("battle-action-surge-atZeroHitPoints-actor"),
         combatants: [
           characterSeed({
             initiative: 20,
@@ -7148,7 +7131,7 @@ describe("battle runtime", () => {
     } satisfies BattleState;
     expect(
       resolveBattleSubject({
-        state: defeatedActorState,
+        state: zeroHpActorState,
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
@@ -7248,8 +7231,8 @@ describe("battle runtime", () => {
     expect(result).toMatchObject({
       tag: "resolved",
       snapshot: {
-        currentTurnResources: {
-          currentHasBonusAction: false,
+        turn: {
+          bonusActionAvailable: false,
         },
         combatants: [
           {
@@ -7367,8 +7350,8 @@ describe("battle runtime", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
 
-    const defeatedActorState = startBattleRight({
-      battleId: battleId("battle-second-wind-defeated-actor"),
+    const zeroHpActorState = startBattleRight({
+      battleId: battleId("battle-second-wind-atZeroHitPoints-actor"),
       combatants: [
         characterSeed({
           initiative: 20,
@@ -7380,7 +7363,7 @@ describe("battle runtime", () => {
     });
     expect(
       resolveBattleSubject({
-        state: defeatedActorState,
+        state: zeroHpActorState,
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
@@ -7420,22 +7403,20 @@ describe("battle runtime", () => {
     expect(raging).toMatchObject({
       tag: "resolved",
       snapshot: {
-        combatants: expect.arrayContaining([
-          expect.objectContaining({
-            combatantId: fighterId,
-            activeOngoingFeatureOccurrences: [
-              expect.objectContaining({
-                source: { kind: "unit", unitId: "barbarian_rage" },
-              }),
-            ],
-          }),
-        ]),
-        currentTurnResources: expect.objectContaining({
-          currentHasBonusAction: false,
+        turn: expect.objectContaining({
+          bonusActionAvailable: false,
         }),
       },
     });
     if (raging.tag !== "resolved") throw new Error("Expected resolved Rage.");
+    expect([
+      ...raging.state.combatants.get(fighterId)!
+        .activeOngoingFeatureOccurrences,
+    ]).toEqual(
+      expect.arrayContaining([
+        ["barbarian_rage", expect.objectContaining({ kind: "roundExtended" })],
+      ]),
+    );
 
     const attackSubject = fighterAttackSubject();
     const target = attackInitialTargetHole(raging.state, attackSubject);
@@ -7843,9 +7824,7 @@ describe("battle runtime", () => {
       throw new Error("Expected limited Rage resource.");
     }
     expect(Number(rageState.usesRemaining)).toBe(1);
-    expect(extended.snapshot.currentTurnResources.currentHasBonusAction).toBe(
-      false,
-    );
+    expect(extended.snapshot.turn.bonusActionAvailable).toBe(false);
   });
 
   test("Rage extends when Grapple forces an enemy saving throw", () => {
@@ -7913,10 +7892,11 @@ describe("battle runtime", () => {
         ],
       }),
     );
-    const barbarian = snapshotBattle(grappled.state).combatants.find(
-      (combatant) => combatant.combatantId === fighterId,
-    );
-    expect(barbarian?.activeOngoingFeatureOccurrences[0]?.expiresAt).toEqual({
+    const barbarian = grappled.state.combatants.get(fighterId);
+    expect(
+      [...(barbarian?.activeOngoingFeatureOccurrences.values() ?? [])][0]
+        ?.expiresAt,
+    ).toEqual({
       kind: "endOfTurn",
       combatantId: fighterId,
       round: 3,
@@ -7986,10 +7966,12 @@ describe("battle runtime", () => {
         fills: [],
       }),
     );
-    const snapshot = snapshotBattle(raging.state).combatants.find(
-      (combatant) => combatant.combatantId === fighterId,
-    );
-    expect(snapshot?.activeOngoingFeatureOccurrences[0]?.expiresAt).toEqual({
+    const snapshotBarbarian = raging.state.combatants.get(fighterId);
+    expect(
+      [
+        ...(snapshotBarbarian?.activeOngoingFeatureOccurrences.values() ?? []),
+      ][0]?.expiresAt,
+    ).toEqual({
       kind: "endOfTurn",
       combatantId: fighterId,
       round: 101,
@@ -8117,18 +8099,17 @@ describe("battle runtime", () => {
     if (reckless.tag !== "needsHoles") {
       throw new Error("Expected Reckless attack to reach damage roll.");
     }
-    expect(snapshotBattle(reckless.state)).toMatchObject({
-      combatants: expect.arrayContaining([
-        expect.objectContaining({
-          combatantId: fighterId,
-          activeOngoingFeatureOccurrences: [
-            expect.objectContaining({
-              source: { kind: "unit", unitId: "barbarian_reckless_attack" },
-            }),
-          ],
-        }),
+    expect([
+      ...reckless.state.combatants.get(fighterId)!
+        .activeOngoingFeatureOccurrences,
+    ]).toEqual(
+      expect.arrayContaining([
+        [
+          "barbarian_reckless_attack",
+          expect.objectContaining({ kind: "turnBoundary" }),
+        ],
       ]),
-    });
+    );
     const damage = findHole(reckless.holes, "rolledDice");
     expect(
       resolveBattleSubject({
@@ -8168,14 +8149,9 @@ describe("battle runtime", () => {
     const barbarianTurn = requireResolved(
       endTurn({ state: goblinTurn, actorId: goblinId }),
     ).state;
-    expect(snapshotBattle(barbarianTurn)).toMatchObject({
-      combatants: expect.arrayContaining([
-        expect.objectContaining({
-          combatantId: fighterId,
-          activeOngoingFeatureOccurrences: [],
-        }),
-      ]),
-    });
+    expect(
+      barbarianTurn.combatants.get(fighterId)?.activeOngoingFeatureOccurrences,
+    ).toEqual(new Map());
   });
 
   test("Reckless Attack cannot be declared before the first attack roll", () => {
@@ -8967,7 +8943,7 @@ describe("battle runtime", () => {
       throw new Error("Expected Cutting Words attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingReaction.snapshot.pendingReaction!.choices,
       cuttingWordsAttackOnly.id,
       "attackRollReduction",
     );
@@ -9058,7 +9034,7 @@ describe("battle runtime", () => {
       throw new Error("Expected Cutting Words damage Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingReaction!.frame.choices,
+      awaitingReaction.snapshot.pendingReaction!.choices,
       cuttingWordsDamageOnly.id,
       "damageRollReduction",
     );
@@ -9189,7 +9165,7 @@ describe("battle runtime", () => {
       throw new Error("Expected attack-hit Reaction window.");
     }
 
-    expect(awaitingReaction.snapshot.pendingReaction!.frame.choices).toEqual(
+    expect(awaitingReaction.snapshot.pendingReaction!.choices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "reactionRollOrDamageReduction",
@@ -9236,7 +9212,7 @@ describe("battle runtime", () => {
       throw new Error("Expected Cutting Words attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingReaction!.frame.choices,
+      setup.result.snapshot.pendingReaction!.choices,
       cuttingWordsAttackOnly.id,
       "attackRollReduction",
     );
@@ -9304,7 +9280,7 @@ describe("battle runtime", () => {
     }
 
     const hitModifierChoices =
-      hitReaction.result.snapshot.pendingReaction!.frame.choices.filter(
+      hitReaction.result.snapshot.pendingReaction!.choices.filter(
         (choice) => choice.kind === "reactionRollOrDamageReduction",
       );
     expect(hitModifierChoices).toEqual(
@@ -9350,7 +9326,7 @@ describe("battle runtime", () => {
       throw new Error("Expected attack-damage Reaction window.");
     }
     const damageModifierChoices =
-      awaitingDamageReaction.snapshot.pendingReaction!.frame.choices.filter(
+      awaitingDamageReaction.snapshot.pendingReaction!.choices.filter(
         (choice) => choice.kind === "reactionRollOrDamageReduction",
       );
     expect(damageModifierChoices).toEqual(
@@ -9841,7 +9817,7 @@ describe("battle runtime", () => {
           { combatantId: wizardId },
           { combatantId: skeletonId, hp: 7 },
         ],
-        currentTurnResources: { actionResources: [] },
+        turn: { actionResources: [] },
       },
     });
     expect(expendedLevelOneSlots(requireResolved(magicMissile), wizardId)).toBe(
@@ -9922,9 +9898,7 @@ describe("battle runtime", () => {
         ],
       }),
     );
-    expect(
-      healingWord.snapshot.currentTurnResources.currentHasBonusAction,
-    ).toBe(false);
+    expect(healingWord.snapshot.turn.bonusActionAvailable).toBe(false);
     expect(healingWord.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ combatantId: fighterId, hp: 12 }),
@@ -10067,7 +10041,7 @@ describe("battle runtime", () => {
       holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
       snapshot: {
         pendingReaction: {
-          frame: { trigger: "spellCast" },
+          trigger: "spellCast",
         },
       },
     });
@@ -10234,7 +10208,7 @@ describe("battle runtime", () => {
       holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
       snapshot: {
         pendingReaction: {
-          frame: { trigger: "afterDamage", damagedId: skeletonId },
+          trigger: "afterDamage",
         },
       },
     });
@@ -10253,7 +10227,7 @@ describe("battle runtime", () => {
       holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
       snapshot: {
         pendingReaction: {
-          frame: { trigger: "afterDamage", damagedId: fighterId },
+          trigger: "afterDamage",
         },
       },
     });
@@ -10307,22 +10281,26 @@ describe("battle runtime", () => {
           {
             combatantId: skeletonId,
             hp: 9,
-            activeEffects: [
-              {
-                kind: "speedDelta",
-                sourceSpellId: "ray_of_frost",
-                sourceCombatantId: wizardId,
-                deltaFeet: movementDeltaFeet(-10),
-                expiresAt: {
-                  kind: "startOfTurn",
-                  combatantId: wizardId,
-                },
-              },
-            ],
           },
         ],
       },
     });
+    expect(requireResolved(ray).state.combatants.get(skeletonId)).toMatchObject(
+      {
+        activeEffects: [
+          {
+            kind: "speedDelta",
+            sourceSpellId: "ray_of_frost",
+            sourceCombatantId: wizardId,
+            deltaFeet: movementDeltaFeet(-10),
+            expiresAt: {
+              kind: "startOfTurn",
+              combatantId: wizardId,
+            },
+          },
+        ],
+      },
+    );
     expect(expendedLevelOneSlots(requireResolved(ray), wizardId)).toBe(0);
 
     const stackedRayState = {
@@ -10355,19 +10333,18 @@ describe("battle runtime", () => {
     expect(refreshedRay).toMatchObject({
       tag: "resolved",
       snapshot: {
-        combatants: [
-          { combatantId: wizardId },
-          {
-            combatantId: skeletonId,
-            activeEffects: [
-              expect.objectContaining({
-                sourceSpellId: "ray_of_frost",
-                sourceCombatantId: wizardId,
-              }),
-            ],
-          },
-        ],
+        combatants: [{ combatantId: wizardId }, { combatantId: skeletonId }],
       },
+    });
+    expect(
+      requireResolved(refreshedRay).state.combatants.get(skeletonId),
+    ).toMatchObject({
+      activeEffects: [
+        expect.objectContaining({
+          sourceSpellId: "ray_of_frost",
+          sourceCombatantId: wizardId,
+        }),
+      ],
     });
 
     const criticalRayState = wizardVsSkeletonBattle();
@@ -10450,12 +10427,15 @@ describe("battle runtime", () => {
       tag: "resolved",
       snapshot: {
         currentActorId: wizardId,
-        combatants: [
-          { combatantId: wizardId },
-          { combatantId: skeletonId, activeEffects: [] },
-        ],
+        combatants: [{ combatantId: wizardId }, { combatantId: skeletonId }],
       },
     });
+    if (afterSkeletonTurn.tag !== "resolved") {
+      throw new Error("Expected Ray of Frost cleanup turn to resolve.");
+    }
+    expect(
+      afterSkeletonTurn.state.combatants.get(skeletonId)?.activeEffects,
+    ).toEqual([]);
 
     const rayMiss = resolveBattleSubject({
       state: rayState,
@@ -10468,7 +10448,7 @@ describe("battle runtime", () => {
     expect(rayMiss).toMatchObject({
       tag: "resolved",
       snapshot: {
-        currentTurnResources: { actionResources: [] },
+        turn: { actionResources: [] },
         combatants: [
           { combatantId: wizardId },
           { combatantId: skeletonId, hp: 13 },
@@ -10600,22 +10580,26 @@ describe("battle runtime", () => {
           {
             combatantId: wizardId,
             armorClass: 15,
-            activeEffects: [
-              {
-                kind: "spellBaseArmorClass",
-                sourceSpellId: "mage_armor",
-                sourceCombatantId: wizardId,
-                base: 13,
-                ability: "dex",
-                durationTicks: requireElapsedHours(8),
-                earlyEnds: [{ kind: "targetDonsArmor" }],
-              },
-            ],
           },
           { combatantId: skeletonId },
         ],
-        currentTurnResources: { actionResources: [] },
+        turn: { actionResources: [] },
       },
+    });
+    expect(
+      requireResolved(result).state.combatants.get(wizardId),
+    ).toMatchObject({
+      activeEffects: [
+        {
+          kind: "spellBaseArmorClass",
+          sourceSpellId: "mage_armor",
+          sourceCombatantId: wizardId,
+          base: 13,
+          ability: "dex",
+          durationTicks: requireElapsedHours(8),
+          earlyEnds: [{ kind: "targetDonsArmor" }],
+        },
+      ],
     });
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(1);
   });
@@ -10710,9 +10694,10 @@ describe("battle runtime", () => {
     const broken = breakBattleConcentration(concentrating, wizardId);
 
     expect(snapshotBattle(broken).combatants).toMatchObject([
-      { combatantId: wizardId, concentration: null },
-      { combatantId: skeletonId, activeEffects: [] },
+      { combatantId: wizardId, concentrating: false },
+      { combatantId: skeletonId },
     ]);
+    expect(broken.combatants.get(skeletonId)?.activeEffects).toEqual([]);
   });
 
   test("breaking ordinary concentration does not clear a non-owned readied spell entry", () => {
@@ -10883,9 +10868,9 @@ describe("battle runtime", () => {
     expect(failed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        readiedSpells: [],
+        readiedResponses: { spells: [] },
         combatants: [
-          { combatantId: wizardId, hp: 7, concentration: null },
+          { combatantId: wizardId, hp: 7, concentrating: false },
           { combatantId: goblinId },
         ],
       },
@@ -10982,12 +10967,12 @@ describe("battle runtime", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        readiedSpells: [],
+        readiedResponses: { spells: [] },
         combatants: [
           {
             combatantId: wizardId,
             hp: 1,
-            concentration: null,
+            concentrating: false,
             conditions: expect.arrayContaining(["unconscious", "prone"]),
           },
           { combatantId: goblinId },
@@ -11075,16 +11060,20 @@ describe("battle runtime", () => {
     expect(released).toMatchObject({
       tag: "resolved",
       snapshot: {
-        readiedSpells: [],
+        readiedResponses: { spells: [] },
         combatants: [
-          { combatantId: wizardId, concentration: null },
+          { combatantId: wizardId, concentrating: false },
           {
             combatantId: goblinId,
             hp: 6,
-            activeEffects: [{ kind: "speedDelta" }],
           },
         ],
       },
+    });
+    expect(
+      requireResolved(released).state.combatants.get(goblinId),
+    ).toMatchObject({
+      activeEffects: [{ kind: "speedDelta" }],
     });
   });
 
@@ -11222,15 +11211,17 @@ describe("battle runtime", () => {
     ).state;
 
     expect(snapshotBattle(secondReadied)).toMatchObject({
-      readiedSpells: [{ casterId: wizardId }, { casterId: secondWizardId }],
+      readiedResponses: {
+        spells: [{ casterId: wizardId }, { casterId: secondWizardId }],
+      },
       combatants: [
         {
           combatantId: wizardId,
-          concentration: { effectKind: "readiedSpell" },
+          concentrating: true,
         },
         {
           combatantId: secondWizardId,
-          concentration: { effectKind: "readiedSpell" },
+          concentrating: true,
         },
         { combatantId: goblinId },
       ],
@@ -11305,7 +11296,7 @@ describe("battle runtime", () => {
           { combatantId: skeletonId, hp: 9 },
           { combatantId: secondSkeletonId, hp: 13 },
         ],
-        currentTurnResources: { actionResources: [] },
+        turn: { actionResources: [] },
       },
     });
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
@@ -11331,7 +11322,7 @@ describe("battle runtime", () => {
           { combatantId: skeletonId, hp: 13 },
           { combatantId: secondSkeletonId, hp: 13 },
         ],
-        currentTurnResources: { actionResources: [] },
+        turn: { actionResources: [] },
       },
     });
   });
@@ -11612,7 +11603,7 @@ describe("battle runtime", () => {
       snapshot: {
         combatants: [
           { combatantId: wizardId },
-          { combatantId: skeletonId, hp: 9, concentration: null },
+          { combatantId: skeletonId, hp: 9, concentrating: false },
         ],
       },
     });
@@ -11638,9 +11629,9 @@ describe("battle runtime", () => {
         currentActorId: fighterId,
         round: 2,
         turnOrder: [fighterId, goblinId],
-        currentTurnResources: {
+        turn: {
           actionResources: [{ kind: "action", source: "turn" }],
-          currentHasBonusAction: true,
+          bonusActionAvailable: true,
         },
       },
     });
@@ -13384,7 +13375,7 @@ function resolveGoblinScimitarHitReduction(input: {
     throw new Error("Expected attack-hit Reaction window.");
   }
   const choice = reactionModifierChoice(
-    setup.result.snapshot.pendingReaction!.frame.choices,
+    setup.result.snapshot.pendingReaction!.choices,
     input.unitId,
     "attackDamageReduction",
   );
@@ -13446,7 +13437,7 @@ function reactionModifierChoice(
   choices: ReadonlyArray<
     NonNullable<
       ReturnType<typeof snapshotBattle>["pendingReaction"]
-    >["frame"]["choices"][number]
+    >["choices"][number]
   >,
   unitId: string,
   modifierKind:
@@ -13482,7 +13473,7 @@ function reactionChoiceWithSubject(
   choices: ReadonlyArray<
     NonNullable<
       ReturnType<typeof snapshotBattle>["pendingReaction"]
-    >["frame"]["choices"][number]
+    >["choices"][number]
   >,
 ) {
   const choice = choices[0];

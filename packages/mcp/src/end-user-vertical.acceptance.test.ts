@@ -225,7 +225,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     });
     expect(fighterDamage.result.tag).toBe("resolved");
-    expect(fighterDamage.battleState.combatants).toEqual([
+    expect(fighterDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 12 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -239,6 +239,7 @@ describe("end-user promoted MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Nimble Escape",
       "Move",
       "End Turn",
     ]);
@@ -291,7 +292,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     });
     expect(goblinDamage.result.tag).toBe("resolved");
-    expect(goblinDamage.battleState.combatants).toEqual([
+    expect(goblinDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 5 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -392,7 +393,7 @@ describe("end-user promoted MCP vertical", () => {
         { combatantId: "skeleton", hp: 13 },
       ],
     });
-    expect(started.battleState.combatants).toEqual([
+    expect(started.snapshot.combatants).toEqual([
       expect.objectContaining({
         combatantId: "fighter",
         origin: expect.objectContaining({ kind: "character" }),
@@ -437,7 +438,7 @@ describe("end-user promoted MCP vertical", () => {
         value: [{ results: [1] }],
       },
     );
-    expect(afterBludgeoning.battleState.combatants).toEqual([
+    expect(afterBludgeoning.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({ combatantId: "wizard", hp: 8 }),
       expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
@@ -451,7 +452,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     });
     expect(surged.result.tag).toBe("resolved");
-    expect(surged.battleState.combatants[0].origin.resources).toEqual(
+    expect(surged.snapshot.combatants[0].origin.resources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           unitId: "fighter_action_surge",
@@ -523,7 +524,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     );
     expect(afterRayMiss.result.tag).toBe("resolved");
-    expect(afterRayMiss.battleState.combatants).toEqual([
+    expect(afterRayMiss.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
         combatantId: "wizard",
@@ -573,7 +574,7 @@ describe("end-user promoted MCP vertical", () => {
         value: [{ results: [1] }],
       },
     );
-    expect(afterSkeletonAttack.battleState.combatants).toEqual([
+    expect(afterSkeletonAttack.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 16 }),
       expect.objectContaining({ combatantId: "wizard", hp: 8 }),
       expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
@@ -594,7 +595,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     );
     expect(
-      callTool(root, "read_battle_state", {}).battleState.combatants,
+      callTool(root, "read_battle_state", {}).snapshot.combatants,
     ).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({ combatantId: "wizard", hp: 8 }),
@@ -622,7 +623,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     );
     expect(afterMagicMissile.result.tag).toBe("resolved");
-    expect(afterMagicMissile.battleState.combatants).toEqual([
+    expect(afterMagicMissile.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
         combatantId: "wizard",
