@@ -17,6 +17,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterDraftId,
+  abilityScoreAssignment,
   characterClassLevel,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
@@ -42,7 +43,6 @@ import {
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
-
 import {
   battleToolDefinitions,
   characterToolDefinitions,
@@ -63,6 +63,20 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+
+function testAbilityScoreAssignment(
+  scores: Readonly<
+    Record<"str" | "dex" | "con" | "int" | "wis" | "cha", number>
+  >,
+) {
+  const parsed = abilityScoreAssignment(scores);
+  if (Either.isLeft(parsed)) {
+    throw new Error(
+      "Test fixture ability scores must be valid AbilityScore values.",
+    );
+  }
+  return parsed.right;
+}
 
 function startBattleFromCharacterBuildAndStatBlockRight(
   input: Parameters<typeof startBattleFromCharacterBuildAndStatBlock>[0],
@@ -3413,14 +3427,14 @@ function initialManifestFills(
       kind: "abilityScores",
       holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
       method: "standardArray",
-      value: {
+      value: testAbilityScoreAssignment({
         str: 15,
         dex: 14,
         con: 13,
         int: 8,
         wis: 10,
         cha: 12,
-      },
+      }),
     },
     {
       kind: "choice",

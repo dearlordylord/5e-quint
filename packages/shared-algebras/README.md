@@ -25,6 +25,10 @@ should not contain algebra modules.
 ## Algebra Inventory
 
 - `ability-score-algebra` - ability-score generation and assignment rules.
+  Its broad `AbilityScoreAssignment` helper type remains raw-number compatible
+  for legacy Core/app readers, while `abilityScoreAssignment(...)` parses
+  boundary input into `ParsedAbilityScoreAssignment` values backed by the shared
+  `AbilityScore` primitive for durable character-creation state.
 - `action-economy-algebra` - turn resource availability, spending, and reset.
 - `armor-class-algebra` - structured Armor Class state and current AC reading.
 - `attack-roll-algebra` - d20 attack-roll hit adjudication.

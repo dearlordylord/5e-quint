@@ -1,6 +1,6 @@
 import { Either, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
-import { hp } from "@dnd/shared/types";
+import { abilityScore, hp } from "@dnd/shared/types";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
@@ -49,7 +49,6 @@ import {
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SKILL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
-  SURFACE_ABILITIES,
 } from "./phase1-manifest.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
@@ -113,6 +112,13 @@ type LoadoutChoiceSelection = Extract<
   CharacterChoiceSelection,
   { readonly kind: "loadout" }
 >;
+
+const BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE = 20;
+
+type BackgroundAbilityScoreIncreaseDelta = {
+  readonly ability: Ability;
+  readonly increase: number;
+};
 
 export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
@@ -410,22 +416,20 @@ export function isSupportedBackgroundAbilityScoreIncrease(
   }
 
   const eligible = facts.value.abilityScoreIncrease.abilities;
-  const finalScores = applyBackgroundAbilityScoreIncrease(
-    baseScores,
-    selection,
-    eligible,
-  );
-
-  if (SURFACE_ABILITIES.some((ability) => finalScores[ability] > 20)) {
-    return false;
-  }
-
   if (selection.kind === "oneEach") {
-    return true;
+    return backgroundAbilityScoreIncreaseFitsCap(
+      baseScores,
+      backgroundAbilityScoreIncreaseDeltas(selection, eligible),
+    );
   }
 
   return (
-    eligible.includes(selection.plusTwo) && eligible.includes(selection.plusOne)
+    eligible.includes(selection.plusTwo) &&
+    eligible.includes(selection.plusOne) &&
+    backgroundAbilityScoreIncreaseFitsCap(
+      baseScores,
+      backgroundAbilityScoreIncreaseDeltas(selection, eligible),
+    )
   );
 }
 
@@ -522,6 +526,8 @@ export function buildCharacterBuild(input: {
     selections.backgroundAbilityScoreIncrease,
     backgroundFacts.right.abilityScoreIncrease.abilities,
   );
+  if (Either.isLeft(finalScores)) return Either.left(finalScores.left);
+  const finalAbilityScores = finalScores.right;
   const classFeatureGrants = classFacts.right.featureGrants.filter(
     (grant) => grant.level <= selectedClassLevel,
   );
@@ -552,7 +558,10 @@ export function buildCharacterBuild(input: {
   );
   const hitPointsAfterLevelOne =
     hitPointsAfterLevelOneMultiplier(progression) *
-    fixedHitPointsAfterLevelOne(classFacts.right.hitPointDie, finalScores.con);
+    fixedHitPointsAfterLevelOne(
+      classFacts.right.hitPointDie,
+      finalAbilityScores.con,
+    );
 
   return Either.right({
     progression,
@@ -560,11 +569,11 @@ export function buildCharacterBuild(input: {
     species: selections.species,
     originLanguages: selections.languages,
     alignment: selections.alignment,
-    abilityScores: finalScores,
+    abilityScores: finalAbilityScores,
     hitPoints: {
       maximum: hp(
         classFacts.right.hitPointDie +
-          abilityModifier(finalScores.con) +
+          abilityModifier(finalAbilityScores.con) +
           hitPointsAfterLevelOne,
       ),
       hitDice: [
@@ -1244,22 +1253,96 @@ export function applyBackgroundAbilityScoreIncrease(
   baseScores: AbilityScoreAssignment,
   selection: BackgroundAbilityScoreIncreaseSelection,
   eligibleAbilities: readonly Ability[],
-): AbilityScoreAssignment {
+): Either.Either<AbilityScoreAssignment, CreationFinalizationIssue> {
+  const deltas = backgroundAbilityScoreIncreaseDeltas(
+    selection,
+    eligibleAbilities,
+  );
+  const capIssue = backgroundAbilityScoreIncreaseCapIssue(baseScores, deltas);
+  if (capIssue != null) {
+    return Either.left(capIssue);
+  }
+
   if (selection.kind === "oneEach") {
-    return eligibleAbilities.reduce(
-      (scores, ability) => ({
-        ...scores,
-        [ability]: scores[ability] + 1,
-      }),
-      baseScores,
+    return Either.right(
+      eligibleAbilities.reduce(
+        (scores, ability) => ({
+          ...scores,
+          [ability]: abilityScore(scores[ability] + 1),
+        }),
+        baseScores,
+      ),
     );
   }
 
-  return {
+  return Either.right({
     ...baseScores,
-    [selection.plusTwo]: baseScores[selection.plusTwo] + 2,
-    [selection.plusOne]: baseScores[selection.plusOne] + 1,
-  };
+    [selection.plusTwo]: abilityScore(baseScores[selection.plusTwo] + 2),
+    [selection.plusOne]: abilityScore(baseScores[selection.plusOne] + 1),
+  });
+}
+
+function backgroundAbilityScoreIncreaseDeltas(
+  selection: BackgroundAbilityScoreIncreaseSelection,
+  eligibleAbilities: readonly Ability[],
+): readonly BackgroundAbilityScoreIncreaseDelta[] {
+  const deltas =
+    selection.kind === "oneEach"
+      ? eligibleAbilities.map((ability) => ({
+          ability,
+          increase: 1,
+        }))
+      : [
+          { ability: selection.plusTwo, increase: 2 },
+          { ability: selection.plusOne, increase: 1 },
+        ];
+
+  return totalBackgroundAbilityScoreIncreaseDeltas(deltas);
+}
+
+function totalBackgroundAbilityScoreIncreaseDeltas(
+  deltas: readonly BackgroundAbilityScoreIncreaseDelta[],
+): readonly BackgroundAbilityScoreIncreaseDelta[] {
+  const totals = new Map<Ability, number>();
+  for (const delta of deltas) {
+    totals.set(
+      delta.ability,
+      (totals.get(delta.ability) ?? 0) + delta.increase,
+    );
+  }
+
+  return [...totals].map(([ability, increase]) => ({ ability, increase }));
+}
+
+function backgroundAbilityScoreIncreaseFitsCap(
+  baseScores: AbilityScoreAssignment,
+  deltas: readonly BackgroundAbilityScoreIncreaseDelta[],
+): boolean {
+  return deltas.every(
+    (delta) =>
+      baseScores[delta.ability] + delta.increase <=
+      BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE,
+  );
+}
+
+function backgroundAbilityScoreIncreaseCapIssue(
+  baseScores: AbilityScoreAssignment,
+  deltas: readonly BackgroundAbilityScoreIncreaseDelta[],
+): CreationFinalizationIssue | undefined {
+  const overCapDelta = deltas.find(
+    (delta) =>
+      baseScores[delta.ability] + delta.increase >
+      BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE,
+  );
+  if (overCapDelta == null) {
+    return undefined;
+  }
+
+  return illegalFinalizationIssue(
+    `Cannot apply background ability-score increase: ${overCapDelta.ability} ${
+      baseScores[overCapDelta.ability]
+    } + ${overCapDelta.increase} would exceed ${BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE}.`,
+  );
 }
 
 export function abilityModifier(score: number): number {

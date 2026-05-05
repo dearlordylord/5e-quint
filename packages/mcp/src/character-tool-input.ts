@@ -1,5 +1,6 @@
 import {
   SUPPORTED_ABILITY_SCORE_METHODS,
+  abilityScoreAssignment,
   characterDraftId,
   creationChoiceOptionId,
   draftRevision,
@@ -52,12 +53,36 @@ const ChoiceCreationFillArgsSchema = Schema.Struct({
 });
 
 const AbilityScoreAssignmentArgsSchema = Schema.Struct({
-  str: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
-  dex: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
-  con: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
-  int: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
-  wis: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
-  cha: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  str: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(30),
+  ),
+  dex: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(30),
+  ),
+  con: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(30),
+  ),
+  int: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(30),
+  ),
+  wis: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(30),
+  ),
+  cha: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(1),
+    Schema.lessThanOrEqualTo(30),
+  ),
 });
 
 const AbilityScoreCreationFillArgsSchema = Schema.Struct({
@@ -290,11 +315,18 @@ function decodeAbilityScoreFill(
   index: number,
 ): ToolInputResult<CreationFill> {
   const holeId = decodeCreationHoleId(holeIdText, index);
+  const scores = abilityScoreAssignment(value.value);
+  if (Either.isLeft(scores)) {
+    return Either.left(
+      invalidFieldContent(`fills[${index}].value`, "ability score assignment"),
+    );
+  }
+
   return Either.map(holeId, (decodedHoleId) => ({
     kind: "abilityScores",
     holeId: decodedHoleId,
     method: value.method,
-    value: value.value,
+    value: scores.right,
   }));
 }
 

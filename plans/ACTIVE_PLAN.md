@@ -73,7 +73,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 65,
       "id": "PBA15A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate Surface And Character-Creation Domain Primitives"
     },
     {
@@ -91,7 +91,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 68,
       "id": "PBA15B",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Remove Runtime-Owned Spatiality And Distances"
     },
     {
@@ -201,10 +201,10 @@ Keep it synchronized with the DAG table and task details.
 | 62    | PBA15A0B - Introduce Character Progression Projection Helpers     | done                                          | PBA15A0A     | PBA15A0C     | inline below                                                                                                 | Character-creation-runtime exports character progression helpers and Unit-id boundary adapters.                                  |
 | 63    | PBA15A0C - Replace Level-One Class-Entry Workflow                 | done                                          | PBA15A0B     | PBA15A0D     | inline below                                                                                                 | Runtime progression fill now replaces separate primary-class and level-1 class-entry workflow.                                   |
 | 64    | PBA15A0D - Wire Progression And Multiclass Through MCP Docs       | done                                          | PBA15A0C     | PBA15A       | inline below                                                                                                 | MCP schema/workflow/docs now expose progression as one atomic profile choice and point multiclass validation at shared-algebras. |
-| 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | ready-for-research                            | PBA15A0D     | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Migrate remaining durable Surface and character-creation primitive domain values after PBA15A0D.                                 |
-| 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | blocked                                       | PBA15A       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes.                                                |
-| 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | blocked                                       | PBA16        | PBA15B       | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width.                                                  |
-| 68    | PBA15B - Remove Runtime-Owned Spatiality And Distances            | blocked                                       | PBA17        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)              | Remove promoted runtime and MCP distance ownership before widening attack range and spell targeting behavior that would otherwise depend on it. |
+| 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | done                                          | PBA15A0D     | PBA15B       | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Character-creation ability-score assignments are parsed into shared AbilityScore values before durable runtime storage.           |
+| 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | blocked                                       | PBA15B       | PBA17        | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Add narrow promoted battle-runtime MBT/QNT coverage for Death Saving Throw holes.                                                |
+| 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | blocked                                       | PBA16        | PBA18        | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Restore Knock Out and remaining durable zero-HP/dead/Stable/rest handoff width.                                                  |
+| 68    | PBA15B - Remove Runtime-Owned Spatiality And Distances            | ready-for-research                            | PBA15A       | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)              | Remove promoted runtime and MCP distance ownership before widening attack range and spell targeting behavior that would otherwise depend on it. |
 | 69    | PBA18 - Widen Attack Range And Conditional Attack Riders          | blocked                                       | PBA15B       | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Restore long-range Disadvantage and supported conditional attack riders.                                                         |
 | 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | blocked                                       | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Restore Stat Block Multiattack and Bonus Action procedure families.                                                              |
 | 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | blocked                                       | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Restore Magic Missile split-target replay and broaden spell procedure pressure.                                                  |
@@ -436,10 +436,10 @@ unblocked for research.
 
 ### Task 65 - PBA15A - Migrate Surface And Character-Creation Domain Primitives
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA15A0D
-Blocks: PBA16
+Blocks: PBA15B
 
 Research plan:
 [pba15a-domain-primitives-research-plan.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)
@@ -471,13 +471,23 @@ also already represented by `CharacterEquipmentItemId`, a package-owned
 source/key isomorphism. RAW and UL/domain checker convergence passed in the
 parallel worktree review lanes before integration.
 
-Plan Impact: if successful, unblock PBA16.
+Plan Impact: if successful, unblock PBA15B.
+
+Closeout: `@dnd/shared-algebras` now parses raw ability-score assignments into
+the shared `AbilityScore` primitive, while character-creation-runtime stores
+the parsed assignment in creation fills, drafts, and finalized builds. MCP fill
+decoding parses incoming score objects at the boundary before they enter
+runtime state. Background ability-score increases return typed finalization
+issues instead of silently clamping when a post-background score would exceed
+the SRD cap. Verification passed focused shared-algebras,
+character-creation-runtime, and MCP typechecks/tests; no battle MBT was needed
+because promoted battle-runtime mappings were not touched. PBA15B is unblocked.
 
 ### Task 66 - PBA16 - Add Death-Save Promoted MBT Coverage
 
 Status: `blocked`
 
-Depends on: PBA15A
+Depends on: PBA15B
 Blocks: PBA17
 
 Research plan:
@@ -501,7 +511,7 @@ Plan Impact: if successful, unblock PBA17.
 Status: `blocked`
 
 Depends on: PBA16
-Blocks: PBA15B
+Blocks: PBA18
 
 Research plan:
 [pba17-knockout-zero-hp-handoff-research-plan.md](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)
@@ -515,14 +525,14 @@ are explicit and type-representable without contradictory states.
 Verification summary: RAW/UL check, focused battle-runtime/MCP tests, QNT/MBT
 only if lifecycle mappings change beyond PBA16, `/simplify` convergence.
 
-Plan Impact: if successful, unblock PBA15B.
+Plan Impact: if successful, unblock PBA18.
 
 ### Task 68 - PBA15B - Remove Runtime-Owned Spatiality And Distances
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Depends on: PBA17
-Blocks: PBA18
+Depends on: PBA15A
+Blocks: PBA16
 
 Research plan:
 [pba15b-table-spatial-fact-eradication-plan.md](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)

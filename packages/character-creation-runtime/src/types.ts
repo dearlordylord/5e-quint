@@ -15,7 +15,8 @@ import {
 } from "@dnd/shared/game-facts";
 import {
   SUPPORTED_ABILITY_SCORE_METHODS,
-  type AbilityScoreAssignment,
+  abilityScoreAssignment,
+  type ParsedAbilityScoreAssignment,
   type SupportedAbilityScoreMethod,
 } from "@dnd/shared-algebras/ability-score-algebra";
 import {
@@ -39,8 +40,8 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { CharacterProgression } from "./character-progression-types.ts";
 
-export { SUPPORTED_ABILITY_SCORE_METHODS };
-export type { AbilityScoreAssignment, SupportedAbilityScoreMethod };
+export { SUPPORTED_ABILITY_SCORE_METHODS, abilityScoreAssignment };
+export type { SupportedAbilityScoreMethod };
 export type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 
 export type CreationSessionId = string & Brand.Brand<"CreationSessionId">;
@@ -668,7 +669,7 @@ export type UnitRef = {
 
 export type AbilityScoreGenerationSelection = {
   readonly method: SupportedAbilityScoreMethod;
-  readonly assignedScores: AbilityScoreAssignment;
+  readonly assignedScores: CharacterCreationAbilityScoreAssignment;
 };
 
 export type TwoAndOneBackgroundAbilityScoreIncreaseSelection = {
@@ -771,7 +772,7 @@ export type CreationFill =
       readonly kind: "abilityScores";
       readonly holeId: CreationHoleId;
       readonly method: SupportedAbilityScoreMethod;
-      readonly value: AbilityScoreAssignment;
+      readonly value: CharacterCreationAbilityScoreAssignment;
     };
 
 // Creation fill issues stay package-owned because this protocol validates
@@ -873,7 +874,11 @@ export type FinalizedCharacterSelections = {
   readonly equipment: CharacterEquipmentSelection;
 };
 
-export type CharacterBuildAbilityScores = AbilityScoreAssignment;
+export type CharacterCreationAbilityScoreAssignment =
+  ParsedAbilityScoreAssignment;
+export type AbilityScoreAssignment = CharacterCreationAbilityScoreAssignment;
+export type CharacterBuildAbilityScores =
+  CharacterCreationAbilityScoreAssignment;
 
 export type CharacterBuildHitPoints = {
   readonly maximum: HP;

@@ -14,6 +14,7 @@ import {
   createCharacterDraft,
   CREATION_BATCH_ISSUE_CODES,
   CREATION_FILL_ISSUE_CODES,
+  abilityScoreAssignment,
   creationChoiceOptionId,
   creationHoleId,
   discoverCreationHoles,
@@ -307,18 +308,23 @@ function standardArrayFill(
   holes: readonly CreationHole[],
   hole: keyof typeof holeIds,
 ): CreationFill {
+  const scores = abilityScoreAssignment({
+    str: 15,
+    dex: 14,
+    con: 13,
+    int: 8,
+    wis: 10,
+    cha: 12,
+  });
+  if (Either.isLeft(scores)) {
+    throw new Error("Standard Array MBT fixture must parse.");
+  }
+
   return {
     kind: "abilityScores",
     holeId: discoveredHoleId(holes, hole),
     method: "standardArray",
-    value: {
-      str: 15,
-      dex: 14,
-      con: 13,
-      int: 8,
-      wis: 10,
-      cha: 12,
-    },
+    value: scores.right,
   };
 }
 

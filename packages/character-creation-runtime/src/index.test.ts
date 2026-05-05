@@ -24,6 +24,7 @@ import {
   CHARACTER_EQUIPMENT_ITEM_SLOTS,
   LOADOUT_SLOTS,
   UNIT_CHOICE_KEYS,
+  abilityScoreAssignment,
   classUnitIdFromUnitId,
   createCharacterDraft,
   creationChoiceOptionId,
@@ -51,6 +52,7 @@ import {
   type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
+  type AbilityScoreAssignment,
   type CharacterEquipmentItemSlot,
   type LoadoutSlot,
   type UnitCatalog,
@@ -60,6 +62,7 @@ import {
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import { classUnitId } from "./character-progression-types.ts";
 import {
+  applyBackgroundAbilityScoreIncrease,
   finalizedBuildEquipment,
   supportedChoiceHolesBySource,
 } from "./finalization.ts";
@@ -74,6 +77,20 @@ import { progressionOptionId } from "./phase1-manifest.ts";
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
+
+function testAbilityScoreAssignment(
+  scores: Readonly<
+    Record<"str" | "dex" | "con" | "int" | "wis" | "cha", number>
+  >,
+): AbilityScoreAssignment {
+  const parsed = abilityScoreAssignment(scores);
+  if (Either.isLeft(parsed)) {
+    throw new Error(
+      "Test fixture ability scores must be valid AbilityScore values.",
+    );
+  }
+  return parsed.right;
+}
 
 if (unitCatalogResult.tag !== "ok") {
   throw new Error("SRD Unit catalog test fixture must build successfully.");
@@ -1136,14 +1153,14 @@ describe("character creation QNT slice parity", () => {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: {
+          value: testAbilityScoreAssignment({
             str: 14,
             dex: 15,
             con: 13,
             int: 8,
             wis: 10,
             cha: 12,
-          },
+          }),
         },
       ],
     });
@@ -1162,14 +1179,14 @@ describe("character creation QNT slice parity", () => {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "pointBuy",
-          value: {
+          value: testAbilityScoreAssignment({
             str: 13,
             dex: 13,
             con: 13,
             int: 12,
             wis: 12,
             cha: 12,
-          },
+          }),
         },
       ],
     });
@@ -1443,14 +1460,14 @@ describe("character creation batch fill", () => {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "pointBuy",
-          value: {
+          value: testAbilityScoreAssignment({
             str: 13,
             dex: 13,
             con: 13,
             int: 12,
             wis: 12,
             cha: 12,
-          },
+          }),
         },
       ],
     });
@@ -1461,14 +1478,14 @@ describe("character creation batch fill", () => {
         selections: {
           abilityScoreGeneration: {
             method: "pointBuy",
-            assignedScores: {
+            assignedScores: testAbilityScoreAssignment({
               str: 13,
               dex: 13,
               con: 13,
               int: 12,
               wis: 12,
               cha: 12,
-            },
+            }),
           },
         },
       },
@@ -1486,14 +1503,14 @@ describe("character creation batch fill", () => {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: {
+          value: testAbilityScoreAssignment({
             str: 20,
             dex: 20,
             con: 20,
             int: 20,
             wis: 20,
             cha: 20,
-          },
+          }),
         },
       ],
     });
@@ -1515,14 +1532,14 @@ describe("character creation batch fill", () => {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "pointBuy",
-          value: {
+          value: testAbilityScoreAssignment({
             str: 15,
             dex: 15,
             con: 15,
             int: 15,
             wis: 8,
             cha: 8,
-          },
+          }),
         },
       ],
     });
@@ -1595,14 +1612,14 @@ describe("character creation batch fill", () => {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.progression.initial"),
           method: "standardArray",
-          value: {
+          value: testAbilityScoreAssignment({
             str: 15,
             dex: 14,
             con: 13,
             int: 12,
             wis: 10,
             cha: 8,
-          },
+          }),
         },
         choiceFill("cc:draft:draft.alignment", "neutral_good"),
       ],
@@ -1838,6 +1855,59 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test("rejects over-cap parsed ability scores without throwing during finalization", () => {
+    const complete = completeManifestDraft();
+    const draft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        abilityScoreGeneration: {
+          method: "standardArray",
+          assignedScores: testAbilityScoreAssignment({
+            str: 30,
+            dex: 14,
+            con: 13,
+            int: 8,
+            wis: 10,
+            cha: 12,
+          }),
+        },
+      },
+    };
+
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result).toMatchObject({ tag: "invalid" });
+    if (result.tag !== "invalid") return;
+    expect(result.issues.map((issue) => issue.message)).toContain(
+      "Finalized build must use the supported manifest background ability-score increase.",
+    );
+  });
+
+  test("returns a typed issue instead of clamping over-cap background ability-score increases", () => {
+    const result = applyBackgroundAbilityScoreIncrease(
+      testAbilityScoreAssignment({
+        str: 30,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      }),
+      { kind: "twoAndOne", plusTwo: "str", plusOne: "con" },
+      ["str", "dex", "con"],
+    );
+
+    expect(result).toEqual(
+      Either.left({
+        tag: "illegalFinalization",
+        code: "illegalFinalization",
+        message:
+          "Cannot apply background ability-score increase: str 30 + 2 would exceed 20.",
+      }),
+    );
+  });
+
   test("accepts Fighter 2 through the runtime progression fill", () => {
     const fighterTwo = completeFighterTwoDraft();
     const result = finalizeCharacterDraft({ draft: fighterTwo, unitLibrary });
@@ -2015,14 +2085,14 @@ describe("character creation finalization", () => {
       background: "background_soldier",
       abilityScoreGeneration: {
         method: "standardArray",
-        assignedScores: {
+        assignedScores: testAbilityScoreAssignment({
           str: 15,
           dex: 14,
           con: 13,
           int: 8,
           wis: 10,
           cha: 12,
-        },
+        }),
       },
       backgroundAbilityScoreIncrease: {
         kind: "twoAndOne",
@@ -2603,14 +2673,14 @@ function initialManifestFills(
       kind: "abilityScores",
       holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
       method: "standardArray",
-      value: {
+      value: testAbilityScoreAssignment({
         str: 15,
         dex: 14,
         con: 13,
         int: 8,
         wis: 10,
         cha: 12,
-      },
+      }),
     },
     {
       kind: "choice",
@@ -2751,14 +2821,14 @@ function completeWizardDraft(): CharacterDraft {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: {
+          value: testAbilityScoreAssignment({
             str: 8,
             dex: 14,
             con: 13,
             int: 15,
             wis: 10,
             cha: 12,
-          },
+          }),
         },
         choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
         choiceFill("cc:draft:draft.alignment", "lawful_good"),
