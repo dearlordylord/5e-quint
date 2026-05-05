@@ -29,6 +29,11 @@ import { exactOptional as optionalExact, nonEmpty } from "./schema-helpers.ts";
 // vocabulary in schema-base.ts.
 
 export const SpellLevelSchema = Schema.Literal(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+export const SpellSlotLevelSchema = Schema.Literal(1, 2, 3, 4, 5, 6, 7, 8, 9);
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
 
 export const SpellSchoolSchema = Schema.Literal(
   "abjuration",
@@ -59,6 +64,17 @@ export const ThresholdTiersNumberSchema = Schema.Struct({
   axis: LevelAxisSchema,
   base: Schema.Number,
   tiers: nonEmpty(ThresholdTierNumberSchema),
+});
+export const TargetCountThresholdTierSchema = Schema.Struct({
+  atLevel: PositiveIntegerSchema,
+  value: PositiveIntegerSchema,
+});
+
+export const TargetCountThresholdTiersSchema = Schema.Struct({
+  kind: Schema.Literal("threshold_tiers"),
+  axis: LevelAxisSchema,
+  base: PositiveIntegerSchema,
+  tiers: nonEmpty(TargetCountThresholdTierSchema),
 });
 
 export const DiceExprBaseSchema = Schema.Struct({
@@ -1042,11 +1058,11 @@ export const AreaOccupantDispositionFilterSchema = Schema.Literal(
   "hostile_to_source",
 );
 
-export const SlotScalingNumberSchema = Schema.Struct({
+export const TargetCountSlotScalingSchema = Schema.Struct({
   kind: Schema.Literal("linear"),
-  base: Schema.Number,
-  perSlotAboveBase: Schema.Number,
-  baseLevel: Schema.Number,
+  base: PositiveIntegerSchema,
+  perSlotAboveBase: PositiveIntegerSchema,
+  baseLevel: SpellSlotLevelSchema,
 });
 
 export const TargetSelectionSchema = Schema.Union(
@@ -1057,9 +1073,9 @@ export const TargetSelectionSchema = Schema.Union(
   Schema.Struct({
     mode: Schema.Literal("choose_up_to"),
     count: Schema.Union(
-      Schema.Number,
-      SlotScalingNumberSchema,
-      ThresholdTiersNumberSchema,
+      PositiveIntegerSchema,
+      TargetCountSlotScalingSchema,
+      TargetCountThresholdTiersSchema,
     ),
     repeatsAllowed: optionalExact(Schema.Literal(true)),
     typeFilter: optionalExact(TargetTypeFilterSchema),

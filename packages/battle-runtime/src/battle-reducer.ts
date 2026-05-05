@@ -111,10 +111,11 @@ import type {
   DamageType,
   DcSource,
   DiceExpr,
+  Size,
   SpellRecord,
   StatBlockRecord,
   StatBlockValue,
-  Size,
+  TargetSelection,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
@@ -12755,43 +12756,23 @@ function supportedCantripSaveGateDamageProfile(
 }
 
 function supportedRepeatedEffectCount(
-  selection: {
-    readonly mode: string;
-    readonly repeatsAllowed?: boolean;
-    readonly count?:
-      | number
-      | {
-          readonly kind?: string;
-          readonly base?: number;
-          readonly baseLevel?: number;
-          readonly perSlotAboveBase?: number;
-        };
-  },
+  selection: TargetSelection,
   spellLevel: number,
 ): ((slotLevel: SpellSlotLevel) => number) | null {
   if (selection.mode !== "choose_up_to" || selection.repeatsAllowed !== true) {
     return null;
   }
-  if (typeof selection.count === "number") {
-    return () => selection.count as number;
-  }
   const count = selection.count;
-  if (
-    count?.kind === "linear" &&
-    typeof count.base === "number" &&
-    typeof count.perSlotAboveBase === "number"
-  ) {
-    const base = count.base;
-    const perSlotAboveBase = count.perSlotAboveBase;
-    const baseLevel = count.baseLevel ?? spellLevel;
-    return (slotLevel) =>
-      base + Math.max(0, Number(slotLevel) - baseLevel) * perSlotAboveBase;
+  if (typeof count === "number") {
+    return () => count;
   }
-  if (typeof count?.base === "number") {
-    const base = count.base;
-    return () => base;
+  if (count.kind !== "linear") {
+    return null;
   }
-  return null;
+  const { base, perSlotAboveBase } = count;
+  const baseLevel = count.baseLevel ?? spellLevel;
+  return (slotLevel) =>
+    base + Math.max(0, Number(slotLevel) - baseLevel) * perSlotAboveBase;
 }
 
 function supportedDamageAmountExpr(amount: {
