@@ -957,13 +957,13 @@ parse_review_verdict() {
   node - "$report" <<'NODE'
 const fs = require("fs")
 const text = fs.readFileSync(process.argv[2], "utf8")
-const sameLine = text.match(/^##?\s*Verdict:\s*(.+)$/im)
-const nextLine = text.match(/^##?\s*Verdict\s*$\n+^\s*([A-Za-z-]+)\s*$/im)
+const sameLine = text.match(/^\s*(?:##?\s*)?\**\s*Verdict:\s*(.+?)\s*\**\s*$/im)
+const nextLine = text.match(/^\s*(?:##?\s*)?\**\s*Verdict\s*\**\s*$\n+^\s*([A-Za-z-]+)\s*$/im)
 const raw = sameLine?.[1] ?? nextLine?.[1]
 if (!raw) {
   throw new Error("review report missing Verdict section")
 }
-const verdict = raw.trim().replace(/`/g, "").toLowerCase()
+const verdict = raw.trim().replace(/[`*]/g, "").toLowerCase()
 if (!["accept", "accept-with-fixes", "reject"].includes(verdict)) {
   throw new Error(`invalid review verdict: ${verdict}`)
 }
@@ -1025,8 +1025,8 @@ Requirements:
 - If the task stays runnable (
   - retry-same-task
   - needs-more-research
-  ), add or update a concise `Retry Guidance:` section in the current task body in $plan_file. Keep it attempt-agnostic, actionable, and focused on what the next implementer round should change.
-- If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied, except for required attempt-agnostic `Retry Guidance:` updates on runnable reruns.
+  ), add or update a concise Retry Guidance section in the current task body in $plan_file. Keep it attempt-agnostic, actionable, and focused on what the next implementer round should change.
+- If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied, except for required attempt-agnostic Retry Guidance updates on runnable reruns.
 - Every decider result must classify the task disposition as exactly one of:
   - done
   - retry-same-task
