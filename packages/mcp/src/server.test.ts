@@ -38,6 +38,7 @@ import {
   type CharacterEquipmentItemSlot,
 } from "@dnd/character-creation-runtime";
 import { Hp, hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   battleToolDefinitions,
@@ -61,11 +62,7 @@ import {
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
-function testAbilityScoreAssignment(
-  scores: Readonly<
-    Record<"str" | "dex" | "con" | "int" | "wis" | "cha", number>
-  >,
-) {
+function testAbilityScoreAssignment(scores: RawAbilityScoreAssignment) {
   const parsed = abilityScoreAssignment(scores);
   if (Either.isLeft(parsed)) {
     throw new Error(

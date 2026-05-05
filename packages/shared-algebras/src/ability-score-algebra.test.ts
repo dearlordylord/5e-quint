@@ -7,7 +7,7 @@ import {
 } from "./ability-score-algebra.ts";
 
 describe("ability score assignment algebra", () => {
-  test("parses raw scores into durable AbilityScore values", () => {
+  test("constructs durable AbilityScore values from typed scores", () => {
     const result = abilityScoreAssignment({
       str: 15,
       dex: 14,
@@ -24,10 +24,7 @@ describe("ability score assignment algebra", () => {
     );
   });
 
-  test("returns typed issues for missing or out-of-range scores", () => {
-    expect(abilityScoreAssignment({ str: 15 })).toEqual(
-      Either.left({ tag: "missingNumericAbilityScore", ability: "dex" }),
-    );
+  test("returns typed issues for out-of-range scores", () => {
     expect(
       abilityScoreAssignment({
         str: 31,

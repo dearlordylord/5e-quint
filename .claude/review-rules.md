@@ -247,9 +247,27 @@ All data crossing system boundaries must be parsed or decoded at the boundary an
 Flag:
 
 - `any`, untyped JSON access, or raw external data beyond the boundary;
+- typed internal callers forced through an `unknown` parameter, erasing compile-time compatibility that should be checked at the call site;
 - passing weak `string`, `number`, or broad union values deeper after a stronger fact has been established;
 - validation repeated downstream instead of parsing once and carrying the parsed type;
 - authored Surface data, runtime projection data, and provenance collapsed into one type or field.
+
+Pattern: split raw boundary parsing from typed core logic.
+
+```typescript
+function f(input: Wider): Narrower {
+  return narrow(input);
+}
+
+function fRaw(input: unknown): Either.Either<Narrower, ParseIssue> {
+  const parsed = parseToWider(input);
+  return Either.isLeft(parsed)
+    ? Either.left(parsed.left)
+    : Either.right(f(parsed.right));
+}
+```
+
+Known typed callers call `f`, not `fRaw`; only JSON/tool/user/storage/wire boundaries and parser rejection tests call `fRaw`.
 
 ## No Bare Primitives For Domain Values
 

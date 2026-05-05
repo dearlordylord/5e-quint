@@ -169,6 +169,7 @@ Promoted Unit/StatBlock-backed battle behavior MUST maintain parity with `packag
 ## TypeScript conventions
 
 - **Parse, don’t validate:** Parse once at the boundary; use the parsed type everywhere else. When code establishes a stronger fact about a value, reflect that fact in the type and pass the narrowed value forward. Do not keep passing the weaker type and re-checking the same property downstream.
+  Boundary parsers may accept `unknown`; typed internal functions must not. For known callers, use a typed core (`f(c: Wider): Narrower`) and let the raw adapter parse then delegate (`fRaw(c: unknown)` parses to `Wider`, then calls `f`).
 
   First examples:
   - If a function only makes sense for damage effects, it should accept `DamageEffect`, not `Effect`.
