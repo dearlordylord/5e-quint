@@ -469,7 +469,9 @@ Research plan:
 [pba16-death-save-promoted-mbt-research-plan.md](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)
 
 Next action: add selective promoted `@dnd/battle-runtime` QNT/MBT coverage for
-turn-start Death Saving Throw holes and one lifecycle outcome.
+turn-start Death Saving Throw holes and one lifecycle outcome. A 2026-05-05
+read-only preflight in the research plan confirms the exact promoted MBT gap
+and recommends a two-Character Build tracer bullet.
 
 Acceptance summary: Death Saving Throw hole replay is covered by promoted
 battle-runtime proof; old Core MBT remains quarantined reference material.

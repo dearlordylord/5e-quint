@@ -41,6 +41,66 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 - Current promoted MBT projection rejects `deathSavingThrow` holes and only models target, attack roll, damage roll, and recharge holes.
 - The current Rogue-vs-Skeleton MBT path is not a natural death-save pressure case because Skeletons use `diesAtZeroHp`.
 
+## Read-Only Preflight - 2026-05-05
+
+This preflight was run directly on `master` after the PBA15A source-identity
+review lanes landed. No PBA16 production implementation was done.
+
+Confirmed current state:
+
+- Deterministic promoted runtime tests already cover the core start-turn Death
+  Saving Throw lifecycle in `packages/battle-runtime/src/index.test.ts`:
+  - End Turn asks for a `deathSavingThrow` hole when the next Character Build
+    combatant starts at `0` HP.
+  - A roll of `5` adds one failure.
+  - A roll of `10` from two existing successes makes the combatant Stable and
+    resets counters.
+  - A natural `20` restores `1` HP and removes Unconscious.
+- Shared algebra ownership already exists in
+  `packages/shared-algebras/src/death-saves-algebra.ts`, with proof coverage in
+  `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt`.
+- Promoted runtime QNT already has helper-level death-save behavior:
+  `endTurnWithDeathSave` and `applyStartTurnDeathSave` in
+  `packages/battle-runtime/battle-runtime.qnt`.
+- The promoted MBT harness still does not model the hole. In
+  `packages/battle-runtime/src/battle-runtime.mbt.test.ts`, `MbtHole` omits
+  `DeathSavingThrow`, `projectHole` throws on `kind: "deathSavingThrow"`, and
+  `holeName` accepts only target/attack/damage/recharge variants.
+- `packages/battle-runtime/battle-runtime.mbt.qnt` currently models the
+  Rogue-vs-Skeleton attack path only. That scenario is useful for attack/rider
+  parity but is the wrong pressure case for death saves because the Skeleton
+  uses `diesAtZeroHp` under ASSUMPTIONS.md A12.
+
+Recommended tracer bullet:
+
+1. Add a second MBT scenario in the same promoted MBT test file rather than
+   widening the Rogue-vs-Skeleton trace. Use two Character Build combatants:
+   current actor at higher Initiative, next actor at `0` HP with
+   `usesDeathSavingThrows`.
+2. Add `DeathSavingThrow` to the MBT hole vocabulary and map TS
+   `kind: "deathSavingThrow"` to it.
+3. Model only representative fills at first: `5`, `10`, and `20`. Add `1` if
+   the initial state can cheaply start with one existing failure, so the
+   two-failure natural-1 path reaches dead in one replay.
+4. Project only the lifecycle facts the trace needs: current actor id, pending
+   holes, target HP, Unconscious/Stable/dead, and death-save success/failure
+   counters. Do not pull Character Sheet/session closeout or Stable `1d4` hour
+   recovery into this MBT.
+5. Reuse runtime subjects through
+   `{ tag: "runtimeCommand", actorId, command: "endTurn" }`; do not create an
+   MBT-only command path.
+
+What PBA15A lanes help with:
+
+- The character-creation source/hole cleanup does not directly change
+  battle-runtime death-save semantics.
+- It does make the next implementation less noisy: MCP and creation-hole
+  protocol ambiguity is no longer part of the PBA16 blast radius, so PBA16 can
+  stay focused on promoted battle-runtime QNT/MBT coverage.
+- The new PBA15A inventory identifies `AbilityScoreAssignment` and
+  `CharacterBuildLoadout.itemId` as remaining primitive debt, but neither is a
+  prerequisite for this narrow Death Saving Throw MBT slice.
+
 ## Suggested Implementation Shape
 
 - A narrow promoted MBT lane could use two Character Build combatants so the next actor naturally uses `usesDeathSavingThrows`.
