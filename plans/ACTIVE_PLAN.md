@@ -120,42 +120,54 @@ Keep it synchronized with the DAG table and task details.
     },
     {
       "number": 73,
-      "id": "PBA22",
+      "id": "PBA21A",
       "status": "ready-for-implementation-after-light-research",
-      "title": "Stabilize Battle Snapshots Traces And App UI"
+      "title": "Fix Knock Out Lifecycle Provenance"
     },
     {
       "number": 74,
+      "id": "PBA21B",
+      "status": "blocked",
+      "title": "Promote BattleSnapshot Into Battle View Contract"
+    },
+    {
+      "number": 75,
+      "id": "PBA22",
+      "status": "blocked",
+      "title": "Stabilize Battle Snapshots Traces And App UI"
+    },
+    {
+      "number": 76,
       "id": "PBA23",
       "status": "blocked",
       "title": "Core Promotion Deletion Ledger"
     },
     {
-      "number": 75,
+      "number": 77,
       "id": "PBA24",
       "status": "blocked",
       "title": "Remove Rogue Cunning Action Support Workaround"
     },
     {
-      "number": 76,
+      "number": 78,
       "id": "PBA25",
       "status": "blocked",
       "title": "Promote Unit-Backed Character Choice Width"
     },
     {
-      "number": 77,
+      "number": 79,
       "id": "PBA26",
       "status": "blocked",
       "title": "Define Character Sheet Session Boundary And Migrate App"
     },
     {
-      "number": 78,
+      "number": 80,
       "id": "PBA27",
       "status": "blocked",
       "title": "Core Quarantine And Deletion Cutover"
     },
     {
-      "number": 79,
+      "number": 81,
       "id": "PBA28",
       "status": "blocked",
       "title": "MBT Consolidation And Shared Algebra Parity"
@@ -208,14 +220,16 @@ Keep it synchronized with the DAG table and task details.
 | 69    | PBA18 - Widen Attack Range And Conditional Attack Riders          | done                                          | PBA15B       | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Long-range attack target facts are legal and feed Disadvantage through the shared roll-mode path; supported conditional attack riders remain Surface-derived. |
 | 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | done                                          | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Stat Block Multiattack and Bonus Action procedure families are restored for supported monster profiles.                                                       |
 | 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | done                                          | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Magic Missile split-target replay and higher-slot dart count are restored through spell target allocation fills.                                              |
-| 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | done                                          | PBA20        | PBA22        | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Attack host Reaction windows and prepared Bonus Action healing spell subjects are restored in the promoted runtime.                                           |
-| 73    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | ready-for-implementation-after-light-research | PBA21        | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Restore promoted snapshot/trace contracts and app battle UI workflows.                                                                                        |
-| 74    | PBA23 - Core Promotion Deletion Ledger                            | blocked                                       | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                                               |
-| 75    | PBA24 - Remove Rogue Cunning Action Support Workaround            | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                                                     |
-| 76    | PBA25 - Promote Unit-Backed Character Choice Width                | blocked                                       | PBA23        | PBA24, PBA26 | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)                 | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections.                                 |
-| 77    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs.                                                        |
-| 78    | PBA27 - Core Quarantine And Deletion Cutover                      | blocked                                       | PBA24, PBA26 | PBA28        | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior.                              |
-| 79    | PBA28 - MBT Consolidation And Shared Algebra Parity               | blocked                                       | PBA27        | future tasks | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT.                                      |
+| 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | done                                          | PBA20        | PBA21A       | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Attack host Reaction windows and prepared Bonus Action healing spell subjects are restored in the promoted runtime.                                           |
+| 73    | PBA21A - Fix Knock Out Lifecycle Provenance                       | ready-for-implementation-after-light-research | PBA21        | PBA21B       | inline below                                                                                                 | Fix the RAW Knock Out healing/provenance defects before promoted snapshots expose lifecycle facts to app/MCP.                                                 |
+| 74    | PBA21B - Promote BattleSnapshot Into Battle View Contract         | blocked                                       | PBA21A       | PBA22        | inline below                                                                                                 | Reshape existing promoted `BattleSnapshot` into the finite `/battle` and MCP view contract; do not add a permanent parallel read model.                       |
+| 75    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | blocked                                       | PBA21B       | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Move active `/battle` and MCP battle output to the promoted snapshot contract; temporarily quarantine Core-backed trace routes only to advance Core deletion. |
+| 76    | PBA23 - Core Promotion Deletion Ledger                            | blocked                                       | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                                               |
+| 77    | PBA24 - Remove Rogue Cunning Action Support Workaround            | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                                                     |
+| 78    | PBA25 - Promote Unit-Backed Character Choice Width                | blocked                                       | PBA23        | PBA24, PBA26 | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)                 | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections.                                 |
+| 79    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs.                                                        |
+| 80    | PBA27 - Core Quarantine And Deletion Cutover                      | blocked                                       | PBA24, PBA26 | PBA28        | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior.                              |
+| 81    | PBA28 - MBT Consolidation And Shared Algebra Parity               | blocked                                       | PBA27        | future tasks | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT.                                      |
 
 ## Task Details
 
@@ -665,7 +679,7 @@ Plan Impact: PBA21 is unblocked.
 Status: `done`
 
 Depends on: PBA20
-Blocks: PBA22
+Blocks: PBA21A
 
 Research plan:
 [pba21-reaction-bonus-action-width-research-plan.md](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)
@@ -681,7 +695,9 @@ runtime docs and QNT comments. Focused battle-runtime typecheck and tests passed
 including QNT self-tests and the promoted package MBT scenarios. Full
 `pnpm quality` remains blocked by unrelated app/Core baseline typecheck failures.
 
-Plan Impact: PBA22 is unblocked.
+Plan Impact: PBA21A is unblocked. PBA22 remains blocked until the Knock Out
+lifecycle/provenance and promoted `BattleSnapshot` contract prerequisites below
+are complete.
 
 Closeout: promoted attack hosts now include Attack action attacks, Off-Hand
 Attack, and Opportunity Attack for attack-hit, attack-damage, and after-damage
@@ -691,46 +707,148 @@ Action and a Spell Slot, opens Spell Cast Reaction windows, and uses the
 turn-resource fact that prevents expending more than one Spell Slot to cast a
 spell on a turn. Unsupported Bonus Action spell shapes remain support-gated.
 
-### Task 73 - PBA22 - Stabilize Battle Snapshots Traces And App UI
+### Task 73 - PBA21A - Fix Knock Out Lifecycle Provenance
 
 Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA21
+Blocks: PBA21B
+
+Research plan: inline from manual PBA22 review findings.
+
+Next action: fix the RAW/modeling defects found while reviewing rejected PBA22
+attempts before those facts become the promoted app/MCP battle view contract.
+
+Acceptance summary: Knock Out recovery is a runtime-owned fact, not inferred by
+MCP from positive-HP Unconscious. Healing a knocked-out creature ends the
+Knock Out Unconscious state according to RAW. Positive-HP Unconscious no longer
+implies `knockOutShortRest` unless the runtime has represented that provenance.
+
+Verification summary: RAW check against SRD 5.2.1 Knock Out and Unconscious
+text, focused battle-runtime tests for Knock Out healing and lifecycle
+projection, focused MCP handoff/session tests, no battle MBT unless reducer
+semantics require the smallest promoted tier, `/simplify` convergence.
+
+Review findings captured:
+
+1. Knock Out healing currently does not end Unconscious because
+   `applyHpHealing` only removes Unconscious when healing from 0 HP.
+2. MCP currently infers Knock Out recovery from any positive-HP Unconscious
+   character, which collapses condition state and recovery provenance.
+3. Unconscious hand-drop snapshot behavior is related RAW debt. This task should
+   either fix it if the promoted battle view exposes hand use, or record it as a
+   later explicit RAW/display task; do not silently bake a wrong hand model into
+   the promoted view contract.
+
+Plan Impact: if successful, unblock PBA21B.
+
+### Task 74 - PBA21B - Promote BattleSnapshot Into Battle View Contract
+
+Status: `blocked`
+
+Depends on: PBA21A
+Blocks: PBA22
+
+Research plan: inline from rejected PBA22 attempts and manual review reports in
+`.ralph/runs/20260505T0616UNATTENDED/manual-reviews/`.
+
+Why this task exists: it is a Core/Correction deletion enabler, not ritual
+architecture. The active app and MCP need one promoted battle view contract to
+replace Core scene snapshots and ad hoc MCP subsets. If this work stops directly
+advancing Core deletion, Correction deletion, or a necessary promoted battle
+surface, stop and reconsider.
+
+Next action: promote the existing `@dnd/battle-runtime` `BattleSnapshot` into
+the finite `/battle` and MCP battle view contract. Do not add a permanent
+parallel `BattleReadModel`; field-by-field, reshape or rename `BattleSnapshot`
+so it becomes the canonical promoted contract.
+
+Acceptance summary:
+
+- `BattleSnapshot` is the single promoted battle view contract for active
+  `/battle` UI and MCP battle output.
+- MCP uses the battle facts from that contract directly, with only MCP
+  session/tool wrappers around it; no weak parallel MCP snapshot subset for
+  fields the app/MCP consume.
+- The contract includes interaction affordances the consumers need, such as
+  available acts and public holes/fills, under consumer-facing names.
+- Reducer internals are exposed only when a concrete consumer/debug need is
+  named. Otherwise they are removed, renamed, or projected into stable domain
+  facts.
+- No permanent coexistence of `BattleSnapshot` plus another promoted battle read
+  model. Temporary adapters are allowed only inside the task and must be removed
+  before completion or converted into a follow-up blocker.
+
+Verification summary: focused battle-runtime schema/type tests, focused MCP
+structured-content tests that prove the contract is encodable without stack
+overflow, focused app tests for the fields `/battle` consumes, no battle MBT
+unless runtime semantics change, `/simplify` convergence.
+
+Review findings captured:
+
+4. Current `BattleSnapshot` is a broad runtime projection with reducer-like
+   internals. Ralph alternated between exposing it directly, which broke MCP
+   validation, and creating a lossy MCP-local subset, which reintroduced
+   duplicated contract ownership.
+5. Naming debt affects the public view if surfaced: `defeated` currently means
+   `hp === 0`, `Off-Hand Attack` remains visible terminology, and
+   `preparedSlotSpell` sounds broader than the Magic Missile-like execution
+   profile it currently represents. Fix these where they enter the promoted
+   view contract; otherwise record explicit later cleanup.
+
+Plan Impact: if successful, unblock PBA22.
+
+### Task 75 - PBA22 - Stabilize Battle Snapshots Traces And App UI
+
+Status: `blocked`
+
+Depends on: PBA21B
 Blocks: PBA23
 
 Research plan:
 [pba22-snapshots-traces-app-ui-research-plan.md](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)
 
-Next action: restore promoted battle snapshot/trace contracts and app battle UI
-workflows after runtime procedure families stabilize.
+Next action: move active `/battle` app UI and MCP battle output to the promoted
+`BattleSnapshot` contract. Temporarily quarantine Core-backed `/trace` and
+`/embed/trace` from the active promoted app surface only if doing so directly
+advances Core deletion.
 
-Acceptance summary: UI consumes promoted runtime/MCP snapshots instead of old
-Core/projected state; snapshot facts derive from runtime state and retained
-Surface records.
+Acceptance summary: active `/battle` UI consumes promoted runtime/MCP snapshots
+instead of old Core/projected state. Snapshot facts derive from promoted runtime
+state and retained Surface records. Core-backed `/trace` is not treated as a
+promoted surface in this task; if quarantined, its future restoration as a
+promoted trace/debug viewer must remain explicit follow-up work.
 
 Verification summary: app/source tests, MCP/runtime snapshot contract tests,
-Playwright screenshots for changed visual surfaces, no battle MBT unless
-runtime semantics change, `/simplify` convergence.
+Playwright screenshots for changed `/battle` visual surfaces when browser
+tooling is available, no battle MBT unless runtime semantics change,
+`/simplify` convergence.
 
 Retry Guidance:
 
 - Keep all product implementation files tracked; do not leave imports/exports
   depending on untracked generated files.
-- Build promoted trace rows from a single chronological runtime state sequence.
-  Later snapshots must preserve earlier resolved damage, pending Reaction
-  windows, resource spends, and Initiative advancement.
+- Do not implement a promoted trace contract inside PBA22 unless active
+  `/battle` migration unexpectedly requires it. Legacy `/trace` may be
+  quarantined only as a temporary Core-deletion enabler; it is not deleted as a
+  product goal.
 - Do not present runtime-projected literals as promoted QNT/spec parity
-  evidence. Either consume real promoted spec trace evidence or label the view
-  as runtime-only.
-- Tighten the executable snapshot contract for exposed acts/holes/fills; avoid
-  `Any`-shaped MCP/UI fields for facts the UI depends on.
+  evidence. A promoted trace viewer is later work unless explicitly pulled
+  forward.
+- Consume the `BattleSnapshot` contract from PBA21B; do not recreate an
+  MCP-local or app-local snapshot subset for fields the UI depends on.
 - Include focused runtime/MCP snapshot contract tests, app typecheck or focused
-  app tests, and Playwright screenshot evidence for changed battle/trace UI
-  surfaces when browser tooling is available.
+  app tests, and Playwright screenshot evidence for changed battle UI surfaces
+  when browser tooling is available.
 
 Plan Impact: if successful, unblock PBA23.
 
-### Task 74 - PBA23 - Core Promotion Deletion Ledger
+Deferred trace note: `/trace` is still needed in some promoted form ultimately.
+Quarantining `/trace` or `/embed/trace` is justified only as a temporary measure
+that brings Core deletion forward. A later promoted trace/debug viewer should be
+backed by battle-runtime/MCP evidence, not old Core/XState replay.
+
+### Task 76 - PBA23 - Core Promotion Deletion Ledger
 
 Status: `blocked`
 
@@ -756,7 +874,7 @@ manifests require them, no old Core battle MBT, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA25.
 
-### Task 75 - PBA24 - Remove Rogue Cunning Action Support Workaround
+### Task 77 - PBA24 - Remove Rogue Cunning Action Support Workaround
 
 Status: `blocked`
 
@@ -786,7 +904,7 @@ standard-action behavior changes, no broad battle MBT, `/simplify` convergence.
 Plan Impact: if successful, unblock the Rogue-workaround prerequisite for
 PBA27.
 
-### Task 76 - PBA25 - Promote Unit-Backed Character Choice Width
+### Task 78 - PBA25 - Promote Unit-Backed Character Choice Width
 
 Status: `blocked`
 
@@ -814,7 +932,7 @@ updates only for changed reducer behavior or bridge shapes,
 
 Plan Impact: if successful, unblock PBA24 and PBA26.
 
-### Task 77 - PBA26 - Define Character Sheet Session Boundary And Migrate App
+### Task 79 - PBA26 - Define Character Sheet Session Boundary And Migrate App
 
 Status: `blocked`
 
@@ -840,7 +958,7 @@ MBT unless snapshot semantics change, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA27 when PBA24 is also complete.
 
-### Task 78 - PBA27 - Core Quarantine And Deletion Cutover
+### Task 80 - PBA27 - Core Quarantine And Deletion Cutover
 
 Status: `blocked`
 
@@ -864,7 +982,7 @@ legacy Core MBT as a gate, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA28.
 
-### Task 79 - PBA28 - MBT Consolidation And Shared Algebra Parity
+### Task 81 - PBA28 - MBT Consolidation And Shared Algebra Parity
 
 Status: `blocked`
 
