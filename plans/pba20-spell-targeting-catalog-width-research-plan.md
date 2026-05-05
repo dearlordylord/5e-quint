@@ -58,8 +58,8 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 - Scorching Ray as multi-target spell attack pressure.
 - Bless as multi-target concentration support pressure.
 - Chain Lightning as primary/secondary target shape, probably later than Magic
-  Missile because of no-duplicate constraints and table-supplied
-  distance-from-primary facts.
+  Missile because of no-duplicate constraints and table-supplied secondary-target
+  eligibility/allocation facts.
 
 ## Verification Suggestions
 

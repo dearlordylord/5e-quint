@@ -43,15 +43,16 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 ## Suggested Implementation Shape
 
 - `AttackTargetConstraint` could widen from `{ kind: "rangedRange"; normalFeet }` to `{ kind: "rangedRange"; normalFeet; longFeet }`.
-- Target legality could classify table-supplied target distance against the
-  selected attack's authored range:
-  - within normal range: legal, no range Disadvantage;
-  - beyond normal and within long range: legal, range Disadvantage;
-  - beyond long range: illegal.
+- Target legality should consume a table-supplied range band for the selected
+  target and attack:
+  - normal range: legal, no range Disadvantage;
+  - long range: legal, range Disadvantage;
+  - out of range: illegal.
 - Range-derived Disadvantage could flow through the same roll-mode aggregation path as hidden, Dodge, grapple, and ongoing features so RAW cancellation remains centralized.
-- Surface attack readers should remain the source for normal/long range. The
-  target distance itself remains table-supplied; MCP should not copy authored
-  range facts or infer geometry into session state.
+- Surface attack readers should remain the source for normal/long range metadata.
+  The table supplies the selected target's range band; MCP should not copy
+  authored range facts, accept target distances, or infer geometry into session
+  state.
 - Conditional Stat Block riders could parse from existing attack `onHit` / `EffectAtom` data into damage components derived from the resolved attack context.
 - Unit feature riders and Stat Block on-hit effects should stay separate provenance/profile domains, though they may share lower-level damage component helpers.
 
@@ -73,7 +74,8 @@ Status: pre-researched. This file is planning evidence and implementation guidan
 - MCP tests:
   - long-range targets appear as normal runtime target choices;
   - follow-up attack-roll hole reports Disadvantage;
-  - MCP input does not carry normal/long range facts.
+  - MCP input carries table-provided range-band facts, not normal/long authored
+    range metadata or target distances.
 - Regression tests:
   - Sneak Attack still uses Unit support profiles;
   - Cutting Words/Uncanny Dodge still see attack-hit and damage windows.

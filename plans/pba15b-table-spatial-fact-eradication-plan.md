@@ -116,6 +116,12 @@ owning combatant-to-combatant spatial distance.
    production paths if those paths still execute. If a path remains only as
    restore-source material, mark it clearly so no new work depends on it.
 
+8. Audit downstream plans.
+   Remove or rewrite stale "table-supplied distance" language in later PBA/MCP
+   plans. Downstream tasks should depend on table-provided legality facts,
+   range-band facts, reach-exit facts, and affected-target allocations, not on
+   target distances or distance-from-primary facts.
+
 ## Acceptance
 
 - No production promoted battle-runtime state stores pairwise combatant
@@ -131,6 +137,9 @@ owning combatant-to-combatant spatial distance.
 - Docs in `ARCHITECTURE.md`, `packages/battle-runtime/README.md`,
   `packages/battle-runtime/ARCHITECTURE_GRAPH.md`, MCP docs, and linked plan
   files describe the table-spatial-fact boundary consistently.
+- Later active plans do not instruct implementers to pass target distances,
+  destination distances, distance-from-primary facts, or runtime-computed area
+  choices as the replacement for geometry.
 
 ## Verification Suggestions
 
