@@ -12,6 +12,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 
 import {
   characterDraftId,
@@ -79,9 +80,7 @@ const unitCatalogResult = buildUnitCatalog({
 });
 
 function testAbilityScoreAssignment(
-  scores: Readonly<
-    Record<"str" | "dex" | "con" | "int" | "wis" | "cha", number>
-  >,
+  scores: RawAbilityScoreAssignment,
 ): AbilityScoreAssignment {
   const parsed = abilityScoreAssignment(scores);
   if (Either.isLeft(parsed)) {
