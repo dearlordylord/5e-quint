@@ -51,6 +51,26 @@ Remove loadout slot keys from `UNIT_CHOICE_KEYS`, add a distinct
 `LoadoutSource` and branded `LoadoutSourceKey` source/key isomorphism, and use
 `cc:loadout-source:<LoadoutSourceKey>` for selected-equipment loadout holes.
 
+Remaining slice estimate after the loadout split: about four to five domain
+family slices, not one broad primitive sweep.
+
+1. CharacterBuild equipment item identity: replace raw durable `itemId: string`
+   and `main:${selectedUnitId}` composition with a package-owned
+   `CharacterEquipmentItemId` boundary.
+2. Character progression level primitives: converge remaining raw
+   character-creation level numbers on shared level/domain types where they
+   carry class-level meaning.
+3. Surface class/level authored facts: brand or narrow `startingAtLevel`,
+   `atLevel`, and `baseLevel` where they drive promoted creation/runtime
+   behavior.
+4. Surface authored numeric facts consumed by promoted flows: migrate
+   Core-removal-relevant costs, weights, ranges, HP/DC-like facts, and similar
+   values by domain family.
+5. Split the Surface numeric slice further if equipment, spell, and Stat Block
+   facts cause separate compile/test fallout. Do not include broad descriptive
+   labels or whole-Surface cleanup unless the Core-removal relevance test above
+   is met.
+
 ## Research Inputs
 
 - RAW lens: no new D&D rule behavior is expected. RAW is relevant only as range/vocabulary evidence for branded values: ability scores, HP, Hit Dice, point cost, languages, stat block AC/HP/Speed, Recharge, Legendary Action uses, and movement distances.
