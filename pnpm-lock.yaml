@@ -381,6 +381,9 @@ importers:
         specifier: ^3.21.0
         version: 3.21.0
     devDependencies:
+      '@firfi/quint-connect':
+        specifier: ^1.0.0
+        version: 1.0.0(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.15
