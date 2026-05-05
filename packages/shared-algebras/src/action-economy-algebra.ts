@@ -1,8 +1,5 @@
 import { Either, Match } from "effect";
-import type {
-  ActionRestriction,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { ActionRestriction, UnitRecord } from "@dnd/surface/surface/types";
 import {
   STANDARD_ACTION_KINDS,
   type StandardActionKind,
@@ -20,6 +17,16 @@ export type RuntimeActionResource =
       readonly source: "unit";
       readonly sourceOwnerId: CreatureId;
       readonly sourceUnitId: UnitRecord["id"];
+      readonly restriction: ActionRestriction;
+    }
+  | {
+      readonly kind: "action";
+      readonly source: "statBlockMultiattack";
+      readonly sourceOwnerId: CreatureId;
+      readonly attackPart: {
+        readonly section: "actions";
+        readonly name: string;
+      };
       readonly restriction: ActionRestriction;
     };
 
@@ -153,9 +160,21 @@ function compatibleActionResourceIndex(
     .map((resource, index) => ({ resource, index }))
     .filter(({ resource }) => actionResourceAllows(resource, action));
   const restricted = compatible.find(
-    ({ resource }) => resource.source === "unit",
+    ({ resource }) => resource.source !== "turn",
   );
   return (restricted ?? compatible[0])?.index ?? null;
+}
+
+function matchingActionResourceIndex(
+  resources: ReadonlyArray<RuntimeActionResource>,
+  action: StandardActionKind,
+  resourceMatches: (resource: RuntimeActionResource) => boolean,
+): number | null {
+  const index = resources.findIndex(
+    (resource) =>
+      actionResourceAllows(resource, action) && resourceMatches(resource),
+  );
+  return index === -1 ? null : index;
 }
 
 export function canSpendAction(
@@ -194,6 +213,28 @@ export function spendAction<T extends ActionEconomyState>(
   // TODO: If multiple compatible action resources are available and spending
   // one versus another can change later legality, expose resource choice as a
   // runtime hole instead of choosing deterministically here.
+  return Either.right({
+    ...state,
+    actionResources: state.actionResources.filter(
+      (_, index) => index !== actionResourceIndex,
+    ),
+  });
+}
+
+export function spendMatchingActionResource<T extends ActionEconomyState>(
+  state: T,
+  action: StandardActionKind,
+  resourceMatches: (resource: RuntimeActionResource) => boolean,
+): Either.Either<T, ActionEconomySpendError> {
+  const actionResourceIndex = matchingActionResourceIndex(
+    state.actionResources,
+    action,
+    resourceMatches,
+  );
+  if (actionResourceIndex === null) {
+    return Either.left("no action resource available");
+  }
+
   return Either.right({
     ...state,
     actionResources: state.actionResources.filter(

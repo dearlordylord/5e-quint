@@ -28,6 +28,41 @@ describe("Stat Block catalog boundary", () => {
     expect(goblinWarrior.statBlock.displayName).toBe("Goblin Warrior");
   });
 
+  test("decodes Stat Block Multiattack and Bonus Action procedure sections", () => {
+    const decoded = decodeStatBlockRecordSync({
+      ...goblinWarriorInput,
+      id: "stat_block_surface_contract_multiattack",
+      statBlock: {
+        ...goblinWarriorInput.statBlock,
+        actions: {
+          ...goblinWarriorInput.statBlock.actions,
+          multiattacks: [
+            {
+              name: "Multiattack",
+              dispatches: [
+                { name: "Scimitar", count: { kind: "literal", value: 1 } },
+                { name: "Shortbow", count: { kind: "literal", value: 1 } },
+              ],
+            },
+          ],
+        },
+      },
+    });
+
+    expect(decoded.statBlock.actions?.multiattacks).toEqual([
+      {
+        name: "Multiattack",
+        dispatches: [
+          { name: "Scimitar", count: { kind: "literal", value: 1 } },
+          { name: "Shortbow", count: { kind: "literal", value: 1 } },
+        ],
+      },
+    ]);
+    expect(decoded.statBlock.bonusActions?.actionOptions).toEqual([
+      { name: "Nimble Escape", options: ["disengage", "hide"] },
+    ]);
+  });
+
   test("rejects empty Stat Block ids and names", () => {
     expect(
       Either.isLeft(

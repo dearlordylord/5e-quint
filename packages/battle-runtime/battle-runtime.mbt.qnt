@@ -6,6 +6,7 @@ module battleRuntimeMbt {
   var qSkeletonHp: int
   var qSkeletonDead: bool
   var qActionAvailable: bool
+  var qMultiattackDispatchesAvailable: int
   var qSneakAttackUsedThisTurn: bool
   var qHoles: Set[Hole]
   var qLastResult: str
@@ -32,6 +33,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = skeletonInitialHp,
     qSkeletonDead' = false,
     qActionAvailable' = true,
+    qMultiattackDispatchesAvailable' = 0,
     qSneakAttackUsedThisTurn' = false,
     qHoles' = Set(TargetChoice),
     qLastResult' = "init",
@@ -44,6 +46,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(TargetChoice),
     qLastResult' = "needsHoles",
@@ -56,6 +59,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(AttackRoll),
     qLastResult' = "needsHoles",
@@ -68,6 +72,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = qHoles,
     qLastResult' = "invalid",
@@ -80,6 +85,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = false,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(),
     qLastResult' = "resolved",
@@ -92,6 +98,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(DamageRoll),
     qLastResult' = "needsHoles",
@@ -104,6 +111,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 2),
     qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 2) == 0,
     qActionAvailable' = false,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(),
     qLastResult' = "resolved",
@@ -116,6 +124,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4),
     qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4) == 0,
     qActionAvailable' = false,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(),
     qLastResult' = "resolved",
@@ -129,6 +138,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4),
     qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4) == 0,
     qActionAvailable' = false,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = true,
     qHoles' = Set(),
     qLastResult' = "resolved",
@@ -142,6 +152,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 8),
     qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 8) == 0,
     qActionAvailable' = false,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = true,
     qHoles' = Set(),
     qLastResult' = "resolved",
@@ -154,10 +165,66 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = qHoles,
     qLastResult' = "invalid",
     qLastInvalidReason' = "staleSubject",
+  }
+
+  action doStartSkeletonTurn = all {
+    qActionAvailable,
+    qHoles == Set(TargetChoice),
+    qSkeletonHp' = qSkeletonHp,
+    qSkeletonDead' = qSkeletonDead,
+    qActionAvailable' = true,
+    qMultiattackDispatchesAvailable' = 0,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+    qHoles' = Set(),
+    qLastResult' = "resolved",
+    qLastInvalidReason' = "",
+  }
+
+  action doResolveSkeletonMultiattack = all {
+    qActionAvailable,
+    qHoles == Set(),
+    qMultiattackDispatchesAvailable == 0,
+    qSkeletonHp' = qSkeletonHp,
+    qSkeletonDead' = qSkeletonDead,
+    qActionAvailable' = false,
+    qMultiattackDispatchesAvailable' = 2,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+    qHoles' = Set(),
+    qLastResult' = "resolved",
+    qLastInvalidReason' = "",
+  }
+
+  action doRejectRecursiveSkeletonMultiattack = all {
+    not(qActionAvailable),
+    qHoles == Set(),
+    qMultiattackDispatchesAvailable > 0,
+    qSkeletonHp' = qSkeletonHp,
+    qSkeletonDead' = qSkeletonDead,
+    qActionAvailable' = qActionAvailable,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+    qHoles' = qHoles,
+    qLastResult' = "invalid",
+    qLastInvalidReason' = "staleSubject",
+  }
+
+  action doSpendSkeletonMultiattackDispatch = all {
+    not(qActionAvailable),
+    qHoles == Set(),
+    qMultiattackDispatchesAvailable > 0,
+    qSkeletonHp' = qSkeletonHp,
+    qSkeletonDead' = qSkeletonDead,
+    qActionAvailable' = qActionAvailable,
+    qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable - 1,
+    qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+    qHoles' = Set(),
+    qLastResult' = "resolved",
+    qLastInvalidReason' = "",
   }
 
   action step = any {
@@ -171,5 +238,9 @@ module battleRuntimeMbt {
     doFillDamageLowSneakAttack,
     doFillDamageHighSneakAttack,
     doRejectStaleAfterResolved,
+    doStartSkeletonTurn,
+    doResolveSkeletonMultiattack,
+    doRejectRecursiveSkeletonMultiattack,
+    doSpendSkeletonMultiattackDispatch,
   }
 }

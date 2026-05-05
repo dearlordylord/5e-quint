@@ -8,6 +8,7 @@ import {
   resetTurnActionEconomy,
   spendAction,
   spendActivationResource,
+  spendMatchingActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   attackRollHits,
@@ -104,7 +105,9 @@ import type {
   Ability,
   CreatureActions,
   CreatureLimitedUse,
+  CreatureNamedActionOption,
   CreatureNamedAttackRoll,
+  CreatureNamedMultiattack,
   DamageType,
   DcSource,
   DiceExpr,
@@ -1825,12 +1828,28 @@ type AttackBattleResolutionInput = BattleResolutionInputForSubject<
     | readonly BattlePendingAttackDamageReduction[]
     | undefined;
 };
+type MultiattackBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "multiattack" }
+  >
+>;
 type OffHandAttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<
     BattleSubject,
     { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
   >
 >;
+type StatBlockBonusActionOptionBattleResolutionInput =
+  BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "bonusAction";
+        readonly action: "statBlockActionOption";
+      }
+    >
+  >;
 type HideBattleResolutionInput = BattleResolutionInputForSubject<
   ActionHideSubject | BonusActionHideSubject
 >;
@@ -1945,6 +1964,12 @@ type CharacterBattleCreatureState = BattleCreatureState & {
     { readonly kind: "character" }
   >;
 };
+type StatBlockBattleCreatureState = BattleCreatureState & {
+  readonly origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "statBlock" }
+  >;
+};
 
 export type BattleCreatureZeroHpLifecycleSnapshot =
   | {
@@ -1977,6 +2002,29 @@ const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
 const ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE = holeInstanceKey(
   "battle:attack:damage-disposition",
 );
+const SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS = [
+  "disengage",
+  "hide",
+] as const satisfies ReadonlyArray<StandardActionKind>;
+type SupportedStatBlockBonusActionStandardAction =
+  (typeof SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS)[number];
+const STAT_BLOCK_MULTIATTACK_RESOURCE_EXCLUDED_ACTIONS = [
+  "dash",
+  "disengage",
+  "dodge",
+  "help",
+  "hide",
+  "influence",
+  "magic",
+  "ready",
+  "search",
+  "study",
+  "utilize",
+] as const satisfies readonly [StandardActionKind, ...StandardActionKind[]];
+type StatBlockMultiattackActionResource = Extract<
+  RuntimeActionResource,
+  { readonly source: "statBlockMultiattack" }
+>;
 const HELP_ATTACK_ALLY_HOLE_ID = holeId("battle:help-attack:ally");
 const HELP_ATTACK_TARGET_HOLE_ID = holeId("battle:help-attack:target");
 const HELP_ATTACK_ALLY_HOLE_INSTANCE = holeInstanceKey(
@@ -2243,6 +2291,7 @@ export function discoverBattleActs(
       }),
     );
   }
+  acts.push(...statBlockMultiattackActs(state, actorId));
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "dash")
@@ -2335,6 +2384,7 @@ export function discoverBattleActs(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
+    !actorHasStatBlockMultiattackActionResource(state, actorId) &&
     canSpendAction(state.currentTurnResources, "attack") &&
     grappleTargetChoices(state, actorId).length > 0
   ) {
@@ -2347,6 +2397,7 @@ export function discoverBattleActs(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
+    !actorHasStatBlockMultiattackActionResource(state, actorId) &&
     canSpendAction(state.currentTurnResources, "attack") &&
     grappledBy(state, actorId) !== undefined
   ) {
@@ -2393,6 +2444,7 @@ export function discoverBattleActs(
       initialHoles: [hideAbilityCheckHole()],
     });
   }
+  acts.push(...statBlockBonusActionOptionActs(state, actorId));
   acts.push(...supportedUnitFeatureActs(state, actorId));
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
@@ -2457,6 +2509,269 @@ function releaseGrappleActs(state: BattleState): readonly AvailableBattleAct[] {
     summary: "Release a grappled target without spending an action.",
     initialHoles: [],
   }));
+}
+
+type SupportedStatBlockBonusActionOption = {
+  readonly option: Omit<CreatureNamedActionOption, "options"> & {
+    readonly options: readonly SupportedStatBlockBonusActionStandardAction[];
+  };
+  readonly part: StatBlockPartKey;
+};
+
+type SupportedStatBlockMultiattack = {
+  readonly multiattack: CreatureNamedMultiattack;
+  readonly dispatches: readonly StatBlockAttackActionOption[];
+};
+type SupportedLiteralMultiattackDispatch =
+  CreatureNamedMultiattack["dispatches"][number] & {
+    readonly count: Extract<
+      CreatureNamedMultiattack["dispatches"][number]["count"],
+      { readonly kind: "literal" }
+    >;
+  };
+
+function statBlockMultiattackActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    actor?.origin.kind !== "statBlock" ||
+    !combatantCanTakeActions(actor) ||
+    !hasTurnActionResource(state.currentTurnResources)
+  ) {
+    return [];
+  }
+  const origin = actor.origin;
+  return supportedStatBlockMultiattacks(origin.statBlock).flatMap(
+    (multiattack) => {
+      if (
+        !multiattack.dispatches.every((dispatch) =>
+          statBlockAttackResourceAvailable(
+            origin.statBlock.statBlock,
+            origin.resources,
+            dispatch,
+          ),
+        )
+      ) {
+        return [];
+      }
+      return [
+        {
+          subject: {
+            tag: "action" as const,
+            actorId,
+            action: "multiattack" as const,
+            multiattackName: multiattack.multiattack.name,
+          },
+          label: multiattack.multiattack.name,
+          summary: `Take the Attack action using ${multiattack.multiattack.name}.`,
+          initialHoles: [],
+        },
+      ];
+    },
+  );
+}
+
+function statBlockBonusActionOptionActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    actor?.origin.kind !== "statBlock" ||
+    !combatantCanTakeActions(actor) ||
+    !state.currentTurnResources.currentHasBonusAction
+  ) {
+    return [];
+  }
+  const origin = actor.origin;
+
+  return supportedStatBlockBonusActionOptions(origin.statBlock).flatMap(
+    (option) =>
+      option.option.options.flatMap((standardAction) => {
+        if (
+          !statBlockPartLimitedUseAvailable(
+            origin.statBlock.statBlock,
+            origin.resources,
+            option.part,
+          )
+        ) {
+          return [];
+        }
+        if (
+          standardAction === "hide" &&
+          !canHideInCurrentCircumstances(state, actorId)
+        ) {
+          return [];
+        }
+        return [
+          {
+            subject: {
+              tag: "bonusAction" as const,
+              actorId,
+              action: "statBlockActionOption" as const,
+              optionName: option.option.name,
+              standardAction,
+            },
+            label: option.option.name,
+            summary: `Use ${option.option.name} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
+            initialHoles:
+              standardAction === "hide" ? [hideAbilityCheckHole()] : [],
+          },
+        ];
+      }),
+  );
+}
+
+function supportedStatBlockMultiattacks(
+  statBlock: StatBlockRecord,
+): readonly SupportedStatBlockMultiattack[] {
+  const actionAttacks = statBlockActionSectionAttackOptions(
+    "actions",
+    statBlock.statBlock.actions,
+  );
+  return (
+    statBlock.statBlock.actions?.multiattacks?.flatMap((multiattack) => {
+      const literalDispatches =
+        supportedLiteralMultiattackDispatches(multiattack);
+      if (literalDispatches === null) return [];
+
+      const dispatches = literalDispatches.flatMap((dispatch) => {
+        const matchingAttacks = actionAttacks.filter(
+          (candidate) => candidate.attack.name === dispatch.name,
+        );
+        const [attack] = matchingAttacks;
+        if (attack === undefined || matchingAttacks.length !== 1) return [];
+        if (
+          dispatch.count.value > 1 &&
+          statBlockLimitedUseForPart(statBlock.statBlock, attack.part) !==
+            undefined
+        ) {
+          return [];
+        }
+        return Array.from({ length: dispatch.count.value }, () => attack);
+      });
+      const dispatchCount = literalDispatches.reduce(
+        (count, dispatch) => count + dispatch.count.value,
+        0,
+      );
+      return dispatches.length === dispatchCount
+        ? [{ multiattack, dispatches }]
+        : [];
+    }) ?? []
+  );
+}
+
+function supportedLiteralMultiattackDispatches(
+  multiattack: CreatureNamedMultiattack,
+): readonly SupportedLiteralMultiattackDispatch[] | null {
+  if (multiattack.dispatches.length === 0) return null;
+
+  const dispatches = multiattack.dispatches.filter(
+    isSupportedLiteralMultiattackDispatch,
+  );
+  return dispatches.length === multiattack.dispatches.length
+    ? dispatches
+    : null;
+}
+
+function isSupportedLiteralMultiattackDispatch(
+  dispatch: CreatureNamedMultiattack["dispatches"][number],
+): dispatch is SupportedLiteralMultiattackDispatch {
+  return (
+    dispatch.count.kind === "literal" &&
+    dispatch.count.value >= 1 &&
+    Number.isInteger(dispatch.count.value)
+  );
+}
+
+function supportedStatBlockBonusActionOptions(
+  statBlock: StatBlockRecord,
+): readonly SupportedStatBlockBonusActionOption[] {
+  return (
+    statBlock.statBlock.bonusActions?.actionOptions?.flatMap((option) => {
+      const supportedOptions = option.options.filter(
+        (
+          standardAction,
+        ): standardAction is SupportedStatBlockBonusActionStandardAction =>
+          supportedStatBlockBonusActionStandardAction(standardAction),
+      );
+      return supportedOptions.length === option.options.length
+        ? [
+            {
+              option: { ...option, options: supportedOptions },
+              part: { section: "bonusActions", name: option.name },
+            },
+          ]
+        : [];
+    }) ?? []
+  );
+}
+
+function supportedStatBlockBonusActionStandardAction(
+  standardAction: StandardActionKind,
+): standardAction is SupportedStatBlockBonusActionStandardAction {
+  return SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.some(
+    (supported) => supported === standardAction,
+  );
+}
+
+function isStatBlockMultiattackActionResource(
+  resource: RuntimeActionResource,
+  actorId: CombatantId,
+): resource is StatBlockMultiattackActionResource {
+  return (
+    resource.source === "statBlockMultiattack" &&
+    resource.sourceOwnerId === actorId
+  );
+}
+
+function actorHasStatBlockMultiattackActionResource(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  return state.currentTurnResources.actionResources.some((resource) =>
+    isStatBlockMultiattackActionResource(resource, actorId),
+  );
+}
+
+function hasTurnActionResource(state: ActionEconomyState): boolean {
+  return state.actionResources.some((resource) => resource.source === "turn");
+}
+
+function spendTurnAction<T extends ActionEconomyState>(
+  state: T,
+): Either.Either<T, "no action resource available"> {
+  const turnActionResourceIndex = state.actionResources.findIndex(
+    (resource) => resource.source === "turn",
+  );
+  if (turnActionResourceIndex === -1) {
+    return Either.left("no action resource available");
+  }
+
+  return Either.right({
+    ...state,
+    actionResources: state.actionResources.filter(
+      (_, index) => index !== turnActionResourceIndex,
+    ),
+  });
+}
+
+function isStatBlockBattleCreatureState(
+  combatant: BattleCreatureState | undefined,
+): combatant is StatBlockBattleCreatureState {
+  return combatant?.origin.kind === "statBlock";
+}
+
+function standardActionLabel(
+  standardAction: SupportedStatBlockBonusActionStandardAction,
+): string {
+  return Match.value(standardAction).pipe(
+    Match.when("disengage", () => "Disengage"),
+    Match.when("hide", () => "Hide"),
+    Match.exhaustive,
+  );
 }
 
 export function resolveBattleSubject(
@@ -2578,6 +2893,7 @@ function resolveBattleSubjectInternal(
       input.subject.action === "dodge" ||
       input.subject.action === "helpAttack" ||
       input.subject.action === "hide" ||
+      input.subject.action === "multiattack" ||
       input.subject.action === "ready" ||
       input.subject.action === "search" ||
       input.subject.action === "grapple" ||
@@ -2674,6 +2990,9 @@ function resolveBattleSubjectInternal(
     if (subject.tag === "action" && subject.action === "hide") {
       return resolveHide({ ...input, subject: actionHideSubject(subject) });
     }
+    if (subject.tag === "action" && subject.action === "multiattack") {
+      return resolveMultiattack({ ...input, subject });
+    }
     if (subject.tag === "action" && subject.action === "ready") {
       return resolveReady({ ...input, subject });
     }
@@ -2694,6 +3013,12 @@ function resolveBattleSubjectInternal(
         ...input,
         subject: bonusActionHideSubject(subject),
       });
+    }
+    if (
+      subject.tag === "bonusAction" &&
+      subject.action === "statBlockActionOption"
+    ) {
+      return resolveStatBlockBonusActionOption({ ...input, subject });
     }
     if (subject.tag === "actionSpell") {
       return resolveSpellAct({
@@ -2809,6 +3134,7 @@ function standardActionKindForSubject(
     Match.when("dodge", () => "dodge" as const),
     Match.when("helpAttack", () => "help" as const),
     Match.when("hide", () => "hide" as const),
+    Match.when("multiattack", () => "attack" as const),
     Match.when("ready", () => "ready" as const),
     Match.when("search", () => "search" as const),
     Match.when("grapple", () => "attack" as const),
@@ -5975,6 +6301,87 @@ function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
   };
 }
 
+function resolveMultiattack(
+  input: MultiattackBattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Multiattack accepts no fills.",
+    );
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    !isStatBlockBattleCreatureState(actor) ||
+    !combatantCanTakeActions(actor)
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Multiattack requires an admitted Stat Block Multiattack.",
+    );
+  }
+  const origin = actor.origin;
+  const multiattack = supportedStatBlockMultiattacks(origin.statBlock).find(
+    (candidate) => candidate.multiattack.name === input.subject.multiattackName,
+  );
+  if (multiattack === undefined) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Multiattack requires an admitted Stat Block Multiattack.",
+    );
+  }
+  if (
+    !multiattack.dispatches.every((dispatch) =>
+      statBlockAttackResourceAvailable(
+        origin.statBlock.statBlock,
+        origin.resources,
+        dispatch,
+      ),
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Multiattack Stat Block resources are no longer available.",
+    );
+  }
+  const spent = spendTurnAction(input.state.currentTurnResources);
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack is no longer available for the current actor.",
+    );
+  }
+  const nextState = {
+    ...input.state,
+    currentTurnResources: {
+      ...spent.right,
+      actionResources: [
+        ...spent.right.actionResources,
+        ...multiattack.dispatches.map((dispatch) => ({
+          kind: "action" as const,
+          source: "statBlockMultiattack" as const,
+          sourceOwnerId: input.subject.actorId,
+          attackPart: { section: "actions" as const, name: dispatch.part.name },
+          restriction: {
+            kind: "exclude" as const,
+            actions: STAT_BLOCK_MULTIATTACK_RESOURCE_EXCLUDED_ACTIONS,
+          },
+        })),
+      ],
+    },
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function resolveSearch(
   input: SearchBattleResolutionInput,
 ): BattleResolutionResult {
@@ -6368,6 +6775,166 @@ function resolveOffHandAttack(
   return { tag: "resolved", state, snapshot: snapshotBattle(state) };
 }
 
+function resolveStatBlockBonusActionOption(
+  input: StatBlockBonusActionOptionBattleResolutionInput,
+): BattleResolutionResult {
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    !isStatBlockBattleCreatureState(actor) ||
+    !combatantCanTakeActions(actor)
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Stat Block Bonus Action requires an admitted Stat Block action option.",
+    );
+  }
+  const statBlockActor = actor;
+  const origin = statBlockActor.origin;
+  const option = supportedStatBlockBonusActionOptions(origin.statBlock).find(
+    (candidate) =>
+      candidate.option.name === input.subject.optionName &&
+      candidate.option.options.some(
+        (standardAction) => standardAction === input.subject.standardAction,
+      ),
+  );
+  if (option === undefined) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Stat Block Bonus Action requires an admitted Stat Block action option.",
+    );
+  }
+  if (
+    !statBlockPartLimitedUseAvailable(
+      origin.statBlock.statBlock,
+      origin.resources,
+      option.part,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Stat Block Bonus Action resource is no longer available.",
+    );
+  }
+  if (
+    !supportedStatBlockBonusActionStandardAction(input.subject.standardAction)
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Stat Block Bonus Action requires an admitted standard action option.",
+    );
+  }
+  const standardAction = input.subject.standardAction;
+
+  return Match.value(standardAction).pipe(
+    Match.when("disengage", () =>
+      resolveStatBlockBonusActionDisengage(input, statBlockActor, option.part),
+    ),
+    Match.when("hide", () =>
+      resolveStatBlockBonusActionHide(input, statBlockActor, option.part),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveStatBlockBonusActionDisengage(
+  input: StatBlockBonusActionOptionBattleResolutionInput,
+  actor: StatBlockBattleCreatureState,
+  part: StatBlockPartKey,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Stat Block Bonus Action Disengage accepts no fills.",
+    );
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action is no longer available for the current actor.",
+    );
+  }
+  const nextState = updateStatBlockActorResources(
+    {
+      ...input.state,
+      currentTurnResources: { ...spent.right, disengaged: true },
+    },
+    actor,
+    part,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveStatBlockBonusActionHide(
+  input: StatBlockBonusActionOptionBattleResolutionInput,
+  actor: StatBlockBattleCreatureState,
+  part: StatBlockPartKey,
+): BattleResolutionResult {
+  if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Hide requires Heavily Obscured or sufficient cover and being out of enemy line of sight.",
+    );
+  }
+  const check = abilityCheckFill(
+    input.fills,
+    HIDE_ABILITY_CHECK_HOLE_ID,
+    "Hide",
+  );
+  if (check.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", check.message);
+  }
+  if (check.value === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      hideAbilityCheckHole(),
+    ]);
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action is no longer available for the current actor.",
+    );
+  }
+  const hidden =
+    check.value.value.total >= HIDE_DC
+      ? { discoveryDc: difficultyClass(check.value.value.total) }
+      : null;
+  const nextState = updateStatBlockActorResources(
+    normalizeBattleGrapples({
+      ...input.state,
+      currentTurnResources: spent.right,
+      combatants: new Map(input.state.combatants).set(actor.combatantId, {
+        ...actor,
+        hidden,
+      }),
+    }),
+    actor,
+    part,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function resolveGrapple(
   input: GrappleBattleResolutionInput,
 ): BattleResolutionResult {
@@ -6407,6 +6974,18 @@ function resolveGrapple(
       input.state,
       "invalidFill",
       "Grapple outcome fill does not match the requested hole.",
+    );
+  }
+  if (
+    actorHasStatBlockMultiattackActionResource(
+      input.state,
+      input.subject.actorId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Grapple is not available during a Stat Block Multiattack dispatch.",
     );
   }
   const spent = spendAction(input.state.currentTurnResources, "attack");
@@ -6468,6 +7047,18 @@ function resolveEscapeGrapple(
       input.state,
       "invalidFill",
       "Escape Grapple outcome fill does not match the requested hole.",
+    );
+  }
+  if (
+    actorHasStatBlockMultiattackActionResource(
+      input.state,
+      input.subject.actorId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Escape Grapple is not available during a Stat Block Multiattack dispatch.",
     );
   }
   const spent = spendAction(input.state.currentTurnResources, "attack");
@@ -6982,7 +7573,26 @@ function spendAttackAction(
     };
   }
 
-  const spent = spendAction(state.currentTurnResources, "attack");
+  const multiattackResources =
+    attack.kind === "statBlockAttack" && attack.part.section === "actions"
+      ? state.currentTurnResources.actionResources.filter(
+          (resource): resource is StatBlockMultiattackActionResource =>
+            isStatBlockMultiattackActionResource(resource, actorId),
+        )
+      : [];
+  const spent =
+    multiattackResources.length > 0 &&
+    attack.kind === "statBlockAttack" &&
+    attack.part.section === "actions"
+      ? spendMatchingActionResource(
+          state.currentTurnResources,
+          "attack",
+          (resource) =>
+            isStatBlockMultiattackActionResource(resource, actorId) &&
+            resource.attackPart.section === attack.part.section &&
+            resource.attackPart.name === attack.part.name,
+        )
+      : spendAction(state.currentTurnResources, "attack");
   if (Either.isLeft(spent)) {
     return invalidResult(
       state,
@@ -12535,12 +13145,23 @@ function attackActionOptionsForActor(
 
   if (actor?.origin.kind === "statBlock") {
     const origin = actor.origin;
-    return statBlockAttackActionOptions(origin.statBlock).filter((option) =>
-      statBlockAttackResourceAvailable(
-        origin.statBlock.statBlock,
-        origin.resources,
-        option,
-      ),
+    const multiattackResources =
+      state.currentTurnResources.actionResources.filter(
+        (resource): resource is StatBlockMultiattackActionResource =>
+          isStatBlockMultiattackActionResource(resource, actorId),
+      );
+    const multiattackAttackNames = multiattackResources.map(
+      (resource) => resource.attackPart.name,
+    );
+    return statBlockAttackActionOptions(origin.statBlock).filter(
+      (option) =>
+        statBlockAttackResourceAvailable(
+          origin.statBlock.statBlock,
+          origin.resources,
+          option,
+        ) &&
+        (multiattackAttackNames.length === 0 ||
+          multiattackAttackNames.includes(option.attack.name)),
     );
   }
 
@@ -12955,6 +13576,32 @@ function spendStatBlockAttackResources(input: {
     },
   });
   return { ...input.state, combatants };
+}
+
+function updateStatBlockActorResources(
+  state: BattleState,
+  actor: StatBlockBattleCreatureState,
+  part: StatBlockPartKey,
+): BattleState {
+  const currentActor = state.combatants.get(actor.combatantId);
+  if (currentActor?.origin.kind !== "statBlock") {
+    return state;
+  }
+  const resources = spendStatBlockPartResources(
+    currentActor.origin.statBlock.statBlock,
+    currentActor.origin.resources,
+    part,
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actor.combatantId, {
+      ...currentActor,
+      origin: {
+        ...currentActor.origin,
+        resources,
+      },
+    }),
+  };
 }
 
 function spendStatBlockPartResources(

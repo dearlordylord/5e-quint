@@ -189,18 +189,18 @@ flowchart TD
 - Save damage replacement riders are retained feature profiles, not named
   reducer branches. Save-gate damage replay derives the final full, half, or no
   damage result from the single Saving Throw outcome and the admitted profile.
-- Unsupported Stat Block attack branches such as Multiattack and unsupported
-  conditional on-hit riders are filtered by support gates and are not copied
-  into MCP state.
+- Supported Stat Block Multiattack entries spend the Attack action and grant
+  named dispatch attacks from the Actions section. Unsupported conditional
+  on-hit riders are filtered by support gates and are not copied into MCP state.
 - New authored abilities are data-only when they fit these implemented
   procedure families. Widen readers or support gates when the authored shape is
   legal but unsupported. Add reducer state or QNT/MBT behavior only for a
   reusable SRD procedure family, not for catalog breadth.
-- Bonus-action availability is represented in turn resources. Second Wind is
-  the first promoted bonus-action Unit feature subject; Rogue Cunning Action
-  Hide reuses the same prerequisite-gated Hide procedure through a Bonus Action
-  class rider.
-  Broader bonus-action spell, monster, and generic subjects remain future width.
+- Bonus-action availability is represented in turn resources. Second Wind,
+  Rogue Cunning Action Hide, and admitted Stat Block Bonus Action options spend
+  the same Bonus Action resource while reusing package-owned procedures such as
+  Disengage and Hide.
+  Broader bonus-action spell and generic subjects remain future width.
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
   source material, not the target for new promoted behavior.

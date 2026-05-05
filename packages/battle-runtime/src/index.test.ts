@@ -4972,6 +4972,362 @@ describe("battle runtime", () => {
     );
   });
 
+  test("Goblin Warrior discovers Nimble Escape as Stat Block Bonus Action options", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: fighterVsGoblinBattle({
+          hidePrerequisites: hidePrerequisites([
+            [goblinId, { kind: "heavilyObscuredOutOfEnemyLineOfSight" }],
+          ]),
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+
+    expect(discoverBattleActs(goblinTurn).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "bonusAction",
+          actorId: goblinId,
+          action: "statBlockActionOption",
+          optionName: "Nimble Escape",
+          standardAction: "disengage",
+        },
+        {
+          tag: "bonusAction",
+          actorId: goblinId,
+          action: "statBlockActionOption",
+          optionName: "Nimble Escape",
+          standardAction: "hide",
+        },
+      ]),
+    );
+  });
+
+  test("Goblin Warrior Nimble Escape spends Bonus Action for Disengage", () => {
+    const goblinTurn = requireResolved(
+      endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "bonusAction",
+      actorId: goblinId,
+      action: "statBlockActionOption",
+      optionName: "Nimble Escape",
+      standardAction: "disengage",
+    };
+
+    const result = requireResolved(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).state;
+
+    expect(result.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(result.currentTurnResources.disengaged).toBe(true);
+  });
+
+  test("Goblin Warrior Nimble Escape spends Bonus Action for Hide", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: fighterVsGoblinBattle({
+          hidePrerequisites: hidePrerequisites([
+            [goblinId, { kind: "heavilyObscuredOutOfEnemyLineOfSight" }],
+          ]),
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "bonusAction",
+      actorId: goblinId,
+      action: "statBlockActionOption",
+      optionName: "Nimble Escape",
+      standardAction: "hide",
+    };
+    const act = findAct(goblinTurn, subject);
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [
+          abilityCheckFill(findHole(act.initialHoles, "abilityCheck"), 17),
+        ],
+      }),
+    ).state;
+
+    expect(result.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(snapshotBattle(result).combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: goblinId,
+          hidden: { discoveryDc: difficultyClass(17) },
+          conditions: expect.arrayContaining(["invisible"]),
+        }),
+      ]),
+    );
+  });
+
+  test("Stat Block Multiattack spends the Attack action and grants named dispatch attacks", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiattackStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "multiattack",
+      multiattackName: "Multiattack",
+    };
+
+    expect(
+      discoverBattleActs(goblinTurn).map((act) => act.subject),
+    ).toContainEqual(subject);
+    const multiattackState = requireResolved(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).state;
+
+    expect(multiattackState.currentTurnResources.actionResources).toEqual([
+      {
+        kind: "action",
+        source: "statBlockMultiattack",
+        sourceOwnerId: goblinId,
+        attackPart: { section: "actions", name: "Scimitar" },
+        restriction: {
+          kind: "exclude",
+          actions: expect.arrayContaining(["dash", "magic", "utilize"]),
+        },
+      },
+      {
+        kind: "action",
+        source: "statBlockMultiattack",
+        sourceOwnerId: goblinId,
+        attackPart: { section: "actions", name: "Shortbow" },
+        restriction: {
+          kind: "exclude",
+          actions: expect.arrayContaining(["dash", "magic", "utilize"]),
+        },
+      },
+    ]);
+    expect(
+      discoverBattleActs(multiattackState).map((act) => act.subject),
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Scimitar",
+        },
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Shortbow",
+        },
+      ]),
+    );
+    expect(
+      discoverBattleActs(multiattackState).map((act) => act.subject),
+    ).not.toContainEqual(subject);
+
+    const shortbowSubject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Shortbow",
+    };
+    const shortbow = findAct(multiattackState, shortbowSubject);
+    const targetChoice = attackTargetFill(
+      findHole(shortbow.initialHoles, "targetChoice"),
+      goblinId,
+      fighterId,
+      "Shortbow",
+    );
+    const targeted = requireNeedsHoles(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: shortbowSubject,
+        fills: [targetChoice],
+      }),
+    );
+    const afterDispatch = requireResolved(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: shortbowSubject,
+        fills: [
+          targetChoice,
+          attackRollFill(findHole(targeted.holes, "attackRoll"), {
+            total: 1,
+            naturalD20: 1,
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(afterDispatch.currentTurnResources.actionResources).toEqual([
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        attackPart: { section: "actions", name: "Scimitar" },
+      }),
+    ]);
+    expect(discoverBattleActs(afterDispatch).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Scimitar",
+        },
+      ]),
+    );
+    expect(
+      discoverBattleActs(afterDispatch).map((act) => act.subject),
+    ).not.toContainEqual(shortbowSubject);
+    expect(
+      resolveBattleSubject({
+        state: afterDispatch,
+        subject: shortbowSubject,
+        fills: [targetChoice],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+  });
+
+  test("Stat Block Multiattack remains gated when a dispatch has no positive literal count", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack-zero-count"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiattackStatBlock({
+                scimitarCount: 0,
+              }),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "multiattack",
+      multiattackName: "Multiattack",
+    };
+
+    expect(
+      discoverBattleActs(goblinTurn).map((act) => act.subject),
+    ).not.toContainEqual(subject);
+    expect(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+  });
+
+  test("Stat Block Multiattack dispatch resources do not authorize Escape Grapple", () => {
+    const grappled = fighterGrapplesGoblin(
+      startBattleRight({
+        battleId: battleId("battle-monster-multiattack-grapple-gate"),
+        combatants: [
+          characterSeed({ initiative: 20 }),
+          statBlockCreatureInit({
+            initiative: 10,
+            statBlock: monsterMultiattackStatBlock(),
+          }),
+        ],
+      }),
+    ).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const escapeSubject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "escapeGrapple",
+    };
+    const escape = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: escapeSubject,
+        fills: [],
+      }),
+      "grappleOutcome",
+    );
+    const multiattackState = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: {
+          tag: "action",
+          actorId: goblinId,
+          action: "multiattack",
+          multiattackName: "Multiattack",
+        },
+        fills: [],
+      }),
+    ).state;
+
+    expect(
+      discoverBattleActs(multiattackState).map((act) => act.subject),
+    ).not.toContainEqual(escapeSubject);
+    expect(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: escapeSubject,
+        fills: [grappleOutcomeFill(escape, true)],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("Stat Block Multiattack remains gated when dispatch names are ambiguous", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack-duplicate-name"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiattackStatBlock({
+                duplicateScimitarAttack: true,
+              }),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "multiattack",
+      multiattackName: "Multiattack",
+    };
+
+    expect(
+      discoverBattleActs(goblinTurn).map((act) => act.subject),
+    ).not.toContainEqual(subject);
+    expect(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+  });
+
   test("Stat Block limited-use resources are initialized from authored monster controls", () => {
     const state = startBattleRight({
       battleId: battleId("battle-monster-resource-init"),
@@ -10123,6 +10479,19 @@ function requireResolved(
   return result;
 }
 
+function requireNeedsHoles(
+  result: ReturnType<typeof resolveBattleSubject>,
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "needsHoles" }
+> {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected needsHoles battle result, got ${result.tag}.`);
+  }
+
+  return result;
+}
+
 function subjectName(
   subject: BattleSubject,
 ):
@@ -10132,11 +10501,13 @@ function subjectName(
   | "dodge"
   | "helpAttack"
   | "hide"
+  | "multiattack"
   | "ready"
   | "search"
   | "grapple"
   | "escapeGrapple"
   | "offHandAttack"
+  | "statBlockActionOption"
   | "actionSpell"
   | "unitFeature"
   | "endTurn"
@@ -10176,7 +10547,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("82 passing");
+  expect(quintOutput).toContain("83 passing");
 }
 
 function hidePrerequisites(
@@ -11390,6 +11761,53 @@ function monsterResourceStatBlockWithUnsupportedAttackSections(): StatBlockRecor
             name: "Counter Snap",
           },
         ],
+      },
+    },
+  };
+}
+
+function monsterMultiattackStatBlock(input?: {
+  readonly scimitarCount?: number;
+  readonly shortbowCount?: number;
+  readonly duplicateScimitarAttack?: boolean;
+}): StatBlockRecord {
+  const base = statBlockRecord();
+  const scimitar = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Scimitar",
+  );
+  const shortbow = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Shortbow",
+  );
+  if (scimitar === undefined || shortbow === undefined) {
+    throw new Error("Expected Goblin Warrior attack fixtures.");
+  }
+  return {
+    ...base,
+    id: "stat_block_multiattack_test_monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Multiattack Test Monster",
+      actions: {
+        ...base.statBlock.actions,
+        multiattacks: [
+          {
+            name: "Multiattack",
+            dispatches: [
+              {
+                name: "Scimitar",
+                count: { kind: "literal", value: input?.scimitarCount ?? 1 },
+              },
+              {
+                name: "Shortbow",
+                count: { kind: "literal", value: input?.shortbowCount ?? 1 },
+              },
+            ],
+          },
+        ],
+        attacks:
+          input?.duplicateScimitarAttack === true
+            ? [scimitar, { ...shortbow, name: "Scimitar" }]
+            : [scimitar, shortbow],
       },
     },
   };

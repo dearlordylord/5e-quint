@@ -10,6 +10,7 @@ import {
   characterId,
   combatantId,
   discoverBattleActs,
+  endTurn,
   initiativeScore,
   snapshotBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -58,6 +59,7 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 function testAbilityScoreAssignment(
   scores: Readonly<
@@ -81,6 +83,13 @@ function startBattleFromCharacterBuildAndStatBlockRight(
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function resolvedState(result: ReturnType<typeof endTurn>): BattleState {
+  if (result.tag !== "resolved") {
+    throw new Error("Expected battle runtime result to resolve.");
+  }
+  return result.state;
 }
 
 function characterEquipmentItemUnitIdRight(value: string) {
@@ -688,6 +697,49 @@ describe("MCP server route", () => {
           tag: "unitFeature",
           actorId: fighterId,
           unitId: "fighter_action_surge",
+        },
+      ]),
+    );
+  });
+
+  test("discovers Stat Block Multiattack and Bonus Action subjects through battle runtime", () => {
+    const root = createMcpCompositionRoot();
+    const fighterTurn = startBattleFromCharacterBuildAndStatBlockRight({
+      battleId: battleId("battle-root-stat-block-procedures"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Orc Soldier Fighter",
+        build: fighterCharacterBuild(root.unitLibrary),
+        initiative: initiativeScore(12),
+        side: partySide,
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: goblinWarriorMultiattackStatBlock(root),
+        initiative: initiativeScore(11),
+        side: oppositionSide,
+      },
+      unitLibrary: root.unitLibrary,
+    });
+    const goblinTurn = resolvedState(
+      endTurn({ state: fighterTurn, actorId: fighterId }),
+    );
+
+    expect(discoverBattleActs(goblinTurn).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "multiattack",
+          multiattackName: "Multiattack",
+        },
+        {
+          tag: "bonusAction",
+          actorId: goblinId,
+          action: "statBlockActionOption",
+          optionName: "Nimble Escape",
+          standardAction: "disengage",
         },
       ]),
     );
@@ -3404,6 +3456,33 @@ function fighterCharacterBuild(
   }
 
   return result.build;
+}
+
+function goblinWarriorMultiattackStatBlock(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+): StatBlockRecord {
+  const base = root.statBlockCatalog.requireStatBlock(
+    "stat_block_goblin_warrior",
+  );
+  return {
+    ...base,
+    id: "stat_block_goblin_warrior_mcp_multiattack",
+    statBlock: {
+      ...base.statBlock,
+      actions: {
+        ...base.statBlock.actions,
+        multiattacks: [
+          {
+            name: "Multiattack",
+            dispatches: [
+              { name: "Scimitar", count: { kind: "literal", value: 1 } },
+              { name: "Shortbow", count: { kind: "literal", value: 1 } },
+            ],
+          },
+        ],
+      },
+    },
+  };
 }
 
 function fighterTwoCharacterBuild(

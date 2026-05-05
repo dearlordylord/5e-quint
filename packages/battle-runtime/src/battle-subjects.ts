@@ -1,4 +1,5 @@
 import { Match, Schema } from "effect";
+import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { CombatantId } from "./identity.ts";
 import {
   BATTLE_REACTION_TRIGGERS,
@@ -12,6 +13,7 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "dodge",
   "helpAttack",
   "hide",
+  "multiattack",
   "ready",
   "search",
   "grapple",
@@ -19,7 +21,11 @@ export const BATTLE_SUBJECT_ACTIONS = [
 ] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
-export const BATTLE_SUBJECT_BONUS_ACTIONS = ["offHandAttack", "hide"] as const;
+export const BATTLE_SUBJECT_BONUS_ACTIONS = [
+  "offHandAttack",
+  "hide",
+  "statBlockActionOption",
+] as const;
 export type BattleSubjectBonusAction =
   (typeof BATTLE_SUBJECT_BONUS_ACTIONS)[number];
 
@@ -83,6 +89,12 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
+    action: Schema.Literal("multiattack"),
+    multiattackName: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
     action: Schema.Literal("search"),
   }),
   Schema.Struct({
@@ -131,6 +143,13 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("bonusAction"),
     actorId: CombatantId,
     action: Schema.Literal("hide"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("bonusAction"),
+    actorId: CombatantId,
+    action: Schema.Literal("statBlockActionOption"),
+    optionName: BattleSubjectTextSchema,
+    standardAction: Schema.Literal(...STANDARD_ACTION_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
@@ -240,6 +259,14 @@ function battleSubjectKey(subject: BattleSubject): string {
     Match.when({ tag: "action", action: "hide" }, (action) =>
       JSON.stringify([action.tag, action.actorId, action.action]),
     ),
+    Match.when({ tag: "action", action: "multiattack" }, (action) =>
+      JSON.stringify([
+        action.tag,
+        action.actorId,
+        action.action,
+        action.multiattackName,
+      ]),
+    ),
     Match.when({ tag: "action", action: "ready" }, (action) =>
       JSON.stringify([
         action.tag,
@@ -279,6 +306,17 @@ function battleSubjectKey(subject: BattleSubject): string {
     ),
     Match.when({ tag: "bonusAction", action: "hide" }, (action) =>
       JSON.stringify([action.tag, action.actorId, action.action]),
+    ),
+    Match.when(
+      { tag: "bonusAction", action: "statBlockActionOption" },
+      (action) =>
+        JSON.stringify([
+          action.tag,
+          action.actorId,
+          action.action,
+          action.optionName,
+          action.standardAction,
+        ]),
     ),
     Match.when({ tag: "actionSpell" }, (spell) =>
       JSON.stringify([

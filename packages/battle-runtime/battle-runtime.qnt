@@ -85,6 +85,10 @@ module battleRuntime {
   //   resources. This spec models the Stat Block resource boundary with a
   //   representative Goblin recharge part and Legendary Action use pool;
   //   TypeScript carries the authored StatBlockRecord catalog breadth.
+  // - Monsters/Overview.md lines 229-245 and Playing-the-Game.md lines
+  //   318-324, 501-503: Stat Block Multiattack is part of a monster's single
+  //   Attack action, and Stat Block Bonus Action options spend the one
+  //   per-turn Bonus Action.
   // - Rules-Glossary.md lines 102-106, 496-514, and 1074 plus
   //   Equipment.md lines 54-56 and ASSUMPTIONS.md A8/A37: the battle-owned
   //   held/wielded hand state, Light-property Off-Hand Attack damage modifier
@@ -260,6 +264,7 @@ module battleRuntime {
     fighterHidePrerequisite: bool,
     goblinRechargeAvailable: bool,
     goblinLegendaryUsesRemaining: int,
+    goblinMultiattackDispatchesRemaining: int,
     lastTurnActor: LastTurnActor,
     legendaryActionWindowConsumed: bool,
     fighterCriticalRange: FighterCriticalRange,
@@ -352,6 +357,7 @@ module battleRuntime {
     fighterHidePrerequisite: false,
     goblinRechargeAvailable: true,
     goblinLegendaryUsesRemaining: 2,
+    goblinMultiattackDispatchesRemaining: 0,
     lastTurnActor: NoTurnEnded,
     legendaryActionWindowConsumed: false,
     fighterCriticalRange: DefaultCriticalRange,
@@ -625,6 +631,7 @@ module battleRuntime {
       fighter: if (nextActor == Fighter) { ...featureAdvanced.fighter, reactionAvailable: true, movementSpent: 0, dodging: false } else featureAdvanced.fighter,
       goblin: if (nextActor == Goblin) { ...featureAdvanced.goblin, reactionAvailable: true, movementSpent: 0, dodging: false } else featureAdvanced.goblin,
       goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else featureAdvanced.goblinLegendaryUsesRemaining,
+      goblinMultiattackDispatchesRemaining: 0,
       lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
       fighterSneakAttackUsedThisTurn: false,
@@ -950,6 +957,32 @@ module battleRuntime {
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+    }
+
+  pure def resolveGoblinMultiattack(state: BattleState): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Goblin or state.goblin.hp == 0)
+      state
+    else
+      { ...state, actionAvailable: false, goblinMultiattackDispatchesRemaining: 2 }
+
+  pure def resolveGoblinMultiattackDispatch(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (state.goblinMultiattackDispatchesRemaining <= 0 or currentActor(state) != Goblin or state.goblin.hp == 0)
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
+      { ...state, goblinMultiattackDispatchesRemaining: state.goblinMultiattackDispatchesRemaining - 1 }
+    else {
+      val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
+      {
+        ...state,
+        fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded),
+        goblinMultiattackDispatchesRemaining: state.goblinMultiattackDispatchesRemaining - 1,
+      }
     }
 
   pure def resolveGoblinOpportunityAttack(
@@ -1630,6 +1663,21 @@ module battleRuntime {
 
   run test_goblin_attack_replay_uses_fighter_armor_class = {
     assert(attackReplayHoles(endTurn(initialState), AttackRollFilled({ attackTotal: 19, naturalD20: 10 })) == Set(DamageRoll))
+  }
+
+  run test_stat_block_multiattack_spends_one_attack_action_and_grants_dispatches = {
+    val goblinTurn = endTurn(initialState)
+    val multiattack = resolveGoblinMultiattack(goblinTurn)
+    val recursive = resolveGoblinMultiattack(multiattack)
+    val firstDispatch = resolveGoblinMultiattackDispatch(multiattack, 1, 1, 0, true)
+    val secondDispatch = resolveGoblinMultiattackDispatch(firstDispatch, 1, 1, 0, true)
+    all {
+      assert(not(multiattack.actionAvailable)),
+      assert(multiattack.goblinMultiattackDispatchesRemaining == 2),
+      assert(recursive.goblinMultiattackDispatchesRemaining == 2),
+      assert(firstDispatch.goblinMultiattackDispatchesRemaining == 1),
+      assert(secondDispatch.goblinMultiattackDispatchesRemaining == 0),
+    }
   }
 
   run test_attack_miss_spends_action_without_damage = {

@@ -20,6 +20,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -65,6 +66,7 @@ type MbtProjection = {
   readonly skeletonHp: number;
   readonly skeletonDead: boolean;
   readonly actionAvailable: boolean;
+  readonly multiattackDispatchesAvailable: number;
   readonly sneakAttackUsedThisTurn: boolean;
   readonly holes: readonly MbtHole[];
   readonly lastResult: MbtLastResult;
@@ -115,6 +117,10 @@ const driverSchema = {
   doFillDamageLowSneakAttack: {},
   doFillDamageHighSneakAttack: {},
   doRejectStaleAfterResolved: {},
+  doStartSkeletonTurn: {},
+  doResolveSkeletonMultiattack: {},
+  doRejectRecursiveSkeletonMultiattack: {},
+  doSpendSkeletonMultiattackDispatch: {},
   step: {},
 } as const;
 
@@ -132,7 +138,7 @@ const deathSavingThrowDriverSchema = {
 function createBattleRuntimeDriver() {
   return defineDriver(driverSchema, () => {
     let state = fighterVsSkeletonBattle();
-    let subject = fighterAttackSubject();
+    let subject: BattleSubject = fighterAttackSubject();
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverAttackHoles(state, subject);
     let lastResult: MbtProjection["lastResult"] = "init";
@@ -173,6 +179,7 @@ function createBattleRuntimeDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
+        subject = fighterAttackSubject();
         holes = discoverAttackHoles(state, subject);
         lastResult = "needsHoles";
         lastInvalidReason = "";
@@ -226,6 +233,38 @@ function createBattleRuntimeDriver() {
         ]);
       },
       doRejectStaleAfterResolved: () => {
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doStartSkeletonTurn: () => {
+        subject = endTurnSubject();
+        fills = [];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doResolveSkeletonMultiattack: () => {
+        subject = skeletonMultiattackSubject();
+        fills = [];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doRejectRecursiveSkeletonMultiattack: () => {
+        subject = skeletonMultiattackSubject();
+        fills = [];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doSpendSkeletonMultiattackDispatch: () => {
+        subject = skeletonShortswordSubject();
+        const target = requireHole(
+          discoverAttackHoles(state, subject),
+          "targetChoice",
+        );
+        const targetChoice = targetFill(target, fighterId);
+        const attackRoll = requireHole(
+          holesAfterFills(state, subject, [targetChoice]),
+          "attackRoll",
+        );
+        fills = [
+          targetChoice,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       step: () => {},
@@ -325,6 +364,10 @@ function normalizeQuintState(raw: unknown): MbtProjection {
     skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
     skeletonDead: booleanField(state, "qSkeletonDead"),
     actionAvailable: booleanField(state, "qActionAvailable"),
+    multiattackDispatchesAvailable: numberFromQuintInt(
+      state["qMultiattackDispatchesAvailable"],
+      "qMultiattackDispatchesAvailable",
+    ),
     sneakAttackUsedThisTurn: booleanField(state, "qSneakAttackUsedThisTurn"),
     holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
     lastResult: mbtLastResult(state["qLastResult"]),
@@ -447,8 +490,14 @@ function projectMbtState(input: {
       skeleton.zeroHpLifecycle.policy === "diesAtZeroHp" &&
       skeleton.zeroHpLifecycle.dead,
     actionAvailable: snapshot.currentTurnResources.actionResources.some(
-      (resource) => resource.kind === "action",
+      (resource) => resource.source === "turn",
     ),
+    multiattackDispatchesAvailable:
+      snapshot.currentTurnResources.actionResources.filter(
+        (resource) =>
+          resource.source === "statBlockMultiattack" &&
+          resource.sourceOwnerId === skeletonId,
+      ).length,
     sneakAttackUsedThisTurn:
       snapshot.currentTurnResources.attackDamageRidersUsedThisTurn.some(
         (usage) =>
@@ -495,20 +544,38 @@ function projectDeathSavingThrowMbtState(input: {
 
 function discoverAttackHoles(
   state: BattleState,
-  subject: BattleSubject,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
 ): readonly BattleHole[] {
   const act = discoverBattleActs(state).find(
     (candidate) =>
-      candidate.subject.tag === subject.tag &&
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.attackName === "Dagger",
+      candidate.subject.attackName === subject.attackName,
   );
   if (act == null) {
-    throw new Error("Expected Rogue Dagger attack act.");
+    throw new Error(`Expected ${subject.attackName} attack act.`);
   }
 
   return act.initialHoles;
+}
+
+function holesAfterFills(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected attack fills to request more holes.");
+  }
+
+  return result.holes;
 }
 
 function fighterAttackSubject(): Extract<
@@ -520,6 +587,30 @@ function fighterAttackSubject(): Extract<
     actorId: fighterId,
     action: "attack",
     attackName: "Dagger",
+  };
+}
+
+function skeletonMultiattackSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "multiattack" }
+> {
+  return {
+    tag: "action",
+    actorId: skeletonId,
+    action: "multiattack",
+    multiattackName: "Multiattack",
+  };
+}
+
+function skeletonShortswordSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  return {
+    tag: "action",
+    actorId: skeletonId,
+    action: "attack",
+    attackName: "Shortsword",
   };
 }
 
@@ -701,10 +792,31 @@ function skeletonCreatureInit(input: {
     side: oppositionSide,
     creatureInit: {
       kind: "statBlock",
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      statBlock: skeletonMultiattackStatBlock(),
       currentHp: Hp(13),
       maxHp: Hp(13),
       tempHp: Hp(0),
+    },
+  };
+}
+
+function skeletonMultiattackStatBlock(): StatBlockRecord {
+  const base = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  return {
+    ...base,
+    statBlock: {
+      ...base.statBlock,
+      actions: {
+        ...base.statBlock.actions,
+        multiattacks: [
+          {
+            name: "Multiattack",
+            dispatches: [
+              { name: "Shortsword", count: { kind: "literal", value: 2 } },
+            ],
+          },
+        ],
+      },
     },
   };
 }
@@ -735,6 +847,12 @@ function targetFill(
         actorId: fighterId,
         targetId,
         attackName: "Dagger",
+      },
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: skeletonId,
+        targetId,
+        attackName: "Shortsword",
       },
       {
         kind: "sneakAttackAllyWithin5FeetOfTarget",
