@@ -23,6 +23,11 @@ Creation Fill - caller-submitted answer for one Creation Hole. Fills are
 applied in atomic batches by `fillCreationHoles`; a rejected batch leaves the
 draft unchanged.
 
+Character Equipment Item Id - durable CharacterBuild equipment item identity.
+It is a source/key isomorphism over an equipment item slot (`main` or `off`) and
+the selected equipment Unit id. It is not a display label and not an inferred
+weapon Unit id.
+
 Unit-backed selection - a character-creation choice whose accepted option
 references a Unit. The draft records the selected Unit reference rather
 than treating the submitted option id as authored truth.

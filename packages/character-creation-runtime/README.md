@@ -126,6 +126,11 @@ source/key isomorphism. Loadout holes use stable ids derived from the
 `LoadoutSourceKey` source/key isomorphism. Hole ids are semantic addresses, not
 array positions.
 
+CharacterBuild equipment item ids use the `CharacterEquipmentItemId` source/key
+isomorphism. They identify a durable build equipment item slot plus its selected
+equipment Unit id without leaving `main:<unit>` and `off:<unit>` string
+composition in build projection code.
+
 Accepted option ids are protocol choices. When a selected option references a
 Unit, the draft records the Unit reference rather than treating the
 submitted option id as authored truth.
@@ -145,8 +150,9 @@ refs and derived build facts needed by later boundaries: final ability scores,
 Hit Point maximum and Hit Die pool, proficiencies, granted feature refs,
 activation resources, starting Wizard Spell Access and Spell Slot capacity, and
 equipment/loadout refs. Supported class-choice features, Wizard spellcasting
-facts, and loadout refs are projected from accepted draft selections and Unit
-readers, not reauthored as parallel constants. The remaining finalization gate
+facts, loadout refs, and equipment item ids are projected from accepted draft
+selections and Unit readers, not reauthored as parallel constants. The remaining
+finalization gate
 rejects complete drafts whose progression profile, origin facts, choices, or
 equipment are outside the support profile. `CharacterBuild` does not carry
 current HP, Temporary Hit Points, expended resources or Spell Slots, Hit Dice

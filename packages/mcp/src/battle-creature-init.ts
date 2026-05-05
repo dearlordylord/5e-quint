@@ -15,12 +15,14 @@ import {
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
+  type CharacterBattleLoadoutRef,
   type InitiativeScore,
   type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
   computeTotalLevel,
+  characterEquipmentItemSourceFromId,
   progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
@@ -145,6 +147,7 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(offHandAttack)) {
     return battleCreatureInitIssue(offHandAttack.left.message);
   }
+  const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
   const unitFeatures = characterBattleFeatures(input.build, input.unitLibrary);
   if (Either.isLeft(unitFeatures)) {
     return battleCreatureInitIssue(unitFeatures.left.message);
@@ -191,7 +194,7 @@ export function battleCreatureInitFromCharacterBuild(
       ...(input.zeroHpLifecycle === undefined
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
-      selectedLoadout: input.build.equipment,
+      selectedLoadout,
       attack: attack.right,
       unarmedStrike: characterBaseUnarmedStrikeActionOption(input.build),
       ...(offHandAttack.right === undefined
@@ -399,7 +402,9 @@ function characterAttackActionOption(
   CharacterWeaponAttackActionOption | null,
   BattleCreatureInitIssue
 > {
-  const selectedWeapon = build.equipment.weapon?.unitId;
+  const selectedWeapon = characterBuildEquipmentItemUnitId(
+    build.equipment.weapon?.itemId,
+  );
   if (selectedWeapon == null) {
     return Either.right(null);
   }
@@ -414,7 +419,9 @@ function characterOffHandAttackActionOption(
   CharacterWeaponAttackActionOption | undefined,
   BattleCreatureInitIssue
 > {
-  const selectedWeapon = build.equipment.offHandWeapon?.unitId;
+  const selectedWeapon = characterBuildEquipmentItemUnitId(
+    build.equipment.offHandWeapon?.itemId,
+  );
   if (selectedWeapon == null) {
     return Either.right(undefined);
   }
@@ -427,6 +434,54 @@ function characterOffHandAttackActionOption(
   return Either.isLeft(option)
     ? battleCreatureInitIssue(option.left.message)
     : Either.right(option.right ?? undefined);
+}
+
+function characterBattleLoadoutFromBuild(
+  build: CharacterBuild,
+): CharacterBattleLoadoutRef {
+  const weaponUnitId = characterBuildEquipmentItemUnitId(
+    build.equipment.weapon?.itemId,
+  );
+  const offHandWeaponUnitId = characterBuildEquipmentItemUnitId(
+    build.equipment.offHandWeapon?.itemId,
+  );
+
+  return {
+    ...(build.equipment.armor == null ? {} : { armor: build.equipment.armor }),
+    ...(build.equipment.shield == null
+      ? {}
+      : { shield: build.equipment.shield }),
+    ...(build.equipment.weapon == null || weaponUnitId == null
+      ? {}
+      : {
+          weapon: {
+            itemId: build.equipment.weapon.itemId,
+            unitId: weaponUnitId,
+            grip: build.equipment.weapon.grip,
+          },
+        }),
+    ...(build.equipment.offHandWeapon == null || offHandWeaponUnitId == null
+      ? {}
+      : {
+          offHandWeapon: {
+            itemId: build.equipment.offHandWeapon.itemId,
+            unitId: offHandWeaponUnitId,
+          },
+        }),
+  };
+}
+
+function characterBuildEquipmentItemUnitId(
+  itemId:
+    | NonNullable<CharacterBuild["equipment"]["weapon"]>["itemId"]
+    | NonNullable<CharacterBuild["equipment"]["offHandWeapon"]>["itemId"]
+    | undefined,
+): UnitRecord["id"] | undefined {
+  if (itemId == null) {
+    return undefined;
+  }
+
+  return characterEquipmentItemSourceFromId(itemId).unitId;
 }
 
 function characterWeaponAttackActionOption(

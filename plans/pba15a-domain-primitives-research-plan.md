@@ -54,9 +54,9 @@ Remove loadout slot keys from `UNIT_CHOICE_KEYS`, add a distinct
 Remaining slice estimate after the loadout split: about four to five domain
 family slices, not one broad primitive sweep.
 
-1. CharacterBuild equipment item identity: replace raw durable `itemId: string`
-   and `main:${selectedUnitId}` composition with a package-owned
-   `CharacterEquipmentItemId` boundary.
+1. Completed slice: CharacterBuild equipment item identity replaced raw durable
+   `itemId: string` and `main:${selectedUnitId}` composition with a
+   package-owned `CharacterEquipmentItemId` source/key isomorphism.
 2. Character progression level primitives: converge remaining raw
    character-creation level numbers on shared level/domain types where they
    carry class-level meaning.

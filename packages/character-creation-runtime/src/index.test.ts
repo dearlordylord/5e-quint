@@ -15,10 +15,13 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   characterDraftId,
+  characterEquipmentItemId,
+  characterEquipmentItemUnitId,
   exactChoiceCardinality,
   boundedChoiceCardinality,
   characterBuildUnitRefs,
   computeTotalLevel,
+  CHARACTER_EQUIPMENT_ITEM_SLOTS,
   LOADOUT_SLOTS,
   UNIT_CHOICE_KEYS,
   classUnitIdFromUnitId,
@@ -32,6 +35,7 @@ import {
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   loadoutSourceKey,
+  parseCharacterEquipmentItemId,
   parseCreationHoleId,
   parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
@@ -47,6 +51,7 @@ import {
   type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
+  type CharacterEquipmentItemSlot,
   type LoadoutSlot,
   type UnitCatalog,
   type CharacterProgression,
@@ -144,6 +149,25 @@ function loadoutEquipmentUnitIdRight(value: string) {
     throw new Error(`Invalid test loadout equipment Unit id: ${value}`);
   }
   return result.right;
+}
+
+function characterEquipmentItemUnitIdRight(value: string) {
+  const result = characterEquipmentItemUnitId(value);
+  if (Either.isLeft(result)) {
+    throw new Error(
+      `Invalid test CharacterBuild equipment item Unit id: ${value}`,
+    );
+  }
+  return result.right;
+}
+
+function testCharacterEquipmentItemId<
+  const Slot extends CharacterEquipmentItemSlot,
+>(slot: Slot, unitId: string) {
+  return characterEquipmentItemId({
+    slot,
+    unitId: characterEquipmentItemUnitIdRight(unitId),
+  });
 }
 
 function testUnitChoiceSourceKey(unitId: string, choiceKey: string) {
@@ -267,6 +291,54 @@ describe("LoadoutSourceKey", () => {
         tag: "loadoutSourceKeyUnsupportedSlot",
         value: "e:16:armor_chain_mail:s:carried",
         slot: "carried",
+      }),
+    );
+  });
+});
+
+describe("CharacterEquipmentItemId", () => {
+  const itemSlot = fc.constantFrom(...CHARACTER_EQUIPMENT_ITEM_SLOTS);
+  const itemUnitIdText = fc.string({ minLength: 1, maxLength: 40 });
+
+  test("satisfies source/key isomorphism laws", () => {
+    fc.assert(
+      fc.property(itemSlot, itemUnitIdText, (slot, unitIdText) => {
+        const source = {
+          slot,
+          unitId: characterEquipmentItemUnitIdRight(unitIdText),
+        };
+        const itemId = characterEquipmentItemId(source);
+        const parsed = expectRight(parseCharacterEquipmentItemId(itemId));
+
+        expect(parsed).toEqual(source);
+        expect(characterEquipmentItemId(parsed)).toBe(itemId);
+      }),
+    );
+  });
+
+  test("preserves separator-like characters in authored Unit ids", () => {
+    const source = {
+      slot: "main" as const,
+      unitId: characterEquipmentItemUnitIdRight("weapon:custom:blade"),
+    };
+    const itemId = characterEquipmentItemId(source);
+
+    expect(itemId).toBe("main:weapon:custom:blade");
+    expect(expectRight(parseCharacterEquipmentItemId(itemId))).toEqual(source);
+  });
+
+  test("returns typed issues for invalid item ids", () => {
+    expect(parseCharacterEquipmentItemId("carried:weapon_longsword")).toEqual(
+      Either.left({
+        tag: "characterEquipmentItemIdSlotUnsupported",
+        value: "carried:weapon_longsword",
+      }),
+    );
+    expect(parseCharacterEquipmentItemId("main:")).toEqual(
+      Either.left({
+        tag: "characterEquipmentItemIdUnitIdEmpty",
+        value: "main:",
+        slot: "main",
       }),
     );
   });
@@ -1725,8 +1797,7 @@ describe("character creation finalization", () => {
       armor: "armor_chain_mail",
       shield: "equipment_shield",
       weapon: {
-        itemId: "main:weapon_longsword",
-        unitId: "weapon_longsword",
+        itemId: testCharacterEquipmentItemId("main", "weapon_longsword"),
         grip: "one_handed",
       },
     });
@@ -1982,8 +2053,7 @@ describe("character creation finalization", () => {
     });
 
     expect(projection.weapon).toEqual({
-      itemId: "main:weapon_longsword",
-      unitId: "weapon_longsword",
+      itemId: testCharacterEquipmentItemId("main", "weapon_longsword"),
       grip: "one_handed",
     });
   });
@@ -2109,8 +2179,7 @@ describe("character creation finalization", () => {
             armor: "armor_chain_mail",
             shield: "equipment_shield",
             weapon: {
-              itemId: "main:weapon_spear",
-              unitId: "weapon_spear",
+              itemId: testCharacterEquipmentItemId("main", "weapon_spear"),
               grip: "one_handed",
             },
           },

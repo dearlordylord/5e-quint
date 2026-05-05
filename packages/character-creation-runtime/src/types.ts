@@ -528,6 +528,113 @@ function parseCreationHoleIdText(value: string): CreationHoleIdText | null {
   return Either.isRight(source) ? loadoutSourceHoleIdText(source.right) : null;
 }
 
+export const CHARACTER_EQUIPMENT_ITEM_SLOTS = ["main", "off"] as const;
+export type CharacterEquipmentItemSlot =
+  (typeof CHARACTER_EQUIPMENT_ITEM_SLOTS)[number];
+
+export type CharacterEquipmentItemUnitId = UnitRecord["id"] &
+  Brand.Brand<"CharacterEquipmentItemUnitId">;
+const CharacterEquipmentItemUnitId =
+  Brand.nominal<CharacterEquipmentItemUnitId>();
+
+export type CharacterEquipmentItemUnitIdIssue = {
+  readonly tag: "characterEquipmentItemUnitIdEmpty";
+  readonly value: UnitRecord["id"];
+};
+
+export function characterEquipmentItemUnitId(
+  value: UnitRecord["id"],
+): Either.Either<
+  CharacterEquipmentItemUnitId,
+  CharacterEquipmentItemUnitIdIssue
+> {
+  return value.length > 0
+    ? Either.right(CharacterEquipmentItemUnitId(value))
+    : Either.left({ tag: "characterEquipmentItemUnitIdEmpty", value });
+}
+
+export function characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
+  value: LoadoutEquipmentUnitId,
+): CharacterEquipmentItemUnitId {
+  return CharacterEquipmentItemUnitId(value);
+}
+
+export type CharacterEquipmentItemSource<
+  Slot extends CharacterEquipmentItemSlot = CharacterEquipmentItemSlot,
+> = {
+  readonly slot: Slot;
+  readonly unitId: CharacterEquipmentItemUnitId;
+};
+
+export type CharacterEquipmentItemIdText<
+  Slot extends CharacterEquipmentItemSlot = CharacterEquipmentItemSlot,
+> = `${Slot}:${CharacterEquipmentItemUnitId}`;
+export type CharacterEquipmentItemId<
+  Slot extends CharacterEquipmentItemSlot = CharacterEquipmentItemSlot,
+> = CharacterEquipmentItemIdText<Slot> &
+  Brand.Brand<"CharacterEquipmentItemId">;
+const CharacterEquipmentItemId = Brand.nominal<CharacterEquipmentItemId>();
+
+export type CharacterEquipmentItemIdIssue =
+  | {
+      readonly tag: "characterEquipmentItemIdSlotUnsupported";
+      readonly value: string;
+    }
+  | {
+      readonly tag: "characterEquipmentItemIdUnitIdEmpty";
+      readonly value: string;
+      readonly slot: CharacterEquipmentItemSlot;
+    };
+
+export function characterEquipmentItemId<
+  const Slot extends CharacterEquipmentItemSlot,
+>(source: CharacterEquipmentItemSource<Slot>): CharacterEquipmentItemId<Slot> {
+  // Template evidence is local to the source/key isomorphism: slot is narrowed
+  // to the item slot literal and unitId is already branded non-empty.
+  return CharacterEquipmentItemId(
+    `${source.slot}:${source.unitId}` as CharacterEquipmentItemIdText<Slot>,
+  ) as CharacterEquipmentItemId<Slot>;
+}
+
+export function parseCharacterEquipmentItemId(
+  value: string,
+): Either.Either<CharacterEquipmentItemSource, CharacterEquipmentItemIdIssue> {
+  const slot = CHARACTER_EQUIPMENT_ITEM_SLOTS.find((candidate) =>
+    value.startsWith(`${candidate}:`),
+  );
+  if (slot == null) {
+    return Either.left({
+      tag: "characterEquipmentItemIdSlotUnsupported",
+      value,
+    });
+  }
+
+  const unitIdText = value.slice(slot.length + 1);
+  const unitId = characterEquipmentItemUnitId(unitIdText);
+  return Either.isRight(unitId)
+    ? Either.right({ slot, unitId: unitId.right })
+    : Either.left({
+        tag: "characterEquipmentItemIdUnitIdEmpty",
+        value,
+        slot,
+      });
+}
+
+export function characterEquipmentItemSourceFromId(
+  itemId: CharacterEquipmentItemId,
+): CharacterEquipmentItemSource {
+  const source = parseCharacterEquipmentItemId(itemId);
+  if (Either.isRight(source)) {
+    return source.right;
+  }
+
+  // Branded ids are only produced by characterEquipmentItemId or an explicit
+  // unsafe cast, so this is an invariant failure rather than caller validation.
+  throw new Error(
+    `CharacterEquipmentItemId invariant violated: ${String(itemId)}`,
+  );
+}
+
 export type UnitRef = {
   readonly unitId: UnitRecord["id"];
 };
@@ -821,13 +928,11 @@ export type CharacterBuildLoadout = {
   readonly armor?: UnitRecord["id"];
   readonly shield?: UnitRecord["id"];
   readonly weapon?: {
-    readonly itemId: string;
-    readonly unitId: UnitRecord["id"];
+    readonly itemId: CharacterEquipmentItemId<"main">;
     readonly grip: "one_handed";
   };
   readonly offHandWeapon?: {
-    readonly itemId: string;
-    readonly unitId: UnitRecord["id"];
+    readonly itemId: CharacterEquipmentItemId<"off">;
   };
 };
 

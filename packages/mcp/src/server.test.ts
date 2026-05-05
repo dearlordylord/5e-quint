@@ -18,6 +18,8 @@ import {
 import {
   characterDraftId,
   characterClassLevel,
+  characterEquipmentItemId,
+  characterEquipmentItemUnitId,
   classUnitIdFromClassUnit,
   createCharacterDraft,
   creationChoiceOptionId,
@@ -31,6 +33,7 @@ import {
   type CreationFill,
   type CreationHole,
   type CreationHoleIdText,
+  type CharacterEquipmentItemSlot,
 } from "@dnd/character-creation-runtime";
 import {
   Hp,
@@ -69,6 +72,25 @@ function startBattleFromCharacterBuildAndStatBlockRight(
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function characterEquipmentItemUnitIdRight(value: string) {
+  const result = characterEquipmentItemUnitId(value);
+  if (Either.isLeft(result)) {
+    throw new Error(
+      `Invalid test CharacterBuild equipment item Unit id: ${value}`,
+    );
+  }
+  return result.right;
+}
+
+function testCharacterEquipmentItemId<
+  const Slot extends CharacterEquipmentItemSlot,
+>(slot: Slot, unitId: string) {
+  return characterEquipmentItemId({
+    slot,
+    unitId: characterEquipmentItemUnitIdRight(unitId),
+  });
 }
 
 function availableCharacterSessionRight(
@@ -2758,8 +2780,7 @@ describe("MCP server route", () => {
           equipment: {
             shield: "equipment_shield",
             weapon: {
-              itemId: "main:weapon_longsword",
-              unitId: "weapon_longsword",
+              itemId: testCharacterEquipmentItemId("main", "weapon_longsword"),
               grip: "one_handed",
             },
           },
@@ -3310,13 +3331,11 @@ function fighterTwoLightWeaponBuild(
     equipment: {
       armor: "armor_chain_mail",
       weapon: {
-        itemId: "main:weapon_shortsword",
-        unitId: "weapon_shortsword",
+        itemId: testCharacterEquipmentItemId("main", "weapon_shortsword"),
         grip: "one_handed",
       },
       offHandWeapon: {
-        itemId: "off:weapon_dagger",
-        unitId: "weapon_dagger",
+        itemId: testCharacterEquipmentItemId("off", "weapon_dagger"),
       },
     },
   };
@@ -3628,8 +3647,7 @@ function rogueCharacterBuild(
     }),
     equipment: {
       weapon: {
-        itemId: "main:weapon_dagger",
-        unitId: "weapon_dagger",
+        itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
         grip: "one_handed",
       },
     },

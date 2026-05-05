@@ -59,6 +59,9 @@ import {
   unitRefsForSupportedClassChoice,
 } from "./support-gates.ts";
 import {
+  characterEquipmentItemId,
+  characterEquipmentItemSourceFromId,
+  characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId,
   creationChoiceOptionId,
   choiceCardinalityBounds,
   exactChoiceCardinality,
@@ -71,6 +74,7 @@ import {
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterBuild,
   type CharacterBuildEquipment,
+  type CharacterEquipmentItemId,
   type CharacterBuildFeature,
   type CharacterBuildResource,
   type CharacterBuildSpellcasting,
@@ -85,6 +89,7 @@ import {
   type FinalizedCharacterSelections,
   type NonEmptyReadonlyArray,
   type UnitCatalog,
+  type LoadoutEquipmentUnitId,
   type LoadoutSourceKey,
   type UnitChoiceSourceKey,
   type UnitChoiceSource,
@@ -1009,8 +1014,8 @@ export function characterBuildUnitRefs(
     ...build.features.map((feature) => feature.unitId),
     ...optionalUnitId(build.equipment.armor),
     ...optionalUnitId(build.equipment.shield),
-    ...optionalUnitId(build.equipment.weapon?.unitId),
-    ...optionalUnitId(build.equipment.offHandWeapon?.unitId),
+    ...optionalEquipmentItemUnitId(build.equipment.weapon?.itemId),
+    ...optionalEquipmentItemUnitId(build.equipment.offHandWeapon?.itemId),
     ...(build.spellcasting?.cantrips ?? []),
     ...(build.spellcasting?.spellbook.map((spell) => spell.spellId) ?? []),
     ...(build.spellcasting?.preparedSpells ?? []),
@@ -1062,8 +1067,13 @@ export function finalizedBuildEquipment(
       return {
         ...equipment,
         weapon: {
-          itemId: `main:${selectedUnitId}`,
-          unitId: selectedUnitId,
+          itemId: characterEquipmentItemId({
+            slot: "main",
+            unitId:
+              characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
+                selectedUnitId,
+              ),
+          }),
           grip: loadoutChoice.grip,
         },
       };
@@ -1132,7 +1142,7 @@ function selectedUnitRefsForChoice(
 function selectedUnitIdForLoadoutChoice(
   selection: Extract<CharacterChoiceSelection, { readonly kind: "loadout" }>,
   loadoutChoice: ReturnType<typeof supportedLoadoutChoiceForSource>,
-): UnitRecord["id"] | undefined {
+): LoadoutEquipmentUnitId | undefined {
   if (loadoutChoice == null) {
     return undefined;
   }
@@ -1147,6 +1157,16 @@ export function optionalUnitId(
   unitId: UnitRecord["id"] | undefined,
 ): readonly UnitRecord["id"][] {
   return unitId == null ? [] : [unitId];
+}
+
+function optionalEquipmentItemUnitId(
+  itemId: CharacterEquipmentItemId | undefined,
+): readonly UnitRecord["id"][] {
+  if (itemId == null) {
+    return [];
+  }
+
+  return [characterEquipmentItemSourceFromId(itemId).unitId];
 }
 
 function readableForFinalization<T>(
