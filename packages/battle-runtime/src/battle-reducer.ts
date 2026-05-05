@@ -2591,6 +2591,8 @@ export function discoverBattleActs(
     acts.push(...discoverSupportedSpellActs(state, actorId));
   }
   const movementHoleForActor = movementHole(state, actorId);
+  // PBA29 tracks the whole legal action/command surface while Stat Block
+  // Multiattack dispatches are pending; movement is only one example.
   if (
     combatantCanMoveInState(state, actorId) &&
     state.combatants.size > 1 &&

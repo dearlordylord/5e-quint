@@ -171,6 +171,12 @@ Keep it synchronized with the DAG table and task details.
       "id": "PBA28",
       "status": "blocked",
       "title": "MBT Consolidation And Shared Algebra Parity"
+    },
+    {
+      "number": 82,
+      "id": "PBA29",
+      "status": "blocked",
+      "title": "Tighten Stat Block Multiattack Dispatch Continuation"
     }
   ]
 }
@@ -230,6 +236,7 @@ Keep it synchronized with the DAG table and task details.
 | 79    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs.                                                        |
 | 80    | PBA27 - Core Quarantine And Deletion Cutover                      | blocked                                       | PBA24, PBA26 | PBA28        | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior.                              |
 | 81    | PBA28 - MBT Consolidation And Shared Algebra Parity               | blocked                                       | PBA27        | future tasks | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT.                                      |
+| 82    | PBA29 - Tighten Stat Block Multiattack Dispatch Continuation      | blocked                                       | PBA28        | future tasks | inline below                                                                                                 | Decide and encode the full legal action/command surface while pending Stat Block Multiattack dispatches remain.                                               |
 
 ## Task Details
 
@@ -1016,3 +1023,34 @@ Verification summary: package-local shared-algebras typecheck/tests and
 selected Quint proof/MBT commands, promoted runtime documentation checks, no
 legacy Core MBT as a gate, no broad battle MBT unless a promoted integrated
 slice is intentionally changed, `/simplify` convergence.
+
+### Task 82 - PBA29 - Tighten Stat Block Multiattack Dispatch Continuation
+
+Status: `blocked`
+
+Depends on: PBA28
+Blocks: future tasks
+
+Research plan: inline from review of `9fb8bc86`.
+
+Next action: decide and encode the lifecycle of pending Stat Block Multiattack
+dispatch resources. Current promoted runtime spends the monster's Attack action
+and grants named dispatch attack resources, but normal movement discovery is not
+suppressed while those resources remain. Movement is only the first observed
+example; the real decision is the complete RAW/project action and command
+surface while a Multiattack continuation is open.
+
+Acceptance summary: the chosen rule is explicit in code, QNT, docs, and tests.
+If pending dispatches are an immediate continuation, movement, stand-from-prone,
+bonus actions, free commands, spell/feature activations, and any other
+non-Multiattack turn options are unavailable unless RAW/project guidance says
+they are part of or allowed during that continuation. Dispatches are spent,
+cancelled, or otherwise closed by an explicit operation.
+If movement between Multiattack dispatches is accepted from RAW, that is also
+encoded as an explicit project decision inside the same whole-surface contract
+and tested so it is not accidental.
+
+Verification summary: RAW/UL check for Stat Block Multiattack and Moving
+between Attacks, focused battle-runtime reducer tests, package-local QNT/MBT
+update if the dispatch continuation changes reducer semantics, MCP workflow
+test if public available-action output changes, `/simplify` convergence.
