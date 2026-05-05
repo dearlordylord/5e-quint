@@ -1595,13 +1595,17 @@ describe("battle runtime", () => {
     const subject = magicSubject("magic_missile");
     const target = requireHole(
       resolveBattleSubject({ state: hiddenState, subject, fills: [] }),
-      "targetChoice",
+      "spellTargetAllocation",
     );
     const damage = requireHole(
       resolveBattleSubject({
         state: hiddenState,
         subject,
-        fills: [targetFill(target, skeletonId)],
+        fills: [
+          spellTargetAllocationFill(target, [
+            { targetId: skeletonId, count: 3 },
+          ]),
+        ],
       }),
       "rolledDice",
     );
@@ -1610,7 +1614,7 @@ describe("battle runtime", () => {
       state: hiddenState,
       subject,
       fills: [
-        targetFill(target, skeletonId),
+        spellTargetAllocationFill(target, [{ targetId: skeletonId, count: 3 }]),
         damageRollFillWithGroups(damage, [[2, 2, 2]]),
       ],
     });
@@ -3121,12 +3125,14 @@ describe("battle runtime", () => {
     const subject = magicSubject("magic_missile");
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
-      "targetChoice",
+      "spellTargetAllocation",
     );
     const awaitingReaction = resolveBattleSubject({
       state,
       subject,
-      fills: [targetFill(target, skeletonId)],
+      fills: [
+        spellTargetAllocationFill(target, [{ targetId: skeletonId, count: 3 }]),
+      ],
     });
 
     expect(awaitingReaction).toMatchObject({
@@ -9072,17 +9078,39 @@ describe("battle runtime", () => {
         subject: magicSubject("magic_missile"),
         fills: [],
       }),
-      "targetChoice",
+      "spellTargetAllocation",
     );
     expect(magicMissileTarget).toMatchObject({
-      label: "Magic Missile all-darts target",
+      label: "Magic Missile target allocation",
+      allocationCount: 3,
       choices: [wizardId, skeletonId],
+    });
+    expect(
+      resolveBattleSubject({
+        state: magicMissileState,
+        subject: magicSubject("magic_missile"),
+        fills: [
+          spellTargetAllocationFill(magicMissileTarget, [
+            { targetId: wizardId, count: 0 },
+            { targetId: skeletonId, count: 3 },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell target allocation entries must assign a positive integer count.",
     });
     const magicMissileDamage = requireHole(
       resolveBattleSubject({
         state: magicMissileState,
         subject: magicSubject("magic_missile"),
-        fills: [targetFill(magicMissileTarget, skeletonId)],
+        fills: [
+          spellTargetAllocationFill(magicMissileTarget, [
+            { targetId: skeletonId, count: 3 },
+          ]),
+        ],
       }),
       "rolledDice",
     );
@@ -9113,7 +9141,9 @@ describe("battle runtime", () => {
       state: magicMissileState,
       subject: magicSubject("magic_missile"),
       fills: [
-        targetFill(magicMissileTarget, skeletonId),
+        spellTargetAllocationFill(magicMissileTarget, [
+          { targetId: skeletonId, count: 3 },
+        ]),
         damageRollFillWithGroups(magicMissileDamage, [[1, 1, 1]]),
       ],
     });
@@ -9130,6 +9160,174 @@ describe("battle runtime", () => {
     expect(expendedLevelOneSlots(requireResolved(magicMissile), wizardId)).toBe(
       1,
     );
+
+    const levelTwoState = startBattleRight({
+      battleId: battleId("battle-magic-missile-split-targets"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            spellSlots: [
+              { spellLevel: 1, count: 2 },
+              { spellLevel: 2, count: 1 },
+            ],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Fighter",
+          initiative: 15,
+          attack: null,
+          currentHp: 20,
+          maxHp: 20,
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(discoverBattleActs(levelTwoState).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "preparedSlotSpell:magic_missile:slot:2",
+        },
+      ]),
+    );
+    const levelTwoSubject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      spellId: "magic_missile",
+      spellActId: "preparedSlotSpell:magic_missile:slot:2",
+    };
+    const levelTwoTargets = requireHole(
+      resolveBattleSubject({
+        state: levelTwoState,
+        subject: levelTwoSubject,
+        fills: [],
+      }),
+      "spellTargetAllocation",
+    );
+    expect(levelTwoTargets).toMatchObject({ allocationCount: 4 });
+    const levelTwoDamage = requireHole(
+      resolveBattleSubject({
+        state: levelTwoState,
+        subject: levelTwoSubject,
+        fills: [
+          spellTargetAllocationFill(levelTwoTargets, [
+            { targetId: skeletonId, count: 3 },
+            { targetId: fighterId, count: 1 },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(levelTwoDamage).toMatchObject({
+      label: "Magic Missile damage (4d4+4-force)",
+    });
+    const splitMagicMissile = resolveBattleSubject({
+      state: levelTwoState,
+      subject: levelTwoSubject,
+      fills: [
+        spellTargetAllocationFill(levelTwoTargets, [
+          { targetId: skeletonId, count: 3 },
+          { targetId: fighterId, count: 1 },
+        ]),
+        damageRollFillWithGroups(levelTwoDamage, [[1, 1, 1], [4]]),
+      ],
+    });
+    expect(splitMagicMissile).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: fighterId, hp: 15 },
+          { combatantId: skeletonId, hp: 7 },
+        ],
+      },
+    });
+
+    const secondWizardReady = requireResolved(
+      resolveBattleSubject({
+        state: startBattleRight({
+          battleId: battleId("battle-second-wizard-ready-after-damage"),
+          combatants: [
+            characterSeed({
+              combatantId: secondWizardId,
+              displayName: "Second Wizard",
+              initiative: 20,
+              attack: null,
+              spellcasting: wizardSpellcasting(),
+            }),
+            skeletonCreatureInit({ initiative: 10 }),
+          ],
+        }),
+        subject: {
+          tag: "actionSpell",
+          actorId: secondWizardId,
+          spellId: "ray_of_frost",
+          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          readyTrigger: "afterDamage",
+        },
+        fills: [],
+      }),
+    ).state;
+    const readiedRay = secondWizardReady.readiedSpells.get(secondWizardId);
+    const concentratingSecondWizard =
+      secondWizardReady.combatants.get(secondWizardId);
+    if (readiedRay === undefined || concentratingSecondWizard === undefined) {
+      throw new Error("Expected Second Wizard to hold a Readied Spell.");
+    }
+    const afterDamageSequenceState = {
+      ...levelTwoState,
+      combatants: new Map(levelTwoState.combatants).set(
+        secondWizardId,
+        concentratingSecondWizard,
+      ),
+      readiedSpells: new Map([[secondWizardId, readiedRay]]),
+    } satisfies BattleState;
+    const splitWithAfterDamageReaction = resolveBattleSubject({
+      state: afterDamageSequenceState,
+      subject: levelTwoSubject,
+      fills: [
+        spellTargetAllocationFill(levelTwoTargets, [
+          { targetId: skeletonId, count: 3 },
+          { targetId: fighterId, count: 1 },
+        ]),
+        damageRollFillWithGroups(levelTwoDamage, [[1, 1, 1], [4]]),
+      ],
+    });
+    expect(splitWithAfterDamageReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+      snapshot: {
+        pendingReaction: {
+          frame: { trigger: "afterDamage", damagedId: skeletonId },
+        },
+      },
+    });
+    if (splitWithAfterDamageReaction.tag !== "needsHoles") {
+      throw new Error("Expected first after-damage reaction window.");
+    }
+    const secondAfterDamageReaction = resolveBattleReaction({
+      state: splitWithAfterDamageReaction.state,
+      fill: reactionDecisionFill(
+        splitWithAfterDamageReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: secondWizardId },
+      ),
+    });
+    expect(secondAfterDamageReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+      snapshot: {
+        pendingReaction: {
+          frame: { trigger: "afterDamage", damagedId: fighterId },
+        },
+      },
+    });
 
     const rayState = wizardVsSkeletonBattle();
     const rayTarget = requireHole(
@@ -9959,6 +10157,88 @@ describe("battle runtime", () => {
         ],
       },
     });
+  });
+
+  test("readied prepared slot spell releases without spending another Spell Slot", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-readied-slot-spell-release"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          spellId: "magic_missile",
+          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
+          readyTrigger: "attackHit",
+        },
+        fills: [],
+      }),
+    );
+    expect(expendedLevelOneSlots(readied, wizardId)).toBe(1);
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: wizardId }),
+    );
+    const releaseSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "releaseReadiedSpell" as const,
+      readiedSpellCasterId: wizardId,
+    };
+    const releaseAct = discoverBattleActs(goblinTurn.state).find(
+      (act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "releaseReadiedSpell" &&
+        act.subject.readiedSpellCasterId === wizardId,
+    );
+    expect(releaseAct?.initialHoles).toMatchObject([
+      {
+        kind: "spellTargetAllocation",
+        label: "Magic Missile target allocation",
+        allocationCount: 3,
+      },
+    ]);
+    const target = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [],
+      }),
+      "spellTargetAllocation",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [
+          spellTargetAllocationFill(target, [{ targetId: goblinId, count: 3 }]),
+        ],
+      }),
+      "rolledDice",
+    );
+    const released = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [
+          spellTargetAllocationFill(target, [{ targetId: goblinId, count: 3 }]),
+          damageRollFillWithGroups(damage, [[1, 1, 1]]),
+        ],
+      }),
+    );
+
+    expect(expendedLevelOneSlots(released, wizardId)).toBe(1);
   });
 
   test("readied spells are held per caster", () => {
@@ -11092,6 +11372,29 @@ function targetFill(
     ...((spatialFacts ?? defaultSpatialFacts).length === 0
       ? {}
       : { spatialFacts: spatialFacts ?? defaultSpatialFacts }),
+  };
+}
+
+function spellTargetAllocationFill(
+  hole: BattleHole,
+  allocations: readonly {
+    readonly targetId: CombatantId;
+    readonly count: number;
+  }[],
+): BattleFill {
+  if (hole.kind !== "spellTargetAllocation") {
+    throw new Error("Expected spellTargetAllocation hole.");
+  }
+  return {
+    kind: "spellTargetAllocation",
+    holeId: hole.holeId,
+    value: { allocations },
+    spatialFacts: allocations.map((allocation) => ({
+      kind: "spellTarget",
+      casterId: wizardId,
+      targetId: allocation.targetId,
+      spellId: hole.spell.spell.id,
+    })),
   };
 }
 
@@ -12696,6 +12999,10 @@ function wizardVsRogueBattle(input: {
 function wizardSpellcasting(input?: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
+  readonly spellSlots?: readonly {
+    readonly spellLevel: 1 | 2;
+    readonly count: number;
+  }[];
 }): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -12711,7 +13018,7 @@ function wizardSpellcasting(input?: {
       spellRecord("acid_splash"),
     ],
     preparedSpells: input?.preparedSpells ?? [spellRecord("magic_missile")],
-    spellSlots: [{ spellLevel: 1, count: 2 }],
+    spellSlots: input?.spellSlots ?? [{ spellLevel: 1, count: 2 }],
   };
 }
 

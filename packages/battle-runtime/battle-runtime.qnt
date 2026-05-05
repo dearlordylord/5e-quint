@@ -49,8 +49,9 @@ module battleRuntime {
   // - Spells/Gaining-and-Casting.md lines 176-182 and Playing-the-Game.md
   //   lines 219-222: spell attacks add Proficiency Bonus.
   // - Spells/Descriptions-M-P.md lines 85-96 and Spells/Descriptions-Q-R.md
-  //   lines 41-52: Magic Missile can put all darts on one target; Ray of Frost
-  //   reduces Speed until the start of the caster's next turn.
+  //   lines 41-52: Magic Missile can allocate darts to one creature or
+  //   several and gains one dart per slot level above 1; Ray of Frost reduces
+  //   Speed until the start of the caster's next turn.
   // - Spells/Descriptions-M-P.md lines 5-15 and
   //   Spells/Gaining-and-Casting.md lines 142-149: Mage Armor is a timed
   //   ongoing spell effect whose target's base AC becomes 13 + Dexterity
@@ -125,8 +126,10 @@ module battleRuntime {
 
   type Hole =
     | TargetChoice
+    | SpellTargetAllocation
     | AttackRoll
     | DamageRoll
+    | SpellDamageRoll
     | DeathSavingThrow
     | SavingThrowOutcome
     | GrappleOutcome
@@ -1470,7 +1473,10 @@ module battleRuntime {
   ): int =
     spellcastingAbilityModifier + proficiencyBonus
 
-  pure def magicMissileAllDartsDamage(
+  pure def magicMissileDartCount(slotLevel: int): int =
+    3 + (slotLevel - 1)
+
+  pure def magicMissileAllocatedDamage(
     dieTotal: int,
     dartCount: int,
     flatPerDart: int,
@@ -1933,7 +1939,10 @@ module battleRuntime {
   run test_spell_invocation_executable_spell_facts = {
     all {
       assert(spellAttackModifier(3, 2) == 5),
-      assert(magicMissileAllDartsDamage(3, 3, 1) == 6),
+      assert(magicMissileDartCount(1) == 3),
+      assert(magicMissileDartCount(2) == 4),
+      assert(magicMissileAllocatedDamage(3, 3, 1) == 6),
+      assert(magicMissileAllocatedDamage(4, 1, 1) == 5),
       assert(rayOfFrostSpeedEffectActive(true, Goblin, Fighter)),
       assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
     }

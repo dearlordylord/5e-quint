@@ -75,7 +75,7 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.fillBattleHole,
     description:
-      "Fill one hole for a selected battle act subject. MCP stores transient target, attack-roll, damage-result, and feature-roll fills until the battle runtime resolves the act.",
+      "Fill one hole for a selected battle act subject. MCP stores transient target, spell target allocation, attack-roll, damage-result, and feature-roll fills until the battle runtime resolves the act.",
     inputSchema: fillBattleHoleInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
   },

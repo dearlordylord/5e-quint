@@ -84,9 +84,9 @@ The battle-session tool boundary exposes these user-facing tools:
   Fighter 2 Action Surge, Wizard `magic_missile` and `ray_of_frost` Magic-action spell acts,
   supported Goblin Warrior/Skeleton Stat Block attacks, and End Turn.
 - `fill_battle_hole` submits one fill at a time for a selected battle act
-  subject. MCP stores transient target, attack-roll, damage-result, and
-  feature-roll fills until `@dnd/battle-runtime` resolves the act, then stores
-  the returned `BattleState` and clears the transient fills.
+  subject. MCP stores transient target, spell target allocation, attack-roll,
+  damage-result, and feature-roll fills until `@dnd/battle-runtime` resolves the
+  act, then stores the returned `BattleState` and clears the transient fills.
 - `resolve_battle_act` resolves selected battle act subjects that need no
   holes, such as Fighter 2 Action Surge.
 - `end_turn` resolves the End Turn runtime command for the current actor, stores
@@ -123,7 +123,8 @@ Stat Block id, applies Skeleton Bludgeoning vulnerability through a Flail hit,
 resolves Fighter Second Wind and Action Surge, casts Wizard `ray_of_frost` as a
 cantrip without spending a Spell Slot, lets Skeleton apply authored Shortsword
 attack pressure, casts prepared `magic_missile` with a level-1 Spell Slot
-spend, and closes the battle back to `list_characters`.
+spend and explicit dart target allocation, and closes the battle back to
+`list_characters`.
 The supported Wizard creation choices in this slice are catalog-backed SRD
 Spell Definitions; battle start fails at the MCP boundary rather than dropping
 selected spell or feature Unit refs that are not in the Surface catalog.

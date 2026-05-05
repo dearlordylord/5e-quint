@@ -11,6 +11,7 @@ import {
   abilityModifier,
   attackBonus,
   movementFeet,
+  proficiencyBonus,
 } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
@@ -20,7 +21,10 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import magicMissileInput from "../../surface/content/magic_missile.json";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -54,8 +58,10 @@ function startBattleRight(
 
 type MbtHole =
   | "TargetChoice"
+  | "SpellTargetAllocation"
   | "AttackRoll"
   | "DamageRoll"
+  | "SpellDamageRoll"
   | "DeathSavingThrow"
   | "StatBlockRechargeRoll";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
@@ -104,6 +110,11 @@ if (statBlockCatalogResult.tag !== "ok" || unitCatalogResult.tag !== "ok") {
 
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const unitLibrary = unitCatalogResult.catalog;
+const magicMissileUnit = decodeUnitRecordSync(magicMissileInput);
+if (magicMissileUnit.kind !== "spell") {
+  throw new Error("Expected Magic Missile content to decode as a spell Unit.");
+}
+const magicMissileSpell = magicMissileUnit satisfies SpellRecord;
 
 const driverSchema = {
   init: {},
@@ -132,6 +143,14 @@ const deathSavingThrowDriverSchema = {
   doFillDeathSavingThrowSuccess: {},
   doFillDeathSavingThrowNaturalTwenty: {},
   doRejectWrongActorEndTurnAfterResolved: {},
+  step: {},
+} as const;
+
+const magicMissileDriverSchema = {
+  init: {},
+  doFillMagicMissileAllocation: {},
+  doFillMagicMissileDamageLow: {},
+  doFillMagicMissileDamageHigh: {},
   step: {},
 } as const;
 
@@ -266,6 +285,71 @@ function createBattleRuntimeDriver() {
           attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
         ];
         recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      step: () => {},
+      getState: () =>
+        projectMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
+function createMagicMissileDriver() {
+  return defineDriver(magicMissileDriverSchema, () => {
+    let state = fighterVsSkeletonBattle();
+    const subject = magicMissileSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = discoverMagicMissileHoles(
+      state,
+      subject,
+    );
+    let lastResult: MbtProjection["lastResult"] = "init";
+    let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
+
+    function reset(): void {
+      state = fighterVsSkeletonBattle();
+      fills = [];
+      holes = discoverMagicMissileHoles(state, subject);
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function submit(nextFills: readonly BattleFill[]): void {
+      fills = nextFills;
+      const result = resolveBattleSubject({ state, subject, fills });
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    return {
+      init: reset,
+      doFillMagicMissileAllocation: () => {
+        const allocation = requireHole(holes, "spellTargetAllocation");
+        submit([spellTargetAllocationFill(allocation, skeletonId, 3)]);
+      },
+      doFillMagicMissileDamageLow: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFillWithGroups(damage, [[1, 1, 1]])]);
+      },
+      doFillMagicMissileDamageHigh: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFillWithGroups(damage, [[4, 4, 4]])]);
       },
       step: () => {},
       getState: () =>
@@ -453,6 +537,22 @@ describe("battle-runtime MBT", () => {
     });
   }, 120_000);
 
+  it("replays Magic Missile target allocation against a Skeleton target", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../battle-runtime-magic-missile.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createMagicMissileDriver(),
+      backend: "typescript",
+      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
+      stateCheck: battleRuntimeStateCheck,
+    });
+  }, 120_000);
+
   it("replays start-turn Death Saving Throw holes for a Character Build combatant", async () => {
     await run({
       spec: path.resolve(
@@ -562,6 +662,23 @@ function discoverAttackHoles(
   return act.initialHoles;
 }
 
+function discoverMagicMissileHoles(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): readonly BattleHole[] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.spellId === subject.spellId,
+  );
+  if (act == null) {
+    throw new Error("Expected Magic Missile spell act.");
+  }
+
+  return act.initialHoles;
+}
+
 function holesAfterFills(
   state: BattleState,
   subject: Extract<
@@ -611,6 +728,18 @@ function skeletonShortswordSubject(): Extract<
     actorId: skeletonId,
     action: "attack",
     attackName: "Shortsword",
+  };
+}
+
+function magicMissileSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    spellId: "magic_missile",
+    spellActId: "preparedSlotSpell:magic_missile:slot:1",
   };
 }
 
@@ -742,6 +871,14 @@ function rogueCreatureInit(input: {
       attack: daggerAttack(),
       unarmedStrike: baseUnarmedStrike(),
       unitFeatures: [{ unit: unitLibrary.requireUnit("rogue_sneak_attack") }],
+      spellcasting: {
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [magicMissileSpell],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
     },
   };
 }
@@ -864,6 +1001,30 @@ function targetFill(
   };
 }
 
+function spellTargetAllocationFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+  count: number,
+): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
+  if (hole.kind !== "spellTargetAllocation") {
+    throw new Error("Expected spell target allocation hole.");
+  }
+
+  return {
+    kind: "spellTargetAllocation",
+    holeId: hole.holeId,
+    value: { allocations: [{ targetId, count }] },
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: fighterId,
+        targetId,
+        spellId: hole.spell.spell.id,
+      },
+    ],
+  };
+}
+
 function attackRollFill(
   hole: BattleHole,
   value: {
@@ -939,6 +1100,10 @@ function rolledDiceGroup(
 function projectHole(hole: BattleHole): MbtHole {
   return Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
+    Match.when(
+      { kind: "spellTargetAllocation" },
+      () => "SpellTargetAllocation" as const,
+    ),
     Match.when({ kind: "attackRoll" }, (attackRoll) => {
       if ("spell" in attackRoll) {
         throw new Error(
@@ -949,9 +1114,7 @@ function projectHole(hole: BattleHole): MbtHole {
     }),
     Match.when({ kind: "rolledDice" }, (rolledDice) => {
       if ("spell" in rolledDice) {
-        throw new Error(
-          "Battle runtime MBT expected a weapon damage roll hole.",
-        );
+        return "SpellDamageRoll" as const;
       }
       return "DamageRoll" as const;
     }),
@@ -996,8 +1159,10 @@ function holeName(raw: unknown): MbtHole {
   const tag = quintVariantTag(raw);
   if (
     tag === "TargetChoice" ||
+    tag === "SpellTargetAllocation" ||
     tag === "AttackRoll" ||
     tag === "DamageRoll" ||
+    tag === "SpellDamageRoll" ||
     tag === "DeathSavingThrow" ||
     tag === "StatBlockRechargeRoll"
   ) {

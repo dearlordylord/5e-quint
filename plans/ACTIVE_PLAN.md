@@ -109,13 +109,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 71,
       "id": "PBA20",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Restore Spell Targeting And Catalog Width"
     },
     {
       "number": 72,
       "id": "PBA21",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Broaden Reaction Windows And Bonus-Action Subjects"
     },
     {
@@ -207,8 +207,8 @@ Keep it synchronized with the DAG table and task details.
 | 68    | PBA15B - Remove Runtime-Owned Spatiality And Distances            | done                                          | PBA15A       | PBA16        | [research plan](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)              | Promoted runtime and MCP now consume table/caller spatial facts instead of owning combatant distances. |
 | 69    | PBA18 - Widen Attack Range And Conditional Attack Riders          | done                                          | PBA15B       | PBA19        | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Long-range attack target facts are legal and feed Disadvantage through the shared roll-mode path; supported conditional attack riders remain Surface-derived. |
 | 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | done                                          | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Stat Block Multiattack and Bonus Action procedure families are restored for supported monster profiles.                          |
-| 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | ready-for-implementation-after-light-research | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Restore Magic Missile split-target replay and broaden spell procedure pressure.                                                  |
-| 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | blocked                                       | PBA20        | PBA22        | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Broaden reaction windows and Bonus Action subjects after spell targeting width.                                                  |
+| 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | done                                          | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Magic Missile split-target replay and higher-slot dart count are restored through spell target allocation fills.                 |
+| 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | ready-for-implementation-after-light-research | PBA20        | PBA22        | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Broaden Reaction windows and Bonus Action subjects after spell targeting width.                                                  |
 | 73    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | blocked                                       | PBA21        | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Restore promoted snapshot/trace contracts and app battle UI workflows.                                                           |
 | 74    | PBA23 - Core Promotion Deletion Ledger                            | blocked                                       | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                  |
 | 75    | PBA24 - Remove Rogue Cunning Action Support Workaround            | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                        |
@@ -639,7 +639,7 @@ Plan Impact: PBA20 is unblocked.
 
 ### Task 71 - PBA20 - Restore Spell Targeting And Catalog Width
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: PBA19
 Blocks: PBA21
@@ -647,22 +647,22 @@ Blocks: PBA21
 Research plan:
 [pba20-spell-targeting-catalog-width-research-plan.md](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)
 
-Next action: restore Magic Missile split-target replay and broaden spell
-effects/catalog pressure through reusable spell support profiles.
+Next action: Magic Missile split-target replay and higher-slot dart count are
+restored through reusable spell target allocation fills.
 
 Acceptance summary: spell targeting, slot spend, Concentration, and effect
 lifecycles remain distinct runtime facts; catalog breadth remains table-driven
 when it fits existing profiles.
 
-Verification summary: RAW check, focused Surface/battle-runtime/MCP/typecheck
-coverage, promoted QNT/MBT only for new reusable spell procedure behavior,
-`/simplify` convergence.
+Verification summary: RAW check, focused battle-runtime/MCP typecheck and tests,
+and promoted Magic Missile MBT coverage passed; full `pnpm quality` remains
+blocked by unrelated app/Core baseline typecheck failures.
 
-Plan Impact: if successful, unblock PBA21.
+Plan Impact: PBA21 is unblocked.
 
 ### Task 72 - PBA21 - Broaden Reaction Windows And Bonus-Action Subjects
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: PBA20
 Blocks: PBA22

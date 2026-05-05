@@ -59,7 +59,7 @@ flowchart TD
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals"]
-  SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile all-darts target spends a slot; Ray of Frost records Speed effect; Acid Splash save-gate damage applies to failed saves"]
+  SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile allocates darts and spends the selected slot; Ray of Frost records Speed effect; Acid Splash save-gate damage applies to failed saves"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle or melee Knock Out applied<br/>why: one HP mutation boundary"]
   Hidden["Hidden state<br/>source: Hide/Search procedure<br/>data: discovery DC<br/>why: battle-owned execution fact for Invisible projection, Search, and reveal triggers"]
@@ -173,10 +173,11 @@ flowchart TD
   healing roll, spends the turn Bonus Action and retained use-count resource,
   and applies HP healing through the battle HP boundary.
 - Character-derived Wizard action-time spell acts come from retained Spell Records
-  plus runtime Spell Slot and active-effect state. Prepared level-1 spells spend
-  slots; cantrips do not. `magic_missile` is narrowed by a support gate to all
-  repeated darts at one target. `ray_of_frost` requires both its Cold damage and
-  Speed-reduction rider before discovery. Save-gate damage cantrips such as
+  plus runtime Spell Slot and active-effect state. Prepared spells spend the
+  selected slot; cantrips do not. `magic_missile` derives dart count from slot
+  level and uses a spell target allocation fill for one or several table-legal
+  targets. `ray_of_frost` requires both its Cold damage and Speed-reduction
+  rider before discovery. Save-gate damage cantrips such as
   `acid_splash` use a Saving Throw outcome hole that selects in-range targets;
   damage is requested only for targets whose Saving Throw outcome and admitted
   replacement riders still produce damage.

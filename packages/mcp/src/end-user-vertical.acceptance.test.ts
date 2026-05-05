@@ -499,7 +499,7 @@ describe("end-user promoted MCP vertical", () => {
         expect.objectContaining({
           label: "Magic Missile",
           summary:
-            "Cast Magic Missile using a level 1 Spell Slot, with all darts at one target.",
+            "Cast Magic Missile using a level 1 Spell Slot, allocating 3 repeated effects among targets.",
         }),
         expect.objectContaining({
           label: "Ray of Frost",
@@ -608,9 +608,9 @@ describe("end-user promoted MCP vertical", () => {
     });
 
     fillBattleSubject(root, magicSubject("wizard", "magic_missile"), {
-      kind: "targetChoice",
-      holeId: "battle:attack:target",
-      value: "skeleton",
+      kind: "spellTargetAllocation",
+      holeId: "battle:spell:target-allocation:magic_missile",
+      value: { allocations: [{ targetId: "skeleton", count: 3 }] },
     });
     const afterMagicMissile = fillBattleSubject(
       root,
@@ -898,7 +898,11 @@ function fillBattleSubject(
     | ReturnType<typeof magicSubject>
     | ReturnType<typeof unitFeatureSubject>,
   fill: {
-    readonly kind: "targetChoice" | "attackRoll" | "rolledDice";
+    readonly kind:
+      | "targetChoice"
+      | "spellTargetAllocation"
+      | "attackRoll"
+      | "rolledDice";
     readonly holeId: string;
     readonly spatialFacts?: readonly unknown[];
     readonly value: unknown;
@@ -929,6 +933,22 @@ function fillBattleSubject(
                   ]
                 : [],
         }
-      : fill;
+      : fill.kind === "spellTargetAllocation" &&
+          fill.spatialFacts === undefined &&
+          "spellId" in subject &&
+          typeof fill.value === "object" &&
+          fill.value !== null &&
+          "allocations" in fill.value &&
+          Array.isArray(fill.value.allocations)
+        ? {
+            ...fill,
+            spatialFacts: fill.value.allocations.map((allocation) => ({
+              kind: "spellTarget",
+              casterId: subject.actorId,
+              targetId: String(allocation.targetId),
+              spellId: subject.spellId,
+            })),
+          }
+        : fill;
   return callTool(root, "fill_battle_hole", { subject, fill: battleFill });
 }

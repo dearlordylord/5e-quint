@@ -263,6 +263,11 @@ export type BattleInterruptedProcedure =
       readonly subject: BattleSubject;
     }
   | {
+      readonly kind: "afterDamageSequence";
+      readonly subject: BattleSubject;
+      readonly events: readonly BattleAfterDamageEvent[];
+    }
+  | {
       readonly kind: "movement";
       readonly subject: BattleSubject;
       readonly movement: BattleResolvedMovement;
@@ -295,6 +300,11 @@ type BattleAttackDamagePrefixFill = Extract<
       | "attackDamageDisposition";
   }
 >;
+type BattleAfterDamageEvent = {
+  readonly damageSourceId: CombatantId;
+  readonly damagedId: CombatantId;
+  readonly damageAmount: DamageAmount;
+};
 type BattlePendingAttackDamageReduction = {
   readonly reactorId: CombatantId;
   readonly unitId: UnitRecord["id"];
@@ -564,7 +574,7 @@ export type SupportedSpellAct =
       readonly kind: "preparedSlotSpell";
       readonly spell: SpellRecord;
       readonly targeting: {
-        readonly kind: "allRepeatedEffectsAtOneTarget";
+        readonly kind: "repeatedEffectTargetAllocation";
         readonly repeatedEffectCount: number;
       };
       readonly slotLevel: SpellSlotLevel;
@@ -916,6 +926,20 @@ export type BattleTargetChoiceHole = Extract<
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact?: boolean;
 };
+export type BattleSpellTargetAllocation = {
+  readonly targetId: CombatantId;
+  readonly count: number;
+};
+export type BattleSpellTargetAllocationHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "spellTargetAllocation";
+  readonly label: string;
+  readonly spell: SupportedSpellAct;
+  readonly allocationCount: number;
+  readonly choices: readonly CombatantId[];
+  readonly requiresTableSpatialFact: true;
+};
 export type BattleAttackRollHole = Extract<
   RuntimeHole,
   { readonly kind: "attackRoll" }
@@ -1071,6 +1095,7 @@ export type BattleAttackDamageDispositionHole = {
 };
 export type BattleHole =
   | BattleTargetChoiceHole
+  | BattleSpellTargetAllocationHole
   | BattleAttackRollHole
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
@@ -1144,7 +1169,7 @@ const SupportedSpellActSchema = Schema.Union(
     kind: Schema.Literal("preparedSlotSpell"),
     spell: BattleRuntimeObjectSchema,
     targeting: Schema.Struct({
-      kind: Schema.Literal("allRepeatedEffectsAtOneTarget"),
+      kind: Schema.Literal("repeatedEffectTargetAllocation"),
       repeatedEffectCount: Schema.Number,
     }),
     slotLevel: SpellSlotLevel,
@@ -1200,6 +1225,14 @@ export const BattleHoleSchema = Schema.Union(
     requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
       exact: true,
     }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("spellTargetAllocation"),
+    spell: SupportedSpellActSchema,
+    allocationCount: Schema.Number,
+    choices: Schema.Array(CombatantId),
+    requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1370,6 +1403,17 @@ export type BattleFill =
       readonly spatialFacts?: readonly BattleTargetSpatialFact[];
     }
   | {
+      readonly kind: "spellTargetAllocation";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly allocations: readonly BattleSpellTargetAllocation[];
+      };
+      readonly spatialFacts: readonly Extract<
+        BattleTargetSpatialFact,
+        { readonly kind: "spellTarget" }
+      >[];
+    }
+  | {
       readonly kind: "deathSavingThrow";
       readonly holeId: BattleHoleId;
       readonly value: DieRollResult;
@@ -1484,6 +1528,22 @@ type BattleFillEncoded =
             readonly allyId: string;
           }
       )[];
+    }
+  | {
+      readonly kind: "spellTargetAllocation";
+      readonly holeId: string;
+      readonly value: {
+        readonly allocations: readonly {
+          readonly targetId: string;
+          readonly count: number;
+        }[];
+      };
+      readonly spatialFacts: readonly {
+        readonly kind: "spellTarget";
+        readonly casterId: string;
+        readonly targetId: string;
+        readonly spellId: string;
+      }[];
     }
   | {
       readonly kind: "attackRoll";
@@ -1667,6 +1727,26 @@ export const BattleFillSchema: Schema.Schema<
           ),
         ),
         { exact: true },
+      ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("spellTargetAllocation"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        allocations: Schema.Array(
+          Schema.Struct({
+            targetId: CombatantId,
+            count: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
+          }),
+        ),
+      }),
+      spatialFacts: Schema.Array(
+        Schema.Struct({
+          kind: Schema.Literal("spellTarget"),
+          casterId: CombatantId,
+          targetId: CombatantId,
+          spellId: Schema.String,
+        }),
       ),
     }),
     Schema.Struct({
@@ -3805,6 +3885,17 @@ function resumeInterruptedProcedure(
       snapshot: snapshotBattle(state),
     };
   }
+  if (continuation.kind === "afterDamageSequence") {
+    return openAfterDamageSequenceReactionWindow({
+      state,
+      subject: continuation.subject,
+      events: continuation.events,
+      suppressedReactionTrigger:
+        suppressedReactionTrigger === "afterDamage"
+          ? undefined
+          : suppressedReactionTrigger,
+    });
+  }
   if (continuation.kind === "movement") {
     const nextState = applyBattleMovement(state, continuation.movement);
     return {
@@ -3886,6 +3977,44 @@ function resumeInterruptedProcedure(
     continuation,
     suppressedReactionTrigger,
     continuation.fills,
+  );
+}
+
+function openAfterDamageSequenceReactionWindow(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly events: readonly BattleAfterDamageEvent[];
+  readonly suppressedReactionTrigger: BattleReactionTrigger | undefined;
+}): BattleResolutionResult {
+  const [event, ...remainingEvents] = input.events;
+  if (event === undefined) {
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  const reactionWindow = maybeOpenReactionWindow(
+    input.state,
+    {
+      trigger: "afterDamage",
+      damageSourceId: event.damageSourceId,
+      damagedId: event.damagedId,
+      damageAmount: event.damageAmount,
+      continuation: {
+        kind: "afterDamageSequence",
+        subject: input.subject,
+        events: remainingEvents,
+      },
+    },
+    input.suppressedReactionTrigger,
+  );
+  return (
+    reactionWindow ??
+    openAfterDamageSequenceReactionWindow({
+      ...input,
+      events: remainingEvents,
+    })
   );
 }
 
@@ -8512,9 +8641,13 @@ function readiedSpellInitialHoles(
   casterId: CombatantId,
   readied: BattleReadiedSpell,
 ): readonly BattleHole[] {
-  return readied.invocation.kind === "cantripSaveGateDamage"
-    ? [spellSavingThrowOutcomeHole(state, casterId, readied.invocation)]
-    : [spellTargetHole(state, casterId, readied.invocation)];
+  if (readied.invocation.kind === "cantripSaveGateDamage") {
+    return [spellSavingThrowOutcomeHole(state, casterId, readied.invocation)];
+  }
+  if (readied.invocation.kind === "preparedSlotSpell") {
+    return [spellTargetAllocationHole(state, casterId, readied.invocation)];
+  }
+  return [spellTargetHole(state, casterId, readied.invocation)];
 }
 
 function readiedMovementInitialHoles(
@@ -9473,7 +9606,10 @@ function discoverSupportedSpellActs(
         ];
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
-      const targetHole = spellTargetHole(state, actorId, invocation);
+      const targetHole =
+        invocation.kind === "preparedSlotSpell"
+          ? spellTargetAllocationHole(state, actorId, invocation)
+          : spellTargetHole(state, actorId, invocation);
       const castActs =
         targetHole.choices.length === 0
           ? []
@@ -9488,7 +9624,7 @@ function discoverSupportedSpellActs(
                 label: invocation.spell.name,
                 summary:
                   invocation.kind === "preparedSlotSpell"
-                    ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot, with all darts at one target.`
+                    ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`
                     : `Cast ${invocation.spell.name} as a cantrip.`,
                 initialHoles: [targetHole],
               },
@@ -9620,6 +9756,14 @@ function resolveSpellAct(
   }
   if (invocation.kind === "cantripSaveGateDamage") {
     return resolveSaveGateDamageSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.kind === "preparedSlotSpell") {
+    return resolvePreparedSlotSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -9858,11 +10002,7 @@ function resolveSpellAct(
       "Magic action is no longer available for the current actor.",
     );
   }
-  const slotted =
-    invocation.kind === "preparedSlotSpell"
-      ? expendSpellSlot(effected, subject.actorId, invocation.slotLevel)
-      : effected;
-  const nextState = { ...slotted, currentTurnResources: spent.right };
+  const nextState = { ...effected, currentTurnResources: spent.right };
   const afterDamageReactionWindow = maybeOpenReactionWindow(
     nextState,
     {
@@ -9994,6 +10134,14 @@ function resolveSpellRelease(
   }
   if (invocation.kind === "cantripSaveGateDamage") {
     return resolveSaveGateDamageSpellRelease({
+      input,
+      actorId: input.subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.kind === "preparedSlotSpell") {
+    return resolvePreparedSlotSpellRelease({
       input,
       actorId: input.subject.actorId,
       invocation,
@@ -10193,6 +10341,15 @@ type SpellFillSet =
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+      readonly targetAllocation:
+        | {
+            readonly allocations: readonly BattleSpellTargetAllocation[];
+            readonly spatialFacts: readonly Extract<
+              BattleTargetSpatialFact,
+              { readonly kind: "spellTarget" }
+            >[];
+          }
+        | undefined;
       readonly attackRoll: AttackRollResult | undefined;
       readonly savingThrowOutcomes: BattleSavingThrowOutcomeValue | undefined;
       readonly concentrationSavingThrows: readonly Extract<
@@ -10211,6 +10368,15 @@ function spellFillSet(
 ): SpellFillSet {
   let targetId: CombatantId | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
+  let targetAllocation:
+    | {
+        readonly allocations: readonly BattleSpellTargetAllocation[];
+        readonly spatialFacts: readonly Extract<
+          BattleTargetSpatialFact,
+          { readonly kind: "spellTarget" }
+        >[];
+      }
+    | undefined;
   let attackRoll: AttackRollResult | undefined;
   let savingThrowOutcomes: BattleSavingThrowOutcomeValue | undefined;
   const concentrationSavingThrows: Extract<
@@ -10227,6 +10393,33 @@ function spellFillSet(
       }
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
+      continue;
+    }
+
+    if (fill.kind === "spellTargetAllocation") {
+      if (invocation.kind !== "preparedSlotSpell") {
+        return {
+          tag: "invalid",
+          message: "Spell target allocation does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellTargetAllocationHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell target allocation must use the selected spell act allocation hole.",
+        };
+      }
+      if (targetAllocation !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell target allocation was filled twice.",
+        };
+      }
+      targetAllocation = {
+        allocations: fill.value.allocations,
+        spatialFacts: fill.spatialFacts,
+      };
       continue;
     }
 
@@ -10298,6 +10491,7 @@ function spellFillSet(
     tag: "ok",
     targetId,
     targetSpatialFacts,
+    targetAllocation,
     attackRoll,
     savingThrowOutcomes,
     concentrationSavingThrows,
@@ -10315,6 +10509,255 @@ function concentrationSavingThrowFillFor(
   | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
   | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function resolvePreparedSlotSpellRelease(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedSlotSpell" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  return resolvePreparedSlotSpellAct({
+    ...input,
+    opensSpellCastReactionWindow: false,
+    spendsCastResources: false,
+    opensAfterDamageReactionWindow: false,
+  });
+}
+
+function resolvePreparedSlotSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedSlotSpell" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly opensSpellCastReactionWindow?: boolean;
+  readonly spendsCastResources?: boolean;
+  readonly opensAfterDamageReactionWindow?: boolean;
+}): BattleResolutionResult {
+  const allocationHole = spellTargetAllocationHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.targetId !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Repeated-damage slot spells use spell target allocation fills, not a single-target fill.",
+    );
+  }
+  if (input.fillSet.attackRoll !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      `${input.invocation.spell.name} does not use an attack roll.`,
+    );
+  }
+  if (input.fillSet.targetAllocation === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      allocationHole,
+    ]);
+  }
+  const allocationValidation = validateSpellTargetAllocation(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetAllocation.allocations,
+    input.fillSet.targetAllocation.spatialFacts,
+  );
+  if (allocationValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      allocationValidation,
+    );
+  }
+
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "spellCast",
+        casterId: input.actorId,
+        spellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
+  }
+
+  if (input.fillSet.damageRoll == null) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDamageHole(input.invocation),
+    ]);
+  }
+  const damageValidation =
+    validateSpellDamageFill(
+      input.fillSet.damageRoll,
+      input.invocation,
+      false,
+    ) ??
+    validatePreparedSlotSpellDamageGroups(
+      input.fillSet.damageRoll,
+      input.fillSet.targetAllocation.allocations,
+    );
+  if (damageValidation !== null) {
+    return invalidResult(input.input.state, "invalidFill", damageValidation);
+  }
+
+  const concentrationSaves = input.fillSet.targetAllocation.allocations.flatMap(
+    (allocation, allocationIndex) => {
+      const target = input.input.state.combatants.get(allocation.targetId);
+      if (target === undefined) {
+        return [];
+      }
+      const damageAmount = preparedSlotSpellDamageAmountForAllocation(
+        target,
+        input.invocation,
+        input.fillSet.damageRoll!,
+        allocationIndex,
+        allocation.count,
+      );
+      const hole = concentrationSavingThrowHole(target, damageAmount);
+      return hole === null ? [] : [hole];
+    },
+  );
+  const missingConcentrationSaves = concentrationSaves.filter(
+    (concentrationSave) =>
+      concentrationSavingThrowFillFor(
+        input.fillSet.concentrationSavingThrows,
+        concentrationSave,
+      ) === undefined,
+  );
+  if (missingConcentrationSaves.length > 0) {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      missingConcentrationSaves,
+    );
+  }
+  const concentrationSaveIds = new Set<BattleHoleId>(
+    concentrationSaves.map((concentrationSave) => concentrationSave.holeId),
+  );
+  if (
+    input.fillSet.concentrationSavingThrows.some(
+      (fill) => !concentrationSaveIds.has(fill.holeId),
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+    );
+  }
+
+  const damaged = input.fillSet.targetAllocation.allocations.reduce(
+    (state, allocation, allocationIndex) => {
+      const target = state.combatants.get(allocation.targetId);
+      if (target === undefined) {
+        return state;
+      }
+      const damageAmount = preparedSlotSpellDamageAmountForAllocation(
+        target,
+        input.invocation,
+        input.fillSet.damageRoll!,
+        allocationIndex,
+        allocation.count,
+      );
+      const concentrationSave = concentrationSavingThrowHole(
+        target,
+        damageAmount,
+      );
+      return applyPreparedSlotSpellDamage(
+        state,
+        allocation.targetId,
+        damageAmount,
+        concentrationSave === null
+          ? undefined
+          : concentrationSavingThrowFillFor(
+              input.fillSet.concentrationSavingThrows,
+              concentrationSave,
+            ),
+      );
+    },
+    input.input.state,
+  );
+  if (input.spendsCastResources === false) {
+    return {
+      tag: "resolved",
+      state: damaged,
+      snapshot: snapshotBattle(damaged),
+    };
+  }
+
+  const spent = spendAction(damaged.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+  const slotted = expendSpellSlot(
+    damaged,
+    input.actorId,
+    input.invocation.slotLevel,
+  );
+  const nextState = { ...slotted, currentTurnResources: spent.right };
+  if (input.opensAfterDamageReactionWindow !== false) {
+    const damageRoll = input.fillSet.damageRoll;
+    const afterDamageEvents =
+      input.fillSet.targetAllocation.allocations.flatMap(
+        (allocation, allocationIndex): readonly BattleAfterDamageEvent[] => {
+          const target = input.input.state.combatants.get(allocation.targetId);
+          if (target === undefined) {
+            return [];
+          }
+          const damageAmount = preparedSlotSpellDamageAmountForAllocation(
+            target,
+            input.invocation,
+            damageRoll,
+            allocationIndex,
+            allocation.count,
+          );
+          return [
+            {
+              damageSourceId: input.actorId,
+              damagedId: allocation.targetId,
+              damageAmount: toDamageAmount(damageAmount),
+            },
+          ];
+        },
+      );
+    const afterDamageReactionWindow = openAfterDamageSequenceReactionWindow({
+      state: nextState,
+      subject: input.input.subject,
+      events: afterDamageEvents,
+      suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    });
+    if (afterDamageReactionWindow.tag === "needsHoles") {
+      return afterDamageReactionWindow;
+    }
+  }
+
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveSaveGateDamageSpellAct(input: {
@@ -11366,7 +11809,7 @@ function supportedSpellActs(
 
   return [
     ...spellcasting.preparedSpells.flatMap((spell) =>
-      supportedPreparedSlotSpellProfile(spell),
+      supportedPreparedSlotSpellProfile(spell, spellcasting.spellSlots),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
@@ -11386,6 +11829,7 @@ function supportedSpellActs(
 
 function supportedPreparedSlotSpellProfile(
   spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellAct[] {
   if (spell.mechanics.family !== "activation") {
     return [];
@@ -11411,27 +11855,36 @@ function supportedPreparedSlotSpellProfile(
   if (damageExpr == null || typeof effect.damageType !== "string") {
     return [];
   }
-  const repeatedEffectCount = supportedAllDartsAtOneTargetCount(
+  const damageType = effect.damageType;
+  const rangeFeet = movementFeet(spell.mechanics.range.feet);
+  const repeatedEffectCountForSlotLevel = supportedRepeatedEffectCount(
     phase.attachment.value.selection,
+    spell.mechanics.level,
   );
-  return repeatedEffectCount !== null
-    ? [
-        {
-          kind: "preparedSlotSpell",
-          spell,
-          targeting: {
-            kind: "allRepeatedEffectsAtOneTarget",
-            repeatedEffectCount,
-          },
-          slotLevel: spellSlotLevel(1),
-          damage: {
-            expr: damageExpr,
-            damageType: effect.damageType,
-          },
-          rangeFeet: movementFeet(spell.mechanics.range.feet),
+  if (repeatedEffectCountForSlotLevel === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellAct[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        kind: "preparedSlotSpell",
+        spell,
+        targeting: {
+          kind: "repeatedEffectTargetAllocation",
+          repeatedEffectCount: repeatedEffectCountForSlotLevel(slot.spellLevel),
         },
-      ]
-    : [];
+        slotLevel: slot.spellLevel,
+        damage: {
+          expr: damageExpr,
+          damageType,
+        },
+        rangeFeet,
+      },
+    ];
+  });
 }
 
 function supportedPreparedPersistentSpellProfile(
@@ -11592,23 +12045,44 @@ function supportedCantripSaveGateDamageProfile(
   ];
 }
 
-function supportedAllDartsAtOneTargetCount(selection: {
-  readonly mode: string;
-  readonly repeatsAllowed?: boolean;
-  readonly count?: number | { readonly base?: number };
-}): number | null {
-  const count =
-    typeof selection.count === "number"
-      ? selection.count
-      : selection.count?.base;
-  if (
-    selection.mode !== "choose_up_to" ||
-    selection.repeatsAllowed !== true ||
-    typeof count !== "number"
-  ) {
+function supportedRepeatedEffectCount(
+  selection: {
+    readonly mode: string;
+    readonly repeatsAllowed?: boolean;
+    readonly count?:
+      | number
+      | {
+          readonly kind?: string;
+          readonly base?: number;
+          readonly baseLevel?: number;
+          readonly perSlotAboveBase?: number;
+        };
+  },
+  spellLevel: number,
+): ((slotLevel: SpellSlotLevel) => number) | null {
+  if (selection.mode !== "choose_up_to" || selection.repeatsAllowed !== true) {
     return null;
   }
-  return count;
+  if (typeof selection.count === "number") {
+    return () => selection.count as number;
+  }
+  const count = selection.count;
+  if (
+    count?.kind === "linear" &&
+    typeof count.base === "number" &&
+    typeof count.perSlotAboveBase === "number"
+  ) {
+    const base = count.base;
+    const perSlotAboveBase = count.perSlotAboveBase;
+    const baseLevel = count.baseLevel ?? spellLevel;
+    return (slotLevel) =>
+      base + Math.max(0, Number(slotLevel) - baseLevel) * perSlotAboveBase;
+  }
+  if (typeof count?.base === "number") {
+    const base = count.base;
+    return () => base;
+  }
+  return null;
 }
 
 function supportedDamageAmountExpr(amount: {
@@ -11655,10 +12129,39 @@ function spellTargetHole(
     kind: "targetChoice",
     holeId: ATTACK_TARGET_HOLE_ID,
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
-    label:
-      invocation.kind === "preparedSlotSpell"
-        ? `${invocation.spell.name} all-darts target`
-        : `${invocation.spell.name} target`,
+    label: `${invocation.spell.name} target`,
+    requiresTableSpatialFact: true,
+    choices: [...state.combatants.keys()].filter((id) =>
+      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
+    ),
+  };
+}
+
+function spellTargetAllocationHoleId(
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedSlotSpell" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:target-allocation:${invocation.spell.id}`);
+}
+
+function spellTargetAllocationHole(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedSlotSpell" }
+  >,
+): BattleSpellTargetAllocationHole {
+  const holeKey = `battle:spell:target-allocation:${invocation.spell.id}`;
+  return {
+    kind: "spellTargetAllocation",
+    holeId: spellTargetAllocationHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} target allocation`,
+    spell: invocation,
+    allocationCount: invocation.targeting.repeatedEffectCount,
     requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter((id) =>
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
@@ -11702,6 +12205,50 @@ function spellTargetHasNonSpatialPrerequisites(
     return false;
   }
   return target !== undefined;
+}
+
+function validateSpellTargetAllocation(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedSlotSpell" }
+  >,
+  allocations: readonly BattleSpellTargetAllocation[],
+  facts: readonly BattleTargetSpatialFact[],
+): string | null {
+  if (allocations.length === 0) {
+    return "Spell target allocation must include at least one target.";
+  }
+  const seen = new Set<CombatantId>();
+  for (const allocation of allocations) {
+    if (!Number.isInteger(allocation.count) || allocation.count <= 0) {
+      return "Spell target allocation entries must assign a positive integer count.";
+    }
+    if (seen.has(allocation.targetId)) {
+      return "Spell target allocation must combine repeated effects for the same target into one entry.";
+    }
+    seen.add(allocation.targetId);
+    if (
+      !spellTargetIsLegal(
+        state,
+        actorId,
+        allocation.targetId,
+        invocation,
+        facts,
+      )
+    ) {
+      return "Spell target allocation entries must be combatants within the selected spell's supported range.";
+    }
+  }
+  const allocatedCount = allocations.reduce(
+    (total, allocation) => total + allocation.count,
+    0,
+  );
+  if (allocatedCount !== invocation.targeting.repeatedEffectCount) {
+    return `${invocation.spell.name} target allocation must assign exactly ${invocation.targeting.repeatedEffectCount} repeated effects.`;
+  }
+  return null;
 }
 
 function persistentSpellTargetIsKnownWilling(
@@ -11834,6 +12381,22 @@ function validateSpellDamageFill(
   return validation?.reason ?? null;
 }
 
+function validatePreparedSlotSpellDamageGroups(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  allocations: readonly BattleSpellTargetAllocation[],
+): string | null {
+  if (fill.value.length !== allocations.length) {
+    return "Repeated spell damage dice groups must match the target allocation entries.";
+  }
+  const mismatched = allocations.find(
+    (allocation, index) =>
+      fill.value[index]?.results.length !== allocation.count,
+  );
+  return mismatched === undefined
+    ? null
+    : "Each repeated spell damage dice group must match that target's allocated effect count.";
+}
+
 function applySpellDamage(
   state: BattleState,
   targetId: CombatantId,
@@ -11860,6 +12423,36 @@ function applySpellDamage(
     ),
     { deathFailuresAtZeroHp: critical ? 2 : 1 },
   );
+  const nextState = {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, damaged),
+  };
+  return concentrationSavingThrow?.value.succeeded === false ||
+    (target.concentration !== null && damaged.concentration === null)
+    ? breakBattleConcentrationAfterDamage({
+        state: nextState,
+        combatantId: targetId,
+        priorConcentration: target.concentration,
+      })
+    : nextState;
+}
+
+function applyPreparedSlotSpellDamage(
+  state: BattleState,
+  targetId: CombatantId,
+  damageAmount: number,
+  concentrationSavingThrow?: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target == null) {
+    return state;
+  }
+  const damaged = applyHpDamage(target, damageAmount, {
+    deathFailuresAtZeroHp: 1,
+  });
   const nextState = {
     ...state,
     combatants: new Map(state.combatants).set(targetId, damaged),
@@ -11901,6 +12494,30 @@ function spellDamageAmountForTarget(
   return damageAmountAfterTargetAdjustments(
     target,
     saveAdjustedDamage,
+    invocation.damage.damageType,
+  );
+}
+
+function preparedSlotSpellDamageAmountForAllocation(
+  target: BattleCreatureState,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedSlotSpell" }
+  >,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  allocationIndex: number,
+  repeatedEffectCount: number,
+): number {
+  const group = damageRoll.value[allocationIndex];
+  const diceTotal =
+    group?.results.reduce(
+      (groupTotal, dieResult) => groupTotal + Number(dieResult),
+      0,
+    ) ?? 0;
+  const flat = (invocation.damage.expr.flat ?? 0) * repeatedEffectCount;
+  return damageAmountAfterTargetAdjustments(
+    target,
+    diceTotal + flat,
     invocation.damage.damageType,
   );
 }
