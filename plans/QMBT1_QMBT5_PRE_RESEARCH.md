@@ -1,8 +1,8 @@
-# QMBT1-QMBT5 Pre-Research
+# QMBT1-QMBT6 Pre-Research
 
 Date: 2026-05-06
 
-Purpose: add the first promoted rule-core MBT parity queue after QCORE7-QCORE10
+Purpose: add the first promoted rule-core MBT parity queue after QCORE7-QCORE11
 without widening into full battle state space. QNT remains the first authority;
 the MBT drivers must exercise production reducers or extracted production
 procedures, not test-only reimplementations.
@@ -22,6 +22,21 @@ procedures, not test-only reimplementations.
   and full attack/damage recursion unless that QMBT task owns the behavior.
 - Use bounded fixtures and fixed fact tables. State-space growth should come
   from the procedure under test, not from authored content discovery.
+
+Open projection-vocabulary guidance:
+
+- Candidate shared terms include `lastResult` or `lastOutcome`,
+  `invalidReason`, `holes`, `actionAvailable`, `bonusActionAvailable`,
+  `reactionAvailable`, `movementSpentFeet`, `movementRemainingFeet`,
+  `concentrationActive`, `readiedHeld`, and `readiedReleased`.
+- Candidate lane-local terms include `pendingPrimaryDispatches`,
+  `pendingSecondaryDispatches`, `multiattackContinuationOpen`,
+  `legendaryActionWindowOpen`, `level1SlotsRemaining`,
+  `deathSaveSuccesses`, `deathSaveFailures`, `featurePoolRemaining`,
+  `rageActive`, `sneakAttackUsed`, and `cuttingWordsDieAvailable`.
+- Treat this list as provisional, not reviewed contract. Revisit it after the
+  QMBT3 worktree lands, and extract shared helpers only when the same domain
+  projection shape repeats across at least two lanes.
 
 ## QMBT1 - Standard Rule-Core MBT Bridge Contract
 
@@ -196,3 +211,56 @@ Bounds:
 - Avoid concentration saves in the baseline spell lane unless the task is
   explicitly testing QCORE8/QCORE10 integration.
 - Bound multitarget spell cases to the smallest useful set.
+
+## QMBT6 - Stat-Block Control Runtime Parity
+
+QCORE source:
+
+- `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt`
+- `packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt`
+
+Runtime entrypoints:
+
+- Stat-block subject resolution through production battle-runtime APIs or a
+  production stat-block control procedure module consumed by those APIs.
+- Authored SRD monster projection tests are separate. QMBT6 uses small typed
+  control-profile fixtures, not monster ids or parsed catalog records.
+
+Scope:
+
+- Start with Multiattack named dispatch as the first tracer. The fixture should
+  have at least two named attack options and a profile with pending dispatches
+  after the first listed attack.
+- Prove that the first listed attack spends the Attack action, pending named
+  dispatches remain explicit, Movement may interleave, End Turn closes unspent
+  dispatches, and unrelated turn subjects such as Bonus Action or ordinary
+  Action are rejected while the Multiattack continuation is open.
+- Add Legendary Actions as a separate later tracer after Multiattack parity is
+  stable. That tracer should cover opening after another creature's turn,
+  spending one Legendary Action use, closing after one action, rejecting use on
+  the legendary creature's own turn, and refreshing uses at the monster's start
+  turn.
+
+Projection:
+
+- attack action availability, pending primary/secondary dispatch counts,
+  movement spent/remaining, whether a Multiattack continuation is open, last
+  result, and invalid reason.
+- For the later Legendary Action tracer: window open, uses remaining/maximum,
+  actor-turn ownership, last result, and invalid reason.
+
+Bounds:
+
+- Fixture attack names only, such as primary/secondary stat-block attacks.
+- No authored monster catalog breadth, tactics, action priority, parser
+  admission, or provenance checks in QMBT6.
+- Keep Multiattack and Legendary Actions in separate focused lanes even though
+  they share the QMBT6 task label; their timing models differ enough that one
+  trace would blur failures.
+
+Risk:
+
+- Multiattack interleaving is the highest-value stat-block control invariant.
+  If runtime permits Bonus Actions, ordinary Actions, or unrelated subjects
+  during an open Multiattack continuation, QCORE11 and runtime have diverged
+  even if dispatch counters decrement correctly.

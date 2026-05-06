@@ -115,6 +115,12 @@ Keep it synchronized with the DAG table and task details.
       "id": "QMBT5",
       "status": "ready-for-implementation-after-light-research",
       "title": "Spell Procedure Runtime Parity"
+    },
+    {
+      "number": 101,
+      "id": "QMBT6",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Stat-Block Control Runtime Parity"
     }
   ]
 }
@@ -158,11 +164,12 @@ Keep it synchronized with the DAG table and task details.
 | 93    | QCORE9 - Unit Feature Procedure Profiles | done | QCORE8 | QCORE10 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed projection-shaped feature procedure profiles and owned proof machine without Unit ids or authored Surface records. |
 | 94    | QCORE10 - Spell Procedure Profiles | done | QCORE9 | QCORE11 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed Spell Invocation facts, production Spell Effects, and Readied Spell Response integration. |
 | 95    | QCORE11 - Stat-Block Controls | done | QCORE10 | QMBT1 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed Stat Block attack controls, Multiattack named dispatch, limited-use, Recharge, rest recharge, and Legendary Action procedure facts. |
-| 96    | QMBT1 - Standard Rule-Core MBT Bridge Contract | done | QCORE7-QCORE11 | QMBT2-QMBT5 | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed reusable focused-QMBT contract, projection discipline, file placement, timing command, and first movement runnable pattern without broad battle state explosion. |
-| 97    | QMBT2 - Movement and Grapple Runtime Parity | done | QMBT1, QCORE7 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE7 movement budget, Dash, Disengage, Stand, Grapple/Escape/Release, and OA-decline resume. |
-| 98    | QMBT3 - Reaction and Continuation Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE8 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, readied movement, and concentration break/hold. |
-| 99    | QMBT4 - Feature Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE9 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
-| 100   | QMBT5 - Spell Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE10 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
+| 96    | QMBT1 - Standard Rule-Core MBT Bridge Contract | done | QCORE7-QCORE11 | QMBT2-QMBT6 | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed reusable focused-QMBT contract, projection discipline, file placement, timing command, and first movement runnable pattern without broad battle state explosion. |
+| 97    | QMBT2 - Movement and Grapple Runtime Parity | done | QMBT1, QCORE7 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE7 movement budget, Dash, Disengage, Stand, Grapple/Escape/Release, and OA-decline resume. |
+| 98    | QMBT3 - Reaction and Continuation Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE8 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, readied movement, and concentration break/hold. |
+| 99    | QMBT4 - Feature Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE9 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
+| 100   | QMBT5 - Spell Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
+| 101   | QMBT6 - Stat-Block Control Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE11 stat-block control profiles, starting with Multiattack interleaving; keep Legendary Actions as a separate later tracer. |
 
 ## Task Details
 
@@ -242,7 +249,7 @@ Legendary Action resource/cooldown boundaries.
 Status: `done`
 
 Depends on: QCORE7-QCORE11
-Blocks: QMBT2-QMBT5
+Blocks: QMBT2-QMBT6
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 
@@ -331,3 +338,26 @@ Verification: RAW/ubiquitous check for spellcasting, Ready, Concentration, and
 each modeled spell passage; focused QMBT5 run only after implementation;
 existing promoted battle-runtime MBT once if runtime behavior changed; minimum
 two `/simplify` rounds.
+
+### Task 101 - QMBT6 - Stat-Block Control Runtime Parity
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT1, QCORE11
+Blocks: none
+
+Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
+
+Scope: add focused promoted runtime MBT parity for QCORE11 stat-block control
+profiles through typed fixtures, not authored monster parsing. Start with
+Multiattack named dispatch: first listed attack spends the Attack action,
+remaining named dispatches stay pending, Movement may interleave, non-Movement
+turn subjects such as Bonus Action or ordinary Action are rejected while the
+dispatch continuation is open, and End Turn closes unspent dispatches. Keep
+Legendary Actions as a separate later tracer with its own window/use/refresh
+projection.
+
+Verification: RAW/ubiquitous check for Stat Block, Multiattack, Monster
+Actions, Bonus Action, Reaction, Legendary Actions, and Limited Usage passages;
+focused QMBT6 run only after implementation; existing promoted battle-runtime
+MBT once if runtime behavior changed; minimum two `/simplify` rounds.
