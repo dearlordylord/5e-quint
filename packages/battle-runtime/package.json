@@ -14,6 +14,7 @@
     "test:mbt:rule-core-features": "vitest run src/rule-core-features.mbt.test.ts",
     "test:mbt:rule-core-movement": "vitest run src/rule-core-movement.mbt.test.ts",
     "test:mbt:rule-core-reactions": "vitest run src/rule-core-reactions.mbt.test.ts",
+    "test:mbt:rule-core-spells": "vitest run src/rule-core-spells.mbt.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
