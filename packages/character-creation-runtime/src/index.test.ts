@@ -5,13 +5,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import fc from "fast-check";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  ProficiencyGrantSubject,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 
 import {
@@ -38,6 +41,7 @@ import {
   loadoutSourceHoleIdText,
   loadoutSourceKey,
   parseCharacterEquipmentItemId,
+  parseCharacterDraft,
   parseCreationHoleId,
   parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
@@ -50,6 +54,7 @@ import {
   type CharacterChoiceSelection,
   type ChoiceCardinality,
   type CreationFill,
+  type CreationChoiceOptionId,
   type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
@@ -64,16 +69,24 @@ import { parseCharacterProgressionShape } from "./character-progression-algebra.
 import { classUnitId } from "./character-progression-types.ts";
 import {
   applyBackgroundAbilityScoreIncrease,
+  buildCharacterBuild,
   finalizedBuildEquipment,
   supportedChoiceHolesBySource,
 } from "./finalization.ts";
 import { qntLoadoutSlot } from "./qnt-loadout-bridge.test-support.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
-  isSupportedProgression,
   type SupportedLoadoutChoice,
 } from "./support-gates.ts";
-import { progressionOptionId } from "./phase1-manifest.ts";
+import {
+  abilityScoreIncreaseChoiceOptions,
+  progressionOptionId,
+} from "./phase1-manifest.ts";
+import {
+  decodeAbilityScoreIncreaseOptionId,
+  decodeProficiencyGrantSubjectOptionId,
+  proficiencyGrantSubjectOption,
+} from "./choice-option-codecs.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -222,6 +235,39 @@ function choiceCardinalityRight(
   return cardinality;
 }
 
+describe("CharacterDraft parser", () => {
+  test("accepts persisted promoted draft JSON", () => {
+    const draft = createCharacterDraft({
+      draftId: characterDraftId("test:stored-draft"),
+    });
+
+    expect(parseCharacterDraft(JSON.parse(JSON.stringify(draft)))).toEqual(
+      Either.right(draft),
+    );
+  });
+
+  test("rejects malformed nested selection data", () => {
+    const draft = createCharacterDraft({
+      draftId: characterDraftId("test:malformed-stored-draft"),
+    });
+
+    expect(
+      parseCharacterDraft({
+        ...draft,
+        selections: {
+          choices: [{ kind: "unitChoice", source: { tag: "unitChoice" } }],
+        },
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "invalidCharacterDraft",
+        path: "$.selections.choices[0].source.unitId",
+        message: "Expected a string.",
+      }),
+    );
+  });
+});
+
 describe("UnitChoiceSourceKey", () => {
   const sourceUnitIdText = fc.string({ minLength: 1, maxLength: 40 });
   const unitChoiceKeyText = fc.constantFrom(...UNIT_CHOICE_KEYS);
@@ -230,7 +276,7 @@ describe("UnitChoiceSourceKey", () => {
     const source = {
       tag: "unitChoice" as const,
       unitId: unitChoiceSourceUnitIdRight("class:custom:fighter"),
-      choiceKey: unitChoiceKeyRight("fighter_skill_choices"),
+      choiceKey: unitChoiceKeyRight("class_skill_proficiency_choice"),
     };
 
     const key = unitChoiceSourceKey(source);
@@ -242,7 +288,9 @@ describe("UnitChoiceSourceKey", () => {
 
   test("rejects the old separator-based Unit-source hole id", () => {
     expect(
-      parseCreationHoleId("cc:unit:class_fighter:fighter_skill_choices"),
+      parseCreationHoleId(
+        "cc:unit:class_fighter:class_skill_proficiency_choice",
+      ),
     ).toBeNull();
   });
 
@@ -390,6 +438,7 @@ describe("character creation hole discovery", () => {
           "13:class_fighter:level_1:maximum_hit_die",
           "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
           "12:class_wizard:level_1:maximum_hit_die",
+          "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
         ],
       ],
       ["choice", "cc:draft:draft.background", ["background_soldier"]],
@@ -490,7 +539,10 @@ describe("character creation hole discovery", () => {
       holeById(holes, "cc:draft:draft.progression.initial"),
     ).toBeUndefined();
     expect(
-      holeById(holes, testUnitHoleId("class_fighter", "fighter_skill_choices")),
+      holeById(
+        holes,
+        testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
+      ),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 2 },
@@ -509,7 +561,7 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
       ),
     ).toMatchObject({
       kind: "choice",
@@ -866,13 +918,13 @@ describe("character creation hole discovery", () => {
         choices: [
           selectedChoice(
             "class_fighter",
-            "fighter_skill_choices",
+            "class_skill_proficiency_choice",
             "perception",
             "survival",
           ),
           selectedUnitChoice(
             "fighter_fighting_style",
-            "fighting_style_feat",
+            "class_feature_feat_choice",
             "defense",
           ),
           selectedUnitChoice(
@@ -893,12 +945,15 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, testUnitHoleId("class_fighter", "fighter_skill_choices")),
+      holeById(
+        holes,
+        testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
+      ),
     ).toBeUndefined();
     expect(
       holeById(
         holes,
-        testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
       ),
     ).toBeUndefined();
     expect(
@@ -934,7 +989,7 @@ describe("character creation hole discovery", () => {
         choices: [
           selectedChoice(
             "class_fighter",
-            "fighter_skill_choices",
+            "class_skill_proficiency_choice",
             "perception",
           ),
         ],
@@ -943,7 +998,10 @@ describe("character creation hole discovery", () => {
     });
 
     expect(
-      holeById(holes, testUnitHoleId("class_fighter", "fighter_skill_choices")),
+      holeById(
+        holes,
+        testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
+      ),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 2 },
@@ -957,7 +1015,7 @@ describe("character creation hole discovery", () => {
         choices: [
           selectedChoice(
             "fighter_fighting_style",
-            "fighting_style_feat",
+            "class_feature_feat_choice",
             "defense",
           ),
         ],
@@ -968,7 +1026,7 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(
         holes,
-        testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
       ),
     ).toMatchObject({
       kind: "choice",
@@ -1071,7 +1129,7 @@ describe("character creation QNT slice parity", () => {
       expectedRevision: afterInitial.draft.revision,
       fills: [
         choiceFill(
-          testUnitHoleId("class_fighter", "fighter_skill_choices"),
+          testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
           "perception",
           "athletics",
         ),
@@ -1288,7 +1346,7 @@ describe("character creation batch fill", () => {
     expect(
       holeById(
         result.holes,
-        testUnitHoleId("class_fighter", "fighter_skill_choices"),
+        testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
       ),
     ).toMatchObject({
       kind: "choice",
@@ -1313,12 +1371,12 @@ describe("character creation batch fill", () => {
       expectedRevision: afterInitial.revision,
       fills: [
         choiceFill(
-          testUnitHoleId("class_fighter", "fighter_skill_choices"),
+          testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
           "perception",
           "survival",
         ),
         choiceFill(
-          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+          testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
           "defense",
         ),
         choiceFill(
@@ -1339,14 +1397,14 @@ describe("character creation batch fill", () => {
       selectedChoiceBySource(
         result.draft,
         "class_fighter",
-        "fighter_skill_choices",
+        "class_skill_proficiency_choice",
       )?.options,
     ).toEqual([{ optionId: "perception" }, { optionId: "survival" }]);
     expect(
       selectedChoiceBySource(
         result.draft,
         "fighter_fighting_style",
-        "fighting_style_feat",
+        "class_feature_feat_choice",
       )?.options,
     ).toEqual([{ optionId: "defense", unitRef: { unitId: "defense" } }]);
     expect(
@@ -1804,7 +1862,7 @@ describe("character creation finalization", () => {
         unitId: "orc_relentless_endurance",
       },
       {
-        choiceKey: "fighting_style_feat",
+        choiceKey: "class_feature_feat_choice",
         kind: "classChoice",
         unitId: "defense",
       },
@@ -1928,6 +1986,365 @@ describe("character creation finalization", () => {
     );
   });
 
+  test("retains selected subclass Unit refs in finalized builds", () => {
+    const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
+      supportedProgressions: CharacterProgression[];
+    };
+    const originalProgressions = profile.supportedProgressions;
+    const fighterThree = testProgression("class_fighter", 3);
+    profile.supportedProgressions = [...originalProgressions, fighterThree];
+    try {
+      const complete = completeManifestDraft();
+      const draft: CharacterDraft = {
+        ...complete,
+        selections: {
+          ...complete.selections,
+          progression: fighterThree,
+          choices: [
+            ...complete.selections.choices,
+            selectedUnitChoice(
+              "class_fighter",
+              "class_subclass_choice",
+              "subclass_fighter_champion",
+            ),
+          ],
+        },
+      };
+
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(result).toMatchObject({
+        tag: "ready",
+        build: {
+          features: expect.arrayContaining([
+            {
+              choiceKey: "class_subclass_choice",
+              kind: "classChoice",
+              unitId: "subclass_fighter_champion",
+            },
+          ]),
+        },
+      });
+    } finally {
+      profile.supportedProgressions = originalProgressions;
+    }
+  });
+
+  test("projects selected Ability Score Improvement feat choices into build ability scores", () => {
+    const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
+      supportedProgressions: CharacterProgression[];
+    };
+    const originalProgressions = profile.supportedProgressions;
+    const fighterFour = testProgression("class_fighter", 4);
+    profile.supportedProgressions = [...originalProgressions, fighterFour];
+    try {
+      const fighter = unitLibrary.requireUnit("class_fighter");
+      const secondWind = unitLibrary.requireUnit("fighter_second_wind");
+      const abilityScoreImprovement = {
+        ...secondWind,
+        id: "fighter_ability_score_improvement_l4",
+        name: "Ability Score Improvement",
+        acquiredAtLevel: 4,
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              category: "general",
+              kind: "grant_feat",
+              openFallback: "any_qualifying_feat",
+            },
+          ],
+        },
+      } as UnitRecord;
+      const widenedFighter = {
+        ...fighter,
+        featureGrants: [
+          ...("featureGrants" in fighter ? fighter.featureGrants : []),
+          { level: 4, unitId: "fighter_ability_score_improvement_l4" },
+        ],
+      } as UnitRecord;
+      const widenedUnitLibrary = unitLibraryReplacingUnits([
+        widenedFighter,
+        abilityScoreImprovement,
+      ]);
+      const complete = completeManifestDraft();
+      const draft: CharacterDraft = {
+        ...complete,
+        selections: {
+          ...complete.selections,
+          progression: fighterFour,
+          choices: [
+            ...complete.selections.choices,
+            selectedUnitChoice(
+              "class_fighter",
+              "class_subclass_choice",
+              "subclass_fighter_champion",
+            ),
+            selectedUnitChoice(
+              "fighter_ability_score_improvement_l4",
+              "class_feature_feat_choice",
+              "feat_ability_score_improvement",
+            ),
+            selectedChoice(
+              "fighter_ability_score_improvement_l4",
+              "class_feature_ability_score_increase_choice",
+              "ability_score:dex:+2:max20",
+            ),
+          ],
+        },
+      };
+
+      const result = finalizeCharacterDraft({
+        draft,
+        unitLibrary: widenedUnitLibrary,
+      });
+      expect(result).toMatchObject({
+        tag: "ready",
+        build: {
+          abilityScores: {
+            dex: 16,
+          },
+          features: expect.arrayContaining([
+            {
+              choiceKey: "class_feature_feat_choice",
+              kind: "classChoice",
+              unitId: "feat_ability_score_improvement",
+            },
+          ]),
+        },
+      });
+    } finally {
+      profile.supportedProgressions = originalProgressions;
+    }
+  });
+
+  test("represents two-score Ability Score Improvement choices as unordered pairs", () => {
+    const optionIds = abilityScoreIncreaseChoiceOptions({
+      maxScore: 20,
+      methods: [
+        { kind: "two_scores", primaryIncrease: 1, secondaryIncrease: 1 },
+      ],
+    }).map((option) => option.optionId);
+
+    expect(optionIds).toContain("ability_scores:str:+1;dex:+1:max20");
+    expect(optionIds).not.toContain("ability_scores:dex:+1;str:+1:max20");
+    expect(new Set(optionIds).size).toBe(optionIds.length);
+  });
+
+  test("decodes every generated Ability Score Improvement option", () => {
+    const options = abilityScoreIncreaseChoiceOptions({
+      maxScore: 20,
+      methods: [
+        { kind: "one_score", increase: 2 },
+        { kind: "two_scores", primaryIncrease: 1, secondaryIncrease: 1 },
+      ],
+    });
+
+    for (const option of options) {
+      const decoded = decodeAbilityScoreIncreaseOptionId(option.optionId);
+      expect(Either.isRight(decoded)).toBe(true);
+      if (Either.isRight(decoded)) {
+        expect(decoded.right.length).toBeGreaterThan(0);
+      }
+    }
+    expect(
+      Either.isLeft(
+        decodeAbilityScoreIncreaseOptionId("ability_score:dex:2:max20"),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeAbilityScoreIncreaseOptionId(
+          "ability_scores:str:+1;str:+1:max20",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("applies two-score Ability Score Improvement feat choices", () => {
+    const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
+      supportedProgressions: CharacterProgression[];
+    };
+    const originalProgressions = profile.supportedProgressions;
+    const fighterFour = testProgression("class_fighter", 4);
+    profile.supportedProgressions = [...originalProgressions, fighterFour];
+    try {
+      const fighter = unitLibrary.requireUnit("class_fighter");
+      const secondWind = unitLibrary.requireUnit("fighter_second_wind");
+      const abilityScoreImprovement = {
+        ...secondWind,
+        id: "fighter_ability_score_improvement_l4",
+        name: "Ability Score Improvement",
+        acquiredAtLevel: 4,
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              category: "general",
+              kind: "grant_feat",
+              openFallback: "any_qualifying_feat",
+            },
+          ],
+        },
+      } as UnitRecord;
+      const widenedFighter = {
+        ...fighter,
+        featureGrants: [
+          ...("featureGrants" in fighter ? fighter.featureGrants : []),
+          { level: 4, unitId: "fighter_ability_score_improvement_l4" },
+        ],
+      } as UnitRecord;
+      const widenedUnitLibrary = unitLibraryReplacingUnits([
+        widenedFighter,
+        abilityScoreImprovement,
+      ]);
+      const complete = completeManifestDraft();
+      const draft: CharacterDraft = {
+        ...complete,
+        selections: {
+          ...complete.selections,
+          progression: fighterFour,
+          choices: [
+            ...complete.selections.choices,
+            selectedUnitChoice(
+              "class_fighter",
+              "class_subclass_choice",
+              "subclass_fighter_champion",
+            ),
+            selectedUnitChoice(
+              "fighter_ability_score_improvement_l4",
+              "class_feature_feat_choice",
+              "feat_ability_score_improvement",
+            ),
+            selectedChoice(
+              "fighter_ability_score_improvement_l4",
+              "class_feature_ability_score_increase_choice",
+              "ability_scores:str:+1;dex:+1:max20",
+            ),
+          ],
+        },
+      };
+
+      const result = finalizeCharacterDraft({
+        draft,
+        unitLibrary: widenedUnitLibrary,
+      });
+      expect(result).toMatchObject({
+        tag: "ready",
+        build: {
+          abilityScores: {
+            str: 18,
+            dex: 15,
+          },
+        },
+      });
+    } finally {
+      profile.supportedProgressions = originalProgressions;
+    }
+  });
+
+  test("rejects cumulative class-feature ability-score increases above their cap", () => {
+    const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
+      supportedProgressions: CharacterProgression[];
+    };
+    const originalProgressions = profile.supportedProgressions;
+    const fighterSix = testProgression("class_fighter", 6);
+    profile.supportedProgressions = [...originalProgressions, fighterSix];
+    try {
+      const fighter = unitLibrary.requireUnit("class_fighter");
+      const secondWind = unitLibrary.requireUnit("fighter_second_wind");
+      const abilityScoreImprovement = {
+        ...secondWind,
+        id: "fighter_ability_score_improvement_l4",
+        name: "Ability Score Improvement",
+        acquiredAtLevel: 4,
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              category: "general",
+              kind: "grant_feat",
+              openFallback: "any_qualifying_feat",
+            },
+          ],
+        },
+      } as UnitRecord;
+      const secondAbilityScoreImprovement = {
+        ...abilityScoreImprovement,
+        id: "fighter_ability_score_improvement_l6",
+        acquiredAtLevel: 6,
+      } as UnitRecord;
+      const widenedFighter = {
+        ...fighter,
+        featureGrants: [
+          ...("featureGrants" in fighter ? fighter.featureGrants : []),
+          { level: 4, unitId: "fighter_ability_score_improvement_l4" },
+          { level: 6, unitId: "fighter_ability_score_improvement_l6" },
+        ],
+      } as UnitRecord;
+      const widenedUnitLibrary = unitLibraryReplacingUnits([
+        widenedFighter,
+        abilityScoreImprovement,
+        secondAbilityScoreImprovement,
+      ]);
+      const complete = completeManifestDraft();
+      const draft: CharacterDraft = {
+        ...complete,
+        selections: {
+          ...complete.selections,
+          progression: fighterSix,
+          choices: [
+            ...complete.selections.choices,
+            selectedUnitChoice(
+              "class_fighter",
+              "class_subclass_choice",
+              "subclass_fighter_champion",
+            ),
+            selectedUnitChoice(
+              "fighter_ability_score_improvement_l4",
+              "class_feature_feat_choice",
+              "feat_ability_score_improvement",
+            ),
+            selectedChoice(
+              "fighter_ability_score_improvement_l4",
+              "class_feature_ability_score_increase_choice",
+              "ability_score:str:+2:max20",
+            ),
+            selectedUnitChoice(
+              "fighter_ability_score_improvement_l6",
+              "class_feature_feat_choice",
+              "feat_ability_score_improvement",
+            ),
+            selectedChoice(
+              "fighter_ability_score_improvement_l6",
+              "class_feature_ability_score_increase_choice",
+              "ability_score:str:+2:max20",
+            ),
+          ],
+        },
+      };
+
+      const result = finalizeCharacterDraft({
+        draft,
+        unitLibrary: widenedUnitLibrary,
+      });
+
+      expect(result).toMatchObject({
+        tag: "invalid",
+        issues: [
+          {
+            tag: "illegalFinalization",
+            code: "illegalFinalization",
+            message:
+              "Cannot apply class-feature ability-score increase: str 19 + 2 would exceed 20.",
+          },
+        ],
+      });
+    } finally {
+      profile.supportedProgressions = originalProgressions;
+    }
+  });
+
   test("does not treat Fighter followed by Wizard as supported Fighter 2", () => {
     const fighterThenWizard = expectRight(
       parseCharacterProgressionShape({
@@ -1952,10 +2369,140 @@ describe("character creation finalization", () => {
     );
     const fighterTwo = testProgression("class_fighter", 2);
 
-    expect(isSupportedProgression(fighterThenWizard)).toBe(false);
     expect(progressionOptionId(fighterThenWizard)).not.toBe(
       progressionOptionId(fighterTwo),
     );
+  });
+
+  test("finalizes supported multiclass proficiencies and class feature choices", () => {
+    const draft = completeWizardThenFighterDraft();
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(result.build.hitPoints.hitDice).toEqual([
+      { classUnitId: "class_wizard", dieSize: 6, total: 1 },
+      { classUnitId: "class_fighter", dieSize: 10, total: 1 },
+    ]);
+    expect(result.build.proficiencies.weapon).toEqual(["simple", "martial"]);
+    expect(result.build.armorTraining).toEqual(["light", "medium", "shield"]);
+    expect(result.build.features).toEqual(
+      expect.arrayContaining([
+        { kind: "classFeature", unitId: "wizard_ritual_adept" },
+        { kind: "classFeature", unitId: "fighter_fighting_style" },
+        { kind: "classFeature", unitId: "fighter_weapon_mastery" },
+      ]),
+    );
+  });
+
+  test("collects all missing class Unit issues while projecting a build", () => {
+    const progression = expectRight(
+      parseCharacterProgressionShape({
+        startingClass: classUnitId("class_fighter"),
+        advancements: [
+          {
+            classUnitId: classUnitId("class_missing_one"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+          {
+            classUnitId: classUnitId("class_missing_two"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      }),
+    );
+    const complete = completeManifestDraft();
+    const selections = {
+      ...complete.selections,
+      progression,
+    };
+    const supportedSelections = {
+      selections,
+      progression,
+      unitChoices: [],
+      loadoutChoices: [],
+    } as unknown as Parameters<
+      typeof buildCharacterBuild
+    >[0]["supportedSelections"];
+
+    const result = buildCharacterBuild({ supportedSelections, unitLibrary });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left.map((issue) => issue.message)).toEqual([
+      "Cannot finalize unknown class Unit: class_missing_one",
+      "Cannot finalize unknown class Unit: class_missing_two",
+    ]);
+  });
+
+  test("collects malformed class-feature ability-score option issues while projecting a build", () => {
+    const complete = completeManifestDraft();
+    const selections = {
+      ...complete.selections,
+      choices: [
+        ...complete.selections.choices,
+        selectedChoice(
+          "fighter_ability_score_improvement_l4",
+          "class_feature_ability_score_increase_choice",
+          "ability_score:dex:2:max20",
+          "ability_scores:str:+1;str:+1:max20",
+        ),
+      ],
+    };
+    const supportedSelections = {
+      selections,
+      progression: selections.progression,
+      unitChoices: [],
+      loadoutChoices: [],
+    } as unknown as Parameters<
+      typeof buildCharacterBuild
+    >[0]["supportedSelections"];
+
+    const result = buildCharacterBuild({ supportedSelections, unitLibrary });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toMatchObject([
+      { tag: "invalidChoiceOption", optionId: "ability_score:dex:2:max20" },
+      {
+        tag: "invalidChoiceOption",
+        optionId: "ability_scores:str:+1;str:+1:max20",
+      },
+    ]);
+  });
+
+  test("collects malformed class-feature proficiency option issues while projecting a build", () => {
+    const complete = completeManifestDraft();
+    const selections = {
+      ...complete.selections,
+      choices: [
+        ...complete.selections.choices,
+        selectedChoice(
+          "fighter_proficiency_grant",
+          "class_feature_proficiency_choice",
+          "proficiency:skill",
+          "proficiency:armor",
+        ),
+      ],
+    };
+    const supportedSelections = {
+      selections,
+      progression: selections.progression,
+      unitChoices: [],
+      loadoutChoices: [],
+    } as unknown as Parameters<
+      typeof buildCharacterBuild
+    >[0]["supportedSelections"];
+
+    const result = buildCharacterBuild({ supportedSelections, unitLibrary });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toMatchObject([
+      { tag: "invalidChoiceOption", optionId: "proficiency:skill" },
+      { tag: "invalidChoiceOption", optionId: "proficiency:armor" },
+    ]);
   });
 
   test("uses collision-resistant progression option ids for class paths", () => {
@@ -2268,12 +2815,12 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+          testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         ),
         source: {
           tag: "unitChoice",
           unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style"),
-          choiceKey: unitChoiceKeyRight("fighting_style_feat"),
+          choiceKey: unitChoiceKeyRight("class_feature_feat_choice"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
@@ -2287,12 +2834,12 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+          testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         ),
         source: {
           tag: "unitChoice",
           unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style"),
-          choiceKey: unitChoiceKeyRight("fighting_style_feat"),
+          choiceKey: unitChoiceKeyRight("class_feature_feat_choice"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
@@ -2311,14 +2858,17 @@ describe("character creation finalization", () => {
     ]);
 
     const mergedHole = merged.get(
-      testUnitChoiceSourceKey("fighter_fighting_style", "fighting_style_feat"),
+      testUnitChoiceSourceKey(
+        "fighter_fighting_style",
+        "class_feature_feat_choice",
+      ),
     );
     expect(mergedHole).toMatchObject({
       kind: "choice",
       source: {
         tag: "unitChoice",
         unitId: "fighter_fighting_style",
-        choiceKey: "fighting_style_feat",
+        choiceKey: "class_feature_feat_choice",
       },
     });
     expect(mergedHole?.options).toEqual([
@@ -2340,12 +2890,12 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+          testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         ),
         source: {
           tag: "unitChoice",
           unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style"),
-          choiceKey: unitChoiceKeyRight("fighting_style_feat"),
+          choiceKey: unitChoiceKeyRight("class_feature_feat_choice"),
         },
         cardinality: choiceCardinalityRight(exactChoiceCardinality(1)),
         options: [
@@ -2359,12 +2909,12 @@ describe("character creation finalization", () => {
       {
         kind: "choice",
         holeId: creationHoleId(
-          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+          testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         ),
         source: {
           tag: "unitChoice",
           unitId: unitChoiceSourceUnitIdRight("fighter_fighting_style"),
-          choiceKey: unitChoiceKeyRight("fighting_style_feat"),
+          choiceKey: unitChoiceKeyRight("class_feature_feat_choice"),
         },
         cardinality: choiceCardinalityRight(
           boundedChoiceCardinality({ min: 1, max: 2 }),
@@ -2382,7 +2932,7 @@ describe("character creation finalization", () => {
       merged.get(
         testUnitChoiceSourceKey(
           "fighter_fighting_style",
-          "fighting_style_feat",
+          "class_feature_feat_choice",
         ),
       )?.options,
     ).toEqual([
@@ -2465,7 +3015,7 @@ describe("character creation finalization", () => {
           ...complete.selections.choices,
           selectedChoice(
             "fighter_fighting_style",
-            "fighting_style_feat",
+            "class_feature_feat_choice",
             "weapon_longsword",
           ),
         ],
@@ -2479,7 +3029,7 @@ describe("character creation finalization", () => {
           ...complete.selections.choices,
           selectedChoice(
             "fighter_fighting_style",
-            "fighting_style_feat",
+            "class_feature_feat_choice",
             "defense",
           ),
         ],
@@ -2523,7 +3073,7 @@ describe("character creation finalization", () => {
         choices: complete.selections.choices.map((choice) =>
           choice.kind === "unitChoice" &&
           choice.source.unitId === "fighter_fighting_style" &&
-          choice.source.choiceKey === "fighting_style_feat"
+          choice.source.choiceKey === "class_feature_feat_choice"
             ? {
                 ...choice,
                 options: choice.options.map((option) => ({
@@ -2546,11 +3096,314 @@ describe("character creation finalization", () => {
         {
           holeId: testUnitHoleId(
             "fighter_fighting_style",
-            "fighting_style_feat",
+            "class_feature_feat_choice",
           ),
         },
       ],
     });
+  });
+
+  test("projects selected class-feature proficiency grants into build skills", () => {
+    const fighter = unitLibrary.requireUnit("class_fighter");
+    const secondWind = unitLibrary.requireUnit("fighter_second_wind");
+    const bonusProficiencies = {
+      ...secondWind,
+      id: "fighter_bonus_proficiencies",
+      name: "Bonus Proficiencies",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            kind: "grant_proficiency",
+            proficiency: {
+              kind: "choice",
+              count: 3,
+              options: [
+                { kind: "skill", skill: "animal_handling" },
+                { kind: "skill", skill: "medicine" },
+                { kind: "skill", skill: "religion" },
+              ],
+            },
+          },
+        ],
+      },
+    } as UnitRecord;
+    const widenedFighter = {
+      ...fighter,
+      featureGrants: [
+        ...("featureGrants" in fighter ? fighter.featureGrants : []),
+        { level: 2, unitId: "fighter_bonus_proficiencies" },
+      ],
+    } as UnitRecord;
+    const widenedUnitLibrary = unitLibraryReplacingUnits([
+      widenedFighter,
+      bonusProficiencies,
+    ]);
+    const draft = createCharacterDraft({
+      unitLibrary: widenedUnitLibrary,
+      draftId: characterDraftId("draft:class-feature-proficiency-grant"),
+    });
+    const afterProgression = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary: widenedUnitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills(
+          "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+        ),
+      }),
+    );
+
+    const proficiencyHole = holeById(
+      discoverCreationHoles({
+        draft: afterProgression,
+        unitLibrary: widenedUnitLibrary,
+      }),
+      testUnitHoleId(
+        "fighter_bonus_proficiencies",
+        "class_feature_proficiency_choice",
+      ),
+    );
+    expect(proficiencyHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 3 },
+      options: expect.arrayContaining([
+        expect.objectContaining({ optionId: "animal_handling" }),
+        expect.objectContaining({ optionId: "medicine" }),
+        expect.objectContaining({ optionId: "religion" }),
+      ]),
+    });
+
+    const afterChoices = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterProgression,
+        unitLibrary: widenedUnitLibrary,
+        expectedRevision: afterProgression.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
+            "perception",
+            "survival",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "fighter_fighting_style",
+              "class_feature_feat_choice",
+            ),
+            "defense",
+          ),
+          choiceFill(
+            testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+            "weapon_longsword",
+            "weapon_spear",
+            "weapon_flail",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "fighter_bonus_proficiencies",
+              "class_feature_proficiency_choice",
+            ),
+            "animal_handling",
+            "medicine",
+            "religion",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "background_soldier",
+              "background_ability_score_increase",
+            ),
+            "two_and_one:str:con",
+          ),
+          choiceFill(
+            testUnitHoleId("background_soldier", "background_tool_choice"),
+            "tool_dice_set",
+          ),
+          choiceFill(
+            testUnitHoleId("class_fighter", "class_equipment_choice"),
+            "option_c",
+          ),
+          choiceFill(
+            testUnitHoleId("background_soldier", "background_equipment_choice"),
+            "option_b",
+          ),
+        ],
+      }),
+    );
+    const afterPurchase = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterChoices,
+        unitLibrary: widenedUnitLibrary,
+        expectedRevision: afterChoices.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("class_fighter", "equipment_purchase"),
+            "armor_chain_mail",
+            "weapon_longsword",
+            "equipment_shield",
+          ),
+        ],
+      }),
+    );
+    const complete = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterPurchase,
+        unitLibrary: widenedUnitLibrary,
+        expectedRevision: afterPurchase.revision,
+        fills: [
+          choiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+          choiceFill(
+            testLoadoutHoleId("equipment_shield", "shield"),
+            "wielded",
+          ),
+          choiceFill(
+            testLoadoutHoleId("weapon_longsword", "weapon"),
+            "wielded_one_handed",
+          ),
+        ],
+      }),
+    );
+
+    const finalization = finalizeCharacterDraft({
+      draft: complete,
+      unitLibrary: widenedUnitLibrary,
+    });
+
+    expect(finalization).toMatchObject({
+      tag: "ready",
+      build: {
+        proficiencies: {
+          skills: [
+            "perception",
+            "survival",
+            "animal_handling",
+            "medicine",
+            "religion",
+            "athletics",
+            "intimidation",
+          ],
+        },
+      },
+    });
+  });
+
+  test("represents mixed class-feature proficiency grant subjects without narrowing to skills", () => {
+    const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
+      unitOptionIdsByChoiceKey: Record<string, CreationChoiceOptionId[]>;
+    };
+    const originalProficiencyOptions =
+      profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice;
+    profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice = [
+      ...(originalProficiencyOptions ?? []),
+      creationChoiceOptionId("tool:tool_thieves_tools"),
+    ];
+    try {
+      const fighter = unitLibrary.requireUnit("class_fighter");
+      const secondWind = unitLibrary.requireUnit("fighter_second_wind");
+      const mixedProficiencies = {
+        ...secondWind,
+        id: "fighter_mixed_proficiencies",
+        name: "Mixed Proficiencies",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              kind: "grant_proficiency",
+              proficiency: {
+                kind: "choice",
+                count: 4,
+                options: [
+                  { kind: "skill", skill: "medicine" },
+                  { kind: "weapon_category", category: "martial" },
+                  { kind: "armor_category", category: "light" },
+                  { kind: "tool", toolId: "tool_thieves_tools" },
+                ],
+              },
+            },
+          ],
+        },
+      } as UnitRecord;
+      const widenedFighter = {
+        ...fighter,
+        featureGrants: [
+          ...("featureGrants" in fighter ? fighter.featureGrants : []),
+          { level: 2, unitId: "fighter_mixed_proficiencies" },
+        ],
+      } as UnitRecord;
+      const widenedUnitLibrary = unitLibraryReplacingUnits([
+        widenedFighter,
+        mixedProficiencies,
+      ]);
+      const complete = completeFighterTwoDraft();
+      const draft: CharacterDraft = {
+        ...complete,
+        selections: {
+          ...complete.selections,
+          choices: [
+            ...complete.selections.choices,
+            selectedChoice(
+              "fighter_mixed_proficiencies",
+              "class_feature_proficiency_choice",
+              "medicine",
+              "weapon_category:martial",
+              "armor_category:light",
+              "tool:tool_thieves_tools",
+            ),
+          ],
+        },
+      };
+
+      const result = finalizeCharacterDraft({
+        draft,
+        unitLibrary: widenedUnitLibrary,
+      });
+
+      expect(result).toMatchObject({
+        tag: "ready",
+        build: {
+          armorTraining: expect.arrayContaining(["light"]),
+          proficiencies: {
+            skills: expect.arrayContaining(["medicine"]),
+            weapon: expect.arrayContaining(["martial"]),
+            tools: expect.arrayContaining(["tool_thieves_tools"]),
+          },
+        },
+      });
+    } finally {
+      profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice =
+        originalProficiencyOptions;
+    }
+  });
+
+  test("round-trips every class-feature proficiency subject option shape", () => {
+    const subjects: readonly ProficiencyGrantSubject[] = [
+      { kind: "skill", skill: "medicine" },
+      { kind: "weapon_category", category: "martial" },
+      { kind: "armor_category", category: "light" },
+      { kind: "tool", toolId: "tool_thieves_tools" },
+    ];
+
+    for (const subject of subjects) {
+      const option = proficiencyGrantSubjectOption(subject);
+      const decoded = decodeProficiencyGrantSubjectOptionId(option.optionId);
+      expect(Either.isRight(decoded)).toBe(true);
+      if (Either.isRight(decoded)) {
+        expect(decoded.right).toEqual(subject);
+      }
+    }
+    expect(
+      Either.isLeft(
+        decodeProficiencyGrantSubjectOptionId("weapon_category:future"),
+      ),
+    ).toBe(true);
+    expect(Either.isLeft(decodeProficiencyGrantSubjectOptionId("tool:"))).toBe(
+      true,
+    );
+    expect(
+      Either.isLeft(decodeProficiencyGrantSubjectOptionId("tool:   ")),
+    ).toBe(true);
+    expect(
+      proficiencyGrantSubjectOption({ kind: "skill", skill: "medicine" }),
+    ).toMatchObject({ label: "Medicine" });
   });
 
   test("keeps duplicate or missing equipment ownership fillable", () => {
@@ -2661,6 +3514,35 @@ function unitLibraryWithUnrelatedUnits(count: number): UnitCatalog {
   };
 }
 
+function unitLibraryReplacingUnits(
+  replacements: readonly UnitRecord[],
+): UnitCatalog {
+  const replacementById = new Map(
+    replacements.map((unit) => [unit.id, unit] as const),
+  );
+  const baseUnits = unitLibrary.listUnits();
+  const units = [
+    ...baseUnits.map((unit) => replacementById.get(unit.id) ?? unit),
+    ...replacements.filter(
+      (unit) => !baseUnits.some((baseUnit) => baseUnit.id === unit.id),
+    ),
+  ];
+
+  return {
+    ...unitLibrary,
+    getUnit: (id) => Option.fromNullable(units.find((unit) => unit.id === id)),
+    listUnits: () => units,
+    requireUnit: (id) => {
+      const unit = units.find((candidate) => candidate.id === id);
+      if (unit == null) {
+        throw new Error(`Missing test Unit: ${id}`);
+      }
+
+      return unit;
+    },
+  };
+}
+
 function initialManifestFills(
   progressionOptionId = "13:class_fighter:level_1:maximum_hit_die",
 ): readonly CreationFill[] {
@@ -2733,12 +3615,12 @@ function completeManifestDraftAfterProgression(
       expectedRevision: afterProgression.revision,
       fills: [
         choiceFill(
-          testUnitHoleId("class_fighter", "fighter_skill_choices"),
+          testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
           "perception",
           "survival",
         ),
         choiceFill(
-          testUnitHoleId("fighter_fighting_style", "fighting_style_feat"),
+          testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
           "defense",
         ),
         choiceFill(
@@ -2841,7 +3723,7 @@ function completeWizardDraft(): CharacterDraft {
       expectedRevision: afterInitial.revision,
       fills: [
         choiceFill(
-          testUnitHoleId("class_wizard", "wizard_skill_choices"),
+          testUnitHoleId("class_wizard", "class_skill_proficiency_choice"),
           "arcana",
           "history",
         ),
@@ -2921,6 +3803,136 @@ function completeWizardDraft(): CharacterDraft {
   );
 }
 
+function completeWizardThenFighterDraft(): CharacterDraft {
+  const draft = createTestDraft("draft:complete-wizard-fighter");
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
+        ),
+        choiceFill("cc:draft:draft.background", "background_soldier"),
+        choiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: testAbilityScoreAssignment({
+            str: 15,
+            dex: 14,
+            con: 13,
+            int: 8,
+            wis: 10,
+            cha: 12,
+          }),
+        },
+        choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        choiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId("class_wizard", "class_skill_proficiency_choice"),
+          "arcana",
+          "history",
+        ),
+        choiceFill(
+          testUnitHoleId("class_wizard", "wizard_cantrip_choices"),
+          "light",
+          "fire_bolt",
+          "ray_of_frost",
+        ),
+        choiceFill(
+          testUnitHoleId("class_wizard", "wizard_spellbook_choices"),
+          "detect_magic",
+          "mage_armor",
+          "magic_missile",
+          "shield",
+          "sleep",
+          "thunderwave",
+        ),
+        choiceFill(
+          testUnitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+          "detect_magic",
+          "mage_armor",
+          "magic_missile",
+          "sleep",
+        ),
+        choiceFill(
+          testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
+          "defense",
+        ),
+        choiceFill(
+          testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+        ),
+        choiceFill(
+          testUnitHoleId(
+            "background_soldier",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:str:con",
+        ),
+        choiceFill(
+          testUnitHoleId("background_soldier", "background_tool_choice"),
+          "tool_dice_set",
+        ),
+        choiceFill(
+          testUnitHoleId("class_wizard", "class_equipment_choice"),
+          "option_b",
+        ),
+        choiceFill(
+          testUnitHoleId("background_soldier", "background_equipment_choice"),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId("class_wizard", "equipment_purchase"),
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+
+  return requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        choiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        choiceFill(testLoadoutHoleId("equipment_shield", "shield"), "wielded"),
+        choiceFill(
+          testLoadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+}
+
 function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
   if (result.tag !== "accepted") {
     throw new Error(
@@ -2955,8 +3967,9 @@ const HOLE_ID_TO_QNT_VARIANT = {
   "cc:draft:draft.abilityScoreGeneration": "HAbilityScores",
   "cc:draft:draft.languages": "HLanguages",
   "cc:draft:draft.alignment": "HAlignment",
-  [testUnitHoleId("class_fighter", "fighter_skill_choices")]: "HClassSkills",
-  [testUnitHoleId("fighter_fighting_style", "fighting_style_feat")]:
+  [testUnitHoleId("class_fighter", "class_skill_proficiency_choice")]:
+    "HClassSkills",
+  [testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice")]:
     "HFighterFightingStyle",
   [testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options")]:
     "HFighterWeaponMastery",
@@ -3275,8 +4288,8 @@ function renderQntDraftProjection(draft: CharacterDraft): string {
     abilityScores: ${qntBool(selections.abilityScoreGeneration != null)},
     languages: ${qntBool(selections.languages != null)},
     alignment: ${qntBool(selections.alignment != null)},
-    classSkills: ${qntBool(hasChoiceSelection(draft, "class_fighter", "fighter_skill_choices"))},
-    fighterFightingStyle: ${qntBool(hasChoiceSelection(draft, "fighter_fighting_style", "fighting_style_feat"))},
+    classSkills: ${qntBool(hasChoiceSelection(draft, "class_fighter", "class_skill_proficiency_choice"))},
+    fighterFightingStyle: ${qntBool(hasChoiceSelection(draft, "fighter_fighting_style", "class_feature_feat_choice"))},
     fighterWeaponMastery: ${qntBool(hasChoiceSelection(draft, "fighter_weapon_mastery", "weapon_mastery_options"))},
     backgroundAbilityScoreIncrease: ${qntBool(selections.backgroundAbilityScoreIncrease != null)},
     backgroundTool: ${qntBool(hasChoiceSelection(draft, "background_soldier", "background_tool_choice"))},

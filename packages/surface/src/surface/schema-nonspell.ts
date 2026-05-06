@@ -6,6 +6,7 @@ import {
   ArmorTrainingCategorySchema,
   BackgroundRecordKindSchema,
   ClassRecordKindSchema,
+  SubclassRecordKindSchema,
   ClassNameSchema,
   ConditionSchema,
   DamageTypeSchema,
@@ -18,6 +19,7 @@ import {
   MediumArmorAcFormulaSchema,
   NON_FIGHTER_NON_WIZARD_CLASS_NAMES,
   NON_WIZARD_CLASS_NAMES,
+  ProficiencyGrantSchema,
   ProvenanceSchema,
   RollKindSchema,
   SkillSchema,
@@ -394,9 +396,21 @@ export const MagicItemSpawnedCreatureMechanicsSchema = Schema.Struct({
 export const ClassFeatureActivationMechanicsSchema =
   ActivatedAbilityMechanicsSchema;
 
+export const AlternateActionCostMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("alternate_action_cost"),
+  from: Schema.Struct({
+    kind: Schema.Literal("standard_action"),
+    actions: Schema.NonEmptyArray(StandardActionKindSchema),
+  }),
+  to: Schema.Struct({
+    kind: Schema.Literal("bonus_action"),
+  }),
+});
+
 export const ClassFeatureComponentMechanicsSchema = Schema.Union(
   Schema.suspend(() => PassiveMechanicsSchema),
   ActivatedAbilityMechanicsSchema,
+  AlternateActionCostMechanicsSchema,
   Schema.suspend(() => OnHitTriggerMechanicsSchema),
   Schema.suspend(() => SaveDamageReplacementMechanicsSchema),
   Schema.suspend(() => ReactionRollOrDamageReductionMechanicsSchema),
@@ -992,6 +1006,13 @@ const ClassRecordBaseFields = {
   armorTraining: ArmorTrainingSchema,
   startingEquipment: Schema.NonEmptyArray(StartingEquipmentChoiceSchema),
   featureGrants: Schema.Array(ClassFeatureGrantSchema),
+  multiclassProficiencies: ProficiencyGrantSchema,
+  subclassChoices: Schema.Array(
+    Schema.Struct({
+      level: PositiveIntegerSchema,
+      options: Schema.NonEmptyArray(NonEmptyStringSchema),
+    }),
+  ),
 };
 
 export const WizardClassRecordSchema = Schema.Struct({
@@ -1047,6 +1068,13 @@ export const ClassFeatureRecordSchema = Schema.Union(
   OtherClassFeatureRecordSchema,
 );
 
+export const SubclassRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: SubclassRecordKindSchema,
+  className: ClassNameSchema,
+  featureGrants: Schema.Array(ClassFeatureGrantSchema),
+});
+
 export const MasteryRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("mastery"),
@@ -1063,6 +1091,24 @@ export const FeatRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("feat"),
   category: FeatCategorySchema,
+  abilityScoreIncreaseChoice: exactOptional(
+    Schema.Struct({
+      maxScore: PositiveIntegerSchema,
+      methods: Schema.NonEmptyArray(
+        Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("one_score"),
+            increase: PositiveIntegerSchema,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("two_scores"),
+            primaryIncrease: PositiveIntegerSchema,
+            secondaryIncrease: PositiveIntegerSchema,
+          }),
+        ),
+      ),
+    }),
+  ),
   mechanics: FeatMechanicsSchema,
 });
 
@@ -1344,6 +1390,7 @@ export const WeaponRecordSchema = Schema.Struct({
 export const UnitRecordSchema = Schema.Union(
   SpellRecordSchema,
   ClassRecordSchema,
+  SubclassRecordSchema,
   ClassFeatureRecordSchema,
   BackgroundRecordSchema,
   MasteryRecordSchema,

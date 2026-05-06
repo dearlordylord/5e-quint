@@ -120,6 +120,7 @@ export {
   DurationUpcastTierSchema,
   DurationValueSchema,
   ClassRecordKindSchema,
+  SubclassRecordKindSchema,
   ClassNameSchema,
   ContainerStorageProfileSchema,
   ExileDestinationSchema,
@@ -161,6 +162,7 @@ export {
 export {
   ActivationResourceSchema,
   ActivatedAbilityMechanicsSchema,
+  AlternateActionCostMechanicsSchema,
   ArmorRecordSchema,
   ArmorTemplateRecordSchema,
   ArmorTrainingSchema,
@@ -176,6 +178,7 @@ export {
   ClassFeatureMechanicsSchema,
   ClassFeatureRecordSchema,
   ClassRecordSchema,
+  SubclassRecordSchema,
   FighterClassFeatureMechanicsSchema,
   FighterClassFeatureRecordSchema,
   NonWizardClassRecordSchema,
@@ -261,6 +264,7 @@ import {
   BackgroundRecordSchema,
   ClassFeatureRecordSchema,
   ClassRecordSchema,
+  SubclassRecordSchema,
   FeatRecordSchema,
   MagicItemRecordSchema,
   MasteryRecordSchema,
@@ -332,6 +336,12 @@ export function decodeClassRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ClassRecordSchema> {
   return Schema.decodeUnknownSync(ClassRecordSchema)(raw);
+}
+
+export function decodeSubclassRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof SubclassRecordSchema> {
+  return Schema.decodeUnknownSync(SubclassRecordSchema)(raw);
 }
 
 export function decodeBackgroundRecordSync(

@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
+import { characterDraftId } from "@dnd/character-creation-runtime";
+import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
@@ -10,7 +12,7 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 
-describe("end-user promoted MCP vertical", () => {
+describe("end-user MCP vertical", () => {
   test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:accepted-orc-soldier-fighter";
@@ -48,8 +50,8 @@ describe("end-user promoted MCP vertical", () => {
 
     const choices = callTool(root, "discover_creation_holes", { draftId });
     expect(holeIds(choices)).toEqual([
-      unitHoleId("class_fighter", "fighter_skill_choices"),
-      unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+      unitHoleId("class_fighter", "class_skill_proficiency_choice"),
+      unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
       unitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
       unitHoleId("class_fighter", "class_equipment_choice"),
       unitHoleId("background_soldier", "background_ability_score_increase"),
@@ -62,12 +64,12 @@ describe("end-user promoted MCP vertical", () => {
       expectedRevision: 1,
       fills: [
         choiceFill(
-          unitHoleId("class_fighter", "fighter_skill_choices"),
+          unitHoleId("class_fighter", "class_skill_proficiency_choice"),
           "perception",
           "survival",
         ),
         choiceFill(
-          unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+          unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
           "defense",
         ),
         choiceFill(
@@ -145,7 +147,7 @@ describe("end-user promoted MCP vertical", () => {
       initialCombatants: [
         {
           kind: "characterSession",
-          sourceDraftId: draftId,
+          characterId: testCharacterId(draftId),
           combatantId: "fighter",
           initiative: 18,
           side: "party",
@@ -225,7 +227,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     });
     expect(fighterDamage.result.tag).toBe("resolved");
-    expect(fighterDamage.battleState.combatants).toEqual([
+    expect(fighterDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 12 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -239,6 +241,7 @@ describe("end-user promoted MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Nimble Escape",
       "Move",
       "End Turn",
     ]);
@@ -291,7 +294,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     });
     expect(goblinDamage.result.tag).toBe("resolved");
-    expect(goblinDamage.battleState.combatants).toEqual([
+    expect(goblinDamage.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 5 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -305,7 +308,7 @@ describe("end-user promoted MCP vertical", () => {
     const listed = callTool(root, "list_characters", {});
     expect(listed.characters).toEqual([
       expect.objectContaining({
-        sourceDraftId: draftId,
+        characterId: testCharacterId(draftId),
         status: "available",
         displayName: "Orc Soldier Fighter",
         hitPoints: expect.objectContaining({ current: 5, maximum: 12 }),
@@ -362,14 +365,14 @@ describe("end-user promoted MCP vertical", () => {
       initialCombatants: [
         {
           kind: "characterSession",
-          sourceDraftId: fighterDraftId,
+          characterId: testCharacterId(fighterDraftId),
           combatantId: "fighter",
           initiative: 18,
           side: "party",
         },
         {
           kind: "characterSession",
-          sourceDraftId: wizardDraftId,
+          characterId: testCharacterId(wizardDraftId),
           combatantId: "wizard",
           initiative: 14,
           side: "party",
@@ -392,7 +395,7 @@ describe("end-user promoted MCP vertical", () => {
         { combatantId: "skeleton", hp: 13 },
       ],
     });
-    expect(started.battleState.combatants).toEqual([
+    expect(started.snapshot.combatants).toEqual([
       expect.objectContaining({
         combatantId: "fighter",
         origin: expect.objectContaining({ kind: "character" }),
@@ -437,7 +440,7 @@ describe("end-user promoted MCP vertical", () => {
         value: [{ results: [1] }],
       },
     );
-    expect(afterBludgeoning.battleState.combatants).toEqual([
+    expect(afterBludgeoning.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({ combatantId: "wizard", hp: 8 }),
       expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
@@ -451,7 +454,7 @@ describe("end-user promoted MCP vertical", () => {
       },
     });
     expect(surged.result.tag).toBe("resolved");
-    expect(surged.battleState.combatants[0].origin.resources).toEqual(
+    expect(surged.snapshot.combatants[0].origin.resources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           unitId: "fighter_action_surge",
@@ -523,13 +526,13 @@ describe("end-user promoted MCP vertical", () => {
       },
     );
     expect(afterRayMiss.result.tag).toBe("resolved");
-    expect(afterRayMiss.battleState.combatants).toEqual([
+    expect(afterRayMiss.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
         combatantId: "wizard",
         origin: expect.objectContaining({
           kind: "character",
-          characterId: wizardDraftId,
+          characterId: testCharacterId(wizardDraftId),
           resources: [],
           spellcasting: {
             spellSlots: [{ count: 2, expended: 0, spellLevel: 1 }],
@@ -573,7 +576,7 @@ describe("end-user promoted MCP vertical", () => {
         value: [{ results: [1] }],
       },
     );
-    expect(afterSkeletonAttack.battleState.combatants).toEqual([
+    expect(afterSkeletonAttack.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 16 }),
       expect.objectContaining({ combatantId: "wizard", hp: 8 }),
       expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
@@ -593,13 +596,13 @@ describe("end-user promoted MCP vertical", () => {
         value: [{ results: [2] }],
       },
     );
-    expect(
-      callTool(root, "read_battle_state", {}).battleState.combatants,
-    ).toEqual([
-      expect.objectContaining({ combatantId: "fighter", hp: 20 }),
-      expect.objectContaining({ combatantId: "wizard", hp: 8 }),
-      expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
-    ]);
+    expect(callTool(root, "read_battle_state", {}).snapshot.combatants).toEqual(
+      [
+        expect.objectContaining({ combatantId: "fighter", hp: 20 }),
+        expect.objectContaining({ combatantId: "wizard", hp: 8 }),
+        expect.objectContaining({ combatantId: "skeleton", hp: 5 }),
+      ],
+    );
 
     expect(
       callTool(root, "end_turn", { actorId: "fighter" }).snapshot,
@@ -622,13 +625,13 @@ describe("end-user promoted MCP vertical", () => {
       },
     );
     expect(afterMagicMissile.result.tag).toBe("resolved");
-    expect(afterMagicMissile.battleState.combatants).toEqual([
+    expect(afterMagicMissile.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
         combatantId: "wizard",
         origin: expect.objectContaining({
           kind: "character",
-          characterId: wizardDraftId,
+          characterId: testCharacterId(wizardDraftId),
           resources: [],
           spellcasting: {
             spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],
@@ -642,19 +645,18 @@ describe("end-user promoted MCP vertical", () => {
     expect(ended.session).toMatchObject({
       activeBattle: null,
       transientBattleFills: null,
-      sourceDraftIds: [fighterDraftId, wizardDraftId],
+      characterIds: [testCharacterId(fighterDraftId), testCharacterId(wizardDraftId)],
     });
 
     const listed = callTool(root, "list_characters", {});
     expect(listed.characters).toEqual([
       expect.objectContaining({
-        sourceDraftId: fighterDraftId,
+        characterId: testCharacterId(fighterDraftId),
         status: "available",
         hitPoints: expect.objectContaining({ current: 20, maximum: 20 }),
       }),
       expect.objectContaining({
-        sourceDraftId: wizardDraftId,
-        characterId: wizardDraftId,
+        characterId: testCharacterId(wizardDraftId),
         status: "available",
         hitPoints: expect.objectContaining({ current: 8, maximum: 8 }),
         spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],
@@ -662,6 +664,10 @@ describe("end-user promoted MCP vertical", () => {
     ]);
   });
 });
+
+function testCharacterId(draftId: string) {
+  return characterIdFromDraftId(characterDraftId(draftId));
+}
 
 function choiceFill(holeId: string, ...optionIds: readonly string[]) {
   return {
@@ -723,12 +729,12 @@ function createAndFinalizeFighterTwo(
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_fighter", "fighter_skill_choices"),
+        unitHoleId("class_fighter", "class_skill_proficiency_choice"),
         "perception",
         "survival",
       ),
       choiceFill(
-        unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         "defense",
       ),
       choiceFill(
@@ -809,7 +815,7 @@ function createAndFinalizeWizardOne(
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_wizard", "wizard_skill_choices"),
+        unitHoleId("class_wizard", "class_skill_proficiency_choice"),
         "arcana",
         "history",
       ),

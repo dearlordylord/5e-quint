@@ -14,7 +14,7 @@
 -- PARTIAL. `apply_condition` does not currently carry the
 -- until-start-of-next-turn expiry; the timing is preserved in the RAW
 -- description and should become executable when condition expiry is
--- promoted into the atom.
+-- modeled in the atom.
 
 let DiceExpr : Type = { dice : Natural, dieSize : Natural }
 

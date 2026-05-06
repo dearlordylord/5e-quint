@@ -1,8 +1,10 @@
 import { Either, Match, Option } from "effect";
+import { traverseValidation } from "./validation-algebra.ts";
 import {
   ABILITIES,
   AbilityScore,
   type Ability,
+  type ReadonlyNonEmptyArray,
   type AbilityScore as AbilityScoreValue,
 } from "@dnd/shared/types";
 
@@ -19,11 +21,17 @@ export type ParsedAbilityScoreAssignment = Readonly<
   Record<Ability, AbilityScoreValue>
 >;
 
-export type AbilityScoreAssignmentValueIssue = {
-  readonly tag: "invalidAbilityScore";
-  readonly ability: Ability;
-  readonly value: number;
-};
+export type AbilityScoreAssignmentIssue =
+  | { readonly tag: "abilityScoreAssignmentNotObject" }
+  | {
+      readonly tag: "missingNumericAbilityScore";
+      readonly ability: Ability;
+    }
+  | {
+      readonly tag: "invalidAbilityScore";
+      readonly ability: Ability;
+      readonly value: number;
+    };
 
 export const STANDARD_ARRAY_SCORES = [15, 14, 13, 12, 10, 8] as const;
 export const POINT_BUY_BUDGET = 27;
@@ -31,38 +39,37 @@ export const POINT_BUY_MIN_SCORE = 8;
 export const POINT_BUY_MAX_SCORE = 15;
 
 export function abilityScoreAssignment(
-  scores: AbilityScoreAssignment,
+  scores: unknown,
 ): Either.Either<
   ParsedAbilityScoreAssignment,
-  AbilityScoreAssignmentValueIssue
+  ReadonlyNonEmptyArray<AbilityScoreAssignmentIssue>
 > {
-  const str = abilityScoreField(scores.str, "str");
-  if (Either.isLeft(str)) return Either.left(str.left);
-  const dex = abilityScoreField(scores.dex, "dex");
-  if (Either.isLeft(dex)) return Either.left(dex.left);
-  const con = abilityScoreField(scores.con, "con");
-  if (Either.isLeft(con)) return Either.left(con.left);
-  const int = abilityScoreField(scores.int, "int");
-  if (Either.isLeft(int)) return Either.left(int.left);
-  const wis = abilityScoreField(scores.wis, "wis");
-  if (Either.isLeft(wis)) return Either.left(wis.left);
-  const cha = abilityScoreField(scores.cha, "cha");
-  if (Either.isLeft(cha)) return Either.left(cha.left);
+  if (typeof scores !== "object" || scores == null) {
+    return Either.left([{ tag: "abilityScoreAssignmentNotObject" }]);
+  }
 
-  return Either.right({
-    str: str.right,
-    dex: dex.right,
-    con: con.right,
-    int: int.right,
-    wis: wis.right,
-    cha: cha.right,
-  } satisfies ParsedAbilityScoreAssignment);
+  const fields = traverseValidation(ABILITIES, (ability) =>
+    Either.map(abilityScoreField(scores, ability), (score) => ({
+      ability,
+      score,
+    })),
+  );
+  if (Either.isLeft(fields)) return Either.left(fields.left);
+  const scoresByAbility = Object.fromEntries(
+    fields.right.map(({ ability, score }) => [ability, score]),
+  ) as ParsedAbilityScoreAssignment;
+
+  return Either.right(scoresByAbility);
 }
 
 function abilityScoreField(
-  score: number,
+  scores: object,
   ability: Ability,
-): Either.Either<AbilityScoreValue, AbilityScoreAssignmentValueIssue> {
+): Either.Either<AbilityScoreValue, AbilityScoreAssignmentIssue> {
+  const score: unknown = Reflect.get(scores, ability);
+  if (typeof score !== "number") {
+    return Either.left({ tag: "missingNumericAbilityScore", ability });
+  }
   if (!Number.isInteger(score) || score < 1 || score > 30) {
     return Either.left({
       tag: "invalidAbilityScore",

@@ -101,10 +101,12 @@ export const UNIT_CHOICE_KEYS = [
   "class_equipment_choice",
   "background_equipment_choice",
   "equipment_purchase",
-  "fighter_skill_choices",
-  "fighting_style_feat",
+  "class_skill_proficiency_choice",
+  "class_subclass_choice",
+  "class_feature_feat_choice",
+  "class_feature_ability_score_increase_choice",
+  "class_feature_proficiency_choice",
   "weapon_mastery_options",
-  "wizard_skill_choices",
   "wizard_cantrip_choices",
   "wizard_spellbook_choices",
   "wizard_prepared_spell_choices",
@@ -587,6 +589,27 @@ export function characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
   return CharacterEquipmentItemUnitId(value);
 }
 
+export type ToolProficiencyId = string & Brand.Brand<"ToolProficiencyId">;
+const ToolProficiencyId = Brand.nominal<ToolProficiencyId>();
+export const CHARACTER_BUILD_TOOL_PROFICIENCY_IDS = [
+  "tool_dice_set",
+  "tool_thieves_tools",
+] as const;
+export type ToolProficiencyIdText =
+  (typeof CHARACTER_BUILD_TOOL_PROFICIENCY_IDS)[number];
+export function isCharacterBuildToolProficiencyId(
+  value: string,
+): value is ToolProficiencyIdText {
+  return CHARACTER_BUILD_TOOL_PROFICIENCY_IDS.some(
+    (candidate) => candidate === value,
+  );
+}
+export function toolProficiencyId(
+  value: ToolProficiencyIdText,
+): ToolProficiencyId {
+  return ToolProficiencyId(value);
+}
+
 export type CharacterEquipmentItemSource<
   Slot extends CharacterEquipmentItemSlot = CharacterEquipmentItemSlot,
 > = {
@@ -811,6 +834,7 @@ export type CreationBatchIssue = {
 
 export const CREATION_FINALIZATION_ISSUE_CODES = [
   "illegalFinalization",
+  "invalidChoiceOption",
   "unsupportedFinalization",
 ] as const;
 export type CreationFinalizationIssueCode =
@@ -820,6 +844,13 @@ export type CreationFinalizationIssue =
   | {
       readonly tag: "illegalFinalization";
       readonly code: "illegalFinalization";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "invalidChoiceOption";
+      readonly code: "invalidChoiceOption";
+      readonly optionId: string;
+      readonly reason: string;
       readonly message: string;
     }
   | {
@@ -903,7 +934,7 @@ export type CharacterBuildProficiencies = {
   readonly savingThrows: readonly Ability[];
   readonly skills: readonly Skill[];
   readonly weapon: readonly WeaponProficiencyCategory[];
-  readonly tools: readonly CreationChoiceOptionId[];
+  readonly tools: readonly ToolProficiencyId[];
 };
 
 export type CharacterBuildFeature =
@@ -968,9 +999,8 @@ export type CharacterBuildLoadout = {
   };
 };
 
-// Phase 1 only records the supported default build loadout. The future in-play
-// CharacterSheet owns mutable equipment state if active equipment can change
-// during adventuring.
+// The build records the supported default loadout. The in-play Character Sheet
+// owns mutable equipment state if active equipment can change during adventuring.
 export type CharacterBuildEquipment = CharacterBuildLoadout;
 
 // CharacterBuild is the creation output: durable build and identity facts.

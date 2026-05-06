@@ -1,19 +1,14 @@
-import {
-  alignmentFromAbbreviation,
-  alignmentLabel,
-  ALIGNMENTS,
-  CHARACTER_BACKGROUNDS,
-  CHARACTER_LANGUAGES,
-  CHARACTER_SPECIES,
-  type CharacterDraft,
-  type CharacterLevelUpTransition
-} from "@dnd/core/character-domain.ts"
-import { CLASS_NAMES, type ClassName } from "@dnd/core/features/class-tables.ts"
-import { ABILITIES, type Ability } from "@dnd/core/types.ts"
+import type {
+  CharacterDraft,
+  CreationFill,
+  CreationFinalizationResult,
+  CreationHole
+} from "@dnd/character-creation-runtime"
+import { BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY } from "@dnd/character-creation-runtime"
+import { useState } from "react"
 
 import { AbilityScoresStep } from "#/components/character-creation/AbilityScoresStep.tsx"
-import { JsonEditor, titleCase } from "#/components/character-creation/characterCreationShared.tsx"
-import { DetailsStep } from "#/components/character-creation/DetailsStep.tsx"
+import { displayValue, titleCase } from "#/components/character-creation/characterCreationShared.tsx"
 
 export const STEP_ORDER = ["class", "origin", "abilityScores", "alignment", "details", "review"] as const
 
@@ -25,244 +20,224 @@ export const STEP_TITLES: Readonly<Record<StepId, string>> = {
   abilityScores: "3. Determine Ability Scores",
   alignment: "4. Choose Alignment",
   details: "5. Fill In Details",
-  review: "Review And Projections"
+  review: "Review Character"
 }
 
-function abilityScoresComplete(draft: CharacterDraft): boolean {
-  return ABILITIES.every((ability) => draft.abilityScoreGeneration?.assignedScores[ability] != null)
+function draftPath(hole: CreationHole): string | null {
+  return hole.source.tag === "draft" ? hole.source.path : null
 }
 
-function completeAssignedScores(draft: CharacterDraft): Readonly<Record<Ability, number>> | null {
-  if (!abilityScoresComplete(draft) || draft.abilityScoreGeneration == null) return null
-  return draft.abilityScoreGeneration.assignedScores as Readonly<Record<Ability, number>>
+function holesForStep(step: StepId, holes: ReadonlyArray<CreationHole>): ReadonlyArray<CreationHole> {
+  if (step === "class") return holes.filter((hole) => draftPath(hole) === "draft.progression.initial")
+  if (step === "origin") {
+    return holes.filter((hole) =>
+      ["draft.background", "draft.species", "draft.languages"].some((path) => path === draftPath(hole))
+    )
+  }
+  if (step === "abilityScores") {
+    return holes.filter(
+      (hole) =>
+        draftPath(hole) === "draft.abilityScoreGeneration" ||
+        (hole.source.tag === "unitChoice" && hole.source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY)
+    )
+  }
+  if (step === "alignment") return holes.filter((hole) => draftPath(hole) === "draft.alignment")
+  if (step === "details") {
+    return holes.filter(
+      (hole) =>
+        !holesForStep("class", [hole]).includes(hole) &&
+        !holesForStep("origin", [hole]).includes(hole) &&
+        !holesForStep("abilityScores", [hole]).includes(hole) &&
+        !holesForStep("alignment", [hole]).includes(hole)
+    )
+  }
+  return holes
 }
 
-function nextLanguages(
-  draft: CharacterDraft,
-  language: (typeof CHARACTER_LANGUAGES)[number],
-  checked: boolean
-): ReadonlyArray<(typeof CHARACTER_LANGUAGES)[number]> {
-  const languages = draft.languages ?? []
-  if (checked) return languages.includes(language) ? languages : [...languages, language]
-  return languages.filter((entry) => entry !== language)
+function holeTitle(hole: CreationHole): string {
+  if (hole.source.tag === "draft") return titleCase(hole.source.path.replace("draft.", ""))
+  if (hole.source.tag === "unitChoice") return titleCase(hole.source.choiceKey)
+  return titleCase(hole.source.slot)
 }
 
-export function CharacterCreationStepContent({
-  advanceDraft,
-  currentStep,
-  displayValue,
-  draft,
-  draftStatus,
-  reviewOutputs,
-  updateDraft
+function choiceLimit(hole: Extract<CreationHole, { readonly kind: "choice" }>): number {
+  return hole.cardinality.tag === "exactly" ? hole.cardinality.count : hole.cardinality.max
+}
+
+function choiceMinimum(hole: Extract<CreationHole, { readonly kind: "choice" }>): number {
+  return hole.cardinality.tag === "exactly" ? hole.cardinality.count : hole.cardinality.min
+}
+
+function ChoiceHolePicker({
+  hole,
+  onFill
 }: {
-  advanceDraft: (transition: CharacterLevelUpTransition) => void
-  currentStep: StepId
-  draft: CharacterDraft
-  displayValue: (value: unknown) => string
-  draftStatus: "complete" | "incomplete" | "invalid"
-  reviewOutputs: Readonly<Record<"battleProjection" | "derived" | "machineInput" | "sheet", unknown>> | null
-  updateDraft: (patch: Partial<CharacterDraft>) => void
+  hole: Extract<CreationHole, { readonly kind: "choice" }>
+  onFill: (fill: CreationFill) => void
 }) {
-  const assignedScores = completeAssignedScores(draft)
-
-  if (currentStep === "class") {
+  const max = choiceLimit(hole)
+  const min = choiceMinimum(hole)
+  const isMultiPick = max > 1
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  if (!isMultiPick) {
     return (
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-gray-200">Primary class</span>
-          <select
-            className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-            onChange={(event) => {
-              const primaryClass = event.target.value as ClassName
-              updateDraft({ primaryClass })
-            }}
-            value={draft.primaryClass ?? ""}
-          >
-            <option value="">Select a class</option>
-            {CLASS_NAMES.map((className) => (
-              <option key={className} value={className}>
-                {titleCase(className)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm text-gray-300">
-          <p className="font-medium text-gray-100">Current advancement</p>
-          <p className="mt-2 text-gray-400">
-            The ordered advancement record drives level, class distribution, subclass timing, and feat choices. Edit it
-            here for higher-level starts, or use Level Up from the review step after completing a character.
-          </p>
-          <pre className="mt-3 overflow-auto rounded-md bg-black/30 p-3 text-xs text-gray-200">
-            {displayValue(draft.advancement ?? [])}
-          </pre>
-        </div>
-        <div className="md:col-span-2">
-          <JsonEditor
-            label="Advancement JSON override"
-            onChange={(value) => updateDraft({ advancement: value as CharacterDraft["advancement"] })}
-            value={draft.advancement}
-          />
-        </div>
-      </div>
+      <label className="block space-y-2 rounded-lg border border-gray-800 bg-gray-950/40 p-3">
+        <span className="text-xs font-medium uppercase tracking-wide text-gray-400">{holeTitle(hole)}</span>
+        <select
+          className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
+          onChange={(event) => {
+            const option = hole.options.find((candidate) => candidate.optionId === event.target.value)
+            if (option == null) return
+            onFill({ kind: "choice", holeId: hole.holeId, optionIds: [option.optionId] })
+          }}
+          value=""
+        >
+          <option value="">Select an option</option>
+          {hole.options.map((option) => (
+            <option key={option.optionId} value={option.optionId}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
     )
-  }
-
-  if (currentStep === "origin") {
-    return (
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-gray-200">Background</span>
-          <select
-            className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-            onChange={(event) =>
-              updateDraft({
-                background: event.target.value === "" ? undefined : (event.target.value as CharacterDraft["background"])
-              })
-            }
-            value={draft.background ?? ""}
-          >
-            <option value="">Select a background</option>
-            {CHARACTER_BACKGROUNDS.map((background) => (
-              <option key={background} value={background}>
-                {titleCase(background)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-gray-200">Species</span>
-          <select
-            className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-            onChange={(event) =>
-              updateDraft({
-                species: event.target.value === "" ? undefined : (event.target.value as CharacterDraft["species"])
-              })
-            }
-            value={draft.species ?? ""}
-          >
-            <option value="">Select a species</option>
-            {CHARACTER_SPECIES.map((species) => (
-              <option key={species} value={species}>
-                {titleCase(species)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <fieldset className="md:col-span-2">
-          <legend className="text-sm font-medium text-gray-200">Languages</legend>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {CHARACTER_LANGUAGES.map((language) => (
-              <label
-                key={language}
-                className="flex items-center gap-2 rounded-lg border border-gray-800 bg-gray-950/60 px-3 py-2 text-sm text-gray-200"
-              >
-                <input
-                  checked={draft.languages?.includes(language) ?? false}
-                  onChange={(event) => updateDraft({ languages: nextLanguages(draft, language, event.target.checked) })}
-                  type="checkbox"
-                />
-                <span>{language}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      </div>
-    )
-  }
-
-  if (currentStep === "abilityScores") {
-    return <AbilityScoresStep assignedScores={assignedScores} draft={draft} updateDraft={updateDraft} />
-  }
-
-  if (currentStep === "alignment") {
-    return (
-      <div className="mt-5 max-w-xl">
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-gray-200">Alignment</span>
-          <select
-            className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-            onChange={(event) =>
-              updateDraft({
-                alignment: event.target.value === "" ? undefined : (event.target.value as CharacterDraft["alignment"])
-              })
-            }
-            value={draft.alignment ?? ""}
-          >
-            <option value="">Select an alignment</option>
-            {ALIGNMENTS.map((alignment) => (
-              <option key={alignment} value={alignment}>
-                {alignmentLabel(alignmentFromAbbreviation(alignment))}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-    )
-  }
-
-  if (currentStep === "details") {
-    return <DetailsStep draft={draft} updateDraft={updateDraft} />
   }
 
   return (
-    <div className="mt-5 space-y-5">
-      <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
-        <p className="font-medium text-gray-100">Direct finalization</p>
-        <p className={`mt-2 text-sm ${draftStatus === "complete" ? "text-emerald-300" : "text-amber-300"}`}>
-          {draftStatus === "complete"
-            ? "This review uses the direct domain-level finalization path."
-            : draftStatus === "invalid"
-              ? "The draft has illegal choices that must be fixed before review."
-              : "The draft still has open required choices before review."}
-        </p>
+    <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+        {holeTitle(hole)} ({min === max ? max : `${min}-${max}`} choices)
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {hole.options.map((option) => {
+          const checked = selected.has(option.optionId)
+          const disabled = !checked && selected.size >= max
+          return (
+            <label
+              key={option.optionId}
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                checked
+                  ? "border-amber-500 bg-amber-500/10 text-amber-200"
+                  : disabled
+                    ? "cursor-not-allowed border-gray-800 bg-gray-950/40 text-gray-500"
+                    : "border-gray-700 bg-gray-950/60 text-gray-200 hover:border-gray-500"
+              }`}
+            >
+              <input
+                checked={checked}
+                disabled={disabled}
+                onChange={(event) => {
+                  setSelected((current) => {
+                    const next = new Set(current)
+                    if (event.target.checked) next.add(option.optionId)
+                    else next.delete(option.optionId)
+                    return next
+                  })
+                }}
+                type="checkbox"
+              />
+              <span>{option.label}</span>
+            </label>
+          )
+        })}
       </div>
-      {draftStatus === "complete" && (
-        <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
-          <p className="font-medium text-gray-100">Level Up (current: {draft.advancement?.length ?? 0})</p>
-          <p className="mt-1 text-xs text-gray-500">
-            Starts from the finalized sheet, previews the next canonical advancement draft, and lets the assessment
-            pipeline surface any newly opened choices before a finalized sheet exists again.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {CLASS_NAMES.map((className) => (
-              <button
-                key={className}
-                className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
-                onClick={() => advanceDraft({ entry: { className } })}
-                type="button"
-              >
-                +1 {titleCase(className)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {reviewOutputs == null ? null : (
-        <div className="grid gap-5 xl:grid-cols-2">
-          {(
-            [
-              ["Character Sheet", reviewOutputs.sheet],
-              ["Derived Numbers", reviewOutputs.derived],
-              ["Machine Input", reviewOutputs.machineInput],
-              ["Battle Projection", reviewOutputs.battleProjection]
-            ] as const
-          ).map(([label, value]) => (
-            <div key={label}>
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gray-400">{label}</h3>
-              <pre className="overflow-auto rounded-lg border border-gray-800 bg-gray-950 p-4 text-xs text-gray-100">
-                {displayValue(value)}
-              </pre>
-            </div>
-          ))}
-        </div>
-      )}
-      <div>
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gray-400">Persisted Draft</h3>
-        <pre className="overflow-auto rounded-lg border border-gray-800 bg-gray-950 p-4 text-xs text-gray-100">
-          {displayValue(draft)}
-        </pre>
-      </div>
+      <button
+        className="mt-3 rounded-md border border-amber-500 px-4 py-2 text-sm text-amber-200 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+        disabled={selected.size < min || selected.size > max}
+        onClick={() => {
+          const selectedOptions = hole.options
+            .filter((option) => selected.has(option.optionId))
+            .map((option) => option.optionId)
+          onFill({ kind: "choice", holeId: hole.holeId, optionIds: selectedOptions })
+          setSelected(new Set())
+        }}
+        type="button"
+      >
+        Submit {holeTitle(hole)}
+      </button>
     </div>
   )
+}
+
+function CreationHoles({
+  emptyText,
+  holes,
+  onFill
+}: {
+  emptyText: string
+  holes: ReadonlyArray<CreationHole>
+  onFill: (fill: CreationFill) => void
+}) {
+  if (holes.length === 0) return <p className="mt-5 text-sm text-emerald-300">{emptyText}</p>
+
+  return (
+    <div className="mt-5 space-y-3">
+      {holes.map((hole) =>
+        hole.kind === "choice" ? (
+          <ChoiceHolePicker key={hole.holeId} hole={hole} onFill={onFill} />
+        ) : (
+          <div key={hole.holeId} className="rounded-lg border border-gray-800 bg-gray-950/40 p-3 text-sm text-gray-300">
+            Fill {holeTitle(hole)} from the ability-score step.
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
+export function CharacterCreationStepContent({
+  currentStep,
+  draft,
+  finalization,
+  holes,
+  onFill
+}: {
+  currentStep: StepId
+  draft: CharacterDraft
+  finalization: CreationFinalizationResult
+  holes: ReadonlyArray<CreationHole>
+  onFill: (fill: CreationFill) => void
+}) {
+  const stepHoles = holesForStep(currentStep, holes)
+
+  if (currentStep === "abilityScores") return <AbilityScoresStep holes={stepHoles} onFill={onFill} />
+
+  if (currentStep === "review") {
+    return (
+      <div className="mt-5 space-y-5">
+        <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
+          <p className="font-medium text-gray-100">In-Play State</p>
+          <p className="mt-2 text-sm text-gray-400">
+            Character creation finalizes Character Build facts. In-play records own current HP, zero-HP lifecycle, and
+            spent Spell Slots outside battle; BattleState owns them during combat.
+          </p>
+        </div>
+        {finalization.tag === "ready" ? (
+          <div>
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gray-400">Character Build</h3>
+            <pre className="overflow-auto rounded-lg border border-gray-800 bg-gray-950 p-4 text-xs text-gray-100">
+              {displayValue(finalization.build)}
+            </pre>
+          </div>
+        ) : finalization.tag === "invalid" ? (
+          <div>
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-rose-300">Finalization Issues</h3>
+            <pre className="overflow-auto rounded-lg border border-rose-900 bg-rose-950/20 p-4 text-xs text-rose-100">
+              {displayValue(finalization.issues)}
+            </pre>
+          </div>
+        ) : (
+          <CreationHoles emptyText="No open creation holes." holes={holes} onFill={onFill} />
+        )}
+        <div>
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gray-400">Character Draft</h3>
+          <pre className="overflow-auto rounded-lg border border-gray-800 bg-gray-950 p-4 text-xs text-gray-100">
+            {displayValue(draft)}
+          </pre>
+        </div>
+      </div>
+    )
+  }
+
+  return <CreationHoles emptyText="This step is complete." holes={stepHoles} onFill={onFill} />
 }

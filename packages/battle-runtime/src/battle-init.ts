@@ -47,6 +47,18 @@ export type BattleWalkSpeed = {
   readonly walkFeet: MovementFeet;
 };
 
+// SRD 5.2.1 "Knocking Out a Creature": a knocked-out creature is left at 1 HP
+// with the Unconscious condition. That condition ends when the Short Rest
+// started by Knock Out completes, when it regains HP, or after successful
+// DC 10 Wisdom (Medicine) first aid. Battle runtime executes the HP-healing
+// ending path; rest completion and first aid are carried for session workflows.
+export type BattlePositiveHpUnconscious = {
+  readonly tag: "knockedOut";
+};
+export const KNOCKED_OUT_UNCONSCIOUS = {
+  tag: "knockedOut",
+} as const satisfies BattlePositiveHpUnconscious;
+
 export type CharacterBattleCreatureInit = {
   readonly kind: "character";
   readonly characterId: CharacterId;
@@ -59,6 +71,7 @@ export type CharacterBattleCreatureInit = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly conditions?: readonly Condition[];
+  readonly positiveHpUnconscious?: BattlePositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly attack: CharacterWeaponAttackActionOption | null;

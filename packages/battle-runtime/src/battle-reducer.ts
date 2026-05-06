@@ -55,7 +55,10 @@ import type {
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
-import type { DeathSaves } from "@dnd/shared-algebras/death-saves-algebra";
+import type {
+  DeathSaveRuntimeState,
+  DeathSaves,
+} from "@dnd/shared-algebras/death-saves-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   HoleId,
@@ -100,7 +103,10 @@ import {
   type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
 } from "@dnd/shared/types";
-import type { StandardActionKind } from "@dnd/shared/game-facts";
+import {
+  STANDARD_ACTION_KINDS,
+  type StandardActionKind,
+} from "@dnd/shared/game-facts";
 import type {
   Ability,
   CreatureActions,
@@ -131,6 +137,7 @@ import {
 import type { CharacterId, InitiativeScore } from "./identity.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
+  characterBattleResourceUsage,
   characterResourceState,
   characterSpellcastingState,
   parseCharacterBattleClassLevels,
@@ -150,12 +157,14 @@ import {
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
 import {
   BattleSubjectTextSchema,
+  BattleSubjectSchema,
   sameBattleSubject,
   type ActionHideSubject,
   type ActionSearchSubject,
   type BattleSubject,
-  type BonusActionHideSubject,
+  type BonusActionStandardActionSubject,
 } from "./battle-subjects.ts";
+import { KNOCKED_OUT_UNCONSCIOUS } from "./battle-init.ts";
 import type {
   BattleWeaponDamage,
   CharacterUnarmedStrikeActionOption,
@@ -173,6 +182,7 @@ import type {
 } from "./battle-action-options.ts";
 import type {
   BattleCreatureInit,
+  BattlePositiveHpUnconscious,
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleCreatureInit,
@@ -181,6 +191,7 @@ import type {
 } from "./battle-init.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  type AlternateActionCostAction,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -235,7 +246,7 @@ export type BattleReadiedSpell = {
   readonly expiresAt: BattleActiveEffectExpiration;
 };
 // SRD 5.2.1 Ready [Action]: Ready can hold a chosen action, or the special
-// alternative to move up to Speed. This promoted slice models only that
+// alternative to move up to Speed. This runtime slice models only that
 // movement alternative for non-spell Ready responses.
 export type BattleReadiedMovement = {
   // supported runtime trigger buckets, not the RAW Ready trigger taxonomy; RAW is closer to "table decision" and probably shall be modeled like that
@@ -245,7 +256,7 @@ export type BattleReadiedMovement = {
 // SRD 5.2.1 Help [Action], "Assist an Attack Roll": helper distracts an
 // enemy within 5 feet, granting Advantage to one ally's next attack roll
 // against that enemy; the benefit expires at the start of the helper's
-// next turn. This promoted slice models that attack-roll branch only, not
+// next turn. This runtime slice models that attack-roll branch only, not
 // Help's ability-check branch or first-aid action summary.
 export type BattleHelpAttack = {
   readonly helperId: CombatantId;
@@ -822,25 +833,39 @@ function ongoingFeatureSourceKeyForUnit(
   return ongoingFeatureSourceKey(ongoingFeatureSourceForUnit(unitId));
 }
 
-function ongoingFeatureSourceFromKey(
-  key: OngoingFeatureSourceKey,
-): OngoingFeatureSource {
-  const unitId = String(key);
-  if (unitId.length === 0) {
-    throw new Error(`Invalid ongoing feature source key: ${String(key)}`);
-  }
-  return { kind: "unit", unitId };
-}
+export type KnockedOutOneHp = Hp & Brand.Brand<"KnockedOutOneHp">;
+const KnockedOutOneHp = Brand.nominal<KnockedOutOneHp>();
+export type KnockedOutConditionState = ConditionState &
+  Brand.Brand<"KnockedOutConditionState">;
+const KnockedOutConditionState = Brand.nominal<KnockedOutConditionState>();
+type KnockOutEligibleZeroHpLifecycle =
+  | Extract<ZeroHpLifecycle, { readonly policy: "diesAtZeroHp" }>
+  | (Extract<ZeroHpLifecycle, { readonly policy: "usesDeathSavingThrows" }> & {
+      readonly deathSaves: DeathSaveRuntimeState & { readonly dead: false };
+    });
+export type KnockOutEligibleBattleCreatureState = BattleCreatureState & {
+  readonly zeroHpLifecycle: KnockOutEligibleZeroHpLifecycle;
+};
 
-export type BattleCreatureState = {
+type BattleCreatureKnockOutLifecycle =
+  | {
+      readonly hp: Hp;
+      readonly conditions: ConditionState;
+      readonly positiveHpUnconscious: null;
+    }
+  | {
+      readonly hp: KnockedOutOneHp;
+      readonly conditions: KnockedOutConditionState;
+      readonly positiveHpUnconscious: BattlePositiveHpUnconscious;
+    };
+
+type BattleCreatureStateCommon = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
   readonly side: BattleCombatantSide;
-  readonly hp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
-  readonly conditions: ConditionState;
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly activeOngoingFeatureOccurrences: ReadonlyMap<
     OngoingFeatureSourceKey,
@@ -902,6 +927,9 @@ export type BattleCreatureState = {
         readonly resources: StatBlockMutableResourceState;
       };
 };
+
+export type BattleCreatureState = BattleCreatureStateCommon &
+  BattleCreatureKnockOutLifecycle;
 
 export type LegendaryActionWindow = {
   readonly afterTurnActorId: CombatantId;
@@ -1988,8 +2016,11 @@ type StatBlockBonusActionOptionBattleResolutionInput =
     >
   >;
 type HideBattleResolutionInput = BattleResolutionInputForSubject<
-  ActionHideSubject | BonusActionHideSubject
+  | ActionHideSubject
+  | (BonusActionStandardActionSubject & { readonly action: "hide" })
 >;
+type BonusActionStandardActionBattleResolutionInput =
+  BattleResolutionInputForSubject<BonusActionStandardActionSubject>;
 type SearchBattleResolutionInput =
   BattleResolutionInputForSubject<ActionSearchSubject>;
 type GrappleBattleResolutionInput = BattleResolutionInputForSubject<
@@ -2054,17 +2085,16 @@ export type BattleSnapshot = {
   readonly turnOrder: readonly CombatantId[];
   readonly combatants: readonly BattleCreatureSnapshot[];
   readonly acts: readonly AvailableBattleAct[];
-  readonly currentTurnResources: BattleTurnResources;
-  readonly readiedSpells: readonly (BattleReadiedSpell & {
-    readonly casterId: CombatantId;
-  })[];
-  readonly readiedMovements: readonly (BattleReadiedMovement & {
-    readonly actorId: CombatantId;
-  })[];
-  readonly helpAttacks: readonly BattleHelpAttack[];
+  readonly turn: BattleTurnSnapshot;
+  readonly readiedResponses: {
+    readonly spells: readonly BattleReadiedSpellSnapshot[];
+    readonly movements: readonly BattleReadiedMovementSnapshot[];
+  };
+  readonly helpAttackMarkers: readonly BattleHelpAttackSnapshot[];
   readonly pendingReaction: {
-    readonly frame: BattleReactionFrame;
+    readonly trigger: BattleReactionTrigger;
     readonly decisionHole: BattleReactionDecisionHole;
+    readonly choices: readonly BattleReactionProcedureChoice[];
     readonly stackDepth: BattleReplayStackDepth;
   } | null;
 };
@@ -2072,34 +2102,76 @@ export type BattleSnapshot = {
 export type BattleCreatureSnapshot = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
-  readonly originKind: BattleCreatureState["origin"]["kind"];
+  readonly initiative: InitiativeScore;
+  readonly side: BattleCombatantSide;
+  readonly origin: BattleCreatureOriginSnapshot;
   readonly hp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly armorClass: ArmorClass;
   readonly size: Size;
-  readonly defeated: boolean;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;
   readonly conditions: readonly Condition[];
-  readonly hidden: BattleHiddenState | null;
-  readonly activeEffects: readonly BattleActiveEffect[];
-  readonly activeOngoingFeatureOccurrences: readonly ActiveOngoingFeatureOccurrenceSnapshot[];
-  readonly concentration: BattleConcentration | null;
+  readonly concentrating: boolean;
   readonly dodging: boolean;
   readonly reactionAvailable: boolean;
-  readonly hands: {
-    readonly left: HandUse;
-    readonly right: HandUse;
-  };
-  readonly grappling: readonly BattleGrappleLink[];
-  readonly grappledBy: BattleGrappleLink | null;
-  readonly statBlockResources?: StatBlockResourceSnapshot;
   readonly movement: {
     readonly speedFeet: MovementFeet;
     readonly spentFeet: MovementFeet;
     readonly remainingFeet: MovementFeet;
   };
 };
+
+export type BattleTurnSnapshot = {
+  readonly actionResources: readonly RuntimeActionResource[];
+  readonly bonusActionAvailable: boolean;
+  readonly spellSlotExpendedThisTurn: boolean;
+  readonly attackRollMadeThisTurn: boolean;
+  readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly lightWeaponAttackMade?: {
+    readonly weaponItemId: string;
+  };
+  readonly dashMovementBonusFeet: MovementFeet;
+  readonly disengaged: boolean;
+};
+
+export type BattleReadiedSpellSnapshot = BattleReadiedSpell & {
+  readonly casterId: CombatantId;
+};
+
+export type BattleReadiedMovementSnapshot = BattleReadiedMovement & {
+  readonly actorId: CombatantId;
+};
+
+export type BattleHelpAttackSnapshot = BattleHelpAttack;
+
+export type BattleCreatureOriginSnapshot =
+  | {
+      readonly kind: "character";
+      readonly characterId: CharacterId;
+      readonly resources: readonly BattleCharacterResourceSnapshot[];
+      readonly spellcasting: {
+        readonly spellSlots: CharacterBattleSpellcastingState["spellSlots"];
+      } | null;
+    }
+  | {
+      readonly kind: "statBlock";
+      readonly statBlockId: StatBlockRecord["id"];
+      readonly resources: StatBlockResourceSnapshot;
+    };
+
+export type BattleCharacterResourceSnapshot =
+  | {
+      readonly unitId: UnitRecord["id"];
+      readonly usage: "unlimited";
+      readonly usedThisTurn: boolean;
+    }
+  | {
+      readonly unitId: UnitRecord["id"];
+      readonly usage: "limited";
+      readonly usesRemaining: number;
+      readonly usedThisTurn: boolean;
+    };
 type CharacterBattleCreatureState = BattleCreatureState & {
   readonly origin: Extract<
     BattleCreatureState["origin"],
@@ -2124,6 +2196,279 @@ export type BattleCreatureZeroHpLifecycleSnapshot =
       readonly stable: boolean;
       readonly dead: boolean;
     };
+
+const BattleCreatureZeroHpLifecycleSnapshotSchema = Schema.Union(
+  Schema.Struct({
+    policy: Schema.Literal("diesAtZeroHp"),
+    dead: Schema.Boolean,
+  }),
+  Schema.Struct({
+    policy: Schema.Literal("usesDeathSavingThrows"),
+    deathSaves: Schema.Struct({
+      successes: Schema.Literal(0, 1, 2, 3),
+      failures: Schema.Literal(0, 1, 2, 3),
+    }),
+    stable: Schema.Boolean,
+    dead: Schema.Boolean,
+  }),
+);
+
+const BattleActionRestrictionSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("none") }),
+  Schema.Struct({
+    kind: Schema.Literal("exclude"),
+    actions: Schema.NonEmptyArray(Schema.Literal(...STANDARD_ACTION_KINDS)),
+  }),
+);
+
+const RuntimeActionResourceSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    source: Schema.Literal("turn"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    source: Schema.Literal("unit"),
+    sourceOwnerId: Schema.String,
+    sourceUnitId: Schema.String,
+    restriction: BattleActionRestrictionSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    source: Schema.Literal("statBlockMultiattack"),
+    sourceOwnerId: Schema.String,
+    attackPart: Schema.Struct({
+      section: Schema.Literal("actions"),
+      name: Schema.String,
+    }),
+    restriction: BattleActionRestrictionSchema,
+  }),
+);
+
+const BattleTurnSnapshotSchema = Schema.Struct({
+  actionResources: Schema.Array(RuntimeActionResourceSchema),
+  bonusActionAvailable: Schema.Boolean,
+  spellSlotExpendedThisTurn: Schema.Boolean,
+  attackRollMadeThisTurn: Schema.Boolean,
+  attackDamageRidersUsedThisTurn: Schema.Array(
+    Schema.Struct({
+      attackerId: CombatantId,
+      unitId: Schema.String,
+    }),
+  ),
+  lightWeaponAttackMade: Schema.optionalWith(
+    Schema.Struct({ weaponItemId: Schema.String }),
+    { exact: true },
+  ),
+  dashMovementBonusFeet: Schema.Number,
+  disengaged: Schema.Boolean,
+});
+
+const BattleCharacterResourceSnapshotSchema = Schema.Union(
+  Schema.Struct({
+    unitId: Schema.String,
+    usage: Schema.Literal("unlimited"),
+    usedThisTurn: Schema.Boolean,
+  }),
+  Schema.Struct({
+    unitId: Schema.String,
+    usage: Schema.Literal("limited"),
+    usesRemaining: Schema.Number,
+    usedThisTurn: Schema.Boolean,
+  }),
+);
+
+const StatBlockPartKeySchema = Schema.Struct({
+  section: Schema.Literal(
+    "actions",
+    "bonusActions",
+    "reactions",
+    "legendaryActions",
+  ),
+  name: Schema.String,
+});
+
+const StatBlockLimitedUseSnapshotSchema = Schema.Union(
+  Schema.Struct({
+    key: StatBlockPartKeySchema,
+    kind: Schema.Literal("daily"),
+    usesMax: Schema.Number,
+    usesRemaining: Schema.Number,
+  }),
+  Schema.Struct({
+    key: StatBlockPartKeySchema,
+    kind: Schema.Literal("recharge"),
+    minimumRoll: Schema.Number,
+    available: Schema.Boolean,
+  }),
+  Schema.Struct({
+    key: StatBlockPartKeySchema,
+    kind: Schema.Literal("recharge_after_rest"),
+    available: Schema.Boolean,
+  }),
+);
+
+const StatBlockResourceSnapshotSchema = Schema.Struct({
+  legendaryActions: Schema.Union(
+    Schema.Struct({
+      usesMax: Schema.Number,
+      usesRemaining: Schema.Number,
+    }),
+    Schema.Null,
+  ),
+  limitedUses: Schema.Array(StatBlockLimitedUseSnapshotSchema),
+});
+
+const BattleCreatureOriginSnapshotSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("character"),
+    characterId: Schema.String,
+    resources: Schema.Array(BattleCharacterResourceSnapshotSchema),
+    spellcasting: Schema.Union(
+      Schema.Struct({
+        spellSlots: Schema.Array(
+          Schema.Struct({
+            spellLevel: SpellSlotLevel,
+            count: Schema.Number,
+            expended: Schema.Number,
+          }),
+        ),
+      }),
+      Schema.Null,
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("statBlock"),
+    statBlockId: Schema.String,
+    resources: StatBlockResourceSnapshotSchema,
+  }),
+);
+
+const BattleCreatureSnapshotSchema = Schema.Struct({
+  combatantId: CombatantId,
+  displayName: Schema.String,
+  initiative: Schema.Number,
+  side: BattleCombatantSide,
+  origin: BattleCreatureOriginSnapshotSchema,
+  hp: Schema.Number,
+  maxHp: Schema.Number,
+  tempHp: Schema.Number,
+  armorClass: Schema.Number,
+  size: Schema.String,
+  zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshotSchema,
+  conditions: Schema.Array(Schema.Literal(...ALL_CONDITIONS)),
+  concentrating: Schema.Boolean,
+  dodging: Schema.Boolean,
+  reactionAvailable: Schema.Boolean,
+  movement: Schema.Struct({
+    speedFeet: Schema.Number,
+    spentFeet: Schema.Number,
+    remainingFeet: Schema.Number,
+  }),
+});
+
+const AvailableBattleActSchema = Schema.Struct({
+  subject: BattleSubjectSchema,
+  label: Schema.String,
+  summary: Schema.String,
+  initialHoles: Schema.Array(BattleHoleSchema),
+});
+
+const BattleReadiedSpellSnapshotSchema = Schema.Struct({
+  casterId: CombatantId,
+  invocation: SupportedSpellActSchema,
+  trigger: Schema.Literal(...BATTLE_READIED_SPELL_TRIGGERS),
+  expiresAt: OngoingFeatureExpirationSchema,
+});
+
+const BattleReadiedMovementSnapshotSchema = Schema.Struct({
+  actorId: CombatantId,
+  trigger: Schema.Literal(...BATTLE_REACTION_TRIGGERS),
+  expiresAt: OngoingFeatureExpirationSchema,
+});
+
+const BattleHelpAttackSnapshotSchema = Schema.Struct({
+  helperId: CombatantId,
+  allyId: CombatantId,
+  targetEnemyId: CombatantId,
+  expiresAt: OngoingFeatureExpirationSchema,
+});
+
+const BattleReactionModifierChoiceSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("attackRollReduction", "damageRollReduction"),
+    unitId: Schema.String,
+    label: Schema.String,
+    reduction: Schema.Struct({
+      kind: Schema.Literal("rolled"),
+      flatModifier: Schema.Number,
+      dieSize: Schema.Literal(6, 8, 10, 12),
+    }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackDamageReduction"),
+    unitId: Schema.String,
+    label: Schema.String,
+    reduction: Schema.Struct({
+      kind: Schema.Literal("halfDamage"),
+    }),
+  }),
+);
+
+const BattleReactionProcedureChoiceSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("releaseReadiedSpell"),
+    reactorId: CombatantId,
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+    readiedSpellCasterId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("releaseReadiedMovement"),
+    reactorId: CombatantId,
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+    readiedMovementActorId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("opportunityAttack"),
+    reactorId: CombatantId,
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("reactionRollOrDamageReduction"),
+    reactorId: CombatantId,
+    choice: BattleReactionModifierChoiceSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+  }),
+);
+
+const BattlePendingReactionSnapshotSchema = Schema.Struct({
+  trigger: Schema.Literal(...BATTLE_REACTION_TRIGGERS),
+  decisionHole: BattleHoleSchema,
+  choices: Schema.Array(BattleReactionProcedureChoiceSchema),
+  stackDepth: Schema.Number,
+});
+
+export const BattleSnapshotSchema = Schema.Struct({
+  battleId: BattleId,
+  round: Schema.Number,
+  currentActorId: CombatantId,
+  turnOrder: Schema.Array(CombatantId),
+  combatants: Schema.Array(BattleCreatureSnapshotSchema),
+  acts: Schema.Array(AvailableBattleActSchema),
+  turn: BattleTurnSnapshotSchema,
+  readiedResponses: Schema.Struct({
+    spells: Schema.Array(BattleReadiedSpellSnapshotSchema),
+    movements: Schema.Array(BattleReadiedMovementSnapshotSchema),
+  }),
+  helpAttackMarkers: Schema.Array(BattleHelpAttackSnapshotSchema),
+  pendingReaction: Schema.Union(
+    BattlePendingReactionSnapshotSchema,
+    Schema.Null,
+  ),
+});
 
 const INITIAL_ROUND: RoundType = Round(1);
 const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
@@ -2234,6 +2579,11 @@ export function startBattle(input: {
         `Duplicate combatant id: ${combatant.combatantId}`,
       );
     }
+    const positiveHpUnconsciousIssue =
+      positiveHpUnconsciousInitIssue(combatant);
+    if (positiveHpUnconsciousIssue !== null) {
+      return positiveHpUnconsciousIssue;
+    }
     combatants.set(
       combatant.combatantId,
       battleCreatureStateFromInit(combatant),
@@ -2291,6 +2641,12 @@ export function addBattleCombatant(input: {
     return battleStateInitIssue(
       `Duplicate combatant id: ${input.combatant.combatantId}`,
     );
+  }
+  const positiveHpUnconsciousIssue = positiveHpUnconsciousInitIssue(
+    input.combatant,
+  );
+  if (positiveHpUnconsciousIssue !== null) {
+    return positiveHpUnconsciousIssue;
   }
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,
@@ -2569,24 +2925,12 @@ export function discoverBattleActs(
         action: "offHandAttack",
         attackName: attackActionOptionName(offHand),
       },
-      label: "Off-Hand Attack",
+      label: "Light Property Bonus Action Attack",
       summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
       initialHoles: [attackTargetHole(state, actorId, offHand)],
     });
   }
-  if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    state.currentTurnResources.currentHasBonusAction &&
-    actorSupportsBonusActionHide(state.combatants.get(actorId)) &&
-    canHideInCurrentCircumstances(state, actorId)
-  ) {
-    acts.push({
-      subject: { tag: "bonusAction", actorId, action: "hide" },
-      label: "Hide",
-      summary: "Use a supported feature to Hide as a Bonus Action.",
-      initialHoles: [hideAbilityCheckHole()],
-    });
-  }
+  acts.push(...bonusActionStandardActionActs(state, actorId));
   acts.push(...statBlockBonusActionOptionActs(state, actorId));
   acts.push(...supportedUnitFeatureActs(state, actorId));
   if (combatantCanTakeActions(state.combatants.get(actorId))) {
@@ -3078,6 +3422,17 @@ function resolveBattleSubjectInternal(
     );
   }
   if (
+    input.subject.tag === "bonusActionStandardAction" &&
+    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
+      !input.state.currentTurnResources.currentHasBonusAction)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action is no longer available for the current actor.",
+    );
+  }
+  if (
     input.subject.tag === "actionSpell" &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
       !canSpendAction(input.state.currentTurnResources, "magic"))
@@ -3185,11 +3540,8 @@ function resolveBattleSubjectInternal(
             }),
       });
     }
-    if (subject.tag === "bonusAction" && subject.action === "hide") {
-      return resolveHide({
-        ...input,
-        subject: bonusActionHideSubject(subject),
-      });
+    if (subject.tag === "bonusActionStandardAction") {
+      return resolveBonusActionStandardAction({ ...input, subject });
     }
     if (
       subject.tag === "bonusAction" &&
@@ -3284,18 +3636,6 @@ function actionSearchSubject(subject: {
     tag: "action",
     actorId: subject.actorId,
     action: "search",
-  };
-}
-
-function bonusActionHideSubject(subject: {
-  readonly tag: "bonusAction";
-  readonly actorId: CombatantId;
-  readonly action: "hide";
-}): BonusActionHideSubject {
-  return {
-    tag: "bonusAction",
-    actorId: subject.actorId,
-    action: "hide",
   };
 }
 
@@ -4483,19 +4823,38 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       return combatant == null ? [] : [combatantSnapshot(state, combatant)];
     }),
     acts: discoverBattleActs(state),
-    currentTurnResources: state.currentTurnResources,
-    readiedSpells: [...state.readiedSpells].map(([casterId, readiedSpell]) => ({
-      casterId,
-      ...readiedSpell,
-    })),
-    readiedMovements: [...state.readiedMovements].map(
-      ([actorId, readiedMovement]) => ({
-        actorId,
-        ...readiedMovement,
-      }),
-    ),
-    helpAttacks: state.helpAttacks,
+    turn: battleTurnSnapshot(state.currentTurnResources),
+    readiedResponses: {
+      spells: [...state.readiedSpells].map(([casterId, readiedSpell]) => ({
+        casterId,
+        ...readiedSpell,
+      })),
+      movements: [...state.readiedMovements].map(
+        ([actorId, readiedMovement]) => ({
+          actorId,
+          ...readiedMovement,
+        }),
+      ),
+    },
+    helpAttackMarkers: state.helpAttacks,
     pendingReaction: pendingReactionSnapshot(state),
+  };
+}
+
+function battleTurnSnapshot(
+  resources: BattleTurnResources,
+): BattleTurnSnapshot {
+  return {
+    actionResources: resources.actionResources,
+    bonusActionAvailable: resources.currentHasBonusAction,
+    spellSlotExpendedThisTurn: resources.spellSlotExpendedThisTurn,
+    attackRollMadeThisTurn: resources.attackRollMadeThisTurn,
+    attackDamageRidersUsedThisTurn: resources.attackDamageRidersUsedThisTurn,
+    ...(resources.lightWeaponAttackMade === undefined
+      ? {}
+      : { lightWeaponAttackMade: resources.lightWeaponAttackMade }),
+    dashMovementBonusFeet: resources.dashMovementBonusFeet,
+    disengaged: resources.disengaged,
   };
 }
 
@@ -4506,8 +4865,9 @@ function pendingReactionSnapshot(
   return frame === null
     ? null
     : {
-        frame,
+        trigger: frame.trigger,
         decisionHole: reactionDecisionHole(frame),
+        choices: frame.choices,
         stackDepth: battleReplayStackDepth(state.interruptStack.length),
       };
 }
@@ -4940,10 +5300,9 @@ function battleCreatureStateFromInit(
     displayName: input.displayName,
     initiative: input.initiative,
     side: input.side,
-    hp: creatureInit.currentHp,
     maxHp: creatureInit.maxHp,
     tempHp: creatureInit.tempHp,
-    conditions: initialConditions,
+    ...initialKnockOutLifecycleFields(creatureInit, initialConditions),
     activeEffects: [],
     activeOngoingFeatureOccurrences: new Map(),
     concentration: null,
@@ -5171,17 +5530,6 @@ function activeOngoingFeatureOccurrencesForCombatant(
   );
 }
 
-function activeOngoingFeatureOccurrenceSnapshotsForCombatant(
-  combatant: BattleCreatureState,
-): readonly ActiveOngoingFeatureOccurrenceSnapshot[] {
-  return [...activeOngoingFeatureOccurrencesForCombatant(combatant)].map(
-    ([key, occurrence]) => ({
-      ...occurrence,
-      source: ongoingFeatureSourceFromKey(key),
-    }),
-  );
-}
-
 function ongoingFeatureProfileForSourceKey(
   combatant: BattleCreatureState,
   key: OngoingFeatureSourceKey,
@@ -5228,45 +5576,76 @@ function combatantSnapshot(
   state: BattleState,
   combatant: BattleCreatureState,
 ): BattleCreatureSnapshot {
-  const grappling = state.grapples.filter(
-    (grapple) => grapple.grapplerId === combatant.combatantId,
-  );
   const sourceGrapple = grappledBy(state, combatant.combatantId) ?? null;
   return {
     combatantId: combatant.combatantId,
     displayName: combatant.displayName,
-    originKind: combatant.origin.kind,
+    initiative: combatant.initiative,
+    side: combatant.side,
+    origin: combatantOriginSnapshot(combatant),
     hp: combatant.hp,
     maxHp: combatant.maxHp,
     tempHp: combatant.tempHp,
     armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
     size: combatant.size,
-    defeated: combatant.hp === 0,
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
     conditions: activeConditions(
       combatant.conditions,
       sourceGrapple !== null,
       combatant.hidden !== null,
     ),
-    hidden: combatant.hidden,
-    activeEffects: combatant.activeEffects,
-    activeOngoingFeatureOccurrences:
-      activeOngoingFeatureOccurrenceSnapshotsForCombatant(combatant),
-    concentration: combatant.concentration,
+    concentrating: combatant.concentration !== null,
     dodging: combatant.dodging,
     reactionAvailable: combatant.reactionAvailable,
-    hands: combatantHandUses(combatant, state.grapples),
-    grappling,
-    grappledBy: sourceGrapple,
-    ...(combatant.origin.kind === "statBlock"
-      ? {
-          statBlockResources: statBlockResourceSnapshot(
-            combatant.origin.statBlock.statBlock,
-            combatant.origin.resources,
-          ),
-        }
-      : {}),
     movement: battleMovementBudgetForActor(state, combatant.combatantId),
+  };
+}
+
+function combatantOriginSnapshot(
+  combatant: BattleCreatureState,
+): BattleCreatureOriginSnapshot {
+  return Match.value(combatant.origin).pipe(
+    Match.when({ kind: "character" }, (origin) => ({
+      kind: "character" as const,
+      characterId: origin.characterId,
+      resources: origin.resources.map(characterResourceSnapshot),
+      spellcasting:
+        origin.spellcasting === undefined
+          ? null
+          : { spellSlots: origin.spellcasting.spellSlots },
+    })),
+    Match.when({ kind: "statBlock" }, (origin) => ({
+      kind: "statBlock" as const,
+      statBlockId: origin.statBlock.id,
+      resources: statBlockResourceSnapshot(
+        origin.statBlock.statBlock,
+        origin.resources,
+      ),
+    })),
+    Match.exhaustive,
+  );
+}
+
+function characterResourceSnapshot(
+  resource: CharacterBattleResourceState,
+): BattleCharacterResourceSnapshot {
+  const common = {
+    unitId: resource.unit.id,
+    usedThisTurn: resource.usedThisTurn,
+  };
+  const usage = characterBattleResourceUsage(resource);
+  const usesRemaining =
+    "usesRemaining" in resource ? resource.usesRemaining : undefined;
+  if (usage === "unlimited" || usesRemaining === undefined) {
+    return {
+      ...common,
+      usage: "unlimited",
+    };
+  }
+  return {
+    ...common,
+    usage: "limited",
+    usesRemaining,
   };
 }
 
@@ -5337,6 +5716,127 @@ function combatantZeroHpLifecycleSnapshot(
     })),
     Match.exhaustive,
   );
+}
+
+function positiveHpUnconsciousInitIssue(
+  input: BattleCreatureInit,
+): Either.Either<never, BattleStateInitIssue> | null {
+  const creatureInit = input.creatureInit;
+  if (
+    creatureInit.kind !== "character" ||
+    creatureInit.positiveHpUnconscious === undefined
+  ) {
+    return null;
+  }
+  if (Number(creatureInit.currentHp) !== 1) {
+    return battleStateInitIssue(
+      "Knocked Out Unconscious initialization requires exactly 1 current HP.",
+    );
+  }
+  if (!(creatureInit.conditions ?? []).includes("unconscious")) {
+    return battleStateInitIssue(
+      "Knocked Out Unconscious initialization requires the Unconscious condition.",
+    );
+  }
+  return null;
+}
+
+function knockedOutOneHp(): KnockedOutOneHp {
+  return KnockedOutOneHp(Hp(1));
+}
+
+function knockedOutConditionState(
+  conditions: ConditionState,
+): KnockedOutConditionState {
+  return KnockedOutConditionState(applyCondition(conditions, "unconscious"));
+}
+
+function battleCreatureStateWithKnockOutPreservedConditions(
+  combatant: BattleCreatureState,
+  conditions: ConditionState,
+): BattleCreatureState {
+  if (combatant.positiveHpUnconscious !== null) {
+    return {
+      ...combatant,
+      conditions: knockedOutConditionState(conditions),
+    };
+  }
+
+  return { ...combatant, conditions };
+}
+
+function nonKnockOutLifecycleFields(
+  hp: Hp,
+  conditions: ConditionState,
+): BattleCreatureKnockOutLifecycle {
+  return { hp, conditions, positiveHpUnconscious: null };
+}
+
+function battleCreatureStateWithoutKnockOut(
+  combatant: BattleCreatureState,
+  hp: Hp,
+  conditions: ConditionState,
+): BattleCreatureState {
+  return { ...combatant, ...nonKnockOutLifecycleFields(hp, conditions) };
+}
+
+function battleCreatureStateWithDamageProjection(
+  combatant: BattleCreatureState,
+  projection: HpDamageProjection,
+): BattleCreatureState {
+  const tempHp = Hp(projection.currentTempHp - projection.tempHpAbsorbed);
+  if (
+    combatant.positiveHpUnconscious !== null &&
+    Number(projection.nextHp) === 1
+  ) {
+    return { ...combatant, hp: knockedOutOneHp(), tempHp };
+  }
+
+  return {
+    ...battleCreatureStateWithoutKnockOut(
+      combatant,
+      projection.nextHp,
+      combatant.conditions,
+    ),
+    tempHp,
+  };
+}
+
+function initialKnockOutLifecycleFields(
+  creatureInit: BattleCreatureInit["creatureInit"],
+  conditions: ConditionState,
+): BattleCreatureKnockOutLifecycle {
+  if (
+    creatureInit.kind === "character" &&
+    creatureInit.positiveHpUnconscious !== undefined
+  ) {
+    return {
+      hp: KnockedOutOneHp(creatureInit.currentHp),
+      conditions: KnockedOutConditionState(conditions),
+      positiveHpUnconscious: creatureInit.positiveHpUnconscious,
+    };
+  }
+
+  return {
+    hp: creatureInit.currentHp,
+    conditions,
+    positiveHpUnconscious: null,
+  };
+}
+
+export function combatantKnockedOutUnconscious(
+  combatant: BattleCreatureState,
+): Either.Either<BattlePositiveHpUnconscious | null, BattleStateInitIssue> {
+  if (combatant.positiveHpUnconscious === null) return Either.right(null);
+  if (
+    Number(combatant.hp) !== 1 ||
+    !hasCondition(combatant.conditions, "unconscious")
+  ) {
+    return battleStateInitIssue(
+      "BattleCreatureState invariant violated: Knocked Out Unconscious requires exactly 1 HP and the Unconscious condition.",
+    );
+  }
+  return Either.right(combatant.positiveHpUnconscious);
 }
 
 function combatantCanTakeActions(
@@ -6296,25 +6796,31 @@ function resolveDash(input: BattleResolutionInput): BattleResolutionResult {
       "Dash is no longer available.",
     );
   }
-  const speed = effectiveWalkSpeed(
-    actor,
-    input.state.grapples.some(
-      (grapple) => grapple.targetId === actor.combatantId,
-    ),
-  );
-  const nextState = {
-    ...input.state,
-    currentTurnResources: {
-      ...spent.right,
-      dashMovementBonusFeet: movementFeet(
-        Number(spent.right.dashMovementBonusFeet) + Number(speed),
-      ),
-    },
-  };
+  const nextState = applyDashToActor(input.state, actor, spent.right);
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function applyDashToActor(
+  state: BattleState,
+  actor: BattleCreatureState,
+  spentResources: BattleTurnResources,
+): BattleState {
+  const speed = effectiveWalkSpeed(
+    actor,
+    state.grapples.some((grapple) => grapple.targetId === actor.combatantId),
+  );
+  return {
+    ...state,
+    currentTurnResources: {
+      ...spentResources,
+      dashMovementBonusFeet: movementFeet(
+        Number(spentResources.dashMovementBonusFeet) + Number(speed),
+      ),
+    },
   };
 }
 
@@ -6336,14 +6842,112 @@ function resolveDisengage(
       "Disengage is no longer available.",
     );
   }
-  const nextState = {
-    ...input.state,
-    currentTurnResources: { ...spent.right, disengaged: true },
-  };
+  const nextState = applyDisengage(input.state, spent.right);
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveBonusActionStandardAction(
+  input: BonusActionStandardActionBattleResolutionInput,
+): BattleResolutionResult {
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    !actorHasAlternateActionCost(
+      actor,
+      input.subject.sourceUnitId,
+      input.subject.action,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Bonus Action standard action requires an admitted alternate action cost feature.",
+    );
+  }
+
+  return Match.value(input.subject.action).pipe(
+    Match.when("dash", () => resolveBonusActionDash(input)),
+    Match.when("disengage", () => resolveBonusActionDisengage(input)),
+    Match.when("hide", () =>
+      resolveHide({
+        ...input,
+        subject: { ...input.subject, action: "hide" },
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveBonusActionDash(
+  input: BonusActionStandardActionBattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(input.state, "invalidFill", "Dash accepts no fills.");
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (actor === undefined) {
+    return invalidResult(
+      input.state,
+      "missingCombatant",
+      "Dash actor is not in this battle.",
+    );
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Dash is no longer available.",
+    );
+  }
+  const nextState = applyDashToActor(input.state, actor, spent.right);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveBonusActionDisengage(
+  input: BonusActionStandardActionBattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Disengage accepts no fills.",
+    );
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Disengage is no longer available.",
+    );
+  }
+  const nextState = applyDisengage(input.state, spent.right);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function applyDisengage(
+  state: BattleState,
+  spentResources: BattleTurnResources,
+): BattleState {
+  return {
+    ...state,
+    currentTurnResources: { ...spentResources, disengaged: true },
   };
 }
 
@@ -6530,13 +7134,17 @@ function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
     );
   }
   if (
-    input.subject.tag === "bonusAction" &&
-    !actorSupportsBonusActionHide(actor)
+    input.subject.tag === "bonusActionStandardAction" &&
+    !actorHasAlternateActionCost(
+      actor,
+      input.subject.sourceUnitId,
+      input.subject.action,
+    )
   ) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Bonus Action Hide requires an admitted support profile.",
+      "Bonus Action Hide requires an admitted alternate action cost feature.",
     );
   }
   if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
@@ -6561,7 +7169,7 @@ function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
   }
 
   const spent =
-    input.subject.tag === "bonusAction"
+    input.subject.tag === "bonusActionStandardAction"
       ? spendActivationResource(input.state.currentTurnResources, {
           kind: "bonusAction",
         })
@@ -6829,7 +7437,7 @@ function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Off-Hand Attack requires a prior Attack action attack with a different Light weapon.",
+      "Light Property Bonus Action Attack requires a prior Attack action attack with a different Light weapon.",
     );
   }
 
@@ -6857,7 +7465,7 @@ function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Off-Hand Attack target is outside the selected attack's supported target constraint.",
+      "Light Property Bonus Action Attack target is outside the selected attack's supported target constraint.",
     );
   }
   if (fillSet.attackRoll == null) {
@@ -6865,7 +7473,7 @@ function resolveOffHandAttack(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Off-Hand Attack roll must be filled before damage.",
+        "Light Property Bonus Action Attack roll must be filled before damage.",
       );
     }
     return needsHolesResult(input.state, input.subject, [
@@ -6890,7 +7498,7 @@ function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Off-Hand Attack roll result is outside the d20 attack-roll protocol.",
+      "Light Property Bonus Action Attack roll result is outside the d20 attack-roll protocol.",
     );
   }
   const activatedOngoingFeatureProfile =
@@ -6908,7 +7516,7 @@ function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Off-Hand Attack ongoing feature activation is not available for this attack roll.",
+      "Light Property Bonus Action Attack ongoing feature activation is not available for this attack roll.",
     );
   }
   const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
@@ -6926,14 +7534,14 @@ function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Off-Hand Attack roll mode does not match the activated ongoing feature rule.",
+      "Light Property Bonus Action Attack roll mode does not match the activated ongoing feature rule.",
     );
   }
   if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Off-Hand Attack roll mode does not match the current attack-roll rule.",
+      "Light Property Bonus Action Attack roll mode does not match the current attack-roll rule.",
     );
   }
   const criticalThreshold = criticalThresholdForAttack(
@@ -7020,7 +7628,7 @@ function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Off-Hand Attack damage can only be filled after a hit.",
+      "Light Property Bonus Action Attack damage can only be filled after a hit.",
     );
   }
   if (!hit) {
@@ -8380,8 +8988,10 @@ function resolveStandFromProneCommand(
     );
   }
   const nextActor = {
-    ...actor,
-    conditions: removeCondition(actor.conditions, "prone"),
+    ...battleCreatureStateWithKnockOutPreservedConditions(
+      actor,
+      removeCondition(actor.conditions, "prone"),
+    ),
     movementSpentFeet: movementFeet(Number(actor.movementSpentFeet) + cost),
   };
   const nextState = {
@@ -11848,11 +12458,7 @@ function applyHpDamage(
     return combatant;
   }
 
-  const damaged = {
-    ...combatant,
-    hp: projection.nextHp,
-    tempHp: Hp(projection.currentTempHp - projection.tempHpAbsorbed),
-  };
+  const damaged = battleCreatureStateWithDamageProjection(combatant, projection);
 
   if (projection.currentHp <= 0) {
     return projection.massiveDamageKills
@@ -11864,10 +12470,7 @@ function applyHpDamage(
     return damaged;
   }
 
-  if (
-    context.damageDisposition?.kind === "knockOut" &&
-    !projection.massiveDamageKills
-  ) {
+  if (context.damageDisposition?.kind === "knockOut") {
     return applyKnockOut(damaged);
   }
 
@@ -11907,17 +12510,25 @@ function damageAllowsKnockOut(
   const projection = hpDamageProjection(combatant, damageAmount);
   return (
     projection.currentHp > 0 &&
-    Number(projection.nextHp) === 0 &&
-    !projection.massiveDamageKills
+    Number(projection.nextHp) === 0
   );
 }
 
-function applyKnockOut(combatant: BattleCreatureState): BattleCreatureState {
+function battleCreatureStateWithKnockedOutUnconsciousFields(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
   return {
-    ...withoutConcentration(combatant),
-    hp: Hp(1),
-    conditions: applyCondition(combatant.conditions, "unconscious"),
+    ...combatant,
+    hp: knockedOutOneHp(),
+    conditions: knockedOutConditionState(combatant.conditions),
+    positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
   };
+}
+
+function applyKnockOut(combatant: BattleCreatureState): BattleCreatureState {
+  return battleCreatureStateWithKnockedOutUnconsciousFields(
+    withoutConcentration(combatant),
+  );
 }
 
 function applyHpHealing(
@@ -11933,11 +12544,14 @@ function applyHpHealing(
   const nextHp = Hp(
     Math.min(Number(combatant.maxHp), currentHp + effectiveHealing),
   );
+  const regainedHitPoints = Number(nextHp) > currentHp;
   if (currentHp <= 0 && Number(nextHp) > 0) {
     return {
-      ...combatant,
-      hp: nextHp,
-      conditions: removeCondition(combatant.conditions, "unconscious"),
+      ...battleCreatureStateWithoutKnockOut(
+        combatant,
+        nextHp,
+        removeCondition(combatant.conditions, "unconscious"),
+      ),
       zeroHpLifecycle:
         combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows"
           ? {
@@ -11947,8 +12561,17 @@ function applyHpHealing(
           : combatant.zeroHpLifecycle,
     };
   }
+  if (regainedHitPoints && combatant.positiveHpUnconscious !== null) {
+    return battleCreatureStateWithoutKnockOut(
+      combatant,
+      nextHp,
+      removeCondition(combatant.conditions, "unconscious"),
+    );
+  }
 
-  return { ...combatant, hp: nextHp };
+  return regainedHitPoints
+    ? battleCreatureStateWithoutKnockOut(combatant, nextHp, combatant.conditions)
+    : combatant;
 }
 
 function applyInitialZeroHpLifecycle(
@@ -11963,8 +12586,10 @@ function applyInitialZeroHpLifecycle(
       withoutConcentration(combatant),
     ),
     Match.when({ policy: "usesDeathSavingThrows" }, () => ({
-      ...combatant,
-      conditions: applyCondition(combatant.conditions, "unconscious"),
+      ...battleCreatureStateWithKnockOutPreservedConditions(
+        combatant,
+        applyCondition(combatant.conditions, "unconscious"),
+      ),
     })),
     Match.exhaustive,
   );
@@ -11974,12 +12599,19 @@ function applyDropToZeroHpLifecycle(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
-    Match.when({ policy: "diesAtZeroHp" }, () =>
-      withoutConcentration(combatant),
-    ),
+    Match.when({ policy: "diesAtZeroHp" }, () => ({
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        combatant.conditions,
+      ),
+    })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
-      ...withoutConcentration(combatant),
-      conditions: applyCondition(combatant.conditions, "unconscious"),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        applyCondition(combatant.conditions, "unconscious"),
+      ),
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: resetDeathSaveRuntimeState(),
@@ -11994,12 +12626,19 @@ function applyDamageAtZeroHp(
   context: BattleDamageContext,
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
-    Match.when({ policy: "diesAtZeroHp" }, () =>
-      withoutConcentration(combatant),
-    ),
+    Match.when({ policy: "diesAtZeroHp" }, () => ({
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        combatant.conditions,
+      ),
+    })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
-      ...withoutConcentration(combatant),
-      conditions: applyCondition(combatant.conditions, "unconscious"),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        applyCondition(combatant.conditions, "unconscious"),
+      ),
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: addDeathFailures(
@@ -12044,11 +12683,13 @@ function applyStartTurnDeathSavingThrow(
     Number(roll),
   );
   const nextCombatant = {
-    ...combatant,
-    hp: deathSaves.hpRegained ? Hp(1) : combatant.hp,
-    conditions: deathSaves.hpRegained
-      ? removeCondition(combatant.conditions, "unconscious")
-      : combatant.conditions,
+    ...battleCreatureStateWithoutKnockOut(
+      combatant,
+      deathSaves.hpRegained ? Hp(1) : combatant.hp,
+      deathSaves.hpRegained
+        ? removeCondition(combatant.conditions, "unconscious")
+        : combatant.conditions,
+    ),
     zeroHpLifecycle: {
       ...combatant.zeroHpLifecycle,
       deathSaves,
@@ -12154,12 +12795,19 @@ function applyInstantDeath(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
-    Match.when({ policy: "diesAtZeroHp" }, () =>
-      withoutConcentration(combatant),
-    ),
+    Match.when({ policy: "diesAtZeroHp" }, () => ({
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        combatant.conditions,
+      ),
+    })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
-      ...withoutConcentration(combatant),
-      conditions: applyCondition(combatant.conditions, "unconscious"),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        applyCondition(combatant.conditions, "unconscious"),
+      ),
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: addDeathFailures(lifecycle.deathSaves, 3),
@@ -13631,17 +14279,94 @@ function revealHidden(
   };
 }
 
-function actorSupportsBonusActionHide(
+function bonusActionStandardActionActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    !combatantCanTakeActions(actor) ||
+    !state.currentTurnResources.currentHasBonusAction
+  ) {
+    return [];
+  }
+
+  return alternateActionCostProfilesForActor(actor).flatMap((entry) =>
+    entry.profile.from.actions.flatMap((action) => {
+      if (!alternateActionCostActionAvailable(state, actorId, action)) {
+        return [];
+      }
+      return [
+        {
+          subject: {
+            tag: "bonusActionStandardAction" as const,
+            actorId,
+            sourceUnitId: entry.unitId,
+            action,
+          },
+          label: alternateActionCostActionLabel(action),
+          summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
+          initialHoles: action === "hide" ? [hideAbilityCheckHole()] : [],
+        },
+      ];
+    }),
+  );
+}
+
+function alternateActionCostProfilesForActor(
   combatant: BattleCreatureState | undefined,
+): readonly {
+  readonly unitId: UnitRecord["id"];
+  readonly profile: Extract<
+    BattleUnitSupportProfile,
+    { readonly kind: "alternateActionCost" }
+  >;
+}[] {
+  return combatant?.origin.kind === "character"
+    ? combatant.origin.characterUnitRefs.flatMap((unitRef) =>
+        unitRef.supportProfiles.flatMap((profile) =>
+          typeof profile === "object" && profile.kind === "alternateActionCost"
+            ? [{ unitId: unitRef.unitId, profile }]
+            : [],
+        ),
+      )
+    : [];
+}
+
+function alternateActionCostActionAvailable(
+  state: BattleState,
+  actorId: CombatantId,
+  action: AlternateActionCostAction,
 ): boolean {
-  return (
-    combatant?.origin.kind === "character" &&
-    combatant.origin.characterUnitRefs.some(
-      (unitRef) =>
-        unitRef.supportProfiles.some(
-          (profile) => profile === "bonusActionHide",
-        ) === true,
-    )
+  return Match.value(action).pipe(
+    Match.when("dash", () => true),
+    Match.when("disengage", () => true),
+    Match.when("hide", () => canHideInCurrentCircumstances(state, actorId)),
+    Match.exhaustive,
+  );
+}
+
+function actorHasAlternateActionCost(
+  combatant: BattleCreatureState | undefined,
+  sourceUnitId: string,
+  action: AlternateActionCostAction,
+): boolean {
+  return alternateActionCostProfilesForActor(combatant).some(
+    (entry) =>
+      entry.unitId === sourceUnitId &&
+      entry.profile.to.kind === "bonusAction" &&
+      entry.profile.from.actions.some((candidate) => candidate === action),
+  );
+}
+
+function alternateActionCostActionLabel(
+  action: AlternateActionCostAction,
+): string {
+  return Match.value(action).pipe(
+    Match.when("dash", () => "Dash"),
+    Match.when("disengage", () => "Disengage"),
+    Match.when("hide", () => "Hide"),
+    Match.exhaustive,
   );
 }
 

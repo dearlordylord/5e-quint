@@ -10,6 +10,8 @@ import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attac
 import classFighterInput from "../../content/class_fighter.json";
 import classWizardInput from "../../content/class_wizard.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
+import featAbilityScoreImprovementInput from "../../content/feat_ability_score_improvement.json";
+import featBoonOfCombatProwessInput from "../../content/feat_boon_of_combat_prowess.json";
 import featDefenseInput from "../../content/feat_defense.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
 import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
@@ -29,7 +31,10 @@ import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import speciesOrcInput from "../../content/species_orc.json";
+import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
+import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
+import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
 import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
@@ -95,6 +100,14 @@ export type UnitCatalogBuildIssue =
       readonly code: "unknownUnitReference";
       readonly referringUnitId: UnitId;
       readonly referencedUnitId: UnitId;
+    }
+  | {
+      readonly code: "invalidSubclassChoiceReference";
+      readonly classUnitId: UnitId;
+      readonly subclassUnitId: UnitId;
+      readonly expectedClassName: string;
+      readonly actualKind: UnitRecord["kind"];
+      readonly actualClassName?: string;
     };
 
 export type UnitCatalogBuildResult =
@@ -145,6 +158,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     classWizardInput,
     backgroundSoldierInput,
     speciesOrcInput,
+    subclassFighterChampionInput,
+    subclassWizardEvokerInput,
     fighterFightingStyleInput,
     fighterSecondWindInput,
     fighterWeaponMasteryInput,
@@ -155,11 +170,14 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianRecklessAttackInput,
     bardCuttingWordsInput,
     monkDeflectAttacksInput,
+    rogueCunningActionInput,
     rogueEvasionInput,
     rogueUncannyDodgeInput,
     rogueSneakAttackInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
+    featAbilityScoreImprovementInput,
+    featBoonOfCombatProwessInput,
     featDefenseInput,
     featSavageAttackerInput,
     masterySapInput,
@@ -212,6 +230,7 @@ export function buildUnitCatalog(input: {
     for (const unit of collection.units) {
       issues.push(...findUnknownStartingEquipmentRefs(unit, records));
       issues.push(...findUnknownClassSpellRefs(unit, records));
+      issues.push(...findInvalidSubclassChoiceRefs(unit, records));
     }
   }
   // Class feature grant refs are intentionally not catalog-validated yet:
@@ -298,6 +317,49 @@ function findUnknownClassSpellRefs(
 
 function isWizardClassRecord(unit: UnitRecord): unit is WizardClassRecord {
   return unit.kind === "class" && unit.className === "wizard";
+}
+
+function findInvalidSubclassChoiceRefs(
+  unit: UnitRecord,
+  records: ReadonlyMap<UnitId, UnitRecord>,
+): readonly UnitCatalogBuildIssue[] {
+  if (unit.kind !== "class") {
+    return [];
+  }
+
+  return unit.subclassChoices.flatMap((choice) =>
+    choice.options.flatMap((subclassUnitId): readonly UnitCatalogBuildIssue[] => {
+      const referenced = records.get(subclassUnitId);
+      if (referenced == null) {
+        return [
+          {
+            code: "unknownUnitReference",
+            referringUnitId: unit.id,
+            referencedUnitId: subclassUnitId,
+          } satisfies UnitCatalogBuildIssue,
+        ];
+      }
+      if (
+        referenced.kind === "subclass" &&
+        referenced.className === unit.className
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          code: "invalidSubclassChoiceReference",
+          classUnitId: unit.id,
+          subclassUnitId,
+          expectedClassName: unit.className,
+          actualKind: referenced.kind,
+          ...("className" in referenced
+            ? { actualClassName: referenced.className }
+            : {}),
+        } satisfies UnitCatalogBuildIssue,
+      ];
+    }),
+  );
 }
 
 function validateSrdUnitCollection(

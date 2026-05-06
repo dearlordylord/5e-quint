@@ -1,7 +1,7 @@
-import type { CreatureSnapshot } from "@dnd/core/battle-scene/scene-snapshot.ts"
+import type { LayoutCreatureSnapshot } from "@dnd/core/battle-scene/layout.ts"
 import { useState } from "react"
 
-function SlotPips({ slots }: { slots: CreatureSnapshot["slotsByLevel"] }) {
+function SlotPips({ slots }: { slots: LayoutCreatureSnapshot["slotsByLevel"] }) {
   if (slots.length === 0) return null
   return (
     <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
@@ -20,30 +20,13 @@ function SlotPips({ slots }: { slots: CreatureSnapshot["slotsByLevel"] }) {
   )
 }
 
-function SpellList({ hasCounterspell, spells }: { spells: ReadonlyArray<string>; hasCounterspell: boolean }) {
-  if (spells.length === 0) return null
-  return (
-    <div className="flex flex-wrap gap-0.5 mt-0.5">
-      {spells.map((s) => (
-        <span
-          key={s}
-          className={[
-            "px-1 py-px rounded text-[9px] leading-tight",
-            s === "counterspell"
-              ? hasCounterspell
-                ? "bg-amber-500/30 text-amber-300"
-                : "bg-gray-700 text-gray-500 line-through"
-              : "bg-gray-700/60 text-gray-400"
-          ].join(" ")}
-        >
-          {s.replace(/_/g, " ")}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-export function InitiativeTracker({ creatures, round }: { creatures: ReadonlyArray<CreatureSnapshot>; round: number }) {
+export function InitiativeTracker({
+  creatures,
+  round
+}: {
+  creatures: ReadonlyArray<LayoutCreatureSnapshot>
+  round: number
+}) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   return (
@@ -53,7 +36,6 @@ export function InitiativeTracker({ creatures, round }: { creatures: ReadonlyArr
         const ko = c.unconscious && !c.dead
         const active = c.isActive && !c.dead && !ko
         const expanded = expandedId === c.id
-        const hasCS = c.preparedSpells.includes("counterspell")
         return (
           <div key={c.id}>
             <button
@@ -90,11 +72,6 @@ export function InitiativeTracker({ creatures, round }: { creatures: ReadonlyArr
               >
                 {c.name}
               </span>
-              {hasCS && c.reactionAvailable && (
-                <span className="text-[8px] font-bold text-amber-400 shrink-0" title="Counterspell ready">
-                  CS
-                </span>
-              )}
               <span
                 className={[
                   "tabular-nums text-[10px] shrink-0",
@@ -117,7 +94,6 @@ export function InitiativeTracker({ creatures, round }: { creatures: ReadonlyArr
             </button>
             {expanded && !c.dead && (
               <div className="px-2 pb-1 pt-0.5">
-                <SpellList spells={c.preparedSpells} hasCounterspell={hasCS && c.reactionAvailable} />
                 <SlotPips slots={c.slotsByLevel} />
               </div>
             )}

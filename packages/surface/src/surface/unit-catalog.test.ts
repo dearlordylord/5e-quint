@@ -27,9 +27,13 @@ const requiredFirstVerticalUnitIds = [
   "fighter_action_surge",
   "fighter_tactical_mind",
   "fighter_improved_critical",
+  "subclass_fighter_champion",
+  "subclass_wizard_evoker",
   "rogue_evasion",
   "wizard_ritual_adept",
   "wizard_arcane_recovery",
+  "feat_ability_score_improvement",
+  "feat_boon_of_combat_prowess",
   "defense",
   "feat_savage_attacker",
   "mastery_sap",
@@ -521,11 +525,11 @@ describe("SRD Unit catalog boundary", () => {
     const malformedCollection: SrdUnitCollection = {
       kind: "srdUnitCollection",
       provenance: { kind: "srd-5.2.1" },
-      units: [
+      units: srdUnitCollection.units.map((unit) =>
         // Cast justification: this test simulates a corrupted SRD collection
         // after generic Unit decoding accepted a non-SRD provenance.
-        privateRecord as Srd521Unit,
-      ],
+        unit.id === privateRecord.id ? (privateRecord as Srd521Unit) : unit,
+      ),
     };
 
     expect(buildUnitCatalog({ collections: [malformedCollection] })).toEqual({
@@ -590,6 +594,43 @@ describe("SRD Unit catalog boundary", () => {
           code: "unknownUnitReference",
           referringUnitId: "class_wizard",
           referencedUnitId: "ray_of_frost",
+        },
+      ],
+    });
+  });
+
+  test("rejects class subclass choices that point at a different class subclass", () => {
+    const fighter = srdUnitCollection.units.find(
+      (unit) => unit.id === "class_fighter",
+    );
+    if (fighter?.kind !== "class") {
+      throw new Error("class_fighter fixture missing from SRD collection");
+    }
+    const brokenFighter = decodeUnitRecordSync({
+      ...fighter,
+      subclassChoices: [
+        {
+          level: 3,
+          options: ["subclass_wizard_evoker"],
+        },
+      ],
+    }) as Srd521Unit;
+    const malformedCollection = defineSrdUnitCollection({
+      units: srdUnitCollection.units.map((unit) =>
+        unit.id === "class_fighter" ? brokenFighter : unit,
+      ),
+    });
+
+    expect(buildUnitCatalog({ collections: [malformedCollection] })).toEqual({
+      tag: "invalid",
+      issues: [
+        {
+          actualClassName: "wizard",
+          actualKind: "subclass",
+          classUnitId: "class_fighter",
+          code: "invalidSubclassChoiceReference",
+          expectedClassName: "fighter",
+          subclassUnitId: "subclass_wizard_evoker",
         },
       ],
     });

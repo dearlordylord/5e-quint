@@ -41,8 +41,8 @@ flowchart TD
 
   Finalize["finalizeCharacterDraft({ draft, unitLibrary })<br/>ready: CharacterBuild<br/>incomplete: open holes<br/>invalid: finalization issues<br/>why: single draft-to-build boundary<br/>without: consumers decide independently when a draft is usable"]
   Complete["finalizedSelections(draft)<br/>success: FinalizedCharacterSelections<br/>absence: undefined when required typed selections are missing<br/>why: narrow partial draft to complete selection type<br/>without: build building handles optional fields defensively"]
-  Legality["temporarySupportedSliceIssues<br/>success: no issues for the current executable slice<br/>invalid: illegalFinalization issues<br/>why: complete does not automatically mean currently projectable<br/>without: unsupported complete drafts can finalize"]
-  SheetBuild["buildCharacterBuild<br/>input: complete legal selections + Surface facts<br/>success: CharacterBuild with Unit refs, abilities, HP, proficiencies, features, resources, equipment/loadout<br/>why: one runtime projection from accepted draft and authored Units<br/>without: callers would rederive character facts"]
+  Legality["executableSupportIssues<br/>success: no issues for the executable support boundary<br/>invalid: illegalFinalization issues<br/>why: complete does not automatically mean currently projectable<br/>without: unsupported complete drafts can finalize"]
+  BuildProjection["buildCharacterBuild<br/>input: complete legal selections + Surface facts<br/>success: CharacterBuild with Unit refs, abilities, HP, proficiencies, features, resources, equipment/loadout<br/>why: one runtime projection from accepted draft and authored Units<br/>without: callers would rederive character facts"]
   Build["CharacterBuild<br/>finalized player-character boundary<br/>not: Unit, Stat Block, or execution state<br/>why: character creation owns build facts and exports a stable boundary<br/>without: runtime initialization can become the character-creation source of truth"]
 
   Content --> Decode --> Collection --> Catalog
@@ -53,7 +53,7 @@ flowchart TD
   Discover --> InitialHoles
   Discover --> Readers --> UnitGrantedHoles
   Discover --> EquipmentHoles
-  Readers --> SheetBuild
+  Readers --> BuildProjection
 
   Discover --> CallerFills --> Fill
   Draft --> Fill
@@ -70,12 +70,12 @@ flowchart TD
   Finalize --> Discover
   Finalize --> Complete
   Complete -->|missing selections| InvalidFinalization["return invalid<br/>illegalFinalization"]
-  Complete -->|complete selections| Legality --> SheetBuild --> Build --> Session
+  Complete -->|complete selections| Legality --> BuildProjection --> Build --> Session
 
   classDef invalid fill:#fff7ed,stroke:#f97316,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
   class Rejected,InvalidFinalization invalid;
-  class Content,Decode,Collection,Catalog,Create,Draft,Session,Discover,InitialHoles,UnitGrantedHoles,EquipmentHoles,Readers,Fill,CallerFills,CurrentFrontier,Issues,SupportGate,Apply,Rediscover,RefillLoop,Finalize,Complete,Legality,SheetBuild,Build implemented;
+  class Content,Decode,Collection,Catalog,Create,Draft,Session,Discover,InitialHoles,UnitGrantedHoles,EquipmentHoles,Readers,Fill,CallerFills,CurrentFrontier,Issues,SupportGate,Apply,Rediscover,RefillLoop,Finalize,Complete,Legality,BuildProjection,Build implemented;
 ```
 
 ## Hole Discovery Graph
@@ -137,9 +137,9 @@ flowchart TD
   Duplicate["duplicate-fill diagnostic<br/>success: one fill per hole per batch<br/>failure: duplicateFill<br/>why: one batch cannot answer one hole twice<br/>without: apply order determines semantics"]
   HoleLookup["hole lookup diagnostic<br/>success: matching current CreationHole<br/>failure: unknownHole<br/>why: only currently open holes can be filled<br/>without: old/future holes mutate the draft"]
   Kind["fill-kind diagnostic<br/>success: choice, abilityScores, or text matches hole kind<br/>failure: wrongFillKind<br/>why: parse the fill protocol before applying it<br/>without: mutation functions need defensive union checks"]
-  ChoiceValidation["choice-fill diagnostics<br/>checks: cardinality, duplicate option ids, option exists, option is supported<br/>failure: invalidChoice, tooFewChoices, tooManyChoices, unsupportedChoice<br/>why: distinguish illegal SRD choice from valid-but-unsupported slice choice"]
+  ChoiceValidation["choice-fill diagnostics<br/>checks: cardinality, duplicate option ids, option exists, option is supported<br/>failure: invalidChoice, tooFewChoices, tooManyChoices, unsupportedChoice<br/>why: distinguish illegal SRD choice from valid-but-unsupported executable choice"]
   AbilityValidation["abilityScoreFillIssues<br/>checks: supported method + shared ability-score algebra<br/>failure: invalidAbilityScores<br/>why: ability-score rules live in shared algebra<br/>without: creation duplicates Standard Array and Point Buy validation"]
-  SupportGate["package-private support gates<br/>input: current hole + selected option ids<br/>success: supported or unrestricted choice<br/>failure: unsupportedChoice diagnostic<br/>why: valid SRD choices can still be outside this runtime slice"]
+  SupportGate["package-private support gates<br/>input: current hole + selected option ids<br/>success: supported or unrestricted choice<br/>failure: unsupportedChoice diagnostic<br/>why: valid SRD choices can still be outside this runtime boundary"]
   Issues["CreationBatchFillIssue[] aggregate<br/>success path: []<br/>failure path: stale revision plus every diagnosable fill issue<br/>why: all-or-nothing acceptance decision without short-circuiting"]
 
   Rejected["rejected result<br/>draft: original draft<br/>holes: original holes<br/>issues: NonEmptyReadonlyArray&lt;CreationBatchFillIssue&gt;<br/>finalization: status of original draft<br/>why: rejected batches are atomic"]
@@ -152,7 +152,7 @@ flowchart TD
   Finalize["finalizeCharacterDraft<br/>input: draft + UnitCatalog<br/>returns: ready, incomplete, or invalid"]
   OpenHoles["open holes check<br/>if holes remain: incomplete with holes<br/>why: finalization cannot skip required choices"]
   Narrow["finalizedSelections<br/>success: all required selections present<br/>absence: undefined when required selections are missing despite no open holes<br/>why: convert partial draft into complete selection type"]
-  ManifestLegality["temporarySupportedSliceIssues<br/>checks: current supported slice values, valid ability scores, exact choices, exact owned equipment<br/>failure: illegalFinalization issues<br/>why: complete draft must still match temporary executable support"]
+  ManifestLegality["executableSupportIssues<br/>checks: supported executable values, valid ability scores, exact choices, exact owned equipment<br/>failure: illegalFinalization issues<br/>why: complete draft must still match executable support"]
   Build["buildCharacterBuild<br/>derives: Unit refs, final ability scores, HP/Hit Dice, proficiencies, features, resources, equipment loadout<br/>why: one projection from creation choices to character boundary"]
   Ready["ready result<br/>build: CharacterBuild<br/>why: finalized player-character handoff"]
 
@@ -209,7 +209,7 @@ flowchart TD
 | `applyCreationFills`            | Draft, current holes, accepted fills          | New draft selections and `revision + 1`                                                              | Throws only if accepted-fill invariant is broken                                   | One mutation boundary after validation                        | Every hole family owns its own mutation protocol              |
 | `finalizeCharacterDraft`        | Draft, Unit library                           | `ready` with `CharacterBuild`                                                                        | `incomplete` with non-empty holes, or `invalid` with non-empty finalization issues | Single draft-to-build boundary                                | Consumers decide independently when a draft is usable         |
 | `finalizedSelections`           | `CharacterDraft`                              | `FinalizedCharacterSelections`                                                                       | `undefined` when required fields are missing                                       | Narrows optional draft state before build projection          | Build building handles optional fields defensively            |
-| `temporarySupportedSliceIssues` | Complete selections, Unit library             | `[]` for the current executable slice                                                                | `illegalFinalization` issues                                                       | Temporary gate until full SRD creation is projectable         | Unsupported complete drafts finalize                          |
+| `executableSupportIssues` | Complete selections, Unit library             | `[]` for the executable support boundary                                                             | `illegalFinalization` issues                                                       | Gate until full SRD creation is projectable                   | Unsupported complete drafts finalize                          |
 | `buildCharacterBuild`           | Complete legal selections, Unit library       | `CharacterBuild`                                                                                     | Throws if required Surface facts are unreadable                                    | One projection from choices and authored facts to build facts | Callers rederive character facts                              |
 | `CharacterBuild`                | n/a                                           | Finalized Unit refs, abilities, HP, proficiencies, features, resources, equipment/loadout            | n/a                                                                                | Player-character boundary after creation                      | Consumer initialization becomes the source of creation truth  |
 

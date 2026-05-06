@@ -32,7 +32,6 @@ import {
   SelectStatBlockOutputSchema,
   StartBattleOutputSchema,
 } from "./battle-tool-output.ts";
-import { battleStateProjection } from "./battle-state-projection.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 import type { BattleFillSession } from "./session-store.ts";
@@ -61,14 +60,14 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.readBattleState,
     description:
-      "Return the stored battle state projection and current battle snapshot, including discoverable battle acts.",
+      "Return the current battle-runtime snapshot, including discoverable battle acts, and the MCP session summary.",
     inputSchema: readBattleStateInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
   },
   {
     name: battleToolNames.discoverBattleActs,
     description:
-      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Hide/Search when the battle state carries the RAW Hide prerequisite, Fighter Second Wind, Fighter 2 Action Surge, Wizard action-time spell acts, and End Turn.",
+      "Return the current battle snapshot and runtime-discovered available acts for the current combatant.",
     inputSchema: discoverBattleActsInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
   },
@@ -242,8 +241,8 @@ export function handleBattleToolCall(
       return schemaJsonContent(EndBattleOutputSchema, {
         endedBattleId: state.right.battleId,
         characters: Array.from(root.sessionStore.characters.entries()).map(
-          ([sourceDraftId, session]) => ({
-            sourceDraftId,
+          ([characterId, session]) => ({
+            characterId,
             session,
           }),
         ),
@@ -286,7 +285,6 @@ function battleSessionPayload(
   state: BattleState | null,
 ) {
   return {
-    battleState: state === null ? null : battleStateProjection(state),
     snapshot: state === null ? null : snapshotBattle(state),
     session: root.sessionStore.snapshot(),
   };
@@ -298,8 +296,6 @@ function battleResolutionPayload(
 ) {
   return {
     result: battleResolutionResultPayload(result),
-    battleState:
-      result.tag === "invalid" ? null : battleStateProjection(result.state),
     snapshot: result.snapshot,
     session: root.sessionStore.snapshot(),
   };

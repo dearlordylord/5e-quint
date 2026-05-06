@@ -160,6 +160,8 @@ export function traceUnit(unit: UnitRecord): Trace {
       return traceSpellUnit(unit);
     case "class":
       return traceClassUnit(unit);
+    case "subclass":
+      return traceSubclassUnit(unit);
     case "class_feature":
       return traceClassFeatureUnit(unit);
     case "background":
@@ -5302,9 +5304,54 @@ function traceClassUnit(unit: ClassRecord): Trace {
     edges.push({ from: rootId, to: grantId, relation: "grants" });
   }
 
+  for (const choice of unit.subclassChoices) {
+    const choiceId = ids("subclass");
+    nodes.push({
+      id: choiceId,
+      category: "hole",
+      atomKind: "subclass_choice",
+      label: `subclass_choice\nlevel ${choice.level}\n${choice.options.join(", ")}`,
+    });
+    edges.push({ from: rootId, to: choiceId, relation: "opens" });
+  }
+
   traceStartingEquipment(rootId, unit.startingEquipment, nodes, edges, ids);
 
   return traceFromNodes(unit, nodes, edges);
+}
+
+function traceSubclassUnit(
+  unit: Extract<UnitRecord, { kind: "subclass" }>,
+): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "subclass_root",
+    label: `subclass_root\n${unit.name}\n${unit.className}`,
+  });
+
+  for (const grant of unit.featureGrants) {
+    const grantId = ids("grant");
+    nodes.push({
+      id: grantId,
+      category: "source",
+      atomKind: "subclass_feature_grant",
+      label: `subclass_feature_grant\nlevel ${grant.level}\n${grant.unitId}`,
+    });
+    edges.push({ from: rootId, to: grantId, relation: "grants" });
+  }
+
+  return {
+    unitId: unit.id,
+    unitName: unit.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
 }
 
 function traceBackgroundUnit(unit: BackgroundRecord): Trace {
@@ -5845,6 +5892,8 @@ function traceClassFeatureMechanics(
       return [traceActivatedAbility(m, nodes, edges, ids)];
     case "passive":
       return [tracePassiveMechanics(m, nodes, edges, ids)];
+    case "alternate_action_cost":
+      return [traceAlternateActionCostMechanics(m, nodes, ids)];
     case "on_hit_trigger":
       return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
     case "save_damage_replacement":
@@ -5909,6 +5958,8 @@ function traceClassFeatureMechanics(
             return traceActivatedAbility(part, nodes, edges, ids);
           case "passive":
             return tracePassiveMechanics(part, nodes, edges, ids);
+          case "alternate_action_cost":
+            return traceAlternateActionCostMechanics(part, nodes, ids);
           case "on_hit_trigger":
             return traceOnHitTriggerMechanics(part, nodes, edges, ids);
           case "save_damage_replacement":
@@ -5934,6 +5985,24 @@ function traceClassFeatureMechanics(
       );
     }
   }
+}
+
+function traceAlternateActionCostMechanics(
+  m: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "alternate_action_cost" }
+  >,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const alternateCostId = ids("alternate-cost");
+  nodes.push({
+    id: alternateCostId,
+    category: "procedure",
+    atomKind: "alternate_action_cost",
+    label: `alternate_action_cost\n${m.from.actions.join(", ")}\nas ${m.to.kind}`,
+  });
+  return alternateCostId;
 }
 
 function traceSaveDamageReplacementMechanics(
@@ -6564,6 +6633,8 @@ function describeUseCountCap(cap: UseCountResource["cap"]): string {
 
 function describeProficiencyGrant(grant: ProficiencyGrant): string {
   switch (grant.kind) {
+    case "none":
+      return "none";
     case "fixed":
       return grant.proficiencies
         .map(describeProficiencyGrantSubject)
@@ -6589,6 +6660,8 @@ function describeProficiencyGrantSubject(
       return `${subject.category} weapons`;
     case "armor_category":
       return `${subject.category} armor`;
+    case "tool":
+      return `${subject.toolId} tool`;
     default: {
       const _exhaustive: never = subject;
       return _exhaustive;

@@ -5,10 +5,18 @@ import {
   SURFACE_CONDITIONS,
   SURFACE_SKILLS,
 } from "@dnd/shared/game-facts";
+import {
+  ARMOR_TRAINING_CATEGORIES as SCHEMA_ARMOR_TRAINING_CATEGORIES,
+  WEAPON_PROFICIENCY_CATEGORIES as SCHEMA_WEAPON_PROFICIENCY_CATEGORIES,
+} from "./schema-base.ts";
 import * as SurfaceSchema from "./schema.ts";
 
 // Runtime literal sets kept as values; concrete surface types derive from the Effect schemas.
 export const SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
+export const WEAPON_PROFICIENCY_CATEGORIES =
+  SCHEMA_WEAPON_PROFICIENCY_CATEGORIES satisfies ReadonlyArray<WeaponProficiencyCategory>;
+export const ARMOR_TRAINING_CATEGORIES =
+  SCHEMA_ARMOR_TRAINING_CATEGORIES satisfies ReadonlyArray<ArmorTrainingCategory>;
 export const CONDITIONS = SURFACE_CONDITIONS satisfies ReadonlyArray<Condition>;
 export const AREA_SHAPES = [
   "sphere",
@@ -133,6 +141,9 @@ export type ClassName = Schema.Schema.Type<
 >;
 export type ClassRecordKind = Schema.Schema.Type<
   typeof SurfaceSchema.ClassRecordKindSchema
+>;
+export type SubclassRecordKind = Schema.Schema.Type<
+  typeof SurfaceSchema.SubclassRecordKindSchema
 >;
 export type BackgroundRecordKind = Schema.Schema.Type<
   typeof SurfaceSchema.BackgroundRecordKindSchema
@@ -328,6 +339,9 @@ export type OngoingEffectMechanics = Schema.Schema.Type<
 >;
 export type ActivationMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ActivationMechanicsSchema
+>;
+export type AlternateActionCostMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.AlternateActionCostMechanicsSchema
 >;
 export type TriggeredReactionMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.TriggeredReactionMechanicsSchema
@@ -644,6 +658,9 @@ export type TacticalMindMechanics = Schema.Schema.Type<
 >;
 export type ClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassRecordSchema
+>;
+export type SubclassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.SubclassRecordSchema
 >;
 export type WizardClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.WizardClassRecordSchema

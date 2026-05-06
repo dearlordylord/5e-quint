@@ -565,8 +565,8 @@ NODE
 auto_unblock_blocked_tasks() {
   local target_file="$1"
 
-  local promoted_tasks
-  promoted_tasks="$(node - "$target_file" <<'NODE'
+  local unblocked_tasks
+  unblocked_tasks="$(node - "$target_file" <<'NODE'
 const fs = require("fs")
 
 const path = process.argv[2]
@@ -659,7 +659,7 @@ for (let i = 0; i < lines.length; i += 1) {
   }
 }
 
-const promoted = []
+const unblocked = []
 
 for (const [number, deps] of dependsByNumber.entries()) {
   const task = index.tasks.find((entry) => entry.number === number)
@@ -675,15 +675,15 @@ for (const [number, deps] of dependsByNumber.entries()) {
   if (task.status === "blocked") {
     task.status = "ready-for-research"
     statusById.set(task.id, "ready-for-research")
-    promoted.push(task)
+    unblocked.push(task)
   }
 }
 
-if (promoted.length === 0) {
+if (unblocked.length === 0) {
   process.exit(0)
 }
 
-for (const task of promoted) {
+for (const task of unblocked) {
   const rowIndex = rowIndexByNumber.get(task.number)
   if (typeof rowIndex !== "number") {
     throw new Error(`missing DAG row index for #${task.number}`)
@@ -695,30 +695,40 @@ for (const task of promoted) {
 }
 
 let updatedText = lines.join("\n")
-for (const task of promoted) {
+for (const task of unblocked) {
   const headingPattern = new RegExp("(^### Task " + task.number + "[^\\n]*\\n\\nStatus: `)([^`]+)(`)", "m")
   const headingReplacement = `$1${task.status}$3`
 
-  const replaced = updatedText.replace(headingPattern, headingReplacement)
-  if (replaced === updatedText) {
+  if (!headingPattern.test(updatedText)) {
     throw new Error(`missing task heading for #${task.number}`)
   }
-  updatedText = replaced
+  updatedText = updatedText.replace(headingPattern, headingReplacement)
 }
 
 updatedText = updatedText.replace(/<!-- ralph-task-index\n[\s\S]*?\n-->/, `<!-- ralph-task-index\n${JSON.stringify(index, null, 2)}\n-->`)
 
 fs.writeFileSync(path, updatedText)
-for (const task of promoted) {
+for (const task of unblocked) {
   const safe = `${task.number}|${task.id}`
   console.log(safe)
 }
 NODE
   )"
 
-  if [[ -n "$promoted_tasks" ]]; then
-    note "plan" "auto-unblocked-from-dependencies tasks=$(echo "$promoted_tasks" | tr '\n' ',')"
+  if [[ -n "$unblocked_tasks" ]]; then
+    note "plan" "auto-unblocked-from-dependencies tasks=$(echo "$unblocked_tasks" | tr '\n' ',')"
   fi
+}
+
+commit_plan_automation_change() {
+  local message="$1"
+
+  if git diff --quiet -- "$plan_file" && git diff --cached --quiet -- "$plan_file"; then
+    return 0
+  fi
+
+  git add "$plan_file"
+  HUSKY=0 git commit -m "$message" >/dev/null
 }
 
 lookup_task_row() {
@@ -824,9 +834,9 @@ write_prompt() {
   cat >"$output_file" <<EOF
 You are the $role agent in a Ralph-style fresh-context implementation run for this repository.
 
-Before starting, run 'git log --oneline -1 master' and 'git log --oneline -1 HEAD'. Treat this as a branch-base check, not an exact-match requirement.
-If HEAD is missing master's tip as an ancestor, run 'git rebase master'.
-If HEAD is ahead of master because earlier reconciled task commits are already present on the integration branch, continue after confirming master is still the branch base.
+Before starting, run 'git log --oneline -1 $task_base_ref', 'git log --oneline -1 HEAD', and 'git merge-base --is-ancestor $task_base_sha HEAD'. Treat this as a task-base check.
+If the merge-base command fails, stop and report the branch-base mismatch. Do not rebase onto master; Ralph task worktrees must stay based on the task Base SHA below.
+If HEAD is ahead of the Base SHA because this is a later implement/review round in the same task worktree, continue after confirming the Base SHA is still an ancestor.
 
 Workspace: $workspace
 Base ref: $task_base_ref
@@ -880,9 +890,9 @@ write_review_prompt() {
   cat >"$output_file" <<EOF
 You are reviewing the $implementation implementation for Task $task_no in this Ralph run.
 
-Before starting, run 'git log --oneline -1 master' and 'git log --oneline -1 HEAD'. Treat this as a branch-base check, not an exact-match requirement.
-If HEAD is missing master's tip as an ancestor, run 'git rebase master'.
-If HEAD is ahead of master because earlier reconciled task commits are already present on the integration branch, continue after confirming master is still the branch base.
+Before starting, run 'git log --oneline -1 $base_ref', 'git log --oneline -1 HEAD', and 'git merge-base --is-ancestor $task_base_sha HEAD'. Treat this as a task-base check.
+If the merge-base command fails, stop and report the branch-base mismatch. Do not rebase onto master; Ralph task worktrees must stay based on the task Base SHA below.
+If HEAD is ahead of the Base SHA because the implementation committed task changes, continue after confirming the Base SHA is still an ancestor.
 
 Workspace: $workspace
 Base ref: $base_ref
@@ -1593,6 +1603,7 @@ choose_next_task() {
 
   refresh_plan_snapshot
   auto_unblock_blocked_tasks "$plan_file"
+  commit_plan_automation_change "Auto-unblock ready Ralph tasks"
   refresh_plan_snapshot
 
   if [[ ${#selected_tasks[@]} -gt 0 ]]; then
@@ -1874,6 +1885,7 @@ run_task_attempt() {
   if [[ "$decider_disposition" == "done" && "$authoritative_disposition" != "done" ]]; then
     if set_task_status_in_plan "$task_no" "$task_id" "done" "$plan_file"; then
       note "task" "warning-autorepaired-task-done-status task=$task_no attempt=$attempt_no previous_status=$refreshed_task_status"
+      commit_plan_automation_change "Mark Ralph task $task_no done"
       refresh_plan_snapshot
       refreshed_task_row="$(lookup_task_row "$task_no" || true)"
       if [[ -z "$refreshed_task_row" ]]; then

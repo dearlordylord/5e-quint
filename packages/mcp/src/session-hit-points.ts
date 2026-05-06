@@ -1,3 +1,7 @@
+import {
+  KNOCKED_OUT_UNCONSCIOUS,
+  type BattlePositiveHpUnconscious,
+} from "@dnd/battle-runtime";
 import type { CharacterZeroHpLifecycleInit } from "@dnd/battle-runtime";
 import { Hp, type Condition, type Hp as HpType } from "@dnd/shared/types";
 import type {
@@ -6,10 +10,12 @@ import type {
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { Either } from "effect";
 
-export type CharacterSessionPositiveHpCondition = {
-  readonly tag: "unconscious";
-  readonly recovery: { readonly kind: "knockOutShortRest" };
+export type CharacterSessionPositiveHpUnconscious = {
+  readonly tag: "knockedOut";
 };
+export const CHARACTER_SESSION_KNOCKED_OUT_UNCONSCIOUS = {
+  tag: "knockedOut",
+} as const satisfies CharacterSessionPositiveHpUnconscious;
 type CharacterSessionPendingDeathSaveCount = Exclude<DeathSaveCount, 3>;
 type CharacterSessionPendingDeathSaves = {
   readonly successes: CharacterSessionPendingDeathSaveCount;
@@ -39,18 +45,14 @@ export type CharacterSessionZeroHpLifecycleInput =
   | { readonly tag: "dead"; readonly deathSaves: DeathSaves };
 export type CharacterSessionHitPoints =
   | { readonly tag: "positive"; readonly currentHp: HpType }
-  | {
-      readonly tag: "positiveWithCondition";
-      readonly currentHp: HpType;
-      readonly condition: CharacterSessionPositiveHpCondition;
-    }
+  | { readonly tag: "knockedOut" }
   | {
       readonly tag: "zero";
       readonly lifecycle: CharacterSessionZeroHpLifecycle;
     };
 export type CharacterSessionHitPointsInput = {
   readonly currentHp: HpType;
-  readonly positiveHpCondition?: CharacterSessionPositiveHpCondition;
+  readonly positiveHpUnconscious?: CharacterSessionPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
 };
 export type CharacterSessionIssue = {
@@ -73,19 +75,23 @@ export function characterSessionHitPoints(
         "Positive-HP character session cannot carry zero-HP state.",
       );
     }
+    if (
+      input.positiveHpUnconscious !== undefined &&
+      Number(input.currentHp) !== 1
+    ) {
+      return characterSessionIssue(
+        "Knocked Out character session must have exactly 1 current HP.",
+      );
+    }
     return Either.right(
-      input.positiveHpCondition === undefined
+      input.positiveHpUnconscious === undefined
         ? { tag: "positive", currentHp: input.currentHp }
-        : {
-            tag: "positiveWithCondition",
-            currentHp: input.currentHp,
-            condition: input.positiveHpCondition,
-          },
+        : { tag: "knockedOut" },
     );
   }
-  if (input.positiveHpCondition !== undefined) {
+  if (input.positiveHpUnconscious !== undefined) {
     return characterSessionIssue(
-      "Zero-HP character session cannot carry positive-HP condition state.",
+      "Zero-HP character session cannot carry Knock Out Unconscious state.",
     );
   }
   const lifecycle = canonicalZeroHpLifecycle(
@@ -102,27 +108,35 @@ export function characterSessionHitPoints(
 export function characterSessionHitPointsCurrentHp(
   hitPoints: CharacterSessionHitPoints,
 ): HpType {
-  return hitPoints.tag === "positive" ||
-    hitPoints.tag === "positiveWithCondition"
-    ? hitPoints.currentHp
-    : Hp(0);
+  if (hitPoints.tag === "positive") return hitPoints.currentHp;
+  return hitPoints.tag === "knockedOut" ? Hp(1) : Hp(0);
 }
 
 export function characterSessionHitPointsInitialConditions(
   hitPoints: CharacterSessionHitPoints,
 ): readonly Condition[] {
-  return hitPoints.tag === "positiveWithCondition"
-    ? [hitPoints.condition.tag]
-    : [];
+  return hitPoints.tag === "knockedOut" ? ["unconscious"] : [];
+}
+
+export function characterSessionHitPointsPositiveHpUnconscious(
+  hitPoints: CharacterSessionHitPoints,
+): BattlePositiveHpUnconscious | undefined {
+  return hitPoints.tag === "knockedOut" ? KNOCKED_OUT_UNCONSCIOUS : undefined;
+}
+
+export function characterSessionPositiveHpUnconsciousFromBattle(
+  value: BattlePositiveHpUnconscious,
+): CharacterSessionPositiveHpUnconscious {
+  switch (value.tag) {
+    case "knockedOut":
+      return CHARACTER_SESSION_KNOCKED_OUT_UNCONSCIOUS;
+  }
 }
 
 export function characterSessionHitPointsZeroHpLifecycle(
   hitPoints: CharacterSessionHitPoints,
 ): CharacterZeroHpLifecycleInit | undefined {
-  if (
-    hitPoints.tag === "positive" ||
-    hitPoints.tag === "positiveWithCondition"
-  ) {
+  if (hitPoints.tag === "positive" || hitPoints.tag === "knockedOut") {
     return undefined;
   }
   const lifecycle = hitPoints.lifecycle;

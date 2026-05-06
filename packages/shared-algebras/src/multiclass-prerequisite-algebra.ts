@@ -6,8 +6,7 @@ import { type Ability, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { ClassName } from "@dnd/shared/game-facts";
 import {
   abilityScoreAssignment,
-  type AbilityScoreAssignment,
-  type AbilityScoreAssignmentValueIssue,
+  type AbilityScoreAssignmentIssue,
   type ParsedAbilityScoreAssignment,
 } from "./ability-score-algebra.ts";
 
@@ -17,11 +16,17 @@ export const MULTICLASS_THRESHOLD = 13;
 
 export type MulticlassAbilityScores = ParsedAbilityScoreAssignment;
 
-export type MulticlassAbilityScoresValueIssue = {
-  readonly tag: "invalidMulticlassAbilityScore";
-  readonly ability: Ability;
-  readonly value: number;
-};
+export type MulticlassAbilityScoresIssue =
+  | { readonly tag: "multiclassAbilityScoresNotObject" }
+  | {
+      readonly tag: "missingNumericMulticlassAbilityScore";
+      readonly ability: Ability;
+    }
+  | {
+      readonly tag: "invalidMulticlassAbilityScore";
+      readonly ability: Ability;
+      readonly value: number;
+    };
 
 export type MulticlassClassChange = {
   readonly currentClasses: ReadonlyNonEmptyArray<ClassName>;
@@ -72,25 +77,38 @@ export function multiclassClassChange(input: {
 }
 
 export function multiclassAbilityScores(
-  scores: AbilityScoreAssignment,
+  scores: unknown,
 ): Either.Either<
   MulticlassAbilityScores,
-  MulticlassAbilityScoresValueIssue
+  ReadonlyNonEmptyArray<MulticlassAbilityScoresIssue>
 > {
-  return Either.mapLeft(
-    abilityScoreAssignment(scores),
-    multiclassScoresValueIssue,
-  );
+  return Either.mapLeft(abilityScoreAssignment(scores), (issues) => {
+    const [first, ...rest] = issues;
+    return [
+      multiclassScoresIssue(first),
+      ...rest.map(multiclassScoresIssue),
+    ] satisfies ReadonlyNonEmptyArray<MulticlassAbilityScoresIssue>;
+  });
 }
 
-function multiclassScoresValueIssue(
-  issue: AbilityScoreAssignmentValueIssue,
-): MulticlassAbilityScoresValueIssue {
-  return {
-    tag: "invalidMulticlassAbilityScore",
-    ability: issue.ability,
-    value: issue.value,
-  };
+function multiclassScoresIssue(
+  issue: AbilityScoreAssignmentIssue,
+): MulticlassAbilityScoresIssue {
+  return Match.value(issue).pipe(
+    byTag("abilityScoreAssignmentNotObject", () => ({
+      tag: "multiclassAbilityScoresNotObject" as const,
+    })),
+    byTag("missingNumericAbilityScore", ({ ability }) => ({
+      tag: "missingNumericMulticlassAbilityScore" as const,
+      ability,
+    })),
+    byTag("invalidAbilityScore", ({ ability, value }) => ({
+      tag: "invalidMulticlassAbilityScore" as const,
+      ability,
+      value,
+    })),
+    Match.exhaustive,
+  );
 }
 
 export type MulticlassPrerequisite =

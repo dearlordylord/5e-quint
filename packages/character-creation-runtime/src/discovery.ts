@@ -16,25 +16,30 @@ import type {
   BackgroundToolProficiency,
   ClassFeatureRecord,
   FeatRecord,
+  ProficiencyGrant,
   StartingEquipmentChoice,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { proficiencyGrantSubjectOption } from "./choice-option-codecs.ts";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
+  CLASS_FEATURE_FEAT_CHOICE_KEY,
+  CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
   EXACTLY_ONE_CHOICE,
-  FIGHTING_STYLE_FEAT_CHOICE_KEY,
-  FIGHTER_SKILL_CHOICE_KEY,
+  CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   INITIAL_CHARACTER_DRAFT_PATHS,
+  abilityScoreIncreaseChoiceOptions,
   progressionOptionId,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
-  WIZARD_SKILL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import {
@@ -84,6 +89,7 @@ import {
   computeTotalLevel,
   finalAdvancementEntry,
   hitPointRuleLabel,
+  progressionClassUnitIds,
   startingClassUnitId,
 } from "./character-progression-types.ts";
 import {
@@ -142,8 +148,8 @@ export function discoverClassGrantedHoles(input: {
   if (progression == null || !isSupportedProgression(progression)) {
     return [];
   }
-  const classUnitId = startingClassUnitId(progression);
-
+  const startingUnitId = startingClassUnitId(progression);
+  const classUnitId = startingUnitId;
   const classUnit = input.unitLibrary.getUnit(classUnitId);
   if (Option.isNone(classUnit)) {
     return [];
@@ -158,7 +164,7 @@ export function discoverClassGrantedHoles(input: {
     ...unselectedUnitChoiceHole(
       input.draft,
       choiceHole({
-        source: unitSource(classUnitId, classSkillChoiceKey(facts.value)),
+        source: unitSource(classUnitId, CLASS_SKILL_PROFICIENCY_CHOICE_KEY),
         cardinality: exactChoiceCardinality(
           facts.value.skillProficiencyChoice.choose,
         ),
@@ -174,6 +180,8 @@ export function discoverClassGrantedHoles(input: {
           )
         : [],
     ),
+    ...discoverSubclassHoles(classUnitId, classLevel, facts.value, input),
+    ...discoverSelectedFeatAbilityScoreIncreaseHoles(input),
     ...unselectedUnitChoiceHole(
       input.draft,
       startingEquipmentChoiceHole(
@@ -182,6 +190,16 @@ export function discoverClassGrantedHoles(input: {
       ),
     ),
     ...discoverWizardSpellcastingHoles(classUnitId, facts.value, input.draft),
+    ...progressionClassUnitIds(progression).flatMap((progressionClassUnitId) =>
+      progressionClassUnitId === startingUnitId
+        ? []
+        : discoverAdditionalClassGrantedHoles(
+            progressionClassUnitId,
+            classLevelForUnit(progression, progressionClassUnitId),
+            input.draft,
+            input.unitLibrary,
+          ),
+    ),
   ];
 }
 
@@ -189,12 +207,6 @@ type ReadableClassCreationFacts = Extract<
   ReturnType<typeof readClassCreationFacts>,
   { readonly tag: "readable" }
 >["value"];
-
-function classSkillChoiceKey(facts: ReadableClassCreationFacts) {
-  return facts.className === "wizard"
-    ? WIZARD_SKILL_CHOICE_KEY
-    : FIGHTER_SKILL_CHOICE_KEY;
-}
 
 function discoverWizardSpellcastingHoles(
   classUnitId: UnitRecord["id"],
@@ -252,6 +264,98 @@ function isWizardClassCreationFacts(
   facts: ReadableClassCreationFacts,
 ): facts is WizardClassCreationFacts {
   return facts.className === "wizard";
+}
+
+function discoverSubclassHoles(
+  classUnitId: UnitRecord["id"],
+  classLevel: number,
+  facts: ReadableClassCreationFacts,
+  input: {
+    readonly draft: CharacterDraft;
+    readonly unitLibrary: UnitCatalog;
+  },
+): readonly CreationHole[] {
+  return facts.subclassChoices
+    .filter((choice) => choice.level <= classLevel)
+    .flatMap((choice) =>
+      unselectedUnitChoiceHole(
+        input.draft,
+        choiceHole({
+          source: unitSource(classUnitId, CLASS_SUBCLASS_CHOICE_KEY),
+          cardinality: EXACTLY_ONE_CHOICE,
+          options: choice.options.flatMap((unitId) => {
+            const unit = input.unitLibrary.getUnit(unitId);
+            return Option.isSome(unit) ? [unitOption(unit.value)] : [];
+          }),
+        }),
+      ),
+    );
+}
+
+function discoverAdditionalClassGrantedHoles(
+  classUnitId: UnitRecord["id"],
+  classLevel: number,
+  draft: CharacterDraft,
+  unitLibrary: UnitCatalog,
+): readonly CreationHole[] {
+  const classUnit = unitLibrary.getUnit(classUnitId);
+  if (Option.isNone(classUnit)) {
+    return [];
+  }
+  const facts = readClassCreationFacts(classUnit.value);
+  if (facts.tag !== "readable") {
+    return [];
+  }
+
+  return [
+    ...facts.value.featureGrants.flatMap((grant) =>
+      grant.level <= classLevel
+        ? discoverClassFeatureGrantHoles(grant.unitId, draft, unitLibrary)
+        : [],
+    ),
+    ...unselectedUnitChoiceHole(
+      draft,
+      proficiencyGrantChoiceHoleSource(
+        classUnitId,
+        facts.value.multiclassProficiencies,
+      ),
+    ),
+  ];
+}
+
+function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitCatalog;
+}): readonly CreationHole[] {
+  return input.draft.selections.choices.flatMap((selection) => {
+    if (
+      selection.kind !== "unitChoice" ||
+      selection.source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY
+    ) {
+      return [];
+    }
+
+    return selection.options.flatMap((option) => {
+      const featUnitId = option.unitRef?.unitId;
+      if (featUnitId == null) return [];
+      const unit = input.unitLibrary.getUnit(featUnitId);
+      if (Option.isNone(unit)) return [];
+      const options = selectedFeatAbilityScoreIncreaseOptions(unit.value);
+      if (options.length === 0) return [];
+
+      return unselectedUnitChoiceHole(
+        input.draft,
+        choiceHole({
+          source: unitSource(
+            selection.source.unitId,
+            CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+          ),
+          cardinality: EXACTLY_ONE_CHOICE,
+          options,
+        }),
+      );
+    });
+  });
 }
 
 export function discoverBackgroundGrantedHoles(input: {
@@ -346,8 +450,8 @@ export function backgroundToolChoiceSpec(
       (toolChoice) => ({
         cardinality: exactChoiceCardinality(toolChoice.choose),
         // SRD 5.2.1 Equipment.md:334-337 lists these Gaming Set variants.
-        // Phase 1 only supports Dice Set; support-gates.ts rejects the rest as
-        // unsupported rather than treating them as invalid RAW choices.
+        // The current support profile admits Dice Set; support-gates.ts rejects
+        // the rest as unsupported rather than treating them as invalid RAW choices.
         options: SRD_GAMING_SET_OPTIONS,
       }),
     ),
@@ -809,18 +913,20 @@ export function classFeatureGrantChoiceHoles(
   }
   const mechanics = feature.mechanics;
 
-  if (
-    mechanics.family === "passive" &&
-    mechanics.grants.some(
-      (grant) =>
-        grant.kind === "grant_feat" &&
-        ("category" in grant
-          ? grant.category === "fighting_style"
-          : grant.categories.includes("fighting_style")),
-    )
-  ) {
-    const hole = fightingStyleFeatureHoleSource(featureUnitId, unitLibrary);
-    return hole === undefined ? [] : [hole];
+  if (mechanics.family === "passive") {
+    const passiveGrantHoles = mechanics.grants.flatMap((grant) =>
+      grant.kind === "grant_feat"
+        ? [featGrantFeatureHoleSource(featureUnitId, grant, unitLibrary)]
+        : grant.kind === "grant_proficiency"
+          ? [proficiencyGrantChoiceHoleSource(featureUnitId, grant.proficiency)]
+          : [],
+    );
+    const readablePassiveGrantHoles = passiveGrantHoles.filter(
+      (hole): hole is ChoiceCreationHole => hole !== undefined,
+    );
+    if (readablePassiveGrantHoles.length > 0) {
+      return readablePassiveGrantHoles;
+    }
   }
 
   if (isWeaponMasteryChoiceFeature(feature)) {
@@ -854,25 +960,74 @@ function isWeaponMasteryChoiceFeature(
   return feature.mechanics.family === "weapon_mastery_choice";
 }
 
-function fightingStyleFeatureHoleSource(
+function featGrantFeatureHoleSource(
   featureUnitId: UnitRecord["id"],
+  grant: Extract<
+    ClassFeatureRecord["mechanics"],
+    { readonly family: "passive" }
+  >["grants"][number] & { readonly kind: "grant_feat" },
   unitLibrary: UnitCatalog,
 ): ChoiceCreationHole | undefined {
+  const categories = "category" in grant ? [grant.category] : grant.categories;
   const options = unitLibrary
     .listUnits()
     .filter(
       (unit): unit is FeatRecord =>
-        unit.kind === "feat" && unit.category === "fighting_style",
+        unit.kind === "feat" && categories.includes(unit.category),
     )
     .map(unitOption);
 
   return requireChoiceCreationHole(
     choiceHole({
-      source: unitSource(featureUnitId, FIGHTING_STYLE_FEAT_CHOICE_KEY),
+      source: unitSource(featureUnitId, CLASS_FEATURE_FEAT_CHOICE_KEY),
       cardinality: EXACTLY_ONE_CHOICE,
       options,
     }),
   );
+}
+
+function proficiencyGrantChoiceHoleSource(
+  sourceUnitId: UnitRecord["id"],
+  proficiency: ProficiencyGrant,
+): ChoiceCreationHole | undefined {
+  if (proficiency.kind !== "choice") {
+    return undefined;
+  }
+
+  const options = proficiency.options.map(proficiencyGrantSubjectOption);
+  const cardinality = exactChoiceCardinality(proficiency.count);
+  if (
+    cardinality === undefined ||
+    choiceCardinalityMax(cardinality) > options.length
+  ) {
+    return undefined;
+  }
+
+  return requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(sourceUnitId, CLASS_FEATURE_PROFICIENCY_CHOICE_KEY),
+      cardinality,
+      options,
+    }),
+  );
+}
+
+export function abilityScoreIncreaseOptions(
+  feat: FeatRecord & {
+    readonly abilityScoreIncreaseChoice: NonNullable<
+      FeatRecord["abilityScoreIncreaseChoice"]
+    >;
+  },
+): readonly CreationChoiceOption[] {
+  return abilityScoreIncreaseChoiceOptions(feat.abilityScoreIncreaseChoice);
+}
+
+export function selectedFeatAbilityScoreIncreaseOptions(
+  unit: UnitRecord,
+): readonly CreationChoiceOption[] {
+  return unit.kind === "feat" && unit.abilityScoreIncreaseChoice != null
+    ? abilityScoreIncreaseChoiceOptions(unit.abilityScoreIncreaseChoice)
+    : [];
 }
 
 function weaponMasteryFeatureHoleSource(

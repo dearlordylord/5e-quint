@@ -68,6 +68,7 @@ export type {
 } from "./battle-action-options.ts";
 export type {
   BattleCreatureInit,
+  BattlePositiveHpUnconscious,
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleCreatureInit,
@@ -75,14 +76,17 @@ export type {
   StatBlockBattleCreatureInit,
   StatBlockBattleInitInput,
 } from "./battle-init.ts";
+export { KNOCKED_OUT_UNCONSCIOUS } from "./battle-init.ts";
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BATTLE_INVALID_REASON_CODES,
   BattleFillSchema,
   BattleHoleSchema,
+  BattleSnapshotSchema,
   addBattleCombatant,
   battleCreatureInitFromStatBlock,
   breakBattleConcentration,
+  combatantKnockedOutUnconscious,
   concentrationSavingThrowDc,
   discoverBattleActs,
   endTurn,
@@ -167,13 +171,14 @@ export {
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   battleAttackDamageRiderSupportForUnit,
-  battleBonusActionHideSupportForClassUnit,
+  battleBonusActionStandardActionSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleSaveDamageReplacementSupportForUnit,
   battleUnitRefWithSupportProfiles,
   battleUnitSupportProfilesForUnit,
   battleWeaponOrUnarmedCriticalRange19SupportForUnit,
   type BattleAttackDamageRiderSupport,
+  type BattleBonusActionStandardActionSupport,
   type BattleReactionRollOrDamageReductionSupport,
   type BattleSaveDamageReplacementSupport,
   type BattleUnitSupportProfile,

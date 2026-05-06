@@ -11,7 +11,7 @@ import type {
   BattleSubject,
   CharacterId,
 } from "@dnd/battle-runtime";
-import { snapshotBattle } from "@dnd/battle-runtime";
+import { characterId, snapshotBattle } from "@dnd/battle-runtime";
 import {
   resourceCount,
   spellSlotLevel,
@@ -29,17 +29,18 @@ import {
   characterSessionHitPoints,
   characterSessionHitPointsCurrentHp,
   characterSessionHitPointsInitialConditions,
+  characterSessionHitPointsPositiveHpUnconscious,
   characterSessionHitPointsZeroHpLifecycle,
   characterSessionIssue,
   type CharacterSessionHitPoints,
   type CharacterSessionIssue,
-  type CharacterSessionPositiveHpCondition,
+  type CharacterSessionPositiveHpUnconscious,
   type CharacterSessionZeroHpLifecycleInput,
 } from "./session-hit-points.ts";
 export type {
   CharacterSessionHitPoints,
   CharacterSessionIssue,
-  CharacterSessionPositiveHpCondition,
+  CharacterSessionPositiveHpUnconscious,
   CharacterSessionZeroHpLifecycle,
   CharacterSessionZeroHpLifecycleInput,
 } from "./session-hit-points.ts";
@@ -77,7 +78,7 @@ export type AvailableCharacterSessionInput = {
   readonly characterId: CharacterId;
   readonly build: CharacterBuild;
   readonly currentHp: HpType;
-  readonly positiveHpCondition?: CharacterSessionPositiveHpCondition;
+  readonly positiveHpUnconscious?: CharacterSessionPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
@@ -144,6 +145,12 @@ export function characterBattleInitialConditions(
   session: AvailableCharacterSession,
 ): ReturnType<typeof characterSessionHitPointsInitialConditions> {
   return characterSessionHitPointsInitialConditions(session.hitPoints);
+}
+
+export function characterBattlePositiveHpUnconscious(
+  session: AvailableCharacterSession,
+): ReturnType<typeof characterSessionHitPointsPositiveHpUnconscious> {
+  return characterSessionHitPointsPositiveHpUnconscious(session.hitPoints);
 }
 
 export function characterBattleSpellSlots(
@@ -241,6 +248,15 @@ export type CharacterSession =
   | AvailableCharacterSession
   | InBattleCharacterSession;
 
+export type CharacterSessionRegistry = {
+  readonly size: number;
+  get(characterId: CharacterId): CharacterSession | undefined;
+  has(characterId: CharacterId): boolean;
+  set(session: CharacterSession): void;
+  entries(): IterableIterator<readonly [CharacterId, CharacterSession]>;
+  keys(): IterableIterator<CharacterId>;
+};
+
 export type BattleFillSession = {
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
@@ -248,7 +264,7 @@ export type BattleFillSession = {
 
 export type McpSessionSnapshot = {
   readonly draftIds: readonly CharacterDraftId[];
-  readonly sourceDraftIds: readonly CharacterDraftId[];
+  readonly characterIds: readonly CharacterId[];
   readonly selectedStatBlockId: StatBlockId | null;
   readonly activeBattle: McpBattleSessionSnapshot | null;
   readonly transientBattleFills: BattleFillSession | null;
@@ -261,7 +277,7 @@ export type McpBattleSessionSnapshot = {
 
 export type McpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
-  readonly characters: Map<CharacterDraftId, CharacterSession>;
+  readonly characters: CharacterSessionRegistry;
   battleState: BattleState | null;
   transientBattleFills: BattleFillSession | null;
   clearSelectedStatBlock(): void;
@@ -272,11 +288,19 @@ export type McpSessionStore = {
   snapshot(): McpSessionSnapshot;
 };
 
+// MCP creates deterministic character handles from draft ids because character
+// creation currently has no independent naming/id fill.
+export function characterIdFromDraftId(
+  draftId: CharacterDraftId,
+): CharacterId {
+  return characterId(`character:${encodeURIComponent(String(draftId))}`);
+}
+
 export function createMcpSessionStore(
   statBlockCatalog: StatBlockCatalog,
 ): McpSessionStore {
   const drafts = new Map<CharacterDraftId, CharacterDraft>();
-  const characters = new Map<CharacterDraftId, CharacterSession>();
+  const characters = characterSessionRegistry();
   let selectedStatBlockId: StatBlockId | null = null;
   const store: McpSessionStore = {
     drafts,
@@ -300,10 +324,10 @@ export function createMcpSessionStore(
       return Either.right(statBlock.value);
     },
     snapshot(): McpSessionSnapshot {
-      const sourceDraftIds = Array.from(characters.keys());
+      const characterIds = Array.from(characters.keys());
       return {
         draftIds: Array.from(drafts.keys()),
-        sourceDraftIds,
+        characterIds,
         selectedStatBlockId,
         activeBattle:
           store.battleState === null
@@ -315,6 +339,30 @@ export function createMcpSessionStore(
   } satisfies McpSessionStore;
 
   return store;
+}
+
+function characterSessionRegistry(): CharacterSessionRegistry {
+  const sessions = new Map<CharacterId, CharacterSession>();
+  return {
+    get size() {
+      return sessions.size;
+    },
+    get(characterId: CharacterId): CharacterSession | undefined {
+      return sessions.get(characterId);
+    },
+    has(characterId: CharacterId): boolean {
+      return sessions.has(characterId);
+    },
+    set(session: CharacterSession): void {
+      sessions.set(session.characterId, session);
+    },
+    entries(): IterableIterator<readonly [CharacterId, CharacterSession]> {
+      return sessions.entries();
+    },
+    keys(): IterableIterator<CharacterId> {
+      return sessions.keys();
+    },
+  };
 }
 
 function battleSessionSnapshot(state: BattleState): McpBattleSessionSnapshot {

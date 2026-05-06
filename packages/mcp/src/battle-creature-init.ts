@@ -4,6 +4,7 @@ import {
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
+  type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type BattleId,
   type BattleCombatantSide,
@@ -50,6 +51,7 @@ export type CharacterBuildCreatureInput = {
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly conditions?: readonly Condition[];
+  readonly positiveHpUnconscious?: CharacterBattleCreatureInit["positiveHpUnconscious"];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
@@ -88,7 +90,9 @@ export function battleCreatureInitFromCharacterBuild(
     input.unitLibrary,
   );
   if (Either.isLeft(characterUnitRefs)) {
-    return battleCreatureInitIssue(characterUnitRefs.left.message);
+    return battleCreatureInitIssue(
+      characterUnitRefs.left.map((issue) => issue.message).join("; "),
+    );
   }
   const currentHp = input.currentHp ?? maxHp;
   if (currentHp > maxHp) {
@@ -168,6 +172,9 @@ export function battleCreatureInitFromCharacterBuild(
       ...(input.conditions === undefined
         ? {}
         : { conditions: input.conditions }),
+      ...(input.positiveHpUnconscious === undefined
+        ? {}
+        : { positiveHpUnconscious: input.positiveHpUnconscious }),
       ...(input.zeroHpLifecycle === undefined
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),

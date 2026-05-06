@@ -3,14 +3,16 @@ import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
+  CLASS_FEATURE_FEAT_CHOICE_KEY,
+  CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  CLASS_SUBCLASS_CHOICE_KEY,
+  CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
-  FIGHTING_STYLE_FEAT_CHOICE_KEY,
-  FIGHTER_SKILL_CHOICE_KEY,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
-  WIZARD_SKILL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
   LOADOUT_ARMOR_SLOT,
   LOADOUT_SHIELD_SLOT,
@@ -42,6 +44,7 @@ import {
   SUPPORTED_SPECIES_OPTION_IDS,
   SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
   WIDTH_CLASS_WIZARD_UNIT_ID,
+  abilityScoreIncreaseChoiceOptionIds,
 } from "./phase1-manifest.ts";
 import type {
   BackgroundAbilityScoreIncreaseSelection,
@@ -57,15 +60,23 @@ import type {
   UnitChoiceSource,
   UnitRef,
 } from "./types.ts";
-import { creationChoiceOptionId } from "./types.ts";
+import {
+  CHARACTER_BUILD_TOOL_PROFICIENCY_IDS,
+  creationChoiceOptionId,
+} from "./types.ts";
 import {
   classUnitId,
   characterProgressionEntry,
   startingClassUnitId,
   type CharacterProgression,
 } from "./character-progression-types.ts";
-import { characterClassLevel } from "@dnd/shared/game-facts";
+import { characterClassLevel, SURFACE_SKILLS } from "@dnd/shared/game-facts";
+import {
+  ARMOR_TRAINING_CATEGORIES,
+  WEAPON_PROFICIENCY_CATEGORIES,
+} from "@dnd/surface/surface/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import { proficiencyGrantSubjectOptionId } from "./choice-option-codecs.ts";
 
 export type SupportedLoadoutChoice =
   | {
@@ -103,9 +114,8 @@ export type CharacterCreationSupportProfile = {
   readonly draftOptionIdsByPath: Partial<
     Record<CharacterDraftPath, readonly CreationChoiceOptionId[]>
   >;
-  readonly unitOptionIdsByChoiceKey: Record<
-    SupportProfileUnitChoiceKey,
-    readonly CreationChoiceOptionId[]
+  readonly unitOptionIdsByChoiceKey: Partial<
+    Record<SupportProfileUnitChoiceKey, readonly CreationChoiceOptionId[]>
   >;
   readonly backgroundUnitIds: readonly UnitRecord["id"][];
   readonly purchasableEquipmentUnitIds: readonly UnitRecord["id"][];
@@ -137,6 +147,10 @@ const SUPPORTED_PROGRESSIONS = [
   supportedLevelOneProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
   supportedLevelOneProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
+  supportedTwoClassSecondLevelProgression(
+    WIDTH_CLASS_WIZARD_UNIT_ID,
+    PHASE1_CLASS_FIGHTER_UNIT_ID,
+  ),
 ] as const satisfies ReadonlyArray<CharacterProgression>;
 
 function supportedLevelOneProgression(
@@ -151,8 +165,18 @@ function supportedLevelOneProgression(
 function supportedSameClassSecondLevelProgression(
   supportedClassUnitId: UnitRecord["id"],
 ): CharacterProgression {
+  return supportedTwoClassSecondLevelProgression(
+    supportedClassUnitId,
+    supportedClassUnitId,
+  );
+}
+
+function supportedTwoClassSecondLevelProgression(
+  startingClassUnitId: UnitRecord["id"],
+  advancementClassUnitId: UnitRecord["id"],
+): CharacterProgression {
   const advancement = characterProgressionEntry({
-    classUnitId: classUnitId(supportedClassUnitId),
+    classUnitId: classUnitId(advancementClassUnitId),
     characterLevel: characterClassLevel(2),
     hitPointRule: { tag: "fixedHigherLevelGain" },
   });
@@ -163,7 +187,7 @@ function supportedSameClassSecondLevelProgression(
   }
 
   return {
-    startingClass: classUnitId(supportedClassUnitId),
+    startingClass: classUnitId(startingClassUnitId),
     advancements: [advancement.right],
   };
 }
@@ -179,16 +203,41 @@ const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
   readonly CreationChoiceOptionId[]
 >;
 
+const SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS = SURFACE_SKILLS.map(
+  (skill) => proficiencyGrantSubjectOptionId({ kind: "skill", skill }),
+);
+const SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS = [
+  ...SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
+  ...WEAPON_PROFICIENCY_CATEGORIES.map((category) =>
+    proficiencyGrantSubjectOptionId({ kind: "weapon_category", category }),
+  ),
+  ...ARMOR_TRAINING_CATEGORIES.map((category) =>
+    proficiencyGrantSubjectOptionId({ kind: "armor_category", category }),
+  ),
+  ...CHARACTER_BUILD_TOOL_PROFICIENCY_IDS.map((toolId) =>
+    proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
+  ),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS =
+  supportedAbilityScoreIncreaseOptionIds();
+
 export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   draftOptionIdsByPath: SUPPORTED_DRAFT_OPTION_IDS_BY_PATH,
   unitOptionIdsByChoiceKey: {
-    [FIGHTER_SKILL_CHOICE_KEY]: SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
-    [FIGHTING_STYLE_FEAT_CHOICE_KEY]: SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
-    [WEAPON_MASTERY_OPTIONS_CHOICE_KEY]: SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
-    [WIZARD_SKILL_CHOICE_KEY]: [
-      creationChoiceOptionId("arcana"),
-      creationChoiceOptionId("history"),
+    [CLASS_FEATURE_FEAT_CHOICE_KEY]: [
+      ...SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
+      creationChoiceOptionId("feat_ability_score_improvement"),
+      creationChoiceOptionId("feat_boon_of_combat_prowess"),
     ],
+    [CLASS_SUBCLASS_CHOICE_KEY]: [
+      creationChoiceOptionId("subclass_fighter_champion"),
+      creationChoiceOptionId("subclass_wizard_evoker"),
+    ],
+    [CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY]:
+      SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS,
+    [CLASS_FEATURE_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
+    [WEAPON_MASTERY_OPTIONS_CHOICE_KEY]: SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
     [WIZARD_CANTRIP_CHOICE_KEY]: [
       creationChoiceOptionId("light"),
       creationChoiceOptionId("fire_bolt"),
@@ -299,9 +348,7 @@ export function supportedDraftOptionIds(
   source: DraftCreationHoleSource,
 ): readonly CreationChoiceOptionId[] | undefined {
   if (isSupportedDraftChoicePath(source.path)) {
-    return CHARACTER_CREATION_SUPPORT_PROFILE.draftOptionIdsByPath[
-      source.path
-    ];
+    return CHARACTER_CREATION_SUPPORT_PROFILE.draftOptionIdsByPath[source.path];
   }
 
   return undefined;
@@ -315,7 +362,7 @@ function isSupportedDraftChoicePath(
   );
 }
 
-// Current support-slice filter, not RAW legality. This is the character
+// Support-profile filter, not RAW legality. This is the character
 // creation equivalent of battle-runtime's Attack action option support gate: legal
 // SRD-legal catalog choices may be discoverable, but finalization only accepts the
 // subset this reducer can currently project and execute. This should shrink as
@@ -323,7 +370,9 @@ function isSupportedDraftChoicePath(
 export function supportedUnitOptionIds(
   choiceKey: SupportProfileUnitChoiceKey,
 ): readonly CreationChoiceOptionId[] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey[choiceKey];
+  const optionIdsByChoiceKey: CharacterCreationSupportProfile["unitOptionIdsByChoiceKey"] =
+    CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey;
+  return optionIdsByChoiceKey[choiceKey] ?? [];
 }
 
 export function supportedUnitOptionIdsForSource(
@@ -338,6 +387,21 @@ export function supportedUnitOptionIdsForSource(
         Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
       >;
     return coinEquipmentChoices[source.unitId] ?? [];
+  }
+
+  if (source.choiceKey === CLASS_SKILL_PROFICIENCY_CHOICE_KEY) {
+    if (source.unitId === PHASE1_CLASS_FIGHTER_UNIT_ID) {
+      return SUPPORTED_FIGHTER_SKILL_OPTION_IDS;
+    }
+
+    if (source.unitId === WIDTH_CLASS_WIZARD_UNIT_ID) {
+      return [
+        creationChoiceOptionId("arcana"),
+        creationChoiceOptionId("history"),
+      ];
+    }
+
+    return [];
   }
 
   return supportedUnitOptionIds(source.choiceKey);
@@ -433,11 +497,30 @@ export function unitRefsForSupportedClassChoice(
   source: UnitChoiceSource,
   options: readonly { readonly unitRef?: UnitRef }[],
 ): readonly UnitRecord["id"][] {
-  if (source.choiceKey !== FIGHTING_STYLE_FEAT_CHOICE_KEY) {
+  if (
+    source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY &&
+    source.choiceKey !== CLASS_SUBCLASS_CHOICE_KEY
+  ) {
     return [];
   }
 
   return options.flatMap((option) =>
     option.unitRef == null ? [] : [option.unitRef.unitId],
   );
+}
+
+function supportedAbilityScoreIncreaseOptionIds(): readonly CreationChoiceOptionId[] {
+  return [
+    ...abilityScoreIncreaseChoiceOptionIds({
+      maxScore: 20,
+      methods: [
+        { kind: "one_score", increase: 2 },
+        { kind: "two_scores", primaryIncrease: 1, secondaryIncrease: 1 },
+      ],
+    }),
+    ...abilityScoreIncreaseChoiceOptionIds({
+      maxScore: 30,
+      methods: [{ kind: "one_score", increase: 1 }],
+    }),
+  ];
 }

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { characterDraftId } from "@dnd/character-creation-runtime";
+import { characterIdFromDraftId } from "../src/session-store.ts";
 
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -9,6 +11,10 @@ import {
 import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 
 type JsonObject = Record<string, unknown>;
+
+function testCharacterId(draftId: string) {
+  return characterIdFromDraftId(characterDraftId(draftId));
+}
 
 const expectedTools = [
   "describe_mcp_workflow",
@@ -92,11 +98,11 @@ const agentConversationScenarios = [
     agentReads:
       "start_battle exposes battleId, a non-empty initialCombatants roster, and per-combatant Initiative.",
     agentDecision:
-      "It uses sourceDraftIds from finalized character sessions, statBlock roster entries with Stat Block ids from list_stat_blocks, caller-chosen combatantIds for table actors, and rejects/repairs an empty initialCombatants array.",
+      "It uses characterIds from finalized character sessions, statBlock roster entries with Stat Block ids from list_stat_blocks, caller-chosen combatantIds for table actors, and rejects/repairs an empty initialCombatants array.",
     executableCoverage:
       "verifyToolContract, verifyBaselineVertical, verifyWidthVertical",
     insufficiency:
-      "The schema now describes initialCombatants, sourceDraftId, statBlockId, and combatantId entries; list_characters exposes a formal outputSchema for sourceDraftId result rows.",
+      "The schema now describes initialCombatants, characterId, statBlockId, and combatantId entries; list_characters exposes a formal outputSchema for characterId result rows.",
   },
   {
     name: "Take turns and resolve attacks",
@@ -202,7 +208,7 @@ export async function verifyToolContract(client: Client) {
   assert.match(schemaText, /statBlockId/);
   assert.doesNotMatch(schemaText, /characterCombatantId/);
   assert.doesNotMatch(schemaText, /additionalCharacters/);
-  assert.match(startBattleOutputSchemaText, /battleState/);
+  assert.doesNotMatch(startBattleOutputSchemaText, /battleState/);
   assert.match(startBattleOutputSchemaText, /snapshot/);
   assert.match(startBattleOutputSchemaText, /session/);
 
@@ -295,8 +301,8 @@ export async function verifyBaselineVertical(client: Client) {
     draftId,
   });
   assert.deepEqual(holeIds(choices), [
-    unitHoleId("class_fighter", "fighter_skill_choices"),
-    unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+    unitHoleId("class_fighter", "class_skill_proficiency_choice"),
+    unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
     unitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
     unitHoleId("class_fighter", "class_equipment_choice"),
     unitHoleId("background_soldier", "background_ability_score_increase"),
@@ -309,12 +315,12 @@ export async function verifyBaselineVertical(client: Client) {
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_fighter", "fighter_skill_choices"),
+        unitHoleId("class_fighter", "class_skill_proficiency_choice"),
         "perception",
         "survival",
       ),
       choiceFill(
-        unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         "defense",
       ),
       choiceFill(
@@ -386,7 +392,7 @@ export async function verifyBaselineVertical(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
-        sourceDraftId: draftId,
+        characterId: testCharacterId(draftId),
         combatantId: "fighter",
         initiative: 18,
         side: "party",
@@ -441,7 +447,14 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(endedFighterTurn, "snapshot.currentActorId"), "goblin");
   assert.deepEqual(
     actionLabels(await callTool(client, "discover_battle_acts", {})),
-    ["Attack", "Attack", ...GENERIC_COMBAT_ACTION_LABELS, "Move", "End Turn"],
+    [
+      "Attack",
+      "Attack",
+      ...GENERIC_COMBAT_ACTION_LABELS,
+      "Nimble Escape",
+      "Move",
+      "End Turn",
+    ],
   );
 
   await callTool(client, "fill_battle_hole", {
@@ -525,14 +538,14 @@ export async function verifyWidthVertical(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
-        sourceDraftId: fighterDraftId,
+        characterId: testCharacterId(fighterDraftId),
         combatantId: "fighter",
         initiative: 18,
         side: "party",
       },
       {
         kind: "characterSession",
-        sourceDraftId: wizardDraftId,
+        characterId: testCharacterId(wizardDraftId),
         combatantId: "wizard",
         initiative: 14,
         side: "party",
@@ -594,7 +607,7 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(get(surged, "result.tag"), "resolved");
   const resources = get(
     surged,
-    "battleState.combatants.0.origin.resources",
+    "snapshot.combatants.0.origin.resources",
   ) as JsonObject[];
   assert.ok(
     resources.some(
@@ -682,7 +695,19 @@ export async function verifyWidthVertical(client: Client) {
 
   await callTool(client, "fill_battle_hole", {
     subject: magicSubject("wizard", "magic_missile"),
-    fill: targetFill("skeleton"),
+    fill: {
+      kind: "spellTargetAllocation",
+      holeId: "battle:spell:target-allocation:magic_missile",
+      value: { allocations: [{ targetId: "skeleton", count: 3 }] },
+      spatialFacts: [
+        {
+          kind: "spellTarget",
+          casterId: "wizard",
+          targetId: "skeleton",
+          spellId: "magic_missile",
+        },
+      ],
+    },
   });
   const afterMagicMissile = await callTool(client, "fill_battle_hole", {
     subject: magicSubject("wizard", "magic_missile"),
@@ -698,12 +723,12 @@ export async function verifyWidthVertical(client: Client) {
   ]);
 
   const ended = await callTool(client, "end_battle", {});
-  const sourceDraftIds = get(ended, "session.sourceDraftIds") as string[];
-  assert.ok(sourceDraftIds.includes(fighterDraftId));
-  assert.ok(sourceDraftIds.includes(wizardDraftId));
+  const characterIds = get(ended, "session.characterIds") as string[];
+  assert.ok(characterIds.includes(testCharacterId(fighterDraftId)));
+  assert.ok(characterIds.includes(testCharacterId(wizardDraftId)));
   const listed = await callTool(client, "list_characters", {});
-  const fighter = characterRow(listed, fighterDraftId);
-  const wizard = characterRow(listed, wizardDraftId);
+  const fighter = characterRow(listed, testCharacterId(fighterDraftId));
+  const wizard = characterRow(listed, testCharacterId(wizardDraftId));
   assert.equal(get(fighter, "hitPoints.current"), 16);
   assert.equal(get(fighter, "hitPoints.maximum"), 20);
   assert.equal(get(wizard, "hitPoints.current"), 8);
@@ -732,12 +757,12 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_fighter", "fighter_skill_choices"),
+        unitHoleId("class_fighter", "class_skill_proficiency_choice"),
         "perception",
         "survival",
       ),
       choiceFill(
-        unitHoleId("fighter_fighting_style", "fighting_style_feat"),
+        unitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
         "defense",
       ),
       choiceFill(
@@ -808,7 +833,7 @@ async function createAndFinalizeWizardOne(client: Client, draftId: string) {
     expectedRevision: 1,
     fills: [
       choiceFill(
-        unitHoleId("class_wizard", "wizard_skill_choices"),
+        unitHoleId("class_wizard", "class_skill_proficiency_choice"),
         "arcana",
         "history",
       ),
@@ -1034,7 +1059,7 @@ function actionLabels(payload: JsonObject) {
 }
 
 function combatantHp(payload: JsonObject, combatantId: string) {
-  const combatants = get(payload, "battleState.combatants") as ReadonlyArray<{
+  const combatants = get(payload, "snapshot.combatants") as ReadonlyArray<{
     readonly combatantId: string;
     readonly hp: number;
   }>;
@@ -1046,7 +1071,7 @@ function combatantHp(payload: JsonObject, combatantId: string) {
 }
 
 function wizardSpellSlots(payload: JsonObject) {
-  const combatants = get(payload, "battleState.combatants") as ReadonlyArray<{
+  const combatants = get(payload, "snapshot.combatants") as ReadonlyArray<{
     readonly combatantId: string;
     readonly origin: {
       readonly spellcasting?: {
@@ -1061,12 +1086,12 @@ function wizardSpellSlots(payload: JsonObject) {
   return wizard.origin.spellcasting?.spellSlots;
 }
 
-function characterRow(payload: JsonObject, sourceDraftId: string) {
+function characterRow(payload: JsonObject, characterId: string) {
   const characters = get(payload, "characters") as JsonObject[];
   const character = characters.find(
-    (candidate) => candidate.sourceDraftId === sourceDraftId,
+    (candidate) => candidate.characterId === characterId,
   );
-  assert.ok(character, `Missing listed character ${sourceDraftId}`);
+  assert.ok(character, `Missing listed character ${characterId}`);
   return character;
 }
 

@@ -4,6 +4,8 @@ import {
   characterClassLevel,
   type ClassName,
 } from "@dnd/shared/game-facts";
+import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -12,7 +14,6 @@ import {
   classUnitId,
   type CharacterProgression,
   type CharacterProgressionLevelIssue,
-  type CharacterProgressionEntry,
   type ClassUnitId,
   type FixedHigherLevelClassHitPointRule,
 } from "./character-progression-types.ts";
@@ -38,31 +39,32 @@ export function parseCharacterProgressionShape(input: {
     readonly classUnitId: ClassUnitId;
     readonly hitPointRule: FixedHigherLevelClassHitPointRule;
   }[];
-}): Either.Either<CharacterProgression, CharacterProgressionIssue> {
+}): Either.Either<
+  CharacterProgression,
+  ReadonlyNonEmptyArray<CharacterProgressionIssue>
+> {
   const totalLevel = 1 + input.advancements.length;
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === totalLevel)) {
-    return Either.left({
-      code: "invalidCharacterClassLevel",
-      classLevel: totalLevel,
-    });
+    return Either.left([
+      {
+        code: "invalidCharacterClassLevel",
+        classLevel: totalLevel,
+      },
+    ]);
   }
 
-  const advancements: CharacterProgressionEntry[] = [];
-  for (const [index, entry] of input.advancements.entries()) {
-    const parsedEntry = characterProgressionEntry({
+  const advancements = traverseValidation(input.advancements, (entry, index) =>
+    characterProgressionEntry({
       classUnitId: entry.classUnitId,
       characterLevel: characterClassLevel(index + 2),
       hitPointRule: entry.hitPointRule,
-    });
-    if (Either.isLeft(parsedEntry)) {
-      return Either.left(parsedEntry.left);
-    }
-    advancements.push(parsedEntry.right);
-  }
+    }),
+  );
+  if (Either.isLeft(advancements)) return Either.left(advancements.left);
 
   return Either.right({
     startingClass: input.startingClass,
-    advancements,
+    advancements: advancements.right,
   });
 }
 

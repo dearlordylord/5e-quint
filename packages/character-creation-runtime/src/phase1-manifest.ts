@@ -4,10 +4,15 @@ import {
   type CharacterDraftPath,
   type ChoiceCardinality,
   type ChoiceCount,
+  type CreationChoiceOption,
   type CreationChoiceOptionId,
   type LoadoutSlot,
   type UnitChoiceKey,
 } from "./types.ts";
+import {
+  abilityScoreIncreaseOneScoreOptionId,
+  requireAbilityScoreIncreaseTwoScoresOptionId,
+} from "./choice-option-codecs.ts";
 import { backgroundAbilityScoreIncreaseOptionId } from "./hole-factories.ts";
 import {
   computeTotalLevel,
@@ -30,7 +35,7 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 
 // This manifest started as the first supported character-creation vertical from
 // plans/phase1-fighter-manifest.md: an Orc Soldier Fighter using Standard
-// Array, fixed first-slice languages/alignment, level-1 Fighter choices, Chain
+// Array, fixed initial languages/alignment, level-1 Fighter choices, Chain
 // Mail + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
 // Hole discovery may expose broader legal SRD options, but finalization is
 // intentionally gated to the support profile that now widens selected class
@@ -140,14 +145,18 @@ export const BACKGROUND_EQUIPMENT_CHOICE_KEY =
   "background_equipment_choice" satisfies UnitChoiceKey;
 export const EQUIPMENT_PURCHASE_CHOICE_KEY =
   "equipment_purchase" satisfies UnitChoiceKey;
-export const FIGHTER_SKILL_CHOICE_KEY =
-  "fighter_skill_choices" satisfies UnitChoiceKey;
-export const FIGHTING_STYLE_FEAT_CHOICE_KEY =
-  "fighting_style_feat" satisfies UnitChoiceKey;
+export const CLASS_SKILL_PROFICIENCY_CHOICE_KEY =
+  "class_skill_proficiency_choice" satisfies UnitChoiceKey;
+export const CLASS_SUBCLASS_CHOICE_KEY =
+  "class_subclass_choice" satisfies UnitChoiceKey;
+export const CLASS_FEATURE_FEAT_CHOICE_KEY =
+  "class_feature_feat_choice" satisfies UnitChoiceKey;
+export const CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY =
+  "class_feature_ability_score_increase_choice" satisfies UnitChoiceKey;
+export const CLASS_FEATURE_PROFICIENCY_CHOICE_KEY =
+  "class_feature_proficiency_choice" satisfies UnitChoiceKey;
 export const WEAPON_MASTERY_OPTIONS_CHOICE_KEY =
   "weapon_mastery_options" satisfies UnitChoiceKey;
-export const WIZARD_SKILL_CHOICE_KEY =
-  "wizard_skill_choices" satisfies UnitChoiceKey;
 export const WIZARD_CANTRIP_CHOICE_KEY =
   "wizard_cantrip_choices" satisfies UnitChoiceKey;
 export const WIZARD_SPELLBOOK_CHOICE_KEY =
@@ -161,5 +170,69 @@ export const EXACTLY_ONE_CHOICE = {
   tag: "exactly",
   count: 1 as ChoiceCount,
 } as const satisfies ChoiceCardinality;
+
+type SurfaceAbility = (typeof SURFACE_ABILITIES)[number];
+
+export type AbilityScoreIncreaseChoiceSpec = {
+  readonly maxScore: number;
+  readonly methods: readonly (
+    | {
+        readonly kind: "one_score";
+        readonly increase: number;
+      }
+    | {
+        readonly kind: "two_scores";
+        readonly primaryIncrease: number;
+        readonly secondaryIncrease: number;
+      }
+  )[];
+};
+
+export function abilityScoreIncreaseChoiceOptions(
+  choice: AbilityScoreIncreaseChoiceSpec,
+): readonly CreationChoiceOption[] {
+  return choice.methods.flatMap((method) => {
+    if (method.kind === "one_score") {
+      return SURFACE_ABILITIES.map((ability) => ({
+        optionId: abilityScoreIncreaseOneScoreOptionId({
+          ability,
+          increase: method.increase,
+          maxScore: choice.maxScore,
+        }),
+        label: `${ability.toUpperCase()} +${method.increase}`,
+      }));
+    }
+
+    return unorderedSurfaceAbilityPairs().map(([primary, secondary]) => ({
+      optionId: requireAbilityScoreIncreaseTwoScoresOptionId({
+        primary,
+        primaryIncrease: method.primaryIncrease,
+        secondary,
+        secondaryIncrease: method.secondaryIncrease,
+        maxScore: choice.maxScore,
+      }),
+      label: `${primary.toUpperCase()} +${method.primaryIncrease}, ${secondary.toUpperCase()} +${method.secondaryIncrease}`,
+    }));
+  });
+}
+
+export function abilityScoreIncreaseChoiceOptionIds(
+  choice: AbilityScoreIncreaseChoiceSpec,
+): readonly CreationChoiceOptionId[] {
+  return abilityScoreIncreaseChoiceOptions(choice).map(
+    (option) => option.optionId,
+  );
+}
+
+function unorderedSurfaceAbilityPairs(): readonly (readonly [
+  SurfaceAbility,
+  SurfaceAbility,
+])[] {
+  return SURFACE_ABILITIES.flatMap((primary, primaryIndex) =>
+    SURFACE_ABILITIES.slice(primaryIndex + 1).map(
+      (secondary) => [primary, secondary] as const,
+    ),
+  );
+}
 
 export { SURFACE_ABILITIES };

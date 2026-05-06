@@ -7,7 +7,7 @@ import {
 } from "./ability-score-algebra.ts";
 
 describe("ability score assignment algebra", () => {
-  test("constructs durable AbilityScore values from typed scores", () => {
+  test("parses raw scores into durable AbilityScore values", () => {
     const result = abilityScoreAssignment({
       str: 15,
       dex: 14,
@@ -24,7 +24,16 @@ describe("ability score assignment algebra", () => {
     );
   });
 
-  test("returns typed issues for out-of-range scores", () => {
+  test("returns typed issues for missing or out-of-range scores", () => {
+    expect(abilityScoreAssignment({ str: 15 })).toEqual(
+      Either.left([
+        { tag: "missingNumericAbilityScore", ability: "dex" },
+        { tag: "missingNumericAbilityScore", ability: "con" },
+        { tag: "missingNumericAbilityScore", ability: "int" },
+        { tag: "missingNumericAbilityScore", ability: "wis" },
+        { tag: "missingNumericAbilityScore", ability: "cha" },
+      ]),
+    );
     expect(
       abilityScoreAssignment({
         str: 31,
@@ -35,7 +44,7 @@ describe("ability score assignment algebra", () => {
         cha: 12,
       }),
     ).toEqual(
-      Either.left({ tag: "invalidAbilityScore", ability: "str", value: 31 }),
+      Either.left([{ tag: "invalidAbilityScore", ability: "str", value: 31 }]),
     );
   });
 });

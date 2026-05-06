@@ -3,7 +3,7 @@
  * One createActor(battleMachine), each Quint action maps to one actor.send() call.
  *
  * Proof-source material for the legacy Core lane. It is opt-in and is not a
- * promoted @dnd/battle-runtime verification gate.
+ * @dnd/battle-runtime verification gate.
  */
 import * as path from "node:path";
 

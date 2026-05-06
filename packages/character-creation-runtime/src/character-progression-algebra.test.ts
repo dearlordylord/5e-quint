@@ -187,10 +187,12 @@ describe("character progression algebra", () => {
         })),
       }),
     ).toEqual(
-      Either.left({
-        code: "invalidCharacterClassLevel",
-        classLevel: 21,
-      }),
+      Either.left([
+        {
+          code: "invalidCharacterClassLevel",
+          classLevel: 21,
+        },
+      ]),
     );
   });
 

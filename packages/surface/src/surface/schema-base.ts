@@ -121,6 +121,8 @@ export const ClassNameSchema = Schema.Literal(...CLASS_NAMES);
 
 export const ClassRecordKindSchema = Schema.Literal("class");
 
+export const SubclassRecordKindSchema = Schema.Literal("subclass");
+
 export const BackgroundRecordKindSchema = Schema.Literal("background");
 
 export const SpeciesRecordKindSchema = Schema.Literal("species");
@@ -231,16 +233,19 @@ export const SkillFilterSchema = Schema.Union(
   }),
 );
 
+export const WEAPON_PROFICIENCY_CATEGORIES = ["simple", "martial"] as const;
 export const WeaponProficiencyCategorySchema = Schema.Literal(
-  "simple",
-  "martial",
+  ...WEAPON_PROFICIENCY_CATEGORIES,
 );
 
-export const ArmorTrainingCategorySchema = Schema.Literal(
+export const ARMOR_TRAINING_CATEGORIES = [
   "light",
   "medium",
   "heavy",
   "shield",
+] as const;
+export const ArmorTrainingCategorySchema = Schema.Literal(
+  ...ARMOR_TRAINING_CATEGORIES,
 );
 
 export const ArmorCategorySchema = Schema.Literal("light", "medium", "heavy");
@@ -343,12 +348,19 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
     kind: Schema.Literal("armor_category"),
     category: ArmorTrainingCategorySchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("tool"),
+    toolId: Schema.NonEmptyTrimmedString,
+  }),
 );
 
 export const ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema =
   Schema.NonEmptyArray(ProficiencyGrantSubjectSchema);
 
 export const ProficiencyGrantSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("none"),
+  }),
   Schema.Struct({
     kind: Schema.Literal("fixed"),
     proficiencies: ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,

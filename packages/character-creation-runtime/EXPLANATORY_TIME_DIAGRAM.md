@@ -42,7 +42,7 @@ flowchart TD
   Runtime["character-creation-runtime/src/*"]
   SurfaceReaders["Surface readers<br/>readClassCreationFacts<br/>readBackgroundCreationFacts<br/>readSpeciesCreationFacts"]
   SharedAlgebra["shared-algebras<br/>isValidAbilityScoreAssignment"]
-  Sheet["CharacterBuild<br/>finalized player-character boundary"]
+  Build["CharacterBuild<br/>finalized player-character boundary"]
 
   Caller -->|createCharacterDraft| Runtime
   Runtime --> Draft
@@ -51,9 +51,9 @@ flowchart TD
   Runtime --> SurfaceReaders
   Runtime --> SharedAlgebra
   Runtime -->|accepted batches produce next CharacterDraft| Draft
-  Runtime -->|finalizeCharacterDraft ready| Sheet
-  Caller -->|stores draft or sheet| Draft
-  Caller -->|stores sheet| Sheet
+  Runtime -->|finalizeCharacterDraft ready| Build
+  Caller -->|stores draft while incomplete| Draft
+  Caller -->|stores finalized build facts| Build
 ```
 
 `UnitCatalog` is not copied into a runtime-owned catalog. The runtime accepts the
@@ -196,7 +196,7 @@ sequenceDiagram
   Caller->>Runtime: finalizeCharacterDraft({ draft rev 4, unitLibrary })
   Runtime->>Runtime: discoverCreationHoles(...) returns []
   Runtime->>Runtime: finalizedSelections(draft)
-  Runtime->>Runtime: temporarySupportedSliceIssues(selections, unitLibrary)
+  Runtime->>Runtime: executableSupportIssues(selections, unitLibrary)
   Runtime->>Algebra: isValidAbilityScoreAssignment(...)
   Runtime->>Runtime: isSupportedManifestBackgroundAbilityScoreIncrease(...)
   Runtime->>Runtime: sameOptionIdMultiset(...)
@@ -358,8 +358,8 @@ flowchart TD
   D["discoverCreationHoles(revision 1 draft)"]
   Class["discoverClassGrantedHoles"]
   ClassRead["requireUnit(class_fighter)<br/>readClassCreationFacts"]
-  Skills["choiceHole(class_fighter, fighter_skill_choices)<br/>exactly 2"]
-  Style["discoverClassFeatureGrantHoles(fighter_fighting_style)<br/>read grant_feat fighting_style<br/>list fighting_style feats<br/>exactly 1"]
+  Skills["choiceHole(class_fighter, class_skill_proficiency_choice)<br/>exactly 2"]
+  Style["discoverClassFeatureGrantHoles(fighter_fighting_style)<br/>read grant_feat fighting_style<br/>class_feature_feat_choice<br/>exactly 1"]
   Mastery["discoverClassFeatureGrantHoles(fighter_weapon_mastery)<br/>read weapon_mastery_choice<br/>list eligible simple/martial weapons"]
   ClassEquip["startingEquipmentChoiceHole(class_fighter)<br/>option_c coin grant"]
 
@@ -478,7 +478,7 @@ sequenceDiagram
   participant Runtime as finalizeCharacterDraft
   participant Discover as discoverCreationHoles
   participant Narrow as finalizedSelections
-  participant Legal as temporarySupportedSliceIssues
+  participant Legal as executableSupportIssues
   participant Build as buildCharacterBuild
   participant Catalog as UnitCatalog
   participant Surface as Surface readers
@@ -488,7 +488,7 @@ sequenceDiagram
   Discover-->>Runtime: []
   Runtime->>Narrow: finalizedSelections(draft)
   Narrow-->>Runtime: FinalizedCharacterSelections
-  Runtime->>Legal: temporarySupportedSliceIssues(selections, unitLibrary)
+  Runtime->>Legal: executableSupportIssues(selections, unitLibrary)
   Legal->>Legal: progression class is supported
   Legal->>Legal: background === background_soldier
   Legal->>Legal: species === species_orc
@@ -521,8 +521,8 @@ sequenceDiagram
 If any holes remain, finalization returns `incomplete` before it tries to narrow
 the draft. If no holes remain but required typed fields are still missing,
 `finalizedSelections` returns `undefined` and finalization returns `invalid`.
-If typed fields exist but contradict the current executable support slice, the
-`temporarySupportedSliceIssues` checks return `illegalFinalization`.
+If typed fields exist but contradict the current executable support boundary, the
+`executableSupportIssues` checks return `illegalFinalization`.
 
 ## Build Projection For The Supported Orc Soldier Fighter
 
@@ -544,9 +544,10 @@ The ready `CharacterBuild` contains durable build facts only:
 - `resources`: activation resources from class features such as Second Wind.
 - `equipment`: phase-1 starting loadout.
 
-It does not store creation-session facts such as `sourceDraftId`, raw
-`selections`, or a cached `unitRefs` list. Callers can derive Unit refs from the
-build with `characterBuildUnitRefs` when they need that projection.
+It does not store character/session identity such as `characterId`, raw creation
+selections, or cached runtime projections such as `unitRefs`. Callers can derive
+Unit refs from the build with `characterBuildUnitRefs` when they need that
+projection.
 
 ## Why Some Legal-Looking Choices Are Unsupported
 
@@ -604,19 +605,18 @@ functions. This inventory groups them by responsibility.
 | Batch validation          | `creationFillIssues`, `fillIssuesForHole`, `fillKindMatchesHole`, `choiceFillIssues`, `abilityScoreFillIssues`, `unsupportedHoleSelectionOptionId`, `supportedHoleOptionIds`, `supportedDraftOptionIds`, `supportedUnitOptionIds`                                                                                                                                                                                                                                                                                                        |
 | Issue constructors        | `wrongFillKindIssue`, `invalidChoiceIssue`, `invalidAbilityScoresIssue`, `tooFewChoicesIssue`, `tooManyChoicesIssue`, `unsupportedChoiceIssue`, `staleRevisionIssue`, `duplicateFillIssue`, `unknownHoleIssue`                                                                                                                                                                                                                                                                                                                           |
 | Applying accepted fills   | `applyCreationFills`, `requireHole`, `applyCreationFill`, `applyDraftFill`, `applyUnitFill`, `selectedChoiceOption`, `requireSelectedUnitIds`, `requireOneOptionId`, `requireSelectedUnitId`, `requireAcceptedChoiceOption`, `requireStartingLanguages`, `requireAlignmentSelection`, `requireBackgroundAbilityScoreIncreaseSelection`                                                                                                                                                                                                   |
-| Final legality            | `finalizedSelections`, `temporarySupportedSliceIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedFinalizableProgression`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
+| Final legality            | `finalizedSelections`, `executableSupportIssues`, `allFinalizedChoicesSupported`, `supportedStartingEquipmentCoinGrantChoice`, `choiceSelection`, `unitChoiceSelection`, `choiceSelectionWithOptions`, `selectedChoiceOptionRecord`, `expectedValueIssue`, `illegalFinalizationIssue`, `isSupportedFinalizableProgression`, `isSupportedBackgroundAbilityScoreIncrease`, `isSupportedManifestBackgroundAbilityScoreIncrease`, `sameBackgroundAbilityScoreIncreaseSelection`, `sameChoiceSelectionMultiset`, `sameOptionIdMultiset` |
 | Build projection          | `buildCharacterBuild`, `characterBuildUnitRefs`, `requireReadable`, `applyBackgroundAbilityScoreIncrease`, `abilityModifier`, `finalizedBuildSkillProficiencies`, `finalizedBuildToolProficiencies`, `resourceForFeature`, `unitRefs`, `uniqueValues`, `nonEmptyReadonlyArray`                                                                                                                                                                                                                                                           |
 
 ## Connascence Notes For Future Readers
 
 Several facts must change together:
 
-- Support-profile constants such as `SUPPORTED_PROGRESSIONS`,
-  `SUPPORTED_PROGRESSIONS`, supported option ids, and
-  `temporarySupportedSliceIssues` all encode the currently executable creation
-  slice.
+- Support-profile constants such as `SUPPORTED_PROGRESSIONS`, supported option
+  ids, and `executableSupportIssues` all encode the currently executable
+  creation boundary.
 - `CreationHoleSource` and `holeIdForSource` are coupled by name and meaning:
-  changing one requires changing fill ids, tests, and the Quint slice.
+  changing one requires changing fill ids, tests, and the Quint model.
 - Choice cardinality, accepted option metadata, and selection suppression are
   coupled by algorithm in `choiceFillIssues`, `choiceOptionIdsFitHole`, and
   `choiceSelectionMatchesHole`.
@@ -628,4 +628,4 @@ Several facts must change together:
 
 When extending the runtime beyond this Orc Soldier Fighter vertical, update the
 runtime, tests, Surface records/readers if needed, and
-`character-creation-runtime-slice.qnt` together.
+the character-creation parity model together.
