@@ -1,5 +1,6 @@
-// Auto-generated from packages/core/src/character-spellcasting-data.ts and packages/core/src/features/spell-registry.ts.
-// Do not edit by hand; run `pnpm exec tsx scripts/generate-character-creation-spell-data.ts`.
+// Restore-source material generated from the quarantined Core character spell data.
+// Promoted character-creation runtime data is package-owned; do not use this as
+// an active workspace generation target.
 
 module characterCreationSpellData {
   import creature.* from "./creature"

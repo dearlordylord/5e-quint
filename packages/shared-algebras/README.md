@@ -5,8 +5,8 @@ This package contains reusable reducer/model algebras. It is separate from
 
 - `@dnd/shared` owns low-level scalar/domain types and package-neutral utilities.
 - `@dnd/shared-algebras` owns reusable semantic algebras that can be consumed by
-  runtime packages such as `@dnd/battle-runtime`,
-  `@dnd/character-creation-runtime`, and legacy `@dnd/core`.
+  runtime packages such as `@dnd/battle-runtime` and
+  `@dnd/character-creation-runtime`.
 
 ## Surface Dependency Policy
 
@@ -25,10 +25,9 @@ should not contain algebra modules.
 ## Algebra Inventory
 
 - `ability-score-algebra` - ability-score generation and assignment rules.
-  Its broad `AbilityScoreAssignment` helper type remains raw-number compatible
-  for legacy Core/app readers, while `abilityScoreAssignment(...)` parses
-  boundary input into `ParsedAbilityScoreAssignment` values backed by the shared
-  `AbilityScore` primitive for durable character-creation state.
+  `abilityScoreAssignment(...)` parses boundary input into
+  `ParsedAbilityScoreAssignment` values backed by the shared `AbilityScore`
+  primitive for durable character-creation state.
 - `action-economy-algebra` - turn resource availability, spending, and reset.
 - `armor-class-algebra` - structured Armor Class state and current AC reading.
 - `attack-roll-algebra` - d20 attack-roll hit adjudication.
