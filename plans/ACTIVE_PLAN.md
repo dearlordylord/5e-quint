@@ -113,7 +113,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 100,
       "id": "QMBT5",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Spell Procedure Runtime Parity"
     },
     {
@@ -168,7 +168,7 @@ Keep it synchronized with the DAG table and task details.
 | 97    | QMBT2 - Movement and Grapple Runtime Parity | done | QMBT1, QCORE7 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE7 movement budget, Dash, Disengage, Stand, Grapple/Escape/Release, and OA-decline resume. |
 | 98    | QMBT3 - Reaction and Continuation Runtime Parity | done | QMBT1, QCORE8 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, Readied Movement release, and Concentration break/hold. |
 | 99    | QMBT4 - Feature Procedure Runtime Parity | done | QMBT1, QCORE9 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
-| 100   | QMBT5 - Spell Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
+| 100   | QMBT5 - Spell Procedure Runtime Parity | done | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
 | 101   | QMBT6 - Stat-Block Control Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE11 stat-block control profiles, starting with Multiattack interleaving; keep Legendary Actions as a separate later tracer. |
 
 ## Task Details
@@ -322,24 +322,22 @@ coverage and docs/script wiring without production runtime behavior changes.
 
 ### Task 100 - QMBT5 - Spell Procedure Runtime Parity
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT1, QCORE10
 Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 
-Scope: add focused promoted runtime MBT parity for QCORE10 spell procedure
-profiles: Magic Missile, Ray of Frost, Acid Splash, Healing Word, Mage Armor,
-Spell Slot spend, Cantrip non-spend, and Readied Spell Response. Project HP,
-action/bonus availability, slot spend, level-1 slots, active effect kind,
-readied held/released state, concentration flag, holes, result, and invalid
-reason.
+Completed scope: focused promoted runtime MBT parity for QCORE10 spell
+procedure profiles through production spell reducers and projections. The lane
+uses the package-local `rule-core-spells.mbt.qnt` spec and
+`rule-core-spells.mbt.test.ts` driver to project spell HP/resource/effect
+facts without broad authored spell-catalog discovery.
 
 Verification: RAW/ubiquitous check for spellcasting, Ready, Concentration, and
-each modeled spell passage; focused QMBT5 run only after implementation;
-existing promoted battle-runtime MBT once if runtime behavior changed; minimum
-two `/simplify` rounds.
+each modeled spell passage; focused QMBT5 timed run; package typecheck;
+`pnpm quality`; two `/simplify` review rounds.
 
 ### Task 101 - QMBT6 - Stat-Block Control Runtime Parity
 

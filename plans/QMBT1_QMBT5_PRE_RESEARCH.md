@@ -34,9 +34,9 @@ Open projection-vocabulary guidance:
   `legendaryActionWindowOpen`, `level1SlotsRemaining`,
   `deathSaveSuccesses`, `deathSaveFailures`, `featurePoolRemaining`,
   `rageActive`, `sneakAttackUsed`, and `cuttingWordsDieAvailable`.
-- Treat this list as provisional, not reviewed contract. Revisit it after the
-  QMBT3 worktree lands, and extract shared helpers only when the same domain
-  projection shape repeats across at least two lanes.
+- Treat this list as provisional, not reviewed contract. QMBT3 and QMBT4 have
+  landed; extract shared helpers only when QMBT5+ work shows the same domain
+  projection shape repeating across lanes.
 
 ## QMBT1 - Standard Rule-Core MBT Bridge Contract
 
@@ -173,6 +173,16 @@ Risk:
   resources and support profiles.
 - Cunning Action is not a `unitFeature` subject in runtime; it is
   support-profile-driven `bonusActionStandardAction`.
+
+Learning after QMBT4:
+
+- The feature lane stayed viable through public battle-runtime reducer APIs
+  without extracting production procedure modules or adding test-only helpers.
+- Feature-family fixtures were enough to cover Fighter, Rogue, Barbarian, and
+  Bard reaction shapes under one QMBT4 task label.
+- Keep projection helper extraction deferred. QMBT4 repeats some shared scalar
+  vocabulary from QMBT2/QMBT3, but spell parity should land before deciding
+  which helpers are truly shared rather than lane-local.
 
 ## QMBT5 - Spell Procedure Runtime Parity
 
