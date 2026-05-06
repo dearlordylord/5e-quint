@@ -11,9 +11,13 @@ draft structure or by selected Units. Filling a draft can reveal more holes.
 
 Character Build - finalized build-only player-character boundary produced from
 a complete legal Character Draft. It carries Character Progression plus selected
-Unit references and derived build facts such as ability scores, proficiencies,
-HP maximum, Hit Dice, starting Spell Access, starting Spell Slot capacity, and
-loadout. It is not a Stat Block and not in-play Character Sheet state.
+Unit references and non-derivable creation evidence such as selected
+proficiency choices, selected class-choice grants, source-scoped spell choices,
+owned equipment, and initial loadout. Derived executable facts such as HP
+maximum, Hit Dice, total proficiencies, armor training, resources, granted origin
+features, and battle spell slot capacity are projected from the build plus the
+Unit catalog at the boundary that needs them. It is not a Stat Block and not
+in-play Character Sheet state.
 
 Creation Hole - a fillable requirement in a Character Draft. Holes can come
 from draft structure or from selected authored Units. Hole ids are stable
@@ -24,9 +28,18 @@ applied in atomic batches by `fillCreationHoles`; a rejected batch leaves the
 draft unchanged.
 
 Character Equipment Item Id - durable CharacterBuild equipment item identity.
-It is a source/key isomorphism over an equipment item slot (`main` or `off`) and
-the selected equipment Unit id. It is not a display label and not an inferred
-weapon Unit id.
+It is a source/key isomorphism over an equipment item slot (`armor`, `shield`,
+`main`, or `off`) and the selected equipment Unit id. It is not a display label
+and not an inferred weapon Unit id.
+
+Character Build Spellcasting Source - one spellcasting source retained by a
+build. It records the source Unit, spellcasting ability, cantrips, spellbook
+spells, prepared spells, and focus permissions for that source. It does not
+merge cantrips or prepared spells across classes.
+
+Character Build Spell Slot Pool - durable slot-capacity evidence on a build.
+Ordinary `spellcasting` slots and `pactMagic` slots are separate pools because
+the rules do not make them one interchangeable capacity.
 
 Unit-backed selection - a character-creation choice whose accepted option
 references a Unit. The draft records the selected Unit reference rather
@@ -69,8 +82,8 @@ semantic dispatch in finalization.
 
 Subclass Choice - a class-owned Unit choice opened by Surface class creation
 facts once the selected progression reaches the subclass level. The selected
-subclass Unit ref is retained as a `classChoice` build feature; subclass feature
-grants stay owned by the subclass Unit boundary.
+subclass Unit ref is retained as a selected class-choice build ref; subclass
+feature grants stay owned by the subclass Unit boundary.
 
 Class-feature Ability Score Increase Choice - a follow-up Unit choice opened
 when a selected feat Unit carries an executable ability-score increase choice.

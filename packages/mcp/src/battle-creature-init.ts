@@ -17,6 +17,9 @@ import {
   type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import {
+  characterBuildFeatureUnitIds,
+  characterBuildHitPoints,
+  characterBuildResources,
   progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
@@ -84,7 +87,13 @@ export function battleCreatureInitFromCharacterBuild(
     readonly unitLibrary: UnitCatalog;
   },
 ): Either.Either<BattleCreatureInit, BattleCreatureInitIssue> {
-  const maxHp = Hp(input.build.hitPoints.maximum);
+  const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
+  if (Either.isLeft(hitPoints)) {
+    return battleCreatureInitIssue(
+      hitPoints.left.map((issue) => issue.message).join("; "),
+    );
+  }
+  const maxHp = Hp(hitPoints.right.maximum);
   const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
     input.build,
     input.unitLibrary,
@@ -236,7 +245,7 @@ function characterBattleResources(
   BattleCreatureInitIssue
 > {
   const resources: CharacterBattleResourceInit[] = [];
-  for (const resource of build.resources) {
+  for (const resource of characterBuildResources(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, resource.unitId);
     if (Either.isLeft(unit)) {
       return battleCreatureInitIssue(unit.left.message);
@@ -260,16 +269,16 @@ function characterBattleFeatures(
   BattleCreatureInitIssue
 > {
   const features: CharacterBattleFeatureInit[] = [];
-  for (const feature of build.features) {
-    if (feature.kind !== "classFeature") continue;
-    const unit = getRequiredUnit(unitLibrary, feature.unitId);
+  for (const featureUnitId of characterBuildFeatureUnitIds(
+    build,
+    unitLibrary,
+  )) {
+    const unit = getRequiredUnit(unitLibrary, featureUnitId);
     if (Either.isLeft(unit)) {
       return battleCreatureInitIssue(unit.left.message);
     }
     if (unit.right.kind !== "class_feature") {
-      return battleCreatureInitIssue(
-        `Expected class feature Unit for feature: ${unit.right.id}`,
-      );
+      continue;
     }
     features.push({ unit: unit.right });
   }

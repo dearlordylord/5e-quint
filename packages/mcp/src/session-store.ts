@@ -3,6 +3,7 @@ import type {
   CharacterDraftId,
   CharacterBuild,
 } from "@dnd/character-creation-runtime";
+import { characterBuildSpellcastingSlotCapacity } from "@dnd/character-creation-runtime";
 import type {
   BattleId,
   BattleFill,
@@ -157,18 +158,32 @@ export function characterBattleSpellSlots(
   session: AvailableCharacterSession,
 ): readonly CharacterBattleSpellSlotState[] | undefined {
   if (!("spellSlotExpenditures" in session)) return undefined;
-  return session.build.spellcasting.spellSlots.map((slot) => {
-    const expenditure = session.spellSlotExpenditures.find(
-      (candidate: CharacterSpellSlotExpenditure) =>
-        candidate.spellLevel === slot.spellLevel,
+  return characterBuildSpellcastingSlotCapacity(session.build).map((slot) => {
+    const expenditure = requireSpellSlotExpenditure(
+      session.spellSlotExpenditures,
+      spellSlotLevel(slot.spellLevel),
     );
-    if (expenditure === undefined) return undefined as never;
     return {
       spellLevel: spellSlotLevel(slot.spellLevel),
       count: resourceCount(slot.count),
       expended: expenditure.expended,
     };
   });
+}
+
+function requireSpellSlotExpenditure(
+  expenditures: readonly CharacterSpellSlotExpenditure[],
+  spellLevel: SpellSlotLevel,
+): CharacterSpellSlotExpenditure {
+  const expenditure = expenditures.find(
+    (candidate) => candidate.spellLevel === spellLevel,
+  );
+  if (expenditure === undefined) {
+    throw new Error(
+      `Available spellcasting session is missing Spell Slot expenditure for level ${spellLevel}.`,
+    );
+  }
+  return expenditure;
 }
 
 function spellSlotExpendituresFromInput(
@@ -181,12 +196,13 @@ function spellSlotExpendituresFromInput(
 > {
   const runtimeSlots =
     input.spellSlots ??
-    input.build.spellcasting.spellSlots.map((slot) => ({
+    characterBuildSpellcastingSlotCapacity(input.build).map((slot) => ({
       spellLevel: spellSlotLevel(slot.spellLevel),
       count: resourceCount(slot.count),
       expended: resourceCount(0),
     }));
-  if (runtimeSlots.length !== input.build.spellcasting.spellSlots.length) {
+  const buildSlots = characterBuildSpellcastingSlotCapacity(input.build);
+  if (runtimeSlots.length !== buildSlots.length) {
     return characterSessionIssue(
       "Spell Slot state must match build capacity exactly.",
     );
@@ -201,7 +217,7 @@ function spellSlotExpendituresFromInput(
     runtimeLevels.add(runtimeSlot.spellLevel);
   }
   const expenditures = [];
-  for (const buildSlot of input.build.spellcasting.spellSlots) {
+  for (const buildSlot of buildSlots) {
     const runtimeSlot = runtimeSlots.find(
       (candidate) =>
         candidate.spellLevel === spellSlotLevel(buildSlot.spellLevel),
@@ -290,9 +306,7 @@ export type McpSessionStore = {
 
 // MCP creates deterministic character handles from draft ids because character
 // creation currently has no independent naming/id fill.
-export function characterIdFromDraftId(
-  draftId: CharacterDraftId,
-): CharacterId {
+export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
   return characterId(`character:${encodeURIComponent(String(draftId))}`);
 }
 

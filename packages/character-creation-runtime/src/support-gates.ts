@@ -49,7 +49,7 @@ import {
 import type {
   BackgroundAbilityScoreIncreaseSelection,
   CharacterAlignment,
-  CharacterBuildEquipment,
+  CharacterBuildLoadout,
   CharacterDraftPath,
   CharacterStartingLanguages,
   CreationChoiceOptionId,
@@ -99,7 +99,7 @@ export type SupportedLoadoutChoice =
       readonly optionId: CreationChoiceOptionId;
       readonly label: string;
       readonly buildSlot: "weapon";
-      readonly grip: NonNullable<CharacterBuildEquipment["weapon"]>["grip"];
+      readonly grip: NonNullable<CharacterBuildLoadout["weapon"]>["grip"];
     };
 
 type SourceScopedEquipmentChoiceKey =
@@ -203,8 +203,8 @@ const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
   readonly CreationChoiceOptionId[]
 >;
 
-const SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS = SURFACE_SKILLS.map(
-  (skill) => proficiencyGrantSubjectOptionId({ kind: "skill", skill }),
+const SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS = SURFACE_SKILLS.map((skill) =>
+  proficiencyGrantSubjectOptionId({ kind: "skill", skill }),
 );
 const SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS = [
   ...SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,

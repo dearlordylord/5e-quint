@@ -558,7 +558,12 @@ function parseCreationHoleIdText(value: string): CreationHoleIdText | null {
   return Either.isRight(source) ? loadoutSourceHoleIdText(source.right) : null;
 }
 
-export const CHARACTER_EQUIPMENT_ITEM_SLOTS = ["main", "off"] as const;
+export const CHARACTER_EQUIPMENT_ITEM_SLOTS = [
+  "armor",
+  "shield",
+  "main",
+  "off",
+] as const;
 export type CharacterEquipmentItemSlot =
   (typeof CHARACTER_EQUIPMENT_ITEM_SLOTS)[number];
 
@@ -937,24 +942,23 @@ export type CharacterBuildProficiencies = {
   readonly tools: readonly ToolProficiencyId[];
 };
 
-export type CharacterBuildFeature =
+export type CharacterBuildProficiencyChoiceSubject =
+  | { readonly kind: "skill"; readonly skill: Skill }
   | {
-      readonly kind: "classFeature";
-      readonly unitId: UnitRecord["id"];
+      readonly kind: "weapon_category";
+      readonly category: WeaponProficiencyCategory;
     }
   | {
-      readonly kind: "backgroundOriginFeat";
-      readonly unitId: UnitRecord["id"];
+      readonly kind: "armor_category";
+      readonly category: ArmorTrainingCategory;
     }
-  | {
-      readonly kind: "speciesTrait";
-      readonly unitId: UnitRecord["id"];
-    }
-  | {
-      readonly kind: "classChoice";
-      readonly unitId: UnitRecord["id"];
-      readonly choiceKey: UnitChoiceKey;
-    };
+  | { readonly kind: "tool"; readonly toolId: ToolProficiencyId };
+
+export type CharacterBuildFeature = {
+  readonly kind: "selectedClassChoice";
+  readonly unitId: UnitRecord["id"];
+  readonly selectedFromUnitId: UnitRecord["id"];
+};
 
 export type CharacterBuildResource = {
   readonly unitId: UnitRecord["id"];
@@ -962,12 +966,33 @@ export type CharacterBuildResource = {
 };
 
 export type CharacterBuildSpellcasting = {
+  readonly sources: NonEmptyReadonlyArray<CharacterBuildSpellcastingSource>;
+  readonly slotPools: CharacterBuildSpellSlotPools;
+};
+
+export type CharacterBuildSpellcastingSource = {
+  readonly sourceUnitId: UnitRecord["id"];
   readonly spellcastingAbility: Ability;
   readonly cantrips: readonly UnitRecord["id"][];
-  readonly spellbook: readonly CharacterBuildSpellbookEntry[];
+  readonly spellbook: readonly UnitRecord["id"][];
   readonly preparedSpells: readonly UnitRecord["id"][];
-  readonly spellSlots: readonly CharacterBuildSpellSlotCapacity[];
   readonly spellcastingFocuses: readonly CharacterBuildSpellcastingFocus[];
+};
+
+export type CharacterBuildSpellSlotPools = {
+  readonly spellcasting?: CharacterBuildSpellcastingSlotPool;
+  readonly pactMagic?: CharacterBuildPactMagicSlotPool;
+};
+
+export type CharacterBuildSpellcastingSlotPool = {
+  readonly kind: "spellcasting";
+  readonly slots: readonly CharacterBuildSpellSlotCapacity[];
+};
+
+export type CharacterBuildPactMagicSlotPool = {
+  readonly kind: "pactMagic";
+  readonly slotLevel: CharacterBuildSpellLevel;
+  readonly count: CharacterBuildSpellSlotCount;
 };
 
 export type CharacterBuildSpellcastingFocus =
@@ -977,19 +1002,14 @@ export type CharacterBuildSpellLevel =
 export type CharacterBuildSpellSlotCount =
   WizardSpellcastingCreation["spellSlotProjection"]["slots"][number]["count"];
 
-export type CharacterBuildSpellbookEntry = {
-  readonly spellId: UnitRecord["id"];
-  readonly spellLevel: CharacterBuildSpellLevel;
-};
-
 export type CharacterBuildSpellSlotCapacity = {
   readonly spellLevel: CharacterBuildSpellLevel;
   readonly count: CharacterBuildSpellSlotCount;
 };
 
 export type CharacterBuildLoadout = {
-  readonly armor?: UnitRecord["id"];
-  readonly shield?: UnitRecord["id"];
+  readonly armor?: CharacterEquipmentItemId<"armor">;
+  readonly shield?: CharacterEquipmentItemId<"shield">;
   readonly weapon?: {
     readonly itemId: CharacterEquipmentItemId<"main">;
     readonly grip: "one_handed";
@@ -999,9 +1019,19 @@ export type CharacterBuildLoadout = {
   };
 };
 
-// The build records the supported default loadout. The in-play Character Sheet
-// owns mutable equipment state if active equipment can change during adventuring.
-export type CharacterBuildEquipment = CharacterBuildLoadout;
+export type CharacterBuildOwnedEquipmentItem = {
+  readonly itemId: CharacterEquipmentItemId;
+  readonly unitId: UnitRecord["id"];
+};
+
+// The build records durable owned equipment separately from the initial loadout.
+// Equipment acquisition provenance can be added when a workflow needs it; the
+// current model intentionally keeps owned equipment source-less.
+// The in-play Character Sheet owns mutable equipment state after creation.
+export type CharacterBuildEquipment = {
+  readonly owned: readonly CharacterBuildOwnedEquipmentItem[];
+  readonly loadout: CharacterBuildLoadout;
+};
 
 // CharacterBuild is the creation output: durable build and identity facts.
 // In-play CharacterSheet state such as current HP, Temporary Hit Points, and
@@ -1013,11 +1043,8 @@ export type CharacterBuild = {
   readonly originLanguages: CharacterStartingLanguages;
   readonly alignment: CharacterAlignment;
   readonly abilityScores: CharacterBuildAbilityScores;
-  readonly hitPoints: CharacterBuildHitPoints;
-  readonly proficiencies: CharacterBuildProficiencies;
-  readonly armorTraining: readonly ArmorTrainingCategory[];
+  readonly proficiencyChoices: readonly CharacterBuildProficiencyChoiceSubject[];
   readonly features: readonly CharacterBuildFeature[];
-  readonly resources: readonly CharacterBuildResource[];
   readonly spellcasting?: CharacterBuildSpellcasting;
   readonly equipment: CharacterBuildEquipment;
 };

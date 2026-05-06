@@ -2,7 +2,7 @@
 
 Task: PBA25A - Refactor Character Build Projection Boundary
 
-Status: blocked until PBA25 lands the widened Unit-backed choice path.
+Status: implemented.
 
 ## Purpose
 

@@ -20,6 +20,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterDraftId,
+  characterBuildHitPoints,
   abilityScoreAssignment,
   characterClassLevel,
   characterEquipmentItemId,
@@ -30,16 +31,15 @@ import {
   creationHoleId,
   fillCreationHoles,
   finalizeCharacterDraft,
-  hitDieSize,
-  hitDieTotal,
   type CharacterDraft,
   type CharacterBuild,
   type CreationFill,
   type CreationHole,
   type CreationHoleIdText,
   type CharacterEquipmentItemSlot,
+  type CharacterBuildSpellcasting,
 } from "@dnd/character-creation-runtime";
-import { Hp, hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -119,6 +119,52 @@ function characterEquipmentItemUnitIdRight(value: string) {
     );
   }
   return result.right;
+}
+
+function testWizardSpellcasting(input: {
+  readonly cantrips: readonly string[];
+  readonly spellbook?: readonly string[];
+  readonly preparedSpells: readonly string[];
+  readonly spellSlots: readonly { readonly spellLevel: 1; readonly count: 2 }[];
+}): CharacterBuildSpellcasting {
+  return {
+    sources: [
+      {
+        sourceUnitId: "class_wizard",
+        spellcastingAbility: "int",
+        cantrips: input.cantrips,
+        spellbook: input.spellbook ?? input.preparedSpells,
+        preparedSpells: input.preparedSpells,
+        spellcastingFocuses: ["spellbook"],
+      },
+    ],
+    slotPools: {
+      spellcasting: {
+        kind: "spellcasting",
+        slots: input.spellSlots,
+      },
+    },
+  };
+}
+
+function characterBuildMaximumHp(
+  build: CharacterBuild,
+  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+) {
+  return expectRight(characterBuildHitPoints(build, unitLibrary)).maximum;
+}
+
+function wizardProgression(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+): CharacterBuild["progression"] {
+  const wizard = root.unitLibrary.requireUnit("class_wizard");
+  if (wizard.kind !== "class") {
+    throw new Error("Expected Wizard class Unit.");
+  }
+  return {
+    startingClass: expectRight(classUnitIdFromClassUnit(wizard)),
+    advancements: [],
+  };
 }
 
 function testCharacterEquipmentItemId<
@@ -278,25 +324,6 @@ describe("MCP server route", () => {
           },
         ],
       },
-      hitPoints: {
-        maximum: hp(
-          build.hitPoints.maximum +
-            Math.max(
-              1,
-              Math.floor(wizard.hitPointDie / 2) +
-                1 +
-                Math.floor((build.abilityScores.con - 10) / 2),
-            ),
-        ),
-        hitDice: [
-          ...build.hitPoints.hitDice,
-          {
-            classUnitId: wizard.id,
-            dieSize: hitDieSize(wizard.hitPointDie),
-            total: hitDieTotal(1),
-          },
-        ],
-      },
     };
 
     const state = startBattleFromCharacterBuildAndStatBlockRight({
@@ -341,8 +368,11 @@ describe("MCP server route", () => {
         build: {
           ...build,
           equipment: {
-            armor: build.equipment.armor,
-            shield: build.equipment.shield,
+            ...build.equipment,
+            loadout: {
+              armor: build.equipment.loadout.armor,
+              shield: build.equipment.loadout.shield,
+            },
           },
         },
         initiative: initiativeScore(12),
@@ -802,8 +832,16 @@ describe("MCP server route", () => {
         ...build,
         features: [
           ...build.features,
-          { kind: "classFeature", unitId: "missing_feature_one" },
-          { kind: "classFeature", unitId: "missing_feature_two" },
+          {
+            kind: "selectedClassChoice",
+            unitId: "missing_feature_one",
+            selectedFromUnitId: "fighter_fighting_style",
+          },
+          {
+            kind: "selectedClassChoice",
+            unitId: "missing_feature_two",
+            selectedFromUnitId: "fighter_fighting_style",
+          },
         ],
       },
       root.unitLibrary,
@@ -2021,9 +2059,7 @@ describe("MCP server route", () => {
           },
           {
             kind: "characterSession",
-            characterId: testCharacterId(
-              "draft:mcp-missing-additional-third",
-            ),
+            characterId: testCharacterId("draft:mcp-missing-additional-third"),
             combatantId: "third-fighter",
             initiative: 14,
             side: "party",
@@ -2296,23 +2332,19 @@ describe("MCP server route", () => {
       build: {
         background: "background_soldier",
         species: "species_orc",
-        hitPoints: { maximum: 12 },
       },
     });
     expect(finalized.build).toMatchObject({
       background: "background_soldier",
       species: "species_orc",
-      hitPoints: { maximum: 12 },
     });
     expect(root.sessionStore.drafts.has(characterDraftId(draftId))).toBe(false);
-    expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
-      {
-        tag: "available",
-        characterId: testCharacterId(draftId),
-        build: finalized.finalization.build,
-        hitPoints: { tag: "positive", currentHp: 12 },
-      },
-    );
+    expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual({
+      tag: "available",
+      characterId: testCharacterId(draftId),
+      build: finalized.finalization.build,
+      hitPoints: { tag: "positive", currentHp: 12 },
+    });
     expect(finalized.session).toMatchObject({
       draftIds: [],
       characterIds: [testCharacterId(draftId)],
@@ -2333,7 +2365,6 @@ describe("MCP server route", () => {
       build: {
         background: "background_soldier",
         species: "species_orc",
-        hitPoints: { maximum: 12 },
       },
     });
     expect(root.sessionStore.snapshot()).toMatchObject({
@@ -3394,7 +3425,9 @@ describe("MCP server route", () => {
       root.sessionStore.drafts.has(characterDraftId(finalizedSessionDraftId)),
     ).toBe(false);
     expect(
-      root.sessionStore.characters.has(testCharacterId(finalizedSessionDraftId)),
+      root.sessionStore.characters.has(
+        testCharacterId(finalizedSessionDraftId),
+      ),
     ).toBe(true);
   });
 
@@ -3412,10 +3445,19 @@ describe("MCP server route", () => {
         build: {
           ...build,
           equipment: {
-            shield: "equipment_shield",
-            weapon: {
-              itemId: testCharacterEquipmentItemId("main", "weapon_longsword"),
-              grip: "one_handed",
+            ...build.equipment,
+            loadout: {
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+              weapon: {
+                itemId: testCharacterEquipmentItemId(
+                  "main",
+                  "weapon_longsword",
+                ),
+                grip: "one_handed",
+              },
             },
           },
         },
@@ -3450,15 +3492,12 @@ describe("MCP server route", () => {
         side: partySide,
         build: {
           ...build,
-          armorTraining: [],
-          spellcasting: {
-            spellcastingAbility: "int",
+          progression: wizardProgression(root),
+          spellcasting: testWizardSpellcasting({
             cantrips: ["ray_of_frost"],
-            spellbook: [{ spellId: "magic_missile", spellLevel: 1 }],
             preparedSpells: ["magic_missile"],
             spellSlots: [{ spellLevel: 1, count: 2 }],
-            spellcastingFocuses: ["spellbook"],
-          },
+          }),
         },
         spellSlots: [
           {
@@ -3504,18 +3543,21 @@ describe("MCP server route", () => {
         side: partySide,
         build: {
           ...build,
-          armorTraining: [],
+          progression: wizardProgression(root),
           equipment: {
-            shield: "equipment_shield",
+            ...build.equipment,
+            loadout: {
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+            },
           },
-          spellcasting: {
-            spellcastingAbility: "int",
+          spellcasting: testWizardSpellcasting({
             cantrips: ["ray_of_frost"],
-            spellbook: [{ spellId: "magic_missile", spellLevel: 1 }],
             preparedSpells: ["magic_missile"],
             spellSlots: [{ spellLevel: 1, count: 2 }],
-            spellcastingFocuses: ["spellbook"],
-          },
+          }),
         },
       },
       statBlockBattleInput: {
@@ -3553,18 +3595,21 @@ describe("MCP server route", () => {
         side: partySide,
         build: {
           ...build,
-          armorTraining: [],
+          progression: wizardProgression(root),
           equipment: {
-            shield: "equipment_shield",
+            ...build.equipment,
+            loadout: {
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+            },
           },
-          spellcasting: {
-            spellcastingAbility: "int",
+          spellcasting: testWizardSpellcasting({
             cantrips: ["acid_splash"],
-            spellbook: [{ spellId: "magic_missile", spellLevel: 1 }],
             preparedSpells: ["magic_missile"],
             spellSlots: [{ spellLevel: 1, count: 2 }],
-            spellcastingFocuses: ["spellbook"],
-          },
+          }),
         },
       },
       statBlockBattleInput: {
@@ -3643,7 +3688,7 @@ describe("MCP server route", () => {
       tag: "resolved",
       snapshot: {
         combatants: [
-          { combatantId: "fighter", hp: 12 },
+          { combatantId: "fighter", hp: 8 },
           { combatantId: "goblin", hp: 6 },
         ],
         turn: { actionResources: [] },
@@ -3665,16 +3710,21 @@ describe("MCP server route", () => {
         side: partySide,
         build: {
           ...build,
-          armorTraining: [],
-          equipment: { shield: "equipment_shield" },
-          spellcasting: {
-            spellcastingAbility: "int",
+          progression: wizardProgression(root),
+          equipment: {
+            ...build.equipment,
+            loadout: {
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+            },
+          },
+          spellcasting: testWizardSpellcasting({
             cantrips: ["ray_of_frost"],
-            spellbook: [{ spellId: "magic_missile", spellLevel: 1 }],
             preparedSpells: ["magic_missile"],
             spellSlots: [{ spellLevel: 1, count: 2 }],
-            spellcastingFocuses: ["spellbook"],
-          },
+          }),
         },
       },
       statBlockBattleInput: {
@@ -3797,21 +3847,21 @@ describe("MCP server route", () => {
     const build = fighterCharacterBuild(root.unitLibrary);
     const spellcastingBuild = {
       ...build,
-      spellcasting: {
-        spellcastingAbility: "int" as const,
+      progression: wizardProgression(root),
+      spellcasting: testWizardSpellcasting({
         cantrips: ["ray_of_frost"],
-        spellbook: [{ spellId: "magic_missile", spellLevel: 1 as const }],
         preparedSpells: ["magic_missile"],
         spellSlots: [{ spellLevel: 1 as const, count: 2 as const }],
-        spellcastingFocuses: ["spellbook" as const],
-      },
+      }),
     };
 
     expect(() =>
       availableCharacterSessionRight({
         characterId: characterId("character:spell-slot-duplicate-levels"),
         build: spellcastingBuild,
-        currentHp: Hp(spellcastingBuild.hitPoints.maximum),
+        currentHp: Hp(
+          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
+        ),
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -3833,13 +3883,20 @@ describe("MCP server route", () => {
           ...spellcastingBuild,
           spellcasting: {
             ...spellcastingBuild.spellcasting,
-            spellSlots: [
-              { spellLevel: 1, count: 2 },
-              { spellLevel: 2, count: 1 },
-            ],
+            slotPools: {
+              spellcasting: {
+                kind: "spellcasting",
+                slots: [
+                  { spellLevel: 1, count: 2 },
+                  { spellLevel: 2, count: 1 },
+                ],
+              },
+            },
           },
         },
-        currentHp: Hp(spellcastingBuild.hitPoints.maximum),
+        currentHp: Hp(
+          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
+        ),
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -3992,13 +4049,16 @@ function fighterTwoLightWeaponBuild(
   return {
     ...fighterCharacterBuild(unitLibrary),
     equipment: {
-      armor: "armor_chain_mail",
-      weapon: {
-        itemId: testCharacterEquipmentItemId("main", "weapon_shortsword"),
-        grip: "one_handed",
-      },
-      offHandWeapon: {
-        itemId: testCharacterEquipmentItemId("off", "weapon_dagger"),
+      ...fighterCharacterBuild(unitLibrary).equipment,
+      loadout: {
+        armor: testCharacterEquipmentItemId("armor", "armor_chain_mail"),
+        weapon: {
+          itemId: testCharacterEquipmentItemId("main", "weapon_shortsword"),
+          grip: "one_handed",
+        },
+        offHandWeapon: {
+          itemId: testCharacterEquipmentItemId("off", "weapon_dagger"),
+        },
       },
     },
   };
@@ -4013,7 +4073,7 @@ function createFinalizedFighterSheet(
     availableCharacterSessionRight({
       characterId: testCharacterId(draftId),
       build,
-      currentHp: Hp(build.hitPoints.maximum),
+      currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
     }),
   );
   return build;
@@ -4343,9 +4403,12 @@ function rogueCharacterBuild(
       keepClassChoices: false,
     }),
     equipment: {
-      weapon: {
-        itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
-        grip: "one_handed",
+      ...fighterCharacterBuild(unitLibrary).equipment,
+      loadout: {
+        weapon: {
+          itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
+          grip: "one_handed",
+        },
       },
     },
   };
@@ -4419,49 +4482,13 @@ function characterBuildForClassProgression(input: {
   return {
     ...input.base,
     progression,
-    hitPoints: {
-      maximum: fixedClassHitPointMaximum(
-        input.classUnit.hitPointDie,
-        input.base.abilityScores.con,
-        classLevel,
-      ),
-      hitDice: [
-        {
-          classUnitId: input.classUnit.id,
-          dieSize: hitDieSize(input.classUnit.hitPointDie),
-          total: hitDieTotal(classLevel),
-        },
-      ],
-    },
     features: [
       ...input.base.features.filter(
         (feature) =>
-          feature.kind !== "classFeature" &&
-          (input.keepClassChoices || feature.kind !== "classChoice"),
+          input.keepClassChoices || feature.kind !== "selectedClassChoice",
       ),
-      ...input.classUnit.featureGrants
-        .filter((grant) => grant.level <= classLevel)
-        .map((grant) => ({
-          kind: "classFeature" as const,
-          unitId: grant.unitId,
-        })),
     ],
-    resources: [],
   };
-}
-
-function fixedClassHitPointMaximum(
-  hitPointDie: number,
-  constitutionScore: number,
-  classLevel: number,
-): ReturnType<typeof hp> {
-  const constitutionModifier = Math.floor((constitutionScore - 10) / 2);
-  return hp(
-    hitPointDie +
-      constitutionModifier +
-      (classLevel - 1) *
-        Math.max(1, Math.floor(hitPointDie / 2) + 1 + constitutionModifier),
-  );
 }
 
 function unitLibraryWithOverrides(

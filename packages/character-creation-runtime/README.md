@@ -17,9 +17,11 @@ process over those records.
 
 A Character Draft is an incomplete session object with fillable holes. Filling a
 hole can reveal more holes. A Character Build is the complete build-only
-player-character boundary produced by finalization. It can reference selected
-Units and carry derived build facts, but it is not a Unit, not a Stat Block, and
-not in-play Character Sheet state.
+player-character boundary produced by finalization. It records durable identity
+facts and non-derivable creation choices. Executable facts such as HP maximum,
+proficiencies, armor training, resources, and battle spell slot capacity are
+derived later from the build plus the Unit catalog. A build is not a Unit, not a
+Stat Block, and not in-play Character Sheet state.
 
 ## Boundary
 
@@ -145,19 +147,32 @@ checks all run against that indexed frontier instead of repeatedly scanning the
 hole list. This keeps the validation boundary stable as Surface catalogs gain
 more legal Units and options.
 
-The finalized `CharacterBuild` carries Character Progression plus selected Unit
-refs and derived build facts needed by later boundaries: final ability scores,
-Hit Point maximum and Hit Die pool, proficiencies, granted feature refs,
-activation resources, starting Wizard Spell Access and Spell Slot capacity, and
-equipment/loadout refs. Supported subclass choices, class-feature feat grants
-including Ability Score Improvement and Epic Boon ability-score increases,
-proficiency grants, Wizard spellcasting facts, loadout refs, and equipment item
-ids are projected from accepted draft selections and Unit readers, not
-reauthored as parallel constants. The remaining finalization gate
-rejects complete drafts whose progression profile, origin facts, choices, or
-equipment are outside the support profile. `CharacterBuild` does not carry
-current HP, Temporary Hit Points, expended resources or Spell Slots, Hit Dice
-remaining, or battle creature-init types.
+The finalized `CharacterBuild` carries Character Progression, origin identity,
+final ability scores, selected proficiency evidence, selected class-choice Unit
+refs, source-scoped spellcasting choices, owned equipment, and initial loadout.
+It deliberately does not store class feature grant lists, background origin
+feat, species traits, Hit Point maximum, Hit Dice totals, total proficiencies,
+armor training, activation resources, or global spell slot capacity when those
+facts can be derived from retained build facts plus the Unit catalog. Supported
+subclass choices, class-feature feat grants including Ability Score Improvement
+and Epic Boon ability-score increases, proficiency choices, Wizard spellcasting
+choices, loadout refs, and equipment item ids are projected from accepted draft
+selections and Unit readers, not reauthored as parallel constants. The remaining
+finalization gate rejects complete drafts whose progression profile, origin
+facts, choices, or equipment are outside the support profile. `CharacterBuild`
+does not carry current HP, Temporary Hit Points, expended resources or Spell
+Slots, Hit Dice remaining, or battle creature-init types.
+
+Spellcasting on a build is source-scoped. Each source records the source Unit,
+spellcasting ability, cantrips, spellbook entries, prepared spells, and focus
+permissions for that source. Slot pools are explicit and rigid: ordinary
+`spellcasting` slots and optional `pactMagic` slots are separate pools. Battle
+and session projections decide which subset they can execute.
+
+Equipment on a build is split into durable owned equipment and initial loadout.
+Loadout entries hold `CharacterEquipmentItemId`s for owned items instead of
+duplicating bare equipment Unit ids. Mutable in-play equipment changes belong to
+the future Character Sheet/session boundary, not character creation.
 
 Finalization support checks are source-shaped: they reconstruct expected
 choice-hole families from Surface readers plus the support profile and validate

@@ -21,6 +21,11 @@ import {
   characterDraftId,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
+  characterBuildArmorTraining,
+  characterBuildFeatureUnitIds,
+  characterBuildHitPoints,
+  characterBuildProficiencies,
+  characterBuildResources,
   exactChoiceCardinality,
   boundedChoiceCardinality,
   characterBuildUnitRefs,
@@ -1816,66 +1821,41 @@ describe("character creation finalization", () => {
       wis: 10,
       cha: 12,
     });
-    expect(result.build.hitPoints).toEqual({
+    expect(
+      expectRight(characterBuildHitPoints(result.build, unitLibrary)),
+    ).toEqual({
       maximum: 12,
       hitDice: [{ classUnitId: "class_fighter", dieSize: 10, total: 1 }],
     });
-    expect(result.build.proficiencies).toEqual({
+    expect(
+      expectRight(characterBuildProficiencies(result.build, unitLibrary)),
+    ).toEqual({
       savingThrows: ["str", "con"],
-      skills: ["perception", "survival", "athletics", "intimidation"],
+      skills: ["athletics", "intimidation", "perception", "survival"],
       weapon: ["simple", "martial"],
       tools: ["tool_dice_set"],
     });
-    expect(result.build.armorTraining).toEqual([
-      "light",
-      "medium",
-      "heavy",
-      "shield",
-    ]);
+    expect(
+      expectRight(characterBuildArmorTraining(result.build, unitLibrary)),
+    ).toEqual(["light", "medium", "heavy", "shield"]);
     expect(result.build.features).toEqual([
       {
-        kind: "classFeature",
-        unitId: "fighter_fighting_style",
-      },
-      {
-        kind: "classFeature",
-        unitId: "fighter_second_wind",
-      },
-      {
-        kind: "classFeature",
-        unitId: "fighter_weapon_mastery",
-      },
-      {
-        kind: "backgroundOriginFeat",
-        unitId: "feat_savage_attacker",
-      },
-      {
-        kind: "speciesTrait",
-        unitId: "orc_adrenaline_rush",
-      },
-      {
-        kind: "speciesTrait",
-        unitId: "orc_darkvision",
-      },
-      {
-        kind: "speciesTrait",
-        unitId: "orc_relentless_endurance",
-      },
-      {
-        choiceKey: "class_feature_feat_choice",
-        kind: "classChoice",
+        selectedFromUnitId: "fighter_fighting_style",
+        kind: "selectedClassChoice",
         unitId: "defense",
       },
     ]);
-    expect(result.build.equipment).toEqual({
-      armor: "armor_chain_mail",
-      shield: "equipment_shield",
-      weapon: {
-        itemId: testCharacterEquipmentItemId("main", "weapon_longsword"),
-        grip: "one_handed",
+    expect(result.build.equipment).toMatchObject({
+      loadout: {
+        armor: testCharacterEquipmentItemId("armor", "armor_chain_mail"),
+        shield: testCharacterEquipmentItemId("shield", "equipment_shield"),
+        weapon: {
+          itemId: testCharacterEquipmentItemId("main", "weapon_longsword"),
+          grip: "one_handed",
+        },
       },
     });
-    expect(result.build.resources).toEqual([
+    expect(characterBuildResources(result.build, unitLibrary)).toEqual([
       {
         unitId: "fighter_second_wind",
         resource: {
@@ -1893,7 +1873,9 @@ describe("character creation finalization", () => {
       },
     ]);
     expect(
-      characterBuildUnitRefs(result.build).map((ref) => ref.unitId),
+      characterBuildUnitRefs(result.build, unitLibrary).map(
+        (ref) => ref.unitId,
+      ),
     ).toEqual([
       "class_fighter",
       "background_soldier",
@@ -1907,8 +1889,8 @@ describe("character creation finalization", () => {
       "orc_relentless_endurance",
       "defense",
       "armor_chain_mail",
-      "equipment_shield",
       "weapon_longsword",
+      "equipment_shield",
     ]);
   });
 
@@ -1972,18 +1954,17 @@ describe("character creation finalization", () => {
     expect(result.tag).toBe("ready");
     if (result.tag !== "ready") return;
 
-    expect(result.build.hitPoints.hitDice).toEqual([
-      { classUnitId: "class_fighter", dieSize: 10, total: 2 },
-    ]);
-    expect(result.build.features).toEqual(
-      expect.arrayContaining([
-        { kind: "classFeature", unitId: "fighter_action_surge" },
-        { kind: "classFeature", unitId: "fighter_tactical_mind" },
-      ]),
+    expect(
+      expectRight(characterBuildHitPoints(result.build, unitLibrary)).hitDice,
+    ).toEqual([{ classUnitId: "class_fighter", dieSize: 10, total: 2 }]);
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+      expect.arrayContaining(["fighter_action_surge", "fighter_tactical_mind"]),
     );
-    expect(result.build.resources.map((resource) => resource.unitId)).toContain(
-      "fighter_action_surge",
-    );
+    expect(
+      characterBuildResources(result.build, unitLibrary).map(
+        (resource) => resource.unitId,
+      ),
+    ).toContain("fighter_action_surge");
   });
 
   test("retains selected subclass Unit refs in finalized builds", () => {
@@ -2018,8 +1999,8 @@ describe("character creation finalization", () => {
         build: {
           features: expect.arrayContaining([
             {
-              choiceKey: "class_subclass_choice",
-              kind: "classChoice",
+              kind: "selectedClassChoice",
+              selectedFromUnitId: "class_fighter",
               unitId: "subclass_fighter_champion",
             },
           ]),
@@ -2106,8 +2087,8 @@ describe("character creation finalization", () => {
           },
           features: expect.arrayContaining([
             {
-              choiceKey: "class_feature_feat_choice",
-              kind: "classChoice",
+              kind: "selectedClassChoice",
+              selectedFromUnitId: "fighter_ability_score_improvement_l4",
               unitId: "feat_ability_score_improvement",
             },
           ]),
@@ -2381,17 +2362,24 @@ describe("character creation finalization", () => {
     expect(result.tag).toBe("ready");
     if (result.tag !== "ready") return;
 
-    expect(result.build.hitPoints.hitDice).toEqual([
+    expect(
+      expectRight(characterBuildHitPoints(result.build, unitLibrary)).hitDice,
+    ).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 1 },
       { classUnitId: "class_fighter", dieSize: 10, total: 1 },
     ]);
-    expect(result.build.proficiencies.weapon).toEqual(["simple", "martial"]);
-    expect(result.build.armorTraining).toEqual(["light", "medium", "shield"]);
-    expect(result.build.features).toEqual(
+    expect(
+      expectRight(characterBuildProficiencies(result.build, unitLibrary))
+        .weapon,
+    ).toEqual(["simple", "martial"]);
+    expect(
+      expectRight(characterBuildArmorTraining(result.build, unitLibrary)),
+    ).toEqual(["light", "medium", "shield"]);
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
       expect.arrayContaining([
-        { kind: "classFeature", unitId: "wizard_ritual_adept" },
-        { kind: "classFeature", unitId: "fighter_fighting_style" },
-        { kind: "classFeature", unitId: "fighter_weapon_mastery" },
+        "wizard_ritual_adept",
+        "fighter_fighting_style",
+        "fighter_weapon_mastery",
       ]),
     );
   });
@@ -2542,28 +2530,43 @@ describe("character creation finalization", () => {
     if (result.tag !== "ready") return;
 
     expect(result.build.spellcasting).toEqual({
-      spellcastingAbility: "int",
-      cantrips: ["light", "fire_bolt", "ray_of_frost"],
-      spellbook: [
-        { spellId: "detect_magic", spellLevel: 1 },
-        { spellId: "mage_armor", spellLevel: 1 },
-        { spellId: "magic_missile", spellLevel: 1 },
-        { spellId: "shield", spellLevel: 1 },
-        { spellId: "sleep", spellLevel: 1 },
-        { spellId: "thunderwave", spellLevel: 1 },
+      sources: [
+        {
+          sourceUnitId: "class_wizard",
+          spellcastingAbility: "int",
+          cantrips: ["light", "fire_bolt", "ray_of_frost"],
+          spellbook: [
+            "detect_magic",
+            "mage_armor",
+            "magic_missile",
+            "shield",
+            "sleep",
+            "thunderwave",
+          ],
+          preparedSpells: [
+            "detect_magic",
+            "mage_armor",
+            "magic_missile",
+            "sleep",
+          ],
+          spellcastingFocuses: ["arcane_focus", "spellbook"],
+        },
       ],
-      preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "sleep"],
-      spellSlots: [{ count: 2, spellLevel: 1 }],
-      spellcastingFocuses: ["arcane_focus", "spellbook"],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ count: 2, spellLevel: 1 }],
+        },
+      },
     });
-    expect(result.build.proficiencies.skills).toEqual([
-      "arcana",
-      "history",
-      "athletics",
-      "intimidation",
-    ]);
     expect(
-      characterBuildUnitRefs(result.build).map((ref) => ref.unitId),
+      expectRight(characterBuildProficiencies(result.build, unitLibrary))
+        .skills,
+    ).toEqual(["athletics", "intimidation", "arcana", "history"]);
+    expect(
+      characterBuildUnitRefs(result.build, unitLibrary).map(
+        (ref) => ref.unitId,
+      ),
     ).toEqual([
       "class_wizard",
       "background_soldier",
@@ -2574,8 +2577,9 @@ describe("character creation finalization", () => {
       "orc_adrenaline_rush",
       "orc_darkvision",
       "orc_relentless_endurance",
-      "equipment_shield",
       "weapon_longsword",
+      "weapon_dagger",
+      "equipment_shield",
       "light",
       "fire_bolt",
       "ray_of_frost",
@@ -2625,50 +2629,55 @@ describe("character creation finalization", () => {
 
   test("derives build loadout projection from selected loadout source equipment", () => {
     const complete = completeManifestDraft();
-    const projection = finalizedBuildEquipment({
-      ...complete.selections,
-      progression: testProgression("class_fighter", 1),
-      background: "background_soldier",
-      abilityScoreGeneration: {
-        method: "standardArray",
-        assignedScores: testAbilityScoreAssignment({
-          str: 15,
-          dex: 14,
-          con: 13,
-          int: 8,
-          wis: 10,
-          cha: 12,
-        }),
+    const projection = finalizedBuildEquipment(
+      {
+        ...complete.selections,
+        progression: testProgression("class_fighter", 1),
+        background: "background_soldier",
+        abilityScoreGeneration: {
+          method: "standardArray",
+          assignedScores: testAbilityScoreAssignment({
+            str: 15,
+            dex: 14,
+            con: 13,
+            int: 8,
+            wis: 10,
+            cha: 12,
+          }),
+        },
+        backgroundAbilityScoreIncrease: {
+          kind: "twoAndOne",
+          plusTwo: "str",
+          plusOne: "con",
+        },
+        species: "species_orc",
+        languages: ["Common", "Dwarvish", "Goblin"],
+        alignment: { order: "lawful", morality: "good" },
+        equipment: {
+          selectedUnitIds: [
+            "armor_chain_mail",
+            "weapon_longsword",
+            "equipment_shield",
+          ],
+        },
+        choices: complete.selections.choices.map((choice) =>
+          choice.kind === "loadout" &&
+          choice.source.equipmentUnitId === "weapon_longsword" &&
+          choice.source.slot === "weapon"
+            ? selectedLoadoutChoice(
+                "weapon_longsword",
+                "weapon",
+                "wielded_one_handed",
+              )
+            : choice,
+        ),
       },
-      backgroundAbilityScoreIncrease: {
-        kind: "twoAndOne",
-        plusTwo: "str",
-        plusOne: "con",
-      },
-      species: "species_orc",
-      languages: ["Common", "Dwarvish", "Goblin"],
-      alignment: { order: "lawful", morality: "good" },
-      equipment: {
-        selectedUnitIds: [
-          "armor_chain_mail",
-          "weapon_longsword",
-          "equipment_shield",
-        ],
-      },
-      choices: complete.selections.choices.map((choice) =>
-        choice.kind === "loadout" &&
-        choice.source.equipmentUnitId === "weapon_longsword" &&
-        choice.source.slot === "weapon"
-          ? selectedLoadoutChoice(
-              "weapon_longsword",
-              "weapon",
-              "wielded_one_handed",
-            )
-          : choice,
-      ),
-    });
+      unitLibrary,
+    );
 
-    expect(projection.weapon).toEqual({
+    expect(projection).toMatchObject({ _tag: "Right" });
+    if (Either.isLeft(projection)) return;
+    expect(projection.right.loadout.weapon).toEqual({
       itemId: testCharacterEquipmentItemId("main", "weapon_longsword"),
       grip: "one_handed",
     });
@@ -2792,11 +2801,16 @@ describe("character creation finalization", () => {
         tag: "ready",
         build: {
           equipment: {
-            armor: "armor_chain_mail",
-            shield: "equipment_shield",
-            weapon: {
-              itemId: testCharacterEquipmentItemId("main", "weapon_spear"),
-              grip: "one_handed",
+            loadout: {
+              armor: testCharacterEquipmentItemId("armor", "armor_chain_mail"),
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+              weapon: {
+                itemId: testCharacterEquipmentItemId("main", "weapon_spear"),
+                grip: "one_handed",
+              },
             },
           },
         },
@@ -3268,22 +3282,21 @@ describe("character creation finalization", () => {
       unitLibrary: widenedUnitLibrary,
     });
 
-    expect(finalization).toMatchObject({
-      tag: "ready",
-      build: {
-        proficiencies: {
-          skills: [
-            "perception",
-            "survival",
-            "animal_handling",
-            "medicine",
-            "religion",
-            "athletics",
-            "intimidation",
-          ],
-        },
-      },
-    });
+    expect(finalization.tag).toBe("ready");
+    if (finalization.tag !== "ready") return;
+    expect(
+      expectRight(
+        characterBuildProficiencies(finalization.build, widenedUnitLibrary),
+      ).skills,
+    ).toEqual([
+      "athletics",
+      "intimidation",
+      "perception",
+      "survival",
+      "animal_handling",
+      "medicine",
+      "religion",
+    ]);
   });
 
   test("represents mixed class-feature proficiency grant subjects without narrowing to skills", () => {
@@ -3357,17 +3370,23 @@ describe("character creation finalization", () => {
         unitLibrary: widenedUnitLibrary,
       });
 
-      expect(result).toMatchObject({
-        tag: "ready",
-        build: {
-          armorTraining: expect.arrayContaining(["light"]),
-          proficiencies: {
-            skills: expect.arrayContaining(["medicine"]),
-            weapon: expect.arrayContaining(["martial"]),
-            tools: expect.arrayContaining(["tool_thieves_tools"]),
-          },
-        },
-      });
+      expect(result.tag).toBe("ready");
+      if (result.tag !== "ready") return;
+      expect(
+        expectRight(
+          characterBuildArmorTraining(result.build, widenedUnitLibrary),
+        ),
+      ).toEqual(expect.arrayContaining(["light"]));
+      const proficiencies = expectRight(
+        characterBuildProficiencies(result.build, widenedUnitLibrary),
+      );
+      expect(proficiencies.skills).toEqual(
+        expect.arrayContaining(["medicine"]),
+      );
+      expect(proficiencies.weapon).toEqual(expect.arrayContaining(["martial"]));
+      expect(proficiencies.tools).toEqual(
+        expect.arrayContaining(["tool_thieves_tools"]),
+      );
     } finally {
       profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice =
         originalProficiencyOptions;

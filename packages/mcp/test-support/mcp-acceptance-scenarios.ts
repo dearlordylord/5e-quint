@@ -374,7 +374,6 @@ export async function verifyBaselineVertical(client: Client) {
 
   const finalized = await callTool(client, "finalize_character", { draftId });
   assert.equal(get(finalized, "finalization.tag"), "ready");
-  assert.equal(get(finalized, "finalization.build.hitPoints.maximum"), 12);
 
   const listedBeforeBattle = await callTool(client, "list_characters", {});
   assert.equal(get(listedBeforeBattle, "characters.0.hitPoints.current"), 12);
@@ -497,14 +496,17 @@ export async function verifyWidthVertical(client: Client) {
     wizardDraftId,
   );
   assert.deepEqual(
-    get(finalizedWizard, "finalization.build.spellcasting.spellSlots"),
+    get(
+      finalizedWizard,
+      "finalization.build.spellcasting.slotPools.spellcasting.slots",
+    ),
     [{ count: 2, spellLevel: 1 }],
   );
   assert.ok(
     (
       get(
         finalizedWizard,
-        "finalization.build.spellcasting.cantrips",
+        "finalization.build.spellcasting.sources.0.cantrips",
       ) as string[]
     ).includes("ray_of_frost"),
   );
@@ -512,7 +514,7 @@ export async function verifyWidthVertical(client: Client) {
     (
       get(
         finalizedWizard,
-        "finalization.build.spellcasting.preparedSpells",
+        "finalization.build.spellcasting.sources.0.preparedSpells",
       ) as string[]
     ).includes("magic_missile"),
   );

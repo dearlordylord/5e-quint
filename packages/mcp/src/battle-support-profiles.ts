@@ -18,8 +18,9 @@ export function characterUnitRefsWithBattleSupportProfiles(
   readonly BattleUnitRef[],
   ReadonlyNonEmptyArray<BattleSupportProfileIssue>
 > {
-  return traverseValidation(characterBuildUnitRefs(build), (unitRef) =>
-    withBattleSupportProfiles(unitRef, unitLibrary),
+  return traverseValidation(
+    characterBuildUnitRefs(build, unitLibrary),
+    (unitRef) => withBattleSupportProfiles(unitRef, unitLibrary),
   );
 }
 

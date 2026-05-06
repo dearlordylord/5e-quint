@@ -55,8 +55,19 @@ export {
   type CharacterBuildHitDiePool,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
+  type CharacterBuildOwnedEquipmentItem,
+  type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencies,
+  type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildResource,
+  type CharacterBuildSpellcasting,
+  type CharacterBuildSpellcastingFocus,
+  type CharacterBuildSpellcastingSlotPool,
+  type CharacterBuildSpellcastingSource,
+  type CharacterBuildSpellLevel,
+  type CharacterBuildSpellSlotCapacity,
+  type CharacterBuildSpellSlotCount,
+  type CharacterBuildSpellSlotPools,
   type CharacterChoiceSelection,
   type CharacterClassLevel,
   type CharacterCreationAbilityScoreAssignment,
@@ -135,6 +146,12 @@ export { discoverCreationHoles } from "./discovery.ts";
 export { fillCreationHoles } from "./fill-reducer.ts";
 export {
   finalizeCharacterDraft,
+  characterBuildArmorTraining,
+  characterBuildFeatureUnitIds,
+  characterBuildHitPoints,
+  characterBuildProficiencies,
+  characterBuildResources,
+  characterBuildSpellcastingSlotCapacity,
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {

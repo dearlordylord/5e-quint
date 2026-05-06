@@ -9,6 +9,7 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
+  characterBuildHitPoints,
   type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
@@ -197,6 +198,7 @@ const ListCharactersOutputSchema = Schema.Struct({
   characters: Schema.Array(CharacterSessionRowSchema),
   session: McpSessionSnapshotSchema,
 });
+type CharacterSessionRow = Schema.Schema.Type<typeof CharacterSessionRowSchema>;
 
 export const characterToolDefinitions = [
   {
@@ -263,9 +265,7 @@ export function handleCharacterToolCall(
         return duplicateDraftIdContent(draft.draftId, "activeDraft");
       }
       if (
-        root.sessionStore.characters.has(
-          characterIdFromDraftId(draft.draftId),
-        )
+        root.sessionStore.characters.has(characterIdFromDraftId(draft.draftId))
       ) {
         return duplicateDraftIdContent(draft.draftId, "finalizedSession");
       }
@@ -321,10 +321,20 @@ export function handleCharacterToolCall(
       });
       const finalizedCharacterId = characterIdFromDraftId(draftId);
       if (finalization.tag === "ready") {
+        const hitPoints = characterBuildHitPoints(
+          finalization.build,
+          root.unitLibrary,
+        );
+        if (Either.isLeft(hitPoints)) {
+          return errorContent("Character finalization session failed.", {
+            code: "CHARACTER_SESSION_INVALID",
+            message: hitPoints.left.map((issue) => issue.message).join("; "),
+          });
+        }
         const session = availableCharacterSession({
           characterId: finalizedCharacterId,
           build: finalization.build,
-          currentHp: Hp(finalization.build.hitPoints.maximum),
+          currentHp: Hp(hitPoints.right.maximum),
         });
         if (Either.isLeft(session)) {
           return errorContent("Character finalization session failed.", {
@@ -347,15 +357,19 @@ export function handleCharacterToolCall(
         session: root.sessionStore.snapshot(),
       });
     }),
-    Match.when({ name: characterToolNames.listCharacters }, () =>
-      schemaJsonContent(ListCharactersOutputSchema, {
-        characters: Array.from(root.sessionStore.characters.entries()).map(
-          ([characterId, session]) =>
-            characterListRow(root.unitLibrary, characterId, session),
-        ),
+    Match.when({ name: characterToolNames.listCharacters }, () => {
+      const rows = characterListRows(root);
+      if (Either.isLeft(rows)) {
+        return errorContent("Character list projection failed.", {
+          code: "CHARACTER_LIST_INVALID",
+          message: rows.left,
+        });
+      }
+      return schemaJsonContent(ListCharactersOutputSchema, {
+        characters: rows.right,
         session: root.sessionStore.snapshot(),
-      }),
-    ),
+      });
+    }),
     Match.exhaustive,
   );
 }
@@ -404,33 +418,51 @@ function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {
   };
 }
 
+function characterListRows(
+  root: McpCompositionRoot,
+): Either.Either<readonly CharacterSessionRow[], string> {
+  const rows: CharacterSessionRow[] = [];
+  for (const [characterId, session] of root.sessionStore.characters.entries()) {
+    const row = characterListRow(root.unitLibrary, characterId, session);
+    if (Either.isLeft(row)) return Either.left(row.left);
+    rows.push(row.right);
+  }
+  return Either.right(rows);
+}
+
 function characterListRow(
   unitLibrary: UnitCatalog,
   characterId: CharacterId,
   session: CharacterSession,
-) {
+): Either.Either<CharacterSessionRow, string> {
   if (session.tag === "available") {
-    return {
+    const hitPoints = characterBuildHitPoints(session.build, unitLibrary);
+    if (Either.isLeft(hitPoints)) {
+      return Either.left(
+        hitPoints.left.map((issue) => issue.message).join("; "),
+      );
+    }
+    return Either.right({
       characterId,
       status: session.tag,
       displayName: characterBuildDisplayName(unitLibrary, session.build),
       build: session.build,
       hitPoints: {
         current: characterSessionCurrentHp(session),
-        maximum: session.build.hitPoints.maximum,
+        maximum: hitPoints.right.maximum,
         state: session.hitPoints,
       },
       ...(characterBattleSpellSlots(session) === undefined
         ? {}
         : { spellSlots: characterBattleSpellSlots(session) }),
-    };
+    });
   }
 
-  return {
+  return Either.right({
     characterId,
     status: session.tag,
     displayName: null,
     build: session.build,
     battleId: session.battleId,
-  };
+  });
 }

@@ -129,7 +129,6 @@ describe("end-user MCP vertical", () => {
       build: {
         background: "background_soldier",
         species: "species_orc",
-        hitPoints: { maximum: 12 },
       },
     });
 
@@ -337,9 +336,17 @@ describe("end-user MCP vertical", () => {
       tag: "ready",
       build: {
         spellcasting: {
-          cantrips: expect.arrayContaining(["ray_of_frost"]),
-          preparedSpells: expect.arrayContaining(["magic_missile"]),
-          spellSlots: [{ count: 2, spellLevel: 1 }],
+          sources: [
+            expect.objectContaining({
+              cantrips: expect.arrayContaining(["ray_of_frost"]),
+              preparedSpells: expect.arrayContaining(["magic_missile"]),
+            }),
+          ],
+          slotPools: {
+            spellcasting: {
+              slots: [{ count: 2, spellLevel: 1 }],
+            },
+          },
         },
       },
     });
@@ -645,7 +652,10 @@ describe("end-user MCP vertical", () => {
     expect(ended.session).toMatchObject({
       activeBattle: null,
       transientBattleFills: null,
-      characterIds: [testCharacterId(fighterDraftId), testCharacterId(wizardDraftId)],
+      characterIds: [
+        testCharacterId(fighterDraftId),
+        testCharacterId(wizardDraftId),
+      ],
     });
 
     const listed = callTool(root, "list_characters", {});
