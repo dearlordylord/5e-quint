@@ -101,7 +101,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 98,
       "id": "QMBT3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Reaction and Continuation Runtime Parity"
     },
     {
@@ -166,7 +166,7 @@ Keep it synchronized with the DAG table and task details.
 | 95    | QCORE11 - Stat-Block Controls | done | QCORE10 | QMBT1 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed Stat Block attack controls, Multiattack named dispatch, limited-use, Recharge, rest recharge, and Legendary Action procedure facts. |
 | 96    | QMBT1 - Standard Rule-Core MBT Bridge Contract | done | QCORE7-QCORE11 | QMBT2-QMBT6 | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed reusable focused-QMBT contract, projection discipline, file placement, timing command, and first movement runnable pattern without broad battle state explosion. |
 | 97    | QMBT2 - Movement and Grapple Runtime Parity | done | QMBT1, QCORE7 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE7 movement budget, Dash, Disengage, Stand, Grapple/Escape/Release, and OA-decline resume. |
-| 98    | QMBT3 - Reaction and Continuation Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE8 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, readied movement, and concentration break/hold. |
+| 98    | QMBT3 - Reaction and Continuation Runtime Parity | done | QMBT1, QCORE8 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, Readied Movement release, and Concentration break/hold. |
 | 99    | QMBT4 - Feature Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE9 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
 | 100   | QMBT5 - Spell Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
 | 101   | QMBT6 - Stat-Block Control Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE11 stat-block control profiles, starting with Multiattack interleaving; keep Legendary Actions as a separate later tracer. |
@@ -281,23 +281,23 @@ DC, action availability, holes, pending OA, result, and invalid reason.
 
 ### Task 98 - QMBT3 - Reaction and Continuation Runtime Parity
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT1, QCORE8
 Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 
-Scope: add focused promoted runtime MBT parity for QCORE8 reaction protocol:
-reaction offer, decline, matching reaction spend, continuation resume, Readied
-Movement release, and Concentration saving throw break/hold. Keep full Readied
-Spell release and full Opportunity Attack damage resolution out unless only
-projecting held/dissipated state.
+Completed scope: focused promoted runtime MBT parity for QCORE8 reaction
+protocol: reaction offer, decline, matching reaction spend, continuation
+resume, Readied Movement release, and Concentration saving throw break/hold.
+Full Readied Spell release and full Opportunity Attack damage resolution remain
+out of this lane.
 
 Verification: RAW/ubiquitous check for Reactions, Ready, Concentration, and
-Opportunity Attack passages; focused QMBT3 run only after implementation;
-existing promoted battle-runtime MBT once if runtime behavior changed; minimum
-two `/simplify` rounds.
+Opportunity Attack passages; focused QMBT3 timed run; existing promoted
+battle-runtime MBT after the Readied Movement runtime behavior correction;
+`pnpm quality`; two `/simplify` rounds.
 
 ### Task 99 - QMBT4 - Feature Procedure Runtime Parity
 

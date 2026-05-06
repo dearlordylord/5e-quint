@@ -9874,7 +9874,7 @@ function resolveReleaseReadiedMovementCommand(
         input.state,
         readiedMovementActorId,
       ),
-      spendsTurnMovement: false,
+      spendsTurnMovement: true,
     },
   );
   if (movement.tag === "invalid") {

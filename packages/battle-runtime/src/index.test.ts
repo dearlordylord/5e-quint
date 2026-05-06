@@ -754,7 +754,7 @@ describe("battle runtime", () => {
     expect(released.state.readiedMovements.has(fighterId)).toBe(false);
     expect(released.state.combatants.get(fighterId)).toMatchObject({
       reactionAvailable: false,
-      movementSpentFeet: movementFeet(0),
+      movementSpentFeet: movementFeet(5),
     });
   });
 

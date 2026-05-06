@@ -442,9 +442,11 @@ package-local battle MBT into the full battle state space.
   stable production entrypoint is `resolveBattleSubject` or
   `resolveBattleReaction`.
 
-The first focused runtime pattern is
+The focused runtime lanes currently include
 `packages/battle-runtime/rule-core-movement.mbt.qnt` with
-`packages/battle-runtime/src/rule-core-movement.mbt.test.ts`. It maps QCORE7
-`doSpendMovement` and `doStandFromProne` through production
-`resolveBattleSubject`, projecting Movement spent/remaining, Prone, pending
-Movement holes, and last outcome.
+`packages/battle-runtime/src/rule-core-movement.mbt.test.ts` for QCORE7
+Movement/Grapple/OA-decline parity, and
+`packages/battle-runtime/rule-core-reactions.mbt.qnt` with
+`packages/battle-runtime/src/rule-core-reactions.mbt.test.ts` for QCORE8
+Reaction offer/decline/spend, continuation resume, Readied Movement release,
+and Concentration damage-save parity.

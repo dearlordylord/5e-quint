@@ -244,6 +244,14 @@ Projection:
   spell targets, and Grapple outcomes are caller/table fills, not derived grid
   state.
 
+Focused lanes currently include:
+
+- `rule-core-movement.mbt.qnt` / `src/rule-core-movement.mbt.test.ts` for
+  QCORE7 Movement, Grapple, and Opportunity Attack decline/resume.
+- `rule-core-reactions.mbt.qnt` / `src/rule-core-reactions.mbt.test.ts` for
+  QCORE8 Reaction offer/decline/spend, continuation resume, Readied Movement
+  release, and Concentration damage-save break/hold.
+
 Action naming and replay:
 
 - QNT action names mirror the owned proof action names where possible:
