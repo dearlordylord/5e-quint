@@ -18,7 +18,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 11/11 | 100% |
 | Runtime parity coverage | 11/11 | 100% |
 | Deterministic admission/projection coverage | 9/16 | 56.3% |
-| Selected identity MBT coverage | 1/16 | 6.3% |
+| Selected identity MBT coverage | 9/16 | 56.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Supported Unit Claims
@@ -423,6 +423,14 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Unit | Profiles | Task | Owner |
 | --- | --- | --- | --- |
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 
 ## Unsupported And Widening Pressure
 
