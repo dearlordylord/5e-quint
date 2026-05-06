@@ -55,15 +55,9 @@ Keep it synchronized with the DAG table and task details.
   "schema": "ralph-plan.v1",
   "tasks": [
     {
-      "number": 88,
-      "id": "QCORE4",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Prove Damage Component Adjustments"
-    },
-    {
       "number": 89,
       "id": "QCORE5",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Prove Attack Roll and Attack Damage Composition"
     },
     {
@@ -139,8 +133,7 @@ Keep it synchronized with the DAG table and task details.
 
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
-| 88    | QCORE4 - Damage Component Adjustments | ready-for-implementation-after-light-research | QCORE3 | QCORE5 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove damage component modifiers plus Immunity/Resistance/Vulnerability using caller-partitioned damage instances unless implementation uncovers a required `ASSUMPTIONS.md` decision. |
-| 89    | QCORE5 - Attack Roll and Attack Damage Composition | blocked | QCORE4 | QCORE6 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | After QCORE4, compose attack-roll hit/critical, damage roll, damage disposition, and action quota spend over QCORE1-QCORE4. |
+| 89    | QCORE5 - Attack Roll and Attack Damage Composition | ready-for-implementation-after-light-research | QCORE4 | QCORE6 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Compose attack-roll hit/critical, damage roll, damage disposition, and action quota spend over QCORE1-QCORE4. |
 | 90    | QCORE6 - Action and Turn Procedures | blocked | QCORE5 | QCORE7 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove currently executable action/turn facts; cite End Turn assumptions and keep Stand from Prone in QCORE7. |
 | 91    | QCORE7 - Movement, Spatial Facts, and Grapple | blocked | QCORE6 | QCORE8 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Movement budget, caller spatial facts, full Stand from Prone, and Grapple bounded state. |
 | 92    | QCORE8 - Reactions, Continuations, and Concentration | blocked | QCORE7 | QCORE9 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove bounded spell-free continuation/reaction protocol plus concentration; defer Readied Spell Response integration to QCORE10. |
@@ -150,23 +143,9 @@ Keep it synchronized with the DAG table and task details.
 
 ## Task Details
 
-### Task 88 - QCORE4 - Damage Component Adjustments
-
-Status: `ready-for-implementation-after-light-research`
-
-Depends on: QCORE3
-Blocks: QCORE5
-
-Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
-
-Scope: damage component modifiers, Immunity, Resistance, Vulnerability, and
-component application after QCORE3. Prefer caller-provided partitioned damage
-instances; add an `ASSUMPTIONS.md` entry only if implementation uncovers a
-mixed-type allocation/aggregation rule that cannot stay caller-owned.
-
 ### Task 89 - QCORE5 - Attack Roll and Attack Damage Composition
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: QCORE4
 Blocks: QCORE6

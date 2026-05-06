@@ -108,3 +108,33 @@ Out of scope for QCORE3:
 `hit-point-recovery-inductive.qnt` is the owned proof machine and shallow
 composition check with QCORE1/QCORE2. Its `step` action records the branch
 budget near the `any` action.
+
+## QCORE4: Damage Component Adjustments
+
+`damage-component-adjustments.qnt` models damage roll adjustment before Hit
+Point damage is applied. It keeps authored content out of QNT by using a small
+fixture damage-type set and projection-shaped facts for Immunity, Resistance,
+and Vulnerability.
+
+Scope:
+
+- damage penalties cannot reduce a damage roll below 0;
+- same-type damage components aggregate before target adjustments;
+- Immunity nullifies damage of a type;
+- Resistance halves damage of a type once, rounding down;
+- Vulnerability doubles damage of a type once after Resistance;
+- mixed typed damage is adjusted independently by type and summed;
+- scalar damage reductions on mixed damage pairs use the existing A43
+  proportional largest-remainder allocation before target adjustments;
+- adjusted damage totals compose into QCORE1 positive-Hit-Point damage.
+
+Out of scope for QCORE4:
+
+- attack roll hit/critical procedures;
+- spell save success/failure procedures;
+- choosing Knock Out after melee attack damage;
+- broad battle action sequencing.
+
+`damage-component-adjustments-inductive.qnt` is the owned proof machine. It
+keeps state to aggregate adjusted typed damage and scalar-reduction outputs, and
+records the branch budget near the `any` action.
