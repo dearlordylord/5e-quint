@@ -182,6 +182,8 @@ Blocks: QCORE8
 
 Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
 
+Matrix: `RAW-QCORE7-MOVEMENT-GRAPPLE-001` (`qnt-proof`).
+
 Scope: turn Movement budget, caller-supplied Movement cost, full Stand from
 Prone, table/caller spatial facts, Opportunity Attack trigger facts, and bounded
 Grapple/Escape/Release state.
@@ -194,6 +196,9 @@ Depends on: QCORE7
 Blocks: QCORE9
 
 Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
+
+Matrix: `RAW-PTG-REACTIONS-002`, `RAW-PTG-REACTIONS-004`,
+`RAW-PTG-REACTIONS-005`, `RAW-PTG-REACTIONS-006` (`qnt-proof`).
 
 Completed scope: bounded spell-free reaction/continuation protocol,
 Opportunity Attack and damage-interruption shallow integrations, Reaction Quota
@@ -210,6 +215,8 @@ Blocks: QCORE10
 
 Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
 
+Matrix: `RAW-QCORE9-UNIT-FEATURE-PROFILES-001` (`qnt-proof`).
+
 Completed scope: feature procedure facts for Action Surge, Second Wind, Cunning
 Action, Champion Improved Critical range 19, Rage, Reckless Attack, Sneak
 Attack, Evasion-style save damage replacement, Cutting Words, and Uncanny
@@ -224,6 +231,8 @@ Blocks: QCORE11
 
 Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
 
+Matrix: `RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001` (`qnt-proof`).
+
 Completed scope: Spell Invocation procedure facts and Spell Effects for Magic
 Missile, Ray of Frost, Acid Splash, Healing Word, Mage Armor, Spell Slot spend,
 Cantrip non-spend, and Readied Spell Response integration with QCORE8.
@@ -236,6 +245,8 @@ Depends on: QCORE10
 Blocks: QMBT1
 
 Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
+
+Matrix: `RAW-QCORE11-STAT-BLOCK-CONTROLS-001` (`qnt-proof`).
 
 Completed scope: Stat Block attack options, Multiattack named dispatch
 procedure, Stat Block Bonus Action options, Reaction and Legendary Action
@@ -252,6 +263,12 @@ Depends on: QCORE7-QCORE11
 Blocks: QMBT2-QMBT6
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
+
+Matrix: `RAW-QCORE7-MOVEMENT-GRAPPLE-001`, `RAW-PTG-REACTIONS-002`,
+`RAW-PTG-REACTIONS-004`, `RAW-PTG-REACTIONS-005`,
+`RAW-PTG-REACTIONS-006`, and
+`RAW-QCORE9-UNIT-FEATURE-PROFILES-001` (`runtime-parity` bridge
+contract baseline).
 
 Scope: define and implement the reusable focused-QMBT bridge contract for
 rule-core parity: file placement, projection shape, fixture bounds, action
@@ -273,6 +290,8 @@ Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 
+Matrix: `RAW-QCORE7-MOVEMENT-GRAPPLE-001` (`runtime-parity`).
+
 Completed scope: focused promoted runtime MBT parity for QCORE7 movement and
 grapple: Move, Dash, Disengage, Stand from Prone, Grapple, Escape Grapple,
 Release Grapple, and Opportunity Attack decline/resume. The focused lane
@@ -287,6 +306,9 @@ Depends on: QMBT1, QCORE8
 Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
+
+Matrix: `RAW-PTG-REACTIONS-002`, `RAW-PTG-REACTIONS-004`,
+`RAW-PTG-REACTIONS-005`, `RAW-PTG-REACTIONS-006` (`runtime-parity`).
 
 Completed scope: focused promoted runtime MBT parity for QCORE8 reaction
 protocol: reaction offer, decline, matching reaction spend, continuation
@@ -307,6 +329,8 @@ Depends on: QMBT1, QCORE9
 Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
+
+Matrix: `RAW-QCORE9-UNIT-FEATURE-PROFILES-001` (`runtime-parity`).
 
 Completed scope: focused promoted runtime MBT parity for QCORE9 feature
 procedure profiles: Action Surge, Second Wind, Cunning Action, Improved
@@ -329,6 +353,10 @@ Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 
+Matrix: `RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001` (planned
+`runtime-parity`; not counted complete until this task is `done` and focused
+MBT owner claims are added).
+
 Scope: add focused promoted runtime MBT parity for QCORE10 spell procedure
 profiles: Magic Missile, Ray of Frost, Acid Splash, Healing Word, Mage Armor,
 Spell Slot spend, Cantrip non-spend, and Readied Spell Response. Project HP,
@@ -349,6 +377,10 @@ Depends on: QMBT1, QCORE11
 Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
+
+Matrix: `RAW-QCORE11-STAT-BLOCK-CONTROLS-001` (planned `runtime-parity`; not
+counted complete until this task is `done` and focused MBT owner claims are
+added).
 
 Scope: add focused promoted runtime MBT parity for QCORE11 stat-block control
 profiles through typed fixtures, not authored monster parsing. Start with
