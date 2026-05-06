@@ -1,0 +1,19 @@
+{
+  "id": "mycelium_step",
+  "syntheticLabel": "Mycelium Step",
+  "provenance": {
+    "kind": "classic-2024-mechanics-source-lane"
+  },
+  "mechanics": {
+    "family": "alternate_action_cost",
+    "from": {
+      "kind": "standard_action",
+      "actions": [
+        "dash"
+      ]
+    },
+    "to": {
+      "kind": "bonus_action"
+    }
+  }
+}

@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 

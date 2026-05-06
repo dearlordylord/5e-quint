@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-critical-range-19
 
 module unitFeatureProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"

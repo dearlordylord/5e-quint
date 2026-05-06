@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield spell.readied-action-time-spell
 
 module reactionsContinuationsConcentration {
   import hitPointDamage.* from "./hit-point-damage"
