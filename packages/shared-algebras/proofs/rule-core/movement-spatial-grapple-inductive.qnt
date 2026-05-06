@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE7-MOVEMENT-GRAPPLE-001
 
 module movementSpatialGrappleInductive {
   import attackDamageComposition.* from "./attack-damage-composition"

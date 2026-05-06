@@ -1,3 +1,4 @@
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 

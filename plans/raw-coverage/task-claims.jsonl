@@ -1,0 +1,11 @@
+{"taskId":"QCORE7","coverageMetric":"qnt-proof","requirementIds":["RAW-QCORE7-MOVEMENT-GRAPPLE-001"]}
+{"taskId":"QCORE8","coverageMetric":"qnt-proof","requirementIds":["RAW-PTG-REACTIONS-002","RAW-PTG-REACTIONS-004","RAW-PTG-REACTIONS-005","RAW-PTG-REACTIONS-006"]}
+{"taskId":"QCORE9","coverageMetric":"qnt-proof","requirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}
+{"taskId":"QCORE10","coverageMetric":"qnt-proof","requirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}
+{"taskId":"QCORE11","coverageMetric":"qnt-proof","requirementIds":["RAW-QCORE11-STAT-BLOCK-CONTROLS-001"]}
+{"taskId":"QMBT1","coverageMetric":"runtime-parity","requirementIds":["RAW-QCORE7-MOVEMENT-GRAPPLE-001","RAW-PTG-REACTIONS-002","RAW-PTG-REACTIONS-004","RAW-PTG-REACTIONS-005","RAW-PTG-REACTIONS-006","RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}
+{"taskId":"QMBT2","coverageMetric":"runtime-parity","requirementIds":["RAW-QCORE7-MOVEMENT-GRAPPLE-001"]}
+{"taskId":"QMBT3","coverageMetric":"runtime-parity","requirementIds":["RAW-PTG-REACTIONS-002","RAW-PTG-REACTIONS-004","RAW-PTG-REACTIONS-005","RAW-PTG-REACTIONS-006"]}
+{"taskId":"QMBT4","coverageMetric":"runtime-parity","requirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}
+{"taskId":"QMBT5","coverageMetric":"runtime-parity","requirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}
+{"taskId":"QMBT6","coverageMetric":"runtime-parity","requirementIds":["RAW-QCORE11-STAT-BLOCK-CONTROLS-001"]}

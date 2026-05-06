@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// RAW-COVERAGE: qnt-owner RAW-QCORE11-STAT-BLOCK-CONTROLS-001
 
 module statBlockControls {
   import attackDamageComposition.* from "./attack-damage-composition"
