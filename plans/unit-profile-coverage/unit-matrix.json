@@ -63,9 +63,9 @@
       "percent": "100%"
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 17,
-      "numerator": 3,
-      "percent": "17.6%"
+      "denominator": 16,
+      "numerator": 9,
+      "percent": "56.3%"
     },
     "profileClassificationCoverage": {
       "denominator": 49,
@@ -93,14 +93,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 17,
+      "denominator": 16,
       "numerator": 1,
-      "percent": "5.9%"
+      "percent": "6.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 35,
-      "numerator": 17,
-      "percent": "48.6%"
+      "numerator": 16,
+      "percent": "45.7%"
     }
   },
   "profiles": [
@@ -779,7 +779,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT8"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -847,7 +853,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT8"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -896,7 +908,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT8"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -993,55 +1011,15 @@
         "status": "installed"
       },
       "claim": {
-        "profileIds": [
-          "unit-feature.reaction-roll-or-damage-reduction"
-        ],
-        "rawRequirementIds": [
-          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001",
-          "RAW-PTG-REACTIONS-002"
-        ],
-        "tag": "supported-profile"
+        "futureProfileOwner": "QCORE9",
+        "issue": "Full SRD Cutting Words includes ability-check reduction, and the promoted production reaction support boundary still gates authored ability-check reaction branches.",
+        "tag": "needs-surface-widening"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [
-        {
-          "id": "unit-feature.reaction-roll-or-damage-reduction",
-          "profileKind": "reaction",
-          "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-reaction-triggers.ts",
-            "packages/battle-runtime/src/battle-reducer.ts"
-          ],
-          "taskRefs": [
-            "QCORE8",
-            "QCORE9",
-            "QMBT3",
-            "QMBT4"
-          ],
-          "title": "Unit feature reacts to reduce an attack roll or attack damage",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
-            }
-          ]
-        }
-      ],
+      "profiles": [],
       "sourceRecordPath": "packages/surface/content/bard_cutting_words.json",
       "unitId": "bard_cutting_words"
     },
@@ -1080,7 +1058,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT8"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -1186,7 +1170,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT8"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -1244,7 +1234,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT8"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [

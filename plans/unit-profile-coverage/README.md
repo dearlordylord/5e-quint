@@ -151,6 +151,12 @@ Run:
 pnpm unit-profile-coverage:check
 ```
 
+The check command is split between pipeline orchestration/validation in
+`scripts/unit-profile-coverage-check.cjs` and matrix/report projection in
+`scripts/unit-profile-coverage-report.cjs`. Keep catalog discovery and
+validation rules in the command script until they have another repeated owner;
+put metrics and Markdown rendering changes in the report module.
+
 When intentionally changing claims or installed collection inventory, regenerate
 the matrix and report with:
 

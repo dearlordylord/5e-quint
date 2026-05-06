@@ -12,13 +12,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 48/391 | 12.3% |
 | Authored Surface executable catalog admission | 34/326 | 10.4% |
 | Profile classification coverage | 49/49 | 100% |
-| Supported profile coverage | 17/35 | 48.6% |
+| Supported profile coverage | 16/35 | 45.7% |
 | QNT profile modeling coverage | 11/11 | 100% |
 | QNT proof coverage | 11/11 | 100% |
 | Runtime mapping coverage | 11/11 | 100% |
 | Runtime parity coverage | 11/11 | 100% |
-| Deterministic admission/projection coverage | 3/17 | 17.6% |
-| Selected identity MBT coverage | 1/17 | 5.9% |
+| Deterministic admission/projection coverage | 9/16 | 56.3% |
+| Selected identity MBT coverage | 1/16 | 6.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Supported Unit Claims
@@ -30,7 +30,6 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `fighter_improved_critical` | srd-5.2.1 | `unit-feature.weapon-critical-range-19` |
 | `barbarian_rage` | srd-5.2.1 | `unit-feature.bonus-action-ongoing-rage` |
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
-| `bard_cutting_words` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `rogue_cunning_action` | srd-5.2.1 | `unit-feature.alternate-action-cost` |
 | `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
 | `rogue_uncanny_dodge` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
@@ -410,8 +409,14 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Unit | Profiles | Task | Owner |
 | --- | --- | --- | --- |
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 
 ## Selected Identity MBT Evidence
 
@@ -432,6 +437,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `fighter_fighting_style` | unsupported-profile | Choice/grant container; selected Fighting Style feat carries executable pressure. |
 | `fighter_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `fighter_tactical_mind` | needs-surface-widening | Ability-check resource augmentation is not represented by a promoted battle Unit profile. |
+| `bard_cutting_words` | needs-surface-widening | Full SRD Cutting Words includes ability-check reduction, and the promoted production reaction support boundary still gates authored ability-check reaction branches. |
 | `monk_deflect_attacks` | unsupported-profile | Damage reduction is partially promoted, but redirect-on-zero follow-up is not yet fully represented as a supported profile. |
 | `wizard_ritual_adept` | unsupported-profile | Ritual casting is character/spell access pressure, not a promoted battle execution profile yet. |
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
@@ -463,6 +469,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | srd-5.2.1 | unassigned | unsupported-profile | 26 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `defense`, `feat_savage_attacker`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 4 | `fighter_tactical_mind`, `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`, `thunderwave` |
 | srd-5.2.1 | QCORE9 | unsupported-profile | 2 | `monk_deflect_attacks`, `orc_relentless_endurance` |
+| srd-5.2.1 | QCORE9 | needs-surface-widening | 1 | `bard_cutting_words` |
 
 ## Profile Claims By Task
 
