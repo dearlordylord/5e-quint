@@ -4,20 +4,13 @@ import {
   startBattle,
   type BattleCreatureInit,
 } from "@dnd/battle-runtime";
+import { characterSheetBattleInit } from "@dnd/character-battle-runtime";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Option } from "effect";
 
-import { battleCreatureInitFromCharacterBuild } from "./battle-creature-init.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
-import {
-  characterBattleInitialConditions,
-  characterBattlePositiveHpUnconscious,
-  characterBattleSpellSlots,
-  characterBattleZeroHpLifecycle,
-  characterSessionCurrentHp,
-  type AvailableCharacterSession,
-} from "./session-store.ts";
+import { type AvailableCharacterSession } from "./session-store.ts";
 import {
   type InitialBattleCombatantToolInput,
   type InitialCharacterSessionCombatantToolInput,
@@ -80,9 +73,8 @@ export function handleStartBattleToolCall(
   for (const { session } of combatants.right.characterSessions) {
     root.sessionStore.characters.set({
       tag: "inBattle",
-      build: session.build,
+      sheet: session,
       battleId: input.battleId,
-      characterId: session.characterId,
     });
   }
 
@@ -167,18 +159,12 @@ function startableBattleCombatant(
           }),
         );
       }
-      const characterInit = battleCreatureInitFromCharacterBuild({
+      const characterInit = characterSheetBattleInit({
         combatantId: character.combatantId,
-        characterId: session.characterId,
         displayName: characterBuildDisplayName(root.unitLibrary, session.build),
-        build: session.build,
+        sheet: session,
         initiative: character.initiative,
         side: character.side,
-        currentHp: characterSessionCurrentHp(session),
-        conditions: characterBattleInitialConditions(session),
-        positiveHpUnconscious: characterBattlePositiveHpUnconscious(session),
-        zeroHpLifecycle: characterBattleZeroHpLifecycle(session),
-        spellSlots: characterBattleSpellSlots(session),
         unitLibrary: root.unitLibrary,
       });
       return Either.isLeft(characterInit)

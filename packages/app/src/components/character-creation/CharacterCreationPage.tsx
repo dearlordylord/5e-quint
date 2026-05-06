@@ -4,10 +4,15 @@ import { useCallback, useEffect, useState } from "react"
 
 import { CHARACTER_CREATION_PRESETS } from "#/components/character-creation/characterCreationPresets.ts"
 import {
+  appendStoredCharacterSheet,
   applyCharacterCreationFill,
   assessCharacterDraft,
   CHARACTER_DRAFT_STORAGE_KEY,
-  parseStoredCharacterDraft
+  CHARACTER_SHEET_STORAGE_KEY,
+  characterSheetSummary,
+  createCharacterSheetFromDraft,
+  parseStoredCharacterDraft,
+  parseStoredCharacterSheets
 } from "#/components/character-creation/characterCreationRuntime.ts"
 import {
   CharacterCreationStepContent,
@@ -30,6 +35,19 @@ function parseStoredDraft(): CharacterDraft {
   }
 }
 
+function parseStoredSheets() {
+  if (typeof window === "undefined") return []
+  const stored = window.localStorage.getItem(CHARACTER_SHEET_STORAGE_KEY)
+  if (stored == null) return []
+  try {
+    const parsed: unknown = JSON.parse(stored)
+    const sheets = parseStoredCharacterSheets(parsed)
+    return Either.isRight(sheets) ? sheets.right : []
+  } catch {
+    return []
+  }
+}
+
 function currentStepIndex(step: StepId): number {
   return STEP_ORDER.indexOf(step)
 }
@@ -40,13 +58,20 @@ function issueKey(issue: CreationBatchFillIssue): string {
 
 export function CharacterCreationPage() {
   const [draft, setDraft] = useState<CharacterDraft>(parseStoredDraft)
+  const [sheets, setSheets] = useState(parseStoredSheets)
+  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(() => sheets[0]?.characterId ?? null)
   const [currentStep, setCurrentStep] = useState<StepId>("class")
   const [lastIssues, setLastIssues] = useState<ReadonlyArray<CreationBatchFillIssue>>([])
+  const [lastSheetIssue, setLastSheetIssue] = useState<string | null>(null)
   const assessment = assessCharacterDraft(draft)
 
   useEffect(() => {
     window.localStorage.setItem(CHARACTER_DRAFT_STORAGE_KEY, JSON.stringify(draft))
   }, [draft])
+
+  useEffect(() => {
+    window.localStorage.setItem(CHARACTER_SHEET_STORAGE_KEY, JSON.stringify(sheets))
+  }, [sheets])
 
   const goToStep = useCallback((offset: -1 | 1) => {
     setCurrentStep((step) => {
@@ -82,6 +107,7 @@ export function CharacterCreationPage() {
                 setDraft(preset.draft)
                 setCurrentStep("review")
                 setLastIssues([])
+                setLastSheetIssue(null)
               }}
               type="button"
             >
@@ -94,6 +120,7 @@ export function CharacterCreationPage() {
               setDraft(createCharacterDraft({}))
               setCurrentStep("class")
               setLastIssues([])
+              setLastSheetIssue(null)
             }}
             type="button"
           >
@@ -135,8 +162,58 @@ export function CharacterCreationPage() {
                   : `${assessment.holes.length} creation hole(s) remain open.`}
             </p>
             <p className="mt-2 text-gray-400">
-              This workflow stores only the Character Draft. The runtime owns holes, fills, and finalization.
+              Character creation stores durable build evidence. Finalizing creates a local Character Sheet for in-play
+              state.
             </p>
+            <button
+              className="mt-3 w-full rounded-md border border-emerald-600 px-3 py-2 text-sm text-emerald-200 transition hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={assessment.finalization.tag !== "ready"}
+              onClick={() => {
+                const sheet = createCharacterSheetFromDraft(draft)
+                if (Either.isLeft(sheet)) {
+                  setLastSheetIssue(sheet.left)
+                  return
+                }
+                setSheets((storedSheets) => appendStoredCharacterSheet(storedSheets, sheet.right))
+                setSelectedSheetId(sheet.right.characterId)
+                setLastSheetIssue(null)
+              }}
+              type="button"
+            >
+              Finalize Character Sheet
+            </button>
+            {lastSheetIssue === null ? null : <p className="mt-2 text-rose-200">{lastSheetIssue}</p>}
+          </div>
+          <div className="mt-4 rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm">
+            <p className="font-medium text-gray-100">Character Sheets</p>
+            {sheets.length === 0 ? (
+              <p className="mt-2 text-gray-400">No local Character Sheets.</p>
+            ) : (
+              <ol className="mt-3 space-y-2">
+                {sheets.map((sheet) => {
+                  const summary = characterSheetSummary(sheet)
+                  const selected = selectedSheetId === sheet.characterId
+                  return (
+                    <li key={sheet.characterId}>
+                      <button
+                        className={`w-full rounded-md border px-3 py-2 text-left transition ${
+                          selected
+                            ? "border-emerald-500 bg-emerald-500/10 text-emerald-100"
+                            : "border-gray-800 bg-black/20 text-gray-300 hover:border-gray-700"
+                        }`}
+                        onClick={() => setSelectedSheetId(sheet.characterId)}
+                        type="button"
+                      >
+                        <span className="block truncate">{summary.characterId}</span>
+                        <span className="mt-1 block text-xs text-gray-400">
+                          HP {summary.currentHp}/{summary.maximumHp} · {summary.hitPointState}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ol>
+            )}
           </div>
           {lastIssues.length === 0 ? null : (
             <div className="mt-4 rounded-lg border border-rose-900 bg-rose-950/20 p-3 text-sm">
@@ -197,6 +274,38 @@ export function CharacterCreationPage() {
               </button>
             </div>
           </div>
+          {sheets.length === 0 ? null : (
+            <div className="rounded-lg border border-gray-800 bg-gray-900/80 p-5">
+              <h2 className="text-xl font-semibold text-emerald-300">Character Session</h2>
+              {sheets
+                .filter((sheet) => sheet.characterId === selectedSheetId)
+                .map((sheet) => {
+                  const summary = characterSheetSummary(sheet)
+                  return (
+                    <dl key={sheet.characterId} className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                      <div className="rounded-md border border-gray-800 bg-black/20 p-3">
+                        <dt className="text-gray-400">Character Sheet</dt>
+                        <dd className="mt-1 break-all text-gray-100">{summary.characterId}</dd>
+                      </div>
+                      <div className="rounded-md border border-gray-800 bg-black/20 p-3">
+                        <dt className="text-gray-400">Hit Points</dt>
+                        <dd className="mt-1 text-gray-100">
+                          {summary.currentHp}/{summary.maximumHp} · {summary.hitPointState}
+                        </dd>
+                      </div>
+                      <div className="rounded-md border border-gray-800 bg-black/20 p-3">
+                        <dt className="text-gray-400">Spell Slot State</dt>
+                        <dd className="mt-1 text-gray-100">
+                          {summary.spellSlotLevels.length === 0
+                            ? "No spell slot expenditures"
+                            : summary.spellSlotLevels.map((level) => `Level ${level}`).join(", ")}
+                        </dd>
+                      </div>
+                    </dl>
+                  )
+                })}
+            </div>
+          )}
         </section>
       </div>
     </PageShell>

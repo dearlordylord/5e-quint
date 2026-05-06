@@ -4,7 +4,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
 import { CharacterCreationPage } from "#/components/character-creation/CharacterCreationPage.tsx"
-import { CHARACTER_DRAFT_STORAGE_KEY } from "#/components/character-creation/characterCreationRuntime.ts"
+import {
+  CHARACTER_DRAFT_STORAGE_KEY,
+  CHARACTER_SHEET_STORAGE_KEY
+} from "#/components/character-creation/characterCreationRuntime.ts"
 
 describe("CharacterCreationPage", () => {
   it("loads a complete example and persists the CharacterDraft", async () => {
@@ -19,9 +22,12 @@ describe("CharacterCreationPage", () => {
     expect(screen.getByText("Draft finalizes to a Character Build.")).toBeTruthy()
     expect(screen.getAllByText("Character Build").length).toBeGreaterThan(0)
     expect(screen.getByText("In-Play State")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Finalize Character Sheet" }))
+    expect(screen.getByText("Character Session")).toBeTruthy()
 
     await waitFor(() => {
       expect(window.localStorage.getItem(CHARACTER_DRAFT_STORAGE_KEY)).toContain("class_fighter")
+      expect(window.localStorage.getItem(CHARACTER_SHEET_STORAGE_KEY)).toContain("maximumHp")
     })
   })
 

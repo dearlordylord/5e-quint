@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@dnd/battle-runtime": "workspace:*",
+    "@dnd/character-battle-runtime": "workspace:*",
     "@dnd/character-creation-runtime": "workspace:*",
+    "@dnd/character-sheet-runtime": "workspace:*",
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
     "@dnd/surface": "workspace:*",

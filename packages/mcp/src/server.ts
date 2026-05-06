@@ -24,7 +24,7 @@ export {
   battleCreatureInitFromCharacterBuild,
   startBattleFromCharacterBuildAndStatBlock,
   type CharacterBuildCreatureInput,
-} from "./battle-creature-init.ts";
+} from "@dnd/character-battle-runtime";
 export {
   battleToolDefinitions,
   handleBattleToolCall,

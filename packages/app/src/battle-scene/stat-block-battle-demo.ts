@@ -12,11 +12,16 @@ import {
 import { buildStatBlockCatalog, srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog"
 import { Either } from "effect"
 
-import type { BattleSnapshotSceneMeta } from "./battle-snapshot-scene.ts"
-
 const warriorId = combatantId("warrior")
 const skeletonId = combatantId("skeleton")
 const statBlockCatalog = requireStatBlockDemoCatalog()
+const WARRIOR_INITIATIVE = 18
+const SKELETON_INITIATIVE = 12
+
+export type BattleSnapshotSceneMeta = {
+  readonly names: Readonly<Record<string, string>>
+  readonly gridPositions: Readonly<Partial<Record<string, { readonly row: number; readonly col: number }>>>
+}
 
 export const STAT_BLOCK_BATTLE_DEMO_META: BattleSnapshotSceneMeta = {
   names: {
@@ -47,13 +52,13 @@ function requireStatBlockBattleDemoState(): BattleState {
       battleCreatureInitFromStatBlock({
         combatantId: warriorId,
         statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
-        initiative: initiativeScore(18),
+        initiative: initiativeScore(WARRIOR_INITIATIVE),
         side: battleCombatantSide("party")
       }),
       battleCreatureInitFromStatBlock({
         combatantId: skeletonId,
         statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-        initiative: initiativeScore(12),
+        initiative: initiativeScore(SKELETON_INITIATIVE),
         side: battleCombatantSide("opposition")
       })
     ]

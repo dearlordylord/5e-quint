@@ -53,9 +53,9 @@ importers:
       '@dnd/character-creation-runtime':
         specifier: workspace:*
         version: link:../character-creation-runtime
-      '@dnd/core':
+      '@dnd/character-sheet-runtime':
         specifier: workspace:*
-        version: link:../core
+        version: link:../character-sheet-runtime
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
@@ -250,12 +250,21 @@ importers:
       '@dnd/battle-runtime':
         specifier: workspace:*
         version: link:../battle-runtime
+      '@dnd/character-creation-runtime':
+        specifier: workspace:*
+        version: link:../character-creation-runtime
       '@dnd/character-sheet-runtime':
         specifier: workspace:*
         version: link:../character-sheet-runtime
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
+      '@dnd/surface':
+        specifier: workspace:*
+        version: link:../surface
       effect:
         specifier: ^3.21.0
         version: 3.21.0
@@ -312,6 +321,9 @@ importers:
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
       effect:
         specifier: ^3.21.0
         version: 3.21.0
@@ -380,9 +392,15 @@ importers:
       '@dnd/battle-runtime':
         specifier: workspace:*
         version: link:../battle-runtime
+      '@dnd/character-battle-runtime':
+        specifier: workspace:*
+        version: link:../character-battle-runtime
       '@dnd/character-creation-runtime':
         specifier: workspace:*
         version: link:../character-creation-runtime
+      '@dnd/character-sheet-runtime':
+        specifier: workspace:*
+        version: link:../character-sheet-runtime
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared

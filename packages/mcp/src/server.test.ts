@@ -1412,7 +1412,7 @@ describe("MCP server route", () => {
     ).toMatchObject({
       tag: "inBattle",
       battleId: "battle:mcp-active-battle-first",
-      characterId: testCharacterId(firstDraftId),
+      sheet: { characterId: testCharacterId(firstDraftId) },
     });
     expect(
       root.sessionStore.characters.get(testCharacterId(secondDraftId)),
@@ -2343,6 +2343,7 @@ describe("MCP server route", () => {
       tag: "available",
       characterId: testCharacterId(draftId),
       build: finalized.finalization.build,
+      maximumHp: 12,
       hitPoints: { tag: "positive", currentHp: 12 },
     });
     expect(finalized.session).toMatchObject({
@@ -2915,6 +2916,7 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(1),
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
@@ -2967,6 +2969,7 @@ describe("MCP server route", () => {
       availableCharacterSession({
         characterId: testCharacterId(draftId),
         build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(6),
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
@@ -2987,6 +2990,7 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
         zeroHpLifecycle: {
           tag: "stable",
@@ -3047,6 +3051,7 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
         zeroHpLifecycle: {
           tag: "dead",
@@ -3113,6 +3118,7 @@ describe("MCP server route", () => {
     const sessionInput = {
       characterId: characterId("character:zero-hp-boundary"),
       build,
+      maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(0),
     };
 
@@ -3859,6 +3865,9 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: characterId("character:spell-slot-duplicate-levels"),
         build: spellcastingBuild,
+        maximumHp: Hp(
+          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
+        ),
         currentHp: Hp(
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
@@ -3894,6 +3903,9 @@ describe("MCP server route", () => {
             },
           },
         },
+        maximumHp: Hp(
+          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
+        ),
         currentHp: Hp(
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
@@ -4073,6 +4085,7 @@ function createFinalizedFighterSheet(
     availableCharacterSessionRight({
       characterId: testCharacterId(draftId),
       build,
+      maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
     }),
   );
