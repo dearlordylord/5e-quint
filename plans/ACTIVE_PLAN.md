@@ -5,7 +5,7 @@ Date: 2026-05-06
 This is the single active planning queue.
 Completed PBA15A0A-PBA29 work was removed from this queue after closeout; older
 closeout history remains in git history.
-Completed QCORE0-QCORE5 work was removed from this active queue after closeout;
+Completed QCORE0-QCORE6 work was removed from this active queue after closeout;
 their research and proof artifacts remain linked from the rule-core docs and
 task-specific research files.
 
@@ -15,8 +15,8 @@ Current authority summary:
   promoted battle authority for new Unit/StatBlock-backed behavior.
 - Root `battle.qnt` and old v0 battle code are legacy proof/restore source
   material only.
-- The most recent proof work is `QCORE5`: Attack Roll and attack damage
-  composition over QCORE1-QCORE4.
+- The most recent proof work is `QCORE6`: Action and turn procedure facts over
+  the shared action quota.
 - Broad widening should proceed through typed projection parsers and
   package-owned runtime procedures rather than authored-id dispatch,
   support-gate terminology, or projected-executable vocabulary.
@@ -55,15 +55,9 @@ Keep it synchronized with the DAG table and task details.
   "schema": "ralph-plan.v1",
   "tasks": [
     {
-      "number": 90,
-      "id": "QCORE6",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Prove Action and Turn Procedures"
-    },
-    {
       "number": 91,
       "id": "QCORE7",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Prove Movement, Spatial Facts, and Grapple"
     },
     {
@@ -127,8 +121,7 @@ Keep it synchronized with the DAG table and task details.
 
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
-| 90    | QCORE6 - Action and Turn Procedures | ready-for-implementation-after-light-research | QCORE5 | QCORE7 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove currently executable action/turn facts; cite End Turn assumptions and keep Stand from Prone in QCORE7. |
-| 91    | QCORE7 - Movement, Spatial Facts, and Grapple | blocked | QCORE6 | QCORE8 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Movement budget, caller spatial facts, full Stand from Prone, and Grapple bounded state. |
+| 91    | QCORE7 - Movement, Spatial Facts, and Grapple | ready-for-implementation-after-light-research | QCORE6 | QCORE8 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Movement budget, caller spatial facts, full Stand from Prone, and Grapple bounded state. |
 | 92    | QCORE8 - Reactions, Continuations, and Concentration | blocked | QCORE7 | QCORE9 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove bounded spell-free continuation/reaction protocol plus concentration; defer Readied Spell Response integration to QCORE10. |
 | 93    | QCORE9 - Unit Feature Procedure Profiles | blocked | QCORE8 | QCORE10 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove feature procedure profiles after reaction/action/damage protocols exist; QNT models procedure facts, not Unit ids. |
 | 94    | QCORE10 - Spell Procedure Profiles | blocked | QCORE9 | QCORE11 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Spell Invocation procedure facts and Spell Effects; add Readied Spell Response integration with QCORE8. |
@@ -136,22 +129,9 @@ Keep it synchronized with the DAG table and task details.
 
 ## Task Details
 
-### Task 90 - QCORE6 - Action and Turn Procedures
-
-Status: `ready-for-implementation-after-light-research`
-
-Depends on: QCORE5
-Blocks: QCORE7
-
-Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
-
-Scope: currently executable action and turn procedure facts, action/bonus-action
-quota spend, End Turn as an assumed runtime transition, and start/end-turn
-hooks. Stand from Prone belongs to QCORE7.
-
 ### Task 91 - QCORE7 - Movement, Spatial Facts, and Grapple
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: QCORE6
 Blocks: QCORE8

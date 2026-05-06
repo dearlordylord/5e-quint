@@ -17,7 +17,7 @@ module attackDamageCompositionInductive {
   var qStable: bool
   var qHpRegained: bool
   var qPositiveRecovery: PositiveHitPointUnconsciousRecovery
-  var qActionQuota: AttackActionQuota
+  var qActionQuota: ActionQuota
   var qAttackHits: bool
   var qCriticalHit: bool
 
@@ -48,7 +48,7 @@ module attackDamageCompositionInductive {
     qStable' = false,
     qHpRegained' = false,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
-    qActionQuota' = AttackActionAvailable,
+    qActionQuota' = ActionAvailable,
     qAttackHits' = false,
     qCriticalHit' = false,
   }
@@ -123,7 +123,7 @@ module attackDamageCompositionInductive {
     qStable' = false,
     qHpRegained' = false,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
-    qActionQuota' = AttackActionAvailable,
+    qActionQuota' = ActionAvailable,
     qAttackHits' = false,
     qCriticalHit' = false,
   }
@@ -139,7 +139,7 @@ module attackDamageCompositionInductive {
     qStable' = false,
     qHpRegained' = false,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
-    qActionQuota' = AttackActionSpent,
+    qActionQuota' = ActionSpent,
     qAttackHits' = false,
     qCriticalHit' = false,
   }
@@ -166,7 +166,7 @@ module attackDamageCompositionInductive {
     qStable.in(Set(true, false)),
     qHpRegained.in(Set(true, false)),
     qPositiveRecovery.in(Set(NoPositiveHitPointUnconsciousRecovery, EndsWhenHitPointsRegained)),
-    qActionQuota.in(Set(AttackActionAvailable, AttackActionSpent)),
+    qActionQuota.in(Set(ActionAvailable, ActionSpent)),
     qAttackHits.in(Set(true, false)),
     qCriticalHit.in(Set(true, false)),
     legalHitPointRecoveryState(qVitals, qDeathSavingThrows, qPositiveRecovery),

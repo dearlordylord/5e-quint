@@ -171,3 +171,35 @@ Out of scope for QCORE5:
 `attack-damage-composition-inductive.qnt` is the owned proof machine. It samples
 bounded attack-roll and damage procedure facts while keeping only scalar result
 state, and records the branch budget near the `any` action.
+
+## QCORE6: Action and Turn Procedures
+
+`action-turn-procedures.qnt` models ordinary action/turn procedure facts using
+the shared `ActionQuota` from QCORE5. It keeps table-owned facts explicit for
+Hide, Search, Help, and Ready; no geometry, line of sight, cover derivation, or
+turn-order data structure is modeled here.
+
+Scope:
+
+- ordinary Action quota spend;
+- Bonus Action quota spend for admitted alternate-cost actions;
+- Dash movement bonus, coupled to spent action resources;
+- Disengage and Dodge turn facts;
+- Help attack caller target fact and held advantage procedure fact;
+- Hide prerequisite/check facts and hidden result;
+- Search hidden-target/check facts and discovery result;
+- Ready movement trigger selection and start-of-turn expiry;
+- Reaction spend and reset at start turn;
+- End Turn as a runtime transition that releases current actor ownership and
+  expires end-of-turn hooks.
+
+Out of scope for QCORE6:
+
+- Stand from Prone and Movement cost accounting, deferred to QCORE7;
+- reaction windows, continuations, and Concentration, deferred to QCORE8;
+- spell action profiles, deferred to QCORE10;
+- stat-block Multiattack dispatches, deferred to QCORE11.
+
+`action-turn-procedures-inductive.qnt` is the owned proof machine. Its invariant
+links Dash bonus bounds to remaining action/bonus-action resources, keeping the
+state space finite and executable.

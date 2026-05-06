@@ -26,7 +26,7 @@ module attackDamageComposition {
     critical: bool,
   }
 
-  type AttackActionQuota = AttackActionAvailable | AttackActionSpent
+  type ActionQuota = ActionAvailable | ActionSpent
 
   type AttackDamageDisposition =
     | OrdinaryAttackDamage
@@ -42,7 +42,7 @@ module attackDamageComposition {
   }
 
   type AttackProcedureResult = {
-    actionQuota: AttackActionQuota,
+    actionQuota: ActionQuota,
     attackRollOutcome: AttackRollOutcome,
     damageResult: HitPointRecoveryResult,
   }
@@ -85,8 +85,8 @@ module attackDamageComposition {
   ): bool =
     filledDiceCount == criticalDamageDiceCount(baseDice, critical)
 
-  pure def spendAttackActionQuota(quota: AttackActionQuota): AttackActionQuota =
-    AttackActionSpent
+  pure def spendActionQuota(quota: ActionQuota): ActionQuota =
+    ActionSpent
 
   pure def damageAmountBeforeHitPoints(facts: AttackDamageProcedureFacts): int = {
     val adjustedRoll = adjustedDamageRollAmount(facts.rolledDamage, facts.damageModifier)
@@ -130,7 +130,7 @@ module attackDamageComposition {
   }
 
   pure def resolveAttackProcedure(
-    quota: AttackActionQuota,
+    quota: ActionQuota,
     rangeFact: AttackRangeFact,
     rollFacts: AttackRollProcedureFacts,
     targetVitals: CreatureVitals,
@@ -139,7 +139,7 @@ module attackDamageComposition {
     val rollOutcome = resolveAttackRoll(rollFacts)
     val damageAmount = damageAmountBeforeHitPoints(damageFacts)
     val attackAdmitted = all {
-      quota == AttackActionAvailable,
+      quota == ActionAvailable,
       legalAttackTargetFact(damageFacts.attackKind, rangeFact),
       legalAttackRollProcedureFacts(rollFacts),
       canApplyResolvedDamageToPositiveHitPoints(targetVitals),
@@ -153,7 +153,7 @@ module attackDamageComposition {
       rollOutcome.hits,
     }
     {
-      actionQuota: if (procedureAdmitted) spendAttackActionQuota(quota) else quota,
+      actionQuota: if (procedureAdmitted) spendActionQuota(quota) else quota,
       attackRollOutcome: rollOutcome,
       damageResult:
         if (canApplyDamage) resolveAttackDamage(targetVitals, damageFacts)
@@ -215,7 +215,7 @@ module attackDamageComposition {
 
   run test_ordinary_attack_damage_composes_adjustments_and_hp_damage = {
     val result = resolveAttackProcedure(
-      AttackActionAvailable,
+      ActionAvailable,
       WithinMeleeReach,
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
       {
@@ -236,7 +236,7 @@ module attackDamageComposition {
       }
     )
     all {
-      assert(result.actionQuota == AttackActionSpent),
+      assert(result.actionQuota == ActionSpent),
       assert(result.attackRollOutcome.hits),
       assert(result.damageResult.vitals.hitPoints == 8),
       assert(result.damageResult.vitals.temporaryHitPoints == 0),
@@ -258,7 +258,7 @@ module attackDamageComposition {
       unconscious: false,
     }
     val result = resolveAttackProcedure(
-      AttackActionAvailable,
+      ActionAvailable,
       WithinMeleeReach,
       { naturalD20: 2, total: 8, armorClass: 15, criticalThreshold: 20 },
       vitals,
@@ -272,7 +272,7 @@ module attackDamageComposition {
       }
     )
     all {
-      assert(result.actionQuota == AttackActionSpent),
+      assert(result.actionQuota == ActionSpent),
       assert(not(result.attackRollOutcome.hits)),
       assert(result.damageResult.vitals == vitals),
     }
@@ -280,7 +280,7 @@ module attackDamageComposition {
 
   run test_out_of_range_attack_does_not_spend_action = {
     val result = resolveAttackProcedure(
-      AttackActionAvailable,
+      ActionAvailable,
       BeyondRange,
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
       {
@@ -300,12 +300,12 @@ module attackDamageComposition {
         disposition: OrdinaryAttackDamage,
       }
     )
-    assert(result.actionQuota == AttackActionAvailable)
+    assert(result.actionQuota == ActionAvailable)
   }
 
   run test_melee_knock_out_disposition_composes_qcore3 = {
     val result = resolveAttackProcedure(
-      AttackActionAvailable,
+      ActionAvailable,
       WithinMeleeReach,
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
       {
