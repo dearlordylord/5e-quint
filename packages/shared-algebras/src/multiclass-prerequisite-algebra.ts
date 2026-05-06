@@ -78,8 +78,17 @@ export function multiclassClassChange(input: {
 
 export function multiclassAbilityScores(
   scores: unknown,
-): Either.Either<MulticlassAbilityScores, MulticlassAbilityScoresIssue> {
-  return Either.mapLeft(abilityScoreAssignment(scores), multiclassScoresIssue);
+): Either.Either<
+  MulticlassAbilityScores,
+  ReadonlyNonEmptyArray<MulticlassAbilityScoresIssue>
+> {
+  return Either.mapLeft(abilityScoreAssignment(scores), (issues) => {
+    const [first, ...rest] = issues;
+    return [
+      multiclassScoresIssue(first),
+      ...rest.map(multiclassScoresIssue),
+    ] satisfies ReadonlyNonEmptyArray<MulticlassAbilityScoresIssue>;
+  });
 }
 
 function multiclassScoresIssue(

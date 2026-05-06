@@ -50,6 +50,7 @@ import {
 } from "./server.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
+import { characterUnitRefsWithBattleSupportProfiles } from "./battle-support-profiles.ts";
 import { availableCharacterSession } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -765,6 +766,29 @@ describe("MCP server route", () => {
         }),
       }),
     ).toThrow("Unsupported battle reaction roll or damage reduction Unit hook");
+  });
+
+  test("reports every missing Character Build Unit ref at the battle support boundary", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const result = characterUnitRefsWithBattleSupportProfiles(
+      {
+        ...build,
+        features: [
+          ...build.features,
+          { kind: "classFeature", unitId: "missing_feature_one" },
+          { kind: "classFeature", unitId: "missing_feature_two" },
+        ],
+      },
+      root.unitLibrary,
+    );
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left.map((issue) => issue.message)).toEqual([
+      "Unknown Unit for battle support profile: missing_feature_one.",
+      "Unknown Unit for battle support profile: missing_feature_two.",
+    ]);
   });
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
@@ -1968,6 +1992,13 @@ describe("MCP server route", () => {
             side: "party",
           },
           {
+            kind: "characterSession",
+            sourceDraftId: "draft:mcp-missing-additional-third",
+            combatantId: "third-fighter",
+            initiative: 14,
+            side: "party",
+          },
+          {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
@@ -1980,8 +2011,21 @@ describe("MCP server route", () => {
 
     expect(rejected).toMatchObject({
       details: {
-        code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
-        sourceDraftId: "draft:mcp-missing-additional-secondary",
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            details: {
+              code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
+              sourceDraftId: "draft:mcp-missing-additional-secondary",
+            },
+          },
+          {
+            details: {
+              code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
+              sourceDraftId: "draft:mcp-missing-additional-third",
+            },
+          },
+        ],
       },
     });
     expect(root.sessionStore.battleState).toBeNull();
@@ -3102,6 +3146,59 @@ describe("MCP server route", () => {
     );
     expect(rejected.storedDraft).toEqual(before);
     expect(root.sessionStore.characters.size).toBe(0);
+  });
+
+  test("fill_creation_holes reports every malformed fill input", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-tool-malformed-fills";
+    readPayload(handleToolCall(root, "create_character_draft", { draftId }));
+
+    const rejected = readPayload(
+      handleToolCall(root, "fill_creation_holes", {
+        draftId,
+        expectedRevision: 0,
+        fills: [
+          {
+            kind: "choice",
+            holeId: "not-a-hole",
+            optionIds: ["class_fighter"],
+          },
+          {
+            kind: "abilityScores",
+            holeId: "also-not-a-hole",
+            method: "standardArray",
+            value: {
+              str: 15,
+              dex: 14,
+              con: 13,
+              int: 8,
+              wis: 10,
+              cha: 12,
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "INVALID_FILLS",
+        issues: [
+          {
+            details: {
+              code: "INVALID_FIELD",
+              field: "fills[0].holeId",
+            },
+          },
+          {
+            details: {
+              code: "INVALID_FIELD",
+              field: "fills[1].holeId",
+            },
+          },
+        ],
+      },
+    });
   });
 
   test("finalization stores no build until the draft is ready", () => {

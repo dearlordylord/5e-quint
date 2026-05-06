@@ -9,12 +9,14 @@ import {
   type CreationFill,
   type DraftRevision,
 } from "@dnd/character-creation-runtime";
+import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Schema } from "effect";
 
 import { errorContent } from "./tool-content.ts";
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
+  type ToolError,
   type ToolInputResult,
 } from "./schema-codec.ts";
 
@@ -259,17 +261,15 @@ function decodeFillCreationHolesArgs(
     characterToolNames.fillCreationHoles,
   );
   if (Either.isLeft(record)) return Either.left(record.left);
-  const fills: CreationFill[] = [];
-  for (const [index, fill] of record.right.fills.entries()) {
-    const decoded = decodeCreationFill(fill, index);
-    if (Either.isLeft(decoded)) return Either.left(decoded.left);
-    fills.push(decoded.right);
+  const fills = traverseValidation(record.right.fills, decodeCreationFill);
+  if (Either.isLeft(fills)) {
+    return Either.left(invalidFillsContent(fills.left));
   }
 
   return Either.right({
     draftId: characterDraftId(record.right.draftId),
     expectedRevision: draftRevision(record.right.expectedRevision),
-    fills,
+    fills: fills.right,
   });
 }
 
@@ -349,4 +349,21 @@ function invalidFieldContent(field: string, expected: string) {
     field,
     expected,
   });
+}
+
+function invalidFillsContent(issues: readonly ToolError[]) {
+  return errorContent(`Invalid ${characterToolNames.fillCreationHoles} input`, {
+    code: "INVALID_FILLS",
+    issues: issues.map(toolErrorPayload),
+  });
+}
+
+function toolErrorPayload(error: ToolError): unknown {
+  const text = error.content[0]?.text;
+  if (text === undefined) return error;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }

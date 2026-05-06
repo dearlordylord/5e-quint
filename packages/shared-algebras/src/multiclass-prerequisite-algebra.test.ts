@@ -26,7 +26,7 @@ function scores(
     ...overrides,
   });
   if (Either.isLeft(result)) {
-    throw new Error(`Invalid test scores: ${result.left.tag}`);
+    throw new Error(`Invalid test scores: ${result.left[0].tag}`);
   }
   return result.right;
 }

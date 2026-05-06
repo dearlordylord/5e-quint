@@ -6,20 +6,21 @@ import {
   characterBuildUnitRefs,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
+import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 
 export function characterUnitRefsWithBattleSupportProfiles(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<readonly BattleUnitRef[], BattleSupportProfileIssue> {
-  const refs: BattleUnitRef[] = [];
-  for (const unitRef of characterBuildUnitRefs(build)) {
-    const profiled = withBattleSupportProfiles(unitRef, unitLibrary);
-    if (Either.isLeft(profiled)) return Either.left(profiled.left);
-    refs.push(profiled.right);
-  }
-  return Either.right(refs);
+): Either.Either<
+  readonly BattleUnitRef[],
+  ReadonlyNonEmptyArray<BattleSupportProfileIssue>
+> {
+  return traverseValidation(characterBuildUnitRefs(build), (unitRef) =>
+    withBattleSupportProfiles(unitRef, unitLibrary),
+  );
 }
 
 export type BattleSupportProfileIssue = {

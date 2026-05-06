@@ -90,7 +90,9 @@ export function battleCreatureInitFromCharacterBuild(
     input.unitLibrary,
   );
   if (Either.isLeft(characterUnitRefs)) {
-    return battleCreatureInitIssue(characterUnitRefs.left.message);
+    return battleCreatureInitIssue(
+      characterUnitRefs.left.map((issue) => issue.message).join("; "),
+    );
   }
   const currentHp = input.currentHp ?? maxHp;
   if (currentHp > maxHp) {
