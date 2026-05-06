@@ -242,8 +242,8 @@ keeping spatial facts explicit rather than deriving geometry in Core.
 
 ## QCORE8: Reactions, Continuations, and Concentration
 
-`reactions-continuations-concentration.qnt` models the spell-free reaction
-protocol on top of QCORE6 turn resources and QCORE7 spatial trigger facts.
+`reactions-continuations-concentration.qnt` models the reaction protocol on top
+of QCORE6 turn resources and QCORE7 spatial trigger facts.
 Reaction windows are implementation protocol, not authored content: the module
 uses bounded active and suspended window states rather than importing Surface
 features or broad battle state. Advancing a continuation is executable window
@@ -260,14 +260,16 @@ Scope:
   Hit Points through QCORE1's positive-HP damage procedure;
 - Readied Movement Response release as reactor-owned Reaction spend plus
   caller-supplied Movement cost, gated by QCORE6's held Readied Movement fact;
+- Readied Spell Response as a reaction-window kind consumed by QCORE10's held
+  Spell Effect release integration;
 - Concentration start/replace/end, incapacitated-or-dead break/prevent,
   damage-save DC `max(10, floor(damage / 2))` capped at 30, and failed-save
   break, owned separately by the interrupted actor and reactor.
 
 Out of scope for QCORE8:
 
-- Readied Spell Response release, deferred to QCORE10 after Spell Invocation
-  and Spell Effect procedure facts exist;
+- Readied Spell Response effect release, owned by QCORE10's spell profile
+  module;
 - all possible reaction features, deferred to QCORE9/QCORE11 procedure
   profiles;
 - battle-wide queue/stack policy beyond the bounded active-window protocol in
@@ -333,3 +335,51 @@ Out of scope for QCORE9:
 samples bounded feature Pool uses, ordinary/Bonus Action and Reaction quota
 spends, Rage/Reckless/Sneak occurrence state, and representative damage or
 healing amounts while keeping feature facts projection-shaped and Surface-free.
+
+## QCORE10: Spell Procedure Profiles
+
+`spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
+and Spell Effects for the production spell procedures without importing Spell
+Definition records, Spell Access lists, Unit ids, or Surface authored ids.
+
+Scope:
+
+- Spell Invocation spends the Magic Action for action-time profiles and Bonus
+  Action for Healing Word, consumes a same-level Spell Slot for leveled spells,
+  leaves Cantrip invocations slot-free, and rejects a second slot spell in the
+  same turn;
+- Magic Missile slot scaling creates `3 + slot level - 1` Force-damage darts,
+  with caller-provided allocation to one target bounded by the dart count;
+- Ray of Frost uses QCORE5 spell attack-roll and critical-damage dice-count
+  facts, deals Cold damage on a hit, and produces a
+  start-of-caster-next-turn Speed-reduction Spell Effect;
+- Acid Splash uses a Dexterity save-gated Acid-damage profile with no
+  successful-save damage;
+- Healing Word spends a Bonus Action/slot and applies QCORE3 HP recovery,
+  including zero-HP Death Saving Throw reset and Unconscious removal;
+- Mage Armor creates a persistent Spell Effect for a willing unarmored target,
+  derives base AC as `13 + Dexterity modifier`, and ends the effect when the
+  target dons armor;
+- Readied Spell Response holds only action-time spell profiles as a readied
+  spell held effect, expends the spell's casting resources at the hold
+  boundary, starts Concentration while held, opens QCORE8's Readied Spell
+  reaction window, spends Reaction on release, carries the released spell
+  profile forward after clearing held state, and dissipates without effect if
+  Concentration is gone.
+
+Out of scope for QCORE10:
+
+- authored Spell Definition parsing, prepared-list admission, or full spell
+  catalog enumeration;
+- non-production spell profiles beyond Magic Missile, Ray of Frost, Acid
+  Splash, Healing Word, and Mage Armor;
+- pathfinding, area geometry, line of sight, cover derivation, or target
+  discovery;
+- broad battle reducer sequencing beyond shallow QCORE8/QCORE6/QCORE3/QCORE5
+  composition.
+
+`spell-procedure-profiles-inductive.qnt` is the owned proof machine. It samples
+bounded slot/action resources, cantrip and leveled invocation paths, direct
+damage, spell attack damage, save-gated damage, healing, Mage Armor effects,
+and Readied Spell Response hold/release while tracking only scalar outputs plus
+one ordinary Spell Effect fixture and one readied spell held-effect fixture.

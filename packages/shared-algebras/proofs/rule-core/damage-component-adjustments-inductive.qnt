@@ -19,52 +19,23 @@ module damageComponentAdjustmentsInductive {
     slashing: qSlashing,
     fire: qFire,
     poison: qPoison,
+    acid: 0,
+    cold: 0,
+    force: 0,
   }
 
   pure def factsForFixture(fixture: AdjustmentFixture): DamageAdjustmentFacts =
-    if (fixture == SlashingResistance) {
-      immuneSlashing: false,
-      immuneFire: false,
-      immunePoison: false,
-      resistantSlashing: true,
-      resistantFire: false,
-      resistantPoison: false,
-      vulnerableSlashing: false,
-      vulnerableFire: false,
-      vulnerablePoison: false,
-    } else if (fixture == FireVulnerability) {
-      immuneSlashing: false,
-      immuneFire: false,
-      immunePoison: false,
-      resistantSlashing: false,
-      resistantFire: false,
-      resistantPoison: false,
-      vulnerableSlashing: false,
-      vulnerableFire: true,
-      vulnerablePoison: false,
-    } else if (fixture == PoisonImmunity) {
-      immuneSlashing: false,
-      immuneFire: false,
-      immunePoison: true,
-      resistantSlashing: false,
-      resistantFire: false,
-      resistantPoison: false,
-      vulnerableSlashing: false,
-      vulnerableFire: false,
-      vulnerablePoison: false,
-    } else if (fixture == SlashingResistanceFireVulnerability) {
-      immuneSlashing: false,
-      immuneFire: false,
-      immunePoison: false,
-      resistantSlashing: true,
-      resistantFire: false,
-      resistantPoison: false,
-      vulnerableSlashing: false,
-      vulnerableFire: true,
-      vulnerablePoison: false,
-    } else {
+    if (fixture == SlashingResistance)
+      noDamageAdjustmentFacts.with("resistantSlashing", true)
+    else if (fixture == FireVulnerability)
+      noDamageAdjustmentFacts.with("vulnerableFire", true)
+    else if (fixture == PoisonImmunity)
+      noDamageAdjustmentFacts.with("immunePoison", true)
+    else if (fixture == SlashingResistanceFireVulnerability)
       noDamageAdjustmentFacts
-    }
+        .with("resistantSlashing", true)
+        .with("vulnerableFire", true)
+    else noDamageAdjustmentFacts
 
   action init = all {
     qSlashing' = 0,

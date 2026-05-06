@@ -9,24 +9,28 @@ module reactionsContinuationsConcentration {
     | OpportunityAttackReactionWindow
     | DamageInterruptionReactionWindow
     | ReadiedMovementReactionWindow
+    | ReadiedSpellReactionWindow
 
   type SuspendedReactionWindowKind =
     | NoSuspendedReactionWindow
     | SuspendedOpportunityAttackReactionWindow
     | SuspendedDamageInterruptionReactionWindow
     | SuspendedReadiedMovementReactionWindow
+    | SuspendedReadiedSpellReactionWindow
 
   type ReactionWindowState =
     | NoReactionWindow
     | OfferedOpportunityAttackWindow({ suspended: SuspendedReactionWindowKind })
     | OfferedDamageInterruptionWindow({ suspended: SuspendedReactionWindowKind })
     | OfferedReadiedMovementWindow({ suspended: SuspendedReactionWindowKind })
+    | OfferedReadiedSpellWindow({ suspended: SuspendedReactionWindowKind })
 
   type ReactionChoice =
     | DeclineReaction
     | TakeOpportunityAttackReaction
     | TakeDamageInterruptionReaction
     | TakeReadiedMovementReaction
+    | TakeReadiedSpellReaction
 
   type ConcentrationState =
     | NoConcentration
@@ -65,7 +69,8 @@ module reactionsContinuationsConcentration {
     NoSuspendedReactionWindow,
     SuspendedOpportunityAttackReactionWindow,
     SuspendedDamageInterruptionReactionWindow,
-    SuspendedReadiedMovementReactionWindow
+    SuspendedReadiedMovementReactionWindow,
+    SuspendedReadiedSpellReactionWindow
   )
 
   pure def legalReactionWindowStates: Set[ReactionWindowState] =
@@ -76,6 +81,8 @@ module reactionsContinuationsConcentration {
         .map(suspended => OfferedDamageInterruptionWindow({ suspended: suspended })))
       .union(suspendedReactionWindowKinds
         .map(suspended => OfferedReadiedMovementWindow({ suspended: suspended })))
+      .union(suspendedReactionWindowKinds
+        .map(suspended => OfferedReadiedSpellWindow({ suspended: suspended })))
 
   pure def initialReactionProtocolState: ReactionProtocolState = {
     interruptedActor: initialMovementGrappleState,
@@ -110,6 +117,7 @@ module reactionsContinuationsConcentration {
       | OfferedOpportunityAttackWindow(_) => kind == OpportunityAttackReactionWindow
       | OfferedDamageInterruptionWindow(_) => kind == DamageInterruptionReactionWindow
       | OfferedReadiedMovementWindow(_) => kind == ReadiedMovementReactionWindow
+      | OfferedReadiedSpellWindow(_) => kind == ReadiedSpellReactionWindow
     }
 
   pure def reactionWindowDepth(window: ReactionWindowState): int =
@@ -121,6 +129,8 @@ module reactionsContinuationsConcentration {
         if (v.suspended == NoSuspendedReactionWindow) 1 else 2
       | OfferedReadiedMovementWindow(v) =>
         if (v.suspended == NoSuspendedReactionWindow) 1 else 2
+      | OfferedReadiedSpellWindow(v) =>
+        if (v.suspended == NoSuspendedReactionWindow) 1 else 2
     }
 
   pure def reactionChoiceMatchesWindow(
@@ -131,6 +141,7 @@ module reactionsContinuationsConcentration {
       or (choice == TakeOpportunityAttackReaction and reactionWindowIsKind(window, OpportunityAttackReactionWindow))
       or (choice == TakeDamageInterruptionReaction and reactionWindowIsKind(window, DamageInterruptionReactionWindow))
       or (choice == TakeReadiedMovementReaction and reactionWindowIsKind(window, ReadiedMovementReactionWindow))
+      or (choice == TakeReadiedSpellReaction and reactionWindowIsKind(window, ReadiedSpellReactionWindow))
 
   pure def suspendedReactionWindowKind(window: ReactionWindowState): SuspendedReactionWindowKind =
     match window {
@@ -138,6 +149,7 @@ module reactionsContinuationsConcentration {
       | OfferedOpportunityAttackWindow(_) => SuspendedOpportunityAttackReactionWindow
       | OfferedDamageInterruptionWindow(_) => SuspendedDamageInterruptionReactionWindow
       | OfferedReadiedMovementWindow(_) => SuspendedReadiedMovementReactionWindow
+      | OfferedReadiedSpellWindow(_) => SuspendedReadiedSpellReactionWindow
     }
 
   pure def reactionWindowForKind(
@@ -148,8 +160,10 @@ module reactionsContinuationsConcentration {
       OfferedOpportunityAttackWindow({ suspended: suspended })
     } else if (kind == DamageInterruptionReactionWindow) {
       OfferedDamageInterruptionWindow({ suspended: suspended })
-    } else {
+    } else if (kind == ReadiedMovementReactionWindow) {
       OfferedReadiedMovementWindow({ suspended: suspended })
+    } else {
+      OfferedReadiedSpellWindow({ suspended: suspended })
     }
 
   pure def reactionWindowForSuspendedKind(
@@ -161,6 +175,8 @@ module reactionsContinuationsConcentration {
       OfferedDamageInterruptionWindow({ suspended: NoSuspendedReactionWindow })
     } else if (suspended == SuspendedReadiedMovementReactionWindow) {
       OfferedReadiedMovementWindow({ suspended: NoSuspendedReactionWindow })
+    } else if (suspended == SuspendedReadiedSpellReactionWindow) {
+      OfferedReadiedSpellWindow({ suspended: NoSuspendedReactionWindow })
     } else {
       NoReactionWindow
     }
@@ -171,6 +187,7 @@ module reactionsContinuationsConcentration {
       | OfferedOpportunityAttackWindow(v) => reactionWindowForSuspendedKind(v.suspended)
       | OfferedDamageInterruptionWindow(v) => reactionWindowForSuspendedKind(v.suspended)
       | OfferedReadiedMovementWindow(v) => reactionWindowForSuspendedKind(v.suspended)
+      | OfferedReadiedSpellWindow(v) => reactionWindowForSuspendedKind(v.suspended)
     }
 
   pure def offerReactionWindow(

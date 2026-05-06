@@ -3,24 +3,42 @@
 module damageComponentAdjustments {
   import hitPointDamage.* from "./hit-point-damage"
 
-  type RuleDamageType = SlashingDamage | FireDamage | PoisonDamage
+  type RuleDamageType =
+    | SlashingDamage
+    | FireDamage
+    | PoisonDamage
+    | AcidDamage
+    | ColdDamage
+    | ForceDamage
 
   type DamageByType = {
     slashing: int,
     fire: int,
     poison: int,
+    acid: int,
+    cold: int,
+    force: int,
   }
 
   type DamageAdjustmentFacts = {
     immuneSlashing: bool,
     immuneFire: bool,
     immunePoison: bool,
+    immuneAcid: bool,
+    immuneCold: bool,
+    immuneForce: bool,
     resistantSlashing: bool,
     resistantFire: bool,
     resistantPoison: bool,
+    resistantAcid: bool,
+    resistantCold: bool,
+    resistantForce: bool,
     vulnerableSlashing: bool,
     vulnerableFire: bool,
     vulnerablePoison: bool,
+    vulnerableAcid: bool,
+    vulnerableCold: bool,
+    vulnerableForce: bool,
   }
 
   type DamagePair = {
@@ -34,30 +52,48 @@ module damageComponentAdjustments {
     slashing: 0,
     fire: 0,
     poison: 0,
+    acid: 0,
+    cold: 0,
+    force: 0,
   }
 
   pure def noDamageAdjustmentFacts: DamageAdjustmentFacts = {
     immuneSlashing: false,
     immuneFire: false,
     immunePoison: false,
+    immuneAcid: false,
+    immuneCold: false,
+    immuneForce: false,
     resistantSlashing: false,
     resistantFire: false,
     resistantPoison: false,
+    resistantAcid: false,
+    resistantCold: false,
+    resistantForce: false,
     vulnerableSlashing: false,
     vulnerableFire: false,
     vulnerablePoison: false,
+    vulnerableAcid: false,
+    vulnerableCold: false,
+    vulnerableForce: false,
   }
 
   pure def legalDamageByType(amounts: DamageByType): bool = all {
     amounts.slashing >= 0,
     amounts.fire >= 0,
     amounts.poison >= 0,
+    amounts.acid >= 0,
+    amounts.cold >= 0,
+    amounts.force >= 0,
   }
 
   pure def damageAmountForType(amounts: DamageByType, damageType: RuleDamageType): int =
     if (damageType == SlashingDamage) amounts.slashing
     else if (damageType == FireDamage) amounts.fire
-    else amounts.poison
+    else if (damageType == PoisonDamage) amounts.poison
+    else if (damageType == AcidDamage) amounts.acid
+    else if (damageType == ColdDamage) amounts.cold
+    else amounts.force
 
   pure def addDamageAmountForType(
     amounts: DamageByType,
@@ -68,14 +104,44 @@ module damageComponentAdjustments {
       slashing: amounts.slashing + nonnegative(rawAmount),
       fire: amounts.fire,
       poison: amounts.poison,
+      acid: amounts.acid,
+      cold: amounts.cold,
+      force: amounts.force,
     } else if (damageType == FireDamage) {
       slashing: amounts.slashing,
       fire: amounts.fire + nonnegative(rawAmount),
       poison: amounts.poison,
-    } else {
+      acid: amounts.acid,
+      cold: amounts.cold,
+      force: amounts.force,
+    } else if (damageType == PoisonDamage) {
       slashing: amounts.slashing,
       fire: amounts.fire,
       poison: amounts.poison + nonnegative(rawAmount),
+      acid: amounts.acid,
+      cold: amounts.cold,
+      force: amounts.force,
+    } else if (damageType == AcidDamage) {
+      slashing: amounts.slashing,
+      fire: amounts.fire,
+      poison: amounts.poison,
+      acid: amounts.acid + nonnegative(rawAmount),
+      cold: amounts.cold,
+      force: amounts.force,
+    } else if (damageType == ColdDamage) {
+      slashing: amounts.slashing,
+      fire: amounts.fire,
+      poison: amounts.poison,
+      acid: amounts.acid,
+      cold: amounts.cold + nonnegative(rawAmount),
+      force: amounts.force,
+    } else {
+      slashing: amounts.slashing,
+      fire: amounts.fire,
+      poison: amounts.poison,
+      acid: amounts.acid,
+      cold: amounts.cold,
+      force: amounts.force + nonnegative(rawAmount),
     }
 
   pure def aggregateDamagePair(pair: DamagePair): DamageByType =
@@ -94,7 +160,10 @@ module damageComponentAdjustments {
   ): bool =
     if (damageType == SlashingDamage) facts.immuneSlashing
     else if (damageType == FireDamage) facts.immuneFire
-    else facts.immunePoison
+    else if (damageType == PoisonDamage) facts.immunePoison
+    else if (damageType == AcidDamage) facts.immuneAcid
+    else if (damageType == ColdDamage) facts.immuneCold
+    else facts.immuneForce
 
   pure def damageTypeIsResistant(
     facts: DamageAdjustmentFacts,
@@ -102,7 +171,10 @@ module damageComponentAdjustments {
   ): bool =
     if (damageType == SlashingDamage) facts.resistantSlashing
     else if (damageType == FireDamage) facts.resistantFire
-    else facts.resistantPoison
+    else if (damageType == PoisonDamage) facts.resistantPoison
+    else if (damageType == AcidDamage) facts.resistantAcid
+    else if (damageType == ColdDamage) facts.resistantCold
+    else facts.resistantForce
 
   pure def damageTypeIsVulnerable(
     facts: DamageAdjustmentFacts,
@@ -110,7 +182,10 @@ module damageComponentAdjustments {
   ): bool =
     if (damageType == SlashingDamage) facts.vulnerableSlashing
     else if (damageType == FireDamage) facts.vulnerableFire
-    else facts.vulnerablePoison
+    else if (damageType == PoisonDamage) facts.vulnerablePoison
+    else if (damageType == AcidDamage) facts.vulnerableAcid
+    else if (damageType == ColdDamage) facts.vulnerableCold
+    else facts.vulnerableForce
 
   pure def damageAmountAfterTargetAdjustments(
     amount: int,
@@ -134,10 +209,13 @@ module damageComponentAdjustments {
     slashing: damageAmountAfterTargetAdjustments(amounts.slashing, SlashingDamage, facts),
     fire: damageAmountAfterTargetAdjustments(amounts.fire, FireDamage, facts),
     poison: damageAmountAfterTargetAdjustments(amounts.poison, PoisonDamage, facts),
+    acid: damageAmountAfterTargetAdjustments(amounts.acid, AcidDamage, facts),
+    cold: damageAmountAfterTargetAdjustments(amounts.cold, ColdDamage, facts),
+    force: damageAmountAfterTargetAdjustments(amounts.force, ForceDamage, facts),
   }
 
   pure def totalDamageByType(amounts: DamageByType): int =
-    amounts.slashing + amounts.fire + amounts.poison
+    amounts.slashing + amounts.fire + amounts.poison + amounts.acid + amounts.cold + amounts.force
 
   pure def totalDamageAfterTargetAdjustments(
     amounts: DamageByType,
@@ -196,17 +274,7 @@ module damageComponentAdjustments {
   }
 
   run test_same_type_damage_aggregates_before_resistance = {
-    val facts = {
-      immuneSlashing: false,
-      immuneFire: false,
-      immunePoison: false,
-      resistantSlashing: true,
-      resistantFire: false,
-      resistantPoison: false,
-      vulnerableSlashing: false,
-      vulnerableFire: false,
-      vulnerablePoison: false,
-    }
+    val facts = noDamageAdjustmentFacts.with("resistantSlashing", true)
     val pair = {
       firstType: SlashingDamage,
       firstAmount: 5,
@@ -224,32 +292,18 @@ module damageComponentAdjustments {
   }
 
   run test_immunity_nullifies_before_resistance_and_vulnerability = {
-    val facts = {
-      immuneSlashing: false,
-      immuneFire: true,
-      immunePoison: false,
-      resistantSlashing: false,
-      resistantFire: true,
-      resistantPoison: false,
-      vulnerableSlashing: false,
-      vulnerableFire: true,
-      vulnerablePoison: false,
-    }
+    val facts = noDamageAdjustmentFacts
+      .with("immuneFire", true)
+      .with("resistantFire", true)
+      .with("vulnerableFire", true)
     assert(damageAmountAfterTargetAdjustments(9, FireDamage, facts) == 0)
   }
 
   run test_resistance_then_vulnerability_order = {
-    val facts = {
-      immuneSlashing: false,
-      immuneFire: true,
-      immunePoison: false,
-      resistantSlashing: true,
-      resistantFire: false,
-      resistantPoison: false,
-      vulnerableSlashing: true,
-      vulnerableFire: false,
-      vulnerablePoison: false,
-    }
+    val facts = noDamageAdjustmentFacts
+      .with("immuneFire", true)
+      .with("resistantSlashing", true)
+      .with("vulnerableSlashing", true)
     all {
       assert(damageAmountAfterTargetAdjustments(7, SlashingDamage, facts) == 6),
       assert(damageAmountAfterTargetAdjustments(7, PoisonDamage, facts) == 7),
@@ -257,21 +311,17 @@ module damageComponentAdjustments {
   }
 
   run test_mixed_damage_adjusts_by_type_and_sums = {
-    val facts = {
-      immuneSlashing: false,
-      immuneFire: false,
-      immunePoison: true,
-      resistantSlashing: true,
-      resistantFire: false,
-      resistantPoison: false,
-      vulnerableSlashing: false,
-      vulnerableFire: true,
-      vulnerablePoison: false,
-    }
+    val facts = noDamageAdjustmentFacts
+      .with("immunePoison", true)
+      .with("resistantSlashing", true)
+      .with("vulnerableFire", true)
     val amounts = {
       slashing: 5,
       fire: 4,
       poison: 6,
+      acid: 0,
+      cold: 0,
+      force: 0,
     }
     assert(totalDamageAfterTargetAdjustments(amounts, facts) == 10)
   }
@@ -292,21 +342,14 @@ module damageComponentAdjustments {
   }
 
   run test_adjusted_damage_total_feeds_positive_hit_point_damage = {
-    val facts = {
-      immuneSlashing: false,
-      immuneFire: false,
-      immunePoison: false,
-      resistantSlashing: false,
-      resistantFire: false,
-      resistantPoison: false,
-      vulnerableSlashing: true,
-      vulnerableFire: false,
-      vulnerablePoison: false,
-    }
+    val facts = noDamageAdjustmentFacts.with("vulnerableSlashing", true)
     val damage = totalDamageAfterTargetAdjustments({
       slashing: 4,
       fire: 0,
       poison: 0,
+      acid: 0,
+      cold: 0,
+      force: 0,
     }, facts)
     val result = applyResolvedDamageToPositiveHitPoints({
       kind: PlayerCharacter,
