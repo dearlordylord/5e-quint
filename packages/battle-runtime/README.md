@@ -497,11 +497,15 @@ Zero-HP lifecycle:
   lifecycle is marked dead.
 - If supported melee attack damage would reduce a creature from positive HP to
   `0` without Massive Damage, the attacker can choose **Knock Out**: the target
-  is left at `1` HP, gains Unconscious, carries explicit Knock Out Short Rest
-  recovery provenance, and does not enter or advance a zero-HP lifecycle. Any
-  later HP healing that actually restores Hit Points ends that Knock Out
-  Unconscious state. Ranged attacks, spell damage, save damage, and damage that
-  does not come from melee attack damage cannot carry this choice.
+  is left at `1` HP, gains Unconscious, carries explicit Knocked Out state, and
+  does not enter or advance a zero-HP lifecycle. Any later HP healing that
+  actually restores Hit Points ends that Knock Out Unconscious state. Ranged
+  attacks, spell damage, save damage, and damage that does not come from melee
+  attack damage cannot carry this choice.
+- The Knocked Out state is also carried across battle/session handoff so rest
+  completion and DC 10 Wisdom (Medicine) first aid can end the Unconscious state
+  in session/recovery workflows. This package executes only the in-battle
+  HP-healing ending path.
 - End Turn asks for a Death Saving Throw fill when the next actor starts their
   turn at `0` HP and is neither Stable nor dead. A failed roll adds one failure,
   a natural `1` adds two failures, a natural `20` restores `1` HP and ends

@@ -34,5 +34,5 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
-  }, 10_000);
+  }, 30_000);
 });

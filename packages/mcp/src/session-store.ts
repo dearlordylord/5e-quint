@@ -29,18 +29,18 @@ import {
   characterSessionHitPoints,
   characterSessionHitPointsCurrentHp,
   characterSessionHitPointsInitialConditions,
-  characterSessionHitPointsPositiveHpConditionRecovery,
+  characterSessionHitPointsPositiveHpUnconscious,
   characterSessionHitPointsZeroHpLifecycle,
   characterSessionIssue,
   type CharacterSessionHitPoints,
   type CharacterSessionIssue,
-  type CharacterSessionPositiveHpCondition,
+  type CharacterSessionPositiveHpUnconscious,
   type CharacterSessionZeroHpLifecycleInput,
 } from "./session-hit-points.ts";
 export type {
   CharacterSessionHitPoints,
   CharacterSessionIssue,
-  CharacterSessionPositiveHpCondition,
+  CharacterSessionPositiveHpUnconscious,
   CharacterSessionZeroHpLifecycle,
   CharacterSessionZeroHpLifecycleInput,
 } from "./session-hit-points.ts";
@@ -78,7 +78,7 @@ export type AvailableCharacterSessionInput = {
   readonly characterId: CharacterId;
   readonly build: CharacterBuild;
   readonly currentHp: HpType;
-  readonly positiveHpCondition?: CharacterSessionPositiveHpCondition;
+  readonly positiveHpUnconscious?: CharacterSessionPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
@@ -147,10 +147,10 @@ export function characterBattleInitialConditions(
   return characterSessionHitPointsInitialConditions(session.hitPoints);
 }
 
-export function characterBattlePositiveHpConditionRecovery(
+export function characterBattlePositiveHpUnconscious(
   session: AvailableCharacterSession,
-): ReturnType<typeof characterSessionHitPointsPositiveHpConditionRecovery> {
-  return characterSessionHitPointsPositiveHpConditionRecovery(session.hitPoints);
+): ReturnType<typeof characterSessionHitPointsPositiveHpUnconscious> {
+  return characterSessionHitPointsPositiveHpUnconscious(session.hitPoints);
 }
 
 export function characterBattleSpellSlots(

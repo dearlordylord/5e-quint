@@ -11,7 +11,7 @@ import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
   characterBattleInitialConditions,
-  characterBattlePositiveHpConditionRecovery,
+  characterBattlePositiveHpUnconscious,
   characterBattleSpellSlots,
   characterBattleZeroHpLifecycle,
   characterSessionCurrentHp,
@@ -158,8 +158,7 @@ function startableBattleCombatants(input: {
           side: character.side,
           currentHp: characterSessionCurrentHp(session),
           conditions: characterBattleInitialConditions(session),
-          positiveHpConditionRecovery:
-            characterBattlePositiveHpConditionRecovery(session),
+          positiveHpUnconscious: characterBattlePositiveHpUnconscious(session),
           zeroHpLifecycle: characterBattleZeroHpLifecycle(session),
           spellSlots: characterBattleSpellSlots(session),
           unitLibrary: input.root.unitLibrary,

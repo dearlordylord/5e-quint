@@ -51,9 +51,7 @@ export type CharacterBuildCreatureInput = {
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly conditions?: readonly Condition[];
-  readonly positiveHpConditionRecovery?: CharacterBattleCreatureInit[
-    "positiveHpConditionRecovery"
-  ];
+  readonly positiveHpUnconscious?: CharacterBattleCreatureInit["positiveHpUnconscious"];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 };
@@ -172,9 +170,9 @@ export function battleCreatureInitFromCharacterBuild(
       ...(input.conditions === undefined
         ? {}
         : { conditions: input.conditions }),
-      ...(input.positiveHpConditionRecovery === undefined
+      ...(input.positiveHpUnconscious === undefined
         ? {}
-        : { positiveHpConditionRecovery: input.positiveHpConditionRecovery }),
+        : { positiveHpUnconscious: input.positiveHpUnconscious }),
       ...(input.zeroHpLifecycle === undefined
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),

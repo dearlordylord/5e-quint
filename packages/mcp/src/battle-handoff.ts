@@ -4,15 +4,15 @@ import type {
   CharacterBattleSpellSlotState,
   CharacterId,
 } from "@dnd/battle-runtime";
+import { combatantKnockedOutUnconscious } from "@dnd/battle-runtime";
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type { Hp } from "@dnd/shared/types";
-import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { Either } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
   availableCharacterSession,
-  type CharacterSessionPositiveHpCondition,
+  type CharacterSessionPositiveHpUnconscious,
   type CharacterSessionZeroHpLifecycleInput,
 } from "./session-store.ts";
 import { errorContent } from "./tool-content.ts";
@@ -24,7 +24,7 @@ export function finalizeCharacterSessionsFromBattle(
   const updates: {
     readonly sourceDraftId: CharacterDraftId;
     readonly currentHp: Hp;
-    readonly positiveHpCondition?: CharacterSessionPositiveHpCondition;
+    readonly positiveHpUnconscious?: CharacterSessionPositiveHpUnconscious;
     readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
     readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   }[] = [];
@@ -54,6 +54,7 @@ export function finalizeCharacterSessionsFromBattle(
     }
     const zeroHpLifecycle =
       combatant.hp === 0 ? characterZeroHpLifecycleFromBattle(combatant) : null;
+    const knockedOut = combatantKnockedOutUnconscious(combatant);
     if (zeroHpLifecycle != null && Either.isLeft(zeroHpLifecycle)) {
       return errorContent(
         "Battle character has unsupported zero-HP lifecycle.",
@@ -67,16 +68,7 @@ export function finalizeCharacterSessionsFromBattle(
     updates.push({
       sourceDraftId,
       currentHp: combatant.hp,
-      ...(combatant.hp > 0 &&
-      hasCondition(combatant.conditions, "unconscious") &&
-      combatant.positiveHpConditionRecovery !== null
-        ? {
-            positiveHpCondition: {
-              tag: "unconscious",
-              recovery: combatant.positiveHpConditionRecovery,
-            },
-          }
-        : {}),
+      ...(knockedOut === null ? {} : { positiveHpUnconscious: knockedOut }),
       ...(combatant.hp === 0
         ? { zeroHpLifecycle: zeroHpLifecycle?.right }
         : {}),
@@ -93,7 +85,7 @@ export function finalizeCharacterSessionsFromBattle(
       characterId: session.characterId,
       build: session.build,
       currentHp: update.currentHp,
-      positiveHpCondition: update.positiveHpCondition,
+      positiveHpUnconscious: update.positiveHpUnconscious,
       zeroHpLifecycle: update.zeroHpLifecycle,
       spellSlots: update.spellSlots,
     });

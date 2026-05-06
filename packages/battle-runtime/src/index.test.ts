@@ -28,6 +28,7 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
+  KNOCKED_OUT_UNCONSCIOUS,
   resolveBattleSubject,
   resolveBattleReaction,
   resolveBattleConcentrationDamage,
@@ -4789,6 +4790,7 @@ describe("battle runtime", () => {
           initiative: 10,
           currentHp: 1,
           conditions: ["unconscious"],
+          positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
         }),
       ],
     });
@@ -4849,13 +4851,13 @@ describe("battle runtime", () => {
         expect.objectContaining({
           combatantId: fighterId,
           hp: 6,
-          conditions: expect.arrayContaining(["unconscious", "prone"]),
+          conditions: ["prone"],
         }),
       ]),
     );
   });
 
-  test("positive-HP Unconscious without Knock Out provenance projects no recovery", () => {
+  test("positive-HP Unconscious without Knock Out state projects ordinary Unconscious", () => {
     const state = startBattleRight({
       battleId: battleId("battle-positive-unconscious-no-recovery"),
       combatants: [
@@ -4880,41 +4882,58 @@ describe("battle runtime", () => {
     );
   });
 
-  test("authored Knock Out recovery is discarded unless positive-HP Unconscious is present", () => {
-    const state = startBattleRight({
-      battleId: battleId("battle-invalid-authored-recovery-canonicalized"),
-      combatants: [
-        characterSeed({ initiative: 20 }),
-        characterSeed({
-          combatantId: wizardId,
-          displayName: "Recovered Wizard",
-          initiative: 10,
-          conditions: ["prone"],
-        }),
-        characterSeed({
-          combatantId: secondWizardId,
-          displayName: "Zero HP Wizard",
-          initiative: 5,
-          currentHp: 0,
-          conditions: ["unconscious"],
-        }),
-      ],
-    });
-
-    expect(snapshotBattle(state).combatants).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          combatantId: wizardId,
-          hp: 12,
-          conditions: ["prone"],
-        }),
-        expect.objectContaining({
-          combatantId: secondWizardId,
-          hp: 0,
-          conditions: expect.arrayContaining(["unconscious", "prone"]),
-        }),
-      ]),
+  test("rejects authored Knocked Out state unless positive-HP Unconscious is present", () => {
+    expect(
+      startBattle({
+        battleId: battleId(
+          "battle-invalid-authored-knocked-out-without-unconscious",
+        ),
+        combatants: [
+          characterSeed({ initiative: 20 }),
+          characterSeed({
+            combatantId: wizardId,
+            displayName: "Recovered Wizard",
+            initiative: 10,
+            currentHp: 1,
+            conditions: ["prone"],
+            positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
+          }),
+        ],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        message:
+          "Knocked Out Unconscious initialization requires the Unconscious condition.",
+      }),
     );
+
+    for (const currentHp of [0, 6]) {
+      expect(
+        startBattle({
+          battleId: battleId(
+            `battle-invalid-authored-knocked-out-hp-${currentHp}`,
+          ),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            characterSeed({
+              combatantId: secondWizardId,
+              displayName: "Wrong HP Wizard",
+              initiative: 5,
+              currentHp,
+              conditions: ["unconscious"],
+              positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
+            }),
+          ],
+        }),
+      ).toEqual(
+        Either.left({
+          tag: "battleStateInitIssue",
+          message:
+            "Knocked Out Unconscious initialization requires exactly 1 current HP.",
+        }),
+      );
+    }
   });
 
   test("melee Knock Out leaves a Stat Block target at 1 HP and Unconscious", () => {
@@ -12723,10 +12742,10 @@ function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["conditions"];
-  readonly positiveHpConditionRecovery?: Extract<
+  readonly positiveHpUnconscious?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
-  >["positiveHpConditionRecovery"];
+  >["positiveHpUnconscious"];
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly selectedLoadout?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -12795,9 +12814,9 @@ function characterSeed(input: {
       ...(input.conditions === undefined
         ? {}
         : { conditions: input.conditions }),
-      ...(input.positiveHpConditionRecovery === undefined
+      ...(input.positiveHpUnconscious === undefined
         ? {}
-        : { positiveHpConditionRecovery: input.positiveHpConditionRecovery }),
+        : { positiveHpUnconscious: input.positiveHpUnconscious }),
       selectedLoadout,
       attack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),

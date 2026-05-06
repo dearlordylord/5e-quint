@@ -68,7 +68,7 @@ export type {
 } from "./battle-action-options.ts";
 export type {
   BattleCreatureInit,
-  BattlePositiveHpConditionRecovery,
+  BattlePositiveHpUnconscious,
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleCreatureInit,
@@ -76,7 +76,7 @@ export type {
   StatBlockBattleCreatureInit,
   StatBlockBattleInitInput,
 } from "./battle-init.ts";
-export { KNOCK_OUT_SHORT_REST_RECOVERY } from "./battle-init.ts";
+export { KNOCKED_OUT_UNCONSCIOUS } from "./battle-init.ts";
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BATTLE_INVALID_REASON_CODES,
@@ -86,6 +86,7 @@ export {
   addBattleCombatant,
   battleCreatureInitFromStatBlock,
   breakBattleConcentration,
+  combatantKnockedOutUnconscious,
   concentrationSavingThrowDc,
   discoverBattleActs,
   endTurn,

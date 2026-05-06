@@ -215,7 +215,10 @@ module battleRuntime {
     activeEffects: Set[ActiveEffect],
     concentrating: bool,
     unconscious: bool,
-    knockOutRecovery: bool,
+    // SRD 5.2.1 "Knocking Out a Creature": positive-HP Unconscious caused
+    // by Knock Out, with the Knock Out ending rules rather than zero-HP
+    // Death Saving Throw lifecycle.
+    knockedOut: bool,
     stable: bool,
     deathSuccesses: int,
     deathFailures: int,
@@ -307,7 +310,7 @@ module battleRuntime {
       activeEffects: Set(),
       concentrating: false,
       unconscious: false,
-      knockOutRecovery: false,
+      knockedOut: false,
       stable: false,
       deathSuccesses: 0,
       deathFailures: 0,
@@ -334,7 +337,7 @@ module battleRuntime {
       activeEffects: Set(),
       concentrating: false,
       unconscious: false,
-      knockOutRecovery: false,
+      knockedOut: false,
       stable: false,
       deathSuccesses: 0,
       deathFailures: 0,
@@ -1097,7 +1100,7 @@ module battleRuntime {
   }
 
   pure def applyKnockOut(target: Combatant): Combatant =
-    { ...breakConcentration(target), hp: 1, unconscious: true, knockOutRecovery: true }
+    { ...breakConcentration(target), hp: 1, unconscious: true, knockedOut: true }
 
   pure def applyMageArmor(target: Combatant): Combatant =
     if (target.activeEffects.contains(MageArmor))
@@ -1293,13 +1296,13 @@ module battleRuntime {
         ...target,
         hp: nextHp,
         unconscious: false,
-        knockOutRecovery: false,
+        knockedOut: false,
         stable: false,
         deathSuccesses: 0,
         deathFailures: 0,
       }
-    else if (target.knockOutRecovery and nextHp > target.hp)
-      { ...target, hp: nextHp, unconscious: false, knockOutRecovery: false }
+    else if (target.knockedOut and nextHp > target.hp)
+      { ...target, hp: nextHp, unconscious: false, knockedOut: false }
     else
       { ...target, hp: nextHp }
   }
@@ -1611,33 +1614,33 @@ module battleRuntime {
 
   pure def applyDropToZeroHp(target: Combatant): Combatant =
     match target.lifecycle {
-      | DiesAtZeroHp => { ...target, knockOutRecovery: false }
-      | UsesDeathSavingThrows => { ...breakConcentration(target), unconscious: true, knockOutRecovery: false, stable: false, deathSuccesses: 0, deathFailures: 0 }
+      | DiesAtZeroHp => { ...target, knockedOut: false }
+      | UsesDeathSavingThrows => { ...breakConcentration(target), unconscious: true, knockedOut: false, stable: false, deathSuccesses: 0, deathFailures: 0 }
     }
 
   pure def applyDamageAtZeroHp(target: Combatant, deathFailuresAtZeroHp: int): Combatant =
     match target.lifecycle {
-      | DiesAtZeroHp => { ...target, knockOutRecovery: false }
+      | DiesAtZeroHp => { ...target, knockedOut: false }
       | UsesDeathSavingThrows => {
           ...target,
           stable: false,
           unconscious: true,
-          knockOutRecovery: false,
+          knockedOut: false,
           deathFailures: if (target.deathFailures + deathFailuresAtZeroHp > 3) 3 else target.deathFailures + deathFailuresAtZeroHp,
         }
     }
 
   pure def applyInstantDeath(target: Combatant): Combatant =
     match target.lifecycle {
-      | DiesAtZeroHp => { ...target, knockOutRecovery: false }
-      | UsesDeathSavingThrows => { ...target, unconscious: true, knockOutRecovery: false, stable: false, deathFailures: 3 }
+      | DiesAtZeroHp => { ...target, knockedOut: false }
+      | UsesDeathSavingThrows => { ...target, unconscious: true, knockedOut: false, stable: false, deathFailures: 3 }
     }
 
   pure def applyStartTurnDeathSave(target: Combatant, deathSaveRoll: int): Combatant =
     if (target.lifecycle != UsesDeathSavingThrows or target.hp != 0 or target.stable or target.deathFailures >= 3)
       target
     else if (deathSaveRoll == 20)
-      { ...target, hp: 1, unconscious: false, knockOutRecovery: false, stable: false, deathSuccesses: 0, deathFailures: 0 }
+      { ...target, hp: 1, unconscious: false, knockedOut: false, stable: false, deathSuccesses: 0, deathFailures: 0 }
     else if (deathSaveRoll == 1)
       applyDamageAtZeroHp(target, 2)
     else if (deathSaveRoll >= 10) {
@@ -2139,7 +2142,7 @@ module battleRuntime {
     all {
       assert(result.goblin.hp == 1),
       assert(result.goblin.unconscious),
-      assert(result.goblin.knockOutRecovery),
+      assert(result.goblin.knockedOut),
       assert(result.goblin.lifecycle == DiesAtZeroHp),
     }
   }
@@ -2149,7 +2152,7 @@ module battleRuntime {
     all {
       assert(result.hp == 1),
       assert(result.unconscious),
-      assert(result.knockOutRecovery),
+      assert(result.knockedOut),
       assert(result.lifecycle == UsesDeathSavingThrows),
       assert(result.deathFailures == 0),
     }
@@ -2161,7 +2164,7 @@ module battleRuntime {
     all {
       assert(result.hp == 5),
       assert(not(result.unconscious)),
-      assert(not(result.knockOutRecovery)),
+      assert(not(result.knockedOut)),
     }
   }
 

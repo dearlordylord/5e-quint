@@ -122,7 +122,7 @@ Keep it synchronized with the DAG table and task details.
       "number": 73,
       "id": "PBA21A",
       "status": "done",
-      "title": "Fix Knock Out Lifecycle Provenance"
+      "title": "Fix Knock Out Lifecycle State"
     },
     {
       "number": 74,
@@ -227,7 +227,7 @@ Keep it synchronized with the DAG table and task details.
 | 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | done                                          | PBA18        | PBA20        | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Stat Block Multiattack and Bonus Action procedure families are restored for supported monster profiles.                                                       |
 | 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | done                                          | PBA19        | PBA21        | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Magic Missile split-target replay and higher-slot dart count are restored through spell target allocation fills.                                              |
 | 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | done                                          | PBA20        | PBA21A       | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Attack host Reaction windows and prepared Bonus Action healing spell subjects are restored in the promoted runtime.                                           |
-| 73    | PBA21A - Fix Knock Out Lifecycle Provenance                       | done                                          | PBA21        | PBA21B       | inline below                                                                                                 | Knock Out recovery provenance is runtime-owned, healing clears Knock Out Unconscious, and MCP no longer infers recovery from positive-HP Unconscious.         |
+| 73    | PBA21A - Fix Knock Out Lifecycle State                            | done                                          | PBA21        | PBA21B       | inline below                                                                                                 | Knocked Out state is runtime-owned, healing clears Knock Out Unconscious, and MCP no longer infers Knock Out from positive-HP Unconscious.                    |
 | 74    | PBA21B - Promote BattleSnapshot Into Battle View Contract         | done                                          | PBA21A       | PBA22        | inline below                                                                                                 | Reshape, rename, or replace existing `BattleSnapshot` into one finite `/battle` and MCP view contract; delete the old loose snapshot shape.                   |
 | 75    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | done                                          | PBA21B       | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Active `/battle` and MCP battle output now use the promoted snapshot contract; Core-backed trace routes are quarantined from the active promoted app surface. |
 | 76    | PBA23 - Core Promotion Deletion Ledger                            | done                                          | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                                               |
@@ -706,8 +706,8 @@ including QNT self-tests and the promoted package MBT scenarios. Full
 `pnpm quality` remains blocked by unrelated app/Core baseline typecheck failures.
 
 Plan Impact: PBA21A is unblocked. PBA22 remains blocked until the Knock Out
-lifecycle/provenance and promoted `BattleSnapshot` contract prerequisites below
-are complete.
+lifecycle state and promoted `BattleSnapshot` contract prerequisites below are
+complete.
 
 Closeout: promoted attack hosts now include Attack action attacks, Off-Hand
 Attack, and Opportunity Attack for attack-hit, attack-damage, and after-damage
@@ -717,7 +717,7 @@ Action and a Spell Slot, opens Spell Cast Reaction windows, and uses the
 turn-resource fact that prevents expending more than one Spell Slot to cast a
 spell on a turn. Unsupported Bonus Action spell shapes remain support-gated.
 
-### Task 73 - PBA21A - Fix Knock Out Lifecycle Provenance
+### Task 73 - PBA21A - Fix Knock Out Lifecycle State
 
 Status: `done`
 
@@ -729,10 +729,10 @@ Research plan: inline from manual PBA22 review findings.
 Next action: fix the RAW/modeling defects found while reviewing rejected PBA22
 attempts before those facts become the promoted app/MCP battle view contract.
 
-Acceptance summary: Knock Out recovery is a runtime-owned fact, not inferred by
+Acceptance summary: Knocked Out state is a runtime-owned fact, not inferred by
 MCP from positive-HP Unconscious. Healing a knocked-out creature ends the
 Knock Out Unconscious state according to RAW. Positive-HP Unconscious no longer
-implies `knockOutShortRest` unless the runtime has represented that provenance.
+implies Knock Out unless the runtime has represented that state.
 
 Verification summary: RAW check against SRD 5.2.1 Knock Out and Unconscious
 text, focused battle-runtime tests for Knock Out healing and lifecycle
@@ -743,17 +743,16 @@ Review findings captured:
 
 1. Knock Out healing currently does not end Unconscious because
    `applyHpHealing` only removes Unconscious when healing from 0 HP.
-2. MCP currently infers Knock Out recovery from any positive-HP Unconscious
-   character, which collapses condition state and recovery provenance.
+2. MCP currently infers Knock Out from any positive-HP Unconscious character,
+   which collapses condition state and Knock Out state.
 3. Unconscious hand-drop snapshot behavior is related RAW debt. This task should
    either fix it if the promoted battle view exposes hand use, or record it as a
    later explicit RAW/display task; do not silently bake a wrong hand model into
    the promoted view contract.
 
-Closeout: promoted battle-runtime now owns explicit Knock Out Short Rest
-recovery provenance, healing that restores Hit Points clears that Knock Out
-Unconscious state, and MCP handoff/session start carries the provenance only
-when supplied by the runtime.
+Closeout: promoted battle-runtime now owns explicit Knocked Out state, healing
+that restores Hit Points clears that Knock Out Unconscious state, and MCP
+handoff/session start carries that state only when supplied by the runtime.
 
 Plan Impact: PBA21B is unblocked.
 
