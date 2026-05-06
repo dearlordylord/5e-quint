@@ -8,20 +8,30 @@ const repoRoot = path.resolve(__dirname, "..");
 const workspacePath = path.join(repoRoot, "pnpm-workspace.yaml");
 const activePackageDirs = readWorkspacePackageDirs(workspacePath);
 const failures = [];
+const quarantinedPackageDirs = ["packages/core", "packages/v0"];
+const quarantinedPackageNames = ["@dnd/core", "@dnd/v0"];
 
-if (activePackageDirs.includes("packages/core")) {
-  failures.push("pnpm-workspace.yaml must not include packages/core.");
+if (fs.existsSync(path.join(repoRoot, "packages", "core"))) {
+  failures.push("packages/core must not exist; v0 restore-source material lives in packages/v0.");
+}
+
+for (const packageDir of quarantinedPackageDirs) {
+  if (activePackageDirs.includes(packageDir)) {
+    failures.push(`pnpm-workspace.yaml must not include ${packageDir}.`);
+  }
 }
 
 const rootPackageJson = readJson(path.join(repoRoot, "package.json"));
 for (const [scriptName, script] of Object.entries(rootPackageJson.scripts ?? {})) {
-  if (script.includes("@dnd/core")) {
-    failures.push(`root package.json script ${scriptName} references @dnd/core.`);
+  for (const packageName of quarantinedPackageNames) {
+    if (script.includes(packageName)) {
+      failures.push(`root package.json script ${scriptName} references ${packageName}.`);
+    }
   }
 }
 
 for (const packageDir of activePackageDirs) {
-  if (packageDir === "packages/core") continue;
+  if (quarantinedPackageDirs.includes(packageDir)) continue;
 
   const absolutePackageDir = path.join(repoRoot, packageDir);
   const packageJsonPath = path.join(absolutePackageDir, "package.json");
@@ -37,8 +47,10 @@ for (const packageDir of activePackageDirs) {
     "peerDependencies",
     "optionalDependencies",
   ]) {
-    if (packageJson[dependencyField]?.["@dnd/core"] !== undefined) {
-      failures.push(`${packageDir}/package.json declares ${dependencyField}.@dnd/core.`);
+    for (const packageName of quarantinedPackageNames) {
+      if (packageJson[dependencyField]?.[packageName] !== undefined) {
+        failures.push(`${packageDir}/package.json declares ${dependencyField}.${packageName}.`);
+      }
     }
   }
 
@@ -51,7 +63,7 @@ for (const packageDir of activePackageDirs) {
 }
 
 if (failures.length > 0) {
-  console.error("Core quarantine boundary failed:");
+  console.error("v0 quarantine boundary failed:");
   for (const failure of failures) {
     console.error(`- ${failure}`);
   }
@@ -100,15 +112,22 @@ function checkSourceFile(filePath, failures) {
   ].map((match) => match[1]);
 
   for (const specifier of importSpecifiers) {
-    if (specifier === "@dnd/core" || specifier.startsWith("@dnd/core/")) {
-      failures.push(`${relative(filePath)} imports ${specifier}.`);
-      continue;
+    for (const packageName of quarantinedPackageNames) {
+      if (specifier === packageName || specifier.startsWith(`${packageName}/`)) {
+        failures.push(`${relative(filePath)} imports ${specifier}.`);
+        continue;
+      }
     }
 
     if (specifier.startsWith(".")) {
       const resolved = path.resolve(path.dirname(filePath), specifier);
       const relativeResolved = relative(resolved);
-      if (relativeResolved === "packages/core" || relativeResolved.startsWith("packages/core/")) {
+      if (
+        relativeResolved === "packages/core" ||
+        relativeResolved.startsWith("packages/core/") ||
+        relativeResolved === "packages/v0" ||
+        relativeResolved.startsWith("packages/v0/")
+      ) {
         failures.push(`${relative(filePath)} reaches into ${relativeResolved}.`);
       }
     }

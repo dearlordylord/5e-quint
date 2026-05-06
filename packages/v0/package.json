@@ -1,5 +1,5 @@
 {
-  "name": "@dnd/core",
+  "name": "@dnd/v0",
   "private": true,
   "type": "module",
   "imports": {

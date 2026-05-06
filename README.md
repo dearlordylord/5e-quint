@@ -1,7 +1,7 @@
 # D&D 5e SRD Runtime Workspace
 
 Promoted D&D 5e SRD 5.2.1 runtime packages, Surface-authored content, MCP
-tools, and a React frontend. The old `@dnd/core` package remains in the repo as
+tools, and a React frontend. The old `@dnd/v0` package remains in the repo as
 restore-source material only; it is not part of workspace discovery or the
 promoted quality gate.
 
@@ -51,7 +51,7 @@ active battle proof/spec authority.
 package-owned character build, sheet-session, and battle-entry projections.
 
 **MCP and app** (`packages/mcp`, `packages/app`) — user-facing workflows over
-the promoted runtimes. They must not import `@dnd/core`.
+the promoted runtimes. They must not import `@dnd/v0`.
 
 **QA pipeline** (`scripts/qa/`) — community Q&A turned into Quint test assertions by LLM. See [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
 
@@ -63,15 +63,15 @@ pnpm test                       # workspace package tests
 pnpm dev                        # React UI
 ```
 
-## Legacy Core MBT
+## Legacy v0 MBT
 
-Root `battle.qnt` and the Core battle MBT are legacy/Core broad proof and
+Root `battle.qnt` and the v0 battle MBT are legacy/Core broad proof and
 restore material. They are not the promoted `@dnd/battle-runtime` verification
-gate, and `packages/core` is intentionally excluded from the active pnpm
+gate, and `packages/v0` is intentionally excluded from the active pnpm
 workspace.
 
 Legacy battle MBT traces are nondeterministic when live generation is used:
-each seed generates different traces through the old Core battle state space.
+each seed generates different traces through the old v0 battle state space.
 Failures include a seed for reproduction. Re-enable Core locally only for
 restore-source work; do not add it back to promoted workspace gates.
 

@@ -8,7 +8,7 @@ subjects, replay caller fills, resolve state transitions, and expose snapshots.
 Unit/StatBlock-backed battle behavior. `battle-runtime.qnt` is its canonical
 package-local spec.
 
-Deleted legacy Correction docs, old root `battle.qnt`, and Core battle MBT
+Deleted legacy Correction docs, old root `battle.qnt`, and v0 battle MBT
 remain useful breadth/proof source material, not active promoted runtime
 authorities. Correction was legacy source material for prior Surface/Unit-shaped
 reducer work; it was never the promoted owner of Unit/StatBlock-backed battle
@@ -216,12 +216,12 @@ flowchart TD
 - The first integrated promoted MBT is
   `src/battle-runtime.mbt.test.ts` plus `battle-runtime.mbt.qnt`. It targets the
   public weapon Attack reducer path against Skeleton, is intentionally narrower
-  than the old Core MBT, and does not require MBT for every authored Unit or
+  than the old v0 MBT, and does not require MBT for every authored Unit or
   Stat Block.
 
 ## Relationship To Core And Deleted Correction
 
-`@dnd/core`, root `battle.qnt`, and the old Core battle MBT are the legacy
+`@dnd/v0`, root `battle.qnt`, and the old v0 battle MBT are the legacy
 battle system being strangled. They remain the broadest source for old behavior,
 feature expectations, and proof material, but they are not the active owner for
 new promoted Unit/StatBlock-backed battle behavior.

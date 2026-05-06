@@ -6,7 +6,7 @@ Status: draft research plan.
 
 ## Purpose
 
-After PBA27 quarantines or deletes old Core proof artifacts, consolidate the
+After PBA27 quarantines or deletes old v0 proof artifacts, consolidate the
 active promoted proof graph. The goal is to make reusable reducer facts live in
 package-local shared algebra parity lanes instead of rebuilding old broad Core
 MBT or widening integrated battle-runtime MBT beyond the behavior it is meant to
@@ -71,10 +71,10 @@ record introduces a new reducer procedure family.
 - `pnpm --filter @dnd/shared-algebras test`
 - Run the package-local shared-algebras Quint proof/MBT commands introduced or
   normalized by this task.
-- `rg -n "packages/core|@dnd/core|battle-projection\\.mbt|creature\\.mbt|battle-machine\\.mbt" packages/shared-algebras packages/battle-runtime package.json turbo.json -S`
+- `rg -n "packages/v0|@dnd/v0|battle-projection\\.mbt|creature\\.mbt|battle-machine\\.mbt" packages/shared-algebras packages/battle-runtime package.json turbo.json -S`
 - Confirm battle-runtime docs still describe integrated MBT as selective and
   shared reducer algebras as modular proof owners.
-- No legacy Core MBT as a gate.
+- No legacy v0 MBT as a gate.
 - No broad battle MBT unless this task intentionally changes a promoted
   integrated battle-runtime MBT slice.
 - `/simplify` convergence, minimum two rounds.

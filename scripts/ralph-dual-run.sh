@@ -1320,7 +1320,7 @@ bootstrap_worktree_install() {
 
   for path in \
     "node_modules" \
-    "packages/core/node_modules" \
+    "packages/v0/node_modules" \
     "packages/mcp/node_modules"; do
     if [[ -e "$workspace/$path" || -L "$workspace/$path" ]]; then
       rm -rf "$workspace/$path"
@@ -1347,7 +1347,7 @@ bootstrap_worktree_install() {
 worktree_has_install() {
   local root="$1"
   [[ -d "$root/node_modules" ]] &&
-    [[ -d "$root/packages/core/node_modules" ]] &&
+    [[ -d "$root/packages/v0/node_modules" ]] &&
     [[ -d "$root/packages/mcp/node_modules" ]]
 }
 

@@ -43,7 +43,7 @@ Three-way separation:
   (e.g., `SURFACES_spells.md` cites `RESEARCH_foundry_effect_staging.md`
   for effect staging patterns). Read-only.
 - `packages/surface/` (this package) — **where the surface evolves**. It remains
-  independent from engine packages and has no `@dnd/core` dependency. Runtime
+  independent from engine packages and has no `@dnd/v0` dependency. Runtime
   packages consume it through typed record/catalog boundaries.
 
 ## Runtime Boundary

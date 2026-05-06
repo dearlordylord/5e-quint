@@ -94,7 +94,7 @@ table/contract-test problem. QNT/MBT should target procedure-family behavior and
 composition, not one model trace per authored Unit, Spell Record, feature, or
 Stat Block.
 
-Projected executable vocabulary must stay out of this package. If old Core or
+Projected executable vocabulary must stay out of this package. If old v0 or
 deleted Correction material names a projected action, translate the SRD
 procedure into Surface readers, support gates, battle subjects, holes, and
 reducer state instead of restoring the projected vocabulary.
@@ -144,7 +144,7 @@ Allowed boundaries:
 - composition/user-selection boundary (`@dnd/mcp` explicit identity-retention
   files only, not the whole package),
 - tests/fixtures,
-- legacy Core quarantine (`@dnd/core`),
+- legacy v0 quarantine (`@dnd/v0`),
 - character-creation support-profile boundary files.
 
 Reducer support and resolution files in `@dnd/battle-runtime` are intentionally
@@ -539,24 +539,24 @@ options, and the remaining zero-HP lifecycle width listed above.
 
 ## Width Overlap Reconciliation
 
-The first promoted width slice overlaps several old Core battle concepts. The
+The first promoted width slice overlaps several old v0 battle concepts. The
 runtime keeps the overlap executable through typed Surface records, Character
 Build facts, and battle-owned state instead of restoring the old projected
 executable vocabulary.
 
-- Action Surge matches the old Core rule shape for Fighter level 2: a Unit
+- Action Surge matches the old v0 rule shape for Fighter level 2: a Unit
   resource grants one additional action that excludes Magic, spends one
   Short/Long Rest use, and is once per turn. Discovery and resolution share one
   support parser for the admitted single-phase, single-effect Surface
   activation shape. The promoted runtime encodes the extra action as a
   restricted `RuntimeActionResource`, not a scalar action counter plus pending
   flag.
-- Second Wind matches the old Core healing lane without restoring projected
+- Second Wind matches the old v0 healing lane without restoring projected
   executable vocabulary: the retained Unit selects the direct self-healing
   Bonus Action procedure, the runtime asks for the `1d10` roll, spends one
   feature use and the turn Bonus Action, and heals through the same HP boundary
   used by damage and death-save recovery.
-- Wizard action-time spells match the old Core distinction between prepared
+- Wizard action-time spells match the old v0 distinction between prepared
   level-1 spells that spend Spell Slots and cantrips that do not for the
   implemented `magic_missile` and `ray_of_frost` lane. The promoted runtime
   intentionally does not restore old broad save-spell, reaction, ritual,
@@ -566,7 +566,7 @@ executable vocabulary.
   composition sets `canCastSpells`, spell act discovery checks it, and runtime
   Spell Slot expenditure state is preserved rather than cleared. Missing shield
   training alone does not block spellcasting.
-- Skeleton Stat Block damage modifiers match old Core damage modifier order for
+- Skeleton Stat Block damage modifiers match old v0 damage modifier order for
   supported paths: immunity first, then resistance, then vulnerability.
   Skeleton's Bludgeoning vulnerability and Poison damage immunity are read from
   the retained `StatBlockRecord` at the HP mutation boundary. Exhaustion and
@@ -617,10 +617,10 @@ Zero-HP lifecycle is a typed union on each `BattleCreatureState`.
 Unit/StatBlock-backed battle work. `battle-runtime.qnt` is the canonical
 package-local spec for this runtime's implemented subset.
 
-Old root `battle.qnt` and Core battle MBT are legacy/Core broad proof and
+Old root `battle.qnt` and v0 battle MBT are legacy/Core broad proof and
 restore source material. They are not the place to add new promoted runtime
 behavior. Missing old-only behavior is future width/restoration work, not
-evidence that old Core remains canonical.
+evidence that old v0 remains canonical.
 
 ## Proof Strategy
 
@@ -663,9 +663,9 @@ justify MBT over deterministic tests.
 Keep four facts separate when changing battle behavior:
 
 - semantic authority: promoted `@dnd/battle-runtime`;
-- feature breadth: old Core may still cover behavior this runtime has not
+- feature breadth: old v0 may still cover behavior this runtime has not
   restored yet;
-- proof depth: old Core MBT is useful evidence, while promoted behavior is
+- proof depth: old v0 MBT is useful evidence, while promoted behavior is
   checked here by reducer tests and `battle-runtime.qnt`;
 - content encoding: Surface `UnitRecord` and `StatBlockRecord` remain authored
   content, not runtime state or provenance labels.

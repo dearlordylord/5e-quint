@@ -1,4 +1,4 @@
-# @dnd/core Architecture
+# @dnd/v0 Architecture
 
 Core owns the legacy XState-based combat and creature runtime path. The
 repository is currently growing runtime reducer packages beside it; this
@@ -10,9 +10,9 @@ top-level architecture guide.
 The battle projection contract has four layers:
 
 - `battle.qnt:Combatant` is the semantic contract for battle-owned combat facts.
-- `packages/core/src/battle-machine-types.ts:BattleCreatureState` is the runtime mirror of that contract.
-- `packages/core/src/battle-machine-types.ts:InitCreatureConfig` is the promotion input contract.
-- `packages/core/src/battle-machine-actions-turn.ts:buildCreatureState` is the authoritative `InitCreatureConfig -> BattleCreatureState` projector.
+- `packages/v0/src/battle-machine-types.ts:BattleCreatureState` is the runtime mirror of that contract.
+- `packages/v0/src/battle-machine-types.ts:InitCreatureConfig` is the promotion input contract.
+- `packages/v0/src/battle-machine-actions-turn.ts:buildCreatureState` is the authoritative `InitCreatureConfig -> BattleCreatureState` projector.
 
 The battle engine keeps a flat `Map<CreatureId, BattleCreatureState>` rather
 than embedding creature child actors because combat resolution needs atomic
@@ -50,8 +50,8 @@ Projection methodology for a new battle-owned field:
 2. Mirror it in `BattleCreatureState`.
 3. Mirror it in `InitCreatureConfig`.
 4. Thread it through `buildCreatureState`.
-5. Set fresh defaults in `packages/core/src/battle-machine-creature.ts` (`freshCreature` / `freshCaster`).
-6. Update MBT normalization in `packages/core/src/battle-projection.mbt.test.ts`.
+5. Set fresh defaults in `packages/v0/src/battle-machine-creature.ts` (`freshCreature` / `freshCaster`).
+6. Update MBT normalization in `packages/v0/src/battle-projection.mbt.test.ts`.
 7. Update every source-specific compiler that produces `InitCreatureConfig`, including raw `BATTLE_INIT` / `BATTLE_ADD_CREATURE` adapter paths, `monsterCatalogInitCreatureConfig` / `statBlockToInitCreatureConfig`, and any PC or session-owned start-battle projector.
 8. Verify parity and task-scoped tests.
 9. Update this section if the new field changes the documented ownership categories.

@@ -28,7 +28,7 @@ case "$OUTPUT_ROOT" in
     exit 1
     ;;
 esac
-cd "$PROJECT_ROOT/packages/core"
+cd "$PROJECT_ROOT/packages/v0"
 
 MAX_SEEDS="${1:-0}"  # 0 = infinite
 TRACES="${MBT_TRACES:-1}"
