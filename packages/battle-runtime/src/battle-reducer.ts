@@ -2752,8 +2752,12 @@ export function removeBattleCombatants(input: {
 export function discoverBattleActs(
   state: BattleState,
 ): readonly AvailableBattleAct[] {
-  const acts: AvailableBattleAct[] = [...releaseGrappleActs(state)];
   const actorId = currentActorId(state);
+  const hasOpenStatBlockMultiattackDispatch =
+    currentActorHasOpenStatBlockMultiattackDispatch(state);
+  const acts: AvailableBattleAct[] = hasOpenStatBlockMultiattackDispatch
+    ? []
+    : [...releaseGrappleActs(state)];
   if (!state.combatants.has(actorId)) {
     return acts;
   }
@@ -2789,6 +2793,16 @@ export function discoverBattleActs(
             ];
       }),
     );
+  }
+  if (hasOpenStatBlockMultiattackDispatch) {
+    acts.push({
+      subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
+      label: "End Turn",
+      summary:
+        "End the current combatant's turn and close pending Multiattack dispatches.",
+      initialHoles: [],
+    });
+    return acts;
   }
   acts.push(...statBlockMultiattackActs(state, actorId));
   if (
@@ -2937,8 +2951,6 @@ export function discoverBattleActs(
     acts.push(...discoverSupportedSpellActs(state, actorId));
   }
   const movementHoleForActor = movementHole(state, actorId);
-  // PBA29 tracks the whole legal action/command surface while Stat Block
-  // Multiattack dispatches are pending; movement is only one example.
   if (
     combatantCanMoveInState(state, actorId) &&
     state.combatants.size > 1 &&
@@ -3222,6 +3234,42 @@ function actorHasStatBlockMultiattackActionResource(
   );
 }
 
+function currentActorHasOpenStatBlockMultiattackDispatch(
+  state: BattleState,
+): boolean {
+  return actorHasStatBlockMultiattackActionResource(
+    state,
+    currentActorId(state),
+  );
+}
+
+function subjectAllowedDuringStatBlockMultiattackDispatch(
+  state: BattleState,
+  subject: BattleSubject,
+): boolean {
+  const actorId = currentActorId(state);
+  if (
+    subject.tag === "runtimeCommand" &&
+    subject.actorId === actorId &&
+    subject.command === "endTurn"
+  ) {
+    return true;
+  }
+  if (
+    subject.tag !== "action" ||
+    subject.actorId !== actorId ||
+    subject.action !== "attack"
+  ) {
+    return false;
+  }
+  return state.currentTurnResources.actionResources.some(
+    (resource): boolean =>
+      isStatBlockMultiattackActionResource(resource, actorId) &&
+      resource.attackPart.name === subject.attackName &&
+      resource.attackPart.section === (subject.statBlockSection ?? "actions"),
+  );
+}
+
 function hasTurnActionResource(state: ActionEconomyState): boolean {
   return state.actionResources.some((resource) => resource.source === "turn");
 }
@@ -3374,6 +3422,19 @@ function resolveBattleSubjectInternal(
       input.state,
       "missingCombatant",
       "Subject actor is not in this battle.",
+    );
+  }
+  if (
+    currentActorHasOpenStatBlockMultiattackDispatch(input.state) &&
+    !subjectAllowedDuringStatBlockMultiattackDispatch(
+      input.state,
+      input.subject,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Pending Stat Block Multiattack dispatches must be resolved or the turn must end before other battle subjects.",
     );
   }
 

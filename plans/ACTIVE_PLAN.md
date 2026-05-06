@@ -181,7 +181,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 83,
       "id": "PBA29",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Tighten Stat Block Multiattack Dispatch Continuation"
     }
   ]
@@ -243,7 +243,7 @@ Keep it synchronized with the DAG table and task details.
 | 80    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | done                                          | PBA25A       | PBA27         | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Add promoted Character Sheet and Character Battle runtime packages, migrate MCP/app to them, then remove app Core dependency.                                 |
 | 81    | PBA27 - Core Quarantine And Deletion Cutover                      | done                                          | PBA24, PBA26 | PBA28         | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Core is excluded from active workspace discovery and promoted root gates; remaining Core material is restore-source only.                                     |
 | 82    | PBA28 - MBT Consolidation And Shared Algebra Parity               | done                                          | PBA27        | future tasks  | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Shared-algebras now owns package-local reducer parity lanes and proof commands; promoted runtime MBT remains selective.                                      |
-| 83    | PBA29 - Tighten Stat Block Multiattack Dispatch Continuation      | ready-for-research                            | PBA28        | future tasks  | inline below                                                                                                 | Decide and encode the full legal action/command surface while pending Stat Block Multiattack dispatches remain.                                               |
+| 83    | PBA29 - Tighten Stat Block Multiattack Dispatch Continuation      | done                                          | PBA28        | future tasks  | inline below                                                                                                 | Pending Stat Block Multiattack dispatches are immediate continuations exposing only matching dispatch attacks plus End Turn.                                    |
 
 ## Task Details
 
@@ -1098,7 +1098,7 @@ deterministic contract-test responsibility.
 
 ### Task 83 - PBA29 - Tighten Stat Block Multiattack Dispatch Continuation
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA28
 Blocks: future tasks
@@ -1126,3 +1126,20 @@ Verification summary: RAW/UL check for Stat Block Multiattack and Moving
 between Attacks, focused battle-runtime reducer tests, package-local QNT/MBT
 update if the dispatch continuation changes reducer semantics, MCP workflow
 test if public available-action output changes, `/simplify` convergence.
+
+Closeout: pending Stat Block Multiattack dispatch resources are modeled as an
+immediate continuation of the monster's Attack action. While any dispatch
+resource remains, battle-runtime discovery exposes only matching named dispatch
+attacks plus End Turn, and reducer replay rejects unrelated subjects as stale.
+End Turn is the explicit cancellation boundary for unspent dispatches. The
+rule is recorded in `ASSUMPTIONS.md`, battle-runtime docs, package-local QNT,
+focused reducer tests, and MCP workflow coverage.
+
+Verification passed: RAW/UL check against SRD 5.2.1 Monsters "Multiattack",
+Rules Glossary "Attack [Action]" Moving between Attacks, Playing the Game
+"Bonus Actions", and `UBIQUITOUS_LANGUAGE.md`; focused Stat Block Multiattack
+runtime tests; package-local QNT assertion for the Multiattack dispatch
+continuation; Tier 1 promoted battle-runtime MBT
+`MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`;
+MCP `discover_battle_acts` workflow coverage for the pending dispatch surface;
+`pnpm quality`; and two `/simplify`-style convergence rounds.

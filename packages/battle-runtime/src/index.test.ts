@@ -5991,27 +5991,59 @@ describe("battle runtime", () => {
         },
       },
     ]);
+    const continuationActs = discoverBattleActs(multiattackState);
+    const continuationSubjects = continuationActs.map((act) => act.subject);
+    expect(continuationSubjects).toEqual([
+      {
+        tag: "action",
+        actorId: goblinId,
+        action: "attack",
+        attackName: "Scimitar",
+      },
+      {
+        tag: "action",
+        actorId: goblinId,
+        action: "attack",
+        attackName: "Shortbow",
+      },
+      { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
+    ]);
+    expect(continuationSubjects).not.toContainEqual(subject);
+    expect(continuationActs.map((act) => act.label)).toEqual([
+      "Attack",
+      "Attack",
+      "End Turn",
+    ]);
     expect(
-      discoverBattleActs(multiattackState).map((act) => act.subject),
-    ).toEqual(
-      expect.arrayContaining([
-        {
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: { tag: "runtimeCommand", actorId: goblinId, command: "move" },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: {
+          tag: "action",
+          actorId: goblinId,
+          action: "disengage",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: {
           tag: "action",
           actorId: goblinId,
           action: "attack",
-          attackName: "Scimitar",
+          attackName: "Dagger",
         },
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Shortbow",
-        },
-      ]),
-    );
-    expect(
-      discoverBattleActs(multiattackState).map((act) => act.subject),
-    ).not.toContainEqual(subject);
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
 
     const shortbowSubject: BattleSubject = {
       tag: "action",
@@ -6072,7 +6104,7 @@ describe("battle runtime", () => {
         subject: shortbowSubject,
         fills: [targetChoice],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("Stat Block Multiattack remains gated when a dispatch has no positive literal count", () => {

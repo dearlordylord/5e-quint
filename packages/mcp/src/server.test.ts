@@ -47,6 +47,7 @@ import {
   characterToolDefinitions,
   contentToolDefinitions,
   createMcpCompositionRoot,
+  createMcpSessionStore,
   handleToolCall,
   startBattleFromCharacterBuildAndStatBlock,
 } from "./server.ts";
@@ -67,6 +68,11 @@ import {
 } from "../test-support/creation-hole-ids.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import {
+  assertSrd521StatBlock,
+  buildStatBlockCatalog,
+  defineSrdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
 
 function testAbilityScoreAssignment(scores: RawAbilityScoreAssignment) {
   const parsed = abilityScoreAssignment(scores);
@@ -1240,6 +1246,115 @@ describe("MCP server route", () => {
         ),
     ).toEqual([...GENERIC_READY_TRIGGERS]);
     expect(read.snapshot.combatants).toHaveLength(2);
+  });
+
+  test("discovers only Stat Block Multiattack dispatch continuations through MCP tools", () => {
+    const baseRoot = createMcpCompositionRoot();
+    const multiattackStatBlock = goblinWarriorMultiattackStatBlock(baseRoot);
+    const catalogResult = buildStatBlockCatalog({
+      collections: [
+        defineSrdStatBlockCollection({
+          statBlocks: [assertSrd521StatBlock(multiattackStatBlock)],
+        }),
+      ],
+    });
+    if (catalogResult.tag !== "ok") {
+      throw new Error("Expected MCP Multiattack test catalog to build.");
+    }
+    const root = {
+      ...baseRoot,
+      statBlockCatalog: catalogResult.catalog,
+      sessionStore: createMcpSessionStore(catalogResult.catalog),
+    };
+    const draftId = "draft:mcp-multiattack-continuation";
+    createFinalizedFighterSheet(root, draftId);
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-multiattack-continuation",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "fighter",
+            initiative: 18,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            statBlockId: multiattackStatBlock.id,
+            combatantId: "goblin",
+            initiative: 7,
+            side: "opposition",
+          },
+        ],
+      }),
+    );
+    readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
+    const opened = readPayload(
+      handleToolCall(root, "resolve_battle_act", {
+        subject: {
+          tag: "action",
+          actorId: "goblin",
+          action: "multiattack",
+          multiattackName: "Multiattack",
+        },
+      }),
+    );
+    expect(opened.result.tag).toBe("resolved");
+    expect(opened.snapshot.currentActorId).toBe("goblin");
+    expect(opened.snapshot.turn.actionResources).toEqual([
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        sourceOwnerId: "goblin",
+      }),
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        sourceOwnerId: "goblin",
+      }),
+    ]);
+    expect(
+      root.sessionStore.battleState?.currentTurnResources.actionResources,
+    ).toEqual([
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        sourceOwnerId: "goblin",
+      }),
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        sourceOwnerId: "goblin",
+      }),
+    ]);
+
+    const continuation = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    expect(
+      continuation.snapshot.acts.map((act: { label: string }) => act.label),
+    ).toEqual(["Attack", "Attack", "End Turn"]);
+    expect(
+      continuation.snapshot.acts.map(
+        (act: { subject: unknown }) => act.subject,
+      ),
+    ).toEqual([
+      {
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        attackName: "Scimitar",
+      },
+      {
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        attackName: "Shortbow",
+      },
+      {
+        tag: "runtimeCommand",
+        actorId: "goblin",
+        command: "endTurn",
+      },
+    ]);
   });
 
   test("fills a battle movement hole through MCP", () => {

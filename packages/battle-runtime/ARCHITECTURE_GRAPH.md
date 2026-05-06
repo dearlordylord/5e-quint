@@ -51,13 +51,13 @@ flowchart TD
   AttackRoll["attack-roll-algebra<br/>input: AttackRollResult + Armor Class<br/>success: SRD natural 1/20 and AC hit fact<br/>why: one d20 attack-roll adjudication path"]
   RuntimeDice["runtime-dice-algebra<br/>input: rolled dice groups + weapon damage dice expression<br/>success: validated dice count/range facts<br/>why: one dice-roll validation path"]
   Discover["discoverBattleActs(state)<br/>success: AvailableBattleAct[] = subject + label + summary + initial holes<br/>why: public act discovery API<br/>without: callers duplicate legality checks"]
-  Subject["BattleSubject<br/>action.attack, generic combat actions, actionSpell, unitFeature, or runtimeCommand movement/turn/reaction commands<br/>why: stable caller-selected replay key, including turn-start Death Saving Throw fills"]
+  Subject["BattleSubject<br/>action.attack, action.multiattack, generic combat actions, actionSpell, unitFeature, or runtimeCommand movement/turn/reaction commands<br/>why: stable caller-selected replay key, including turn-start Death Saving Throw fills"]
   FillSession["caller-owned BattleFill[]<br/>data: accumulated answers for a selected subject<br/>why: replay-from-root input<br/>without: partially answered forms become durable battle state"]
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
   Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
-  MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn<br/>why: reusable Stat Block limited-use protocol"]
+  MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose only matching dispatch attacks plus End Turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation<br/>source: retained Unit + runtime use-count state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals"]
   SpellAct["action-time spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: consumes Magic action; Magic Missile allocates darts and spends the selected slot; Ray of Frost records Speed effect; Acid Splash save-gate damage applies to failed saves"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
@@ -99,7 +99,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  Subject["BattleSubject<br/>action.attack, actionSpell, unitFeature, or runtimeCommand.endTurn"]
+  Subject["BattleSubject<br/>action.attack, action.multiattack, actionSpell, unitFeature, or runtimeCommand.endTurn"]
   CurrentActor["actorId === currentActing(state.initiative)<br/>success: continue<br/>failure: invalid wrongActor<br/>why: subject legality is turn-local"]
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn<br/>invalid: fills are not accepted"]
   Attack["action.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
@@ -126,11 +126,12 @@ flowchart TD
 
 ## Implemented Slice Boundaries
 
-- Public subjects are `action.attack` with an authored `attackName`,
-  `actionSpell` with a retained Spell Record id, `unitFeature` with a
-  retained Unit id, and `runtimeCommand.endTurn`. They select reusable runtime
-  procedures; they are not a projected executable taxonomy and are not one
-  reducer branch per authored slug.
+- Public subjects include `action.attack` with an authored `attackName`,
+  `action.multiattack`, `actionSpell` with a retained Spell Record id,
+  `unitFeature` with a retained Unit id, and runtime commands such as
+  `runtimeCommand.endTurn`. They select reusable runtime procedures; they are
+  not a projected executable taxonomy and are not one reducer branch per
+  authored slug.
 - Fills are caller/session state, not durable `BattleState`.
 - Reaction decisions are durable state transitions. A `needsHoles` result may
   return a `BattleState` with an `interruptStack`; MCP and other callers must
@@ -192,8 +193,10 @@ flowchart TD
   reducer branches. Save-gate damage replay derives the final full, half, or no
   damage result from the single Saving Throw outcome and the admitted profile.
 - Supported Stat Block Multiattack entries spend the Attack action and grant
-  named dispatch attacks from the Actions section. Unsupported conditional
-  on-hit riders are filtered by support gates and are not copied into MCP state.
+  named dispatch attacks from the Actions section. While any dispatch remains
+  pending, discovery and replay allow only matching dispatch attacks plus End
+  Turn, which closes unspent dispatches. Unsupported conditional on-hit riders
+  are filtered by support gates and are not copied into MCP state.
 - New authored abilities are data-only when they fit these implemented
   procedure families. Widen readers or support gates when the authored shape is
   legal but unsupported. Add reducer state or QNT/MBT behavior only for a
