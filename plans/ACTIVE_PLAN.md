@@ -156,24 +156,30 @@ Keep it synchronized with the DAG table and task details.
     },
     {
       "number": 79,
+      "id": "PBA25A",
+      "status": "blocked",
+      "title": "Refactor Character Build Projection Boundary"
+    },
+    {
+      "number": 80,
       "id": "PBA26",
       "status": "blocked",
       "title": "Define Character Sheet Session Boundary And Migrate App"
     },
     {
-      "number": 80,
+      "number": 81,
       "id": "PBA27",
       "status": "blocked",
       "title": "Core Quarantine And Deletion Cutover"
     },
     {
-      "number": 81,
+      "number": 82,
       "id": "PBA28",
       "status": "blocked",
       "title": "MBT Consolidation And Shared Algebra Parity"
     },
     {
-      "number": 82,
+      "number": 83,
       "id": "PBA29",
       "status": "blocked",
       "title": "Tighten Stat Block Multiattack Dispatch Continuation"
@@ -232,11 +238,12 @@ Keep it synchronized with the DAG table and task details.
 | 75    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | blocked                                       | PBA21B       | PBA23        | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Move active `/battle` and MCP battle output to the promoted snapshot contract; temporarily quarantine Core-backed trace routes only to advance Core deletion. |
 | 76    | PBA23 - Core Promotion Deletion Ledger                            | blocked                                       | PBA22        | PBA25        | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                                               |
 | 77    | PBA24 - Remove Rogue Cunning Action Support Workaround            | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                                                     |
-| 78    | PBA25 - Promote Unit-Backed Character Choice Width                | blocked                                       | PBA23        | PBA24, PBA26 | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)                 | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections.                                 |
-| 79    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | blocked                                       | PBA25        | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs.                                                        |
-| 80    | PBA27 - Core Quarantine And Deletion Cutover                      | blocked                                       | PBA24, PBA26 | PBA28        | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior.                              |
-| 81    | PBA28 - MBT Consolidation And Shared Algebra Parity               | blocked                                       | PBA27        | future tasks | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT.                                      |
-| 82    | PBA29 - Tighten Stat Block Multiattack Dispatch Continuation      | blocked                                       | PBA28        | future tasks | inline below                                                                                                 | Decide and encode the full legal action/command surface while pending Stat Block Multiattack dispatches remain.                                               |
+| 78    | PBA25 - Promote Unit-Backed Character Choice Width                | blocked                                       | PBA23        | PBA24, PBA25A | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)                 | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections.                                 |
+| 79    | PBA25A - Refactor Character Build Projection Boundary             | blocked                                       | PBA25        | PBA26        | [research plan](/workspace/typescript/dnd/plans/pba25a-character-build-projection-boundary.md)               | Refactor CharacterBuild into durable identity and choice evidence, with executable facts projected at session/battle boundaries.                              |
+| 80    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | blocked                                       | PBA25A       | PBA27        | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Decide the promoted Character Sheet/session read model and move app character workflows off Core APIs.                                                        |
+| 81    | PBA27 - Core Quarantine And Deletion Cutover                      | blocked                                       | PBA24, PBA26 | PBA28        | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior.                              |
+| 82    | PBA28 - MBT Consolidation And Shared Algebra Parity               | blocked                                       | PBA27        | future tasks | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT.                                      |
+| 83    | PBA29 - Tighten Stat Block Multiattack Dispatch Continuation      | blocked                                       | PBA28        | future tasks | inline below                                                                                                 | Decide and encode the full legal action/command surface while pending Stat Block Multiattack dispatches remain.                                               |
 
 ## Task Details
 
@@ -926,34 +933,66 @@ PBA27.
 Status: `blocked`
 
 Depends on: PBA23
-Blocks: PBA24, PBA26
+Blocks: PBA24, PBA25A
 
 Research plan:
 [pba25-unit-backed-character-choice-width.md](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)
 
 Next action: move remaining Core direct character-choice width into Surface
-Unit records/readers, Unit-backed creation holes, selected Unit refs, and
-`CharacterBuild` projections.
+Unit records/readers, Unit-backed creation holes, selected Unit refs, and the
+minimum retained build facts needed for later projection-boundary cleanup.
 
 Acceptance summary: subclass, feat/ASI/Epic Boon, multiclass skill/tool, and
 proficiency choice families that remain needed for promoted workflows are
 represented through Surface language and runtime support gates, not Core enums,
 parallel tables, or authored-id dispatch in non-Surface packages. This task
-owns the generic feature-grant and retained-Unit path needed by PBA24, but does
-not attach Cunning Action battle support from MCP.
+owns the generic feature-grant and retained-Unit path needed by PBA24 and
+PBA25A, but does not attach Cunning Action battle support from MCP or complete
+the broader `CharacterBuild`/Character Sheet boundary cleanup.
 
 Verification summary: RAW/UL check per widened choice family, Surface
 schema/reader tests, character-creation reducer and finalization tests, QNT/MBT
 updates only for changed reducer behavior or bridge shapes,
 `pnpm check:authored-id-dispatch`, `/simplify` convergence.
 
-Plan Impact: if successful, unblock PBA24 and PBA26.
+Plan Impact: if successful, unblock PBA24 and PBA25A.
 
-### Task 79 - PBA26 - Define Character Sheet Session Boundary And Migrate App
+### Task 79 - PBA25A - Refactor Character Build Projection Boundary
 
 Status: `blocked`
 
 Depends on: PBA25
+Blocks: PBA26
+
+Research plan:
+[pba25a-character-build-projection-boundary.md](/workspace/typescript/dnd/plans/pba25a-character-build-projection-boundary.md)
+
+Next action: refactor `CharacterBuild` into durable identity and
+non-derivable choice evidence, then move executable totals and capacities to
+MCP/session/battle projection boundaries.
+
+Acceptance summary: `CharacterBuild` no longer stores deterministic granted
+feature lists, proficiencies, armor training, max HP, resources, global
+spellcasting facts, or active-equipment state when those facts can be derived
+from progression, origin Units, selected choices, equipment ownership, and the
+catalog. Creation holes, fill validation, and finalization share one
+support-sliced projection path. Spell access is source-scoped, slot pools are
+explicit (`spellcasting` vs `pact_magic`), and owned equipment is distinct from
+loadout.
+
+Verification summary: RAW/PHB/UL agent check, focused
+Surface/character-creation/MCP projection tests, docs updates for
+`README.md`/`VOCABULARY.md`, `pnpm check:authored-id-dispatch`, package
+typechecks/tests, character-creation MBT only if reducer bridge shape changes,
+no battle MBT unless battle behavior changes, `/simplify` convergence.
+
+Plan Impact: if successful, unblock PBA26.
+
+### Task 80 - PBA26 - Define Character Sheet Session Boundary And Migrate App
+
+Status: `blocked`
+
+Depends on: PBA25A
 Blocks: PBA27
 
 Research plan:
@@ -975,7 +1014,7 @@ MBT unless snapshot semantics change, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA27 when PBA24 is also complete.
 
-### Task 80 - PBA27 - Core Quarantine And Deletion Cutover
+### Task 81 - PBA27 - Core Quarantine And Deletion Cutover
 
 Status: `blocked`
 
@@ -999,7 +1038,7 @@ legacy Core MBT as a gate, `/simplify` convergence.
 
 Plan Impact: if successful, unblock PBA28.
 
-### Task 81 - PBA28 - MBT Consolidation And Shared Algebra Parity
+### Task 82 - PBA28 - MBT Consolidation And Shared Algebra Parity
 
 Status: `blocked`
 
@@ -1024,7 +1063,7 @@ selected Quint proof/MBT commands, promoted runtime documentation checks, no
 legacy Core MBT as a gate, no broad battle MBT unless a promoted integrated
 slice is intentionally changed, `/simplify` convergence.
 
-### Task 82 - PBA29 - Tighten Stat Block Multiattack Dispatch Continuation
+### Task 83 - PBA29 - Tighten Stat Block Multiattack Dispatch Continuation
 
 Status: `blocked`
 
