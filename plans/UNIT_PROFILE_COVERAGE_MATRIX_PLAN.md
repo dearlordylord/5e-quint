@@ -39,6 +39,12 @@ Durable decisions that apply across all phases:
 - **Profile model**: QNT proves structural mechanics profiles, not individual
   authored Units. Unit coverage proves that every authored Unit maps to one or
   more supported profiles or to an explicit unsupported disposition.
+- **Procedure parity vs Unit identity**: QMBT2-QMBT6 are Procedure Parity MBT:
+  focused behavior-shape parity against production reducers. Specific Unit
+  Parity MBT is a later, selective identity-aware lane driven by this matrix.
+- **Selective MBT identity coverage**: deterministic projection/admission
+  coverage should span every executable Unit. MBT by concrete Unit id is for
+  representative or high-risk identities, not every Unit in the catalog.
 - **No duplicate SRD overlap**: if a mechanic is covered by an SRD Unit, the
   Classic non-SRD collection does not author a duplicate renamed record for it.
 - **Provenance discipline**: SRD provenance, Classic non-SRD mechanics source
@@ -323,6 +329,10 @@ tasks and completed parity rows for done tasks. Keep MBT scarce: profile MBT is
 representative semantics coverage, while catalog tests cover per-Unit
 classification.
 
+After QMBT2-QMBT6, use the matrix as the input to a separate Specific Unit
+Parity MBT lane only where identity matters. That lane should bind selected
+Unit ids into production runtime fixtures, not enumerate all Units in QNT.
+
 ### Acceptance Criteria
 
 - [ ] Completed QMBT profile claims require focused MBT or runtime-test owners.
@@ -331,6 +341,8 @@ classification.
 - [ ] The checker rejects completed runtime parity claims without owner
       artifacts.
 - [ ] No broad battle MBT is required for matrix-only profile edits.
+- [ ] Specific Unit Parity MBT candidates are chosen from matrix risk/profile
+      pressure, not from a goal of one MBT per Unit id.
 
 ---
 

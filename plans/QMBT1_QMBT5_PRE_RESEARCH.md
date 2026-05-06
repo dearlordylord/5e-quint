@@ -13,6 +13,18 @@ procedures, not test-only reimplementations.
   small runtime-shaped fixtures.
 - Prefer one focused MBT spec/driver per QCORE family instead of one broad
   `battle-runtime.qnt` lane.
+- Treat QMBT2-QMBT6 as **Procedure Parity MBT**: behavior-shape parity against
+  production reducers for a bounded QCORE profile, not full authored content
+  coverage.
+- Treat future matrix-driven identity lanes as **Specific Unit Parity MBT**:
+  selected concrete Unit ids from `plans/unit-profile-coverage/` installed in
+  runtime and checked against the same procedure projections.
+- Do not enumerate all Units in QNT. QNT stays behavior-shape/scenario based;
+  TS catalog/projection tests and the Unit profile matrix own concrete Unit
+  identity.
+- Every executable Unit should receive deterministic projection/admission
+  coverage through the matrix lane. MBT by identity is reserved for
+  representative or high-risk Units, not every Unit.
 - Compare scalar projections: resources, holes, HP deltas, reaction window
   shape, movement budget, and last result. Do not compare full runtime state.
 - If production-equivalent procedure logic is private in `battle-reducer.ts`,
@@ -34,9 +46,10 @@ Open projection-vocabulary guidance:
   `legendaryActionWindowOpen`, `level1SlotsRemaining`,
   `deathSaveSuccesses`, `deathSaveFailures`, `featurePoolRemaining`,
   `rageActive`, `sneakAttackUsed`, and `cuttingWordsDieAvailable`.
-- Treat this list as provisional, not reviewed contract. QMBT3 and QMBT4 have
-  landed; extract shared helpers only when QMBT5+ work shows the same domain
-  projection shape repeating across lanes.
+- Treat this list as provisional, not reviewed contract. QMBT3-QMBT6 have
+  landed; extract shared helpers only when a new lane shows the same domain
+  projection shape repeating across Procedure Parity and Specific Unit Parity
+  drivers.
 
 ## QMBT1 - Standard Rule-Core MBT Bridge Contract
 
@@ -274,3 +287,14 @@ Risk:
   If runtime permits Bonus Actions, ordinary Actions, or unrelated subjects
   during an open Multiattack continuation, QCORE11 and runtime have diverged
   even if dispatch counters decrement correctly.
+
+Learning after QMBT5-QMBT6 and the Unit profile matrix:
+
+- QMBT5 and QMBT6 confirm the focused lane pattern scales across spells and
+  stat-block controls without catalog enumeration in QNT.
+- Matrix-backed Unit identity belongs on the TS side. The matrix can drive
+  red/green work for unsupported or missing profiles, while QNT continues to
+  prove reusable procedure shapes.
+- Specific Unit Parity MBT should bind selected matrix Unit ids into production
+  runtime fixtures and reuse focused projections. It should not add one QNT
+  branch per shipped Unit.

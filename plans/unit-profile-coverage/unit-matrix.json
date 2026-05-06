@@ -58,29 +58,29 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 8,
-      "numerator": 8,
+      "denominator": 11,
+      "numerator": 11,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 8,
-      "numerator": 8,
+      "denominator": 11,
+      "numerator": 11,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 8,
-      "numerator": 8,
+      "denominator": 11,
+      "numerator": 11,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 8,
-      "numerator": 8,
+      "denominator": 11,
+      "numerator": 11,
       "percent": "100%"
     },
     "supportedProfileCoverage": {
       "denominator": 35,
-      "numerator": 14,
-      "percent": "40%"
+      "numerator": 17,
+      "percent": "48.6%"
     }
   },
   "profiles": [
@@ -162,6 +162,58 @@
       ]
     },
     {
+      "id": "unit-feature.bonus-action-ongoing-rage",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT4"
+      ],
+      "title": "Unit feature starts an ongoing rage occurrence with resistance, damage, and concentration restrictions",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.first-attack-roll-reckless-advantage",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT4"
+      ],
+      "title": "Unit feature can declare Reckless Attack on the first Strength attack roll",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "unit-feature.reaction-roll-or-damage-reduction",
       "profileKind": "reaction",
       "qntOwners": [
@@ -192,6 +244,58 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.save-damage-replacement",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT4"
+      ],
+      "title": "Unit feature replaces Dexterity half-damage save outcomes",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.self-bonus-action-healing",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT4"
+      ],
+      "title": "Unit feature spends a Bonus Action and resource to heal self",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
         }
       ]
     },
@@ -356,7 +460,11 @@
         "unit-feature.alternate-action-cost",
         "unit-feature.action-surge-resource",
         "unit-feature.attack-damage-rider",
+        "unit-feature.bonus-action-ongoing-rage",
+        "unit-feature.first-attack-roll-reckless-advantage",
         "unit-feature.reaction-roll-or-damage-reduction",
+        "unit-feature.save-damage-replacement",
+        "unit-feature.self-bonus-action-healing",
         "unit-feature.weapon-critical-range-19"
       ],
       "taskId": "QCORE9"
@@ -401,7 +509,11 @@
         "unit-feature.alternate-action-cost",
         "unit-feature.action-surge-resource",
         "unit-feature.attack-damage-rider",
+        "unit-feature.bonus-action-ongoing-rage",
+        "unit-feature.first-attack-roll-reckless-advantage",
         "unit-feature.reaction-roll-or-damage-reduction",
+        "unit-feature.save-damage-replacement",
+        "unit-feature.self-bonus-action-healing",
         "unit-feature.weapon-critical-range-19"
       ],
       "taskId": "QMBT4"
@@ -512,14 +624,45 @@
     },
     {
       "claim": {
-        "futureProfileOwner": "QCORE9",
-        "reason": "Healing resource profile exists in QCORE9 but is not yet a stable Unit profile row in this matrix slice.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.self-bonus-action-healing"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.self-bonus-action-healing",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature spends a Bonus Action and resource to heal self",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/fighter_second_wind.json",
       "unitId": "fighter_second_wind"
     },
@@ -637,7 +780,7 @@
     {
       "claim": {
         "profileIds": [
-          "unit-feature.attack-damage-rider"
+          "unit-feature.bonus-action-ongoing-rage"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
@@ -649,7 +792,7 @@
       "kind": "class_feature",
       "profiles": [
         {
-          "id": "unit-feature.attack-damage-rider",
+          "id": "unit-feature.bonus-action-ongoing-rage",
           "profileKind": "persistent-effect",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
@@ -662,7 +805,7 @@
             "QCORE9",
             "QMBT4"
           ],
-          "title": "Unit feature contributes an attack damage rider",
+          "title": "Unit feature starts an ongoing rage occurrence with resistance, damage, and concentration restrictions",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -680,14 +823,45 @@
     },
     {
       "claim": {
-        "futureProfileOwner": "QCORE9",
-        "reason": "Attack-roll advantage with next-turn defense consequence is not a stable Unit profile row yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.first-attack-roll-reckless-advantage"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.first-attack-roll-reckless-advantage",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature can declare Reckless Attack on the first Strength attack roll",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/barbarian_reckless_attack.json",
       "unitId": "barbarian_reckless_attack"
     },
@@ -802,14 +976,45 @@
     },
     {
       "claim": {
-        "futureProfileOwner": "QCORE9",
-        "reason": "Save damage replacement support exists in runtime but is not yet backfilled as a stable profile row in this matrix slice.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.save-damage-replacement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.save-damage-replacement",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature replaces Dexterity half-damage save outcomes",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/rogue_evasion.json",
       "unitId": "rogue_evasion"
     },

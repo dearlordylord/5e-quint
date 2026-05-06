@@ -32,8 +32,10 @@ The derived view is never authored directly.
 Owner artifacts use a separate claim prefix from RAW coverage:
 
 ```text
-UNIT_PROFILE_COVERAGE_EXAMPLE: <claim-kind> <profile-id> [<profile-id> ...]
+<claim-prefix> <claim-kind> <profile-id> [<profile-id> ...]
 ```
+
+where `<claim-prefix>` is `UNIT-PROFILE-COVERAGE:`.
 
 Supported claim kinds are `qnt-owner`, `runtime-owner`,
 `verification-owner:qnt-proof`, `verification-owner:focused-mbt`,
@@ -56,6 +58,17 @@ Unit ids across collections, missing fungi-themed synthetic labels, protected
 expression fields, and near-canonical ids/labels from its deny list.
 
 ## Workflow
+
+This matrix has two verification layers:
+
+- **Procedure parity**: focused QMBT lanes prove structural QCORE profiles
+  through production reducers. These are representative semantics tests for
+  the profile, not a catalog loop over every authored Unit id.
+- **Specific Unit parity**: Unit claims prove that each authored Unit id is
+  classified into supported profiles or an explicit unsupported/widening
+  disposition. Deterministic catalog/projection tests should cover all shipped
+  Units; focused MBT should be added only for representative or high-risk Unit
+  identities.
 
 Run:
 

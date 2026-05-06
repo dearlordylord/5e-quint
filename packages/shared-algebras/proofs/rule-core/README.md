@@ -9,6 +9,12 @@ QCORE0 composition result:
 - integration modules stay shallow and measured;
 - QNT fixtures are projection-shaped rule facts, not Surface mirrors.
 
+QCORE proofs model reusable procedure shapes. They do not enumerate authored
+Surface Unit ids or act as a catalog coverage mechanism. Concrete Unit identity
+coverage belongs to `plans/unit-profile-coverage/` and runtime projection tests;
+only selected representative or high-risk Unit ids should receive Specific Unit
+Parity MBT.
+
 ## QCORE1: Hit Point Damage
 
 `hit-point-damage.qnt` models the SRD 5.2.1 procedure for applying a resolved

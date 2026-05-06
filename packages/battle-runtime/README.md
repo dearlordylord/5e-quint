@@ -257,6 +257,17 @@ Focused lanes currently include:
   QCORE9 Action Surge, Second Wind, Cunning Action, Improved Critical,
   Rage/Reckless, Sneak Attack, Evasion, Cutting Words, and Uncanny Dodge
   projections.
+- `rule-core-spells.mbt.qnt` / `src/rule-core-spells.mbt.test.ts` for QCORE10
+  spell invocation, supported reaction spell, and readied spell projections.
+- `rule-core-stat-block-controls.mbt.qnt` /
+  `src/rule-core-stat-block-controls.mbt.test.ts` for QCORE11 stat-block
+  Multiattack dispatch projections.
+
+These focused lanes are Procedure Parity MBT. They prove supported procedure
+shapes through production reducers. Authored Unit identity coverage is owned by
+`plans/unit-profile-coverage/`: deterministic matrix/projection coverage should
+span all executable Units, while Specific Unit Parity MBT is selective for
+representative or high-risk Unit ids.
 
 Action naming and replay:
 

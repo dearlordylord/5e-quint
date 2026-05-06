@@ -121,6 +121,12 @@ Keep it synchronized with the DAG table and task details.
       "id": "QMBT6",
       "status": "done",
       "title": "Stat-Block Control Runtime Parity"
+    },
+    {
+      "number": 102,
+      "id": "QMBT7",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Specific Unit Parity MBT and Matrix Integration"
     }
   ]
 }
@@ -170,6 +176,7 @@ Keep it synchronized with the DAG table and task details.
 | 99    | QMBT4 - Feature Procedure Runtime Parity | done | QMBT1, QCORE9 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
 | 100   | QMBT5 - Spell Procedure Runtime Parity | done | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
 | 101   | QMBT6 - Stat-Block Control Runtime Parity | done | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE11 Stat Block Multiattack dispatch through production reducers. Legendary Actions remain a separate later tracer. |
+| 102   | QMBT7 - Specific Unit Parity MBT and Matrix Integration | ready-for-implementation-after-light-research | QMBT4-QMBT6, Unit profile matrix | later Specific Unit parity expansion tasks | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Run the deep vertical: define the methodology, add deterministic admission/projection coverage for a small matrix slice, add one selected identity MBT, then create QMBT8+ only from tracer learnings. |
 
 ## Task Details
 
@@ -390,3 +397,28 @@ Actions, Bonus Action, Reaction, Legendary Actions, and Limited Usage passages;
 focused QMBT6 timed run; existing promoted battle-runtime MBT after the
 Multiattack runtime behavior correction; package typecheck; package unit tests;
 `pnpm quality`; two `/simplify` rounds.
+
+### Task 102 - QMBT7 - Specific Unit Parity MBT and Matrix Integration
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT4-QMBT6, Unit profile matrix
+
+Blocks: none
+
+Research / plan: [QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md)
+
+Scope: run the matrix-driven Specific Unit Parity methodology tracer that sits
+after Procedure Parity MBT. QMBT7 should define the exact coverage states, add
+deterministic catalog/projection/admission coverage for a small feature-profile
+slice, add one selected identity-aware MBT, and record learnings before any
+QMBT8+ expansion tasks are created.
+
+Out of scope: enumerating all Units in QNT; one MBT trace per shipped Unit;
+duplicating Surface Unit data into QNT; broad catalog discovery inside focused
+MBT drivers.
+
+Verification: matrix checker; focused deterministic projection/admission tests;
+focused MBT only after choosing representative/high-risk Unit identities and
+only with the standard timed MBT protocol; no broad battle MBT for matrix-only
+edits.

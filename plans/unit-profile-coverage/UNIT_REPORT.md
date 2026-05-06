@@ -10,22 +10,25 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | --- | ---: | ---: |
 | Collection inventory coverage | 49/49 | 100% |
 | Profile classification coverage | 49/49 | 100% |
-| Supported profile coverage | 14/35 | 40% |
-| QNT profile modeling coverage | 8/8 | 100% |
-| QNT proof coverage | 8/8 | 100% |
-| Runtime mapping coverage | 8/8 | 100% |
-| Runtime parity coverage | 8/8 | 100% |
+| Supported profile coverage | 17/35 | 48.6% |
+| QNT profile modeling coverage | 11/11 | 100% |
+| QNT proof coverage | 11/11 | 100% |
+| Runtime mapping coverage | 11/11 | 100% |
+| Runtime parity coverage | 11/11 | 100% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Supported Unit Claims
 
 | Unit | Collection | Profiles |
 | --- | --- | --- |
+| `fighter_second_wind` | srd-5.2.1 | `unit-feature.self-bonus-action-healing` |
 | `fighter_action_surge` | srd-5.2.1 | `unit-feature.action-surge-resource` |
 | `fighter_improved_critical` | srd-5.2.1 | `unit-feature.weapon-critical-range-19` |
-| `barbarian_rage` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
+| `barbarian_rage` | srd-5.2.1 | `unit-feature.bonus-action-ongoing-rage` |
+| `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
 | `bard_cutting_words` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `rogue_cunning_action` | srd-5.2.1 | `unit-feature.alternate-action-cost` |
+| `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
 | `rogue_uncanny_dodge` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
 | `acid_splash` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -47,12 +50,9 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `subclass_fighter_champion` | unsupported-profile | Subclass container record; executable pressure lives on granted feature Units. |
 | `subclass_wizard_evoker` | unsupported-profile | Subclass container record; no promoted execution profile yet. |
 | `fighter_fighting_style` | unsupported-profile | Choice/grant container; selected Fighting Style feat carries executable pressure. |
-| `fighter_second_wind` | unsupported-profile | Healing resource profile exists in QCORE9 but is not yet a stable Unit profile row in this matrix slice. |
 | `fighter_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `fighter_tactical_mind` | needs-surface-widening | Ability-check resource augmentation is not represented by a promoted battle Unit profile. |
-| `barbarian_reckless_attack` | unsupported-profile | Attack-roll advantage with next-turn defense consequence is not a stable Unit profile row yet. |
 | `monk_deflect_attacks` | unsupported-profile | Damage reduction is partially promoted, but redirect-on-zero follow-up is not yet fully represented as a supported profile. |
-| `rogue_evasion` | unsupported-profile | Save damage replacement support exists in runtime but is not yet backfilled as a stable profile row in this matrix slice. |
 | `wizard_ritual_adept` | unsupported-profile | Ritual casting is character/spell access pressure, not a promoted battle execution profile yet. |
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
@@ -81,8 +81,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 26 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `defense`, `feat_savage_attacker`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
-| srd-5.2.1 | QCORE9 | unsupported-profile | 5 | `fighter_second_wind`, `barbarian_reckless_attack`, `monk_deflect_attacks`, `rogue_evasion`, `orc_relentless_endurance` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 4 | `fighter_tactical_mind`, `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`, `thunderwave` |
+| srd-5.2.1 | QCORE9 | unsupported-profile | 2 | `monk_deflect_attacks`, `orc_relentless_endurance` |
 
 ## Profile Claims By Task
 
@@ -90,12 +90,12 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | --- | --- | --- |
 | QCORE7 | qnt-proof | _none_ |
 | QCORE8 | qnt-proof | `unit-feature.reaction-roll-or-damage-reduction`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
-| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.weapon-critical-range-19` |
+| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19` |
 | QCORE10 | qnt-proof | `spell.invocation-damage-save-or-attack`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | QCORE11 | qnt-proof | `stat-block.attack-control` |
 | QMBT2 | completed-runtime-parity | _none_ |
 | QMBT3 | completed-runtime-parity | `unit-feature.reaction-roll-or-damage-reduction`, `spell.reaction-shield` |
-| QMBT4 | completed-runtime-parity | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.weapon-critical-range-19` |
+| QMBT4 | completed-runtime-parity | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19` |
 | QMBT5 | completed-runtime-parity | `spell.invocation-damage-save-or-attack`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | QMBT6 | completed-runtime-parity | `stat-block.attack-control` |
 
