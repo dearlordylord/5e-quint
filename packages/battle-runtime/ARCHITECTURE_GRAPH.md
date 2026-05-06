@@ -218,6 +218,12 @@ flowchart TD
   public weapon Attack reducer path against Skeleton, is intentionally narrower
   than the old v0 MBT, and does not require MBT for every authored Unit or
   Stat Block.
+- Focused rule-core MBT lanes use one small `.mbt.qnt` spec and one matching
+  driver per QCORE family. They project scalar QCORE-observable facts and call
+  production reducer entrypoints instead of duplicating reducer logic. The first
+  focused lane is `rule-core-movement.mbt.qnt` plus
+  `src/rule-core-movement.mbt.test.ts`, covering QCORE7 Movement and Stand from
+  Prone against `resolveBattleSubject`.
 
 ## Relationship To Core And Deleted Correction
 

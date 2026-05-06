@@ -216,6 +216,72 @@ parses a Unit, Spell, or Stat Block part into a profile, resolution must re-pars
 or carry the narrowed profile through the selected subject path instead of
 duplicating authored-id checks.
 
+## Focused Rule-Core MBT Bridge Contract
+
+Focused QMBT lanes compare promoted rule-core Quint procedures with production
+runtime replay without widening into the full battle state space.
+
+Placement:
+
+- battle-runtime-focused lanes live in this package when the stable production
+  entrypoints are `startBattle`, `discoverBattleActs`,
+  `resolveBattleSubject`, `resolveBattleReaction`, and `snapshotBattle`;
+- reusable pure procedure lanes may live beside the production procedure module
+  that the reducer consumes;
+- each focused lane owns one `.mbt.qnt` file at package root and one matching
+  `src/*.mbt.test.ts` driver.
+
+Projection:
+
+- compare only QCORE-observable scalar facts such as Movement spent/derived
+  remaining, Prone/Grappled flags, resource counters, pending holes, and one
+  discriminated last outcome value;
+- do not compare full `BattleState`, full snapshots, authored catalogs, or
+  retained Surface records;
+- do not store derivable projection facts or split coupled outcome facts into
+  parallel fields;
+- keep fixture facts explicit. Spatial legality, Opportunity Attack threats,
+  spell targets, and Grapple outcomes are caller/table fills, not derived grid
+  state.
+
+Action naming and replay:
+
+- QNT action names mirror the owned proof action names where possible:
+  `init`, the procedure action, and optional `step`;
+- TS driver actions call production runtime entrypoints or extracted production
+  procedures. They must not reimplement reducer decisions in test code;
+- invalid outcomes project a narrow reason only when that reason is part of the
+  QCORE-observable contract for the lane.
+
+Fixture bounds:
+
+- each MBT file documents its fixed fixture through names and constants rather
+  than discovering broad authored content;
+- state-space growth should come from the procedure under test, not from
+  catalog enumeration or multiple independent actors;
+- integrated `battle-runtime.mbt.test.ts` remains a final selective gate, not a
+  collection point for every rule-core parity trace.
+
+Timing command:
+
+```sh
+cd packages/battle-runtime
+START=$(date +%s); MBT_TRACES=1 MBT_STEPS=4 pnpm exec vitest run src/rule-core-movement.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"
+```
+
+Before any MBT run, check for existing `vitest` and `quint_evaluator`
+processes, and stop stale `quint_evaluator` processes as described in the repo
+instructions.
+
+The first focused runnable pattern is
+`rule-core-movement.mbt.qnt` plus `src/rule-core-movement.mbt.test.ts`. It
+replays the QCORE7 Movement and Stand from Prone procedure names through
+`resolveBattleSubject`, with a two-combatant fixture, no Opportunity Attack
+threats, a fixed 10-foot Movement fill, and one 35-foot overspend rejection.
+It cites SRD 5.2.1 Movement and Prone text through the QCORE7 proof module and
+uses `UBIQUITOUS_LANGUAGE.md` terms: Speed, Movement, Prone, and Opportunity
+Attack.
+
 Migration map from the PBA13A authored-id violation set:
 
 - `fighter_action_surge` maps to `UnitProfile.extraActionGrant`.

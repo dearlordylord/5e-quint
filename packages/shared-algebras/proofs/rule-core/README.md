@@ -422,3 +422,29 @@ bounded action/Bonus Action/Reaction resources, two fixture named attacks,
 daily use, Recharge, rest recharge, start-turn recharge rolls, Legendary Action
 windows, and Multiattack dispatch closure while keeping projection state
 Surface-free.
+
+## Focused Runtime MBT Contract
+
+Rule-core runtime parity uses focused QMBT lanes rather than widening the
+package-local battle MBT into the full battle state space.
+
+- QNT action names should mirror the owned proof action names: `init`, the
+  procedure action, and optional `step`.
+- Runtime drivers must call production reducers/procedure modules, not
+  duplicate reducer logic in test code.
+- Projections should compare only QCORE-observable facts: scalar resources,
+  holes, flags, and one discriminated last outcome. Derivable facts are
+  projected, not stored as independent MBT variables. Full battle snapshots,
+  authored Surface records, and catalog breadth are outside these lanes.
+- Fixture bounds must be explicit and small. State-space growth belongs to the
+  procedure under test, not authored content discovery.
+- Battle-runtime-focused lanes live in `packages/battle-runtime` when the
+  stable production entrypoint is `resolveBattleSubject` or
+  `resolveBattleReaction`.
+
+The first focused runtime pattern is
+`packages/battle-runtime/rule-core-movement.mbt.qnt` with
+`packages/battle-runtime/src/rule-core-movement.mbt.test.ts`. It maps QCORE7
+`doSpendMovement` and `doStandFromProne` through production
+`resolveBattleSubject`, projecting Movement spent/remaining, Prone, pending
+Movement holes, and last outcome.
