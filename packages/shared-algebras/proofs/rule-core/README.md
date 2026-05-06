@@ -239,3 +239,45 @@ Out of scope for QCORE7:
 bounded caller Movement costs, Opportunity Attack trigger facts, Dash/Disengage
 composition, Stand/Drop Prone, and Grapple/Escape/Release transitions while
 keeping spatial facts explicit rather than deriving geometry in Core.
+
+## QCORE8: Reactions, Continuations, and Concentration
+
+`reactions-continuations-concentration.qnt` models the spell-free reaction
+protocol on top of QCORE6 turn resources and QCORE7 spatial trigger facts.
+Reaction windows are implementation protocol, not authored content: the module
+uses bounded active and suspended window states rather than importing Surface
+features or broad battle state. Advancing a continuation is executable window
+restoration, not a separate projection-only state.
+
+Scope:
+
+- Offer, Decline, matching Reaction spend, and Advance semantics;
+- Reaction quota reuse from QCORE6, including reset through `startTurn`;
+- bounded active-plus-suspended reaction-window depth, documented by
+  `ASSUMPTIONS.md` A45;
+- Opportunity Attack windows from QCORE7 caller-supplied trigger facts;
+- guarded damage-interruption windows after positive effective damage reaches
+  Hit Points through QCORE1's positive-HP damage procedure;
+- Readied Movement Response release as reactor-owned Reaction spend plus
+  caller-supplied Movement cost, gated by QCORE6's held Readied Movement fact;
+- Concentration start/replace/end, incapacitated-or-dead break/prevent,
+  damage-save DC `max(10, floor(damage / 2))` capped at 30, and failed-save
+  break, owned separately by the interrupted actor and reactor.
+
+Out of scope for QCORE8:
+
+- Readied Spell Response release, deferred to QCORE10 after Spell Invocation
+  and Spell Effect procedure facts exist;
+- all possible reaction features, deferred to QCORE9/QCORE11 procedure
+  profiles;
+- battle-wide queue/stack policy beyond the bounded active-window protocol in
+  A45;
+- pathfinding, line of sight, reach derivation, or authored catalog
+  enumeration.
+
+`reactions-continuations-concentration-inductive.qnt` is the owned proof
+machine. It samples bounded Opportunity Attack trigger facts, reaction choices,
+Readied Movement costs, nested offers, Reaction quota reset, and Concentration
+owner break paths, including the guarded damage/concentration interruption
+integration with explicit damage target identity, while recording the branch
+budget near the `any` action.

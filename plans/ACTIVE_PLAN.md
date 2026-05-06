@@ -15,8 +15,9 @@ Current authority summary:
   promoted battle authority for new Unit/StatBlock-backed behavior.
 - Root `battle.qnt` and old v0 battle code are legacy proof/restore source
   material only.
-- The most recent proof work is `QCORE7`: Movement, caller-supplied spatial
-  facts, and Grapple state over the shared turn procedure state.
+- The most recent proof work is `QCORE8`: Reactions, continuations,
+  Reaction quota, Readied Movement Response, and Concentration over the shared
+  turn and movement procedure state.
 - Broad widening should proceed through typed projection parsers and
   package-owned runtime procedures rather than authored-id dispatch,
   support-gate terminology, or projected-executable vocabulary.
@@ -63,13 +64,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 92,
       "id": "QCORE8",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Prove Reactions, Continuations, and Concentration"
     },
     {
       "number": 93,
       "id": "QCORE9",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Prove Unit Feature Procedure Profiles"
     },
     {
@@ -122,8 +123,8 @@ Keep it synchronized with the DAG table and task details.
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
 | 91    | QCORE7 - Movement, Spatial Facts, and Grapple | done | QCORE6 | QCORE8 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed movement budget, caller spatial facts, full Stand from Prone, and Grapple bounded state proof. |
-| 92    | QCORE8 - Reactions, Continuations, and Concentration | ready-for-implementation-after-light-research | QCORE7 | QCORE9 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove bounded spell-free continuation/reaction protocol plus concentration; defer Readied Spell Response integration to QCORE10. |
-| 93    | QCORE9 - Unit Feature Procedure Profiles | blocked | QCORE8 | QCORE10 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove feature procedure profiles after reaction/action/damage protocols exist; QNT models procedure facts, not Unit ids. |
+| 92    | QCORE8 - Reactions, Continuations, and Concentration | done | QCORE7 | QCORE9 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed bounded spell-free continuation/reaction protocol, Opportunity Attack and damage-interruption shallow integrations, Reaction quota spend/reset, Readied Movement Response, and Concentration. |
+| 93    | QCORE9 - Unit Feature Procedure Profiles | ready-for-implementation-after-light-research | QCORE8 | QCORE10 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove feature procedure profiles after reaction/action/damage protocols exist; QNT models procedure facts, not Unit ids. |
 | 94    | QCORE10 - Spell Procedure Profiles | blocked | QCORE9 | QCORE11 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Spell Invocation procedure facts and Spell Effects; add Readied Spell Response integration with QCORE8. |
 | 95    | QCORE11 - Stat-Block Controls | blocked | QCORE10 | none | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove stat-block attack, Multiattack, limited-use, Recharge, and Legendary Action procedure facts after prior protocols exist. |
 
@@ -144,21 +145,22 @@ Grapple/Escape/Release state.
 
 ### Task 92 - QCORE8 - Reactions, Continuations, and Concentration
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QCORE7
 Blocks: QCORE9
 
 Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
 
-Scope: bounded spell-free reaction/continuation protocol, Opportunity Attack
-and damage-interruption shallow integrations, Reaction Quota spend/reset, and
-Concentration. Any nested/replay ordering or queue/stack policy needs a named
-`ASSUMPTIONS.md` entry before implementation.
+Completed scope: bounded spell-free reaction/continuation protocol,
+Opportunity Attack and damage-interruption shallow integrations, Reaction Quota
+spend/reset, Readied Movement Response, and Concentration. Nested active-window
+depth is bounded by `ASSUMPTIONS.md` A45; Readied Spell Response release remains
+deferred to QCORE10.
 
 ### Task 93 - QCORE9 - Unit Feature Procedure Profiles
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: QCORE8
 Blocks: QCORE10
