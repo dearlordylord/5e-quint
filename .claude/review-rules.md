@@ -83,6 +83,25 @@ Accept:
 Required reviewer question:
 "Is this throw asserting an already-established compile-time fact, or is it discovering a runtime/domain failure that should be data?"
 
+### Collection Validation
+
+When validating or projecting a collection of independent items into `Either` or other typed error results, reviewers must check whether fail-fast behavior is intentional.
+
+Flag:
+
+- loops over collections that `return Either.left(...)` on the first invalid item when later items can be validated independently;
+- `Either.all` or monadic sequencing used where the boundary result already has `issues`, `ReadonlyNonEmptyArray<Issue>`, or multi-error response semantics;
+- single-error return types at boundaries whose domain naturally reports a batch, catalog, roster, fill list, option list, or Unit ref set.
+
+Prefer:
+
+- `traverseValidation` for independent per-item validation;
+- `ReadonlyNonEmptyArray<Issue>` or existing issue-list result types at domain boundaries;
+- preserving fail-fast only when later validation depends on earlier successful values, mutation order, resource consumption, or a protocol step that must stop.
+
+Required reviewer question:
+"Are these items independent enough that callers should see every issue, or is there a domain reason to stop at the first failure?"
+
 ## State Space Minimality
 
 For every product type, interface, type alias, Schema struct, Quint record, and machine context shape, verify: can every combination of field values occur in practice?
