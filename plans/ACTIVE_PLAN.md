@@ -5,7 +5,7 @@ Date: 2026-05-06
 This is the single active planning queue.
 Completed PBA15A0A-PBA29 work was removed from this queue after closeout; older
 closeout history remains in git history.
-Completed QCORE0-QCORE2 work was removed from this active queue after closeout;
+Completed QCORE0-QCORE5 work was removed from this active queue after closeout;
 their research and proof artifacts remain linked from the rule-core docs and
 task-specific research files.
 
@@ -15,8 +15,8 @@ Current authority summary:
   promoted battle authority for new Unit/StatBlock-backed behavior.
 - Root `battle.qnt` and old v0 battle code are legacy proof/restore source
   material only.
-- The most recent proof work is `QCORE2`: zero-HP damage and Death Saving Throw
-  lifecycle composition with QCORE1 Hit Point damage.
+- The most recent proof work is `QCORE5`: Attack Roll and attack damage
+  composition over QCORE1-QCORE4.
 - Broad widening should proceed through typed projection parsers and
   package-owned runtime procedures rather than authored-id dispatch,
   support-gate terminology, or projected-executable vocabulary.
@@ -55,15 +55,9 @@ Keep it synchronized with the DAG table and task details.
   "schema": "ralph-plan.v1",
   "tasks": [
     {
-      "number": 89,
-      "id": "QCORE5",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Prove Attack Roll and Attack Damage Composition"
-    },
-    {
       "number": 90,
       "id": "QCORE6",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Prove Action and Turn Procedures"
     },
     {
@@ -133,8 +127,7 @@ Keep it synchronized with the DAG table and task details.
 
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
-| 89    | QCORE5 - Attack Roll and Attack Damage Composition | ready-for-implementation-after-light-research | QCORE4 | QCORE6 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Compose attack-roll hit/critical, damage roll, damage disposition, and action quota spend over QCORE1-QCORE4. |
-| 90    | QCORE6 - Action and Turn Procedures | blocked | QCORE5 | QCORE7 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove currently executable action/turn facts; cite End Turn assumptions and keep Stand from Prone in QCORE7. |
+| 90    | QCORE6 - Action and Turn Procedures | ready-for-implementation-after-light-research | QCORE5 | QCORE7 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove currently executable action/turn facts; cite End Turn assumptions and keep Stand from Prone in QCORE7. |
 | 91    | QCORE7 - Movement, Spatial Facts, and Grapple | blocked | QCORE6 | QCORE8 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Movement budget, caller spatial facts, full Stand from Prone, and Grapple bounded state. |
 | 92    | QCORE8 - Reactions, Continuations, and Concentration | blocked | QCORE7 | QCORE9 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove bounded spell-free continuation/reaction protocol plus concentration; defer Readied Spell Response integration to QCORE10. |
 | 93    | QCORE9 - Unit Feature Procedure Profiles | blocked | QCORE8 | QCORE10 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove feature procedure profiles after reaction/action/damage protocols exist; QNT models procedure facts, not Unit ids. |
@@ -143,22 +136,9 @@ Keep it synchronized with the DAG table and task details.
 
 ## Task Details
 
-### Task 89 - QCORE5 - Attack Roll and Attack Damage Composition
-
-Status: `ready-for-implementation-after-light-research`
-
-Depends on: QCORE4
-Blocks: QCORE6
-
-Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
-
-Scope: attack-roll result, Critical Hit facts including critical range 19,
-damage roll validation, Knock Out disposition, damage application, and Attack
-action quota spend over QCORE1-QCORE4.
-
 ### Task 90 - QCORE6 - Action and Turn Procedures
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: QCORE5
 Blocks: QCORE7

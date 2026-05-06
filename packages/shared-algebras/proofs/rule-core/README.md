@@ -138,3 +138,36 @@ Out of scope for QCORE4:
 `damage-component-adjustments-inductive.qnt` is the owned proof machine. It
 keeps state to aggregate adjusted typed damage and scalar-reduction outputs, and
 records the branch budget near the `any` action.
+
+## QCORE5: Attack Damage Composition
+
+`attack-damage-composition.qnt` models the attack procedure facts that compose
+QCORE1-QCORE4 without importing broad battle state. Attack facts are
+projection-shaped: target/range legality, attack roll results, critical
+threshold, damage totals, damage type, target damage adjustments, and damage
+disposition.
+
+Scope:
+
+- natural 1 attack rolls miss regardless of total;
+- natural 20 attack rolls hit and are Critical Hits;
+- critical-threshold 19 is a procedure fact for weapon and Unarmed Strike
+  critical-range support;
+- Critical Hits require doubled damage dice count;
+- legal misses spend the Attack action quota without damage;
+- invalid target/quota/disposition combinations do not spend quota;
+- attack damage totals compose QCORE4 target adjustments, QCORE1 Hit Point
+  damage, and QCORE3 Knock Out disposition;
+- melee Knock Out is legal only when the attack damage would reduce the target
+  to 0 Hit Points.
+
+Out of scope for QCORE5:
+
+- full action-economy refresh and turn ownership;
+- reaction windows, continuations, and Concentration;
+- spell attack and save-damage profiles;
+- class feature and stat-block authored breadth.
+
+`attack-damage-composition-inductive.qnt` is the owned proof machine. It samples
+bounded attack-roll and damage procedure facts while keeping only scalar result
+state, and records the branch budget near the `any` action.
