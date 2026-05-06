@@ -192,7 +192,7 @@ module battleRuntimeMbt {
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = false,
-    qMultiattackDispatchesAvailable' = 2,
+    qMultiattackDispatchesAvailable' = 1,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
     qHoles' = Set(),
     qLastResult' = "resolved",

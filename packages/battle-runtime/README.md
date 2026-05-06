@@ -108,10 +108,12 @@ may reuse shared hole identity primitives such as `HoleId` and
 fill variants that `@dnd/battle-runtime` can discover and resolve.
 
 Stat Block Multiattack dispatch resources are a continuation of the monster's
-single Attack action, not a second turn mode. While those named dispatch
-resources are pending, `discoverBattleActs` exposes only matching dispatch
-attacks plus End Turn, and `resolveBattleSubject` rejects unrelated subjects as
-stale. End Turn is the explicit cancellation boundary for unspent dispatches.
+single Attack action, not a second turn mode. Taking Multiattack spends the
+Attack action and consumes the first listed attack dispatch; any remaining named
+dispatch resources are pending. While those resources are pending,
+`discoverBattleActs` exposes only matching dispatch attacks, Movement, and End
+Turn, and `resolveBattleSubject` rejects unrelated subjects as stale. End Turn
+is the explicit cancellation boundary for unspent dispatches.
 
 Concrete authored ids are allowed in production only when the code is a catalog
 boundary, a fixture/test helper, or a composition/user-selection boundary that is

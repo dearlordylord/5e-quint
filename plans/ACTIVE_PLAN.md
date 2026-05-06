@@ -119,7 +119,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 101,
       "id": "QMBT6",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Stat-Block Control Runtime Parity"
     }
   ]
@@ -169,7 +169,7 @@ Keep it synchronized with the DAG table and task details.
 | 98    | QMBT3 - Reaction and Continuation Runtime Parity | done | QMBT1, QCORE8 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, Readied Movement release, and Concentration break/hold. |
 | 99    | QMBT4 - Feature Procedure Runtime Parity | done | QMBT1, QCORE9 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
 | 100   | QMBT5 - Spell Procedure Runtime Parity | done | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
-| 101   | QMBT6 - Stat-Block Control Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE11 stat-block control profiles, starting with Multiattack interleaving; keep Legendary Actions as a separate later tracer. |
+| 101   | QMBT6 - Stat-Block Control Runtime Parity | done | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE11 Stat Block Multiattack dispatch through production reducers. Legendary Actions remain a separate later tracer. |
 
 ## Task Details
 
@@ -367,27 +367,26 @@ each modeled spell passage; focused QMBT5 timed run; package typecheck;
 
 ### Task 101 - QMBT6 - Stat-Block Control Runtime Parity
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT1, QCORE11
 Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 
-Matrix: `RAW-QCORE11-STAT-BLOCK-CONTROLS-001` (planned `runtime-parity`; not
-counted complete until this task is `done` and focused MBT owner claims are
-added).
+Matrix: `RAW-QCORE11-STAT-BLOCK-CONTROLS-001` (`runtime-parity`).
 
-Scope: add focused promoted runtime MBT parity for QCORE11 stat-block control
-profiles through typed fixtures, not authored monster parsing. Start with
-Multiattack named dispatch: first listed attack spends the Attack action,
-remaining named dispatches stay pending, Movement may interleave, non-Movement
-turn subjects such as Bonus Action or ordinary Action are rejected while the
-dispatch continuation is open, and End Turn closes unspent dispatches. Keep
-Legendary Actions as a separate later tracer with its own window/use/refresh
-projection.
+Completed scope: focused promoted runtime MBT parity for QCORE11 Stat Block
+Multiattack named dispatch through typed fixtures, not authored monster parsing.
+Taking Multiattack spends the Attack action and consumes the first listed
+attack dispatch; remaining named dispatches stay pending, Movement may
+interleave, non-Movement turn subjects such as Bonus Action or ordinary Action
+are rejected while the dispatch continuation is open, and End Turn closes
+unspent dispatches. Legendary Actions remain a separate later tracer with their
+own window/use/refresh projection.
 
 Verification: RAW/ubiquitous check for Stat Block, Multiattack, Monster
 Actions, Bonus Action, Reaction, Legendary Actions, and Limited Usage passages;
-focused QMBT6 run only after implementation; existing promoted battle-runtime
-MBT once if runtime behavior changed; minimum two `/simplify` rounds.
+focused QMBT6 timed run; existing promoted battle-runtime MBT after the
+Multiattack runtime behavior correction; package typecheck; package unit tests;
+`pnpm quality`; two `/simplify` rounds.

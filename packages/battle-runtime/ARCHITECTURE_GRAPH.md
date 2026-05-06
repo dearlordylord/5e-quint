@@ -192,11 +192,12 @@ flowchart TD
 - Save damage replacement riders are retained feature profiles, not named
   reducer branches. Save-gate damage replay derives the final full, half, or no
   damage result from the single Saving Throw outcome and the admitted profile.
-- Supported Stat Block Multiattack entries spend the Attack action and grant
-  named dispatch attacks from the Actions section. While any dispatch remains
-  pending, discovery and replay allow only matching dispatch attacks plus End
-  Turn, which closes unspent dispatches. Unsupported conditional on-hit riders
-  are filtered by support gates and are not copied into MCP state.
+- Supported Stat Block Multiattack entries spend the Attack action, consume the
+  first listed attack dispatch, and grant remaining named dispatch attacks from
+  the Actions section. While any dispatch remains pending, discovery and replay
+  allow only matching dispatch attacks, Movement, and End Turn, which closes
+  unspent dispatches. Unsupported conditional on-hit riders are filtered by
+  support gates and are not copied into MCP state.
 - New authored abilities are data-only when they fit these implemented
   procedure families. Widen readers or support gates when the authored shape is
   legal but unsupported. Add reducer state or QNT/MBT behavior only for a

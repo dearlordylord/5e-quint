@@ -13362,7 +13362,7 @@ function monsterMultiattackStatBlock(input?: {
             dispatches: [
               {
                 name: "Scimitar",
-                count: { kind: "literal", value: input?.scimitarCount ?? 1 },
+                count: { kind: "literal", value: input?.scimitarCount ?? 2 },
               },
               {
                 name: "Shortbow",

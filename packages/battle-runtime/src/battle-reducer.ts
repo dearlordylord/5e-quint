@@ -7330,13 +7330,14 @@ function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
-  const nextState = {
+  const [consumedDispatch, ...pendingDispatches] = multiattack.dispatches;
+  const nextStateWithPendingDispatches = {
     ...input.state,
     currentTurnResources: {
       ...spent.right,
       actionResources: [
         ...spent.right.actionResources,
-        ...multiattack.dispatches.map((dispatch) => ({
+        ...pendingDispatches.map((dispatch) => ({
           kind: "action" as const,
           source: "statBlockMultiattack" as const,
           sourceOwnerId: input.subject.actorId,
@@ -7349,6 +7350,14 @@ function resolveMultiattack(
       ],
     },
   };
+  const nextState =
+    consumedDispatch === undefined
+      ? nextStateWithPendingDispatches
+      : spendStatBlockAttackResources({
+          state: nextStateWithPendingDispatches,
+          actorId: input.subject.actorId,
+          attack: consumedDispatch,
+        });
   return {
     tag: "resolved",
     state: nextState,
