@@ -290,15 +290,15 @@ artifacts reference existing requirement ids.
 
 ### Acceptance Criteria
 
-- [ ] At least one QNT owner cites a real RAW requirement id from the tracer
+- [x] At least one QNT owner cites a real RAW requirement id from the tracer
       section.
-- [ ] At least one runtime or runtime-test owner cites a real RAW requirement id
+- [x] At least one runtime or runtime-test owner cites a real RAW requirement id
       from the tracer section.
-- [ ] The checker fails when QNT, runtime, or test claims reference an unknown
+- [x] The checker fails when QNT, runtime, or test claims reference an unknown
       RAW requirement id.
-- [ ] The checker fails when an executable requirement claims modeled or tested
+- [x] The checker fails when an executable requirement claims modeled or tested
       status without an owner artifact.
-- [ ] The report distinguishes "mapped to owner" from "proved" and "runtime
+- [x] The report distinguishes "mapped to owner" from "proved" and "runtime
       parity covered."
 
 ---
@@ -325,15 +325,15 @@ the claim matches the actual modeled RAW.
 
 ### Acceptance Criteria
 
-- [ ] Completed QCORE7-QCORE11 tasks have requirement links for their claimed RAW
+- [x] Completed QCORE7-QCORE11 tasks have requirement links for their claimed RAW
       slices.
-- [ ] Completed QMBT1-QMBT4 tasks have parity-evidence links for their claimed
+- [x] Completed QMBT1-QMBT4 tasks have parity-evidence links for their claimed
       runtime slices.
-- [ ] Ready QMBT5-QMBT6 tasks can be represented as planned parity coverage
+- [x] Ready QMBT5-QMBT6 tasks can be represented as planned parity coverage
       without being counted as completed runtime parity.
-- [ ] The report can answer what percentage of executable SRD requirements are
+- [x] The report can answer what percentage of executable SRD requirements are
       covered by current active-plan tasks.
-- [ ] The report can show which current active-plan task, if any, owns the next
+- [x] The report can show which current active-plan task, if any, owns the next
       uncovered requirement in a selected RAW area.
 
 ---
@@ -359,14 +359,14 @@ requirements that lack owners.
 
 ### Acceptance Criteria
 
-- [ ] `ambiguous-needs-assumption` spans fail the checker unless they cite an
+- [x] `ambiguous-needs-assumption` spans fail the checker unless they cite an
       `ASSUMPTIONS.md` anchor.
-- [ ] `unsupported-out-of-promoted-scope` spans require a reason and appear in a
+- [x] `unsupported-out-of-promoted-scope` spans require a reason and appear in a
       grouped report section.
-- [ ] Out-of-scope spans do not inflate QNT or runtime coverage percentages.
-- [ ] The report exposes unresolved ambiguous spans separately from deliberate
+- [x] Out-of-scope spans do not inflate QNT or runtime coverage percentages.
+- [x] The report exposes unresolved ambiguous spans separately from deliberate
       out-of-scope spans.
-- [ ] The model distinguishes "not executable prose", "executable but
+- [x] The model distinguishes "not executable prose", "executable but
       out-of-promoted-scope", and "executable but not yet modeled."
 
 ---
@@ -392,15 +392,15 @@ separate tasks driven by the uncovered-requirement report.
 
 ### Acceptance Criteria
 
-- [ ] The selected full SRD file has 100% classification coverage.
-- [ ] Every executable span in the selected file is either mapped to one or more
+- [x] The selected full SRD file has 100% classification coverage.
+- [x] Every executable span in the selected file is either mapped to one or more
       RAW requirements, explicitly out of promoted scope, or blocked on an
       assumption.
-- [ ] Existing QCORE, battle-runtime, focused MBT, and runtime-test claims are
+- [x] Existing QCORE, battle-runtime, focused MBT, and runtime-test claims are
       linked where they already exist.
-- [ ] The report ranks uncovered executable requirements by source file,
+- [x] The report ranks uncovered executable requirements by source file,
       heading, classification, and domain owner.
-- [ ] The checker remains deterministic and fast enough for normal quality runs.
+- [x] The checker remains deterministic and fast enough for normal quality runs.
 
 ---
 
@@ -427,20 +427,20 @@ needed, or out-of-promoted-scope with reason.
 
 ### Acceptance Criteria
 
-- [ ] 100% of generated SRD spans across `.references/srd-5.2.1/` are
+- [x] 100% of generated SRD spans across `.references/srd-5.2.1/` are
       classified.
-- [ ] 100% of non-fluff spans across `.references/srd-5.2.1/` are closed by a
+- [x] 100% of non-fluff spans across `.references/srd-5.2.1/` are closed by a
       requirement id, table/caller responsibility, authored-data requirement,
       assumption anchor, or out-of-promoted-scope reason.
-- [ ] 100% of SRD sections have passing RAW review agent verdicts before their
+- [x] 100% of SRD sections have passing RAW review agent verdicts before their
       spans count toward matrix completeness.
-- [ ] The report has separate denominators for all spans, fluff spans,
+- [x] The report has separate denominators for all spans, fluff spans,
       non-fluff spans, executable requirements, authored-data requirements, and
       table/caller responsibility requirements.
-- [ ] The report can list every non-fluff span that lacks QNT, runtime,
+- [x] The report can list every non-fluff span that lacks QNT, runtime,
       verification, or production coverage without confusing that list with
       unclassified text.
-- [ ] The checker fails if any SRD file is missing from the generated span
+- [x] The checker fails if any SRD file is missing from the generated span
       inventory.
 
 ---
@@ -465,20 +465,20 @@ parallel data structures.
 
 ### Acceptance Criteria
 
-- [ ] `pnpm raw-coverage:check` or an equivalent workspace script validates the
+- [x] `pnpm raw-coverage:check` or an equivalent workspace script validates the
       matrix.
 - [ ] The workspace quality gate includes the checker only after it is stable and
       fast enough for routine use.
 - [ ] New rule plans are expected to cite existing RAW requirement ids or add
       new ones as part of the plan.
-- [ ] The report answers: what counts as 100%, current percent complete, which
+- [x] The report answers: what counts as 100%, current percent complete, which
       RAW area is next, and which requirements lack QNT/runtime/verification
       owners.
-- [ ] "Matrix complete" means 100% classified SRD spans and 100% closed
+- [x] "Matrix complete" means 100% classified SRD spans and 100% closed
       non-fluff spans; QNT, runtime, parity, and production percentages remain
       measured implementation coverage, not prerequisites for matrix
       completeness.
-- [ ] Coverage facts have one canonical source and are generated into reports
+- [x] Coverage facts have one canonical source and are generated into reports
       instead of duplicated manually across docs.
 
 ## Verification

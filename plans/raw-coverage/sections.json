@@ -1,14 +1,3 @@
 {
-  "sections": [
-    {
-      "sectionId": "srd521-playing-the-game-actions-reactions",
-      "spanIdPrefix": "SRD521-PTG-ACTIONS-REACTIONS",
-      "corpus": "srd-5.2.1",
-      "path": ".references/srd-5.2.1/Playing-the-Game.md",
-      "headingPath": ["Actions", "Reactions"],
-      "headingLine": "### Reactions",
-      "startLine": 326,
-      "endBeforeHeading": "## Social Interaction"
-    }
-  ]
+  "corpusRoot": ".references/srd-5.2.1"
 }

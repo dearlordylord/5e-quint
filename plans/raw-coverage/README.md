@@ -1,9 +1,11 @@
-# RAW Coverage Matrix Tracer
+# RAW Coverage Matrix
 
-This directory contains the first narrow vertical for the RAW coverage matrix.
-It covers `.references/srd-5.2.1/Playing-the-Game.md > Actions > Reactions`.
+This directory contains the RAW coverage matrix for the local SRD 5.2.1 corpus.
+The checker discovers sections and spans from `.references/srd-5.2.1/**/*.md`;
+`sections.json` names the corpus root rather than duplicating generated heading
+metadata.
 
-The vertical proves the mechanics before applying the method to the full SRD:
+The matrix records:
 
 - generated span identity from local SRD text;
 - one primary classification per span;
@@ -25,8 +27,10 @@ To refresh generated report artifacts after intentional matrix edits:
 node scripts/raw-coverage-check.cjs --write
 ```
 
-This tracer is not a broad coverage claim. It is a working miniature of the
-final matrix contract.
+The Reactions section remains the explicit tracer for detailed executable
+ownership. The rest of the corpus is classified and closed at matrix level, with
+out-of-promoted-scope spans marked for future splitting before behavior is
+claimed.
 
 ## RAW Review Agent
 
@@ -37,3 +41,27 @@ review records the local SRD source, `UBIQUITOUS_LANGUAGE.md`, any relevant
 The checker fails if a section lacks this RAW review. That keeps the workflow
 ready for a dedicated RAW review agent before any section is counted as matrix
 complete.
+
+## Owner Claim Convention
+
+QNT, runtime, and verification artifacts cite requirement ids with a single-line
+comment:
+
+```text
+RAW-COVERAGE: <claim-kind> <RAW-ID> [<RAW-ID> ...]
+```
+
+Supported claim kinds are:
+
+- `qnt-owner`
+- `runtime-owner`
+- `verification-owner:qnt-proof`
+- `verification-owner:focused-mbt`
+- `verification-owner:runtime-test`
+- `verification-owner:doc`
+
+The checker scans `packages/` and `plans/` for these claims. A cited
+requirement id must exist in `requirements.jsonl`, and the corresponding
+requirement row must list the owner artifact in the matching owner field. The
+reverse link is also mandatory: if `requirements.jsonl` lists an owner artifact,
+that artifact must cite the requirement id with the matching claim kind.

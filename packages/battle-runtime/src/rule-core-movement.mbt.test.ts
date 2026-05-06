@@ -1,3 +1,4 @@
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";

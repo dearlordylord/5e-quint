@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 
 module spellProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"

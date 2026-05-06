@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
