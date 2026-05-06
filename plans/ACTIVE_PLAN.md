@@ -175,13 +175,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 82,
       "id": "PBA28",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "MBT Consolidation And Shared Algebra Parity"
     },
     {
       "number": 83,
       "id": "PBA29",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Tighten Stat Block Multiattack Dispatch Continuation"
     }
   ]
@@ -242,8 +242,8 @@ Keep it synchronized with the DAG table and task details.
 | 79    | PBA25A - Refactor Character Build Projection Boundary             | done                                          | PBA25        | PBA26         | [research plan](/workspace/typescript/dnd/plans/pba25a-character-build-projection-boundary.md)               | CharacterBuild now stores durable identity and choice evidence; executable facts are projected at session/battle boundaries.                                  |
 | 80    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | done                                          | PBA25A       | PBA27         | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Add promoted Character Sheet and Character Battle runtime packages, migrate MCP/app to them, then remove app Core dependency.                                 |
 | 81    | PBA27 - Core Quarantine And Deletion Cutover                      | done                                          | PBA24, PBA26 | PBA28         | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Core is excluded from active workspace discovery and promoted root gates; remaining Core material is restore-source only.                                     |
-| 82    | PBA28 - MBT Consolidation And Shared Algebra Parity               | ready-for-research                            | PBA27        | future tasks  | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT.                                      |
-| 83    | PBA29 - Tighten Stat Block Multiattack Dispatch Continuation      | blocked                                       | PBA28        | future tasks  | inline below                                                                                                 | Decide and encode the full legal action/command surface while pending Stat Block Multiattack dispatches remain.                                               |
+| 82    | PBA28 - MBT Consolidation And Shared Algebra Parity               | done                                          | PBA27        | future tasks  | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Shared-algebras now owns package-local reducer parity lanes and proof commands; promoted runtime MBT remains selective.                                      |
+| 83    | PBA29 - Tighten Stat Block Multiattack Dispatch Continuation      | ready-for-research                            | PBA28        | future tasks  | inline below                                                                                                 | Decide and encode the full legal action/command surface while pending Stat Block Multiattack dispatches remain.                                               |
 
 ## Task Details
 
@@ -1063,7 +1063,7 @@ task-owned script changes.
 
 ### Task 82 - PBA28 - MBT Consolidation And Shared Algebra Parity
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: PBA27
 Blocks: future tasks
@@ -1086,9 +1086,19 @@ selected Quint proof/MBT commands, promoted runtime documentation checks, no
 legacy Core MBT as a gate, no broad battle MBT unless a promoted integrated
 slice is intentionally changed, `/simplify` convergence.
 
+Plan Impact: PBA28 is done. PBA29 is unblocked for research.
+
+Closeout: `@dnd/shared-algebras` now documents proof ownership for stateful
+semantic algebras, separates pure/helper algebra coverage from reducer parity,
+and exposes package-local deterministic, MBT replay, and Quint proof commands.
+Focused deterministic reducer tests cover action economy, conditions, death
+saves, and initiative behavior imported by runtime packages. Integrated
+battle-runtime MBT remains selective; broad authored-record width remains a
+deterministic contract-test responsibility.
+
 ### Task 83 - PBA29 - Tighten Stat Block Multiattack Dispatch Continuation
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: PBA28
 Blocks: future tasks
