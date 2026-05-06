@@ -55,6 +55,39 @@ The source artifacts for implementation detail are:
 - [plans/QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 - [plans/ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
+The durable coverage lane spans these ownership layers, but the work can move
+through them in either direction depending on what already exists.
+
+For already-authored TypeScript content, the usual evidence flow is:
+
+```text
+authored Unit sources
+  -> TypeScript catalog/support admission
+  -> QNT Procedure Parity profiles
+  -> focused QMBT Procedure Parity
+  -> matrix profile/evidence accounting
+  -> selective Specific Unit Parity MBT
+```
+
+For not-yet-implemented mechanics, the preferred red/green flow may start from
+matrix pressure and QNT/MBT before TypeScript implementation:
+
+```text
+matrix gap or authored-source pressure
+  -> QNT Procedure Parity profile
+  -> focused Procedure Parity MBT expectation
+  -> TypeScript catalog/support/runtime implementation
+  -> deterministic admission/projection evidence
+  -> selective Specific Unit Parity MBT when identity risk justifies it
+```
+
+Authored Unit sources are not all the same boundary. SRD-backed Unit records
+live in this repo. Private PHB/XPHB pressure lives outside this repo and must
+only surface here through public mechanics-only Classic non-SRD records,
+synthetic labels, matrix gaps, or not-in-catalog admission gaps for records
+that exist in this repo but are not installed. Provenance, structured input,
+and runtime projection remain separate throughout the flow.
+
 ## User Stories
 
 1. As a rule-core maintainer, I want QNT to prove procedure shapes without
@@ -97,9 +130,14 @@ The source artifacts for implementation detail are:
 - Specific Unit Parity MBT should be chosen from risk, profile pressure, and
   representative identity value.
 - Matrix-only edits must not require broad battle MBT.
+- Matrix gaps can lead implementation for not-yet-implemented mechanics; the
+  matrix is not only a retrospective report over TypeScript support.
 - Classic non-SRD mechanics-only Units remain separate from SRD Units at the
   collection boundary; the combined Classic library is a derived view.
 - Provenance, structured input, and runtime projection remain separate concepts.
+- The unit-profile checker/report pipeline must stay modular enough to add all
+  authored Units without turning one script or one generated report section into
+  the only place where every matrix concern changes.
 
 ## Testing Decisions
 
@@ -130,13 +168,16 @@ The source artifacts for implementation detail are:
 
 ## Further Notes
 
-Current matrix status after the first ownership pass:
+Current matrix status after QMBT7 and authored catalog admission-gap reporting:
 
 - 49 authored Units classified.
 - 13 stable profiles.
 - 17 of 35 executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
+- authored Surface Unit catalog admission gaps are explicit in the generated
+  report and matrix.
 
-The next active-plan task is QMBT7, which should turn this PRD into the first
-Specific Unit Parity MBT and deterministic admission/projection plan.
+QMBT7 completed the first Specific Unit Parity tracer. Follow-on planning must
+decide how to expand evidence while keeping the checker/report pipeline
+maintainable as the authored Unit count grows.

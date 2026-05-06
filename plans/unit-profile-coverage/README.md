@@ -82,6 +82,49 @@ The checker rejects SRD provenance in the Classic non-SRD collection, duplicate
 Unit ids across collections, missing fungi-themed synthetic labels, protected
 expression fields, and near-canonical ids/labels from its deny list.
 
+## Coverage Flows
+
+The coverage lane intentionally spans several ownership layers, but the work
+does not always move through them in one direction.
+
+For already-authored TypeScript content, the usual evidence flow is:
+
+```text
+authored Unit sources
+  -> TypeScript catalog/support admission
+  -> QNT Procedure Parity profiles
+  -> focused QMBT Procedure Parity
+  -> matrix profile/evidence accounting
+  -> selective Specific Unit Parity MBT
+```
+
+For mechanics that are not implemented in TypeScript yet, the preferred
+red/green flow can start from the matrix and QNT/MBT side:
+
+```text
+matrix gap or authored-source pressure
+  -> QNT Procedure Parity profile
+  -> focused Procedure Parity MBT expectation
+  -> TypeScript catalog/support/runtime implementation
+  -> deterministic admission/projection evidence
+  -> selective Specific Unit Parity MBT when identity risk justifies it
+```
+
+Authored Unit sources currently include SRD-backed records in this repo,
+public mechanics-only Classic fixtures, and private PHB/XPHB records outside
+this repo. Private-source mechanics pressure must enter this repo only through
+the public renamed Classic non-SRD lane, synthetic labels, matrix gaps, or
+not-in-catalog admission gaps for records that are present but not installed.
+Do not let private-source identity leak into shipped ids, labels, prose, or
+provenance.
+
+TypeScript catalog/support admission is one executable boundary, not the only
+way work starts. An authored Unit may exist in `packages/surface/content/` but
+still be absent from the installed Unit catalog, unsupported by battle-runtime
+support gates, or not yet mapped to a stable profile. A matrix gap may also
+exist before the TypeScript implementation. The matrix must keep those states
+distinct instead of treating them as the same kind of missing work.
+
 ## Workflow
 
 This matrix has two verification layers:

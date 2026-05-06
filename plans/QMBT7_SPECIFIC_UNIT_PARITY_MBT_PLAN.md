@@ -179,6 +179,10 @@ Follow-on boundaries:
   supported Unit feature identities before widening into spells.
 - QMBT9: expand selected identity MBT evidence selectively from matrix risk,
   starting with feature identities that have production reducer state changes.
+- Before broad all-Unit expansion, split or otherwise modularize the
+  unit-profile checker/report pipeline so authored catalog discovery, claim
+  validation, evidence validation, metrics, and report rendering do not all
+  evolve inside one catch-all script.
 
 ## Verification
 
