@@ -57,18 +57,12 @@ The production rule-core split should be:
   compile/verify flattening remains the risk surface for composed modules:
   <https://github.com/informalsystems/quint/issues/731>
 
-## Local Spike Artifact
+## Historical Spike Artifact
 
-Files:
-
-- `packages/shared-algebras/proofs/qcore0-composition/qcore0_damage_contract.qnt`
-- `packages/shared-algebras/proofs/qcore0-composition/qcore0_action_contract.qnt`
-- `packages/shared-algebras/proofs/qcore0-composition/qcore0_damage_impl.qnt`
-- `packages/shared-algebras/proofs/qcore0-composition/qcore0_contract_consumer.qnt`
-- `packages/shared-algebras/proofs/qcore0-composition/qcore0_stateful_impl_consumer.qnt`
-- `packages/shared-algebras/proofs/qcore0-composition/qcore0_unused_state_import.qnt`
-- `packages/shared-algebras/proofs/qcore0-composition/qcore0_shallow_integration.qnt`
-- `packages/shared-algebras/proofs/qcore0-composition/qcore0_blowup_poc.qnt`
+The local spike files were added in commit `368d4e28` and later removed from
+the active tree after the rule-core layout they informed had been promoted into
+`packages/shared-algebras/proofs/rule-core/`. Use Git history for the raw spike
+fixtures; this file keeps the decision record.
 
 The POC proves the useful shape:
 
@@ -89,8 +83,8 @@ Tooling:
 
 | Experiment | Command summary | Result |
 | --- | --- | --- |
-| Stateless damage contract | `quint typecheck` and `quint test qcore0_damage_contract.qnt` | Pass, ~1s |
-| Stateless action contract | `quint typecheck` and `quint test qcore0_action_contract.qnt` | Pass, ~1s |
+| Stateless damage contract | `quint typecheck` and `quint test` on the spike damage contract | Pass, ~1s |
+| Stateless action contract | `quint typecheck` and `quint test` on the spike action contract | Pass, ~1s |
 | Contract-only consumer | `quint run ... --max-samples=1000 --max-steps=6` | Pass, 65ms simulator time |
 | Stateful implementation | `quint run ... --max-samples=1000 --max-steps=6` | Pass, 59ms simulator time |
 | Stateful delegate consumer | `quint run ... --max-samples=1000 --max-steps=6` | Pass, 42ms simulator time |
@@ -99,10 +93,10 @@ Tooling:
 | Shallow integration verifier | `quint verify ... --max-steps=3` | Pass, ~3s |
 | Stateful delegate verifier | `quint verify ... --max-steps=3` | Pass, ~4s |
 | Unused import verifier | `quint verify ... --max-steps=3` | Pass, ~4s |
-| Narrow branch POC | `quint verify qcore0_blowup_poc.qnt --step=composedNarrowStep --max-steps=2` | Pass, ~3s |
-| Wide branch POC | `quint verify qcore0_blowup_poc.qnt --step=composedWideStep --max-steps=2` | Pass, ~4s |
-| Narrow set POC | `quint verify qcore0_blowup_poc.qnt --step=narrowSetStep --max-steps=1` | Pass, ~3s |
-| Wide set POC | `quint verify qcore0_blowup_poc.qnt --step=wideSetStep --max-steps=1` | Pass, ~4s |
+| Narrow branch POC | `quint verify` on the spike blowup POC with `--step=composedNarrowStep --max-steps=2` | Pass, ~3s |
+| Wide branch POC | `quint verify` on the spike blowup POC with `--step=composedWideStep --max-steps=2` | Pass, ~4s |
+| Narrow set POC | `quint verify` on the spike blowup POC with `--step=narrowSetStep --max-steps=1` | Pass, ~3s |
+| Wide set POC | `quint verify` on the spike blowup POC with `--step=wideSetStep --max-steps=1` | Pass, ~4s |
 
 The unused qualified stateful import generated an ITF trace with only
 `qCounter` as a state variable. That means the import is not enough to pollute
