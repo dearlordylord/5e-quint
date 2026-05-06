@@ -13,6 +13,7 @@ module actionTurnProcedures {
     | ReadyAction
     | MagicAction
     | AttackAction
+    | EscapeGrappleAction
 
   type ActionCost = StandardActionCost(StandardAction) | BonusActionCost | FreeCost
 

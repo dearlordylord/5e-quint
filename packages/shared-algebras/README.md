@@ -131,6 +131,11 @@ Point clamping, monster death at 0 Hit Points, and player-character instant
 death from massive damage. Damage at 0 Hit Points belongs to a separate Death
 Saving Throw failure procedure.
 
+The package-local rule-core README tracks the active QCORE proof modules,
+including the later composition slices for zero-HP lifecycle, recovery, damage
+adjustment, attack damage, action/turn procedures, movement, spatial facts, and
+grapple.
+
 ## Verification
 
 Algebras should have focused deterministic tests. When an algebra models state

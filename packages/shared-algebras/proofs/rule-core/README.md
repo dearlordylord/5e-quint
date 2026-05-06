@@ -203,3 +203,39 @@ Out of scope for QCORE6:
 `action-turn-procedures-inductive.qnt` is the owned proof machine. Its invariant
 links Dash bonus bounds to remaining action/bonus-action resources, keeping the
 state space finite and executable.
+
+## QCORE7: Movement, Spatial Facts, and Grapple
+
+`movement-spatial-grapple.qnt` models turn Movement spending, table/caller
+spatial facts, Stand from Prone, and bounded Grapple state on top of QCORE6's
+turn procedure state.
+
+Scope:
+
+- Movement budget derived from current Speed plus QCORE6 Dash bonus, with
+  caller-supplied distance and extra-cost facts;
+- full Stand from Prone procedure: current-turn legality, positive half-Speed
+  Movement cost, and Prone removal;
+- Drop Prone as a no-action/no-Movement procedure gated by nonzero effective
+  Speed;
+- Opportunity Attack trigger facts supplied by the table/caller: hostile
+  creature, visibility, leaving reach, movement resource, and Disengage;
+- Grapple attempt legality over free hand, target size limit, failed save, and
+  SRD-formula escape DC facts bounded by the SRD ability-score and Proficiency
+  Bonus ranges;
+- Escape Grapple as an Action-cost procedure, release as no action required,
+  Grappled Speed 0, Grappled attack-roll disadvantage, and drag/carry extra
+  Movement cost facts.
+
+Out of scope for QCORE7:
+
+- pathfinding, adjacency caches, line of sight, cover, or reach derivation;
+- reaction-window/continuation resolution for making Opportunity Attacks,
+  deferred to QCORE8;
+- attack-count resources for replacing an attack with Grapple, deferred to the
+  later feature/stat-block procedure profile tasks.
+
+`movement-spatial-grapple-inductive.qnt` is the owned proof machine. It samples
+bounded caller Movement costs, Opportunity Attack trigger facts, Dash/Disengage
+composition, Stand/Drop Prone, and Grapple/Escape/Release transitions while
+keeping spatial facts explicit rather than deriving geometry in Core.

@@ -15,8 +15,8 @@ Current authority summary:
   promoted battle authority for new Unit/StatBlock-backed behavior.
 - Root `battle.qnt` and old v0 battle code are legacy proof/restore source
   material only.
-- The most recent proof work is `QCORE6`: Action and turn procedure facts over
-  the shared action quota.
+- The most recent proof work is `QCORE7`: Movement, caller-supplied spatial
+  facts, and Grapple state over the shared turn procedure state.
 - Broad widening should proceed through typed projection parsers and
   package-owned runtime procedures rather than authored-id dispatch,
   support-gate terminology, or projected-executable vocabulary.
@@ -57,13 +57,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 91,
       "id": "QCORE7",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Prove Movement, Spatial Facts, and Grapple"
     },
     {
       "number": 92,
       "id": "QCORE8",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Prove Reactions, Continuations, and Concentration"
     },
     {
@@ -121,8 +121,8 @@ Keep it synchronized with the DAG table and task details.
 
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
-| 91    | QCORE7 - Movement, Spatial Facts, and Grapple | ready-for-implementation-after-light-research | QCORE6 | QCORE8 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Movement budget, caller spatial facts, full Stand from Prone, and Grapple bounded state. |
-| 92    | QCORE8 - Reactions, Continuations, and Concentration | blocked | QCORE7 | QCORE9 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove bounded spell-free continuation/reaction protocol plus concentration; defer Readied Spell Response integration to QCORE10. |
+| 91    | QCORE7 - Movement, Spatial Facts, and Grapple | done | QCORE6 | QCORE8 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed movement budget, caller spatial facts, full Stand from Prone, and Grapple bounded state proof. |
+| 92    | QCORE8 - Reactions, Continuations, and Concentration | ready-for-implementation-after-light-research | QCORE7 | QCORE9 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove bounded spell-free continuation/reaction protocol plus concentration; defer Readied Spell Response integration to QCORE10. |
 | 93    | QCORE9 - Unit Feature Procedure Profiles | blocked | QCORE8 | QCORE10 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove feature procedure profiles after reaction/action/damage protocols exist; QNT models procedure facts, not Unit ids. |
 | 94    | QCORE10 - Spell Procedure Profiles | blocked | QCORE9 | QCORE11 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Spell Invocation procedure facts and Spell Effects; add Readied Spell Response integration with QCORE8. |
 | 95    | QCORE11 - Stat-Block Controls | blocked | QCORE10 | none | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove stat-block attack, Multiattack, limited-use, Recharge, and Legendary Action procedure facts after prior protocols exist. |
@@ -131,7 +131,7 @@ Keep it synchronized with the DAG table and task details.
 
 ### Task 91 - QCORE7 - Movement, Spatial Facts, and Grapple
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QCORE6
 Blocks: QCORE8
@@ -144,7 +144,7 @@ Grapple/Escape/Release state.
 
 ### Task 92 - QCORE8 - Reactions, Continuations, and Concentration
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: QCORE7
 Blocks: QCORE9
