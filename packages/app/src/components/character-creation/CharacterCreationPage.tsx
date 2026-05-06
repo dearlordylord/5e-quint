@@ -1,4 +1,5 @@
 import { type CharacterDraft, createCharacterDraft, type CreationBatchFillIssue } from "@dnd/character-creation-runtime"
+import type { CharacterSheet } from "@dnd/character-sheet-runtime"
 import { Either } from "effect"
 import { useCallback, useEffect, useState } from "react"
 
@@ -7,12 +8,8 @@ import {
   appendStoredCharacterSheet,
   applyCharacterCreationFill,
   assessCharacterDraft,
-  CHARACTER_DRAFT_STORAGE_KEY,
-  CHARACTER_SHEET_STORAGE_KEY,
   characterSheetSummary,
-  createCharacterSheetFromDraft,
-  parseStoredCharacterDraft,
-  parseStoredCharacterSheets
+  createCharacterSheetFromDraft
 } from "#/components/character-creation/characterCreationRuntime.ts"
 import {
   CharacterCreationStepContent,
@@ -21,32 +18,6 @@ import {
   type StepId
 } from "#/components/character-creation/CharacterCreationStepContent.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
-
-function parseStoredDraft(): CharacterDraft {
-  if (typeof window === "undefined") return createCharacterDraft({})
-  const stored = window.localStorage.getItem(CHARACTER_DRAFT_STORAGE_KEY)
-  if (stored == null) return createCharacterDraft({})
-  try {
-    const parsed: unknown = JSON.parse(stored)
-    const draft = parseStoredCharacterDraft(parsed)
-    return Either.isRight(draft) ? draft.right : createCharacterDraft({})
-  } catch {
-    return createCharacterDraft({})
-  }
-}
-
-function parseStoredSheets() {
-  if (typeof window === "undefined") return []
-  const stored = window.localStorage.getItem(CHARACTER_SHEET_STORAGE_KEY)
-  if (stored == null) return []
-  try {
-    const parsed: unknown = JSON.parse(stored)
-    const sheets = parseStoredCharacterSheets(parsed)
-    return Either.isRight(sheets) ? sheets.right : []
-  } catch {
-    return []
-  }
-}
 
 function currentStepIndex(step: StepId): number {
   return STEP_ORDER.indexOf(step)
@@ -57,21 +28,13 @@ function issueKey(issue: CreationBatchFillIssue): string {
 }
 
 export function CharacterCreationPage() {
-  const [draft, setDraft] = useState<CharacterDraft>(parseStoredDraft)
-  const [sheets, setSheets] = useState(parseStoredSheets)
+  const [draft, setDraft] = useState<CharacterDraft>(() => createCharacterDraft({}))
+  const [sheets, setSheets] = useState<ReadonlyArray<CharacterSheet>>([])
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(() => sheets[0]?.characterId ?? null)
   const [currentStep, setCurrentStep] = useState<StepId>("class")
   const [lastIssues, setLastIssues] = useState<ReadonlyArray<CreationBatchFillIssue>>([])
   const [lastSheetIssue, setLastSheetIssue] = useState<string | null>(null)
   const assessment = assessCharacterDraft(draft)
-
-  useEffect(() => {
-    window.localStorage.setItem(CHARACTER_DRAFT_STORAGE_KEY, JSON.stringify(draft))
-  }, [draft])
-
-  useEffect(() => {
-    window.localStorage.setItem(CHARACTER_SHEET_STORAGE_KEY, JSON.stringify(sheets))
-  }, [sheets])
 
   const goToStep = useCallback((offset: -1 | 1) => {
     setCurrentStep((step) => {
@@ -206,7 +169,8 @@ export function CharacterCreationPage() {
                       >
                         <span className="block truncate">{summary.characterId}</span>
                         <span className="mt-1 block text-xs text-gray-400">
-                          HP {summary.currentHp}/{summary.maximumHp} · {summary.hitPointState}
+                          HP {summary.currentHp}/{summary.maximumHp}
+                          {summary.tempHp === 0 ? "" : ` + ${summary.tempHp} temp`} · {summary.hitPointState}
                         </span>
                       </button>
                     </li>

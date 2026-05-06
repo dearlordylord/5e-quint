@@ -4,7 +4,6 @@ import {
   type CharacterDraft,
   type CharacterDraftId,
   characterDraftId,
-  type CharacterDraftParseIssue,
   type CreationBatchFillResult,
   type CreationFill,
   type CreationFinalizationResult,
@@ -15,23 +14,19 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
-  parseCharacterDraft,
   type SupportedAbilityScoreMethod
 } from "@dnd/character-creation-runtime"
 import {
   type CharacterSheet,
   characterSheetCurrentHp,
   characterSheetId,
-  createFreshCharacterSheet,
-  parseCharacterSheet
+  characterSheetTempHp,
+  createFreshCharacterSheet
 } from "@dnd/character-sheet-runtime"
 import type { Ability } from "@dnd/shared/game-facts"
 import { Hp } from "@dnd/shared/types"
 import { buildUnitCatalog, srdUnitCollection } from "@dnd/surface/surface/unit-catalog"
 import { Either } from "effect"
-
-export const CHARACTER_DRAFT_STORAGE_KEY = "dnd.characterDraft.v1"
-export const CHARACTER_SHEET_STORAGE_KEY = "dnd.characterSheets.v1"
 
 const catalogBuild = buildUnitCatalog({ collections: [srdUnitCollection] })
 if (catalogBuild.tag !== "ok") {
@@ -66,22 +61,10 @@ export function createCharacterSheetFromDraft(draft: CharacterDraft): Either.Eit
     characterId: characterSheetId(`app:character:${encodeURIComponent(String(draft.draftId))}`),
     build: finalization.build,
     maximumHp: Hp(hitPoints.right.maximum),
-    currentHp: Hp(hitPoints.right.maximum)
+    currentHp: Hp(hitPoints.right.maximum),
+    tempHp: Hp(0)
   })
   return Either.isLeft(sheet) ? Either.left(sheet.left.message) : Either.right(sheet.right)
-}
-
-export function parseStoredCharacterSheets(value: unknown): Either.Either<ReadonlyArray<CharacterSheet>, string> {
-  const storedSheets = Array.isArray(value) ? value : [value]
-  const parsedSheets = storedSheets.map((storedSheet) => {
-    const parsed = parseCharacterSheet(storedSheet)
-    return Either.isLeft(parsed) ? parsed.left.message : parsed.right
-  })
-  const firstIssue = parsedSheets.find((sheetOrIssue): sheetOrIssue is string => typeof sheetOrIssue === "string")
-  if (firstIssue !== undefined) return Either.left(firstIssue)
-  return Either.right(
-    parsedSheets.filter((sheetOrIssue): sheetOrIssue is CharacterSheet => typeof sheetOrIssue !== "string")
-  )
 }
 
 export function appendStoredCharacterSheet(
@@ -94,6 +77,7 @@ export function appendStoredCharacterSheet(
 export function characterSheetSummary(sheet: CharacterSheet): {
   readonly characterId: string
   readonly currentHp: number
+  readonly tempHp: number
   readonly maximumHp: number
   readonly hitPointState: CharacterSheet["hitPoints"]["tag"]
   readonly spellSlotLevels: ReadonlyArray<number>
@@ -101,6 +85,7 @@ export function characterSheetSummary(sheet: CharacterSheet): {
   return {
     characterId: sheet.characterId,
     currentHp: characterSheetCurrentHp(sheet),
+    tempHp: characterSheetTempHp(sheet),
     maximumHp: sheet.maximumHp,
     hitPointState: sheet.hitPoints.tag,
     spellSlotLevels: "spellSlotExpenditures" in sheet ? sheet.spellSlotExpenditures.map((slot) => slot.spellLevel) : []
@@ -144,8 +129,5 @@ export function abilityScoresFill(input: {
 }
 
 export const createStoredDraftId: (value: string) => CharacterDraftId = characterDraftId
-
-export const parseStoredCharacterDraft: (value: unknown) => Either.Either<CharacterDraft, CharacterDraftParseIssue> =
-  parseCharacterDraft
 
 export const draftHoleId: (value: CreationHoleIdText) => CreationHoleId = creationHoleId

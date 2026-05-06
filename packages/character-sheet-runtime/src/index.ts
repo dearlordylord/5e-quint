@@ -85,6 +85,7 @@ export type CharacterSheetInput = {
   readonly build: CharacterBuild;
   readonly maximumHp: HpType;
   readonly currentHp: HpType;
+  readonly tempHp: HpType;
   readonly positiveHpUnconscious?: CharacterSheetPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
   readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
@@ -132,15 +133,21 @@ export type CharacterSheetZeroHpLifecycleInput =
   | { readonly tag: "dead"; readonly deathSaves: DeathSaves };
 
 export type CharacterSheetHitPoints =
-  | { readonly tag: "positive"; readonly currentHp: HpType }
-  | { readonly tag: "knockedOut" }
+  | {
+      readonly tag: "positive";
+      readonly currentHp: HpType;
+      readonly tempHp: HpType;
+    }
+  | { readonly tag: "knockedOut"; readonly tempHp: HpType }
   | {
       readonly tag: "zero";
+      readonly tempHp: HpType;
       readonly lifecycle: CharacterSheetZeroHpLifecycle;
     };
 
 export type CharacterSheetHitPointsInput = {
   readonly currentHp: HpType;
+  readonly tempHp: HpType;
   readonly positiveHpUnconscious?: CharacterSheetPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
 };
@@ -193,6 +200,7 @@ export function createFreshCharacterSheet(
     characterId: input.characterId,
     maximumHp: input.maximumHp,
     currentHp: input.currentHp,
+    tempHp: input.tempHp,
     ...(input.spellSlots === undefined ? {} : { spellSlots: input.spellSlots }),
   });
   if (Either.isLeft(spellSlotExpenditures)) {
@@ -233,6 +241,7 @@ export function parseCharacterSheet(
     build: build.right,
     maximumHp: maximumHp.right,
     currentHp: hitPoints.right.currentHp,
+    tempHp: hitPoints.right.tempHp,
     ...(hitPoints.right.positiveHpUnconscious === undefined
       ? {}
       : { positiveHpUnconscious: hitPoints.right.positiveHpUnconscious }),
@@ -246,6 +255,12 @@ export function parseCharacterSheet(
 export function characterSheetHitPoints(
   input: CharacterSheetHitPointsInput,
 ): Either.Either<CharacterSheetHitPoints, CharacterSheetIssue> {
+  if (!isNonNegativeInteger(input.tempHp)) {
+    return characterSheetIssue(
+      "Character Sheet Temporary Hit Points must be nonnegative.",
+    );
+  }
+  const tempHp = input.tempHp;
   if (Number(input.currentHp) > 0) {
     if (input.zeroHpLifecycle !== undefined) {
       return characterSheetIssue(
@@ -262,8 +277,8 @@ export function characterSheetHitPoints(
     }
     return Either.right(
       input.positiveHpUnconscious === undefined
-        ? { tag: "positive", currentHp: input.currentHp }
-        : { tag: "knockedOut" },
+        ? { tag: "positive", currentHp: input.currentHp, tempHp }
+        : { tag: "knockedOut", tempHp },
     );
   }
   if (input.positiveHpUnconscious !== undefined) {
@@ -279,11 +294,15 @@ export function characterSheetHitPoints(
   );
   return Either.isLeft(lifecycle)
     ? Either.left(lifecycle.left)
-    : Either.right({ tag: "zero", lifecycle: lifecycle.right });
+    : Either.right({ tag: "zero", tempHp, lifecycle: lifecycle.right });
 }
 
 export function characterSheetCurrentHp(sheet: CharacterSheet): HpType {
   return characterSheetHitPointsCurrentHp(sheet.hitPoints);
+}
+
+export function characterSheetTempHp(sheet: CharacterSheet): HpType {
+  return sheet.hitPoints.tempHp;
 }
 
 export function characterSheetHitPointsCurrentHp(
@@ -394,6 +413,7 @@ function characterSheetHitPointCapacity(
 
 type ParsedStoredHitPoints = {
   readonly currentHp: HpType;
+  readonly tempHp: HpType;
   readonly positiveHpUnconscious?: CharacterSheetPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
 };
@@ -403,15 +423,19 @@ function parseStoredHitPoints(
 ): Either.Either<ParsedStoredHitPoints, CharacterSheetIssue> {
   if (!isRecord(value))
     return characterSheetIssue("Expected Character Sheet hit points.");
+  const tempHp =
+    value.tempHp === undefined ? Either.right(Hp(0)) : parseHp(value.tempHp);
+  if (Either.isLeft(tempHp)) return Either.left(tempHp.left);
   if (value.tag === "positive") {
     const currentHp = parseHp(value.currentHp);
     return Either.isLeft(currentHp)
       ? Either.left(currentHp.left)
-      : Either.right({ currentHp: currentHp.right });
+      : Either.right({ currentHp: currentHp.right, tempHp: tempHp.right });
   }
   if (value.tag === "knockedOut") {
     return Either.right({
       currentHp: Hp(1),
+      tempHp: tempHp.right,
       positiveHpUnconscious: CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
     });
   }
@@ -421,7 +445,11 @@ function parseStoredHitPoints(
   const lifecycle = parseStoredZeroHpLifecycle(value.lifecycle);
   return Either.isLeft(lifecycle)
     ? Either.left(lifecycle.left)
-    : Either.right({ currentHp: Hp(0), zeroHpLifecycle: lifecycle.right });
+    : Either.right({
+        currentHp: Hp(0),
+        tempHp: tempHp.right,
+        zeroHpLifecycle: lifecycle.right,
+      });
 }
 
 function parseStoredZeroHpLifecycle(

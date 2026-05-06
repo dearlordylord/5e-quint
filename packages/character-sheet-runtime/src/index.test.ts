@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   characterSheetId,
+  characterSheetTempHp,
   createFreshCharacterSheet,
   parseCharacterSheet,
 } from "./index.ts";
@@ -20,11 +21,31 @@ describe("Character Sheet runtime", () => {
       build,
       maximumHp: Hp(12),
       currentHp: Hp(12),
+      tempHp: Hp(0),
     });
 
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isRight(sheet)) {
-      expect(sheet.right.hitPoints).toEqual({ tag: "positive", currentHp: 12 });
+      expect(sheet.right.hitPoints).toEqual({
+        tag: "positive",
+        currentHp: 12,
+        tempHp: 0,
+      });
+    }
+  });
+
+  test("stores Temporary Hit Points as in-play HP state", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:test"),
+      build,
+      maximumHp: Hp(12),
+      currentHp: Hp(12),
+      tempHp: Hp(5),
+    });
+
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isRight(sheet)) {
+      expect(characterSheetTempHp(sheet.right)).toBe(5);
     }
   });
 
@@ -34,6 +55,7 @@ describe("Character Sheet runtime", () => {
       build,
       maximumHp: Hp(12),
       currentHp: Hp(1),
+      tempHp: Hp(0),
       zeroHpLifecycle: {
         tag: "unstable",
         deathSaves: { successes: 0, failures: 0 },
@@ -49,6 +71,7 @@ describe("Character Sheet runtime", () => {
       build,
       maximumHp: Hp(12),
       currentHp: Hp(13),
+      tempHp: Hp(0),
     });
 
     expect(Either.isLeft(sheet)).toBe(true);

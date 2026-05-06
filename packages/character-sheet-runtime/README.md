@@ -16,18 +16,16 @@ Current executable state:
 - `maximumHp` stores the sheet's HP capacity at the session boundary; callers
   derive it from `CharacterBuild` when creating the sheet, and later handoffs
   must match it before changing current HP.
-- `hitPoints` owns current HP plus the zero-HP Death Saving Throw lifecycle,
-  Stable state, death, and Knock Out's positive-HP Unconscious state. Current
-  HP cannot exceed `maximumHp`.
+- `hitPoints` owns current HP, Temporary Hit Points, the zero-HP Death Saving
+  Throw lifecycle, Stable state, death, and Knock Out's positive-HP Unconscious
+  state. Current HP cannot exceed `maximumHp`.
 - `spellSlotExpenditures` is present only for spellcasting builds and stores
   spent Spell Slots against build-derived capacity.
-- `parseCharacterSheet` is the local-storage/tool boundary parser for stored
-  sheets before app or MCP code consumes them.
+- `parseCharacterSheet` is the boundary parser for serialized sheets before app
+  or MCP code consumes them.
 
 Deferred homes:
 
-- Temporary Hit Points belong with `hitPoints`, but are not stored until a
-  grant/damage/rest workflow can execute them.
 - remaining Hit Dice belong in a future Hit Dice module, initialized from the
   build-derived pool once Short/Long Rest workflows exist.
 - non-spell feature resources belong in a future resource module that can spend

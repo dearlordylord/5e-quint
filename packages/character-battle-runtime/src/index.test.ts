@@ -3,6 +3,7 @@ import { characterId } from "@dnd/battle-runtime";
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   characterSheetId,
+  characterSheetTempHp,
   createFreshCharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
@@ -22,6 +23,7 @@ describe("Character Sheet battle handoff", () => {
       build,
       maximumHp: Hp(10),
       currentHp: Hp(10),
+      tempHp: Hp(0),
     });
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
@@ -33,9 +35,9 @@ describe("Character Sheet battle handoff", () => {
           kind: "character",
           characterId: characterId("character:battle"),
         },
-      // The handoff exits on mismatched identity before reading the rest of the
-      // combatant state, so this local fixture carries only the fields used on
-      // that branch.
+        // The handoff exits on mismatched identity before reading the rest of the
+        // combatant state, so this local fixture carries only the fields used on
+        // that branch.
       } as unknown as BattleCreatureState,
     });
 
@@ -48,6 +50,7 @@ describe("Character Sheet battle handoff", () => {
       build,
       maximumHp: Hp(10),
       currentHp: Hp(10),
+      tempHp: Hp(0),
     });
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
@@ -65,5 +68,36 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(Either.isLeft(handoff)).toBe(true);
+  });
+
+  test("preserves remaining Temporary Hit Points from battle handoff", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:sheet"),
+      build,
+      maximumHp: Hp(10),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      combatant: {
+        origin: {
+          kind: "character",
+          characterId: characterId("character:sheet"),
+        },
+        hp: Hp(8),
+        maxHp: Hp(10),
+        tempHp: Hp(4),
+        positiveHpUnconscious: null,
+      } as unknown as BattleCreatureState,
+    });
+
+    expect(Either.isRight(handoff)).toBe(true);
+    if (Either.isRight(handoff)) {
+      expect(characterSheetTempHp(handoff.right)).toBe(4);
+    }
   });
 });

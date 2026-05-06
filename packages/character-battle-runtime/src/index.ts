@@ -8,6 +8,7 @@ import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   characterSheetCurrentHp,
   characterSheetSpellSlots,
+  characterSheetTempHp,
   createFreshCharacterSheet,
   type CharacterSheet,
   type CharacterSheetIssue,
@@ -48,6 +49,7 @@ export type CharacterSheetBattleInitInput = Omit<
   | "build"
   | "characterId"
   | "currentHp"
+  | "tempHp"
   | "conditions"
   | "positiveHpUnconscious"
   | "zeroHpLifecycle"
@@ -72,6 +74,7 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
     build: sheet.build,
     characterId: sheet.characterId,
     currentHp: characterSheetCurrentHp(sheet),
+    tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
   });
 }
@@ -118,6 +121,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
     build: input.sheet.build,
     maximumHp: input.sheet.maximumHp,
     currentHp: input.combatant.hp,
+    tempHp: input.combatant.tempHp,
     ...(knockedOut.right === null
       ? {}
       : {

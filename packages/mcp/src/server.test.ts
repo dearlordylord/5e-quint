@@ -1533,7 +1533,7 @@ describe("MCP server route", () => {
       root.sessionStore.characters.get(testCharacterId(secondDraftId)),
     ).toMatchObject({
       tag: "available",
-      hitPoints: { tag: "positive", currentHp: 12 },
+      hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
     });
   });
 
@@ -2459,7 +2459,7 @@ describe("MCP server route", () => {
       characterId: testCharacterId(draftId),
       build: finalized.finalization.build,
       maximumHp: 12,
-      hitPoints: { tag: "positive", currentHp: 12 },
+      hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
     });
     expect(finalized.session).toMatchObject({
       draftIds: [],
@@ -2713,7 +2713,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({
         tag: "available",
-        hitPoints: { tag: "positive", currentHp: 5 },
+        hitPoints: { tag: "positive", currentHp: 5, tempHp: 0 },
       }),
     );
 
@@ -2804,6 +2804,7 @@ describe("MCP server route", () => {
         tag: "available",
         hitPoints: {
           tag: "zero",
+          tempHp: 0,
           lifecycle: {
             tag: "stable",
             recovery: { kind: "regains1HpAfter1d4Hours" },
@@ -2821,6 +2822,7 @@ describe("MCP server route", () => {
               maximum: 12,
               state: {
                 tag: "zero",
+                tempHp: 0,
                 lifecycle: {
                   tag: "stable",
                   recovery: { kind: "regains1HpAfter1d4Hours" },
@@ -2951,6 +2953,7 @@ describe("MCP server route", () => {
         tag: "available",
         hitPoints: {
           tag: "knockedOut",
+          tempHp: 0,
         },
       }),
     );
@@ -2964,6 +2967,7 @@ describe("MCP server route", () => {
               maximum: 12,
               state: {
                 tag: "knockedOut",
+                tempHp: 0,
               },
             }),
           }),
@@ -3018,7 +3022,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({
         tag: "available",
-        hitPoints: { tag: "positive", currentHp: 1 },
+        hitPoints: { tag: "positive", currentHp: 1, tempHp: 0 },
       }),
     );
   });
@@ -3033,6 +3037,7 @@ describe("MCP server route", () => {
         build,
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(1),
+        tempHp: Hp(4),
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
     );
@@ -3063,6 +3068,7 @@ describe("MCP server route", () => {
       expect.objectContaining({
         combatantId: "fighter",
         hp: 1,
+        tempHp: 4,
         conditions: expect.arrayContaining(["unconscious"]),
       }),
       expect.objectContaining({ combatantId: "goblin" }),
@@ -3086,6 +3092,7 @@ describe("MCP server route", () => {
         build,
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(6),
+        tempHp: Hp(0),
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
     ).toEqual(
@@ -3107,6 +3114,7 @@ describe("MCP server route", () => {
         build,
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
+        tempHp: Hp(0),
         zeroHpLifecycle: {
           tag: "stable",
           recovery: { kind: "regains1HpAfter1d4Hours" },
@@ -3168,6 +3176,7 @@ describe("MCP server route", () => {
         build,
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
+        tempHp: Hp(0),
         zeroHpLifecycle: {
           tag: "dead",
           deathSaves: { successes: 0, failures: 3 },
@@ -3235,6 +3244,7 @@ describe("MCP server route", () => {
       build,
       maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(0),
+      tempHp: Hp(0),
     };
 
     expect(() =>
@@ -3332,6 +3342,7 @@ describe("MCP server route", () => {
         tag: "available",
         hitPoints: {
           tag: "zero",
+          tempHp: 0,
           lifecycle: {
             tag: "dead",
             deathSaves: { successes: 0, failures: 3 },
@@ -3986,6 +3997,7 @@ describe("MCP server route", () => {
         currentHp: Hp(
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
+        tempHp: Hp(0),
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -4024,6 +4036,7 @@ describe("MCP server route", () => {
         currentHp: Hp(
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
+        tempHp: Hp(0),
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -4202,6 +4215,7 @@ function createFinalizedFighterSheet(
       build,
       maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+      tempHp: Hp(0),
     }),
   );
   return build;
