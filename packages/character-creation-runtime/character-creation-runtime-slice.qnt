@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module characterCreationRuntimeSlice {
-  // SRD traceability for this phase-1 slice:
+  // SRD traceability for this character-creation parity model:
   // - Character-Creation.md lines 56-91, 104-123, 143-187, 205-233,
   //   and 239-245: background/species/languages, Standard Array, alignment,
   //   background ASI, starting equipment, and character-build details.
@@ -13,13 +13,13 @@ module characterCreationRuntimeSlice {
   // - Equipment.md lines 82-85, 135, 143, 149, and 334-337:
   //   selected weapon mastery metadata and Dice Set tool option.
   //
-  // This slice intentionally models only the Orc Soldier Fighter vertical from
-  // plans/phase1-fighter-manifest.md plus POST3's first class-width boundary:
-  // Wizard is now a supported class option in TypeScript. The randomized slice
-  // still drives the established Fighter manifest path while deterministic
-  // TypeScript tests cover widened Wizard/Fighter build projection.
+  // This model intentionally covers the Orc Soldier Fighter support profile
+  // plus the first supported class-choice width: Wizard is now a supported class
+  // option in TypeScript. The randomized model still drives the established
+  // Fighter manifest path while deterministic TypeScript tests cover supported
+  // Wizard/Fighter build projection.
   //
-  // TODO(CAM follow-up): this parity slice currently checks hole/status protocol
+  // TODO(CAM follow-up): this parity model currently checks hole/status protocol
   // more deeply than finalized build values. Before widening character creation
   // beyond the first manifest, add parity coverage for selected Unit refs,
   // HP/Hit Die derivation, proficiencies, resources, and loadout identity.

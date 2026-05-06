@@ -55,7 +55,10 @@ import type {
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
-import type { DeathSaves } from "@dnd/shared-algebras/death-saves-algebra";
+import type {
+  DeathSaveRuntimeState,
+  DeathSaves,
+} from "@dnd/shared-algebras/death-saves-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   HoleId,
@@ -186,7 +189,7 @@ import type {
 } from "./battle-init.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
-  type CunningActionStandardAction,
+  type AlternateActionCostAction,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -828,19 +831,39 @@ function ongoingFeatureSourceKeyForUnit(
   return ongoingFeatureSourceKey(ongoingFeatureSourceForUnit(unitId));
 }
 
-export type BattleCreatureState = {
+export type KnockedOutOneHp = Hp & Brand.Brand<"KnockedOutOneHp">;
+const KnockedOutOneHp = Brand.nominal<KnockedOutOneHp>();
+export type KnockedOutConditionState = ConditionState &
+  Brand.Brand<"KnockedOutConditionState">;
+const KnockedOutConditionState = Brand.nominal<KnockedOutConditionState>();
+type KnockOutEligibleZeroHpLifecycle =
+  | Extract<ZeroHpLifecycle, { readonly policy: "diesAtZeroHp" }>
+  | (Extract<ZeroHpLifecycle, { readonly policy: "usesDeathSavingThrows" }> & {
+      readonly deathSaves: DeathSaveRuntimeState & { readonly dead: false };
+    });
+export type KnockOutEligibleBattleCreatureState = BattleCreatureState & {
+  readonly zeroHpLifecycle: KnockOutEligibleZeroHpLifecycle;
+};
+
+type BattleCreatureKnockOutLifecycle =
+  | {
+      readonly hp: Hp;
+      readonly conditions: ConditionState;
+      readonly positiveHpUnconscious: null;
+    }
+  | {
+      readonly hp: KnockedOutOneHp;
+      readonly conditions: KnockedOutConditionState;
+      readonly positiveHpUnconscious: BattlePositiveHpUnconscious;
+    };
+
+type BattleCreatureStateCommon = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: InitiativeScore;
   readonly side: BattleCombatantSide;
-  readonly hp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
-  readonly conditions: ConditionState;
-  // Non-null only for positive-HP Unconscious caused by SRD Knock Out.
-  // Authored init is parsed at the battle boundary; HP/condition transitions
-  // set or clear it through the Knock Out lifecycle helpers below.
-  readonly positiveHpUnconscious: BattlePositiveHpUnconscious | null;
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly activeOngoingFeatureOccurrences: ReadonlyMap<
     OngoingFeatureSourceKey,
@@ -902,6 +925,9 @@ export type BattleCreatureState = {
         readonly resources: StatBlockMutableResourceState;
       };
 };
+
+export type BattleCreatureState = BattleCreatureStateCommon &
+  BattleCreatureKnockOutLifecycle;
 
 export type LegendaryActionWindow = {
   readonly afterTurnActorId: CombatantId;
@@ -5272,14 +5298,9 @@ function battleCreatureStateFromInit(
     displayName: input.displayName,
     initiative: input.initiative,
     side: input.side,
-    hp: creatureInit.currentHp,
     maxHp: creatureInit.maxHp,
     tempHp: creatureInit.tempHp,
-    conditions: initialConditions,
-    positiveHpUnconscious:
-      creatureInit.kind === "character"
-        ? (creatureInit.positiveHpUnconscious ?? null)
-        : null,
+    ...initialKnockOutLifecycleFields(creatureInit, initialConditions),
     activeEffects: [],
     activeOngoingFeatureOccurrences: new Map(),
     concentration: null,
@@ -5718,19 +5739,102 @@ function positiveHpUnconsciousInitIssue(
   return null;
 }
 
+function knockedOutOneHp(): KnockedOutOneHp {
+  return KnockedOutOneHp(Hp(1));
+}
+
+function knockedOutConditionState(
+  conditions: ConditionState,
+): KnockedOutConditionState {
+  return KnockedOutConditionState(applyCondition(conditions, "unconscious"));
+}
+
+function battleCreatureStateWithKnockOutPreservedConditions(
+  combatant: BattleCreatureState,
+  conditions: ConditionState,
+): BattleCreatureState {
+  if (combatant.positiveHpUnconscious !== null) {
+    return {
+      ...combatant,
+      conditions: knockedOutConditionState(conditions),
+    };
+  }
+
+  return { ...combatant, conditions };
+}
+
+function nonKnockOutLifecycleFields(
+  hp: Hp,
+  conditions: ConditionState,
+): BattleCreatureKnockOutLifecycle {
+  return { hp, conditions, positiveHpUnconscious: null };
+}
+
+function battleCreatureStateWithoutKnockOut(
+  combatant: BattleCreatureState,
+  hp: Hp,
+  conditions: ConditionState,
+): BattleCreatureState {
+  return { ...combatant, ...nonKnockOutLifecycleFields(hp, conditions) };
+}
+
+function battleCreatureStateWithDamageProjection(
+  combatant: BattleCreatureState,
+  projection: HpDamageProjection,
+): BattleCreatureState {
+  const tempHp = Hp(projection.currentTempHp - projection.tempHpAbsorbed);
+  if (
+    combatant.positiveHpUnconscious !== null &&
+    Number(projection.nextHp) === 1
+  ) {
+    return { ...combatant, hp: knockedOutOneHp(), tempHp };
+  }
+
+  return {
+    ...battleCreatureStateWithoutKnockOut(
+      combatant,
+      projection.nextHp,
+      combatant.conditions,
+    ),
+    tempHp,
+  };
+}
+
+function initialKnockOutLifecycleFields(
+  creatureInit: BattleCreatureInit["creatureInit"],
+  conditions: ConditionState,
+): BattleCreatureKnockOutLifecycle {
+  if (
+    creatureInit.kind === "character" &&
+    creatureInit.positiveHpUnconscious !== undefined
+  ) {
+    return {
+      hp: KnockedOutOneHp(creatureInit.currentHp),
+      conditions: KnockedOutConditionState(conditions),
+      positiveHpUnconscious: creatureInit.positiveHpUnconscious,
+    };
+  }
+
+  return {
+    hp: creatureInit.currentHp,
+    conditions,
+    positiveHpUnconscious: null,
+  };
+}
+
 export function combatantKnockedOutUnconscious(
   combatant: BattleCreatureState,
-): BattlePositiveHpUnconscious | null {
-  if (combatant.positiveHpUnconscious === null) return null;
+): Either.Either<BattlePositiveHpUnconscious | null, BattleStateInitIssue> {
+  if (combatant.positiveHpUnconscious === null) return Either.right(null);
   if (
     Number(combatant.hp) !== 1 ||
     !hasCondition(combatant.conditions, "unconscious")
   ) {
-    throw new Error(
+    return battleStateInitIssue(
       "BattleCreatureState invariant violated: Knocked Out Unconscious requires exactly 1 HP and the Unconscious condition.",
     );
   }
-  return combatant.positiveHpUnconscious;
+  return Either.right(combatant.positiveHpUnconscious);
 }
 
 function combatantCanTakeActions(
@@ -8882,8 +8986,10 @@ function resolveStandFromProneCommand(
     );
   }
   const nextActor = {
-    ...actor,
-    conditions: removeCondition(actor.conditions, "prone"),
+    ...battleCreatureStateWithKnockOutPreservedConditions(
+      actor,
+      removeCondition(actor.conditions, "prone"),
+    ),
     movementSpentFeet: movementFeet(Number(actor.movementSpentFeet) + cost),
   };
   const nextState = {
@@ -12350,11 +12456,7 @@ function applyHpDamage(
     return combatant;
   }
 
-  const damaged = {
-    ...combatant,
-    hp: projection.nextHp,
-    tempHp: Hp(projection.currentTempHp - projection.tempHpAbsorbed),
-  };
+  const damaged = battleCreatureStateWithDamageProjection(combatant, projection);
 
   if (projection.currentHp <= 0) {
     return projection.massiveDamageKills
@@ -12366,10 +12468,7 @@ function applyHpDamage(
     return damaged;
   }
 
-  if (
-    context.damageDisposition?.kind === "knockOut" &&
-    !projection.massiveDamageKills
-  ) {
+  if (context.damageDisposition?.kind === "knockOut") {
     return applyKnockOut(damaged);
   }
 
@@ -12409,31 +12508,25 @@ function damageAllowsKnockOut(
   const projection = hpDamageProjection(combatant, damageAmount);
   return (
     projection.currentHp > 0 &&
-    Number(projection.nextHp) === 0 &&
-    !projection.massiveDamageKills
+    Number(projection.nextHp) === 0
   );
 }
 
-function withKnockedOutUnconscious(
+function battleCreatureStateWithKnockedOutUnconsciousFields(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
   return {
     ...combatant,
-    hp: Hp(1),
-    conditions: applyCondition(combatant.conditions, "unconscious"),
+    hp: knockedOutOneHp(),
+    conditions: knockedOutConditionState(combatant.conditions),
     positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
   };
 }
 
-function withoutKnockedOutUnconscious(): Pick<
-  BattleCreatureState,
-  "positiveHpUnconscious"
-> {
-  return { positiveHpUnconscious: null };
-}
-
 function applyKnockOut(combatant: BattleCreatureState): BattleCreatureState {
-  return withKnockedOutUnconscious(withoutConcentration(combatant));
+  return battleCreatureStateWithKnockedOutUnconsciousFields(
+    withoutConcentration(combatant),
+  );
 }
 
 function applyHpHealing(
@@ -12452,10 +12545,11 @@ function applyHpHealing(
   const regainedHitPoints = Number(nextHp) > currentHp;
   if (currentHp <= 0 && Number(nextHp) > 0) {
     return {
-      ...combatant,
-      hp: nextHp,
-      conditions: removeCondition(combatant.conditions, "unconscious"),
-      ...withoutKnockedOutUnconscious(),
+      ...battleCreatureStateWithoutKnockOut(
+        combatant,
+        nextHp,
+        removeCondition(combatant.conditions, "unconscious"),
+      ),
       zeroHpLifecycle:
         combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows"
           ? {
@@ -12466,15 +12560,16 @@ function applyHpHealing(
     };
   }
   if (regainedHitPoints && combatant.positiveHpUnconscious !== null) {
-    return {
-      ...combatant,
-      hp: nextHp,
-      conditions: removeCondition(combatant.conditions, "unconscious"),
-      ...withoutKnockedOutUnconscious(),
-    };
+    return battleCreatureStateWithoutKnockOut(
+      combatant,
+      nextHp,
+      removeCondition(combatant.conditions, "unconscious"),
+    );
   }
 
-  return { ...combatant, hp: nextHp };
+  return regainedHitPoints
+    ? battleCreatureStateWithoutKnockOut(combatant, nextHp, combatant.conditions)
+    : combatant;
 }
 
 function applyInitialZeroHpLifecycle(
@@ -12489,8 +12584,10 @@ function applyInitialZeroHpLifecycle(
       withoutConcentration(combatant),
     ),
     Match.when({ policy: "usesDeathSavingThrows" }, () => ({
-      ...combatant,
-      conditions: applyCondition(combatant.conditions, "unconscious"),
+      ...battleCreatureStateWithKnockOutPreservedConditions(
+        combatant,
+        applyCondition(combatant.conditions, "unconscious"),
+      ),
     })),
     Match.exhaustive,
   );
@@ -12501,13 +12598,18 @@ function applyDropToZeroHpLifecycle(
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => ({
-      ...withoutConcentration(combatant),
-      ...withoutKnockedOutUnconscious(),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        combatant.conditions,
+      ),
     })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
-      ...withoutConcentration(combatant),
-      conditions: applyCondition(combatant.conditions, "unconscious"),
-      ...withoutKnockedOutUnconscious(),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        applyCondition(combatant.conditions, "unconscious"),
+      ),
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: resetDeathSaveRuntimeState(),
@@ -12523,13 +12625,18 @@ function applyDamageAtZeroHp(
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => ({
-      ...withoutConcentration(combatant),
-      ...withoutKnockedOutUnconscious(),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        combatant.conditions,
+      ),
     })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
-      ...withoutConcentration(combatant),
-      conditions: applyCondition(combatant.conditions, "unconscious"),
-      ...withoutKnockedOutUnconscious(),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        applyCondition(combatant.conditions, "unconscious"),
+      ),
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: addDeathFailures(
@@ -12574,11 +12681,13 @@ function applyStartTurnDeathSavingThrow(
     Number(roll),
   );
   const nextCombatant = {
-    ...combatant,
-    hp: deathSaves.hpRegained ? Hp(1) : combatant.hp,
-    conditions: deathSaves.hpRegained
-      ? removeCondition(combatant.conditions, "unconscious")
-      : combatant.conditions,
+    ...battleCreatureStateWithoutKnockOut(
+      combatant,
+      deathSaves.hpRegained ? Hp(1) : combatant.hp,
+      deathSaves.hpRegained
+        ? removeCondition(combatant.conditions, "unconscious")
+        : combatant.conditions,
+    ),
     zeroHpLifecycle: {
       ...combatant.zeroHpLifecycle,
       deathSaves,
@@ -12685,13 +12794,18 @@ function applyInstantDeath(
 ): BattleCreatureState {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => ({
-      ...withoutConcentration(combatant),
-      ...withoutKnockedOutUnconscious(),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        combatant.conditions,
+      ),
     })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
-      ...withoutConcentration(combatant),
-      conditions: applyCondition(combatant.conditions, "unconscious"),
-      ...withoutKnockedOutUnconscious(),
+      ...battleCreatureStateWithoutKnockOut(
+        withoutConcentration(combatant),
+        combatant.hp,
+        applyCondition(combatant.conditions, "unconscious"),
+      ),
       zeroHpLifecycle: {
         ...lifecycle,
         deathSaves: addDeathFailures(lifecycle.deathSaves, 3),
@@ -14250,7 +14364,7 @@ function alternateActionCostProfilesForActor(
 function alternateActionCostActionAvailable(
   state: BattleState,
   actorId: CombatantId,
-  action: CunningActionStandardAction,
+  action: AlternateActionCostAction,
 ): boolean {
   return Match.value(action).pipe(
     Match.when("dash", () => true),
@@ -14263,7 +14377,7 @@ function alternateActionCostActionAvailable(
 function actorHasAlternateActionCost(
   combatant: BattleCreatureState | undefined,
   sourceUnitId: string,
-  action: CunningActionStandardAction,
+  action: AlternateActionCostAction,
 ): boolean {
   return alternateActionCostProfilesForActor(combatant).some(
     (entry) =>
@@ -14274,7 +14388,7 @@ function actorHasAlternateActionCost(
 }
 
 function alternateActionCostActionLabel(
-  action: CunningActionStandardAction,
+  action: AlternateActionCostAction,
 ): string {
   return Match.value(action).pipe(
     Match.when("dash", () => "Dash"),

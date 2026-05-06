@@ -12,7 +12,7 @@ const JsonObjectSchema = Schema.Record({
 });
 const McpSessionSnapshotSchema = Schema.Struct({
   draftIds: Schema.Array(Schema.String),
-  sourceDraftIds: Schema.Array(Schema.String),
+  characterIds: Schema.Array(Schema.String),
   selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
   activeBattle: Schema.Union(
     Schema.Struct({

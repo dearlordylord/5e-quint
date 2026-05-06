@@ -589,6 +589,27 @@ export function characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
   return CharacterEquipmentItemUnitId(value);
 }
 
+export type ToolProficiencyId = string & Brand.Brand<"ToolProficiencyId">;
+const ToolProficiencyId = Brand.nominal<ToolProficiencyId>();
+export const CHARACTER_BUILD_TOOL_PROFICIENCY_IDS = [
+  "tool_dice_set",
+  "tool_thieves_tools",
+] as const;
+export type ToolProficiencyIdText =
+  (typeof CHARACTER_BUILD_TOOL_PROFICIENCY_IDS)[number];
+export function isCharacterBuildToolProficiencyId(
+  value: string,
+): value is ToolProficiencyIdText {
+  return CHARACTER_BUILD_TOOL_PROFICIENCY_IDS.some(
+    (candidate) => candidate === value,
+  );
+}
+export function toolProficiencyId(
+  value: ToolProficiencyIdText,
+): ToolProficiencyId {
+  return ToolProficiencyId(value);
+}
+
 export type CharacterEquipmentItemSource<
   Slot extends CharacterEquipmentItemSlot = CharacterEquipmentItemSlot,
 > = {
@@ -913,7 +934,7 @@ export type CharacterBuildProficiencies = {
   readonly savingThrows: readonly Ability[];
   readonly skills: readonly Skill[];
   readonly weapon: readonly WeaponProficiencyCategory[];
-  readonly tools: readonly UnitRecord["id"][];
+  readonly tools: readonly ToolProficiencyId[];
 };
 
 export type CharacterBuildFeature =
@@ -978,9 +999,8 @@ export type CharacterBuildLoadout = {
   };
 };
 
-// Phase 1 only records the supported default build loadout. The future in-play
-// CharacterSheet owns mutable equipment state if active equipment can change
-// during adventuring.
+// The build records the supported default loadout. The in-play Character Sheet
+// owns mutable equipment state if active equipment can change during adventuring.
 export type CharacterBuildEquipment = CharacterBuildLoadout;
 
 // CharacterBuild is the creation output: durable build and identity facts.

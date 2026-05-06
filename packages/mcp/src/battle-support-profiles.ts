@@ -41,7 +41,7 @@ function withBattleSupportProfiles(
   const unitOption = unitLibrary.getUnit(unitRef.unitId);
   if (Option.isNone(unitOption)) {
     return battleSupportProfileIssue(
-      `Unknown Unit for battle support profile: ${unitRef.unitId}.`,
+      `Unknown Character Build Unit for battle initialization: ${unitRef.unitId}.`,
     );
   }
   const battleUnitRef = battleUnitRefWithSupportProfiles({

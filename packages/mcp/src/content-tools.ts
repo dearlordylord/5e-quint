@@ -211,7 +211,7 @@ function workflowGuide() {
       "After every accepted fill_creation_holes call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
       "Call list_stat_blocks for Stat Block ids. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
-      "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use sourceDraftId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks.",
+      "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks.",
       "Call discover_battle_acts and copy a returned subject exactly.",
       "If an act has initialHoles, call fill_battle_hole with one fill at a time, reusing the same subject until result.tag is resolved.",
       "If an act has no holes, call resolve_battle_act with the returned subject.",
@@ -257,10 +257,10 @@ function workflowGuide() {
       "On pending-fill errors, continue filling session.transientBattleFills.subject until the result resolves.",
     ],
     limits: [
-      "The current slice supports Orc Soldier Fighter 1, Orc Soldier Fighter 2, Orc Soldier Wizard 1, Goblin Warrior, and Skeleton workflows.",
+      "Use discover_creation_holes, list_characters, list_stat_blocks, and discover_battle_acts for the currently executable workflows and acts.",
       "Character creation exposes one draft.progression.initial fill for the selected progression profile; MCP does not expose a later level-1 class-entry fill.",
       "MCP does not roll dice. Use user-provided or external dice results.",
-      "Rest and revival workflows remain outside this slice after typed zero-HP character closeout.",
+      "Rest and revival workflows are not currently supported after typed zero-HP character closeout.",
     ],
   };
 }

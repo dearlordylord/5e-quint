@@ -60,7 +60,10 @@ import type {
   UnitChoiceSource,
   UnitRef,
 } from "./types.ts";
-import { creationChoiceOptionId } from "./types.ts";
+import {
+  CHARACTER_BUILD_TOOL_PROFICIENCY_IDS,
+  creationChoiceOptionId,
+} from "./types.ts";
 import {
   classUnitId,
   characterProgressionEntry,
@@ -211,6 +214,9 @@ const SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS = [
   ...ARMOR_TRAINING_CATEGORIES.map((category) =>
     proficiencyGrantSubjectOptionId({ kind: "armor_category", category }),
   ),
+  ...CHARACTER_BUILD_TOOL_PROFICIENCY_IDS.map((toolId) =>
+    proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
+  ),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 const SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS =
   supportedAbilityScoreIncreaseOptionIds();
@@ -356,7 +362,7 @@ function isSupportedDraftChoicePath(
   );
 }
 
-// Current support-slice filter, not RAW legality. This is the character
+// Support-profile filter, not RAW legality. This is the character
 // creation equivalent of battle-runtime's Attack action option support gate: legal
 // SRD-legal catalog choices may be discoverable, but finalization only accepts the
 // subset this reducer can currently project and execute. This should shrink as

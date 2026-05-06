@@ -10,7 +10,12 @@ import type {
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { Either } from "effect";
 
-export type CharacterSessionPositiveHpUnconscious = BattlePositiveHpUnconscious;
+export type CharacterSessionPositiveHpUnconscious = {
+  readonly tag: "knockedOut";
+};
+export const CHARACTER_SESSION_KNOCKED_OUT_UNCONSCIOUS = {
+  tag: "knockedOut",
+} as const satisfies CharacterSessionPositiveHpUnconscious;
 type CharacterSessionPendingDeathSaveCount = Exclude<DeathSaveCount, 3>;
 type CharacterSessionPendingDeathSaves = {
   readonly successes: CharacterSessionPendingDeathSaveCount;
@@ -115,8 +120,17 @@ export function characterSessionHitPointsInitialConditions(
 
 export function characterSessionHitPointsPositiveHpUnconscious(
   hitPoints: CharacterSessionHitPoints,
-): CharacterSessionPositiveHpUnconscious | undefined {
+): BattlePositiveHpUnconscious | undefined {
   return hitPoints.tag === "knockedOut" ? KNOCKED_OUT_UNCONSCIOUS : undefined;
+}
+
+export function characterSessionPositiveHpUnconsciousFromBattle(
+  value: BattlePositiveHpUnconscious,
+): CharacterSessionPositiveHpUnconscious {
+  switch (value.tag) {
+    case "knockedOut":
+      return CHARACTER_SESSION_KNOCKED_OUT_UNCONSCIOUS;
+  }
 }
 
 export function characterSessionHitPointsZeroHpLifecycle(

@@ -29,20 +29,22 @@ import {
 } from "./character-progression-types.ts";
 import {
   backgroundToolChoiceSpec,
-  abilityScoreIncreaseOptions,
   classFeatureGrantChoiceHoles,
   choiceSelectionOptionIds,
   choiceSelectionMatchesHole,
   sameCreationHoleSource,
+  selectedFeatAbilityScoreIncreaseOptions,
   sameOptionIdMultiset,
   startingEquipmentChoiceHole,
 } from "./discovery.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
   decodeProficiencyGrantSubjectOptionId,
+  parseToolProficiencyId,
   proficiencyGrantSubjectOption,
   type AbilityScoreIncreaseDeltaWithCap,
   type ChoiceOptionCodecIssue,
+  type ParsedProficiencyGrantSubject,
 } from "./choice-option-codecs.ts";
 import {
   choiceHole,
@@ -82,6 +84,7 @@ import {
   hitDieTotal,
   nonEmptyReadonlyArray,
   loadoutSourceKey,
+  isCharacterBuildToolProficiencyId,
   unitChoiceSourceKey,
   type AbilityScoreAssignment,
   type BackgroundAbilityScoreIncreaseSelection,
@@ -100,6 +103,7 @@ import {
   type CreationFinalizationResult,
   type FinalizedCharacterSelections,
   type NonEmptyReadonlyArray,
+  type ToolProficiencyId,
   type UnitCatalog,
   type LoadoutEquipmentUnitId,
   type LoadoutSourceKey,
@@ -157,7 +161,7 @@ export function finalizeCharacterDraft(input: {
     };
   }
 
-  const supportedSelections = temporarySupportedSliceSelections(
+  const supportedSelections = executableSupportSelections(
     selections,
     input.unitLibrary,
   );
@@ -218,11 +222,10 @@ export function finalizedSelections(
   };
 }
 
-// Temporary executable-width gate. This is not the final rules-legality model:
-// it rejects complete drafts that are legal for the active rules corpus but
-// that the current runtime cannot yet project or execute. Remove this boundary
-// as implemented creation coverage reaches the project's supported content set.
-export function temporarySupportedSliceIssues(
+// Executable support gate. This is narrower than rules legality: it rejects
+// complete drafts that are legal for the active rules corpus but that this
+// runtime cannot yet project or execute.
+export function executableSupportIssues(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): readonly CreationFinalizationIssue[] {
@@ -330,27 +333,27 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
   });
 }
 
-const TemporarySupportedSliceSelections = Symbol(
-  "TemporarySupportedSliceSelections",
+const ExecutableSupportSelections = Symbol(
+  "ExecutableSupportSelections",
 );
 
-type TemporarySupportedSliceSelections = {
+type ExecutableSupportSelections = {
   readonly selections: FinalizedCharacterSelections;
   readonly progression: CharacterProgression;
   readonly unitChoices: readonly UnitChoiceSelection[];
   readonly loadoutChoices: readonly LoadoutChoiceSelection[];
-  readonly [TemporarySupportedSliceSelections]: true;
+  readonly [ExecutableSupportSelections]: true;
 };
 
-function temporarySupportedSliceSelections(
+function executableSupportSelections(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): Either.Either<
-  TemporarySupportedSliceSelections,
+  ExecutableSupportSelections,
   NonEmptyReadonlyArray<CreationFinalizationIssue>
 > {
   const issues = nonEmptyReadonlyArray([
-    ...temporarySupportedSliceIssues(selections, unitLibrary),
+    ...executableSupportIssues(selections, unitLibrary),
   ]);
   if (issues != null) {
     return Either.left(issues);
@@ -361,7 +364,7 @@ function temporarySupportedSliceSelections(
     progression: selections.progression,
     unitChoices: unitChoiceSelections(selections),
     loadoutChoices: loadoutChoiceSelections(selections),
-    [TemporarySupportedSliceSelections]: true,
+    [ExecutableSupportSelections]: true,
   });
 }
 
@@ -542,7 +545,7 @@ export function sameBackgroundAbilityScoreIncreaseSelection(
 }
 
 export function buildCharacterBuild(input: {
-  readonly supportedSelections: TemporarySupportedSliceSelections;
+  readonly supportedSelections: ExecutableSupportSelections;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterBuild, FinalizationIssues> {
   const { selections } = input.supportedSelections;
@@ -639,6 +642,19 @@ export function buildCharacterBuild(input: {
   if (Either.isLeft(classFeatureProficiencySubjects)) {
     return Either.left(classFeatureProficiencySubjects.left);
   }
+  const toolProficiencies = finalizedBuildToolProficiencies(
+    selections,
+    classFeatureProficiencySubjects.right,
+  );
+  if (Either.isLeft(toolProficiencies)) {
+    return Either.left(toolProficiencies.left);
+  }
+  const multiclassToolProficiencies = finalizedBuildSurfaceToolProficiencyIds(
+    multiclassProficiencySubjects,
+  );
+  if (Either.isLeft(multiclassToolProficiencies)) {
+    return Either.left(multiclassToolProficiencies.left);
+  }
   const hitPointsAfterLevelOne = progression.advancements.reduce(
     (total, advancement) => {
       const advancementClassFacts = classFactsByUnitId.right.get(
@@ -698,13 +714,8 @@ export function buildCharacterBuild(input: {
         ),
       ]),
       tools: uniqueValues([
-        ...finalizedBuildToolProficiencies(
-          selections,
-          classFeatureProficiencySubjects.right,
-        ),
-        ...multiclassProficiencySubjects.flatMap((subject) =>
-          subject.kind === "tool" ? [subject.toolId] : [],
-        ),
+        ...toolProficiencies.right,
+        ...multiclassToolProficiencies.right,
       ]),
     },
     armorTraining: uniqueValues([
@@ -1147,13 +1158,9 @@ function selectedFeatAbilityScoreChoiceHoles(
       const featUnitId = option.unitRef?.unitId;
       if (featUnitId == null) return [];
       const unit = unitLibrary.getUnit(featUnitId);
-      if (
-        Option.isNone(unit) ||
-        unit.value.kind !== "feat" ||
-        unit.value.abilityScoreIncreaseChoice == null
-      ) {
-        return [];
-      }
+      if (Option.isNone(unit)) return [];
+      const options = selectedFeatAbilityScoreIncreaseOptions(unit.value);
+      if (options.length === 0) return [];
 
       return compact([
         requireUnitChoiceCreationHole(
@@ -1163,9 +1170,7 @@ function selectedFeatAbilityScoreChoiceHoles(
               CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
             ),
             cardinality: EXACTLY_ONE_CHOICE,
-            options: abilityScoreIncreaseOptions(
-              unit.value as Parameters<typeof abilityScoreIncreaseOptions>[0],
-            ),
+            options,
           }),
         ),
       ]);
@@ -1366,7 +1371,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
 
 export function finalizedBuildSpellcasting(
   classFacts: ClassCreationFacts,
-  supportedSelections: TemporarySupportedSliceSelections,
+  supportedSelections: ExecutableSupportSelections,
 ): CharacterBuildSpellcasting | undefined {
   if (!isWizardClassCreationFacts(classFacts)) {
     return undefined;
@@ -1636,7 +1641,7 @@ export function abilityModifier(score: number): number {
 
 export function finalizedBuildSkillProficiencies(
   selections: FinalizedCharacterSelections,
-  classFeatureProficiencySubjects: readonly ProficiencyGrantSubject[],
+  classFeatureProficiencySubjects: readonly ParsedProficiencyGrantSubject[],
 ): readonly Skill[] {
   const skillSelection = selections.choices.find(
     (selection): selection is UnitChoiceSelection =>
@@ -1671,8 +1676,8 @@ function skillsFromChoiceSelection(
 
 export function finalizedBuildToolProficiencies(
   selections: FinalizedCharacterSelections,
-  classFeatureProficiencySubjects: readonly ProficiencyGrantSubject[],
-): readonly UnitRecord["id"][] {
+  classFeatureProficiencySubjects: readonly ParsedProficiencyGrantSubject[],
+): Either.Either<readonly ToolProficiencyId[], FinalizationIssues> {
   const toolSelection = selections.choices.find(
     (selection) =>
       selection.kind === "unitChoice" &&
@@ -1682,20 +1687,69 @@ export function finalizedBuildToolProficiencies(
       ),
   );
 
-  return uniqueValues([
-    ...(toolSelection == null
-      ? []
-      : choiceSelectionOptionIds(toolSelection).map(
-          (optionId) => String(optionId) as UnitRecord["id"],
-        )),
-    ...classFeatureProficiencySubjects.flatMap((subject) =>
-      subject.kind === "tool" ? [subject.toolId] : [],
-    ),
-  ]);
+  const backgroundToolIds: ToolProficiencyId[] = [];
+  if (toolSelection != null) {
+    for (const optionId of choiceSelectionOptionIds(toolSelection)) {
+      if (
+        !isCharacterBuildToolProficiencyId(String(optionId))
+      ) {
+        return Either.left([
+          illegalFinalizationIssue(
+            `Unsupported background tool proficiency for finalized Character Build: ${optionId}.`,
+          ),
+        ]);
+      }
+      const parsed = parseToolProficiencyId(String(optionId));
+      if (Either.isLeft(parsed)) {
+        return Either.left([choiceOptionCodecFinalizationIssue(parsed.left)]);
+      }
+      backgroundToolIds.push(parsed.right);
+    }
+  }
+
+  const classFeatureToolIds = finalizedBuildToolProficiencyIds(
+    classFeatureProficiencySubjects,
+  );
+
+  return Either.right(
+    uniqueValues([...backgroundToolIds, ...classFeatureToolIds]),
+  );
+}
+
+function finalizedBuildToolProficiencyIds(
+  subjects: readonly ParsedProficiencyGrantSubject[],
+): readonly ToolProficiencyId[] {
+  return subjects.flatMap((subject) =>
+    subject.kind === "tool" ? [subject.toolId] : [],
+  );
+}
+
+function finalizedBuildSurfaceToolProficiencyIds(
+  subjects: readonly ProficiencyGrantSubject[],
+): Either.Either<readonly ToolProficiencyId[], FinalizationIssues> {
+  const toolIds: ToolProficiencyId[] = [];
+  for (const subject of subjects) {
+    if (subject.kind !== "tool") continue;
+    if (
+      !isCharacterBuildToolProficiencyId(subject.toolId)
+    ) {
+      return Either.left([
+        illegalFinalizationIssue(
+          `Unsupported tool proficiency for finalized Character Build: ${subject.toolId}.`,
+        ),
+      ]);
+    }
+    const parsed = parseToolProficiencyId(subject.toolId);
+    if (Either.isLeft(parsed)) {
+      return Either.left([choiceOptionCodecFinalizationIssue(parsed.left)]);
+    }
+    toolIds.push(parsed.right);
+  }
+  return Either.right(toolIds);
 }
 
 function finalizedBuildWeaponProficiencies(
-  classFeatureProficiencySubjects: readonly ProficiencyGrantSubject[],
+  classFeatureProficiencySubjects: readonly ParsedProficiencyGrantSubject[],
 ): readonly WeaponProficiencyCategory[] {
   return classFeatureProficiencySubjects.flatMap((subject) =>
     subject.kind === "weapon_category" ? [subject.category] : [],
@@ -1703,7 +1757,7 @@ function finalizedBuildWeaponProficiencies(
 }
 
 function finalizedBuildArmorTraining(
-  classFeatureProficiencySubjects: readonly ProficiencyGrantSubject[],
+  classFeatureProficiencySubjects: readonly ParsedProficiencyGrantSubject[],
 ): readonly ArmorTrainingCategory[] {
   return classFeatureProficiencySubjects.flatMap((subject) =>
     subject.kind === "armor_category" ? [subject.category] : [],
@@ -1712,8 +1766,11 @@ function finalizedBuildArmorTraining(
 
 function decodedClassFeatureProficiencySubjects(
   selections: FinalizedCharacterSelections,
-): Either.Either<readonly ProficiencyGrantSubject[], FinalizationIssues> {
-  const subjects: ProficiencyGrantSubject[] = [];
+): Either.Either<
+  readonly ParsedProficiencyGrantSubject[],
+  FinalizationIssues
+> {
+  const subjects: ParsedProficiencyGrantSubject[] = [];
   const issues: CreationFinalizationIssue[] = [];
   for (const selection of selections.choices) {
     if (

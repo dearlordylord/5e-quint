@@ -26,7 +26,7 @@ the character-creation and battle runtimes. Its composition root builds:
 The character-creation tool boundary exposes these user-facing tools:
 
 - `describe_mcp_workflow` returns the agent-facing lifecycle, accepted fill
-  examples, result paths, recovery rules, and current slice limits. This tool
+  examples, result paths, recovery rules, and supported workflow limits. This tool
   has an Effect Schema-derived output schema and returns structured content.
 - `list_catalog_units` lists installed Unit ids grouped by kind for
   discovery. These ids are catalog facts, not MCP-local support lists; legal
@@ -46,27 +46,24 @@ The character-creation tool boundary exposes these user-facing tools:
   advancement entries together; MCP does not expose a separate level-1 class
   entry after that fill.
 - `finalize_character` finalizes only when the runtime reports a supported
-  character draft is ready. The active character-creation runtime path currently
-  supports the Orc Soldier Fighter 1/Fighter 2 and Orc Soldier Wizard 1 slice. A
-  ready result returns `build`, stores an available character session by source
-  draft id, and removes the active draft from `drafts`. The Character Build
-  remains build-only; the session owns current HP while the character is outside
-  battle.
+  character draft is ready. Supported character-creation workflows are
+  discovered from current creation holes rather than duplicated in MCP docs. A ready result returns
+  `build`, stores an available in-play record by characterId, and removes
+  the draft from `drafts`. The Character Build remains build-only; the
+  session owns current HP while the character is outside battle.
 - `list_characters` lists durable character-session rows. It reads only the
   character-session store, so selected or battled Stat Blocks do not appear as
   characters.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
-character helpers in the active runtime path.
+character helpers in the runtime path.
 
 Character Progression and multiclass prerequisites are not MCP-owned facts.
 `@dnd/character-creation-runtime` owns the progression shape and support gate,
 while `@dnd/shared-algebras/multiclass-prerequisite-algebra` owns the SRD
 prerequisite table and check. MCP may project finalized progression class
-levels into battle initialization, but the current finalization slice remains
-single-class until character-creation projection supports multiclass features,
-HP, Hit Dice, proficiencies, and spellcasting end to end.
+levels into battle initialization for supported finalized builds.
 
 The battle-session tool boundary exposes these user-facing tools:
 
@@ -80,11 +77,8 @@ The battle-session tool boundary exposes these user-facing tools:
   `BattleState` owns HP until battle closeout.
 - `read_battle_state` returns the stored `BattleState` projection and current
   battle snapshot.
-- `discover_battle_acts` returns the current actor's battle acts. The active
-  battle-runtime slice exposes supported character weapon Attacks, Fighter
-  Second Wind, Fighter 2 Action Surge, Wizard `magic_missile` and
-  `ray_of_frost` Magic-action spell acts, supported Goblin Warrior/Skeleton Stat
-  Block attacks, and End Turn.
+- `discover_battle_acts` returns the current actor's battle acts. The battle
+  runtime is the source of truth for which acts are currently available.
 - `fill_battle_hole` submits one fill at a time for a selected battle act
   subject. MCP stores transient target, spell target allocation, attack-roll,
   damage-result, and feature-roll fills until `@dnd/battle-runtime` resolves the
@@ -117,7 +111,7 @@ That fixture uses the authored Unit and Stat Block catalogs. It does
 not use character presets, Core projections, duplicated executable stat-block
 data, or reducer-owned in-progress battle fills.
 
-The first post-acceptance widened workflow is also covered through MCP tools. It
+The mixed character-and-Stat-Block battle workflow is also covered through MCP tools. It
 creates and finalizes an Orc Soldier Fighter 2 and an Orc Soldier Wizard 1
 through real creation holes, selects the authored SRD Skeleton Stat Block,
 starts battle from both finalized character identities plus the selected Stat
@@ -127,7 +121,7 @@ cantrip without spending a Spell Slot, lets Skeleton apply authored Shortsword
 attack pressure, casts prepared `magic_missile` with a level-1 Spell Slot spend
 and explicit dart target allocation, and closes the battle back to
 `list_characters`.
-The supported Wizard creation choices in this slice are catalog-backed SRD
+The supported Wizard creation choices in this workflow are catalog-backed SRD
 Spell Definitions; battle start fails at the MCP boundary rather than dropping
 selected spell or feature Unit refs that are not in the Surface catalog.
 
@@ -151,18 +145,16 @@ Zero-HP handoff:
   session stores the closeout fact needed for `list_characters`, rest/recovery,
   or revival workflows; it does not keep a second combat HP total.
 
-Remaining first-vertical gates:
+Deferred workflow gates:
 
 - broader rest/revival workflows remain deferred beyond the typed closeout
   state;
 - broader character choices, monster spellcasting, Multiattack, reactions,
   casting spells with higher-level Spell Slots, persistent spell effects such as
-  Mage Armor, and post-turn lifecycle subjects remain outside this widened
-  slice.
+  Mage Armor, and post-turn lifecycle subjects remain outside this workflow.
 
-Normal package tests cover the active MCP server route. The old Core-backed MCP
-route has been removed from this package; omitted behavior is governed by the
-Restore Ledger in
+Normal package tests cover the MCP server route. The removed Core-backed MCP
+route's omitted behavior is governed by the Restore Ledger in
 `plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`.
 
 `BattleResolutionResult` may include display-facing result details for tool
@@ -202,9 +194,9 @@ tools.
 
 `start_battle` must receive caller-supplied Initiative scores for every
 combatant in `initialCombatants`. MCP must not derive Initiative as
-`10 + modifier` in the active runtime path.
+`10 + modifier` in the runtime path.
 
-No active MCP/runtime path may import `@dnd/core`. Check that boundary with:
+No MCP/runtime path may import `@dnd/core`. Check that boundary with:
 
 ```sh
 rg '@dnd/core' packages/mcp/src packages/character-creation-runtime packages/battle-runtime

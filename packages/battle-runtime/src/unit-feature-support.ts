@@ -28,13 +28,13 @@ export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
 export const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE = "saveDamageReplacement";
 export const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE =
   "reactionRollOrDamageReduction";
-export const CUNNING_ACTION_STANDARD_ACTIONS = [
+export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
   "hide",
 ] as const satisfies ReadonlyArray<StandardActionKind>;
-export type CunningActionStandardAction =
-  (typeof CUNNING_ACTION_STANDARD_ACTIONS)[number];
+export type AlternateActionCostAction =
+  (typeof ALTERNATE_ACTION_COST_ACTIONS)[number];
 export const BATTLE_UNIT_SUPPORT_PROFILES = [
   "alternateActionCost",
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -43,11 +43,11 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 ] as const;
 export type BattleAlternateActionCostSupportProfile = {
-  readonly kind: "alternateActionCost";
-  readonly from: {
-    readonly kind: "standardAction";
-    readonly actions: typeof CUNNING_ACTION_STANDARD_ACTIONS;
-  };
+    readonly kind: "alternateActionCost";
+    readonly from: {
+      readonly kind: "standardAction";
+    readonly actions: typeof ALTERNATE_ACTION_COST_ACTIONS;
+    };
   readonly to: { readonly kind: "bonusAction" };
 };
 export type BattleUnitSupportProfile =
@@ -306,22 +306,22 @@ export function battleBonusActionStandardActionSupportForUnit(
   }
 
   if (
-    unit.mechanics.from.kind !== "standard_action" ||
-    !sameStringSet(
-      unit.mechanics.from.actions,
-      CUNNING_ACTION_STANDARD_ACTIONS,
-    ) ||
+      unit.mechanics.from.kind !== "standard_action" ||
+      !sameStringSet(
+        unit.mechanics.from.actions,
+      ALTERNATE_ACTION_COST_ACTIONS,
+      ) ||
     unit.mechanics.to.kind !== "bonus_action"
   ) {
     return "unsupported";
   }
 
   return {
-    kind: "alternateActionCost",
-    from: {
-      kind: "standardAction",
-      actions: CUNNING_ACTION_STANDARD_ACTIONS,
-    },
+      kind: "alternateActionCost",
+      from: {
+        kind: "standardAction",
+      actions: ALTERNATE_ACTION_COST_ACTIONS,
+      },
     to: { kind: "bonusAction" },
   };
 }

@@ -499,7 +499,8 @@ Zero-HP lifecycle:
   maximum HP, or if damage at `0` HP equals or exceeds maximum HP, the death-save
   lifecycle is marked dead.
 - If supported melee attack damage would reduce a creature from positive HP to
-  `0` without Massive Damage, the attacker can choose **Knock Out**: the target
+  `0`, the attacker can choose **Knock Out** instead of applying the ordinary
+  zero-HP result, including ordinary Massive Damage instant death: the target
   is left at `1` HP, gains Unconscious, carries explicit Knocked Out state, and
   does not enter or advance a zero-HP lifecycle. Any later HP healing that
   actually restores Hit Points ends that Knock Out Unconscious state. Ranged

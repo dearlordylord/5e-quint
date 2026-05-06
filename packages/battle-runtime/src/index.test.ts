@@ -49,6 +49,7 @@ import {
   abilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
@@ -104,6 +105,18 @@ const ROGUE_CUNNING_ACTION_SUPPORT_PROFILE = {
   },
   to: { kind: "bonusAction" },
 } as const;
+
+function testBattleCreatureStateWithConditions(
+  combatant: BattleState["combatants"] extends ReadonlyMap<CombatantId, infer Creature>
+    ? Creature
+    : never,
+  conditions: ConditionState,
+) {
+  if (combatant.positiveHpUnconscious !== null) {
+    throw new Error("Test fixture must not rewrite Knocked Out conditions.");
+  }
+  return { ...combatant, conditions, positiveHpUnconscious: null };
+}
 
 function addBattleCombatantRight(
   input: Parameters<typeof addBattleCombatant>[0],
@@ -834,10 +847,13 @@ describe("battle runtime", () => {
     const fighter = state.combatants.get(fighterId)!;
     const proneState: BattleState = {
       ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...fighter,
-        conditions: applyCondition(fighter.conditions, "prone"),
-      }),
+      combatants: new Map(state.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          fighter,
+          applyCondition(fighter.conditions, "prone"),
+        ),
+      ),
     };
     const stood = requireResolved(
       resolveBattleSubject({
@@ -1251,10 +1267,13 @@ describe("battle runtime", () => {
     }
     const blindedDodger: BattleState = {
       ...dodged,
-      combatants: new Map(dodged.combatants).set(fighterId, {
-        ...fighter,
-        conditions: applyCondition(fighter.conditions, "blinded"),
-      }),
+      combatants: new Map(dodged.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          fighter,
+          applyCondition(fighter.conditions, "blinded"),
+        ),
+      ),
     };
     const goblinTurn = requireResolved(
       endTurn({ state: blindedDodger, actorId: fighterId }),
@@ -3843,8 +3862,10 @@ describe("battle runtime", () => {
     const state: BattleState = {
       ...base,
       combatants: new Map(base.combatants).set(skeletonId, {
-        ...skeleton,
-        conditions: applyCondition(skeleton.conditions, "blinded"),
+        ...testBattleCreatureStateWithConditions(
+          skeleton,
+          applyCondition(skeleton.conditions, "blinded"),
+        ),
         dodging: true,
       }),
     };
@@ -4270,10 +4291,14 @@ describe("battle runtime", () => {
     const state = fighterVsGoblinBattle();
     const targetHole = attackInitialTargetHole(state);
     const rollHole = attackRollHoleAfterTarget(state, targetHole);
-    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {
-      total: 20,
-      naturalD20: 20,
-    });
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 20, naturalD20: 20 },
+      fighterAttackSubject(),
+      goblinId,
+    );
     const dispositionHole = attackDamageDispositionHoleAfterFills(
       state,
       fighterAttackSubject(),
@@ -5179,7 +5204,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("massive damage does not expose or accept Knock Out", () => {
+  test("melee Knock Out can replace massive-damage instant death", () => {
     const targetCharacterId = combatantId("massive-knock-out-character");
     const state = startBattleRight({
       battleId: battleId("battle-massive-knock-out"),
@@ -5198,6 +5223,14 @@ describe("battle runtime", () => {
     const targetHole = attackInitialTargetHole(state);
     const rollHole = attackRollHoleAfterTarget(state, targetHole);
     const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole);
+    const dispositionHole = attackDamageDispositionHoleAfterDamage(
+      state,
+      targetHole,
+      rollHole,
+      damageHole,
+      targetCharacterId,
+      8,
+    );
 
     const withoutDisposition = resolveBattleSubject({
       state,
@@ -5214,6 +5247,33 @@ describe("battle runtime", () => {
       ],
     });
     expect(withoutDisposition).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "attackDamageDisposition",
+          choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+        },
+      ],
+    });
+
+    const ordinaryDisposition = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "attack",
+        attackName: "Longsword",
+      },
+      fills: [
+        targetFill(targetHole, targetCharacterId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 8),
+        attackDamageDispositionFill(dispositionHole, {
+          kind: "ordinaryDamage",
+        }),
+      ],
+    });
+    expect(ordinaryDisposition).toMatchObject({
       tag: "resolved",
       snapshot: {
         combatants: [
@@ -5227,7 +5287,7 @@ describe("battle runtime", () => {
       },
     });
 
-    const withDisposition = resolveBattleSubject({
+    const knockOutDisposition = resolveBattleSubject({
       state,
       subject: {
         tag: "action",
@@ -5239,18 +5299,22 @@ describe("battle runtime", () => {
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
         damageRollFill(damageHole, 8),
-        {
-          kind: "attackDamageDisposition",
-          holeId: holeId("battle:attack:damage-disposition"),
-          value: { kind: "knockOut" },
-        },
+        attackDamageDispositionFill(dispositionHole, { kind: "knockOut" }),
       ],
     });
-    expect(withDisposition).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
+    expect(knockOutDisposition).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: fighterId },
+          {
+            combatantId: targetCharacterId,
+            hp: 1,
+            conditions: expect.arrayContaining(["unconscious"]),
+            zeroHpLifecycle: expect.objectContaining({ dead: false }),
+          },
+        ],
+      },
     });
   });
 
@@ -5271,10 +5335,23 @@ describe("battle runtime", () => {
     });
     const targetHole = attackInitialTargetHole(state);
     const rollHole = attackRollHoleAfterTarget(state, targetHole);
-    const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {
-      total: 20,
-      naturalD20: 20,
-    });
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 20, naturalD20: 20 },
+      fighterAttackSubject(),
+      targetCharacterId,
+    );
+    const dispositionHole = attackDamageDispositionHoleAfterFills(
+      state,
+      fighterAttackSubject(),
+      [
+        targetFill(targetHole, targetCharacterId),
+        attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
+        damageRollFillWithGroups(damageHole, [[8, 8]]),
+      ],
+    );
 
     const result = resolveBattleSubject({
       state,
@@ -5288,6 +5365,9 @@ describe("battle runtime", () => {
         targetFill(targetHole, targetCharacterId),
         attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
         damageRollFillWithGroups(damageHole, [[8, 8]]),
+        attackDamageDispositionFill(dispositionHole, {
+          kind: "ordinaryDamage",
+        }),
       ],
     });
 
@@ -8046,10 +8126,13 @@ describe("battle runtime", () => {
     }
     const incapacitatedState = {
       ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...barbarian,
-        conditions: applyCondition(barbarian.conditions, "incapacitated"),
-      }),
+      combatants: new Map(state.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          barbarian,
+          applyCondition(barbarian.conditions, "incapacitated"),
+        ),
+      ),
     };
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
@@ -8107,10 +8190,13 @@ describe("battle runtime", () => {
     }
     const incapacitated = {
       ...raging.state,
-      combatants: new Map(raging.state.combatants).set(fighterId, {
-        ...barbarian,
-        conditions: applyCondition(barbarian.conditions, "incapacitated"),
-      }),
+      combatants: new Map(raging.state.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          barbarian,
+          applyCondition(barbarian.conditions, "incapacitated"),
+        ),
+      ),
     };
     const stillRaging = requireResolved(
       endTurn({ state: incapacitated, actorId: fighterId }),
@@ -8121,10 +8207,13 @@ describe("battle runtime", () => {
     ).toBe(1);
     const unconscious = {
       ...raging.state,
-      combatants: new Map(raging.state.combatants).set(fighterId, {
-        ...barbarian,
-        conditions: applyCondition(barbarian.conditions, "unconscious"),
-      }),
+      combatants: new Map(raging.state.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          barbarian,
+          applyCondition(barbarian.conditions, "unconscious"),
+        ),
+      ),
     };
     const ended = requireResolved(
       endTurn({ state: unconscious, actorId: fighterId }),
@@ -8161,10 +8250,13 @@ describe("battle runtime", () => {
     }
     const incapacitated = {
       ...raging.state,
-      combatants: new Map(raging.state.combatants).set(fighterId, {
-        ...barbarian,
-        conditions: applyCondition(barbarian.conditions, "incapacitated"),
-      }),
+      combatants: new Map(raging.state.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          barbarian,
+          applyCondition(barbarian.conditions, "incapacitated"),
+        ),
+      ),
     };
     const ended = requireResolved(
       endTurn({ state: incapacitated, actorId: fighterId }),
@@ -9313,10 +9405,13 @@ describe("battle runtime", () => {
     const fighter = base.combatants.get(fighterId)!;
     const state = {
       ...base,
-      combatants: new Map(base.combatants).set(fighterId, {
-        ...fighter,
-        conditions: applyCondition(fighter.conditions, "incapacitated"),
-      }),
+      combatants: new Map(base.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          fighter,
+          applyCondition(fighter.conditions, "incapacitated"),
+        ),
+      ),
     } satisfies BattleState;
     const setup = goblinScimitarHitReactionSetup(state);
 

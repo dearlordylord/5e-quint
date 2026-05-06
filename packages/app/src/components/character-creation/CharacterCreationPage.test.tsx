@@ -16,9 +16,9 @@ describe("CharacterCreationPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Load Orc Soldier Fighter 1" }))
 
-    expect(screen.getByText("Draft finalizes to CharacterBuild.")).toBeTruthy()
-    expect(screen.getAllByText("CharacterBuild").length).toBeGreaterThan(0)
-    expect(screen.getByText("Character session boundary")).toBeTruthy()
+    expect(screen.getByText("Draft finalizes to a Character Build.")).toBeTruthy()
+    expect(screen.getAllByText("Character Build").length).toBeGreaterThan(0)
+    expect(screen.getByText("In-Play State")).toBeTruthy()
 
     await waitFor(() => {
       expect(window.localStorage.getItem(CHARACTER_DRAFT_STORAGE_KEY)).toContain("class_fighter")

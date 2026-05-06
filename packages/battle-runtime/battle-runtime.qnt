@@ -1090,7 +1090,7 @@ module battleRuntime {
       else if (nextHp > 0)
         damaged
       else
-        if (damageDisposition == KnockOut and not(massiveDamageKills)) applyKnockOut(damaged)
+        if (damageDisposition == KnockOut) applyKnockOut(damaged)
         else if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
 
     if (target.concentrating and effectiveDamage > 0 and not(concentrationSaveSucceeded))

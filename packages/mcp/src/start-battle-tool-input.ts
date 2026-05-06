@@ -1,16 +1,14 @@
 import {
   BattleCombatantSide,
   BattleId as BattleIdSchema,
+  characterId,
   combatantId,
   initiativeScore,
   type BattleId,
+  type CharacterId,
   type CombatantId,
   type InitiativeScore,
 } from "@dnd/battle-runtime";
-import {
-  characterDraftId,
-  type CharacterDraftId,
-} from "@dnd/character-creation-runtime";
 import { Hp, type Hp as HpType } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Schema } from "effect";
@@ -31,9 +29,9 @@ const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("characterSession").annotations({
     description: "Initial combatant source: finalized character session.",
   }),
-  sourceDraftId: Schema.NonEmptyTrimmedString.annotations({
+  characterId: Schema.NonEmptyTrimmedString.annotations({
     description:
-      "sourceDraftId for an available finalized character from list_characters.",
+      "characterId handle for an available finalized character from list_characters.",
   }),
   combatantId: Schema.NonEmptyTrimmedString.annotations({
     description:
@@ -105,7 +103,7 @@ export type InitialBattleCombatantToolInput =
 
 export type InitialCharacterSessionCombatantToolInput = {
   readonly kind: "characterSession";
-  readonly sourceDraftId: CharacterDraftId;
+  readonly characterId: CharacterId;
   readonly combatantId: CombatantId;
   readonly initiative: InitiativeScore;
   readonly side: BattleCombatantSide;
@@ -144,7 +142,7 @@ function decodeInitialCombatants(
     if (combatant.kind === "characterSession") {
       return {
         kind: "characterSession",
-        sourceDraftId: characterDraftId(combatant.sourceDraftId),
+        characterId: characterId(combatant.characterId),
         combatantId: combatantId(combatant.combatantId),
         initiative: initiativeScore(combatant.initiative),
         side: combatant.side,

@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
+import { characterDraftId } from "@dnd/character-creation-runtime";
+import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
@@ -145,7 +147,7 @@ describe("end-user MCP vertical", () => {
       initialCombatants: [
         {
           kind: "characterSession",
-          sourceDraftId: draftId,
+          characterId: testCharacterId(draftId),
           combatantId: "fighter",
           initiative: 18,
           side: "party",
@@ -306,7 +308,7 @@ describe("end-user MCP vertical", () => {
     const listed = callTool(root, "list_characters", {});
     expect(listed.characters).toEqual([
       expect.objectContaining({
-        sourceDraftId: draftId,
+        characterId: testCharacterId(draftId),
         status: "available",
         displayName: "Orc Soldier Fighter",
         hitPoints: expect.objectContaining({ current: 5, maximum: 12 }),
@@ -363,14 +365,14 @@ describe("end-user MCP vertical", () => {
       initialCombatants: [
         {
           kind: "characterSession",
-          sourceDraftId: fighterDraftId,
+          characterId: testCharacterId(fighterDraftId),
           combatantId: "fighter",
           initiative: 18,
           side: "party",
         },
         {
           kind: "characterSession",
-          sourceDraftId: wizardDraftId,
+          characterId: testCharacterId(wizardDraftId),
           combatantId: "wizard",
           initiative: 14,
           side: "party",
@@ -530,7 +532,7 @@ describe("end-user MCP vertical", () => {
         combatantId: "wizard",
         origin: expect.objectContaining({
           kind: "character",
-          characterId: wizardDraftId,
+          characterId: testCharacterId(wizardDraftId),
           resources: [],
           spellcasting: {
             spellSlots: [{ count: 2, expended: 0, spellLevel: 1 }],
@@ -629,7 +631,7 @@ describe("end-user MCP vertical", () => {
         combatantId: "wizard",
         origin: expect.objectContaining({
           kind: "character",
-          characterId: wizardDraftId,
+          characterId: testCharacterId(wizardDraftId),
           resources: [],
           spellcasting: {
             spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],
@@ -643,19 +645,18 @@ describe("end-user MCP vertical", () => {
     expect(ended.session).toMatchObject({
       activeBattle: null,
       transientBattleFills: null,
-      sourceDraftIds: [fighterDraftId, wizardDraftId],
+      characterIds: [testCharacterId(fighterDraftId), testCharacterId(wizardDraftId)],
     });
 
     const listed = callTool(root, "list_characters", {});
     expect(listed.characters).toEqual([
       expect.objectContaining({
-        sourceDraftId: fighterDraftId,
+        characterId: testCharacterId(fighterDraftId),
         status: "available",
         hitPoints: expect.objectContaining({ current: 20, maximum: 20 }),
       }),
       expect.objectContaining({
-        sourceDraftId: wizardDraftId,
-        characterId: wizardDraftId,
+        characterId: testCharacterId(wizardDraftId),
         status: "available",
         hitPoints: expect.objectContaining({ current: 8, maximum: 8 }),
         spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],
@@ -663,6 +664,10 @@ describe("end-user MCP vertical", () => {
     ]);
   });
 });
+
+function testCharacterId(draftId: string) {
+  return characterIdFromDraftId(characterDraftId(draftId));
+}
 
 function choiceFill(holeId: string, ...optionIds: readonly string[]) {
   return {

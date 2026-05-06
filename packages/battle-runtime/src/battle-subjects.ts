@@ -1,7 +1,7 @@
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { CombatantId } from "./identity.ts";
-import { CUNNING_ACTION_STANDARD_ACTIONS } from "./unit-feature-support.ts";
+import { ALTERNATE_ACTION_COST_ACTIONS } from "./unit-feature-support.ts";
 import {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -150,7 +150,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
     sourceUnitId: BattleSubjectTextSchema,
-    action: Schema.Literal(...CUNNING_ACTION_STANDARD_ACTIONS),
+    action: Schema.Literal(...ALTERNATE_ACTION_COST_ACTIONS),
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
@@ -231,7 +231,7 @@ export type BonusActionStandardActionSubject = {
   readonly tag: "bonusActionStandardAction";
   readonly actorId: CombatantId;
   readonly sourceUnitId: string;
-  readonly action: (typeof CUNNING_ACTION_STANDARD_ACTIONS)[number];
+  readonly action: (typeof ALTERNATE_ACTION_COST_ACTIONS)[number];
 };
 
 export function sameBattleSubject(

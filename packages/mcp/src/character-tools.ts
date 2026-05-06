@@ -1,4 +1,4 @@
-import { characterId } from "@dnd/battle-runtime";
+import type { CharacterId } from "@dnd/battle-runtime";
 import {
   ABILITY_SCORE_GENERATION_DRAFT_PATH,
   CHARACTER_DRAFT_CHOICE_PATHS,
@@ -20,6 +20,7 @@ import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
   availableCharacterSession,
+  characterIdFromDraftId,
   characterBattleSpellSlots,
   characterSessionCurrentHp,
   type CharacterSession,
@@ -43,7 +44,7 @@ const JsonObjectSchema = Schema.Record({
 });
 const McpSessionSnapshotSchema = Schema.Struct({
   draftIds: Schema.Array(Schema.String),
-  sourceDraftIds: Schema.Array(Schema.String),
+  characterIds: Schema.Array(Schema.String),
   selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
   activeBattle: Schema.Union(
     Schema.Struct({
@@ -139,7 +140,6 @@ const CreationFinalizationSchema = Schema.Union(
 );
 const CharacterSessionRowSchema = Schema.Union(
   Schema.Struct({
-    sourceDraftId: Schema.String,
     characterId: Schema.String,
     status: Schema.Literal("available"),
     displayName: Schema.String,
@@ -154,12 +154,11 @@ const CharacterSessionRowSchema = Schema.Union(
     }),
   }),
   Schema.Struct({
-    sourceDraftId: Schema.String,
+    characterId: Schema.String,
     status: Schema.Literal("inBattle"),
     displayName: Schema.Null,
     build: JsonObjectSchema,
     battleId: Schema.String,
-    characterId: Schema.String,
   }),
 );
 const CreationFillResultSchema = Schema.Union(
@@ -224,7 +223,7 @@ export const characterToolDefinitions = [
   {
     name: characterToolNames.finalizeCharacter,
     description:
-      "Finalize a complete supported character draft. A ready finalization stores the resulting character session by source draft id and removes the active draft.",
+      "Finalize a complete supported character draft. A ready finalization stores the resulting in-play record by characterId and removes the active draft.",
     inputSchema: draftIdInputSchema,
     outputSchema: mcpOutputJsonSchema(FinalizeCharacterOutputSchema),
   },
@@ -260,7 +259,14 @@ export function handleCharacterToolCall(
       if (root.sessionStore.drafts.has(draft.draftId)) {
         return duplicateDraftIdContent(draft.draftId, "activeDraft");
       }
-      if (root.sessionStore.characters.has(draft.draftId)) {
+      if (draftCharacterIdAlreadyReserved(root, draft.draftId)) {
+        return duplicateDraftIdContent(draft.draftId, "activeDraft");
+      }
+      if (
+        root.sessionStore.characters.has(
+          characterIdFromDraftId(draft.draftId),
+        )
+      ) {
         return duplicateDraftIdContent(draft.draftId, "finalizedSession");
       }
       root.sessionStore.drafts.set(draft.draftId, draft);
@@ -313,9 +319,10 @@ export function handleCharacterToolCall(
         draft,
         unitLibrary: root.unitLibrary,
       });
+      const finalizedCharacterId = characterIdFromDraftId(draftId);
       if (finalization.tag === "ready") {
         const session = availableCharacterSession({
-          characterId: characterId(draftId),
+          characterId: finalizedCharacterId,
           build: finalization.build,
           currentHp: Hp(finalization.build.hitPoints.maximum),
         });
@@ -325,7 +332,7 @@ export function handleCharacterToolCall(
             message: session.left.message,
           });
         }
-        root.sessionStore.characters.set(draftId, session.right);
+        root.sessionStore.characters.set(session.right);
         root.sessionStore.drafts.delete(draftId);
       }
 
@@ -334,7 +341,8 @@ export function handleCharacterToolCall(
         finalization,
         build:
           finalization.tag === "ready"
-            ? (root.sessionStore.characters.get(draftId)?.build ?? null)
+            ? (root.sessionStore.characters.get(finalizedCharacterId)?.build ??
+              null)
             : null,
         session: root.sessionStore.snapshot(),
       });
@@ -342,8 +350,8 @@ export function handleCharacterToolCall(
     Match.when({ name: characterToolNames.listCharacters }, () =>
       schemaJsonContent(ListCharactersOutputSchema, {
         characters: Array.from(root.sessionStore.characters.entries()).map(
-          ([sourceDraftId, session]) =>
-            characterListRow(root.unitLibrary, sourceDraftId, session),
+          ([characterId, session]) =>
+            characterListRow(root.unitLibrary, characterId, session),
         ),
         session: root.sessionStore.snapshot(),
       }),
@@ -370,6 +378,17 @@ function duplicateDraftIdContent(
   });
 }
 
+function draftCharacterIdAlreadyReserved(
+  root: McpCompositionRoot,
+  draftId: CharacterDraftId,
+): boolean {
+  const candidateCharacterId = characterIdFromDraftId(draftId);
+  return Array.from(root.sessionStore.drafts.keys()).some(
+    (activeDraftId) =>
+      characterIdFromDraftId(activeDraftId) === candidateCharacterId,
+  );
+}
+
 function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {
   return {
     draft,
@@ -387,13 +406,12 @@ function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {
 
 function characterListRow(
   unitLibrary: UnitCatalog,
-  sourceDraftId: CharacterDraftId,
+  characterId: CharacterId,
   session: CharacterSession,
 ) {
   if (session.tag === "available") {
     return {
-      sourceDraftId,
-      characterId: session.characterId,
+      characterId,
       status: session.tag,
       displayName: characterBuildDisplayName(unitLibrary, session.build),
       build: session.build,
@@ -409,11 +427,10 @@ function characterListRow(
   }
 
   return {
-    sourceDraftId,
+    characterId,
     status: session.tag,
     displayName: null,
     build: session.build,
     battleId: session.battleId,
-    characterId: session.characterId,
   };
 }

@@ -5,7 +5,6 @@ import type {
   CharacterId,
 } from "@dnd/battle-runtime";
 import { combatantKnockedOutUnconscious } from "@dnd/battle-runtime";
-import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type { Hp } from "@dnd/shared/types";
 import { Either } from "effect";
 
@@ -15,6 +14,7 @@ import {
   type CharacterSessionPositiveHpUnconscious,
   type CharacterSessionZeroHpLifecycleInput,
 } from "./session-store.ts";
+import { characterSessionPositiveHpUnconsciousFromBattle } from "./session-hit-points.ts";
 import { errorContent } from "./tool-content.ts";
 
 export function finalizeCharacterSessionsFromBattle(
@@ -22,7 +22,7 @@ export function finalizeCharacterSessionsFromBattle(
   state: BattleState,
 ): ReturnType<typeof errorContent> | null {
   const updates: {
-    readonly sourceDraftId: CharacterDraftId;
+    readonly characterId: CharacterId;
     readonly currentHp: Hp;
     readonly positiveHpUnconscious?: CharacterSessionPositiveHpUnconscious;
     readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
@@ -32,29 +32,33 @@ export function finalizeCharacterSessionsFromBattle(
   for (const combatant of state.combatants.values()) {
     if (combatant.origin.kind !== "character") continue;
 
-    const sourceDraftId = sourceDraftIdForInBattleCharacter(
-      root,
-      state,
-      combatant.origin.characterId,
-    );
-    if (sourceDraftId === null) {
+    const characterId = combatant.origin.characterId;
+    const session = root.sessionStore.characters.get(characterId);
+    if (session == null) {
       return errorContent("Battle character has no matching session record.", {
         code: "UNKNOWN_BATTLE_CHARACTER_SESSION",
         combatantId: combatant.combatantId,
-        characterId: combatant.origin.characterId,
+        characterId,
       });
     }
 
-    const session = root.sessionStore.characters.get(sourceDraftId);
     if (session?.tag !== "inBattle") {
       return errorContent("Battle character session is not in battle.", {
         code: "CHARACTER_SESSION_NOT_IN_BATTLE",
-        sourceDraftId,
+        characterId,
       });
     }
     const zeroHpLifecycle =
       combatant.hp === 0 ? characterZeroHpLifecycleFromBattle(combatant) : null;
     const knockedOut = combatantKnockedOutUnconscious(combatant);
+    if (Either.isLeft(knockedOut)) {
+      return errorContent("Battle character Knock Out lifecycle is invalid.", {
+        code: "CHARACTER_KNOCK_OUT_LIFECYCLE_INVALID",
+        combatantId: combatant.combatantId,
+        characterId: combatant.origin.characterId,
+        message: knockedOut.left.message,
+      });
+    }
     if (zeroHpLifecycle != null && Either.isLeft(zeroHpLifecycle)) {
       return errorContent(
         "Battle character has unsupported zero-HP lifecycle.",
@@ -66,9 +70,16 @@ export function finalizeCharacterSessionsFromBattle(
       );
     }
     updates.push({
-      sourceDraftId,
+      characterId,
       currentHp: combatant.hp,
-      ...(knockedOut === null ? {} : { positiveHpUnconscious: knockedOut }),
+      ...(knockedOut.right === null
+        ? {}
+        : {
+            positiveHpUnconscious:
+              characterSessionPositiveHpUnconsciousFromBattle(
+                knockedOut.right,
+              ),
+          }),
       ...(combatant.hp === 0
         ? { zeroHpLifecycle: zeroHpLifecycle?.right }
         : {}),
@@ -79,7 +90,7 @@ export function finalizeCharacterSessionsFromBattle(
   }
 
   for (const update of updates) {
-    const session = root.sessionStore.characters.get(update.sourceDraftId);
+    const session = root.sessionStore.characters.get(update.characterId);
     if (session?.tag !== "inBattle") continue;
     const availableSession = availableCharacterSession({
       characterId: session.characterId,
@@ -92,14 +103,11 @@ export function finalizeCharacterSessionsFromBattle(
     if (Either.isLeft(availableSession)) {
       return errorContent("Battle character session handoff failed.", {
         code: "CHARACTER_SESSION_HANDOFF_INVALID",
-        sourceDraftId: update.sourceDraftId,
+        characterId: update.characterId,
         message: availableSession.left.message,
       });
     }
-    root.sessionStore.characters.set(
-      update.sourceDraftId,
-      availableSession.right,
-    );
+    root.sessionStore.characters.set(availableSession.right);
   }
 
   return null;
@@ -122,22 +130,4 @@ function characterZeroHpLifecycleFromBattle(
     });
   }
   return Either.right({ tag: "unstable", deathSaves: lifecycle.deathSaves });
-}
-
-function sourceDraftIdForInBattleCharacter(
-  root: McpCompositionRoot,
-  state: BattleState,
-  characterId: CharacterId,
-) {
-  for (const [sourceDraftId, session] of root.sessionStore.characters) {
-    if (
-      session.tag === "inBattle" &&
-      session.battleId === state.battleId &&
-      session.characterId === characterId
-    ) {
-      return sourceDraftId;
-    }
-  }
-
-  return null;
 }

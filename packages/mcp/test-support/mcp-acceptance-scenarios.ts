@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { characterDraftId } from "@dnd/character-creation-runtime";
+import { characterIdFromDraftId } from "../src/session-store.ts";
 
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -9,6 +11,10 @@ import {
 import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 
 type JsonObject = Record<string, unknown>;
+
+function testCharacterId(draftId: string) {
+  return characterIdFromDraftId(characterDraftId(draftId));
+}
 
 const expectedTools = [
   "describe_mcp_workflow",
@@ -92,11 +98,11 @@ const agentConversationScenarios = [
     agentReads:
       "start_battle exposes battleId, a non-empty initialCombatants roster, and per-combatant Initiative.",
     agentDecision:
-      "It uses sourceDraftIds from finalized character sessions, statBlock roster entries with Stat Block ids from list_stat_blocks, caller-chosen combatantIds for table actors, and rejects/repairs an empty initialCombatants array.",
+      "It uses characterIds from finalized character sessions, statBlock roster entries with Stat Block ids from list_stat_blocks, caller-chosen combatantIds for table actors, and rejects/repairs an empty initialCombatants array.",
     executableCoverage:
       "verifyToolContract, verifyBaselineVertical, verifyWidthVertical",
     insufficiency:
-      "The schema now describes initialCombatants, sourceDraftId, statBlockId, and combatantId entries; list_characters exposes a formal outputSchema for sourceDraftId result rows.",
+      "The schema now describes initialCombatants, characterId, statBlockId, and combatantId entries; list_characters exposes a formal outputSchema for characterId result rows.",
   },
   {
     name: "Take turns and resolve attacks",
@@ -386,7 +392,7 @@ export async function verifyBaselineVertical(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
-        sourceDraftId: draftId,
+        characterId: testCharacterId(draftId),
         combatantId: "fighter",
         initiative: 18,
         side: "party",
@@ -532,14 +538,14 @@ export async function verifyWidthVertical(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
-        sourceDraftId: fighterDraftId,
+        characterId: testCharacterId(fighterDraftId),
         combatantId: "fighter",
         initiative: 18,
         side: "party",
       },
       {
         kind: "characterSession",
-        sourceDraftId: wizardDraftId,
+        characterId: testCharacterId(wizardDraftId),
         combatantId: "wizard",
         initiative: 14,
         side: "party",
@@ -717,12 +723,12 @@ export async function verifyWidthVertical(client: Client) {
   ]);
 
   const ended = await callTool(client, "end_battle", {});
-  const sourceDraftIds = get(ended, "session.sourceDraftIds") as string[];
-  assert.ok(sourceDraftIds.includes(fighterDraftId));
-  assert.ok(sourceDraftIds.includes(wizardDraftId));
+  const characterIds = get(ended, "session.characterIds") as string[];
+  assert.ok(characterIds.includes(testCharacterId(fighterDraftId)));
+  assert.ok(characterIds.includes(testCharacterId(wizardDraftId)));
   const listed = await callTool(client, "list_characters", {});
-  const fighter = characterRow(listed, fighterDraftId);
-  const wizard = characterRow(listed, wizardDraftId);
+  const fighter = characterRow(listed, testCharacterId(fighterDraftId));
+  const wizard = characterRow(listed, testCharacterId(wizardDraftId));
   assert.equal(get(fighter, "hitPoints.current"), 16);
   assert.equal(get(fighter, "hitPoints.maximum"), 20);
   assert.equal(get(wizard, "hitPoints.current"), 8);
@@ -1080,12 +1086,12 @@ function wizardSpellSlots(payload: JsonObject) {
   return wizard.origin.spellcasting?.spellSlots;
 }
 
-function characterRow(payload: JsonObject, sourceDraftId: string) {
+function characterRow(payload: JsonObject, characterId: string) {
   const characters = get(payload, "characters") as JsonObject[];
   const character = characters.find(
-    (candidate) => candidate.sourceDraftId === sourceDraftId,
+    (candidate) => candidate.characterId === characterId,
   );
-  assert.ok(character, `Missing listed character ${sourceDraftId}`);
+  assert.ok(character, `Missing listed character ${characterId}`);
   return character;
 }
 

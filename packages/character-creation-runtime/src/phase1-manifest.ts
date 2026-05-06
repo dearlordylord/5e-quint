@@ -35,7 +35,7 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 
 // This manifest started as the first supported character-creation vertical from
 // plans/phase1-fighter-manifest.md: an Orc Soldier Fighter using Standard
-// Array, fixed first-slice languages/alignment, level-1 Fighter choices, Chain
+// Array, fixed initial languages/alignment, level-1 Fighter choices, Chain
 // Mail + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
 // Hole discovery may expose broader legal SRD options, but finalization is
 // intentionally gated to the support profile that now widens selected class

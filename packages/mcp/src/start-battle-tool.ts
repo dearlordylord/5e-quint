@@ -77,8 +77,8 @@ export function handleStartBattleToolCall(
   }
   root.sessionStore.battleState = state.right;
   root.sessionStore.transientBattleFills = null;
-  for (const { character, session } of combatants.right.characterSessions) {
-    root.sessionStore.characters.set(character.sourceDraftId, {
+  for (const { session } of combatants.right.characterSessions) {
+    root.sessionStore.characters.set({
       tag: "inBattle",
       build: session.build,
       battleId: input.battleId,
@@ -96,13 +96,13 @@ function duplicateStartBattleInputContent(
   initialCombatants: readonly InitialBattleCombatantToolInput[],
 ) {
   const characters = initialCombatants.filter(isCharacterSessionCombatant);
-  const duplicateSourceDraftId = firstDuplicate(
-    characters.map((character) => character.sourceDraftId),
+  const duplicateCharacterId = firstDuplicate(
+    characters.map((character) => character.characterId),
   );
-  if (duplicateSourceDraftId !== null) {
-    return errorContent("Duplicate source draft id in battle start.", {
-      code: "DUPLICATE_BATTLE_SOURCE_DRAFT_ID",
-      sourceDraftId: duplicateSourceDraftId,
+  if (duplicateCharacterId !== null) {
+    return errorContent("Duplicate character id in battle start.", {
+      code: "DUPLICATE_BATTLE_CHARACTER_ID",
+      characterId: duplicateCharacterId,
     });
   }
 
@@ -146,14 +146,14 @@ function startableBattleCombatant(
 ): Either.Either<StartableBattleCombatant, ToolError> {
   return Match.value(combatant).pipe(
     Match.when({ kind: "characterSession" }, (character) => {
-      const session = root.sessionStore.characters.get(character.sourceDraftId);
+      const session = root.sessionStore.characters.get(character.characterId);
       if (session === undefined) {
         return Either.left(
           errorContent(
-            `Unknown finalized character session: ${character.sourceDraftId}`,
+            `Unknown finalized character session: ${character.characterId}`,
             {
               code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
-              sourceDraftId: character.sourceDraftId,
+              characterId: character.characterId,
             },
           ),
         );
@@ -162,7 +162,7 @@ function startableBattleCombatant(
         return Either.left(
           errorContent("Character is already assigned to a battle.", {
             code: "CHARACTER_ALREADY_IN_BATTLE",
-            sourceDraftId: character.sourceDraftId,
+            characterId: character.characterId,
             battleId: session.battleId,
           }),
         );

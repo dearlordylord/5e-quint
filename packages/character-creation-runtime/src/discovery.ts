@@ -339,13 +339,9 @@ function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
       const featUnitId = option.unitRef?.unitId;
       if (featUnitId == null) return [];
       const unit = input.unitLibrary.getUnit(featUnitId);
-      if (
-        Option.isNone(unit) ||
-        unit.value.kind !== "feat" ||
-        unit.value.abilityScoreIncreaseChoice == null
-      ) {
-        return [];
-      }
+      if (Option.isNone(unit)) return [];
+      const options = selectedFeatAbilityScoreIncreaseOptions(unit.value);
+      if (options.length === 0) return [];
 
       return unselectedUnitChoiceHole(
         input.draft,
@@ -355,9 +351,7 @@ function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
             CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
           ),
           cardinality: EXACTLY_ONE_CHOICE,
-          options: abilityScoreIncreaseOptions(
-            unit.value as Parameters<typeof abilityScoreIncreaseOptions>[0],
-          ),
+          options,
         }),
       );
     });
@@ -456,8 +450,8 @@ export function backgroundToolChoiceSpec(
       (toolChoice) => ({
         cardinality: exactChoiceCardinality(toolChoice.choose),
         // SRD 5.2.1 Equipment.md:334-337 lists these Gaming Set variants.
-        // Phase 1 only supports Dice Set; support-gates.ts rejects the rest as
-        // unsupported rather than treating them as invalid RAW choices.
+        // The current support profile admits Dice Set; support-gates.ts rejects
+        // the rest as unsupported rather than treating them as invalid RAW choices.
         options: SRD_GAMING_SET_OPTIONS,
       }),
     ),
@@ -924,12 +918,7 @@ export function classFeatureGrantChoiceHoles(
       grant.kind === "grant_feat"
         ? [featGrantFeatureHoleSource(featureUnitId, grant, unitLibrary)]
         : grant.kind === "grant_proficiency"
-          ? [
-              proficiencyGrantChoiceHoleSource(
-                featureUnitId,
-                grant.proficiency,
-              ),
-            ]
+          ? [proficiencyGrantChoiceHoleSource(featureUnitId, grant.proficiency)]
           : [],
     );
     const readablePassiveGrantHoles = passiveGrantHoles.filter(
@@ -1031,6 +1020,14 @@ export function abilityScoreIncreaseOptions(
   },
 ): readonly CreationChoiceOption[] {
   return abilityScoreIncreaseChoiceOptions(feat.abilityScoreIncreaseChoice);
+}
+
+export function selectedFeatAbilityScoreIncreaseOptions(
+  unit: UnitRecord,
+): readonly CreationChoiceOption[] {
+  return unit.kind === "feat" && unit.abilityScoreIncreaseChoice != null
+    ? abilityScoreIncreaseChoiceOptions(unit.abilityScoreIncreaseChoice)
+    : [];
 }
 
 function weaponMasteryFeatureHoleSource(

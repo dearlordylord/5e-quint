@@ -67,7 +67,7 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.discoverBattleActs,
     description:
-      "Return the current battle snapshot and available acts for the current combatant. Supported acts include character and Stat Block Attack subjects, Hide/Search when the battle state carries the RAW Hide prerequisite, Fighter Second Wind, Fighter 2 Action Surge, Wizard action-time spell acts, and End Turn.",
+      "Return the current battle snapshot and runtime-discovered available acts for the current combatant.",
     inputSchema: discoverBattleActsInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
   },
@@ -241,8 +241,8 @@ export function handleBattleToolCall(
       return schemaJsonContent(EndBattleOutputSchema, {
         endedBattleId: state.right.battleId,
         characters: Array.from(root.sessionStore.characters.entries()).map(
-          ([sourceDraftId, session]) => ({
-            sourceDraftId,
+          ([characterId, session]) => ({
+            characterId,
             session,
           }),
         ),

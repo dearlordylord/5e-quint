@@ -13,8 +13,11 @@ import type {
 import { skillOption } from "./hole-factories.ts";
 import {
   creationChoiceOptionId,
+  isCharacterBuildToolProficiencyId,
+  toolProficiencyId,
   type CreationChoiceOption,
   type CreationChoiceOptionId,
+  type ToolProficiencyId,
 } from "./types.ts";
 
 export type AbilityScoreIncreaseDeltaWithCap = {
@@ -22,6 +25,15 @@ export type AbilityScoreIncreaseDeltaWithCap = {
   readonly increase: number;
   readonly maxScore: number;
 };
+
+export type ParsedProficiencyGrantSubject =
+  | Extract<ProficiencyGrantSubject, { readonly kind: "skill" }>
+  | Extract<ProficiencyGrantSubject, { readonly kind: "weapon_category" }>
+  | Extract<ProficiencyGrantSubject, { readonly kind: "armor_category" }>
+  | {
+      readonly kind: "tool";
+      readonly toolId: ToolProficiencyId;
+    };
 
 export type ChoiceOptionCodecIssue = {
   readonly tag: "choiceOptionCodecIssue";
@@ -181,7 +193,7 @@ export function proficiencyGrantSubjectOptionId(
 
 export function decodeProficiencyGrantSubjectOptionId(
   optionId: CreationChoiceOptionId | string,
-): Either.Either<ProficiencyGrantSubject, ChoiceOptionCodecIssue> {
+): Either.Either<ParsedProficiencyGrantSubject, ChoiceOptionCodecIssue> {
   const optionIdText = String(optionId);
   const skill = SKILLS.find((candidate) => candidate === optionIdText);
   if (skill != null) {
@@ -216,16 +228,17 @@ export function decodeProficiencyGrantSubjectOptionId(
 
   if (optionIdText.startsWith("tool:")) {
     const toolId = optionIdText.slice("tool:".length);
-    if (toolId.trim().length === 0) {
+    const parsedToolId = parseToolProficiencyId(toolId);
+    if (Either.isLeft(parsedToolId)) {
       return choiceOptionCodecIssue(
         optionIdText,
-        "Proficiency choice option encodes an empty tool id.",
+        "Proficiency choice option encodes an unsupported tool proficiency id.",
       );
     }
 
     return Either.right({
       kind: "tool",
-      toolId,
+      toolId: parsedToolId.right,
     });
   }
 
@@ -233,6 +246,17 @@ export function decodeProficiencyGrantSubjectOptionId(
     optionIdText,
     "Proficiency choice option does not encode a proficiency grant subject.",
   );
+}
+
+export function parseToolProficiencyId(
+  value: string,
+): Either.Either<ToolProficiencyId, ChoiceOptionCodecIssue> {
+  return isCharacterBuildToolProficiencyId(value)
+    ? Either.right(toolProficiencyId(value))
+    : choiceOptionCodecIssue(
+        value,
+        "Expected a supported Character Build tool proficiency id.",
+      );
 }
 
 function isOneOf<T extends string>(

@@ -6,8 +6,9 @@ character draft into a finalized `CharacterBuild` using authored Units.
 The package is a character-creation runtime boundary. It does not author classes,
 backgrounds, species, feats, or equipment, and it does not build battle creature
 initialization data. It consumes a `UnitCatalog` built from `@dnd/surface` and
-returns draft state, creation holes, fill results, and finalized build facts for
-callers to store at the session boundary.
+returns draft state, creation holes, fill results, and finalized build facts.
+Callers may create in-play Character Sheets from finalized builds; sheets own
+in-play state outside this package.
 
 ## Mental Model
 
@@ -50,14 +51,14 @@ are transient replay inputs for one selected battle subject.
 MCP uses the same runtime protocol directly:
 `create_character_draft`, `discover_creation_holes`, `fill_creation_holes`, and
 `finalize_character`. The MCP boundary stores drafts by `CharacterDraftId`,
-passes caller fill batches through `fillCreationHoles`, and stores a finalized
-sheet only after `finalizeCharacterDraft` returns `ready`. A rejected fill batch
-does not mutate the stored draft. MCP does not use presets or direct selection
-patches; callers must answer the holes exposed by this package.
+passes caller fill batches through `fillCreationHoles`, and stores a Character
+Session only after `finalizeCharacterDraft` returns `ready`. A rejected fill
+batch does not mutate the stored draft. MCP does not use presets or direct
+selection patches; callers must answer the holes exposed by this package.
 
 The progression fill is atomic. `draft.progression.initial` selects the durable
 Character Progression profile in one choice: starting class plus any post-start
-advancement entries. There is no later promoted level-1 class-entry hole for MCP
+advancement entries. There is no later level-1 class-entry hole for MCP
 or replay callers to keep synchronized with a starting-class field.
 
 ## Fill Issue Vocabulary
@@ -92,8 +93,7 @@ Key boundary terms:
 
 ## Implemented Behavior
 
-This package supports the first legal character-creation vertical plus the
-POST3 class-width slice:
+This package supports these character-creation profiles:
 
 - level-1 Fighter and level-2 Fighter progression;
 - level-1 Wizard spellcasting creation facts;
@@ -180,16 +180,15 @@ calling its prerequisite check. Do not reauthor prerequisite rules here.
 For total character levels after 1, the current support profile projects fixed
 Hit Point gains. Post-start advancement entries carry explicit Hit Point rule
 evidence into `CharacterProgression`, and finalization rejects level/evidence
-combinations that contradict the rules. Rolled HP is outside this slice and must
+combinations that contradict the rules. Rolled HP is outside this support profile and must
 become an explicit creation choice before it can be finalized.
 
-Phase-1 manifest lock is still intentional in the current runtime. The lock ends
-only after the promoted-reachable shape inventory for character creation has been
-closed: every promoted-reachable shape from Core/correction is either admitted by
-support profiles with executable projection/finalization behavior or rejected at
-one typed support boundary with explicit rationale. At that point,
-`temporarySupportedSliceIssues`, `supportProfile.manifest` origin locking, and
-`phase1-manifest` naming become removal targets rather than active policy.
+Support-profile admission is runtime policy: every character-creation shape is
+either admitted by support profiles with executable discovery, fill, and
+finalization behavior or rejected at one typed support boundary with explicit
+rationale. Manifest constants are implementation fixtures for admitted SRD
+Units and option ids. When a fixture no longer owns a support boundary, remove it
+rather than preserving migration labels as domain policy.
 
 ### Authored-Id Dispatch Enforcement
 
@@ -205,7 +204,7 @@ When widening support:
 
 1. Add support-profile entries in `support-gates.ts` (and manifest constants only when needed).
 2. Keep discovery/finalization logic shape-driven over choice-hole families.
-3. Add focused tests proving the widened profile path.
+3. Add focused tests proving the added support-profile path.
 4. Keep authored ids as retained identity facts only, never as downstream semantic dispatch switches.
 
 Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
@@ -216,14 +215,14 @@ that rest boundary.
 ## Parity
 
 `character-creation-runtime-slice.qnt` is the deterministic package-local Quint
-parity slice. It models draft state, stable hole ids, atomic batch fill,
+parity model. It models draft state, stable hole ids, atomic batch fill,
 rediscovery, and finalization status for the established Fighter manifest path,
-with the POST3 supported class-option width reflected at the initial class
-choice boundary. Focused TypeScript tests cover the widened Fighter 2 and Wizard
+with the supported class-option width reflected at the initial class choice
+boundary. Focused TypeScript tests cover the supported Fighter 2 and Wizard
 1 build projection facts.
 
 `character-creation-runtime.mbt.qnt` is the package-local randomized MBT model.
-It imports the deterministic slice and drives fill-batch traces against the
+It imports the deterministic model and drives fill-batch traces against the
 TypeScript reducer through `src/character-creation-runtime.mbt.test.ts`.
 
 When changing reducer behavior in this package, update the affected `src/*`
@@ -239,11 +238,11 @@ runtime module, focused tests, `character-creation-runtime-slice.qnt`, and
 - `src/fill-reducer.ts` - batch fill validation and draft mutation.
 - `src/finalization.ts` - draft finalization and `CharacterBuild` projection.
 - `src/hole-factories.ts` - hole ids, sources, option builders, and choice source projections.
-- `src/phase1-manifest.ts` - Phase 1 manifest facts and supported option ids.
-- `src/support-gates.ts` - current support-slice gates, not RAW legality.
-- `src/index.test.ts` - deterministic reducer tests and Quint-slice checks.
+- `src/phase1-manifest.ts` - Support manifest facts and admitted option ids.
+- `src/support-gates.ts` - support-profile gates, not RAW legality.
+- `src/index.test.ts` - deterministic reducer tests and Quint model checks.
 - `src/character-creation-runtime.mbt.test.ts` - randomized MBT bridge.
-- `character-creation-runtime-slice.qnt` - local parity slice.
+- `character-creation-runtime-slice.qnt` - local parity model.
 - `character-creation-runtime.mbt.qnt` - local randomized MBT model.
 - `VOCABULARY.md` - package-owned creation terminology.
 

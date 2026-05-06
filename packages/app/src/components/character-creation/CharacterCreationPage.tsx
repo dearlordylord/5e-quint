@@ -129,13 +129,13 @@ export function CharacterCreationPage() {
             <p className="font-medium text-gray-100">Character creation status</p>
             <p className={assessment.finalization.tag === "ready" ? "mt-2 text-emerald-300" : "mt-2 text-amber-300"}>
               {assessment.finalization.tag === "ready"
-                ? "Draft finalizes to CharacterBuild."
+                ? "Draft finalizes to a Character Build."
                 : assessment.finalization.tag === "invalid"
                   ? `${assessment.finalization.issues.length} finalization issue(s) require fixes.`
                   : `${assessment.holes.length} creation hole(s) remain open.`}
             </p>
             <p className="mt-2 text-gray-400">
-              This shell stores only <code>CharacterDraft</code>. The runtime owns holes, fills, and finalization.
+              This workflow stores only the Character Draft. The runtime owns holes, fills, and finalization.
             </p>
           </div>
           {lastIssues.length === 0 ? null : (
