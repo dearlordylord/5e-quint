@@ -1,18 +1,20 @@
 # Active Plan
 
-Date: 2026-05-04
+Date: 2026-05-06
 
-This is the single active planning queue. Historical CAM/POST/BA/PBA closeouts
-were archived to
-[ACTIVE_PLAN_ARCHIVE_2026-05-04.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN_ARCHIVE_2026-05-04.md).
+This is the single active planning queue.
+Completed PBA15A0A-PBA29 work was removed from this queue after closeout; older
+closeout history remains in git history.
 
 Current authority summary:
 
 - `@dnd/battle-runtime` plus `packages/battle-runtime/battle-runtime.qnt` is the
   promoted battle authority for new Unit/StatBlock-backed behavior.
-- Root `battle.qnt` and old Core battle code are legacy proof/restore source
+- Root `battle.qnt` and old v0 battle code are legacy proof/restore source
   material only.
-- Broad widening proceeds through the current PBA queue below, using Surface
+- The most recent proof work is `QCORE1`: the first production stateless Quint
+  rule-core procedure using the measured QCORE0 composition pattern.
+- Broad widening should proceed through newly added tasks that use Surface
   support profiles and package-owned runtime procedures rather than authored-id
   dispatch or projected-executable vocabulary.
 
@@ -22,7 +24,6 @@ Primary context links:
 - [ARCHITECTURE.md](/workspace/typescript/dnd/ARCHITECTURE.md)
 - [MOVEMENT_GEOMETRY_OWNERSHIP.md](/workspace/typescript/dnd/plans/MOVEMENT_GEOMETRY_OWNERSHIP.md)
 - [MCPA3_SPATIAL_ACTION_CONTRACTS.md](/workspace/typescript/dnd/plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md)
-- [pba15b-table-spatial-fact-eradication-plan.md](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)
 - [packages/battle-runtime/README.md](/workspace/typescript/dnd/packages/battle-runtime/README.md)
 - [packages/battle-runtime/ARCHITECTURE_GRAPH.md](/workspace/typescript/dnd/packages/battle-runtime/ARCHITECTURE_GRAPH.md)
 - [packages/character-creation-runtime/README.md](/workspace/typescript/dnd/packages/character-creation-runtime/README.md)
@@ -47,142 +48,22 @@ Keep it synchronized with the DAG table and task details.
   "schema": "ralph-plan.v1",
   "tasks": [
     {
-      "number": 61,
-      "id": "PBA15A0A",
+      "number": 84,
+      "id": "QCORE0",
       "status": "done",
-      "title": "Promote Multiclass Prerequisite Algebra"
+      "title": "Research Composable Quint Rule-Core Architecture"
     },
     {
-      "number": 62,
-      "id": "PBA15A0B",
+      "number": 85,
+      "id": "QCORE1",
       "status": "done",
-      "title": "Introduce Character Progression Projection Helpers"
+      "title": "Create First Stateless Quint Rule-Core Procedure"
     },
     {
-      "number": 63,
-      "id": "PBA15A0C",
+      "number": 86,
+      "id": "QCORE2",
       "status": "done",
-      "title": "Replace Level-One Class-Entry Workflow"
-    },
-    {
-      "number": 64,
-      "id": "PBA15A0D",
-      "status": "done",
-      "title": "Wire Progression And Multiclass Through MCP Docs"
-    },
-    {
-      "number": 65,
-      "id": "PBA15A",
-      "status": "done",
-      "title": "Migrate Surface And Character-Creation Domain Primitives"
-    },
-    {
-      "number": 66,
-      "id": "PBA16",
-      "status": "done",
-      "title": "Add Death-Save Promoted MBT Coverage"
-    },
-    {
-      "number": 67,
-      "id": "PBA17",
-      "status": "done",
-      "title": "Restore Nonlethal Knockout And Zero-HP Handoff Width"
-    },
-    {
-      "number": 68,
-      "id": "PBA15B",
-      "status": "done",
-      "title": "Remove Runtime-Owned Spatiality And Distances"
-    },
-    {
-      "number": 69,
-      "id": "PBA18",
-      "status": "done",
-      "title": "Widen Attack Range And Conditional Attack Riders"
-    },
-    {
-      "number": 70,
-      "id": "PBA19",
-      "status": "done",
-      "title": "Restore Stat Block Multiattack And Bonus Actions"
-    },
-    {
-      "number": 71,
-      "id": "PBA20",
-      "status": "done",
-      "title": "Restore Spell Targeting And Catalog Width"
-    },
-    {
-      "number": 72,
-      "id": "PBA21",
-      "status": "done",
-      "title": "Broaden Reaction Windows And Bonus-Action Subjects"
-    },
-    {
-      "number": 73,
-      "id": "PBA21A",
-      "status": "done",
-      "title": "Fix Knock Out Lifecycle State"
-    },
-    {
-      "number": 74,
-      "id": "PBA21B",
-      "status": "done",
-      "title": "Promote BattleSnapshot Into Battle View Contract"
-    },
-    {
-      "number": 75,
-      "id": "PBA22",
-      "status": "done",
-      "title": "Stabilize Battle Snapshots Traces And App UI"
-    },
-    {
-      "number": 76,
-      "id": "PBA23",
-      "status": "done",
-      "title": "Core Promotion Deletion Ledger"
-    },
-    {
-      "number": 77,
-      "id": "PBA24",
-      "status": "done",
-      "title": "Remove Rogue Cunning Action Support Workaround"
-    },
-    {
-      "number": 78,
-      "id": "PBA25",
-      "status": "done",
-      "title": "Promote Unit-Backed Character Choice Width"
-    },
-    {
-      "number": 79,
-      "id": "PBA25A",
-      "status": "done",
-      "title": "Refactor Character Build Projection Boundary"
-    },
-    {
-      "number": 80,
-      "id": "PBA26",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Define Character Sheet Session Boundary And Migrate App"
-    },
-    {
-      "number": 81,
-      "id": "PBA27",
-      "status": "blocked",
-      "title": "Core Quarantine And Deletion Cutover"
-    },
-    {
-      "number": 82,
-      "id": "PBA28",
-      "status": "blocked",
-      "title": "MBT Consolidation And Shared Algebra Parity"
-    },
-    {
-      "number": 83,
-      "id": "PBA29",
-      "status": "blocked",
-      "title": "Tighten Stat Block Multiattack Dispatch Continuation"
+      "title": "Prove Zero-HP Damage and Death Saving Throw Rule-Core Procedures"
     }
   ]
 }
@@ -204,14 +85,14 @@ Keep it synchronized with the DAG table and task details.
   `packages/battle-runtime/ARCHITECTURE_GRAPH.md` when architecture or public
   behavior changes.
 - Spatial facts always come from the table/caller/session. Do not plan grid
-  state, LOS/pathfinding/cover derivation, or adjacency caches in Core, promoted
-  runtimes, or MCP; plan explicit table-supplied facts instead.
+  state, LOS/pathfinding/cover derivation, or adjacency caches in Core,
+  promoted runtimes, or MCP; plan explicit table-supplied facts instead.
 - Character-creation behavior changes must update
   `packages/character-creation-runtime/README.md` and
   `packages/character-creation-runtime/VOCABULARY.md` when architecture or
   vocabulary changes.
-- Shared algebra changes must update
-  `packages/shared-algebras/README.md` or relevant package-local proof docs.
+- Shared algebra changes must update `packages/shared-algebras/README.md` or
+  relevant package-local proof docs.
 - Do not run battle MBT for research-only tasks. Use the smallest MBT tier that
   actually validates a completed behavior change.
 - Implementation closeout must include `/simplify` convergence: minimum two
@@ -219,892 +100,210 @@ Keep it synchronized with the DAG table and task details.
 
 ## DAG / Queue Order
 
-| Order | Task                                                              | Status                                        | Depends on   | Blocks        | Research / plan                                                                                              | Next action                                                                                                                                                   |
-| ----- | ----------------------------------------------------------------- | --------------------------------------------- | ------------ | ------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 61    | PBA15A0A - Promote Multiclass Prerequisite Algebra                | done                                          | PBA15        | PBA15A0B      | inline below                                                                                                 | Shared algebra owns multiclass prerequisite facts; Core delegates through compatibility wrappers.                                                             |
-| 62    | PBA15A0B - Introduce Character Progression Projection Helpers     | done                                          | PBA15A0A     | PBA15A0C      | inline below                                                                                                 | Character-creation-runtime exports character progression helpers and Unit-id boundary adapters.                                                               |
-| 63    | PBA15A0C - Replace Level-One Class-Entry Workflow                 | done                                          | PBA15A0B     | PBA15A0D      | inline below                                                                                                 | Runtime progression fill now replaces separate primary-class and level-1 class-entry workflow.                                                                |
-| 64    | PBA15A0D - Wire Progression And Multiclass Through MCP Docs       | done                                          | PBA15A0C     | PBA15A        | inline below                                                                                                 | MCP schema/workflow/docs now expose progression as one atomic profile choice and point multiclass validation at shared-algebras.                              |
-| 65    | PBA15A - Migrate Surface And Character-Creation Domain Primitives | done                                          | PBA15A0D     | PBA15B        | [research plan](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)                   | Character-creation ability-score assignments are parsed into shared AbilityScore values before durable runtime storage.                                       |
-| 66    | PBA16 - Add Death-Save Promoted MBT Coverage                      | done                                          | PBA15B       | PBA17         | [research plan](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)              | Promoted battle-runtime MBT/QNT now covers Death Saving Throw holes for a Character Build combatant.                                                          |
-| 67    | PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width      | done                                          | PBA16        | PBA18         | [research plan](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)             | Knock Out and durable positive/zero-HP handoffs are now explicit in promoted battle-runtime and MCP session state.                                            |
-| 68    | PBA15B - Remove Runtime-Owned Spatiality And Distances            | done                                          | PBA15A       | PBA16         | [research plan](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)               | Promoted runtime and MCP now consume table/caller spatial facts instead of owning combatant distances.                                                        |
-| 69    | PBA18 - Widen Attack Range And Conditional Attack Riders          | done                                          | PBA15B       | PBA19         | [research plan](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)                  | Long-range attack target facts are legal and feed Disadvantage through the shared roll-mode path; supported conditional attack riders remain Surface-derived. |
-| 70    | PBA19 - Restore Stat Block Multiattack And Bonus Actions          | done                                          | PBA18        | PBA20         | [research plan](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md) | Stat Block Multiattack and Bonus Action procedure families are restored for supported monster profiles.                                                       |
-| 71    | PBA20 - Restore Spell Targeting And Catalog Width                 | done                                          | PBA19        | PBA21         | [research plan](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)        | Magic Missile split-target replay and higher-slot dart count are restored through spell target allocation fills.                                              |
-| 72    | PBA21 - Broaden Reaction Windows And Bonus-Action Subjects        | done                                          | PBA20        | PBA21A        | [research plan](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)          | Attack host Reaction windows and prepared Bonus Action healing spell subjects are restored in the promoted runtime.                                           |
-| 73    | PBA21A - Fix Knock Out Lifecycle State                            | done                                          | PBA21        | PBA21B        | inline below                                                                                                 | Knocked Out state is runtime-owned, healing clears Knock Out Unconscious, and MCP no longer infers Knock Out from positive-HP Unconscious.                    |
-| 74    | PBA21B - Promote BattleSnapshot Into Battle View Contract         | done                                          | PBA21A       | PBA22         | inline below                                                                                                 | Reshape, rename, or replace existing `BattleSnapshot` into one finite `/battle` and MCP view contract; delete the old loose snapshot shape.                   |
-| 75    | PBA22 - Stabilize Battle Snapshots Traces And App UI              | done                                          | PBA21B       | PBA23         | [research plan](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)              | Active `/battle` and MCP battle output now use the promoted snapshot contract; Core-backed trace routes are quarantined from the active promoted app surface. |
-| 76    | PBA23 - Core Promotion Deletion Ledger                            | done                                          | PBA22        | PBA25         | [research plan](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)                     | Inventory every remaining Core consumer, proof artifact, and restore-source lane before any Core deletion work.                                               |
-| 77    | PBA24 - Remove Rogue Cunning Action Support Workaround            | done                                          | PBA25        | PBA27         | [research plan](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)             | Replace MCP's Rogue class-name support-profile inference with real Surface Unit and support-profile flow.                                                     |
-| 78    | PBA25 - Promote Unit-Backed Character Choice Width                | done                                          | PBA23        | PBA24, PBA25A | [research plan](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)                 | Move remaining Core direct character-choice width into Surface Unit readers and character-creation runtime holes/projections.                                 |
-| 79    | PBA25A - Refactor Character Build Projection Boundary             | done                                          | PBA25        | PBA26         | [research plan](/workspace/typescript/dnd/plans/pba25a-character-build-projection-boundary.md)               | CharacterBuild now stores durable identity and choice evidence; executable facts are projected at session/battle boundaries.                                  |
-| 80    | PBA26 - Define Character Sheet Session Boundary And Migrate App   | ready-for-implementation-after-light-research | PBA25A       | PBA27         | [research plan](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)              | Add promoted Character Sheet and Character Battle runtime packages, migrate MCP/app to them, then remove app Core dependency.                                 |
-| 81    | PBA27 - Core Quarantine And Deletion Cutover                      | blocked                                       | PBA24, PBA26 | PBA28         | [research plan](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)                   | Remove or quarantine Core only after the deletion ledger has no production blockers and promoted gates own replacement behavior.                              |
-| 82    | PBA28 - MBT Consolidation And Shared Algebra Parity               | blocked                                       | PBA27        | future tasks  | [research plan](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)            | Consolidate the post-Core proof graph around package-local shared algebra MBT/proofs and selective promoted runtime MBT.                                      |
-| 83    | PBA29 - Tighten Stat Block Multiattack Dispatch Continuation      | blocked                                       | PBA28        | future tasks  | inline below                                                                                                 | Decide and encode the full legal action/command surface while pending Stat Block Multiattack dispatches remain.                                               |
+| Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
+| ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
+| 84    | QCORE0 - Research Composable Quint Rule-Core Architecture | done               | none       | QCORE1 | [QCORE0_COMPOSITION_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE0_COMPOSITION_RESEARCH.md) | Research complete: use stateless contract/procedure modules, shallow stateful proof modules, and serialized verifier checks. |
+| 85    | QCORE1 - Create First Stateless Quint Rule-Core Procedure | done | QCORE0 | QCORE2 | [rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md) | Created the first production stateless rule-core QNT procedure and owned proof machine for Hit Point damage. |
+| 86    | QCORE2 - Prove Zero-HP Damage and Death Saving Throw Rule-Core Procedures | done | QCORE1 | QCORE3 | [QCORE2_100_PERCENT_RAW_COVERAGE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE2_100_PERCENT_RAW_COVERAGE_RESEARCH.md) | Created zero-HP damage and Death Saving Throw rule-core QNT with a shallow QCORE1 lifecycle composition proof. |
 
 ## Task Details
 
-### Task 61 - PBA15A0A - Promote Multiclass Prerequisite Algebra
+### Task 84 - QCORE0 - Research Composable Quint Rule-Core Architecture
 
 Status: `done`
 
-Depends on: PBA15
-Blocks: PBA15A0B
+Depends on: none
+Blocks: QCORE1
 
-Next action: finish the shared multiclass prerequisite algebra extraction and
-Core compatibility wrappers only. Do not change character-creation workflow,
-MCP schemas, or docs except package-local shared-algebras README/proof notes if
-needed.
+Result: research and spike complete. See
+[QCORE0_COMPOSITION_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE0_COMPOSITION_RESEARCH.md)
+and
+[qcore0-composition README](/workspace/typescript/dnd/packages/shared-algebras/proofs/qcore0-composition/README.md).
 
 Context:
 
-- In-progress handoff files exist:
-  - `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`
-  - `packages/shared-algebras/src/multiclass-prerequisite-algebra.test.ts`
-  - `packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`
-  - `packages/core/src/features/class-tables.ts`
-- Keep the algebra Surface-free: it should speak in class names and ability
-  prerequisite facts, not Surface Unit ids such as `class_fighter`.
-- Core may retain compatibility wrappers, but must not own a duplicate
-  prerequisite table.
+- The long-term goal is to restore a 100% RAW rule core written in Quint without
+  recreating the v0 failure mode where some traces take effectively forever.
+- Quint authored facts are proof fixtures, not canonical content mirrors.
+  Fixtures should primarily prove reusable rule procedure families. SRD-like
+  names/mechanics may be used when legal and helpful; non-SRD/PHB-like fixtures
+  must use fake names and minimal executable facts only.
+- QNT should prove rule procedures after projection, not Surface/DLC parser
+  correctness. Surface/DLC authored content is parsed by TypeScript into
+  executable procedure facts; QNT fixtures instantiate those proof-facing facts
+  directly.
+- Support gates as a concept should disappear. Typed projection parsers remain
+  the boundary from authored content to executable procedure facts.
+- The likely architecture is small algebra/procedure modules first, with
+  battle-level integration specs reserved for selected composition proofs, but
+  QCORE0 must measure Quint behavior before finalizing that architecture.
 
 Acceptance:
 
-- `@dnd/shared-algebras/multiclass-prerequisite-algebra` owns the canonical
-  multiclass prerequisite table and exported check helpers.
-- Tests cover passing and failing multiclass prerequisites for representative
-  classes and ability-score combinations.
-- The small Quint proof has deterministic `mc_` assertions for the same
-  canonical algebra facts.
-- Core class-table code either re-exports/adapts the shared algebra or clearly
-  delegates to it without duplicating the table.
-- No character-creation-runtime workflow or MCP schema changes are made in this
-  slice.
+- Upstream research scans `informalsystems/quint` docs, examples, issues,
+  discussions, and relevant code for module/import semantics, compositional
+  specification patterns, state-space control, evaluator behavior, and known
+  performance pathologies.
+- Local spike specs exercise at least these patterns:
+  - pure function/contract import;
+  - implementation transition import;
+  - importing a module with unused vars/actions;
+  - a procedure module proved against an abstract contract;
+  - a shallow integration module that composes two small procedures.
+- Each experiment records the command, backend/evaluator, state variables,
+  actions, trace depth or invariant bounds, runtime, and observed failure mode
+  if slow or nonterminating.
+- The closeout chooses allowed QNT module kinds, such as implementation modules,
+  contract modules, fixture modules, and integration modules, and names banned
+  or high-risk import/composition patterns.
+- No production rule-core module is created until the composition pattern is
+  measured and recorded.
 
 Verification:
 
-- RAW/UL check for multiclass prerequisite wording in
-  `.references/srd-5.2.1/Classes/` and `UBIQUITOUS_LANGUAGE.md`.
-- `pnpm --filter @dnd/shared-algebras typecheck`
-- `pnpm --filter @dnd/shared-algebras test`
-- `pnpm exec quint test --match "mc_" packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`
-- Focused Core tests only if Core wrappers are touched.
+- `pnpm exec quint typecheck` or the smallest equivalent typecheck command for
+  each spike file.
+- Focused `pnpm exec quint test` / `pnpm exec quint run` commands for each
+  local experiment.
+- Focused serialized `pnpm exec quint compile` / `pnpm exec quint verify`
+  checks for the shallow integration, stateful delegate, unused import, and
+  branch blow-up POC.
 - No battle MBT.
-- `/simplify` convergence, minimum two rounds.
+- `/simplify` convergence, minimum two rounds for the resulting plan/spike
+  design.
 
-Plan Impact: if successful, unblock PBA15A0B.
+Plan Impact: QCORE1 is now the first production rule-core module/proof-layout
+task using the measured composition pattern.
 
-Closeout: shared-algebras owns the canonical multiclass prerequisite table and
-checks, with focused TS tests and `mc_` Quint assertions passing. Core
-class-table compatibility wrappers delegate to shared-algebras.
-
-### Task 62 - PBA15A0B - Introduce Character Progression Projection Helpers
+### Task 85 - QCORE1 - Create First Stateless Quint Rule-Core Procedure
 
 Status: `done`
 
-Depends on: PBA15A0A
-Blocks: PBA15A0C
+Depends on: QCORE0
+Blocks: QCORE2
 
-Next action: add the canonical character progression model and derivation
-helpers in `@dnd/character-creation-runtime` without yet replacing every
-workflow caller.
+Result: created the first production rule-core proof location and positive-Hit
+Point damage procedure. See
+[rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md),
+[hit-point-damage.qnt](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt),
+and
+[hit-point-damage-inductive.qnt](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt).
 
 Context:
 
-- Character-creation state previously duplicated starting class through a
-  separate class pick and a level-1 class entry.
-- Target promoted shape is one durable `CharacterProgression` selected at the
-  draft boundary. It carries an explicit starting class plus ordered post-start
-  class advancement entries. Total character level and per-class levels are
-  derived from that history.
-- `packages/character-creation-runtime/src/character-progression-algebra.ts` is the
-  handoff file for this slice.
+- QCORE0 established the composition rule: reusable modules are stateless
+  contracts/procedures, stateful proof machines are shallow owners, and broad
+  battle-level specs are reserved for selected integration proofs.
+- The first production procedure should be small enough to keep verifier state
+  bounded, but representative enough to validate the layout for future rule
+  families.
+- Fixtures are projection-shaped authored facts, not Surface mirrors. They may
+  use SRD-like names/mechanics where legal and useful; PHB-like cases use fake
+  names and minimal executable facts.
 
 Acceptance:
 
-- Character-creation-runtime exports a precise `CharacterProgression` model with
-  starting-class facts distinct from post-start advancement entries.
-- Runtime helpers derive total level and class-level facts from the progression
-  model.
-- Unit-id inputs such as `class_fighter` are converted through one explicit
-  boundary adapter; Surface Unit ids are not stored in the core progression
-  algebra.
-- Focused tests prove a level-1 Fighter, Fighter 2, and Fighter/Wizard
-  progression derive expected totals/class levels without storing contradictory
-  class levels.
-- Existing public workflow behavior is not broadly rewired in this slice; keep
-  compatibility projections where needed.
+- Create or choose the production rule-core proof location.
+- Add one stateless contract/procedure module with projection-shaped facts and
+  pure legality/procedure functions.
+- Add one small stateful proof machine that imports only the stateless contract.
+- Record a branch budget beside each `any` action.
+- Do not introduce support gates.
+- Do not import Surface schema into QNT.
+- Do not create a broad battle-level composition spec in this task.
 
 Verification:
 
-- RAW/UL check for class creation and class level and Hit Point rule wording.
-- `pnpm --filter @dnd/character-creation-runtime typecheck`
-- `pnpm --filter @dnd/character-creation-runtime test`
+- Read `.references/srd-5.2.1/Playing-the-Game.md` Damage and Healing, Hit
+  Points, Temporary Hit Points, Dropping to 0 Hit Points, Monster Death, Massive
+  Damage, and Falling Unconscious.
+- Checked `UBIQUITOUS_LANGUAGE.md` Hit Points and Death plus creature/stat-block
+  language.
+- Checked `ASSUMPTIONS.md` A12 and A16.
+- `pnpm exec quint typecheck packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt`
+- `pnpm exec quint typecheck packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt`
+- `pnpm exec quint test packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt`
+- `pnpm exec quint run packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt --max-samples=2000 --max-steps=8 --invariant=invariant --verbosity=1 --backend=rust`
+- `pnpm exec quint compile packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt --target=json --out=/tmp/qcore1_hit_point_damage.json --verbosity=1`
+- Serialized Apalache:
+  `pnpm exec quint verify packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt --inductive-invariant=invariant --invariant=invariant --max-steps=1 --verbosity=1`
 - No battle MBT.
-- `/simplify` convergence, minimum two rounds.
+- RAW/ubiquitous/architecture reviewer found the original at-0-HP scope hole
+  and contract invalid-state gap. Fixed by renaming the procedure to positive
+  Hit Point damage, adding `canApplyResolvedDamageToPositiveHitPoints(...)`,
+  guarding the proof action, and making `legalVitals(...)` reject a non-dead
+  player character at 0 Hit Points without Unconscious.
+- `/simplify` convergence:
+  - Round 1 found the same at-0-HP scope hole before final closeout; fixed with
+    executable guard plus narrower procedure naming.
+  - Round 2 found no additional structural issue in the QCORE1 QNT shape:
+    stateless procedure module, owned proof machine, no Surface schema, no
+    support gates, branch budget near `any`, and serialized verifier command.
 
-Plan Impact: if successful, unblock PBA15A0C.
-
-Closeout: `@dnd/character-creation-runtime` exports `CharacterProgression`
-helpers with branded class Unit ids, explicit starting class, ordered post-start
-advancement entries with Hit Point rule evidence, derived total/class-level
-helpers, focused tests, and package README/VOCABULARY notes.
-
-### Task 63 - PBA15A0C - Replace Level-One Class-Entry Workflow
+### Task 86 - QCORE2 - Prove Zero-HP Damage and Death Saving Throw Rule-Core Procedures
 
 Status: `done`
 
-Depends on: PBA15A0B
-Blocks: PBA15A0D
+Depends on: QCORE1
+Blocks: QCORE3
 
-Closeout: character-creation-runtime discovery, fill reduction, finalization,
-QNT slice, MBT bridge, MCP tests, and package docs use one draft-owned
-`draft.progression.initial` fill. The old separate class-pick plus level-1
-class-entry workflow is removed from the promoted runtime.
+Research: see
+[QCORE2_100_PERCENT_RAW_COVERAGE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE2_100_PERCENT_RAW_COVERAGE_RESEARCH.md).
+
+Result: created the zero-HP lifecycle rule-core procedure and owned proof
+machine. See
+[zero-hit-point-lifecycle.qnt](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt),
+[zero-hit-point-lifecycle-inductive.qnt](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt),
+and
+[rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md).
 
 Context:
 
-- The former runtime stored both a separate starting-class pick and a level-1
-  class entry. That duplicated the same level-1 fact and made callers keep two
-  fields synchronized.
-- Task PBA15A0B creates the progression helpers that should make duplicate
-  level-1 class ownership unrepresentable at the promoted runtime boundary.
-- Keep supported workflows available: Orc Soldier Fighter 1, Orc Soldier
-  Fighter 2, and Orc Soldier Wizard 1.
+- QNT is the first authority for every production-modeled reducer procedure,
+  including procedures reached through Unit/StatBlock/Spell projection.
+- Surface/DLC authored facts are not modeled in QNT. QNT fixtures instantiate
+  projection-shaped executable facts directly, using SRD-like facts where legal
+  and fake names for non-SRD authored content.
+- Forward architecture replaces support gates with typed projection parsers:
+  projection parsers classify authored content into executable procedure facts;
+  rule-core QNT proves those procedure facts and battle-runtime reducers mirror
+  them.
+- Deepness comes first. QCORE2 extends QCORE1 through the adjacent zero-HP
+  lifecycle before widening to attacks, spells, features, and monster controls.
 
 Acceptance:
 
-- Promoted character creation cannot represent a starting-class pick separate
-  from a separate level-1 class entry. Fighter followed by Wizard remains a valid
-  ordered multiclass shape when prerequisites are satisfied.
-- Promoted character creation cannot represent a post-start class entry with a
-  contradictory stored level.
-- Character-creation-runtime no longer exposes a separate post-class level-1
-  class-entry fill after choosing a starting class.
-- Discovery, fill reducer, support gates, finalization, QNT slice/MBT bridge,
-  and focused runtime tests use the progression model.
-- Existing supported creation verticals still pass.
+- Add a stateless rule-core procedure module for damage at 0 Hit Points and
+  Death Saving Throw counter updates.
+- Reuse or align with the existing `death-saves-algebra` semantics rather than
+  creating a second counter model.
+- Add one owned proof machine with a recorded branch budget near each `any`.
+- Add one shallow integration module or proof action that composes QCORE1
+  positive-HP damage with zero-HP damage/Death Saving Throw lifecycle facts.
+- Keep QNT Surface-free and projection-shaped.
+- No broad battle-runtime composition spec in this task.
 
 Verification:
 
-- RAW/UL check for class creation and class level and Hit Point rule wording.
-- `pnpm --filter @dnd/character-creation-runtime typecheck`
-- `pnpm --filter @dnd/character-creation-runtime test`
-- Focused Core tests only if legacy replay compatibility wrappers are touched.
-- No battle MBT unless battle-runtime mappings change.
-- `/simplify` convergence, minimum two rounds.
-
-Plan Impact: if successful, unblock PBA15A0D.
-
-### Task 64 - PBA15A0D - Wire Progression And Multiclass Through MCP Docs
-
-Status: `done`
-
-Depends on: PBA15A0C
-Blocks: PBA15A
-
-Next action: wire the character progression model and shared multiclass
-prerequisite checks through MCP schemas/tests and update package docs.
-
-Context:
-
-- PBA15A0A owns canonical multiclass prerequisite checks in
-  `@dnd/shared-algebras`.
-- PBA15A0B and PBA15A0C normalize character-creation-runtime progression and
-  remove the separate level-1 class-entry workflow.
-- This slice is the integration/docs closeout before PBA15A can resume durable
-  primitive migration.
-
-Acceptance:
-
-- MCP creation schemas and tests no longer expose a separate level-1 class-entry
-  fill after a starting class is selected.
-- All TS replay paths that validate multiclass entry use the shared
-  prerequisite algebra instead of a Core-owned duplicate table.
-- Existing MCP creation/battle handoff verticals remain available.
-- `packages/character-creation-runtime/README.md`,
-  `packages/character-creation-runtime/VOCABULARY.md`, and relevant
-  shared-algebras docs describe the new ownership/progression language.
-- Final plan closeout can unblock PBA15A.
-
-Verification:
-
-- RAW/UL check for class creation, class level progression, and multiclass
-  prerequisite wording.
-- `pnpm --filter @dnd/shared-algebras typecheck`
-- `pnpm --filter @dnd/shared-algebras test`
-- `pnpm --filter @dnd/character-creation-runtime typecheck`
-- `pnpm --filter @dnd/character-creation-runtime test`
-- `pnpm --filter @dnd/mcp typecheck`
-- `pnpm --filter @dnd/mcp test`
-- No battle MBT unless battle-runtime mappings change.
-- `/simplify` convergence, minimum two rounds.
-
-Plan Impact: if successful, unblock PBA15A.
-
-Closeout: MCP fill schema descriptions, workflow output, README, and focused
-tests now present `draft.progression.initial` as the single atomic Character
-Progression profile fill. The docs identify `@dnd/character-creation-runtime`
-as the progression owner and
-`@dnd/shared-algebras/multiclass-prerequisite-algebra` as the multiclass
-prerequisite owner. Character-creation-runtime and shared-algebras docs carry
-the same ownership language. Verification passed:
-`pnpm --filter @dnd/shared-algebras typecheck`,
-`pnpm --filter @dnd/shared-algebras test`,
-`pnpm --filter @dnd/character-creation-runtime typecheck`,
-`pnpm --filter @dnd/character-creation-runtime test`,
-`pnpm --filter @dnd/mcp typecheck`, and `pnpm --filter @dnd/mcp test`.
-`/simplify` converged in two rounds: round 1 weakened a brittle exact workflow
-text assertion to invariant phrase checks; round 2 rechecked task-index
-synchronization and MCP contract ownership with no further changes. PBA15A is
-unblocked for research.
-
-### Task 65 - PBA15A - Migrate Surface And Character-Creation Domain Primitives
-
-Status: `done`
-
-Depends on: PBA15A0D
-Blocks: PBA15B
-
-Research plan:
-[pba15a-domain-primitives-research-plan.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-research-plan.md)
-
-Inventory evidence:
-[pba15a-domain-primitives-inventory.md](/workspace/typescript/dnd/plans/pba15a-domain-primitives-inventory.md)
-
-Next action: migrate `AbilityScoreAssignment` from raw `number` values to an
-owned parsed ability-score assignment type before it is stored in
-`CreationFill`, `CharacterDraft`, or `CharacterBuild`. This should use the
-existing shared `AbilityScore` primitive or a narrower creation-assignment type
-that contains shared `AbilityScore` values. Do not widen this slice into broad
-Surface Unit id or whole-Surface numeric cleanup.
-
-Acceptance summary: changed Surface and character-creation production types no
-longer use bare primitives for Core-related durable domain values when an owned
-type or literal union should carry meaning.
-
-Verification summary: source primitive inventory, focused Surface and
-character-creation typechecks/tests, no battle MBT unless promoted battle
-runtime mappings change, `/simplify` convergence.
-
-Implementation note: the first PBA15A source-identity slices are integrated:
-Unit-choice and selected-equipment loadout sources use distinct source/key
-isomorphisms; `ChoiceCreationHole.source` excludes the ability-score draft
-source; MCP creation-hole schemas use runtime-owned literal domains and the
-canonical ability-score draft-path constant. `CharacterBuildLoadout.itemId` is
-also already represented by `CharacterEquipmentItemId`, a package-owned
-source/key isomorphism. RAW and UL/domain checker convergence passed in the
-parallel worktree review lanes before integration.
-
-Plan Impact: if successful, unblock PBA15B.
-
-Closeout: `@dnd/shared-algebras` now parses raw ability-score assignments into
-the shared `AbilityScore` primitive, while character-creation-runtime stores
-the parsed assignment in creation fills, drafts, and finalized builds. MCP fill
-decoding parses incoming score objects at the boundary before they enter
-runtime state. Background ability-score increases return typed finalization
-issues instead of silently clamping when a post-background score would exceed
-the SRD cap. Verification passed focused shared-algebras,
-character-creation-runtime, and MCP typechecks/tests; no battle MBT was needed
-because promoted battle-runtime mappings were not touched. PBA15B is unblocked.
-
-### Task 66 - PBA16 - Add Death-Save Promoted MBT Coverage
-
-Status: `done`
-
-Depends on: PBA15B
-Blocks: PBA17
-
-Research plan:
-[pba16-death-save-promoted-mbt-research-plan.md](/workspace/typescript/dnd/plans/pba16-death-save-promoted-mbt-research-plan.md)
-
-Next action: add selective promoted `@dnd/battle-runtime` QNT/MBT coverage for
-turn-start Death Saving Throw holes and one lifecycle outcome. A 2026-05-05
-read-only preflight in the research plan confirms the exact promoted MBT gap
-and recommends a two-Character Build tracer bullet.
-
-Acceptance summary: Death Saving Throw hole replay is covered by promoted
-battle-runtime proof; old Core MBT remains quarantined reference material.
-
-Verification summary: RAW lifecycle check, smallest useful promoted MBT tier,
-no broad battle MBT/fuzz, `/simplify` convergence.
-
-Plan Impact: if successful, unblock PBA17.
-
-Closeout: promoted `@dnd/battle-runtime` MBT now models and replays the
-`DeathSavingThrow` hole for a Character Build combatant starting its turn at 0
-HP. The dedicated promoted MBT scenario compares current actor role, pending
-holes, HP, Unconscious, Stable, dead, and Death Saving Throw success/failure
-counters across QNT and TS. Verification covered RAW/UBIQUITOUS_LANGUAGE
-anchors, QNT typechecks, focused battle-runtime TypeScript typecheck, and the
-Tier 1 promoted MBT test. PBA17 is unblocked.
-
-### Task 67 - PBA17 - Restore Nonlethal Knockout And Zero-HP Handoff Width
-
-Status: `done`
-
-Depends on: PBA16
-Blocks: PBA18
-
-Research plan:
-[pba17-knockout-zero-hp-handoff-research-plan.md](/workspace/typescript/dnd/plans/pba17-knockout-zero-hp-handoff-research-plan.md)
-
-Next action: restore Knock Out and remaining zero-HP/dead/Stable/rest handoff
-width without duplicating battle-runtime state.
-
-Acceptance summary: positive HP, zero HP, Stable, dead, and Knock Out handoffs
-are explicit and type-representable without contradictory states.
-
-Verification summary: RAW/UL check, focused battle-runtime/MCP tests, QNT/MBT
-only if lifecycle mappings change beyond PBA16, `/simplify` convergence.
-
-Plan Impact: if successful, unblock PBA18.
-
-Closeout: promoted battle-runtime now exposes melee Knock Out as an
-attack-damage disposition when damage would reduce a creature from positive HP
-to 0 without Massive Damage, applying the SRD 1 HP plus Unconscious outcome for
-Character and Stat Block combatants. MCP character sessions now preserve
-positive-HP Unconscious Knock Out handoff separately from zero-HP unstable,
-Stable, and dead lifecycles, and can start a later battle from those explicit
-session states. Verification covered RAW/UBIQUITOUS_LANGUAGE anchors, focused
-battle-runtime and MCP tests, QNT self-tests through the battle-runtime suite,
-and `pnpm quality` until unrelated app/Core baseline typecheck failures.
-PBA18 remains runnable.
-
-### Task 68 - PBA15B - Remove Runtime-Owned Spatiality And Distances
-
-Status: `done`
-
-Depends on: PBA15A
-Blocks: PBA16
-
-Research plan:
-[pba15b-table-spatial-fact-eradication-plan.md](/workspace/typescript/dnd/plans/pba15b-table-spatial-fact-eradication-plan.md)
-
-Next action: remove promoted battle-runtime and MCP ownership of pairwise
-combatant distances before attack range, spell targeting, reaction, and app
-behavior widening depends on that state. Preserve movement budget in feet, but
-replace geometry/distance-derived legality with explicit table/caller/session
-facts for movement reach-exit, opportunity attacks, target legality, Help
-proximity, Grapple reach/out-of-range, Sneak Attack adjacent ally, and AoE
-included targets.
-
-Acceptance summary: promoted battle runtime and MCP do not store, default,
-project, or compute combatant distances, adjacency, reach exit, target range, or
-area membership. Authored reach/range/radius facts remain content metadata that
-the table uses to provide executable spatial facts. Public fills carry the
-adjudicated procedure fact, such as attack `normal`/`long` range band or
-Grapple-adjacent legality, not raw measured distances for runtime geometry
-calculation.
-
-Verification summary: RAW/UL check for every touched movement, targeting, reach,
-Help, Grapple, and area rule; focused battle-runtime and MCP typechecks/tests;
-smallest useful promoted MBT only after QNT changes; no battle MBT for
-research-only work; `/simplify` convergence.
-
-Plan Impact: if successful, unblock PBA18.
-
-Closeout: promoted battle-runtime and MCP no longer store, default, project, or
-compute combatant distance graphs. Movement, opportunity attacks, target
-legality, Help, Grapple, Sneak Attack adjacency, and save-gate area membership
-now consume table/caller spatial facts; authored reach/range/radius facts remain
-content metadata.
-
-### Task 69 - PBA18 - Widen Attack Range And Conditional Attack Riders
-
-Status: `done`
-
-Depends on: PBA15B
-Blocks: PBA19
-
-Research plan:
-[pba18-attack-range-riders-research-plan.md](/workspace/typescript/dnd/plans/pba18-attack-range-riders-research-plan.md)
-
-Next action: restore ranged attacks beyond normal range with Disadvantage and
-support-profile handling for supported conditional attack riders.
-
-Acceptance summary: authored normal/long range metadata derives from retained
-Surface records, selected-target range bands come from table/session facts, and
-rider facts derive from retained Surface records and runtime state; no attack
-branch dispatches on authored ids, names, or monster slugs.
-
-Verification summary: RAW check, focused battle-runtime/MCP/Surface tests,
-promoted QNT/MBT only if reusable attack procedure behavior changes,
-`/simplify` convergence.
-
-Plan Impact: if successful, unblock PBA19.
-
-Closeout: ranged attack target facts now distinguish normal and long range.
-Long-range target fills are legal and contribute Disadvantage through the shared
-attack-roll mode path, including Advantage/Disadvantage cancellation. The
-runtime continues to derive authored normal/long range and supported
-conditional attack rider facts from retained Surface records, with MCP replay
-preserving table-supplied target range bands rather than storing distances or
-copying authored range metadata.
-
-### Task 70 - PBA19 - Restore Stat Block Multiattack And Bonus Actions
-
-Status: `done`
-
-Depends on: PBA18
-Blocks: PBA20
-
-Research plan:
-[pba19-stat-block-multiattack-bonus-actions-research-plan.md](/workspace/typescript/dnd/plans/pba19-stat-block-multiattack-bonus-actions-research-plan.md)
-
-Next action: Stat Block Multiattack and Stat Block Bonus Action options are
-restored as reusable monster procedure families for supported profiles.
-
-Acceptance summary: Multiattack composes supported actions/resources rather than
-copying monster-specific scripts; unsupported Stat Block shapes remain
-support-gated.
-
-Verification summary: RAW check, focused Surface contract, battle-runtime, and
-MCP tests, promoted QNT/MBT only for new reusable procedure behavior,
-`/simplify` convergence.
-
-Plan Impact: PBA20 is unblocked.
-
-### Task 71 - PBA20 - Restore Spell Targeting And Catalog Width
-
-Status: `done`
-
-Depends on: PBA19
-Blocks: PBA21
-
-Research plan:
-[pba20-spell-targeting-catalog-width-research-plan.md](/workspace/typescript/dnd/plans/pba20-spell-targeting-catalog-width-research-plan.md)
-
-Next action: Magic Missile split-target replay and higher-slot dart count are
-restored through reusable spell target allocation fills.
-
-Acceptance summary: spell targeting, slot spend, Concentration, and effect
-lifecycles remain distinct runtime facts; catalog breadth remains table-driven
-when it fits existing profiles.
-
-Verification summary: RAW check, focused battle-runtime/MCP typecheck and tests,
-and promoted Magic Missile MBT coverage passed; full `pnpm quality` remains
-blocked by unrelated app/Core baseline typecheck failures.
-
-Plan Impact: PBA21 is unblocked.
-
-### Task 72 - PBA21 - Broaden Reaction Windows And Bonus-Action Subjects
-
-Status: `done`
-
-Depends on: PBA20
-Blocks: PBA21A
-
-Research plan:
-[pba21-reaction-bonus-action-width-research-plan.md](/workspace/typescript/dnd/plans/pba21-reaction-bonus-action-width-research-plan.md)
-
-Next action: Attack host Reaction windows and prepared Bonus Action healing spell
-subjects are restored in the promoted runtime.
-
-Acceptance summary: Reaction and Bonus Action resources remain represented in
-turn resources with typed replay; unsupported shapes fail at support gates.
-
-Verification summary: RAW anchors from the PBA21 research plan were preserved in
-runtime docs and QNT comments. Focused battle-runtime typecheck and tests passed,
-including QNT self-tests and the promoted package MBT scenarios. Full
-`pnpm quality` remains blocked by unrelated app/Core baseline typecheck failures.
-
-Plan Impact: PBA21A is unblocked. PBA22 remains blocked until the Knock Out
-lifecycle state and promoted `BattleSnapshot` contract prerequisites below are
-complete.
-
-Closeout: promoted attack hosts now include Attack action attacks, Off-Hand
-Attack, and Opportunity Attack for attack-hit, attack-damage, and after-damage
-Reaction windows while preserving each host's resource spend. Prepared Healing
-Word is admitted as a `bonusActionSpell` subject, spends the shared turn Bonus
-Action and a Spell Slot, opens Spell Cast Reaction windows, and uses the
-turn-resource fact that prevents expending more than one Spell Slot to cast a
-spell on a turn. Unsupported Bonus Action spell shapes remain support-gated.
-
-### Task 73 - PBA21A - Fix Knock Out Lifecycle State
-
-Status: `done`
-
-Depends on: PBA21
-Blocks: PBA21B
-
-Research plan: inline from manual PBA22 review findings.
-
-Next action: fix the RAW/modeling defects found while reviewing rejected PBA22
-attempts before those facts become the promoted app/MCP battle view contract.
-
-Acceptance summary: Knocked Out state is a runtime-owned fact, not inferred by
-MCP from positive-HP Unconscious. Healing a knocked-out creature ends the
-Knock Out Unconscious state according to RAW. Positive-HP Unconscious no longer
-implies Knock Out unless the runtime has represented that state.
-
-Verification summary: RAW check against SRD 5.2.1 Knock Out and Unconscious
-text, focused battle-runtime tests for Knock Out healing and lifecycle
-projection, focused MCP handoff/session tests, no battle MBT unless reducer
-semantics require the smallest promoted tier, `/simplify` convergence.
-
-Review findings captured:
-
-1. Knock Out healing currently does not end Unconscious because
-   `applyHpHealing` only removes Unconscious when healing from 0 HP.
-2. MCP currently infers Knock Out from any positive-HP Unconscious character,
-   which collapses condition state and Knock Out state.
-3. Unconscious hand-drop snapshot behavior is related RAW debt. This task should
-   either fix it if the promoted battle view exposes hand use, or record it as a
-   later explicit RAW/display task; do not silently bake a wrong hand model into
-   the promoted view contract.
-
-Closeout: promoted battle-runtime now owns explicit Knocked Out state, healing
-that restores Hit Points clears that Knock Out Unconscious state, and MCP
-handoff/session start carries that state only when supplied by the runtime.
-
-Plan Impact: PBA21B is unblocked.
-
-### Task 74 - PBA21B - Promote BattleSnapshot Into Battle View Contract
-
-Status: `done`
-
-Depends on: PBA21A
-Blocks: PBA22
-
-Research plan: inline from rejected PBA22 attempts and manual review reports in
-`.ralph/runs/20260505T0616UNATTENDED/manual-reviews/`.
-
-Why this task exists: it is a Core/Correction deletion enabler, not ritual
-architecture. The active app and MCP need one promoted battle view contract to
-replace Core scene snapshots and ad hoc MCP subsets. If this work stops directly
-advancing Core deletion, Correction deletion, or a necessary promoted battle
-surface, stop and reconsider.
-
-Next action: promote the existing `@dnd/battle-runtime` `BattleSnapshot` into
-the finite `/battle` and MCP battle view contract. Do not add a permanent
-parallel `BattleReadModel`; field-by-field, reshape and rename `BattleSnapshot`
-if it is the right base shape, or replace it with a new promoted contract. The
-old loose/internal `BattleSnapshot` shape must not survive completion as a
-second read model.
-
-Acceptance summary:
-
-- Exactly one promoted battle view contract exists for active `/battle` UI and
-  MCP battle output. If it keeps the `BattleSnapshot` name, that name refers to
-  the promoted finite contract, not the old loose/internal projection.
-- MCP uses the battle facts from that contract directly, with only MCP
-  session/tool wrappers around it; no weak parallel MCP snapshot subset for
-  fields the app/MCP consume.
-- The contract includes interaction affordances the consumers need, such as
-  available acts and public holes/fills, under consumer-facing names.
-- Reducer internals are exposed only when a concrete consumer/debug need is
-  named. Otherwise they are removed, renamed, or projected into stable domain
-  facts.
-- No permanent coexistence of `BattleSnapshot` plus another promoted battle read
-  model. Temporary adapters are allowed only inside the task and must be removed
-  before completion or converted into a follow-up blocker.
-- The previous loose/internal `BattleSnapshot` shape is deleted, renamed into
-  the promoted contract, or fully replaced; it is not kept as legacy runtime
-  snapshot storage behind the view contract.
-
-Verification summary: focused battle-runtime schema/type tests, focused MCP
-structured-content tests that prove the contract is encodable without stack
-overflow, focused app tests for the fields `/battle` consumes, no battle MBT
-unless runtime semantics change, `/simplify` convergence.
-
-Review findings captured:
-
-4. Current `BattleSnapshot` is a broad runtime projection with reducer-like
-   internals. Ralph alternated between exposing it directly, which broke MCP
-   validation, and creating a lossy MCP-local subset, which reintroduced
-   duplicated contract ownership.
-5. Naming debt affects the public view if surfaced: `defeated` currently means
-   `hp === 0`, `Off-Hand Attack` remains visible terminology, and
-   `preparedSlotSpell` sounds broader than the Magic Missile-like execution
-   profile it currently represents. Fix these where they enter the promoted
-   view contract; otherwise record explicit later cleanup.
-
-Plan Impact: if successful, unblock PBA22.
-
-### Task 75 - PBA22 - Stabilize Battle Snapshots Traces And App UI
-
-Status: `done`
-
-Depends on: PBA21B
-Blocks: PBA23
-
-Research plan:
-[pba22-snapshots-traces-app-ui-research-plan.md](/workspace/typescript/dnd/plans/pba22-snapshots-traces-app-ui-research-plan.md)
-
-Next action: complete. Active `/battle` app routes and MCP battle output consume
-the promoted battle view contract from PBA21B. Core-backed `/trace` and
-`/embed/trace` are quarantined from the active promoted app surface while the
-promoted trace/debug viewer remains explicit later work.
-
-Acceptance summary: active `/battle` UI consumes promoted runtime/MCP snapshots
-instead of old Core/projected state. Snapshot facts derive from promoted runtime
-state and retained Surface records. Core-backed `/trace` is not treated as a
-promoted surface in this task; if quarantined, its future restoration as a
-promoted trace/debug viewer must remain explicit follow-up work.
-
-Verification summary: app route/projection tests, MCP/runtime snapshot contract
-tests, bundled battle-runtime QNT/MBT tests, no separate broad battle MBT fuzzing,
-`/simplify` convergence.
-
-Plan Impact: PBA23 is unblocked.
-
-Deferred trace note: `/trace` is still needed in some promoted form ultimately.
-Quarantining `/trace` or `/embed/trace` is justified only as a temporary measure
-that brings Core deletion forward. A later promoted trace/debug viewer should be
-backed by battle-runtime/MCP evidence, not old Core/XState replay.
-
-### Task 76 - PBA23 - Core Promotion Deletion Ledger
-
-Status: `done`
-
-Depends on: PBA22
-Blocks: PBA25
-
-Research plan:
-[pba23-core-promotion-deletion-ledger.md](/workspace/typescript/dnd/plans/pba23-core-promotion-deletion-ledger.md)
-
-Next action: complete. The deletion ledger inventories remaining Core
-consumers, proof artifacts, root Quint lanes, package dependencies, app imports,
-and restore-source artifacts before Core deletion work.
-
-Acceptance summary: a single ledger classifies every remaining Core character,
-battle, app, root-QNT, MBT, script, and package-config dependency as promoted,
-legacy proof, active app debt, blocked restore work, obsolete, or deletion
-residue. The ledger explicitly covers battle reducer replacement; a
-character-only ledger is insufficient.
-
-Verification summary: import and projected-vocabulary searches, promoted
-runtime Core-free checks, package-local promoted test commands only if docs or
-manifests require them, no old Core battle MBT, `/simplify` convergence.
-
-Plan Impact: PBA25 is unblocked.
-
-### Task 77 - PBA24 - Remove Rogue Cunning Action Support Workaround
-
-Status: `done`
-
-Depends on: PBA25
-Blocks: PBA27
-
-Research plan:
-[pba24-remove-rogue-cunning-action-workaround.md](/workspace/typescript/dnd/plans/pba24-remove-rogue-cunning-action-workaround.md)
-
-Next action: after PBA25 provides the retained feature-Unit path, replace MCP's
-Rogue class-name/level support-profile inference with real Surface Unit content
-and support-profile parsing for Cunning Action.
-
-Acceptance summary: Cunning Action support is derived from retained Surface Unit
-refs and parsed mechanics, never from `className === "rogue"` or a fake class
-Unit support profile. Rogue level 2 with the real feature can use admitted
-Bonus Action standard-action support; Rogue level 1 or missing feature Units
-cannot. This task may add the Cunning Action support-profile reader/runtime
-mapping, but must not rebuild generic class-feature grant or retained-Unit
-machinery owned by PBA25.
-
-Verification summary: RAW/UL check for Rogue Cunning Action and Bonus Actions,
-focused Surface/character-creation/battle-runtime/MCP tests,
-`pnpm check:authored-id-dispatch`, promoted QNT only if reusable bonus-action
-standard-action behavior changes, no broad battle MBT, `/simplify` convergence.
-
-Plan Impact: PBA24 is done. PBA27 remains blocked on PBA26.
-
-### Task 78 - PBA25 - Promote Unit-Backed Character Choice Width
-
-Status: `done`
-
-Depends on: PBA23
-Blocks: PBA24, PBA25A
-
-Research plan:
-[pba25-unit-backed-character-choice-width.md](/workspace/typescript/dnd/plans/pba25-unit-backed-character-choice-width.md)
-
-Next action: move remaining Core direct character-choice width into Surface
-Unit records/readers, Unit-backed creation holes, selected Unit refs, and the
-minimum retained build facts needed for later projection-boundary cleanup.
-
-Acceptance summary: subclass, feat/ASI/Epic Boon, multiclass skill/tool, and
-proficiency choice families that remain needed for promoted workflows are
-represented through Surface language and runtime support gates, not Core enums,
-parallel tables, or authored-id dispatch in non-Surface packages. This task
-owns the generic feature-grant and retained-Unit path needed by PBA24 and
-PBA25A, but does not attach Cunning Action battle support from MCP or complete
-the broader `CharacterBuild`/Character Sheet boundary cleanup.
-
-Verification summary: RAW/UL check per widened choice family, Surface
-schema/reader tests, character-creation reducer and finalization tests, QNT/MBT
-updates only for changed reducer behavior or bridge shapes,
-`pnpm check:authored-id-dispatch`, `/simplify` convergence.
-
-Retry Guidance:
-
-- Keep subclass choice width executable, not schema-only: discover subclass
-  holes from Surface Unit facts, retain the selected subclass Unit ref, and
-  project selected subclass feature grants into `CharacterBuild` where the
-  promoted workflow needs them.
-- For generic `grant_proficiency` choices, finalization must project selected
-  class-feature proficiency grants into build proficiencies. Do not stop at
-  hole discovery or support-gate admission.
-- Do not admit Ability Score Improvement as a supported feat option until the
-  Ability Score Improvement feat opens executable ability-score choice holes
-  and finalization projects the selected increases into `CharacterBuild`
-  ability scores with the SRD cap enforced.
-- When adding authored Surface facts for subclass, Ability Score Improvement,
-  Epic Boon, multiclass, or proficiency grants, update each record provenance
-  span so every newly modeled SRD fact is covered by the cited local SRD
-  passage.
-
-Plan Impact: PBA24 is done. PBA25A is ready for research.
-
-### Task 79 - PBA25A - Refactor Character Build Projection Boundary
-
-Status: `done`
-
-Depends on: PBA25
-Blocks: PBA26
-
-Research plan:
-[pba25a-character-build-projection-boundary.md](/workspace/typescript/dnd/plans/pba25a-character-build-projection-boundary.md)
-
-Closeout: `CharacterBuild` now stores durable identity and non-derivable choice
-evidence. HP, Hit Dice, total proficiencies, armor training, deterministic
-feature refs, resources, and battle/session spell slot capacity are projected
-from `CharacterBuild + UnitCatalog` at the boundary that needs them.
-Spellcasting is source-scoped with explicit `spellcasting`/`pactMagic` slot
-pools, and build equipment separates owned items from loadout item ids.
-
-Acceptance summary: `CharacterBuild` no longer stores deterministic granted
-feature lists, proficiencies, armor training, max HP, resources, global
-spellcasting facts, or active-equipment state when those facts can be derived
-from progression, origin Units, selected choices, equipment ownership, and the
-catalog. Creation holes, fill validation, and finalization share one
-support-sliced projection path. Spell access is source-scoped, slot pools are
-explicit (`spellcasting` vs `pact_magic`), and owned equipment is distinct from
-loadout.
-
-Verification summary: RAW/PHB/UL agent check completed during planning;
-character-creation and MCP projection tests updated; docs updated for
-`README.md`/`VOCABULARY.md`; package typechecks and focused tests passed. No
-battle MBT was run because battle-runtime behavior did not change.
-
-Plan Impact: if successful, unblock PBA26.
-
-### Task 80 - PBA26 - Define Character Sheet Session Boundary And Migrate App
-
-Status: `ready-for-implementation-after-light-research`
-
-Depends on: PBA25A
-Blocks: PBA27
-
-Research plan:
-[pba26-character-sheet-session-app-migration.md](/workspace/typescript/dnd/plans/pba26-character-sheet-session-app-migration.md)
-
-Next action: implement the promoted Character Sheet boundary. Add
-`@dnd/character-sheet-runtime` for local Character Sheet state and
-`@dnd/character-battle-runtime` for Character Sheet <-> battle-runtime adapters,
-then migrate MCP/app character workflows to those packages and remove app Core
-dependency.
-
-Scaffold checkpoint: branch `codex/pba26-character-sheet-runtime` creates
-package shells for `@dnd/character-sheet-runtime` and
-`@dnd/character-battle-runtime`; both package typechecks pass. Next Ralph loop
-should begin by moving MCP's existing executable sheet/session state into
-`@dnd/character-sheet-runtime`.
-
-Acceptance summary: app character creation and character-session UI no longer
-depend on `@dnd/core` or Core character/session APIs. `CharacterBuild` remains
-durable build/progression evidence. `CharacterSheet` is the local player
-character in-play owner, with executable state only; future temp HP, Hit Dice,
-feature resources, and mutable equipment state have documented homes but are
-not stored as inert placeholders. Character/battle projection and battle
-handoff settlement live in `@dnd/character-battle-runtime`, not MCP, app, or
-`@dnd/battle-runtime`.
-
-Verification summary: app and MCP Core-import searches, app typecheck/tests,
-MCP typecheck/tests, Playwright screenshots for changed app flows, no battle
-MBT unless snapshot semantics change, `/simplify` convergence.
-
-Plan Impact: if successful, unblock PBA27 when PBA24 is also complete.
-
-### Task 81 - PBA27 - Core Quarantine And Deletion Cutover
-
-Status: `blocked`
-
-Depends on: PBA24, PBA26
-Blocks: PBA28
-
-Research plan:
-[pba27-core-quarantine-deletion-cutover.md](/workspace/typescript/dnd/plans/pba27-core-quarantine-deletion-cutover.md)
-
-Next action: remove or quarantine Core only after the PBA23 ledger has no
-production blockers and promoted package gates own replacement behavior.
-
-Acceptance summary: no production package imports `@dnd/core`; old Core battle,
-creature, and character behavior is either promoted, explicitly restore-source
-only, or obsolete; workspace scripts and package metadata no longer keep Core in
-the active promoted build/test path.
-
-Verification summary: workspace Core-import searches, package manifest/script
-checks, promoted Surface/character-creation/battle-runtime/MCP/app checks, no
-legacy Core MBT as a gate, `/simplify` convergence.
-
-Plan Impact: if successful, unblock PBA28.
-
-### Task 82 - PBA28 - MBT Consolidation And Shared Algebra Parity
-
-Status: `blocked`
-
-Depends on: PBA27
-Blocks: future tasks
-
-Research plan:
-[pba28-mbt-consolidation-shared-algebra-parity.md](/workspace/typescript/dnd/plans/pba28-mbt-consolidation-shared-algebra-parity.md)
-
-Next action: after Core quarantine/deletion, consolidate the active proof graph
-around package-local shared algebra MBT/proofs and selective promoted runtime
-MBT.
-
-Acceptance summary: `@dnd/shared-algebras` has a durable package-local parity
-pattern for stateful semantic algebras; each state-transition algebra has
-focused deterministic TS tests plus Quint MBT replay or documented
-Quint invariant/proof coverage; battle-runtime integrated MBT remains
-selective; broad authored-record width remains deterministic contract tests.
-
-Verification summary: package-local shared-algebras typecheck/tests and
-selected Quint proof/MBT commands, promoted runtime documentation checks, no
-legacy Core MBT as a gate, no broad battle MBT unless a promoted integrated
-slice is intentionally changed, `/simplify` convergence.
-
-### Task 83 - PBA29 - Tighten Stat Block Multiattack Dispatch Continuation
-
-Status: `blocked`
-
-Depends on: PBA28
-Blocks: future tasks
-
-Research plan: inline from review of `9fb8bc86`.
-
-Next action: decide and encode the lifecycle of pending Stat Block Multiattack
-dispatch resources. Current promoted runtime spends the monster's Attack action
-and grants named dispatch attack resources, but normal movement discovery is not
-suppressed while those resources remain. Movement is only the first observed
-example; the real decision is the complete RAW/project action and command
-surface while a Multiattack continuation is open.
-
-Acceptance summary: the chosen rule is explicit in code, QNT, docs, and tests.
-If pending dispatches are an immediate continuation, movement, stand-from-prone,
-bonus actions, free commands, spell/feature activations, and any other
-non-Multiattack turn options are unavailable unless RAW/project guidance says
-they are part of or allowed during that continuation. Dispatches are spent,
-cancelled, or otherwise closed by an explicit operation.
-If movement between Multiattack dispatches is accepted from RAW, that is also
-encoded as an explicit project decision inside the same whole-surface contract
-and tested so it is not accidental.
-
-Verification summary: RAW/UL check for Stat Block Multiattack and Moving
-between Attacks, focused battle-runtime reducer tests, package-local QNT/MBT
-update if the dispatch continuation changes reducer semantics, MCP workflow
-test if public available-action output changes, `/simplify` convergence.
+- Read `.references/srd-5.2.1/Playing-the-Game.md` Dropping to 0 Hit Points,
+  Falling Unconscious, Death Saving Throws, Damage at 0 Hit Points, and
+  Healing.
+- Checked `UBIQUITOUS_LANGUAGE.md` Hit Points and Death, Damage, Conditions, and
+  Action Lifecycle.
+- Checked `ASSUMPTIONS.md` entries that govern monster-vs-character zero-HP
+  policy and battle/session handoff.
+- `pnpm exec quint typecheck packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt`
+- `pnpm exec quint typecheck packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt`
+- `pnpm exec quint test packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt`
+- `pnpm exec quint run packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt --max-samples=2000 --max-steps=8 --invariant=invariant --verbosity=1 --backend=rust`
+- `pnpm exec quint compile packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt --target=json --out=/tmp/qcore2_zero_hit_point_lifecycle.json --verbosity=1`
+- Serialized Apalache:
+  `pnpm exec quint verify packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt --inductive-invariant=invariant --invariant=invariant --max-steps=1 --verbosity=1`
+- No battle MBT because no TypeScript reducer behavior changed.
+- `/simplify` convergence:
+  - Round 1 found one Quint scoping issue in the inductive action binding;
+    fixed by moving the `nextLifecycle` binding outside the `all` block.
+  - Round 2 found no additional structural issue: QCORE2 keeps Surface out of
+    QNT, keeps death canonical in `CreatureVitals`, avoids a duplicate death
+    flag in the Death Saving Throw lifecycle, records a branch budget, and
+    verifies with serialized Apalache.

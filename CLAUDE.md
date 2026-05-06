@@ -44,7 +44,7 @@ General design rule:
 
 ## Domain-language reflex (extends SRD-parity rules above)
 
-When a union type feels off, the signal to refactor is **domain conflation**, not *just* "is this type-safe?" Type safety matters a lot; it is necessary but not sufficient. A mixed union whose name fits only half its members already lies about the world even if every variant typechecks. Justify splits/renames in domain terms first (e.g., "rest-triggered" vs "calendar-time-triggered" are distinct SRD triggers), and let type safety follow.
+When a union type feels off, the signal to refactor is **domain conflation**, not _just_ "is this type-safe?" Type safety matters a lot; it is necessary but not sufficient. A mixed union whose name fits only half its members already lies about the world even if every variant typechecks. Justify splits/renames in domain terms first (e.g., "rest-triggered" vs "calendar-time-triggered" are distinct SRD triggers), and let type safety follow.
 
 ## Connascence discipline (CRITICAL)
 
@@ -103,11 +103,16 @@ Worktree creation sometimes branches from a stale ref instead of master's HEAD. 
 
 ## MBT tests are nondeterministic
 
-MBT traces are generated with random seeds. Failures may not reproduce on the next run. When an MBT test fails, the error includes the seed (e.g., `seed: 0xfa2124eb`). **Always reproduce before fixing:** `cd packages/core && QUINT_SEED=0xfa2124eb npx vitest run -t "replays Quint"`. Do not dismiss MBT failures as flaky — reproduce with the seed, diagnose, and fix unless the user explicitly says otherwise.
+MBT traces are generated with random seeds. Failures may not reproduce on the
+next run. When an MBT test fails, the error includes the seed (e.g.,
+`seed: 0xfa2124eb`). **Always reproduce before fixing** with the same package
+test and `QUINT_SEED`. Do not dismiss MBT failures as flaky; reproduce with the
+seed, diagnose, and fix unless the user explicitly says otherwise.
 
 ## MBT runs are expensive
 
-Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.** See `QUINT_CONNECT_TROUBLESHOOT.md` for performance analysis.
+Promoted battle-runtime MBT is selective, and old v0/root battle MBT is
+restore-source material only. **Treat MBT runs as a scarce resource.**
 
 - Never run battle MBT for exploratory questions (checking a variable shape, confirming a format). Answer those by reading source code, quint-connect internals, ITF docs, or writing a focused unit test.
 - Only run battle MBT for actual end-to-end validation after code changes are complete.
@@ -115,18 +120,18 @@ Battle MBT (`battle.qnt`) is slow. **Treat runs as a scarce resource.** See `QUI
 - If a command gets backgrounded, wait for the task completion notification — do not re-issue.
 - **MBT run observation protocol (MANDATORY):** Always run MBT with `run_in_background`. Wrap the command in a timing shell: `START=$(date +%s); <cmd> 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"`. For runs expected >60s, add a 1-minute progress reporter alongside it.
 - **Debug without re-running when possible:** Once you have a failing trace (seed + action sequence), prefer these over re-running MBT:
-  1. Write a focused TS unit test that replays the specific event sequence against XState actors directly (milliseconds, no Quint).
+  1. Write a focused TS unit test that replays the specific event sequence against package runtime reducers directly (milliseconds, no Quint).
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
-  3. Trace through the Quint spec logic manually by reading the code.
-- **MBT run tiers (choose the right one!):** Wall-clock times include vitest startup (~8–10s overhead). See `BENCHMARK_METHODOLOGY.md` for full measurement data (Night 1, 2026-04-05).
-  - **Tier 1 — Battle dev (~15s wall-clock):** `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 MBT_STEPS=3 npx vitest run src/battle-projection.mbt.test.ts` — **Use this for iterative development.** Requires compiled cache (`node scripts/compile-battle-spec.cjs`). Vitest overhead dominates; 3-step and 5-step are the same wall-clock (~14s median). Evaluator-only time is ~5–8s.
-  - **Tier 1b — Creature MBT (~17s wall-clock):** `cd packages/core && MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/creature.mbt.test.ts` — creature-level parity only (no battle.qnt). Use when changes are purely creature-level.
-  - **Tier 2 — Pre-commit (~12–18s/seed on host, ~25s on Docker):** `cd packages/core && MBT_DEV=1 npx vitest run src/battle-projection.mbt.test.ts` — 1 trace × 5 steps, 10 seeds via `MBT_DEV`. Background it. **Needs ~2GB+ free RAM** — OOMs when available memory is low. On memory-constrained environments, use Tier 1 or run on the host machine.
-  - **Tier 3 — CI validation (~15 min):** `MBT_STEPS=10 ./scripts/mbt-fuzz.sh 50` — 50 seeds × 1 trace × 10 steps. Use the fuzz script, NOT a single vitest invocation: a single call will hit a slow seed and hang. The fuzz script isolates each seed with a per-seed timeout.
-  - **Tier 4 — Overnight (~92–105s/seed, unlimited):** `MBT_STEPS=640 MBT_TIMEOUT=150 ./scripts/mbt-fuzz.sh` — 640 steps/seed, runs indefinitely. Add `MBT_SAVE_TRACES=1` to save full ITF traces to `fat-traces/<seed>/` for offline analysis. Validated 2026-04-07: 314 seeds × 640 steps, 0 failures, 0 timeouts.
+  3. Trace through the package-local Quint spec logic manually by reading the code.
+- **Promoted battle-runtime MBT:** use
+  `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`
+  for completed battle-runtime behavior changes that need integrated MBT.
+- **Legacy v0 MBT:** `packages/v0`, root `battle.qnt`, `creature.qnt`, and
+  old v0 MBT are quarantined restore-source material. Do not add them to
+  promoted workspace gates.
+- **Old fuzz tiers:** root fuzz and overnight scripts target the old v0/root
+  proof lane. They are not promoted verification gates.
   - **Coverage lever is `MBT_TRACES`, not `MBT_MAX_SAMPLES`.** `MBT_TRACES=N` generates N distinct random walks per vitest call. `MBT_MAX_SAMPLES` is a search budget for invariant checking — irrelevant for MBT trace generation (first walk always succeeds). Do not escalate `MBT_MAX_SAMPLES` expecting more coverage.
-  - **Step count scaling (measured 2026-04-07):** Per-seed timing scales linearly with steps: 10→9s, 20→11s, 40→13s, 80→18s, 160→29s, 320→51s, 640→97s, 1280→>180s. At 1280 steps the evaluator exceeds the 180s per-seed watchdog in `mbt-fuzz.sh` (`MBT_TIMEOUT`). **640 steps is the practical limit** with the default 180s watchdog. Default Tier 1/2/3 use 3–10 steps — far below this.
-  - **Default to Tier 1.** Never run Tier 2/3/4 for exploratory work. See `QUINT_CONNECT_TROUBLESHOOT.md` for why.
 - **If a seed is slow**, re-run without `QUINT_SEED` for a fresh one. Slow-seed rate measured at ~49% for invariant fuzzer (5 samples × 5 steps, 120s timeout) and 0% for battle MBT Tier 1 (10 seeds). Slow seeds are caused by branch count (Finding 14), not nondet range sizes.
 - **Slow evaluator? Try different seeds first.** Slow seeds are caused by branch count (Finding 14), not nondet range sizes. Re-run with fresh seeds before considering range narrowing. If narrowing is truly necessary, keep domain-correct ranges as comments and document the narrowing rationale in the code.
 
@@ -139,11 +144,11 @@ Things that cause non-obvious errors, not discoverable by reading code.
 - **Cross-file imports:** Must use `from` clause: `import dnd.* from "./dnd"` (bare `import dnd.*` fails silently with "unknown module").
 - **Test syntax:** Multiple assertions use `all { assert(x), assert(y) }` — `and { }` causes parse errors in `run` blocks.
 - **Verbose test output:** `quint test --match "pattern"` for per-test output (default only shows module name).
-- **Rust evaluator GLIBC mismatch:** If MBT tests fail with `EPIPE`, run `./scripts/build-quint-evaluator.sh` (re-run after `npm install`).
+- **Rust evaluator GLIBC mismatch:** If MBT tests fail with `EPIPE`, run `./scripts/build-quint-evaluator.sh` (re-run after `pnpm install`).
 - **Apalache / Java:** JDK 17 is installed at `~/.local/java/jdk-17.0.18+8-jre/`. The Bash tool doesn't source `.zshrc`, so prefix Apalache commands with: `export PATH="$HOME/.local/java/jdk-17.0.18+8-jre/bin:$PATH" &&`
 - **Nondet must be bare `oneOf()`:** `nondet x = if (cond) A.oneOf() else B.oneOf()` is a parse error (QNT204). The outermost expression must be `oneOf()` or `apalache::generate` — no wrapping `if`, `val`, or function calls. If you need conditional narrowing, accept the wider set and let the guard filter.
-- **Apalache record sets:** Apalache needs `var.in(Set)` for record-typed vars before field access. Quint's only way to express record sets is nested `map().flatten()` which enumerates the Cartesian product. This works for small records (~7K elements for FighterState) but is infeasible for large records (CreatureState, TurnState). Don't attempt to build VALID_*_STATES for records with 10+ fields or wide integer ranges.
-- **Frame condition verification recipe:** After bulk-adding new class state vars to frame conditions, some actions get missed due to line-ending variations. To catch stragglers: `grep -n "barbarianLevel' = barbarianLevel" creature.qnt | grep -v "newClassState'"` — finds every frame condition that has the *previous* class but is missing the *new* class. Fix all hits before typechecking.
+- **Apalache record sets:** Apalache needs `var.in(Set)` for record-typed vars before field access. Quint's only way to express record sets is nested `map().flatten()` which enumerates the Cartesian product. This works for small records (~7K elements for FighterState) but is infeasible for large records (CreatureState, TurnState). Don't attempt to build VALID\_\*\_STATES for records with 10+ fields or wide integer ranges.
+- **Frame condition verification recipe:** After bulk-adding new class state vars to frame conditions, some actions get missed due to line-ending variations. To catch stragglers: `grep -n "barbarianLevel' = barbarianLevel" creature.qnt | grep -v "newClassState'"` — finds every frame condition that has the _previous_ class but is missing the _new_ class. Fix all hits before typechecking.
 - **Rust backend `mbt::actionTaken` bug:** Bare actions inside `match` arms report the composite name (e.g., `"battleStep"`) instead of the leaf name. Only `any { }` branches get leaf-level tracking. Workaround: wrap every single-action `match` arm in `any { action, }`. See comment in `battle.qnt` above `battleStep`. Upstream Quint bug — not yet filed.
 - **ITF variant format:** Parameterized Quint variants (e.g., `RCounterspell(false)`) arrive in ITF as `{tag: "RCounterspell", value: false}`, NOT `{"RCounterspell": false}`. Use `v.value` to access the parameter — `Object.values(v)[0]` returns the tag string. See `ITFVariantWithValue` in `mbt-shared.ts`.
 
@@ -159,7 +164,12 @@ The Quint specs are a **direct formalization of the SRD** — nothing more, noth
 
 ## Quint parity (CRITICAL)
 
-Promoted Unit/StatBlock-backed battle behavior MUST maintain parity with `packages/battle-runtime/battle-runtime.qnt` and the promoted `@dnd/battle-runtime` tests. `battle-machine.ts` and root `battle.qnt` remain a legacy/Core proof-source lane; use them for restore/reference work, not as a competing active authority for promoted battle behavior. `machine.ts` and `creature.mbt.test.ts` remain valuable for helper/local-projection coverage.
+Promoted Unit/StatBlock-backed battle behavior MUST maintain parity with
+`packages/battle-runtime/battle-runtime.qnt` and the promoted
+`@dnd/battle-runtime` tests. `battle-machine.ts`, `machine.ts`, root
+`battle.qnt`, and `creature.mbt.test.ts` remain a legacy/Core proof-source
+lane; use them for restore/reference work only, not as a competing active
+authority or gate for promoted battle behavior.
 
 - **Never** add logic to an XState machine that diverges from the relevant Quint model without updating the spec first.
 - **Never** "fix" runtime behavior that the relevant authoritative Quint model handles differently — update the spec or accept it as spec-level intentional.
@@ -180,23 +190,33 @@ Promoted Unit/StatBlock-backed battle behavior MUST maintain parity with `packag
 - **Brand meaningful primitives early:** If a primitive (`string`, `number`, etc.) carries protocol/domain meaning, give it a branded type at the boundary instead of passing the raw primitive deeper into the code.
 
 - **Typed constant arrays:** When defining a fixed list of domain values (conditions, damage types, etc.), use `as const satisfies ReadonlyArray<T>` to get both literal types and compile-time validation:
+
   ```typescript
-  const CURABLE = ["poisoned", "blinded", "charmed"] as const satisfies ReadonlyArray<Condition>
+  const CURABLE = [
+    "poisoned",
+    "blinded",
+    "charmed",
+  ] as const satisfies ReadonlyArray<Condition>;
   ```
+
   This catches typos and invalid values at compile time. Prefer this over plain `string[]` or unvalidated `as const`.
 
 - **Derive union types from constant arrays:** When a union type and a runtime array contain the same values, define the array first and derive the type with `typeof X[number]`. Single source of truth — no duplication:
+
   ```typescript
-  const CHOICES = ["push", "sap", "slow"] as const
-  type Choice = typeof CHOICES[number]  // "push" | "sap" | "slow"
+  const CHOICES = ["push", "sap", "slow"] as const;
+  type Choice = (typeof CHOICES)[number]; // "push" | "sap" | "slow"
   ```
+
   When subsets exist, spread them into a combined array and derive from that:
+
   ```typescript
-  const BASE = ["a", "b"] as const
-  const ADVANCED = ["c", "d"] as const
-  const ALL = [...BASE, ...ADVANCED] as const
-  type Effect = typeof ALL[number]  // "a" | "b" | "c" | "d"
+  const BASE = ["a", "b"] as const;
+  const ADVANCED = ["c", "d"] as const;
+  const ALL = [...BASE, ...ADVANCED] as const;
+  type Effect = (typeof ALL)[number]; // "a" | "b" | "c" | "d"
   ```
+
   Place these arrays in the types section (top of file, before interfaces) so the derived type is available for interface fields. Never hand-write a union type that duplicates a `const` array.
 
 - **Exhaustive matching with `effect/Match`:** All `switch` statements on discriminated unions or literal unions must use `effect/Match` with `Match.exhaustive`. Never use `default` branches — they silently swallow new variants and hide bugs. For tagged unions (discriminant field `tag`), use the shared `byTag` helper from `battle-machine-helpers.ts`. For string literal unions, use `Match.when`:
@@ -230,16 +250,15 @@ After significant changes, run `/simplify` repeatedly until it converges — i.e
 
 ## Invariant scenario tests
 
-`npx quint test --match "inv_" dndTest.qnt` — deterministic pure-function tests for creature-level invariant edge cases (death saves, stability, concentration, conditions, effects, exhaustion, HP).
+Root `dndTest.qnt` is legacy/Core restore-source material. Use package-local
+runtime tests and package-local Quint specs for promoted verification.
 
 ## Fuzzing
 
-`./scripts/fuzz-all.sh [N]` — runs battle MBT parity + invariant fuzzers in parallel. Failures → `mbt-failures.jsonl` / `invariant-failures.jsonl`. **Needs ~12GB+ RAM** — on constrained containers (<16GB), run them separately.
+Root fuzz scripts target the legacy/Core proof lane. They are not active
+promoted verification gates.
 
-- `./scripts/mbt-fuzz.sh [N]` — battle MBT fuzzer (default). Set `MBT_TEST=creature` for creature MBT. Includes per-seed timeout (180s default, set `MBT_TIMEOUT`), timing data (`mbt-timing.jsonl`), and structured error extraction. Set `MBT_SAVE_TRACES=1` to save per-seed ITF traces to `fat-traces/<seed>/trace_0.itf.json`.
-- `./scripts/invariant-fuzz.sh [N]` — invariant fuzzer. Per-seed timeout (120s default, set `FUZZ_TIMEOUT`). ~49% of seeds timeout at 5 samples × 5 steps.
 - `./scripts/fuzz-monitor.sh` — health checker: kills zombie evaluators, analyzes failure patterns, reports timing stats. Designed for cron.
-- `./scripts/measure-tier-timing.sh [N]` — benchmarks MBT tier wall-clock times. Results in `tier-timing.jsonl`. See `BENCHMARK_METHODOLOGY.md`.
 
 ## QA pipeline
 

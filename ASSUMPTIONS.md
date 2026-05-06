@@ -363,3 +363,11 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rationale:** The promoted runtime stores typed damage entries so target adjustments can be applied after modifiers. Proportional allocation preserves the scalar total while keeping each typed entry nonnegative and deterministic.
 
 **Changes:** Reaction damage-roll reductions and hit-triggered attack-damage reductions use this allocation before Resistance, Vulnerability, and Immunity.
+
+## A44: Stat Block Multiattack dispatches are a named-attack continuation
+
+**Assumption:** Once a monster takes Stat Block Multiattack, the granted named dispatch attacks are a continuation of that Attack action. Until those dispatch resources are spent or the monster ends its turn, ordinary turn options other than Movement between attacks are unavailable: standing from Prone, other standard actions, Bonus Actions, non-Movement runtime commands, spells, feature activations, and unrelated reactions/Legendary Action subjects are not discoverable or replayable as the current turn surface.
+
+**Rules basis:** SRD 5.2.1 Monsters > Overview, "Multiattack" says the listed attacks and additional abilities are made as part of the monster's Attack action. Rules Glossary "Attack [Action]" allows movement between attacks for a feature that gives more than one attack as part of the Attack action, so Movement remains available while pending dispatch attacks are open. Playing the Game "Bonus Actions" says a creature chooses when to take a Bonus Action unless the Bonus Action's timing is specified. This runtime chooses a named-attack continuation model for Stat Block Multiattack dispatch replay so the fixed named dispatch list cannot be interleaved with unrelated non-Movement battle commands unless a future task models another specific RAW-permitted interleave point.
+
+**Changes:** `packages/battle-runtime/src/battle-reducer.ts` treats pending `statBlockMultiattack` action resources as a surface gate: discovery returns matching dispatch attacks, Movement, and End Turn, and resolution rejects other battle subjects as stale. `packages/battle-runtime/battle-runtime.qnt` names the continuation predicate and asserts that dispatches close by being spent or by ending the turn.

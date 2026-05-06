@@ -33,8 +33,8 @@ const ALLOWLIST_PATH_RULES = [
     pattern: /^packages\/mcp\/src\/(?:composition-root|content-tools)\.ts$/,
   },
   {
-    reason: "legacy-core-quarantine",
-    pattern: /^packages\/core\/src\//,
+    reason: "legacy-v0-quarantine",
+    pattern: /^packages\/v0\/src\//,
   },
   {
     reason: "fixture-boundary",

@@ -5991,27 +5991,85 @@ describe("battle runtime", () => {
         },
       },
     ]);
-    expect(
-      discoverBattleActs(multiattackState).map((act) => act.subject),
-    ).toEqual(
-      expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Scimitar",
-        },
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          attackName: "Shortbow",
-        },
-      ]),
+    const continuationActs = discoverBattleActs(multiattackState);
+    const continuationSubjects = continuationActs.map((act) => act.subject);
+    expect(continuationSubjects).toEqual([
+      {
+        tag: "action",
+        actorId: goblinId,
+        action: "attack",
+        attackName: "Scimitar",
+      },
+      {
+        tag: "action",
+        actorId: goblinId,
+        action: "attack",
+        attackName: "Shortbow",
+      },
+      { tag: "runtimeCommand", actorId: goblinId, command: "move" },
+      { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
+    ]);
+    expect(continuationSubjects).not.toContainEqual(subject);
+    expect(continuationActs.map((act) => act.label)).toEqual([
+      "Attack",
+      "Attack",
+      "Move",
+      "End Turn",
+    ]);
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: goblinId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: moveSubject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const afterMove = requireResolved(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: moveSubject,
+        fills: [
+          movementFill(moveHole, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).state;
+    expect(afterMove.currentTurnResources.actionResources).toEqual(
+      multiattackState.currentTurnResources.actionResources,
+    );
+    expect(afterMove.combatants.get(goblinId)?.movementSpentFeet).toBe(
+      movementFeet(5),
     );
     expect(
-      discoverBattleActs(multiattackState).map((act) => act.subject),
-    ).not.toContainEqual(subject);
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: {
+          tag: "action",
+          actorId: goblinId,
+          action: "disengage",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Dagger",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
 
     const shortbowSubject: BattleSubject = {
       tag: "action",
@@ -6072,7 +6130,7 @@ describe("battle runtime", () => {
         subject: shortbowSubject,
         fills: [targetChoice],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("Stat Block Multiattack remains gated when a dispatch has no positive literal count", () => {

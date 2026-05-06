@@ -5,8 +5,8 @@ This package contains reusable reducer/model algebras. It is separate from
 
 - `@dnd/shared` owns low-level scalar/domain types and package-neutral utilities.
 - `@dnd/shared-algebras` owns reusable semantic algebras that can be consumed by
-  runtime packages such as `@dnd/battle-runtime`,
-  `@dnd/character-creation-runtime`, and legacy `@dnd/core`.
+  runtime packages such as `@dnd/battle-runtime` and
+  `@dnd/character-creation-runtime`.
 
 ## Surface Dependency Policy
 
@@ -25,10 +25,9 @@ should not contain algebra modules.
 ## Algebra Inventory
 
 - `ability-score-algebra` - ability-score generation and assignment rules.
-  Its broad `AbilityScoreAssignment` helper type remains raw-number compatible
-  for legacy Core/app readers, while `abilityScoreAssignment(...)` parses
-  boundary input into `ParsedAbilityScoreAssignment` values backed by the shared
-  `AbilityScore` primitive for durable character-creation state.
+  `abilityScoreAssignment(...)` parses boundary input into
+  `ParsedAbilityScoreAssignment` values backed by the shared `AbilityScore`
+  primitive for durable character-creation state.
 - `action-economy-algebra` - turn resource availability, spending, and reset.
 - `armor-class-algebra` - structured Armor Class state and current AC reading.
 - `attack-roll-algebra` - d20 attack-roll hit adjudication.
@@ -44,6 +43,9 @@ should not contain algebra modules.
 - `runtime-dice-algebra` - rolled-dice validation and totaling.
 - `runtime-hole-algebra` - shared hole identity/refill vocabulary.
 - `validation-algebra` - small validation/result helpers.
+- `proofs/rule-core` - production Quint rule-core proofs. These are
+  stateless procedure contracts plus small owned proof machines, starting with
+  Hit Point damage in QCORE1.
 
 ## Runtime Hole Algebra
 
@@ -81,8 +83,65 @@ Keep coverage goals distinct:
 - **Reducer behavior coverage:** focused algebra tests and selective MBT for
   state transitions after inputs have already crossed the Surface boundary.
 
+## Proof Ownership Inventory
+
+Shared reducer behavior is proved in this package, not by restoring old Core
+MBT. State-transition semantic algebras need focused deterministic TypeScript
+tests plus one package-local proof lane. Pure scalar helpers, parsers, and
+Surface adapters use deterministic contract tests unless they grow reducer
+state.
+
+| Algebra                           | Classification                                  | Package-local parity lane                                                                                                                                                                        |
+| --------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `action-economy-algebra`          | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/action-economy-algebra-inductive.qnt`      |
+| `conditions-algebra`              | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/conditions-algebra-inductive.qnt`          |
+| `death-saves-algebra`             | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/death-saves-algebra-inductive.qnt`         |
+| `initiative-algebra`              | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; simulation-checked invariant in `proofs/initiative-algebra-invariant.qnt` |
+| `runtime-hole-algebra`            | replay identity vocabulary                      | no reducer transition owner here; consuming runtimes test fill/replay semantics at their own boundary                                                                                            |
+| `elapsed-time-algebra`            | shared elapsed-time scalar/projection re-export | deterministic coverage remains with `@dnd/shared/elapsed-time`; add package-local tests here only if this package owns new elapsed-time reducer state                                            |
+| `multiclass-prerequisite-algebra` | pure SRD prerequisite algebra                   | deterministic tests in `src/multiclass-prerequisite-algebra.test.ts`; Quint examples in `proofs/multiclass-prerequisite-algebra.qnt`                                                             |
+| `ability-score-algebra`           | parser/validation algebra                       | deterministic parser and assignment tests in `src/ability-score-algebra.test.ts`                                                                                                                 |
+| `character-advancement-algebra`   | pure progression projection algebra             | deterministic projection tests in `src/character-advancement-algebra.test.ts`                                                                                                                    |
+| `armor-class-algebra`             | pure scalar/helper algebra                      | deterministic consumers test structured AC projection where Armor Class enters a runtime                                                                                                         |
+| `attack-roll-algebra`             | pure scalar/helper algebra                      | deterministic consumers test hit adjudication where Attack Roll results enter a runtime                                                                                                          |
+| `runtime-dice-algebra`            | validation/helper algebra                       | deterministic consumers test dice validation at the runtime boundary                                                                                                                             |
+| `validation-algebra`              | validation helper                               | no MBT; callers test typed error paths at their parser boundary                                                                                                                                  |
+
+Do not add integrated battle-runtime MBT for another authored Unit, Spell, or
+Stat Block when the behavior uses one of the reducer families above unchanged.
+Use package-local algebra proof here plus deterministic catalog contract tests
+in the owning authored-data package.
+
+## Quint Rule Core
+
+Rule-core QNT lives in `proofs/rule-core/`.
+
+The rule-core proof layout follows the QCORE0 composition research:
+
+- reusable modules are stateless contracts/procedures;
+- stateful proof modules own their variables and import only stateless
+  procedures;
+- broad battle-level composition is not the first proof target;
+- each `any` action records a branch budget near the action.
+
+QCORE1 adds `hit-point-damage.qnt`, which models the SRD Hit Point damage
+procedure after a damage amount has already been resolved by the caller and
+while the target has positive Hit Points. It covers Temporary Hit Points, Hit
+Point clamping, monster death at 0 Hit Points, and player-character instant
+death from massive damage. Damage at 0 Hit Points belongs to a separate Death
+Saving Throw failure procedure.
+
 ## Verification
 
 Algebras should have focused deterministic tests. When an algebra models state
 transition behavior with a corresponding Quint file, its package tests should
 replay that model against the TypeScript module that runtime packages import.
+
+Useful checks:
+
+```sh
+pnpm --filter @dnd/shared-algebras typecheck
+pnpm --filter @dnd/shared-algebras test:deterministic
+MBT_TRACES=1 MBT_STEPS=12 pnpm --filter @dnd/shared-algebras test:mbt
+pnpm --filter @dnd/shared-algebras proof:quint
+```

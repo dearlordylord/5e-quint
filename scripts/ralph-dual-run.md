@@ -64,7 +64,7 @@ In Ralph context, "add a task" should mean all of:
 2. sync that plan into the active Ralph launcher worktree and commit it there;
 3. verify the files are identical before saying the live run will pick it up.
 
-Task worktrees reuse the main repo install by symlinking `node_modules`, `packages/core/node_modules`, and `packages/mcp/node_modules` into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
+Task worktrees reuse the main repo install by symlinking `node_modules`, `packages/v0/node_modules`, and `packages/mcp/node_modules` into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
 
 The harness also kills stray fuzz / overnight MBT processes and removes generated MBT artifact files under `packages/` before the run starts, before each task begins, and after each task ends. Ralph task runs are not allowed to leave `mbt-failure-battle-*.log`, `mbt-failures.jsonl`, `mbt-timing.jsonl`, `mbt-fuzz.log`, `mbt-seed-blacklist.txt`, or `packages/fat-traces/` behind.
 
@@ -210,7 +210,7 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
   --opencode-timeout-seconds 600 \
   --codex-model gpt-5.3-codex-spark \
   --max-task-attempts 3 \
-  --test-command "pnpm --filter @dnd/core test" \
+  --test-command "pnpm --filter @dnd/v0 test" \
   --output-branch "ralph/my-run/integration" \
   --run-id "my-run" \
   --keep-worktrees

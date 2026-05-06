@@ -1,263 +1,50 @@
 import type {
   CharacterDraft,
   CharacterDraftId,
-  CharacterBuild,
 } from "@dnd/character-creation-runtime";
-import { characterBuildSpellcastingSlotCapacity } from "@dnd/character-creation-runtime";
 import type {
-  BattleId,
   BattleFill,
-  CharacterBattleSpellSlotState,
+  BattleId,
   BattleState,
   BattleSubject,
   CharacterId,
 } from "@dnd/battle-runtime";
 import { characterId, snapshotBattle } from "@dnd/battle-runtime";
 import {
-  resourceCount,
-  spellSlotLevel,
-  type Hp as HpType,
-  type ResourceCount,
-  type SpellSlotLevel,
-} from "@dnd/shared/types";
+  characterSheetCurrentHp,
+  characterSheetSpellSlots,
+  createFreshCharacterSheet,
+  type CharacterSheet,
+  type CharacterSheetHitPoints,
+  type CharacterSheetInput,
+  type CharacterSheetPositiveHpUnconscious,
+  type CharacterSheetZeroHpLifecycle,
+  type CharacterSheetZeroHpLifecycleInput,
+} from "@dnd/character-sheet-runtime";
 import type {
   StatBlockCatalog,
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
-import {
-  characterSessionHitPoints,
-  characterSessionHitPointsCurrentHp,
-  characterSessionHitPointsInitialConditions,
-  characterSessionHitPointsPositiveHpUnconscious,
-  characterSessionHitPointsZeroHpLifecycle,
-  characterSessionIssue,
-  type CharacterSessionHitPoints,
-  type CharacterSessionIssue,
-  type CharacterSessionPositiveHpUnconscious,
-  type CharacterSessionZeroHpLifecycleInput,
-} from "./session-hit-points.ts";
-export type {
-  CharacterSessionHitPoints,
-  CharacterSessionIssue,
-  CharacterSessionPositiveHpUnconscious,
-  CharacterSessionZeroHpLifecycle,
-  CharacterSessionZeroHpLifecycleInput,
-} from "./session-hit-points.ts";
 
-type SpellcastingCharacterBuild = CharacterBuild & {
-  readonly spellcasting: NonNullable<CharacterBuild["spellcasting"]>;
+export type AvailableCharacterSession = CharacterSheet;
+export type AvailableCharacterSessionInput = CharacterSheetInput;
+export type CharacterSessionIssue = {
+  readonly tag: "characterSessionIssue";
+  readonly message: string;
 };
-
-type NonSpellcastingCharacterBuild = CharacterBuild & {
-  readonly spellcasting?: undefined;
-};
-
-export type AvailableCharacterSession =
-  | {
-      readonly tag: "available";
-      readonly characterId: CharacterId;
-      readonly build: SpellcastingCharacterBuild;
-      readonly hitPoints: CharacterSessionHitPoints;
-      readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
-    }
-  | {
-      readonly tag: "available";
-      readonly characterId: CharacterId;
-      readonly build: NonSpellcastingCharacterBuild;
-      readonly hitPoints: CharacterSessionHitPoints;
-      readonly spellSlots?: never;
-    };
-
-export type CharacterSpellSlotExpenditure = {
-  readonly spellLevel: SpellSlotLevel;
-  readonly expended: ResourceCount;
-};
-
-export type AvailableCharacterSessionInput = {
-  readonly characterId: CharacterId;
-  readonly build: CharacterBuild;
-  readonly currentHp: HpType;
-  readonly positiveHpUnconscious?: CharacterSessionPositiveHpUnconscious;
-  readonly zeroHpLifecycle?: CharacterSessionZeroHpLifecycleInput;
-  readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
-};
-
-export function availableCharacterSession(
-  input: AvailableCharacterSessionInput,
-): Either.Either<AvailableCharacterSession, CharacterSessionIssue> {
-  if (isNonSpellcastingBuild(input.build)) {
-    if (input.spellSlots !== undefined) {
-      return characterSessionIssue(
-        "Non-spellcasting character session cannot carry Spell Slot state.",
-      );
-    }
-    const hitPoints = characterSessionHitPoints(input);
-    if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
-    return Either.right({
-      tag: "available",
-      characterId: input.characterId,
-      build: input.build,
-      hitPoints: hitPoints.right,
-    });
-  }
-
-  if (!isSpellcastingBuild(input.build)) {
-    return characterSessionIssue(
-      "Character build spellcasting state is inconsistent.",
-    );
-  }
-  const build = input.build;
-  const hitPoints = characterSessionHitPoints(input);
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
-  const spellSlotExpenditures = spellSlotExpendituresFromInput({
-    characterId: input.characterId,
-    build,
-    currentHp: input.currentHp,
-    spellSlots: input.spellSlots,
-  });
-  if (Either.isLeft(spellSlotExpenditures)) {
-    return Either.left(spellSlotExpenditures.left);
-  }
-
-  return Either.right({
-    tag: "available",
-    characterId: input.characterId,
-    build,
-    hitPoints: hitPoints.right,
-    spellSlotExpenditures: spellSlotExpenditures.right,
-  });
-}
-
-export function characterSessionCurrentHp(
-  session: AvailableCharacterSession,
-): HpType {
-  return characterSessionHitPointsCurrentHp(session.hitPoints);
-}
-
-export function characterBattleZeroHpLifecycle(
-  session: AvailableCharacterSession,
-): ReturnType<typeof characterSessionHitPointsZeroHpLifecycle> {
-  return characterSessionHitPointsZeroHpLifecycle(session.hitPoints);
-}
-
-export function characterBattleInitialConditions(
-  session: AvailableCharacterSession,
-): ReturnType<typeof characterSessionHitPointsInitialConditions> {
-  return characterSessionHitPointsInitialConditions(session.hitPoints);
-}
-
-export function characterBattlePositiveHpUnconscious(
-  session: AvailableCharacterSession,
-): ReturnType<typeof characterSessionHitPointsPositiveHpUnconscious> {
-  return characterSessionHitPointsPositiveHpUnconscious(session.hitPoints);
-}
-
-export function characterBattleSpellSlots(
-  session: AvailableCharacterSession,
-): readonly CharacterBattleSpellSlotState[] | undefined {
-  if (!("spellSlotExpenditures" in session)) return undefined;
-  return characterBuildSpellcastingSlotCapacity(session.build).map((slot) => {
-    const expenditure = requireSpellSlotExpenditure(
-      session.spellSlotExpenditures,
-      spellSlotLevel(slot.spellLevel),
-    );
-    return {
-      spellLevel: spellSlotLevel(slot.spellLevel),
-      count: resourceCount(slot.count),
-      expended: expenditure.expended,
-    };
-  });
-}
-
-function requireSpellSlotExpenditure(
-  expenditures: readonly CharacterSpellSlotExpenditure[],
-  spellLevel: SpellSlotLevel,
-): CharacterSpellSlotExpenditure {
-  const expenditure = expenditures.find(
-    (candidate) => candidate.spellLevel === spellLevel,
-  );
-  if (expenditure === undefined) {
-    throw new Error(
-      `Available spellcasting session is missing Spell Slot expenditure for level ${spellLevel}.`,
-    );
-  }
-  return expenditure;
-}
-
-function spellSlotExpendituresFromInput(
-  input: AvailableCharacterSessionInput & {
-    readonly build: SpellcastingCharacterBuild;
-  },
-): Either.Either<
-  readonly CharacterSpellSlotExpenditure[],
-  CharacterSessionIssue
-> {
-  const runtimeSlots =
-    input.spellSlots ??
-    characterBuildSpellcastingSlotCapacity(input.build).map((slot) => ({
-      spellLevel: spellSlotLevel(slot.spellLevel),
-      count: resourceCount(slot.count),
-      expended: resourceCount(0),
-    }));
-  const buildSlots = characterBuildSpellcastingSlotCapacity(input.build);
-  if (runtimeSlots.length !== buildSlots.length) {
-    return characterSessionIssue(
-      "Spell Slot state must match build capacity exactly.",
-    );
-  }
-  const runtimeLevels = new Set<number>();
-  for (const runtimeSlot of runtimeSlots) {
-    if (runtimeLevels.has(runtimeSlot.spellLevel)) {
-      return characterSessionIssue(
-        "Spell Slot state must not duplicate spell levels.",
-      );
-    }
-    runtimeLevels.add(runtimeSlot.spellLevel);
-  }
-  const expenditures = [];
-  for (const buildSlot of buildSlots) {
-    const runtimeSlot = runtimeSlots.find(
-      (candidate) =>
-        candidate.spellLevel === spellSlotLevel(buildSlot.spellLevel),
-    );
-    if (
-      runtimeSlot === undefined ||
-      runtimeSlot.count !== resourceCount(buildSlot.count) ||
-      !Number.isInteger(runtimeSlot.expended) ||
-      runtimeSlot.expended < 0 ||
-      runtimeSlot.expended > buildSlot.count
-    ) {
-      return characterSessionIssue(
-        `Spell Slot state does not match build capacity for level ${buildSlot.spellLevel}.`,
-      );
-    }
-    expenditures.push({
-      spellLevel: spellSlotLevel(buildSlot.spellLevel),
-      expended: resourceCount(runtimeSlot.expended),
-    });
-  }
-  return Either.right(expenditures);
-}
-
-function isSpellcastingBuild(
-  build: CharacterBuild,
-): build is SpellcastingCharacterBuild {
-  return build.spellcasting !== undefined;
-}
-
-function isNonSpellcastingBuild(
-  build: CharacterBuild,
-): build is NonSpellcastingCharacterBuild {
-  return build.spellcasting === undefined;
-}
+export type CharacterSessionHitPoints = CharacterSheetHitPoints;
+export type CharacterSessionPositiveHpUnconscious =
+  CharacterSheetPositiveHpUnconscious;
+export type CharacterSessionZeroHpLifecycle = CharacterSheetZeroHpLifecycle;
+export type CharacterSessionZeroHpLifecycleInput =
+  CharacterSheetZeroHpLifecycleInput;
 
 export type InBattleCharacterSession = {
   readonly tag: "inBattle";
-  readonly build: CharacterBuild;
+  readonly sheet: AvailableCharacterSession;
   readonly battleId: BattleId;
-  readonly characterId: CharacterId;
 };
 
 export type CharacterSession =
@@ -303,6 +90,36 @@ export type McpSessionStore = {
   ): Either.Either<StatBlockRecord, CharacterSessionIssue>;
   snapshot(): McpSessionSnapshot;
 };
+
+export function availableCharacterSession(
+  input: AvailableCharacterSessionInput,
+): Either.Either<AvailableCharacterSession, CharacterSessionIssue> {
+  const sheet = createFreshCharacterSheet(input);
+  return Either.isLeft(sheet)
+    ? characterSessionIssue(sheet.left.message)
+    : Either.right(sheet.right);
+}
+
+export function characterSessionIssue(
+  message: string,
+): Either.Either<never, CharacterSessionIssue> {
+  return Either.left({
+    tag: "characterSessionIssue",
+    message: message.replaceAll("Character Sheet", "character session"),
+  });
+}
+
+export function characterSessionCurrentHp(
+  session: AvailableCharacterSession,
+): ReturnType<typeof characterSheetCurrentHp> {
+  return characterSheetCurrentHp(session);
+}
+
+export function characterBattleSpellSlots(
+  session: AvailableCharacterSession,
+): ReturnType<typeof characterSheetSpellSlots> {
+  return characterSheetSpellSlots(session);
+}
 
 // MCP creates deterministic character handles from draft ids because character
 // creation currently has no independent naming/id fill.
@@ -368,7 +185,7 @@ function characterSessionRegistry(): CharacterSessionRegistry {
       return sessions.has(characterId);
     },
     set(session: CharacterSession): void {
-      sessions.set(session.characterId, session);
+      sessions.set(characterSessionId(session), session);
     },
     entries(): IterableIterator<readonly [CharacterId, CharacterSession]> {
       return sessions.entries();
@@ -377,6 +194,12 @@ function characterSessionRegistry(): CharacterSessionRegistry {
       return sessions.keys();
     },
   };
+}
+
+function characterSessionId(session: CharacterSession): CharacterId {
+  return session.tag === "inBattle"
+    ? session.sheet.characterId
+    : session.characterId;
 }
 
 function battleSessionSnapshot(state: BattleState): McpBattleSessionSnapshot {

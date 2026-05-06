@@ -47,6 +47,7 @@ import {
   characterToolDefinitions,
   contentToolDefinitions,
   createMcpCompositionRoot,
+  createMcpSessionStore,
   handleToolCall,
   startBattleFromCharacterBuildAndStatBlock,
 } from "./server.ts";
@@ -67,6 +68,11 @@ import {
 } from "../test-support/creation-hole-ids.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import {
+  assertSrd521StatBlock,
+  buildStatBlockCatalog,
+  defineSrdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
 
 function testAbilityScoreAssignment(scores: RawAbilityScoreAssignment) {
   const parsed = abilityScoreAssignment(scores);
@@ -1242,6 +1248,120 @@ describe("MCP server route", () => {
     expect(read.snapshot.combatants).toHaveLength(2);
   });
 
+  test("discovers Stat Block Multiattack dispatch and Movement continuations through MCP tools", () => {
+    const baseRoot = createMcpCompositionRoot();
+    const multiattackStatBlock = goblinWarriorMultiattackStatBlock(baseRoot);
+    const catalogResult = buildStatBlockCatalog({
+      collections: [
+        defineSrdStatBlockCollection({
+          statBlocks: [assertSrd521StatBlock(multiattackStatBlock)],
+        }),
+      ],
+    });
+    if (catalogResult.tag !== "ok") {
+      throw new Error("Expected MCP Multiattack test catalog to build.");
+    }
+    const root = {
+      ...baseRoot,
+      statBlockCatalog: catalogResult.catalog,
+      sessionStore: createMcpSessionStore(catalogResult.catalog),
+    };
+    const draftId = "draft:mcp-multiattack-continuation";
+    createFinalizedFighterSheet(root, draftId);
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-multiattack-continuation",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "fighter",
+            initiative: 18,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            statBlockId: multiattackStatBlock.id,
+            combatantId: "goblin",
+            initiative: 7,
+            side: "opposition",
+          },
+        ],
+      }),
+    );
+    readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
+    const opened = readPayload(
+      handleToolCall(root, "resolve_battle_act", {
+        subject: {
+          tag: "action",
+          actorId: "goblin",
+          action: "multiattack",
+          multiattackName: "Multiattack",
+        },
+      }),
+    );
+    expect(opened.result.tag).toBe("resolved");
+    expect(opened.snapshot.currentActorId).toBe("goblin");
+    expect(opened.snapshot.turn.actionResources).toEqual([
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        sourceOwnerId: "goblin",
+      }),
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        sourceOwnerId: "goblin",
+      }),
+    ]);
+    expect(
+      root.sessionStore.battleState?.currentTurnResources.actionResources,
+    ).toEqual([
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        sourceOwnerId: "goblin",
+      }),
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        sourceOwnerId: "goblin",
+      }),
+    ]);
+
+    const continuation = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    expect(
+      continuation.snapshot.acts.map((act: { label: string }) => act.label),
+    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
+    expect(
+      continuation.snapshot.acts.map(
+        (act: { subject: unknown }) => act.subject,
+      ),
+    ).toEqual([
+      {
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        attackName: "Scimitar",
+      },
+      {
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        attackName: "Shortbow",
+      },
+      {
+        tag: "runtimeCommand",
+        actorId: "goblin",
+        command: "move",
+      },
+      {
+        tag: "runtimeCommand",
+        actorId: "goblin",
+        command: "endTurn",
+      },
+    ]);
+  });
+
   test("fills a battle movement hole through MCP", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-battle-movement";
@@ -1412,13 +1532,13 @@ describe("MCP server route", () => {
     ).toMatchObject({
       tag: "inBattle",
       battleId: "battle:mcp-active-battle-first",
-      characterId: testCharacterId(firstDraftId),
+      sheet: { characterId: testCharacterId(firstDraftId) },
     });
     expect(
       root.sessionStore.characters.get(testCharacterId(secondDraftId)),
     ).toMatchObject({
       tag: "available",
-      hitPoints: { tag: "positive", currentHp: 12 },
+      hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
     });
   });
 
@@ -2343,7 +2463,8 @@ describe("MCP server route", () => {
       tag: "available",
       characterId: testCharacterId(draftId),
       build: finalized.finalization.build,
-      hitPoints: { tag: "positive", currentHp: 12 },
+      maximumHp: 12,
+      hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
     });
     expect(finalized.session).toMatchObject({
       draftIds: [],
@@ -2597,7 +2718,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({
         tag: "available",
-        hitPoints: { tag: "positive", currentHp: 5 },
+        hitPoints: { tag: "positive", currentHp: 5, tempHp: 0 },
       }),
     );
 
@@ -2688,6 +2809,7 @@ describe("MCP server route", () => {
         tag: "available",
         hitPoints: {
           tag: "zero",
+          tempHp: 0,
           lifecycle: {
             tag: "stable",
             recovery: { kind: "regains1HpAfter1d4Hours" },
@@ -2705,6 +2827,7 @@ describe("MCP server route", () => {
               maximum: 12,
               state: {
                 tag: "zero",
+                tempHp: 0,
                 lifecycle: {
                   tag: "stable",
                   recovery: { kind: "regains1HpAfter1d4Hours" },
@@ -2835,6 +2958,7 @@ describe("MCP server route", () => {
         tag: "available",
         hitPoints: {
           tag: "knockedOut",
+          tempHp: 0,
         },
       }),
     );
@@ -2848,6 +2972,7 @@ describe("MCP server route", () => {
               maximum: 12,
               state: {
                 tag: "knockedOut",
+                tempHp: 0,
               },
             }),
           }),
@@ -2902,7 +3027,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({
         tag: "available",
-        hitPoints: { tag: "positive", currentHp: 1 },
+        hitPoints: { tag: "positive", currentHp: 1, tempHp: 0 },
       }),
     );
   });
@@ -2915,7 +3040,9 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(1),
+        tempHp: Hp(4),
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
     );
@@ -2946,6 +3073,7 @@ describe("MCP server route", () => {
       expect.objectContaining({
         combatantId: "fighter",
         hp: 1,
+        tempHp: 4,
         conditions: expect.arrayContaining(["unconscious"]),
       }),
       expect.objectContaining({ combatantId: "goblin" }),
@@ -2967,7 +3095,9 @@ describe("MCP server route", () => {
       availableCharacterSession({
         characterId: testCharacterId(draftId),
         build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(6),
+        tempHp: Hp(0),
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
     ).toEqual(
@@ -2987,7 +3117,9 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
+        tempHp: Hp(0),
         zeroHpLifecycle: {
           tag: "stable",
           recovery: { kind: "regains1HpAfter1d4Hours" },
@@ -3047,7 +3179,9 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
+        tempHp: Hp(0),
         zeroHpLifecycle: {
           tag: "dead",
           deathSaves: { successes: 0, failures: 3 },
@@ -3113,7 +3247,9 @@ describe("MCP server route", () => {
     const sessionInput = {
       characterId: characterId("character:zero-hp-boundary"),
       build,
+      maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(0),
+      tempHp: Hp(0),
     };
 
     expect(() =>
@@ -3211,6 +3347,7 @@ describe("MCP server route", () => {
         tag: "available",
         hitPoints: {
           tag: "zero",
+          tempHp: 0,
           lifecycle: {
             tag: "dead",
             deathSaves: { successes: 0, failures: 3 },
@@ -3859,9 +3996,13 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: characterId("character:spell-slot-duplicate-levels"),
         build: spellcastingBuild,
+        maximumHp: Hp(
+          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
+        ),
         currentHp: Hp(
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
+        tempHp: Hp(0),
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -3894,9 +4035,13 @@ describe("MCP server route", () => {
             },
           },
         },
+        maximumHp: Hp(
+          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
+        ),
         currentHp: Hp(
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
+        tempHp: Hp(0),
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -3962,9 +4107,12 @@ function goblinWarriorMultiattackStatBlock(
   const base = root.statBlockCatalog.requireStatBlock(
     "stat_block_goblin_warrior",
   );
+  // MCP-only upgraded Goblin Warrior fixture: the SRD Goblin Warrior has no
+  // Multiattack, but this keeps the fixture small while exercising the tool path.
   return {
     ...base,
     id: "stat_block_goblin_warrior_mcp_multiattack",
+    name: "Upgraded Goblin Warrior",
     statBlock: {
       ...base.statBlock,
       actions: {
@@ -4073,7 +4221,9 @@ function createFinalizedFighterSheet(
     availableCharacterSessionRight({
       characterId: testCharacterId(draftId),
       build,
+      maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+      tempHp: Hp(0),
     }),
   );
   return build;

@@ -53,9 +53,9 @@ importers:
       '@dnd/character-creation-runtime':
         specifier: workspace:*
         version: link:../character-creation-runtime
-      '@dnd/core':
+      '@dnd/character-sheet-runtime':
         specifier: workspace:*
-        version: link:../core
+        version: link:../character-sheet-runtime
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
@@ -250,12 +250,21 @@ importers:
       '@dnd/battle-runtime':
         specifier: workspace:*
         version: link:../battle-runtime
+      '@dnd/character-creation-runtime':
+        specifier: workspace:*
+        version: link:../character-creation-runtime
       '@dnd/character-sheet-runtime':
         specifier: workspace:*
         version: link:../character-sheet-runtime
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
+      '@dnd/surface':
+        specifier: workspace:*
+        version: link:../surface
       effect:
         specifier: ^3.21.0
         version: 3.21.0
@@ -312,6 +321,9 @@ importers:
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
       effect:
         specifier: ^3.21.0
         version: 3.21.0
@@ -326,63 +338,20 @@ importers:
         specifier: ^3.0.5
         version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
 
-  packages/core:
-    dependencies:
-      '@dnd/shared':
-        specifier: workspace:*
-        version: link:../shared
-      '@dnd/shared-algebras':
-        specifier: workspace:*
-        version: link:../shared-algebras
-      '@dnd/surface':
-        specifier: workspace:*
-        version: link:../surface
-      '@firfi/quint-connect':
-        specifier: ^2.0.0
-        version: 2.0.0(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
-      '@statelyai/graph':
-        specifier: ^0.8.0
-        version: 0.8.0(zod@4.3.6)
-      '@statelyai/inspect':
-        specifier: ^0.4.0
-        version: 0.4.0(ws@8.20.0)(xstate@5.28.0)
-      effect:
-        specifier: ^3.21.0
-        version: 3.21.0
-      three:
-        specifier: ^0.183.2
-        version: 0.183.2
-      xstate:
-        specifier: ^5.28.0
-        version: 5.28.0
-      zod:
-        specifier: ^4.3.6
-        version: 4.3.6
-    devDependencies:
-      '@types/three':
-        specifier: ^0.183.1
-        version: 0.183.1
-      '@vitest/coverage-v8':
-        specifier: ^3.0.5
-        version: 3.2.4(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-      vite-tsconfig-paths:
-        specifier: ^5.1.4
-        version: 5.1.4(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))
-      vitest:
-        specifier: ^3.0.5
-        version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
-
   packages/mcp:
     dependencies:
       '@dnd/battle-runtime':
         specifier: workspace:*
         version: link:../battle-runtime
+      '@dnd/character-battle-runtime':
+        specifier: workspace:*
+        version: link:../character-battle-runtime
       '@dnd/character-creation-runtime':
         specifier: workspace:*
         version: link:../character-creation-runtime
+      '@dnd/character-sheet-runtime':
+        specifier: workspace:*
+        version: link:../character-sheet-runtime
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared

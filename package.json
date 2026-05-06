@@ -5,9 +5,10 @@
     "prepare": "husky",
     "dev": "turbo dev --filter=@dnd/app",
     "check:authored-id-dispatch": "node scripts/check-authored-id-dispatch-boundary.cjs",
-    "lint": "pnpm --filter @dnd/core lint && pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
-    "circular": "pnpm --filter @dnd/core circular && pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
-    "quality": "pnpm check:authored-id-dispatch && pnpm lint && pnpm circular && pnpm typecheck",
+    "check:v0-quarantine": "node scripts/check-v0-quarantine.cjs",
+    "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
+    "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
+    "quality": "pnpm check:authored-id-dispatch && pnpm check:v0-quarantine && pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },

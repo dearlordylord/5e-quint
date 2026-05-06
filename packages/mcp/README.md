@@ -153,7 +153,7 @@ Deferred workflow gates:
   casting spells with higher-level Spell Slots, persistent spell effects such as
   Mage Armor, and post-turn lifecycle subjects remain outside this workflow.
 
-Normal package tests cover the MCP server route. The removed Core-backed MCP
+Normal package tests cover the MCP server route. The removed v0-backed MCP
 route's omitted behavior is governed by the Restore Ledger in
 `plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`.
 
@@ -196,8 +196,8 @@ tools.
 combatant in `initialCombatants`. MCP must not derive Initiative as
 `10 + modifier` in the runtime path.
 
-No MCP/runtime path may import `@dnd/core`. Check that boundary with:
+No MCP/runtime path may import `@dnd/v0`. Check that boundary with:
 
 ```sh
-rg '@dnd/core' packages/mcp/src packages/character-creation-runtime packages/battle-runtime
+rg '@dnd/v0' packages/mcp/src packages/character-creation-runtime packages/battle-runtime
 ```

@@ -1,2 +1,10 @@
 packages:
-  - "packages/*"
+  - "packages/app"
+  - "packages/battle-runtime"
+  - "packages/character-battle-runtime"
+  - "packages/character-creation-runtime"
+  - "packages/character-sheet-runtime"
+  - "packages/mcp"
+  - "packages/shared"
+  - "packages/shared-algebras"
+  - "packages/surface"

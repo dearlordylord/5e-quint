@@ -1,88 +1,79 @@
-# D&D 5e in Quint
+# D&D 5e SRD Runtime Workspace
 
-Formal specification of D&D 5e (SRD 5.2.1) combat and character mechanics in [Quint](https://github.com/informalsystems/quint), with a verified [XState](https://xstate.js.org/) implementation and a React frontend.
+Promoted D&D 5e SRD 5.2.1 runtime packages, Surface-authored content, MCP
+tools, and a React frontend. The old `@dnd/v0` package remains in the repo as
+restore-source material only; it is not part of workspace discovery or the
+promoted quality gate.
 
 ## What this is
 
-A **rules engine for a single actor**. Core combat rules of D&D 5e — conditions, action economy, spellcasting, attack resolution, death saves, grappling, mounted combat, resting — written as a Quint specification. An XState state machine mirrors it exactly, and model-based testing proves they stay in sync.
+A package workspace for promoted runtimes:
 
 ```mermaid
 graph TD
-    SRD["SRD 5.2.1"] -.->|rules trace to| SPEC
-    SRD -.->|class features trace to| FEATURES
-    QA[QA corpus] -.->|generates assertions| TEST
-    SPEC["creature.qnt — Quint spec"] --> TEST[quint test]
-    SPEC --> TRACES[quint run — random traces]
-    TRACES --> MBT["MBT bridge"]
-    MBT -->|field-by-field comparison| XSTATE["XState machine"]
-    XSTATE --> FEATURES[class feature pure functions]
-    XSTATE --> UI[React UI]
-    FEATURES --> UI
+    SRD["SRD 5.2.1"] -.-> SURFACE["@dnd/surface authored Units and Stat Blocks"]
+    SURFACE --> CCR["@dnd/character-creation-runtime"]
+    SURFACE --> BR["@dnd/battle-runtime + battle-runtime.qnt"]
+    CCR --> CSR["@dnd/character-sheet-runtime"]
+    CSR --> CBR["@dnd/character-battle-runtime"]
+    BR --> MCP["@dnd/mcp"]
+    CCR --> MCP
+    CSR --> APP["@dnd/app"]
+    BR --> APP
 ```
 
-Each actor is an independent XState machine tracking its own HP, conditions, action economy, death saves, spell concentration, and class resource charges. The `DndEvent` union (`USE_ACTION`, `TAKE_DAMAGE`, `USE_SECOND_WIND`, ...) is the actor's API.
-
-> **Rules Aren't Physics.** The rules of the game are meant to provide a fun game experience, not to describe the laws of physics in the worlds of D&D. — *Dungeon Master's Guide*
-
-## What a game would add
-
-The engine handles rules for one actor. A game needs an **orchestration layer** on top:
-
-| Engine (exists) | Orchestrator (doesn't exist yet) |
-|---|---|
-| Action economy, HP, death saves, conditions | Multiple combatants: N machines, route events between them |
-| Class features (Second Wind, Rage, ...) | Initiative: sort actors, cycle turns |
-| Accepts dice rolls as event fields | Targeting: map/grid, route `TAKE_DAMAGE` to target's machine |
-| Spell slots, concentration, effect lifecycle | Attack resolution: d20 vs AC, compute damage |
-
-The React UI is a debugging tool — you send events by hand. A game would send the same events with real dice, real targets, and turn sequencing.
+> **Rules Aren't Physics.** The rules of the game are meant to provide a fun game experience, not to describe the laws of physics in the worlds of D&D. — _Dungeon Master's Guide_
 
 ## What's covered
 
-**Core (Quint + XState):** d20 resolution, advantage/disadvantage, conditions, exhaustion, action economy, attack resolution (crits, cover, underwater), grapple/shove, two-weapon fighting, mounted combat, spellcasting (slots, concentration, ritual, multiclass, pact magic), active effect lifecycle, HP/temp HP/death saves, short and long rest, character construction, combat mode gating.
+**Promoted battle runtime:** Unit/StatBlock-backed action resources, attack
+flows, selected spells, Death Saving Throws, Knock Out lifecycle, battle
+snapshots, and caller-owned hole/fill replay.
 
-**Class features (TypeScript):** Pure functions for Barbarian, Cleric, Druid, Fighter, Monk, Paladin, Rogue, Sorcerer. Fighter (Champion L1-L18) is also in Quint and MBT-verified. See `app/src/features/`.
+**Promoted character runtimes:** character-creation choices, progression,
+sheet-session projection, and character battle-entry projection.
 
-**Also:** Weapon mastery (all 8), spell effect patterns, Grappler feat, QA corpus ([`scripts/qa/QA_README.md`](scripts/qa/QA_README.md)).
+**Also:** Surface-authored content records, shared reducer algebras, MCP
+session workflows, React app routes, and QA corpus
+([`scripts/qa/QA_README.md`](scripts/qa/QA_README.md)).
 
 ## How the layers work
 
-**Quint spec** (`creature.qnt`) — source of truth. Pure functions (`pUseAction`, `pTakeDamage`, ...) model every rule. `do*` actions compose them with nondeterministic inputs for model checking.
+**Surface** (`packages/surface`) — source-authored records and projection
+contracts for Units, Stat Blocks, spells, class features, and related content.
 
-**XState machine** (`machine.ts` + satellite files) — parallel-region machine with four tracks: damageTrack, turnPhase, conditionTrack, spellcasting. Direct transliteration of the Quint spec.
+**Battle runtime** (`packages/battle-runtime`) — promoted Unit/StatBlock-backed
+battle reducer behavior. `packages/battle-runtime/battle-runtime.qnt` is the
+active battle proof/spec authority.
 
-**Feature system** (`app/src/features/`) — class abilities as pure functions (`class-fighter.ts`, `class-barbarian.ts`, ...) adapted to XState via a bridge layer. One user action produces a `BridgeResult`: a `featureAction` for the feature reducer + `machineEvents` for XState.
+**Character runtimes** (`packages/character-creation-runtime`,
+`packages/character-sheet-runtime`, `packages/character-battle-runtime`) —
+package-owned character build, sheet-session, and battle-entry projections.
 
-**MBT bridge** (`creature.mbt.test.ts`) — correctness proof. Replays 50 Quint traces (30 steps each) against XState, compares every field after each step. Uses [`@firfi/quint-connect`](https://github.com/dearlordylord/quint-connect-ts).
+**MCP and app** (`packages/mcp`, `packages/app`) — user-facing workflows over
+the promoted runtimes. They must not import `@dnd/v0`.
 
 **QA pipeline** (`scripts/qa/`) — community Q&A turned into Quint test assertions by LLM. See [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
 
 ## Running It
 
 ```sh
-quint test dndTest.qnt          # Quint spec tests
 pnpm quality                    # workspace lint, circular checks, and typecheck
 pnpm test                       # workspace package tests
 pnpm dev                        # React UI
 ```
 
-## Legacy Core MBT
+## Legacy v0 MBT
 
-Root `battle.qnt` and the Core battle MBT are legacy/Core broad proof and
+Root `battle.qnt` and the v0 battle MBT are legacy/Core broad proof and
 restore material. They are not the promoted `@dnd/battle-runtime` verification
-gate. Run them explicitly when restoring or comparing old Core behavior:
-
-```sh
-pnpm --filter @dnd/core test:legacy-battle-mbt
-```
+gate, and `packages/v0` is intentionally excluded from the active pnpm
+workspace.
 
 Legacy battle MBT traces are nondeterministic when live generation is used:
-each seed generates different traces through the old Core battle state space.
-Failures include a seed for reproduction:
-
-```sh
-RUN_LEGACY_CORE_BATTLE_MBT=1 QUINT_SEED=0xdeadbeef pnpm --filter @dnd/core exec vitest run src/battle-projection.mbt.test.ts
-```
+each seed generates different traces through the old v0 battle state space.
+Failures include a seed for reproduction. Re-enable Core locally only for
+restore-source work; do not add it back to promoted workspace gates.
 
 ## SRD parity
 
