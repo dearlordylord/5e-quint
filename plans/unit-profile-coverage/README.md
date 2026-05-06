@@ -5,8 +5,9 @@ It is intentionally separate from `plans/raw-coverage/`, which tracks coverage
 of SRD rules text spans.
 
 The Unit profile matrix answers which authored Units instantiate supported
-mechanics profiles, which Units are explicitly unsupported or need widening, and
-which QNT/runtime/verification owners cover each supported profile.
+mechanics profiles, which installed Units are explicitly unsupported or need
+widening, which authored Surface Units are not yet admitted to the Unit catalog,
+and which QNT/runtime/verification owners cover each supported profile.
 
 ## Collection Boundaries
 
@@ -117,3 +118,9 @@ node scripts/unit-profile-coverage-check.cjs --write
 New Unit authoring tasks must add or update `unit-claims.jsonl`. New QCORE work
 that proves Unit-facing mechanics must cite profile ids. New QMBT work that
 adds runtime parity must cite the same profile ids.
+
+The generated matrix also audits every authored Unit-shaped JSON record under
+`packages/surface/content/`. Records that are not installed through
+`packages/surface/src/surface/unit-catalog.ts` are retained in the matrix with
+`catalogAdmission.status = "not-in-unit-catalog"` so the gap between authored
+content and shipped catalog inventory is explicit.

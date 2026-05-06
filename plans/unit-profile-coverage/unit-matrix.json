@@ -42,6 +42,16 @@
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
+    "authoredSurfaceExecutableCatalogAdmissionCoverage": {
+      "denominator": 326,
+      "numerator": 34,
+      "percent": "10.4%"
+    },
+    "authoredSurfaceUnitCatalogAdmissionCoverage": {
+      "denominator": 391,
+      "numerator": 48,
+      "percent": "12.3%"
+    },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
       "numerator": 1,
@@ -549,6 +559,11 @@
   ],
   "units": [
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Class container record; battle/runtime executable mechanics live on granted feature Units.",
         "tag": "unsupported-profile"
@@ -562,6 +577,11 @@
       "unitId": "class_fighter"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Class container and spell access record; executable pressure is carried by spell Units and class features.",
         "tag": "unsupported-profile"
@@ -575,6 +595,11 @@
       "unitId": "class_wizard"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Character-creation authored data only; no promoted execution profile yet.",
         "tag": "unsupported-profile"
@@ -588,6 +613,11 @@
       "unitId": "background_soldier"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Species container record; executable pressure lives on species trait Units.",
         "tag": "unsupported-profile"
@@ -601,6 +631,11 @@
       "unitId": "species_orc"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Subclass container record; executable pressure lives on granted feature Units.",
         "tag": "unsupported-profile"
@@ -614,6 +649,11 @@
       "unitId": "subclass_fighter_champion"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Subclass container record; no promoted execution profile yet.",
         "tag": "unsupported-profile"
@@ -627,6 +667,11 @@
       "unitId": "subclass_wizard_evoker"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Choice/grant container; selected Fighting Style feat carries executable pressure.",
         "tag": "unsupported-profile"
@@ -640,6 +685,11 @@
       "unitId": "fighter_fighting_style"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.self-bonus-action-healing"
@@ -696,6 +746,11 @@
       "unitId": "fighter_second_wind"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
         "tag": "unsupported-profile"
@@ -709,6 +764,11 @@
       "unitId": "fighter_weapon_mastery"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.action-surge-resource"
@@ -754,6 +814,11 @@
       "unitId": "fighter_action_surge"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "issue": "Ability-check resource augmentation is not represented by a promoted battle Unit profile.",
         "tag": "needs-surface-widening"
@@ -767,6 +832,11 @@
       "unitId": "fighter_tactical_mind"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.weapon-critical-range-19"
@@ -811,6 +881,11 @@
       "unitId": "fighter_improved_critical"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.bonus-action-ongoing-rage"
@@ -856,6 +931,11 @@
       "unitId": "barbarian_rage"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.first-attack-roll-reckless-advantage"
@@ -907,6 +987,11 @@
       "unitId": "barbarian_reckless_attack"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.reaction-roll-or-damage-reduction"
@@ -961,6 +1046,11 @@
       "unitId": "bard_cutting_words"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "futureProfileOwner": "QCORE9",
         "reason": "Damage reduction is partially promoted, but redirect-on-zero follow-up is not yet fully represented as a supported profile.",
@@ -975,6 +1065,11 @@
       "unitId": "monk_deflect_attacks"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.alternate-action-cost"
@@ -1019,6 +1114,11 @@
       "unitId": "rogue_cunning_action"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.save-damage-replacement"
@@ -1070,6 +1170,11 @@
       "unitId": "rogue_evasion"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.reaction-roll-or-damage-reduction"
@@ -1124,6 +1229,11 @@
       "unitId": "rogue_uncanny_dodge"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.attack-damage-rider"
@@ -1169,6 +1279,11 @@
       "unitId": "rogue_sneak_attack"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Ritual casting is character/spell access pressure, not a promoted battle execution profile yet.",
         "tag": "unsupported-profile"
@@ -1182,6 +1297,11 @@
       "unitId": "wizard_ritual_adept"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Spell slot recovery outside battle is not a promoted Unit profile yet.",
         "tag": "unsupported-profile"
@@ -1195,6 +1315,11 @@
       "unitId": "wizard_arcane_recovery"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Character-creation ability score mutation is outside promoted battle Unit profile scope.",
         "tag": "unsupported-profile"
@@ -1208,6 +1333,11 @@
       "unitId": "feat_ability_score_improvement"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "issue": "Miss-to-hit conversion profile is not represented by the promoted Unit profile taxonomy.",
         "tag": "needs-surface-widening"
@@ -1221,6 +1351,11 @@
       "unitId": "feat_boon_of_combat_prowess"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Passive armor-class modification is authored but not yet a promoted Unit profile row.",
         "tag": "unsupported-profile"
@@ -1234,6 +1369,11 @@
       "unitId": "defense"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon damage dice reroll is authored but not yet a stable Unit profile row.",
         "tag": "unsupported-profile"
@@ -1247,6 +1387,11 @@
       "unitId": "feat_savage_attacker"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon mastery rider is authored but not yet a stable Unit profile row.",
         "tag": "unsupported-profile"
@@ -1260,6 +1405,11 @@
       "unitId": "mastery_sap"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "issue": "Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile.",
         "tag": "needs-surface-widening"
@@ -1273,6 +1423,11 @@
       "unitId": "orc_adrenaline_rush"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Sense grant is authored data with no promoted execution profile.",
         "tag": "unsupported-profile"
@@ -1286,6 +1441,11 @@
       "unitId": "orc_darkvision"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "futureProfileOwner": "QCORE9",
         "reason": "Zero-hit-point replacement profile exists in rule core but is not yet a stable Unit profile row.",
@@ -1300,6 +1460,11 @@
       "unitId": "orc_relentless_endurance"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
@@ -1372,6 +1537,11 @@
       "unitId": "acid_splash"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
@@ -1444,6 +1614,11 @@
       "unitId": "fire_bolt"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Object light effect is authored but not promoted as an execution profile yet.",
         "tag": "unsupported-profile"
@@ -1457,6 +1632,11 @@
       "unitId": "light"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
@@ -1529,6 +1709,11 @@
       "unitId": "ray_of_frost"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Detection/concentration search semantics are not promoted as a battle Unit profile.",
         "tag": "unsupported-profile"
@@ -1542,6 +1727,11 @@
       "unitId": "detect_magic"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
@@ -1614,6 +1804,11 @@
       "unitId": "mage_armor"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
@@ -1686,6 +1881,11 @@
       "unitId": "magic_missile"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "spell.reaction-shield"
@@ -1739,6 +1939,11 @@
       "unitId": "shield"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row.",
         "tag": "unsupported-profile"
@@ -1752,6 +1957,11 @@
       "unitId": "sleep"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "issue": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice.",
         "tag": "needs-surface-widening"
@@ -1765,6 +1975,11 @@
       "unitId": "thunderwave"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Equipment AC data is authored but not represented as an executable Unit profile row.",
         "tag": "unsupported-profile"
@@ -1778,6 +1993,11 @@
       "unitId": "armor_chain_mail"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Shield equipment AC data is authored but not represented as an executable Unit profile row.",
         "tag": "unsupported-profile"
@@ -1791,6 +2011,11 @@
       "unitId": "equipment_shield"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
         "tag": "unsupported-profile"
@@ -1804,6 +2029,11 @@
       "unitId": "weapon_dagger"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
         "tag": "unsupported-profile"
@@ -1817,6 +2047,11 @@
       "unitId": "weapon_longsword"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
         "tag": "unsupported-profile"
@@ -1830,6 +2065,11 @@
       "unitId": "weapon_spear"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
         "tag": "unsupported-profile"
@@ -1843,6 +2083,11 @@
       "unitId": "weapon_flail"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
         "tag": "unsupported-profile"
@@ -1856,6 +2101,11 @@
       "unitId": "weapon_shortbow"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
       "claim": {
         "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
         "tag": "unsupported-profile"
@@ -1869,6 +2119,10 @@
       "unitId": "weapon_shortsword"
     },
     {
+      "catalogAdmission": {
+        "collectionId": "classic-2024-non-srd-mechanics",
+        "status": "installed"
+      },
       "claim": {
         "profileIds": [
           "unit-feature.alternate-action-cost"
@@ -1912,6 +2166,4465 @@
       "sourceRecordPath": "plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json",
       "syntheticLabel": "Mycelium Step",
       "unitId": "mycelium_step"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/acid_arrow.json",
+      "unitId": "acid_arrow"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/aid.json",
+      "unitId": "aid"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/alarm.json",
+      "unitId": "alarm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 2,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/alert.json",
+      "unitId": "alert"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/alter_self.json",
+      "unitId": "alter_self"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/animal_friendship.json",
+      "unitId": "animal_friendship"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/animal_shapes.json",
+      "unitId": "animal_shapes"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/animate_dead.json",
+      "unitId": "animate_dead"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/animate_objects.json",
+      "unitId": "animate_objects"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/antilife_shell.json",
+      "unitId": "antilife_shell"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/antimagic_field.json",
+      "unitId": "antimagic_field"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/arcane_eye.json",
+      "unitId": "arcane_eye"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/arcane_lock.json",
+      "unitId": "arcane_lock"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/arcane_sword.json",
+      "unitId": "arcane_sword"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_breastplate.json",
+      "unitId": "armor_breastplate"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_chain_shirt.json",
+      "unitId": "armor_chain_shirt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_half_plate_armor.json",
+      "unitId": "armor_half_plate_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_hide_armor.json",
+      "unitId": "armor_hide_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_leather.json",
+      "unitId": "armor_leather"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_padded_armor.json",
+      "unitId": "armor_padded_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_plate.json",
+      "unitId": "armor_plate"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_ring_mail.json",
+      "unitId": "armor_ring_mail"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_scale_mail.json",
+      "unitId": "armor_scale_mail"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_splint_armor.json",
+      "unitId": "armor_splint_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_studded_leather_armor.json",
+      "unitId": "armor_studded_leather_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/aura_of_life.json",
+      "unitId": "aura_of_life"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bane.json",
+      "unitId": "bane"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/banishment.json",
+      "unitId": "banishment"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/barbarian_ability_score_improvement_l4.json",
+      "unitId": "barbarian_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
+      "unitId": "barbarian_danger_sense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/barbarian_fast_movement.json",
+      "unitId": "barbarian_fast_movement"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/barbarian_primal_champion.json",
+      "unitId": "barbarian_primal_champion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/barbarian_unarmored_defense.json",
+      "unitId": "barbarian_unarmored_defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bard_ability_score_improvement_l4.json",
+      "unitId": "bard_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bard_bonus_proficiencies.json",
+      "unitId": "bard_bonus_proficiencies"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bard_epic_boon.json",
+      "unitId": "bard_epic_boon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
+      "unitId": "bard_jack_of_all_trades"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bard_words_of_creation.json",
+      "unitId": "bard_words_of_creation"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/barkskin.json",
+      "unitId": "barkskin"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/beacon_of_hope.json",
+      "unitId": "beacon_of_hope"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/blade_barrier.json",
+      "unitId": "blade_barrier"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bless.json",
+      "unitId": "bless"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/blight.json",
+      "unitId": "blight"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/blindness_deafness.json",
+      "unitId": "blindness_deafness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/blur.json",
+      "unitId": "blur"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/burning_hands.json",
+      "unitId": "burning_hands"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/call_lightning.json",
+      "unitId": "call_lightning"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/chain_lightning.json",
+      "unitId": "chain_lightning"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/charm_monster.json",
+      "unitId": "charm_monster"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/charm_person.json",
+      "unitId": "charm_person"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/chill_touch.json",
+      "unitId": "chill_touch"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/chromatic_orb.json",
+      "unitId": "chromatic_orb"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/circle_of_death.json",
+      "unitId": "circle_of_death"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/clairvoyance.json",
+      "unitId": "clairvoyance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/cleric_ability_score_improvement_l4.json",
+      "unitId": "cleric_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/cleric_epic_boon.json",
+      "unitId": "cleric_epic_boon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/cloak_of_protection.json",
+      "unitId": "cloak_of_protection"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/cloudkill.json",
+      "unitId": "cloudkill"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/color_spray.json",
+      "unitId": "color_spray"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/comprehend_languages.json",
+      "unitId": "comprehend_languages"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/compulsion.json",
+      "unitId": "compulsion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/cone_of_cold.json",
+      "unitId": "cone_of_cold"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/conjure_minor_elementals.json",
+      "unitId": "conjure_minor_elementals"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/conjure_woodland_beings.json",
+      "unitId": "conjure_woodland_beings"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/continual_flame.json",
+      "unitId": "continual_flame"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/counterspell.json",
+      "unitId": "counterspell"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/create_food_and_water.json",
+      "unitId": "create_food_and_water"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/create_undead.json",
+      "unitId": "create_undead"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/cure_wounds.json",
+      "unitId": "cure_wounds"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dancing_lights.json",
+      "unitId": "dancing_lights"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/darkvision_elf.json",
+      "unitId": "elf_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/daylight.json",
+      "unitId": "daylight"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/death_ward.json",
+      "unitId": "death_ward"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dimension_door.json",
+      "unitId": "dimension_door"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/disintegrate.json",
+      "unitId": "disintegrate"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dispel_magic.json",
+      "unitId": "dispel_magic"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/divine_favor.json",
+      "unitId": "divine_favor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/divine_smite.json",
+      "unitId": "divine_smite"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dominate_beast.json",
+      "unitId": "dominate_beast"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dominate_monster.json",
+      "unitId": "dominate_monster"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dominate_person.json",
+      "unitId": "dominate_person"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/druid_ability_score_improvement_l4.json",
+      "unitId": "druid_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/druid_epic_boon.json",
+      "unitId": "druid_epic_boon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/druid_natures_ward.json",
+      "unitId": "druid_natures_ward"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/earthquake.json",
+      "unitId": "earthquake"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/eldritch_blast.json",
+      "unitId": "eldritch_blast"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ensnaring_strike.json",
+      "unitId": "ensnaring_strike"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/entangle.json",
+      "unitId": "entangle"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fabricate.json",
+      "unitId": "fabricate"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/faerie_fire.json",
+      "unitId": "faerie_fire"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/false_life.json",
+      "unitId": "false_life"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fear.json",
+      "unitId": "fear"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 2,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_alert.json",
+      "unitId": "alert"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_archery.json",
+      "unitId": "feat_archery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fighter_epic_boon.json",
+      "unitId": "fighter_epic_boon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fighter_extra_attack.json",
+      "unitId": "fighter_extra_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/find_familiar.json",
+      "unitId": "find_familiar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/find_steed.json",
+      "unitId": "find_steed"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/finger_of_death.json",
+      "unitId": "finger_of_death"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fire_shield.json",
+      "unitId": "fire_shield"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fire_storm.json",
+      "unitId": "fire_storm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fireball.json",
+      "unitId": "fireball"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/flame_blade.json",
+      "unitId": "flame_blade"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/flame_strike.json",
+      "unitId": "flame_strike"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/flesh_to_stone.json",
+      "unitId": "flesh_to_stone"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fly.json",
+      "unitId": "fly"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/forcecage.json",
+      "unitId": "forcecage"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/freedom_of_movement.json",
+      "unitId": "freedom_of_movement"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/geas.json",
+      "unitId": "geas"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/gentle_repose.json",
+      "unitId": "gentle_repose"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/grease.json",
+      "unitId": "grease"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/greater_invisibility.json",
+      "unitId": "greater_invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/guidance.json",
+      "unitId": "guidance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/guiding_bolt.json",
+      "unitId": "guiding_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/harm.json",
+      "unitId": "harm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/heal.json",
+      "unitId": "heal"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/healing_word.json",
+      "unitId": "healing_word"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/heat_metal.json",
+      "unitId": "heat_metal"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/hellish_rebuke.json",
+      "unitId": "hellish_rebuke"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/heroism.json",
+      "unitId": "heroism"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/hold_monster.json",
+      "unitId": "hold_monster"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/hold_person.json",
+      "unitId": "hold_person"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/holy_aura.json",
+      "unitId": "holy_aura"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/hunters_mark.json",
+      "unitId": "hunters_mark"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/hypnotic_pattern.json",
+      "unitId": "hypnotic_pattern"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ice_knife.json",
+      "unitId": "ice_knife"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ice_storm.json",
+      "unitId": "ice_storm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/identify.json",
+      "unitId": "identify"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/incendiary_cloud.json",
+      "unitId": "incendiary_cloud"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/inflict_wounds.json",
+      "unitId": "inflict_wounds"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/insect_plague.json",
+      "unitId": "insect_plague"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/invisibility.json",
+      "unitId": "invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/lesser_restoration.json",
+      "unitId": "lesser_restoration"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
+      "unitId": "lightning_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/longstrider.json",
+      "unitId": "longstrider"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor_template",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_adamantine_armor.json",
+      "unitId": "magic_item_adamantine_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon_template",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ammunition_1_2_or_3.json",
+      "unitId": "magic_item_ammunition_1_2_or_3"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_amulet_of_health.json",
+      "unitId": "magic_item_amulet_of_health"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor_template",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_armor_1_2_or_3.json",
+      "unitId": "magic_item_armor_1_2_or_3"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_bag_of_holding.json",
+      "unitId": "magic_item_bag_of_holding"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_bracers_of_defense.json",
+      "unitId": "magic_item_bracers_of_defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json",
+      "unitId": "magic_item_brazier_of_commanding_fire_elementals"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_brooch_of_shielding.json",
+      "unitId": "magic_item_brooch_of_shielding"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_censer_of_controlling_air_elementals.json",
+      "unitId": "magic_item_censer_of_controlling_air_elementals"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_chime_of_opening.json",
+      "unitId": "magic_item_chime_of_opening"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_cloak_of_arachnida.json",
+      "unitId": "magic_item_cloak_of_arachnida"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_cloak_of_protection.json",
+      "unitId": "magic_item_cloak_of_protection"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_crystal_ball_of_mind_reading.json",
+      "unitId": "magic_item_crystal_ball_of_mind_reading"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_cube_of_force.json",
+      "unitId": "magic_item_cube_of_force"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon_template",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_defender.json",
+      "unitId": "magic_item_defender"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_eyes_of_minute_seeing.json",
+      "unitId": "magic_item_eyes_of_minute_seeing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_folding_boat.json",
+      "unitId": "magic_item_folding_boat"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_gauntlets_of_ogre_power.json",
+      "unitId": "magic_item_gauntlets_of_ogre_power"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_gem_of_seeing.json",
+      "unitId": "magic_item_gem_of_seeing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_goggles_of_night.json",
+      "unitId": "magic_item_goggles_of_night"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_hat_of_disguise.json",
+      "unitId": "magic_item_hat_of_disguise"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_headband_of_intellect.json",
+      "unitId": "magic_item_headband_of_intellect"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_helm_of_comprehending_languages.json",
+      "unitId": "magic_item_helm_of_comprehending_languages"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_helm_of_teleportation.json",
+      "unitId": "magic_item_helm_of_teleportation"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_instant_fortress.json",
+      "unitId": "magic_item_instant_fortress"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_javelin_of_lightning.json",
+      "unitId": "magic_item_javelin_of_lightning"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_manual_of_gainful_exercise.json",
+      "unitId": "magic_item_manual_of_gainful_exercise"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_manual_of_quickness_of_action.json",
+      "unitId": "magic_item_manual_of_quickness_of_action"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_medallion_of_thoughts.json",
+      "unitId": "magic_item_medallion_of_thoughts"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "armor_template",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_mithral_armor.json",
+      "unitId": "magic_item_mithral_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_necklace_of_fireballs.json",
+      "unitId": "magic_item_necklace_of_fireballs"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_periapt_of_proof_against_poison.json",
+      "unitId": "magic_item_periapt_of_proof_against_poison"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_animal_friendship.json",
+      "unitId": "magic_item_potion_of_animal_friendship"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_clairvoyance.json",
+      "unitId": "magic_item_potion_of_clairvoyance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_climbing.json",
+      "unitId": "magic_item_potion_of_climbing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_flying.json",
+      "unitId": "magic_item_potion_of_flying"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_giant_strength.json",
+      "unitId": "magic_item_potion_of_giant_strength"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_heroism.json",
+      "unitId": "magic_item_potion_of_heroism"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_invisibility.json",
+      "unitId": "magic_item_potion_of_invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_invulnerability.json",
+      "unitId": "magic_item_potion_of_invulnerability"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potion_of_water_breathing.json",
+      "unitId": "magic_item_potion_of_water_breathing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_potions_of_healing.json",
+      "unitId": "potion_of_healing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_quarterstaff_of_the_acrobat.json",
+      "unitId": "magic_item_quarterstaff_of_the_acrobat"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_invisibility.json",
+      "unitId": "magic_item_ring_of_invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_jumping.json",
+      "unitId": "magic_item_ring_of_jumping"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_protection.json",
+      "unitId": "magic_item_ring_of_protection"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_resistance.json",
+      "unitId": "magic_item_ring_of_resistance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_swimming.json",
+      "unitId": "ring_of_swimming"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_telekinesis.json",
+      "unitId": "ring_of_telekinesis"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_three_wishes.json",
+      "unitId": "ring_of_three_wishes"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_warmth.json",
+      "unitId": "magic_item_ring_of_warmth"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_ring_of_water_walking.json",
+      "unitId": "magic_item_ring_of_water_walking"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_robe_of_the_archmagi.json",
+      "unitId": "magic_item_robe_of_the_archmagi"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_rod_of_alertness.json",
+      "unitId": "magic_item_rod_of_alertness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_rod_of_resurrection.json",
+      "unitId": "magic_item_rod_of_resurrection"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_rod_of_rulership.json",
+      "unitId": "magic_item_rod_of_rulership"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "shield_template",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_sentinel_shield.json",
+      "unitId": "magic_item_sentinel_shield"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "shield_template",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_shield_1_2_or_3.json",
+      "unitId": "magic_item_shield_1_2_or_3"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_slippers_of_spider_climbing.json",
+      "unitId": "magic_item_slippers_of_spider_climbing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_sovereign_glue.json",
+      "unitId": "magic_item_sovereign_glue"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_staff_of_charming.json",
+      "unitId": "magic_item_staff_of_charming"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_staff_of_fire.json",
+      "unitId": "magic_item_staff_of_fire"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_staff_of_healing.json",
+      "unitId": "magic_item_staff_of_healing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_staff_of_power.json",
+      "unitId": "magic_item_staff_of_power"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_staff_of_the_woodlands.json",
+      "unitId": "magic_item_staff_of_the_woodlands"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_stone_of_controlling_earth_elementals.json",
+      "unitId": "magic_item_stone_of_controlling_earth_elementals"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_stone_of_good_luck_luckstone.json",
+      "unitId": "magic_item_stone_of_good_luck_luckstone"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_tome_of_clear_thought.json",
+      "unitId": "magic_item_tome_of_clear_thought"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_tome_of_leadership_and_influence.json",
+      "unitId": "magic_item_tome_of_leadership_and_influence"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_tome_of_understanding.json",
+      "unitId": "magic_item_tome_of_understanding"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_wand_of_fear.json",
+      "unitId": "magic_item_wand_of_fear"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_wand_of_fireballs.json",
+      "unitId": "magic_item_wand_of_fireballs"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_wand_of_lightning_bolts.json",
+      "unitId": "magic_item_wand_of_lightning_bolts"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_wand_of_magic_detection.json",
+      "unitId": "magic_item_wand_of_magic_detection"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_wand_of_magic_missiles.json",
+      "unitId": "magic_item_wand_of_magic_missiles"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_wand_of_paralysis.json",
+      "unitId": "magic_item_wand_of_paralysis"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "magic_item",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_wand_of_polymorph.json",
+      "unitId": "magic_item_wand_of_polymorph"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon_template",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_item_weapon_1_2_or_3.json",
+      "unitId": "magic_item_weapon_1_2_or_3"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_weapon.json",
+      "unitId": "magic_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/major_image.json",
+      "unitId": "major_image"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mass_cure_wounds.json",
+      "unitId": "mass_cure_wounds"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mass_healing_word.json",
+      "unitId": "mass_healing_word"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mass_suggestion.json",
+      "unitId": "mass_suggestion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "mastery",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mastery_cleave.json",
+      "unitId": "mastery_cleave"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "mastery",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mastery_topple.json",
+      "unitId": "mastery_topple"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/maze.json",
+      "unitId": "maze"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/meteor_swarm.json",
+      "unitId": "meteor_swarm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mind_blank.json",
+      "unitId": "mind_blank"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mind_spike.json",
+      "unitId": "mind_spike"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/minor_illusion.json",
+      "unitId": "minor_illusion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/misty_step.json",
+      "unitId": "misty_step"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/monk_ability_score_improvement_l4.json",
+      "unitId": "monk_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/monk_body_and_mind.json",
+      "unitId": "monk_body_and_mind"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/monk_epic_boon.json",
+      "unitId": "monk_epic_boon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/monk_unarmored_defense.json",
+      "unitId": "monk_unarmored_defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/moonbeam.json",
+      "unitId": "moonbeam"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/paladin_epic_boon.json",
+      "unitId": "paladin_epic_boon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/paladin_extra_attack.json",
+      "unitId": "paladin_extra_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
+      "unitId": "paladin_fighting_style"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/paladin_lay_on_hands.json",
+      "unitId": "paladin_lay_on_hands"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
+      "unitId": "paladin_paladins_smite"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
+      "unitId": "pass_without_trace"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/poison_spray.json",
+      "unitId": "poison_spray"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/polymorph.json",
+      "unitId": "polymorph"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/power_word_heal.json",
+      "unitId": "power_word_heal"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/power_word_kill.json",
+      "unitId": "power_word_kill"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/power_word_stun.json",
+      "unitId": "power_word_stun"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
+      "unitId": "prayer_of_healing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/prismatic_wall.json",
+      "unitId": "prismatic_wall"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/produce_flame.json",
+      "unitId": "produce_flame"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
+      "unitId": "protection_from_energy"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json",
+      "unitId": "protection_from_evil_and_good"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/protection_from_poison.json",
+      "unitId": "protection_from_poison"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ranger_ability_score_improvement_l4.json",
+      "unitId": "ranger_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ranger_extra_attack.json",
+      "unitId": "ranger_extra_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ranger_feral_senses.json",
+      "unitId": "ranger_feral_senses"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ranger_roving.json",
+      "unitId": "ranger_roving"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ranger_tireless.json",
+      "unitId": "ranger_tireless"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
+      "unitId": "ray_of_enfeeblement"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ray_of_sickness.json",
+      "unitId": "ray_of_sickness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/resistance.json",
+      "unitId": "resistance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/reverse_gravity.json",
+      "unitId": "reverse_gravity"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json",
+      "unitId": "rogue_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sacred_flame.json",
+      "unitId": "sacred_flame"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/scorching_ray.json",
+      "unitId": "scorching_ray"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/searing_smite.json",
+      "unitId": "searing_smite"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/see_invisibility.json",
+      "unitId": "see_invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sequester.json",
+      "unitId": "sequester"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/shatter.json",
+      "unitId": "shatter"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/shield_of_faith.json",
+      "unitId": "shield_of_faith"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/shining_smite.json",
+      "unitId": "shining_smite"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/shocking_grasp.json",
+      "unitId": "shocking_grasp"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/silent_image.json",
+      "unitId": "silent_image"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sorcerer_ability_score_improvement_l4.json",
+      "unitId": "sorcerer_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
+      "unitId": "speak_with_animals"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_breath_weapon.json",
+      "unitId": "species_dragonborn_breath_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
+      "unitId": "species_dragonborn_damage_resistance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_darkvision.json",
+      "unitId": "species_dragonborn_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dwarf_darkvision.json",
+      "unitId": "dwarf_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
+      "unitId": "dwarf_dwarven_resilience"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
+      "unitId": "species_goliath_powerful_build"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_tiefling_darkvision.json",
+      "unitId": "species_tiefling_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/spider_climb.json",
+      "unitId": "spider_climb"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/spike_growth.json",
+      "unitId": "spike_growth"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/spirit_guardians.json",
+      "unitId": "spirit_guardians"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
+      "unitId": "spiritual_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/starry_wisp.json",
+      "unitId": "starry_wisp"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/stinking_cloud.json",
+      "unitId": "stinking_cloud"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/stoneskin.json",
+      "unitId": "stoneskin"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/storm_of_vengeance.json",
+      "unitId": "storm_of_vengeance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/summon_dragon.json",
+      "unitId": "summon_dragon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sunbeam.json",
+      "unitId": "sunbeam"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sunburst.json",
+      "unitId": "sunburst"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/telekinesis.json",
+      "unitId": "telekinesis"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/tongues.json",
+      "unitId": "tongues"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/true_polymorph.json",
+      "unitId": "true_polymorph"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/true_seeing.json",
+      "unitId": "true_seeing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/true_strike.json",
+      "unitId": "true_strike"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/tsunami.json",
+      "unitId": "tsunami"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/vampiric_touch.json",
+      "unitId": "vampiric_touch"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/vicious_mockery.json",
+      "unitId": "vicious_mockery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wall_of_fire.json",
+      "unitId": "wall_of_fire"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wall_of_force.json",
+      "unitId": "wall_of_force"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wall_of_ice.json",
+      "unitId": "wall_of_ice"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wall_of_stone.json",
+      "unitId": "wall_of_stone"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wall_of_thorns.json",
+      "unitId": "wall_of_thorns"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/warding_bond.json",
+      "unitId": "warding_bond"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/warlock_contact_patron.json",
+      "unitId": "warlock_contact_patron"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/warlock_fiend_spells.json",
+      "unitId": "warlock_fiend_spells"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/water_breathing.json",
+      "unitId": "water_breathing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_battleaxe.json",
+      "unitId": "weapon_battleaxe"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_blowgun.json",
+      "unitId": "weapon_blowgun"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_club.json",
+      "unitId": "weapon_club"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_dart.json",
+      "unitId": "weapon_dart"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_glaive.json",
+      "unitId": "weapon_glaive"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_greataxe.json",
+      "unitId": "weapon_greataxe"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_greatclub.json",
+      "unitId": "weapon_greatclub"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_greatsword.json",
+      "unitId": "weapon_greatsword"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_halberd.json",
+      "unitId": "weapon_halberd"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_hand_crossbow.json",
+      "unitId": "weapon_hand_crossbow"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_handaxe.json",
+      "unitId": "weapon_handaxe"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_heavy_crossbow.json",
+      "unitId": "weapon_heavy_crossbow"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_javelin.json",
+      "unitId": "weapon_javelin"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_lance.json",
+      "unitId": "weapon_lance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_light_crossbow.json",
+      "unitId": "weapon_light_crossbow"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_light_hammer.json",
+      "unitId": "weapon_light_hammer"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_longbow.json",
+      "unitId": "weapon_longbow"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_mace.json",
+      "unitId": "weapon_mace"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_maul.json",
+      "unitId": "weapon_maul"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_morningstar.json",
+      "unitId": "weapon_morningstar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_musket.json",
+      "unitId": "weapon_musket"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_pike.json",
+      "unitId": "weapon_pike"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_pistol.json",
+      "unitId": "weapon_pistol"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_quarterstaff.json",
+      "unitId": "weapon_quarterstaff"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_rapier.json",
+      "unitId": "weapon_rapier"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_scimitar.json",
+      "unitId": "weapon_scimitar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_sickle.json",
+      "unitId": "weapon_sickle"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_sling.json",
+      "unitId": "weapon_sling"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_trident.json",
+      "unitId": "weapon_trident"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_war_pick.json",
+      "unitId": "weapon_war_pick"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_warhammer.json",
+      "unitId": "weapon_warhammer"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_whip.json",
+      "unitId": "weapon_whip"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/web.json",
+      "unitId": "web"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weird.json",
+      "unitId": "weird"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wind_walk.json",
+      "unitId": "wind_walk"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wind_wall.json",
+      "unitId": "wind_wall"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json",
+      "unitId": "wizard_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
+      "unitId": "wizard_scholar"
     }
   ]
 }

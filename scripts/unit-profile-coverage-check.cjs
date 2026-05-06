@@ -110,6 +110,25 @@ const nearCanonicalDenyList = [
   "magic missile",
   "fireball",
 ];
+const surfaceUnitKinds = new Set([
+  "armor",
+  "armor_template",
+  "background",
+  "class",
+  "class_feature",
+  "feat",
+  "magic_item",
+  "mastery",
+  "shield",
+  "shield_template",
+  "species",
+  "species_trait",
+  "subclass",
+  "weapon",
+  "weapon_template",
+  "spell",
+]);
+
 function fail(message) {
   throw new Error(message);
 }
@@ -237,6 +256,29 @@ function discoverInventory(collections) {
     }
     fail(`Unknown collection discovery kind: ${collection.discovery.kind}`);
   });
+}
+
+function discoverAuthoredSurfaceUnits() {
+  const contentDir = path.join(root, "packages/surface/content");
+  return fs
+    .readdirSync(contentDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .flatMap((entry) => {
+      const sourceRecordPath = `packages/surface/content/${entry.name}`;
+      const record = readJson(path.join(root, sourceRecordPath));
+      if (!surfaceUnitKinds.has(record.kind)) return [];
+      return [
+        {
+          unitId: record.id,
+          sourceRecordPath,
+          kind: record.kind,
+          provenance: record.provenance,
+          executableMechanics: Boolean(record.mechanics),
+          rawRecord: record,
+        },
+      ];
+    });
 }
 
 function collectFields(value, prefix = "") {
@@ -735,6 +777,7 @@ function groupUnitEvidence(unitEvidence) {
 function buildMatrix({
   collections,
   inventory,
+  authoredSurfaceUnits,
   profiles,
   unitClaims,
   unitEvidence,
@@ -745,25 +788,64 @@ function buildMatrix({
     unitClaims.map((claim) => [claim.unitId, claim]),
   );
   const evidenceByUnit = groupUnitEvidence(unitEvidence);
-  const units = inventory.map((unit) => {
-    const claim = claimsByUnit.get(unit.unitId);
-    return stable({
-      unitId: unit.unitId,
-      collectionId: unit.collectionId,
-      sourceRecordPath: unit.sourceRecordPath,
-      syntheticLabel: unit.syntheticLabel ?? claim?.syntheticLabel,
-      kind: unit.kind,
-      executableMechanics: unit.executableMechanics,
-      claim: claim?.claim,
-      profiles:
-        claim?.claim?.tag === "supported-profile"
-          ? claim.claim.profileIds.map((profileId) => profileMap.get(profileId))
-          : [],
-      evidence: (evidenceByUnit.get(unit.unitId) ?? []).map(
-        (row) => row.evidence,
-      ),
-    });
-  });
+  const installedSourcePaths = new Set(
+    inventory.map((unit) => unit.sourceRecordPath),
+  );
+  const authoredUnitIdCounts = authoredSurfaceUnits.reduce((counts, unit) => {
+    counts.set(unit.unitId, (counts.get(unit.unitId) ?? 0) + 1);
+    return counts;
+  }, new Map());
+  const units = inventory
+    .map((unit) => {
+      const claim = claimsByUnit.get(unit.unitId);
+      return stable({
+        unitId: unit.unitId,
+        collectionId: unit.collectionId,
+        catalogAdmission: {
+          status: "installed",
+          collectionId: unit.collectionId,
+        },
+        sourceRecordPath: unit.sourceRecordPath,
+        syntheticLabel: unit.syntheticLabel ?? claim?.syntheticLabel,
+        kind: unit.kind,
+        executableMechanics: unit.executableMechanics,
+        authoredSurfaceDuplicateIdCount:
+          authoredUnitIdCounts.get(unit.unitId) ?? undefined,
+        claim: claim?.claim,
+        profiles:
+          claim?.claim?.tag === "supported-profile"
+            ? claim.claim.profileIds.map((profileId) =>
+                profileMap.get(profileId),
+              )
+            : [],
+        evidence: (evidenceByUnit.get(unit.unitId) ?? []).map(
+          (row) => row.evidence,
+        ),
+      });
+    })
+    .concat(
+      authoredSurfaceUnits
+        .filter((unit) => !installedSourcePaths.has(unit.sourceRecordPath))
+        .map((unit) =>
+          stable({
+            unitId: unit.unitId,
+            collectionId: undefined,
+            catalogAdmission: {
+              status: "not-in-unit-catalog",
+              expectedCollectionId:
+                unit.provenance?.kind === "srd-5.2.1" ? "srd-5.2.1" : undefined,
+            },
+            sourceRecordPath: unit.sourceRecordPath,
+            kind: unit.kind,
+            executableMechanics: unit.executableMechanics,
+            authoredSurfaceDuplicateIdCount:
+              authoredUnitIdCounts.get(unit.unitId) ?? undefined,
+            claim: undefined,
+            profiles: [],
+            evidence: [],
+          }),
+        ),
+    );
   const executableProfiles = profiles.filter((profile) =>
     executableProfileKinds.has(profile.profileKind),
   );
@@ -775,6 +857,7 @@ function buildMatrix({
     derivedViews: collections.derivedViews,
     metrics: metrics({
       inventory,
+      authoredSurfaceUnits,
       profiles,
       unitClaims,
       unitEvidence,
@@ -793,6 +876,7 @@ function percent(numerator, denominator) {
 
 function metrics({
   inventory,
+  authoredSurfaceUnits,
   profiles,
   unitClaims,
   unitEvidence,
@@ -819,6 +903,22 @@ function metrics({
   const classicUnits = inventory.filter(
     (unit) => unit.collectionId === "classic-2024-non-srd-mechanics",
   );
+  const installedSurfaceSourcePaths = new Set(
+    inventory
+      .filter((unit) =>
+        unit.sourceRecordPath.startsWith("packages/surface/content/"),
+      )
+      .map((unit) => unit.sourceRecordPath),
+  );
+  const authoredSurfaceAdmitted = authoredSurfaceUnits.filter((unit) =>
+    installedSurfaceSourcePaths.has(unit.sourceRecordPath),
+  );
+  const authoredSurfaceExecutable = authoredSurfaceUnits.filter(
+    (unit) => unit.executableMechanics,
+  );
+  const authoredSurfaceExecutableAdmitted = authoredSurfaceExecutable.filter(
+    (unit) => installedSurfaceSourcePaths.has(unit.sourceRecordPath),
+  );
   const qntModeled = executableProfiles.filter(
     (profile) => (profile.qntOwners ?? []).length > 0,
   );
@@ -840,6 +940,22 @@ function metrics({
       numerator: inventory.length,
       denominator: inventory.length,
       percent: percent(inventory.length, inventory.length),
+    },
+    authoredSurfaceUnitCatalogAdmissionCoverage: {
+      numerator: authoredSurfaceAdmitted.length,
+      denominator: authoredSurfaceUnits.length,
+      percent: percent(
+        authoredSurfaceAdmitted.length,
+        authoredSurfaceUnits.length,
+      ),
+    },
+    authoredSurfaceExecutableCatalogAdmissionCoverage: {
+      numerator: authoredSurfaceExecutableAdmitted.length,
+      denominator: authoredSurfaceExecutable.length,
+      percent: percent(
+        authoredSurfaceExecutableAdmitted.length,
+        authoredSurfaceExecutable.length,
+      ),
     },
     profileClassificationCoverage: {
       numerator: classified,
@@ -897,11 +1013,30 @@ function renderMetric(label, metric) {
 }
 
 function renderReport(matrix) {
-  const unsupported = matrix.units.filter(
+  const installedUnits = matrix.units.filter(
+    (unit) => unit.catalogAdmission?.status === "installed",
+  );
+  const authoredNotInCatalog = matrix.units.filter(
+    (unit) => unit.catalogAdmission?.status === "not-in-unit-catalog",
+  );
+  const unsupported = installedUnits.filter(
     (unit) => unit.claim?.tag !== "supported-profile",
   );
-  const supported = matrix.units.filter(
+  const supported = installedUnits.filter(
     (unit) => unit.claim?.tag === "supported-profile",
+  );
+  const authoredNotInCatalogByKind = Array.from(
+    authoredNotInCatalog
+      .reduce((groups, unit) => {
+        const current = groups.get(unit.kind) ?? [];
+        current.push(unit.unitId);
+        groups.set(unit.kind, current);
+        return groups;
+      }, new Map())
+      .entries(),
+  ).sort(
+    ([kindA, unitsA], [kindB, unitsB]) =>
+      unitsB.length - unitsA.length || kindA.localeCompare(kindB),
   );
   const deterministicEvidence = supported.flatMap((unit) =>
     (unit.evidence ?? [])
@@ -974,6 +1109,14 @@ function renderReport(matrix) {
       matrix.metrics.collectionInventoryCoverage,
     ),
     renderMetric(
+      "Authored Surface Unit catalog admission",
+      matrix.metrics.authoredSurfaceUnitCatalogAdmissionCoverage,
+    ),
+    renderMetric(
+      "Authored Surface executable catalog admission",
+      matrix.metrics.authoredSurfaceExecutableCatalogAdmissionCoverage,
+    ),
+    renderMetric(
       "Profile classification coverage",
       matrix.metrics.profileClassificationCoverage,
     ),
@@ -1015,6 +1158,26 @@ function renderReport(matrix) {
       (unit) =>
         `| \`${unit.unitId}\` | ${unit.collectionId} | ${unit.claim.profileIds.map((id) => `\`${id}\``).join(", ")} |`,
     ),
+    "",
+    "## Authored Surface Units Not In Unit Catalog",
+    "",
+    "| Kind | Count | Units |",
+    "| --- | ---: | --- |",
+    ...(authoredNotInCatalogByKind.length === 0
+      ? ["| _none_ | 0 | _none_ |"]
+      : authoredNotInCatalogByKind.map(
+          ([kind, units]) =>
+            `| ${kind} | ${units.length} | ${units.map((unitId) => `\`${unitId}\``).join(", ")} |`,
+        )),
+    "",
+    "| Unit | Kind | Mechanics | Source |",
+    "| --- | --- | --- | --- |",
+    ...(authoredNotInCatalog.length === 0
+      ? ["| _none_ | _none_ | _none_ | _none_ |"]
+      : authoredNotInCatalog.map(
+          (unit) =>
+            `| \`${unit.unitId}\` | ${unit.kind} | ${unit.executableMechanics ? "yes" : "no"} | \`${unit.sourceRecordPath}\` |`,
+        )),
     "",
     "## Deterministic Admission/Projection Evidence",
     "",
@@ -1080,6 +1243,7 @@ function main() {
   const unitEvidence = readJsonl(paths.unitEvidence);
   const taskClaims = readJsonl(paths.taskClaims);
   const inventory = discoverInventory(collections.collections);
+  const authoredSurfaceUnits = discoverAuthoredSurfaceUnits();
   const scannedClaims = scanClaimFiles();
   const issues = [
     ...validateCollections(collections.collections, inventory),
@@ -1108,6 +1272,7 @@ function main() {
   const matrix = buildMatrix({
     collections,
     inventory,
+    authoredSurfaceUnits,
     profiles,
     unitClaims,
     unitEvidence,
