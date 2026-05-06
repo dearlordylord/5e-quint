@@ -245,6 +245,31 @@ importers:
         specifier: ^3.0.5
         version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
 
+  packages/character-battle-runtime:
+    dependencies:
+      '@dnd/battle-runtime':
+        specifier: workspace:*
+        version: link:../battle-runtime
+      '@dnd/character-sheet-runtime':
+        specifier: workspace:*
+        version: link:../character-sheet-runtime
+      '@dnd/shared':
+        specifier: workspace:*
+        version: link:../shared
+      effect:
+        specifier: ^3.21.0
+        version: 3.21.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.19.15
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.5
+        version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
+
   packages/character-creation-runtime:
     dependencies:
       '@dnd/shared':
@@ -278,6 +303,28 @@ importers:
       zod:
         specifier: ^4.3.6
         version: 4.3.6
+
+  packages/character-sheet-runtime:
+    dependencies:
+      '@dnd/character-creation-runtime':
+        specifier: workspace:*
+        version: link:../character-creation-runtime
+      '@dnd/shared':
+        specifier: workspace:*
+        version: link:../shared
+      effect:
+        specifier: ^3.21.0
+        version: 3.21.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.19.15
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.5
+        version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
 
   packages/core:
     dependencies:
