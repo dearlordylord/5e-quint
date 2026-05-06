@@ -15,9 +15,9 @@ Current authority summary:
   promoted battle authority for new Unit/StatBlock-backed behavior.
 - Root `battle.qnt` and old v0 battle code are legacy proof/restore source
   material only.
-- The most recent proof work is `QCORE10`: spell procedure profiles for Magic
-  Missile, Ray of Frost, Acid Splash, Healing Word, Mage Armor, Spell Slot
-  spend, Cantrip non-spend, and Readied Spell Response integration.
+- The most recent proof work is `QCORE11`: Stat Block attack controls,
+  Multiattack named dispatch, Bonus Action and Reaction windows, Legendary
+  Action windows, X/Day, Recharge, rest recharge, and start-turn recharge rolls.
 - Broad widening should proceed through typed projection parsers and
   package-owned runtime procedures rather than authored-id dispatch,
   support-gate terminology, or projected-executable vocabulary.
@@ -83,7 +83,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 95,
       "id": "QCORE11",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Prove Stat-Block Controls"
     },
     {
@@ -157,8 +157,8 @@ Keep it synchronized with the DAG table and task details.
 | 92    | QCORE8 - Reactions, Continuations, and Concentration | done | QCORE7 | QCORE9 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed bounded spell-free continuation/reaction protocol, Opportunity Attack and damage-interruption shallow integrations, Reaction quota spend/reset, Readied Movement Response, and Concentration. |
 | 93    | QCORE9 - Unit Feature Procedure Profiles | done | QCORE8 | QCORE10 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed projection-shaped feature procedure profiles and owned proof machine without Unit ids or authored Surface records. |
 | 94    | QCORE10 - Spell Procedure Profiles | done | QCORE9 | QCORE11 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed Spell Invocation facts, production Spell Effects, and Readied Spell Response integration. |
-| 95    | QCORE11 - Stat-Block Controls | ready-for-implementation-after-light-research | QCORE10 | QMBT1 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove stat-block attack, Multiattack, limited-use, Recharge, and Legendary Action procedure facts. |
-| 96    | QMBT1 - Standard Rule-Core MBT Bridge Contract | ready-for-implementation-after-light-research | QCORE7-QCORE10 | QMBT2-QMBT5 | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Define the reusable focused-QMBT contract, projection discipline, file placement, commands, and first runnable pattern without broad battle state explosion. |
+| 95    | QCORE11 - Stat-Block Controls | done | QCORE10 | QMBT1 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed Stat Block attack controls, Multiattack named dispatch, limited-use, Recharge, rest recharge, and Legendary Action procedure facts. |
+| 96    | QMBT1 - Standard Rule-Core MBT Bridge Contract | ready-for-implementation-after-light-research | QCORE7-QCORE11 | QMBT2-QMBT5 | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Define the reusable focused-QMBT contract, projection discipline, file placement, commands, and first runnable pattern without broad battle state explosion. |
 | 97    | QMBT2 - Movement and Grapple Runtime Parity | blocked | QMBT1, QCORE7 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE7 movement budget, Dash, Disengage, Stand, Grapple/Escape/Release, and OA-decline resume. |
 | 98    | QMBT3 - Reaction and Continuation Runtime Parity | blocked | QMBT1, QCORE8 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, readied movement, and concentration break/hold. |
 | 99    | QMBT4 - Feature Procedure Runtime Parity | blocked | QMBT1, QCORE9 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
@@ -223,23 +223,25 @@ Cantrip non-spend, and Readied Spell Response integration with QCORE8.
 
 ### Task 95 - QCORE11 - Stat-Block Controls
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QCORE10
 Blocks: QMBT1
 
 Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
 
-Scope: Stat Block attack options, Multiattack named dispatch procedure,
-Stat Block Bonus Action options, Reaction and Legendary Action windows, X/Day,
-Recharge, Recharge after rest, and start-turn recharge roll after StatBlock
-projection. Cite `ASSUMPTIONS.md` A18 for Multiattack mapping and interleaving.
+Completed scope: Stat Block attack options, Multiattack named dispatch
+procedure, Stat Block Bonus Action options, Reaction and Legendary Action
+windows, X/Day, Recharge, Recharge after rest, and start-turn recharge roll
+after Stat Block projection. The proof cites local SRD Stat Block text plus
+`ASSUMPTIONS.md` A18/A21-A24/A44 for Multiattack mapping, Recharge timing, and
+Legendary Action resource/cooldown boundaries.
 
 ### Task 96 - QMBT1 - Standard Rule-Core MBT Bridge Contract
 
 Status: `ready-for-implementation-after-light-research`
 
-Depends on: QCORE7-QCORE10
+Depends on: QCORE7-QCORE11
 Blocks: QMBT2-QMBT5
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)

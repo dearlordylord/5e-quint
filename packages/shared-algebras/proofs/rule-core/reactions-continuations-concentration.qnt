@@ -10,6 +10,7 @@ module reactionsContinuationsConcentration {
     | DamageInterruptionReactionWindow
     | ReadiedMovementReactionWindow
     | ReadiedSpellReactionWindow
+    | StatBlockReactionWindow
 
   type SuspendedReactionWindowKind =
     | NoSuspendedReactionWindow
@@ -17,6 +18,7 @@ module reactionsContinuationsConcentration {
     | SuspendedDamageInterruptionReactionWindow
     | SuspendedReadiedMovementReactionWindow
     | SuspendedReadiedSpellReactionWindow
+    | SuspendedStatBlockReactionWindow
 
   type ReactionWindowState =
     | NoReactionWindow
@@ -24,6 +26,7 @@ module reactionsContinuationsConcentration {
     | OfferedDamageInterruptionWindow({ suspended: SuspendedReactionWindowKind })
     | OfferedReadiedMovementWindow({ suspended: SuspendedReactionWindowKind })
     | OfferedReadiedSpellWindow({ suspended: SuspendedReactionWindowKind })
+    | OfferedStatBlockReactionWindow({ suspended: SuspendedReactionWindowKind })
 
   type ReactionChoice =
     | DeclineReaction
@@ -31,6 +34,7 @@ module reactionsContinuationsConcentration {
     | TakeDamageInterruptionReaction
     | TakeReadiedMovementReaction
     | TakeReadiedSpellReaction
+    | TakeStatBlockReaction
 
   type ConcentrationState =
     | NoConcentration
@@ -70,7 +74,8 @@ module reactionsContinuationsConcentration {
     SuspendedOpportunityAttackReactionWindow,
     SuspendedDamageInterruptionReactionWindow,
     SuspendedReadiedMovementReactionWindow,
-    SuspendedReadiedSpellReactionWindow
+    SuspendedReadiedSpellReactionWindow,
+    SuspendedStatBlockReactionWindow
   )
 
   pure def legalReactionWindowStates: Set[ReactionWindowState] =
@@ -83,6 +88,8 @@ module reactionsContinuationsConcentration {
         .map(suspended => OfferedReadiedMovementWindow({ suspended: suspended })))
       .union(suspendedReactionWindowKinds
         .map(suspended => OfferedReadiedSpellWindow({ suspended: suspended })))
+      .union(suspendedReactionWindowKinds
+        .map(suspended => OfferedStatBlockReactionWindow({ suspended: suspended })))
 
   pure def initialReactionProtocolState: ReactionProtocolState = {
     interruptedActor: initialMovementGrappleState,
@@ -118,6 +125,7 @@ module reactionsContinuationsConcentration {
       | OfferedDamageInterruptionWindow(_) => kind == DamageInterruptionReactionWindow
       | OfferedReadiedMovementWindow(_) => kind == ReadiedMovementReactionWindow
       | OfferedReadiedSpellWindow(_) => kind == ReadiedSpellReactionWindow
+      | OfferedStatBlockReactionWindow(_) => kind == StatBlockReactionWindow
     }
 
   pure def reactionWindowDepth(window: ReactionWindowState): int =
@@ -131,17 +139,27 @@ module reactionsContinuationsConcentration {
         if (v.suspended == NoSuspendedReactionWindow) 1 else 2
       | OfferedReadiedSpellWindow(v) =>
         if (v.suspended == NoSuspendedReactionWindow) 1 else 2
+      | OfferedStatBlockReactionWindow(v) =>
+        if (v.suspended == NoSuspendedReactionWindow) 1 else 2
     }
 
   pure def reactionChoiceMatchesWindow(
     choice: ReactionChoice,
     window: ReactionWindowState
   ): bool =
-    choice == DeclineReaction
-      or (choice == TakeOpportunityAttackReaction and reactionWindowIsKind(window, OpportunityAttackReactionWindow))
-      or (choice == TakeDamageInterruptionReaction and reactionWindowIsKind(window, DamageInterruptionReactionWindow))
-      or (choice == TakeReadiedMovementReaction and reactionWindowIsKind(window, ReadiedMovementReactionWindow))
-      or (choice == TakeReadiedSpellReaction and reactionWindowIsKind(window, ReadiedSpellReactionWindow))
+    match choice {
+      | DeclineReaction => true
+      | TakeOpportunityAttackReaction =>
+        reactionWindowIsKind(window, OpportunityAttackReactionWindow)
+      | TakeDamageInterruptionReaction =>
+        reactionWindowIsKind(window, DamageInterruptionReactionWindow)
+      | TakeReadiedMovementReaction =>
+        reactionWindowIsKind(window, ReadiedMovementReactionWindow)
+      | TakeReadiedSpellReaction =>
+        reactionWindowIsKind(window, ReadiedSpellReactionWindow)
+      | TakeStatBlockReaction =>
+        reactionWindowIsKind(window, StatBlockReactionWindow)
+    }
 
   pure def suspendedReactionWindowKind(window: ReactionWindowState): SuspendedReactionWindowKind =
     match window {
@@ -150,35 +168,41 @@ module reactionsContinuationsConcentration {
       | OfferedDamageInterruptionWindow(_) => SuspendedDamageInterruptionReactionWindow
       | OfferedReadiedMovementWindow(_) => SuspendedReadiedMovementReactionWindow
       | OfferedReadiedSpellWindow(_) => SuspendedReadiedSpellReactionWindow
+      | OfferedStatBlockReactionWindow(_) => SuspendedStatBlockReactionWindow
     }
 
   pure def reactionWindowForKind(
     kind: ReactionWindowKind,
     suspended: SuspendedReactionWindowKind
   ): ReactionWindowState =
-    if (kind == OpportunityAttackReactionWindow) {
-      OfferedOpportunityAttackWindow({ suspended: suspended })
-    } else if (kind == DamageInterruptionReactionWindow) {
-      OfferedDamageInterruptionWindow({ suspended: suspended })
-    } else if (kind == ReadiedMovementReactionWindow) {
-      OfferedReadiedMovementWindow({ suspended: suspended })
-    } else {
-      OfferedReadiedSpellWindow({ suspended: suspended })
+    match kind {
+      | OpportunityAttackReactionWindow =>
+        OfferedOpportunityAttackWindow({ suspended: suspended })
+      | DamageInterruptionReactionWindow =>
+        OfferedDamageInterruptionWindow({ suspended: suspended })
+      | ReadiedMovementReactionWindow =>
+        OfferedReadiedMovementWindow({ suspended: suspended })
+      | ReadiedSpellReactionWindow =>
+        OfferedReadiedSpellWindow({ suspended: suspended })
+      | StatBlockReactionWindow =>
+        OfferedStatBlockReactionWindow({ suspended: suspended })
     }
 
   pure def reactionWindowForSuspendedKind(
     suspended: SuspendedReactionWindowKind
   ): ReactionWindowState =
-    if (suspended == SuspendedOpportunityAttackReactionWindow) {
-      OfferedOpportunityAttackWindow({ suspended: NoSuspendedReactionWindow })
-    } else if (suspended == SuspendedDamageInterruptionReactionWindow) {
-      OfferedDamageInterruptionWindow({ suspended: NoSuspendedReactionWindow })
-    } else if (suspended == SuspendedReadiedMovementReactionWindow) {
-      OfferedReadiedMovementWindow({ suspended: NoSuspendedReactionWindow })
-    } else if (suspended == SuspendedReadiedSpellReactionWindow) {
-      OfferedReadiedSpellWindow({ suspended: NoSuspendedReactionWindow })
-    } else {
-      NoReactionWindow
+    match suspended {
+      | NoSuspendedReactionWindow => NoReactionWindow
+      | SuspendedOpportunityAttackReactionWindow =>
+        OfferedOpportunityAttackWindow({ suspended: NoSuspendedReactionWindow })
+      | SuspendedDamageInterruptionReactionWindow =>
+        OfferedDamageInterruptionWindow({ suspended: NoSuspendedReactionWindow })
+      | SuspendedReadiedMovementReactionWindow =>
+        OfferedReadiedMovementWindow({ suspended: NoSuspendedReactionWindow })
+      | SuspendedReadiedSpellReactionWindow =>
+        OfferedReadiedSpellWindow({ suspended: NoSuspendedReactionWindow })
+      | SuspendedStatBlockReactionWindow =>
+        OfferedStatBlockReactionWindow({ suspended: NoSuspendedReactionWindow })
     }
 
   pure def restoreSuspendedReactionWindow(window: ReactionWindowState): ReactionWindowState =
@@ -188,6 +212,7 @@ module reactionsContinuationsConcentration {
       | OfferedDamageInterruptionWindow(v) => reactionWindowForSuspendedKind(v.suspended)
       | OfferedReadiedMovementWindow(v) => reactionWindowForSuspendedKind(v.suspended)
       | OfferedReadiedSpellWindow(v) => reactionWindowForSuspendedKind(v.suspended)
+      | OfferedStatBlockReactionWindow(v) => reactionWindowForSuspendedKind(v.suspended)
     }
 
   pure def offerReactionWindow(

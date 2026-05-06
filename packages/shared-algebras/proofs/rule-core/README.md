@@ -383,3 +383,42 @@ bounded slot/action resources, cantrip and leveled invocation paths, direct
 damage, spell attack damage, save-gated damage, healing, Mage Armor effects,
 and Readied Spell Response hold/release while tracking only scalar outputs plus
 one ordinary Spell Effect fixture and one readied spell held-effect fixture.
+
+## QCORE11: Stat-Block Controls
+
+`stat-block-controls.qnt` models projection-shaped Stat Block control facts
+after authored `StatBlockRecord` projection. The module uses fixture attack
+names and bounded resources rather than importing Surface records, monster ids,
+or catalog entries.
+
+Scope:
+
+- Stat Block Actions-section attack options spend the Attack action;
+- Multiattack is a named dispatch procedure inside the Attack action: the first
+  listed attack spends the Attack action, remaining named dispatch attacks stay
+  pending, Movement and End Turn may interleave, and End Turn closes unspent
+  dispatches;
+- admitted Stat Block Bonus Action options spend the shared Bonus Action
+  resource;
+- Stat Block Reaction options use QCORE8's shared offered trigger window and
+  spend Reaction quota only when taken;
+- Legendary Action windows open after another creature's turn, spend one
+  Legendary Action use, close after one action, refresh at the monster's start
+  turn, and leave per-action-name cooldowns to the caller per `ASSUMPTIONS.md`
+  A24;
+- X/Day, Recharge, Recharge after Short or Long Rest, and start-turn keyed d6
+  Recharge rolls mutate only executable resource state.
+
+Out of scope for QCORE11:
+
+- authored Stat Block catalog breadth or parser admission;
+- monster-specific tactics or action priority guidance;
+- per-Legendary-Action identity cooldown tracking, documented in
+  `ASSUMPTIONS.md` A24;
+- broad battle reducer replay beyond the reusable control procedure facts.
+
+`stat-block-controls-inductive.qnt` is the owned proof machine. It samples
+bounded action/Bonus Action/Reaction resources, two fixture named attacks,
+daily use, Recharge, rest recharge, start-turn recharge rolls, Legendary Action
+windows, and Multiattack dispatch closure while keeping projection state
+Surface-free.
