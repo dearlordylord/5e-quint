@@ -1,5 +1,6 @@
 import { Either, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
+import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { abilityScore, hp } from "@dnd/shared/types";
 import {
   readBackgroundCreationFacts,
@@ -133,6 +134,7 @@ type BackgroundAbilityScoreIncreaseDelta = {
 };
 
 type ClassFactsByUnitId = ReadonlyMap<UnitRecord["id"], ClassCreationFacts>;
+type FinalizationIssues = NonEmptyReadonlyArray<CreationFinalizationIssue>;
 
 export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
@@ -173,7 +175,7 @@ export function finalizeCharacterDraft(input: {
   if (Either.isLeft(build)) {
     return {
       tag: "invalid",
-      issues: [build.left],
+      issues: build.left,
     };
   }
 
@@ -480,20 +482,31 @@ export function isSupportedManifestBackgroundAbilityScoreIncrease(
 function allClassFactsForFinalization(
   progression: CharacterProgression,
   unitLibrary: UnitCatalog,
-): Either.Either<ClassFactsByUnitId, CreationFinalizationIssue> {
-  const factsByUnitId = new Map<UnitRecord["id"], ClassCreationFacts>();
-  for (const classUnitId of progressionClassUnitIds(progression)) {
-    const classUnit = unitForFinalization(unitLibrary, classUnitId, "class");
-    if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-    const facts = readableForFinalization(
-      readClassCreationFacts(classUnit.right),
-      "class",
-    );
-    if (Either.isLeft(facts)) return Either.left(facts.left);
-    factsByUnitId.set(classUnitId, facts.right);
-  }
+): Either.Either<ClassFactsByUnitId, FinalizationIssues> {
+  return Either.map(
+    traverseValidation(progressionClassUnitIds(progression), (classUnitId) =>
+      classFactsEntryForFinalization(unitLibrary, classUnitId),
+    ),
+    (entries) => new Map(entries),
+  );
+}
 
-  return Either.right(factsByUnitId);
+function classFactsEntryForFinalization(
+  unitLibrary: UnitCatalog,
+  classUnitId: UnitRecord["id"],
+): Either.Either<
+  readonly [UnitRecord["id"], ClassCreationFacts],
+  CreationFinalizationIssue
+> {
+  const classUnit = unitForFinalization(unitLibrary, classUnitId, "class");
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  const facts = readableForFinalization(
+    readClassCreationFacts(classUnit.right),
+    "class",
+  );
+  return Either.isLeft(facts)
+    ? Either.left(facts.left)
+    : Either.right([classUnitId, facts.right]);
 }
 
 function fixedMulticlassProficiencySubjects(
@@ -531,7 +544,7 @@ export function sameBackgroundAbilityScoreIncreaseSelection(
 export function buildCharacterBuild(input: {
   readonly supportedSelections: TemporarySupportedSliceSelections;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterBuild, CreationFinalizationIssue> {
+}): Either.Either<CharacterBuild, FinalizationIssues> {
   const { selections } = input.supportedSelections;
   const progression = input.supportedSelections.progression;
   const selectedClassUnitId = startingClassUnitId(progression);
@@ -544,41 +557,42 @@ export function buildCharacterBuild(input: {
   }
   const classFacts = classFactsByUnitId.right.get(selectedClassUnitId);
   if (classFacts == null) {
-    return Either.left(
+    return Either.left([
       illegalFinalizationIssue(
         `Cannot finalize class progression without starting class facts: ${selectedClassUnitId}`,
       ),
-    );
+    ]);
   }
   const backgroundUnit = unitForFinalization(
     input.unitLibrary,
     selections.background,
     "background",
   );
-  if (Either.isLeft(backgroundUnit)) return Either.left(backgroundUnit.left);
+  if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
   const backgroundFacts = readableForFinalization(
     readBackgroundCreationFacts(backgroundUnit.right),
     "background",
   );
-  if (Either.isLeft(backgroundFacts)) return Either.left(backgroundFacts.left);
+  if (Either.isLeft(backgroundFacts))
+    return Either.left([backgroundFacts.left]);
   const speciesUnit = unitForFinalization(
     input.unitLibrary,
     selections.species,
     "species",
   );
-  if (Either.isLeft(speciesUnit)) return Either.left(speciesUnit.left);
+  if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
   const speciesFacts = readableForFinalization(
     readSpeciesCreationFacts(speciesUnit.right),
     "species",
   );
-  if (Either.isLeft(speciesFacts)) return Either.left(speciesFacts.left);
+  if (Either.isLeft(speciesFacts)) return Either.left([speciesFacts.left]);
   const baseScores = selections.abilityScoreGeneration.assignedScores;
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
     selections.backgroundAbilityScoreIncrease,
     backgroundFacts.right.abilityScoreIncrease.abilities,
   );
-  if (Either.isLeft(finalScores)) return Either.left(finalScores.left);
+  if (Either.isLeft(finalScores)) return Either.left([finalScores.left]);
   const featureScores = applyClassFeatureAbilityScoreIncreases(
     finalScores.right,
     selections,
@@ -625,8 +639,8 @@ export function buildCharacterBuild(input: {
   if (Either.isLeft(classFeatureProficiencySubjects)) {
     return Either.left(classFeatureProficiencySubjects.left);
   }
-  const hitPointsAfterLevelOne =
-    progression.advancements.reduce((total, advancement) => {
+  const hitPointsAfterLevelOne = progression.advancements.reduce(
+    (total, advancement) => {
       const advancementClassFacts = classFactsByUnitId.right.get(
         advancement.classUnitId,
       );
@@ -639,7 +653,9 @@ export function buildCharacterBuild(input: {
               finalAbilityScores.con,
             ))
       );
-    }, 0);
+    },
+    0,
+  );
 
   return Either.right({
     progression,
@@ -945,7 +961,8 @@ function supportedFinalizationChoiceHoles(input: {
     .flatMap(([classUnitId, facts]) =>
       facts.featureGrants.filter(
         (grant) =>
-          grant.level <= classLevelForUnit(input.selections.progression, classUnitId),
+          grant.level <=
+          classLevelForUnit(input.selections.progression, classUnitId),
       ),
     )
     .flatMap((grant) =>
@@ -1496,8 +1513,9 @@ export function applyBackgroundAbilityScoreIncrease(
 function applyClassFeatureAbilityScoreIncreases(
   baseScores: AbilityScoreAssignment,
   selections: FinalizedCharacterSelections,
-): Either.Either<AbilityScoreAssignment, CreationFinalizationIssue> {
+): Either.Either<AbilityScoreAssignment, FinalizationIssues> {
   const deltasWithCaps: AbilityScoreIncreaseDeltaWithCap[] = [];
+  const decodingIssues: CreationFinalizationIssue[] = [];
   for (const selection of selections.choices) {
     if (
       selection.kind !== "unitChoice" ||
@@ -1510,28 +1528,40 @@ function applyClassFeatureAbilityScoreIncreases(
     for (const optionId of choiceSelectionOptionIds(selection)) {
       const decoded = decodeAbilityScoreIncreaseOptionId(optionId);
       if (Either.isLeft(decoded)) {
-        return Either.left(choiceOptionCodecFinalizationIssue(decoded.left));
+        decodingIssues.push(choiceOptionCodecFinalizationIssue(decoded.left));
+        continue;
       }
       deltasWithCaps.push(...decoded.right);
     }
   }
+  const collectedDecodingIssues = nonEmptyReadonlyArray(decodingIssues);
+  if (collectedDecodingIssues != null) {
+    return Either.left(collectedDecodingIssues);
+  }
+
+  const capIssues: CreationFinalizationIssue[] = [];
   let scores = baseScores;
   for (const delta of deltasWithCaps) {
     const currentScore = scores[delta.ability];
     if (currentScore + delta.increase > delta.maxScore) {
-      return Either.left(
+      capIssues.push(
         illegalFinalizationIssue(
           `Cannot apply class-feature ability-score increase: ${delta.ability} ${
             currentScore
           } + ${delta.increase} would exceed ${delta.maxScore}.`,
         ),
       );
+      continue;
     }
 
     scores = {
       ...scores,
       [delta.ability]: abilityScore(currentScore + delta.increase),
     };
+  }
+  const collectedCapIssues = nonEmptyReadonlyArray(capIssues);
+  if (collectedCapIssues != null) {
+    return Either.left(collectedCapIssues);
   }
 
   return Either.right(scores);
@@ -1682,11 +1712,9 @@ function finalizedBuildArmorTraining(
 
 function decodedClassFeatureProficiencySubjects(
   selections: FinalizedCharacterSelections,
-): Either.Either<
-  readonly ProficiencyGrantSubject[],
-  CreationFinalizationIssue
-> {
+): Either.Either<readonly ProficiencyGrantSubject[], FinalizationIssues> {
   const subjects: ProficiencyGrantSubject[] = [];
+  const issues: CreationFinalizationIssue[] = [];
   for (const selection of selections.choices) {
     if (
       selection.kind !== "unitChoice" ||
@@ -1698,13 +1726,17 @@ function decodedClassFeatureProficiencySubjects(
     for (const optionId of choiceSelectionOptionIds(selection)) {
       const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
       if (Either.isLeft(decoded)) {
-        return Either.left(choiceOptionCodecFinalizationIssue(decoded.left));
+        issues.push(choiceOptionCodecFinalizationIssue(decoded.left));
+        continue;
       }
       subjects.push(decoded.right);
     }
   }
 
-  return Either.right(subjects);
+  const collectedIssues = nonEmptyReadonlyArray(issues);
+  return collectedIssues == null
+    ? Either.right(subjects)
+    : Either.left(collectedIssues);
 }
 
 export function resourceForFeature(

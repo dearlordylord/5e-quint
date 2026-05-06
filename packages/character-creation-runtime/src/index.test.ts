@@ -69,6 +69,7 @@ import { parseCharacterProgressionShape } from "./character-progression-algebra.
 import { classUnitId } from "./character-progression-types.ts";
 import {
   applyBackgroundAbilityScoreIncrease,
+  buildCharacterBuild,
   finalizedBuildEquipment,
   supportedChoiceHolesBySource,
 } from "./finalization.ts";
@@ -2395,6 +2396,115 @@ describe("character creation finalization", () => {
     );
   });
 
+  test("collects all missing class Unit issues while projecting a build", () => {
+    const progression = expectRight(
+      parseCharacterProgressionShape({
+        startingClass: classUnitId("class_fighter"),
+        advancements: [
+          {
+            classUnitId: classUnitId("class_missing_one"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+          {
+            classUnitId: classUnitId("class_missing_two"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      }),
+    );
+    const complete = completeManifestDraft();
+    const selections = {
+      ...complete.selections,
+      progression,
+    };
+    const supportedSelections = {
+      selections,
+      progression,
+      unitChoices: [],
+      loadoutChoices: [],
+    } as unknown as Parameters<
+      typeof buildCharacterBuild
+    >[0]["supportedSelections"];
+
+    const result = buildCharacterBuild({ supportedSelections, unitLibrary });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left.map((issue) => issue.message)).toEqual([
+      "Cannot finalize unknown class Unit: class_missing_one",
+      "Cannot finalize unknown class Unit: class_missing_two",
+    ]);
+  });
+
+  test("collects malformed class-feature ability-score option issues while projecting a build", () => {
+    const complete = completeManifestDraft();
+    const selections = {
+      ...complete.selections,
+      choices: [
+        ...complete.selections.choices,
+        selectedChoice(
+          "fighter_ability_score_improvement_l4",
+          "class_feature_ability_score_increase_choice",
+          "ability_score:dex:2:max20",
+          "ability_scores:str:+1;str:+1:max20",
+        ),
+      ],
+    };
+    const supportedSelections = {
+      selections,
+      progression: selections.progression,
+      unitChoices: [],
+      loadoutChoices: [],
+    } as unknown as Parameters<
+      typeof buildCharacterBuild
+    >[0]["supportedSelections"];
+
+    const result = buildCharacterBuild({ supportedSelections, unitLibrary });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toMatchObject([
+      { tag: "invalidChoiceOption", optionId: "ability_score:dex:2:max20" },
+      {
+        tag: "invalidChoiceOption",
+        optionId: "ability_scores:str:+1;str:+1:max20",
+      },
+    ]);
+  });
+
+  test("collects malformed class-feature proficiency option issues while projecting a build", () => {
+    const complete = completeManifestDraft();
+    const selections = {
+      ...complete.selections,
+      choices: [
+        ...complete.selections.choices,
+        selectedChoice(
+          "fighter_proficiency_grant",
+          "class_feature_proficiency_choice",
+          "proficiency:skill",
+          "proficiency:armor",
+        ),
+      ],
+    };
+    const supportedSelections = {
+      selections,
+      progression: selections.progression,
+      unitChoices: [],
+      loadoutChoices: [],
+    } as unknown as Parameters<
+      typeof buildCharacterBuild
+    >[0]["supportedSelections"];
+
+    const result = buildCharacterBuild({ supportedSelections, unitLibrary });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toMatchObject([
+      { tag: "invalidChoiceOption", optionId: "proficiency:skill" },
+      { tag: "invalidChoiceOption", optionId: "proficiency:armor" },
+    ]);
+  });
+
   test("uses collision-resistant progression option ids for class paths", () => {
     const singleClassWithRawEncodedSeparator = expectRight(
       parseCharacterProgressionShape({
@@ -3291,8 +3401,9 @@ describe("character creation finalization", () => {
     expect(
       Either.isLeft(decodeProficiencyGrantSubjectOptionId("tool:   ")),
     ).toBe(true);
-    expect(proficiencyGrantSubjectOption({ kind: "skill", skill: "medicine" }))
-      .toMatchObject({ label: "Medicine" });
+    expect(
+      proficiencyGrantSubjectOption({ kind: "skill", skill: "medicine" }),
+    ).toMatchObject({ label: "Medicine" });
   });
 
   test("keeps duplicate or missing equipment ownership fillable", () => {

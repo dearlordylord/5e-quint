@@ -26,7 +26,13 @@ describe("ability score assignment algebra", () => {
 
   test("returns typed issues for missing or out-of-range scores", () => {
     expect(abilityScoreAssignment({ str: 15 })).toEqual(
-      Either.left({ tag: "missingNumericAbilityScore", ability: "dex" }),
+      Either.left([
+        { tag: "missingNumericAbilityScore", ability: "dex" },
+        { tag: "missingNumericAbilityScore", ability: "con" },
+        { tag: "missingNumericAbilityScore", ability: "int" },
+        { tag: "missingNumericAbilityScore", ability: "wis" },
+        { tag: "missingNumericAbilityScore", ability: "cha" },
+      ]),
     );
     expect(
       abilityScoreAssignment({
@@ -38,7 +44,7 @@ describe("ability score assignment algebra", () => {
         cha: 12,
       }),
     ).toEqual(
-      Either.left({ tag: "invalidAbilityScore", ability: "str", value: 31 }),
+      Either.left([{ tag: "invalidAbilityScore", ability: "str", value: 31 }]),
     );
   });
 });
