@@ -281,3 +281,55 @@ Readied Movement costs, nested offers, Reaction quota reset, and Concentration
 owner break paths, including the guarded damage/concentration interruption
 integration with explicit damage target identity, while recording the branch
 budget near the `any` action.
+
+## QCORE9: Unit Feature Procedure Profiles
+
+`unit-feature-procedure-profiles.qnt` models projection-shaped feature procedure
+facts for character-derived battle features without importing Unit ids, Surface
+records, or authored catalog enumeration.
+
+Scope:
+
+- Action Surge spends a feature Pool, enforces once-per-turn use, and grants one
+  additional non-Magic action fact;
+- Second Wind spends a Bonus Action and feature Pool use, then applies HP
+  recovery through QCORE3;
+- Cunning Action admits Dash, Disengage, and Hide through QCORE6's Bonus Action
+  cost path;
+- Champion Improved Critical is the existing QCORE5 critical-threshold-19
+  attack-roll fact, with the feature-profile boundary restricted to weapon and
+  Unarmed Strike attack forms;
+- Rage spends a Bonus Action/use, creates an Active Ongoing Feature Occurrence,
+  breaks/prevents Concentration, grants Bludgeoning/Piercing/Slashing
+  Resistance facts, adds Strength weapon/Unarmed Strike damage, and models
+  heavy-armor/incapacitated/unconscious early-end facts;
+- Reckless Attack is a first-attack-roll Strength attack fact that creates a
+  start-of-turn occurrence granting Strength attack-roll Advantage for the
+  Barbarian and reciprocal incoming attack-roll Advantage against them;
+- Sneak Attack is an optional once-per-turn Attack Damage Rider for attack-roll
+  hits with Finesse or Ranged weapons, with Advantage/Disadvantage cancellation
+  applied before the Advantage branch and the ally-within-5-feet branch modeled
+  as caller-supplied spatial/condition facts;
+- Evasion-style save damage replacement applies to Dexterity Saving Throw
+  damage whose ordinary success result is half damage and is blocked by
+  Incapacitated;
+- Cutting Words and Uncanny Dodge spend Reaction quota, with Cutting Words also
+  spending Bardic Inspiration Pool uses. Cutting Words covers visible,
+  within-60-feet attack-roll, ability-check, and damage-roll reduction facts,
+  and attack-roll/ability-check reductions require an already successful roll;
+  Uncanny Dodge covers visible attack-roll hit damage halving without a feature
+  Pool.
+
+Out of scope for QCORE9:
+
+- Unit id or authored Surface feature admission breadth;
+- spell procedure profiles and Readied Spell Response, deferred to QCORE10;
+- stat-block controls, deferred to QCORE11;
+- full ability-check procedure modeling beyond the Cutting Words roll-reduction
+  fact;
+- catalog-level class/subclass progression parsers.
+
+`unit-feature-procedure-profiles-inductive.qnt` is the owned proof machine. It
+samples bounded feature Pool uses, ordinary/Bonus Action and Reaction quota
+spends, Rage/Reckless/Sneak occurrence state, and representative damage or
+healing amounts while keeping feature facts projection-shaped and Surface-free.

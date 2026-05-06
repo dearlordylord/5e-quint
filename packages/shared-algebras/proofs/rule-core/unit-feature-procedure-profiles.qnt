@@ -1,0 +1,1017 @@
+// -*- mode: Bluespec; -*-
+
+module unitFeatureProcedureProfiles {
+  import hitPointDamage.* from "./hit-point-damage"
+  import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
+  import hitPointRecovery.* from "./hit-point-recovery"
+  import damageComponentAdjustments.* from "./damage-component-adjustments"
+  import attackDamageComposition.* from "./attack-damage-composition"
+  import actionTurnProcedures.* from "./action-turn-procedures"
+  import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
+
+  // RAW anchors:
+  // - Classes/Fighter.md: Second Wind, Action Surge, Champion Improved Critical.
+  // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
+  // - Classes/Barbarian.md: Rage, Reckless Attack.
+  // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
+  // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
+  //   Damage Rolls, Saving Throws and Damage, Resistance and Vulnerability.
+
+  type FeatureUsePool = {
+    usesRemaining: int,
+    maximumUses: int,
+  }
+
+  type ActionSurgeActionGrant =
+    | NoActionSurgeActionGrant
+    | ActionSurgeActionAvailable
+    | ActionSurgeActionSpent
+
+  type ActionSurgeState = {
+    pool: FeatureUsePool,
+    actionGrant: ActionSurgeActionGrant,
+  }
+
+  type ActionSurgeActionResult = {
+    actionSurge: ActionSurgeState,
+    actionWasTaken: bool,
+  }
+
+  type SecondWindFacts = {
+    healingRoll: int,
+    fighterLevel: int,
+  }
+
+  type SecondWindResult = {
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    recovery: HitPointRecoveryResult,
+  }
+
+  type CunningActionChoice =
+    | CunningDash
+    | CunningDisengage
+    | CunningHide
+
+  type CunningActionFacts = {
+    choice: CunningActionChoice,
+    speedFeet: int,
+    hideFacts: HideProcedureFacts,
+  }
+
+  type RageResistanceDamageType =
+    | RageBludgeoningDamage
+    | RagePiercingDamage
+    | RageSlashingDamage
+    | RageOtherDamage
+
+  type RageOccurrence =
+    | NoRageOccurrence
+    | RageUntilEndOfNextTurn
+    | PersistentRageTenMinuteDuration
+
+  type RageState = {
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    occurrence: RageOccurrence,
+    concentration: ActorConcentrationState,
+  }
+
+  type RageActivationFacts = {
+    wearingHeavyArmor: bool,
+    incapacitated: bool,
+    persistentRage: bool,
+  }
+
+  type RageExtensionFacts = {
+    madeAttackRollAgainstEnemy: bool,
+    forcedEnemySavingThrow: bool,
+    spendsBonusAction: bool,
+    incapacitated: bool,
+    unconscious: bool,
+    wearingHeavyArmor: bool,
+  }
+
+  type RageAttackForm =
+    | RageWeaponAttack
+    | RageUnarmedStrikeAttack
+    | RageSpellAttack
+
+  type ChampionImprovedCriticalAttackForm =
+    | ChampionWeaponAttack
+    | ChampionUnarmedStrikeAttack
+
+  type AttackCriticalThresholdProfile =
+    | StandardAttackCriticalThresholdProfile
+    | ChampionImprovedCriticalThresholdProfile({
+      attackForm: ChampionImprovedCriticalAttackForm,
+    })
+
+  type RageAttackFacts = {
+    usesStrength: bool,
+    dealsDamage: bool,
+    attackForm: RageAttackForm,
+  }
+
+  type RecklessAttackOccurrence =
+    | NoRecklessAttackOccurrence
+    | RecklessAttackUntilStartOfTurn
+
+  type RecklessAttackState = {
+    occurrence: RecklessAttackOccurrence,
+    attackRollMadeThisTurn: bool,
+  }
+
+  type RecklessAttackFacts = {
+    choosesRecklessAttack: bool,
+    strengthAttackRoll: bool,
+  }
+
+  type RecklessAttackAdvantageFacts = {
+    strengthAttackRoll: bool,
+  }
+
+  type WeaponProcedureKind =
+    | FinesseWeapon
+    | RangedWeapon
+    | OtherWeapon
+
+  type SneakAttackFacts = {
+    hitWithAttackRoll: bool,
+    weaponKind: WeaponProcedureKind,
+    hasAdvantage: bool,
+    hasDisadvantage: bool,
+    allyWithinFiveFeet: bool,
+    allyIncapacitated: bool,
+    usedThisTurn: bool,
+    rogueLevel: int,
+    weaponDamageType: RuleDamageType,
+  }
+
+  type SneakAttackResult = {
+    admitted: bool,
+    usedThisTurn: bool,
+    damageDice: int,
+    damageType: RuleDamageType,
+  }
+
+  type SavingThrowAbilityFact =
+    | StrengthSavingThrowFact
+    | DexteritySavingThrowFact
+    | ConstitutionSavingThrowFact
+
+  type SaveDamageReplacementFacts = {
+    savingThrowAbility: SavingThrowAbilityFact,
+    normalSuccessTakesHalfDamage: bool,
+    savingThrowSucceeded: bool,
+    incapacitated: bool,
+  }
+
+  type ReactionRollReductionKind =
+    | CuttingWordsAttackRollReduction
+    | CuttingWordsAbilityCheckReduction
+
+  type CuttingWordsTriggerFacts = {
+    creatureSeen: bool,
+    creatureWithinSixtyFeet: bool,
+  }
+
+  type CuttingWordsRollFacts = {
+    trigger: CuttingWordsTriggerFacts,
+    kind: ReactionRollReductionKind,
+    originalTotal: int,
+    dc: int,
+    bardicDieRoll: int,
+  }
+
+  type CuttingWordsDamageFacts = {
+    trigger: CuttingWordsTriggerFacts,
+    damageRoll: int,
+    bardicDieRoll: int,
+  }
+
+  type UncannyDodgeFacts = {
+    attackerSeen: bool,
+    hitWithAttackRoll: bool,
+    incomingDamage: int,
+  }
+
+  type CuttingWordsReductionResult = {
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    reducedAmount: int,
+  }
+
+  type UncannyDodgeReductionResult = {
+    turn: TurnProcedureState,
+    reducedAmount: int,
+  }
+
+  pure def legalFeatureUsePool(pool: FeatureUsePool): bool = all {
+    pool.maximumUses >= 0,
+    pool.maximumUses <= 6,
+    pool.usesRemaining >= 0,
+    pool.usesRemaining <= pool.maximumUses,
+  }
+
+  pure def spendFeatureUsePool(pool: FeatureUsePool): FeatureUsePool =
+    if (pool.usesRemaining <= 0) pool
+    else pool.with("usesRemaining", pool.usesRemaining - 1)
+
+  pure def legalActionSurgeState(state: ActionSurgeState): bool = all {
+    legalFeatureUsePool(state.pool),
+    state.actionGrant.in(Set(
+      NoActionSurgeActionGrant,
+      ActionSurgeActionAvailable,
+      ActionSurgeActionSpent
+    )),
+    state.actionGrant == NoActionSurgeActionGrant or state.pool.usesRemaining < state.pool.maximumUses,
+  }
+
+  pure def initialActionSurgeState(pool: FeatureUsePool): ActionSurgeState = {
+    pool: pool,
+    actionGrant: NoActionSurgeActionGrant,
+  }
+
+  pure def startTurnActionSurge(state: ActionSurgeState): ActionSurgeState =
+    state.with("actionGrant", NoActionSurgeActionGrant)
+
+  pure def activateActionSurge(state: ActionSurgeState, onTurn: bool): ActionSurgeState =
+    if (not(onTurn) or state.actionGrant != NoActionSurgeActionGrant or state.pool.usesRemaining <= 0) state
+    else {
+      pool: spendFeatureUsePool(state.pool),
+      actionGrant: ActionSurgeActionAvailable,
+    }
+
+  pure def actionSurgePermitsAction(requestedAction: StandardAction): bool =
+    requestedAction != MagicAction
+
+  pure def spendActionSurgeAction(
+    state: ActionSurgeState,
+    requestedAction: StandardAction
+  ): ActionSurgeActionResult =
+    if (state.actionGrant != ActionSurgeActionAvailable or not(actionSurgePermitsAction(requestedAction))) {
+      actionSurge: state,
+      actionWasTaken: false,
+    } else {
+      actionSurge: state.with("actionGrant", ActionSurgeActionSpent),
+      actionWasTaken: true,
+    }
+
+  pure def legalSecondWindFacts(facts: SecondWindFacts): bool = all {
+    facts.healingRoll >= 1,
+    facts.healingRoll <= 10,
+    facts.fighterLevel >= 1,
+    facts.fighterLevel <= 20,
+  }
+
+  pure def resolveSecondWind(
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    vitals: CreatureVitals,
+    deathSavingThrows: DeathSavingThrowLifecycle,
+    positiveHitPointUnconsciousRecovery: PositiveHitPointUnconsciousRecovery,
+    facts: SecondWindFacts
+  ): SecondWindResult = {
+    val admitted = all {
+      legalSecondWindFacts(facts),
+      canSpendBonusAction(turn),
+      pool.usesRemaining > 0,
+    }
+    val spentTurn = if (admitted) spendActionCost(turn, BonusActionCost) else turn
+    val spentPool = if (admitted) spendFeatureUsePool(pool) else pool
+    {
+      turn: spentTurn,
+      pool: spentPool,
+      recovery:
+        if (admitted) applyHitPointHealing(
+          vitals,
+          deathSavingThrows,
+          positiveHitPointUnconsciousRecovery,
+          facts.healingRoll + facts.fighterLevel
+        ) else {
+          vitals: vitals,
+          deathSavingThrows: deathSavingThrows,
+          positiveHitPointUnconsciousRecovery: positiveHitPointUnconsciousRecovery,
+          hitPointsRegained: 0,
+        },
+    }
+  }
+
+  pure def resolveCunningAction(
+    turn: TurnProcedureState,
+    facts: CunningActionFacts
+  ): TurnProcedureState =
+    if (facts.choice == CunningDash) {
+      resolveDash(turn, facts.speedFeet, BonusActionCost)
+    } else if (facts.choice == CunningDisengage) {
+      resolveDisengage(turn, BonusActionCost)
+    } else {
+      resolveHide(turn, facts.hideFacts, BonusActionCost)
+    }
+
+  pure def championImprovedCriticalThreshold: int = 19
+
+  pure def attackCriticalThreshold(profile: AttackCriticalThresholdProfile): int =
+    match profile {
+      | StandardAttackCriticalThresholdProfile => 20
+      | ChampionImprovedCriticalThresholdProfile(v) =>
+        match v.attackForm {
+          | ChampionWeaponAttack => championImprovedCriticalThreshold
+          | ChampionUnarmedStrikeAttack => championImprovedCriticalThreshold
+        }
+    }
+
+  pure def legalRageActivationFacts(facts: RageActivationFacts): bool = all {
+    facts.wearingHeavyArmor.in(Set(true, false)),
+    facts.incapacitated.in(Set(true, false)),
+    facts.persistentRage.in(Set(true, false)),
+  }
+
+  pure def legalRageState(state: RageState): bool = all {
+    legalTurnProcedureState(state.turn),
+    legalFeatureUsePool(state.pool),
+    state.occurrence.in(Set(
+      NoRageOccurrence,
+      RageUntilEndOfNextTurn,
+      PersistentRageTenMinuteDuration
+    )),
+    state.concentration.interruptedActor.in(Set(NoConcentration, Concentrating)),
+    state.concentration.reactor.in(Set(NoConcentration, Concentrating)),
+  }
+
+  pure def startRage(state: RageState, facts: RageActivationFacts): RageState = {
+    val admitted = all {
+      legalRageActivationFacts(facts),
+      canSpendBonusAction(state.turn),
+      state.pool.usesRemaining > 0,
+      state.occurrence == NoRageOccurrence,
+      not(facts.wearingHeavyArmor),
+      not(facts.incapacitated),
+    }
+    if (not(admitted)) state
+    else {
+      turn: spendActionCost(state.turn, BonusActionCost),
+      pool: spendFeatureUsePool(state.pool),
+      occurrence:
+        if (facts.persistentRage) PersistentRageTenMinuteDuration
+        else RageUntilEndOfNextTurn,
+      concentration: endConcentration(state.concentration, InterruptedActor),
+    }
+  }
+
+  pure def ragePreventsConcentrationOrSpellcasting(state: RageState): bool =
+    state.occurrence != NoRageOccurrence
+
+  pure def rageGrantsResistance(damageType: RageResistanceDamageType): bool =
+    damageType == RageBludgeoningDamage
+      or damageType == RagePiercingDamage
+      or damageType == RageSlashingDamage
+
+  pure def rageDamageBonus(barbarianLevel: int): int =
+    if (barbarianLevel >= 16) 4
+    else if (barbarianLevel >= 9) 3
+    else 2
+
+  pure def rageDamageAdmitted(state: RageState, facts: RageAttackFacts): bool = all {
+    state.occurrence != NoRageOccurrence,
+    facts.usesStrength,
+    facts.dealsDamage,
+    facts.attackForm == RageWeaponAttack or facts.attackForm == RageUnarmedStrikeAttack,
+  }
+
+  pure def applyRageDamageBonus(
+    state: RageState,
+    facts: RageAttackFacts,
+    barbarianLevel: int,
+    damageRoll: int
+  ): int =
+    if (rageDamageAdmitted(state, facts)) damageRoll + rageDamageBonus(barbarianLevel)
+    else damageRoll
+
+  pure def endRageIfBlocked(state: RageState, facts: RageExtensionFacts): RageState =
+    if (state.occurrence == NoRageOccurrence) state
+    else if (facts.wearingHeavyArmor) state.with("occurrence", NoRageOccurrence)
+    else if (state.occurrence == PersistentRageTenMinuteDuration and facts.unconscious) {
+      state.with("occurrence", NoRageOccurrence)
+    } else if (state.occurrence == RageUntilEndOfNextTurn and facts.incapacitated) {
+      state.with("occurrence", NoRageOccurrence)
+    } else state
+
+  pure def extendRage(state: RageState, facts: RageExtensionFacts): RageState = {
+    val unblocked = endRageIfBlocked(state, facts)
+    val extensionTrigger = facts.madeAttackRollAgainstEnemy
+      or facts.forcedEnemySavingThrow
+      or facts.spendsBonusAction
+    val canPayBonusExtension =
+      not(facts.spendsBonusAction) or canSpendBonusAction(unblocked.turn)
+    if (unblocked.occurrence != RageUntilEndOfNextTurn or not(extensionTrigger) or not(canPayBonusExtension)) {
+      unblocked
+    } else {
+      turn:
+        if (facts.spendsBonusAction) spendActionCost(unblocked.turn, BonusActionCost)
+        else unblocked.turn,
+      pool: unblocked.pool,
+      occurrence: RageUntilEndOfNextTurn,
+      concentration: unblocked.concentration,
+    }
+  }
+
+  pure def activateRecklessAttackOnFirstAttackRoll(
+    state: RecklessAttackState,
+    facts: RecklessAttackFacts
+  ): RecklessAttackState =
+    if (state.attackRollMadeThisTurn) state
+    else {
+      occurrence:
+        if (facts.choosesRecklessAttack and facts.strengthAttackRoll)
+        RecklessAttackUntilStartOfTurn
+        else state.occurrence,
+      attackRollMadeThisTurn: true,
+    }
+
+  pure def startTurnRecklessAttack(state: RecklessAttackState): RecklessAttackState = {
+    occurrence: NoRecklessAttackOccurrence,
+    attackRollMadeThisTurn: false,
+  }
+
+  pure def recklessAttackGrantsAdvantage(
+    state: RecklessAttackState,
+    facts: RecklessAttackAdvantageFacts
+  ): bool = all {
+    state.occurrence == RecklessAttackUntilStartOfTurn,
+    facts.strengthAttackRoll,
+  }
+
+  pure def recklessAttackGrantsIncomingAttackAdvantage(state: RecklessAttackState): bool =
+    state.occurrence == RecklessAttackUntilStartOfTurn
+
+  pure def sneakAttackDiceForRogueLevel(rogueLevel: int): int =
+    if (rogueLevel >= 19) 10
+    else if (rogueLevel >= 17) 9
+    else if (rogueLevel >= 15) 8
+    else if (rogueLevel >= 13) 7
+    else if (rogueLevel >= 11) 6
+    else if (rogueLevel >= 9) 5
+    else if (rogueLevel >= 7) 4
+    else if (rogueLevel >= 5) 3
+    else if (rogueLevel >= 3) 2
+    else if (rogueLevel >= 1) 1
+    else 0
+
+  pure def sneakAttackWeaponEligible(kind: WeaponProcedureKind): bool =
+    kind == FinesseWeapon or kind == RangedWeapon
+
+  pure def rollHasEffectiveAdvantage(hasAdvantage: bool, hasDisadvantage: bool): bool =
+    hasAdvantage and not(hasDisadvantage)
+
+  pure def sneakAttackEligibilityBranch(facts: SneakAttackFacts): bool =
+    rollHasEffectiveAdvantage(facts.hasAdvantage, facts.hasDisadvantage)
+      or (facts.allyWithinFiveFeet and not(facts.allyIncapacitated) and not(facts.hasDisadvantage))
+
+  pure def resolveSneakAttack(facts: SneakAttackFacts): SneakAttackResult = {
+    val admitted = all {
+      facts.hitWithAttackRoll,
+      sneakAttackWeaponEligible(facts.weaponKind),
+      sneakAttackEligibilityBranch(facts),
+      not(facts.usedThisTurn),
+      sneakAttackDiceForRogueLevel(facts.rogueLevel) > 0,
+    }
+    {
+      admitted: admitted,
+      usedThisTurn: facts.usedThisTurn or admitted,
+      damageDice: if (admitted) sneakAttackDiceForRogueLevel(facts.rogueLevel) else 0,
+      damageType: facts.weaponDamageType,
+    }
+  }
+
+  pure def saveDamageAfterEvasionReplacement(
+    facts: SaveDamageReplacementFacts,
+    normalFailedSaveDamage: int
+  ): int =
+    if (all {
+      facts.savingThrowAbility == DexteritySavingThrowFact,
+      facts.normalSuccessTakesHalfDamage,
+      not(facts.incapacitated),
+    }) {
+      if (facts.savingThrowSucceeded) 0 else normalFailedSaveDamage / 2
+    } else {
+      if (facts.savingThrowSucceeded and facts.normalSuccessTakesHalfDamage)
+      normalFailedSaveDamage / 2
+      else normalFailedSaveDamage
+    }
+
+  pure def cuttingWordsRollTotalAfterReduction(facts: CuttingWordsRollFacts): int =
+    nonnegative(facts.originalTotal - facts.bardicDieRoll)
+
+  pure def cuttingWordsTurnsSuccessIntoFailure(facts: CuttingWordsRollFacts): bool = all {
+    facts.originalTotal >= facts.dc,
+    cuttingWordsRollTotalAfterReduction(facts) < facts.dc,
+  }
+
+  pure def cuttingWordsDamageAfterReduction(facts: CuttingWordsDamageFacts): int =
+    nonnegative(facts.damageRoll - facts.bardicDieRoll)
+
+  pure def cuttingWordsTriggerAvailable(trigger: CuttingWordsTriggerFacts): bool = all {
+    trigger.creatureSeen,
+    trigger.creatureWithinSixtyFeet,
+  }
+
+  pure def uncannyDodgeDamage(facts: UncannyDodgeFacts): int =
+    if (facts.attackerSeen and facts.hitWithAttackRoll) nonnegative(facts.incomingDamage) / 2
+    else nonnegative(facts.incomingDamage)
+
+  pure def resolveCuttingWordsDamageReaction(
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    facts: CuttingWordsDamageFacts
+  ): CuttingWordsReductionResult = {
+    val admitted = all {
+      turn.reactionAvailable,
+      pool.usesRemaining > 0,
+      cuttingWordsTriggerAvailable(facts.trigger),
+      facts.bardicDieRoll >= 1,
+      facts.bardicDieRoll <= 12,
+    }
+    {
+      turn: if (admitted) spendReaction(turn) else turn,
+      pool: if (admitted) spendFeatureUsePool(pool) else pool,
+      reducedAmount:
+        if (admitted) cuttingWordsDamageAfterReduction(facts)
+        else nonnegative(facts.damageRoll),
+    }
+  }
+
+  pure def resolveCuttingWordsRollReaction(
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    facts: CuttingWordsRollFacts
+  ): CuttingWordsReductionResult = {
+    val admitted = all {
+      turn.reactionAvailable,
+      pool.usesRemaining > 0,
+      cuttingWordsTriggerAvailable(facts.trigger),
+      facts.originalTotal >= facts.dc,
+      facts.bardicDieRoll >= 1,
+      facts.bardicDieRoll <= 12,
+    }
+    {
+      turn: if (admitted) spendReaction(turn) else turn,
+      pool: if (admitted) spendFeatureUsePool(pool) else pool,
+      reducedAmount:
+        if (admitted) cuttingWordsRollTotalAfterReduction(facts)
+        else nonnegative(facts.originalTotal),
+    }
+  }
+
+  pure def resolveUncannyDodgeReaction(
+    turn: TurnProcedureState,
+    facts: UncannyDodgeFacts
+  ): UncannyDodgeReductionResult = {
+    val admitted = all {
+      turn.reactionAvailable,
+      facts.attackerSeen,
+      facts.hitWithAttackRoll,
+    }
+    {
+      turn: if (admitted) spendReaction(turn) else turn,
+      reducedAmount:
+        if (admitted) uncannyDodgeDamage(facts)
+        else nonnegative(facts.incomingDamage),
+    }
+  }
+
+  run test_action_surge_grants_one_non_magic_action_once_per_turn = {
+    val pool = { usesRemaining: 2, maximumUses: 2 }
+    val surged = activateActionSurge(initialActionSurgeState(pool), true)
+    val attack = spendActionSurgeAction(surged, AttackAction)
+    val secondActivation = activateActionSurge(attack.actionSurge, true)
+    val nextTurnActivation = activateActionSurge(startTurnActionSurge(attack.actionSurge), true)
+    all {
+      assert(surged.pool.usesRemaining == 1),
+      assert(attack.actionWasTaken),
+      assert(attack.actionSurge.actionGrant == ActionSurgeActionSpent),
+      assert(secondActivation == attack.actionSurge),
+      assert(nextTurnActivation.pool.usesRemaining == 0),
+      assert(legalActionSurgeState(nextTurnActivation)),
+    }
+  }
+
+  run test_action_surge_extra_action_excludes_magic = {
+    val pool = { usesRemaining: 1, maximumUses: 1 }
+    val surged = activateActionSurge(initialActionSurgeState(pool), true)
+    val magic = spendActionSurgeAction(surged, MagicAction)
+    all {
+      assert(not(magic.actionWasTaken)),
+      assert(magic.actionSurge.actionGrant == ActionSurgeActionAvailable),
+    }
+  }
+
+  run test_second_wind_spends_bonus_action_and_heals = {
+    val result = resolveSecondWind(
+      initialTurnProcedureState,
+      { usesRemaining: 2, maximumUses: 2 },
+      {
+        kind: PlayerCharacter,
+        hitPoints: 3,
+        hitPointMaximum: 20,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: false,
+      },
+      resetDeathSavingThrowLifecycle,
+      NoPositiveHitPointUnconsciousRecovery,
+      { healingRoll: 6, fighterLevel: 4 }
+    )
+    all {
+      assert(not(result.turn.bonusActionAvailable)),
+      assert(result.pool.usesRemaining == 1),
+      assert(result.recovery.vitals.hitPoints == 13),
+      assert(legalHitPointRecoveryState(
+        result.recovery.vitals,
+        result.recovery.deathSavingThrows,
+        result.recovery.positiveHitPointUnconsciousRecovery
+      )),
+    }
+  }
+
+  run test_second_wind_non_admission_preserves_recovery_lifecycle = {
+    val lifecycle = {
+      successes: 0,
+      failures: 0,
+      stable: false,
+      hpRegained: false,
+    }
+    val result = resolveSecondWind(
+      initialTurnProcedureState,
+      { usesRemaining: 0, maximumUses: 2 },
+      {
+        kind: PlayerCharacter,
+        hitPoints: 5,
+        hitPointMaximum: 20,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: true,
+      },
+      lifecycle,
+      EndsWhenHitPointsRegained,
+      { healingRoll: 6, fighterLevel: 4 }
+    )
+    all {
+      assert(result.turn == initialTurnProcedureState),
+      assert(result.pool.usesRemaining == 0),
+      assert(result.recovery.vitals.hitPoints == 5),
+      assert(result.recovery.deathSavingThrows == lifecycle),
+      assert(result.recovery.positiveHitPointUnconsciousRecovery == EndsWhenHitPointsRegained),
+      assert(result.recovery.hitPointsRegained == 0),
+    }
+  }
+
+  run test_cunning_action_spends_bonus_action_for_dash_disengage_or_hide = {
+    val dash = resolveCunningAction(initialTurnProcedureState, {
+      choice: CunningDash,
+      speedFeet: 30,
+      hideFacts: { prerequisiteSatisfied: false, checkTotal: 0, dc: 10 },
+    })
+    val disengage = resolveCunningAction(initialTurnProcedureState, {
+      choice: CunningDisengage,
+      speedFeet: 30,
+      hideFacts: { prerequisiteSatisfied: false, checkTotal: 0, dc: 10 },
+    })
+    val hide = resolveCunningAction(initialTurnProcedureState, {
+      choice: CunningHide,
+      speedFeet: 30,
+      hideFacts: { prerequisiteSatisfied: true, checkTotal: 18, dc: 15 },
+    })
+    all {
+      assert(not(dash.bonusActionAvailable)),
+      assert(dash.dashMovementBonusFeet == 30),
+      assert(not(disengage.bonusActionAvailable)),
+      assert(disengage.disengaged),
+      assert(not(hide.bonusActionAvailable)),
+      assert(hide.hidden),
+    }
+  }
+
+  run test_champion_improved_critical_is_weapon_or_unarmed_threshold_nineteen_fact = {
+    val weaponOutcome = resolveAttackRoll({
+      naturalD20: 19,
+      total: 1,
+      armorClass: 30,
+      criticalThreshold: attackCriticalThreshold(ChampionImprovedCriticalThresholdProfile({
+        attackForm: ChampionWeaponAttack,
+      })),
+    })
+    val unarmedOutcome = resolveAttackRoll({
+      naturalD20: 19,
+      total: 1,
+      armorClass: 30,
+      criticalThreshold: attackCriticalThreshold(ChampionImprovedCriticalThresholdProfile({
+        attackForm: ChampionUnarmedStrikeAttack,
+      })),
+    })
+    val nonEligibleAttackOutcome = resolveAttackRoll({
+      naturalD20: 19,
+      total: 1,
+      armorClass: 30,
+      criticalThreshold: attackCriticalThreshold(StandardAttackCriticalThresholdProfile),
+    })
+    all {
+      assert(weaponOutcome.hits),
+      assert(weaponOutcome.critical),
+      assert(unarmedOutcome.hits),
+      assert(unarmedOutcome.critical),
+      assert(not(nonEligibleAttackOutcome.hits)),
+      assert(not(nonEligibleAttackOutcome.critical)),
+    }
+  }
+
+  run test_rage_spends_bonus_action_breaks_concentration_and_grants_riders = {
+    val state = {
+      turn: initialTurnProcedureState,
+      pool: { usesRemaining: 2, maximumUses: 2 },
+      occurrence: NoRageOccurrence,
+      concentration: {
+        interruptedActor: Concentrating,
+        reactor: NoConcentration,
+      },
+    }
+    val raging = startRage(state, {
+      wearingHeavyArmor: false,
+      incapacitated: false,
+      persistentRage: false,
+    })
+    val damage = applyRageDamageBonus(raging, {
+      usesStrength: true,
+      dealsDamage: true,
+      attackForm: RageWeaponAttack,
+    }, 9, 5)
+    all {
+      assert(raging.occurrence == RageUntilEndOfNextTurn),
+      assert(not(raging.turn.bonusActionAvailable)),
+      assert(raging.pool.usesRemaining == 1),
+      assert(raging.concentration.interruptedActor == NoConcentration),
+      assert(ragePreventsConcentrationOrSpellcasting(raging)),
+      assert(rageGrantsResistance(RageBludgeoningDamage)),
+      assert(rageGrantsResistance(RagePiercingDamage)),
+      assert(rageGrantsResistance(RageSlashingDamage)),
+      assert(not(rageGrantsResistance(RageOtherDamage))),
+      assert(damage == 8),
+      assert(legalRageState(raging)),
+    }
+  }
+
+  run test_rage_heavy_armor_and_incapacitated_block_or_end = {
+    val state = {
+      turn: initialTurnProcedureState,
+      pool: { usesRemaining: 2, maximumUses: 2 },
+      occurrence: NoRageOccurrence,
+      concentration: {
+        interruptedActor: NoConcentration,
+        reactor: NoConcentration,
+      },
+    }
+    val blocked = startRage(state, {
+      wearingHeavyArmor: true,
+      incapacitated: false,
+      persistentRage: false,
+    })
+    val raging = startRage(state, {
+      wearingHeavyArmor: false,
+      incapacitated: false,
+      persistentRage: false,
+    })
+    val ended = endRageIfBlocked(raging, {
+      madeAttackRollAgainstEnemy: false,
+      forcedEnemySavingThrow: false,
+      spendsBonusAction: false,
+      incapacitated: true,
+      unconscious: false,
+      wearingHeavyArmor: false,
+    })
+    all {
+      assert(blocked == state),
+      assert(ended.occurrence == NoRageOccurrence),
+    }
+  }
+
+  run test_reckless_attack_only_activates_on_first_strength_attack_roll = {
+    val initial = {
+      occurrence: NoRecklessAttackOccurrence,
+      attackRollMadeThisTurn: false,
+    }
+    val reckless = activateRecklessAttackOnFirstAttackRoll(initial, {
+      choosesRecklessAttack: true,
+      strengthAttackRoll: true,
+    })
+    val later = activateRecklessAttackOnFirstAttackRoll(startTurnRecklessAttack(reckless)
+      .with("attackRollMadeThisTurn", true), {
+      choosesRecklessAttack: true,
+      strengthAttackRoll: true,
+    })
+    all {
+      assert(recklessAttackGrantsAdvantage(reckless, { strengthAttackRoll: true })),
+      assert(not(recklessAttackGrantsAdvantage(reckless, { strengthAttackRoll: false }))),
+      assert(recklessAttackGrantsIncomingAttackAdvantage(reckless)),
+      assert(startTurnRecklessAttack(reckless).occurrence == NoRecklessAttackOccurrence),
+      assert(later.occurrence == NoRecklessAttackOccurrence),
+    }
+  }
+
+  run test_sneak_attack_uses_attack_roll_weapon_and_once_per_turn_facts = {
+    val result = resolveSneakAttack({
+      hitWithAttackRoll: true,
+      weaponKind: FinesseWeapon,
+      hasAdvantage: true,
+      hasDisadvantage: false,
+      allyWithinFiveFeet: false,
+      allyIncapacitated: false,
+      usedThisTurn: false,
+      rogueLevel: 5,
+      weaponDamageType: SlashingDamage,
+    })
+    val repeated = resolveSneakAttack({
+      hitWithAttackRoll: true,
+      weaponKind: FinesseWeapon,
+      hasAdvantage: true,
+      hasDisadvantage: false,
+      allyWithinFiveFeet: false,
+      allyIncapacitated: false,
+      usedThisTurn: result.usedThisTurn,
+      rogueLevel: 5,
+      weaponDamageType: SlashingDamage,
+    })
+    all {
+      assert(result.admitted),
+      assert(result.damageDice == 3),
+      assert(result.damageType == SlashingDamage),
+      assert(result.usedThisTurn),
+      assert(not(repeated.admitted)),
+    }
+  }
+
+  run test_sneak_attack_ally_branch_requires_no_disadvantage_and_active_ally = {
+    val admitted = resolveSneakAttack({
+      hitWithAttackRoll: true,
+      weaponKind: RangedWeapon,
+      hasAdvantage: false,
+      hasDisadvantage: false,
+      allyWithinFiveFeet: true,
+      allyIncapacitated: false,
+      usedThisTurn: false,
+      rogueLevel: 7,
+      weaponDamageType: PoisonDamage,
+    })
+    val blocked = resolveSneakAttack({
+      hitWithAttackRoll: true,
+      weaponKind: RangedWeapon,
+      hasAdvantage: false,
+      hasDisadvantage: true,
+      allyWithinFiveFeet: true,
+      allyIncapacitated: false,
+      usedThisTurn: false,
+      rogueLevel: 7,
+      weaponDamageType: PoisonDamage,
+    })
+    val canceledAdvantage = resolveSneakAttack({
+      hitWithAttackRoll: true,
+      weaponKind: RangedWeapon,
+      hasAdvantage: true,
+      hasDisadvantage: true,
+      allyWithinFiveFeet: false,
+      allyIncapacitated: false,
+      usedThisTurn: false,
+      rogueLevel: 7,
+      weaponDamageType: PoisonDamage,
+    })
+    all {
+      assert(admitted.admitted),
+      assert(admitted.damageDice == 4),
+      assert(not(blocked.admitted)),
+      assert(not(canceledAdvantage.admitted)),
+    }
+  }
+
+  run test_evasion_replaces_dexterity_save_damage_only_when_not_incapacitated = {
+    val success = saveDamageAfterEvasionReplacement({
+      savingThrowAbility: DexteritySavingThrowFact,
+      normalSuccessTakesHalfDamage: true,
+      savingThrowSucceeded: true,
+      incapacitated: false,
+    }, 20)
+    val failure = saveDamageAfterEvasionReplacement({
+      savingThrowAbility: DexteritySavingThrowFact,
+      normalSuccessTakesHalfDamage: true,
+      savingThrowSucceeded: false,
+      incapacitated: false,
+    }, 20)
+    val incapacitated = saveDamageAfterEvasionReplacement({
+      savingThrowAbility: DexteritySavingThrowFact,
+      normalSuccessTakesHalfDamage: true,
+      savingThrowSucceeded: true,
+      incapacitated: true,
+    }, 20)
+    all {
+      assert(success == 0),
+      assert(failure == 10),
+      assert(incapacitated == 10),
+    }
+  }
+
+  run test_cutting_words_spends_reaction_and_bardic_pool_for_damage_reduction = {
+    val result = resolveCuttingWordsDamageReaction(
+      initialTurnProcedureState,
+      { usesRemaining: 3, maximumUses: 3 },
+      {
+        trigger: { creatureSeen: true, creatureWithinSixtyFeet: true },
+        damageRoll: 9,
+        bardicDieRoll: 4,
+      }
+    )
+    all {
+      assert(not(result.turn.reactionAvailable)),
+      assert(result.pool.usesRemaining == 2),
+      assert(result.reducedAmount == 5),
+    }
+  }
+
+  run test_cutting_words_roll_reduction_can_turn_success_into_failure = {
+    val facts = {
+      trigger: { creatureSeen: true, creatureWithinSixtyFeet: true },
+      kind: CuttingWordsAttackRollReduction,
+      originalTotal: 17,
+      dc: 15,
+      bardicDieRoll: 3,
+    }
+    val result = resolveCuttingWordsRollReaction(
+      initialTurnProcedureState,
+      { usesRemaining: 3, maximumUses: 3 },
+      facts
+    )
+    all {
+      assert(not(result.turn.reactionAvailable)),
+      assert(result.pool.usesRemaining == 2),
+      assert(result.reducedAmount == 14),
+      assert(cuttingWordsRollTotalAfterReduction(facts) == 14),
+      assert(cuttingWordsTurnsSuccessIntoFailure(facts)),
+    }
+  }
+
+  run test_cutting_words_requires_seen_in_range_trigger_and_prior_success = {
+    val unseenDamage = resolveCuttingWordsDamageReaction(
+      initialTurnProcedureState,
+      { usesRemaining: 3, maximumUses: 3 },
+      {
+        trigger: { creatureSeen: false, creatureWithinSixtyFeet: true },
+        damageRoll: 9,
+        bardicDieRoll: 4,
+      }
+    )
+    val outOfRangeDamage = resolveCuttingWordsDamageReaction(
+      initialTurnProcedureState,
+      { usesRemaining: 3, maximumUses: 3 },
+      {
+        trigger: { creatureSeen: true, creatureWithinSixtyFeet: false },
+        damageRoll: 9,
+        bardicDieRoll: 4,
+      }
+    )
+    val failedRoll = resolveCuttingWordsRollReaction(
+      initialTurnProcedureState,
+      { usesRemaining: 3, maximumUses: 3 },
+      {
+        trigger: { creatureSeen: true, creatureWithinSixtyFeet: true },
+        kind: CuttingWordsAbilityCheckReduction,
+        originalTotal: 12,
+        dc: 15,
+        bardicDieRoll: 4,
+      }
+    )
+    all {
+      assert(unseenDamage.turn.reactionAvailable),
+      assert(unseenDamage.pool.usesRemaining == 3),
+      assert(unseenDamage.reducedAmount == 9),
+      assert(outOfRangeDamage.turn.reactionAvailable),
+      assert(outOfRangeDamage.pool.usesRemaining == 3),
+      assert(outOfRangeDamage.reducedAmount == 9),
+      assert(failedRoll.turn.reactionAvailable),
+      assert(failedRoll.pool.usesRemaining == 3),
+      assert(failedRoll.reducedAmount == 12),
+    }
+  }
+
+  run test_uncanny_dodge_spends_reaction_and_halves_visible_attack_damage = {
+    val result = resolveUncannyDodgeReaction(
+      initialTurnProcedureState,
+      {
+        attackerSeen: true,
+        hitWithAttackRoll: true,
+        incomingDamage: 9,
+      }
+    )
+    all {
+      assert(not(result.turn.reactionAvailable)),
+      assert(result.reducedAmount == 4),
+    }
+  }
+}
