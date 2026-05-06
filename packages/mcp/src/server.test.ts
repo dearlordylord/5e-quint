@@ -501,7 +501,7 @@ describe("MCP server route", () => {
     });
   });
 
-  test("admits Cunning Action Bonus Action Hide through the retained feature Unit", () => {
+  test("admits Cunning Action alternate action cost through the retained feature Unit", () => {
     const root = createMcpCompositionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 2,
@@ -530,7 +530,16 @@ describe("MCP server route", () => {
     expect(
       characterUnitRef(state, fighterId, "rogue_cunning_action"),
     ).toMatchObject({
-      supportProfiles: ["bonusActionHide"],
+      supportProfiles: [
+        {
+          kind: "alternateActionCost",
+          from: {
+            kind: "standardAction",
+            actions: ["dash", "disengage", "hide"],
+          },
+          to: { kind: "bonusAction" },
+        },
+      ],
     });
     expect(characterUnitRef(state, fighterId, "class_rogue")).toMatchObject({
       supportProfiles: [],

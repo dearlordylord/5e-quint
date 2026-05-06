@@ -96,6 +96,15 @@ function startBattleRight(
   return result.right;
 }
 
+const ROGUE_CUNNING_ACTION_SUPPORT_PROFILE = {
+  kind: "alternateActionCost",
+  from: {
+    kind: "standardAction",
+    actions: ["dash", "disengage", "hide"],
+  },
+  to: { kind: "bonusAction" },
+} as const;
+
 function addBattleCombatantRight(
   input: Parameters<typeof addBattleCombatant>[0],
 ): BattleState {
@@ -1643,7 +1652,7 @@ describe("battle runtime", () => {
     expect(concentration.state.combatants.get(wizardId)?.hidden).toBeNull();
   });
 
-  test("Rogue Cunning Action exposes Hide as a Bonus Action", () => {
+  test("Rogue Cunning Action exposes Dash, Disengage, and Hide as Bonus Actions", () => {
     const state = startBattleRight({
       battleId: battleId("battle-rogue-cunning-action-hide"),
       combatants: [
@@ -1653,7 +1662,7 @@ describe("battle runtime", () => {
           characterUnitRefs: [
             {
               unitId: "rogue_cunning_action",
-              supportProfiles: ["bonusActionHide"],
+              supportProfiles: [ROGUE_CUNNING_ACTION_SUPPORT_PROFILE],
             },
           ],
         }),
@@ -1663,19 +1672,104 @@ describe("battle runtime", () => {
         [fighterId, { kind: "coverOutOfEnemyLineOfSight", cover: "total" }],
       ]),
     });
-    const subject: BattleSubject = {
-      tag: "bonusAction",
+    const dashSubject: BattleSubject = {
+      tag: "bonusActionStandardAction",
       actorId: fighterId,
+      sourceUnitId: "rogue_cunning_action",
+      action: "dash",
+    };
+    const disengageSubject: BattleSubject = {
+      tag: "bonusActionStandardAction",
+      actorId: fighterId,
+      sourceUnitId: "rogue_cunning_action",
+      action: "disengage",
+    };
+    const hideSubject: BattleSubject = {
+      tag: "bonusActionStandardAction",
+      actorId: fighterId,
+      sourceUnitId: "rogue_cunning_action",
       action: "hide",
     };
-    const act = findAct(state, subject);
+    expect(findAct(state, dashSubject).summary).toBe("Dash as a Bonus Action.");
+    expect(findAct(state, disengageSubject).summary).toBe(
+      "Disengage as a Bonus Action.",
+    );
+    const hideAct = findAct(state, hideSubject);
+
+    const dashed = requireResolved(
+      resolveBattleSubject({ state, subject: dashSubject, fills: [] }),
+    );
+    expect(dashed.snapshot.turn).toMatchObject({
+      bonusActionAvailable: false,
+      actionResources: [{ kind: "action", source: "turn" }],
+      dashMovementBonusFeet: 30,
+    });
+
+    const disengaged = requireResolved(
+      resolveBattleSubject({ state, subject: disengageSubject, fills: [] }),
+    );
+    expect(disengaged.snapshot.turn).toMatchObject({
+      bonusActionAvailable: false,
+      actionResources: [{ kind: "action", source: "turn" }],
+      disengaged: true,
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...dashSubject,
+          sourceUnitId: "class_rogue",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+    const noHidePrerequisiteState = startBattleRight({
+      battleId: battleId("battle-rogue-cunning-action-no-hide-prerequisite"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "fighter", level: 1 }],
+          characterUnitRefs: [
+            {
+              unitId: "rogue_cunning_action",
+              supportProfiles: [ROGUE_CUNNING_ACTION_SUPPORT_PROFILE],
+            },
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(findAct(noHidePrerequisiteState, dashSubject).summary).toBe(
+      "Dash as a Bonus Action.",
+    );
+    expect(findAct(noHidePrerequisiteState, disengageSubject).summary).toBe(
+      "Disengage as a Bonus Action.",
+    );
+    expect(
+      discoverBattleActs(noHidePrerequisiteState).some(
+        (act) => JSON.stringify(act.subject) === JSON.stringify(hideSubject),
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: noHidePrerequisiteState,
+        subject: hideSubject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
 
     const hidden = requireResolved(
       resolveBattleSubject({
         state,
-        subject,
+        subject: hideSubject,
         fills: [
-          abilityCheckFill(findHole(act.initialHoles, "abilityCheck"), 16),
+          abilityCheckFill(findHole(hideAct.initialHoles, "abilityCheck"), 16),
         ],
       }),
     );
@@ -1693,11 +1787,11 @@ describe("battle runtime", () => {
   test("Rogue Cunning Action support comes from alternate action cost mechanics", () => {
     const unit = unitLibrary.requireUnit("rogue_cunning_action");
 
-    expect(battleBonusActionStandardActionSupportForUnit(unit)).toBe(
-      "bonusActionHide",
+    expect(battleBonusActionStandardActionSupportForUnit(unit)).toEqual(
+      ROGUE_CUNNING_ACTION_SUPPORT_PROFILE,
     );
     expect(battleUnitSupportProfilesForUnit({ unit })).toEqual(
-      Either.right(["bonusActionHide"]),
+      Either.right([ROGUE_CUNNING_ACTION_SUPPORT_PROFILE]),
     );
   });
 
@@ -11753,6 +11847,9 @@ function subjectName(
     return subject.action;
   }
   if (subject.tag === "bonusAction") {
+    return subject.action;
+  }
+  if (subject.tag === "bonusActionStandardAction") {
     return subject.action;
   }
   if (subject.tag === "actionSpell") {

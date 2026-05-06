@@ -28,26 +28,39 @@ export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
 export const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE = "saveDamageReplacement";
 export const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE =
   "reactionRollOrDamageReduction";
+export const CUNNING_ACTION_STANDARD_ACTIONS = [
+  "dash",
+  "disengage",
+  "hide",
+] as const satisfies ReadonlyArray<StandardActionKind>;
+export type CunningActionStandardAction =
+  (typeof CUNNING_ACTION_STANDARD_ACTIONS)[number];
 export const BATTLE_UNIT_SUPPORT_PROFILES = [
-  "bonusActionHide",
+  "alternateActionCost",
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 ] as const;
+export type BattleAlternateActionCostSupportProfile = {
+  readonly kind: "alternateActionCost";
+  readonly from: {
+    readonly kind: "standardAction";
+    readonly actions: typeof CUNNING_ACTION_STANDARD_ACTIONS;
+  };
+  readonly to: { readonly kind: "bonusAction" };
+};
 export type BattleUnitSupportProfile =
-  (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number];
+  | BattleAlternateActionCostSupportProfile
+  | Exclude<
+      (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
+      "alternateActionCost"
+    >;
 
 export type BattleUnitSupportProfileIssue = {
   readonly tag: "battleUnitSupportProfileIssue";
   readonly message: string;
 };
-
-const CUNNING_ACTION_STANDARD_ACTIONS = [
-  "dash",
-  "disengage",
-  "hide",
-] as const satisfies ReadonlyArray<StandardActionKind>;
 
 function battleUnitSupportProfileIssue(
   message: string,
@@ -70,8 +83,8 @@ export function battleUnitSupportProfilesForUnit(input: {
       `Unsupported battle bonus-action standard-action Unit hook: ${input.unit.id}.`,
     );
   }
-  if (bonusActionStandardActionSupport === "bonusActionHide") {
-    supportProfiles.push("bonusActionHide");
+  if (bonusActionStandardActionSupport !== null) {
+    supportProfiles.push(bonusActionStandardActionSupport);
   }
 
   const criticalRangeSupport =
@@ -278,7 +291,7 @@ export type BattleWeaponOrUnarmedCriticalRange19Support =
   | null;
 
 export type BattleBonusActionStandardActionSupport =
-  | "bonusActionHide"
+  | BattleAlternateActionCostSupportProfile
   | "unsupported"
   | null;
 
@@ -292,14 +305,25 @@ export function battleBonusActionStandardActionSupportForUnit(
     return null;
   }
 
-  return unit.mechanics.from.kind === "standard_action" &&
-    sameStringSet(
+  if (
+    unit.mechanics.from.kind !== "standard_action" ||
+    !sameStringSet(
       unit.mechanics.from.actions,
       CUNNING_ACTION_STANDARD_ACTIONS,
-    ) &&
-    unit.mechanics.to.kind === "bonus_action"
-    ? "bonusActionHide"
-    : "unsupported";
+    ) ||
+    unit.mechanics.to.kind !== "bonus_action"
+  ) {
+    return "unsupported";
+  }
+
+  return {
+    kind: "alternateActionCost",
+    from: {
+      kind: "standardAction",
+      actions: CUNNING_ACTION_STANDARD_ACTIONS,
+    },
+    to: { kind: "bonusAction" },
+  };
 }
 
 export function battleWeaponOrUnarmedCriticalRange19SupportForUnit(

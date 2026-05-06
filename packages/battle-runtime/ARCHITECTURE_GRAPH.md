@@ -200,8 +200,9 @@ flowchart TD
   reusable SRD procedure family, not for catalog breadth.
 - Bonus-action availability is represented in turn resources. Off-Hand Attack,
   prepared Bonus Action healing spells, Second Wind, support-profile-backed
-  Cunning Action Hide, and admitted Stat Block Bonus Action options spend the
-  same Bonus Action resource while reusing package-owned procedures. Slot-spent
+  Cunning Action Dash/Disengage/Hide, and admitted Stat Block Bonus Action
+  options spend the same Bonus Action resource while reusing package-owned
+  procedures. Slot-spent
   spell procedures also share a turn-resource fact for the SRD one-Spell-Slot
   per-turn rule. Off-Hand Attack uses the shared attack host Reaction windows
   before the Bonus Action resource is committed for damage replay.

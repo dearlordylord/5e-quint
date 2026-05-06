@@ -157,7 +157,7 @@ import {
   type ActionHideSubject,
   type ActionSearchSubject,
   type BattleSubject,
-  type BonusActionHideSubject,
+  type BonusActionStandardActionSubject,
 } from "./battle-subjects.ts";
 import { KNOCKED_OUT_UNCONSCIOUS } from "./battle-init.ts";
 import type {
@@ -186,6 +186,7 @@ import type {
 } from "./battle-init.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  type CunningActionStandardAction,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -1987,8 +1988,11 @@ type StatBlockBonusActionOptionBattleResolutionInput =
     >
   >;
 type HideBattleResolutionInput = BattleResolutionInputForSubject<
-  ActionHideSubject | BonusActionHideSubject
+  | ActionHideSubject
+  | (BonusActionStandardActionSubject & { readonly action: "hide" })
 >;
+type BonusActionStandardActionBattleResolutionInput =
+  BattleResolutionInputForSubject<BonusActionStandardActionSubject>;
 type SearchBattleResolutionInput =
   BattleResolutionInputForSubject<ActionSearchSubject>;
 type GrappleBattleResolutionInput = BattleResolutionInputForSubject<
@@ -2898,19 +2902,7 @@ export function discoverBattleActs(
       initialHoles: [attackTargetHole(state, actorId, offHand)],
     });
   }
-  if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    state.currentTurnResources.currentHasBonusAction &&
-    actorSupportsBonusActionHide(state.combatants.get(actorId)) &&
-    canHideInCurrentCircumstances(state, actorId)
-  ) {
-    acts.push({
-      subject: { tag: "bonusAction", actorId, action: "hide" },
-      label: "Hide",
-      summary: "Use a supported feature to Hide as a Bonus Action.",
-      initialHoles: [hideAbilityCheckHole()],
-    });
-  }
+  acts.push(...bonusActionStandardActionActs(state, actorId));
   acts.push(...statBlockBonusActionOptionActs(state, actorId));
   acts.push(...supportedUnitFeatureActs(state, actorId));
   if (combatantCanTakeActions(state.combatants.get(actorId))) {
@@ -3402,6 +3394,17 @@ function resolveBattleSubjectInternal(
     );
   }
   if (
+    input.subject.tag === "bonusActionStandardAction" &&
+    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
+      !input.state.currentTurnResources.currentHasBonusAction)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action is no longer available for the current actor.",
+    );
+  }
+  if (
     input.subject.tag === "actionSpell" &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
       !canSpendAction(input.state.currentTurnResources, "magic"))
@@ -3509,11 +3512,8 @@ function resolveBattleSubjectInternal(
             }),
       });
     }
-    if (subject.tag === "bonusAction" && subject.action === "hide") {
-      return resolveHide({
-        ...input,
-        subject: bonusActionHideSubject(subject),
-      });
+    if (subject.tag === "bonusActionStandardAction") {
+      return resolveBonusActionStandardAction({ ...input, subject });
     }
     if (
       subject.tag === "bonusAction" &&
@@ -3608,18 +3608,6 @@ function actionSearchSubject(subject: {
     tag: "action",
     actorId: subject.actorId,
     action: "search",
-  };
-}
-
-function bonusActionHideSubject(subject: {
-  readonly tag: "bonusAction";
-  readonly actorId: CombatantId;
-  readonly action: "hide";
-}): BonusActionHideSubject {
-  return {
-    tag: "bonusAction",
-    actorId: subject.actorId,
-    action: "hide",
   };
 }
 
@@ -6702,25 +6690,31 @@ function resolveDash(input: BattleResolutionInput): BattleResolutionResult {
       "Dash is no longer available.",
     );
   }
-  const speed = effectiveWalkSpeed(
-    actor,
-    input.state.grapples.some(
-      (grapple) => grapple.targetId === actor.combatantId,
-    ),
-  );
-  const nextState = {
-    ...input.state,
-    currentTurnResources: {
-      ...spent.right,
-      dashMovementBonusFeet: movementFeet(
-        Number(spent.right.dashMovementBonusFeet) + Number(speed),
-      ),
-    },
-  };
+  const nextState = applyDashToActor(input.state, actor, spent.right);
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function applyDashToActor(
+  state: BattleState,
+  actor: BattleCreatureState,
+  spentResources: BattleTurnResources,
+): BattleState {
+  const speed = effectiveWalkSpeed(
+    actor,
+    state.grapples.some((grapple) => grapple.targetId === actor.combatantId),
+  );
+  return {
+    ...state,
+    currentTurnResources: {
+      ...spentResources,
+      dashMovementBonusFeet: movementFeet(
+        Number(spentResources.dashMovementBonusFeet) + Number(speed),
+      ),
+    },
   };
 }
 
@@ -6742,14 +6736,112 @@ function resolveDisengage(
       "Disengage is no longer available.",
     );
   }
-  const nextState = {
-    ...input.state,
-    currentTurnResources: { ...spent.right, disengaged: true },
-  };
+  const nextState = applyDisengage(input.state, spent.right);
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveBonusActionStandardAction(
+  input: BonusActionStandardActionBattleResolutionInput,
+): BattleResolutionResult {
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    !actorHasAlternateActionCost(
+      actor,
+      input.subject.sourceUnitId,
+      input.subject.action,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Bonus Action standard action requires an admitted alternate action cost feature.",
+    );
+  }
+
+  return Match.value(input.subject.action).pipe(
+    Match.when("dash", () => resolveBonusActionDash(input)),
+    Match.when("disengage", () => resolveBonusActionDisengage(input)),
+    Match.when("hide", () =>
+      resolveHide({
+        ...input,
+        subject: { ...input.subject, action: "hide" },
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveBonusActionDash(
+  input: BonusActionStandardActionBattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(input.state, "invalidFill", "Dash accepts no fills.");
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (actor === undefined) {
+    return invalidResult(
+      input.state,
+      "missingCombatant",
+      "Dash actor is not in this battle.",
+    );
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Dash is no longer available.",
+    );
+  }
+  const nextState = applyDashToActor(input.state, actor, spent.right);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveBonusActionDisengage(
+  input: BonusActionStandardActionBattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Disengage accepts no fills.",
+    );
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Disengage is no longer available.",
+    );
+  }
+  const nextState = applyDisengage(input.state, spent.right);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function applyDisengage(
+  state: BattleState,
+  spentResources: BattleTurnResources,
+): BattleState {
+  return {
+    ...state,
+    currentTurnResources: { ...spentResources, disengaged: true },
   };
 }
 
@@ -6936,13 +7028,17 @@ function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
     );
   }
   if (
-    input.subject.tag === "bonusAction" &&
-    !actorSupportsBonusActionHide(actor)
+    input.subject.tag === "bonusActionStandardAction" &&
+    !actorHasAlternateActionCost(
+      actor,
+      input.subject.sourceUnitId,
+      input.subject.action,
+    )
   ) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Bonus Action Hide requires an admitted support profile.",
+      "Bonus Action Hide requires an admitted alternate action cost feature.",
     );
   }
   if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
@@ -6967,7 +7063,7 @@ function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
   }
 
   const spent =
-    input.subject.tag === "bonusAction"
+    input.subject.tag === "bonusActionStandardAction"
       ? spendActivationResource(input.state.currentTurnResources, {
           kind: "bonusAction",
         })
@@ -14097,17 +14193,94 @@ function revealHidden(
   };
 }
 
-function actorSupportsBonusActionHide(
+function bonusActionStandardActionActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    !combatantCanTakeActions(actor) ||
+    !state.currentTurnResources.currentHasBonusAction
+  ) {
+    return [];
+  }
+
+  return alternateActionCostProfilesForActor(actor).flatMap((entry) =>
+    entry.profile.from.actions.flatMap((action) => {
+      if (!alternateActionCostActionAvailable(state, actorId, action)) {
+        return [];
+      }
+      return [
+        {
+          subject: {
+            tag: "bonusActionStandardAction" as const,
+            actorId,
+            sourceUnitId: entry.unitId,
+            action,
+          },
+          label: alternateActionCostActionLabel(action),
+          summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
+          initialHoles: action === "hide" ? [hideAbilityCheckHole()] : [],
+        },
+      ];
+    }),
+  );
+}
+
+function alternateActionCostProfilesForActor(
   combatant: BattleCreatureState | undefined,
+): readonly {
+  readonly unitId: UnitRecord["id"];
+  readonly profile: Extract<
+    BattleUnitSupportProfile,
+    { readonly kind: "alternateActionCost" }
+  >;
+}[] {
+  return combatant?.origin.kind === "character"
+    ? combatant.origin.characterUnitRefs.flatMap((unitRef) =>
+        unitRef.supportProfiles.flatMap((profile) =>
+          typeof profile === "object" && profile.kind === "alternateActionCost"
+            ? [{ unitId: unitRef.unitId, profile }]
+            : [],
+        ),
+      )
+    : [];
+}
+
+function alternateActionCostActionAvailable(
+  state: BattleState,
+  actorId: CombatantId,
+  action: CunningActionStandardAction,
 ): boolean {
-  return (
-    combatant?.origin.kind === "character" &&
-    combatant.origin.characterUnitRefs.some(
-      (unitRef) =>
-        unitRef.supportProfiles.some(
-          (profile) => profile === "bonusActionHide",
-        ) === true,
-    )
+  return Match.value(action).pipe(
+    Match.when("dash", () => true),
+    Match.when("disengage", () => true),
+    Match.when("hide", () => canHideInCurrentCircumstances(state, actorId)),
+    Match.exhaustive,
+  );
+}
+
+function actorHasAlternateActionCost(
+  combatant: BattleCreatureState | undefined,
+  sourceUnitId: string,
+  action: CunningActionStandardAction,
+): boolean {
+  return alternateActionCostProfilesForActor(combatant).some(
+    (entry) =>
+      entry.unitId === sourceUnitId &&
+      entry.profile.to.kind === "bonusAction" &&
+      entry.profile.from.actions.some((candidate) => candidate === action),
+  );
+}
+
+function alternateActionCostActionLabel(
+  action: CunningActionStandardAction,
+): string {
+  return Match.value(action).pipe(
+    Match.when("dash", () => "Dash"),
+    Match.when("disengage", () => "Disengage"),
+    Match.when("hide", () => "Hide"),
+    Match.exhaustive,
   );
 }
 
