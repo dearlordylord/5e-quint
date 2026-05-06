@@ -9,6 +9,10 @@ import {
   type LoadoutSlot,
   type UnitChoiceKey,
 } from "./types.ts";
+import {
+  abilityScoreIncreaseOneScoreOptionId,
+  requireAbilityScoreIncreaseTwoScoresOptionId,
+} from "./choice-option-codecs.ts";
 import { backgroundAbilityScoreIncreaseOptionId } from "./hole-factories.ts";
 import {
   computeTotalLevel,
@@ -190,17 +194,23 @@ export function abilityScoreIncreaseChoiceOptions(
   return choice.methods.flatMap((method) => {
     if (method.kind === "one_score") {
       return SURFACE_ABILITIES.map((ability) => ({
-        optionId: creationChoiceOptionId(
-          `ability_score:${ability}:+${method.increase}:max${choice.maxScore}`,
-        ),
+        optionId: abilityScoreIncreaseOneScoreOptionId({
+          ability,
+          increase: method.increase,
+          maxScore: choice.maxScore,
+        }),
         label: `${ability.toUpperCase()} +${method.increase}`,
       }));
     }
 
     return unorderedSurfaceAbilityPairs().map(([primary, secondary]) => ({
-      optionId: creationChoiceOptionId(
-        `ability_scores:${primary}:+${method.primaryIncrease};${secondary}:+${method.secondaryIncrease}:max${choice.maxScore}`,
-      ),
+      optionId: requireAbilityScoreIncreaseTwoScoresOptionId({
+        primary,
+        primaryIncrease: method.primaryIncrease,
+        secondary,
+        secondaryIncrease: method.secondaryIncrease,
+        maxScore: choice.maxScore,
+      }),
       label: `${primary.toUpperCase()} +${method.primaryIncrease}, ${secondary.toUpperCase()} +${method.secondaryIncrease}`,
     }));
   });

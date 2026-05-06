@@ -233,16 +233,19 @@ export const SkillFilterSchema = Schema.Union(
   }),
 );
 
+export const WEAPON_PROFICIENCY_CATEGORIES = ["simple", "martial"] as const;
 export const WeaponProficiencyCategorySchema = Schema.Literal(
-  "simple",
-  "martial",
+  ...WEAPON_PROFICIENCY_CATEGORIES,
 );
 
-export const ArmorTrainingCategorySchema = Schema.Literal(
+export const ARMOR_TRAINING_CATEGORIES = [
   "light",
   "medium",
   "heavy",
   "shield",
+] as const;
+export const ArmorTrainingCategorySchema = Schema.Literal(
+  ...ARMOR_TRAINING_CATEGORIES,
 );
 
 export const ArmorCategorySchema = Schema.Literal("light", "medium", "heavy");
@@ -347,7 +350,7 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("tool"),
-    toolId: Schema.String,
+    toolId: Schema.NonEmptyTrimmedString,
   }),
 );
 

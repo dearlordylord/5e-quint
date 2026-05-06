@@ -68,7 +68,12 @@ import {
   type CharacterProgression,
 } from "./character-progression-types.ts";
 import { characterClassLevel, SURFACE_SKILLS } from "@dnd/shared/game-facts";
+import {
+  ARMOR_TRAINING_CATEGORIES,
+  WEAPON_PROFICIENCY_CATEGORIES,
+} from "@dnd/surface/surface/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import { proficiencyGrantSubjectOptionId } from "./choice-option-codecs.ts";
 
 export type SupportedLoadoutChoice =
   | {
@@ -196,15 +201,15 @@ const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
 >;
 
 const SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS = SURFACE_SKILLS.map(
-  creationChoiceOptionId,
+  (skill) => proficiencyGrantSubjectOptionId({ kind: "skill", skill }),
 );
 const SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS = [
   ...SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
-  ...["simple", "martial"].map((category) =>
-    creationChoiceOptionId(`weapon_category:${category}`),
+  ...WEAPON_PROFICIENCY_CATEGORIES.map((category) =>
+    proficiencyGrantSubjectOptionId({ kind: "weapon_category", category }),
   ),
-  ...["light", "medium", "heavy", "shield"].map((category) =>
-    creationChoiceOptionId(`armor_category:${category}`),
+  ...ARMOR_TRAINING_CATEGORIES.map((category) =>
+    proficiencyGrantSubjectOptionId({ kind: "armor_category", category }),
   ),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 const SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS =

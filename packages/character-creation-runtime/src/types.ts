@@ -813,6 +813,7 @@ export type CreationBatchIssue = {
 
 export const CREATION_FINALIZATION_ISSUE_CODES = [
   "illegalFinalization",
+  "invalidChoiceOption",
   "unsupportedFinalization",
 ] as const;
 export type CreationFinalizationIssueCode =
@@ -822,6 +823,13 @@ export type CreationFinalizationIssue =
   | {
       readonly tag: "illegalFinalization";
       readonly code: "illegalFinalization";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "invalidChoiceOption";
+      readonly code: "invalidChoiceOption";
+      readonly optionId: string;
+      readonly reason: string;
       readonly message: string;
     }
   | {
@@ -905,7 +913,7 @@ export type CharacterBuildProficiencies = {
   readonly savingThrows: readonly Ability[];
   readonly skills: readonly Skill[];
   readonly weapon: readonly WeaponProficiencyCategory[];
-  readonly tools: readonly CreationChoiceOptionId[];
+  readonly tools: readonly UnitRecord["id"][];
 };
 
 export type CharacterBuildFeature =

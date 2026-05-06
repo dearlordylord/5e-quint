@@ -11,7 +11,10 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  ProficiencyGrantSubject,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 
 import {
@@ -78,6 +81,11 @@ import {
   abilityScoreIncreaseChoiceOptions,
   progressionOptionId,
 } from "./phase1-manifest.ts";
+import {
+  decodeAbilityScoreIncreaseOptionId,
+  decodeProficiencyGrantSubjectOptionId,
+  proficiencyGrantSubjectOption,
+} from "./choice-option-codecs.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -2122,6 +2130,118 @@ describe("character creation finalization", () => {
     expect(new Set(optionIds).size).toBe(optionIds.length);
   });
 
+  test("decodes every generated Ability Score Improvement option", () => {
+    const options = abilityScoreIncreaseChoiceOptions({
+      maxScore: 20,
+      methods: [
+        { kind: "one_score", increase: 2 },
+        { kind: "two_scores", primaryIncrease: 1, secondaryIncrease: 1 },
+      ],
+    });
+
+    for (const option of options) {
+      const decoded = decodeAbilityScoreIncreaseOptionId(option.optionId);
+      expect(Either.isRight(decoded)).toBe(true);
+      if (Either.isRight(decoded)) {
+        expect(decoded.right.length).toBeGreaterThan(0);
+      }
+    }
+    expect(
+      Either.isLeft(
+        decodeAbilityScoreIncreaseOptionId("ability_score:dex:2:max20"),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeAbilityScoreIncreaseOptionId(
+          "ability_scores:str:+1;str:+1:max20",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("applies two-score Ability Score Improvement feat choices", () => {
+    const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
+      supportedProgressions: CharacterProgression[];
+    };
+    const originalProgressions = profile.supportedProgressions;
+    const fighterFour = testProgression("class_fighter", 4);
+    profile.supportedProgressions = [...originalProgressions, fighterFour];
+    try {
+      const fighter = unitLibrary.requireUnit("class_fighter");
+      const secondWind = unitLibrary.requireUnit("fighter_second_wind");
+      const abilityScoreImprovement = {
+        ...secondWind,
+        id: "fighter_ability_score_improvement_l4",
+        name: "Ability Score Improvement",
+        acquiredAtLevel: 4,
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              category: "general",
+              kind: "grant_feat",
+              openFallback: "any_qualifying_feat",
+            },
+          ],
+        },
+      } as UnitRecord;
+      const widenedFighter = {
+        ...fighter,
+        featureGrants: [
+          ...("featureGrants" in fighter ? fighter.featureGrants : []),
+          { level: 4, unitId: "fighter_ability_score_improvement_l4" },
+        ],
+      } as UnitRecord;
+      const widenedUnitLibrary = unitLibraryReplacingUnits([
+        widenedFighter,
+        abilityScoreImprovement,
+      ]);
+      const complete = completeManifestDraft();
+      const draft: CharacterDraft = {
+        ...complete,
+        selections: {
+          ...complete.selections,
+          progression: fighterFour,
+          choices: [
+            ...complete.selections.choices,
+            selectedUnitChoice(
+              "class_fighter",
+              "class_subclass_choice",
+              "subclass_fighter_champion",
+            ),
+            selectedUnitChoice(
+              "fighter_ability_score_improvement_l4",
+              "class_feature_feat_choice",
+              "feat_ability_score_improvement",
+            ),
+            selectedChoice(
+              "fighter_ability_score_improvement_l4",
+              "class_feature_ability_score_increase_choice",
+              "ability_scores:str:+1;dex:+1:max20",
+            ),
+          ],
+        },
+      };
+
+      const result = finalizeCharacterDraft({
+        draft,
+        unitLibrary: widenedUnitLibrary,
+      });
+      expect(result).toMatchObject({
+        tag: "ready",
+        build: {
+          abilityScores: {
+            str: 18,
+            dex: 15,
+          },
+        },
+      });
+    } finally {
+      profile.supportedProgressions = originalProgressions;
+    }
+  });
+
   test("rejects cumulative class-feature ability-score increases above their cap", () => {
     const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
       supportedProgressions: CharacterProgression[];
@@ -3134,7 +3254,7 @@ describe("character creation finalization", () => {
           proficiencies: {
             skills: expect.arrayContaining(["medicine"]),
             weapon: expect.arrayContaining(["martial"]),
-            tools: expect.arrayContaining(["tool:tool_thieves_tools"]),
+            tools: expect.arrayContaining(["tool_thieves_tools"]),
           },
         },
       });
@@ -3142,6 +3262,37 @@ describe("character creation finalization", () => {
       profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice =
         originalProficiencyOptions;
     }
+  });
+
+  test("round-trips every class-feature proficiency subject option shape", () => {
+    const subjects: readonly ProficiencyGrantSubject[] = [
+      { kind: "skill", skill: "medicine" },
+      { kind: "weapon_category", category: "martial" },
+      { kind: "armor_category", category: "light" },
+      { kind: "tool", toolId: "tool_thieves_tools" },
+    ];
+
+    for (const subject of subjects) {
+      const option = proficiencyGrantSubjectOption(subject);
+      const decoded = decodeProficiencyGrantSubjectOptionId(option.optionId);
+      expect(Either.isRight(decoded)).toBe(true);
+      if (Either.isRight(decoded)) {
+        expect(decoded.right).toEqual(subject);
+      }
+    }
+    expect(
+      Either.isLeft(
+        decodeProficiencyGrantSubjectOptionId("weapon_category:future"),
+      ),
+    ).toBe(true);
+    expect(Either.isLeft(decodeProficiencyGrantSubjectOptionId("tool:"))).toBe(
+      true,
+    );
+    expect(
+      Either.isLeft(decodeProficiencyGrantSubjectOptionId("tool:   ")),
+    ).toBe(true);
+    expect(proficiencyGrantSubjectOption({ kind: "skill", skill: "medicine" }))
+      .toMatchObject({ label: "Medicine" });
   });
 
   test("keeps duplicate or missing equipment ownership fillable", () => {

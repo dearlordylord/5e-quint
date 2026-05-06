@@ -17,11 +17,11 @@ import type {
   ClassFeatureRecord,
   FeatRecord,
   ProficiencyGrant,
-  ProficiencyGrantSubject,
   StartingEquipmentChoice,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { proficiencyGrantSubjectOption } from "./choice-option-codecs.ts";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
@@ -1020,27 +1020,6 @@ function proficiencyGrantChoiceHoleSource(
       cardinality,
       options,
     }),
-  );
-}
-
-function proficiencyGrantSubjectOption(
-  subject: ProficiencyGrantSubject,
-): CreationChoiceOption {
-  return Match.value(subject).pipe(
-    Match.when({ kind: "skill" }, ({ skill }) => skillOption(skill)),
-    Match.when({ kind: "weapon_category" }, ({ category }) => ({
-      optionId: creationChoiceOptionId(`weapon_category:${category}`),
-      label: `Weapon category: ${category}`,
-    })),
-    Match.when({ kind: "armor_category" }, ({ category }) => ({
-      optionId: creationChoiceOptionId(`armor_category:${category}`),
-      label: `Armor category: ${category}`,
-    })),
-    Match.when({ kind: "tool" }, ({ toolId }) => ({
-      optionId: creationChoiceOptionId(`tool:${toolId}`),
-      label: toolId,
-    })),
-    Match.exhaustive,
   );
 }
 
