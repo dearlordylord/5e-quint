@@ -41,14 +41,32 @@ turning the matrix into a runtime registry.
 
 ### Acceptance Criteria
 
-- [ ] The plan defines what counts as deterministic admission/projection
+- [x] The plan defines what counts as deterministic admission/projection
       coverage for an executable supported Unit.
-- [ ] The plan defines what counts as Specific Unit Parity MBT coverage.
-- [ ] The matrix/report can distinguish profile parity from selected identity
+- [x] The plan defines what counts as Specific Unit Parity MBT coverage.
+- [x] The matrix/report can distinguish profile parity from selected identity
       parity.
-- [ ] QMBT7 explicitly remains a tracer; later expansion task boundaries are
+- [x] QMBT7 explicitly remains a tracer; later expansion task boundaries are
       deferred until tracer learnings are recorded.
-- [ ] No QNT file is required to enumerate authored Unit ids.
+- [x] No QNT file is required to enumerate authored Unit ids.
+
+### Phase 1 Notes
+
+Specific Unit Parity evidence lives in
+`plans/unit-profile-coverage/unit-evidence.jsonl`. Evidence rows cite concrete
+Unit ids and owner artifacts, while profile ids are derived from
+`unit-claims.jsonl`; this keeps profile classification single-source.
+
+Deterministic admission/projection coverage means a focused catalog/runtime
+test loads the authored Unit through the production Unit catalog and proves the
+production support or feature-projection boundary admits it. Selected identity
+MBT coverage means a focused MBT fixture binds a concrete authored Unit id into
+production runtime entrypoints and compares QCORE-observable projections.
+
+The supported Unit denominator is the set of `supported-profile` claims in the
+matrix. Unsupported and widening rows remain explicit closure dispositions.
+QMBT7 remains a methodology tracer until Phase 4 records expansion boundaries
+for QMBT8+.
 
 ---
 
@@ -76,14 +94,14 @@ save-damage replacement profiles.
 
 ### Acceptance Criteria
 
-- [ ] The tracer uses real authored Unit ids from the matrix.
-- [ ] The test verifies production admission/projection behavior, not copied
+- [x] The tracer uses real authored Unit ids from the matrix.
+- [x] The test verifies production admission/projection behavior, not copied
       expected behavior in a parallel registry.
-- [ ] The matrix has a durable way to cite deterministic admission/projection
+- [x] The matrix has a durable way to cite deterministic admission/projection
       evidence.
-- [ ] Unsupported or widening Units remain explicit closure dispositions rather
+- [x] Unsupported or widening Units remain explicit closure dispositions rather
       than hidden omissions.
-- [ ] `pnpm unit-profile-coverage:check` passes after evidence wiring.
+- [x] `pnpm unit-profile-coverage:check` passes after evidence wiring.
 
 ---
 
@@ -101,13 +119,20 @@ is genuinely shared, but it should not force a catch-all helper layer.
 
 ### Acceptance Criteria
 
-- [ ] The MBT fixture uses a concrete authored Unit id from the matrix.
-- [ ] The MBT replay goes through production runtime entrypoints.
-- [ ] The QNT side remains a bounded procedure/scenario spec, not a Unit
+- [x] The MBT fixture uses a concrete authored Unit id from the matrix.
+- [x] The MBT replay goes through production runtime entrypoints.
+- [x] The QNT side remains a bounded procedure/scenario spec, not a Unit
       catalog loop.
-- [ ] The matrix/report can cite the selected identity MBT evidence separately
+- [x] The matrix/report can cite the selected identity MBT evidence separately
       from profile-level Procedure Parity evidence.
-- [ ] The focused MBT run follows the standard timed MBT protocol.
+- [x] The focused MBT run follows the standard timed MBT protocol.
+
+### Phase 3 Notes
+
+QMBT7 uses `fighter_second_wind` as the selected identity tracer because the
+existing focused feature MBT already binds that concrete authored Unit id into
+production runtime discovery and resolution paths. The QNT side remains the
+bounded QCORE9 feature procedure scenario, not a Unit catalog enumeration.
 
 ---
 
@@ -123,26 +148,62 @@ Only then add QMBT8+ expansion tasks to `ACTIVE_PLAN`.
 
 ### Acceptance Criteria
 
-- [ ] QMBT7 closeout states whether Specific Unit Parity should expand by
+- [x] QMBT7 closeout states whether Specific Unit Parity should expand by
       feature profiles, spell profiles, stat-block identity, or another
       matrix-derived grouping.
-- [ ] The report or plan defines the percentage denominator for future identity
+- [x] The report or plan defines the percentage denominator for future identity
       coverage.
-- [ ] Any reusable helpers introduced by QMBT7 are justified by repeated
+- [x] Any reusable helpers introduced by QMBT7 are justified by repeated
       projection vocabulary, not by speculative generalization.
-- [ ] `ACTIVE_PLAN.md` contains follow-on tasks only after the tracer learnings
+- [x] `ACTIVE_PLAN.md` contains follow-on tasks only after the tracer learnings
       justify their boundaries.
+
+### Phase 4 Notes
+
+Expansion should proceed by matrix-derived supported Unit identities, grouped
+first by Unit feature profiles and then by spell profiles. The deterministic
+admission/projection denominator is supported Unit claims, currently 17 Units.
+Selected identity MBT uses the same denominator for reporting but should remain
+selective: add identities where the authored Unit shape is representative or
+high-risk, not one random-walk fixture for every Unit.
+
+QMBT7 introduced one durable matrix concept, `unit-evidence.jsonl`, because
+both deterministic admission/projection evidence and selected identity MBT
+evidence need the same Unit-id-to-owner citation shape. No runtime helper layer
+was added; the deterministic test calls existing production catalog and feature
+projection entrypoints directly.
+
+Follow-on boundaries:
+
+- QMBT8: expand deterministic admission/projection evidence for the remaining
+  supported Unit feature identities before widening into spells.
+- QMBT9: expand selected identity MBT evidence selectively from matrix risk,
+  starting with feature identities that have production reducer state changes.
 
 ## Verification
 
-- [ ] RAW/source check for any newly modeled behavior. If QMBT7 only wires
+- [x] RAW/source check for any newly modeled behavior. If QMBT7 only wires
       evidence for already-modeled behavior, cite existing QCORE/QMBT RAW
       anchors rather than rereading unrelated SRD text.
-- [ ] Matrix check: `pnpm unit-profile-coverage:check`.
-- [ ] Package typecheck for touched runtime test packages.
-- [ ] Focused deterministic tests for admission/projection coverage.
-- [ ] Focused MBT only after behavior/evidence wiring is complete and only with
+- [x] Matrix check: `pnpm unit-profile-coverage:check`.
+- [x] Package typecheck for touched runtime test packages.
+- [x] Focused deterministic tests for admission/projection coverage.
+- [x] Focused MBT only after behavior/evidence wiring is complete and only with
       the required timed MBT protocol.
-- [ ] No broad battle MBT for matrix-only edits.
-- [ ] `/simplify` convergence after implementation phases, minimum two rounds
+- [x] No broad battle MBT for matrix-only edits.
+- [x] `/simplify` convergence after implementation phases, minimum two rounds
       for nontrivial changes.
+
+### Simplification Notes
+
+- Round 1 localized evidence-tag literals in the checker so validation,
+  metrics, and report rendering share one tag definition.
+- Round 2 localized repeated Unit ids in the deterministic admission test and
+  then addressed reviewer findings by making Unit identity evidence executable
+  through owner-local `UNIT-IDENTITY-EVIDENCE` markers while removing duplicate
+  QMBT7 profile/task claims.
+- Round 3 addressed second-pass reviewer feedback by making owner-local Unit
+  identity evidence markers bidirectional with `unit-evidence.jsonl`; no
+  further important simplification issues remained. Task ids intentionally are
+  not foreign-keyed to `ACTIVE_PLAN.md`, because that file is an active queue
+  and completed tasks may be cleaned up.

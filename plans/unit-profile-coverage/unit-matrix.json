@@ -52,6 +52,11 @@
       "numerator": 49,
       "percent": "100%"
     },
+    "deterministicAdmissionProjectionCoverage": {
+      "denominator": 17,
+      "numerator": 3,
+      "percent": "17.6%"
+    },
     "profileClassificationCoverage": {
       "denominator": 49,
       "numerator": 49,
@@ -76,6 +81,11 @@
       "denominator": 11,
       "numerator": 11,
       "percent": "100%"
+    },
+    "selectedIdentityMbtCoverage": {
+      "denominator": 17,
+      "numerator": 1,
+      "percent": "5.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 35,
@@ -544,6 +554,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "class",
       "profiles": [],
@@ -556,6 +567,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "class",
       "profiles": [],
@@ -568,6 +580,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "background",
       "profiles": [],
@@ -580,6 +593,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "species",
       "profiles": [],
@@ -592,6 +606,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "subclass",
       "profiles": [],
@@ -604,6 +619,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "subclass",
       "profiles": [],
@@ -616,6 +632,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [],
@@ -633,6 +650,18 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT7"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "QMBT7"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -672,6 +701,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [],
@@ -689,6 +719,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -728,6 +759,7 @@
         "tag": "needs-surface-widening"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [],
@@ -745,6 +777,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -788,6 +821,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -832,6 +866,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT7"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -877,6 +918,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -925,6 +967,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [],
@@ -942,6 +985,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -985,6 +1029,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT7"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -1030,6 +1081,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -1082,6 +1134,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -1121,6 +1174,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [],
@@ -1133,6 +1187,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [],
@@ -1145,6 +1200,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "feat",
       "profiles": [],
@@ -1157,6 +1213,7 @@
         "tag": "needs-surface-widening"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "feat",
       "profiles": [],
@@ -1169,6 +1226,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "feat",
       "profiles": [],
@@ -1181,6 +1239,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "feat",
       "profiles": [],
@@ -1193,6 +1252,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "mastery",
       "profiles": [],
@@ -1205,6 +1265,7 @@
         "tag": "needs-surface-widening"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
       "profiles": [],
@@ -1217,6 +1278,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
       "profiles": [],
@@ -1230,6 +1292,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
       "profiles": [],
@@ -1248,6 +1311,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1319,6 +1383,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1384,6 +1449,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
@@ -1402,6 +1468,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1467,6 +1534,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
@@ -1485,6 +1553,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1556,6 +1625,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1627,6 +1697,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1673,6 +1744,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
@@ -1685,6 +1757,7 @@
         "tag": "needs-surface-widening"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
@@ -1697,6 +1770,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "armor",
       "profiles": [],
@@ -1709,6 +1783,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "shield",
       "profiles": [],
@@ -1721,6 +1796,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
@@ -1733,6 +1809,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
@@ -1745,6 +1822,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
@@ -1757,6 +1835,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
@@ -1769,6 +1848,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
@@ -1781,6 +1861,7 @@
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
+      "evidence": [],
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
@@ -1798,6 +1879,7 @@
         "tag": "supported-profile"
       },
       "collectionId": "classic-2024-non-srd-mechanics",
+      "evidence": [],
       "executableMechanics": true,
       "kind": "classic-non-srd-mechanics-fixture",
       "profiles": [

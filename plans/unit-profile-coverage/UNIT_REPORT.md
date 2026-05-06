@@ -15,6 +15,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | QNT proof coverage | 11/11 | 100% |
 | Runtime mapping coverage | 11/11 | 100% |
 | Runtime parity coverage | 11/11 | 100% |
+| Deterministic admission/projection coverage | 3/17 | 17.6% |
+| Selected identity MBT coverage | 1/17 | 5.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Supported Unit Claims
@@ -38,6 +40,20 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `magic_missile` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `shield` | srd-5.2.1 | `spell.reaction-shield` |
 | `mycelium_step` | classic-2024-non-srd-mechanics | `unit-feature.alternate-action-cost` |
+
+## Deterministic Admission/Projection Evidence
+
+| Unit | Profiles | Task | Owner |
+| --- | --- | --- | --- |
+| `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+
+## Selected Identity MBT Evidence
+
+| Unit | Profiles | Task | Owner |
+| --- | --- | --- | --- |
+| `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 
 ## Unsupported And Widening Pressure
 

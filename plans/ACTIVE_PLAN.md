@@ -125,8 +125,20 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 102,
       "id": "QMBT7",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Specific Unit Parity MBT and Matrix Integration"
+    },
+    {
+      "number": 103,
+      "id": "QMBT8",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Expand Unit Feature Admission Evidence"
+    },
+    {
+      "number": 104,
+      "id": "QMBT9",
+      "status": "ready-for-research",
+      "title": "Select Specific Unit Identity MBT Expansion"
     }
   ]
 }
@@ -176,7 +188,9 @@ Keep it synchronized with the DAG table and task details.
 | 99    | QMBT4 - Feature Procedure Runtime Parity | done | QMBT1, QCORE9 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
 | 100   | QMBT5 - Spell Procedure Runtime Parity | done | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
 | 101   | QMBT6 - Stat-Block Control Runtime Parity | done | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE11 Stat Block Multiattack dispatch through production reducers. Legendary Actions remain a separate later tracer. |
-| 102   | QMBT7 - Specific Unit Parity MBT and Matrix Integration | ready-for-implementation-after-light-research | QMBT4-QMBT6, Unit profile matrix | later Specific Unit parity expansion tasks | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Run the deep vertical: define the methodology, add deterministic admission/projection coverage for a small matrix slice, add one selected identity MBT, then create QMBT8+ only from tracer learnings. |
+| 102   | QMBT7 - Specific Unit Parity MBT and Matrix Integration | done | QMBT4-QMBT6, Unit profile matrix | QMBT8-QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed methodology contract, deterministic admission/projection tracer for three Unit feature identities, selected identity MBT citation for `fighter_second_wind`, and expansion boundaries. |
+| 103   | QMBT8 - Expand Unit Feature Admission Evidence | ready-for-implementation-after-light-research | QMBT7 | QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Expand deterministic admission/projection evidence across remaining supported Unit feature identities before widening into spell identities. |
+| 104   | QMBT9 - Select Specific Unit Identity MBT Expansion | ready-for-research | QMBT7-QMBT8 | none | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Choose the next selected identity MBT cases from matrix risk, prioritizing feature identities with production reducer state changes. |
 
 ## Task Details
 
@@ -400,25 +414,70 @@ Multiattack runtime behavior correction; package typecheck; package unit tests;
 
 ### Task 102 - QMBT7 - Specific Unit Parity MBT and Matrix Integration
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT4-QMBT6, Unit profile matrix
 
-Blocks: none
+Blocks: QMBT8-QMBT9
 
 Research / plan: [QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md)
 
-Scope: run the matrix-driven Specific Unit Parity methodology tracer that sits
-after Procedure Parity MBT. QMBT7 should define the exact coverage states, add
-deterministic catalog/projection/admission coverage for a small feature-profile
-slice, add one selected identity-aware MBT, and record learnings before any
-QMBT8+ expansion tasks are created.
+Completed scope: defined the Specific Unit Parity evidence states, added
+deterministic catalog/projection/admission coverage for
+`fighter_second_wind`, `barbarian_reckless_attack`, and `rogue_evasion`, cited
+selected identity MBT evidence for `fighter_second_wind`, and recorded QMBT8+
+expansion boundaries.
 
 Out of scope: enumerating all Units in QNT; one MBT trace per shipped Unit;
 duplicating Surface Unit data into QNT; broad catalog discovery inside focused
 MBT drivers.
 
-Verification: matrix checker; focused deterministic projection/admission tests;
-focused MBT only after choosing representative/high-risk Unit identities and
-only with the standard timed MBT protocol; no broad battle MBT for matrix-only
-edits.
+Verification: existing QCORE9/QMBT4 RAW anchors; `pnpm
+unit-profile-coverage:check`; focused deterministic projection/admission test;
+`pnpm --filter @dnd/battle-runtime typecheck`; focused QMBT4 feature MBT with
+the timed protocol; no broad battle MBT; two `/simplify` rounds.
+
+### Task 103 - QMBT8 - Expand Unit Feature Admission Evidence
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT7
+
+Blocks: QMBT9
+
+Research / plan: [QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md)
+
+Scope: expand `unit-evidence.jsonl` deterministic admission/projection evidence
+for remaining supported Unit feature identities, using focused tests that load
+authored Units through the production Unit catalog and production feature
+projection/support boundaries. Keep profile ids single-source through
+`unit-claims.jsonl`.
+
+Out of scope: selected identity MBT expansion; QNT catalog enumeration; spell
+identity expansion.
+
+Verification: `pnpm unit-profile-coverage:check`; focused deterministic
+admission/projection tests; package typecheck; two `/simplify` rounds. Do not
+run battle MBT for deterministic evidence-only expansion.
+
+### Task 104 - QMBT9 - Select Specific Unit Identity MBT Expansion
+
+Status: `ready-for-research`
+
+Depends on: QMBT7-QMBT8
+
+Blocks: none
+
+Research / plan: [QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md)
+
+Scope: choose the next selected identity MBT cases from matrix risk after
+QMBT8 expands deterministic admission. Prioritize supported Unit feature
+identities whose authored mechanics drive production reducer state changes, and
+record selected MBT evidence separately from deterministic evidence.
+
+Out of scope: one MBT trace per shipped Unit; broad battle MBT; QNT Unit
+catalog loops.
+
+Verification: focused MBT only for chosen identities, one run at a time with
+the standard timed protocol; `pnpm unit-profile-coverage:check`; package
+typecheck; two `/simplify` rounds.

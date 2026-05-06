@@ -39,13 +39,37 @@ where `<claim-prefix>` is `UNIT-PROFILE-COVERAGE:`.
 
 Supported claim kinds are `qnt-owner`, `runtime-owner`,
 `verification-owner:qnt-proof`, `verification-owner:focused-mbt`,
-`verification-owner:runtime-test`, and `verification-owner:catalog-test`.
+and `verification-owner:runtime-test`.
+
+`unit-evidence.jsonl` records concrete Unit identity evidence. The evidence row
+does not restate profile ids; the checker derives those from `unit-claims.jsonl`
+so profile classification stays single-source. Evidence owners must also carry
+a matching marker:
+
+```text
+UNIT-IDENTITY-EVIDENCE marker fields:
+<evidence-tag> <task-id> <unit-id> [<unit-id> ...]
+```
+
+Current evidence tags are:
+
+- `deterministic-admission-projection`: a focused catalog/runtime test loads the
+  authored Unit through the production Unit catalog and proves the production
+  support/projection boundary admits it.
+- `selected-identity-mbt`: a focused MBT fixture binds a concrete authored Unit
+  id into production runtime entrypoints and compares QCORE-observable
+  projections.
 
 ## Classic Non-SRD Authoring Lane
 
 Classic non-SRD mechanics-only records may preserve exact mechanics facts:
 level gates, prerequisites, action economy, resource cadence, dice, numbers,
 conditions, durations, target shapes, and execution relationships.
+
+This is the public surrogate lane for private PHB/XPHB mechanics pressure:
+PHB/XPHB source identity must not appear in shipped ids, labels, names,
+descriptions, or prose; only structured mechanics may be preserved, under
+mushroom/fungi synthetic ids and labels.
 
 They must not include protected expression: canonical names, descriptions,
 flavor text, examples, rules prose, unique phrasing, table presentation,
@@ -66,9 +90,16 @@ This matrix has two verification layers:
   the profile, not a catalog loop over every authored Unit id.
 - **Specific Unit parity**: Unit claims prove that each authored Unit id is
   classified into supported profiles or an explicit unsupported/widening
-  disposition. Deterministic catalog/projection tests should cover all shipped
-  Units; focused MBT should be added only for representative or high-risk Unit
-  identities.
+  disposition. Deterministic catalog/projection tests should cover supported
+  Unit claims; focused MBT should be added only for representative or high-risk
+  Unit identities.
+
+Deterministic admission/projection coverage counts supported Unit ids with
+`unit-evidence.jsonl` evidence tagged `deterministic-admission-projection`.
+Selected identity MBT coverage counts supported Unit ids with evidence tagged
+`selected-identity-mbt`. Both denominators are the supported Unit claims in
+this matrix; unsupported and widening rows remain closure dispositions, not
+test omissions.
 
 Run:
 
