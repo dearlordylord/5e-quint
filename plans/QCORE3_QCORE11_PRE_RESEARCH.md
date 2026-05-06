@@ -15,6 +15,13 @@ authored content into executable procedure facts; rule-core QNT proves those
 facts; TypeScript reducers mirror the QNT procedure shape; selective MBT/parity
 is used where it adds cross-boundary value.
 
+Every QCORE implementation must define the executable procedure fact shape
+before or alongside the QNT procedure. Authored inputs must cross a typed
+projection parser that returns either those facts or typed projection issues.
+Parser/catalog breadth is tested outside QNT; QNT fixtures instantiate the
+executable facts directly. Reducers must consume the same fact shape or the task
+must create an explicit parity-bridge follow-up.
+
 Use the QCORE0 composition pattern for every task:
 
 - stateless procedure modules for reusable rules;
@@ -31,11 +38,11 @@ Production mechanics:
 
 - `applyHpHealing(...)` heals up to Hit Point Maximum, ignores terminal death,
   removes Unconscious when a zero-HP character regains HP, resets Death Saving
-  Throws, and ends positive-HP Knock Out.
+  Throws, and ends the Unconscious/rest state created by Knock Out.
 - `applyKnockOut(...)` turns a qualifying melee drop-to-zero into 1 HP plus
   Unconscious.
-- Stable remains at 0 HP and Unconscious; ordinary damage resumes the Death
-  Saving Throw lifecycle through QCORE2.
+- Stable remains a 0 HP creature state with Unconscious; ordinary damage resumes
+  the Death Saving Throw lifecycle through QCORE2.
 
 RAW anchors:
 
@@ -55,6 +62,10 @@ Architecture notes:
 
 - Extend QCORE1/QCORE2, do not duplicate Hit Point or Death Saving Throw state.
 - Keep `dead` canonical in `CreatureVitals`.
+- Represent Knock Out as the source/procedure that applies 1 HP plus
+  Unconscious and any executable Short Rest/first-aid lifecycle; do not add an
+  independent Knock Out status unless the type makes mismatched HP,
+  Unconscious, and rest/first-aid combinations unrepresentable.
 - Stable 1d4-hour recovery is out of scope unless a production reducer executes
   it; session handoff may record it, but QNT should only prove executable
   reducer procedure facts.
@@ -64,10 +75,11 @@ Architecture notes:
 Production mechanics:
 
 - damage components by type;
-- numeric bonuses/reductions before target damage adjustments;
+- numeric damage modifiers before target damage adjustments;
 - Immunity, Resistance, and Vulnerability;
 - same-type component aggregation before target adjustment;
-- scalar/proportional reductions across mixed damage entries.
+- proportional allocation across mixed damage components after applying the
+  relevant modifier.
 
 RAW anchors:
 
@@ -89,17 +101,22 @@ Architecture notes:
   where legal.
 - Do not model monster catalog breadth; projection parsers and catalog tests own
   authored breadth.
+- RAW does not define every same-type aggregation or mixed-type allocation
+  policy. QCORE4 must either require callers to provide already-partitioned
+  damage instances after source-owned allocation or add an `ASSUMPTIONS.md`
+  entry before implementation.
 
 ## QCORE5 - Attack Roll and Attack Damage Composition
 
 Production mechanics:
 
 - target fact legality, range-band facts, attack roll mode;
-- natural 1 miss, natural 20 hit/critical, critical threshold 19;
+- attack roll d20 result 1 misses; d20 result 20 hits and is a Critical Hit;
+  Champion procedure fact makes d20 result 19 also a Critical Hit;
 - hit/miss branch, damage roll validation, Critical Hit dice doubling;
 - melee Knock Out disposition hook from QCORE3;
 - damage application through QCORE1-QCORE4;
-- Attack action resource spend.
+- Attack action quota spend.
 
 RAW anchors:
 
@@ -129,10 +146,10 @@ Architecture notes:
 
 Production mechanics:
 
-- Dash, Disengage, Dodge, Help, Hide, Search, Ready, End Turn, Stand from
-  Prone;
-- ordinary Action/Bonus Action resource consumption;
-- turn refresh, reaction refresh, start/end turn effect expiry hooks;
+- Dash, Disengage, Dodge, Help, Hide, Search, Ready, End Turn;
+- ordinary Action Quota and Bonus Action Quota Spend;
+- turn refresh, Reaction Quota reset at the start of the creature's next turn,
+  start/end turn effect expiry hooks;
 - current-actor legality.
 
 RAW anchors:
@@ -142,10 +159,12 @@ RAW anchors:
   Prone.
 - `.references/srd-5.2.1/Rules-Glossary.md`: Dash, Disengage, Dodge, Help,
   Hide, Ready, Search, Prone, Reaction.
+- `ASSUMPTIONS.md`: A2 for End Turn as a runtime transition; A6/A16 if
+  start/end-turn effect ordering is in implementation scope.
 
 Ubiquitous-language checks:
 
-- Action Lifecycle, Magic Action, Resource Consumption, Movement, Prone,
+- Action Lifecycle, Magic Action, Pool/Quota/Spend, Movement, Prone,
   Invisible/Hidden distinctions.
 
 Architecture notes:
@@ -154,16 +173,22 @@ Architecture notes:
   second resource model.
 - Hide/Search should take table/caller facts as inputs; no geometry, line of
   sight, or cover derivation in QNT.
+- Influence, Study, Utilize, and Magic are SRD action kinds but are not all
+  production reducer procedures yet. QCORE6 should either model only the
+  currently executable action facts or add a generic action-quota-spend
+  procedure with parser consequences for non-executable action kinds.
 
 ## QCORE7 - Movement, Spatial Facts, and Grapple
 
 Production mechanics:
 
-- movement budget and caller-supplied movement cost;
-- stand-from-Prone movement cost;
+- turn Movement budget and caller-supplied Movement cost;
+- full Stand from Prone procedure: action legality, Prone removal, and Movement
+  cost;
 - opportunity-attack trigger facts;
-- Grapple, Escape Grapple, release, free hand, size limit, escape DC,
-  Grappled attack-roll disadvantage, drag-cost fact.
+- Grapple, Escape Grapple, release, free hand, size limit, escape DC, Grappled
+  Speed becomes 0, Grappled attack-roll disadvantage, Grappled drag/carry extra
+  Movement cost fact.
 
 RAW anchors:
 
@@ -184,15 +209,18 @@ Architecture notes:
   with supplied facts, not pathfinding, adjacency, cover, or line of sight.
 - Grapple should be a bounded state machine with a shallow attack-roll
   disadvantage integration proof.
+- Stand from Prone belongs here, not QCORE6, because its correctness couples
+  condition removal to Movement cost.
 
 ## QCORE8 - Reactions, Continuations, and Concentration
 
 Production mechanics:
 
-- reaction resource spend/refresh;
-- interrupt windows, decline, nested windows, replay continuations;
+- Reaction Quota Spend and reset;
+- Offer/Decline reaction windows, nested reaction windows, Advance
+  continuations;
 - opportunity attack continuation;
-- readied movement/spell release;
+- Readied Movement Response;
 - concentration ownership, break/prevent, damage save DC, failed save break.
 
 RAW anchors:
@@ -201,21 +229,27 @@ RAW anchors:
   Ready, Concentration, Damage and Healing.
 - `.references/srd-5.2.1/Rules-Glossary.md`: Reaction, Ready, Concentration,
   Opportunity Attacks.
-- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`: Concentration and
-  Ready spell casting.
+- `ASSUMPTIONS.md`: required before modeling nested/replay ordering, decline
+  semantics beyond Ready's "ignore", or any queue/stack policy.
 
 Ubiquitous-language checks:
 
-- Offer, Decline, Advance, Reaction, Concentration, Spell Invocation, Spell
-  Effect.
+- Offer, Decline, Advance, Reaction, Concentration.
 
 Architecture notes:
 
 - This is the highest composition-risk cluster. Keep a small standalone
   continuation algebra first, then one shallow integration with attack damage
-  and one with readied spell release.
+  and one with Opportunity Attack.
+- The continuation algebra is implementation protocol, not a direct RAW rule.
+  Keep proof fixtures bounded: fixed maximum continuation depth, finite window
+  kinds, branch budget beside each `any`, and separate shallow integrations for
+  Opportunity Attack and damage interruption.
 - Do not model all possible reaction features here; QCORE9 consumes this
   protocol through feature procedure facts.
+- Do not model Readied Spell Response release here. QCORE10 defines Spell
+  Invocation and Spell Effect procedure facts first, then adds the readied spell
+  integration.
 
 ## QCORE9 - Unit Feature Procedure Profiles
 
@@ -234,12 +268,12 @@ RAW anchors:
 - `.references/srd-5.2.1/Classes/Rogue.md`: Cunning Action, Sneak Attack,
   Evasion, Uncanny Dodge.
 - `.references/srd-5.2.1/Classes/Barbarian.md`: Rage, Reckless Attack.
-- `.references/srd-5.2.1/Classes/Bard.md`: Bardic Inspiration/Cutting Words
-  where available in the local corpus.
+- `.references/srd-5.2.1/Classes/Bard.md`: Bardic Inspiration and College of
+  Lore: Cutting Words.
 
 Ubiquitous-language checks:
 
-- Rider, Resource Consumption, Attack Damage Rider, Reaction, Resistance,
+- Rider, Pool, Quota, Spend, Attack Damage Rider, Reaction, Resistance,
   Critical Hit.
 
 Architecture notes:
@@ -254,11 +288,14 @@ Architecture notes:
 
 Production mechanics:
 
-- Magic Missile, Ray of Frost, Acid Splash, Healing Word, Mage Armor;
-- prepared slot spend, cantrip non-spend, action/bonus-action spell costs;
-- spell target allocation, spell attack rolls, save-gate damage;
-- persistent Mage Armor effect and early end;
-- readied spell cast/release integration with QCORE8.
+- Spell Definition procedure profiles for Magic Missile, Ray of Frost, Acid
+  Splash, Healing Word, and Mage Armor;
+- Spell Invocation from prepared Spell Access spends a Spell Slot; Cantrip
+  invocations do not;
+- Magic Action or Bonus Action quota spend for Spell Invocation;
+- Spell Invocation target allocation, spell attack rolls, save-gated damage;
+- persistent Mage Armor Spell Effect and early end;
+- Readied Spell Response release integration with QCORE8.
 
 RAW anchors:
 
@@ -277,7 +314,7 @@ Ubiquitous-language checks:
 
 Architecture notes:
 
-- Model spell invocation procedure facts, not full spell definitions.
+- Model Spell Invocation procedure facts, not full Spell Definitions.
 - Spell width should be per procedure family: attack spell, save-gate damage,
   direct allocation damage, healing spell, persistent AC effect.
 - Do not let spell QNT absorb the whole battle reducer; integrate with QCORE8
@@ -288,7 +325,7 @@ Architecture notes:
 Production mechanics:
 
 - Stat Block attack options;
-- Multiattack dispatch resources and interleaving;
+- Multiattack named dispatch procedure and interleaving;
 - Stat Block Bonus Action options;
 - Reaction and Legendary Action windows;
 - X/Day, Recharge, Recharge after rest, start-turn recharge roll.
@@ -298,6 +335,8 @@ RAW anchors:
 - `.references/srd-5.2.1/Monsters/Overview.md`: Actions, Multiattack, Bonus
   Action, Reactions, Legendary Actions, Limited Usage.
 - `.references/srd-5.2.1/Rules-Glossary.md`: Stat Block, Reaction.
+- `ASSUMPTIONS.md`: A18 for Multiattack counter mapping, dispatch identity, and
+  any allowed interleaving.
 
 Ubiquitous-language checks:
 
@@ -320,3 +359,28 @@ Each QCORE must pass these checks before implementation closeout:
   death, action lifecycle, spell ownership, movement/spatial, and riders.
 - Architecture: QNT remains procedure-first and Surface-free; projection parsers
   own authored-content admission; state spaces stay bounded and composable.
+
+## Pre-Review Closeout
+
+RAW, architecture, and ubiquitous-language reviews were applied before adding
+QCORE3-QCORE11 to `ACTIVE_PLAN.md`.
+
+Applied review corrections:
+
+- QCORE3: Knock Out is not an independent durable status; it is a procedure/source
+  fact over 1 HP plus Unconscious and any executable rest/first-aid lifecycle.
+- QCORE4: mixed-type damage allocation/aggregation needs caller-provided
+  partitioned damage instances or an `ASSUMPTIONS.md` entry before
+  implementation.
+- QCORE5: Critical Hit language distinguishes the d20 trigger from the result.
+- QCORE6: Stand from Prone moved to QCORE7; End Turn cites `ASSUMPTIONS.md`
+  A2, with A6/A16 if start/end-turn ordering enters scope.
+- QCORE7: Movement wording distinguishes Speed, turn Movement budget, and
+  caller-supplied Movement cost.
+- QCORE8: the continuation algebra is an implementation protocol, must be
+  bounded, and needs assumptions before nested/replay queue or stack policy is
+  modeled. Readied Spell Response integration is deferred to QCORE10.
+- QCORE9: Bard/Cutting Words anchors use the concrete local corpus reference.
+- QCORE10: spell terminology uses Spell Definition, Spell Access, Spell
+  Invocation, and Spell Effect.
+- QCORE11: Multiattack mapping/interleaving cites `ASSUMPTIONS.md` A18.
