@@ -6006,21 +6006,47 @@ describe("battle runtime", () => {
         action: "attack",
         attackName: "Shortbow",
       },
+      { tag: "runtimeCommand", actorId: goblinId, command: "move" },
       { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
     ]);
     expect(continuationSubjects).not.toContainEqual(subject);
     expect(continuationActs.map((act) => act.label)).toEqual([
       "Attack",
       "Attack",
+      "Move",
       "End Turn",
     ]);
-    expect(
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: goblinId,
+      command: "move",
+    };
+    const moveHole = requireHole(
       resolveBattleSubject({
         state: multiattackState,
-        subject: { tag: "runtimeCommand", actorId: goblinId, command: "move" },
+        subject: moveSubject,
         fills: [],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+      "movement",
+    );
+    const afterMove = requireResolved(
+      resolveBattleSubject({
+        state: multiattackState,
+        subject: moveSubject,
+        fills: [
+          movementFill(moveHole, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).state;
+    expect(afterMove.currentTurnResources.actionResources).toEqual(
+      multiattackState.currentTurnResources.actionResources,
+    );
+    expect(afterMove.combatants.get(goblinId)?.movementSpentFeet).toBe(
+      movementFeet(5),
+    );
     expect(
       resolveBattleSubject({
         state: multiattackState,

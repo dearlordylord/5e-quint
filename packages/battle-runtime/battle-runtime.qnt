@@ -91,9 +91,10 @@ module battleRuntime {
   // - Monsters/Overview.md lines 229-245, Playing-the-Game.md lines
   //   318-324 and 501-503, Rules-Glossary.md line 108, and ASSUMPTIONS.md
   //   A44: Stat Block Multiattack is part of a monster's single Attack
-  //   action; pending dispatches are an immediate continuation in this
-  //   runtime and close when spent or when the turn ends. Stat Block Bonus
-  //   Action options spend the one per-turn Bonus Action.
+  //   action; pending dispatches are a named-attack continuation in this
+  //   runtime, Movement can interleave between dispatch attacks, and dispatches
+  //   close when spent or when the turn ends. Stat Block Bonus Action options
+  //   spend the one per-turn Bonus Action.
   // - Rules-Glossary.md lines 102-106, 496-514, and 1074 plus
   //   Equipment.md lines 54-56 and ASSUMPTIONS.md A8/A37: the battle-owned
   //   held/wielded hand state, Light-property Off-Hand Attack damage modifier

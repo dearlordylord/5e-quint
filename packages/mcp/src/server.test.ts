@@ -1248,7 +1248,7 @@ describe("MCP server route", () => {
     expect(read.snapshot.combatants).toHaveLength(2);
   });
 
-  test("discovers only Stat Block Multiattack dispatch continuations through MCP tools", () => {
+  test("discovers Stat Block Multiattack dispatch and Movement continuations through MCP tools", () => {
     const baseRoot = createMcpCompositionRoot();
     const multiattackStatBlock = goblinWarriorMultiattackStatBlock(baseRoot);
     const catalogResult = buildStatBlockCatalog({
@@ -1331,7 +1331,7 @@ describe("MCP server route", () => {
     );
     expect(
       continuation.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Attack", "End Turn"]);
+    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
     expect(
       continuation.snapshot.acts.map(
         (act: { subject: unknown }) => act.subject,
@@ -1348,6 +1348,11 @@ describe("MCP server route", () => {
         actorId: "goblin",
         action: "attack",
         attackName: "Shortbow",
+      },
+      {
+        tag: "runtimeCommand",
+        actorId: "goblin",
+        command: "move",
       },
       {
         tag: "runtimeCommand",
@@ -4102,9 +4107,12 @@ function goblinWarriorMultiattackStatBlock(
   const base = root.statBlockCatalog.requireStatBlock(
     "stat_block_goblin_warrior",
   );
+  // MCP-only upgraded Goblin Warrior fixture: the SRD Goblin Warrior has no
+  // Multiattack, but this keeps the fixture small while exercising the tool path.
   return {
     ...base,
     id: "stat_block_goblin_warrior_mcp_multiattack",
+    name: "Upgraded Goblin Warrior",
     statBlock: {
       ...base.statBlock,
       actions: {

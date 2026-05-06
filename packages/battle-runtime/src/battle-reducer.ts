@@ -2795,6 +2795,7 @@ export function discoverBattleActs(
     );
   }
   if (hasOpenStatBlockMultiattackDispatch) {
+    acts.push(...movementActs(state, actorId));
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
       label: "End Turn",
@@ -2950,19 +2951,7 @@ export function discoverBattleActs(
   if (combatantCanTakeActions(state.combatants.get(actorId))) {
     acts.push(...discoverSupportedSpellActs(state, actorId));
   }
-  const movementHoleForActor = movementHole(state, actorId);
-  if (
-    combatantCanMoveInState(state, actorId) &&
-    state.combatants.size > 1 &&
-    Number(movementHoleForActor.movementBudgetFeet) > 0
-  ) {
-    acts.push({
-      subject: { tag: "runtimeCommand", actorId, command: "move" },
-      label: "Move",
-      summary: "Spend Movement using table-supplied movement cost.",
-      initialHoles: [movementHoleForActor],
-    });
-  }
+  acts.push(...movementActs(state, actorId));
   if (standFromProneCostFeet(state, actorId) !== null) {
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "standFromProne" },
@@ -3007,6 +2996,29 @@ function releaseGrappleActs(state: BattleState): readonly AvailableBattleAct[] {
     summary: "Release a grappled target without spending an action.",
     initialHoles: [],
   }));
+}
+
+function movementActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const movementHoleForActor = movementHole(state, actorId);
+  if (
+    !combatantCanMoveInState(state, actorId) ||
+    state.combatants.size <= 1 ||
+    Number(movementHoleForActor.movementBudgetFeet) <= 0
+  ) {
+    return [];
+  }
+
+  return [
+    {
+      subject: { tag: "runtimeCommand", actorId, command: "move" },
+      label: "Move",
+      summary: "Spend Movement using table-supplied movement cost.",
+      initialHoles: [movementHoleForActor],
+    },
+  ];
 }
 
 type SupportedStatBlockBonusActionOption = {
@@ -3251,7 +3263,7 @@ function subjectAllowedDuringStatBlockMultiattackDispatch(
   if (
     subject.tag === "runtimeCommand" &&
     subject.actorId === actorId &&
-    subject.command === "endTurn"
+    (subject.command === "endTurn" || subject.command === "move")
   ) {
     return true;
   }
@@ -3434,7 +3446,7 @@ function resolveBattleSubjectInternal(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Pending Stat Block Multiattack dispatches must be resolved or the turn must end before other battle subjects.",
+      "Pending Stat Block Multiattack dispatches must be resolved, Movement may be taken between attacks, or the turn must end before other battle subjects.",
     );
   }
 
