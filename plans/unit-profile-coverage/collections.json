@@ -1,0 +1,42 @@
+{
+  "collections": [
+    {
+      "id": "srd-5.2.1",
+      "title": "SRD 5.2.1 Surface Units",
+      "policy": {
+        "tag": "srd",
+        "provenance": "srd-5.2.1",
+        "distribution": "creative-commons-srd"
+      },
+      "discovery": {
+        "kind": "surface-srd-unit-catalog",
+        "sourcePath": "packages/surface/src/surface/unit-catalog.ts"
+      }
+    },
+    {
+      "id": "classic-2024-non-srd-mechanics",
+      "title": "Classic 2024 Non-SRD Mechanics-Only Units",
+      "policy": {
+        "tag": "classic-non-srd-mechanics",
+        "provenance": "classic-2024-mechanics-source-lane",
+        "distribution": "public-mechanics-only-renamed",
+        "protectedExpression": "excluded"
+      },
+      "discovery": {
+        "kind": "classic-fixture-directory",
+        "sourcePath": "plans/unit-profile-coverage/fixtures/classic-non-srd"
+      }
+    }
+  ],
+  "derivedViews": [
+    {
+      "id": "classic-2024-unit-library",
+      "title": "Classic 2024 Unit Library",
+      "derivedFrom": [
+        "srd-5.2.1",
+        "classic-2024-non-srd-mechanics"
+      ],
+      "authoring": "forbidden"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 

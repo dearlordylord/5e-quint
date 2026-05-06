@@ -51891,7 +51891,7 @@
     },
     {
       "taskId": "QMBT6",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "requirementIds": [
         "RAW-QCORE11-STAT-BLOCK-CONTROLS-001"
       ]

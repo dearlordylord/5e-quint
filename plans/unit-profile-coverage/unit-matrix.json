@@ -1,0 +1,1630 @@
+{
+  "collectionBoundaryNote": "SRD 5.2.1 is conceptually part of Classic, but stored separately for SRD provenance and distribution policy; the Classic 2024 library is a derived view.",
+  "collections": [
+    {
+      "discovery": {
+        "kind": "surface-srd-unit-catalog",
+        "sourcePath": "packages/surface/src/surface/unit-catalog.ts"
+      },
+      "id": "srd-5.2.1",
+      "policy": {
+        "distribution": "creative-commons-srd",
+        "provenance": "srd-5.2.1",
+        "tag": "srd"
+      },
+      "title": "SRD 5.2.1 Surface Units"
+    },
+    {
+      "discovery": {
+        "kind": "classic-fixture-directory",
+        "sourcePath": "plans/unit-profile-coverage/fixtures/classic-non-srd"
+      },
+      "id": "classic-2024-non-srd-mechanics",
+      "policy": {
+        "distribution": "public-mechanics-only-renamed",
+        "protectedExpression": "excluded",
+        "provenance": "classic-2024-mechanics-source-lane",
+        "tag": "classic-non-srd-mechanics"
+      },
+      "title": "Classic 2024 Non-SRD Mechanics-Only Units"
+    }
+  ],
+  "derivedViews": [
+    {
+      "authoring": "forbidden",
+      "derivedFrom": [
+        "srd-5.2.1",
+        "classic-2024-non-srd-mechanics"
+      ],
+      "id": "classic-2024-unit-library",
+      "title": "Classic 2024 Unit Library"
+    }
+  ],
+  "generatedBy": "scripts/unit-profile-coverage-check.cjs",
+  "metrics": {
+    "classicNonSrdExpressionGate": {
+      "denominator": 1,
+      "numerator": 1,
+      "percent": "100%"
+    },
+    "collectionInventoryCoverage": {
+      "denominator": 49,
+      "numerator": 49,
+      "percent": "100%"
+    },
+    "profileClassificationCoverage": {
+      "denominator": 49,
+      "numerator": 49,
+      "percent": "100%"
+    },
+    "qntProfileModelingCoverage": {
+      "denominator": 8,
+      "numerator": 8,
+      "percent": "100%"
+    },
+    "qntProofCoverage": {
+      "denominator": 8,
+      "numerator": 8,
+      "percent": "100%"
+    },
+    "runtimeMappingCoverage": {
+      "denominator": 8,
+      "numerator": 8,
+      "percent": "100%"
+    },
+    "runtimeParityCoverage": {
+      "denominator": 8,
+      "numerator": 8,
+      "percent": "100%"
+    },
+    "supportedProfileCoverage": {
+      "denominator": 35,
+      "numerator": 14,
+      "percent": "40%"
+    }
+  },
+  "profiles": [
+    {
+      "id": "unit-feature.alternate-action-cost",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT4"
+      ],
+      "title": "Unit feature grants a Bonus Action alternative for standard actions",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.action-surge-resource",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT4"
+      ],
+      "title": "Unit feature spends a rest-reset pool to grant a restricted extra Action",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.attack-damage-rider",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT4"
+      ],
+      "title": "Unit feature contributes an attack damage rider",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.reaction-roll-or-damage-reduction",
+      "profileKind": "reaction",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reaction-triggers.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE8",
+        "QCORE9",
+        "QMBT3",
+        "QMBT4"
+      ],
+      "title": "Unit feature reacts to reduce an attack roll or attack damage",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.weapon-critical-range-19",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT4"
+      ],
+      "title": "Unit feature expands weapon or Unarmed Strike critical range to 19",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-damage-save-or-attack",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE10",
+        "QMBT5"
+      ],
+      "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.reaction-shield",
+      "profileKind": "reaction",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reaction-triggers.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE8",
+        "QCORE10",
+        "QMBT3",
+        "QMBT5"
+      ],
+      "title": "Reaction spell profile that interrupts an incoming attack",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.readied-action-time-spell",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE8",
+        "QCORE10",
+        "QMBT5"
+      ],
+      "title": "Action-time spell can be readied and released through the reaction protocol",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.attack-control",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "QCORE11",
+        "QMBT6"
+      ],
+      "title": "Stat Block action, multiattack, limited-use, recharge, and reaction controls",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
+        }
+      ]
+    }
+  ],
+  "taskClaims": [
+    {
+      "claimKind": "qnt-proof",
+      "note": "Movement, spatial, and grapple pressure is tracked as a rule-core family; current UnitRecord rows do not claim a movement Unit profile.",
+      "profileIds": [],
+      "taskId": "QCORE7"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Reaction, continuation, and concentration profile pressure.",
+      "profileIds": [
+        "unit-feature.reaction-roll-or-damage-reduction",
+        "spell.reaction-shield",
+        "spell.readied-action-time-spell"
+      ],
+      "taskId": "QCORE8"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Unit feature procedure profile family.",
+      "profileIds": [
+        "unit-feature.alternate-action-cost",
+        "unit-feature.action-surge-resource",
+        "unit-feature.attack-damage-rider",
+        "unit-feature.reaction-roll-or-damage-reduction",
+        "unit-feature.weapon-critical-range-19"
+      ],
+      "taskId": "QCORE9"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Spell procedure profile family.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack",
+        "spell.reaction-shield",
+        "spell.readied-action-time-spell"
+      ],
+      "taskId": "QCORE10"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Stat Block control pressure stays separate from UnitRecord claims.",
+      "profileIds": [
+        "stat-block.attack-control"
+      ],
+      "taskId": "QCORE11"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Movement and grapple parity has no current UnitRecord profile row.",
+      "profileIds": [],
+      "taskId": "QMBT2"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused reaction runtime parity.",
+      "profileIds": [
+        "unit-feature.reaction-roll-or-damage-reduction",
+        "spell.reaction-shield"
+      ],
+      "taskId": "QMBT3"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused feature procedure runtime parity.",
+      "profileIds": [
+        "unit-feature.alternate-action-cost",
+        "unit-feature.action-surge-resource",
+        "unit-feature.attack-damage-rider",
+        "unit-feature.reaction-roll-or-damage-reduction",
+        "unit-feature.weapon-critical-range-19"
+      ],
+      "taskId": "QMBT4"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused spell procedure runtime parity.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack",
+        "spell.reaction-shield",
+        "spell.readied-action-time-spell"
+      ],
+      "taskId": "QMBT5"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused stat-block control runtime parity.",
+      "profileIds": [
+        "stat-block.attack-control"
+      ],
+      "taskId": "QMBT6"
+    }
+  ],
+  "units": [
+    {
+      "claim": {
+        "reason": "Class container record; battle/runtime executable mechanics live on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_fighter.json",
+      "unitId": "class_fighter"
+    },
+    {
+      "claim": {
+        "reason": "Class container and spell access record; executable pressure is carried by spell Units and class features.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_wizard.json",
+      "unitId": "class_wizard"
+    },
+    {
+      "claim": {
+        "reason": "Character-creation authored data only; no promoted execution profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "background",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/background_soldier.json",
+      "unitId": "background_soldier"
+    },
+    {
+      "claim": {
+        "reason": "Species container record; executable pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_orc.json",
+      "unitId": "species_orc"
+    },
+    {
+      "claim": {
+        "reason": "Subclass container record; executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_fighter_champion.json",
+      "unitId": "subclass_fighter_champion"
+    },
+    {
+      "claim": {
+        "reason": "Subclass container record; no promoted execution profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_wizard_evoker.json",
+      "unitId": "subclass_wizard_evoker"
+    },
+    {
+      "claim": {
+        "reason": "Choice/grant container; selected Fighting Style feat carries executable pressure.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fighter_fighting_style.json",
+      "unitId": "fighter_fighting_style"
+    },
+    {
+      "claim": {
+        "futureProfileOwner": "QCORE9",
+        "reason": "Healing resource profile exists in QCORE9 but is not yet a stable Unit profile row in this matrix slice.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fighter_second_wind.json",
+      "unitId": "fighter_second_wind"
+    },
+    {
+      "claim": {
+        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
+      "unitId": "fighter_weapon_mastery"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "unit-feature.action-surge-resource"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.action-surge-resource",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature spends a rest-reset pool to grant a restricted extra Action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fighter_action_surge.json",
+      "unitId": "fighter_action_surge"
+    },
+    {
+      "claim": {
+        "issue": "Ability-check resource augmentation is not represented by a promoted battle Unit profile.",
+        "tag": "needs-surface-widening"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fighter_tactical_mind.json",
+      "unitId": "fighter_tactical_mind"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "unit-feature.weapon-critical-range-19"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.weapon-critical-range-19",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature expands weapon or Unarmed Strike critical range to 19",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fighter_improved_critical.json",
+      "unitId": "fighter_improved_critical"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "unit-feature.attack-damage-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-damage-rider",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature contributes an attack damage rider",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barbarian_rage.json",
+      "unitId": "barbarian_rage"
+    },
+    {
+      "claim": {
+        "futureProfileOwner": "QCORE9",
+        "reason": "Attack-roll advantage with next-turn defense consequence is not a stable Unit profile row yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/barbarian_reckless_attack.json",
+      "unitId": "barbarian_reckless_attack"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "unit-feature.reaction-roll-or-damage-reduction"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.reaction-roll-or-damage-reduction",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reaction-triggers.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE9",
+            "QMBT3",
+            "QMBT4"
+          ],
+          "title": "Unit feature reacts to reduce an attack roll or attack damage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/bard_cutting_words.json",
+      "unitId": "bard_cutting_words"
+    },
+    {
+      "claim": {
+        "futureProfileOwner": "QCORE9",
+        "reason": "Damage reduction is partially promoted, but redirect-on-zero follow-up is not yet fully represented as a supported profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/monk_deflect_attacks.json",
+      "unitId": "monk_deflect_attacks"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "unit-feature.alternate-action-cost"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.alternate-action-cost",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature grants a Bonus Action alternative for standard actions",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_cunning_action.json",
+      "unitId": "rogue_cunning_action"
+    },
+    {
+      "claim": {
+        "futureProfileOwner": "QCORE9",
+        "reason": "Save damage replacement support exists in runtime but is not yet backfilled as a stable profile row in this matrix slice.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/rogue_evasion.json",
+      "unitId": "rogue_evasion"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "unit-feature.reaction-roll-or-damage-reduction"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.reaction-roll-or-damage-reduction",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reaction-triggers.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE9",
+            "QMBT3",
+            "QMBT4"
+          ],
+          "title": "Unit feature reacts to reduce an attack roll or attack damage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_uncanny_dodge.json",
+      "unitId": "rogue_uncanny_dodge"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "unit-feature.attack-damage-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-damage-rider",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature contributes an attack damage rider",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_sneak_attack.json",
+      "unitId": "rogue_sneak_attack"
+    },
+    {
+      "claim": {
+        "reason": "Ritual casting is character/spell access pressure, not a promoted battle execution profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wizard_ritual_adept.json",
+      "unitId": "wizard_ritual_adept"
+    },
+    {
+      "claim": {
+        "reason": "Spell slot recovery outside battle is not a promoted Unit profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
+      "unitId": "wizard_arcane_recovery"
+    },
+    {
+      "claim": {
+        "reason": "Character-creation ability score mutation is outside promoted battle Unit profile scope.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_ability_score_improvement.json",
+      "unitId": "feat_ability_score_improvement"
+    },
+    {
+      "claim": {
+        "issue": "Miss-to-hit conversion profile is not represented by the promoted Unit profile taxonomy.",
+        "tag": "needs-surface-widening"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_boon_of_combat_prowess.json",
+      "unitId": "feat_boon_of_combat_prowess"
+    },
+    {
+      "claim": {
+        "reason": "Passive armor-class modification is authored but not yet a promoted Unit profile row.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_defense.json",
+      "unitId": "defense"
+    },
+    {
+      "claim": {
+        "reason": "Weapon damage dice reroll is authored but not yet a stable Unit profile row.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
+      "unitId": "feat_savage_attacker"
+    },
+    {
+      "claim": {
+        "reason": "Weapon mastery rider is authored but not yet a stable Unit profile row.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "mastery",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mastery_sap.json",
+      "unitId": "mastery_sap"
+    },
+    {
+      "claim": {
+        "issue": "Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile.",
+        "tag": "needs-surface-widening"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/orc_adrenaline_rush.json",
+      "unitId": "orc_adrenaline_rush"
+    },
+    {
+      "claim": {
+        "reason": "Sense grant is authored data with no promoted execution profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_orc_darkvision.json",
+      "unitId": "orc_darkvision"
+    },
+    {
+      "claim": {
+        "futureProfileOwner": "QCORE9",
+        "reason": "Zero-hit-point replacement profile exists in rule core but is not yet a stable Unit profile row.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/orc_relentless_endurance.json",
+      "unitId": "orc_relentless_endurance"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/acid_splash.json",
+      "unitId": "acid_splash"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fire_bolt.json",
+      "unitId": "fire_bolt"
+    },
+    {
+      "claim": {
+        "reason": "Object light effect is authored but not promoted as an execution profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/light.json",
+      "unitId": "light"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ray_of_frost.json",
+      "unitId": "ray_of_frost"
+    },
+    {
+      "claim": {
+        "reason": "Detection/concentration search semantics are not promoted as a battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/detect_magic.json",
+      "unitId": "detect_magic"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/mage_armor.json",
+      "unitId": "mage_armor"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/magic_missile.json",
+      "unitId": "magic_missile"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "spell.reaction-shield"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.reaction-shield",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reaction-triggers.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT3",
+            "QMBT5"
+          ],
+          "title": "Reaction spell profile that interrupts an incoming attack",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/shield.json",
+      "unitId": "shield"
+    },
+    {
+      "claim": {
+        "reason": "Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sleep.json",
+      "unitId": "sleep"
+    },
+    {
+      "claim": {
+        "issue": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice.",
+        "tag": "needs-surface-widening"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/thunderwave.json",
+      "unitId": "thunderwave"
+    },
+    {
+      "claim": {
+        "reason": "Equipment AC data is authored but not represented as an executable Unit profile row.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "armor",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/armor_chain_mail.json",
+      "unitId": "armor_chain_mail"
+    },
+    {
+      "claim": {
+        "reason": "Shield equipment AC data is authored but not represented as an executable Unit profile row.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "shield",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/equipment_shield.json",
+      "unitId": "equipment_shield"
+    },
+    {
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_dagger.json",
+      "unitId": "weapon_dagger"
+    },
+    {
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_longsword.json",
+      "unitId": "weapon_longsword"
+    },
+    {
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_spear.json",
+      "unitId": "weapon_spear"
+    },
+    {
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_flail.json",
+      "unitId": "weapon_flail"
+    },
+    {
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_shortbow.json",
+      "unitId": "weapon_shortbow"
+    },
+    {
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_shortsword.json",
+      "unitId": "weapon_shortsword"
+    },
+    {
+      "claim": {
+        "profileIds": [
+          "unit-feature.alternate-action-cost"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "classic-2024-non-srd-mechanics",
+      "executableMechanics": true,
+      "kind": "classic-non-srd-mechanics-fixture",
+      "profiles": [
+        {
+          "id": "unit-feature.alternate-action-cost",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature grants a Bonus Action alternative for standard actions",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json",
+      "syntheticLabel": "Mycelium Step",
+      "unitId": "mycelium_step"
+    }
+  ]
+}

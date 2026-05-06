@@ -7,6 +7,7 @@
     "check:authored-id-dispatch": "node scripts/check-authored-id-dispatch-boundary.cjs",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
     "raw-coverage:check:self-test": "node scripts/raw-coverage-check.cjs --self-test",
+    "unit-profile-coverage:check": "node scripts/unit-profile-coverage-check.cjs",
     "check:v0-quarantine": "node scripts/check-v0-quarantine.cjs",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",

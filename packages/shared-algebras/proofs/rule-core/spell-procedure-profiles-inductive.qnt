@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-save-or-attack spell.reaction-shield spell.readied-action-time-spell
 
 module spellProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"

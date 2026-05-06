@@ -1,4 +1,5 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.reaction-shield spell.readied-action-time-spell
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
