@@ -19,7 +19,7 @@ the character-creation and battle runtimes. Its composition root builds:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
-- an in-memory session store for character drafts, finalized character sheets,
+- an in-memory session store for character drafts, finalized Character Builds,
   durable post-battle character state, selected Stat Block identity, durable
   battle state, and transient battle fills.
 
@@ -48,9 +48,9 @@ The character-creation tool boundary exposes these user-facing tools:
 - `finalize_character` finalizes only when the runtime reports a supported
   character draft is ready. The promoted path currently supports the Orc
   Soldier Fighter 1/Fighter 2 and Orc Soldier Wizard 1 slice. A ready result
-  stores an available character session by source draft id and removes the
-  active draft from `drafts`. The session owns current HP while the character is
-  outside battle.
+  returns `build`, stores an available character session by source draft id, and
+  removes the active draft from `drafts`. The Character Build remains build-only;
+  the session owns current HP while the character is outside battle.
 - `list_characters` lists durable character-session rows. It reads only the
   character-session store, so selected or battled Stat Blocks do not appear as
   characters.

@@ -191,7 +191,7 @@ const FillCreationHolesOutputSchema = Schema.Struct({
 const FinalizeCharacterOutputSchema = Schema.Struct({
   draftId: Schema.String,
   finalization: CreationFinalizationSchema,
-  sheet: Schema.Union(JsonObjectSchema, Schema.Null),
+  build: Schema.Union(JsonObjectSchema, Schema.Null),
   session: McpSessionSnapshotSchema,
 });
 const ListCharactersOutputSchema = Schema.Struct({
@@ -332,7 +332,7 @@ export function handleCharacterToolCall(
       return schemaJsonContent(FinalizeCharacterOutputSchema, {
         draftId,
         finalization,
-        sheet:
+        build:
           finalization.tag === "ready"
             ? (root.sessionStore.characters.get(draftId)?.build ?? null)
             : null,

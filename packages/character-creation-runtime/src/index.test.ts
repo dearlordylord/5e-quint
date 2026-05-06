@@ -38,6 +38,7 @@ import {
   loadoutSourceHoleIdText,
   loadoutSourceKey,
   parseCharacterEquipmentItemId,
+  parseCharacterDraft,
   parseCreationHoleId,
   parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
@@ -224,6 +225,39 @@ function choiceCardinalityRight(
   }
   return cardinality;
 }
+
+describe("CharacterDraft parser", () => {
+  test("accepts persisted promoted draft JSON", () => {
+    const draft = createCharacterDraft({
+      draftId: characterDraftId("test:stored-draft"),
+    });
+
+    expect(parseCharacterDraft(JSON.parse(JSON.stringify(draft)))).toEqual(
+      Either.right(draft),
+    );
+  });
+
+  test("rejects malformed nested selection data", () => {
+    const draft = createCharacterDraft({
+      draftId: characterDraftId("test:malformed-stored-draft"),
+    });
+
+    expect(
+      parseCharacterDraft({
+        ...draft,
+        selections: {
+          choices: [{ kind: "unitChoice", source: { tag: "unitChoice" } }],
+        },
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "invalidCharacterDraft",
+        path: "$.selections.choices[0].source.unitId",
+        message: "Expected a string.",
+      }),
+    );
+  });
+});
 
 describe("UnitChoiceSourceKey", () => {
   const sourceUnitIdText = fc.string({ minLength: 1, maxLength: 40 });

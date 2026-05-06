@@ -50,6 +50,9 @@ importers:
       '@dnd/battle-runtime':
         specifier: workspace:*
         version: link:../battle-runtime
+      '@dnd/character-creation-runtime':
+        specifier: workspace:*
+        version: link:../character-creation-runtime
       '@dnd/core':
         specifier: workspace:*
         version: link:../core

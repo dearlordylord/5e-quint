@@ -126,7 +126,11 @@ export {
   type UnitCatalog,
   type UnitRef,
 } from "./types.ts";
-export { createCharacterDraft } from "./draft.ts";
+export {
+  createCharacterDraft,
+  parseCharacterDraft,
+  type CharacterDraftParseIssue,
+} from "./draft.ts";
 export { discoverCreationHoles } from "./discovery.ts";
 export { fillCreationHoles } from "./fill-reducer.ts";
 export {
@@ -144,6 +148,7 @@ export {
 } from "./character-progression-algebra.ts";
 export {
   classLevelForUnit,
+  classUnitId,
   computeTotalLevel,
   characterTotalLevelHitPointRule,
   hitPointRuleLabel,
@@ -161,3 +166,35 @@ export {
   type ClassHitPointRule,
   type LevelOneClassHitPointRule,
 } from "./character-progression-types.ts";
+export {
+  BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  BACKGROUND_EQUIPMENT_CHOICE_KEY,
+  BACKGROUND_TOOL_CHOICE_KEY,
+  CLASS_EQUIPMENT_CHOICE_KEY,
+  CLASS_FEATURE_FEAT_CHOICE_KEY,
+  CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  EQUIPMENT_PURCHASE_CHOICE_KEY,
+  LOADOUT_ARMOR_SLOT,
+  LOADOUT_SHIELD_SLOT,
+  LOADOUT_WEAPON_SLOT,
+  PHASE1_ALIGNMENT_OPTION_ID,
+  PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+  PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID,
+  PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
+  PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
+  PHASE1_BACKGROUND_TOOL_OPTION_ID,
+  PHASE1_CLASS_EQUIPMENT_OPTION_ID,
+  PHASE1_CLASS_FIGHTER_UNIT_ID,
+  PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+  PHASE1_LOADOUT_ARMOR_OPTION_ID,
+  PHASE1_LOADOUT_SHIELD_OPTION_ID,
+  PHASE1_LOADOUT_WEAPON_OPTION_ID,
+  PHASE1_SHIELD_UNIT_ID,
+  PHASE1_SPECIES_ORC_UNIT_ID,
+  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_MASTERY_UNIT_IDS,
+  SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
+  SUPPORTED_LANGUAGE_OPTION_IDS,
+  WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+  progressionOptionId,
+} from "./phase1-manifest.ts";

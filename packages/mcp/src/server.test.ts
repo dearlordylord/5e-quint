@@ -2221,7 +2221,7 @@ describe("MCP server route", () => {
         hitPoints: { maximum: 12 },
       },
     });
-    expect(finalized.sheet).toMatchObject({
+    expect(finalized.build).toMatchObject({
       background: "background_soldier",
       species: "species_orc",
       hitPoints: { maximum: 12 },
@@ -3096,7 +3096,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.size).toBe(0);
   });
 
-  test("finalization stores no sheet until the draft is ready", () => {
+  test("finalization stores no build until the draft is ready", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-tool-incomplete-finalize";
     readPayload(
@@ -3110,7 +3110,7 @@ describe("MCP server route", () => {
     );
 
     expect(finalized.finalization.tag).toBe("incomplete");
-    expect(finalized.sheet).toBeNull();
+    expect(finalized.build).toBeNull();
     expect(root.sessionStore.drafts.has(characterDraftId(draftId))).toBe(true);
     expect(root.sessionStore.characters.has(characterDraftId(draftId))).toBe(
       false,
