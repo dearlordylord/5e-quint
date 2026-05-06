@@ -76,3 +76,35 @@ Out of scope for QCORE2:
 `zero-hit-point-lifecycle-inductive.qnt` is the owned proof machine and shallow
 composition check with QCORE1. Its `step` action records the branch budget near
 the `any` action.
+
+## QCORE3: Hit Point Recovery
+
+`hit-point-recovery.qnt` models the SRD 5.2.1 procedures for Hit Point
+recovery and Knock Out disposition over the QCORE1/QCORE2 state shapes. It
+imports QCORE1's `CreatureVitals` and QCORE2's Death Saving Throw lifecycle
+instead of introducing parallel Hit Point, death, Stable, or Death Saving Throw
+state.
+
+Scope:
+
+- healing restores Hit Points up to the Hit Point Maximum;
+- dead creatures do not regain Hit Points through this procedure;
+- a player character that regains Hit Points resets Death Saving Throws, and
+  zero-HP recovery ends the Unconscious fact from the zero-HP lifecycle;
+- Stable remains a zero-HP Unconscious state until Hit Points are regained or
+  another QCORE2 zero-HP event occurs;
+- Knock Out disposition can replace a qualifying drop-to-zero damage result
+  with 1 Hit Point and Unconscious for any creature kind;
+- first aid can end the positive-Hit-Point Unconscious recovery state created by
+  Knock Out without changing Hit Points.
+
+Out of scope for QCORE3:
+
+- damage type Resistance, Vulnerability, and Immunity;
+- attack roll and melee eligibility facts for choosing Knock Out;
+- Stable 1d4-hour recovery;
+- broad battle action sequencing.
+
+`hit-point-recovery-inductive.qnt` is the owned proof machine and shallow
+composition check with QCORE1/QCORE2. Its `step` action records the branch
+budget near the `any` action.

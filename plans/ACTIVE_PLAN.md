@@ -55,15 +55,9 @@ Keep it synchronized with the DAG table and task details.
   "schema": "ralph-plan.v1",
   "tasks": [
     {
-      "number": 87,
-      "id": "QCORE3",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Prove Healing, Stable, and Knock Out Lifecycle"
-    },
-    {
       "number": 88,
       "id": "QCORE4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Prove Damage Component Adjustments"
     },
     {
@@ -145,8 +139,7 @@ Keep it synchronized with the DAG table and task details.
 
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
-| 87    | QCORE3 - Healing, Stable, and Knock Out Lifecycle | ready-for-implementation-after-light-research | QCORE2 | QCORE4 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Implement healing/Stable/Knock Out lifecycle QNT, composing QCORE1 and QCORE2 without duplicating HP or Death Saving Throw state. |
-| 88    | QCORE4 - Damage Component Adjustments | blocked | QCORE3 | QCORE5 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | After QCORE3, prove damage component modifiers plus Immunity/Resistance/Vulnerability; settle mixed-type allocation via caller partitioning or `ASSUMPTIONS.md`. |
+| 88    | QCORE4 - Damage Component Adjustments | ready-for-implementation-after-light-research | QCORE3 | QCORE5 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove damage component modifiers plus Immunity/Resistance/Vulnerability using caller-partitioned damage instances unless implementation uncovers a required `ASSUMPTIONS.md` decision. |
 | 89    | QCORE5 - Attack Roll and Attack Damage Composition | blocked | QCORE4 | QCORE6 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | After QCORE4, compose attack-roll hit/critical, damage roll, damage disposition, and action quota spend over QCORE1-QCORE4. |
 | 90    | QCORE6 - Action and Turn Procedures | blocked | QCORE5 | QCORE7 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove currently executable action/turn facts; cite End Turn assumptions and keep Stand from Prone in QCORE7. |
 | 91    | QCORE7 - Movement, Spatial Facts, and Grapple | blocked | QCORE6 | QCORE8 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Prove Movement budget, caller spatial facts, full Stand from Prone, and Grapple bounded state. |
@@ -157,38 +150,9 @@ Keep it synchronized with the DAG table and task details.
 
 ## Task Details
 
-### Task 87 - QCORE3 - Healing, Stable, and Knock Out Lifecycle
-
-Status: `ready-for-implementation-after-light-research`
-
-Depends on: QCORE2
-Blocks: QCORE4
-
-Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
-
-Acceptance:
-
-- Prove healing, Stable, and Knock Out lifecycle procedures using QCORE1/QCORE2
-  state shapes.
-- Do not duplicate Hit Point, death, or Death Saving Throw state.
-- Represent Knock Out as procedure/source facts over 1 HP plus Unconscious and
-  any executable rest/first-aid lifecycle; avoid independent invalid status
-  combinations.
-- Add stateless procedure module, owned proof machine, and shallow integration
-  with QCORE1/QCORE2.
-- Keep QNT Surface-free and projection-shaped.
-
-Verification:
-
-- RAW/ubiquitous/architecture checks recorded in the pre-research file.
-- `pnpm exec quint typecheck`, `test`, focused `run`, `compile`, serialized
-  `verify`.
-- No battle MBT unless TypeScript reducer behavior changes.
-- `/simplify` convergence, minimum two rounds.
-
 ### Task 88 - QCORE4 - Damage Component Adjustments
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: QCORE3
 Blocks: QCORE5
@@ -196,9 +160,9 @@ Blocks: QCORE5
 Pre-research: [QCORE3_QCORE11_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md)
 
 Scope: damage component modifiers, Immunity, Resistance, Vulnerability, and
-component application after QCORE3. Before implementation, either require
-caller-provided partitioned damage instances or add an `ASSUMPTIONS.md` entry
-for mixed-type allocation/aggregation.
+component application after QCORE3. Prefer caller-provided partitioned damage
+instances; add an `ASSUMPTIONS.md` entry only if implementation uncovers a
+mixed-type allocation/aggregation rule that cannot stay caller-owned.
 
 ### Task 89 - QCORE5 - Attack Roll and Attack Damage Composition
 
