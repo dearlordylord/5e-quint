@@ -43,6 +43,9 @@ should not contain algebra modules.
 - `runtime-dice-algebra` - rolled-dice validation and totaling.
 - `runtime-hole-algebra` - shared hole identity/refill vocabulary.
 - `validation-algebra` - small validation/result helpers.
+- `proofs/rule-core` - production Quint rule-core proofs. These are
+  stateless procedure contracts plus small owned proof machines, starting with
+  Hit Point damage in QCORE1.
 
 ## Runtime Hole Algebra
 
@@ -108,6 +111,25 @@ Do not add integrated battle-runtime MBT for another authored Unit, Spell, or
 Stat Block when the behavior uses one of the reducer families above unchanged.
 Use package-local algebra proof here plus deterministic catalog contract tests
 in the owning authored-data package.
+
+## Quint Rule Core
+
+Rule-core QNT lives in `proofs/rule-core/`.
+
+The rule-core proof layout follows the QCORE0 composition research:
+
+- reusable modules are stateless contracts/procedures;
+- stateful proof modules own their variables and import only stateless
+  procedures;
+- broad battle-level composition is not the first proof target;
+- each `any` action records a branch budget near the action.
+
+QCORE1 adds `hit-point-damage.qnt`, which models the SRD Hit Point damage
+procedure after a damage amount has already been resolved by the caller and
+while the target has positive Hit Points. It covers Temporary Hit Points, Hit
+Point clamping, monster death at 0 Hit Points, and player-character instant
+death from massive damage. Damage at 0 Hit Points belongs to a separate Death
+Saving Throw failure procedure.
 
 ## Verification
 
