@@ -95,7 +95,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 97,
       "id": "QMBT2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Movement and Grapple Runtime Parity"
     },
     {
@@ -159,7 +159,7 @@ Keep it synchronized with the DAG table and task details.
 | 94    | QCORE10 - Spell Procedure Profiles | done | QCORE9 | QCORE11 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed Spell Invocation facts, production Spell Effects, and Readied Spell Response integration. |
 | 95    | QCORE11 - Stat-Block Controls | done | QCORE10 | QMBT1 | [QCORE3-QCORE11 pre-research](/workspace/typescript/dnd/plans/QCORE3_QCORE11_PRE_RESEARCH.md) | Completed Stat Block attack controls, Multiattack named dispatch, limited-use, Recharge, rest recharge, and Legendary Action procedure facts. |
 | 96    | QMBT1 - Standard Rule-Core MBT Bridge Contract | done | QCORE7-QCORE11 | QMBT2-QMBT5 | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed reusable focused-QMBT contract, projection discipline, file placement, timing command, and first movement runnable pattern without broad battle state explosion. |
-| 97    | QMBT2 - Movement and Grapple Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE7 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE7 movement budget, Dash, Disengage, Stand, Grapple/Escape/Release, and OA-decline resume. |
+| 97    | QMBT2 - Movement and Grapple Runtime Parity | done | QMBT1, QCORE7 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE7 movement budget, Dash, Disengage, Stand, Grapple/Escape/Release, and OA-decline resume. |
 | 98    | QMBT3 - Reaction and Continuation Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE8 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, readied movement, and concentration break/hold. |
 | 99    | QMBT4 - Feature Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE9 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
 | 100   | QMBT5 - Spell Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE10 | none | [QMBT1-QMBT5 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
@@ -259,23 +259,18 @@ the mandatory timing wrapper; no exploratory promoted battle MBT; minimum two
 
 ### Task 97 - QMBT2 - Movement and Grapple Runtime Parity
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT1, QCORE7
 Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 
-Scope: add focused promoted runtime MBT parity for QCORE7 movement and grapple:
-Move, Dash, Disengage, Stand from Prone, Grapple, Escape Grapple, Release
-Grapple, and Opportunity Attack decline/resume. Project movement budget, dash
-bonus, prone, disengaged, grapple link, escape DC, action availability, holes,
-pending OA, result, and invalid reason.
-
-Verification: RAW/ubiquitous check for movement, prone, grapple, escape, and
-Opportunity Attack trigger passages; focused QMBT2 run only after
-implementation; existing promoted battle-runtime MBT once if runtime behavior
-changed; minimum two `/simplify` rounds.
+Completed scope: focused promoted runtime MBT parity for QCORE7 movement and
+grapple: Move, Dash, Disengage, Stand from Prone, Grapple, Escape Grapple,
+Release Grapple, and Opportunity Attack decline/resume. The focused lane
+projects movement budget, dash bonus, prone, disengaged, grapple link, escape
+DC, action availability, holes, pending OA, result, and invalid reason.
 
 ### Task 98 - QMBT3 - Reaction and Continuation Runtime Parity
 

@@ -266,7 +266,7 @@ Timing command:
 
 ```sh
 cd packages/battle-runtime
-START=$(date +%s); MBT_TRACES=1 MBT_STEPS=4 pnpm exec vitest run src/rule-core-movement.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"
+START=$(date +%s); MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-movement.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"
 ```
 
 Before any MBT run, check for existing `vitest` and `quint_evaluator`
@@ -275,12 +275,17 @@ instructions.
 
 The first focused runnable pattern is
 `rule-core-movement.mbt.qnt` plus `src/rule-core-movement.mbt.test.ts`. It
-replays the QCORE7 Movement and Stand from Prone procedure names through
-`resolveBattleSubject`, with a two-combatant fixture, no Opportunity Attack
-threats, a fixed 10-foot Movement fill, and one 35-foot overspend rejection.
-It cites SRD 5.2.1 Movement and Prone text through the QCORE7 proof module and
-uses `UBIQUITOUS_LANGUAGE.md` terms: Speed, Movement, Prone, and Opportunity
-Attack.
+replays the QCORE7 Movement, Dash, Disengage, Stand from Prone, Grapple,
+Escape Grapple, Release Grapple, and decline-only Opportunity Attack resume
+procedure names through `resolveBattleSubject` and `resolveBattleReaction`,
+with a two-combatant fixture, one possible Opportunity Attack threat, one
+Grapple link, Movement fills bounded to 5/10/30 feet, and one 35-foot overspend
+rejection. It cites SRD 5.2.1 Movement, Prone, Grapple, Dash, Disengage, and
+Opportunity Attack text through the QCORE7 proof module and uses
+`UBIQUITOUS_LANGUAGE.md` terms: Speed, Movement, Prone, Grapple, and
+Opportunity Attack.
+The default 6-step run is the minimum focused lane that can resolve a Grapple,
+advance to the Grappled target's turn, and resolve Escape Grapple.
 
 Migration map from the PBA13A authored-id violation set:
 

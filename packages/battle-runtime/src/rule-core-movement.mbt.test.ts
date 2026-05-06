@@ -18,6 +18,7 @@ import {
   characterId,
   combatantId,
   initiativeScore,
+  resolveBattleReaction,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -29,38 +30,79 @@ import {
   type CombatantId,
 } from "./index.ts";
 
-const ruleCoreMovementMbtHoles = ["Movement"] as const;
+const ruleCoreMovementMbtHoles = [
+  "Movement",
+  "TargetChoice",
+  "GrappleOutcome",
+  "ReactionDecision",
+] as const;
 type RuleCoreMovementMbtHole = (typeof ruleCoreMovementMbtHoles)[number];
-const ruleCoreMovementOutcomes = [
+const ruleCoreMovementResults = [
   "init",
   "needsHoles",
   "resolved",
-  "invalidFill",
+  "invalid",
 ] as const;
-type RuleCoreMovementOutcome = (typeof ruleCoreMovementOutcomes)[number];
+type RuleCoreMovementResult = (typeof ruleCoreMovementResults)[number];
+const ruleCoreMovementInvalidReasons = [
+  "none",
+  "invalidFill",
+  "staleSubject",
+] as const;
+type RuleCoreMovementInvalidReason =
+  (typeof ruleCoreMovementInvalidReasons)[number];
 
 type RuleCoreMovementProjection = {
+  readonly currentActor: "Fighter" | "GrappledTarget";
   readonly movementSpentFeet: number;
   readonly movementRemainingFeet: number;
+  readonly dashBonusFeet: number;
   readonly prone: boolean;
+  readonly disengaged: boolean;
+  readonly actionAvailable: boolean;
+  readonly grappleActive: boolean;
+  readonly grappleEscapeDc: number;
   readonly holes: readonly RuleCoreMovementMbtHole[];
-  readonly lastOutcome: RuleCoreMovementOutcome;
+  readonly pendingOpportunityAttack: boolean;
+  readonly lastResult: RuleCoreMovementResult;
+  readonly lastInvalidReason: RuleCoreMovementInvalidReason;
 };
 
+const fighterActor = "Fighter";
+const grappledTargetActor = "GrappledTarget";
 const actorId = combatantId("rule-core-mover");
 const observerId = combatantId("rule-core-observer");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const movementSpeedFeet = 30;
+const movementShortCostFeet = 5;
 const movementFillCostFeet = 10;
+const movementFullCostFeet = 30;
 const movementOverspendCostFeet = 35;
 
 const driverSchema = {
   init: {},
   doDiscoverMovement: {},
   doSpendMovement: {},
+  doSpendShortMovement: {},
+  doSpendFullMovement: {},
+  doMoveProvokesOpportunityAttack: {},
+  doMoveThreatSuppressedByDisengage: {},
+  doDeclineOpportunityAttack: {},
   doRejectMovementOverspend: {},
+  doDash: {},
+  doDisengage: {},
+  doRejectDashAfterActionSpent: {},
   doStandFromProne: {},
+  doDiscoverGrapple: {},
+  doSelectGrappleTarget: {},
+  doResolveGrappleSuccess: {},
+  doResolveGrappleFailure: {},
+  doStartGrappledTargetTurn: {},
+  doDiscoverEscapeGrapple: {},
+  doResolveEscapeSuccess: {},
+  doResolveEscapeFailure: {},
+  doReleaseGrapple: {},
   step: {},
 } as const;
 
@@ -68,81 +110,194 @@ function createRuleCoreMovementDriver() {
   return defineDriver(driverSchema, () => {
     let state = ruleCoreMovementBattle();
     let holes: readonly BattleHole[] = [];
-    let lastOutcome: RuleCoreMovementProjection["lastOutcome"] = "init";
+    let lastResult: RuleCoreMovementProjection["lastResult"] = "init";
+    let lastInvalidReason: RuleCoreMovementProjection["lastInvalidReason"] =
+      "none";
+    let currentActor: RuleCoreMovementProjection["currentActor"] = fighterActor;
 
     function reset(): void {
       state = ruleCoreMovementBattle();
       holes = [];
-      lastOutcome = "init";
+      lastResult = "init";
+      lastInvalidReason = "none";
+      currentActor = fighterActor;
     }
 
     function recordResult(result: BattleResolutionResult): void {
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
-        lastOutcome = "resolved";
+        lastResult = "resolved";
+        lastInvalidReason = "none";
         return;
       }
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
-        lastOutcome = "needsHoles";
+        lastResult = "needsHoles";
+        lastInvalidReason = "none";
         return;
       }
-      if (result.reason !== "invalidFill") {
+      if (!isRuleCoreMovementInvalidReason(result.reason)) {
         throw new Error(
           `Unexpected rule-core Movement MBT invalid reason: ${result.reason}`,
         );
       }
-      lastOutcome = result.reason;
+      lastResult = "invalid";
+      lastInvalidReason = result.reason;
     }
 
-    function submitMovement(costFeet: number): void {
+    function resolveSubject(
+      subject: Parameters<typeof resolveBattleSubject>[0]["subject"],
+      fills: readonly BattleFill[] = [],
+    ): void {
+      recordResult(resolveBattleSubject({ state, subject, fills }));
+    }
+
+    function submitMovement(input: {
+      readonly costFeet: number;
+      readonly provokesOpportunityAttack: boolean;
+    }): void {
       const hole = requireMovementHole(holes);
       recordResult(
         resolveBattleSubject({
           state,
           subject: { tag: "runtimeCommand", actorId, command: "move" },
-          fills: [movementFill(hole, costFeet)],
+          fills: [
+            movementFill(hole, {
+              movementCostFeet: input.costFeet,
+              provokedOpportunityAttacks: input.provokesOpportunityAttack
+                ? [{ reactorId: observerId, attackName: "Unarmed Strike" }]
+                : [],
+            }),
+          ],
         }),
       );
     }
 
     return {
       init: reset,
-      doDiscoverMovement: () => {
+      doDiscoverMovement: () =>
+        resolveSubject({ tag: "runtimeCommand", actorId, command: "move" }),
+      doSpendMovement: () =>
+        submitMovement({
+          costFeet: movementFillCostFeet,
+          provokesOpportunityAttack: false,
+        }),
+      doSpendShortMovement: () =>
+        submitMovement({
+          costFeet: movementShortCostFeet,
+          provokesOpportunityAttack: false,
+        }),
+      doSpendFullMovement: () =>
+        submitMovement({
+          costFeet: movementFullCostFeet,
+          provokesOpportunityAttack: false,
+        }),
+      doMoveProvokesOpportunityAttack: () =>
+        submitMovement({
+          costFeet: movementFillCostFeet,
+          provokesOpportunityAttack: true,
+        }),
+      doMoveThreatSuppressedByDisengage: () =>
+        submitMovement({
+          costFeet: movementFillCostFeet,
+          provokesOpportunityAttack: true,
+        }),
+      doDeclineOpportunityAttack: () => {
         recordResult(
-          resolveBattleSubject({
+          resolveBattleReaction({
             state,
-            subject: { tag: "runtimeCommand", actorId, command: "move" },
-            fills: [],
+            fill: reactionDecisionFill(requireReactionDecisionHole(holes), {
+              kind: "decline",
+              reactorId: observerId,
+            }),
           }),
         );
       },
-      doSpendMovement: () => submitMovement(movementFillCostFeet),
       doRejectMovementOverspend: () =>
-        submitMovement(movementOverspendCostFeet),
-      doStandFromProne: () => {
-        recordResult(
-          resolveBattleSubject({
-            state,
-            subject: {
-              tag: "runtimeCommand",
-              actorId,
-              command: "standFromProne",
-            },
-            fills: [],
-          }),
-        );
+        submitMovement({
+          costFeet: movementOverspendCostFeet,
+          provokesOpportunityAttack: false,
+        }),
+      doDash: () => resolveSubject({ tag: "action", actorId, action: "dash" }),
+      doDisengage: () =>
+        resolveSubject({ tag: "action", actorId, action: "disengage" }),
+      doRejectDashAfterActionSpent: () =>
+        resolveSubject({ tag: "action", actorId, action: "dash" }),
+      doStandFromProne: () =>
+        resolveSubject({
+          tag: "runtimeCommand",
+          actorId,
+          command: "standFromProne",
+        }),
+      doDiscoverGrapple: () =>
+        resolveSubject({ tag: "action", actorId, action: "grapple" }),
+      doSelectGrappleTarget: () =>
+        resolveSubject({ tag: "action", actorId, action: "grapple" }, [
+          grappleTargetFill(requireTargetChoiceHole(holes)),
+        ]),
+      doResolveGrappleSuccess: () =>
+        resolveSubject({ tag: "action", actorId, action: "grapple" }, [
+          grappleTargetFill(requireTargetChoiceHoleFromState()),
+          grappleOutcomeFill(requireGrappleOutcomeHole(holes), false),
+        ]),
+      doResolveGrappleFailure: () =>
+        resolveSubject({ tag: "action", actorId, action: "grapple" }, [
+          grappleTargetFill(requireTargetChoiceHoleFromState()),
+          grappleOutcomeFill(requireGrappleOutcomeHole(holes), true),
+        ]),
+      doStartGrappledTargetTurn: () => {
+        resolveSubject({ tag: "runtimeCommand", actorId, command: "endTurn" });
+        if (lastResult === "resolved") currentActor = grappledTargetActor;
       },
+      doDiscoverEscapeGrapple: () =>
+        resolveSubject({
+          tag: "action",
+          actorId: observerId,
+          action: "escapeGrapple",
+        }),
+      doResolveEscapeSuccess: () =>
+        resolveSubject(
+          { tag: "action", actorId: observerId, action: "escapeGrapple" },
+          [grappleOutcomeFill(requireGrappleOutcomeHole(holes), true)],
+        ),
+      doResolveEscapeFailure: () =>
+        resolveSubject(
+          { tag: "action", actorId: observerId, action: "escapeGrapple" },
+          [grappleOutcomeFill(requireGrappleOutcomeHole(holes), false)],
+        ),
+      doReleaseGrapple: () =>
+        resolveSubject({
+          tag: "runtimeCommand",
+          actorId,
+          command: "releaseGrapple",
+          targetId: observerId,
+        }),
       step: () => {},
       getState: () =>
         projectRuleCoreMovementState({
           state,
           holes,
-          lastOutcome,
+          lastResult,
+          lastInvalidReason,
+          currentActor,
         }),
     };
+
+    function requireTargetChoiceHoleFromState(): Extract<
+      BattleHole,
+      { readonly kind: "targetChoice" }
+    > {
+      const result = resolveBattleSubject({
+        state,
+        subject: { tag: "action", actorId, action: "grapple" },
+        fills: [],
+      });
+      return requireTargetChoiceHole(
+        result.tag === "needsHoles" ? result.holes : holes,
+      );
+    }
   });
 }
 
@@ -151,8 +306,10 @@ const movementStateCheck = stateCheck(
   compareRuleCoreMovementState,
 );
 
+const ruleCoreMovementDefaultMbtSteps = 6;
+
 describe("rule-core Movement focused MBT", () => {
-  it("replays QCORE7 Movement and Stand from Prone against battle-runtime reducers", async () => {
+  it("replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers", async () => {
     await run({
       spec: path.resolve(import.meta.dirname, "../rule-core-movement.mbt.qnt"),
       init: "init",
@@ -160,7 +317,9 @@ describe("rule-core Movement focused MBT", () => {
       driver: createRuleCoreMovementDriver(),
       backend: "typescript",
       nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
+      maxSteps: Number(
+        process.env["MBT_STEPS"] ?? ruleCoreMovementDefaultMbtSteps,
+      ),
       stateCheck: movementStateCheck,
     });
   }, 120_000);
@@ -235,9 +394,9 @@ function movementCreature(input: {
           damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
         },
         attackAbility: "str",
-        attackAbilityModifier: abilityModifier(3),
-        attackBonus: attackBonus(5),
-        damageAbilityModifier: abilityModifier(3),
+        attackAbilityModifier: abilityModifier(0),
+        attackBonus: attackBonus(2),
+        damageAbilityModifier: abilityModifier(0),
       },
     },
   };
@@ -246,7 +405,9 @@ function movementCreature(input: {
 function projectRuleCoreMovementState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
-  readonly lastOutcome: RuleCoreMovementProjection["lastOutcome"];
+  readonly lastResult: RuleCoreMovementProjection["lastResult"];
+  readonly lastInvalidReason: RuleCoreMovementProjection["lastInvalidReason"];
+  readonly currentActor: RuleCoreMovementProjection["currentActor"];
 }): RuleCoreMovementProjection {
   const snapshot = snapshotBattle(input.state);
   const actor = snapshot.combatants.find(
@@ -255,26 +416,84 @@ function projectRuleCoreMovementState(input: {
   if (actor === undefined) {
     throw new Error("Expected rule-core Movement actor in battle snapshot.");
   }
+  const grapple = input.state.grapples.find(
+    (candidate) =>
+      candidate.grapplerId === actorId && candidate.targetId === observerId,
+  );
   return {
+    currentActor: input.currentActor,
     movementSpentFeet: actor.movement.spentFeet,
     movementRemainingFeet: actor.movement.remainingFeet,
+    dashBonusFeet: Number(snapshot.turn.dashMovementBonusFeet),
     prone: actor.conditions.includes("prone"),
+    disengaged: snapshot.turn.disengaged,
+    actionAvailable: snapshot.turn.actionResources.length > 0,
+    grappleActive: grapple !== undefined,
+    grappleEscapeDc: grapple === undefined ? 0 : Number(grapple.escapeDc),
     holes: input.holes.map(projectMovementHole),
-    lastOutcome: input.lastOutcome,
+    pendingOpportunityAttack:
+      snapshot.pendingReaction?.trigger === "opportunityAttack",
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
   };
 }
 
 function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
-  movementCostFeet: number,
+  value: {
+    readonly movementCostFeet: number;
+    readonly provokedOpportunityAttacks: readonly {
+      readonly reactorId: CombatantId;
+      readonly attackName: string;
+    }[];
+  },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
     kind: "movement",
     holeId: hole.holeId,
     value: {
-      movementCostFeet: movementFeet(movementCostFeet),
-      provokedOpportunityAttacks: [],
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
+  };
+}
+
+function grappleTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: observerId,
+    spatialFacts: [
+      {
+        kind: "grappleTargetWithinReach",
+        grapplerId: actorId,
+        targetId: observerId,
+      },
+    ],
+  };
+}
+
+function grappleOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "grappleOutcome" }>,
+  succeeded: boolean,
+): Extract<BattleFill, { readonly kind: "grappleOutcome" }> {
+  return {
+    kind: "grappleOutcome",
+    holeId: hole.holeId,
+    value: { succeeded },
+  };
+}
+
+function reactionDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
+  return {
+    kind: "reactionDecision",
+    holeId: hole.holeId,
+    value,
   };
 }
 
@@ -288,11 +507,42 @@ function requireMovementHole(
   return hole;
 }
 
-function projectMovementHole(hole: BattleHole): RuleCoreMovementMbtHole {
-  if (hole.kind !== "movement") {
-    throw new Error(`Unexpected rule-core Movement MBT hole: ${hole.kind}`);
+function requireTargetChoiceHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "targetChoice" }> {
+  const hole = holes.find((candidate) => candidate.kind === "targetChoice");
+  if (hole === undefined) {
+    throw new Error("Expected target choice hole.");
   }
-  return "Movement";
+  return hole;
+}
+
+function requireGrappleOutcomeHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "grappleOutcome" }> {
+  const hole = holes.find((candidate) => candidate.kind === "grappleOutcome");
+  if (hole === undefined) {
+    throw new Error("Expected Grapple outcome hole.");
+  }
+  return hole;
+}
+
+function requireReactionDecisionHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "reactionDecision" }> {
+  const hole = holes.find((candidate) => candidate.kind === "reactionDecision");
+  if (hole === undefined) {
+    throw new Error("Expected Reaction decision hole.");
+  }
+  return hole;
+}
+
+function projectMovementHole(hole: BattleHole): RuleCoreMovementMbtHole {
+  if (hole.kind === "movement") return "Movement";
+  if (hole.kind === "targetChoice") return "TargetChoice";
+  if (hole.kind === "grappleOutcome") return "GrappleOutcome";
+  if (hole.kind === "reactionDecision") return "ReactionDecision";
+  throw new Error(`Unexpected rule-core Movement MBT hole: ${hole.kind}`);
 }
 
 function normalizeRuleCoreMovementQuintState(
@@ -303,12 +553,30 @@ function normalizeRuleCoreMovementQuintState(
     state["qMovementSpentFeet"],
     "qMovementSpentFeet",
   );
+  const dashBonusFeet = numberFromQuintInt(
+    state["qDashBonusFeet"],
+    "qDashBonusFeet",
+  );
   return {
+    currentActor: currentActorName(state["qCurrentActor"]),
     movementSpentFeet,
-    movementRemainingFeet: movementRemainingFeetFromSpent(movementSpentFeet),
+    movementRemainingFeet: Math.max(
+      0,
+      movementSpeedFeet + dashBonusFeet - movementSpentFeet,
+    ),
+    dashBonusFeet,
     prone: booleanField(state, "qProne"),
+    disengaged: booleanField(state, "qDisengaged"),
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    grappleActive: booleanField(state, "qGrappleActive"),
+    grappleEscapeDc: numberFromQuintInt(
+      state["qGrappleEscapeDc"],
+      "qGrappleEscapeDc",
+    ),
     holes: quintHoleSet(state["qHoles"]).map(movementHoleName),
-    lastOutcome: movementOutcome(state["qLastOutcome"]),
+    pendingOpportunityAttack: booleanField(state, "qPendingOpportunityAttack"),
+    lastResult: movementResult(state["qLastResult"]),
+    lastInvalidReason: movementInvalidReason(state["qLastInvalidReason"]),
   };
 }
 
@@ -353,23 +621,39 @@ function movementHoleName(raw: unknown): RuleCoreMovementMbtHole {
   throw new Error(`Unknown Quint rule-core Movement hole variant: ${tag}`);
 }
 
-function isRuleCoreMovementMbtHole(raw: unknown): raw is RuleCoreMovementMbtHole {
+function isRuleCoreMovementMbtHole(
+  raw: unknown,
+): raw is RuleCoreMovementMbtHole {
   return ruleCoreMovementMbtHoles.some((hole) => hole === raw);
 }
 
-function movementRemainingFeetFromSpent(movementSpentFeet: number): number {
-  return movementSpeedFeet - movementSpentFeet;
+function movementResult(raw: unknown): RuleCoreMovementResult {
+  if (isRuleCoreMovementResult(raw)) return raw;
+  throw new Error(`Unknown Quint rule-core Movement result: ${String(raw)}.`);
 }
 
-function movementOutcome(raw: unknown): RuleCoreMovementOutcome {
-  if (isRuleCoreMovementOutcome(raw)) return raw;
+function isRuleCoreMovementResult(raw: unknown): raw is RuleCoreMovementResult {
+  return ruleCoreMovementResults.some((result) => result === raw);
+}
+
+function movementInvalidReason(raw: unknown): RuleCoreMovementInvalidReason {
+  if (isRuleCoreMovementInvalidReason(raw)) return raw;
   throw new Error(
-    `Unknown Quint rule-core Movement outcome: ${String(raw)}.`,
+    `Unknown Quint rule-core Movement invalid reason: ${String(raw)}.`,
   );
 }
 
-function isRuleCoreMovementOutcome(raw: unknown): raw is RuleCoreMovementOutcome {
-  return ruleCoreMovementOutcomes.some((outcome) => outcome === raw);
+function isRuleCoreMovementInvalidReason(
+  raw: unknown,
+): raw is RuleCoreMovementInvalidReason {
+  return ruleCoreMovementInvalidReasons.some((reason) => reason === raw);
+}
+
+function currentActorName(
+  raw: unknown,
+): RuleCoreMovementProjection["currentActor"] {
+  if (raw === fighterActor || raw === grappledTargetActor) return raw;
+  throw new Error(`Unknown Quint rule-core Movement actor: ${String(raw)}.`);
 }
 
 function quintVariantTag(raw: unknown): string {
