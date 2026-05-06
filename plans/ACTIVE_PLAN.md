@@ -107,7 +107,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 99,
       "id": "QMBT4",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Feature Procedure Runtime Parity"
     },
     {
@@ -167,7 +167,7 @@ Keep it synchronized with the DAG table and task details.
 | 96    | QMBT1 - Standard Rule-Core MBT Bridge Contract | done | QCORE7-QCORE11 | QMBT2-QMBT6 | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed reusable focused-QMBT contract, projection discipline, file placement, timing command, and first movement runnable pattern without broad battle state explosion. |
 | 97    | QMBT2 - Movement and Grapple Runtime Parity | done | QMBT1, QCORE7 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE7 movement budget, Dash, Disengage, Stand, Grapple/Escape/Release, and OA-decline resume. |
 | 98    | QMBT3 - Reaction and Continuation Runtime Parity | done | QMBT1, QCORE8 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE8 reaction offer/decline/spend, continuation resume, Readied Movement release, and Concentration break/hold. |
-| 99    | QMBT4 - Feature Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE9 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
+| 99    | QMBT4 - Feature Procedure Runtime Parity | done | QMBT1, QCORE9 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE9 feature procedure profiles through production feature reducers and projections. |
 | 100   | QMBT5 - Spell Procedure Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
 | 101   | QMBT6 - Stat-Block Control Runtime Parity | ready-for-implementation-after-light-research | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Add focused runtime MBT parity for QCORE11 stat-block control profiles, starting with Multiattack interleaving; keep Legendary Actions as a separate later tracer. |
 
@@ -301,22 +301,24 @@ battle-runtime MBT after the Readied Movement runtime behavior correction;
 
 ### Task 99 - QMBT4 - Feature Procedure Runtime Parity
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT1, QCORE9
 Blocks: none
 
 Pre-research: [QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 
-Scope: add focused promoted runtime MBT parity for QCORE9 feature procedure
-profiles: Action Surge, Second Wind, Cunning Action, Improved Critical,
-Rage/Reckless, Sneak Attack, Evasion, Cutting Words, and Uncanny Dodge. Project
-per-feature facts rather than full runtime resource objects.
+Completed scope: focused promoted runtime MBT parity for QCORE9 feature
+procedure profiles: Action Surge, Second Wind, Cunning Action, Improved
+Critical, Rage/Reckless, Sneak Attack, Evasion, Cutting Words, and Uncanny
+Dodge. The lane projects per-feature facts rather than full runtime resource
+objects.
 
 Verification: RAW/ubiquitous check for the relevant Fighter, Rogue, Barbarian,
-and Bard feature passages plus procedure terminology; focused QMBT4 run only
-after implementation; existing promoted battle-runtime MBT once if runtime
-behavior changed; minimum two `/simplify` rounds.
+and Bard feature passages plus procedure terminology; focused QMBT4 timed run;
+package typecheck; `pnpm quality`; two `/simplify` review rounds. Existing
+promoted battle-runtime MBT was not rerun because this task added parity
+coverage and docs/script wiring without production runtime behavior changes.
 
 ### Task 100 - QMBT5 - Spell Procedure Runtime Parity
 

@@ -251,6 +251,10 @@ Focused lanes currently include:
 - `rule-core-reactions.mbt.qnt` / `src/rule-core-reactions.mbt.test.ts` for
   QCORE8 Reaction offer/decline/spend, continuation resume, Readied Movement
   release, and Concentration damage-save break/hold.
+- `rule-core-features.mbt.qnt` / `src/rule-core-features.mbt.test.ts` for
+  QCORE9 Action Surge, Second Wind, Cunning Action, Improved Critical,
+  Rage/Reckless, Sneak Attack, Evasion, Cutting Words, and Uncanny Dodge
+  projections.
 
 Action naming and replay:
 
@@ -829,6 +833,10 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `src/battle-runtime.mbt.test.ts` - narrow integrated promoted MBT bridge
   that replays Fighter weapon Attack traces against a Skeleton Stat Block
   target through public reducer APIs.
+- `src/rule-core-features.mbt.test.ts` - focused QCORE9 Feature Procedure MBT
+  bridge for Action Surge, Second Wind, Cunning Action, Improved Critical,
+  Rage/Reckless, Sneak Attack, Evasion, Cutting Words, and Uncanny Dodge
+  projections through public battle-runtime reducer APIs.
 - `battle-runtime.qnt` - canonical package-local spec for the implemented
   subset.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
@@ -839,5 +847,6 @@ Useful checks:
 ```sh
 pnpm --filter @dnd/battle-runtime typecheck
 pnpm --filter @dnd/battle-runtime test
+MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts
 MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime.mbt.test.ts
 ```
