@@ -3,6 +3,7 @@ import {
   type CharacterDraft,
   type CharacterDraftId,
   characterDraftId,
+  type CharacterDraftParseIssue,
   type CreationBatchFillResult,
   type CreationFill,
   type CreationFinalizationResult,
@@ -20,7 +21,7 @@ import type { Ability } from "@dnd/shared/game-facts"
 import { buildUnitCatalog, srdUnitCollection } from "@dnd/surface/surface/unit-catalog"
 import { Either } from "effect"
 
-export const CHARACTER_DRAFT_STORAGE_KEY = "dnd.characterDraft.promoted.v1"
+export const CHARACTER_DRAFT_STORAGE_KEY = "dnd.characterDraft.v1"
 
 const catalogBuild = buildUnitCatalog({ collections: [srdUnitCollection] })
 if (catalogBuild.tag !== "ok") {
@@ -36,7 +37,7 @@ export type DraftAssessment = {
 
 export type AbilityScoreInput = Readonly<Record<Ability, number>>
 
-export function assessPromotedDraft(draft: CharacterDraft): DraftAssessment {
+export function assessCharacterDraft(draft: CharacterDraft): DraftAssessment {
   return {
     holes: discoverCreationHoles({
       draft,
@@ -46,7 +47,7 @@ export function assessPromotedDraft(draft: CharacterDraft): DraftAssessment {
   }
 }
 
-export function applyPromotedCreationFill(draft: CharacterDraft, fill: CreationFill): CreationBatchFillResult {
+export function applyCharacterCreationFill(draft: CharacterDraft, fill: CreationFill): CreationBatchFillResult {
   return fillCreationHoles({
     draft,
     unitLibrary: characterCreationUnitLibrary,
@@ -55,26 +56,36 @@ export function applyPromotedCreationFill(draft: CharacterDraft, fill: CreationF
   })
 }
 
+export type AbilityScoreFillIssue = {
+  readonly tag: "invalidAbilityScoreAssignment"
+  readonly holeId: CreationHoleId
+  readonly message: string
+}
+
 export function abilityScoresFill(input: {
   readonly holeId: CreationHoleId
   readonly method: SupportedAbilityScoreMethod
   readonly scores: AbilityScoreInput
-}): CreationFill | null {
+}): Either.Either<CreationFill, AbilityScoreFillIssue> {
   const parsed = abilityScoreAssignment(input.scores)
-  if (Either.isLeft(parsed)) return null
-  return {
+  if (Either.isLeft(parsed)) {
+    return Either.left({
+      tag: "invalidAbilityScoreAssignment",
+      holeId: input.holeId,
+      message: "Expected a valid ability score assignment."
+    })
+  }
+  return Either.right({
     kind: "abilityScores",
     holeId: input.holeId,
     method: input.method,
     value: parsed.right
-  }
+  })
 }
 
 export const createStoredDraftId: (value: string) => CharacterDraftId = characterDraftId
 
-export function parseStoredPromotedDraft(value: unknown): CharacterDraft | null {
-  const parsed = parseCharacterDraft(value)
-  return Either.isRight(parsed) ? parsed.right : null
-}
+export const parseStoredCharacterDraft: (value: unknown) => Either.Either<CharacterDraft, CharacterDraftParseIssue> =
+  parseCharacterDraft
 
 export const draftHoleId: (value: CreationHoleIdText) => CreationHoleId = creationHoleId

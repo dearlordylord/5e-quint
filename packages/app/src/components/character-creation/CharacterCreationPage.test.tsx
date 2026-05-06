@@ -7,7 +7,7 @@ import { CharacterCreationPage } from "#/components/character-creation/Character
 import { CHARACTER_DRAFT_STORAGE_KEY } from "#/components/character-creation/characterCreationRuntime.ts"
 
 describe("CharacterCreationPage", () => {
-  it("loads a promoted complete example and persists the CharacterDraft", async () => {
+  it("loads a complete example and persists the CharacterDraft", async () => {
     window.localStorage.clear()
 
     render(<CharacterCreationPage />)
@@ -18,14 +18,14 @@ describe("CharacterCreationPage", () => {
 
     expect(screen.getByText("Draft finalizes to CharacterBuild.")).toBeTruthy()
     expect(screen.getAllByText("CharacterBuild").length).toBeGreaterThan(0)
-    expect(screen.getByText("Promoted session boundary")).toBeTruthy()
+    expect(screen.getByText("Character session boundary")).toBeTruthy()
 
     await waitFor(() => {
       expect(window.localStorage.getItem(CHARACTER_DRAFT_STORAGE_KEY)).toContain("class_fighter")
     })
   })
 
-  it("hydrates a promoted persisted draft on mount", () => {
+  it("hydrates a persisted draft on mount", () => {
     window.localStorage.clear()
     window.localStorage.setItem(CHARACTER_DRAFT_STORAGE_KEY, JSON.stringify(createCharacterDraft({})))
 
@@ -35,7 +35,7 @@ describe("CharacterCreationPage", () => {
     expect(screen.getByRole("button", { name: /^1\. Choose Class$/ })).toBeTruthy()
   })
 
-  it("does not hydrate malformed persisted promoted draft data", async () => {
+  it("does not hydrate malformed persisted draft data", async () => {
     window.localStorage.clear()
     window.localStorage.setItem(
       CHARACTER_DRAFT_STORAGE_KEY,
@@ -55,13 +55,14 @@ describe("CharacterCreationPage", () => {
     })
   })
 
-  it("submits the initial progression through a promoted runtime fill", async () => {
+  it("submits the initial progression through a runtime fill", async () => {
     window.localStorage.clear()
 
     render(<CharacterCreationPage />)
 
     const progression = screen.getByRole("combobox", { name: /Progression\.Initial/i })
-    const initialProgression = (progression as HTMLSelectElement).options.item(1)?.value
+    if (!(progression instanceof HTMLSelectElement)) throw new Error("Expected progression control to be a select.")
+    const initialProgression = progression.options.item(1)?.value
     expect(initialProgression).toBeTruthy()
     fireEvent.change(progression, { target: { value: initialProgression } })
 

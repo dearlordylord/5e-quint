@@ -1,12 +1,13 @@
 import { type CharacterDraft, createCharacterDraft, type CreationBatchFillIssue } from "@dnd/character-creation-runtime"
+import { Either } from "effect"
 import { useCallback, useEffect, useState } from "react"
 
-import { PROMOTED_CHARACTER_PRESETS } from "#/components/character-creation/characterCreationPresets.ts"
+import { CHARACTER_CREATION_PRESETS } from "#/components/character-creation/characterCreationPresets.ts"
 import {
-  applyPromotedCreationFill,
-  assessPromotedDraft,
+  applyCharacterCreationFill,
+  assessCharacterDraft,
   CHARACTER_DRAFT_STORAGE_KEY,
-  parseStoredPromotedDraft
+  parseStoredCharacterDraft
 } from "#/components/character-creation/characterCreationRuntime.ts"
 import {
   CharacterCreationStepContent,
@@ -21,8 +22,9 @@ function parseStoredDraft(): CharacterDraft {
   const stored = window.localStorage.getItem(CHARACTER_DRAFT_STORAGE_KEY)
   if (stored == null) return createCharacterDraft({})
   try {
-    const parsed = JSON.parse(stored) as unknown
-    return parseStoredPromotedDraft(parsed) ?? createCharacterDraft({})
+    const parsed: unknown = JSON.parse(stored)
+    const draft = parseStoredCharacterDraft(parsed)
+    return Either.isRight(draft) ? draft.right : createCharacterDraft({})
   } catch {
     return createCharacterDraft({})
   }
@@ -40,7 +42,7 @@ export function CharacterCreationPage() {
   const [draft, setDraft] = useState<CharacterDraft>(parseStoredDraft)
   const [currentStep, setCurrentStep] = useState<StepId>("class")
   const [lastIssues, setLastIssues] = useState<ReadonlyArray<CreationBatchFillIssue>>([])
-  const assessment = assessPromotedDraft(draft)
+  const assessment = assessCharacterDraft(draft)
 
   useEffect(() => {
     window.localStorage.setItem(CHARACTER_DRAFT_STORAGE_KEY, JSON.stringify(draft))
@@ -56,10 +58,9 @@ export function CharacterCreationPage() {
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null
-      if (target != null) {
-        const tag = target.tagName
-        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable) return
+      if (event.target instanceof HTMLElement) {
+        const tag = event.target.tagName
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || event.target.isContentEditable) return
       }
       if (event.key === "ArrowLeft") goToStep(-1)
       else if (event.key === "ArrowRight") goToStep(1)
@@ -73,7 +74,7 @@ export function CharacterCreationPage() {
       title="Character Creation Workflow"
       actions={
         <div className="flex flex-wrap justify-center gap-2">
-          {PROMOTED_CHARACTER_PRESETS.map((preset) => (
+          {CHARACTER_CREATION_PRESETS.map((preset) => (
             <button
               key={preset.label}
               className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
@@ -125,7 +126,7 @@ export function CharacterCreationPage() {
             })}
           </ol>
           <div className="mt-6 rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm">
-            <p className="font-medium text-gray-100">Promoted runtime status</p>
+            <p className="font-medium text-gray-100">Character creation status</p>
             <p className={assessment.finalization.tag === "ready" ? "mt-2 text-emerald-300" : "mt-2 text-amber-300"}>
               {assessment.finalization.tag === "ready"
                 ? "Draft finalizes to CharacterBuild."
@@ -134,8 +135,7 @@ export function CharacterCreationPage() {
                   : `${assessment.holes.length} creation hole(s) remain open.`}
             </p>
             <p className="mt-2 text-gray-400">
-              This shell stores only promoted <code>CharacterDraft</code>. The runtime owns holes, fills, and
-              finalization.
+              This shell stores only <code>CharacterDraft</code>. The runtime owns holes, fills, and finalization.
             </p>
           </div>
           {lastIssues.length === 0 ? null : (
@@ -156,7 +156,7 @@ export function CharacterCreationPage() {
           <div className="rounded-lg border border-gray-800 bg-gray-900/80 p-5">
             <h2 className="text-xl font-semibold text-amber-300">{STEP_TITLES[currentStep]}</h2>
             <p className="mt-2 text-sm text-gray-400">
-              The UI follows the SRD character-creation step order while submitting real promoted runtime fills.
+              The UI follows the SRD character-creation step order while submitting real runtime fills.
             </p>
             <CharacterCreationStepContent
               currentStep={currentStep}
@@ -164,7 +164,7 @@ export function CharacterCreationPage() {
               finalization={assessment.finalization}
               holes={assessment.holes}
               onFill={(fill) => {
-                const result = applyPromotedCreationFill(draft, fill)
+                const result = applyCharacterCreationFill(draft, fill)
                 if (result.tag === "accepted") {
                   setDraft(result.draft)
                   setLastIssues([])

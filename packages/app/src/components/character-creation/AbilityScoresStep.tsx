@@ -2,7 +2,7 @@ import type { CreationFill, CreationHole, SupportedAbilityScoreMethod } from "@d
 import { BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY } from "@dnd/character-creation-runtime"
 import { ABILITIES, type Ability } from "@dnd/shared/game-facts"
 import { STANDARD_ARRAY_SCORES, totalPointBuyCost } from "@dnd/shared-algebras/ability-score-algebra"
-import { Option } from "effect"
+import { Either, Option } from "effect"
 import { useState } from "react"
 
 import { type AbilityScoreInput, abilityScoresFill } from "#/components/character-creation/characterCreationRuntime.ts"
@@ -13,7 +13,10 @@ function emptyScores(): Partial<Record<Ability, number>> {
 }
 
 function completeScores(scores: Partial<Record<Ability, number>>): AbilityScoreInput | null {
-  return ABILITIES.every((ability) => scores[ability] != null) ? (scores as AbilityScoreInput) : null
+  const { cha, con, dex, int, str, wis } = scores
+  return str == null || dex == null || con == null || int == null || wis == null || cha == null
+    ? null
+    : { str, dex, con, int, wis, cha }
 }
 
 export function AbilityScoresStep({
@@ -33,12 +36,16 @@ export function AbilityScoresStep({
   const [method, setMethod] = useState<SupportedAbilityScoreMethod>("standardArray")
   const [scores, setScores] = useState<Partial<Record<Ability, number>>>(emptyScores)
   const complete = completeScores(scores)
+  const abilityScoreFill =
+    abilityScoreHole == null || complete == null
+      ? null
+      : abilityScoresFill({ holeId: abilityScoreHole.holeId, method, scores: complete })
 
   return (
     <div className="mt-5 space-y-5">
       {abilityScoreHole == null ? (
         <p className="rounded-lg border border-emerald-900 bg-emerald-950/20 p-3 text-sm text-emerald-300">
-          Ability scores have been accepted by the promoted runtime.
+          Ability scores have been accepted by the runtime.
         </p>
       ) : (
         <>
@@ -47,7 +54,10 @@ export function AbilityScoresStep({
               <span className="text-sm font-medium text-gray-200">Generation method</span>
               <select
                 className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-                onChange={(event) => setMethod(event.target.value as SupportedAbilityScoreMethod)}
+                onChange={(event) => {
+                  const selectedMethod = abilityScoreHole.methods.find((candidate) => candidate === event.target.value)
+                  if (selectedMethod != null) setMethod(selectedMethod)
+                }}
                 value={method}
               >
                 {abilityScoreHole.methods.map((candidate) => (
@@ -91,14 +101,9 @@ export function AbilityScoresStep({
           </div>
           <button
             className="rounded-md border border-amber-500 px-4 py-2 text-sm text-amber-200 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={
-              complete == null ||
-              abilityScoresFill({ holeId: abilityScoreHole.holeId, method, scores: complete }) == null
-            }
+            disabled={abilityScoreFill == null || Either.isLeft(abilityScoreFill)}
             onClick={() => {
-              if (complete == null) return
-              const fill = abilityScoresFill({ holeId: abilityScoreHole.holeId, method, scores: complete })
-              if (fill != null) onFill(fill)
+              if (abilityScoreFill != null && Either.isRight(abilityScoreFill)) onFill(abilityScoreFill.right)
             }}
             type="button"
           >

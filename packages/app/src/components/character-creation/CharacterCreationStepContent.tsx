@@ -206,7 +206,7 @@ export function CharacterCreationStepContent({
     return (
       <div className="mt-5 space-y-5">
         <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
-          <p className="font-medium text-gray-100">Promoted session boundary</p>
+          <p className="font-medium text-gray-100">Character session boundary</p>
           <p className="mt-2 text-sm text-gray-400">
             Character creation finalizes a build-only <code>CharacterBuild</code>. MCP <code>CharacterSession</code>{" "}
             owns current HP, zero-HP lifecycle, and spent Spell Slots outside battle; battle state owns them during
@@ -231,7 +231,7 @@ export function CharacterCreationStepContent({
           <CreationHoles emptyText="No open creation holes." holes={holes} onFill={onFill} />
         )}
         <div>
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gray-400">Promoted Draft</h3>
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gray-400">CharacterDraft</h3>
           <pre className="overflow-auto rounded-lg border border-gray-800 bg-gray-950 p-4 text-xs text-gray-100">
             {displayValue(draft)}
           </pre>
@@ -240,5 +240,5 @@ export function CharacterCreationStepContent({
     )
   }
 
-  return <CreationHoles emptyText="This promoted step is complete." holes={stepHoles} onFill={onFill} />
+  return <CreationHoles emptyText="This step is complete." holes={stepHoles} onFill={onFill} />
 }

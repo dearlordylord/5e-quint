@@ -39,16 +39,17 @@ import {
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY
 } from "@dnd/character-creation-runtime"
 import type { UnitRecord } from "@dnd/surface/surface/types"
+import { Either } from "effect"
 
 import {
   abilityScoresFill,
-  applyPromotedCreationFill,
-  assessPromotedDraft,
+  applyCharacterCreationFill,
+  assessCharacterDraft,
   createStoredDraftId,
   draftHoleId
 } from "#/components/character-creation/characterCreationRuntime.ts"
 
-type PromotedCharacterPreset = {
+type CharacterCreationPreset = {
   readonly label: string
   readonly draft: CharacterDraft
 }
@@ -67,9 +68,9 @@ function presetChoiceFill(
 function applyPresetFills(draft: CharacterDraft, fills: ReadonlyArray<CreationFill>): CharacterDraft {
   let current = draft
   for (const fill of fills) {
-    const result = applyPromotedCreationFill(current, fill)
+    const result = applyCharacterCreationFill(current, fill)
     if (result.tag !== "accepted") {
-      throw new Error(`Promoted character preset fill failed: ${JSON.stringify(result.issues)}`)
+      throw new Error(`Character creation preset fill failed: ${JSON.stringify(result.issues)}`)
     }
     current = result.draft
   }
@@ -79,14 +80,14 @@ function applyPresetFills(draft: CharacterDraft, fills: ReadonlyArray<CreationFi
 function currentChoiceFill(
   draft: CharacterDraft,
   predicate: (
-    hole: Extract<ReturnType<typeof assessPromotedDraft>["holes"][number], { readonly kind: "choice" }>
+    hole: Extract<ReturnType<typeof assessCharacterDraft>["holes"][number], { readonly kind: "choice" }>
   ) => boolean,
   ...optionIds: ReadonlyArray<CreationChoiceOptionId>
 ): CreationFill {
-  const matchingHoles = assessPromotedDraft(draft).holes.filter(
+  const matchingHoles = assessCharacterDraft(draft).holes.filter(
     (candidate) => candidate.kind === "choice" && predicate(candidate)
   )
-  if (matchingHoles.length !== 1) throw new Error("Expected exactly one promoted preset choice hole.")
+  if (matchingHoles.length !== 1) throw new Error("Expected exactly one character creation preset choice hole.")
   const hole = matchingHoles[0]
   return presetChoiceFill(hole.holeId, ...optionIds)
 }
@@ -138,7 +139,7 @@ function loadoutChoiceFill(
   )
 }
 
-function promotedDraft(draftId: string): CharacterDraft {
+function characterDraftPreset(draftId: string): CharacterDraft {
   return createCharacterDraft({ draftId: createStoredDraftId(draftId) })
 }
 
@@ -155,12 +156,12 @@ function abilityScorePresetFill(): CreationFill {
       cha: 12
     }
   })
-  if (fill == null) throw new Error("Expected promoted preset ability scores to parse.")
-  return fill
+  if (Either.isLeft(fill)) throw new Error("Expected character creation preset ability scores to parse.")
+  return fill.right
 }
 
 function completeFighterPreset(draftId: string, initialProgressionOptionId: CreationChoiceOptionId): CharacterDraft {
-  let draft = promotedDraft(draftId)
+  let draft = characterDraftPreset(draftId)
   draft = applyPresetFills(draft, [
     draftChoiceFill(draft, "draft.progression.initial", initialProgressionOptionId),
     draftChoiceFill(draft, "draft.background", creationChoiceOptionId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID)),
@@ -244,7 +245,7 @@ export const FIGHTER_LEVEL2_EXAMPLE_DRAFT = completeFighterPreset(
   })
 )
 
-export const PROMOTED_CHARACTER_PRESETS: ReadonlyArray<PromotedCharacterPreset> = [
+export const CHARACTER_CREATION_PRESETS: ReadonlyArray<CharacterCreationPreset> = [
   { label: "Orc Soldier Fighter 1", draft: FIGHTER_EXAMPLE_DRAFT },
   { label: "Orc Soldier Fighter 2", draft: FIGHTER_LEVEL2_EXAMPLE_DRAFT }
 ]

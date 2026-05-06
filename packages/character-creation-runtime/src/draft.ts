@@ -19,9 +19,14 @@ import {
   type CharacterSelectedChoiceOption,
   type CharacterStartingLanguages,
   type CharacterAlignment,
+  type AlignmentMorality,
+  type AlignmentOrder,
   type DraftRevision,
   type LoadoutSelectedChoiceOption,
+  type LoadoutSlot,
+  type SelectableStandardLanguage,
   type SupportedAbilityScoreMethod,
+  type TwoAndOneBackgroundAbilityScoreIncreaseSelection,
   type UnitCatalog,
   type UnitRef,
 } from "./types.ts";
@@ -253,13 +258,9 @@ function parseAbilityScoreGeneration(
   if (Either.isLeft(selection)) return failIssue(selection.left);
 
   const method = selection.right.method;
-  if (
-    typeof method !== "string" ||
-    !SUPPORTED_ABILITY_SCORE_METHODS.some((candidate) => candidate === method)
-  ) {
+  if (!supportedAbilityScoreMethod(method)) {
     return invalid(path, "Expected a supported ability score method.");
   }
-  const supportedMethod = method as SupportedAbilityScoreMethod;
 
   const assignedScores = abilityScoreAssignment(selection.right.assignedScores);
   return Either.isLeft(assignedScores)
@@ -268,7 +269,7 @@ function parseAbilityScoreGeneration(
         "Expected a valid ability score assignment.",
       )
     : Either.right({
-        method: supportedMethod,
+        method,
         assignedScores: assignedScores.right,
       });
 }
@@ -293,13 +294,11 @@ function parseBackgroundAbilityScoreIncrease(
   if (Either.isLeft(plusTwo)) return failIssue(plusTwo.left);
   const plusOne = parseAbility(selection.right.plusOne, `${path}.plusOne`);
   if (Either.isLeft(plusOne)) return failIssue(plusOne.left);
-  return plusTwo.right === plusOne.right
-    ? invalid(path, "Expected two distinct ability score choices.")
-    : Either.right({
-        kind: "twoAndOne",
-        plusTwo: plusTwo.right,
-        plusOne: plusOne.right,
-      } as BackgroundAbilityScoreIncreaseSelection);
+  return twoAndOneBackgroundAbilityScoreIncrease(
+    plusTwo.right,
+    plusOne.right,
+    path,
+  );
 }
 
 function parseStartingLanguages(
@@ -314,13 +313,13 @@ function parseStartingLanguages(
   if (!selectableStandardLanguage(first)) {
     return invalid(`${path}[1]`, "Expected a selectable standard language.");
   }
-  if (!selectableStandardLanguage(second) || first === second) {
+  if (!selectableStandardLanguage(second)) {
     return invalid(
       `${path}[2]`,
       "Expected a distinct selectable standard language.",
     );
   }
-  return Either.right(["Common", first, second] as CharacterStartingLanguages);
+  return startingLanguagesSelection(first, second, `${path}[2]`);
 }
 
 function parseAlignment(
@@ -331,22 +330,16 @@ function parseAlignment(
   if (Either.isLeft(alignment)) return failIssue(alignment.left);
   const order = alignment.right.order;
   const morality = alignment.right.morality;
-  if (
-    typeof order !== "string" ||
-    !ALIGNMENT_ORDERS.some((candidate) => candidate === order)
-  ) {
+  if (!alignmentOrder(order)) {
     return invalid(`${path}.order`, "Expected a supported alignment order.");
   }
-  if (
-    typeof morality !== "string" ||
-    !ALIGNMENT_MORALITIES.some((candidate) => candidate === morality)
-  ) {
+  if (!alignmentMorality(morality)) {
     return invalid(
       `${path}.morality`,
       "Expected a supported alignment morality.",
     );
   }
-  return Either.right({ order, morality } as CharacterAlignment);
+  return Either.right({ order, morality });
 }
 
 function parseEquipmentSelection(
@@ -475,7 +468,7 @@ function parseLoadoutSelectionSource(
     );
   }
   const slot = source.right.slot;
-  if (slot !== "armor" && slot !== "shield" && slot !== "weapon") {
+  if (!loadoutSlot(slot)) {
     return invalid(`${path}.slot`, "Expected a supported loadout slot.");
   }
   return Either.right({
@@ -545,10 +538,79 @@ function parseUnitRef(value: unknown, path: string): ParseResult<UnitRef> {
 }
 
 function parseAbility(value: unknown, path: string): ParseResult<Ability> {
-  return typeof value === "string" &&
-    SURFACE_ABILITIES.some((candidate) => candidate === value)
-    ? Either.right(value as Ability)
+  return ability(value)
+    ? Either.right(value)
     : invalid(path, "Expected an ability.");
+}
+
+function supportedAbilityScoreMethod(
+  value: unknown,
+): value is SupportedAbilityScoreMethod {
+  return (
+    typeof value === "string" &&
+    SUPPORTED_ABILITY_SCORE_METHODS.some((candidate) => candidate === value)
+  );
+}
+
+function alignmentOrder(value: unknown): value is AlignmentOrder {
+  return (
+    typeof value === "string" &&
+    ALIGNMENT_ORDERS.some((candidate) => candidate === value)
+  );
+}
+
+function alignmentMorality(value: unknown): value is AlignmentMorality {
+  return (
+    typeof value === "string" &&
+    ALIGNMENT_MORALITIES.some((candidate) => candidate === value)
+  );
+}
+
+function ability(value: unknown): value is Ability {
+  return (
+    typeof value === "string" &&
+    SURFACE_ABILITIES.some((candidate) => candidate === value)
+  );
+}
+
+function loadoutSlot(value: unknown): value is LoadoutSlot {
+  return value === "armor" || value === "shield" || value === "weapon";
+}
+
+function startingLanguagesSelection<First extends SelectableStandardLanguage>(
+  first: First,
+  second: SelectableStandardLanguage,
+  secondPath: string,
+): ParseResult<CharacterStartingLanguages> {
+  if (first === second) {
+    return invalid(
+      secondPath,
+      "Expected a distinct selectable standard language.",
+    );
+  }
+  // The guard above establishes the tuple's no-duplicate invariant; TypeScript
+  // cannot connect that runtime inequality to CharacterStartingLanguages' mapped
+  // tuple union.
+  const languages = ["Common", first, second] as CharacterStartingLanguages;
+  return Either.right(languages);
+}
+
+function twoAndOneBackgroundAbilityScoreIncrease(
+  plusTwo: Ability,
+  plusOne: Ability,
+  path: string,
+): ParseResult<TwoAndOneBackgroundAbilityScoreIncreaseSelection> {
+  if (plusTwo === plusOne) {
+    return invalid(path, "Expected two distinct ability score choices.");
+  }
+
+  return Either.right({
+    kind: "twoAndOne",
+    plusTwo,
+    // The branch above establishes the Exclude<Ability, PlusTwo> invariant;
+    // TypeScript cannot express that relation for two runtime values.
+    plusOne: plusOne as Exclude<Ability, typeof plusTwo>,
+  });
 }
 
 function selectableStandardLanguage(
@@ -605,9 +667,15 @@ function record(
   value: unknown,
   path: string,
 ): ParseResult<Readonly<Record<string, unknown>>> {
-  return typeof value === "object" && value != null && !Array.isArray(value)
-    ? Either.right(value as Readonly<Record<string, unknown>>)
+  return unknownRecord(value)
+    ? Either.right(value)
     : invalid(path, "Expected an object.");
+}
+
+function unknownRecord(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value != null && !Array.isArray(value);
 }
 
 function collect<T>(
