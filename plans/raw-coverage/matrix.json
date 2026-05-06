@@ -1,0 +1,158 @@
+{
+  "tracer": {
+    "sectionIds": [
+      "srd521-playing-the-game-actions-reactions"
+    ],
+    "source": [
+      {
+        "corpus": "srd-5.2.1",
+        "path": ".references/srd-5.2.1/Playing-the-Game.md",
+        "headingPath": [
+          "Actions",
+          "Reactions"
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "generatedSpans": 7,
+    "classifiedSpans": 7,
+    "fluffSpans": 0,
+    "nonFluffSpans": 7,
+    "closedNonFluffSpans": 7,
+    "requirements": 6,
+    "executableRequirements": 4,
+    "qntModeled": 4,
+    "qntProved": 4,
+    "runtimeMapped": 4,
+    "runtimeParityCovered": 4,
+    "rawReviewedSections": 1
+  },
+  "rawReviews": [
+    {
+      "sectionId": "srd521-playing-the-game-actions-reactions",
+      "reviewer": "raw-review-agent",
+      "verdict": "pass",
+      "sourcesChecked": [
+        ".references/srd-5.2.1/Playing-the-Game.md",
+        "UBIQUITOUS_LANGUAGE.md",
+        "ASSUMPTIONS.md"
+      ]
+    }
+  ],
+  "activePlanTasks": [
+    {
+      "taskId": "QCORE8",
+      "status": "done",
+      "requirementIds": [
+        "RAW-PTG-REACTIONS-002",
+        "RAW-PTG-REACTIONS-004",
+        "RAW-PTG-REACTIONS-005",
+        "RAW-PTG-REACTIONS-006"
+      ]
+    },
+    {
+      "taskId": "QMBT3",
+      "status": "done",
+      "requirementIds": [
+        "RAW-PTG-REACTIONS-002",
+        "RAW-PTG-REACTIONS-004",
+        "RAW-PTG-REACTIONS-005",
+        "RAW-PTG-REACTIONS-006"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "RAW-PTG-REACTIONS-001",
+      "title": "Reaction is a special action enabled by a rule source",
+      "coverageKind": "definition",
+      "sourceSpanIds": [
+        "SRD521-PTG-ACTIONS-REACTIONS-001",
+        "SRD521-PTG-ACTIONS-REACTIONS-002"
+      ],
+      "qntModeled": false,
+      "qntProved": false,
+      "runtimeMapped": false,
+      "runtimeParityCovered": false,
+      "activePlanTasks": []
+    },
+    {
+      "id": "RAW-PTG-REACTIONS-002",
+      "title": "Reaction is an instant trigger response available on any creature's turn",
+      "coverageKind": "executable",
+      "sourceSpanIds": [
+        "SRD521-PTG-ACTIONS-REACTIONS-003"
+      ],
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeParityCovered": true,
+      "activePlanTasks": [
+        "QCORE8",
+        "QMBT3"
+      ]
+    },
+    {
+      "id": "RAW-PTG-REACTIONS-003",
+      "title": "Opportunity Attack is the most common Reaction type",
+      "coverageKind": "definition",
+      "sourceSpanIds": [
+        "SRD521-PTG-ACTIONS-REACTIONS-004"
+      ],
+      "qntModeled": true,
+      "qntProved": false,
+      "runtimeMapped": true,
+      "runtimeParityCovered": true,
+      "activePlanTasks": []
+    },
+    {
+      "id": "RAW-PTG-REACTIONS-004",
+      "title": "Taking a Reaction spends the Reaction until the start of the reactor's next turn",
+      "coverageKind": "executable",
+      "sourceSpanIds": [
+        "SRD521-PTG-ACTIONS-REACTIONS-005"
+      ],
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeParityCovered": true,
+      "activePlanTasks": [
+        "QCORE8",
+        "QMBT3"
+      ]
+    },
+    {
+      "id": "RAW-PTG-REACTIONS-005",
+      "title": "An interrupted creature continues its turn after the Reaction",
+      "coverageKind": "executable",
+      "sourceSpanIds": [
+        "SRD521-PTG-ACTIONS-REACTIONS-006"
+      ],
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeParityCovered": true,
+      "activePlanTasks": [
+        "QCORE8",
+        "QMBT3"
+      ]
+    },
+    {
+      "id": "RAW-PTG-REACTIONS-006",
+      "title": "Reaction timing defaults to immediately after the trigger unless the Reaction says otherwise",
+      "coverageKind": "executable",
+      "sourceSpanIds": [
+        "SRD521-PTG-ACTIONS-REACTIONS-007"
+      ],
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeParityCovered": true,
+      "activePlanTasks": [
+        "QCORE8",
+        "QMBT3"
+      ]
+    }
+  ]
+}

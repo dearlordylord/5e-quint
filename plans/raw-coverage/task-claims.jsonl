@@ -1,0 +1,3 @@
+{"taskId":"QCORE8","requirementIds":["RAW-PTG-REACTIONS-002","RAW-PTG-REACTIONS-004","RAW-PTG-REACTIONS-005","RAW-PTG-REACTIONS-006"],"evidence":[{"kind":"qnt-proof","ownerPath":"packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"},{"kind":"qnt-proof","ownerPath":"packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-inductive.qnt"}]}
+{"taskId":"QMBT3","requirementIds":["RAW-PTG-REACTIONS-002","RAW-PTG-REACTIONS-004","RAW-PTG-REACTIONS-005","RAW-PTG-REACTIONS-006"],"evidence":[{"kind":"focused-mbt","ownerPath":"packages/battle-runtime/rule-core-reactions.mbt.qnt"},{"kind":"focused-mbt","ownerPath":"packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"}]}
+
