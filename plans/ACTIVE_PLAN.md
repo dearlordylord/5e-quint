@@ -262,7 +262,7 @@ Keep it synchronized with the DAG table and task details.
 | 108   | QMBT13 - Classify Authored Catalog Admission Gaps | done | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed generated catalog-admission dispositions and report triage for authored not-in-catalog Surface Units. |
 | 109   | QMBT14 - Trace Spell Unit Admission Evidence | done | QMBT11-QMBT13 | QMBT15-QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed deterministic spell Unit admission/projection tracer for `acid_splash`, `mage_armor`, `magic_missile`, and `ray_of_frost` through catalog Spell records, creature Spell Access, `startBattle`, and `discoverBattleActs`. |
 | 110   | QMBT15 - Expand Spell Unit Admission Evidence | done | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed candidate narrowing: `fire_bolt` and `shield` are no longer counted as supported spell Unit profiles until their SRD-required object-burning and triggered-Reaction boundaries are represented at the matrix/runtime boundary. |
-| 111   | QMBT16 - Decide Selected Spell Identity MBT | ready-for-research | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether any spell identities need selected MBT beyond QMBT5 Procedure Parity, and add only high-risk selected identities. |
+| 111   | QMBT16 - Decide Selected Spell Identity MBT | done | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT16 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md) | Completed decision: no currently supported spell Unit identity justifies selected identity MBT beyond QMBT5 procedure parity plus QMBT14 deterministic admission/projection evidence. |
 | 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | ready-for-research | QMBT12-QMBT13 | QMBT18-QMBT20 | [Unit profile coverage matrix plan](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md) | Make private PHB/XPHB mechanics pressure intake explicit: public renamed mechanics-only records, matrix gaps, evidence expectations, and protected-expression gates. |
 | 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | blocked | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one unsupported/widening feature profile and drive it matrix/QNT-MBT-first into TypeScript implementation and evidence. |
 | 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | blocked | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Review denominators, labels, and report sections after the corrective and expansion slices so percentages still mean what they claim. |
@@ -715,7 +715,7 @@ package typecheck.
 
 ### Task 111 - QMBT16 - Decide Selected Spell Identity MBT
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT10, QMBT14-QMBT15
 
@@ -733,6 +733,10 @@ inside QNT.
 
 Verification: `pnpm unit-profile-coverage:check`; focused MBT only for chosen
 identities, one run at a time with the standard timed protocol.
+
+Result: no selected spell identity MBT rows are added for the currently
+supported spell Units. See
+[QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md).
 
 ### Task 112 - QMBT17 - Define Classic Non-SRD Mechanics Intake Policy
 

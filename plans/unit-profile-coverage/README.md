@@ -178,6 +178,12 @@ Selected identity MBT coverage counts supported Unit ids with evidence tagged
 this matrix; unsupported and widening rows remain closure dispositions, not
 test omissions.
 
+QMBT16 decided not to add selected spell identity MBT rows for the currently
+supported spell Units. The rationale is recorded in
+[QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md](QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md):
+QMBT5 already replays the supported spell procedures with concrete spell ids,
+and QMBT14 covers catalog/access/invocation admission for those identities.
+
 Run:
 
 ```sh
