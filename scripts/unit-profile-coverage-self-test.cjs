@@ -15,6 +15,7 @@ const {
 } = require("./unit-profile-coverage-discovery.cjs");
 const { fail, toRepoPath } = require("./unit-profile-coverage-io.cjs");
 const {
+  validateCollections,
   validateOwnerClaims,
 } = require("./unit-profile-coverage-validation.cjs");
 
@@ -178,6 +179,54 @@ function runSelfTest(root) {
       fail(
         "Self-test failed: expected variant magic mechanics to count toward executable mechanics.",
       );
+    }
+    const policyIssues = validateCollections(
+      [
+        {
+          id: "classic-2024-non-srd-mechanics",
+          policy: { tag: "classic-non-srd-mechanics" },
+        },
+      ],
+      [
+        {
+          unitId: "phb_action_surge",
+          collectionId: "classic-2024-non-srd-mechanics",
+          syntheticLabel: "Action Surge",
+          sourceRecordPath: "fixture/private-pressure.json",
+          provenance: { kind: "xphb" },
+          rawRecord: {
+            id: "phb_action_surge",
+            syntheticLabel: "Action Surge",
+            canonicalName: "Action Surge",
+            provenance: { kind: "xphb" },
+            mechanics: { family: "extra_action" },
+          },
+        },
+        {
+          unitId: "mycelium_step",
+          collectionId: "srd-5.2.1",
+          sourceRecordPath: "fixture/srd-overlap.json",
+          provenance: { kind: "srd-5.2.1" },
+          rawRecord: {
+            id: "mycelium_step",
+            provenance: { kind: "srd-5.2.1" },
+            mechanics: { family: "extra_action" },
+          },
+        },
+      ],
+    );
+    for (const expectedIssue of [
+      "phb_action_surge must use classic-2024-mechanics-source-lane provenance.",
+      "phb_action_surge must use fungi-themed synthetic id and label.",
+      "phb_action_surge contains protected-expression field canonicalName.",
+      "phb_action_surge uses near-canonical protected label/id text: phb.",
+      "phb_action_surge duplicates SRD Unit mechanics from mycelium_step.",
+    ]) {
+      if (!policyIssues.includes(expectedIssue)) {
+        fail(
+          `Self-test failed: expected Classic non-SRD policy issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(policyIssues)}`,
+        );
+      }
     }
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });

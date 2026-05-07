@@ -99,9 +99,13 @@ const protectedExpressionFields = new Set([
 const nearCanonicalDenyList = [
   "action surge",
   "cunning action",
+  "players handbook",
+  "player's handbook",
+  "phb",
   "rage",
   "sneak attack",
   "uncanny dodge",
+  "xphb",
   "shield",
   "magic missile",
   "fireball",

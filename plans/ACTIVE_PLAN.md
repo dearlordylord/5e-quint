@@ -184,13 +184,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 112,
       "id": "QMBT17",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Define Classic Non-SRD Mechanics Intake Policy"
     },
     {
       "number": 113,
       "id": "QMBT18",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Drive Unsupported Feature Profile Red-Green Slice"
     },
     {
@@ -263,8 +263,8 @@ Keep it synchronized with the DAG table and task details.
 | 109   | QMBT14 - Trace Spell Unit Admission Evidence | done | QMBT11-QMBT13 | QMBT15-QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed deterministic spell Unit admission/projection tracer for `acid_splash`, `mage_armor`, `magic_missile`, and `ray_of_frost` through catalog Spell records, creature Spell Access, `startBattle`, and `discoverBattleActs`. |
 | 110   | QMBT15 - Expand Spell Unit Admission Evidence | done | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed candidate narrowing: `fire_bolt` and `shield` are no longer counted as supported spell Unit profiles until their SRD-required object-burning and triggered-Reaction boundaries are represented at the matrix/runtime boundary. |
 | 111   | QMBT16 - Decide Selected Spell Identity MBT | done | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT16 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md) | Completed decision: no currently supported spell Unit identity justifies selected identity MBT beyond QMBT5 procedure parity plus QMBT14 deterministic admission/projection evidence. |
-| 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | ready-for-research | QMBT12-QMBT13 | QMBT18-QMBT20 | [Unit profile coverage matrix plan](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md) | Make private PHB/XPHB mechanics pressure intake explicit: public renamed mechanics-only records, matrix gaps, evidence expectations, and protected-expression gates. |
-| 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | blocked | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one unsupported/widening feature profile and drive it matrix/QNT-MBT-first into TypeScript implementation and evidence. |
+| 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | done | QMBT12-QMBT13 | QMBT18-QMBT20 | [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed private PHB/XPHB mechanics pressure intake policy plus executable checker coverage for private-source identity markers, protected-expression fields, provenance, synthetic naming, and SRD mechanics overlap. |
+| 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | ready-for-research | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Pick one unsupported/widening feature profile by mechanics pressure, not private-source identity, and drive it matrix/QNT-MBT-first into TypeScript implementation and evidence. |
 | 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | blocked | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Review denominators, labels, and report sections after the corrective and expansion slices so percentages still mean what they claim. |
 | 115   | QMBT20 - Recursive Unit Profile Planning Review | blocked | QMBT10-QMBT19 | QMBT21+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT10-QMBT19 findings, update PRD/plan docs, and append QMBT21+ tasks plus a new recursive planning-review task unless the matrix lane is explicitly declared complete. |
 
@@ -740,38 +740,41 @@ supported spell Units. See
 
 ### Task 112 - QMBT17 - Define Classic Non-SRD Mechanics Intake Policy
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT12-QMBT13
 
 Blocks: QMBT18-QMBT20
 
-Research / plan: [UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md)
+Research / plan: [QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md)
 
-Scope: make private PHB/XPHB mechanics pressure intake explicit. Define how
-pressure becomes public renamed mechanics-only Units, synthetic labels, matrix
-gaps, unsupported/widening dispositions, and evidence requirements without
-leaking private-source identity into shipped ids, labels, prose, or provenance.
+Completed scope: made private PHB/XPHB mechanics pressure intake explicit:
+public renamed mechanics-only Units, synthetic labels, matrix gaps,
+unsupported/widening dispositions, assumption closure, and evidence
+requirements without leaking private-source identity into shipped ids, labels,
+prose, or provenance. The checker now covers private-source identity markers,
+protected-expression fields, provenance, synthetic naming, and duplicate SRD
+mechanics overlap for the Classic non-SRD collection.
 
 Out of scope: importing private content into this repo; adding protected
 expression; broad runtime support for every private-source mechanic.
 
-Verification: `pnpm unit-profile-coverage:check`; expression/provenance gates
-remain executable.
+Verification: `pnpm unit-profile-coverage:check`; `pnpm quality`.
 
 ### Task 113 - QMBT18 - Drive Unsupported Feature Profile Red-Green Slice
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT10-QMBT13, QMBT17
 
 Blocks: QMBT19-QMBT20
 
-Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md)
 
-Scope: pick one unsupported or widening feature profile from the matrix and
-drive it through the red/green flow: matrix gap or authored-source pressure,
-QNT Procedure Parity profile, focused Procedure Parity MBT expectation,
+Scope: pick one unsupported or widening feature profile from mechanics pressure
+without private-source identity, then drive it through the red/green flow:
+matrix gap or public mechanics-only pressure, QNT Procedure Parity profile,
+focused Procedure Parity MBT expectation,
 TypeScript implementation, deterministic evidence, and selected identity MBT
 only if identity risk justifies it.
 

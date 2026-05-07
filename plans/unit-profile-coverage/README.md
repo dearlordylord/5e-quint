@@ -87,6 +87,12 @@ Current evidence tags are:
 
 ## Classic Non-SRD Authoring Lane
 
+The full QMBT17 intake contract is
+[QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md](QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md).
+It is the policy source for how private PHB/XPHB pressure becomes public
+mechanics-only records, matrix gaps, unsupported/widening dispositions, and
+evidence requirements.
+
 Classic non-SRD mechanics-only records may preserve exact mechanics facts:
 level gates, prerequisites, action economy, resource cadence, dice, numbers,
 conditions, durations, target shapes, and execution relationships.
@@ -104,7 +110,9 @@ decorative; matching and coverage use structured fields.
 
 The checker rejects SRD provenance in the Classic non-SRD collection, duplicate
 Unit ids across collections, missing fungi-themed synthetic labels, protected
-expression fields, and near-canonical ids/labels from its deny list.
+expression fields, near-canonical ids/labels from its deny list, private-source
+identity markers in ids/labels, and mechanics that duplicate an SRD Unit under a
+Classic non-SRD id.
 
 ## Coverage Flows
 

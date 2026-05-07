@@ -698,6 +698,7 @@ function validateCoverageInputs({
 }
 
 module.exports = {
+  validateCollections,
   validateCoverageInputs,
   validateOwnerClaims,
 };
