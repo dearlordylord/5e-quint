@@ -35,6 +35,7 @@ export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
 export const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE = "saveDamageReplacement";
 export const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE =
   "reactionRollOrDamageReduction";
+const CUTTING_WORDS_REACTION_RANGE_FEET = 60;
 export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE =
   "attackDamageReductionZeroDamageRedirect";
 export const PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE =
@@ -489,6 +490,12 @@ export type OngoingFeatureLifecycleProfile =
 export type ReactionRollOrDamageReductionProfile =
   | {
       readonly kind: "attackRollReduction";
+      readonly rangeFeet: MovementFeet;
+      readonly requiresVisibleCreature: true;
+      readonly reduction: { readonly kind: "bardicInspirationDie" };
+    }
+  | {
+      readonly kind: "abilityCheckReduction";
       readonly rangeFeet: MovementFeet;
       readonly requiresVisibleCreature: true;
       readonly reduction: { readonly kind: "bardicInspirationDie" };
@@ -1554,6 +1561,7 @@ function reactionRollOrDamageReductionMechanicsProjection(
       if (
         modifier.kind === "attack_roll_reduction" &&
         modifier.trigger.kind === "creature_succeeds_attack_roll" &&
+        modifier.trigger.rangeFeet === CUTTING_WORDS_REACTION_RANGE_FEET &&
         modifier.trigger.requiresVisibleCreature === true &&
         modifier.reduction.kind === "bardic_inspiration_die"
       ) {
@@ -1567,8 +1575,25 @@ function reactionRollOrDamageReductionMechanicsProjection(
         ];
       }
       if (
+        modifier.kind === "ability_check_reduction" &&
+        modifier.trigger.kind === "creature_succeeds_ability_check" &&
+        modifier.trigger.rangeFeet === CUTTING_WORDS_REACTION_RANGE_FEET &&
+        modifier.trigger.requiresVisibleCreature === true &&
+        modifier.reduction.kind === "bardic_inspiration_die"
+      ) {
+        return [
+          {
+            kind: "abilityCheckReduction",
+            rangeFeet: movementFeet(modifier.trigger.rangeFeet),
+            requiresVisibleCreature: true,
+            reduction: { kind: "bardicInspirationDie" },
+          },
+        ];
+      }
+      if (
         modifier.kind === "damage_roll_reduction" &&
         modifier.trigger.kind === "creature_makes_damage_roll" &&
+        modifier.trigger.rangeFeet === CUTTING_WORDS_REACTION_RANGE_FEET &&
         modifier.trigger.requiresVisibleCreature === true &&
         modifier.reduction.kind === "bardic_inspiration_die"
       ) {

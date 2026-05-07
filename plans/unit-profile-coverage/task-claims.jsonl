@@ -24,3 +24,5 @@
 {"taskId":"QMBT59","claimKind":"completed-runtime-parity","profileIds":["unit-feature.attack-damage-reduction-zero-damage-redirect"],"note":"Focused Deflect Attacks zero-damage redirect runtime parity."}
 {"taskId":"QMBT62","claimKind":"qnt-proof","profileIds":["unit-feature.failed-ability-check-resource-boost"],"note":"Tactical Mind failed ability-check resource boost profile proof."}
 {"taskId":"QMBT62","claimKind":"completed-runtime-parity","profileIds":["unit-feature.failed-ability-check-resource-boost"],"note":"Focused Tactical Mind failed ability-check resource boost runtime parity."}
+{"taskId":"QMBT65","claimKind":"qnt-proof","profileIds":["unit-feature.reaction-roll-or-damage-reduction"],"note":"Cutting Words successful ability-check Reaction reduction branch proof."}
+{"taskId":"QMBT65","claimKind":"completed-runtime-parity","profileIds":["unit-feature.reaction-roll-or-damage-reduction"],"note":"Focused Cutting Words ability-check Reaction reduction runtime parity."}

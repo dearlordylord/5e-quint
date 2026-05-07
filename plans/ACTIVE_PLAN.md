@@ -58,13 +58,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 160,
       "id": "QMBT65",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Cutting Words Ability Check Reaction Reduction"
     },
     {
       "number": 161,
       "id": "QMBT66",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -104,8 +104,8 @@ Keep it synchronized with the DAG table and task details.
 
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
-| 160   | QMBT65 - Promote Cutting Words Ability Check Reaction Reduction | ready-for-implementation-after-light-research | none | QMBT66 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Implement the missing Ability Check branch of `unit-feature.reaction-roll-or-damage-reduction` for `bard_cutting_words`, reusing the existing Bardic Inspiration pool and caller-supplied already-rolled Ability Check facts. |
-| 161   | QMBT66 - Recursive Unit Profile Planning Review | blocked | QMBT65 | none | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT65 findings, update PRD and plan docs, and append the largest coherent next batch whose tasks are similar enough to run without re-planning between each item unless the Unit profile matrix lane is explicitly complete. |
+| 160   | QMBT65 - Promote Cutting Words Ability Check Reaction Reduction | done | none | QMBT66 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed `bard_cutting_words` Ability Check reduction as part of `unit-feature.reaction-roll-or-damage-reduction`, with authored mechanics admission, caller-supplied already-successful Ability Check facts, Reaction and Bardic Inspiration spend, QNT proof coverage, focused runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
+| 161   | QMBT66 - Recursive Unit Profile Planning Review | ready-for-research | QMBT65 | none | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT65 findings, update PRD and plan docs, and append the largest coherent next batch whose tasks are similar enough to run without re-planning between each item unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -113,7 +113,7 @@ Older task details were removed from this active queue after closeout. Use git h
 
 ### Task 160 - QMBT65 - Promote Cutting Words Ability Check Reaction Reduction
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: none
 
@@ -155,9 +155,39 @@ reaction behavior changes; `pnpm unit-profile-coverage:check`; relevant
 package typecheck/tests; `pnpm quality`; `/simplify` convergence, minimum two
 rounds.
 
+Completed scope: promoted `bard_cutting_words` Ability Check reaction
+reduction through the existing
+`unit-feature.reaction-roll-or-damage-reduction` profile. The runtime now
+accepts caller-supplied already-successful Ability Check facts, verifies the
+Bard can see the creature and receives the required within-60-feet spatial
+fact, spends Reaction and the existing Bardic Inspiration pool, and reports
+whether the reduced total still succeeds.
+
+Out of scope honored: no Cutting Words-only profile, duplicate Bardic
+Inspiration pool, generic D20 Test modifier, DC/proficiency calculation, class
+catalog work, spell work, or checker metric changes were introduced.
+
+Verification completed: RAW/source review checked `.references/srd-5.2.1`
+`Classes/Bard.md`, `Playing-the-Game.md`, `Rules-Glossary.md`, and
+`UBIQUITOUS_LANGUAGE.md`; focused QNT Cutting Words tests passed; focused
+runtime tests and deterministic admission tests passed; package typecheck
+passed; matrix artifacts were regenerated and
+`pnpm unit-profile-coverage:check` passed; `pnpm quality` passed; Tier 1
+battle-runtime MBT passed with timed single-run protocol; `/simplify`
+convergence is recorded in this closeout.
+
+`/simplify` round 1: kept Ability Check reduction on the existing reaction
+profile and shared Bardic Inspiration resource instead of adding a
+Cutting Words-specific support profile or pool.
+
+`/simplify` round 2: no important changes found; the boundary remains limited
+to successful Ability Checks and does not absorb Tactical Mind, Bardic
+Inspiration grant/use, D20 Test-wide roll modification, or GM check/DC
+selection.
+
 ### Task 161 - QMBT66 - Recursive Unit Profile Planning Review
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT65
 

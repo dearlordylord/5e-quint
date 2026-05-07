@@ -472,7 +472,10 @@ type BattleAttackDamageContinuationWithoutConcentration = Omit<
 };
 type BattleReactionModifierChoice =
   | {
-      readonly kind: "attackRollReduction" | "damageRollReduction";
+      readonly kind:
+        | "attackRollReduction"
+        | "abilityCheckReduction"
+        | "damageRollReduction";
       readonly unitId: UnitRecord["id"];
       readonly label: string;
       readonly reduction: {
@@ -722,6 +725,13 @@ export type BattleTargetSpatialFact =
       readonly kind: "rangedRedirectTargetWithin60FeetWithoutTotalCover";
       readonly sourceId: CombatantId;
       readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "reactionRollOrDamageReductionTargetWithinRange";
+      readonly reactorId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+      readonly rangeFeet: MovementFeet;
     }
   | {
       readonly kind: "grappleTargetWithinReach";
@@ -1194,6 +1204,15 @@ export type BattleFailedAbilityCheckFacts = {
   readonly dc: DifficultyClass;
 };
 
+export type BattleSuccessfulAbilityCheckFacts = {
+  readonly actorId: CombatantId;
+  readonly ability: Ability;
+  readonly skillOrToolLabel?: string;
+  readonly originalTotal: number;
+  readonly dc: DifficultyClass;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+};
+
 export type FailedAbilityCheckResourceBoostResolutionInput = {
   readonly state: BattleState;
   readonly unitId: UnitRecord["id"];
@@ -1201,11 +1220,28 @@ export type FailedAbilityCheckResourceBoostResolutionInput = {
   readonly boostRoll: number;
 };
 
+export type SuccessfulAbilityCheckReactionReductionResolutionInput = {
+  readonly state: BattleState;
+  readonly reactorId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly abilityCheck: BattleSuccessfulAbilityCheckFacts;
+  readonly reductionRoll: number;
+};
+
 export type FailedAbilityCheckResourceBoostResolutionResult =
   | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
       readonly abilityCheckBoost: {
         readonly boostedTotal: number;
         readonly boostedSucceeded: boolean;
+      };
+    })
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
+
+export type SuccessfulAbilityCheckReactionReductionResolutionResult =
+  | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
+      readonly abilityCheckReduction: {
+        readonly reducedTotal: number;
+        readonly reducedSucceeded: boolean;
       };
     })
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
@@ -2046,6 +2082,13 @@ type BattleFillEncoded =
             readonly targetId: string;
           }
         | {
+            readonly kind: "reactionRollOrDamageReductionTargetWithinRange";
+            readonly reactorId: string;
+            readonly targetId: string;
+            readonly unitId: string;
+            readonly rangeFeet: number;
+          }
+        | {
             readonly kind: "grappleTargetWithinReach";
             readonly grapplerId: string;
             readonly targetId: string;
@@ -2213,6 +2256,7 @@ type BattleFillEncoded =
                   readonly unitId: string;
                   readonly modifierKind:
                     | "attackRollReduction"
+                    | "abilityCheckReduction"
                     | "damageRollReduction"
                     | "attackDamageReduction";
                   readonly fills: readonly BattleFillEncoded[];
@@ -2304,6 +2348,15 @@ export const BattleFillSchema: Schema.Schema<
               ),
               sourceId: CombatantId,
               targetId: CombatantId,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal(
+                "reactionRollOrDamageReductionTargetWithinRange",
+              ),
+              reactorId: CombatantId,
+              targetId: CombatantId,
+              unitId: Schema.String,
+              rangeFeet: MovementFeet,
             }),
             Schema.Struct({
               kind: Schema.Literal("grappleTargetWithinReach"),
@@ -2496,6 +2549,7 @@ export const BattleFillSchema: Schema.Schema<
               unitId: BattleSubjectTextSchema,
               modifierKind: Schema.Literal(
                 "attackRollReduction",
+                "abilityCheckReduction",
                 "damageRollReduction",
                 "attackDamageReduction",
               ),
@@ -2991,7 +3045,11 @@ const BattleHelpAttackSnapshotSchema = Schema.Struct({
 
 const BattleReactionModifierChoiceSchema = Schema.Union(
   Schema.Struct({
-    kind: Schema.Literal("attackRollReduction", "damageRollReduction"),
+    kind: Schema.Literal(
+      "attackRollReduction",
+      "abilityCheckReduction",
+      "damageRollReduction",
+    ),
     unitId: Schema.String,
     label: Schema.String,
     reduction: Schema.Struct({
@@ -6792,7 +6850,16 @@ function reactionModifierResourceAvailable(
   const resource = reactor.origin.resources.find(
     (candidate) => candidate.unit.id === profile.unit.id,
   );
+  if (reactionModifierSpendsProfileResource(modifier)) {
+    return resource !== undefined && resourceHasUsesRemaining(resource);
+  }
   return resource === undefined || resourceHasUsesRemaining(resource);
+}
+
+function reactionModifierSpendsProfileResource(
+  modifier: ReactionRollOrDamageReductionProfile,
+): boolean {
+  return modifier.reduction.kind === "bardicInspirationDie";
 }
 
 function opportunityAttackReactionChoices(
@@ -12328,6 +12395,135 @@ export function resolveFailedAbilityCheckResourceBoost(
       boostedSucceeded,
     },
   };
+}
+
+export function resolveSuccessfulAbilityCheckReactionReduction(
+  input: SuccessfulAbilityCheckReactionReductionResolutionInput,
+): SuccessfulAbilityCheckReactionReductionResolutionResult {
+  const reactor = input.state.combatants.get(input.reactorId);
+  const target = input.state.combatants.get(input.abilityCheck.actorId);
+  if (!isCharacterBattleCreatureState(reactor) || target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Ability-check Reaction reduction is no longer available.",
+    );
+  }
+
+  const profile =
+    reactor.origin.reactionRollOrDamageReductionProfiles.get(input.unitId);
+  const modifier = profile?.modifiers.find(
+    (candidate) => candidate.kind === "abilityCheckReduction",
+  );
+  if (
+    profile === undefined ||
+    modifier === undefined ||
+    !combatantCanTakeReactions(reactor) ||
+    !reactionModifierResourceAvailable(
+      input.state,
+      input.reactorId,
+      profile,
+      modifier,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Ability-check Reaction reduction is no longer available.",
+    );
+  }
+
+  if (input.abilityCheck.originalTotal < input.abilityCheck.dc) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${profile.unit.name} requires an already-successful ability check.`,
+    );
+  }
+
+  if (
+    modifier.requiresVisibleCreature &&
+    !combatantCanSee(input.state, input.reactorId, input.abilityCheck.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${profile.unit.name} requires a visible creature.`,
+    );
+  }
+
+  if (
+    !hasReactionRollOrDamageReductionRangeFact(
+      input.abilityCheck.targetSpatialFacts,
+      input.reactorId,
+      input.abilityCheck.actorId,
+      input.unitId,
+      modifier.rangeFeet,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${profile.unit.name} requires the creature to be within range.`,
+    );
+  }
+
+  const dieSize = bardicInspirationDieSize(profile.classLevel);
+  if (
+    input.reductionRoll < 1 ||
+    input.reductionRoll > dieSize ||
+    !Number.isInteger(input.reductionRoll)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${profile.unit.name} reduction roll must be a 1d${dieSize} result.`,
+    );
+  }
+
+  const reducedTotal = input.abilityCheck.originalTotal - input.reductionRoll;
+  const reducedSucceeded = reducedTotal >= input.abilityCheck.dc;
+  const spentState = spendReactionModifierResource(
+    spendReaction(input.state, input.reactorId),
+    input.reactorId,
+    {
+      kind: "abilityCheckReduction",
+      unitId: profile.unit.id,
+      label: profile.unit.name,
+      reduction: {
+        kind: "rolled",
+        flatModifier: 0,
+        dieSize,
+      },
+    },
+  );
+
+  return {
+    tag: "resolved",
+    state: spentState,
+    snapshot: snapshotBattle(spentState),
+    abilityCheckReduction: {
+      reducedTotal,
+      reducedSucceeded,
+    },
+  };
+}
+
+function hasReactionRollOrDamageReductionRangeFact(
+  facts: readonly BattleTargetSpatialFact[],
+  reactorId: CombatantId,
+  targetId: CombatantId,
+  unitId: UnitRecord["id"],
+  rangeFeet: MovementFeet,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "reactionRollOrDamageReductionTargetWithinRange" &&
+      fact.reactorId === reactorId &&
+      fact.targetId === targetId &&
+      fact.unitId === unitId &&
+      fact.rangeFeet === rangeFeet,
+  );
 }
 
 function resolveExtraActionGrantUnitFeature(

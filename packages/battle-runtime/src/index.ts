@@ -109,6 +109,7 @@ export {
   removeBattleCombatants,
   resolveBattleConcentrationDamage,
   resolveFailedAbilityCheckResourceBoost,
+  resolveSuccessfulAbilityCheckReactionReduction,
   resolveBattleReaction,
   resolveBattleSubject,
   scoreModifier,
@@ -172,7 +173,9 @@ export {
   type BattleStatBlockRechargeRollResult,
   type BattleState,
   type BattleStateInitIssue,
+  type BattleSuccessfulAbilityCheckFacts,
   type BattleTargetChoiceHole,
+  type BattleTargetSpatialFact,
   type BattleTurnResources,
   type BattleUnitFeatureRollHole,
   type FailedAbilityCheckResourceBoostResolutionInput,
@@ -182,6 +185,8 @@ export {
   type OngoingFeatureSource,
   type OngoingFeatureSourceKey,
   type SupportedSpellInvocation,
+  type SuccessfulAbilityCheckReactionReductionResolutionInput,
+  type SuccessfulAbilityCheckReactionReductionResolutionResult,
 } from "./battle-reducer.ts";
 export {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,

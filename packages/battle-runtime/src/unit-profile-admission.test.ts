@@ -17,7 +17,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT56 feat_boon_of_combat_prowess
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -51,6 +52,7 @@ import {
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   battleCombatantSide,
   battleId,
+  battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitRefWithSupportProfiles,
   cantripSpellInvocationRef,
   characterId,
@@ -111,6 +113,7 @@ const rogueCunningActionUnitId = "rogue_cunning_action";
 const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
+const bardCuttingWordsUnitId = "bard_cutting_words";
 const defenseUnitId = "defense";
 const myceliumStepUnitId = "mycelium_step";
 const archeryUnitId = "feat_archery";
@@ -346,6 +349,128 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
         unitLibrary.requireUnit(fighterSecondWindUnitId),
       ),
     ).toBeNull();
+  });
+});
+
+describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
+  test("bard_cutting_words is admitted from reaction roll-or-damage reduction mechanics", () => {
+    const unit = unitLibrary.requireUnit(bardCuttingWordsUnitId);
+    const supportProfile = REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE;
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: bardCuttingWordsUnitId,
+        supportProfiles: [supportProfile],
+      }),
+    );
+    expect(battleReactionRollOrDamageReductionSupportForUnit(unit)).toBe(
+      supportProfile,
+    );
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "bard", level: classLevel(3) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "reactionRollOrDamageReduction",
+        unit,
+        classLevel: classLevel(3),
+        modifiers: [
+          {
+            kind: "attackRollReduction",
+            rangeFeet: movementFeet(60),
+            requiresVisibleCreature: true,
+            reduction: { kind: "bardicInspirationDie" },
+          },
+          {
+            kind: "abilityCheckReduction",
+            rangeFeet: movementFeet(60),
+            requiresVisibleCreature: true,
+            reduction: { kind: "bardicInspirationDie" },
+          },
+          {
+            kind: "attackDamageRollReduction",
+            rangeFeet: movementFeet(60),
+            requiresVisibleCreature: true,
+            reduction: { kind: "bardicInspirationDie" },
+          },
+        ],
+      }),
+    );
+  });
+
+  test("bard_cutting_words rejects malformed ability-check reduction mechanics", () => {
+    const unit = unitLibrary.requireUnit(bardCuttingWordsUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+    ) {
+      throw new Error("Expected Cutting Words reaction modifier mechanics.");
+    }
+    const malformedAbilityCheckModifier = unit.mechanics.modifiers.map(
+      (modifier) =>
+        modifier.kind === "ability_check_reduction"
+          ? {
+              ...modifier,
+              trigger: {
+                ...modifier.trigger,
+                requiresVisibleCreature: false,
+              },
+            }
+          : modifier,
+    );
+    const malformedUnit = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        modifiers: malformedAbilityCheckModifier,
+      },
+      // Cast justification: this fixture intentionally violates the authored
+      // Cutting Words visible-creature trigger invariant while preserving the
+      // rest of the real UnitRecord fixture.
+    } as unknown as UnitRecord;
+
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
+    ).toBe("unsupported");
+  });
+
+  test("bard_cutting_words rejects malformed ability-check reduction range", () => {
+    const unit = unitLibrary.requireUnit(bardCuttingWordsUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+    ) {
+      throw new Error("Expected Cutting Words reaction modifier mechanics.");
+    }
+    const malformedAbilityCheckModifier = unit.mechanics.modifiers.map(
+      (modifier) =>
+        modifier.kind === "ability_check_reduction"
+          ? {
+              ...modifier,
+              trigger: {
+                ...modifier.trigger,
+                rangeFeet: 30,
+              },
+            }
+          : modifier,
+    );
+    const malformedUnit = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        modifiers: malformedAbilityCheckModifier,
+      },
+      // Cast justification: this fixture intentionally violates the authored
+      // Cutting Words 60-foot trigger invariant while preserving the rest of
+      // the real UnitRecord fixture.
+    } as unknown as UnitRecord;
+
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
+    ).toBe("unsupported");
   });
 });
 

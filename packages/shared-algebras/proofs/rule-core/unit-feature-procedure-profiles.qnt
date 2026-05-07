@@ -1567,6 +1567,27 @@ module unitFeatureProcedureProfiles {
     }
   }
 
+  run test_cutting_words_ability_check_reduction_can_leave_success_intact = {
+    val facts = {
+      trigger: { creatureSeen: true, creatureWithinSixtyFeet: true },
+      kind: CuttingWordsAbilityCheckReduction,
+      originalTotal: 18,
+      dc: 15,
+      bardicDieRoll: 2,
+    }
+    val result = resolveCuttingWordsRollReaction(
+      initialTurnProcedureState,
+      { usesRemaining: 3, maximumUses: 3 },
+      facts
+    )
+    all {
+      assert(not(result.turn.reactionAvailable)),
+      assert(result.pool.usesRemaining == 2),
+      assert(result.reducedAmount == 16),
+      assert(not(cuttingWordsTurnsSuccessIntoFailure(facts))),
+    }
+  }
+
   run test_cutting_words_requires_seen_in_range_trigger_and_prior_success = {
     val unseenDamage = resolveCuttingWordsDamageReaction(
       initialTurnProcedureState,

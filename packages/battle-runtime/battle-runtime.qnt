@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -322,6 +322,11 @@ module battleRuntime {
   }
 
   type SecondWindResult = {
+    state: BattleState,
+    usesRemaining: int,
+  }
+
+  type CuttingWordsResult = {
     state: BattleState,
     usesRemaining: int,
   }
@@ -1040,6 +1045,30 @@ module battleRuntime {
 
   pure def cuttingWordsAttackRollTotal(attackTotal: int, bardicInspirationRoll: int): int =
     attackTotal - bardicInspirationRoll
+
+  pure def cuttingWordsAbilityCheckTotal(originalTotal: int, bardicInspirationRoll: int): int =
+    originalTotal - bardicInspirationRoll
+
+  pure def abilityCheckSucceeds(total: int, dc: int): bool =
+    total >= dc
+
+  pure def cuttingWordsAbilityCheckResolution(
+    originalTotal: int,
+    dc: int,
+    bardicInspirationRoll: int,
+    bardCanSeeCreature: bool,
+    creatureWithinSixtyFeet: bool,
+    reactionAvailable: bool,
+    bardicInspirationUsesRemaining: int,
+  ): CuttingWordsResult = {
+    if (not(abilityCheckSucceeds(originalTotal, dc)) or not(bardCanSeeCreature) or not(creatureWithinSixtyFeet) or not(reactionAvailable) or bardicInspirationUsesRemaining <= 0)
+      { state: initialState, usesRemaining: bardicInspirationUsesRemaining }
+    else
+      {
+        state: { ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } },
+        usesRemaining: bardicInspirationUsesRemaining - 1,
+      }
+  }
 
   pure def uncannyDodgeDamage(damage: int): int =
     damage / 2
@@ -2084,8 +2113,25 @@ module battleRuntime {
   run test_reaction_roll_or_damage_reductions = {
     all {
       assert(not(attackHits(cuttingWordsAttackRollTotal(12, 3), 10, 10, 20))),
+      assert(not(abilityCheckSucceeds(cuttingWordsAbilityCheckTotal(15, 3), 14))),
       assert(uncannyDodgeDamage(9) == 4),
       assert(deflectAttacksDamage(8, 2, 3, 3) == 0),
+    }
+  }
+
+  run test_cutting_words_ability_check_reduction = {
+    val converted = cuttingWordsAbilityCheckResolution(15, 14, 3, true, true, true, 1)
+    val stillSuccessful = cuttingWordsAbilityCheckResolution(19, 14, 3, true, true, true, 1)
+    val preReductionFailure = cuttingWordsAbilityCheckResolution(13, 14, 3, true, true, true, 1)
+    all {
+      assert(not(abilityCheckSucceeds(cuttingWordsAbilityCheckTotal(15, 3), 14))),
+      assert(abilityCheckSucceeds(cuttingWordsAbilityCheckTotal(19, 3), 14)),
+      assert(converted.state.fighter.reactionAvailable == false),
+      assert(converted.usesRemaining == 0),
+      assert(stillSuccessful.state.fighter.reactionAvailable == false),
+      assert(stillSuccessful.usesRemaining == 0),
+      assert(preReductionFailure.state.fighter.reactionAvailable),
+      assert(preReductionFailure.usesRemaining == 1),
     }
   }
 
