@@ -298,7 +298,25 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 131,
       "id": "QMBT36",
-      "status": "ready-for-research",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 132,
+      "id": "QMBT37",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Level 5 Extra Attack Sequencing"
+    },
+    {
+      "number": 133,
+      "id": "QMBT38",
+      "status": "blocked",
+      "title": "Select Next SRD Feature Widening Slice After Extra Attack"
+    },
+    {
+      "number": 134,
+      "id": "QMBT39",
+      "status": "blocked",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -378,7 +396,10 @@ Keep it synchronized with the DAG table and task details.
 | 128   | QMBT33 - Recursive Unit Profile Planning Review | done | QMBT31-QMBT32 | QMBT34-QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT31-QMBT32 review, refreshed PRD status notes, and appended QMBT34-QMBT36 because the matrix lane is not complete. |
 | 129   | QMBT34 - Promote Mass Cure Wounds Area Hit Point Restoration | done | QMBT32-QMBT33 | QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `mass_cure_wounds` as `spell.hit-point-restoration` with point-origin Sphere target selection, focused runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
 | 130   | QMBT35 - Select Next SRD Feature Widening Slice After Savage Attacker | done | QMBT31-QMBT33 | QMBT36 | [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select level-5 Fighter, Paladin, and Ranger Extra Attack as the next SRD feature widening slice, with a red/green plan for `unit-feature.attack-action-attack-count-scaling`. |
-| 131   | QMBT36 - Recursive Unit Profile Planning Review | ready-for-research | QMBT34-QMBT35 | QMBT37+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Review QMBT34-QMBT35 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
+| 131   | QMBT36 - Recursive Unit Profile Planning Review | done | QMBT34-QMBT35 | QMBT37-QMBT39 | [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Completed QMBT34-QMBT35 review, refreshed PRD status notes, and appended QMBT37-QMBT39 because the matrix lane is not complete. |
+| 132   | QMBT37 - Promote Level 5 Extra Attack Sequencing | ready-for-implementation-after-light-research | QMBT35-QMBT36 | QMBT38-QMBT39 | [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement level-5 Fighter, Paladin, and Ranger Extra Attack as `unit-feature.attack-action-attack-count-scaling` with QNT profile, runtime sequencing, deterministic evidence, and refreshed matrix artifacts. |
+| 133   | QMBT38 - Select Next SRD Feature Widening Slice After Extra Attack | blocked | QMBT37 | QMBT39 | [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT37 lands, re-read remaining SRD feature-style pressure and select one narrow next feature widening slice without mixing speed, AC, healing/temp-HP, resistance, mastery, spell, or magic-item boundaries. |
+| 134   | QMBT39 - Recursive Unit Profile Planning Review | blocked | QMBT37-QMBT38 | QMBT40+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT37-QMBT38 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -1476,18 +1497,122 @@ because matrix docs and generated artifacts did not change.
 
 ### Task 131 - QMBT36 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT34-QMBT35
 
-Blocks: QMBT37+
+Blocks: QMBT37-QMBT39
 
 Research / plan:
+[QMBT36_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
 [QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md)
 
 Scope: review QMBT34-QMBT35 findings, update the PRD and plan docs, and append
 the next batch of QMBT37+ tasks. This task must include a new recursive
+planning-review task at the end of the appended batch unless the Unit profile
+matrix lane is explicitly declared complete.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Verification: active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
+
+Completed scope: reviewed QMBT34-QMBT35 closeout and the generated Unit
+profile report. At QMBT36 closeout, the lane is not complete: supported
+executable Unit coverage is 22/40, deterministic admission/projection evidence
+is complete for the supported Unit denominator at 22/22, selected identity MBT
+coverage remains intentionally selective at 10/22, `fire_bolt` remains a
+spell-boundary blocker, and SRD feature widening pressure remains. Appended
+QMBT37-QMBT39 to implement level-5 Extra Attack sequencing, select the next
+feature widening slice after Extra Attack, and run the next recursive planning
+review.
+
+Verification: active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check`; `/simplify` convergence in
+two rounds. MBT was not run because QMBT36 changed planning documentation only.
+
+### Task 132 - QMBT37 - Promote Level 5 Extra Attack Sequencing
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT35-QMBT36
+
+Blocks: QMBT38-QMBT39
+
+Research / plan:
+[QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT36_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: implement the QMBT35 red/green plan for level-5 Extra Attack. Promote
+`fighter_extra_attack`, `paladin_extra_attack`, and `ranger_extra_attack` as
+supported SRD feature Units under
+`unit-feature.attack-action-attack-count-scaling`. The implementation boundary
+is the authored passive `scale_attack_count` / `additional: 1` mechanics shape
+projected into one Attack action that spends the action once, opens exactly one
+additional ordinary attack slot, allows Movement between the attack slots, and
+closes an unspent slot at End Turn.
+
+Out of scope: Fighter level-11/20 Extra Attacks, Warlock invocation variants,
+Monk catalog intake, Stat Block Multiattack, Dragonborn Breath Weapon attack
+replacement, two-weapon fighting, Nick, Cleave, Weapon Mastery properties,
+speed projection, AC base calculation alternatives, healing or Temporary Hit
+Point resource features, resistance traits, spell admission, magic items, and
+authored-id dispatch registries.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Extra Attack, Attack
+action, Movement between attacks, action spending, multiclass Extra Attack
+non-stacking, and the Multiattack distinction; focused QNT proof for the new
+attack-count scaling profile; focused feature runtime parity with the mandatory
+timed background protocol because promoted battle behavior changes; `pnpm
+unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm
+quality`; `/simplify` convergence, minimum two rounds.
+
+### Task 133 - QMBT38 - Select Next SRD Feature Widening Slice After Extra Attack
+
+Status: `blocked`
+
+Depends on: QMBT37
+
+Blocks: QMBT39
+
+Research / plan:
+[QMBT36_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT37 lands and refreshes matrix artifacts, review remaining SRD
+feature-style executable pressure and select one narrow next feature widening
+slice. Candidate lanes include Fast Movement/Roving Speed projection,
+Unarmored Defense base AC calculation selection, Lay on Hands/Tireless/
+Adrenaline Rush healing or Temporary Hit Point resources, Dragonborn Breath
+Weapon attack replacement, damage resistance traits, Weapon Mastery properties,
+and any newly clarified feature rows exposed by QMBT37.
+
+Out of scope: implementing the selected feature slice; selecting spell,
+magic-item, or catalog-cleanup work; broad feature-family widening; solving all
+unsupported feature rows in one task.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` checks for every candidate
+boundary seriously considered; active-plan consistency check for any appended
+tasks; `pnpm unit-profile-coverage:check` only if matrix docs or generated
+artifacts change; no MBT for this research-only task; `/simplify` convergence,
+minimum two rounds.
+
+### Task 134 - QMBT39 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT37-QMBT38
+
+Blocks: QMBT40+
+
+Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review QMBT37-QMBT38 findings, update the PRD and plan docs, and append
+the next batch of QMBT40+ tasks. This task must include a new recursive
 planning-review task at the end of the appended batch unless the Unit profile
 matrix lane is explicitly declared complete.
 

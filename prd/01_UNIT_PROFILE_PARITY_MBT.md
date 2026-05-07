@@ -168,19 +168,19 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT33's recursive planning review:
+Current matrix status after QMBT36's recursive planning review:
 
-- 53 authored Units classified in the installed coverage collections.
+- 54 authored Units classified in the installed coverage collections.
 - 17 stable executable profiles.
-- 21 of 39 installed executable Units mapped to supported profiles.
+- 22 of 40 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
-- deterministic admission/projection evidence covers all 21 supported Unit
+- deterministic admission/projection evidence covers all 22 supported Unit
   identities, including the QMBT21 Classic non-SRD mechanics-only
   `mycelium_step` row, QMBT22 `shield`, QMBT25 `healing_word`, and QMBT27
   `feat_archery`, QMBT31 `feat_savage_attacker`, and QMBT32 `cure_wounds` and
-  `mass_healing_word`.
-- selected identity MBT covers 10 of 21 supported Unit identities. QMBT16
+  `mass_healing_word`, plus QMBT34 `mass_cure_wounds`.
+- selected identity MBT covers 10 of 22 supported Unit identities. QMBT16
   explicitly decided not to add selected identity MBT for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
@@ -199,8 +199,15 @@ Current matrix status after QMBT33's recursive planning review:
 - QMBT32 counted `cure_wounds` and `mass_healing_word` as supported
   `spell.hit-point-restoration` Units with deterministic admission/projection
   evidence.
+- QMBT34 counted `mass_cure_wounds` as a supported
+  `spell.hit-point-restoration` Unit with point-origin Sphere target selection,
+  focused runtime parity, deterministic admission/projection evidence, and
+  refreshed matrix artifacts.
+- QMBT35 selected level-5 `fighter_extra_attack`, `paladin_extra_attack`, and
+  `ranger_extra_attack` as the next SRD feature widening slice under the
+  planned `unit-feature.attack-action-attack-count-scaling` profile.
 
-QMBT33 appended QMBT34-QMBT36 rather than declaring the matrix lane complete.
-The next batch promotes Mass Cure Wounds as area Hit Point restoration, selects
-the next SRD feature widening slice after Savage Attacker, and then runs
-another recursive planning review.
+QMBT36 appended QMBT37-QMBT39 rather than declaring the matrix lane complete.
+The next batch promotes level-5 Extra Attack sequencing, selects the next SRD
+feature widening slice after Extra Attack, and then runs another recursive
+planning review.
