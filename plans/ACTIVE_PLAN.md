@@ -208,7 +208,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 116,
       "id": "QMBT21",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Close Classic Mechanics Deterministic Admission Gap"
     },
     {
@@ -303,7 +303,7 @@ Keep it synchronized with the DAG table and task details.
 | 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | done | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed Defense as a passive Armor Class bonus profile with QNT procedure profile, focused feature MBT projection, runtime admission/projection, character AC projection reuse, deterministic evidence, and refreshed matrix metrics. |
 | 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | done | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed metric semantics review: generated JSON/report now define each metric's planning question, measure, and denominator; installed inventory is report health rather than coverage; passive production profiles count in executable evidence denominators. |
 | 115   | QMBT20 - Recursive Unit Profile Planning Review | done | QMBT10-QMBT19 | QMBT21-QMBT26 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT10-QMBT19 review, refreshed PRD status notes, and appended QMBT21-QMBT26 because the matrix lane is not complete. |
-| 116   | QMBT21 - Close Classic Mechanics Deterministic Admission Gap | ready-for-implementation-after-light-research | QMBT17-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Add deterministic admission/projection evidence for the supported Classic non-SRD mechanics-only Unit `mycelium_step`, or reclassify the claim if production admission is intentionally out of scope. |
+| 116   | QMBT21 - Close Classic Mechanics Deterministic Admission Gap | done | QMBT17-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed deterministic admission/projection evidence for the Classic non-SRD mechanics-only Unit `mycelium_step` through the policy fixture boundary and production alternate-action-cost support projection. |
 | 117   | QMBT22 - Promote Shield Triggered Reaction Spell Boundary | ready-for-research | QMBT10, QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and implement the triggered Reaction Spell Access boundary needed before `shield` can return to supported spell Unit evidence. |
 | 118   | QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary | ready-for-research | QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether and how promoted spell projection represents Fire Bolt's object targeting and object ignition before reclassifying `fire_bolt`. |
 | 119   | QMBT24 - Select Next SRD Feature Widening Slice | ready-for-research | QMBT18-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one high-value SRD feature-style unsupported/widening pressure row and drive a Defense-style red/green slice plan. |
@@ -866,12 +866,13 @@ matrix lane is explicitly declared complete.
 Out of scope: implementation work not captured by the new task batch.
 
 Completed scope: reviewed QMBT10-QMBT19 closeout and the generated Unit
-profile report. The lane is not complete: deterministic admission/projection is
-14/15 because `mycelium_step` lacks identity evidence, supported executable
-Unit coverage is 15/35, `shield` and `fire_bolt` remain intentionally narrowed
-behind runtime-boundary decisions, and the authored catalog still has SRD
-feature-style widening pressure. Appended QMBT21-QMBT26 to cover the next
-focused batch and the next recursive review.
+profile report. At QMBT20 closeout, the lane was not complete: deterministic
+admission/projection was 14/15 because `mycelium_step` lacked identity
+evidence, supported executable Unit coverage was 15/35, `shield` and
+`fire_bolt` remained intentionally narrowed behind runtime-boundary decisions,
+and the authored catalog still had SRD feature-style widening pressure.
+Appended QMBT21-QMBT26 to cover the next focused batch and the next recursive
+review.
 
 Verification: active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
@@ -879,7 +880,7 @@ artifacts change.
 
 ### Task 116 - QMBT21 - Close Classic Mechanics Deterministic Admission Gap
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT17-QMBT20
 
@@ -904,6 +905,11 @@ if evidence is added; `pnpm unit-profile-coverage:check`; package typecheck if
 runtime test code changes; no MBT unless focused driver behavior changes;
 `/simplify` convergence, minimum two rounds unless the final changeset is
 trivial.
+
+Completed scope: added deterministic admission/projection evidence for
+`mycelium_step` through the Classic non-SRD mechanics policy fixture boundary
+and the production alternate-action-cost support projection. Deterministic
+admission/projection coverage is now 15/15.
 
 ### Task 117 - QMBT22 - Promote Shield Triggered Reaction Spell Boundary
 

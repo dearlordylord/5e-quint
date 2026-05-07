@@ -803,7 +803,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `mycelium_step` | `unit-feature.alternate-action-cost` | QMBT17 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `mycelium_step` | `unit-feature.alternate-action-cost` | QMBT21 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 
 ## Selected Identity MBT Evidence
 

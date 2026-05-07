@@ -78,8 +78,9 @@ deterministic replay, the coverage check or replay test fails.
 Current evidence tags are:
 
 - `deterministic-admission-projection`: a focused catalog/runtime test loads the
-  authored Unit through the production Unit catalog and proves the production
-  support/projection boundary admits it.
+  authored Unit through the production Unit catalog, or loads a public
+  mechanics-only Classic fixture through its policy fixture boundary, and proves
+  the production support/projection boundary admits it.
 - `selected-identity-mbt`: a focused MBT fixture binds a concrete authored Unit
   id into production runtime entrypoints, names the identity-bearing driver
   replay actions with `UNIT-IDENTITY-MBT-REPLAY`, executes deterministic replay

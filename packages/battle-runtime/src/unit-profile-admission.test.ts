@@ -1,7 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT17 mycelium_step
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -426,7 +426,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
   });
 });
 
-describe("QMBT17 Classic non-SRD deterministic feature profile slice", () => {
+describe("QMBT21 Classic non-SRD deterministic feature profile slice", () => {
   test("mycelium_step is admitted and projected through production alternate action cost support", () => {
     const unit = mechanicsOnlyClassicUnit(myceliumStepInput);
 
