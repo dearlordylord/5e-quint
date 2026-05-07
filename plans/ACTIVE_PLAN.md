@@ -412,6 +412,24 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 150,
       "id": "QMBT55",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 151,
+      "id": "QMBT56",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Boon of Combat Prowess Peerless Aim Miss-to-Hit Replacement"
+    },
+    {
+      "number": 152,
+      "id": "QMBT57",
+      "status": "ready-for-research",
+      "title": "Select Next SRD Feature Widening Slice After Combat Prowess"
+    },
+    {
+      "number": 153,
+      "id": "QMBT58",
       "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
     }
@@ -511,7 +529,10 @@ Keep it synchronized with the DAG table and task details.
 | 147   | QMBT52 - Recursive Unit Profile Planning Review | done | QMBT47-QMBT51 | QMBT53-QMBT55 | [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT47-QMBT51 review, refreshed PRD status notes, and appended QMBT53-QMBT55 because the matrix lane is not complete. |
 | 148   | QMBT53 - Promote Adrenaline Rush Bonus Action Dash Temporary Hit Points | done | QMBT48-QMBT52 | QMBT54-QMBT55 | [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `orc_adrenaline_rush` as `unit-feature.bonus-action-dash-temporary-hit-points` with coupled Bonus Action Dash, Proficiency Bonus Temporary Hit Points, Proficiency Bonus use pool, deterministic admission evidence, focused runtime parity, and refreshed matrix artifacts. |
 | 149   | QMBT54 - Select Next SRD Feature Widening Slice After Adrenaline Rush | done | QMBT53 | QMBT55 | [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `feat_boon_of_combat_prowess` Peerless Aim as the next SRD feature widening slice, with a red/green plan for one attack-roll miss-to-hit replacement Unit-feature profile. |
-| 150   | QMBT55 - Recursive Unit Profile Planning Review | ready-for-research | QMBT53-QMBT54 | QMBT56+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT53-QMBT54 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
+| 150   | QMBT55 - Recursive Unit Profile Planning Review | done | QMBT53-QMBT54 | QMBT56-QMBT58 | [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT53-QMBT54 review, refreshed PRD status notes, and appended QMBT56-QMBT58 because the matrix lane is not complete. |
+| 151   | QMBT56 - Promote Boon of Combat Prowess Peerless Aim Miss-to-Hit Replacement | ready-for-implementation-after-light-research | QMBT54-QMBT55 | QMBT57-QMBT58 | [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement Peerless Aim as one attack-roll miss-to-hit replacement Unit-feature profile through the existing attack-roll outcome boundary. |
+| 152   | QMBT57 - Select Next SRD Feature Widening Slice After Combat Prowess | ready-for-research | QMBT56 | QMBT58 | [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT56 refreshes matrix pressure, select the next narrow SRD feature-style widening slice without mixing ability-check, Reaction, healing, AC, resistance, Breath Weapon, Weapon Mastery, spell, or magic-item lanes. |
+| 153   | QMBT58 - Recursive Unit Profile Planning Review | ready-for-research | QMBT56-QMBT57 | QMBT59+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT56-QMBT57 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -2350,25 +2371,123 @@ the QMBT54 decision artifact.
 
 ### Task 150 - QMBT55 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT53-QMBT54
 
-Blocks: QMBT56+
+Blocks: QMBT56-QMBT58
+
+Research / plan:
+[QMBT55_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md),
+[QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Completed scope: reviewed QMBT53-QMBT54 findings, refreshed the PRD status
+notes, and appended QMBT56-QMBT58 because the Unit profile matrix lane remains
+active at 29/45 supported executable Unit coverage. The appended batch starts
+with the selected `feat_boon_of_combat_prowess` implementation slice, then
+reopens SRD feature-slice selection against the refreshed matrix, then runs
+another recursive planning review.
+
+Out of scope honored: no production implementation work was started in QMBT55.
+
+Verification: RAW/source review checked the QMBT53-QMBT54 anchors captured in
+the QMBT55 review artifact; active-plan consistency checked across Ralph index,
+DAG table, and task details; `pnpm unit-profile-coverage:check` was not run
+because no matrix docs or generated artifacts changed; `/simplify` convergence
+recorded in the QMBT55 review artifact.
+
+### Task 151 - QMBT56 - Promote Boon of Combat Prowess Peerless Aim Miss-to-Hit Replacement
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT54-QMBT55
+
+Blocks: QMBT57-QMBT58
+
+Research / plan:
+[QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT55_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: implement the QMBT54 red/green plan for
+`feat_boon_of_combat_prowess`. Promote Boon of Combat Prowess `Peerless Aim`
+as a Unit feature profile such as
+`unit-feature.attack-roll-miss-to-hit-replacement`: when the creature misses
+with an attack roll, it can hit instead, and once the benefit is used it cannot
+be used again until the start of the creature's next turn. The implementation
+must repair the authored Surface mechanics shape from RAW, prove the profile
+in the package-local QNT feature profile lane, parse support from mechanics
+facts rather than Unit id, and execute through the existing attack-roll outcome
+boundary without duplicating attack result state.
+
+Out of scope: Tactical Mind ability-check resource augmentation, Cutting Words
+ability-check Reaction support, Deflect Attacks redirect-on-zero, Temporary
+Hit Point features, healing pools, AC base formula alternatives, resistance
+traits, Dragonborn Breath Weapon, Weapon Mastery properties, spell admission,
+magic-item intake, broad Epic Boon support, and generic miss/hit/d20
+replacement families.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Boon of Combat
+Prowess, Peerless Aim, Attack Roll, D20 Test, Armor Class, hit/miss outcomes,
+Damage Roll, start-turn reset, and the distinction between attack replacement,
+ability-check augmentation, Reaction roll reduction, and Weapon Mastery;
+focused QNT proof for the new attack-roll miss-to-hit replacement profile;
+focused runtime parity with the mandatory timed background MBT protocol if
+promoted battle behavior changes; `pnpm unit-profile-coverage:check`;
+relevant package typecheck/tests; `pnpm quality`; `/simplify` convergence,
+minimum two rounds.
+
+### Task 152 - QMBT57 - Select Next SRD Feature Widening Slice After Combat Prowess
+
+Status: `ready-for-research`
+
+Depends on: QMBT56
+
+Blocks: QMBT58
+
+Research / plan:
+[QMBT55_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT56 refreshes matrix pressure, select the next narrow SRD
+feature-style widening slice. Candidate lanes must stay domain-distinct:
+ability-check resource augmentation, Reaction roll reduction, redirect-on-zero
+damage features, healing pools, Temporary Hit Point features, AC base
+formulas, resistance traits, Breath Weapon attack replacement, Weapon Mastery
+properties, spell admission, and magic-item intake should not be mixed into one
+slice.
+
+Out of scope: implementing the selected slice, selecting spell or magic-item
+work unless the review explicitly changes lane ownership, catalog cleanup
+unrelated to feature widening, and broad feature-family widening.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for every seriously
+considered candidate boundary; active-plan consistency across Ralph index, DAG
+table, and task details; `/simplify` convergence, minimum two rounds. MBT is
+not required for this research-only task.
+
+### Task 153 - QMBT58 - Recursive Unit Profile Planning Review
+
+Status: `ready-for-research`
+
+Depends on: QMBT56-QMBT57
+
+Blocks: QMBT59+
 
 Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
-[QMBT52_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md),
+[QMBT55_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
-Scope: review QMBT53-QMBT54 findings, update the PRD and plan docs, and append
+Scope: review QMBT56-QMBT57 findings, update the PRD and plan docs, and append
 the next implementation/research batch. This task must include a new recursive
 planning-review task at the end of the appended batch unless the Unit profile
 matrix lane is explicitly declared complete.
 
 Out of scope: implementation work not captured by the new task batch.
 
-Verification: RAW/source review for QMBT53-QMBT54 findings and any appended
+Verification: RAW/source review for QMBT56-QMBT57 findings and any appended
 rule slices; active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change; `/simplify` convergence, minimum two rounds unless the final
