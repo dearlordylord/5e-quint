@@ -328,7 +328,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 136,
       "id": "QMBT41",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Select Next SRD Feature Widening Slice After Fast Movement"
     },
     {
@@ -425,7 +425,7 @@ Keep it synchronized with the DAG table and task details.
 | 133   | QMBT38 - Select Next SRD Feature Widening Slice After Extra Attack | done | QMBT37 | QMBT39 | [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `barbarian_fast_movement` as the next SRD feature widening slice, with a red/green plan for `unit-feature.passive-speed-bonus` and a proposed QMBT40 implementation task. |
 | 134   | QMBT39 - Recursive Unit Profile Planning Review | done | QMBT37-QMBT38 | QMBT40-QMBT43 | [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT37-QMBT38 review, refreshed PRD status notes, and appended QMBT40-QMBT43 because the matrix lane is not complete. |
 | 135   | QMBT40 - Promote Fast Movement Passive Speed Bonus | done | QMBT38-QMBT39 | QMBT41, QMBT43 | [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `barbarian_fast_movement` as `unit-feature.passive-speed-bonus`, including QNT profile, runtime projection from authored mechanics, deterministic admission evidence, focused parity as needed, and refreshed matrix artifacts. |
-| 136   | QMBT41 - Select Next SRD Feature Widening Slice After Fast Movement | ready-for-research | QMBT40 | QMBT43 | [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After Fast Movement refreshes the matrix, select the next narrow SRD feature-style widening slice without mixing speed special kinds, AC base alternatives, healing pools, Temporary Hit Points, resistance, attack replacement, or Weapon Mastery properties. |
+| 136   | QMBT41 - Select Next SRD Feature Widening Slice After Fast Movement | done | QMBT40 | QMBT43 | [Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `ranger_roving` as the next SRD feature widening slice, with a red/green plan for `unit-feature.passive-speed-kind-grants` and a proposed QMBT44 implementation task. |
 | 137   | QMBT42 - Split Runtime Tests by RAW and Ubiquitous Boundaries | ready-for-implementation-after-light-research | QMBT22, QMBT39 | QMBT43 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md), [SRD Shield](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRD Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md) | Split Shield runtime behavior tests out of Unit profile admission, establish RAW/ubiquitous naming guidance for deterministic battle-runtime test files, and leave support-profile admission tests narrow. |
 | 138   | QMBT43 - Recursive Unit Profile Planning Review | blocked | QMBT40-QMBT42 | QMBT44+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT40-QMBT42 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly declared complete. |
 
@@ -1707,13 +1707,14 @@ changes; `pnpm unit-profile-coverage:check`; relevant package typecheck/tests;
 
 ### Task 136 - QMBT41 - Select Next SRD Feature Widening Slice After Fast Movement
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT40
 
 Blocks: QMBT43
 
 Research / plan:
+[QMBT41 Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md),
 [QMBT39_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
@@ -1733,6 +1734,15 @@ table, and task details; `pnpm unit-profile-coverage:check` if matrix docs or
 generated artifacts change; `/simplify` convergence, minimum two rounds unless
 the final changeset is trivial. MBT is not expected for this research-only
 task.
+
+Closeout: selected `ranger_roving` as the next narrow SRD feature-style
+widening slice and proposed QMBT44, `Promote Roving Passive Speed Kind Grants`,
+for the implementation work. The selected profile boundary is
+`unit-feature.passive-speed-kind-grants`: reuse Fast Movement's passive
+walk-Speed increase shape, then add represented Climb Speed and Swim Speed
+grants equal to effective Speed without mixing AC base alternatives, healing
+pools, Temporary Hit Points, attack replacement, resistance, Weapon Mastery,
+spell, or magic-item scope.
 
 ### Task 137 - QMBT42 - Split Runtime Tests by RAW and Ubiquitous Boundaries
 
