@@ -256,7 +256,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 124,
       "id": "QMBT29",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Select Next SRD Feature Widening Slice After Archery"
     },
     {
@@ -335,7 +335,7 @@ Keep it synchronized with the DAG table and task details.
 | 121   | QMBT26 - Recursive Unit Profile Planning Review | done | QMBT21-QMBT25 | QMBT27-QMBT30 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT21-QMBT25 review, refreshed PRD status notes, and appended QMBT27-QMBT30 because the matrix lane is not complete. |
 | 122   | QMBT27 - Promote Archery Passive Ranged Attack-Roll Bonus | done | QMBT24-QMBT26 | QMBT29-QMBT30 | [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md) | Completed `feat_archery` as `unit-feature.passive-ranged-attack-roll-bonus` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
 | 123   | QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word | ready-for-research | QMBT22-QMBT23, QMBT25-QMBT26 | QMBT30 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT23 Fire Bolt decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md) | Review the post-QMBT25 spell inventory and choose the next deterministic spell admission batch or explicit spell-boundary slice without re-admitting `fire_bolt` before its object-target/effect boundary exists. |
-| 124   | QMBT29 - Select Next SRD Feature Widening Slice After Archery | ready-for-research | QMBT27 | QMBT30 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After Archery lands, review remaining SRD feature/species/mastery widening pressure and select one next narrow battle-executable feature slice, or document why the lane should pivot. |
+| 124   | QMBT29 - Select Next SRD Feature Widening Slice After Archery | done | QMBT27 | QMBT30 | [Savage Attacker feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `feat_savage_attacker` as the next SRD feature widening slice, with a red/green plan for `unit-feature.weapon-damage-dice-roll-choice`. |
 | 125   | QMBT30 - Recursive Unit Profile Planning Review | ready-for-research | QMBT27-QMBT29 | QMBT31+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT27-QMBT29 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
@@ -1160,19 +1160,20 @@ minimum two rounds unless the final changeset is trivial.
 
 ### Task 124 - QMBT29 - Select Next SRD Feature Widening Slice After Archery
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT27
 
 Blocks: QMBT30
 
-Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+Research / plan:
+[QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
-Scope: after QMBT27 lands and the generated matrix reflects Archery, review
-remaining SRD feature, species trait, feat, and mastery pressure. Select one
-next narrow battle-executable feature-style widening slice, with source checks
-and a red/green plan comparable to QMBT24, or document why the next batch
-should pivot away from feature widening.
+Scope: completed review of remaining SRD feature, species trait, feat, and
+mastery pressure after Archery. Selected `feat_savage_attacker` as the next
+narrow battle-executable feature-style widening slice, with source checks and
+a red/green plan comparable to QMBT24.
 
 Out of scope: implementing the selected slice; solving all unsupported
 features, species traits, feats, or masteries at once; widening movement,
