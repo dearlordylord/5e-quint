@@ -437,6 +437,23 @@ module ruleCoreFeaturesMbt {
     }
   }
 
+  action doArcheryAttackRollBonus = {
+    val result = resolveArcheryAttackRoll({
+      weaponKind: RangedWeapon,
+      baseAttackRollTotal: 7,
+      targetArmorClass: 10,
+      naturalD20: 10,
+    })
+    all {
+      qHoles == Set(),
+      recordProjection(
+        false, true, true, 1, NoActionSurgeActionGrant, 12, 12, 0, false, false,
+        false, false, false, false, result.bonus, result.hits,
+        result.effectiveAttackRollTotal, Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
   action step = any {
     doActionSurgeActivate,
     doActionSurgeSpendAttack,
@@ -456,5 +473,6 @@ module ruleCoreFeaturesMbt {
     doCuttingWordsDamage,
     doUncannyDodge,
     doDefenseArmorClass,
+    doArcheryAttackRollBonus,
   }
 }

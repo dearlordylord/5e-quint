@@ -33,6 +33,7 @@ const requiredFirstVerticalUnitIds = [
   "wizard_ritual_adept",
   "wizard_arcane_recovery",
   "feat_ability_score_improvement",
+  "feat_archery",
   "feat_boon_of_combat_prowess",
   "defense",
   "feat_savage_attacker",

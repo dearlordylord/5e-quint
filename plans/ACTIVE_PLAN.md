@@ -244,7 +244,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 122,
       "id": "QMBT27",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Archery Passive Ranged Attack-Roll Bonus"
     },
     {
@@ -333,7 +333,7 @@ Keep it synchronized with the DAG table and task details.
 | 119   | QMBT24 - Select Next SRD Feature Widening Slice | done | QMBT18-QMBT20 | QMBT26 | [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md) | Completed decision: select `feat_archery` as the next Defense-style SRD feature widening slice, with a red/green plan for `unit-feature.passive-ranged-attack-roll-bonus`. |
 | 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | done | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed spell admission re-triage by admitting `healing_word` as `spell.bonus-action-healing`, adding deterministic admission/projection evidence, refreshing matrix metrics, and keeping `fire_bolt` out of supported evidence behind the object-targeting boundary. |
 | 121   | QMBT26 - Recursive Unit Profile Planning Review | done | QMBT21-QMBT25 | QMBT27-QMBT30 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT21-QMBT25 review, refreshed PRD status notes, and appended QMBT27-QMBT30 because the matrix lane is not complete. |
-| 122   | QMBT27 - Promote Archery Passive Ranged Attack-Roll Bonus | ready-for-implementation-after-light-research | QMBT24-QMBT26 | QMBT29-QMBT30 | [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md) | Implement the selected `feat_archery` slice as `unit-feature.passive-ranged-attack-roll-bonus` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
+| 122   | QMBT27 - Promote Archery Passive Ranged Attack-Roll Bonus | done | QMBT24-QMBT26 | QMBT29-QMBT30 | [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md) | Completed `feat_archery` as `unit-feature.passive-ranged-attack-roll-bonus` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
 | 123   | QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word | ready-for-research | QMBT22-QMBT23, QMBT25-QMBT26 | QMBT30 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT23 Fire Bolt decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md) | Review the post-QMBT25 spell inventory and choose the next deterministic spell admission batch or explicit spell-boundary slice without re-admitting `fire_bolt` before its object-target/effect boundary exists. |
 | 124   | QMBT29 - Select Next SRD Feature Widening Slice After Archery | ready-for-research | QMBT27 | QMBT30 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After Archery lands, review remaining SRD feature/species/mastery widening pressure and select one next narrow battle-executable feature slice, or document why the lane should pivot. |
 | 125   | QMBT30 - Recursive Unit Profile Planning Review | ready-for-research | QMBT27-QMBT29 | QMBT31+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT27-QMBT29 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
@@ -1097,7 +1097,7 @@ changeset is trivial.
 
 ### Task 122 - QMBT27 - Promote Archery Passive Ranged Attack-Roll Bonus
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT24-QMBT26
 
@@ -1123,6 +1123,12 @@ before runtime behavior; focused QNT proof; focused QMBT feature parity with
 the mandatory timed background protocol because runtime behavior changes;
 `pnpm unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm
 quality`; `/simplify` convergence, minimum two rounds.
+
+Completed scope: promoted `feat_archery` into the SRD Unit catalog and
+supported runtime profile matrix as `unit-feature.passive-ranged-attack-roll-bonus`,
+modeled the Archery +2 Ranged weapon attack-roll procedure in QNT, projected the
+support profile through production battle attack-roll holes, and added focused
+MBT plus deterministic admission/projection evidence.
 
 ### Task 123 - QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word
 

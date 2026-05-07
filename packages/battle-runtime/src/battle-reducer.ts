@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing spell.invocation-damage-save-or-attack spell.bonus-action-healing spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing spell.invocation-damage-save-or-attack spell.bonus-action-healing spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -194,6 +194,7 @@ import type {
 } from "./battle-init.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   type AlternateActionCostAction,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -6655,6 +6656,7 @@ function resolveAttack(
     }
     return needsHolesResult(input.state, input.subject, [
       attackRollHole(
+        input.state.combatants.get(input.subject.actorId),
         attack,
         requiredAttackRollMode(
           input.state,
@@ -7895,6 +7897,7 @@ function resolveOffHandAttack(
     }
     return needsHolesResult(input.state, input.subject, [
       attackRollHole(
+        input.state.combatants.get(input.subject.actorId),
         attack,
         requiredAttackRollMode(
           input.state,
@@ -9506,7 +9509,11 @@ function resolveOpportunityAttackCommand(
       );
     }
     return needsHolesResult(input.state, input.subject, [
-      attackRollHole(attack, requiredRollMode),
+      attackRollHole(
+        input.state.combatants.get(subject.reactorId),
+        attack,
+        requiredRollMode,
+      ),
     ]);
   }
   if (!attackRollResultIsValid(fillSet.attackRoll)) {
@@ -15363,6 +15370,7 @@ function grappleDragCostExempt(grappler: Size, target: Size): boolean {
 }
 
 function attackRollHole(
+  attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
   rollMode?: AttackRollMode,
   ongoingFeatureActivations?: readonly AttackRollFeatureActivation[],
@@ -15374,7 +15382,7 @@ function attackRollHole(
     holeInstanceKey: ATTACK_ROLL_HOLE_INSTANCE,
     label: `${name} attack roll`,
     attack,
-    attackBonus: attackActionBonus(attack),
+    attackBonus: attackActionBonusWithPassiveFeatureBonus(attacker, attack),
     ...(rollMode === undefined ? {} : { rollMode }),
     ...(ongoingFeatureActivations === undefined ||
     ongoingFeatureActivations.length === 0
@@ -17030,6 +17038,37 @@ function attackActionBonus(attack: SupportedAttackActionOption): AttackBonus {
     ),
     Match.exhaustive,
   );
+}
+
+function attackActionBonusWithPassiveFeatureBonus(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+): AttackBonus {
+  return attackBonus(
+    Number(attackActionBonus(attack)) +
+      passiveRangedAttackRollBonus(attacker, attack),
+  );
+}
+
+function passiveRangedAttackRollBonus(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+): number {
+  if (
+    attacker?.origin.kind !== "character" ||
+    attack.kind !== "weapon" ||
+    attack.weapon.usage !== "ranged"
+  ) {
+    return 0;
+  }
+  return attacker.origin.characterUnitRefs.some((unitRef) =>
+    unitRef.supportProfiles.some(
+      (profile) =>
+        profile === PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+    ),
+  )
+    ? 2
+    : 0;
 }
 
 function weaponAttackDamageExpression(

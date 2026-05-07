@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -25,12 +26,12 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
+  PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   battleCombatantSide,
   battleId,
   battleUnitRefWithSupportProfiles,
@@ -102,6 +103,12 @@ type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
+  >;
+};
+type PassiveFeatUnit = Extract<UnitRecord, { readonly kind: "feat" }> & {
+  readonly mechanics: Extract<
+    Extract<UnitRecord, { readonly kind: "feat" }>["mechanics"],
+    { readonly family: "passive" }
   >;
 };
 
@@ -406,43 +413,121 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
     );
   });
 
-  test("archery remains outside the passive Armor Class support gate", () => {
-    const unit = decodeUnitRecordSync({
-      category: "fighting_style",
-      description:
-        "You gain a +2 bonus to attack rolls you make with Ranged weapons.",
-      id: archeryUnitId,
-      kind: "feat",
-      mechanics: {
-        family: "passive",
-        grants: [
-          {
-            delta: {
-              dice: 2,
-              dieSize: 1,
-              kind: "fixed_dice",
-              sign: "+",
-            },
-            kind: "modify_roll_numeric",
-            on: ["attack_roll"],
-            weaponFilter: {
-              category: "ranged",
-              kind: "weapon_category",
-            },
-          },
-        ],
-      },
-      name: "Archery",
-      provenance: {
-        kind: "srd-5.2.1",
-        section: "Feats#Archery",
-      },
-    });
+  test("archery is admitted and projected as a passive ranged weapon attack-roll bonus", () => {
+    const unit = unitLibrary.requireUnit(archeryUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, []);
 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
-    ).toEqual(Either.right({ unitId: archeryUnitId, supportProfiles: [] }));
-    expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
+    ).toEqual(
+      Either.right({
+        unitId: archeryUnitId,
+        supportProfiles: [PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "passiveRangedAttackRollBonus",
+        unit,
+        attackRoll: {
+          bonus: 2,
+          weaponFilter: {
+            kind: "weaponCategory",
+            category: "ranged",
+          },
+        },
+      }),
+    );
+  });
+
+  test("archery support projection adds +2 to ranged weapon attack rolls", () => {
+    const state = archeryBattle({
+      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+    });
+    const attackRollHole = weaponAttackRollHole({
+      state,
+      attackName: "Shortbow",
+      actorId: spellCasterId,
+      targetId: spellTargetId,
+    });
+
+    expect(attackRollHole).toMatchObject({
+      kind: "attackRoll",
+      label: "Shortbow attack roll",
+      attackBonus: 2,
+      attack: {
+        kind: "weapon",
+        weapon: { id: "weapon_shortbow", usage: "ranged" },
+      },
+    });
+  });
+
+  test("archery support projection does not add +2 to melee weapon attack rolls", () => {
+    const state = archeryBattle({
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const attackRollHole = weaponAttackRollHole({
+      state,
+      attackName: "Longsword",
+      actorId: spellCasterId,
+      targetId: spellTargetId,
+    });
+
+    expect(attackRollHole).toMatchObject({
+      kind: "attackRoll",
+      label: "Longsword attack roll",
+      attackBonus: 0,
+      attack: {
+        kind: "weapon",
+        weapon: { id: "weapon_longsword", usage: "melee" },
+      },
+    });
+  });
+
+  test("archery support gate rejects adjacent passive roll bonus shapes", () => {
+    const unit = archeryFeatureUnit();
+    const [effect] = unit.mechanics.grants;
+    if (effect?.kind !== "modify_roll_numeric") {
+      throw new Error("Expected Archery numeric roll modifier.");
+    }
+    const adjacentPassiveRollUnits = [
+      {
+        ...unit,
+        id: "test_archery_saving_throw_bonus",
+        mechanics: {
+          ...unit.mechanics,
+          grants: [{ ...effect, on: ["saving_throw"] }],
+        },
+      },
+      {
+        ...unit,
+        id: "test_archery_melee_attack_bonus",
+        mechanics: {
+          ...unit.mechanics,
+          grants: [
+            {
+              ...effect,
+              weaponFilter: { kind: "weapon_category", category: "melee" },
+            },
+          ],
+        },
+      },
+    ] as const satisfies readonly UnitRecord[];
+
+    for (const adjacentUnit of adjacentPassiveRollUnits) {
+      expect(
+        battleUnitRefWithSupportProfiles({
+          unitRef: { unitId: adjacentUnit.id },
+          unit: adjacentUnit,
+        }),
+      ).toEqual(
+        Either.left({
+          tag: "battleUnitSupportProfileIssue",
+          message: `Unsupported battle passive ranged attack-roll bonus Unit hook: ${adjacentUnit.id}.`,
+        }),
+      );
+      expect(parseSupportedUnitFeatureProfile(adjacentUnit, [])).toBeNull();
+    }
   });
 });
 
@@ -1120,16 +1205,94 @@ function shieldMagicMissileBattle(input: {
   return result.right;
 }
 
+function archeryBattle(input: {
+  readonly attack: NonNullable<
+    Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["attack"]
+  >;
+}): BattleState {
+  const archeryUnitRef = archeryBattleUnitRef();
+  const result = startBattle({
+    battleId: battleId("unit-profile-archery-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Archer",
+        initiative: 20,
+        side: partySide,
+        attack: input.attack,
+        characterUnitRefs: [archeryUnitRef],
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function archeryBattleUnitRef(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = archeryFeatureUnit();
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: archeryUnitId,
+      supportProfiles: [PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+function archeryFeatureUnit(): PassiveFeatUnit {
+  const unit = unitLibrary.requireUnit(archeryUnitId);
+  expect(isPassiveFeatUnit(unit)).toBe(true);
+  if (!isPassiveFeatUnit(unit)) {
+    throw new Error("Expected Archery passive feat Unit.");
+  }
+  return unit;
+}
+
+function isPassiveFeatUnit(unit: UnitRecord): unit is PassiveFeatUnit {
+  return unit.kind === "feat" && unit.mechanics.family === "passive";
+}
+
 function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
   readonly side: typeof partySide | typeof oppositionSide;
+  readonly attack?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"];
+  readonly characterUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {
+  const attack = input.attack ?? null;
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -1138,16 +1301,28 @@ function characterCreature(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
-      characterUnitRefs: [],
+      characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: [{ className: "wizard", level: 1 }],
-      armorClass: defaultArmorClassState(),
+      armorClass:
+        attack === null
+          ? defaultArmorClassState()
+          : { ...defaultArmorClassState(), rightHandUse: "mainWeapon" },
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(12),
       maxHp: Hp(12),
       tempHp: Hp(0),
-      selectedLoadout: {},
-      attack: null,
+      selectedLoadout:
+        attack === null
+          ? {}
+          : {
+              weapon: {
+                itemId: `main:${attack.weapon.id}`,
+                unitId: attack.weapon.id,
+                grip: "one_handed" as const,
+              },
+            },
+      attack,
       unarmedStrike: {
         kind: "unarmedStrike",
         effect: {
@@ -1164,6 +1339,70 @@ function characterCreature(input: {
         : { spellcasting: input.spellcasting }),
     },
   };
+}
+
+function zeroAbilityWeaponAttack(
+  unitId: "weapon_longsword" | "weapon_shortbow",
+): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const weapon = unitLibrary.requireUnit(unitId);
+  if (weapon.kind !== "weapon") {
+    throw new Error(`Expected ${unitId} weapon Unit.`);
+  }
+  return {
+    kind: "weapon",
+    weapon,
+    ability: "str",
+    abilityModifier: abilityModifier(0),
+  };
+}
+
+function weaponAttackRollHole(input: {
+  readonly state: BattleState;
+  readonly attackName: "Longsword" | "Shortbow";
+  readonly actorId: CombatantId;
+  readonly targetId: CombatantId;
+}): Extract<BattleHole, { readonly kind: "attackRoll" }> {
+  const subject: BattleSubject = {
+    tag: "action",
+    actorId: input.actorId,
+    action: "attack",
+    attackName: input.attackName,
+  };
+  const targetHole = requireResultHole(
+    resolveBattleSubject({ state: input.state, subject, fills: [] }),
+    "targetChoice",
+  );
+  return requireResultHole(
+    resolveBattleSubject({
+      state: input.state,
+      subject,
+      fills: [
+        attackTargetFill(
+          targetHole,
+          input.actorId,
+          input.targetId,
+          input.attackName,
+        ),
+      ],
+    }),
+    "attackRoll",
+  );
+}
+
+function requireResultHole<K extends BattleHole["kind"]>(
+  result: ReturnType<typeof resolveBattleSubject>,
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  expect(result).toMatchObject({ tag: "needsHoles" });
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected ${kind} hole result.`);
+  }
+  return requireHole(result.holes, kind);
 }
 
 function spellAct(input: {
@@ -1223,18 +1462,27 @@ function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   actorId: CombatantId,
   targetId: CombatantId,
+  attackName = "Unarmed Strike",
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId,
-        targetId,
-        attackName: "Unarmed Strike",
-      },
+      attackName === "Shortbow"
+        ? {
+            kind: "attackTargetInRangedRange",
+            actorId,
+            targetId,
+            attackName,
+            rangeBand: "normal",
+          }
+        : {
+            kind: "attackTargetInMeleeReach",
+            actorId,
+            targetId,
+            attackName,
+          },
     ],
   };
 }

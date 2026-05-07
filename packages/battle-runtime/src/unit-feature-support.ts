@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -33,6 +33,8 @@ export const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE =
   "reactionRollOrDamageReduction";
 export const PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE =
   "passiveArmorClassBonus";
+export const PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE =
+  "passiveRangedAttackRollBonus";
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -47,6 +49,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
+  PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
 ] as const;
 export type BattleAlternateActionCostSupportProfile = {
   readonly kind: "alternateActionCost";
@@ -172,6 +175,17 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE);
   }
 
+  const passiveRangedAttackRollBonusSupport =
+    battlePassiveRangedAttackRollBonusSupportForUnit(input.unit);
+  if (passiveRangedAttackRollBonusSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle passive ranged attack-roll bonus Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (passiveRangedAttackRollBonusSupport === "passiveRangedAttackRollBonus") {
+    supportProfiles.push(PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE);
+  }
+
   return Either.right(supportProfiles);
 }
 
@@ -267,6 +281,14 @@ export type PassiveArmorClassBonusProfile = {
   };
 };
 
+export type PassiveRangedAttackRollBonusProfile = {
+  readonly bonus: 2;
+  readonly weaponFilter: {
+    readonly kind: "weaponCategory";
+    readonly category: "ranged";
+  };
+};
+
 export type SupportedUnitFeatureProfile =
   | {
       readonly kind: "extraActionGrant";
@@ -329,6 +351,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "passiveArmorClassBonus";
       readonly unit: UnitRecord;
       readonly armorClass: PassiveArmorClassBonusProfile;
+    }
+  | {
+      readonly kind: "passiveRangedAttackRollBonus";
+      readonly unit: UnitRecord;
+      readonly attackRoll: PassiveRangedAttackRollBonusProfile;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -561,6 +588,11 @@ export type BattlePassiveArmorClassBonusSupport =
   | "unsupported"
   | null;
 
+export type BattlePassiveRangedAttackRollBonusSupport =
+  | "passiveRangedAttackRollBonus"
+  | "unsupported"
+  | null;
+
 export function battlePassiveArmorClassBonusSupportForUnit(
   unit: UnitRecord,
 ): BattlePassiveArmorClassBonusSupport {
@@ -572,6 +604,17 @@ export function battlePassiveArmorClassBonusSupportForUnit(
     : "passiveArmorClassBonus";
 }
 
+export function battlePassiveRangedAttackRollBonusSupportForUnit(
+  unit: UnitRecord,
+): BattlePassiveRangedAttackRollBonusSupport {
+  if (!hasPassiveRangedAttackRollBonusMechanics(unit)) {
+    return null;
+  }
+  return passiveRangedAttackRollBonusProfileForUnit(unit) === null
+    ? "unsupported"
+    : "passiveRangedAttackRollBonus";
+}
+
 function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
@@ -581,6 +624,14 @@ function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
     effect?.kind === "modify_ac" ||
     unit.mechanics.condition?.kind === "wearing_armor"
   );
+}
+
+function hasPassiveRangedAttackRollBonusMechanics(unit: UnitRecord): boolean {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
+    return false;
+  }
+  const [effect] = unit.mechanics.grants;
+  return effect?.kind === "modify_roll_numeric";
 }
 
 export function passiveArmorClassBonusProfileForUnit(
@@ -609,6 +660,34 @@ export function passiveArmorClassBonusProfileForUnit(
         condition: {
           kind: "wearingArmor",
           categories: ["light", "medium", "heavy"],
+        },
+      }
+    : null;
+}
+
+export function passiveRangedAttackRollBonusProfileForUnit(
+  unit: UnitRecord,
+): PassiveRangedAttackRollBonusProfile | null {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
+    return null;
+  }
+  const [effect, ...extraEffects] = unit.mechanics.grants;
+  if (
+    effect?.kind !== "modify_roll_numeric" ||
+    extraEffects.length > 0 ||
+    !sameStringSet(effect.on, ["attack_roll"]) ||
+    effect.weaponFilter?.kind !== "weapon_category" ||
+    effect.weaponFilter.category !== "ranged"
+  ) {
+    return null;
+  }
+  const bonus = fixedDiceDeltaValue(effect.delta);
+  return bonus === 2
+    ? {
+        bonus: 2,
+        weaponFilter: {
+          kind: "weaponCategory",
+          category: "ranged",
         },
       }
     : null;
@@ -719,7 +798,8 @@ export function parseSupportedUnitFeatureProfile(
     parseAttackDamageRiderUnitFeatureProfile(unit, classLevels) ??
     parseSaveDamageReplacementUnitFeatureProfile(unit, classLevels) ??
     parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels) ??
-    parsePassiveArmorClassBonusUnitFeatureProfile(unit)
+    parsePassiveArmorClassBonusUnitFeatureProfile(unit) ??
+    parsePassiveRangedAttackRollBonusUnitFeatureProfile(unit)
   );
 }
 
@@ -996,6 +1076,22 @@ function parsePassiveArmorClassBonusUnitFeatureProfile(
         kind: "passiveArmorClassBonus",
         unit,
         armorClass,
+      };
+}
+
+function parsePassiveRangedAttackRollBonusUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "passiveRangedAttackRollBonus" }
+> | null {
+  const attackRoll = passiveRangedAttackRollBonusProfileForUnit(unit);
+  return attackRoll === null
+    ? null
+    : {
+        kind: "passiveRangedAttackRollBonus",
+        unit,
+        attackRoll,
       };
 }
 

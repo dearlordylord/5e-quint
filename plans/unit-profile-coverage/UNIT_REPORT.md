@@ -8,22 +8,22 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 50 Units |
+| Installed collection inventory count | 51 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 49/391 | 12.5% |
-| Authored Surface executable catalog admission | 35/334 | 10.5% |
-| Installed Unit profile classification coverage | 50/50 | 100% |
-| Supported executable Unit coverage | 17/36 | 47.2% |
-| QNT profile modeling coverage | 15/15 | 100% |
-| QNT proof coverage | 15/15 | 100% |
-| Runtime mapping coverage | 15/15 | 100% |
-| Runtime parity coverage | 15/15 | 100% |
-| Deterministic admission/projection coverage | 17/17 | 100% |
-| Selected identity MBT coverage | 9/17 | 52.9% |
+| Authored Surface Unit catalog admission | 50/391 | 12.8% |
+| Authored Surface executable catalog admission | 36/334 | 10.8% |
+| Installed Unit profile classification coverage | 51/51 | 100% |
+| Supported executable Unit coverage | 18/37 | 48.6% |
+| QNT profile modeling coverage | 16/16 | 100% |
+| QNT proof coverage | 16/16 | 100% |
+| Runtime mapping coverage | 16/16 | 100% |
+| Runtime parity coverage | 16/16 | 100% |
+| Deterministic admission/projection coverage | 18/18 | 100% |
+| Selected identity MBT coverage | 9/18 | 50% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -56,6 +56,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
 | `rogue_uncanny_dodge` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
+| `feat_archery` | srd-5.2.1 | `unit-feature.passive-ranged-attack-roll-bonus` |
 | `defense` | srd-5.2.1 | `unit-feature.passive-armor-class-bonus` |
 | `acid_splash` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `ray_of_frost` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -78,8 +79,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | armor | 11 | `armor_breastplate`, `armor_chain_shirt`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_leather`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor`, `armor_studded_leather_armor` |
 | species_trait | 8 | `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision` |
 | armor_template | 3 | `magic_item_adamantine_armor`, `magic_item_armor_1_2_or_3`, `magic_item_mithral_armor` |
-| feat | 3 | `alert`, `alert`, `feat_archery` |
 | weapon_template | 3 | `magic_item_ammunition_1_2_or_3`, `magic_item_defender`, `magic_item_weapon_1_2_or_3` |
+| feat | 2 | `alert`, `alert` |
 | mastery | 2 | `mastery_cleave`, `mastery_topple` |
 | shield_template | 2 | `magic_item_sentinel_shield`, `magic_item_shield_1_2_or_3` |
 
@@ -89,7 +90,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | ---: | --- | --- |
 | srd-candidate | QMBT14-QMBT16 | 170 | spell: 170 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
 | intentional-backlog | future magic item profile intake | 79 | magic_item: 71, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
-| unsupported-widening-pressure | QMBT18 | 48 | class_feature: 37, species_trait: 8, mastery: 2, feat: 1 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
+| unsupported-widening-pressure | QMBT18 | 47 | class_feature: 37, species_trait: 8, mastery: 2 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
 | non-runtime-authored-data | no promoted runtime lane | 43 | weapon: 32, armor: 11 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
 | duplicate-content-issue | content cleanup | 2 | feat: 2 | More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure. |
 
@@ -188,7 +189,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `false_life` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/false_life.json` |
 | `fear` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fear.json` |
 | `alert` | duplicate-content-issue | content cleanup | feat | yes | `packages/surface/content/feat_alert.json` |
-| `feat_archery` | unsupported-widening-pressure | QMBT18 | feat | yes | `packages/surface/content/feat_archery.json` |
 | `fighter_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/fighter_epic_boon.json` |
 | `fighter_extra_attack` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/fighter_extra_attack.json` |
 | `find_familiar` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/find_familiar.json` |
@@ -535,7 +535,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `false_life` | spell | yes | `packages/surface/content/false_life.json` |
 | `fear` | spell | yes | `packages/surface/content/fear.json` |
 | `alert` | feat | yes | `packages/surface/content/feat_alert.json` |
-| `feat_archery` | feat | yes | `packages/surface/content/feat_archery.json` |
 | `fighter_epic_boon` | class_feature | yes | `packages/surface/content/fighter_epic_boon.json` |
 | `fighter_extra_attack` | class_feature | yes | `packages/surface/content/fighter_extra_attack.json` |
 | `find_familiar` | spell | yes | `packages/surface/content/find_familiar.json` |
@@ -798,6 +797,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | QMBT27 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | QMBT18 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -875,7 +875,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- |
 | QCORE7 | qnt-proof | _none_ |
 | QCORE8 | qnt-proof | `unit-feature.reaction-roll-or-damage-reduction`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
-| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19` |
+| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19` |
 | QCORE10 | qnt-proof | `spell.invocation-damage-save-or-attack`, `spell.bonus-action-healing`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | QCORE11 | qnt-proof | `stat-block.attack-control` |
 | QMBT2 | completed-runtime-parity | _none_ |
@@ -884,6 +884,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT5 | completed-runtime-parity | `spell.invocation-damage-save-or-attack`, `spell.bonus-action-healing`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | QMBT6 | completed-runtime-parity | `stat-block.attack-control` |
 | QMBT18 | completed-runtime-parity | `unit-feature.passive-armor-class-bonus` |
+| QMBT27 | completed-runtime-parity | `unit-feature.passive-ranged-attack-roll-bonus` |
 
 ## Supported Profiles Lacking Runtime Parity
 

@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 334,
-      "numerator": 35,
-      "percent": "10.5%"
+      "numerator": 36,
+      "percent": "10.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 391,
-      "numerator": 49,
-      "percent": "12.5%"
+      "numerator": 50,
+      "percent": "12.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 50
+      "value": 51
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 17,
-      "numerator": 17,
+      "denominator": 18,
+      "numerator": 18,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 50,
-      "numerator": 50,
+      "denominator": 51,
+      "numerator": 51,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 15,
-      "numerator": 15,
+      "denominator": 16,
+      "numerator": 16,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 15,
-      "numerator": 15,
+      "denominator": 16,
+      "numerator": 16,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 15,
-      "numerator": 15,
+      "denominator": 16,
+      "numerator": 16,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 15,
-      "numerator": 15,
+      "denominator": 16,
+      "numerator": 16,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 17,
+      "denominator": 18,
       "numerator": 9,
-      "percent": "52.9%"
+      "percent": "50%"
     },
     "supportedProfileCoverage": {
-      "denominator": 36,
-      "numerator": 17,
-      "percent": "47.2%"
+      "denominator": 37,
+      "numerator": 18,
+      "percent": "48.6%"
     }
   },
   "metricSemantics": [
@@ -344,6 +344,32 @@
         "QMBT18"
       ],
       "title": "Unit feature passively adds to Armor Class while wearing armor",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.passive-ranged-attack-roll-bonus",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT27"
+      ],
+      "title": "Unit feature passively adds to attack rolls made with Ranged weapons",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -630,6 +656,7 @@
         "unit-feature.bonus-action-ongoing-rage",
         "unit-feature.first-attack-roll-reckless-advantage",
         "unit-feature.passive-armor-class-bonus",
+        "unit-feature.passive-ranged-attack-roll-bonus",
         "unit-feature.reaction-roll-or-damage-reduction",
         "unit-feature.save-damage-replacement",
         "unit-feature.self-bonus-action-healing",
@@ -713,6 +740,14 @@
         "unit-feature.passive-armor-class-bonus"
       ],
       "taskId": "QMBT18"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused passive ranged weapon attack-roll bonus runtime parity.",
+      "profileIds": [
+        "unit-feature.passive-ranged-attack-roll-bonus"
+      ],
+      "taskId": "QMBT27"
     }
   ],
   "units": [
@@ -1525,6 +1560,62 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/feat_ability_score_improvement.json",
       "unitId": "feat_ability_score_improvement"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.passive-ranged-attack-roll-bonus"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT27"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [
+        {
+          "id": "unit-feature.passive-ranged-attack-roll-bonus",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT27"
+          ],
+          "title": "Unit feature passively adds to attack rolls made with Ranged weapons",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/feat_archery.json",
+      "unitId": "feat_archery"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -4104,24 +4195,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/feat_alert.json",
       "unitId": "alert"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "feat",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/feat_archery.json",
-      "unitId": "feat_archery"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

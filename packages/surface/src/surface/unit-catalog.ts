@@ -11,6 +11,7 @@ import classFighterInput from "../../content/class_fighter.json";
 import classWizardInput from "../../content/class_wizard.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
 import featAbilityScoreImprovementInput from "../../content/feat_ability_score_improvement.json";
+import featArcheryInput from "../../content/feat_archery.json";
 import featBoonOfCombatProwessInput from "../../content/feat_boon_of_combat_prowess.json";
 import featDefenseInput from "../../content/feat_defense.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
@@ -178,6 +179,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
     featAbilityScoreImprovementInput,
+    featArcheryInput,
     featBoonOfCombatProwessInput,
     featDefenseInput,
     featSavageAttackerInput,

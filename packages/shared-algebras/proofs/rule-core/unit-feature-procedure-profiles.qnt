@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -16,7 +16,7 @@ module unitFeatureProcedureProfiles {
   // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
   // - Classes/Barbarian.md: Rage, Reckless Attack.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
-  // - Feats.md: Defense.
+  // - Feats.md: Archery, Defense.
   // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
   //   Damage Rolls, Saving Throws and Damage, Resistance and Vulnerability.
 
@@ -216,6 +216,19 @@ module unitFeatureProcedureProfiles {
     wearingHeavyArmor: bool,
   }
 
+  type PassiveRangedAttackRollBonusFacts = {
+    weaponKind: WeaponProcedureKind,
+    baseAttackRollTotal: int,
+    targetArmorClass: int,
+    naturalD20: int,
+  }
+
+  type PassiveRangedAttackRollBonusResult = {
+    bonus: int,
+    effectiveAttackRollTotal: int,
+    hits: bool,
+  }
+
   pure def legalFeatureUsePool(pool: FeatureUsePool): bool = all {
     pool.maximumUses >= 0,
     pool.maximumUses <= 6,
@@ -228,6 +241,27 @@ module unitFeatureProcedureProfiles {
 
   pure def defenseArmorClass(baseArmorClass: int, facts: PassiveArmorClassBonusFacts): int =
     if (wearingArmorForDefense(facts)) baseArmorClass + 1 else baseArmorClass
+
+  pure def archeryAttackRollBonus(facts: PassiveRangedAttackRollBonusFacts): int =
+    if (facts.weaponKind == RangedWeapon) 2 else 0
+
+  pure def resolveArcheryAttackRoll(
+    facts: PassiveRangedAttackRollBonusFacts
+  ): PassiveRangedAttackRollBonusResult = {
+    val bonus = archeryAttackRollBonus(facts)
+    val total = facts.baseAttackRollTotal + bonus
+    val outcome = resolveAttackRoll({
+      naturalD20: facts.naturalD20,
+      total: total,
+      armorClass: facts.targetArmorClass,
+      criticalThreshold: 20,
+    })
+    {
+      bonus: bonus,
+      effectiveAttackRollTotal: total,
+      hits: outcome.hits,
+    }
+  }
 
   pure def spendFeatureUsePool(pool: FeatureUsePool): FeatureUsePool =
     if (pool.usesRemaining <= 0) pool
@@ -1056,6 +1090,29 @@ module unitFeatureProcedureProfiles {
       assert(medium == 17),
       assert(heavy == 17),
       assert(unarmored == 16),
+    }
+  }
+
+  run test_archery_adds_two_to_ranged_weapon_attack_rolls_only = {
+    val ranged = resolveArcheryAttackRoll({
+      weaponKind: RangedWeapon,
+      baseAttackRollTotal: 14,
+      targetArmorClass: 16,
+      naturalD20: 10,
+    })
+    val nonRanged = resolveArcheryAttackRoll({
+      weaponKind: OtherWeapon,
+      baseAttackRollTotal: 14,
+      targetArmorClass: 16,
+      naturalD20: 10,
+    })
+    all {
+      assert(ranged.bonus == 2),
+      assert(ranged.effectiveAttackRollTotal == 16),
+      assert(ranged.hits),
+      assert(nonRanged.bonus == 0),
+      assert(nonRanged.effectiveAttackRollTotal == 14),
+      assert(not(nonRanged.hits)),
     }
   }
 }

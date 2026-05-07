@@ -1,5 +1,5 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
@@ -38,6 +38,7 @@ import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -163,6 +164,7 @@ const driverSchema = {
   doCuttingWordsDamage: {},
   doUncannyDodge: {},
   doDefenseArmorClass: {},
+  doArcheryAttackRollBonus: {},
   step: {},
 } as const;
 type RuleCoreFeatureDriverAction = Exclude<
@@ -772,6 +774,60 @@ function createRuleCoreFeatureDriver() {
         lastResult = "resolved";
         lastInvalidReason = "none";
       },
+      doArcheryAttackRollBonus: () => {
+        state = startBattleRight({
+          battleId: battleId("rule-core-feature-archery"),
+          combatants: [
+            featureActor({
+              initiative: 20,
+              attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+              characterUnitRefs: [
+                {
+                  unitId: "feat_archery",
+                  supportProfiles: [
+                    PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+                  ],
+                },
+              ],
+            }),
+            featureTarget(10),
+          ],
+        });
+        resetProjection();
+        const subject = actorAttackSubject("Shortbow");
+        const target = requireHole(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "targetChoice",
+        );
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [attackTargetFill(target, actorId, targetId, "Shortbow")],
+          }),
+        );
+        const attackRoll = requireHoleFromList(holes, "attackRoll");
+        if (attackRoll.kind !== "attackRoll") {
+          throw new Error("Expected Archery attack roll hole.");
+        }
+        lastDamageAmount = Number(attackRoll.attackBonus);
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              attackTargetFill(target, actorId, targetId, "Shortbow"),
+              attackRollFill(attackRoll, {
+                total: 9,
+                naturalD20: 10,
+              }),
+            ],
+          }),
+        );
+        targetHpFallback = 12;
+        actorArmorClass = 9;
+        critical = false;
+      },
       step: () => {},
       getState: () =>
         projectRuleCoreFeatureState({
@@ -899,7 +955,9 @@ function createRuleCoreFeatureDriver() {
             });
       if (awaited.tag !== "needsHoles") {
         throw new Error(
-          `Expected reaction window, got ${awaited.tag} for ${input.modifierKind}.`,
+          `Expected reaction window, got ${awaited.tag}${
+            awaited.tag === "invalid" ? `:${awaited.message}` : ""
+          } for ${input.modifierKind}.`,
         );
       }
       const choice = reactionModifierChoice(
@@ -1353,7 +1411,11 @@ function featureTarget(initiative: number): BattleCreatureInit {
 }
 
 function zeroAbilityWeaponAttack(
-  unitId: "weapon_longsword" | "weapon_dagger" | "weapon_shortsword",
+  unitId:
+    | "weapon_longsword"
+    | "weapon_dagger"
+    | "weapon_shortbow"
+    | "weapon_shortsword",
 ): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -1396,7 +1458,7 @@ function cuttingWordsResource(
 }
 
 function actorAttackSubject(
-  attackName: "Longsword" | "Dagger" | "Scimitar" | "Shortsword",
+  attackName: "Longsword" | "Dagger" | "Scimitar" | "Shortbow" | "Shortsword",
   actor: CombatantId = actorId,
 ): Extract<
   BattleSubject,
