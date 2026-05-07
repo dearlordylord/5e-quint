@@ -250,7 +250,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 123,
       "id": "QMBT28",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Re-triage Spell Admission Candidates After Shield and Healing Word"
     },
     {
@@ -334,7 +334,7 @@ Keep it synchronized with the DAG table and task details.
 | 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | done | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed spell admission re-triage by admitting `healing_word` as `spell.bonus-action-healing`, adding deterministic admission/projection evidence, refreshing matrix metrics, and keeping `fire_bolt` out of supported evidence behind the object-targeting boundary. |
 | 121   | QMBT26 - Recursive Unit Profile Planning Review | done | QMBT21-QMBT25 | QMBT27-QMBT30 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT21-QMBT25 review, refreshed PRD status notes, and appended QMBT27-QMBT30 because the matrix lane is not complete. |
 | 122   | QMBT27 - Promote Archery Passive Ranged Attack-Roll Bonus | done | QMBT24-QMBT26 | QMBT29-QMBT30 | [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md) | Completed `feat_archery` as `unit-feature.passive-ranged-attack-roll-bonus` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
-| 123   | QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word | ready-for-research | QMBT22-QMBT23, QMBT25-QMBT26 | QMBT30 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT23 Fire Bolt decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md) | Review the post-QMBT25 spell inventory and choose the next deterministic spell admission batch or explicit spell-boundary slice without re-admitting `fire_bolt` before its object-target/effect boundary exists. |
+| 123   | QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word | done | QMBT22-QMBT23, QMBT25-QMBT26 | QMBT30 | [QMBT28 spell admission triage](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT28_SPELL_ADMISSION_TRIAGE.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT23 Fire Bolt decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md) | Completed decision: select direct Hit Point restoration for `cure_wounds` and `mass_healing_word` as the next spell admission batch, with `fire_bolt` still excluded behind the QMBT23 object-target/object-ignition boundary. |
 | 124   | QMBT29 - Select Next SRD Feature Widening Slice After Archery | done | QMBT27 | QMBT30 | [Savage Attacker feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `feat_savage_attacker` as the next SRD feature widening slice, with a red/green plan for `unit-feature.weapon-damage-dice-roll-choice`. |
 | 125   | QMBT30 - Recursive Unit Profile Planning Review | ready-for-research | QMBT27-QMBT29 | QMBT31+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT27-QMBT29 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
@@ -1132,13 +1132,16 @@ MBT plus deterministic admission/projection evidence.
 
 ### Task 123 - QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT22-QMBT23, QMBT25-QMBT26
 
 Blocks: QMBT30
 
-Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md)
+Research / plan:
+[QMBT28_SPELL_ADMISSION_TRIAGE.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT28_SPELL_ADMISSION_TRIAGE.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md)
 
 Scope: review the spell catalog after QMBT22 admitted `shield`, QMBT25 admitted
 `healing_word`, and QMBT23 kept `fire_bolt` behind the explicit object-target
@@ -1157,6 +1160,12 @@ rules being selected; active-plan consistency if a follow-on task is appended
 or revised; `pnpm unit-profile-coverage:check` only if matrix docs or generated
 artifacts change; no MBT for research-only triage; `/simplify` convergence,
 minimum two rounds unless the final changeset is trivial.
+
+Completed scope: selected direct Hit Point restoration for `cure_wounds` and
+`mass_healing_word` as the next spell admission batch, kept `fire_bolt` out of
+supported evidence behind the QMBT23 object-target/object-ignition boundary,
+and recorded a red/green implementation plan for QMBT30 to use when appending
+the next executable task batch.
 
 ### Task 124 - QMBT29 - Select Next SRD Feature Widening Slice After Archery
 

@@ -207,6 +207,12 @@ Invocation and object-ignition Spell Effect projection before it can be counted
 as a supported spell Unit. The decision is recorded in
 [QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md](QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md).
 
+QMBT28 selected the next spell admission batch after Shield and Healing Word:
+direct Hit Point restoration for `cure_wounds` and `mass_healing_word`. The
+triage is recorded in
+[QMBT28_SPELL_ADMISSION_TRIAGE.md](QMBT28_SPELL_ADMISSION_TRIAGE.md), and
+keeps `fire_bolt` excluded until the QMBT23 object-target boundary lands.
+
 Run:
 
 ```sh
