@@ -424,7 +424,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 152,
       "id": "QMBT57",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Select Next SRD Feature Widening Slice After Combat Prowess"
     },
     {
@@ -531,8 +531,8 @@ Keep it synchronized with the DAG table and task details.
 | 149   | QMBT54 - Select Next SRD Feature Widening Slice After Adrenaline Rush | done | QMBT53 | QMBT55 | [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `feat_boon_of_combat_prowess` Peerless Aim as the next SRD feature widening slice, with a red/green plan for one attack-roll miss-to-hit replacement Unit-feature profile. |
 | 150   | QMBT55 - Recursive Unit Profile Planning Review | done | QMBT53-QMBT54 | QMBT56-QMBT58 | [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT53-QMBT54 review, refreshed PRD status notes, and appended QMBT56-QMBT58 because the matrix lane is not complete. |
 | 151   | QMBT56 - Promote Boon of Combat Prowess Peerless Aim Miss-to-Hit Replacement | done | QMBT54-QMBT55 | QMBT57-QMBT58 | [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed Peerless Aim as `unit-feature.attack-roll-miss-to-hit-replacement` through the existing attack-roll outcome boundary, with Surface mechanics widening, QNT proof coverage, runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
-| 152   | QMBT57 - Select Next SRD Feature Widening Slice After Combat Prowess | ready-for-research | QMBT56 | QMBT58 | [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT56 refreshes matrix pressure, select the next narrow SRD feature-style widening slice without mixing ability-check, Reaction, healing, AC, resistance, Breath Weapon, Weapon Mastery, spell, or magic-item lanes. |
-| 153   | QMBT58 - Recursive Unit Profile Planning Review | ready-for-research | QMBT56-QMBT57 | QMBT59+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT56-QMBT57 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
+| 152   | QMBT57 - Select Next SRD Feature Widening Slice After Combat Prowess | done | QMBT56 | QMBT58 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `monk_deflect_attacks` redirect-on-zero as the next SRD feature widening slice, with a red/green plan for one attack-damage reduction zero-damage redirect Unit-feature profile. |
+| 153   | QMBT58 - Recursive Unit Profile Planning Review | ready-for-research | QMBT56-QMBT57 | QMBT59+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT56-QMBT57 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -2440,32 +2440,35 @@ minimum two rounds.
 
 ### Task 152 - QMBT57 - Select Next SRD Feature Widening Slice After Combat Prowess
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT56
 
 Blocks: QMBT58
 
 Research / plan:
+[QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md),
 [QMBT55_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
-Scope: after QMBT56 refreshes matrix pressure, select the next narrow SRD
-feature-style widening slice. Candidate lanes must stay domain-distinct:
-ability-check resource augmentation, Reaction roll reduction, redirect-on-zero
-damage features, healing pools, Temporary Hit Point features, AC base
-formulas, resistance traits, Breath Weapon attack replacement, Weapon Mastery
-properties, spell admission, and magic-item intake should not be mixed into one
-slice.
+Completed scope: after QMBT56 refreshed matrix pressure to 30/45 supported
+executable Units, selected `monk_deflect_attacks` as the next narrow SRD
+feature-style widening slice. The selected boundary is the redirect-on-zero
+follow-up after the already modeled attack-damage Reaction reduction reduces
+damage to 0, with Focus Point spend, redirect target choice, Dexterity saving
+throw, and same-type redirected damage kept together in one profile.
 
-Out of scope: implementing the selected slice, selecting spell or magic-item
-work unless the review explicitly changes lane ownership, catalog cleanup
-unrelated to feature widening, and broad feature-family widening.
+Out of scope honored: no production implementation work was started; spell and
+magic-item lane ownership was not changed; Tactical Mind ability-check
+augmentation, Cutting Words ability-check Reaction support, Lay On Hands,
+Tireless, AC base formulas, resistance traits, Breath Weapon, and Weapon
+Mastery were kept as separate candidate lanes.
 
-Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for every seriously
-considered candidate boundary; active-plan consistency across Ralph index, DAG
-table, and task details; `/simplify` convergence, minimum two rounds. MBT is
-not required for this research-only task.
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` checks for all seriously
+considered candidate boundaries are recorded in the QMBT57 decision artifact;
+active-plan consistency checked across Ralph index, DAG table, and task
+details; `/simplify` convergence recorded in the QMBT57 decision artifact.
+MBT was not required because this task changed planning docs only.
 
 ### Task 153 - QMBT58 - Recursive Unit Profile Planning Review
 
@@ -2477,6 +2480,7 @@ Blocks: QMBT59+
 
 Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md),
 [QMBT55_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
