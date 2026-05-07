@@ -233,6 +233,12 @@ split Shield runtime behavior tests out of Unit profile admission. QMBT43
 reviewed those closeouts and appended QMBT44-QMBT46 because the matrix lane is
 not complete.
 
+QMBT44 promoted `ranger_roving` as
+`unit-feature.passive-speed-kind-grants`. QMBT45 selected
+`orc_relentless_endurance` as the next feature widening slice under
+`unit-feature.zero-hit-point-replacement`. QMBT46 reviewed those closeouts and
+appended QMBT47-QMBT49 because the matrix lane is not complete.
+
 Run:
 
 ```sh

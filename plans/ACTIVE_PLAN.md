@@ -358,6 +358,24 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 141,
       "id": "QMBT46",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 142,
+      "id": "QMBT47",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Relentless Endurance Zero-Hit-Point Replacement"
+    },
+    {
+      "number": 143,
+      "id": "QMBT48",
+      "status": "ready-for-research",
+      "title": "Select Next SRD Feature Widening Slice After Relentless Endurance"
+    },
+    {
+      "number": 144,
+      "id": "QMBT49",
       "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
     }
@@ -448,7 +466,10 @@ Keep it synchronized with the DAG table and task details.
 | 138   | QMBT43 - Recursive Unit Profile Planning Review | done | QMBT40-QMBT42 | QMBT44-QMBT46 | [QMBT43 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT43_RECURSIVE_PLANNING_REVIEW.md), [Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT40-QMBT42 review, refreshed PRD status notes, and appended QMBT44-QMBT46 because the matrix lane is not complete. |
 | 139   | QMBT44 - Promote Roving Passive Speed Kind Grants | done | QMBT41-QMBT43 | QMBT45-QMBT46 | [Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT43 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT43_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `ranger_roving` as `unit-feature.passive-speed-kind-grants` with QNT profile coverage, authored mechanics shape parsing, Climb/Swim Speed movement and Dash runtime behavior, deterministic admission evidence, focused runtime parity, and refreshed matrix artifacts. |
 | 140   | QMBT45 - Select Next SRD Feature Widening Slice After Roving | done | QMBT44 | QMBT46 | [Relentless Endurance feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT43 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT43_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `orc_relentless_endurance` as the next SRD feature widening slice, with a red/green plan for a zero-Hit-Point replacement Unit-feature profile and a proposed QMBT47 implementation task. |
-| 141   | QMBT46 - Recursive Unit Profile Planning Review | ready-for-research | QMBT44-QMBT45 | QMBT47+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Relentless Endurance feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md) | Review QMBT44-QMBT45 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly declared complete. |
+| 141   | QMBT46 - Recursive Unit Profile Planning Review | done | QMBT44-QMBT45 | QMBT47-QMBT49 | [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Relentless Endurance feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT44-QMBT45 review, refreshed PRD status notes, and appended QMBT47-QMBT49 because the matrix lane is not complete. |
+| 142   | QMBT47 - Promote Relentless Endurance Zero-Hit-Point Replacement | ready-for-implementation-after-light-research | QMBT45-QMBT46 | QMBT48-QMBT49 | [Relentless Endurance feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `orc_relentless_endurance` as `unit-feature.zero-hit-point-replacement` through the existing zero-Hit-Point lifecycle and authored `triggered_replacement` mechanics shape. |
+| 143   | QMBT48 - Select Next SRD Feature Widening Slice After Relentless Endurance | ready-for-research | QMBT47 | QMBT49 | [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT47 refreshes matrix pressure, select the next narrow SRD feature widening slice without mixing zero-HP replacement with AC base formulas, healing pools, Temporary Hit Points, resistance, attack replacement, Weapon Mastery, spell, or magic-item scope. |
+| 144   | QMBT49 - Recursive Unit Profile Planning Review | ready-for-research | QMBT47-QMBT48 | QMBT50+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md) | Review QMBT47-QMBT48 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -1936,17 +1957,107 @@ battle-runtime behavior change.
 
 ### Task 141 - QMBT46 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT44-QMBT45
 
-Blocks: QMBT47+
+Blocks: QMBT47-QMBT49
+
+Research / plan:
+[QMBT46_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md),
+[QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Closeout: completed QMBT44-QMBT45 review, confirmed the matrix lane remains
+incomplete at 27/45 supported executable Units, refreshed PRD status notes, and
+appended QMBT47-QMBT49. The next implementation task is QMBT47, `Promote
+Relentless Endurance Zero-Hit-Point Replacement`, followed by post-Relentless
+Endurance SRD feature slice selection and another recursive planning review.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Verification: active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
+
+### Task 142 - QMBT47 - Promote Relentless Endurance Zero-Hit-Point Replacement
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT45-QMBT46
+
+Blocks: QMBT48-QMBT49
+
+Research / plan:
+[QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT46_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: implement the QMBT45 red/green plan for `orc_relentless_endurance`.
+Promote `unit-feature.zero-hit-point-replacement` for the SRD Orc Relentless
+Endurance trait: when the creature is reduced to 0 Hit Points, is not killed
+outright, has an unspent once-per-Long-Rest use, and chooses to use the trait,
+replace the drop to 0 with 1 Hit Point instead. The implementation must use the
+existing damage/drop-to-zero lifecycle and authored `triggered_replacement`
+mechanics shape parsing rather than authored-id dispatch, and it must refresh
+deterministic admission/projection evidence and matrix artifacts.
+
+Out of scope: general death-prevention effects, Death Ward and other spells,
+magic items, AC base calculation alternatives, Lay On Hands and other healing
+pools, Temporary Hit Point resources, Breath Weapon attack replacement,
+resistance traits, Weapon Mastery properties, and broad zero-Hit-Point feature
+families.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Relentless Endurance,
+Hit Points, Dropping to 0 Hit Points, Instant Death, Death Saving Throws,
+Unconscious, Long Rest reset, and the distinction between zero-HP replacement
+and healing; focused QNT proof for the new zero-HP replacement feature profile;
+focused runtime parity with the mandatory timed background MBT protocol if
+promoted battle behavior changes; `pnpm unit-profile-coverage:check`; relevant
+package typecheck/tests; `pnpm quality`; `/simplify` convergence, minimum two
+rounds.
+
+### Task 143 - QMBT48 - Select Next SRD Feature Widening Slice After Relentless Endurance
+
+Status: `ready-for-research`
+
+Depends on: QMBT47
+
+Blocks: QMBT49
+
+Research / plan:
+[QMBT46_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT47 refreshes matrix pressure, select the next narrow SRD
+feature-style widening slice. Candidate lanes must stay domain-distinct:
+AC base formulas, healing pools, Temporary Hit Points, resistance traits,
+attack replacement, Weapon Mastery properties, spell admission, and magic-item
+intake should not be mixed into one slice.
+
+Out of scope: implementing the selected slice, selecting spell or magic-item
+work unless the review explicitly changes lane ownership, catalog cleanup
+unrelated to feature widening, and broad feature-family widening.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for every seriously
+considered candidate boundary; active-plan consistency across Ralph index, DAG
+table, and task details; `/simplify` convergence, minimum two rounds. MBT is
+not required for this research-only task.
+
+### Task 144 - QMBT49 - Recursive Unit Profile Planning Review
+
+Status: `ready-for-research`
+
+Depends on: QMBT47-QMBT48
+
+Blocks: QMBT50+
 
 Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
-[QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md)
+[QMBT46_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md)
 
-Scope: review QMBT44-QMBT45 findings, update the PRD and plan docs, and append
+Scope: review QMBT47-QMBT48 findings, update the PRD and plan docs, and append
 the next implementation/research batch. This task must include a new recursive
 planning-review task at the end of the appended batch unless the Unit profile
 matrix lane is explicitly declared complete.
