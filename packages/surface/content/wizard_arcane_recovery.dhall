@@ -11,7 +11,7 @@ let arcaneRecovery =
       , description =
           "When you finish a Short Rest, you can choose expended spell slots to recover. The spell slots can have a combined level equal to no more than half your Wizard level, rounded up, and none of the slots can be level 6 or higher. Once you use this feature, you can't do so again until you finish a Long Rest."
       , mechanics =
-          { family = "arcane_recovery"
+          { family = "rest_spell_slot_recovery"
           , recoveryTrigger = "short_rest"
           , resetCadence = { kind = "long_rest" }
           , recoveredSlotLevelCap =

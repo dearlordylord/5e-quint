@@ -11,7 +11,7 @@ let tacticalMind =
       , description =
           "When you fail an ability check, you can expend a use of Second Wind to roll 1d10 and add the number rolled to the ability check, potentially turning it into a success. If the check still fails, this use of Second Wind isn't expended."
       , mechanics =
-          { family = "failed_ability_check_second_wind_boost"
+          { family = "failed_ability_check_resource_boost"
           , trigger = { kind = "failed_ability_check" }
           -- Required SRD cross-record reference: Classes/Fighter.md:82-84
           -- names Second Wind as the resource Tactical Mind expends.

@@ -5917,40 +5917,40 @@ function traceClassFeatureMechanics(
       });
       return [masteryId];
     }
-    case "wizard_ritual_adept": {
+    case "spellbook_ritual_access": {
       const ritualId = ids("ritual");
       nodes.push({
         id: ritualId,
         category: "procedure",
-        atomKind: "wizard_ritual_adept",
+        atomKind: "spellbook_ritual_access",
         label:
-          `wizard_ritual_adept\nsource ${m.source}\n` +
+          `spellbook_ritual_access\nsource ${m.source}\n` +
           `preparation ${m.preparationRequirement}`,
       });
       return [ritualId];
     }
-    case "arcane_recovery": {
+    case "rest_spell_slot_recovery": {
       const recoveryId = ids("arcane");
       nodes.push({
         id: recoveryId,
         category: "resource",
-        atomKind: "arcane_recovery",
+        atomKind: "rest_spell_slot_recovery",
         label:
-          `arcane_recovery\ntrigger ${m.recoveryTrigger}\n` +
+          `rest_spell_slot_recovery\ntrigger ${m.recoveryTrigger}\n` +
           `${m.recoveredSlotLevelCap.kind}\n` +
           `slot level < ${m.recoveredSlotLevelCap.maximumSlotLevelExclusive}\n` +
           `reset ${m.resetCadence.kind}`,
       });
       return [recoveryId];
     }
-    case "failed_ability_check_second_wind_boost": {
+    case "failed_ability_check_resource_boost": {
       const tacticalId = ids("tactical");
       nodes.push({
         id: tacticalId,
         category: "resource",
-        atomKind: "failed_ability_check_second_wind_boost",
+        atomKind: "failed_ability_check_resource_boost",
         label:
-          `failed_ability_check_second_wind_boost\n` +
+          `failed_ability_check_resource_boost\n` +
           `spend ${m.spends.resourceUnitId}\n` +
           `+${m.bonus.expr.dice}d${m.bonus.expr.dieSize}`,
       });

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-second-wind-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -220,7 +220,7 @@ import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-  FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE,
+  FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANT_KINDS,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
@@ -711,13 +711,13 @@ export type BattleTargetSpatialFact =
       readonly targetEnemyId: CombatantId;
     }
   | {
-      readonly kind: "deflectAttacksMeleeRedirectTargetWithin5Feet";
-      readonly monkId: CombatantId;
+      readonly kind: "meleeRedirectTargetWithin5Feet";
+      readonly sourceId: CombatantId;
       readonly targetId: CombatantId;
     }
   | {
-      readonly kind: "deflectAttacksRangedRedirectTargetWithin60FeetWithoutTotalCover";
-      readonly monkId: CombatantId;
+      readonly kind: "rangedRedirectTargetWithin60FeetWithoutTotalCover";
+      readonly sourceId: CombatantId;
       readonly targetId: CombatantId;
     }
   | {
@@ -1145,11 +1145,11 @@ type BattleCreatureStateCommon = {
             { readonly kind: "reactionRollOrDamageReduction" }
           >
         >;
-        readonly failedAbilityCheckSecondWindBoostProfiles: ReadonlyMap<
+        readonly failedAbilityCheckResourceBoostProfiles: ReadonlyMap<
           UnitRecord["id"],
           Extract<
             SupportedUnitFeatureProfile,
-            { readonly kind: "failedAbilityCheckSecondWindBoost" }
+            { readonly kind: "failedAbilityCheckResourceBoost" }
           >
         >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
@@ -1191,14 +1191,14 @@ export type BattleFailedAbilityCheckFacts = {
   readonly dc: DifficultyClass;
 };
 
-export type FailedAbilityCheckSecondWindBoostResolutionInput = {
+export type FailedAbilityCheckResourceBoostResolutionInput = {
   readonly state: BattleState;
   readonly unitId: UnitRecord["id"];
   readonly abilityCheck: BattleFailedAbilityCheckFacts;
   readonly boostRoll: number;
 };
 
-export type FailedAbilityCheckSecondWindBoostResolutionResult =
+export type FailedAbilityCheckResourceBoostResolutionResult =
   | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
       readonly abilityCheckBoost: {
         readonly boostedTotal: number;
@@ -2033,13 +2033,13 @@ type BattleFillEncoded =
             readonly targetEnemyId: string;
           }
         | {
-            readonly kind: "deflectAttacksMeleeRedirectTargetWithin5Feet";
-            readonly monkId: string;
+            readonly kind: "meleeRedirectTargetWithin5Feet";
+            readonly sourceId: string;
             readonly targetId: string;
           }
         | {
-            readonly kind: "deflectAttacksRangedRedirectTargetWithin60FeetWithoutTotalCover";
-            readonly monkId: string;
+            readonly kind: "rangedRedirectTargetWithin60FeetWithoutTotalCover";
+            readonly sourceId: string;
             readonly targetId: string;
           }
         | {
@@ -2290,16 +2290,16 @@ export const BattleFillSchema: Schema.Schema<
             }),
             Schema.Struct({
               kind: Schema.Literal(
-                "deflectAttacksMeleeRedirectTargetWithin5Feet",
+                "meleeRedirectTargetWithin5Feet",
               ),
-              monkId: CombatantId,
+              sourceId: CombatantId,
               targetId: CombatantId,
             }),
             Schema.Struct({
               kind: Schema.Literal(
-                "deflectAttacksRangedRedirectTargetWithin60FeetWithoutTotalCover",
+                "rangedRedirectTargetWithin60FeetWithoutTotalCover",
               ),
-              monkId: CombatantId,
+              sourceId: CombatantId,
               targetId: CombatantId,
             }),
             Schema.Struct({
@@ -6688,7 +6688,7 @@ function deflectAttacksFocusResource(
 
 function hasDeflectAttacksRedirectTargetSpatialFact(
   facts: readonly BattleTargetSpatialFact[],
-  monkId: CombatantId,
+  sourceId: CombatantId,
   targetId: CombatantId,
   attackKind: BattleAttackKindForRedirect,
 ): boolean {
@@ -6696,8 +6696,8 @@ function hasDeflectAttacksRedirectTargetSpatialFact(
     Match.when("melee", () =>
       facts.some(
         (fact) =>
-          fact.kind === "deflectAttacksMeleeRedirectTargetWithin5Feet" &&
-          fact.monkId === monkId &&
+          fact.kind === "meleeRedirectTargetWithin5Feet" &&
+          fact.sourceId === sourceId &&
           fact.targetId === targetId,
       ),
     ),
@@ -6705,8 +6705,8 @@ function hasDeflectAttacksRedirectTargetSpatialFact(
       facts.some(
         (fact) =>
           fact.kind ===
-            "deflectAttacksRangedRedirectTargetWithin60FeetWithoutTotalCover" &&
-          fact.monkId === monkId &&
+            "rangedRedirectTargetWithin60FeetWithoutTotalCover" &&
+          fact.sourceId === sourceId &&
           fact.targetId === targetId,
       ),
     ),
@@ -6908,8 +6908,8 @@ function battleCreatureStateFromInit(
             creatureInit.characterUnitRefs,
             classLevels,
           ),
-        failedAbilityCheckSecondWindBoostProfiles:
-          characterFailedAbilityCheckSecondWindBoostProfiles(
+        failedAbilityCheckResourceBoostProfiles:
+          characterFailedAbilityCheckResourceBoostProfiles(
             creatureInit.resources ?? [],
             creatureInit.unitFeatures ?? [],
             creatureInit.characterUnitRefs,
@@ -7633,7 +7633,7 @@ function characterReactionRollOrDamageReductionProfiles(
   );
 }
 
-function characterFailedAbilityCheckSecondWindBoostProfiles(
+function characterFailedAbilityCheckResourceBoostProfiles(
   resources: readonly CharacterBattleResourceInit[],
   features: readonly CharacterBattleFeatureInit[],
   unitRefs: readonly BattleUnitRef[],
@@ -7642,7 +7642,7 @@ function characterFailedAbilityCheckSecondWindBoostProfiles(
   UnitRecord["id"],
   Extract<
     SupportedUnitFeatureProfile,
-    { readonly kind: "failedAbilityCheckSecondWindBoost" }
+    { readonly kind: "failedAbilityCheckResourceBoost" }
   >
 > {
   const units = [
@@ -7652,11 +7652,11 @@ function characterFailedAbilityCheckSecondWindBoostProfiles(
   return new Map(
     units.flatMap((unit) => {
       const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
-      return profile?.kind === "failedAbilityCheckSecondWindBoost" &&
+      return profile?.kind === "failedAbilityCheckResourceBoost" &&
         unitRefSupportsProfileKind(
           unitRefs,
           unit.id,
-          FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE,
+          FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];
@@ -12241,33 +12241,33 @@ function resolveUnitFeature(
   );
 }
 
-export function resolveFailedAbilityCheckSecondWindBoost(
-  input: FailedAbilityCheckSecondWindBoostResolutionInput,
-): FailedAbilityCheckSecondWindBoostResolutionResult {
+export function resolveFailedAbilityCheckResourceBoost(
+  input: FailedAbilityCheckResourceBoostResolutionInput,
+): FailedAbilityCheckResourceBoostResolutionResult {
   const actor = input.state.combatants.get(input.abilityCheck.actorId);
   if (!isCharacterBattleCreatureState(actor)) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Failed ability-check Second Wind boost is no longer available for the current actor.",
+      "Failed ability-check resource boost is no longer available for the current actor.",
     );
   }
 
   const profile =
-    actor.origin.failedAbilityCheckSecondWindBoostProfiles.get(input.unitId);
-  const secondWindResource = actor.origin.resources.find(
+    actor.origin.failedAbilityCheckResourceBoostProfiles.get(input.unitId);
+  const resource = actor.origin.resources.find(
     (resource) =>
       resource.unit.id === profile?.abilityCheck.spends.resourceUnitId,
   );
   if (
     profile === undefined ||
-    secondWindResource === undefined ||
-    !resourceHasUsesRemaining(secondWindResource)
+    resource === undefined ||
+    !resourceHasUsesRemaining(resource)
   ) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Failed ability-check Second Wind boost is no longer available for the current actor.",
+      "Failed ability-check resource boost is no longer available for the current actor.",
     );
   }
 

@@ -647,14 +647,14 @@ export type ArmorTraining = Schema.Schema.Type<
 export type WizardSpellcastingCreation = Schema.Schema.Type<
   typeof SurfaceSchema.WizardSpellcastingCreationSchema
 >;
-export type RitualAdeptMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.RitualAdeptMechanicsSchema
+export type SpellbookRitualAccessMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SpellbookRitualAccessMechanicsSchema
 >;
-export type ArcaneRecoveryMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.ArcaneRecoveryMechanicsSchema
+export type RestSpellSlotRecoveryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.RestSpellSlotRecoveryMechanicsSchema
 >;
-export type TacticalMindMechanics = Schema.Schema.Type<
-  typeof SurfaceSchema.TacticalMindMechanicsSchema
+export type FailedAbilityCheckResourceBoostMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.FailedAbilityCheckResourceBoostMechanicsSchema
 >;
 export type ClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassRecordSchema

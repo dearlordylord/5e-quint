@@ -84,7 +84,7 @@ Additional candidate RAW checked:
 
 | Candidate | Decision |
 | --- | --- |
-| `fighter_tactical_mind` | Best next slice. It is installed SRD `needs-surface-widening` pressure, Surface already carries a specific `failed_ability_check_second_wind_boost` mechanics shape, and it reuses the promoted Second Wind pool while adding one explicit ability-check outcome boundary. |
+| `fighter_tactical_mind` | Best next slice. It is installed SRD `needs-surface-widening` pressure, Surface already carries a specific `failed_ability_check_resource_boost` mechanics shape, and it reuses the promoted Second Wind pool while adding one explicit ability-check outcome boundary. |
 | `bard_cutting_words` | Defer. It should follow Tactical Mind because it needs the same ability-check outcome facts plus a Reaction window, visibility/range facts, Bardic Inspiration die scaling, and opponent success-to-failure reduction. |
 | `paladin_lay_on_hands` | Defer. The pool heals a touched creature and also removes Poisoned for 5 pool points. Keep one Lay On Hands pool rather than admitting only the healing half as a separate runtime state. |
 | `ranger_tireless` | Defer. The Magic action Temporary Hit Point grant is promising, but the same feature also owns Short Rest Exhaustion reduction. A later plan should either model both or explicitly split by executable boundary without duplicating the feature's use pool. |
@@ -99,7 +99,7 @@ Additional candidate RAW checked:
 1. Add profile pressure before support.
 
    Add a profile id such as
-   `unit-feature.failed-ability-check-second-wind-boost` to
+   `unit-feature.failed-ability-check-resource-boost` to
    `plans/unit-profile-coverage/profiles.jsonl`. Keep
    `fighter_tactical_mind` as `needs-surface-widening` until production can
    execute the authored mechanics shape from facts rather than Unit id.
@@ -131,7 +131,7 @@ Additional candidate RAW checked:
    Extend `packages/battle-runtime/src/unit-feature-support.ts` to parse only
    the existing Surface shape:
 
-   - `family: "failed_ability_check_second_wind_boost"`;
+   - `family: "failed_ability_check_resource_boost"`;
    - `trigger.kind: "failed_ability_check"`;
    - `bonus.kind: "dice"` with exactly `1d10`;
    - `spends.resourceUnitId: "fighter_second_wind"`;
@@ -199,7 +199,7 @@ unless the matrix lane is explicitly declared complete.
 - `UBIQUITOUS_LANGUAGE.md` check for Ability Check, Pool, Spend, Refund,
   Proficiency Bonus, Hit Points, and any boundary terms added by the
   implementation.
-- Focused QNT proof for the new failed ability-check Second Wind boost profile.
+- Focused QNT proof for the new failed ability-check resource boost profile.
 - Focused runtime tests for ability-check boost conversion and still-failed
   refund behavior.
 - Focused runtime parity with the mandatory timed background MBT protocol if

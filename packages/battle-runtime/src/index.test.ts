@@ -39,7 +39,7 @@ import {
   snapshotBattle,
   spellSlotInvocationRef,
   startBattle,
-  resolveFailedAbilityCheckSecondWindBoost,
+  resolveFailedAbilityCheckResourceBoost,
   type BattleFill,
   type BattleHole,
   type BattleHidePrerequisite,
@@ -462,7 +462,7 @@ describe("battle runtime", () => {
           characterSeed({
             initiative: 12,
             classLevels: [],
-            resources: [secondWindResource()],
+            resources: [resource()],
           }),
           statBlockCreatureInit({ initiative: 10 }),
         ],
@@ -7595,7 +7595,7 @@ describe("battle runtime", () => {
           initiative: 20,
           classLevel: 2,
           currentHp: 4,
-          resources: [secondWindResource()],
+          resources: [resource()],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
@@ -7672,7 +7672,7 @@ describe("battle runtime", () => {
           characterSeed({
             initiative: 20,
             currentHp: 4,
-            resources: [secondWindResource()],
+            resources: [resource()],
           }),
           statBlockCreatureInit({ initiative: 10 }),
         ],
@@ -7706,7 +7706,7 @@ describe("battle runtime", () => {
         characterSeed({
           initiative: 20,
           currentHp: 4,
-          resources: [secondWindResource({ usesRemaining: 0 })],
+          resources: [resource({ usesRemaining: 0 })],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
@@ -7732,7 +7732,7 @@ describe("battle runtime", () => {
           initiative: 20,
           currentHp: 4,
           resources: [
-            secondWindResource({
+            resource({
               unit: secondWindWithAdditionalDirectEffect(),
             }),
           ],
@@ -7758,7 +7758,7 @@ describe("battle runtime", () => {
         characterSeed({
           initiative: 20,
           currentHp: 0,
-          resources: [secondWindResource()],
+          resources: [resource()],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
@@ -8167,7 +8167,7 @@ describe("battle runtime", () => {
         characterSeed({
           initiative: 20,
           classLevel: 2,
-          resources: [secondWindResource({ usesRemaining: 2 })],
+          resources: [resource({ usesRemaining: 2 })],
           unitFeatures: [{ unit: tacticalMindUnit }],
           characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
         }),
@@ -8175,7 +8175,7 @@ describe("battle runtime", () => {
       ],
     });
 
-    const converted = resolveFailedAbilityCheckSecondWindBoost({
+    const converted = resolveFailedAbilityCheckResourceBoost({
       state,
       unitId: tacticalMindUnit.id,
       abilityCheck: {
@@ -8212,7 +8212,7 @@ describe("battle runtime", () => {
       ],
     });
 
-    const stillFailed = resolveFailedAbilityCheckSecondWindBoost({
+    const stillFailed = resolveFailedAbilityCheckResourceBoost({
       state,
       unitId: tacticalMindUnit.id,
       abilityCheck: {
@@ -8252,7 +8252,7 @@ describe("battle runtime", () => {
         characterSeed({
           initiative: 20,
           classLevel: 2,
-          resources: [secondWindResource({ usesRemaining: 1 })],
+          resources: [resource({ usesRemaining: 1 })],
           unitFeatures: [{ unit: tacticalMindUnit }],
           characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
         }),
@@ -8260,7 +8260,7 @@ describe("battle runtime", () => {
       ],
     });
     expect(
-      resolveFailedAbilityCheckSecondWindBoost({
+      resolveFailedAbilityCheckResourceBoost({
         state: baseState,
         unitId: tacticalMindUnit.id,
         abilityCheck: {
@@ -8279,7 +8279,7 @@ describe("battle runtime", () => {
         characterSeed({
           initiative: 20,
           classLevel: 2,
-          resources: [secondWindResource({ usesRemaining: 0 })],
+          resources: [resource({ usesRemaining: 0 })],
           unitFeatures: [{ unit: tacticalMindUnit }],
           characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
         }),
@@ -8287,7 +8287,7 @@ describe("battle runtime", () => {
       ],
     });
     expect(
-      resolveFailedAbilityCheckSecondWindBoost({
+      resolveFailedAbilityCheckResourceBoost({
         state: depletedState,
         unitId: tacticalMindUnit.id,
         abilityCheck: {
@@ -8306,7 +8306,7 @@ describe("battle runtime", () => {
         characterSeed({
           initiative: 20,
           classLevel: 2,
-          resources: [secondWindResource({ usesRemaining: 1 })],
+          resources: [resource({ usesRemaining: 1 })],
           unitFeatures: [{ unit: tacticalMindUnit }],
           characterUnitRefs: [],
         }),
@@ -8314,7 +8314,7 @@ describe("battle runtime", () => {
       ],
     });
     expect(
-      resolveFailedAbilityCheckSecondWindBoost({
+      resolveFailedAbilityCheckResourceBoost({
         state: unsupportedState,
         unitId: tacticalMindUnit.id,
         abilityCheck: {
@@ -9728,8 +9728,8 @@ describe("battle runtime", () => {
         damageRollFill(damage, 6),
         targetFill(redirectTarget, skeletonId, [
           {
-            kind: "deflectAttacksMeleeRedirectTargetWithin5Feet",
-            monkId: fighterId,
+            kind: "meleeRedirectTargetWithin5Feet",
+            sourceId: fighterId,
             targetId: skeletonId,
           },
         ]),
@@ -9820,8 +9820,8 @@ describe("battle runtime", () => {
           skeletonId,
           [
             {
-              kind: "deflectAttacksMeleeRedirectTargetWithin5Feet",
-              monkId: fighterId,
+              kind: "meleeRedirectTargetWithin5Feet",
+              sourceId: fighterId,
               targetId: skeletonId,
             },
           ],
@@ -9917,8 +9917,8 @@ describe("battle runtime", () => {
           skeletonId,
           [
             {
-              kind: "deflectAttacksMeleeRedirectTargetWithin5Feet",
-              monkId: fighterId,
+              kind: "meleeRedirectTargetWithin5Feet",
+              sourceId: fighterId,
               targetId: skeletonId,
             },
           ],
@@ -10034,8 +10034,8 @@ describe("battle runtime", () => {
         damageRollFill(damage, 6),
         targetFill(findHole(awaitingRedirect.holes, "targetChoice"), goblinId, [
           {
-            kind: "deflectAttacksMeleeRedirectTargetWithin5Feet",
-            monkId: fighterId,
+            kind: "meleeRedirectTargetWithin5Feet",
+            sourceId: fighterId,
             targetId: goblinId,
           },
         ]),
@@ -14489,7 +14489,7 @@ function actionSurgeResource(input?: {
   };
 }
 
-function secondWindResource(input?: {
+function resource(input?: {
   readonly unit?: UnitRecord;
   readonly usesRemaining?: number;
 }): NonNullable<

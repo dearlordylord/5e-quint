@@ -393,7 +393,7 @@
       ]
     },
     {
-      "id": "unit-feature.failed-ability-check-second-wind-boost",
+      "id": "unit-feature.failed-ability-check-resource-boost",
       "profileKind": "resource",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
@@ -1097,17 +1097,17 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Tactical Mind failed ability-check Second Wind boost profile proof.",
+      "note": "Tactical Mind failed ability-check resource boost profile proof.",
       "profileIds": [
-        "unit-feature.failed-ability-check-second-wind-boost"
+        "unit-feature.failed-ability-check-resource-boost"
       ],
       "taskId": "QMBT62"
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Tactical Mind failed ability-check Second Wind boost runtime parity.",
+      "note": "Focused Tactical Mind failed ability-check resource boost runtime parity.",
       "profileIds": [
-        "unit-feature.failed-ability-check-second-wind-boost"
+        "unit-feature.failed-ability-check-resource-boost"
       ],
       "taskId": "QMBT62"
     }
@@ -1444,7 +1444,7 @@
       },
       "claim": {
         "profileIds": [
-          "unit-feature.failed-ability-check-second-wind-boost"
+          "unit-feature.failed-ability-check-resource-boost"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
@@ -1463,7 +1463,7 @@
       "kind": "class_feature",
       "profiles": [
         {
-          "id": "unit-feature.failed-ability-check-second-wind-boost",
+          "id": "unit-feature.failed-ability-check-resource-boost",
           "profileKind": "resource",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"

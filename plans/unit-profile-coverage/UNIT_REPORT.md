@@ -50,7 +50,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `fighter_second_wind` | srd-5.2.1 | `unit-feature.self-bonus-action-healing` |
 | `fighter_action_surge` | srd-5.2.1 | `unit-feature.action-surge-resource` |
 | `fighter_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
-| `fighter_tactical_mind` | srd-5.2.1 | `unit-feature.failed-ability-check-second-wind-boost` |
+| `fighter_tactical_mind` | srd-5.2.1 | `unit-feature.failed-ability-check-resource-boost` |
 | `fighter_improved_critical` | srd-5.2.1 | `unit-feature.weapon-critical-range-19` |
 | `barbarian_rage` | srd-5.2.1 | `unit-feature.bonus-action-ongoing-rage` |
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
@@ -789,7 +789,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `fighter_tactical_mind` | `unit-feature.failed-ability-check-second-wind-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -903,8 +903,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT56 | completed-runtime-parity | `unit-feature.attack-roll-miss-to-hit-replacement` |
 | QMBT59 | qnt-proof | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 | QMBT59 | completed-runtime-parity | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
-| QMBT62 | qnt-proof | `unit-feature.failed-ability-check-second-wind-boost` |
-| QMBT62 | completed-runtime-parity | `unit-feature.failed-ability-check-second-wind-boost` |
+| QMBT62 | qnt-proof | `unit-feature.failed-ability-check-resource-boost` |
+| QMBT62 | completed-runtime-parity | `unit-feature.failed-ability-check-resource-boost` |
 
 ## Supported Profiles Lacking Runtime Parity
 

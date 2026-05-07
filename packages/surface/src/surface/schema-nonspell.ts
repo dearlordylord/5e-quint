@@ -421,14 +421,14 @@ export const CompositeClassFeatureMechanicsSchema = Schema.Struct({
   parts: Schema.NonEmptyArray(ClassFeatureComponentMechanicsSchema),
 });
 
-export const RitualAdeptMechanicsSchema = Schema.Struct({
-  family: Schema.Literal("wizard_ritual_adept"),
+export const SpellbookRitualAccessMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("spellbook_ritual_access"),
   source: Schema.Literal("spellbook"),
   preparationRequirement: Schema.Literal("not_prepared"),
 });
 
-export const ArcaneRecoveryMechanicsSchema = Schema.Struct({
-  family: Schema.Literal("arcane_recovery"),
+export const RestSpellSlotRecoveryMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("rest_spell_slot_recovery"),
   recoveryTrigger: Schema.Literal("short_rest"),
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
   recoveredSlotLevelCap: Schema.Struct({
@@ -437,11 +437,11 @@ export const ArcaneRecoveryMechanicsSchema = Schema.Struct({
   }),
 });
 
-export const TacticalMindMechanicsSchema = Schema.Struct({
-  family: Schema.Literal("failed_ability_check_second_wind_boost"),
+export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("failed_ability_check_resource_boost"),
   trigger: Schema.Struct({ kind: Schema.Literal("failed_ability_check") }),
   spends: Schema.Struct({
-    resourceUnitId: Schema.Literal("fighter_second_wind"),
+    resourceUnitId: NonEmptyStringSchema,
   }),
   bonus: Schema.Struct({
     kind: Schema.Literal("dice"),
@@ -475,9 +475,9 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
-  RitualAdeptMechanicsSchema,
-  ArcaneRecoveryMechanicsSchema,
-  TacticalMindMechanicsSchema,
+  SpellbookRitualAccessMechanicsSchema,
+  RestSpellSlotRecoveryMechanicsSchema,
+  FailedAbilityCheckResourceBoostMechanicsSchema,
 );
 
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
@@ -487,11 +487,12 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
 );
 
 export const WizardClassFeatureMechanicsSchema = Schema.Union(
-  RitualAdeptMechanicsSchema,
-  ArcaneRecoveryMechanicsSchema,
+  SpellbookRitualAccessMechanicsSchema,
+  RestSpellSlotRecoveryMechanicsSchema,
 );
 
-export const FighterClassFeatureMechanicsSchema = TacticalMindMechanicsSchema;
+export const FighterClassFeatureMechanicsSchema =
+  FailedAbilityCheckResourceBoostMechanicsSchema;
 
 export const MasteryTriggerSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("weapon_hit") }),

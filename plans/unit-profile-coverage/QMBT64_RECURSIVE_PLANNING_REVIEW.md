@@ -23,7 +23,7 @@ append:
 ## Reviewed Findings
 
 - QMBT62 promoted `fighter_tactical_mind` as
-  `unit-feature.failed-ability-check-second-wind-boost`, keeping the
+  `unit-feature.failed-ability-check-resource-boost`, keeping the
   already-rolled failed Ability Check boundary, existing Second Wind pool,
   `1d10` boost, converted-success spend, and still-failed no-spend behavior in
   one profile.

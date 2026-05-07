@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-second-wind-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -53,13 +53,13 @@ module unitFeatureProcedureProfiles {
     recovery: HitPointRecoveryResult,
   }
 
-  type FailedAbilityCheckSecondWindBoostFacts = {
+  type FailedAbilityCheckResourceBoostFacts = {
     originalTotal: int,
     dc: int,
     boostRoll: int,
   }
 
-  type FailedAbilityCheckSecondWindBoostResult = {
+  type FailedAbilityCheckResourceBoostResult = {
     pool: FeatureUsePool,
     originalSucceeded: bool,
     boostedTotal: int,
@@ -786,23 +786,23 @@ module unitFeatureProcedureProfiles {
     }
   }
 
-  pure def legalFailedAbilityCheckSecondWindBoostFacts(
-    facts: FailedAbilityCheckSecondWindBoostFacts
+  pure def legalFailedAbilityCheckResourceBoostFacts(
+    facts: FailedAbilityCheckResourceBoostFacts
   ): bool = all {
     facts.boostRoll >= 1,
     facts.boostRoll <= 10,
   }
 
-  pure def resolveFailedAbilityCheckSecondWindBoost(
+  pure def resolveFailedAbilityCheckResourceBoost(
     pool: FeatureUsePool,
-    facts: FailedAbilityCheckSecondWindBoostFacts
-  ): FailedAbilityCheckSecondWindBoostResult = {
+    facts: FailedAbilityCheckResourceBoostFacts
+  ): FailedAbilityCheckResourceBoostResult = {
     val originalSucceeded = facts.originalTotal >= facts.dc
     val boostedTotal = facts.originalTotal + facts.boostRoll
     val boostedSucceeded = boostedTotal >= facts.dc
     val admitted = all {
       legalFeatureUsePool(pool),
-      legalFailedAbilityCheckSecondWindBoostFacts(facts),
+      legalFailedAbilityCheckResourceBoostFacts(facts),
       pool.usesRemaining > 0,
       not(originalSucceeded),
     }
@@ -1238,11 +1238,11 @@ module unitFeatureProcedureProfiles {
   }
 
   run test_tactical_mind_spends_second_wind_only_on_converted_success = {
-    val converted = resolveFailedAbilityCheckSecondWindBoost(
+    val converted = resolveFailedAbilityCheckResourceBoost(
       { usesRemaining: 2, maximumUses: 2 },
       { originalTotal: 13, dc: 15, boostRoll: 3 }
     )
-    val stillFailed = resolveFailedAbilityCheckSecondWindBoost(
+    val stillFailed = resolveFailedAbilityCheckResourceBoost(
       { usesRemaining: 2, maximumUses: 2 },
       { originalTotal: 10, dc: 15, boostRoll: 4 }
     )
@@ -1259,11 +1259,11 @@ module unitFeatureProcedureProfiles {
   }
 
   run test_tactical_mind_requires_failed_ability_check_and_second_wind_use = {
-    val originalSuccess = resolveFailedAbilityCheckSecondWindBoost(
+    val originalSuccess = resolveFailedAbilityCheckResourceBoost(
       { usesRemaining: 2, maximumUses: 2 },
       { originalTotal: 15, dc: 15, boostRoll: 1 }
     )
-    val depleted = resolveFailedAbilityCheckSecondWindBoost(
+    val depleted = resolveFailedAbilityCheckResourceBoost(
       { usesRemaining: 0, maximumUses: 2 },
       { originalTotal: 14, dc: 15, boostRoll: 1 }
     )

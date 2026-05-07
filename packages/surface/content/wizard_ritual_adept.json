@@ -5,7 +5,7 @@
   "id": "wizard_ritual_adept",
   "kind": "class_feature",
   "mechanics": {
-    "family": "wizard_ritual_adept",
+    "family": "spellbook_ritual_access",
     "preparationRequirement": "not_prepared",
     "source": "spellbook"
   },

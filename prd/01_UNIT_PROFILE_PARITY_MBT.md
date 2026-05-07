@@ -274,7 +274,7 @@ Current matrix status after QMBT64:
   focused runtime parity, deterministic admission/projection evidence, and
   refreshed matrix artifacts.
 - QMBT62 counted `fighter_tactical_mind` as a supported
-  `unit-feature.failed-ability-check-second-wind-boost` Unit with focused
+  `unit-feature.failed-ability-check-resource-boost` Unit with focused
   runtime parity, deterministic admission/projection evidence, and refreshed
   matrix artifacts.
 - QMBT63 selected `bard_cutting_words` as the next SRD feature widening slice

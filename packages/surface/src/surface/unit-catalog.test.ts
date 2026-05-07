@@ -164,7 +164,7 @@ describe("SRD Unit catalog boundary", () => {
         acquiredAtLevel: 2,
         kind: "class_feature",
         mechanics: {
-          family: "failed_ability_check_second_wind_boost",
+          family: "failed_ability_check_resource_boost",
           spends: { resourceUnitId: "fighter_second_wind" },
         },
       });

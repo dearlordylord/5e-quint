@@ -5,7 +5,7 @@
   "id": "wizard_arcane_recovery",
   "kind": "class_feature",
   "mechanics": {
-    "family": "arcane_recovery",
+    "family": "rest_spell_slot_recovery",
     "recoveredSlotLevelCap": {
       "kind": "half_class_level_rounded_up",
       "maximumSlotLevelExclusive": 6

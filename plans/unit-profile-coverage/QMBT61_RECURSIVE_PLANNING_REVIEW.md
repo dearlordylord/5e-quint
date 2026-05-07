@@ -64,7 +64,7 @@ the appended batch:
 `QMBT62` should directly implement the QMBT60 decision before broadening into
 another feature family. Tactical Mind is installed SRD Fighter pressure whose
 Surface mechanics already carry a specific
-`failed_ability_check_second_wind_boost` shape. The implementation should add
+`failed_ability_check_resource_boost` shape. The implementation should add
 one explicit already-rolled ability-check outcome boundary and thread the
 existing `fighter_second_wind` pool through that boundary, rather than adding a
 parallel Tactical Mind pool or a generic D20 Test augmentation framework.
