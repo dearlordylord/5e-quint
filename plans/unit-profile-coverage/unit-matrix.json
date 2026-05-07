@@ -63,9 +63,9 @@
       "percent": "100%"
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 16,
+      "denominator": 14,
       "numerator": 13,
-      "percent": "81.3%"
+      "percent": "92.9%"
     },
     "profileClassificationCoverage": {
       "denominator": 49,
@@ -93,14 +93,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 16,
+      "denominator": 14,
       "numerator": 9,
-      "percent": "56.3%"
+      "percent": "64.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 35,
-      "numerator": 16,
-      "percent": "45.7%"
+      "numerator": 14,
+      "percent": "40%"
     }
   },
   "profiles": [
@@ -1585,73 +1585,15 @@
         "status": "installed"
       },
       "claim": {
-        "profileIds": [
-          "spell.invocation-damage-save-or-attack",
-          "spell.readied-action-time-spell"
-        ],
-        "rawRequirementIds": [
-          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
-        ],
-        "tag": "supported-profile"
+        "futureProfileOwner": "QCORE10",
+        "issue": "SRD Fire Bolt can target creatures or objects and ignites eligible flammable objects; promoted spell projection has creature combatant targeting and no object-burning runtime boundary.",
+        "tag": "needs-surface-widening"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [
-        {
-          "id": "spell.invocation-damage-save-or-attack",
-          "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer.ts"
-          ],
-          "taskRefs": [
-            "QCORE10",
-            "QMBT5"
-          ],
-          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
-            }
-          ]
-        },
-        {
-          "id": "spell.readied-action-time-spell",
-          "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer.ts"
-          ],
-          "taskRefs": [
-            "QCORE8",
-            "QCORE10",
-            "QMBT5"
-          ],
-          "title": "Action-time spell can be readied and released through the reaction protocol",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
-            }
-          ]
-        }
-      ],
+      "profiles": [],
       "sourceRecordPath": "packages/surface/content/fire_bolt.json",
       "unitId": "fire_bolt"
     },
@@ -1947,54 +1889,15 @@
         "status": "installed"
       },
       "claim": {
-        "profileIds": [
-          "spell.reaction-shield"
-        ],
-        "rawRequirementIds": [
-          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
-          "RAW-PTG-REACTIONS-002"
-        ],
-        "tag": "supported-profile"
+        "futureProfileOwner": "QCORE10",
+        "issue": "SRD Shield is authored as a triggered Reaction spell, but promoted battle-runtime Spell Access admission projects action, bonus-action, cantrip, and ongoing-effect spell acts rather than triggered Reaction spell choices.",
+        "tag": "needs-surface-widening"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [
-        {
-          "id": "spell.reaction-shield",
-          "profileKind": "reaction",
-          "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reaction-triggers.ts",
-            "packages/battle-runtime/src/battle-reducer.ts"
-          ],
-          "taskRefs": [
-            "QCORE8",
-            "QCORE10",
-            "QMBT3",
-            "QMBT5"
-          ],
-          "title": "Reaction spell profile that interrupts an incoming attack",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
-            }
-          ]
-        }
-      ],
+      "profiles": [],
       "sourceRecordPath": "packages/surface/content/shield.json",
       "unitId": "shield"
     },

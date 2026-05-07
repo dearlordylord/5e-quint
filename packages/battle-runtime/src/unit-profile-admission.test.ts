@@ -63,9 +63,11 @@ const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const acidSplashUnitId = "acid_splash";
+const fireBoltUnitId = "fire_bolt";
 const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
 const rayOfFrostUnitId = "ray_of_frost";
+const shieldUnitId = "shield";
 const spellCasterId = combatantId("unit-profile-spell-caster");
 const spellTargetId = combatantId("unit-profile-spell-target");
 const partySide = battleCombatantSide("party");
@@ -472,6 +474,34 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
   });
 });
 
+describe("QMBT15 Spell Unit admission candidate narrowing", () => {
+  test("fire_bolt is not counted as deterministic admission while object targeting and burning are unprojected", () => {
+    const spell = spellRecord(fireBoltUnitId);
+
+    expect(spell.mechanics.family).toBe("activation");
+    expect(spell.mechanics.level).toBe(0);
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ cantrips: [spell] }),
+        spellId: fireBoltUnitId,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("shield is not counted as deterministic admission before triggered reaction Spell Access projection exists", () => {
+    const spell = spellRecord(shieldUnitId);
+
+    expect(spell.mechanics.family).toBe("triggered_reaction");
+    expect(spell.mechanics.castingTime.kind).toBe("reaction");
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: shieldUnitId,
+      }),
+    ).toBeUndefined();
+  });
+});
+
 function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
@@ -564,16 +594,23 @@ function spellAct(input: {
   readonly state: BattleState;
   readonly spellId: string;
 }): ActionSpellAct {
-  const act = discoverBattleActs(input.state).find(
-    (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      candidate.subject.spellId === input.spellId,
-  );
+  const act = maybeSpellAct(input);
   expect(act).toBeDefined();
   if (act === undefined) {
     throw new Error(`Expected ${input.spellId} spell act.`);
   }
   return act;
+}
+
+function maybeSpellAct(input: {
+  readonly state: BattleState;
+  readonly spellId: string;
+}): ActionSpellAct | undefined {
+  return discoverBattleActs(input.state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.spellId === input.spellId,
+  );
 }
 
 function spellActInvocation(act: ActionSpellAct): SupportedSpellAct {

@@ -172,13 +172,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 110,
       "id": "QMBT15",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Expand Spell Unit Admission Evidence"
     },
     {
       "number": 111,
       "id": "QMBT16",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Decide Selected Spell Identity MBT"
     },
     {
@@ -261,8 +261,8 @@ Keep it synchronized with the DAG table and task details.
 | 107   | QMBT12 - Reconcile QMBT8-QMBT9 Closeout | done | QMBT10-QMBT11 | QMBT13-QMBT20 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed reconciliation: QMBT8-QMBT9 remain closed, no evidence rows were reclassified, deterministic and selected identity coverage remain 9/16, and QMBT13 is unblocked. |
 | 108   | QMBT13 - Classify Authored Catalog Admission Gaps | done | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed generated catalog-admission dispositions and report triage for authored not-in-catalog Surface Units. |
 | 109   | QMBT14 - Trace Spell Unit Admission Evidence | done | QMBT11-QMBT13 | QMBT15-QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed deterministic spell Unit admission/projection tracer for `acid_splash`, `mage_armor`, `magic_missile`, and `ray_of_frost` through catalog Spell records, creature Spell Access, `startBattle`, and `discoverBattleActs`. |
-| 110   | QMBT15 - Expand Spell Unit Admission Evidence | ready-for-research | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Research the remaining supported spell rows before adding evidence: avoid counting partial SRD behavior as deterministic admission/projection coverage. |
-| 111   | QMBT16 - Decide Selected Spell Identity MBT | blocked | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether any spell identities need selected MBT beyond QMBT5 Procedure Parity, and add only high-risk selected identities. |
+| 110   | QMBT15 - Expand Spell Unit Admission Evidence | done | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed candidate narrowing: `fire_bolt` and `shield` are no longer counted as supported spell Unit profiles until their SRD-required object-burning and triggered-Reaction boundaries are represented at the matrix/runtime boundary. |
+| 111   | QMBT16 - Decide Selected Spell Identity MBT | ready-for-research | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether any spell identities need selected MBT beyond QMBT5 Procedure Parity, and add only high-risk selected identities. |
 | 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | ready-for-research | QMBT12-QMBT13 | QMBT18-QMBT20 | [Unit profile coverage matrix plan](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md) | Make private PHB/XPHB mechanics pressure intake explicit: public renamed mechanics-only records, matrix gaps, evidence expectations, and protected-expression gates. |
 | 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | blocked | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one unsupported/widening feature profile and drive it matrix/QNT-MBT-first into TypeScript implementation and evidence. |
 | 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | blocked | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Review denominators, labels, and report sections after the corrective and expansion slices so percentages still mean what they claim. |
@@ -689,7 +689,7 @@ admission/projection tests; package typecheck.
 
 ### Task 110 - QMBT15 - Expand Spell Unit Admission Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT14
 
@@ -701,24 +701,21 @@ Scope: expand deterministic spell Unit admission/projection evidence if QMBT14
 proves the methodology and denominators are clear. Keep evidence deterministic
 and catalog/projection focused.
 
+Closeout: `fire_bolt` and `shield` were narrowed from `supported-profile` to
+`needs-surface-widening` instead of adding partial deterministic evidence rows.
+The supported spell denominator now excludes both until Fire Bolt object-burning
+and Shield triggered-Reaction admission/projection are represented at the
+matrix/runtime boundary.
+
 Out of scope: selected identity MBT; QNT catalog enumeration; unsupported spell
 profile implementation.
 
 Verification: `pnpm unit-profile-coverage:check`; focused deterministic tests;
 package typecheck.
 
-Retry Guidance: first narrow the remaining supported spell candidates before
-adding evidence rows. `fire_bolt` cannot be counted by proving only the creature
-damage path unless its SRD object-target and flammable-object burning branch is
-made explicit at the matrix/runtime boundary. `shield` has a supported profile
-claim, but verify it has production runtime admission/projection coverage before
-using it as the deterministic candidate. Keep QMBT15 deterministic and
-catalog/projection focused; do not add spell identity MBT, QNT catalog
-enumeration, or broad unsupported spell profile implementation here.
-
 ### Task 111 - QMBT16 - Decide Selected Spell Identity MBT
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT10, QMBT14-QMBT15
 
