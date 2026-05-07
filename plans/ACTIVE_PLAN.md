@@ -468,12 +468,6 @@ Keep it synchronized with the DAG table and task details.
       "id": "QMBT64",
       "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
-    },
-    {
-      "number": 160,
-      "id": "QMBT65",
-      "status": "blocked",
-      "title": "Plan SRD Class Catalog Admission and Widening Backlog"
     }
   ]
 }
@@ -580,8 +574,7 @@ Keep it synchronized with the DAG table and task details.
 | 156   | QMBT61 - Recursive Unit Profile Planning Review | done | QMBT59-QMBT60 | QMBT62-QMBT64 | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT59-QMBT60 review, refreshed PRD status notes, unblocked QMBT62, and appended QMBT63-QMBT64 because the matrix lane is not complete. |
 | 157   | QMBT62 - Promote Tactical Mind Failed Ability Check Second Wind Boost | done | QMBT61 | QMBT63-QMBT64 | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `fighter_tactical_mind` as `unit-feature.failed-ability-check-second-wind-boost`, with authored mechanics admission, an already-rolled failed ability-check outcome boundary, shared Second Wind pool spend/no-spend behavior, QNT proof coverage, runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
 | 158   | QMBT63 - Select Next SRD Feature Widening Slice After Tactical Mind | done | QMBT62 | QMBT64 | [Cutting Words feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `bard_cutting_words` as the next SRD feature widening slice, with a red/green plan for the missing Ability Check branch of `unit-feature.reaction-roll-or-damage-reduction`. |
-| 159   | QMBT64 - Recursive Unit Profile Planning Review | ready-for-research | QMBT62-QMBT63 | QMBT65 | [Cutting Words feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT62-QMBT63 findings, update PRD and plan docs, and append the next bounded batch unless the Unit profile matrix lane is explicitly complete. |
-| 160   | QMBT65 - Plan SRD Class Catalog Admission and Widening Backlog | blocked | QMBT64 | QMBT66+ | [SRD class catalog admission plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT65_SRD_CLASS_CATALOG_ADMISSION_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Unit profile coverage README](/workspace/typescript/dnd/plans/unit-profile-coverage/README.md) | Build a generated, level-prioritized class/catalog admission and `needs-surface-widening` backlog from SRD class files, authored Surface records, installed catalog state, and matrix dispositions. Keep it Ralph-executable as coarse batches rather than one task per Unit. |
+| 159   | QMBT64 - Recursive Unit Profile Planning Review | ready-for-research | QMBT62-QMBT63 | none | [Cutting Words feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT62-QMBT63 findings, update PRD and plan docs, and append the next bounded batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -2763,7 +2756,7 @@ Status: `ready-for-research`
 
 Depends on: QMBT62-QMBT63
 
-Blocks: QMBT65
+Blocks: none
 
 Research / plan:
 [QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md),
@@ -2783,36 +2776,3 @@ rule slices; active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change; `/simplify` convergence, minimum two rounds unless the final
 changeset is trivial.
-
-### Task 160 - QMBT65 - Plan SRD Class Catalog Admission and Widening Backlog
-
-Status: `blocked`
-
-Depends on: QMBT64
-
-Blocks: QMBT66+
-
-Research / plan:
-[QMBT65_SRD_CLASS_CATALOG_ADMISSION_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT65_SRD_CLASS_CATALOG_ADMISSION_PLAN.md),
-[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
-[README.md](/workspace/typescript/dnd/plans/unit-profile-coverage/README.md)
-
-Scope: make the class/catalog admission gap executable as planning data. The
-task should define or implement a generated `needs-surface-widening` backlog
-that spans SRD class container records, authored class features, installed
-catalog state, unsupported installed Units, and matrix dispositions. It must
-prioritize by level band, with level 1 as priority 1, level 2 as priority 2,
-level 3 as priority 3, and so on, while keeping Ralph work batches coarse
-enough to avoid one task per Unit.
-
-Out of scope: promoting any one class feature, spell, magic item, class
-container, or runtime reducer behavior. QNT must stay procedure/profile-shaped
-and must not enumerate authored Unit ids.
-
-Verification: RAW/source review of `.references/srd-5.2.1/Classes/` and
-`UBIQUITOUS_LANGUAGE.md` for any class/level/status terms used in the plan;
-active-plan consistency across Ralph index, DAG table, and task details;
-`pnpm unit-profile-coverage:check` if checker, matrix, report, or generated
-catalog artifacts change; `/simplify` convergence, minimum two rounds unless
-the final changeset is trivial. MBT is not required for this planning/catalog
-task unless it also promotes runtime behavior.
