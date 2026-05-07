@@ -214,7 +214,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 117,
       "id": "QMBT22",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Shield Triggered Reaction Spell Boundary"
     },
     {
@@ -304,7 +304,7 @@ Keep it synchronized with the DAG table and task details.
 | 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | done | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed metric semantics review: generated JSON/report now define each metric's planning question, measure, and denominator; installed inventory is report health rather than coverage; passive production profiles count in executable evidence denominators. |
 | 115   | QMBT20 - Recursive Unit Profile Planning Review | done | QMBT10-QMBT19 | QMBT21-QMBT26 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT10-QMBT19 review, refreshed PRD status notes, and appended QMBT21-QMBT26 because the matrix lane is not complete. |
 | 116   | QMBT21 - Close Classic Mechanics Deterministic Admission Gap | done | QMBT17-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed deterministic admission/projection evidence for the Classic non-SRD mechanics-only Unit `mycelium_step` through the policy fixture boundary and production alternate-action-cost support projection. |
-| 117   | QMBT22 - Promote Shield Triggered Reaction Spell Boundary | ready-for-research | QMBT10, QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and implement the triggered Reaction Spell Access boundary needed before `shield` can return to supported spell Unit evidence. |
+| 117   | QMBT22 - Promote Shield Triggered Reaction Spell Boundary | done | QMBT10, QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and implement the triggered Reaction Spell Access boundary needed before `shield` can return to supported spell Unit evidence. |
 | 118   | QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary | ready-for-research | QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether and how promoted spell projection represents Fire Bolt's object targeting and object ignition before reclassifying `fire_bolt`. |
 | 119   | QMBT24 - Select Next SRD Feature Widening Slice | ready-for-research | QMBT18-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one high-value SRD feature-style unsupported/widening pressure row and drive a Defense-style red/green slice plan. |
 | 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | blocked | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After triggered-Reaction and object-targeting boundary decisions land, re-run spell admission triage and append the next deterministic spell evidence batch. |
@@ -913,7 +913,7 @@ admission/projection coverage is now 15/15.
 
 ### Task 117 - QMBT22 - Promote Shield Triggered Reaction Spell Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT10, QMBT15-QMBT20
 
