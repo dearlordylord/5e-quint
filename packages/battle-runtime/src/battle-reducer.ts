@@ -121,6 +121,7 @@ import type {
   DcSource,
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
+  Attachment,
   Size,
   SpellRecord,
   StatBlockRecord,
@@ -597,6 +598,14 @@ export type BattleTargetSpatialFact =
       readonly spellId: SpellRecord["id"];
     }
   | {
+      readonly kind: "spellTargetsInPointOriginSphere";
+      readonly casterId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+      readonly areaId: string;
+      readonly radiusFeet: MovementFeet;
+      readonly targetIds: readonly CombatantId[];
+    }
+  | {
       readonly kind: "helpAttackTargetWithin5Feet";
       readonly helperId: CombatantId;
       readonly targetEnemyId: CombatantId;
@@ -686,16 +695,28 @@ export type SupportedSpellAct =
       readonly kind: "preparedHealingSpell";
       readonly spell: SpellRecord;
       readonly actionCost: HealingSpellActionCost;
-      readonly targeting: {
-        readonly kind: "targetList";
-        readonly minTargets: 1;
-        readonly maxTargets: number;
-      };
+      readonly targeting: HealingSpellTargeting;
       readonly slotLevel: SpellSlotLevel;
       readonly healing: {
         readonly expr: DiceExpr;
       };
       readonly rangeFeet: MovementFeet;
+    };
+
+type HealingSpellTargeting =
+  | {
+      readonly kind: "targetList";
+      readonly minTargets: 1;
+      readonly maxTargets: number;
+    }
+  | {
+      readonly kind: "pointOriginSphereTargetList";
+      readonly minTargets: 1;
+      readonly maxTargets: number;
+      readonly area: {
+        readonly kind: "pointOriginSphere";
+        readonly radiusFeet: MovementFeet;
+      };
     };
 
 type SupportedDamageSpellAct = Exclude<
@@ -1047,6 +1068,17 @@ export type BattleSpellTargetAllocation = {
   readonly targetId: CombatantId;
   readonly count: number;
 };
+type BattleSpellTargetSpatialFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellTarget" }
+>;
+type BattlePointOriginSphereSpellTargetsSpatialFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellTargetsInPointOriginSphere" }
+>;
+type BattleSpellTargetListSpatialFact =
+  | BattleSpellTargetSpatialFact
+  | BattlePointOriginSphereSpellTargetsSpatialFact;
 export type BattleSpellTargetAllocationHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -1311,11 +1343,22 @@ const SupportedHealingSpellActSchema = Schema.Struct({
   kind: Schema.Literal("preparedHealingSpell"),
   spell: BattleRuntimeObjectSchema,
   actionCost: Schema.Literal("magicAction", "bonusAction"),
-  targeting: Schema.Struct({
-    kind: Schema.Literal("targetList"),
-    minTargets: Schema.Literal(1),
-    maxTargets: Schema.Number,
-  }),
+  targeting: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Number,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("pointOriginSphereTargetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Number,
+      area: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+    }),
+  ),
   slotLevel: SpellSlotLevel,
   healing: Schema.Struct({
     expr: BattleRuntimeObjectSchema,
@@ -1605,10 +1648,7 @@ export type BattleFill =
       readonly value: {
         readonly targetIds: readonly CombatantId[];
       };
-      readonly spatialFacts: readonly Extract<
-        BattleTargetSpatialFact,
-        { readonly kind: "spellTarget" }
-      >[];
+      readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
     }
   | {
       readonly kind: "deathSavingThrow";
@@ -1709,6 +1749,14 @@ type BattleFillEncoded =
             readonly spellId: string;
           }
         | {
+            readonly kind: "spellTargetsInPointOriginSphere";
+            readonly casterId: string;
+            readonly spellId: string;
+            readonly areaId: string;
+            readonly radiusFeet: number;
+            readonly targetIds: readonly string[];
+          }
+        | {
             readonly kind: "helpAttackTargetWithin5Feet";
             readonly helperId: string;
             readonly targetEnemyId: string;
@@ -1748,12 +1796,22 @@ type BattleFillEncoded =
       readonly value: {
         readonly targetIds: readonly string[];
       };
-      readonly spatialFacts: readonly {
-        readonly kind: "spellTarget";
-        readonly casterId: string;
-        readonly targetId: string;
-        readonly spellId: string;
-      }[];
+      readonly spatialFacts: readonly (
+        | {
+            readonly kind: "spellTarget";
+            readonly casterId: string;
+            readonly targetId: string;
+            readonly spellId: string;
+          }
+        | {
+            readonly kind: "spellTargetsInPointOriginSphere";
+            readonly casterId: string;
+            readonly spellId: string;
+            readonly areaId: string;
+            readonly radiusFeet: number;
+            readonly targetIds: readonly string[];
+          }
+      )[];
     }
   | {
       readonly kind: "attackRoll";
@@ -1926,6 +1984,14 @@ export const BattleFillSchema: Schema.Schema<
               spellId: Schema.String,
             }),
             Schema.Struct({
+              kind: Schema.Literal("spellTargetsInPointOriginSphere"),
+              casterId: CombatantId,
+              spellId: Schema.String,
+              areaId: Schema.String,
+              radiusFeet: MovementFeet,
+              targetIds: Schema.Array(CombatantId),
+            }),
+            Schema.Struct({
               kind: Schema.Literal("helpAttackTargetWithin5Feet"),
               helperId: CombatantId,
               targetEnemyId: CombatantId,
@@ -1973,12 +2039,22 @@ export const BattleFillSchema: Schema.Schema<
         targetIds: Schema.Array(CombatantId),
       }),
       spatialFacts: Schema.Array(
-        Schema.Struct({
-          kind: Schema.Literal("spellTarget"),
-          casterId: CombatantId,
-          targetId: CombatantId,
-          spellId: Schema.String,
-        }),
+        Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("spellTarget"),
+            casterId: CombatantId,
+            targetId: CombatantId,
+            spellId: Schema.String,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellTargetsInPointOriginSphere"),
+            casterId: CombatantId,
+            spellId: Schema.String,
+            areaId: Schema.String,
+            radiusFeet: MovementFeet,
+            targetIds: Schema.Array(CombatantId),
+          }),
+        ),
       ),
     }),
     Schema.Struct({
@@ -12396,10 +12472,7 @@ type SpellFillSet =
       readonly targetList:
         | {
             readonly targetIds: readonly CombatantId[];
-            readonly spatialFacts: readonly Extract<
-              BattleTargetSpatialFact,
-              { readonly kind: "spellTarget" }
-            >[];
+            readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
           }
         | undefined;
       readonly attackRoll: AttackRollResult | undefined;
@@ -12435,10 +12508,7 @@ function spellFillSet(
   let targetList:
     | {
         readonly targetIds: readonly CombatantId[];
-        readonly spatialFacts: readonly Extract<
-          BattleTargetSpatialFact,
-          { readonly kind: "spellTarget" }
-        >[];
+        readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
       }
     | undefined;
   let attackRoll: AttackRollResult | undefined;
@@ -14141,11 +14211,9 @@ function supportedPreparedHealingSpellProfile(
   const phase = spell.mechanics.phases[0];
   const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
   const actionCost = healingSpellActionCost(spell.mechanics.castingTime);
-  const targetBounds =
-    phase?.kind === "direct" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target"
-      ? healingSpellTargetBounds(phase.attachment.value.selection)
+  const targeting =
+    phase?.kind === "direct" && phase.attachment.kind === "hole"
+      ? healingSpellTargeting(phase.attachment.value)
       : null;
   const rangeFeet = healingSpellRangeFeet(spell.mechanics.range);
   if (
@@ -14154,8 +14222,7 @@ function supportedPreparedHealingSpellProfile(
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    targetBounds === null ||
+    targeting === null ||
     phase.effects?.length !== 1 ||
     effect?.kind !== "heal_hp"
   ) {
@@ -14178,17 +14245,53 @@ function supportedPreparedHealingSpellProfile(
             kind: "preparedHealingSpell",
             spell,
             actionCost,
-            targeting: {
-              kind: "targetList",
-              minTargets: 1,
-              maxTargets: targetBounds.maxTargets,
-            },
+            targeting,
             slotLevel: slot.spellLevel,
             healing: { expr: healingExpr },
             rangeFeet,
           },
         ];
   });
+}
+
+function healingSpellTargeting(
+  attachment: Attachment,
+): HealingSpellTargeting | null {
+  if (attachment.kind === "target") {
+    const targetBounds = healingSpellTargetBounds(attachment.selection);
+    return targetBounds === null
+      ? null
+      : {
+          kind: "targetList",
+          minTargets: 1,
+          maxTargets: targetBounds.maxTargets,
+        };
+  }
+
+  if (attachment.kind === "area") {
+    const targetBounds =
+      attachment.selection === undefined
+        ? null
+        : healingSpellTargetBounds(attachment.selection);
+    if (
+      targetBounds === null ||
+      attachment.origin.kind !== "point_within_range" ||
+      attachment.shape.kind !== "sphere"
+    ) {
+      return null;
+    }
+    return {
+      kind: "pointOriginSphereTargetList",
+      minTargets: 1,
+      maxTargets: targetBounds.maxTargets,
+      area: {
+        kind: "pointOriginSphere",
+        radiusFeet: movementFeet(attachment.shape.radiusFeet),
+      },
+    };
+  }
+
+  return null;
 }
 
 function healingSpellActionCost(
@@ -14647,12 +14750,30 @@ function spellTargetIsLegal(
   ) {
     return false;
   }
-  return facts.some(
-    (fact) =>
-      fact.kind === "spellTarget" &&
-      fact.casterId === actorId &&
-      fact.targetId === targetId &&
-      fact.spellId === invocation.spell.id,
+  return facts.some((fact) =>
+    spellTargetSpatialFactMatches(fact, actorId, targetId, invocation),
+  );
+}
+
+function spellTargetSpatialFactMatches(
+  fact: BattleTargetSpatialFact,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  invocation: SupportedSpellAct,
+): boolean {
+  if (fact.kind !== "spellTarget") {
+    return false;
+  }
+  if (
+    fact.casterId !== actorId ||
+    fact.targetId !== targetId ||
+    fact.spellId !== invocation.spell.id
+  ) {
+    return false;
+  }
+  return !(
+    invocation.kind === "preparedHealingSpell" &&
+    invocation.targeting.kind === "pointOriginSphereTargetList"
   );
 }
 
@@ -14725,7 +14846,7 @@ function validateSpellTargetList(
     { readonly kind: "preparedHealingSpell" }
   >,
   targetIds: readonly CombatantId[],
-  facts: readonly BattleTargetSpatialFact[],
+  facts: readonly BattleSpellTargetListSpatialFact[],
 ): string | null {
   if (targetIds.length < invocation.targeting.minTargets) {
     return `${invocation.spell.name} must target at least ${invocation.targeting.minTargets} creature.`;
@@ -14739,11 +14860,79 @@ function validateSpellTargetList(
       return "Spell target list must not repeat a target.";
     }
     seen.add(targetId);
-    if (!spellTargetIsLegal(state, actorId, targetId, invocation, facts)) {
+    if (
+      invocation.targeting.kind !== "pointOriginSphereTargetList" &&
+      !spellTargetIsLegal(state, actorId, targetId, invocation, facts)
+    ) {
+      return "Spell targets must be combatants within the selected spell's supported range.";
+    }
+  }
+  if (invocation.targeting.kind === "pointOriginSphereTargetList") {
+    return validatePointOriginSphereSpellTargetList(
+      state,
+      actorId,
+      invocation,
+      targetIds,
+      facts,
+    );
+  }
+  return null;
+}
+
+function validatePointOriginSphereSpellTargetList(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >,
+  targetIds: readonly CombatantId[],
+  facts: readonly BattleSpellTargetListSpatialFact[],
+): string | null {
+  if (invocation.targeting.kind !== "pointOriginSphereTargetList") {
+    return "Area healing targets must use a point-origin Sphere target list.";
+  }
+  const expectedRadiusFeet = invocation.targeting.area.radiusFeet;
+  const matchingAreaFacts = facts.filter(
+    (fact) =>
+      fact.kind === "spellTargetsInPointOriginSphere" &&
+      fact.casterId === actorId &&
+      fact.spellId === invocation.spell.id &&
+      fact.areaId.length > 0 &&
+      fact.radiusFeet === expectedRadiusFeet &&
+      sameCombatantIdSet(fact.targetIds, targetIds),
+  );
+  if (matchingAreaFacts.length !== 1) {
+    return "Area healing targets must share one selected point-origin Sphere.";
+  }
+  for (const targetId of targetIds) {
+    if (
+      !spellTargetHasNonSpatialPrerequisites(
+        state,
+        actorId,
+        targetId,
+        invocation,
+      )
+    ) {
       return "Spell targets must be combatants within the selected spell's supported range.";
     }
   }
   return null;
+}
+
+function sameCombatantIdSet(
+  left: readonly CombatantId[],
+  right: readonly CombatantId[],
+): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+  const leftIds = new Set(left);
+  const rightIds = new Set(right);
+  if (leftIds.size !== left.length || rightIds.size !== right.length) {
+    return false;
+  }
+  return left.every((id) => rightIds.has(id));
 }
 
 function persistentSpellTargetIsKnownWilling(

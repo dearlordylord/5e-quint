@@ -35,6 +35,7 @@ let massCureWounds =
                         { kind = "area"
                         , shape = { kind = "sphere", radiusFeet = 30 }
                         , origin = { kind = "point_within_range" }
+                        , selection = Some { mode = "choose_up_to", count = 6 }
                         }
                     }
                 , effects =

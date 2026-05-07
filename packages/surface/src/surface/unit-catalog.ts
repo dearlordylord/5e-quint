@@ -28,6 +28,7 @@ import healingWordInput from "../../content/healing_word.json";
 import lightInput from "../../content/light.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
+import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
@@ -197,6 +198,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     detectMagicInput,
     mageArmorInput,
     magicMissileInput,
+    massCureWoundsInput,
     massHealingWordInput,
     healingWordInput,
     shieldInput,

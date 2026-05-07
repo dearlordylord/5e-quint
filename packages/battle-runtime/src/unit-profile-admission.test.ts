@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
@@ -12,7 +13,6 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
-import massCureWoundsInput from "../../surface/content/mass_cure_wounds.json";
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -29,7 +29,6 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -91,6 +90,7 @@ const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
 const cureWoundsUnitId = "cure_wounds";
 const healingWordUnitId = "healing_word";
+const massCureWoundsUnitId = "mass_cure_wounds";
 const massHealingWordUnitId = "mass_healing_word";
 const rayOfFrostUnitId = "ray_of_frost";
 const shieldUnitId = "shield";
@@ -1608,26 +1608,139 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     ).toMatchObject({ tag: "invalid" });
   });
 
-  test("mass_cure_wounds keeps its point-origin Sphere outside the direct target-list healing profile", () => {
-    const unit = decodeUnitRecordSync(massCureWoundsInput);
-    expect(unit.kind).toBe("spell");
-    if (unit.kind !== "spell") {
-      throw new Error("Expected Mass Cure Wounds spell Unit.");
-    }
-
+  test("mass_cure_wounds is admitted as up-to-six point-origin Sphere Magic Action healing", () => {
+    const spell = spellRecord(massCureWoundsUnitId);
     const state = spellBattle({
-      preparedSpells: [unit],
+      preparedSpells: [spell],
       spellSlots: [{ spellLevel: 5, count: 1 }],
       extraTargetIds: massHealingTargetIds.slice(1),
     });
+    const act = spellAct({
+      state,
+      spellId: massCureWoundsUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      spellId: massCureWoundsUnitId,
+      spellActId: "preparedHealingSpell:mass_cure_wounds:slot:5",
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+    expect(targetListHole).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 6,
+      }),
+    );
+    expect(spellHoleInvocation(act.initialHoles)).toEqual(
+      expect.objectContaining({
+        kind: "preparedHealingSpell",
+        spell,
+        actionCost: "magicAction",
+        targeting: {
+          kind: "pointOriginSphereTargetList",
+          minTargets: 1,
+          maxTargets: 6,
+          area: { kind: "pointOriginSphere", radiusFeet: 30 },
+        },
+        slotLevel: 5,
+        healing: {
+          expr: { dice: 5, dieSize: 8, flat: 3 },
+        },
+        rangeFeet: 60,
+      }),
+    );
+  });
+
+  test("mass_cure_wounds rejects target lists without one shared point-origin Sphere", () => {
+    const spell = spellRecord(massCureWoundsUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+      extraTargetIds: massHealingTargetIds.slice(1),
+    });
+    const act = spellAct({
+      state,
+      spellId: massCureWoundsUnitId,
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetIds = [spellTargetId, massHealingTargetIds[1]];
 
     expect(
-      discoverBattleActs(state).filter(
-        (act) =>
-          act.subject.tag === "actionSpell" &&
-          act.subject.spellId === "mass_cure_wounds",
-      ),
-    ).toEqual([]);
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          {
+            kind: "spellTargetList",
+            holeId: targetListHole.holeId,
+            value: { targetIds },
+            spatialFacts: [
+              {
+                kind: "spellTargetsInPointOriginSphere",
+                casterId: spellCasterId,
+                spellId: massCureWoundsUnitId,
+                areaId: "area-a",
+                radiusFeet: movementFeet(30),
+                targetIds: [targetIds[0]],
+              },
+              {
+                kind: "spellTargetsInPointOriginSphere",
+                casterId: spellCasterId,
+                spellId: massCureWoundsUnitId,
+                areaId: "area-b",
+                radiusFeet: movementFeet(30),
+                targetIds: [targetIds[1]],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Area healing targets must share one selected point-origin Sphere.",
+    });
+  });
+
+  test("mass_cure_wounds level 6 slot scaling adds one healing die", () => {
+    const spell = spellRecord(massCureWoundsUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 6, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: massCureWoundsUnitId,
+      slotLevel: 6,
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+    const awaitingHealingRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(
+          targetListHole,
+          spellCasterId,
+          massCureWoundsUnitId,
+          [spellTargetId],
+        ),
+      ],
+    });
+
+    expect(awaitingHealingRoll).toMatchObject({ tag: "needsHoles" });
+    if (awaitingHealingRoll.tag !== "needsHoles") {
+      throw new Error("Expected Mass Cure Wounds healing roll hole.");
+    }
+    expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
+      expect.objectContaining({
+        kind: "preparedHealingSpell",
+        slotLevel: 6,
+        healing: {
+          expr: { dice: 6, dieSize: 8, flat: 3 },
+        },
+      }),
+    );
   });
 });
 
@@ -1641,7 +1754,7 @@ function spellBattle(input: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
   readonly spellSlots?: readonly {
-    readonly spellLevel: 1 | 3 | 5;
+    readonly spellLevel: 1 | 3 | 5 | 6;
     readonly count: number;
   }[];
   readonly extraTargetIds?: readonly CombatantId[];
@@ -2125,6 +2238,7 @@ function requireResultHole<K extends BattleHole["kind"]>(
 function spellAct(input: {
   readonly state: BattleState;
   readonly spellId: string;
+  readonly slotLevel?: number;
 }): ActionSpellAct {
   const act = maybeSpellAct(input);
   expect(act).toBeDefined();
@@ -2137,11 +2251,15 @@ function spellAct(input: {
 function maybeSpellAct(input: {
   readonly state: BattleState;
   readonly spellId: string;
+  readonly slotLevel?: number;
 }): ActionSpellAct | undefined {
   return discoverBattleActs(input.state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.spellId === input.spellId,
+      candidate.subject.spellId === input.spellId &&
+      (input.slotLevel === undefined ||
+        candidate.subject.spellActId?.endsWith(`:slot:${input.slotLevel}`) ===
+          true),
   );
 }
 
@@ -2272,6 +2390,23 @@ function spellTargetListFill(
   spellId: string,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  if (hole.spell.targeting.kind === "pointOriginSphereTargetList") {
+    return {
+      kind: "spellTargetList",
+      holeId: hole.holeId,
+      value: { targetIds },
+      spatialFacts: [
+        {
+          kind: "spellTargetsInPointOriginSphere",
+          casterId,
+          spellId,
+          areaId: `test:${spellId}:point-origin-sphere`,
+          radiusFeet: hole.spell.targeting.area.radiusFeet,
+          targetIds,
+        },
+      ],
+    };
+  }
   return {
     kind: "spellTargetList",
     holeId: hole.holeId,

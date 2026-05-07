@@ -12,3 +12,4 @@
 {"taskId":"QMBT27","claimKind":"completed-runtime-parity","profileIds":["unit-feature.passive-ranged-attack-roll-bonus"],"note":"Focused passive ranged weapon attack-roll bonus runtime parity."}
 {"taskId":"QMBT31","claimKind":"completed-runtime-parity","profileIds":["unit-feature.weapon-damage-dice-roll-choice"],"note":"Focused weapon hit damage dice roll choice runtime parity."}
 {"taskId":"QMBT32","claimKind":"completed-runtime-parity","profileIds":["spell.hit-point-restoration"],"note":"Focused direct Hit Point restoration spell runtime parity for Cure Wounds and Mass Healing Word."}
+{"taskId":"QMBT34","claimKind":"completed-runtime-parity","profileIds":["spell.hit-point-restoration"],"note":"Focused area Hit Point restoration spell runtime parity for Mass Cure Wounds."}

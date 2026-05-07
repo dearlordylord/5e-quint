@@ -39,6 +39,7 @@
 {"unitId":"healing_word","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.hit-point-restoration"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"cure_wounds","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.hit-point-restoration"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"mass_healing_word","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.hit-point-restoration"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
+{"unitId":"mass_cure_wounds","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.hit-point-restoration"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"shield","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.reaction-shield"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001","RAW-PTG-REACTIONS-002"]}}
 {"unitId":"sleep","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row."}}
 {"unitId":"thunderwave","collectionId":"srd-5.2.1","claim":{"tag":"needs-surface-widening","issue":"Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."}}

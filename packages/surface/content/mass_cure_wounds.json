@@ -27,6 +27,10 @@
             "origin": {
               "kind": "point_within_range"
             },
+            "selection": {
+              "count": 6,
+              "mode": "choose_up_to"
+            },
             "shape": {
               "kind": "sphere",
               "radiusFeet": 30

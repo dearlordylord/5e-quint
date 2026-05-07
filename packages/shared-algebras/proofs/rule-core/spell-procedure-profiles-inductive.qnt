@@ -132,6 +132,7 @@ module spellProcedureProfilesInductive {
       AcidSplashSpellProfile,
       HealingWordSpellProfile,
       CureWoundsSpellProfile,
+      MassCureWoundsSpellProfile,
       MassHealingWordSpellProfile,
       MageArmorSpellProfile
     ).oneOf()

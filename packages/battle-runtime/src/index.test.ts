@@ -12044,7 +12044,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("92 passing");
+  expect(quintOutput).toContain("93 passing");
 }
 
 function hidePrerequisites(

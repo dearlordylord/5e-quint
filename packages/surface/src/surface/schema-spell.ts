@@ -1200,6 +1200,7 @@ export const AttachmentBaseSchema = Schema.Union(
     kind: Schema.Literal("area"),
     shape: AreaShapeSpecSchema,
     origin: AreaOriginSchema,
+    selection: optionalExact(TargetSelectionSchema),
     occupantDispositionFilter: optionalExact(
       AreaOccupantDispositionFilterSchema,
     ),

@@ -7,8 +7,8 @@ module ruleCoreSpellsMbt {
   // - one spellcaster and up to two targets;
   // - level-1 spell slots are projected as a scalar remaining count;
   // - spell breadth is limited to QCORE10 profiles: Magic Missile, Ray of
-  //   Frost, Acid Splash, Cure Wounds, Healing Word, Mass Healing Word, Mage
-  //   Armor, and Readied Spell Response.
+  //   Frost, Acid Splash, Cure Wounds, Healing Word, Mass Cure Wounds,
+  //   Mass Healing Word, Mage Armor, and Readied Spell Response.
 
   var qActionAvailable: bool
   var qBonusActionAvailable: bool
@@ -363,6 +363,39 @@ module ruleCoreSpellsMbt {
     }
   }
 
+  action doMassCureWoundsNeedsTargetList = recordProjection(
+    true, true, true, initialCasterHp, 4, 4, false,
+    0, 0, false, 0, noEffect, false, false, false,
+    Set("SpellTargetList"), "needsHoles", "none"
+  )
+
+  action doMassCureWoundsNeedsHealingRoll = recordProjection(
+    true, true, true, initialCasterHp, 4, 4, false,
+    0, 0, false, 0, noEffect, false, false, false,
+    Set("DamageRoll"), "needsHoles", "none"
+  )
+
+  action doMassCureWoundsWounded = {
+    val invocation = resolveSpellInvocation({
+      turn: initialSpellcastingProcedureState.turn,
+      slotLedger: { slotLevel: 5, slotsRemaining: 1 },
+      slotSpellCastThisTurn: false,
+    }, {
+      profile: MassCureWoundsSpellProfile,
+      hasSpellAccess: true,
+      selectedSlotLevel: 5,
+      targetCount: 2,
+      targetsAreValid: true,
+    })
+    all {
+      recordProjection(
+        false, true, true, initialCasterHp, 12, 12, false,
+        0, 0, invocation.state.slotSpellCastThisTurn,
+        0, noEffect, false, false, false, Set(), "resolved", "none"
+      ),
+    }
+  }
+
   action doMageArmorNeedsTarget = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
@@ -456,6 +489,9 @@ module ruleCoreSpellsMbt {
     doMassHealingWordWounded,
     doMassHealingWordNeedsTargetList,
     doMassHealingWordNeedsHealingRoll,
+    doMassCureWoundsWounded,
+    doMassCureWoundsNeedsTargetList,
+    doMassCureWoundsNeedsHealingRoll,
     doMageArmor,
     doMageArmorNeedsTarget,
     doRejectSecondSlotSpell,

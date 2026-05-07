@@ -17,7 +17,8 @@ module spellProcedureProfiles {
   // - Rules-Glossary.md: Ready, Magic, Concentration, Spell Attack, Target.
   // - Spells/Descriptions-A-D.md: Acid Splash and Cure Wounds.
   // - Spells/Descriptions-E-L.md: Healing Word.
-  // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, and Mass Healing Word.
+  // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, Mass Cure
+  //   Wounds, and Mass Healing Word.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
 
   type SpellInvocationAction =
@@ -35,8 +36,13 @@ module spellProcedureProfiles {
     | AcidSplashSpellProfile
     | HealingWordSpellProfile
     | CureWoundsSpellProfile
+    | MassCureWoundsSpellProfile
     | MassHealingWordSpellProfile
     | MageArmorSpellProfile
+
+  type SpellAreaProfile =
+    | NoSpellAreaProfile
+    | MassCureWoundsPointOriginSphereArea
 
   type ReadiedSpellProfile =
     | ReadiedMagicMissileSpellProfile
@@ -196,6 +202,7 @@ module spellProcedureProfiles {
   pure def spellProfileMinimumSlotLevel(profile: SpellDefinitionProfile): int =
     if (profile == RayOfFrostSpellProfile or profile == AcidSplashSpellProfile) 0
     else if (profile == MassHealingWordSpellProfile) 3
+    else if (profile == MassCureWoundsSpellProfile) 5
     else 1
 
   pure def legalSpellInvocationTargetCount(
@@ -206,8 +213,13 @@ module spellProcedureProfiles {
     if (targetCount < 1) false
     else if (profile == AcidSplashSpellProfile) true
     else if (profile == MagicMissileSpellProfile) targetCount <= magicMissileDartCount(slotLevel)
-    else if (profile == MassHealingWordSpellProfile) targetCount <= 6
+    else if (profile == MassHealingWordSpellProfile or profile == MassCureWoundsSpellProfile) targetCount <= 6
     else targetCount == 1
+
+  pure def spellProfileArea(profile: SpellDefinitionProfile): SpellAreaProfile =
+    if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
+
+  val massCureWoundsPointOriginSphereRadiusFeet = 30
 
   pure def spellProfileRequiresSlot(profile: SpellDefinitionProfile): bool =
     spellProfileMinimumSlotLevel(profile) > 0
@@ -358,16 +370,17 @@ module spellProcedureProfiles {
   ): int =
     if (profile == CureWoundsSpellProfile) 2 + (2 * (slotLevel - 1))
     else if (profile == MassHealingWordSpellProfile) 2 + (slotLevel - 3)
+    else if (profile == MassCureWoundsSpellProfile) 5 + (slotLevel - 5)
     else 2 + (2 * (slotLevel - 1))
 
   pure def directHitPointRestorationDieSize(profile: SpellDefinitionProfile): int =
-    if (profile == CureWoundsSpellProfile) 8 else 4
+    if (profile == CureWoundsSpellProfile or profile == MassCureWoundsSpellProfile) 8 else 4
 
   pure def legalDirectHitPointRestorationEffectFacts(facts: DirectHitPointRestorationEffectFacts): bool = {
     val diceCount = directHitPointRestorationDiceCount(facts.profile, facts.slotLevel)
     val dieSize = directHitPointRestorationDieSize(facts.profile)
     all {
-      facts.profile.in(Set(HealingWordSpellProfile, CureWoundsSpellProfile, MassHealingWordSpellProfile)),
+      facts.profile.in(Set(HealingWordSpellProfile, CureWoundsSpellProfile, MassHealingWordSpellProfile, MassCureWoundsSpellProfile)),
       facts.slotLevel >= spellProfileMinimumSlotLevel(facts.profile),
       facts.slotLevel <= 9,
       facts.healingDiceRoll >= diceCount,
@@ -735,6 +748,48 @@ module spellProcedureProfiles {
       assert(healing.vitals.hitPoints == 8),
       assert(not(healing.vitals.unconscious)),
       assert(healing.deathSavingThrows == resetDeathSavingThrowLifecycle),
+    }
+  }
+
+  run test_mass_cure_wounds_area_hit_point_restoration_facts = {
+    val invocation = resolveSpellInvocation({
+      turn: initialSpellcastingProcedureState.turn,
+      slotLedger: { slotLevel: 5, slotsRemaining: 1 },
+      slotSpellCastThisTurn: false,
+    }, {
+      profile: MassCureWoundsSpellProfile,
+      hasSpellAccess: true,
+      selectedSlotLevel: 5,
+      targetCount: 6,
+      targetsAreValid: true,
+    })
+    val healing = resolveDirectHitPointRestorationEffect(
+      {
+        kind: PlayerCharacter,
+        hitPoints: 4,
+        hitPointMaximum: 20,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: false,
+      },
+      resetDeathSavingThrowLifecycle,
+      NoPositiveHitPointUnconsciousRecovery,
+      {
+        profile: MassCureWoundsSpellProfile,
+        slotLevel: 5,
+        healingDiceRoll: 25,
+        spellcastingAbilityModifier: 3,
+      }
+    )
+    all {
+      assert(invocation.admitted),
+      assert(invocation.state.turn.actionQuota == ActionSpent),
+      assert(invocation.state.slotLedger.slotsRemaining == 0),
+      assert(spellProfileArea(MassCureWoundsSpellProfile) == MassCureWoundsPointOriginSphereArea),
+      assert(spellProfileArea(CureWoundsSpellProfile) == NoSpellAreaProfile),
+      assert(massCureWoundsPointOriginSphereRadiusFeet == 30),
+      assert(healing.hitPointsRegained == 16),
+      assert(healing.vitals.hitPoints == 20),
     }
   }
 
