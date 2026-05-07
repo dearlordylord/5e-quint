@@ -509,7 +509,7 @@ Keep it synchronized with the DAG table and task details.
 | 145   | QMBT50 - Carry Unit Feature Support Profile Payloads | done | QMBT27, QMBT37 | QMBT52 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Completed structured support-profile payloads for Archery `+2` and level-5 Extra Attack `additionalAttacks: 1`, updated reducer consumers to read those payloads, preserved duplicate Archery non-stacking, and verified with RAW/UL review, focused battle-runtime tests, typecheck, `pnpm quality`, and `/simplify` convergence. |
 | 146   | QMBT51 - Structure Spell Invocation Identity and Resource Access | done | QMBT5, QMBT22, QMBT28, QMBT42 | QMBT52 | [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed structured spell invocation refs, cast/Ready subject modes, branded `SpellId`, and access/resource/procedure-shaped supported spell invocations for the promoted prepared Spell Slot, Shield, and class cantrip lanes. |
 | 147   | QMBT52 - Recursive Unit Profile Planning Review | done | QMBT47-QMBT51 | QMBT53-QMBT55 | [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT47-QMBT51 review, refreshed PRD status notes, and appended QMBT53-QMBT55 because the matrix lane is not complete. |
-| 148   | QMBT53 - Promote Adrenaline Rush Bonus Action Dash Temporary Hit Points | ready-for-implementation-after-light-research | QMBT48-QMBT52 | QMBT54-QMBT55 | [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `orc_adrenaline_rush` as a Bonus Action Dash coupled Temporary Hit Point Unit-feature profile using the QMBT48 red/green plan. |
+| 148   | QMBT53 - Promote Adrenaline Rush Bonus Action Dash Temporary Hit Points | done | QMBT48-QMBT52 | QMBT54-QMBT55 | [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `orc_adrenaline_rush` as `unit-feature.bonus-action-dash-temporary-hit-points` with coupled Bonus Action Dash, Proficiency Bonus Temporary Hit Points, Proficiency Bonus use pool, deterministic admission evidence, focused runtime parity, and refreshed matrix artifacts. |
 | 149   | QMBT54 - Select Next SRD Feature Widening Slice After Adrenaline Rush | ready-for-research | QMBT53 | QMBT55 | [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT53 refreshes the matrix, select the next narrow SRD feature widening slice without mixing Temporary Hit Points, healing pools, AC base formulas, resistance, attack replacement, Weapon Mastery, spells, or magic items. |
 | 150   | QMBT55 - Recursive Unit Profile Planning Review | ready-for-research | QMBT53-QMBT54 | QMBT56+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT53-QMBT54 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
 
@@ -2270,7 +2270,7 @@ recorded in the QMBT52 review artifact.
 
 ### Task 148 - QMBT53 - Promote Adrenaline Rush Bonus Action Dash Temporary Hit Points
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT48-QMBT52
 
@@ -2306,6 +2306,12 @@ Dash-coupled Temporary Hit Point feature profile; focused runtime parity with
 the mandatory timed background MBT protocol if promoted battle behavior changes;
 `pnpm unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm
 quality`; `/simplify` convergence, minimum two rounds.
+
+Closeout: completed `orc_adrenaline_rush` as the
+`unit-feature.bonus-action-dash-temporary-hit-points` profile, keeping Dash and
+Temporary Hit Points coupled at the support-profile boundary and refreshing the
+Unit profile matrix evidence for QMBT53. QMBT54-QMBT55 remain unblocked follow-up
+planning tasks.
 
 ### Task 149 - QMBT54 - Select Next SRD Feature Widening Slice After Adrenaline Rush
 

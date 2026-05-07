@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"
@@ -551,6 +551,32 @@ module unitFeatureProcedureProfilesInductive {
     }
   }
 
+  action doBonusActionDashTemporaryHitPoints = {
+    nondet proficiencyBonus = 2.to(6).oneOf()
+    nondet existingTemporaryHitPoints = 0.to(8).oneOf()
+    nondet chooseNewTemporaryHitPoints = Set(true, false).oneOf()
+    val result = resolveBonusActionDashTemporaryHitPoints(qTurn, qFeaturePool, {
+      speedFeet: 30,
+      proficiencyBonus: proficiencyBonus,
+      existingTemporaryHitPoints: existingTemporaryHitPoints,
+      chooseNewTemporaryHitPoints: chooseNewTemporaryHitPoints,
+    })
+    all {
+      recordTurn(result.turn),
+      recordFeaturePool(result.pool),
+      qLastDamageAmount' = result.temporaryHitPoints,
+      qLastArmorClass' = qLastArmorClass,
+      qActionSurgeGrant' = qActionSurgeGrant,
+      qRageOccurrence' = qRageOccurrence,
+      qInterruptedConcentration' = qInterruptedConcentration,
+      qReactorConcentration' = qReactorConcentration,
+      qRecklessOccurrence' = qRecklessOccurrence,
+      qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
+      qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+      qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+    }
+  }
+
   action doStartTurn = all {
     recordTurn(startTurn(qTurn)),
     qActionSurgeGrant' = NoActionSurgeActionGrant,
@@ -583,6 +609,7 @@ module unitFeatureProcedureProfilesInductive {
     doArcheryAttackRollBonus,
     doFastMovementSpeedBonus,
     doRovingSpeedKindGrants,
+    doBonusActionDashTemporaryHitPoints,
     doWeaponDamageDiceRollChoice,
     doZeroHitPointReplacement,
     doStartTurn,

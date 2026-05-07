@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.bonus-action-dash-temporary-hit-points
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -35,6 +35,7 @@ import {
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
+  characterBattleResourceUsage,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -103,6 +104,15 @@ type ExtraAttackMbtProjection = {
   readonly actionAvailable: boolean;
   readonly extraAttackSlotsAvailable: number;
   readonly movementSpentFeet: number;
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
+type AdrenalineRushMbtProjection = {
+  readonly actorTempHp: number;
+  readonly bonusActionAvailable: boolean;
+  readonly dashBonusFeet: number;
+  readonly featureUsesRemaining: number;
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
@@ -176,6 +186,13 @@ const extraAttackDriverSchema = {
   doResolveSecondExtraAttackMiss: {},
   doRejectThirdExtraAttack: {},
   doEndTurnClosesExtraAttackSlot: {},
+  step: {},
+} as const;
+
+const adrenalineRushDriverSchema = {
+  init: {},
+  doAdrenalineRushDash: {},
+  doRejectSecondDash: {},
   step: {},
 } as const;
 
@@ -479,6 +496,65 @@ function createMagicMissileDriver() {
   });
 }
 
+function createAdrenalineRushDriver() {
+  return defineDriver(adrenalineRushDriverSchema, () => {
+    let state = adrenalineRushBattle();
+    let lastResult: AdrenalineRushMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: AdrenalineRushMbtProjection["lastInvalidReason"] =
+      "";
+
+    function reset(): void {
+      state = adrenalineRushBattle();
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    return {
+      init: reset,
+      doAdrenalineRushDash: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: adrenalineRushDashSubject(),
+            fills: [],
+          }),
+        );
+      },
+      doRejectSecondDash: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: adrenalineRushDashSubject(),
+            fills: [],
+          }),
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectAdrenalineRushMbtState({
+          state,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
 function createDeathSavingThrowDriver() {
   return defineDriver(deathSavingThrowDriverSchema, () => {
     let state = deathSavingThrowBattle();
@@ -624,6 +700,27 @@ function normalizeExtraAttackQuintState(
   };
 }
 
+function normalizeAdrenalineRushQuintState(
+  raw: unknown,
+): AdrenalineRushMbtProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    actorTempHp: numberFromQuintInt(state["qActorTempHp"], "qActorTempHp"),
+    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
+    dashBonusFeet: numberFromQuintInt(
+      state["qDashBonusFeet"],
+      "qDashBonusFeet",
+    ),
+    featureUsesRemaining: numberFromQuintInt(
+      state["qFeatureUsesRemaining"],
+      "qFeatureUsesRemaining",
+    ),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+  };
+}
+
 function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
   expect(impl).toEqual(spec);
   return true;
@@ -662,6 +759,13 @@ const deathSavingThrowStateCheck = stateCheck(
 const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+const adrenalineRushStateCheck = stateCheck(
+  normalizeAdrenalineRushQuintState,
+  (spec: AdrenalineRushMbtProjection, impl: AdrenalineRushMbtProjection) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -710,6 +814,22 @@ describe("battle-runtime MBT", () => {
       nTraces: Number(process.env["MBT_TRACES"] ?? 1),
       maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
       stateCheck: extraAttackStateCheck,
+    });
+  }, 120_000);
+
+  it("replays Orc Adrenaline Rush Bonus Action Dash and Temporary Hit Points", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../battle-runtime-adrenaline-rush.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createAdrenalineRushDriver(),
+      backend: "typescript",
+      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
+      stateCheck: adrenalineRushStateCheck,
     });
   }, 120_000);
 
@@ -831,6 +951,31 @@ function projectExtraAttackMbtState(input: {
   };
 }
 
+function projectAdrenalineRushMbtState(input: {
+  readonly state: BattleState;
+  readonly lastResult: AdrenalineRushMbtProjection["lastResult"];
+  readonly lastInvalidReason: AdrenalineRushMbtProjection["lastInvalidReason"];
+}): AdrenalineRushMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  if (actor == null) {
+    throw new Error("Expected Adrenaline Rush MBT actor.");
+  }
+  return {
+    actorTempHp: actor.tempHp,
+    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    dashBonusFeet: Number(snapshot.turn.dashMovementBonusFeet),
+    featureUsesRemaining: resourceUsesRemaining(
+      input.state,
+      "orc_adrenaline_rush",
+    ),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
 function discoverAttackHoles(
   state: BattleState,
   subject: Extract<
@@ -896,6 +1041,19 @@ function fighterAttackSubject(): Extract<
   };
 }
 
+function adrenalineRushDashSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
+> {
+  return {
+    tag: "bonusActionStandardAction",
+    actorId: fighterId,
+    sourceUnitId: "orc_adrenaline_rush",
+    action: "dash",
+    speedKind: "walk",
+  };
+}
+
 function skeletonMultiattackSubject(): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "multiattack" }
@@ -958,6 +1116,16 @@ function extraAttackBattle(): BattleState {
     battleId: battleId("battle-runtime-mbt-extra-attack"),
     combatants: [
       extraAttackCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function adrenalineRushBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-adrenaline-rush"),
+    combatants: [
+      adrenalineRushCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -1130,6 +1298,35 @@ function extraAttackCreatureInit(input: {
   };
 }
 
+function adrenalineRushCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("orc_adrenaline_rush");
+  return {
+    combatantId: fighterId,
+    displayName: "Orc",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("adrenaline-rush-character"),
+      characterUnitRefs: [adrenalineRushUnitRef(unit)],
+      classLevels: [{ className: "fighter", level: 5 }],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(1),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      resources: [{ unit, usesRemaining: 3 }],
+      unitFeatures: [{ unit }],
+    },
+  };
+}
+
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
@@ -1144,6 +1341,37 @@ function extraAttackUnitRef(
     throw new Error(unitRef.left.message);
   }
   return unitRef.right;
+}
+
+function adrenalineRushUnitRef(
+  unit: UnitRecord,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+function resourceUsesRemaining(state: BattleState, unitId: string): number {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") return 1;
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.unit.id === unitId,
+  );
+  if (
+    resource === undefined ||
+    characterBattleResourceUsage(resource) !== "limited"
+  ) {
+    return 1;
+  }
+  return "usesRemaining" in resource ? resource.usesRemaining : 1;
 }
 
 function daggerAttack(): NonNullable<

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -48,6 +48,8 @@ export const ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE =
   "attackActionAttackCountScaling";
 export const ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE =
   "zeroHitPointReplacement";
+export const BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
+  "bonusActionDashTemporaryHitPoints";
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -67,6 +69,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 ] as const;
 export type BattlePassiveSpeedBonusSupportProfile = {
@@ -91,6 +94,23 @@ export type BattlePassiveRangedAttackRollBonusSupportProfile = {
 export type BattleAttackActionAttackCountScalingSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
   readonly additionalAttacks: 1;
+};
+export type BonusActionDashTemporaryHitPointsProfile = {
+  readonly activationCost: {
+    readonly kind: "bonusAction";
+    readonly action: "dash";
+  };
+  readonly temporaryHitPoints: {
+    readonly amount: { readonly kind: "proficiencyBonus" };
+  };
+  readonly resource: {
+    readonly cap: { readonly kind: "proficiencyBonus" };
+    readonly resetCadence: "shortOrLongRest";
+  };
+};
+export type BattleBonusActionDashTemporaryHitPointsSupportProfile = {
+  readonly kind: typeof BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE;
+  readonly dashTemporaryHitPoints: BonusActionDashTemporaryHitPointsProfile;
 };
 export const PASSIVE_SPEED_KIND_GRANT_KINDS = [
   "climb",
@@ -133,6 +153,7 @@ export type BattleUnitSupportProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
   | BattleAttackActionAttackCountScalingSupportProfile
+  | BattleBonusActionDashTemporaryHitPointsSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
       | "alternateActionCost"
@@ -140,6 +161,7 @@ export type BattleUnitSupportProfile =
       | "passiveSpeedBonus"
       | "passiveSpeedKindGrants"
       | "attackActionAttackCountScaling"
+      | "bonusActionDashTemporaryHitPoints"
     >;
 
 export type BattleUnitSupportProfileIssue = {
@@ -316,6 +338,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (zeroHitPointReplacementSupport === "zeroHitPointReplacement") {
     supportProfiles.push(ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE);
+  }
+
+  const bonusActionDashTemporaryHitPointsSupport =
+    battleBonusActionDashTemporaryHitPointsSupportForUnit(input.unit);
+  if (bonusActionDashTemporaryHitPointsSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Bonus Action Dash Temporary Hit Points Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (bonusActionDashTemporaryHitPointsSupport !== null) {
+    supportProfiles.push(bonusActionDashTemporaryHitPointsSupport);
   }
 
   return Either.right(supportProfiles);
@@ -532,6 +565,11 @@ export type SupportedUnitFeatureProfile =
       readonly trigger: "reducedToZeroHitPointsNotKilledOutright";
       readonly replacementHp: 1;
       readonly resetCadence: "longRest";
+    }
+  | {
+      readonly kind: "bonusActionDashTemporaryHitPoints";
+      readonly unit: UnitRecord;
+      readonly dashTemporaryHitPoints: BonusActionDashTemporaryHitPointsProfile;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -794,6 +832,11 @@ export type BattleZeroHitPointReplacementSupport =
   | "unsupported"
   | null;
 
+export type BattleBonusActionDashTemporaryHitPointsSupport =
+  | BattleBonusActionDashTemporaryHitPointsSupportProfile
+  | "unsupported"
+  | null;
+
 export function battlePassiveArmorClassBonusSupportForUnit(
   unit: UnitRecord,
 ): BattlePassiveArmorClassBonusSupport {
@@ -881,6 +924,21 @@ export function battleZeroHitPointReplacementSupportForUnit(
     : "zeroHitPointReplacement";
 }
 
+export function battleBonusActionDashTemporaryHitPointsSupportForUnit(
+  unit: UnitRecord,
+): BattleBonusActionDashTemporaryHitPointsSupport {
+  if (!hasBonusActionDashTemporaryHitPointsMechanics(unit)) {
+    return null;
+  }
+  const profile = bonusActionDashTemporaryHitPointsProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+        dashTemporaryHitPoints: profile.dashTemporaryHitPoints,
+      };
+}
+
 function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
@@ -946,6 +1004,25 @@ function hasZeroHitPointReplacementMechanics(unit: UnitRecord): boolean {
   );
 }
 
+function hasBonusActionDashTemporaryHitPointsMechanics(
+  unit: UnitRecord,
+): boolean {
+  if (unit.kind !== "species_trait" || unit.mechanics.family !== "activation") {
+    return false;
+  }
+  const mechanics = unit.mechanics;
+  const [phase] = mechanics.phases;
+  if (phase?.kind !== "direct" || phase.attachment.kind !== "self") {
+    return false;
+  }
+  return (
+    (mechanics.activationCost.kind === "standard_action" ||
+      mechanics.activationCost.kind === "bonus_action") &&
+    mechanics.activationCost.action === "dash" &&
+    (phase.effects ?? []).some((effect) => effect.kind === "grant_temp_hp")
+  );
+}
+
 export function zeroHitPointReplacementProfileForUnit(
   unit: UnitRecord,
 ): Extract<
@@ -961,6 +1038,51 @@ export function zeroHitPointReplacementProfileForUnit(
     trigger: profile.trigger,
     replacementHp: profile.replacementHp,
     resetCadence: profile.resetCadence,
+  };
+}
+
+export function bonusActionDashTemporaryHitPointsProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "bonusActionDashTemporaryHitPoints" }
+> | null {
+  if (unit.kind !== "species_trait" || unit.mechanics.family !== "activation") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  const [phase, ...extraPhases] = mechanics.phases;
+  if (
+    mechanics.activationCost.kind !== "bonus_action" ||
+    mechanics.activationCost.action !== "dash" ||
+    mechanics.resource?.kind !== "use_count" ||
+    mechanics.resource.cap.kind !== "proficiency_bonus" ||
+    mechanics.resetCadence?.kind !== "short_or_long_rest" ||
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    extraPhases.length > 0
+  ) {
+    return null;
+  }
+  const [effect, ...extraEffects] = phase.effects ?? [];
+  if (
+    effect?.kind !== "grant_temp_hp" ||
+    effect.amount.kind !== "proficiency_bonus" ||
+    extraEffects.length > 0
+  ) {
+    return null;
+  }
+  return {
+    kind: "bonusActionDashTemporaryHitPoints",
+    unit,
+    dashTemporaryHitPoints: {
+      activationCost: { kind: "bonusAction", action: "dash" },
+      temporaryHitPoints: { amount: { kind: "proficiencyBonus" } },
+      resource: {
+        cap: { kind: "proficiencyBonus" },
+        resetCadence: "shortOrLongRest",
+      },
+    },
   };
 }
 
@@ -1290,7 +1412,8 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
     attackActionAttackCountScalingProfileForUnit(unit) ??
-    zeroHitPointReplacementProfileForUnit(unit)
+    zeroHitPointReplacementProfileForUnit(unit) ??
+    bonusActionDashTemporaryHitPointsProfileForUnit(unit)
   );
 }
 

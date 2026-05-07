@@ -19,7 +19,10 @@ import {
   type CharacterBattleClassLevel,
   type CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
-import { requireCharacterClassLevel } from "./unit-feature-support.ts";
+import {
+  bonusActionDashTemporaryHitPointsProfileForUnit,
+  requireCharacterClassLevel,
+} from "./unit-feature-support.ts";
 
 export type CharacterBattleResourceInit = {
   readonly unit: UnitRecord;
@@ -130,6 +133,10 @@ export function characterResourceState(
     input.unit.kind === "class_feature"
       ? requireCharacterClassLevel(classLevels, input.unit.className)
       : undefined;
+  const characterLevel = classLevels.reduce(
+    (total, classLevel) => total + Number(classLevel.level),
+    0,
+  );
   const resource = characterBattleResourceForUnit(input.unit);
   const base = {
     unit: input.unit,
@@ -146,7 +153,10 @@ export function characterResourceState(
     resource,
     usesRemaining:
       input.usesRemaining === undefined
-        ? supportedUseCountCapForLevel(resource, unitClassLevel ?? 1)
+        ? supportedUseCountCapForLevel(
+            resource,
+            unitClassLevel ?? characterLevel,
+          )
         : resourceCount(input.usesRemaining),
   };
 }
@@ -157,6 +167,14 @@ export function characterBattleResourceForUnit(
   const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
   if (zeroHitPointReplacement !== null) {
     return zeroHitPointReplacement.resource;
+  }
+  if (
+    unit.kind === "species_trait" &&
+    unit.mechanics.family === "activation" &&
+    bonusActionDashTemporaryHitPointsProfileForUnit(unit) !== null
+  ) {
+    const resource = unit.mechanics.resource;
+    if (resource !== undefined) return resource;
   }
   if (
     unit.kind !== "class_feature" ||
@@ -307,15 +325,18 @@ function supportedUseCountCapForLevel(
 ): ResourceCount {
   if (resource.kind !== "use_count") {
     throw new Error(
-      "Battle runtime supports only use-count class-feature resources.",
+      "Battle runtime supports only use-count character resources.",
     );
   }
   if (resource.cap.kind === "fixed") {
     return resourceCount(resource.cap.uses);
   }
+  if (resource.cap.kind === "proficiency_bonus") {
+    return resourceCount(Math.max(2, Math.floor((level - 1) / 4) + 2));
+  }
   if (resource.cap.kind !== "threshold_tiers") {
     throw new Error(
-      "Battle runtime supports only fixed, unlimited, or threshold-tier use-count resources.",
+      "Battle runtime supports only fixed, proficiency-bonus, unlimited, or threshold-tier use-count resources.",
     );
   }
 

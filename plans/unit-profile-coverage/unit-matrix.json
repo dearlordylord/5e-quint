@@ -62,8 +62,8 @@
       "value": 59
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 28,
-      "numerator": 28,
+      "denominator": 29,
+      "numerator": 29,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 21,
-      "numerator": 21,
+      "denominator": 22,
+      "numerator": 22,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 21,
-      "numerator": 21,
+      "denominator": 22,
+      "numerator": 22,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 21,
-      "numerator": 21,
+      "denominator": 22,
+      "numerator": 22,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 21,
-      "numerator": 21,
+      "denominator": 22,
+      "numerator": 22,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 28,
+      "denominator": 29,
       "numerator": 10,
-      "percent": "35.7%"
+      "percent": "34.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 45,
-      "numerator": 28,
-      "percent": "62.2%"
+      "numerator": 29,
+      "percent": "64.4%"
     }
   },
   "metricSemantics": [
@@ -302,6 +302,37 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.bonus-action-dash-temporary-hit-points",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT53"
+      ],
+      "title": "Unit feature spends a Bonus Action Dash use to gain Temporary Hit Points equal to Proficiency Bonus",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
         }
       ]
     },
@@ -787,6 +818,7 @@
         "unit-feature.action-surge-resource",
         "unit-feature.attack-action-attack-count-scaling",
         "unit-feature.attack-damage-rider",
+        "unit-feature.bonus-action-dash-temporary-hit-points",
         "unit-feature.bonus-action-ongoing-rage",
         "unit-feature.first-attack-roll-reckless-advantage",
         "unit-feature.passive-armor-class-bonus",
@@ -942,6 +974,14 @@
         "unit-feature.zero-hit-point-replacement"
       ],
       "taskId": "QMBT47"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Adrenaline Rush Bonus Action Dash Temporary Hit Points runtime parity.",
+      "profileIds": [
+        "unit-feature.bonus-action-dash-temporary-hit-points"
+      ],
+      "taskId": "QMBT53"
     }
   ],
   "units": [
@@ -2253,14 +2293,57 @@
         "status": "installed"
       },
       "claim": {
-        "issue": "Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile.",
-        "tag": "needs-surface-widening"
+        "profileIds": [
+          "unit-feature.bonus-action-dash-temporary-hit-points"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT53"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.bonus-action-dash-temporary-hit-points",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT53"
+          ],
+          "title": "Unit feature spends a Bonus Action Dash use to gain Temporary Hit Points equal to Proficiency Bonus",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/orc_adrenaline_rush.json",
       "unitId": "orc_adrenaline_rush"
     },

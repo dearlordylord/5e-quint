@@ -13,7 +13,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT44 ranger_roving
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT47 orc_relentless_endurance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT53 orc_adrenaline_rush
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -72,8 +73,10 @@ import {
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
+  BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
+  bonusActionDashTemporaryHitPointsProfileForUnit,
   battlePassiveSpeedKindGrantsSupportForUnit,
   parseSupportedUnitFeatureProfile,
   type ClassicNonSrdMechanicsUnit,
@@ -94,6 +97,7 @@ const barbarianRageUnitId = "barbarian_rage";
 const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
 const barbarianFastMovementUnitId = "barbarian_fast_movement";
 const rangerRovingUnitId = "ranger_roving";
+const orcAdrenalineRushUnitId = "orc_adrenaline_rush";
 const orcRelentlessEnduranceUnitId = "orc_relentless_endurance";
 const rogueCunningActionUnitId = "rogue_cunning_action";
 const rogueEvasionUnitId = "rogue_evasion";
@@ -2476,25 +2480,25 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       };
     };
     const malformedUnits = [
-      relentlessEnduranceMechanicsVariant(base, {
+      unitMechanicsVariant(base, {
         id: "relentless_endurance_wrong_replacement_hp",
         mechanics: {
           ...base.mechanics,
           effect: { ...base.mechanics.effect, replacementHp: 2 },
         },
       }),
-      relentlessEnduranceMechanicsVariant(base, {
+      unitMechanicsVariant(base, {
         id: "relentless_endurance_required",
         mechanics: { ...base.mechanics, optional: false },
       }),
-      relentlessEnduranceMechanicsVariant(base, {
+      unitMechanicsVariant(base, {
         id: "relentless_endurance_wrong_trigger",
         mechanics: {
           ...base.mechanics,
           trigger: { kind: "creature_makes_damage_roll" },
         },
       }),
-      relentlessEnduranceMechanicsVariant(base, {
+      unitMechanicsVariant(base, {
         id: "relentless_endurance_wrong_reset",
         mechanics: {
           ...base.mechanics,
@@ -2521,6 +2525,186 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
               message: `Unsupported battle zero-Hit-Point replacement Unit hook: ${unit.id}.`,
             })
           : Either.right({ unitId: unit.id, supportProfiles: [] }),
+      );
+    }
+  });
+});
+
+describe("QMBT53 deterministic Adrenaline Rush admission", () => {
+  test("orc_adrenaline_rush is admitted as Bonus Action Dash Temporary Hit Points", () => {
+    const unit = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, []);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: orcAdrenalineRushUnitId,
+        supportProfiles: [adrenalineRushSupportProfile()],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "bonusActionDashTemporaryHitPoints",
+        unit,
+        dashTemporaryHitPoints: adrenalineRushProfilePayload(),
+      }),
+    );
+    expect(characterBattleResourceForUnit(unit)).toEqual({
+      kind: "use_count",
+      cap: { kind: "proficiency_bonus" },
+    });
+  });
+
+  test("Adrenaline Rush spends a Bonus Action Dash use and grants Proficiency Bonus Temporary Hit Points", () => {
+    const state = adrenalineRushBattle({ tempHp: 1 });
+    const act = adrenalineRushDashAct(state);
+    const result = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          bonusActionAvailable: false,
+          dashMovementBonusFeet: 30,
+        },
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            tempHp: 3,
+            movement: expect.objectContaining({
+              speedFeet: 30,
+              remainingFeet: 60,
+            }),
+            origin: expect.objectContaining({
+              resources: [
+                expect.objectContaining({
+                  unitId: orcAdrenalineRushUnitId,
+                  usesRemaining: 2,
+                }),
+              ],
+            }),
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("Adrenaline Rush keeps higher existing Temporary Hit Points", () => {
+    const state = adrenalineRushBattle({ tempHp: 5 });
+    const result = resolveBattleSubject({
+      state,
+      subject: adrenalineRushDashAct(state).subject,
+      fills: [],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            tempHp: 5,
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("Adrenaline Rush is unavailable without uses", () => {
+    const state = adrenalineRushBattle({ usesRemaining: 0 });
+    expect(
+      discoverBattleActs(state).some(
+        (act) =>
+          act.subject.tag === "bonusActionStandardAction" &&
+          act.subject.sourceUnitId === orcAdrenalineRushUnitId,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: adrenalineRushDashSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+  });
+
+  test("malformed Bonus Action Dash Temporary Hit Points mechanics remain unsupported", () => {
+    const base = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
+    if (base.kind !== "species_trait" || base.mechanics.family !== "activation") {
+      throw new Error("Expected Adrenaline Rush activation species trait.");
+    }
+    const [phase] = base.mechanics.phases;
+    if (phase?.kind !== "direct") {
+      throw new Error("Expected Adrenaline Rush direct phase.");
+    }
+    const [effect] = phase.effects ?? [];
+    if (effect?.kind !== "grant_temp_hp") {
+      throw new Error("Expected Adrenaline Rush direct Temporary Hit Points.");
+    }
+    const malformedUnits = [
+      unitMechanicsVariant(base, {
+        id: "adrenaline_rush_standard_action_dash",
+        mechanics: {
+          ...base.mechanics,
+          activationCost: { kind: "standard_action", action: "dash" },
+        },
+      }),
+      unitMechanicsVariant(base, {
+        id: "adrenaline_rush_wrong_effect_amount",
+        mechanics: {
+          ...base.mechanics,
+          phases: [
+            {
+              ...phase,
+              effects: [
+                {
+                  ...effect,
+                  amount: { kind: "fixed", expr: { dice: 0, dieSize: 0, flat: 4 } },
+                },
+              ],
+            },
+          ],
+        },
+      }),
+      unitMechanicsVariant(base, {
+        id: "adrenaline_rush_wrong_resource_cap",
+        mechanics: {
+          ...base.mechanics,
+          resource: { kind: "use_count", cap: { kind: "fixed", uses: 1 } },
+        },
+      }),
+      unitMechanicsVariant(base, {
+        id: "adrenaline_rush_wrong_reset",
+        mechanics: {
+          ...base.mechanics,
+          resetCadence: { kind: "long_rest" },
+        },
+      }),
+    ] as const satisfies readonly UnitRecord[];
+
+    for (const unit of malformedUnits) {
+      expect(bonusActionDashTemporaryHitPointsProfileForUnit(unit)).toBeNull();
+      expect(
+        battleUnitRefWithSupportProfiles({
+          unitRef: { unitId: unit.id },
+          unit,
+        }),
+      ).toEqual(
+        Either.left({
+          tag: "battleUnitSupportProfileIssue",
+          message: `Unsupported battle Bonus Action Dash Temporary Hit Points Unit hook: ${unit.id}.`,
+        }),
       );
     }
   });
@@ -2655,6 +2839,7 @@ function savageAttackerBattle(input: {
   >["classLevels"];
   readonly currentHp?: number;
   readonly maxHp?: number;
+  readonly tempHp?: number;
   readonly resources?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -2848,6 +3033,92 @@ function relentlessEnduranceBattle(input: {
   return result.right;
 }
 
+function adrenalineRushBattle(
+  input: { readonly tempHp?: number; readonly usesRemaining?: number } = {},
+): BattleState {
+  const unit = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
+  const result = startBattle({
+    battleId: battleId("unit-profile-adrenaline-rush-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Orc",
+        initiative: 20,
+        side: partySide,
+        tempHp: input.tempHp ?? 0,
+        classLevels: [{ className: "fighter", level: classLevel(5) }],
+        resources: [
+          input.usesRemaining === undefined
+            ? { unit }
+            : { unit, usesRemaining: input.usesRemaining },
+        ],
+        characterUnitRefs: [adrenalineRushBattleUnitRef()],
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function adrenalineRushDashAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "bonusActionStandardAction" &&
+      candidate.subject.sourceUnitId === orcAdrenalineRushUnitId &&
+      candidate.subject.action === "dash" &&
+      candidate.subject.speedKind === "walk",
+  );
+  expect(isAdrenalineRushDashAct(act)).toBe(true);
+  if (!isAdrenalineRushDashAct(act)) {
+    throw new Error("Expected Adrenaline Rush Bonus Action Dash act.");
+  }
+  return act;
+}
+
+function isAdrenalineRushDashAct(
+  act: AvailableBattleAct | undefined,
+): act is AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
+  >;
+} {
+  return (
+    act !== undefined &&
+    act.subject.tag === "bonusActionStandardAction" &&
+    act.subject.action === "dash" &&
+    act.subject.sourceUnitId === orcAdrenalineRushUnitId &&
+    act.subject.speedKind === "walk"
+  );
+}
+
+function adrenalineRushDashSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
+> {
+  return {
+    tag: "bonusActionStandardAction",
+    actorId: spellCasterId,
+    sourceUnitId: orcAdrenalineRushUnitId,
+    action: "dash",
+    speedKind: "walk",
+  };
+}
+
 function relentlessEnduranceDisposition(
   state: BattleState,
   damageRoll: number,
@@ -2944,7 +3215,7 @@ function relentlessEnduranceDamageResult(
   });
 }
 
-function relentlessEnduranceMechanicsVariant(
+function unitMechanicsVariant(
   base: UnitRecord,
   overrides: {
     readonly id: string;
@@ -3129,6 +3400,27 @@ function rovingBattleUnitRef(): Extract<
   return unitRef.right;
 }
 
+function adrenalineRushBattleUnitRef(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: orcAdrenalineRushUnitId,
+      supportProfiles: [adrenalineRushSupportProfile()],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
 function fastMovementSupportProfile() {
   return {
     kind: PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
@@ -3145,6 +3437,24 @@ function rovingSupportProfile() {
     kind: PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
     speed: rovingSpeedBonusProfile(),
     grants: rovingSpeedKindGrants(),
+  } as const;
+}
+
+function adrenalineRushSupportProfile() {
+  return {
+    kind: BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+    dashTemporaryHitPoints: adrenalineRushProfilePayload(),
+  } as const;
+}
+
+function adrenalineRushProfilePayload() {
+  return {
+    activationCost: { kind: "bonusAction", action: "dash" },
+    temporaryHitPoints: { amount: { kind: "proficiencyBonus" } },
+    resource: {
+      cap: { kind: "proficiencyBonus" },
+      resetCadence: "shortOrLongRest",
+    },
   } as const;
 }
 
@@ -3228,6 +3538,7 @@ function characterCreature(input: {
   >["classLevels"];
   readonly currentHp?: number;
   readonly maxHp?: number;
+  readonly tempHp?: number;
   readonly resources?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -3262,7 +3573,7 @@ function characterCreature(input: {
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(input.maxHp ?? 12),
-      tempHp: Hp(0),
+      tempHp: Hp(input.tempHp ?? 0),
       selectedLoadout:
         attack === null
           ? {}

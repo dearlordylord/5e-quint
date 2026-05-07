@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -17,7 +17,7 @@ module unitFeatureProcedureProfiles {
   // - Classes/Barbarian.md: Rage, Reckless Attack.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
   // - Feats.md: Archery, Defense, Savage Attacker.
-  // - Character-Origins.md: Orc Relentless Endurance.
+  // - Character-Origins.md: Orc Adrenaline Rush and Relentless Endurance.
   // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
   //   Damage Rolls, Dropping to 0 Hit Points, Instant Death, Saving Throws and
   //   Damage, Resistance and Vulnerability.
@@ -258,6 +258,19 @@ module unitFeatureProcedureProfiles {
     dashMovementBonusFeet: int,
   }
 
+  type BonusActionDashTemporaryHitPointsFacts = {
+    speedFeet: int,
+    proficiencyBonus: int,
+    existingTemporaryHitPoints: int,
+    chooseNewTemporaryHitPoints: bool,
+  }
+
+  type BonusActionDashTemporaryHitPointsResult = {
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    temporaryHitPoints: int,
+  }
+
   type PassiveRangedAttackRollBonusResult = {
     bonus: int,
     effectiveAttackRollTotal: int,
@@ -389,6 +402,41 @@ module unitFeatureProcedureProfiles {
     val speed = rovingEffectiveSpeed(facts)
     val dashed = resolveDash(turn, speed, StandardActionCost(DashAction))
     resolveRovingSpeedKindBudget(dashed, facts)
+  }
+
+  pure def resolveTemporaryHitPointsChoice(
+    existingTemporaryHitPoints: int,
+    newTemporaryHitPoints: int,
+    chooseNewTemporaryHitPoints: bool
+  ): int =
+    if (chooseNewTemporaryHitPoints) newTemporaryHitPoints
+    else existingTemporaryHitPoints
+
+  pure def resolveBonusActionDashTemporaryHitPoints(
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    facts: BonusActionDashTemporaryHitPointsFacts
+  ): BonusActionDashTemporaryHitPointsResult = {
+    val admitted = all {
+      legalFeatureUsePool(pool),
+      pool.usesRemaining > 0,
+      facts.speedFeet >= 0,
+      facts.proficiencyBonus >= 2,
+      facts.proficiencyBonus <= 6,
+      facts.existingTemporaryHitPoints >= 0,
+    }
+    val dashed =
+      if (admitted) resolveDash(turn, facts.speedFeet, BonusActionCost) else turn
+    {
+      turn: dashed,
+      pool: if (admitted) spendFeatureUsePool(pool) else pool,
+      temporaryHitPoints:
+        if (admitted) resolveTemporaryHitPointsChoice(
+          facts.existingTemporaryHitPoints,
+          facts.proficiencyBonus,
+          facts.chooseNewTemporaryHitPoints
+        ) else facts.existingTemporaryHitPoints,
+    }
   }
 
   pure def resolveArcheryAttackRoll(
@@ -1482,6 +1530,43 @@ module unitFeatureProcedureProfiles {
       assert(budget.climbSpeedFeet == 30),
       assert(budget.swimSpeedFeet == 30),
       assert(budget.movementRemainingFeet == 20),
+    }
+  }
+
+  run test_adrenaline_rush_spends_bonus_action_dash_use_and_applies_temporary_hit_points = {
+    val result = resolveBonusActionDashTemporaryHitPoints(
+      initialTurnProcedureState,
+      { usesRemaining: 2, maximumUses: 2 },
+      {
+        speedFeet: 30,
+        proficiencyBonus: 3,
+        existingTemporaryHitPoints: 1,
+        chooseNewTemporaryHitPoints: true,
+      }
+    )
+    all {
+      assert(not(result.turn.bonusActionAvailable)),
+      assert(result.turn.dashMovementBonusFeet == 30),
+      assert(result.pool.usesRemaining == 1),
+      assert(result.temporaryHitPoints == 3),
+    }
+  }
+
+  run test_adrenaline_rush_can_keep_higher_existing_temporary_hit_points = {
+    val result = resolveBonusActionDashTemporaryHitPoints(
+      initialTurnProcedureState,
+      { usesRemaining: 1, maximumUses: 2 },
+      {
+        speedFeet: 30,
+        proficiencyBonus: 2,
+        existingTemporaryHitPoints: 5,
+        chooseNewTemporaryHitPoints: false,
+      }
+    )
+    all {
+      assert(result.turn.dashMovementBonusFeet == 30),
+      assert(result.pool.usesRemaining == 0),
+      assert(result.temporaryHitPoints == 5),
     }
   }
 

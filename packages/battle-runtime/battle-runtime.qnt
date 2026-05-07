@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.bonus-action-dash-temporary-hit-points
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -128,6 +128,11 @@ module battleRuntime {
   //   Rules-Glossary.md lines 361-365, 420-428, 528-535, 802-806, and
   //   818-826: Dash, Disengage, Dodge, Help, Ready, and standing from Prone
   //   are battle-owned turn/action or movement procedures.
+  // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
+  //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
+  //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
+  //   Proficiency Bonus Temporary Hit Points that do not stack, and refreshes
+  //   its use pool outside the battle turn reducer on Short or Long Rest.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -317,6 +322,11 @@ module battleRuntime {
   }
 
   type SecondWindResult = {
+    state: BattleState,
+    usesRemaining: int,
+  }
+
+  type BonusActionDashTemporaryHitPointsResult = {
     state: BattleState,
     usesRemaining: int,
   }
@@ -1233,6 +1243,35 @@ module battleRuntime {
       { ...state, actionAvailable: false, dashMovementBonus: state.dashMovementBonus + movementSpeed(state.fighter, speedKind) }
     else
       state
+
+  pure def applyFighterTemporaryHitPoints(state: BattleState, temporaryHitPoints: int): BattleState =
+    { ...state, fighter: { ...state.fighter, tempHp: if (state.fighter.tempHp > temporaryHitPoints) state.fighter.tempHp else temporaryHitPoints } }
+
+  pure def bonusActionDashTemporaryHitPointsFighter(
+    state: BattleState,
+    usesRemaining: int,
+    proficiencyBonus: int,
+    speedKind: MovementSpeedKind
+  ): BonusActionDashTemporaryHitPointsResult =
+    if (currentActor(state) == Fighter
+      and state.bonusActionAvailable
+      and usesRemaining > 0
+      and proficiencyBonus >= 2
+      and proficiencyBonus <= 6
+      and not(state.fighter.unconscious)
+      and not(state.fighter.incapacitated)) {
+      val dashed = {
+        ...state,
+        bonusActionAvailable: false,
+        dashMovementBonus: state.dashMovementBonus + movementSpeed(state.fighter, speedKind),
+      }
+      {
+        state: applyFighterTemporaryHitPoints(dashed, proficiencyBonus),
+        usesRemaining: usesRemaining - 1,
+      }
+    } else {
+      { state: state, usesRemaining: usesRemaining }
+    }
 
   pure def disengageFighter(state: BattleState): BattleState =
     if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
@@ -2633,6 +2672,31 @@ module battleRuntime {
       assert(dodged.fighter.dodging),
       assert(readied.fighterReadiedMovementHeld),
       assert(helped.fighterHelpAttackGoblinForGoblin),
+    }
+  }
+
+  run test_adrenaline_rush_bonus_action_dash_grants_temporary_hit_points_and_spends_use = {
+    val result = bonusActionDashTemporaryHitPointsFighter(
+      { ...initialState, fighter: { ...initialState.fighter, tempHp: 1 } },
+      3,
+      3,
+      WalkSpeedKind
+    )
+    val higherExisting = bonusActionDashTemporaryHitPointsFighter(
+      { ...initialState, fighter: { ...initialState.fighter, tempHp: 5 } },
+      3,
+      3,
+      WalkSpeedKind
+    )
+    val noUses = bonusActionDashTemporaryHitPointsFighter(initialState, 0, 3, WalkSpeedKind)
+    all {
+      assert(not(result.state.bonusActionAvailable)),
+      assert(result.state.dashMovementBonus == 30),
+      assert(result.state.fighter.tempHp == 3),
+      assert(result.usesRemaining == 2),
+      assert(higherExisting.state.fighter.tempHp == 5),
+      assert(noUses.state == initialState),
+      assert(noUses.usesRemaining == 0),
     }
   }
 

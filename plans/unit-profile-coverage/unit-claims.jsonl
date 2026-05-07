@@ -31,7 +31,7 @@
 {"unitId":"ranger_extra_attack","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.attack-action-attack-count-scaling"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"ranger_roving","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.passive-speed-kind-grants"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"mastery_sap","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon mastery rider is authored but not yet a stable Unit profile row."}}
-{"unitId":"orc_adrenaline_rush","collectionId":"srd-5.2.1","claim":{"tag":"needs-surface-widening","issue":"Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile."}}
+{"unitId":"orc_adrenaline_rush","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.bonus-action-dash-temporary-hit-points"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"orc_darkvision","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Sense grant is authored data with no promoted execution profile."}}
 {"unitId":"orc_relentless_endurance","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.zero-hit-point-replacement"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"acid_splash","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-damage-save-or-attack","spell.readied-action-time-spell"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -211,6 +211,7 @@ import type {
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANT_KINDS,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
@@ -224,6 +225,7 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
   type BattleUnitSupportProfile,
+  type BattleBonusActionDashTemporaryHitPointsSupportProfile,
   type OngoingFeatureDamageModifier,
   type OngoingFeatureExtensionTrigger,
   type OngoingFeatureLifecycleProfile,
@@ -7697,7 +7699,12 @@ function resolveBonusActionStandardAction(
       actor,
       input.subject.sourceUnitId,
       input.subject.action,
-    )
+    ) &&
+    (input.subject.action !== "dash" ||
+      bonusActionDashTemporaryHitPointsForActor(
+        actor,
+        input.subject.sourceUnitId,
+      ) === null)
   ) {
     return invalidResult(
       input.state,
@@ -7733,6 +7740,10 @@ function resolveBonusActionDash(
       "Dash actor is not in this battle.",
     );
   }
+  const dashTemporaryHitPoints = bonusActionDashTemporaryHitPointsForActor(
+    actor,
+    input.subject.sourceUnitId,
+  );
   const speedKind =
     input.subject.action === "dash" ? input.subject.speedKind : "walk";
   if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
@@ -7758,10 +7769,67 @@ function resolveBonusActionDash(
     speedKind,
     spent.right,
   );
+  if (dashTemporaryHitPoints !== null) {
+    if (!isCharacterBattleCreatureState(actor)) {
+      return invalidResult(
+        input.state,
+        "unsupportedActOption",
+        "Bonus Action Dash Temporary Hit Points requires a character feature resource.",
+      );
+    }
+    return resolveBonusActionDashTemporaryHitPoints(
+      nextState,
+      actor,
+      input.subject.sourceUnitId,
+    );
+  }
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveBonusActionDashTemporaryHitPoints(
+  dashedState: BattleState,
+  actor: CharacterBattleCreatureState,
+  sourceUnitId: string,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const nextActor = applyTemporaryHitPoints(
+    {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        resources: actor.origin.resources.map((candidate) =>
+          candidate.unit.id === sourceUnitId
+            ? spendCharacterResourceUse(candidate)
+            : candidate,
+        ),
+      },
+    },
+    combatantProficiencyBonus(actor),
+  );
+  const nextState = {
+    ...dashedState,
+    combatants: new Map(dashedState.combatants).set(
+      actor.combatantId,
+      nextActor,
+    ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function applyTemporaryHitPoints(
+  combatant: BattleCreatureState,
+  temporaryHitPoints: number,
+): BattleCreatureState {
+  return {
+    ...combatant,
+    tempHp: Hp(Math.max(Number(combatant.tempHp), temporaryHitPoints)),
   };
 }
 
@@ -16355,35 +16423,54 @@ function bonusActionStandardActionActs(
     return [];
   }
 
-  return alternateActionCostProfilesForActor(actor).flatMap((entry) =>
-    entry.profile.from.actions.flatMap((action) => {
-      if (!alternateActionCostActionAvailable(state, actorId, action)) {
+  const alternateCostActs = alternateActionCostProfilesForActor(actor).flatMap(
+    (entry) =>
+      entry.profile.from.actions.flatMap((action) => {
+        if (!alternateActionCostActionAvailable(state, actorId, action)) {
+          return [];
+        }
+        const speedKinds =
+          action === "dash"
+            ? representedMovementSpeedKinds(actor)
+            : ["walk" as const];
+        return speedKinds.map((speedKind) => ({
+          subject:
+            action === "dash"
+              ? bonusActionDashSubjectForSpeedKind(
+                  actorId,
+                  entry.unitId,
+                  speedKind,
+                )
+              : {
+                  tag: "bonusActionStandardAction" as const,
+                  actorId,
+                  sourceUnitId: entry.unitId,
+                  action,
+                },
+          label: alternateActionCostActionLabel(action),
+          summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
+          initialHoles: action === "hide" ? [hideAbilityCheckHole()] : [],
+        }));
+      }),
+  );
+  const dashTemporaryHitPointActs =
+    bonusActionDashTemporaryHitPointsProfilesForActor(actor).flatMap((entry) => {
+      if (!alternateActionCostActionAvailable(state, actorId, "dash")) {
         return [];
       }
-      const speedKinds =
-        action === "dash"
-          ? representedMovementSpeedKinds(actor)
-          : ["walk" as const];
-      return speedKinds.map((speedKind) => ({
-        subject:
-          action === "dash"
-            ? bonusActionDashSubjectForSpeedKind(
-                actorId,
-                entry.unitId,
-                speedKind,
-              )
-            : {
-                tag: "bonusActionStandardAction" as const,
-                actorId,
-                sourceUnitId: entry.unitId,
-                action,
-              },
-        label: alternateActionCostActionLabel(action),
-        summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
-        initialHoles: action === "hide" ? [hideAbilityCheckHole()] : [],
+      return representedMovementSpeedKinds(actor).map((speedKind) => ({
+        subject: bonusActionDashSubjectForSpeedKind(
+          actorId,
+          entry.unitId,
+          speedKind,
+        ),
+        label: entry.resource.unit.name,
+        summary:
+          "Spend a Bonus Action and one use to Dash and gain Temporary Hit Points.",
+        initialHoles: [],
       }));
-    }),
-  );
+    });
+  return [...alternateCostActs, ...dashTemporaryHitPointActs];
 }
 
 function alternateActionCostProfilesForActor(
@@ -16404,6 +16491,35 @@ function alternateActionCostProfilesForActor(
         ),
       )
     : [];
+}
+
+function bonusActionDashTemporaryHitPointsProfilesForActor(
+  combatant: BattleCreatureState | undefined,
+): readonly {
+  readonly unitId: UnitRecord["id"];
+  readonly profile: BattleBonusActionDashTemporaryHitPointsSupportProfile;
+  readonly resource: CharacterBattleResourceState;
+}[] {
+  if (combatant?.origin.kind !== "character") {
+    return [];
+  }
+  const origin = combatant.origin;
+  return origin.characterUnitRefs.flatMap((unitRef) =>
+    unitRef.supportProfiles.flatMap((profile) => {
+      if (
+        typeof profile !== "object" ||
+        profile.kind !== BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE
+      ) {
+        return [];
+      }
+      const resource = origin.resources.find(
+        (candidate) => candidate.unit.id === unitRef.unitId,
+      );
+      return resource !== undefined && resourceHasUsesRemaining(resource)
+        ? [{ unitId: unitRef.unitId, profile, resource }]
+        : [];
+    }),
+  );
 }
 
 function alternateActionCostActionAvailable(
@@ -16429,6 +16545,20 @@ function actorHasAlternateActionCost(
       entry.unitId === sourceUnitId &&
       entry.profile.to.kind === "bonusAction" &&
       entry.profile.from.actions.some((candidate) => candidate === action),
+  );
+}
+
+function bonusActionDashTemporaryHitPointsForActor(
+  combatant: BattleCreatureState | undefined,
+  sourceUnitId: string,
+): {
+  readonly profile: BattleBonusActionDashTemporaryHitPointsSupportProfile;
+  readonly resource: CharacterBattleResourceState;
+} | null {
+  return (
+    bonusActionDashTemporaryHitPointsProfilesForActor(combatant).find(
+      (entry) => entry.unitId === sourceUnitId,
+    ) ?? null
   );
 }
 
