@@ -469,7 +469,10 @@ type BattleAttackDamageContinuationWithoutConcentration = Omit<
 };
 type BattleReactionModifierChoice =
   | {
-      readonly kind: "attackRollReduction" | "damageRollReduction";
+      readonly kind:
+        | "attackRollReduction"
+        | "abilityCheckReduction"
+        | "damageRollReduction";
       readonly unitId: UnitRecord["id"];
       readonly label: string;
       readonly reduction: {
@@ -1191,6 +1194,14 @@ export type BattleFailedAbilityCheckFacts = {
   readonly dc: DifficultyClass;
 };
 
+export type BattleSuccessfulAbilityCheckFacts = {
+  readonly actorId: CombatantId;
+  readonly ability: Ability;
+  readonly skillOrToolLabel?: string;
+  readonly originalTotal: number;
+  readonly dc: DifficultyClass;
+};
+
 export type FailedAbilityCheckSecondWindBoostResolutionInput = {
   readonly state: BattleState;
   readonly unitId: UnitRecord["id"];
@@ -1198,11 +1209,29 @@ export type FailedAbilityCheckSecondWindBoostResolutionInput = {
   readonly boostRoll: number;
 };
 
+export type CuttingWordsAbilityCheckReductionResolutionInput = {
+  readonly state: BattleState;
+  readonly reactorId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly abilityCheck: BattleSuccessfulAbilityCheckFacts;
+  readonly creatureWithinSixtyFeet: boolean;
+  readonly reductionRoll: number;
+};
+
 export type FailedAbilityCheckSecondWindBoostResolutionResult =
   | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
       readonly abilityCheckBoost: {
         readonly boostedTotal: number;
         readonly boostedSucceeded: boolean;
+      };
+    })
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
+
+export type CuttingWordsAbilityCheckReductionResolutionResult =
+  | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
+      readonly abilityCheckReduction: {
+        readonly reducedTotal: number;
+        readonly reducedSucceeded: boolean;
       };
     })
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
@@ -2210,6 +2239,7 @@ type BattleFillEncoded =
                   readonly unitId: string;
                   readonly modifierKind:
                     | "attackRollReduction"
+                    | "abilityCheckReduction"
                     | "damageRollReduction"
                     | "attackDamageReduction";
                   readonly fills: readonly BattleFillEncoded[];
@@ -2493,6 +2523,7 @@ export const BattleFillSchema: Schema.Schema<
               unitId: BattleSubjectTextSchema,
               modifierKind: Schema.Literal(
                 "attackRollReduction",
+                "abilityCheckReduction",
                 "damageRollReduction",
                 "attackDamageReduction",
               ),
@@ -2988,7 +3019,11 @@ const BattleHelpAttackSnapshotSchema = Schema.Struct({
 
 const BattleReactionModifierChoiceSchema = Schema.Union(
   Schema.Struct({
-    kind: Schema.Literal("attackRollReduction", "damageRollReduction"),
+    kind: Schema.Literal(
+      "attackRollReduction",
+      "abilityCheckReduction",
+      "damageRollReduction",
+    ),
     unitId: Schema.String,
     label: Schema.String,
     reduction: Schema.Struct({
@@ -12319,6 +12354,102 @@ export function resolveFailedAbilityCheckSecondWindBoost(
     abilityCheckBoost: {
       boostedTotal,
       boostedSucceeded,
+    },
+  };
+}
+
+export function resolveCuttingWordsAbilityCheckReduction(
+  input: CuttingWordsAbilityCheckReductionResolutionInput,
+): CuttingWordsAbilityCheckReductionResolutionResult {
+  const reactor = input.state.combatants.get(input.reactorId);
+  const abilityCheckActor = input.state.combatants.get(
+    input.abilityCheck.actorId,
+  );
+  if (
+    !isCharacterBattleCreatureState(reactor) ||
+    abilityCheckActor === undefined
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cutting Words ability-check reduction is no longer available.",
+    );
+  }
+
+  const profile = reactor.origin.reactionRollOrDamageReductionProfiles.get(
+    input.unitId,
+  );
+  const modifier = profile?.modifiers.find(
+    (candidate) => candidate.kind === "abilityCheckReduction",
+  );
+  const resource = reactor.origin.resources.find(
+    (candidate) => candidate.unit.id === profile?.unit.id,
+  );
+  if (
+    profile === undefined ||
+    modifier === undefined ||
+    resource === undefined ||
+    !resourceHasUsesRemaining(resource) ||
+    !combatantCanTakeReactions(reactor)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cutting Words ability-check reduction is no longer available.",
+    );
+  }
+
+  if (
+    input.abilityCheck.originalTotal < input.abilityCheck.dc ||
+    !combatantCanSee(input.state, input.reactorId, input.abilityCheck.actorId) ||
+    !input.creatureWithinSixtyFeet
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Cutting Words ability-check reduction requires a visible creature within 60 feet that succeeded on an ability check.",
+    );
+  }
+
+  const dieSize = bardicInspirationDieSize(profile.classLevel);
+  if (
+    input.reductionRoll < 1 ||
+    input.reductionRoll > dieSize ||
+    !Number.isInteger(input.reductionRoll)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Reaction modifier roll must provide one Bardic Inspiration die result.",
+    );
+  }
+
+  const choice: BattleReactionModifierChoice = {
+    kind: "abilityCheckReduction",
+    unitId: profile.unit.id,
+    label: profile.unit.name,
+    reduction: {
+      kind: "rolled",
+      flatModifier: 0,
+      dieSize,
+    },
+  };
+  const nextState = spendReactionModifierResource(
+    spendReaction(input.state, input.reactorId),
+    input.reactorId,
+    choice,
+  );
+  const reducedTotal = Math.max(
+    0,
+    input.abilityCheck.originalTotal - input.reductionRoll,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+    abilityCheckReduction: {
+      reducedTotal,
+      reducedSucceeded: reducedTotal >= input.abilityCheck.dc,
     },
   };
 }

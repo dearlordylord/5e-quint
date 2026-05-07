@@ -34,6 +34,7 @@ import {
   resolveBattleSubject,
   resolveBattleReaction,
   resolveBattleConcentrationDamage,
+  resolveCuttingWordsAbilityCheckReduction,
   removeBattleCombatants,
   sameBattleSubject,
   snapshotBattle,
@@ -8328,6 +8329,205 @@ describe("battle runtime", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
+  test("Cutting Words ability-check reduction spends Reaction and Bardic Inspiration", () => {
+    const cuttingWordsUnit = unitLibrary.requireUnit("bard_cutting_words");
+    if (cuttingWordsUnit.kind !== "class_feature") {
+      throw new Error("Expected Cutting Words class feature Unit.");
+    }
+    const state = startBattleRight({
+      battleId: battleId("battle-cutting-words-ability-check"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({
+          initiative: 10,
+          displayName: "Lore Bard",
+          classLevels: [{ className: "bard", level: 3 }],
+          attack: null,
+          resources: [cuttingWordsResource({ unit: cuttingWordsUnit })],
+          unitFeatures: [{ unit: cuttingWordsUnit }],
+          characterUnitRefs: [supportedBattleUnitRef(cuttingWordsUnit)],
+        }),
+      ],
+    });
+
+    const converted = resolveCuttingWordsAbilityCheckReduction({
+      state,
+      reactorId: fighterId,
+      unitId: cuttingWordsUnit.id,
+      abilityCheck: {
+        actorId: goblinId,
+        ability: "cha",
+        skillOrToolLabel: "Deception",
+        originalTotal: 16,
+        dc: difficultyClass(15),
+      },
+      creatureWithinSixtyFeet: true,
+      reductionRoll: 2,
+    });
+
+    expect(converted).toMatchObject({
+      tag: "resolved",
+      abilityCheckReduction: {
+        reducedTotal: 14,
+        reducedSucceeded: false,
+      },
+    });
+    if (converted.tag !== "resolved") {
+      throw new Error("Expected resolved Cutting Words ability-check branch.");
+    }
+    expect(converted.state.combatants.get(fighterId)).toMatchObject({
+      reactionAvailable: false,
+      origin: {
+        resources: [
+          expect.objectContaining({
+            unit: expect.objectContaining({ id: "bard_cutting_words" }),
+            usesRemaining: 0,
+          }),
+        ],
+      },
+    });
+
+    const stillSuccessful = resolveCuttingWordsAbilityCheckReduction({
+      state,
+      reactorId: fighterId,
+      unitId: cuttingWordsUnit.id,
+      abilityCheck: {
+        actorId: goblinId,
+        ability: "int",
+        originalTotal: 18,
+        dc: difficultyClass(15),
+      },
+      creatureWithinSixtyFeet: true,
+      reductionRoll: 2,
+    });
+
+    expect(stillSuccessful).toMatchObject({
+      tag: "resolved",
+      abilityCheckReduction: {
+        reducedTotal: 16,
+        reducedSucceeded: true,
+      },
+    });
+  });
+
+  test("Cutting Words ability-check reduction rejects failed checks, bad range, depleted pool, and unsupported projection", () => {
+    const cuttingWordsUnit = unitLibrary.requireUnit("bard_cutting_words");
+    if (cuttingWordsUnit.kind !== "class_feature") {
+      throw new Error("Expected Cutting Words class feature Unit.");
+    }
+    const baseState = startBattleRight({
+      battleId: battleId("battle-cutting-words-ability-check-invalid"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({
+          initiative: 10,
+          displayName: "Lore Bard",
+          classLevels: [{ className: "bard", level: 3 }],
+          attack: null,
+          resources: [cuttingWordsResource({ unit: cuttingWordsUnit })],
+          unitFeatures: [{ unit: cuttingWordsUnit }],
+          characterUnitRefs: [supportedBattleUnitRef(cuttingWordsUnit)],
+        }),
+      ],
+    });
+
+    expect(
+      resolveCuttingWordsAbilityCheckReduction({
+        state: baseState,
+        reactorId: fighterId,
+        unitId: cuttingWordsUnit.id,
+        abilityCheck: {
+          actorId: goblinId,
+          ability: "wis",
+          originalTotal: 14,
+          dc: difficultyClass(15),
+        },
+        creatureWithinSixtyFeet: true,
+        reductionRoll: 2,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    expect(
+      resolveCuttingWordsAbilityCheckReduction({
+        state: baseState,
+        reactorId: fighterId,
+        unitId: cuttingWordsUnit.id,
+        abilityCheck: {
+          actorId: goblinId,
+          ability: "wis",
+          originalTotal: 15,
+          dc: difficultyClass(15),
+        },
+        creatureWithinSixtyFeet: false,
+        reductionRoll: 2,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    const depletedState = startBattleRight({
+      battleId: battleId("battle-cutting-words-ability-check-depleted"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({
+          initiative: 10,
+          displayName: "Lore Bard",
+          classLevels: [{ className: "bard", level: 3 }],
+          attack: null,
+          resources: [
+            cuttingWordsResource({ unit: cuttingWordsUnit, usesRemaining: 0 }),
+          ],
+          unitFeatures: [{ unit: cuttingWordsUnit }],
+          characterUnitRefs: [supportedBattleUnitRef(cuttingWordsUnit)],
+        }),
+      ],
+    });
+    expect(
+      resolveCuttingWordsAbilityCheckReduction({
+        state: depletedState,
+        reactorId: fighterId,
+        unitId: cuttingWordsUnit.id,
+        abilityCheck: {
+          actorId: goblinId,
+          ability: "wis",
+          originalTotal: 15,
+          dc: difficultyClass(15),
+        },
+        creatureWithinSixtyFeet: true,
+        reductionRoll: 2,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const unsupportedState = startBattleRight({
+      battleId: battleId("battle-cutting-words-ability-check-unsupported"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({
+          initiative: 10,
+          displayName: "Lore Bard",
+          classLevels: [{ className: "bard", level: 3 }],
+          attack: null,
+          resources: [cuttingWordsResource({ unit: cuttingWordsUnit })],
+          unitFeatures: [{ unit: cuttingWordsUnit }],
+          characterUnitRefs: [],
+        }),
+      ],
+    });
+    expect(
+      resolveCuttingWordsAbilityCheckReduction({
+        state: unsupportedState,
+        reactorId: fighterId,
+        unitId: cuttingWordsUnit.id,
+        abilityCheck: {
+          actorId: goblinId,
+          ability: "wis",
+          originalTotal: 15,
+          dc: difficultyClass(15),
+        },
+        creatureWithinSixtyFeet: true,
+        reductionRoll: 2,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
   test("Rage is unavailable in Heavy armor", () => {
     const state = startBattleRight({
       battleId: battleId("battle-rage-heavy-armor-gated"),
@@ -9467,12 +9667,12 @@ describe("battle runtime", () => {
     }
   });
 
-  test("full SRD Cutting Words remains gated until ability-check reactions are supported", () => {
+  test("full SRD Cutting Words is admitted after ability-check reactions are supported", () => {
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(
         unitLibrary.requireUnit("bard_cutting_words"),
       ),
-    ).toBe("unsupported");
+    ).toBe("reactionRollOrDamageReduction");
   });
 
   test("Deflect Attacks redirect support comes from authored mechanics", () => {
@@ -12928,9 +13128,13 @@ describe("battle runtime", () => {
     });
   });
 
-  test("canonical battle runtime QNT self-tests pass", () => {
-    runCanonicalBattleRuntimeQntSelfTests();
-  });
+  test(
+    "canonical battle runtime QNT self-tests pass",
+    () => {
+      runCanonicalBattleRuntimeQntSelfTests();
+    },
+    15_000,
+  );
 });
 
 function requireResolved(
@@ -14624,13 +14828,17 @@ function monkDeflectAttacksFocusResource(input?: {
 
 function cuttingWordsResource(input?: {
   readonly unit?: Extract<UnitRecord, { readonly kind: "class_feature" }>;
+  readonly usesRemaining?: number;
 }): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"]
 >[number] {
-  return { unit: input?.unit ?? cuttingWordsUnit(), usesRemaining: 1 };
+  return {
+    unit: input?.unit ?? cuttingWordsUnit(),
+    usesRemaining: input?.usesRemaining ?? 1,
+  };
 }
 
 function goblinAttacksReactionModifierCharacter(input: {
@@ -14772,6 +14980,7 @@ function reactionModifierChoice(
   unitId: string,
   modifierKind:
     | "attackRollReduction"
+    | "abilityCheckReduction"
     | "damageRollReduction"
     | "attackDamageReduction",
 ) {

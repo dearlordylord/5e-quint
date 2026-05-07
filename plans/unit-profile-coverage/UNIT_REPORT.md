@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 58/391 | 14.8% |
 | Authored Surface executable catalog admission | 44/334 | 13.2% |
 | Installed Unit profile classification coverage | 59/59 | 100% |
-| Supported executable Unit coverage | 32/45 | 71.1% |
+| Supported executable Unit coverage | 33/45 | 73.3% |
 | QNT profile modeling coverage | 25/25 | 100% |
 | QNT proof coverage | 25/25 | 100% |
 | Runtime mapping coverage | 25/25 | 100% |
 | Runtime parity coverage | 25/25 | 100% |
-| Deterministic admission/projection coverage | 32/32 | 100% |
-| Selected identity MBT coverage | 10/32 | 31.3% |
+| Deterministic admission/projection coverage | 33/33 | 100% |
+| Selected identity MBT coverage | 10/33 | 30.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -55,6 +55,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `barbarian_rage` | srd-5.2.1 | `unit-feature.bonus-action-ongoing-rage` |
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
 | `barbarian_fast_movement` | srd-5.2.1 | `unit-feature.passive-speed-bonus` |
+| `bard_cutting_words` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `monk_deflect_attacks` | srd-5.2.1 | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 | `rogue_cunning_action` | srd-5.2.1 | `unit-feature.alternate-action-cost` |
 | `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
@@ -794,6 +795,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -846,7 +848,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `subclass_wizard_evoker` | unsupported-profile | Subclass container record; no promoted execution profile yet. |
 | `fighter_fighting_style` | unsupported-profile | Choice/grant container; selected Fighting Style feat carries executable pressure. |
 | `fighter_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
-| `bard_cutting_words` | needs-surface-widening | Full SRD Cutting Words includes ability-check reduction, and the promoted production reaction support boundary still gates authored ability-check reaction branches. |
 | `wizard_ritual_adept` | unsupported-profile | Ritual casting is character/spell access pressure, not a promoted battle execution profile yet. |
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
@@ -872,7 +873,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 24 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
-| srd-5.2.1 | QCORE9 | needs-surface-widening | 1 | `bard_cutting_words` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
 
 ## Profile Claims By Task

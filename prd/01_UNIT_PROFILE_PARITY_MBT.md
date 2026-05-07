@@ -283,7 +283,11 @@ Current matrix status after QMBT64:
 - QMBT64 kept the matrix lane open, preserved the already-landed removal of the
   class catalog task from the Ralph queue, and appended QMBT65-QMBT66 so the
   Cutting Words implementation can proceed before the next recursive review.
+- QMBT65 counted `bard_cutting_words` as a supported
+  `unit-feature.reaction-roll-or-damage-reduction` Unit with the successful
+  Ability Check branch promoted through caller-supplied already-rolled facts,
+  focused runtime parity, deterministic admission/projection evidence, QNT
+  proof coverage, and refreshed matrix artifacts.
 
-QMBT64 appended QMBT65-QMBT66 rather than declaring the matrix lane complete.
-The next open tasks are QMBT65 Cutting Words Ability Check Reaction reduction
-and QMBT66 recursive planning review.
+QMBT65 completed the selected Cutting Words implementation slice. The next open
+task is QMBT66 recursive planning review.

@@ -494,6 +494,12 @@ export type ReactionRollOrDamageReductionProfile =
       readonly reduction: { readonly kind: "bardicInspirationDie" };
     }
   | {
+      readonly kind: "abilityCheckReduction";
+      readonly rangeFeet: MovementFeet;
+      readonly requiresVisibleCreature: true;
+      readonly reduction: { readonly kind: "bardicInspirationDie" };
+    }
+  | {
       readonly kind: "attackDamageRollReduction";
       readonly rangeFeet: MovementFeet;
       readonly requiresVisibleCreature: true;
@@ -1565,6 +1571,21 @@ function reactionRollOrDamageReductionMechanicsProjection(
         return [
           {
             kind: "attackRollReduction",
+            rangeFeet: movementFeet(modifier.trigger.rangeFeet),
+            requiresVisibleCreature: true,
+            reduction: { kind: "bardicInspirationDie" },
+          },
+        ];
+      }
+      if (
+        modifier.kind === "ability_check_reduction" &&
+        modifier.trigger.kind === "creature_succeeds_ability_check" &&
+        modifier.trigger.requiresVisibleCreature === true &&
+        modifier.reduction.kind === "bardic_inspiration_die"
+      ) {
+        return [
+          {
+            kind: "abilityCheckReduction",
             rangeFeet: movementFeet(modifier.trigger.rangeFeet),
             requiresVisibleCreature: true,
             reduction: { kind: "bardicInspirationDie" },
