@@ -31,8 +31,8 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import {
-  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
   characterId,
@@ -1131,10 +1131,14 @@ function extraAttackUnitRef(
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
-  return {
-    unitId: unit.id,
-    supportProfiles: [ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE],
-  };
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
 }
 
 function daggerAttack(): NonNullable<

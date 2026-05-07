@@ -77,6 +77,21 @@ export type BattlePassiveSpeedBonusSupportProfile = {
     readonly categories: readonly ["heavy"];
   };
 };
+export type PassiveRangedAttackRollBonusProfile = {
+  readonly bonus: 2;
+  readonly weaponFilter: {
+    readonly kind: "weaponCategory";
+    readonly category: "ranged";
+  };
+};
+export type BattlePassiveRangedAttackRollBonusSupportProfile = {
+  readonly kind: typeof PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE;
+  readonly attackRoll: PassiveRangedAttackRollBonusProfile;
+};
+export type BattleAttackActionAttackCountScalingSupportProfile = {
+  readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
+  readonly additionalAttacks: 1;
+};
 export const PASSIVE_SPEED_KIND_GRANT_KINDS = [
   "climb",
   "swim",
@@ -114,11 +129,17 @@ export type BattleAlternateActionCostSupportProfile = {
 };
 export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
+  | BattlePassiveRangedAttackRollBonusSupportProfile
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
+  | BattleAttackActionAttackCountScalingSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
-      "alternateActionCost" | "passiveSpeedBonus" | "passiveSpeedKindGrants"
+      | "alternateActionCost"
+      | "passiveRangedAttackRollBonus"
+      | "passiveSpeedBonus"
+      | "passiveSpeedKindGrants"
+      | "attackActionAttackCountScaling"
     >;
 
 export type BattleUnitSupportProfileIssue = {
@@ -237,8 +258,8 @@ export function battleUnitSupportProfilesForUnit(input: {
       `Unsupported battle passive ranged attack-roll bonus Unit hook: ${input.unit.id}.`,
     );
   }
-  if (passiveRangedAttackRollBonusSupport === "passiveRangedAttackRollBonus") {
-    supportProfiles.push(PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE);
+  if (passiveRangedAttackRollBonusSupport !== null) {
+    supportProfiles.push(passiveRangedAttackRollBonusSupport);
   }
 
   const passiveSpeedBonusSupport = battlePassiveSpeedBonusSupportForUnit(
@@ -282,10 +303,8 @@ export function battleUnitSupportProfilesForUnit(input: {
       `Unsupported battle Attack action attack-count scaling Unit hook: ${input.unit.id}.`,
     );
   }
-  if (
-    attackActionAttackCountScalingSupport === "attackActionAttackCountScaling"
-  ) {
-    supportProfiles.push(ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE);
+  if (attackActionAttackCountScalingSupport !== null) {
+    supportProfiles.push(attackActionAttackCountScalingSupport);
   }
 
   const zeroHitPointReplacementSupport =
@@ -391,14 +410,6 @@ export type PassiveArmorClassBonusProfile = {
   readonly condition: {
     readonly kind: "wearingArmor";
     readonly categories: readonly ["light", "medium", "heavy"];
-  };
-};
-
-export type PassiveRangedAttackRollBonusProfile = {
-  readonly bonus: 2;
-  readonly weaponFilter: {
-    readonly kind: "weaponCategory";
-    readonly category: "ranged";
   };
 };
 
@@ -754,7 +765,7 @@ export type BattlePassiveArmorClassBonusSupport =
   | null;
 
 export type BattlePassiveRangedAttackRollBonusSupport =
-  | "passiveRangedAttackRollBonus"
+  | BattlePassiveRangedAttackRollBonusSupportProfile
   | "unsupported"
   | null;
 
@@ -774,7 +785,7 @@ export type BattleWeaponDamageDiceRollChoiceSupport =
   | null;
 
 export type BattleAttackActionAttackCountScalingSupport =
-  | "attackActionAttackCountScaling"
+  | BattleAttackActionAttackCountScalingSupportProfile
   | "unsupported"
   | null;
 
@@ -800,9 +811,10 @@ export function battlePassiveRangedAttackRollBonusSupportForUnit(
   if (!hasPassiveRangedAttackRollBonusMechanics(unit)) {
     return null;
   }
-  return passiveRangedAttackRollBonusProfileForUnit(unit) === null
+  const attackRoll = passiveRangedAttackRollBonusProfileForUnit(unit);
+  return attackRoll === null
     ? "unsupported"
-    : "passiveRangedAttackRollBonus";
+    : { kind: PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE, attackRoll };
 }
 
 export function battlePassiveSpeedBonusSupportForUnit(
@@ -849,9 +861,13 @@ export function battleAttackActionAttackCountScalingSupportForUnit(
   if (!hasAttackActionAttackCountScalingMechanics(unit)) {
     return null;
   }
-  return attackActionAttackCountScalingProfileForUnit(unit) === null
+  const profile = attackActionAttackCountScalingProfileForUnit(unit);
+  return profile === null
     ? "unsupported"
-    : "attackActionAttackCountScaling";
+    : {
+        kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+        additionalAttacks: profile.additionalAttacks,
+      };
 }
 
 export function battleZeroHitPointReplacementSupportForUnit(

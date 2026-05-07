@@ -40,12 +40,12 @@ import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
-  PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+  battleUnitRefWithSupportProfiles,
   battleCombatantSide,
   battleId,
   characterBattleResourceUsage,
@@ -881,20 +881,21 @@ function createRuleCoreFeatureDriver() {
         lastInvalidReason = "none";
       },
       doArcheryAttackRollBonus: () => {
+        const unit = unitLibrary.requireUnit("feat_archery");
+        const unitRef = battleUnitRefWithSupportProfiles({
+          unitRef: { unitId: unit.id },
+          unit,
+        });
+        if (Either.isLeft(unitRef)) {
+          throw new Error(unitRef.left.message);
+        }
         state = startBattleRight({
           battleId: battleId("rule-core-feature-archery"),
           combatants: [
             featureActor({
               initiative: 20,
               attack: zeroAbilityWeaponAttack("weapon_shortbow"),
-              characterUnitRefs: [
-                {
-                  unitId: "feat_archery",
-                  supportProfiles: [
-                    PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
-                  ],
-                },
-              ],
+              characterUnitRefs: [unitRef.right],
             }),
             featureTarget(10),
           ],

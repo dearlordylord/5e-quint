@@ -113,6 +113,17 @@ const rayOfFrostUnitId = "ray_of_frost";
 const shieldUnitId = "shield";
 const paladinExtraAttackUnitId = "paladin_extra_attack";
 const rangerExtraAttackUnitId = "ranger_extra_attack";
+const archerySupportProfile = {
+  kind: PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+  attackRoll: {
+    bonus: 2,
+    weaponFilter: { kind: "weaponCategory", category: "ranged" },
+  },
+} as const;
+const extraAttackSupportProfile = {
+  kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  additionalAttacks: 1,
+} as const;
 const spellCasterId = combatantId("unit-profile-spell-caster");
 const spellTargetId = combatantId("unit-profile-spell-target");
 const massHealingTargetIds = [
@@ -452,7 +463,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
     ).toEqual(
       Either.right({
         unitId: archeryUnitId,
-        supportProfiles: [PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE],
+        supportProfiles: [archerySupportProfile],
       }),
     );
     expect(profile).toEqual(
@@ -473,6 +484,30 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
   test("archery support projection adds +2 to ranged weapon attack rolls", () => {
     const state = archeryBattle({
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+    });
+    const attackRollHole = weaponAttackRollHole({
+      state,
+      attackName: "Shortbow",
+      actorId: spellCasterId,
+      targetId: spellTargetId,
+    });
+
+    expect(attackRollHole).toMatchObject({
+      kind: "attackRoll",
+      label: "Shortbow attack roll",
+      attackBonus: 2,
+      attack: {
+        kind: "weapon",
+        weapon: { id: "weapon_shortbow", usage: "ranged" },
+      },
+    });
+  });
+
+  test("archery support projection applies once with duplicate support refs", () => {
+    const archeryUnitRef = archeryBattleUnitRef();
+    const state = archeryBattle({
+      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      characterUnitRefs: [archeryUnitRef, archeryUnitRef],
     });
     const attackRollHole = weaponAttackRollHole({
       state,
@@ -1499,7 +1534,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
       ).toEqual(
         Either.right({
           unitId,
-          supportProfiles: [ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE],
+          supportProfiles: [extraAttackSupportProfile],
         }),
       );
       expect(profile).toEqual(
@@ -2537,8 +2572,12 @@ function archeryBattle(input: {
       { readonly kind: "character" }
     >["attack"]
   >;
+  readonly characterUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
 }): BattleState {
-  const archeryUnitRef = archeryBattleUnitRef();
+  const characterUnitRefs = input.characterUnitRefs ?? [archeryBattleUnitRef()];
   const result = startBattle({
     battleId: battleId("unit-profile-archery-admission"),
     combatants: [
@@ -2548,7 +2587,7 @@ function archeryBattle(input: {
         initiative: 20,
         side: partySide,
         attack: input.attack,
-        characterUnitRefs: [archeryUnitRef],
+        characterUnitRefs,
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -2940,7 +2979,7 @@ function extraAttackBattleUnitRef(
   expect(unitRef).toEqual(
     Either.right({
       unitId,
-      supportProfiles: [ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE],
+      supportProfiles: [extraAttackSupportProfile],
     }),
   );
   if (Either.isLeft(unitRef)) {
@@ -3003,7 +3042,7 @@ function archeryBattleUnitRef(): Extract<
   expect(unitRef).toEqual(
     Either.right({
       unitId: archeryUnitId,
-      supportProfiles: [PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE],
+      supportProfiles: [archerySupportProfile],
     }),
   );
   if (Either.isLeft(unitRef)) {

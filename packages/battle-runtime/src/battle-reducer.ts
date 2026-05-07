@@ -9478,18 +9478,27 @@ function spendAttackActionResource<T extends ActionEconomyState>(
   });
 }
 
-function classFeatureExtraAttackUnitIdForActor(
+function classFeatureExtraAttackForActor(
   actor: BattleCreatureState | undefined,
-): UnitRecord["id"] | null {
+): {
+  readonly unitId: UnitRecord["id"];
+  readonly additionalAttacks: 1;
+} | null {
   if (actor?.origin.kind !== "character") return null;
-  return (
-    actor.origin.characterUnitRefs.find((unitRef) =>
-      unitRef.supportProfiles.some(
-        (profile) =>
-          profile === ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
-      ),
-    )?.unitId ?? null
-  );
+  for (const unitRef of actor.origin.characterUnitRefs) {
+    for (const profile of unitRef.supportProfiles) {
+      if (
+        typeof profile === "object" &&
+        profile.kind === ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE
+      ) {
+        return {
+          unitId: unitRef.unitId,
+          additionalAttacks: profile.additionalAttacks,
+        };
+      }
+    }
+  }
+  return null;
 }
 
 function openClassFeatureExtraAttackResource(input: {
@@ -9503,26 +9512,26 @@ function openClassFeatureExtraAttackResource(input: {
   ) {
     return input.state.currentTurnResources;
   }
-  const sourceUnitId = classFeatureExtraAttackUnitIdForActor(
+  const extraAttack = classFeatureExtraAttackForActor(
     input.state.combatants.get(input.actorId),
   );
-  if (sourceUnitId === null) {
+  if (extraAttack === null) {
     return input.state.currentTurnResources;
   }
   return {
     ...input.state.currentTurnResources,
     actionResources: [
       ...input.state.currentTurnResources.actionResources,
-      {
-        kind: "action",
-        source: "classFeatureExtraAttack",
+      ...Array.from({ length: extraAttack.additionalAttacks }, () => ({
+        kind: "action" as const,
+        source: "classFeatureExtraAttack" as const,
         sourceOwnerId: input.actorId,
-        sourceUnitId,
+        sourceUnitId: extraAttack.unitId,
         restriction: {
-          kind: "exclude",
+          kind: "exclude" as const,
           actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
         },
-      },
+      })),
     ],
   };
 }
@@ -18774,13 +18783,19 @@ function passiveRangedAttackRollBonus(
   ) {
     return 0;
   }
-  return attacker.origin.characterUnitRefs.some((unitRef) =>
-    unitRef.supportProfiles.some(
-      (profile) => profile === PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
-    ),
-  )
-    ? 2
-    : 0;
+  for (const unitRef of attacker.origin.characterUnitRefs) {
+    for (const profile of unitRef.supportProfiles) {
+      if (
+        typeof profile === "object" &&
+        profile.kind === PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE &&
+        profile.attackRoll.weaponFilter.kind === "weaponCategory" &&
+        profile.attackRoll.weaponFilter.category === attack.weapon.usage
+      ) {
+        return profile.attackRoll.bonus;
+      }
+    }
+  }
+  return 0;
 }
 
 function eligibleWeaponDamageDiceRollChoiceUnitIds(
