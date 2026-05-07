@@ -9841,7 +9841,7 @@ describe("battle runtime", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Deflect Attacks redirect damage must roll two Martial Arts dice.",
+        "Attack damage reduction redirect damage must roll two Martial Arts dice.",
     });
   });
 
@@ -10053,7 +10053,7 @@ describe("battle runtime", () => {
     expect(rejected).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Deflect Attacks redirect target is not eligible.",
+      message: "Attack damage reduction redirect target is not eligible.",
     });
   });
 

@@ -252,24 +252,27 @@ const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 // targeted by the Magic Missile spell.
 const SHIELD_MAGIC_MISSILE_SPELL_ID =
   "magic_missile" satisfies SpellRecord["id"];
-const DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_ID = holeId(
-  "battle:deflect-attacks:redirect-target",
+const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID = holeId(
+  "battle:attack-damage-reduction-zero-damage-redirect:target",
 );
-const DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_INSTANCE = holeInstanceKey(
-  "battle:deflect-attacks:redirect-target",
+const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_INSTANCE =
+  holeInstanceKey(
+    "battle:attack-damage-reduction-zero-damage-redirect:target",
+  );
+const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID = holeId(
+  "battle:attack-damage-reduction-zero-damage-redirect:save",
 );
-const DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_ID = holeId(
-  "battle:deflect-attacks:redirect-save",
+const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_INSTANCE =
+  holeInstanceKey(
+    "battle:attack-damage-reduction-zero-damage-redirect:save",
+  );
+const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID = holeId(
+  "battle:attack-damage-reduction-zero-damage-redirect:damage",
 );
-const DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_INSTANCE = holeInstanceKey(
-  "battle:deflect-attacks:redirect-save",
-);
-const DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_ID = holeId(
-  "battle:deflect-attacks:redirect-damage",
-);
-const DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_INSTANCE = holeInstanceKey(
-  "battle:deflect-attacks:redirect-damage",
-);
+const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_INSTANCE =
+  holeInstanceKey(
+    "battle:attack-damage-reduction-zero-damage-redirect:damage",
+  );
 const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
   "swim",
@@ -4989,13 +4992,14 @@ function deflectAttacksRedirectSelection(input: {
     return {
       tag: "invalid",
       message:
-        "Deflect Attacks redirect requires target, save, and damage facts.",
+        "Attack damage reduction redirect requires target, save, and damage facts.",
     };
   }
   if (!deflectAttacksFocusAvailable(state, reactorId, unitId, offer)) {
     return {
       tag: "invalid",
-      message: "Deflect Attacks redirect requires an available Focus Point.",
+      message:
+        "Attack damage reduction redirect requires an available Focus Point.",
     };
   }
   if (
@@ -5011,7 +5015,7 @@ function deflectAttacksRedirectSelection(input: {
   ) {
     return {
       tag: "invalid",
-      message: "Deflect Attacks redirect target is not eligible.",
+      message: "Attack damage reduction redirect target is not eligible.",
     };
   }
   const outcome = save.value.outcomes.find(
@@ -5021,14 +5025,14 @@ function deflectAttacksRedirectSelection(input: {
     return {
       tag: "invalid",
       message:
-        "Deflect Attacks redirect save must not include spell area facts.",
+        "Attack damage reduction redirect save must not include spell area facts.",
     };
   }
   if (outcome === undefined || save.value.outcomes.length !== 1) {
     return {
       tag: "invalid",
       message:
-        "Deflect Attacks redirect save must name the redirect target once.",
+        "Attack damage reduction redirect save must name the redirect target once.",
     };
   }
   const redirectedDamageRoll = rolledDiceFillTotal(damage, {
@@ -5039,7 +5043,7 @@ function deflectAttacksRedirectSelection(input: {
     return {
       tag: "invalid",
       message:
-        "Deflect Attacks redirect damage must roll two Martial Arts dice.",
+        "Attack damage reduction redirect damage must roll two Martial Arts dice.",
     };
   }
   return {
@@ -5249,7 +5253,7 @@ function resolveDeflectAttacksRedirectAfterReduction(input: {
     return {
       tag: "invalid",
       message:
-        "Deflect Attacks redirect expects exactly one zero-damage redirect offer.",
+        "Attack damage reduction redirect expects exactly one zero-damage redirect offer.",
     };
   }
   if (Number(input.reducedDamageBeforeTargetAdjustments) !== 0) {
@@ -5263,7 +5267,7 @@ function resolveDeflectAttacksRedirectAfterReduction(input: {
     return {
       tag: "invalid",
       message:
-        "Deflect Attacks redirect is only available when the reduction makes the attack damage 0.",
+        "Attack damage reduction redirect is only available when the reduction makes the attack damage 0.",
     };
   }
   const offer = offers[0];
@@ -6575,17 +6579,19 @@ function deflectAttacksRedirectHoles(
   return [
     {
       kind: "targetChoice",
-      holeId: DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_ID,
-      holeInstanceKey: DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_INSTANCE,
-      label: "Deflect Attacks redirect target",
+      holeId: ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
+      holeInstanceKey:
+        ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_INSTANCE,
+      label: `${offer.label} redirect target`,
       choices: targetChoices,
       requiresTableSpatialFact: true,
     },
     {
       kind: "savingThrowOutcome",
-      holeId: DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_ID,
-      holeInstanceKey: DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_INSTANCE,
-      label: "Deflect Attacks Dexterity saving throw",
+      holeId: ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
+      holeInstanceKey:
+        ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_INSTANCE,
+      label: `${offer.label} Dexterity saving throw`,
       unitFeature: {
         unitId: offer.unitId,
         label: offer.label,
@@ -6597,9 +6603,10 @@ function deflectAttacksRedirectHoles(
     },
     {
       kind: "rolledDice",
-      holeId: DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_ID,
-      holeInstanceKey: DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_INSTANCE,
-      label: "Deflect Attacks redirected damage",
+      holeId: ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
+      holeInstanceKey:
+        ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_INSTANCE,
+      label: `${offer.label} redirected damage`,
       unitFeature: {
         unitId: offer.unitId,
         label: offer.label,
@@ -10074,12 +10081,12 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
 
     if (
       fill.kind === "targetChoice" &&
-      fill.holeId === DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_ID
+      fill.holeId === ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID
     ) {
       if (deflectAttacksRedirectTarget !== undefined) {
         return {
           tag: "invalid",
-          message: "Deflect Attacks redirect target was filled twice.",
+          message: "Attack damage reduction redirect target was filled twice.",
         };
       }
       deflectAttacksRedirectTarget = fill;
@@ -10096,12 +10103,12 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
 
     if (
       fill.kind === "savingThrowOutcome" &&
-      fill.holeId === DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_ID
+      fill.holeId === ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID
     ) {
       if (deflectAttacksRedirectSave !== undefined) {
         return {
           tag: "invalid",
-          message: "Deflect Attacks redirect save was filled twice.",
+          message: "Attack damage reduction redirect save was filled twice.",
         };
       }
       deflectAttacksRedirectSave = fill;
@@ -10110,12 +10117,12 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
 
     if (
       fill.kind === "rolledDice" &&
-      fill.holeId === DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_ID
+      fill.holeId === ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID
     ) {
       if (deflectAttacksRedirectDamage !== undefined) {
         return {
           tag: "invalid",
-          message: "Deflect Attacks redirect damage was filled twice.",
+          message: "Attack damage reduction redirect damage was filled twice.",
         };
       }
       deflectAttacksRedirectDamage = fill;
