@@ -1,13 +1,11 @@
 # D&D 5e SRD Runtime Workspace
 
-Promoted D&D 5e SRD 5.2.1 runtime packages, Surface-authored content, MCP
-tools, and a React frontend. The old `@dnd/v0` package remains in the repo as
-restore-source material only; it is not part of workspace discovery or the
-promoted quality gate.
+D&D 5e SRD 5.2.1 runtime packages, Surface-authored content, MCP tools, and a
+React frontend.
 
 ## What this is
 
-A package workspace for promoted runtimes:
+A package workspace for the active runtimes:
 
 ```mermaid
 graph TD
@@ -26,12 +24,12 @@ graph TD
 
 ## What's covered
 
-**Promoted battle runtime:** Unit/StatBlock-backed action resources, attack
+**Battle runtime:** Unit/StatBlock-backed action resources, attack
 flows, selected spells, Death Saving Throws, Knock Out lifecycle, battle
 snapshots, and caller-owned hole/fill replay.
 
-**Promoted character runtimes:** character-creation choices, progression,
-sheet-session projection, and character battle-entry projection.
+**Character runtimes:** character-creation choices, progression, sheet-session
+projection, and character battle-entry projection.
 
 **Also:** Surface-authored content records, shared reducer algebras, MCP
 session workflows, React app routes, and QA corpus
@@ -42,16 +40,16 @@ session workflows, React app routes, and QA corpus
 **Surface** (`packages/surface`) — source-authored records and projection
 contracts for Units, Stat Blocks, spells, class features, and related content.
 
-**Battle runtime** (`packages/battle-runtime`) — promoted Unit/StatBlock-backed
-battle reducer behavior. `packages/battle-runtime/battle-runtime.qnt` is the
-active battle proof/spec authority.
+**Battle runtime** (`packages/battle-runtime`) — Unit/StatBlock-backed battle
+reducer behavior. `packages/battle-runtime/battle-runtime.qnt` is the active
+battle proof/spec authority.
 
 **Character runtimes** (`packages/character-creation-runtime`,
 `packages/character-sheet-runtime`, `packages/character-battle-runtime`) —
 package-owned character build, sheet-session, and battle-entry projections.
 
 **MCP and app** (`packages/mcp`, `packages/app`) — user-facing workflows over
-the promoted runtimes. They must not import `@dnd/v0`.
+the runtime packages.
 
 **QA pipeline** (`scripts/qa/`) — community Q&A turned into Quint test assertions by LLM. See [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
 
@@ -63,17 +61,10 @@ pnpm test                       # workspace package tests
 pnpm dev                        # React UI
 ```
 
-## Legacy v0 MBT
+## Archived v0
 
-Root `battle.qnt` and the v0 battle MBT are legacy/Core broad proof and
-restore material. They are not the promoted `@dnd/battle-runtime` verification
-gate, and `packages/v0` is intentionally excluded from the active pnpm
-workspace.
-
-Legacy battle MBT traces are nondeterministic when live generation is used:
-each seed generates different traces through the old v0 battle state space.
-Failures include a seed for reproduction. Re-enable Core locally only for
-restore-source work; do not add it back to promoted workspace gates.
+`packages/v0` is archived restore-source material and is intentionally outside
+the active workspace. See `packages/v0/README.md`.
 
 ## SRD parity
 

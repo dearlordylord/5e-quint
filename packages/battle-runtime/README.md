@@ -94,10 +94,9 @@ table/contract-test problem. QNT/MBT should target procedure-family behavior and
 composition, not one model trace per authored Unit, Spell Record, feature, or
 Stat Block.
 
-Projected executable vocabulary must stay out of this package. If old v0 or
-deleted Correction material names a projected action, translate the SRD
-procedure into Surface readers, support gates, battle subjects, holes, and
-reducer state instead of restoring the projected vocabulary.
+Projected executable vocabulary must stay out of this package. Translate SRD
+procedures into Surface readers, support gates, battle subjects, holes, and
+reducer state instead of restoring projected-action vocabulary.
 
 Surface holes and runtime holes are different concepts. Surface holes are
 authored source-language constructs that appear in Unit/Spell/Stat Block
@@ -146,7 +145,7 @@ Allowed boundaries:
 - composition/user-selection boundary (`@dnd/mcp` explicit identity-retention
   files only, not the whole package),
 - tests/fixtures,
-- legacy v0 quarantine (`@dnd/v0`),
+- archived restore-source package,
 - character-creation support-profile boundary files.
 
 Reducer support and resolution files in `@dnd/battle-runtime` are intentionally
@@ -633,43 +632,39 @@ the restored interrupt/readied/OA lanes,
 broad bonus-action subjects beyond Second Wind and admitted Stat Block action
 options, and the remaining zero-HP lifecycle width listed above.
 
-## Width Overlap Reconciliation
+## Implemented Width Notes
 
-The first promoted width slice overlaps several old v0 battle concepts. The
-runtime keeps the overlap executable through typed Surface records, Character
-Build facts, and battle-owned state instead of restoring the old projected
-executable vocabulary.
+The current width slice stays executable through typed Surface records,
+Character Build facts, and battle-owned state instead of projected executable
+vocabulary.
 
-- Action Surge matches the old v0 rule shape for Fighter level 2: a Unit
-  resource grants one additional action that excludes Magic, spends one
-  Short/Long Rest use, and is once per turn. Discovery and resolution share one
-  support parser for the admitted single-phase, single-effect Surface
-  activation shape. The promoted runtime encodes the extra action as a
-  restricted `RuntimeActionResource`, not a scalar action counter plus pending
-  flag.
-- Second Wind matches the old v0 healing lane without restoring projected
-  executable vocabulary: the retained Unit selects the direct self-healing
-  Bonus Action procedure, the runtime asks for the `1d10` roll, spends one
+- Action Surge for Fighter level 2 is modeled as a Unit resource that grants
+  one additional action excluding Magic, spends one Short/Long Rest use, and is
+  once per turn. Discovery and resolution share one support parser for the
+  admitted single-phase, single-effect Surface activation shape. The runtime
+  encodes the extra action as a restricted `RuntimeActionResource`, not a scalar
+  action counter plus pending flag.
+- Second Wind is modeled as a retained Unit selecting the direct self-healing
+  Bonus Action procedure. The runtime asks for the `1d10` roll, spends one
   feature use and the turn Bonus Action, and heals through the same HP boundary
   used by damage and death-save recovery.
-- Wizard action-time spells match the old v0 distinction between prepared
-  level-1 spells that spend Spell Slots and cantrips that do not for the
-  implemented `magic_missile` and `ray_of_frost` lane. The promoted runtime
-  intentionally does not restore old broad save-spell, reaction, ritual,
-  concentration, upcast, or one-slot-per-turn coverage in this slice.
+- Wizard action-time spells distinguish prepared level-1 spells that spend
+  Spell Slots from cantrips that do not for the implemented `magic_missile` and
+  `ray_of_frost` lane. Broad save-spell, reaction, ritual, concentration,
+  upcast, and one-slot-per-turn coverage remain outside this slice.
 - The armor-training spell gate matches the SRD/Core consequence that worn armor
   without matching Armor Training prevents spellcasting. The gate is executable:
   composition sets `canCastSpells`, spell act discovery checks it, and runtime
   Spell Slot expenditure state is preserved rather than cleared. Missing shield
   training alone does not block spellcasting.
-- Skeleton Stat Block damage modifiers match old v0 damage modifier order for
-  supported paths: immunity first, then resistance, then vulnerability.
-  Skeleton's Bludgeoning vulnerability and Poison damage immunity are read from
-  the retained `StatBlockRecord` at the HP mutation boundary. Exhaustion and
-  Poisoned condition immunities remain authored Stat Block facts, but
-  condition-application lanes for those facts are not restored here.
+- Skeleton Stat Block damage modifiers apply immunity first, then resistance,
+  then vulnerability for supported paths. Skeleton's Bludgeoning vulnerability
+  and Poison damage immunity are read from the retained `StatBlockRecord` at the
+  HP mutation boundary. Exhaustion and Poisoned condition immunities remain
+  authored Stat Block facts, but condition-application lanes for those facts are
+  outside this slice.
 
-Traceability for this overlap comes from local SRD 5.2.1 text: Fighter Action
+Traceability for this behavior comes from local SRD 5.2.1 text: Fighter Action
 Surge (`Classes/Fighter.md:76-80`), Wizard Spellcasting
 (`Classes/Wizard.md:56-82`), spell access and slots
 (`Spells/Gaining-and-Casting.md:3-65`), armor casting restrictions
@@ -713,10 +708,7 @@ Zero-HP lifecycle is a typed union on each `BattleCreatureState`.
 Unit/StatBlock-backed battle work. `battle-runtime.qnt` is the canonical
 package-local spec for this runtime's implemented subset.
 
-Old root `battle.qnt` and v0 battle MBT are legacy/Core broad proof and
-restore source material. They are not the place to add new promoted runtime
-behavior. Missing old-only behavior is future width/restoration work, not
-evidence that old v0 remains canonical.
+Archived restore-source packages are not active authorities for this runtime.
 
 ## Proof Strategy
 
@@ -747,8 +739,7 @@ combatants and bounded fills.
 
 Prefer table-driven contract tests for ordinary catalog width: another weapon,
 spell, Unit, or Stat Block that exercises an already proved reducer family
-without changing its semantic shape. Do not use integrated MBT to prove old-only
-Core breadth before that behavior is restored in the promoted runtime.
+without changing its semantic shape.
 
 The first selected integrated candidate is Fighter weapon Attack against a
 Skeleton Stat Block target through public `discoverBattleActs`,
@@ -756,19 +747,17 @@ Skeleton Stat Block target through public `discoverBattleActs`,
 Action Surge, Magic Missile, and Ray of Frost when their trace interactions
 justify MBT over deterministic tests.
 
-Keep four facts separate when changing battle behavior:
+Keep these facts separate when changing battle behavior:
 
 - semantic authority: promoted `@dnd/battle-runtime`;
-- feature breadth: old v0 may still cover behavior this runtime has not
-  restored yet;
-- proof depth: old v0 MBT is useful evidence, while promoted behavior is
-  checked here by reducer tests and `battle-runtime.qnt`;
+- feature breadth: unimplemented SRD behavior is future width work;
+- proof depth: runtime behavior is checked here by reducer tests and
+  `battle-runtime.qnt`;
 - content encoding: Surface `UnitRecord` and `StatBlockRecord` remain authored
   content, not runtime state or provenance labels.
 
 When changing promoted battle behavior, update `src/index.ts`, focused reducer
-tests, and `battle-runtime.qnt` together. Use old `battle.qnt`/Core MBT as
-reference material, and record any intentional divergence from shared behavior
+tests, and `battle-runtime.qnt` together. Record intentional modeling choices
 with an SRD citation or `ASSUMPTIONS.md` entry.
 
 ## RAW Traceability

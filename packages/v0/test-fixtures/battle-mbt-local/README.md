@@ -1,8 +1,8 @@
-Local legacy v0 battle MBT fixture for `battle-projection.mbt.test.ts`.
+Archived battle MBT fixture for `battle-projection.mbt.test.ts`.
 
 Purpose:
 
-- keep the legacy v0 battle-projection MBT path stable and fast
+- keep the archived battle-projection MBT path stable and fast
 - avoid live battle trace generation in the projection driver during normal
   explicit legacy runs
 
@@ -11,8 +11,7 @@ Important:
 - this fixture is not a substitute for randomized MBT coverage
 - CI/fuzz runs should use live generation with explicit seeds/settings
 - if `battle.qnt`, MBT picks, or replay decoding changes, regenerate this trace
-- legacy v0 battle MBT is proof-source material for old v0 behavior, not a
-  promoted `@dnd/battle-runtime` verification gate
+- this fixture is not an active `@dnd/battle-runtime` verification gate
 
 Regenerate:
 

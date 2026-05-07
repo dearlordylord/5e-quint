@@ -111,8 +111,8 @@ seed, diagnose, and fix unless the user explicitly says otherwise.
 
 ## MBT runs are expensive
 
-Promoted battle-runtime MBT is selective, and old v0/root battle MBT is
-restore-source material only. **Treat MBT runs as a scarce resource.**
+Battle-runtime MBT is selective. Archived restore-source MBT is not an active
+verification lane. **Treat MBT runs as a scarce resource.**
 
 - Never run battle MBT for exploratory questions (checking a variable shape, confirming a format). Answer those by reading source code, quint-connect internals, ITF docs, or writing a focused unit test.
 - Only run battle MBT for actual end-to-end validation after code changes are complete.
@@ -123,14 +123,11 @@ restore-source material only. **Treat MBT runs as a scarce resource.**
   1. Write a focused TS unit test that replays the specific event sequence against package runtime reducers directly (milliseconds, no Quint).
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
   3. Trace through the package-local Quint spec logic manually by reading the code.
-- **Promoted battle-runtime MBT:** use
+- **Battle-runtime MBT:** use
   `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`
   for completed battle-runtime behavior changes that need integrated MBT.
-- **Legacy v0 MBT:** `packages/v0`, root `battle.qnt`, `creature.qnt`, and
-  old v0 MBT are quarantined restore-source material. Do not add them to
-  promoted workspace gates.
-- **Old fuzz tiers:** root fuzz and overnight scripts target the old v0/root
-  proof lane. They are not promoted verification gates.
+- **Archived MBT/fuzz tiers:** root fuzz and overnight scripts are not active
+  verification gates.
   - **Coverage lever is `MBT_TRACES`, not `MBT_MAX_SAMPLES`.** `MBT_TRACES=N` generates N distinct random walks per vitest call. `MBT_MAX_SAMPLES` is a search budget for invariant checking — irrelevant for MBT trace generation (first walk always succeeds). Do not escalate `MBT_MAX_SAMPLES` expecting more coverage.
 - **If a seed is slow**, re-run without `QUINT_SEED` for a fresh one. Slow-seed rate measured at ~49% for invariant fuzzer (5 samples × 5 steps, 120s timeout) and 0% for battle MBT Tier 1 (10 seeds). Slow seeds are caused by branch count (Finding 14), not nondet range sizes.
 - **Slow evaluator? Try different seeds first.** Slow seeds are caused by branch count (Finding 14), not nondet range sizes. Re-run with fresh seeds before considering range narrowing. If narrowing is truly necessary, keep domain-correct ranges as comments and document the narrowing rationale in the code.

@@ -13,8 +13,7 @@ Current authority summary:
 
 - `@dnd/battle-runtime` plus `packages/battle-runtime/battle-runtime.qnt` is the
   promoted battle authority for new Unit/StatBlock-backed behavior.
-- Root `battle.qnt` and old v0 battle code are legacy proof/restore source
-  material only.
+- Archived restore-source packages are not active implementation targets.
 - The most recent proof work is `QCORE11`: Stat Block attack controls,
   Multiattack named dispatch, Bonus Action and Reaction windows, Legendary
   Action windows, X/Day, Recharge, rest recharge, and start-turn recharge rolls.

@@ -210,7 +210,7 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
   --opencode-timeout-seconds 600 \
   --codex-model gpt-5.3-codex-spark \
   --max-task-attempts 3 \
-  --test-command "pnpm --filter @dnd/v0 test" \
+  --test-command "pnpm --filter @dnd/mcp test" \
   --output-branch "ralph/my-run/integration" \
   --run-id "my-run" \
   --keep-worktrees

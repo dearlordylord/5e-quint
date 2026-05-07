@@ -4,15 +4,8 @@ This is a data-flow map of the `@dnd/battle-runtime` reducer. It owns the
 battle protocol for package callers: initialize combatants, discover battle
 subjects, replay caller fills, resolve state transitions, and expose snapshots.
 
-`@dnd/battle-runtime` is the semantic authority for promoted
-Unit/StatBlock-backed battle behavior. `battle-runtime.qnt` is its canonical
-package-local spec.
-
-Deleted legacy Correction docs, old root `battle.qnt`, and v0 battle MBT
-remain useful breadth/proof source material, not active promoted runtime
-authorities. Correction was legacy source material for prior Surface/Unit-shaped
-reducer work; it was never the promoted owner of Unit/StatBlock-backed battle
-runtime behavior.
+`@dnd/battle-runtime` is the semantic authority for Unit/StatBlock-backed battle
+behavior. `battle-runtime.qnt` is its canonical package-local spec.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied
@@ -213,12 +206,11 @@ flowchart TD
   Broader generic Bonus Action subjects remain future width.
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
-  source material, not the target for new promoted behavior.
+  source material, not the target for new runtime behavior.
 - The first integrated promoted MBT is
   `src/battle-runtime.mbt.test.ts` plus `battle-runtime.mbt.qnt`. It targets the
-  public weapon Attack reducer path against Skeleton, is intentionally narrower
-  than the old v0 MBT, and does not require MBT for every authored Unit or
-  Stat Block.
+  public weapon Attack reducer path against Skeleton and does not require MBT
+  for every authored Unit or Stat Block.
 - Focused rule-core MBT lanes use one small `.mbt.qnt` spec and one matching
   driver per QCORE family. They project scalar QCORE-observable facts and call
   production reducer entrypoints instead of duplicating reducer logic. The first
@@ -228,12 +220,7 @@ flowchart TD
   Opportunity Attack resume against `resolveBattleSubject` and
   `resolveBattleReaction`.
 
-## Relationship To Core And Deleted Correction
-
-`@dnd/v0`, root `battle.qnt`, and the old v0 battle MBT are the legacy
-battle system being strangled. They remain the broadest source for old behavior,
-feature expectations, and proof material, but they are not the active owner for
-new promoted Unit/StatBlock-backed battle behavior.
+## Relationship To Deleted Correction
 
 Deleted `packages/surface-runtime-correction` material represented earlier
 Surface/Unit reducer mechanics. Its remaining facts are preserved here as

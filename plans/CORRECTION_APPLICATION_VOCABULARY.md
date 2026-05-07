@@ -45,10 +45,10 @@ Blocks.
 
 Battle Creature Init - one-time runtime input used to initialize a creature in
 battle. Character creature-init inputs are projected from a Character Sheet plus
-selected Unit lookups in the MCP green package. Stat Block creature-init inputs
-are projected from a Stat Block record plus encounter-local facts such as
-combatant identity and current HP. A creature-init input is not the creature; it
-is consumed by `startBattle` to build battle creature state.
+selected Unit lookups at the MCP composition boundary. Stat Block creature-init
+inputs are projected from a Stat Block record plus encounter-local facts such
+as combatant identity and current HP. A creature-init input is not the creature;
+it is consumed by `startBattle` to build battle creature state.
 
 Battle Creature State - durable runtime combat view of a creature inside one
 battle. Character-derived and Stat Block-derived participants both become
@@ -90,7 +90,7 @@ CharacterBattleCreatureInit + StatBlockBattleCreatureInit -> BattleState
 - Do not let Stat Block-derived creatures own Units merely because Stat Blocks
   reuse shared Surface sub-shapes.
 - Do not introduce a new executable IR between Surface and runtime packages.
-- Put cross-runtime mapping in the MCP green package unless there is a
+- Put cross-runtime mapping at the MCP composition boundary unless there is a
   deliberate package ownership change.
 
 ## Example Checks

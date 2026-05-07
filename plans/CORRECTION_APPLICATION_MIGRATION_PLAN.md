@@ -61,17 +61,13 @@ Core-free runtime packages must have this dependency direction only:
 @dnd/surface <- @dnd/mcp
 ```
 
-Neither runtime package may depend on `@dnd/core`. The promoted MCP
-tools must not import `@dnd/core`; omitted legacy MCP/Core
-behavior must stay represented by Restore Ledger rows instead of retained
-route code.
+Neither runtime package may depend on `@dnd/core`. MCP tools must not import
+`@dnd/core`; omitted behavior must stay represented by Restore Ledger rows
+instead of retained route code.
 
-Historical naming note: MCP temporarily used a literal `src/green/` directory
-as a side-by-side lane next to legacy Core-backed MCP modules. CAM20 promoted
-that lane into the normal MCP server route and deleted the old Core-backed MCP
-directory. The promoted MCP path, `@dnd/surface`,
-`@dnd/character-creation-runtime`, and `@dnd/battle-runtime` are all part of
-the Core-free migration path.
+CAM20 completed the MCP route consolidation. The normal MCP server route is the
+runtime-backed path over `@dnd/surface`, `@dnd/character-creation-runtime`, and
+`@dnd/battle-runtime`.
 
 ## Unit Collections
 
@@ -326,56 +322,36 @@ CAM18 carry-forward gates:
 
 ## Phase 4: Controlled Core Break
 
-After the phase-1/2 QNT tests exist, the promoted MCP server vertical fixture passes, and
+After the phase-1/2 QNT tests exist, the MCP server vertical fixture passes, and
 every intentionally omitted projected lane has a Restore Ledger row with
 `39f9ab71` references:
 
-1. Move legacy Core-backed MCP routes/tests into a separate deletion-marked
-   package before deleting projected code, so `@dnd/mcp` package tests describe
-   the promoted runtime path instead of mixed legacy behavior.
+1. Keep `@dnd/mcp` package tests focused on the runtime-backed path.
 2. Delete `CPU*`, `PEA*`, and `PPR*` projected execution code where no longer referenced.
 3. Allow old app/Core routes outside the MCP/runtime vertical to fail only
    if they are in the Restore Ledger.
 4. Keep local comments only as pointers to this plan; this plan is the source of truth.
 
-## Phase 5: Green Reconciliation And MCP Promotion
+## Phase 5: MCP Route Consolidation
 
-`packages/mcp/src/green/` is a migration isolation lane, not the final MCP
-architecture. It exists so the runtime vertical can be made
-runnable while the legacy Core-backed `src/server.ts` path still exists.
+The MCP runtime tools are served from the normal MCP server path:
 
-After CAM19 isolates the Core-backed MCP path into a deletion-marked legacy
-package and deletes unreferenced projected vocabulary, the next required step
-is to reconcile the MCP runtime tools into the main MCP server path:
-
-1. Promote the character creation, monster selection, battle
-   start, battle act discovery, battle fill/resolve, and End Turn tools to the
-   normal MCP server/router entrypoint.
-2. Remove the deletion-marked legacy MCP package, or keep it only with explicit
-   Restore Ledger coverage outside the promoted route.
-3. Retire `src/green/` as a separate namespace once its tools are either moved
-   into the main MCP path or reduced to ordinary composition helpers with no
-   "green" naming.
-4. Replace "green fixture" tests with normal MCP server tests over the promoted
-   entrypoint.
-5. Keep any still-omitted app/Core behavior only through Restore Ledger rows
+1. Character creation, monster selection, battle start, battle act discovery,
+   battle fill/resolve, and End Turn tools live behind the normal MCP
+   server/router entrypoint.
+2. Keep any still-omitted app/Core behavior only through Restore Ledger rows
    with restore conditions.
 
-Green finalization criteria:
+MCP route criteria:
 
 - no MCP tool path needed for the runnable Fighter/Goblin vertical imports
   `@dnd/core`;
 - no `CPU*`, `PEA*`, `PPR*`, or projected executable vocabulary remains in the
-  promoted MCP/runtime path;
-- `packages/mcp/src/server.ts` or its replacement serves the
-  vertical directly;
-- `src/green/` no longer contains user-facing MCP tools, or the directory is
-  deleted;
-- normal MCP tests, not only green-specific tests, cover create/finalize
-  character, select a Stat Block creature, start battle, Attack with damage,
-  Goblin Warrior Attack with damage, and End Turn;
-- docs stop describing the green path as the active way to use MCP and instead
-  describe the promoted runtime path;
+  MCP/runtime path;
+- the normal MCP server path serves the vertical directly;
+- normal MCP tests cover create/finalize character, select a Stat Block
+  creature, start battle, Attack with damage, Goblin Warrior Attack with
+  damage, and End Turn;
 - temporary QNT authority is resolved per the Verification section's single
   battle-authority gate.
 
@@ -383,20 +359,10 @@ Green finalization criteria:
 
 Every omitted lane is wanted back after Correction application and app growth resumes.
 
-CAM19A current-head refresh (`41a71d3dec664ab3a7036b5c02da7c6d41ac3670`):
-the MCP runtime lane exists under `packages/mcp/src/green/` and has no
-direct `@dnd/core` imports. The remaining Core-backed MCP files are now a
-deletion-marked legacy isolation target for CAM19B, not shared infrastructure
-for the promoted path. The detailed current inventory and CAM19B-CAM19D
-checklist live in `plans/phase0-core-deletion-restore-audit.md`.
-
-CAM20 promotion: the normal MCP server route is backed by the runtime packages through
-`packages/mcp/src/server.ts`. The temporary `packages/mcp/src/green/` namespace
-and deletion-marked `packages/mcp/src/legacy-core/` directory were removed from
-the package. `@dnd/mcp` no longer depends on `@dnd/core`; omitted legacy Core
-behavior remains preserved conceptually through the Restore Ledger rows below,
-with baseline references pointing at pre-migration commits instead of retained
-legacy files.
+CAM20 promotion: the normal MCP server route is backed by the runtime packages.
+`@dnd/mcp` no longer depends on `@dnd/core`; omitted Core behavior remains
+preserved conceptually through the Restore Ledger rows below, with baseline
+references pointing at earlier commits instead of retained legacy files.
 
 CAM20 closeout checks:
 
@@ -405,11 +371,10 @@ CAM20 closeout checks:
   remains traced through the SRD-backed manifest, Surface records, and
   `UBIQUITOUS_LANGUAGE.md` terms such as Attack Roll, Initiative, Hit Points,
   and Damage Type.
-- `/simplify` convergence: round 1 replaced remaining active green-path wording
-  in this plan with promoted MCP/runtime terminology and added this closeout
-  note; round 2 rechecked promoted MCP/runtime paths for `@dnd/core`,
-  projected-executable vocabulary, `src/green`, and user-facing green naming
-  and found no further important fixes.
+- `/simplify` convergence: round 1 replaced remaining active route-isolation
+  wording in this plan with MCP/runtime terminology and added this closeout
+  note; round 2 rechecked MCP/runtime paths for `@dnd/core` and
+  projected-executable vocabulary and found no further important fixes.
 
 CAM21 closeout: the first promoted end-user MCP vertical is accepted for Orc
 Soldier Fighter 1 versus Goblin Warrior. The accepted post-battle handoff covers

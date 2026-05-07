@@ -153,9 +153,7 @@ Deferred workflow gates:
   casting spells with higher-level Spell Slots, persistent spell effects such as
   Mage Armor, and post-turn lifecycle subjects remain outside this workflow.
 
-Normal package tests cover the MCP server route. The removed v0-backed MCP
-route's omitted behavior is governed by the Restore Ledger in
-`plans/CORRECTION_APPLICATION_MIGRATION_PLAN.md`.
+Normal package tests cover the MCP server route.
 
 `BattleResolutionResult` may include display-facing result details for tool
 responses, but `BattleState` remains authoritative. Optional display logs must
@@ -172,9 +170,8 @@ MCP session state belongs here when it is tool workflow state:
 draft handles, selected content ids, durable battle ids, and transient fills.
 Reducer state and rules behavior remain owned by the runtime packages.
 
-MCP tools should use their final user-facing tool names. The
-implementation boundary is the module/package registration path, not a
-migration-prefixed tool name.
+MCP tools should use their final user-facing tool names. The implementation
+boundary is the module/package registration path.
 
 MCP input and output contracts are authored as Effect Schema codecs and exported
 to MCP as generated JSON Schema. Boundary handlers decode tool arguments through
@@ -194,10 +191,4 @@ tools.
 
 `start_battle` must receive caller-supplied Initiative scores for every
 combatant in `initialCombatants`. MCP must not derive Initiative as
-`10 + modifier` in the runtime path.
-
-No MCP/runtime path may import `@dnd/v0`. Check that boundary with:
-
-```sh
-rg '@dnd/v0' packages/mcp/src packages/character-creation-runtime packages/battle-runtime
-```
+`10 + modifier`.

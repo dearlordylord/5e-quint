@@ -42,8 +42,7 @@ Three-way separation:
   taxonomy problems. Fed into the pairing workspace's surface docs
   (e.g., `SURFACES_spells.md` cites `RESEARCH_foundry_effect_staging.md`
   for effect staging patterns). Read-only.
-- `packages/surface/` (this package) — **where the surface evolves**. It remains
-  independent from engine packages and has no `@dnd/v0` dependency. Runtime
+- `packages/surface/` (this package) — **where the surface evolves**. Runtime
   packages consume it through typed record/catalog boundaries.
 
 ## Runtime Boundary
