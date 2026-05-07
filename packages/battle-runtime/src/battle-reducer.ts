@@ -33,6 +33,13 @@ import {
   statBlockArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
+  effectiveSpeed as sharedEffectiveSpeed,
+  type CreatureSpeedFacts,
+  type SpecialSpeedCandidate,
+  type SpeedChange,
+} from "@dnd/shared-algebras/speed-algebra";
+import { ordinaryMovementCost } from "@dnd/shared-algebras/movement-cost-algebra";
+import {
   applyCondition,
   EMPTY_CONDITION_STATE,
   hasCondition,
@@ -109,6 +116,7 @@ import {
 } from "@dnd/shared/types";
 import {
   STANDARD_ACTION_KINDS,
+  type SpeedType,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
 import type {
@@ -224,6 +232,10 @@ import {
 const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 const SHIELD_MAGIC_MISSILE_SPELL_ID =
   "magic_missile" satisfies SpellRecord["id"];
+const BATTLE_SPECIAL_SPEED_KINDS = [
+  "climb",
+  "swim",
+] as const satisfies ReadonlyArray<Exclude<BattleMovementSpeedKind, "walk">>;
 type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
 type BattlePassiveSpeedProfile =
   | BattlePassiveSpeedBonusSupportProfile
@@ -10609,7 +10621,11 @@ function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
-  if (fill.value.movementCostFeet > Number(movementBudgetFeet)) {
+  const movementCost = ordinaryMovementCost(
+    movementFeet(fill.value.movementCostFeet),
+    fill.value.speedKind,
+  );
+  if (Number(movementCost.costFeet) > Number(movementBudgetFeet)) {
     return {
       tag: "invalid",
       message: "Movement cost exceeds the combatant's remaining Movement.",
@@ -10665,7 +10681,7 @@ function parseBattleMovement(
     movement: {
       moverId,
       speedKind: fill.value.speedKind,
-      movementCostFeet: movementFeet(fill.value.movementCostFeet),
+      movementCostFeet: movementCost.costFeet,
       provokedOpportunityAttacks,
       spendsTurnMovement: options.spendsTurnMovement ?? true,
     },
@@ -16502,49 +16518,12 @@ function effectiveMovementSpeed(
   speedKind: BattleMovementSpeedKind,
   isGrappled = false,
 ): MovementFeet {
-  if (
-    isGrappled ||
-    hasCondition(combatant.conditions, "paralyzed") ||
-    hasCondition(combatant.conditions, "petrified") ||
-    hasCondition(combatant.conditions, "restrained") ||
-    hasCondition(combatant.conditions, "stunned") ||
-    hasCondition(combatant.conditions, "unconscious")
-  ) {
-    return movementFeet(0);
-  }
-  const base = baseMovementSpeed(combatant, speedKind);
-  if (base === null) {
-    return movementFeet(0);
-  }
-  const passiveFeatureDelta = passiveSpeedBonusDelta(combatant);
-  const delta = combatant.activeEffects
-    .filter((effect) => effect.kind === "speedDelta")
-    .reduce((total, effect) => total + effect.deltaFeet, 0);
-  return movementFeet(base + passiveFeatureDelta + delta);
-}
-
-function baseMovementSpeed(
-  combatant: BattleCreatureState,
-  speedKind: BattleMovementSpeedKind,
-): number | null {
-  if (speedKind === "walk") {
-    return baseWalkSpeed(combatant);
-  }
-  if (
-    combatant.origin.kind === "character" &&
-    passiveSpeedKindGrantKinds(combatant).includes(speedKind)
-  ) {
-    return baseWalkSpeed(combatant);
-  }
-  if (combatant.origin.kind === "statBlock") {
-    const specialSpeed = combatant.origin.statBlock.statBlock.speeds.find(
-      (speed) => speed.kind === speedKind && speed.feet.kind === "literal",
-    );
-    return specialSpeed?.feet.kind === "literal"
-      ? specialSpeed.feet.value
-      : null;
-  }
-  return null;
+  return (
+    sharedEffectiveSpeed(
+      battleCreatureSpeedFacts(combatant, isGrappled),
+      speedKind,
+    ) ?? movementFeet(0)
+  );
 }
 
 function baseWalkSpeed(combatant: BattleCreatureState): number {
@@ -16557,6 +16536,67 @@ function baseWalkSpeed(combatant: BattleCreatureState): number {
   return walkSpeed?.feet.kind === "literal" ? walkSpeed.feet.value : 0;
 }
 
+function battleCreatureSpeedFacts(
+  combatant: BattleCreatureState,
+  isGrappled = false,
+): CreatureSpeedFacts {
+  return {
+    ordinarySpeedFeet: movementFeet(baseWalkSpeed(combatant)),
+    speedChanges: battleSpeedChanges(combatant),
+    specialSpeeds: battleSpecialSpeedCandidates(combatant),
+    terminalSpeedZero: battleTerminalSpeedZero(combatant, isGrappled),
+  };
+}
+
+function battleSpeedChanges(
+  combatant: BattleCreatureState,
+): readonly SpeedChange[] {
+  const passiveFeatureDelta = passiveSpeedBonusDelta(combatant);
+  const activeEffectDelta = combatant.activeEffects
+    .filter((effect) => effect.kind === "speedDelta")
+    .reduce((total, effect) => total + effect.deltaFeet, 0);
+  return [
+    { deltaFeet: movementDeltaFeet(passiveFeatureDelta + activeEffectDelta) },
+  ];
+}
+
+function battleSpecialSpeedCandidates(
+  combatant: BattleCreatureState,
+): readonly SpecialSpeedCandidate[] {
+  const candidates: SpecialSpeedCandidate[] = [];
+  if (combatant.origin.kind === "character") {
+    for (const speedType of passiveSpeedKindGrantKinds(combatant)) {
+      candidates.push({ kind: "equalToSpeed", speedType });
+    }
+  }
+  if (combatant.origin.kind === "statBlock") {
+    for (const speed of combatant.origin.statBlock.statBlock.speeds) {
+      if (isBattleLiteralSpecialSpeed(speed)) {
+        candidates.push({
+          kind: "fixed",
+          speedType: speed.kind,
+          speedFeet: movementFeet(speed.feet.value),
+        });
+      }
+    }
+  }
+  return candidates;
+}
+
+function battleTerminalSpeedZero(
+  combatant: BattleCreatureState,
+  isGrappled: boolean,
+): boolean {
+  return (
+    isGrappled ||
+    hasCondition(combatant.conditions, "paralyzed") ||
+    hasCondition(combatant.conditions, "petrified") ||
+    hasCondition(combatant.conditions, "restrained") ||
+    hasCondition(combatant.conditions, "stunned") ||
+    hasCondition(combatant.conditions, "unconscious")
+  );
+}
+
 function representedMovementSpeedKinds(
   combatant: BattleCreatureState,
 ): readonly BattleMovementSpeedKind[] {
@@ -16566,15 +16606,25 @@ function representedMovementSpeedKinds(
   }
   if (combatant.origin.kind === "statBlock") {
     for (const speed of combatant.origin.statBlock.statBlock.speeds) {
-      if (
-        (speed.kind === "climb" || speed.kind === "swim") &&
-        speed.feet.kind === "literal"
-      ) {
+      if (isBattleLiteralSpecialSpeed(speed)) {
         kinds.add(speed.kind);
       }
     }
   }
   return BATTLE_MOVEMENT_SPEED_KINDS.filter((kind) => kinds.has(kind));
+}
+
+function isBattleLiteralSpecialSpeed(speed: {
+  readonly kind: SpeedType;
+  readonly feet: { readonly kind: string };
+}): speed is {
+  readonly kind: (typeof BATTLE_SPECIAL_SPEED_KINDS)[number];
+  readonly feet: { readonly kind: "literal"; readonly value: number };
+} {
+  return (
+    speed.feet.kind === "literal" &&
+    BATTLE_SPECIAL_SPEED_KINDS.some((kind) => kind === speed.kind)
+  );
 }
 
 function passiveSpeedKindGrantKinds(

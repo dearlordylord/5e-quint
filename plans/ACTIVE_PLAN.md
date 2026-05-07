@@ -376,7 +376,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 144,
       "id": "QMBT49",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Extract Shared Speed and Movement Cost Algebras"
     },
     {
@@ -487,7 +487,7 @@ Keep it synchronized with the DAG table and task details.
 | 141   | QMBT46 - Recursive Unit Profile Planning Review | done | QMBT44-QMBT45 | QMBT47-QMBT52 | [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Relentless Endurance feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT44-QMBT45 review, refreshed PRD status notes, and appended QMBT47-QMBT52 because the matrix lane is not complete. |
 | 142   | QMBT47 - Promote Relentless Endurance Zero-Hit-Point Replacement | done | QMBT45-QMBT46 | QMBT48-QMBT52 | [Relentless Endurance feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT45_RELENTLESS_ENDURANCE_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `orc_relentless_endurance` as `unit-feature.zero-hit-point-replacement` through the existing zero-Hit-Point lifecycle, authored `triggered_replacement` mechanics shape parsing, deterministic admission evidence, focused runtime parity, and refreshed matrix artifacts. |
 | 143   | QMBT48 - Select Next SRD Feature Widening Slice After Relentless Endurance | done | QMBT47 | QMBT49-QMBT52 | [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `orc_adrenaline_rush` as the next SRD feature widening slice, with a red/green plan for a Bonus Action Dash coupled Temporary Hit Point Unit-feature profile. |
-| 144   | QMBT49 - Extract Shared Speed and Movement Cost Algebras | ready-for-implementation-after-light-research | QMBT44, QMBT48 | QMBT52 | [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md) | Extract Speed capacity and Movement cost logic into `@dnd/shared-algebras`, then refactor battle Roving/Fast Movement speed-kind behavior to use the shared algebras while keeping battle legality and spatial facts local. |
+| 144   | QMBT49 - Extract Shared Speed and Movement Cost Algebras | done | QMBT44, QMBT48 | QMBT52 | [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md) | Completed shared Speed capacity and Movement cost algebras in `@dnd/shared-algebras`, documented `"walk"` as ordinary SRD Speed, and refactored battle Roving/Fast Movement speed-kind behavior to call the shared algebras while keeping battle legality and spatial facts local. |
 | 145   | QMBT50 - Carry Unit Feature Support Profile Payloads | ready-for-implementation-after-light-research | QMBT27, QMBT37 | QMBT52 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Refactor promoted Unit feature support profiles so runtime-needed payload facts stay on `BattleUnitRef` instead of being collapsed to marker strings and re-hardcoded downstream; migrate Archery `+2` and Extra Attack `additionalAttacks: 1` first. |
 | 146   | QMBT51 - Structure Spell Invocation Identity and Resource Access | ready-for-implementation-after-light-research | QMBT5, QMBT22, QMBT28, QMBT42 | QMBT52 | [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Refactor promoted battle-runtime spell acts so subjects and supported invocations use structured domain refs, constrained access/resource/procedure unions, and branded boundary types instead of encoded `spellActId` strings and mixed variant names. |
 | 147   | QMBT52 - Recursive Unit Profile Planning Review | ready-for-research | QMBT47-QMBT51 | QMBT53+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md) | Review QMBT47-QMBT51 findings, update PRD and plan docs, and append the next task batch, including the selected Adrenaline Rush implementation task if the Unit profile matrix lane remains active. |
@@ -2077,7 +2077,7 @@ append the implementation task if the Unit profile matrix lane remains active.
 
 ### Task 144 - QMBT49 - Extract Shared Speed and Movement Cost Algebras
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT44, QMBT48
 
@@ -2113,6 +2113,16 @@ deterministic shared-algebra tests; `pnpm --filter @dnd/shared typecheck`;
 Roving/Fast Movement/movement; battle MBT only after battle integration is
 complete and only once using the mandatory timed background protocol;
 `/simplify` convergence, minimum two rounds.
+
+Closeout: completed shared `speed-algebra` and `movement-cost-algebra`
+extraction, package exports and deterministic tests, `"walk"` ordinary Speed
+documentation, and battle-runtime integration for current walk/climb/swim
+support. RAW review covered the local SRD Speed, Dash, Difficult Terrain,
+Climbing, Climb Speed, Swimming, Swim Speed, Grappled, and Ranger Roving
+passages plus `UBIQUITOUS_LANGUAGE.md` Movement and `ASSUMPTIONS.md` A41.
+Verification passed with shared/shared-algebras/battle-runtime typechecks,
+shared deterministic algebra tests, targeted battle-runtime movement tests,
+one Tier 1 battle MBT run, `/simplify` convergence, and `pnpm quality`.
 
 ### Task 145 - QMBT50 - Carry Unit Feature Support Profile Payloads
 

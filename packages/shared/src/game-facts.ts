@@ -158,6 +158,8 @@ export const CREATURE_TYPES = [
 ] as const;
 export type CreatureType = (typeof CREATURE_TYPES)[number];
 
+// "walk" is the code-facing kind for ordinary SRD Speed, not a separate
+// walk/run mode. See ASSUMPTIONS.md A41.
 export const SPEED_TYPES = ["walk", "fly", "swim", "climb", "burrow"] as const;
 export type SpeedType = (typeof SPEED_TYPES)[number];
 
