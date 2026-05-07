@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 334,
-      "numerator": 36,
-      "percent": "10.8%"
+      "numerator": 38,
+      "percent": "11.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 391,
-      "numerator": 50,
-      "percent": "12.8%"
+      "numerator": 52,
+      "percent": "13.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 51
+      "value": 53
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 19,
-      "numerator": 19,
+      "denominator": 21,
+      "numerator": 21,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 51,
-      "numerator": 51,
+      "denominator": 53,
+      "numerator": 53,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 19,
+      "denominator": 21,
       "numerator": 10,
-      "percent": "52.6%"
+      "percent": "47.6%"
     },
     "supportedProfileCoverage": {
-      "denominator": 37,
-      "numerator": 19,
-      "percent": "51.4%"
+      "denominator": 39,
+      "numerator": 21,
+      "percent": "53.8%"
     }
   },
   "metricSemantics": [
@@ -544,8 +544,8 @@
       ]
     },
     {
-      "id": "spell.bonus-action-healing",
-      "profileKind": "bonus-action",
+      "id": "spell.hit-point-restoration",
+      "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],
@@ -554,9 +554,10 @@
       ],
       "taskRefs": [
         "QCORE10",
-        "QMBT5"
+        "QMBT5",
+        "QMBT32"
       ],
-      "title": "Spell spends a Bonus Action and Spell Slot to restore Hit Points",
+      "title": "Spell spends an Action or Bonus Action and Spell Slot to restore Hit Points",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -696,7 +697,7 @@
       "note": "Spell procedure profile family.",
       "profileIds": [
         "spell.invocation-damage-save-or-attack",
-        "spell.bonus-action-healing",
+        "spell.hit-point-restoration",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -746,7 +747,7 @@
       "note": "Focused spell procedure runtime parity.",
       "profileIds": [
         "spell.invocation-damage-save-or-attack",
-        "spell.bonus-action-healing",
+        "spell.hit-point-restoration",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -783,6 +784,14 @@
         "unit-feature.weapon-damage-dice-roll-choice"
       ],
       "taskId": "QMBT31"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused direct Hit Point restoration spell runtime parity for Cure Wounds and Mass Healing Word.",
+      "profileIds": [
+        "spell.hit-point-restoration"
+      ],
+      "taskId": "QMBT32"
     }
   ],
   "units": [
@@ -1949,6 +1958,62 @@
         "status": "installed"
       },
       "claim": {
+        "profileIds": [
+          "spell.hit-point-restoration"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT32"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.hit-point-restoration",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "QMBT32"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to restore Hit Points",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/cure_wounds.json",
+      "unitId": "cure_wounds"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "futureProfileOwner": "QCORE10",
         "issue": "QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary.",
         "tag": "needs-surface-widening"
@@ -2254,7 +2319,63 @@
       },
       "claim": {
         "profileIds": [
-          "spell.bonus-action-healing"
+          "spell.hit-point-restoration"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT32"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.hit-point-restoration",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "QMBT32"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to restore Hit Points",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/mass_healing_word.json",
+      "unitId": "mass_healing_word"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.hit-point-restoration"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -2273,8 +2394,8 @@
       "kind": "spell",
       "profiles": [
         {
-          "id": "spell.bonus-action-healing",
-          "profileKind": "bonus-action",
+          "id": "spell.hit-point-restoration",
+          "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
           ],
@@ -2283,9 +2404,10 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "QMBT32"
           ],
-          "title": "Spell spends a Bonus Action and Spell Slot to restore Hit Points",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to restore Hit Points",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -3823,24 +3945,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/create_undead.json",
       "unitId": "create_undead"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/cure_wounds.json",
-      "unitId": "cure_wounds"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -6451,24 +6555,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/mass_cure_wounds.json",
       "unitId": "mass_cure_wounds"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/mass_healing_word.json",
-      "unitId": "mass_healing_word"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

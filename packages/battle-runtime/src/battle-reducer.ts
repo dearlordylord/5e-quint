@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.bonus-action-healing spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -618,6 +618,7 @@ type BattleResolvedMovement = {
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly spendsTurnMovement: boolean;
 };
+type HealingSpellActionCost = "magicAction" | "bonusAction";
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 export type SupportedSpellAct =
@@ -684,6 +685,12 @@ export type SupportedSpellAct =
   | {
       readonly kind: "preparedHealingSpell";
       readonly spell: SpellRecord;
+      readonly actionCost: HealingSpellActionCost;
+      readonly targeting: {
+        readonly kind: "targetList";
+        readonly minTargets: 1;
+        readonly maxTargets: number;
+      };
       readonly slotLevel: SpellSlotLevel;
       readonly healing: {
         readonly expr: DiceExpr;
@@ -1050,6 +1057,20 @@ export type BattleSpellTargetAllocationHole = {
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
 };
+export type BattleSpellTargetListHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "spellTargetList";
+  readonly label: string;
+  readonly spell: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >;
+  readonly minTargets: 1;
+  readonly maxTargets: number;
+  readonly choices: readonly CombatantId[];
+  readonly requiresTableSpatialFact: true;
+};
 export type BattleAttackRollHole = Extract<
   RuntimeHole,
   { readonly kind: "attackRoll" }
@@ -1216,6 +1237,7 @@ export type BattleAttackDamageDispositionHole = {
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleSpellTargetAllocationHole
+  | BattleSpellTargetListHole
   | BattleAttackRollHole
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
@@ -1288,6 +1310,12 @@ const SupportedAttackActionOptionSchema = Schema.Union(
 const SupportedHealingSpellActSchema = Schema.Struct({
   kind: Schema.Literal("preparedHealingSpell"),
   spell: BattleRuntimeObjectSchema,
+  actionCost: Schema.Literal("magicAction", "bonusAction"),
+  targeting: Schema.Struct({
+    kind: Schema.Literal("targetList"),
+    minTargets: Schema.Literal(1),
+    maxTargets: Schema.Number,
+  }),
   slotLevel: SpellSlotLevel,
   healing: Schema.Struct({
     expr: BattleRuntimeObjectSchema,
@@ -1370,6 +1398,15 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("spellTargetAllocation"),
     spell: SupportedSpellActSchema,
     allocationCount: Schema.Number,
+    choices: Schema.Array(CombatantId),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("spellTargetList"),
+    spell: SupportedHealingSpellActSchema,
+    minTargets: Schema.Literal(1),
+    maxTargets: Schema.Number,
     choices: Schema.Array(CombatantId),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
@@ -1563,6 +1600,17 @@ export type BattleFill =
       >[];
     }
   | {
+      readonly kind: "spellTargetList";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly targetIds: readonly CombatantId[];
+      };
+      readonly spatialFacts: readonly Extract<
+        BattleTargetSpatialFact,
+        { readonly kind: "spellTarget" }
+      >[];
+    }
+  | {
       readonly kind: "deathSavingThrow";
       readonly holeId: BattleHoleId;
       readonly value: DieRollResult;
@@ -1686,6 +1734,19 @@ type BattleFillEncoded =
           readonly targetId: string;
           readonly count: number;
         }[];
+      };
+      readonly spatialFacts: readonly {
+        readonly kind: "spellTarget";
+        readonly casterId: string;
+        readonly targetId: string;
+        readonly spellId: string;
+      }[];
+    }
+  | {
+      readonly kind: "spellTargetList";
+      readonly holeId: string;
+      readonly value: {
+        readonly targetIds: readonly string[];
       };
       readonly spatialFacts: readonly {
         readonly kind: "spellTarget";
@@ -1895,6 +1956,21 @@ export const BattleFillSchema: Schema.Schema<
             count: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
           }),
         ),
+      }),
+      spatialFacts: Schema.Array(
+        Schema.Struct({
+          kind: Schema.Literal("spellTarget"),
+          casterId: CombatantId,
+          targetId: CombatantId,
+          spellId: Schema.String,
+        }),
+      ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("spellTargetList"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        targetIds: Schema.Array(CombatantId),
       }),
       spatialFacts: Schema.Array(
         Schema.Struct({
@@ -11201,7 +11277,10 @@ function discoverSupportedSpellActs(
       const targetHole =
         invocation.kind === "preparedSlotSpell"
           ? spellTargetAllocationHole(state, actorId, invocation)
-          : spellTargetHole(state, actorId, invocation);
+          : invocation.kind === "preparedHealingSpell" &&
+              invocation.targeting.maxTargets > 1
+            ? spellTargetListHole(state, actorId, invocation)
+            : spellTargetHole(state, actorId, invocation);
       const castActs =
         targetHole.choices.length === 0
           ? []
@@ -11218,7 +11297,7 @@ function discoverSupportedSpellActs(
                   invocation.kind === "preparedSlotSpell"
                     ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`
                     : invocation.kind === "preparedHealingSpell"
-                      ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot as a Bonus Action.`
+                      ? `Cast ${invocation.spell.name} using a level ${invocation.slotLevel} Spell Slot.`
                       : `Cast ${invocation.spell.name} as a cantrip.`,
                 initialHoles: [targetHole],
               },
@@ -11231,7 +11310,8 @@ function discoverSupportedSpellActs(
 function spellSubjectTagForInvocation(
   invocation: SupportedSpellAct,
 ): "actionSpell" | "bonusActionSpell" {
-  return invocation.kind === "preparedHealingSpell"
+  return invocation.kind === "preparedHealingSpell" &&
+    invocation.actionCost === "bonusAction"
     ? "bonusActionSpell"
     : "actionSpell";
 }
@@ -11329,7 +11409,10 @@ function resolveSpellAct(
       "Action-time spell act is unavailable while an active ongoing feature prevents spellcasting.",
     );
   }
-  if (invocation.kind === "preparedHealingSpell") {
+  if (
+    invocation.kind === "preparedHealingSpell" &&
+    invocation.actionCost === "bonusAction"
+  ) {
     return invalidResult(
       input.state,
       "unsupportedSubject",
@@ -11389,6 +11472,14 @@ function resolveSpellAct(
   }
   if (invocation.kind === "preparedSlotSpell") {
     return resolvePreparedSlotSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.kind === "preparedHealingSpell") {
+    return resolvePreparedHealingSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -11698,7 +11789,10 @@ function resolveBonusActionSpellAct(
       "Bonus Action spell act requires a supported prepared spell.",
     );
   }
-  if (invocation.kind !== "preparedHealingSpell") {
+  if (
+    invocation.kind !== "preparedHealingSpell" ||
+    invocation.actionCost !== "bonusAction"
+  ) {
     return invalidResult(
       input.state,
       "unsupportedSubject",
@@ -11736,103 +11830,126 @@ function resolveBonusActionSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  return resolvePreparedHealingSpellAct({
+    input: { ...input, state: castingState },
+    actorId: subject.actorId,
+    invocation,
+    fillSet,
+  });
+}
+
+function resolvePreparedHealingSpellAct(input: {
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
   if (
-    fillSet.attackRoll !== undefined ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.damageRoll !== undefined
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0
   ) {
     return invalidResult(
-      input.state,
+      input.input.state,
       "invalidFill",
-      "Bonus Action healing spells use one target fill and one healing roll.",
+      "Hit Point restoration spells use target fills and one healing roll.",
     );
   }
-  if (fillSet.targetId == null) {
-    return needsHolesResult(castingState, input.subject, [
-      spellTargetHole(castingState, subject.actorId, invocation),
+  const targetSelection = healingSpellTargetSelection(input);
+  if (targetSelection.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetSelection.hole,
     ]);
   }
-  const target = castingState.combatants.get(fillSet.targetId);
-  if (
-    target == null ||
-    !spellTargetIsLegal(
-      castingState,
-      subject.actorId,
-      target.combatantId,
-      invocation,
-      fillSet.targetSpatialFacts,
-    )
-  ) {
+  if (targetSelection.tag === "invalid") {
     return invalidResult(
-      input.state,
+      input.input.state,
       "invalidFill",
-      "Spell target must be a combatant within the selected spell's supported range.",
+      targetSelection.message,
     );
   }
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
-    castingState,
+    input.input.state,
     {
       trigger: "spellCast",
-      casterId: subject.actorId,
-      spellId: invocation.spell.id,
-      targetIds: [target.combatantId],
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: targetSelection.targetIds,
       continuation: {
         kind: "replay",
-        subject: input.subject,
-        fills: input.fills,
+        subject: input.input.subject,
+        fills: input.input.fills,
       },
     },
-    input.suppressedReactionTrigger,
+    input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
 
-  if (fillSet.healingRoll == null) {
-    return needsHolesResult(castingState, input.subject, [
-      spellHealingRollHole(invocation),
+  if (input.fillSet.healingRoll == null) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellHealingRollHole(input.invocation),
     ]);
   }
   const healingValidation = validateSpellHealingFill(
-    fillSet.healingRoll,
-    invocation,
+    input.fillSet.healingRoll,
+    input.invocation,
   );
   if (healingValidation !== null) {
-    return invalidResult(input.state, "invalidFill", healingValidation);
+    return invalidResult(input.input.state, "invalidFill", healingValidation);
   }
-  const healed = {
-    ...castingState,
-    combatants: new Map(castingState.combatants).set(
-      target.combatantId,
-      applyHpHealing(
-        target,
-        spellHealingAmount(invocation, fillSet.healingRoll),
-      ),
-    ),
-  };
-  const spent = spendActivationResource(healed.currentTurnResources, {
-    kind: "bonusAction",
-  });
+  const healingAmount = spellHealingAmount(
+    input.invocation,
+    input.fillSet.healingRoll,
+  );
+  const healed = targetSelection.targetIds.reduce((state, targetId) => {
+    const target = state.combatants.get(targetId);
+    return target === undefined
+      ? state
+      : {
+          ...state,
+          combatants: new Map(state.combatants).set(
+            targetId,
+            applyHpHealing(target, healingAmount),
+          ),
+        };
+  }, input.input.state);
+  const spent =
+    input.invocation.actionCost === "bonusAction"
+      ? spendActivationResource(healed.currentTurnResources, {
+          kind: "bonusAction",
+        })
+      : spendAction(healed.currentTurnResources, "magic");
   if (Either.isLeft(spent)) {
     return invalidResult(
-      input.state,
+      input.input.state,
       "staleSubject",
-      "Bonus Action spell is no longer available for the current actor.",
+      input.invocation.actionCost === "bonusAction"
+        ? "Bonus Action spell is no longer available for the current actor."
+        : "Magic action is no longer available for the current actor.",
     );
   }
   const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
   if (Either.isLeft(slotTurnResources)) {
     return invalidResult(
-      input.state,
+      input.input.state,
       "staleSubject",
       "This turn has already expended a Spell Slot.",
     );
   }
   const slotted = expendSpellSlot(
     healed,
-    subject.actorId,
-    invocation.slotLevel,
+    input.actorId,
+    input.invocation.slotLevel,
   );
   const nextState = {
     ...slotted,
@@ -11843,6 +11960,87 @@ function resolveBonusActionSpellAct(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+type HealingSpellTargetSelection =
+  | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function healingSpellTargetSelection(input: {
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): HealingSpellTargetSelection {
+  if (input.invocation.targeting.maxTargets === 1) {
+    if (input.fillSet.targetList !== undefined) {
+      return {
+        tag: "invalid",
+        message: "Single-target healing spells use one target fill.",
+      };
+    }
+    if (input.fillSet.targetId == null) {
+      return {
+        tag: "needsHoles",
+        hole: spellTargetHole(
+          input.input.state,
+          input.actorId,
+          input.invocation,
+        ),
+      };
+    }
+    const target = input.input.state.combatants.get(input.fillSet.targetId);
+    if (
+      target == null ||
+      !spellTargetIsLegal(
+        input.input.state,
+        input.actorId,
+        target.combatantId,
+        input.invocation,
+        input.fillSet.targetSpatialFacts,
+      )
+    ) {
+      return {
+        tag: "invalid",
+        message:
+          "Spell target must be a combatant within the selected spell's supported range.",
+      };
+    }
+    return { tag: "ok", targetIds: [target.combatantId] };
+  }
+
+  if (input.fillSet.targetId !== undefined) {
+    return {
+      tag: "invalid",
+      message: "Multi-target healing spells use a target-list fill.",
+    };
+  }
+  if (input.fillSet.targetList === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellTargetListHole(
+        input.input.state,
+        input.actorId,
+        input.invocation,
+      ),
+    };
+  }
+  const validation = validateSpellTargetList(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  return validation === null
+    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
+    : { tag: "invalid", message: validation };
 }
 
 function resolveReadySpellAct(
@@ -11860,7 +12058,7 @@ function resolveReadySpellAct(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Bonus Action healing spells cannot be readied by this runtime lane.",
+      "Hit Point restoration spells cannot be readied by this runtime lane.",
     );
   }
   if (invocation.kind === "preparedShieldReactionSpell") {
@@ -12195,6 +12393,15 @@ type SpellFillSet =
             >[];
           }
         | undefined;
+      readonly targetList:
+        | {
+            readonly targetIds: readonly CombatantId[];
+            readonly spatialFacts: readonly Extract<
+              BattleTargetSpatialFact,
+              { readonly kind: "spellTarget" }
+            >[];
+          }
+        | undefined;
       readonly attackRoll: AttackRollResult | undefined;
       readonly savingThrowOutcomes: BattleSavingThrowOutcomeValue | undefined;
       readonly concentrationSavingThrows: readonly Extract<
@@ -12219,6 +12426,15 @@ function spellFillSet(
   let targetAllocation:
     | {
         readonly allocations: readonly BattleSpellTargetAllocation[];
+        readonly spatialFacts: readonly Extract<
+          BattleTargetSpatialFact,
+          { readonly kind: "spellTarget" }
+        >[];
+      }
+    | undefined;
+  let targetList:
+    | {
+        readonly targetIds: readonly CombatantId[];
         readonly spatialFacts: readonly Extract<
           BattleTargetSpatialFact,
           { readonly kind: "spellTarget" }
@@ -12269,6 +12485,33 @@ function spellFillSet(
       }
       targetAllocation = {
         allocations: fill.value.allocations,
+        spatialFacts: fill.spatialFacts,
+      };
+      continue;
+    }
+
+    if (fill.kind === "spellTargetList") {
+      if (invocation.kind !== "preparedHealingSpell") {
+        return {
+          tag: "invalid",
+          message: "Spell target list does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellTargetListHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell target list must use the selected spell act target-list hole.",
+        };
+      }
+      if (targetList !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell target list was filled twice.",
+        };
+      }
+      targetList = {
+        targetIds: fill.value.targetIds,
         spatialFacts: fill.spatialFacts,
       };
       continue;
@@ -12350,6 +12593,7 @@ function spellFillSet(
     targetId,
     targetSpatialFacts,
     targetAllocation,
+    targetList,
     attackRoll,
     savingThrowOutcomes,
     concentrationSavingThrows,
@@ -13896,20 +14140,27 @@ function supportedPreparedHealingSpellProfile(
   }
   const phase = spell.mechanics.phases[0];
   const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+  const actionCost = healingSpellActionCost(spell.mechanics.castingTime);
+  const targetBounds =
+    phase?.kind === "direct" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target"
+      ? healingSpellTargetBounds(phase.attachment.value.selection)
+      : null;
+  const rangeFeet = healingSpellRangeFeet(spell.mechanics.range);
   if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "point" ||
+    actionCost === null ||
+    rangeFeet === null ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "hole" ||
     phase.attachment.value.kind !== "target" ||
+    targetBounds === null ||
     phase.effects?.length !== 1 ||
     effect?.kind !== "heal_hp"
   ) {
     return [];
   }
-  const rangeFeet = movementFeet(spell.mechanics.range.feet);
   return spellSlots.flatMap((slot): readonly SupportedSpellAct[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
@@ -13926,12 +14177,54 @@ function supportedPreparedHealingSpellProfile(
           {
             kind: "preparedHealingSpell",
             spell,
+            actionCost,
+            targeting: {
+              kind: "targetList",
+              minTargets: 1,
+              maxTargets: targetBounds.maxTargets,
+            },
             slotLevel: slot.spellLevel,
             healing: { expr: healingExpr },
             rangeFeet,
           },
         ];
   });
+}
+
+function healingSpellActionCost(
+  castingTime: SpellRecord["mechanics"]["castingTime"],
+): HealingSpellActionCost | null {
+  return Match.value(castingTime).pipe(
+    Match.when({ kind: "action" }, () => "magicAction" as const),
+    Match.when({ kind: "bonus_action" }, () => "bonusAction" as const),
+    Match.orElse(() => null),
+  );
+}
+
+function healingSpellTargetBounds(
+  selection: TargetSelection,
+): { readonly maxTargets: number } | null {
+  if (selection.mode === "one") {
+    return { maxTargets: 1 };
+  }
+  if (
+    selection.mode === "choose_up_to" &&
+    typeof selection.count === "number" &&
+    selection.count >= 1
+  ) {
+    return { maxTargets: selection.count };
+  }
+  return null;
+}
+
+function healingSpellRangeFeet(
+  range: SpellRecord["mechanics"]["range"],
+): MovementFeet | null {
+  return Match.value(range).pipe(
+    Match.when({ kind: "point" }, (point) => movementFeet(point.feet)),
+    Match.when({ kind: "touch" }, () => movementFeet(5)),
+    Match.orElse(() => null),
+  );
 }
 
 function supportedPreparedSlotSpellProfile(
@@ -14246,7 +14539,8 @@ function spellActTurnResourceAvailable(
   if (resources.spellSlotExpendedThisTurn) {
     return false;
   }
-  return invocation.kind === "preparedHealingSpell"
+  return invocation.kind === "preparedHealingSpell" &&
+    invocation.actionCost === "bonusAction"
     ? resources.currentHasBonusAction
     : canSpendAction(resources, "magic");
 }
@@ -14301,6 +14595,39 @@ function spellTargetAllocationHole(
     label: `${invocation.spell.name} target allocation`,
     spell: invocation,
     allocationCount: invocation.targeting.repeatedEffectCount,
+    requiresTableSpatialFact: true,
+    choices: [...state.combatants.keys()].filter((id) =>
+      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
+    ),
+  };
+}
+
+function spellTargetListHoleId(
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:target-list:${invocation.spell.id}`);
+}
+
+function spellTargetListHole(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >,
+): BattleSpellTargetListHole {
+  const holeKey = `battle:spell:target-list:${invocation.spell.id}`;
+  return {
+    kind: "spellTargetList",
+    holeId: spellTargetListHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} targets`,
+    spell: invocation,
+    minTargets: invocation.targeting.minTargets,
+    maxTargets: invocation.targeting.maxTargets,
     requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter((id) =>
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
@@ -14386,6 +14713,35 @@ function validateSpellTargetAllocation(
   );
   if (allocatedCount !== invocation.targeting.repeatedEffectCount) {
     return `${invocation.spell.name} target allocation must assign exactly ${invocation.targeting.repeatedEffectCount} repeated effects.`;
+  }
+  return null;
+}
+
+function validateSpellTargetList(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedHealingSpell" }
+  >,
+  targetIds: readonly CombatantId[],
+  facts: readonly BattleTargetSpatialFact[],
+): string | null {
+  if (targetIds.length < invocation.targeting.minTargets) {
+    return `${invocation.spell.name} must target at least ${invocation.targeting.minTargets} creature.`;
+  }
+  if (targetIds.length > invocation.targeting.maxTargets) {
+    return `${invocation.spell.name} can target at most ${invocation.targeting.maxTargets} creatures.`;
+  }
+  const seen = new Set<CombatantId>();
+  for (const targetId of targetIds) {
+    if (seen.has(targetId)) {
+      return "Spell target list must not repeat a target.";
+    }
+    seen.add(targetId);
+    if (!spellTargetIsLegal(state, actorId, targetId, invocation, facts)) {
+      return "Spell targets must be combatants within the selected spell's supported range.";
+    }
   }
   return null;
 }
@@ -14567,7 +14923,7 @@ function validateSpellHealingFill(
   >,
 ): string | null {
   if (fill.holeId !== spellHealingRollHole(invocation).holeId) {
-    return "Spell healing must use the selected Bonus Action spell act healing hole.";
+    return "Spell healing must use the selected spell act healing hole.";
   }
   const validation = validateRolledDiceForDiceExpr(fill.value, {
     dice: invocation.healing.expr.dice,

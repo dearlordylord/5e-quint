@@ -7,7 +7,8 @@ module ruleCoreSpellsMbt {
   // - one spellcaster and up to two targets;
   // - level-1 spell slots are projected as a scalar remaining count;
   // - spell breadth is limited to QCORE10 profiles: Magic Missile, Ray of
-  //   Frost, Acid Splash, Healing Word, Mage Armor, and Readied Spell Response.
+  //   Frost, Acid Splash, Cure Wounds, Healing Word, Mass Healing Word, Mage
+  //   Armor, and Readied Spell Response.
 
   var qActionAvailable: bool
   var qBonusActionAvailable: bool
@@ -299,6 +300,69 @@ module ruleCoreSpellsMbt {
     }
   }
 
+  action doCureWoundsNeedsTarget = recordProjection(
+    true, true, true, initialCasterHp, 4, initialTargetHp, false,
+    0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
+    Set("TargetChoice"), "needsHoles", "none"
+  )
+
+  action doCureWoundsNeedsHealingRoll = recordProjection(
+    true, true, true, initialCasterHp, 4, initialTargetHp, false,
+    0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
+    Set("DamageRoll"), "needsHoles", "none"
+  )
+
+  action doCureWoundsWounded = {
+    val invocation = resolveSpellInvocation(initialSpellcastingProcedureState, {
+      profile: CureWoundsSpellProfile,
+      hasSpellAccess: true,
+      selectedSlotLevel: 1,
+      targetCount: 1,
+      targetsAreValid: true,
+    })
+    all {
+      recordProjection(
+        false, true, true, initialCasterHp, 12, initialTargetHp, false,
+        0, 0, invocation.state.slotSpellCastThisTurn,
+        invocation.state.slotLedger.slotsRemaining, noEffect, false, false,
+        false, Set(), "resolved", "none"
+      ),
+    }
+  }
+
+  action doMassHealingWordNeedsTargetList = recordProjection(
+    true, true, true, initialCasterHp, 4, 4, false,
+    0, 0, false, 0, noEffect, false, false, false,
+    Set("SpellTargetList"), "needsHoles", "none"
+  )
+
+  action doMassHealingWordNeedsHealingRoll = recordProjection(
+    true, true, true, initialCasterHp, 4, 4, false,
+    0, 0, false, 0, noEffect, false, false, false,
+    Set("DamageRoll"), "needsHoles", "none"
+  )
+
+  action doMassHealingWordWounded = {
+    val invocation = resolveSpellInvocation({
+      turn: initialSpellcastingProcedureState.turn,
+      slotLedger: { slotLevel: 3, slotsRemaining: 1 },
+      slotSpellCastThisTurn: false,
+    }, {
+      profile: MassHealingWordSpellProfile,
+      hasSpellAccess: true,
+      selectedSlotLevel: 3,
+      targetCount: 2,
+      targetsAreValid: true,
+    })
+    all {
+      recordProjection(
+        true, false, true, initialCasterHp, 12, 12, false,
+        0, 0, invocation.state.slotSpellCastThisTurn,
+        0, noEffect, false, false, false, Set(), "resolved", "none"
+      ),
+    }
+  }
+
   action doMageArmorNeedsTarget = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
@@ -386,6 +450,12 @@ module ruleCoreSpellsMbt {
     doHealingWordZeroHp,
     doHealingWordNeedsTarget,
     doHealingWordNeedsHealingRoll,
+    doCureWoundsWounded,
+    doCureWoundsNeedsTarget,
+    doCureWoundsNeedsHealingRoll,
+    doMassHealingWordWounded,
+    doMassHealingWordNeedsTargetList,
+    doMassHealingWordNeedsHealingRoll,
     doMageArmor,
     doMageArmorNeedsTarget,
     doRejectSecondSlotSpell,

@@ -32,11 +32,9 @@ let massCureWounds =
                     , holeId = "mass_cure_wounds_targets"
                     , label = "up to six creatures in 30-foot sphere"
                     , value =
-                        { kind = "target"
-                        , selection =
-                            { mode = "choose_up_to"
-                            , count = 6
-                            }
+                        { kind = "area"
+                        , shape = { kind = "sphere", radiusFeet = 30 }
+                        , origin = { kind = "point_within_range" }
                         }
                     }
                 , effects =

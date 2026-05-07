@@ -233,7 +233,7 @@ restoration pressure, not as active package architecture:
 - generic Unit activation for `spell | class_feature` activations with exactly
   one `attack_roll`, `save_gate`, or `direct` phase;
 - generic UnitRecord resolution for cantrip attack/save-gate effects, direct
-  `heal_hp`, and `grant_extra_action`;
+  `heal_hp` with action cost and target-list bounds, and `grant_extra_action`;
 - spell-slot and use-count gates;
 - generic Surface attachment projection and damage-type hole projection,
   including temporary attachment and damage-type reference fills;

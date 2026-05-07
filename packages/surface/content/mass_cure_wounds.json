@@ -23,10 +23,13 @@
           "kind": "hole",
           "label": "up to six creatures in 30-foot sphere",
           "value": {
-            "kind": "target",
-            "selection": {
-              "count": 6,
-              "mode": "choose_up_to"
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "kind": "sphere",
+              "radiusFeet": 30
             }
           }
         },

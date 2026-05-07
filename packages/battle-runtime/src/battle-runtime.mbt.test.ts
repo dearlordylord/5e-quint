@@ -592,18 +592,15 @@ function projectMbtState(input: {
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    multiattackDispatchesAvailable:
-      snapshot.turn.actionResources.filter(
-        (resource) =>
-          resource.source === "statBlockMultiattack" &&
-          resource.sourceOwnerId === skeletonId,
-      ).length,
-    sneakAttackUsedThisTurn:
-      snapshot.turn.attackDamageRidersUsedThisTurn.some(
-        (usage) =>
-          usage.attackerId === fighterId &&
-          usage.unitId === "rogue_sneak_attack",
-      ),
+    multiattackDispatchesAvailable: snapshot.turn.actionResources.filter(
+      (resource) =>
+        resource.source === "statBlockMultiattack" &&
+        resource.sourceOwnerId === skeletonId,
+    ).length,
+    sneakAttackUsedThisTurn: snapshot.turn.attackDamageRidersUsedThisTurn.some(
+      (usage) =>
+        usage.attackerId === fighterId && usage.unitId === "rogue_sneak_attack",
+    ),
     holes: input.holes.map(projectHole).sort(),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
@@ -1104,6 +1101,11 @@ function projectHole(hole: BattleHole): MbtHole {
       { kind: "spellTargetAllocation" },
       () => "SpellTargetAllocation" as const,
     ),
+    Match.when({ kind: "spellTargetList" }, () => {
+      throw new Error(
+        "Battle runtime MBT does not model spell target-list holes.",
+      );
+    }),
     Match.when({ kind: "attackRoll" }, (attackRoll) => {
       if ("spell" in attackRoll) {
         throw new Error(

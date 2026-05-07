@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
@@ -11,6 +12,7 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
+import massCureWoundsInput from "../../surface/content/mass_cure_wounds.json";
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -27,6 +29,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -86,11 +89,22 @@ const acidSplashUnitId = "acid_splash";
 const fireBoltUnitId = "fire_bolt";
 const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
+const cureWoundsUnitId = "cure_wounds";
 const healingWordUnitId = "healing_word";
+const massHealingWordUnitId = "mass_healing_word";
 const rayOfFrostUnitId = "ray_of_frost";
 const shieldUnitId = "shield";
 const spellCasterId = combatantId("unit-profile-spell-caster");
 const spellTargetId = combatantId("unit-profile-spell-target");
+const massHealingTargetIds = [
+  spellTargetId,
+  combatantId("unit-profile-spell-target-2"),
+  combatantId("unit-profile-spell-target-3"),
+  combatantId("unit-profile-spell-target-4"),
+  combatantId("unit-profile-spell-target-5"),
+  combatantId("unit-profile-spell-target-6"),
+  combatantId("unit-profile-spell-target-7"),
+] as const;
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 type ActionSpellAct = AvailableBattleAct & {
@@ -1480,6 +1494,143 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
   });
 });
 
+describe("QMBT32 deterministic direct Hit Point restoration spell admission", () => {
+  test("cure_wounds is admitted through catalog spell access and projected as a Magic Action healing spell", () => {
+    const spell = spellRecord(cureWoundsUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({
+      state,
+      spellId: cureWoundsUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      spellId: cureWoundsUnitId,
+      spellActId: "preparedHealingSpell:cure_wounds:slot:1",
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const awaitingHealingRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          cureWoundsUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(awaitingHealingRoll).toMatchObject({ tag: "needsHoles" });
+    if (awaitingHealingRoll.tag !== "needsHoles") {
+      throw new Error("Expected Cure Wounds healing roll hole.");
+    }
+    expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
+      expect.objectContaining({
+        kind: "preparedHealingSpell",
+        spell,
+        actionCost: "magicAction",
+        targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+        slotLevel: 1,
+        healing: {
+          expr: { dice: 2, dieSize: 8, flat: 3 },
+        },
+        rangeFeet: 5,
+      }),
+    );
+  });
+
+  test("mass_healing_word is admitted as up-to-six Bonus Action healing and rejects adjacent invalid target counts", () => {
+    const spell = spellRecord(massHealingWordUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      extraTargetIds: massHealingTargetIds.slice(1),
+    });
+    const act = bonusSpellAct({
+      state,
+      spellId: massHealingWordUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: spellCasterId,
+      spellId: massHealingWordUnitId,
+      spellActId: "preparedHealingSpell:mass_healing_word:slot:3",
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+    expect(targetListHole).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 6,
+      }),
+    );
+    expect(spellHoleInvocation(act.initialHoles)).toEqual(
+      expect.objectContaining({
+        kind: "preparedHealingSpell",
+        actionCost: "bonusAction",
+        targeting: { kind: "targetList", minTargets: 1, maxTargets: 6 },
+        slotLevel: 3,
+        healing: {
+          expr: { dice: 2, dieSize: 4, flat: 3 },
+        },
+      }),
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetListFill(
+            targetListHole,
+            spellCasterId,
+            massHealingWordUnitId,
+            [],
+          ),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetListFill(
+            targetListHole,
+            spellCasterId,
+            massHealingWordUnitId,
+            massHealingTargetIds,
+          ),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid" });
+  });
+
+  test("mass_cure_wounds keeps its point-origin Sphere outside the direct target-list healing profile", () => {
+    const unit = decodeUnitRecordSync(massCureWoundsInput);
+    expect(unit.kind).toBe("spell");
+    if (unit.kind !== "spell") {
+      throw new Error("Expected Mass Cure Wounds spell Unit.");
+    }
+
+    const state = spellBattle({
+      preparedSpells: [unit],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+      extraTargetIds: massHealingTargetIds.slice(1),
+    });
+
+    expect(
+      discoverBattleActs(state).filter(
+        (act) =>
+          act.subject.tag === "actionSpell" &&
+          act.subject.spellId === "mass_cure_wounds",
+      ),
+    ).toEqual([]);
+  });
+});
+
 function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
@@ -1489,6 +1640,11 @@ function spellRecord(unitId: string): SpellRecord {
 function spellBattle(input: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
+  readonly spellSlots?: readonly {
+    readonly spellLevel: 1 | 3 | 5;
+    readonly count: number;
+  }[];
+  readonly extraTargetIds?: readonly CombatantId[];
 }): BattleState {
   const result = startBattle({
     battleId: battleId("unit-profile-spell-admission"),
@@ -1504,7 +1660,7 @@ function spellBattle(input: {
           canCastSpells: true,
           cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
-          spellSlots: [{ spellLevel: 1, count: 2 }],
+          spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
       }),
       characterCreature({
@@ -1513,6 +1669,14 @@ function spellBattle(input: {
         initiative: 10,
         side: oppositionSide,
       }),
+      ...(input.extraTargetIds ?? []).map((combatantId, index) =>
+        characterCreature({
+          combatantId,
+          displayName: `Target ${index + 2}`,
+          initiative: 9 - index,
+          side: oppositionSide,
+        }),
+      ),
     ],
   });
   expect(Either.isRight(result)).toBe(true);
@@ -2097,6 +2261,25 @@ function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId,
       targetId: allocation.targetId,
+      spellId,
+    })),
+  };
+}
+
+function spellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  spellId: string,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "spellTarget",
+      casterId,
+      targetId,
       spellId,
     })),
   };

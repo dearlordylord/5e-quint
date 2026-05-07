@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-save-or-attack spell.bonus-action-healing spell.reaction-shield spell.readied-action-time-spell
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 
 module spellProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"
@@ -131,6 +131,8 @@ module spellProcedureProfilesInductive {
       RayOfFrostSpellProfile,
       AcidSplashSpellProfile,
       HealingWordSpellProfile,
+      CureWoundsSpellProfile,
+      MassHealingWordSpellProfile,
       MageArmorSpellProfile
     ).oneOf()
     nondet hasSpellAccess = Set(true, false).oneOf()
@@ -228,7 +230,7 @@ module spellProcedureProfilesInductive {
   }
 
   action doHealingWord = {
-    val result = resolveHealingWordEffect(
+    val result = resolveDirectHitPointRestorationEffect(
       {
         kind: PlayerCharacter,
         hitPoints: 0,
@@ -240,6 +242,7 @@ module spellProcedureProfilesInductive {
       { successes: 1, failures: 1, stable: false, hpRegained: false },
       NoPositiveHitPointUnconsciousRecovery,
       {
+        profile: HealingWordSpellProfile,
         slotLevel: 1,
         healingDiceRoll: 5,
         spellcastingAbilityModifier: 2,

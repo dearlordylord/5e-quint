@@ -50,8 +50,13 @@ module battleRuntime {
   //   lines 219-222: spell attacks add Proficiency Bonus.
   // - Spells/Descriptions-E-L.md lines 1121-1132,
   //   Spells/Descriptions-M-P.md lines 85-96, and
-  //   Spells/Descriptions-Q-R.md lines 41-52: Healing Word is a Bonus Action
-  //   healing spell; Magic Missile can allocate darts to one creature or
+  //   Spells/Descriptions-A-D.md lines 232-242,
+  //   Spells/Descriptions-E-L.md lines 1121-1132, and
+  //   Spells/Descriptions-M-P.md lines 479-490: Cure Wounds, Healing Word,
+  //   and Mass Healing Word directly restore Hit Points with explicit Action
+  //   or Bonus Action cost, target count, minimum slot level, and dice scaling.
+  //   Spells/Descriptions-M-P.md lines 85-96 and Spells/Descriptions-Q-R.md
+  //   lines 41-52: Magic Missile can allocate darts to one creature or
   //   several and gains one dart per slot level above 1; Ray of Frost reduces
   //   Speed until the start of the caster's next turn.
   // - Spells/Descriptions-S-Z.md lines 215-224, Playing-the-Game.md lines
@@ -127,7 +132,9 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | HealingWord | Shield
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | HealingWord | CureWounds | MassHealingWord | Shield
+  type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
+  type SpellActionCost = SpellMagicAction | SpellBonusAction
 
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus
 
@@ -1369,27 +1376,52 @@ module battleRuntime {
       { ...target, hp: nextHp }
   }
 
-  pure def resolveHealingWord(
+  pure def directHitPointRestorationActionCost(invocation: DirectHitPointRestorationSpell): SpellActionCost =
+    if (invocation == HealingWordRestoration or invocation == MassHealingWordRestoration) SpellBonusAction
+    else SpellMagicAction
+
+  pure def directHitPointRestorationMaximumTargets(invocation: DirectHitPointRestorationSpell): int =
+    if (invocation == MassHealingWordRestoration) 6 else 1
+
+  pure def directHitPointRestorationHealing(healingRoll: int, spellcastingAbilityModifier: int): int =
+    healingRoll + spellcastingAbilityModifier
+
+  pure def resolveDirectHitPointRestoration(
     state: BattleState,
+    invocation: DirectHitPointRestorationSpell,
+    targetCount: int,
     healingRoll: int,
     spellcastingAbilityModifier: int,
-  ): BattleState =
+  ): BattleState = {
+    val actionCost = directHitPointRestorationActionCost(invocation)
+    val validTargetCount = targetCount >= 1 and targetCount <= directHitPointRestorationMaximumTargets(invocation)
+    val canSpendActionCost =
+      if (actionCost == SpellBonusAction) state.bonusActionAvailable
+      else state.actionAvailable
     if (
       currentActor(state) == Fighter and
-      state.bonusActionAvailable and
+      validTargetCount and
+      canSpendActionCost and
       canExpendSpellSlotThisTurn(state) and
       not(state.fighter.unconscious) and
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
-    )
+    ) {
+      val healed = applyHealing(
+        state.fighter,
+        directHitPointRestorationHealing(healingRoll, spellcastingAbilityModifier)
+      )
       {
         ...state,
-        fighter: applyHealing(state.fighter, healingWordHealing(healingRoll, spellcastingAbilityModifier)),
-        bonusActionAvailable: false,
+        fighter: healed,
+        actionAvailable: if (actionCost == SpellMagicAction) false else state.actionAvailable,
+        bonusActionAvailable: if (actionCost == SpellBonusAction) false else state.bonusActionAvailable,
         spellSlotExpendedThisTurn: true,
       }
-    else
+    } else {
       state
+    }
+  }
 
   pure def damageAfterAdjustments(
     damage: int,
@@ -1583,6 +1615,8 @@ module battleRuntime {
       | RayOfFrost => expendedLevelOneSlots
       | AcidSplash => expendedLevelOneSlots
       | HealingWord => expendedLevelOneSlots + 1
+      | CureWounds => expendedLevelOneSlots + 1
+      | MassHealingWord => expendedLevelOneSlots + 1
       | Shield => expendedLevelOneSlots + 1
     }
 
@@ -1605,9 +1639,6 @@ module battleRuntime {
 
   pure def magicMissileDartCount(slotLevel: int): int =
     3 + (slotLevel - 1)
-
-  pure def healingWordHealing(healingRoll: int, spellcastingAbilityModifier: int): int =
-    healingRoll + spellcastingAbilityModifier
 
   pure def magicMissileAllocatedDamage(
     dieTotal: int,
@@ -2143,22 +2174,38 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
       assert(expendedSlotsAfterInvocation(AcidSplash, 0) == 0),
       assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
+      assert(expendedSlotsAfterInvocation(CureWounds, 0) == 1),
+      assert(expendedSlotsAfterInvocation(MassHealingWord, 0) == 1),
     }
   }
 
-  run test_healing_word_spends_bonus_action_slot_and_heals = {
+  run test_direct_hit_point_restoration_spends_action_cost_slot_and_heals = {
     val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 } }
-    val result = resolveHealingWord(wounded, 7, 3)
+    val cure = resolveDirectHitPointRestoration(wounded, CureWoundsRestoration, 1, 7, 3)
+    val massWord = resolveDirectHitPointRestoration(wounded, MassHealingWordRestoration, 6, 7, 3)
     all {
-      assert(result.fighter.hp == 12),
-      assert(not(result.bonusActionAvailable)),
-      assert(result.spellSlotExpendedThisTurn),
+      assert(cure.fighter.hp == 12),
+      assert(not(cure.actionAvailable)),
+      assert(cure.bonusActionAvailable),
+      assert(cure.spellSlotExpendedThisTurn),
+      assert(massWord.fighter.hp == 12),
+      assert(massWord.actionAvailable),
+      assert(not(massWord.bonusActionAvailable)),
+      assert(massWord.spellSlotExpendedThisTurn),
     }
   }
 
-  run test_healing_word_rejects_second_slot_spell_in_same_turn = {
+  run test_direct_hit_point_restoration_rejects_second_slot_spell_in_same_turn = {
     val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 }, spellSlotExpendedThisTurn: true }
-    assert(resolveHealingWord(wounded, 7, 3) == wounded)
+    assert(resolveDirectHitPointRestoration(wounded, CureWoundsRestoration, 1, 7, 3) == wounded)
+  }
+
+  run test_mass_healing_word_rejects_adjacent_invalid_target_counts = {
+    val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 } }
+    all {
+      assert(resolveDirectHitPointRestoration(wounded, MassHealingWordRestoration, 0, 7, 3) == wounded),
+      assert(resolveDirectHitPointRestoration(wounded, MassHealingWordRestoration, 7, 7, 3) == wounded),
+    }
   }
 
   run test_spell_act_discovery_respects_spellcasting_gate = {

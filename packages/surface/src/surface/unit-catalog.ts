@@ -9,6 +9,7 @@ import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import classFighterInput from "../../content/class_fighter.json";
 import classWizardInput from "../../content/class_wizard.json";
+import cureWoundsInput from "../../content/cure_wounds.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
 import featAbilityScoreImprovementInput from "../../content/feat_ability_score_improvement.json";
 import featArcheryInput from "../../content/feat_archery.json";
@@ -27,6 +28,7 @@ import healingWordInput from "../../content/healing_word.json";
 import lightInput from "../../content/light.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
+import massHealingWordInput from "../../content/mass_healing_word.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
@@ -188,12 +190,14 @@ export const srdUnitCollection = defineSrdUnitCollection({
     orcDarkvisionInput,
     orcRelentlessEnduranceInput,
     acidSplashInput,
+    cureWoundsInput,
     fireBoltInput,
     lightInput,
     rayOfFrostInput,
     detectMagicInput,
     mageArmorInput,
     magicMissileInput,
+    massHealingWordInput,
     healingWordInput,
     shieldInput,
     sleepInput,
@@ -332,37 +336,39 @@ function findInvalidSubclassChoiceRefs(
   }
 
   return unit.subclassChoices.flatMap((choice) =>
-    choice.options.flatMap((subclassUnitId): readonly UnitCatalogBuildIssue[] => {
-      const referenced = records.get(subclassUnitId);
-      if (referenced == null) {
+    choice.options.flatMap(
+      (subclassUnitId): readonly UnitCatalogBuildIssue[] => {
+        const referenced = records.get(subclassUnitId);
+        if (referenced == null) {
+          return [
+            {
+              code: "unknownUnitReference",
+              referringUnitId: unit.id,
+              referencedUnitId: subclassUnitId,
+            } satisfies UnitCatalogBuildIssue,
+          ];
+        }
+        if (
+          referenced.kind === "subclass" &&
+          referenced.className === unit.className
+        ) {
+          return [];
+        }
+
         return [
           {
-            code: "unknownUnitReference",
-            referringUnitId: unit.id,
-            referencedUnitId: subclassUnitId,
+            code: "invalidSubclassChoiceReference",
+            classUnitId: unit.id,
+            subclassUnitId,
+            expectedClassName: unit.className,
+            actualKind: referenced.kind,
+            ...("className" in referenced
+              ? { actualClassName: referenced.className }
+              : {}),
           } satisfies UnitCatalogBuildIssue,
         ];
-      }
-      if (
-        referenced.kind === "subclass" &&
-        referenced.className === unit.className
-      ) {
-        return [];
-      }
-
-      return [
-        {
-          code: "invalidSubclassChoiceReference",
-          classUnitId: unit.id,
-          subclassUnitId,
-          expectedClassName: unit.className,
-          actualKind: referenced.kind,
-          ...("className" in referenced
-            ? { actualClassName: referenced.className }
-            : {}),
-        } satisfies UnitCatalogBuildIssue,
-      ];
-    }),
+      },
+    ),
   );
 }
 

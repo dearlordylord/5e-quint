@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.bonus-action-healing spell.reaction-shield spell.readied-action-time-spell
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 
 module spellProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -15,9 +15,9 @@ module spellProcedureProfiles {
   // - Spells/Gaining-and-Casting.md: Spell Slots, cantrips, Casting Time,
   //   targets, Saving Throws, Attack Rolls, and spell effects.
   // - Rules-Glossary.md: Ready, Magic, Concentration, Spell Attack, Target.
-  // - Spells/Descriptions-A-D.md: Acid Splash.
+  // - Spells/Descriptions-A-D.md: Acid Splash and Cure Wounds.
   // - Spells/Descriptions-E-L.md: Healing Word.
-  // - Spells/Descriptions-M-P.md: Mage Armor and Magic Missile.
+  // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, and Mass Healing Word.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
 
   type SpellInvocationAction =
@@ -34,6 +34,8 @@ module spellProcedureProfiles {
     | RayOfFrostSpellProfile
     | AcidSplashSpellProfile
     | HealingWordSpellProfile
+    | CureWoundsSpellProfile
+    | MassHealingWordSpellProfile
     | MageArmorSpellProfile
 
   type ReadiedSpellProfile =
@@ -80,7 +82,8 @@ module spellProcedureProfiles {
     damageRoll: int,
   }
 
-  type HealingWordEffectFacts = {
+  type DirectHitPointRestorationEffectFacts = {
+    profile: SpellDefinitionProfile,
     slotLevel: int,
     healingDiceRoll: int,
     spellcastingAbilityModifier: int,
@@ -187,11 +190,12 @@ module spellProcedureProfiles {
     ))
 
   pure def spellProfileAction(profile: SpellDefinitionProfile): SpellInvocationAction =
-    if (profile == HealingWordSpellProfile) BonusActionSpellInvocation
+    if (profile == HealingWordSpellProfile or profile == MassHealingWordSpellProfile) BonusActionSpellInvocation
     else ActionTimeSpellInvocation
 
   pure def spellProfileMinimumSlotLevel(profile: SpellDefinitionProfile): int =
     if (profile == RayOfFrostSpellProfile or profile == AcidSplashSpellProfile) 0
+    else if (profile == MassHealingWordSpellProfile) 3
     else 1
 
   pure def legalSpellInvocationTargetCount(
@@ -202,6 +206,7 @@ module spellProcedureProfiles {
     if (targetCount < 1) false
     else if (profile == AcidSplashSpellProfile) true
     else if (profile == MagicMissileSpellProfile) targetCount <= magicMissileDartCount(slotLevel)
+    else if (profile == MassHealingWordSpellProfile) targetCount <= 6
     else targetCount == 1
 
   pure def spellProfileRequiresSlot(profile: SpellDefinitionProfile): bool =
@@ -347,28 +352,38 @@ module spellProcedureProfiles {
       effect: NoSpellEffect,
     }
 
-  pure def healingWordDiceCount(slotLevel: int): int =
-    if (slotLevel <= 1) 2 else slotLevel * 2
+  pure def directHitPointRestorationDiceCount(
+    profile: SpellDefinitionProfile,
+    slotLevel: int
+  ): int =
+    if (profile == CureWoundsSpellProfile) 2 + (2 * (slotLevel - 1))
+    else if (profile == MassHealingWordSpellProfile) 2 + (slotLevel - 3)
+    else 2 + (2 * (slotLevel - 1))
 
-  pure def legalHealingWordEffectFacts(facts: HealingWordEffectFacts): bool = {
-    val diceCount = healingWordDiceCount(facts.slotLevel)
+  pure def directHitPointRestorationDieSize(profile: SpellDefinitionProfile): int =
+    if (profile == CureWoundsSpellProfile) 8 else 4
+
+  pure def legalDirectHitPointRestorationEffectFacts(facts: DirectHitPointRestorationEffectFacts): bool = {
+    val diceCount = directHitPointRestorationDiceCount(facts.profile, facts.slotLevel)
+    val dieSize = directHitPointRestorationDieSize(facts.profile)
     all {
-      facts.slotLevel >= 1,
+      facts.profile.in(Set(HealingWordSpellProfile, CureWoundsSpellProfile, MassHealingWordSpellProfile)),
+      facts.slotLevel >= spellProfileMinimumSlotLevel(facts.profile),
       facts.slotLevel <= 9,
       facts.healingDiceRoll >= diceCount,
-      facts.healingDiceRoll <= diceCount * 4,
+      facts.healingDiceRoll <= diceCount * dieSize,
       facts.spellcastingAbilityModifier >= -5,
       facts.spellcastingAbilityModifier <= 10,
     }
   }
 
-  pure def resolveHealingWordEffect(
+  pure def resolveDirectHitPointRestorationEffect(
     vitals: CreatureVitals,
     lifecycle: DeathSavingThrowLifecycle,
     recovery: PositiveHitPointUnconsciousRecovery,
-    facts: HealingWordEffectFacts
+    facts: DirectHitPointRestorationEffectFacts
   ): HitPointRecoveryResult =
-    if (not(legalHealingWordEffectFacts(facts))) {
+    if (not(legalDirectHitPointRestorationEffectFacts(facts))) {
       vitals: vitals,
       deathSavingThrows: lifecycle,
       positiveHitPointUnconsciousRecovery: recovery,
@@ -688,15 +703,15 @@ module spellProcedureProfiles {
     }
   }
 
-  run test_healing_word_spends_bonus_action_and_recovers_hit_points = {
+  run test_direct_hit_point_restoration_spends_action_cost_and_recovers_hit_points = {
     val invocation = resolveSpellInvocation(initialSpellcastingProcedureState, {
-      profile: HealingWordSpellProfile,
+      profile: CureWoundsSpellProfile,
       hasSpellAccess: true,
       selectedSlotLevel: 1,
       targetCount: 1,
       targetsAreValid: true,
     })
-    val healing = resolveHealingWordEffect(
+    val healing = resolveDirectHitPointRestorationEffect(
       {
         kind: PlayerCharacter,
         hitPoints: 0,
@@ -708,6 +723,7 @@ module spellProcedureProfiles {
       { successes: 1, failures: 1, stable: false, hpRegained: false },
       NoPositiveHitPointUnconsciousRecovery,
       {
+        profile: CureWoundsSpellProfile,
         slotLevel: 1,
         healingDiceRoll: 5,
         spellcastingAbilityModifier: 3,
@@ -715,7 +731,7 @@ module spellProcedureProfiles {
     )
     all {
       assert(invocation.admitted),
-      assert(invocation.state.turn.bonusActionAvailable == false),
+      assert(invocation.state.turn.actionQuota == ActionSpent),
       assert(healing.vitals.hitPoints == 8),
       assert(not(healing.vitals.unconscious)),
       assert(healing.deathSavingThrows == resetDeathSavingThrowLifecycle),

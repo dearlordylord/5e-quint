@@ -274,7 +274,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 127,
       "id": "QMBT32",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Direct Hit Point Restoration Spell Batch"
     },
     {
@@ -356,7 +356,7 @@ Keep it synchronized with the DAG table and task details.
 | 124   | QMBT29 - Select Next SRD Feature Widening Slice After Archery | done | QMBT27 | QMBT30 | [Savage Attacker feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `feat_savage_attacker` as the next SRD feature widening slice, with a red/green plan for `unit-feature.weapon-damage-dice-roll-choice`. |
 | 125   | QMBT30 - Recursive Unit Profile Planning Review | done | QMBT27-QMBT29 | QMBT31-QMBT33 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT27-QMBT29 review, refreshed PRD status notes, and appended QMBT31-QMBT33 because the matrix lane is not complete. |
 | 126   | QMBT31 - Promote Savage Attacker Weapon Damage Dice Choice | done | QMBT29-QMBT30 | QMBT33 | [Savage Attacker feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `feat_savage_attacker` as `unit-feature.weapon-damage-dice-roll-choice` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
-| 127   | QMBT32 - Promote Direct Hit Point Restoration Spell Batch | ready-for-implementation-after-light-research | QMBT28-QMBT30 | QMBT33 | [QMBT28 spell admission triage](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT28_SPELL_ADMISSION_TRIAGE.md) | Implement direct Hit Point restoration spell admission for `cure_wounds` and `mass_healing_word` without Fire Bolt object-targeting or condition-removal scope. |
+| 127   | QMBT32 - Promote Direct Hit Point Restoration Spell Batch | done | QMBT28-QMBT30 | QMBT33 | [QMBT28 spell admission triage](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT28_SPELL_ADMISSION_TRIAGE.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `cure_wounds` and `mass_healing_word` as `spell.hit-point-restoration` across QNT procedure facts, runtime projection/support, focused QMBT, deterministic admission evidence, and matrix artifacts. |
 | 128   | QMBT33 - Recursive Unit Profile Planning Review | ready-for-research | QMBT31-QMBT32 | QMBT34+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT31-QMBT32 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
@@ -1291,7 +1291,7 @@ typecheck/tests, `pnpm quality`, and two simplify review rounds passed.
 
 ### Task 127 - QMBT32 - Promote Direct Hit Point Restoration Spell Batch
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT28-QMBT30
 
@@ -1314,13 +1314,12 @@ area-centered targeting, condition removal, max-HP modification, heal-to-max,
 target Reaction stand-up, noncombat sensing spells, concentration condition
 lifecycle, and forced movement spells.
 
-Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Cure Wounds, Mass
-Healing Word, Healing Word precedent, Spell Definition, Spell Access, Spell
-Invocation, Spell Effect, Casting Time, Spell Slots, and Hit Points. Focused
-QNT proof for generalized direct Hit Point restoration facts; focused QMBT
-spell parity with the mandatory timed background protocol if production battle
-behavior changes; `pnpm unit-profile-coverage:check`; relevant package
-typecheck/tests; `pnpm quality`; `/simplify` convergence, minimum two rounds.
+Verification completed: RAW and `UBIQUITOUS_LANGUAGE.md` checked for Cure
+Wounds, Mass Healing Word, Healing Word precedent, Spell Definition, Spell
+Access, Spell Invocation, Spell Effect, Casting Time, Spell Slots, and Hit
+Points. Focused QNT proof, timed focused QMBT spell parity, deterministic
+admission/projection tests, `pnpm unit-profile-coverage:check`, package
+typecheck/tests, `pnpm quality`, and two simplify review rounds passed.
 
 ### Task 128 - QMBT33 - Recursive Unit Profile Planning Review
 

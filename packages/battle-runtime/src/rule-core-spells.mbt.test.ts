@@ -1,5 +1,5 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.bonus-action-healing spell.reaction-shield spell.readied-action-time-spell
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -19,8 +19,10 @@ import {
   proficiencyBonus,
 } from "@dnd/shared/types";
 import acidSplashInput from "../../surface/content/acid_splash.json";
+import cureWoundsInput from "../../surface/content/cure_wounds.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import mageArmorInput from "../../surface/content/mage_armor.json";
+import massHealingWordInput from "../../surface/content/mass_healing_word.json";
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -51,6 +53,7 @@ import {
 const ruleCoreSpellMbtHoles = [
   "TargetChoice",
   "SpellTargetAllocation",
+  "SpellTargetList",
   "AttackRoll",
   "SavingThrowOutcome",
   "DamageRoll",
@@ -104,7 +107,9 @@ const spellRecords = new Map(
     decodeSpellRecord(magicMissileInput),
     decodeSpellRecord(rayOfFrostInput),
     decodeSpellRecord(acidSplashInput),
+    decodeSpellRecord(cureWoundsInput),
     decodeSpellRecord(healingWordInput),
+    decodeSpellRecord(massHealingWordInput),
     decodeSpellRecord(mageArmorInput),
   ].map((spell) => [spell.id, spell]),
 );
@@ -127,6 +132,12 @@ const driverSchema = {
   doHealingWordNeedsHealingRoll: {},
   doHealingWordWounded: {},
   doHealingWordZeroHp: {},
+  doCureWoundsNeedsTarget: {},
+  doCureWoundsNeedsHealingRoll: {},
+  doCureWoundsWounded: {},
+  doMassHealingWordNeedsTargetList: {},
+  doMassHealingWordNeedsHealingRoll: {},
+  doMassHealingWordWounded: {},
   doMageArmorNeedsTarget: {},
   doMageArmor: {},
   doRejectSecondSlotSpell: {},
@@ -267,7 +278,11 @@ function createRuleCoreSpellDriver() {
           preparedSpells: [spellRecord("healing_word")],
         });
         resetProjection();
-        resolveHealingWord([[4, 3]]);
+        resolveSingleTargetHealingSpell({
+          spellId: "healing_word",
+          subject: healingSpellSubject("healing_word", "bonusActionSpell", 1),
+          healingGroups: [[4, 3]],
+        });
       },
       doHealingWordZeroHp: () => {
         state = spellBattle({
@@ -276,7 +291,50 @@ function createRuleCoreSpellDriver() {
           preparedSpells: [spellRecord("healing_word")],
         });
         resetProjection();
-        resolveHealingWord([[1, 1]]);
+        resolveSingleTargetHealingSpell({
+          spellId: "healing_word",
+          subject: healingSpellSubject("healing_word", "bonusActionSpell", 1),
+          healingGroups: [[1, 1]],
+        });
+      },
+      doCureWoundsNeedsTarget: () =>
+        resolveSingleTargetHealingSpellStaged({
+          spellId: "cure_wounds",
+          subject: healingSpellSubject("cure_wounds", "actionSpell", 1),
+          stopAt: "target",
+        }),
+      doCureWoundsNeedsHealingRoll: () =>
+        resolveSingleTargetHealingSpellStaged({
+          spellId: "cure_wounds",
+          subject: healingSpellSubject("cure_wounds", "actionSpell", 1),
+          stopAt: "healingRoll",
+        }),
+      doCureWoundsWounded: () => {
+        state = spellBattle({
+          targetHp: 4,
+          preparedSpells: [spellRecord("cure_wounds")],
+        });
+        resetProjection();
+        resolveSingleTargetHealingSpell({
+          spellId: "cure_wounds",
+          subject: healingSpellSubject("cure_wounds", "actionSpell", 1),
+          healingGroups: [[4, 3]],
+        });
+      },
+      doMassHealingWordNeedsTargetList: () =>
+        resolveMassHealingWordStaged("targetList"),
+      doMassHealingWordNeedsHealingRoll: () =>
+        resolveMassHealingWordStaged("healingRoll"),
+      doMassHealingWordWounded: () => {
+        state = spellBattle({
+          targetHp: 4,
+          secondTargetHp: 4,
+          preparedSpells: [spellRecord("mass_healing_word")],
+          includeSecondTarget: true,
+          spellSlots: [{ spellLevel: 3, count: 1 }],
+        });
+        resetProjection();
+        resolveMassHealingWord([[4, 3]]);
       },
       doMageArmor: () => {
         state = spellBattle({
@@ -670,13 +728,106 @@ function createRuleCoreSpellDriver() {
     }
 
     function resolveHealingWordStaged(stopAt: "target" | "healingRoll"): void {
+      resolveSingleTargetHealingSpellStaged({
+        spellId: "healing_word",
+        subject: healingSpellSubject("healing_word", "bonusActionSpell", 1),
+        stopAt,
+      });
+    }
+
+    function resolveSingleTargetHealingSpellStaged(input: {
+      readonly spellId: DirectHitPointRestorationSpellId;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "actionSpell" | "bonusActionSpell" }
+      >;
+      readonly stopAt: "target" | "healingRoll";
+    }): void {
       state = spellBattle({
         targetHp: 4,
-        preparedSpells: [spellRecord("healing_word")],
+        preparedSpells: [spellRecord(input.spellId)],
       });
       resetProjection();
-      const subject = healingWordSubject();
-      if (stopAt === "target") {
+      if (input.stopAt === "target") {
+        recordResult(
+          resolveBattleSubject({ state, subject: input.subject, fills: [] }),
+        );
+        return;
+      }
+      const act = discoverBattleActs(state).find((candidate) =>
+        isDeepStrictEqual(candidate.subject, input.subject),
+      );
+      if (act === undefined) {
+        throw new Error(`Expected ${input.spellId} healing spell act.`);
+      }
+      const target = requireHoleFromList(act.initialHoles, "targetChoice");
+      recordResult(
+        resolveBattleSubject({
+          state,
+          subject: input.subject,
+          fills: [spellTargetFill(target, input.spellId, casterId, targetId)],
+        }),
+      );
+    }
+
+    function resolveSingleTargetHealingSpell(input: {
+      readonly spellId: DirectHitPointRestorationSpellId;
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "actionSpell" | "bonusActionSpell" }
+      >;
+      readonly healingGroups: readonly (readonly number[])[];
+    }): void {
+      const act = discoverBattleActs(state).find((candidate) =>
+        isDeepStrictEqual(candidate.subject, input.subject),
+      );
+      if (act === undefined) {
+        throw new Error(`Expected ${input.spellId} healing spell act.`);
+      }
+      const target = requireHoleFromList(act.initialHoles, "targetChoice");
+      const targetFill = spellTargetFill(
+        target,
+        input.spellId,
+        casterId,
+        targetId,
+      );
+      const healing = requireHole(
+        resolveBattleSubject({
+          state,
+          subject: input.subject,
+          fills: [targetFill],
+        }),
+        "rolledDice",
+      );
+      recordResult(
+        resolveBattleSubject({
+          state,
+          subject: input.subject,
+          fills: [
+            targetFill,
+            damageRollFillWithGroups(healing, input.healingGroups),
+          ],
+        }),
+      );
+    }
+
+    function resolveMassHealingWordStaged(
+      stopAt: "targetList" | "healingRoll",
+    ): void {
+      state = spellBattle({
+        targetHp: 4,
+        secondTargetHp: 4,
+        preparedSpells: [spellRecord("mass_healing_word")],
+        includeSecondTarget: true,
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      });
+      resetProjection();
+      const subject = healingSpellSubject(
+        "mass_healing_word",
+        "bonusActionSpell",
+        3,
+      );
+      if (stopAt === "targetList") {
         recordResult(resolveBattleSubject({ state, subject, fills: [] }));
         return;
       }
@@ -684,34 +835,42 @@ function createRuleCoreSpellDriver() {
         isDeepStrictEqual(candidate.subject, subject),
       );
       if (act === undefined) {
-        throw new Error("Expected Healing Word Bonus Action spell act.");
+        throw new Error("Expected Mass Healing Word Bonus Action spell act.");
       }
-      const target = requireHoleFromList(act.initialHoles, "targetChoice");
+      const targetList = requireHoleFromList(
+        act.initialHoles,
+        "spellTargetList",
+      );
       recordResult(
         resolveBattleSubject({
           state,
           subject,
-          fills: [spellTargetFill(target, "healing_word", casterId, targetId)],
+          fills: [spellTargetListFill(targetList, "mass_healing_word")],
         }),
       );
     }
 
-    function resolveHealingWord(
+    function resolveMassHealingWord(
       healingGroups: readonly (readonly number[])[],
     ): void {
-      const subject = healingWordSubject();
+      const subject = healingSpellSubject(
+        "mass_healing_word",
+        "bonusActionSpell",
+        3,
+      );
       const act = discoverBattleActs(state).find((candidate) =>
         isDeepStrictEqual(candidate.subject, subject),
       );
       if (act === undefined) {
-        throw new Error("Expected Healing Word Bonus Action spell act.");
+        throw new Error("Expected Mass Healing Word Bonus Action spell act.");
       }
-      const target = requireHoleFromList(act.initialHoles, "targetChoice");
-      const targetFill = spellTargetFill(
-        target,
-        "healing_word",
-        casterId,
-        targetId,
+      const targetList = requireHoleFromList(
+        act.initialHoles,
+        "spellTargetList",
+      );
+      const targetFill = spellTargetListFill(
+        targetList,
+        "mass_healing_word",
       );
       const healing = requireHole(
         resolveBattleSubject({
@@ -725,7 +884,10 @@ function createRuleCoreSpellDriver() {
         resolveBattleSubject({
           state,
           subject,
-          fills: [targetFill, damageRollFillWithGroups(healing, healingGroups)],
+          fills: [
+            targetFill,
+            damageRollFillWithGroups(healing, healingGroups),
+          ],
         }),
       );
     }
@@ -760,8 +922,13 @@ describe("rule-core Spell focused MBT", () => {
 function spellBattle(
   input: {
     readonly targetHp?: number;
+    readonly secondTargetHp?: number;
     readonly preparedSpells?: readonly SpellRecord[];
     readonly includeSecondTarget?: boolean;
+    readonly spellSlots?: readonly {
+      readonly spellLevel: 1 | 3;
+      readonly count: number;
+    }[];
     readonly casterArmorClass?: ReturnType<typeof defaultArmorClassState>;
     readonly targetDeathSaves?: {
       readonly successes: 0 | 1 | 2;
@@ -780,6 +947,9 @@ function spellBattle(
         ...(input.preparedSpells === undefined
           ? {}
           : { preparedSpells: input.preparedSpells }),
+        ...(input.spellSlots === undefined
+          ? {}
+          : { spellSlots: input.spellSlots }),
       }),
       spellTarget({
         combatantId: targetId,
@@ -793,7 +963,7 @@ function spellBattle(
               combatantId: secondTargetId,
               displayName: "Second Spell Target",
               initiative: 8,
-              currentHp: 13,
+              currentHp: input.secondTargetHp ?? 13,
             }),
           ]
         : []),
@@ -840,6 +1010,10 @@ function spellcaster(input: {
   readonly initiative: number;
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly preparedSpells?: readonly SpellRecord[];
+  readonly spellSlots?: readonly {
+    readonly spellLevel: 1 | 3;
+    readonly count: number;
+  }[];
 }): BattleCreatureInit {
   return characterCreature({
     combatantId: casterId,
@@ -856,7 +1030,7 @@ function spellcaster(input: {
         spellRecord("healing_word"),
         spellRecord("mage_armor"),
       ],
-      spellSlots: [{ spellLevel: 1, count: 2 }],
+      spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
     },
     ...(input.armorClass === undefined ? {} : { armorClass: input.armorClass }),
   });
@@ -935,8 +1109,18 @@ function unarmoredDexArmorClass(): ReturnType<typeof defaultArmorClassState> {
   };
 }
 
+type DirectHitPointRestorationSpellId =
+  | "healing_word"
+  | "cure_wounds"
+  | "mass_healing_word";
+
 function actionSpellSubject(
-  spellId: "magic_missile" | "mage_armor" | "ray_of_frost" | "acid_splash",
+  spellId:
+    | "magic_missile"
+    | "mage_armor"
+    | "ray_of_frost"
+    | "acid_splash"
+    | "cure_wounds",
   spellActId: string,
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
   return { tag: "actionSpell", actorId: casterId, spellId, spellActId };
@@ -954,15 +1138,19 @@ function targetAttackSubject(): Extract<
   };
 }
 
-function healingWordSubject(): Extract<
+function healingSpellSubject(
+  spellId: DirectHitPointRestorationSpellId,
+  subjectTag: "actionSpell" | "bonusActionSpell",
+  slotLevel: 1 | 3,
+): Extract<
   BattleSubject,
-  { readonly tag: "bonusActionSpell" }
+  { readonly tag: "actionSpell" | "bonusActionSpell" }
 > {
   return {
-    tag: "bonusActionSpell",
+    tag: subjectTag,
     actorId: casterId,
-    spellId: "healing_word",
-    spellActId: "preparedHealingSpell:healing_word:slot:1",
+    spellId,
+    spellActId: `preparedHealingSpell:${spellId}:slot:${slotLevel}`,
   };
 }
 
@@ -987,7 +1175,7 @@ function attackTargetFill(hole: BattleHole): BattleFill {
 
 function spellTargetFill(
   hole: BattleHole,
-  spellId: "mage_armor" | "ray_of_frost" | "healing_word",
+  spellId: "mage_armor" | "ray_of_frost" | DirectHitPointRestorationSpellId,
   caster: CombatantId,
   target: CombatantId,
 ): BattleFill {
@@ -1006,6 +1194,27 @@ function spellTargetFill(
         spellId,
       },
     ],
+  };
+}
+
+function spellTargetListFill(
+  hole: BattleHole,
+  spellId: "mass_healing_word",
+): BattleFill {
+  if (hole.kind !== "spellTargetList") {
+    throw new Error("Expected spellTargetList hole.");
+  }
+  const targetIds = [targetId, secondTargetId];
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((spellTargetId) => ({
+      kind: "spellTarget",
+      casterId,
+      targetId: spellTargetId,
+      spellId,
+    })),
   };
 }
 
@@ -1226,6 +1435,7 @@ function level1SlotsRemaining(
 function projectSpellHole(hole: BattleHole): RuleCoreSpellMbtHole {
   if (hole.kind === "targetChoice") return "TargetChoice";
   if (hole.kind === "spellTargetAllocation") return "SpellTargetAllocation";
+  if (hole.kind === "spellTargetList") return "SpellTargetList";
   if (hole.kind === "attackRoll") return "AttackRoll";
   if (hole.kind === "savingThrowOutcome") return "SavingThrowOutcome";
   if (hole.kind === "rolledDice") return "DamageRoll";
@@ -1283,7 +1493,7 @@ function spellRecord(
     | "mage_armor"
     | "ray_of_frost"
     | "acid_splash"
-    | "healing_word",
+    | DirectHitPointRestorationSpellId,
 ): SpellRecord {
   const spell = spellRecords.get(spellId);
   if (spell === undefined) {
