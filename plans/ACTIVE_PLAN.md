@@ -394,6 +394,24 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 147,
       "id": "QMBT52",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 148,
+      "id": "QMBT53",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Adrenaline Rush Bonus Action Dash Temporary Hit Points"
+    },
+    {
+      "number": 149,
+      "id": "QMBT54",
+      "status": "ready-for-research",
+      "title": "Select Next SRD Feature Widening Slice After Adrenaline Rush"
+    },
+    {
+      "number": 150,
+      "id": "QMBT55",
       "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
     }
@@ -490,7 +508,10 @@ Keep it synchronized with the DAG table and task details.
 | 144   | QMBT49 - Extract Shared Speed and Movement Cost Algebras | done | QMBT44, QMBT48 | QMBT52 | [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md) | Completed shared Speed capacity and Movement cost algebras in `@dnd/shared-algebras`, documented `"walk"` as ordinary SRD Speed, and refactored battle Roving/Fast Movement speed-kind behavior to call the shared algebras while keeping battle legality and spatial facts local. |
 | 145   | QMBT50 - Carry Unit Feature Support Profile Payloads | done | QMBT27, QMBT37 | QMBT52 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Completed structured support-profile payloads for Archery `+2` and level-5 Extra Attack `additionalAttacks: 1`, updated reducer consumers to read those payloads, preserved duplicate Archery non-stacking, and verified with RAW/UL review, focused battle-runtime tests, typecheck, `pnpm quality`, and `/simplify` convergence. |
 | 146   | QMBT51 - Structure Spell Invocation Identity and Resource Access | done | QMBT5, QMBT22, QMBT28, QMBT42 | QMBT52 | [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed structured spell invocation refs, cast/Ready subject modes, branded `SpellId`, and access/resource/procedure-shaped supported spell invocations for the promoted prepared Spell Slot, Shield, and class cantrip lanes. |
-| 147   | QMBT52 - Recursive Unit Profile Planning Review | ready-for-research | QMBT47-QMBT51 | QMBT53+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md) | Review QMBT47-QMBT51 findings, update PRD and plan docs, and append the next task batch, including the selected Adrenaline Rush implementation task if the Unit profile matrix lane remains active. |
+| 147   | QMBT52 - Recursive Unit Profile Planning Review | done | QMBT47-QMBT51 | QMBT53-QMBT55 | [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT47-QMBT51 review, refreshed PRD status notes, and appended QMBT53-QMBT55 because the matrix lane is not complete. |
+| 148   | QMBT53 - Promote Adrenaline Rush Bonus Action Dash Temporary Hit Points | ready-for-implementation-after-light-research | QMBT48-QMBT52 | QMBT54-QMBT55 | [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `orc_adrenaline_rush` as a Bonus Action Dash coupled Temporary Hit Point Unit-feature profile using the QMBT48 red/green plan. |
+| 149   | QMBT54 - Select Next SRD Feature Widening Slice After Adrenaline Rush | ready-for-research | QMBT53 | QMBT55 | [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT53 refreshes the matrix, select the next narrow SRD feature widening slice without mixing Temporary Hit Points, healing pools, AC base formulas, resistance, attack replacement, Weapon Mastery, spells, or magic items. |
+| 150   | QMBT55 - Recursive Unit Profile Planning Review | ready-for-research | QMBT53-QMBT54 | QMBT56+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [QMBT52 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT53-QMBT54 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -2218,27 +2239,123 @@ timed background protocol; `/simplify` convergence, minimum two rounds.
 
 ### Task 147 - QMBT52 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT47-QMBT51
 
-Blocks: QMBT53+
+Blocks: QMBT53-QMBT55
 
 Research / plan:
-[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[QMBT52_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md),
 [QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md),
 [QMBT46_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md),
 [SPEED_MOVEMENT_ALGEBRAS_PLAN.md](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md),
-[QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md)
+[QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
-Scope: review QMBT47-QMBT51 findings, update the PRD and plan docs, and append
+Completed scope: reviewed QMBT47-QMBT51 findings, refreshed the PRD status
+notes, and appended QMBT53-QMBT55 because the Unit profile matrix lane remains
+active at 28/45 supported executable Unit coverage. The appended batch starts
+with the selected `orc_adrenaline_rush` implementation slice, then reopens
+SRD feature-slice selection against the refreshed matrix, then runs another
+recursive planning review.
+
+Out of scope honored: no production implementation work was started in QMBT52.
+
+Verification: RAW/source review checked the QMBT47-QMBT51 anchors captured in
+the QMBT52 review artifact; active-plan consistency checked across Ralph index,
+DAG table, and task details; `pnpm unit-profile-coverage:check` was not run
+because no matrix docs or generated artifacts changed; `/simplify` convergence
+recorded in the QMBT52 review artifact.
+
+### Task 148 - QMBT53 - Promote Adrenaline Rush Bonus Action Dash Temporary Hit Points
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT48-QMBT52
+
+Blocks: QMBT54-QMBT55
+
+Research / plan:
+[QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT52_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[SPEED_MOVEMENT_ALGEBRAS_PLAN.md](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md)
+
+Scope: implement the QMBT48 red/green plan for `orc_adrenaline_rush`. Promote a
+Unit feature profile such as
+`unit-feature.bonus-action-dash-temporary-hit-points` for the SRD Orc
+Adrenaline Rush trait: the Orc can take Dash as a Bonus Action; when the Orc
+takes that Bonus Action Dash through this trait, the Orc gains Temporary Hit
+Points equal to Proficiency Bonus; the trait has a Proficiency Bonus use pool;
+and expended uses refresh on a Short or Long Rest. The implementation must
+parse the authored `activation` mechanics shape, thread through the existing
+Dash/Bonus Action movement boundary and shared Speed/Movement algebras, and
+avoid splitting the Dash and Temporary Hit Point facts into independent support
+markers.
+
+Out of scope: generic Temporary Hit Point features, Ranger Tireless, False Life
+and other spells, magic items, AC base calculation alternatives, Lay On Hands
+and other healing pools, Dragonborn Breath Weapon attack replacement,
+resistance traits, Weapon Mastery properties, and broad Dash rider families.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Orc Adrenaline Rush,
+Dash, Temporary Hit Points, Hit Points, Healing, Proficiency Bonus, Short Rest,
+Long Rest, Pool, Quota, Spend, Movement, and Speed; focused QNT proof for the
+Dash-coupled Temporary Hit Point feature profile; focused runtime parity with
+the mandatory timed background MBT protocol if promoted battle behavior changes;
+`pnpm unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm
+quality`; `/simplify` convergence, minimum two rounds.
+
+### Task 149 - QMBT54 - Select Next SRD Feature Widening Slice After Adrenaline Rush
+
+Status: `ready-for-research`
+
+Depends on: QMBT53
+
+Blocks: QMBT55
+
+Research / plan:
+[QMBT52_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT53 refreshes matrix pressure, select the next narrow SRD
+feature-style widening slice. Candidate lanes must stay domain-distinct:
+Temporary Hit Point features, healing pools, AC base formulas, resistance
+traits, attack replacement, Weapon Mastery properties, spell admission, and
+magic-item intake should not be mixed into one slice.
+
+Out of scope: implementing the selected slice, selecting spell or magic-item
+work unless the review explicitly changes lane ownership, catalog cleanup
+unrelated to feature widening, and broad feature-family widening.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for every seriously
+considered candidate boundary; active-plan consistency across Ralph index, DAG
+table, and task details; `/simplify` convergence, minimum two rounds. MBT is
+not required for this research-only task.
+
+### Task 150 - QMBT55 - Recursive Unit Profile Planning Review
+
+Status: `ready-for-research`
+
+Depends on: QMBT53-QMBT54
+
+Blocks: QMBT56+
+
+Research / plan:
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[QMBT52_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT52_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: review QMBT53-QMBT54 findings, update the PRD and plan docs, and append
 the next implementation/research batch. This task must include a new recursive
 planning-review task at the end of the appended batch unless the Unit profile
 matrix lane is explicitly declared complete.
 
 Out of scope: implementation work not captured by the new task batch.
 
-Verification: active-plan consistency check across Ralph index, DAG table, and
+Verification: RAW/source review for QMBT53-QMBT54 findings and any appended
+rule slices; active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change; `/simplify` convergence, minimum two rounds unless the final
 changeset is trivial.

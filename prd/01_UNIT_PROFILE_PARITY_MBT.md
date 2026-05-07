@@ -168,21 +168,21 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT46's recursive planning review:
+Current matrix status after QMBT52's recursive planning review:
 
 - 59 authored Units classified in the installed coverage collections.
-- 20 stable executable profiles.
-- 27 of 45 installed executable Units mapped to supported profiles.
+- 21 stable executable profiles.
+- 28 of 45 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
-- deterministic admission/projection evidence covers all 27 supported Unit
+- deterministic admission/projection evidence covers all 28 supported Unit
   identities, including the QMBT21 Classic non-SRD mechanics-only
   `mycelium_step` row, QMBT22 `shield`, QMBT25 `healing_word`, and QMBT27
   `feat_archery`, QMBT31 `feat_savage_attacker`, and QMBT32 `cure_wounds` and
   `mass_healing_word`, plus QMBT34 `mass_cure_wounds` and QMBT37
   `fighter_extra_attack`, `paladin_extra_attack`, and `ranger_extra_attack`,
   plus QMBT40 `barbarian_fast_movement` and QMBT44 `ranger_roving`.
-- selected identity MBT covers 10 of 27 supported Unit identities. QMBT16
+- selected identity MBT covers 10 of 28 supported Unit identities. QMBT16
   explicitly decided not to add selected identity MBT for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
@@ -227,8 +227,22 @@ Current matrix status after QMBT46's recursive planning review:
   deterministic admission/projection evidence, and refreshed matrix artifacts.
 - QMBT45 selected `orc_relentless_endurance` as the next SRD feature widening
   slice under the planned `unit-feature.zero-hit-point-replacement` profile.
+- QMBT47 counted `orc_relentless_endurance` as a supported
+  `unit-feature.zero-hit-point-replacement` Unit with focused runtime parity,
+  deterministic admission/projection evidence, and refreshed matrix artifacts.
+- QMBT48 selected `orc_adrenaline_rush` as the next SRD feature widening slice
+  under a planned Bonus Action Dash coupled Temporary Hit Point profile.
+- QMBT49 extracted shared Speed capacity and Movement cost algebras into
+  `@dnd/shared-algebras`, keeping battle legality and spatial facts local.
+- QMBT50 structured Archery and level-5 Extra Attack support-profile payloads
+  so runtime reducers consume parsed values instead of re-materializing them
+  from marker presence.
+- QMBT51 structured promoted spell invocation refs, cast/Ready subject modes,
+  branded `SpellId`, and access/resource/procedure-shaped supported spell
+  invocations for the current prepared Spell Slot, Shield, and class cantrip
+  lanes.
 
-QMBT46 appended QMBT47-QMBT49 rather than declaring the matrix lane complete.
-The next batch promotes Relentless Endurance's zero-Hit-Point replacement,
-selects the next SRD feature widening slice after Relentless Endurance, and
-then runs another recursive planning review.
+QMBT52 appended QMBT53-QMBT55 rather than declaring the matrix lane complete.
+The next batch promotes Adrenaline Rush's Bonus Action Dash coupled Temporary
+Hit Point profile, selects the next SRD feature widening slice after Adrenaline
+Rush, and then runs another recursive planning review.
