@@ -139,6 +139,72 @@ Keep it synchronized with the DAG table and task details.
       "id": "QMBT9",
       "status": "done",
       "title": "Select Specific Unit Identity MBT Expansion"
+    },
+    {
+      "number": 105,
+      "id": "QMBT10",
+      "status": "ready-for-research",
+      "title": "Tighten Unit Identity Evidence Semantics"
+    },
+    {
+      "number": 106,
+      "id": "QMBT11",
+      "status": "ready-for-research",
+      "title": "Finish Unit Profile Checker Modularization"
+    },
+    {
+      "number": 107,
+      "id": "QMBT12",
+      "status": "blocked",
+      "title": "Reconcile QMBT8-QMBT9 Closeout"
+    },
+    {
+      "number": 108,
+      "id": "QMBT13",
+      "status": "blocked",
+      "title": "Classify Authored Catalog Admission Gaps"
+    },
+    {
+      "number": 109,
+      "id": "QMBT14",
+      "status": "blocked",
+      "title": "Trace Spell Unit Admission Evidence"
+    },
+    {
+      "number": 110,
+      "id": "QMBT15",
+      "status": "blocked",
+      "title": "Expand Spell Unit Admission Evidence"
+    },
+    {
+      "number": 111,
+      "id": "QMBT16",
+      "status": "blocked",
+      "title": "Decide Selected Spell Identity MBT"
+    },
+    {
+      "number": 112,
+      "id": "QMBT17",
+      "status": "blocked",
+      "title": "Define Classic Non-SRD Mechanics Intake Policy"
+    },
+    {
+      "number": 113,
+      "id": "QMBT18",
+      "status": "blocked",
+      "title": "Drive Unsupported Feature Profile Red-Green Slice"
+    },
+    {
+      "number": 114,
+      "id": "QMBT19",
+      "status": "blocked",
+      "title": "Review Unit Profile Matrix Metrics Semantics"
+    },
+    {
+      "number": 115,
+      "id": "QMBT20",
+      "status": "blocked",
+      "title": "Recursive Unit Profile Planning Review"
     }
   ]
 }
@@ -191,6 +257,17 @@ Keep it synchronized with the DAG table and task details.
 | 102   | QMBT7 - Specific Unit Parity MBT and Matrix Integration | done | QMBT4-QMBT6, Unit profile matrix | QMBT8-QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed methodology contract, deterministic admission/projection tracer for three Unit feature identities, selected identity MBT citation for `fighter_second_wind`, and expansion boundaries. |
 | 103   | QMBT8 - Expand Unit Feature Admission Evidence | done | QMBT7 | QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed unit-profile checker/report modularization and deterministic admission/projection evidence expansion for remaining supported Unit feature identities. |
 | 104   | QMBT9 - Select Specific Unit Identity MBT Expansion | done | QMBT7-QMBT8 | none | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed selected identity MBT evidence for eight additional supported SRD Unit feature identities with production reducer state changes; selected identity MBT coverage is now 9/16. |
+| 105   | QMBT10 - Tighten Unit Identity Evidence Semantics | ready-for-research | QMBT7-QMBT9 | QMBT12, QMBT16, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Research and fix whether `selected-identity-mbt` evidence proves executable Unit-specific replay or only owner-file membership; downgrade or strengthen evidence before expanding MBT metrics. |
+| 106   | QMBT11 - Finish Unit Profile Checker Modularization | ready-for-research | QMBT8 | QMBT12-QMBT15, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and finish splitting authored discovery, installed inventory discovery, claim/evidence validation, matrix construction, report rendering, and CLI orchestration so all-Unit growth does not concentrate in one script. |
+| 107   | QMBT12 - Reconcile QMBT8-QMBT9 Closeout | blocked | QMBT10-QMBT11 | QMBT13-QMBT20 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | After QMBT10-QMBT11, review QMBT8-QMBT9 findings, repair closeout notes/statuses/metrics, and decide whether any evidence must be reclassified. |
+| 108   | QMBT13 - Classify Authored Catalog Admission Gaps | blocked | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Turn `not-in-unit-catalog` into actionable categories: intentional backlog, SRD candidate, Classic/private pressure, non-runtime authored data, duplicate/content issue, or other explicit disposition. |
+| 109   | QMBT14 - Trace Spell Unit Admission Evidence | blocked | QMBT11-QMBT13 | QMBT15-QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Add a small deterministic spell Unit admission/projection tracer before broad spell expansion. |
+| 110   | QMBT15 - Expand Spell Unit Admission Evidence | blocked | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Expand deterministic spell Unit evidence if QMBT14 proves the methodology and denominators are clear. |
+| 111   | QMBT16 - Decide Selected Spell Identity MBT | blocked | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether any spell identities need selected MBT beyond QMBT5 Procedure Parity, and add only high-risk selected identities. |
+| 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | blocked | QMBT12-QMBT13 | QMBT18-QMBT20 | [Unit profile coverage matrix plan](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md) | Make private PHB/XPHB mechanics pressure intake explicit: public renamed mechanics-only records, matrix gaps, evidence expectations, and protected-expression gates. |
+| 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | blocked | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one unsupported/widening feature profile and drive it matrix/QNT-MBT-first into TypeScript implementation and evidence. |
+| 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | blocked | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Review denominators, labels, and report sections after the corrective and expansion slices so percentages still mean what they claim. |
+| 115   | QMBT20 - Recursive Unit Profile Planning Review | blocked | QMBT10-QMBT19 | QMBT21+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT10-QMBT19 findings, update PRD/plan docs, and append QMBT21+ tasks plus a new recursive planning-review task unless the matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -486,3 +563,237 @@ Verification: local SRD and `UBIQUITOUS_LANGUAGE.md` checks for the already
 modeled Fighter, Barbarian, and Rogue feature anchors; focused feature MBT with
 the standard timed protocol; `pnpm unit-profile-coverage:check`; package
 typecheck; `pnpm quality`; two `/simplify` rounds.
+
+### Task 105 - QMBT10 - Tighten Unit Identity Evidence Semantics
+
+Status: `ready-for-research`
+
+Depends on: QMBT7-QMBT9
+
+Blocks: QMBT12, QMBT16, QMBT19
+
+Research / plan: [01_UNIT_PROFILE_PARITY_MBT.md](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md)
+
+Scope: research and fix the semantics of `selected-identity-mbt`. The current
+checker proves that `unit-evidence.jsonl` and an owner-local
+`UNIT-IDENTITY-EVIDENCE` marker agree, but it does not prove that the MBT action
+set actually exercised each claimed Unit id as an identity-bearing replay. The
+task must decide whether to strengthen evidence markers, add action/fixture
+markers, split evidence tags, or downgrade overbroad QMBT9 claims.
+
+Out of scope: adding new selected identity MBT cases; broad battle MBT; changing
+Procedure Parity profile evidence.
+
+Verification: `pnpm unit-profile-coverage:check`; focused evidence checker
+tests or negative fixtures if introduced; no MBT unless the task changes MBT
+driver behavior or evidence must be validated by an actual focused run.
+
+### Task 106 - QMBT11 - Finish Unit Profile Checker Modularization
+
+Status: `ready-for-research`
+
+Depends on: QMBT8
+
+Blocks: QMBT12-QMBT15, QMBT19
+
+Research / plan: [01_UNIT_PROFILE_PARITY_MBT.md](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md)
+
+Scope: research and finish the checker modularization started by QMBT8. Report
+rendering is now separate, but `scripts/unit-profile-coverage-check.cjs` still
+owns authored discovery, installed inventory discovery, claim validation,
+evidence validation, owner-marker scanning, and CLI orchestration. Split or
+otherwise isolate these responsibilities enough that adding all Units does not
+concentrate every matrix concern in one temporal catch-all script.
+
+Out of scope: changing matrix semantics; adding new Unit evidence; selected MBT
+expansion.
+
+Verification: `pnpm unit-profile-coverage:check`; generated matrix/report stay
+stable unless intentionally changed; focused script-level regression checks if
+new module boundaries make them practical.
+
+### Task 107 - QMBT12 - Reconcile QMBT8-QMBT9 Closeout
+
+Status: `blocked`
+
+Depends on: QMBT10-QMBT11
+
+Blocks: QMBT13-QMBT20
+
+Research / plan: [QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md)
+
+Scope: after QMBT10-QMBT11, review whether QMBT8 and QMBT9 remain correctly
+closed. Update closeout notes, task statuses, report labels, evidence rows, and
+metrics if the corrected evidence semantics or modularization findings require
+reclassification.
+
+Out of scope: new profile implementation and broad evidence expansion.
+
+Verification: `pnpm unit-profile-coverage:check`; active-plan consistency
+check across Ralph index, DAG row, and task detail.
+
+### Task 108 - QMBT13 - Classify Authored Catalog Admission Gaps
+
+Status: `blocked`
+
+Depends on: QMBT11-QMBT12
+
+Blocks: QMBT14-QMBT18
+
+Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: turn `catalogAdmission.status = "not-in-unit-catalog"` from a raw gap
+list into actionable categories. Candidate dispositions include intentional
+backlog, SRD candidate, Classic/private pressure, non-runtime authored data,
+duplicate/content issue, and explicit unsupported/widening pressure.
+
+Out of scope: implementing every missing Unit; admitting all authored content
+to the catalog.
+
+Verification: `pnpm unit-profile-coverage:check`; generated report separates
+raw not-in-catalog inventory from triaged planning pressure.
+
+### Task 109 - QMBT14 - Trace Spell Unit Admission Evidence
+
+Status: `blocked`
+
+Depends on: QMBT11-QMBT13
+
+Blocks: QMBT15-QMBT16
+
+Research / plan: [QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md)
+
+Scope: add a small deterministic spell Unit admission/projection tracer before
+broad spell expansion. The tracer should use real installed spell Unit ids,
+exercise production catalog/support/projection boundaries, and clarify how
+spell evidence differs from feature Unit evidence.
+
+Out of scope: all spell Units; selected spell identity MBT; broad battle MBT.
+
+Verification: `pnpm unit-profile-coverage:check`; focused deterministic spell
+admission/projection tests; package typecheck.
+
+### Task 110 - QMBT15 - Expand Spell Unit Admission Evidence
+
+Status: `blocked`
+
+Depends on: QMBT14
+
+Blocks: QMBT16
+
+Research / plan: [QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md)
+
+Scope: expand deterministic spell Unit admission/projection evidence if QMBT14
+proves the methodology and denominators are clear. Keep evidence deterministic
+and catalog/projection focused.
+
+Out of scope: selected identity MBT; QNT catalog enumeration; unsupported spell
+profile implementation.
+
+Verification: `pnpm unit-profile-coverage:check`; focused deterministic tests;
+package typecheck.
+
+### Task 111 - QMBT16 - Decide Selected Spell Identity MBT
+
+Status: `blocked`
+
+Depends on: QMBT10, QMBT14-QMBT15
+
+Blocks: QMBT19-QMBT20
+
+Research / plan: [01_UNIT_PROFILE_PARITY_MBT.md](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md)
+
+Scope: decide whether any spell Unit identities need selected identity MBT
+beyond QMBT5 Procedure Parity. Use the corrected QMBT10 evidence semantics and
+the spell admission evidence from QMBT14-QMBT15. Add only high-risk selected
+identity MBT cases, or explicitly record why none are justified yet.
+
+Out of scope: one MBT trace per spell; broad authored spell catalog discovery
+inside QNT.
+
+Verification: `pnpm unit-profile-coverage:check`; focused MBT only for chosen
+identities, one run at a time with the standard timed protocol.
+
+### Task 112 - QMBT17 - Define Classic Non-SRD Mechanics Intake Policy
+
+Status: `blocked`
+
+Depends on: QMBT12-QMBT13
+
+Blocks: QMBT18-QMBT20
+
+Research / plan: [UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md)
+
+Scope: make private PHB/XPHB mechanics pressure intake explicit. Define how
+pressure becomes public renamed mechanics-only Units, synthetic labels, matrix
+gaps, unsupported/widening dispositions, and evidence requirements without
+leaking private-source identity into shipped ids, labels, prose, or provenance.
+
+Out of scope: importing private content into this repo; adding protected
+expression; broad runtime support for every private-source mechanic.
+
+Verification: `pnpm unit-profile-coverage:check`; expression/provenance gates
+remain executable.
+
+### Task 113 - QMBT18 - Drive Unsupported Feature Profile Red-Green Slice
+
+Status: `blocked`
+
+Depends on: QMBT10-QMBT13, QMBT17
+
+Blocks: QMBT19-QMBT20
+
+Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: pick one unsupported or widening feature profile from the matrix and
+drive it through the red/green flow: matrix gap or authored-source pressure,
+QNT Procedure Parity profile, focused Procedure Parity MBT expectation,
+TypeScript implementation, deterministic evidence, and selected identity MBT
+only if identity risk justifies it.
+
+Out of scope: solving every unsupported feature profile.
+
+Verification: RAW/source check for the selected feature; QNT/proof or focused
+QMBT as needed; `pnpm unit-profile-coverage:check`; runtime tests; MBT only
+after behavior is complete.
+
+### Task 114 - QMBT19 - Review Unit Profile Matrix Metrics Semantics
+
+Status: `blocked`
+
+Depends on: QMBT10-QMBT18
+
+Blocks: QMBT20
+
+Research / plan: [01_UNIT_PROFILE_PARITY_MBT.md](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md)
+
+Scope: review all matrix denominators, labels, report sections, and evidence
+categories after the corrective and expansion slices. Confirm that each
+percentage still answers a concrete planning question and does not overclaim
+coverage.
+
+Out of scope: new runtime behavior.
+
+Verification: `pnpm unit-profile-coverage:check`; report review against PRD
+goals and active-plan task semantics.
+
+### Task 115 - QMBT20 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT10-QMBT19
+
+Blocks: QMBT21+
+
+Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review QMBT10-QMBT19 findings, update the PRD and plan docs, and append
+the next batch of QMBT21+ tasks. This task must include a new recursive
+planning-review task at the end of the appended batch unless the Unit profile
+matrix lane is explicitly declared complete.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Verification: active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change.
