@@ -67,7 +67,11 @@ or whether a proficiency applies.
 
 `QMBT66` remains necessary because the matrix lane is not complete and the
 project needs a recurring stop to reconcile QMBT65 findings, refresh the PRD,
-and append the next bounded batch rather than letting planning drift.
+and append the next bounded batch rather than letting planning drift. Unlike
+this QMBT64 review, QMBT66 should not default to one implementation task plus
+one review task. It should append the largest coherent group whose tasks are
+similar enough to run without re-planning between each item, and justify any
+single-task batch as a boundary/uncertainty exception.
 
 ## QMBT65 Refinements
 
@@ -99,7 +103,10 @@ clarifications:
   batch to preserve the current active-plan queue shape, keeping QMBT65 focused
   on the already selected Cutting Words implementation.
 - `/simplify` round 2: no important changes found; the batch still has one
-  selected implementation task and one recursive review task.
+  selected implementation task and one recursive review task. This is accepted
+  for QMBT64 only because QMBT63 had already selected exactly one next slice;
+  QMBT66 has a stricter obligation to mine QMBT65 findings and append a
+  coherent multi-task batch where confidence permits.
 - `pnpm unit-profile-coverage:check` remains the matrix gate if generated
   artifacts change; QMBT64 changed planning docs only.
 - MBT not run: QMBT64 is planning-only and makes no promoted battle-runtime
