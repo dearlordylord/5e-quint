@@ -158,6 +158,118 @@ function runSelfTest(root) {
         `Self-test failed: expected matching deterministic replay action marker to pass, got ${JSON.stringify(issues)}`,
       );
     }
+    const taskClaimDriftIssues = validateOwnerClaims(
+      [
+        {
+          id: "fixture.profile",
+          qntOwners: [],
+          runtimeOwners: [],
+          verificationOwners: [
+            { kind: "qnt-proof", ownerPath: "fixture/proof.qnt" },
+            { kind: "focused-mbt", ownerPath: "fixture/parity.test.ts" },
+          ],
+          taskRefs: ["QCORE_FIXTURE", "QMBT_FIXTURE"],
+        },
+      ],
+      [
+        {
+          taskId: "QCORE_FIXTURE",
+          claimKind: "qnt-proof",
+          profileIds: [],
+        },
+        {
+          taskId: "QMBT_FIXTURE",
+          claimKind: "completed-runtime-parity",
+          profileIds: [],
+        },
+      ],
+      [
+        {
+          ownerPath: "fixture/proof.qnt",
+          claimKind: "verification-owner:qnt-proof",
+          profileIds: ["fixture.profile"],
+        },
+        {
+          ownerPath: "fixture/parity.test.ts",
+          claimKind: "verification-owner:focused-mbt",
+          profileIds: ["fixture.profile"],
+        },
+      ],
+      {
+        unitEvidence: [],
+        unitIdentityMbtReplays: [],
+        selectedUnitIdentityReplays: [],
+        selectedUnitIdentityReplayConsumers: [],
+      },
+      [],
+    );
+    for (const expectedIssue of [
+      "fixture.profile has qnt-proof verification ownership but no qnt-proof task claim.",
+      "fixture.profile has runtime parity verification ownership but no completed runtime parity task claim.",
+      "fixture.profile taskRefs includes QCORE_FIXTURE but no matching task claim includes the profile.",
+      "fixture.profile taskRefs includes QMBT_FIXTURE but no matching task claim includes the profile.",
+    ]) {
+      if (!taskClaimDriftIssues.includes(expectedIssue)) {
+        fail(
+          `Self-test failed: expected task claim drift issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(taskClaimDriftIssues)}`,
+        );
+      }
+    }
+    const reverseTaskClaimDriftIssues = validateOwnerClaims(
+      [
+        {
+          id: "fixture.profile",
+          qntOwners: [],
+          runtimeOwners: [],
+          verificationOwners: [
+            { kind: "qnt-proof", ownerPath: "fixture/proof.qnt" },
+            { kind: "focused-mbt", ownerPath: "fixture/parity.test.ts" },
+          ],
+          taskRefs: [],
+        },
+      ],
+      [
+        {
+          taskId: "QCORE_STRAY",
+          claimKind: "qnt-proof",
+          profileIds: ["fixture.profile"],
+        },
+        {
+          taskId: "QMBT_STRAY",
+          claimKind: "completed-runtime-parity",
+          profileIds: ["fixture.profile"],
+        },
+      ],
+      [
+        {
+          ownerPath: "fixture/proof.qnt",
+          claimKind: "verification-owner:qnt-proof",
+          profileIds: ["fixture.profile"],
+        },
+        {
+          ownerPath: "fixture/parity.test.ts",
+          claimKind: "verification-owner:focused-mbt",
+          profileIds: ["fixture.profile"],
+        },
+      ],
+      {
+        unitEvidence: [],
+        unitIdentityMbtReplays: [],
+        selectedUnitIdentityReplays: [],
+        selectedUnitIdentityReplayConsumers: [],
+      },
+      [],
+    );
+    for (const expectedIssue of [
+      "Task claim QCORE_STRAY includes fixture.profile but the profile taskRefs do not include the task.",
+      "Task claim QMBT_STRAY includes fixture.profile but the profile taskRefs do not include the task.",
+    ]) {
+      if (!reverseTaskClaimDriftIssues.includes(expectedIssue)) {
+        fail(
+          `Self-test failed: expected reverse task claim drift issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(reverseTaskClaimDriftIssues)}`,
+        );
+      }
+    }
     if (
       !hasVariantMagicMechanics({
         id: "fixture_magic_template",

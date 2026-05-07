@@ -10,6 +10,7 @@ import {
   movementFeet,
   type Condition,
   type MovementFeet,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
   Ability,
@@ -51,7 +52,7 @@ export type BattleAlternateActionCostSupportProfile = {
   readonly kind: "alternateActionCost";
   readonly from: {
     readonly kind: "standardAction";
-    readonly actions: typeof ALTERNATE_ACTION_COST_ACTIONS;
+    readonly actions: ReadonlyNonEmptyArray<AlternateActionCostAction>;
   };
   readonly to: { readonly kind: "bonusAction" };
 };
@@ -67,6 +68,23 @@ export type BattleUnitSupportProfileIssue = {
   readonly message: string;
 };
 
+export type ClassicNonSrdMechanicsUnit = {
+  readonly id: UnitRecord["id"];
+  readonly syntheticLabel: string;
+  readonly provenance: { readonly kind: "classic-2024-mechanics-source-lane" };
+  readonly kind: "class_feature";
+  readonly mechanics: {
+    readonly family: "alternate_action_cost";
+    readonly from: {
+      readonly kind: "standard_action";
+      readonly actions: readonly StandardActionKind[];
+    };
+    readonly to: { readonly kind: "bonus_action" };
+  };
+};
+
+type BattleUnitSupportSource = UnitRecord | ClassicNonSrdMechanicsUnit;
+
 function battleUnitSupportProfileIssue(
   message: string,
 ): Either.Either<never, BattleUnitSupportProfileIssue> {
@@ -74,7 +92,7 @@ function battleUnitSupportProfileIssue(
 }
 
 export function battleUnitSupportProfilesForUnit(input: {
-  readonly unit: UnitRecord;
+  readonly unit: BattleUnitSupportSource;
 }): Either.Either<
   readonly BattleUnitSupportProfile[],
   BattleUnitSupportProfileIssue
@@ -90,6 +108,10 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (bonusActionStandardActionSupport !== null) {
     supportProfiles.push(bonusActionStandardActionSupport);
+  }
+
+  if (isClassicNonSrdMechanicsUnit(input.unit)) {
+    return Either.right(supportProfiles);
   }
 
   const criticalRangeSupport =
@@ -155,7 +177,7 @@ export function battleUnitSupportProfilesForUnit(input: {
 
 export function battleUnitRefWithSupportProfiles(input: {
   readonly unitRef: Pick<BattleUnitRef, "unitId">;
-  readonly unit: UnitRecord;
+  readonly unit: BattleUnitSupportSource;
 }): Either.Either<BattleUnitRef, BattleUnitSupportProfileIssue> {
   if (input.unitRef.unitId !== input.unit.id) {
     return battleUnitSupportProfileIssue(
@@ -325,7 +347,7 @@ export type BattleBonusActionStandardActionSupport =
   | null;
 
 export function battleBonusActionStandardActionSupportForUnit(
-  unit: UnitRecord,
+  unit: BattleUnitSupportSource,
 ): BattleBonusActionStandardActionSupport {
   if (
     unit.kind !== "class_feature" ||
@@ -334,14 +356,11 @@ export function battleBonusActionStandardActionSupportForUnit(
     return null;
   }
 
-  if (
-    unit.mechanics.from.kind !== "standard_action" ||
-    !sameStringSet(
-      unit.mechanics.from.actions,
-      ALTERNATE_ACTION_COST_ACTIONS,
-    ) ||
-    unit.mechanics.to.kind !== "bonus_action"
-  ) {
+  const actions = alternateActionCostActions(unit.mechanics.from.actions);
+  if (unit.mechanics.from.kind !== "standard_action" || actions === null) {
+    return "unsupported";
+  }
+  if (unit.mechanics.to.kind !== "bonus_action") {
     return "unsupported";
   }
 
@@ -349,10 +368,38 @@ export function battleBonusActionStandardActionSupportForUnit(
     kind: "alternateActionCost",
     from: {
       kind: "standardAction",
-      actions: ALTERNATE_ACTION_COST_ACTIONS,
+      actions,
     },
     to: { kind: "bonusAction" },
   };
+}
+
+function alternateActionCostActions(
+  actions: readonly StandardActionKind[],
+): ReadonlyNonEmptyArray<AlternateActionCostAction> | null {
+  const first = actions[0];
+  if (first === undefined || !isAlternateActionCostAction(first)) {
+    return null;
+  }
+  const rest = actions.slice(1);
+  if (!rest.every(isAlternateActionCostAction)) {
+    return null;
+  }
+  return [first, ...rest];
+}
+
+function isAlternateActionCostAction(
+  action: StandardActionKind,
+): action is AlternateActionCostAction {
+  return ALTERNATE_ACTION_COST_ACTIONS.includes(
+    action as AlternateActionCostAction,
+  );
+}
+
+function isClassicNonSrdMechanicsUnit(
+  unit: BattleUnitSupportSource,
+): unit is ClassicNonSrdMechanicsUnit {
+  return unit.provenance.kind === "classic-2024-mechanics-source-lane";
 }
 
 export function battleWeaponOrUnarmedCriticalRange19SupportForUnit(
@@ -586,7 +633,7 @@ function fixedDiceDeltaValue(delta: {
 
 function reactionRollOrDamageReductionMechanicsProjection(
   unit: UnitRecord,
-): readonly ReactionRollOrDamageReductionProfile[] | null {
+): ReadonlyNonEmptyArray<ReactionRollOrDamageReductionProfile> | null {
   if (
     unit.kind !== "class_feature" ||
     unit.mechanics.family !== "reaction_roll_or_damage_reduction"
@@ -644,9 +691,11 @@ function reactionRollOrDamageReductionMechanicsProjection(
       return [];
     },
   );
-  return modifiers.length === unit.mechanics.modifiers.length &&
+  const first = modifiers[0];
+  return first !== undefined &&
+    modifiers.length === unit.mechanics.modifiers.length &&
     reactionRollOrDamageReductionKindsUnique(modifiers)
-    ? modifiers
+    ? [first, ...modifiers.slice(1)]
     : null;
 }
 

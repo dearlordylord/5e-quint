@@ -447,6 +447,14 @@ function validateOwnerClaims(
       (consumer) => consumer.ownerPath,
     ),
   );
+  const qntProofTaskClaimProfileIds = taskClaimProfileIds(
+    taskClaims,
+    (claimKind) => claimKind === "qnt-proof",
+  );
+  const runtimeParityTaskClaimProfileIds = taskClaimProfileIds(
+    taskClaims,
+    (claimKind) => completedRuntimeParityKinds.has(claimKind),
+  );
   for (const replay of scannedUnitEvidence.selectedUnitIdentityReplays) {
     if (!selectedReplayConsumerOwnerPaths.has(replay.ownerPath)) {
       issues.push(
@@ -642,6 +650,29 @@ function validateOwnerClaims(
         );
       }
     }
+    if (
+      hasVerificationOwner(profile, "qnt-proof") &&
+      !qntProofTaskClaimProfileIds.has(profile.id)
+    ) {
+      issues.push(
+        `${profile.id} has qnt-proof verification ownership but no qnt-proof task claim.`,
+      );
+    }
+    if (
+      hasRuntimeParityOwner(profile) &&
+      !runtimeParityTaskClaimProfileIds.has(profile.id)
+    ) {
+      issues.push(
+        `${profile.id} has runtime parity verification ownership but no completed runtime parity task claim.`,
+      );
+    }
+    for (const taskId of profile.taskRefs ?? []) {
+      if (!taskClaimIncludesProfile(taskClaims, taskId, profile.id)) {
+        issues.push(
+          `${profile.id} taskRefs includes ${taskId} but no matching task claim includes the profile.`,
+        );
+      }
+    }
   }
   for (const taskClaim of taskClaims) {
     for (const profileId of taskClaim.profileIds ?? []) {
@@ -649,6 +680,28 @@ function validateOwnerClaims(
         issues.push(
           `Task claim ${taskClaim.taskId} references missing profile ${profileId}.`,
         );
+        continue;
+      }
+      const profile = profiles.find((candidate) => candidate.id === profileId);
+      if (!(profile.taskRefs ?? []).includes(taskClaim.taskId)) {
+        issues.push(
+          `Task claim ${taskClaim.taskId} includes ${profileId} but the profile taskRefs do not include the task.`,
+        );
+      }
+    }
+    if (taskClaim.claimKind === "qnt-proof") {
+      for (const profileId of taskClaim.profileIds ?? []) {
+        const profile = profiles.find(
+          (candidate) => candidate.id === profileId,
+        );
+        if (
+          profile !== undefined &&
+          !hasVerificationOwner(profile, "qnt-proof")
+        ) {
+          issues.push(
+            `QNT proof task claim ${taskClaim.taskId} for ${profileId} has no qnt-proof verification owner.`,
+          );
+        }
       }
     }
     if (completedRuntimeParityKinds.has(taskClaim.claimKind)) {
@@ -656,12 +709,7 @@ function validateOwnerClaims(
         const profile = profiles.find(
           (candidate) => candidate.id === profileId,
         );
-        const parityOwners =
-          profile?.verificationOwners?.filter(
-            (owner) =>
-              owner.kind === "focused-mbt" || owner.kind === "runtime-test",
-          ) ?? [];
-        if (parityOwners.length === 0) {
+        if (profile !== undefined && !hasRuntimeParityOwner(profile)) {
           issues.push(
             `Completed runtime parity claim ${taskClaim.taskId} for ${profileId} has no MBT/runtime-test owner.`,
           );
@@ -670,6 +718,34 @@ function validateOwnerClaims(
     }
   }
   return issues;
+}
+
+function hasVerificationOwner(profile, kind) {
+  return (profile.verificationOwners ?? []).some(
+    (owner) => owner.kind === kind,
+  );
+}
+
+function hasRuntimeParityOwner(profile) {
+  return (profile.verificationOwners ?? []).some(
+    (owner) => owner.kind === "focused-mbt" || owner.kind === "runtime-test",
+  );
+}
+
+function taskClaimProfileIds(taskClaims, claimKindMatches) {
+  return new Set(
+    taskClaims.flatMap((taskClaim) =>
+      claimKindMatches(taskClaim.claimKind) ? (taskClaim.profileIds ?? []) : [],
+    ),
+  );
+}
+
+function taskClaimIncludesProfile(taskClaims, taskId, profileId) {
+  return taskClaims.some(
+    (taskClaim) =>
+      taskClaim.taskId === taskId &&
+      (taskClaim.profileIds ?? []).includes(profileId),
+  );
 }
 
 function validateCoverageInputs({

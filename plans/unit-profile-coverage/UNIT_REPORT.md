@@ -22,7 +22,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | QNT proof coverage | 14/14 | 100% |
 | Runtime mapping coverage | 14/14 | 100% |
 | Runtime parity coverage | 14/14 | 100% |
-| Deterministic admission/projection coverage | 14/15 | 93.3% |
+| Deterministic admission/projection coverage | 15/15 | 100% |
 | Selected identity MBT coverage | 9/15 | 60% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
@@ -803,6 +803,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `mycelium_step` | `unit-feature.alternate-action-cost` | QMBT17 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 
 ## Selected Identity MBT Evidence
 
@@ -873,7 +874,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- |
 | QCORE7 | qnt-proof | _none_ |
 | QCORE8 | qnt-proof | `unit-feature.reaction-roll-or-damage-reduction`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
-| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19` |
+| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19` |
 | QCORE10 | qnt-proof | `spell.invocation-damage-save-or-attack`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | QCORE11 | qnt-proof | `stat-block.attack-control` |
 | QMBT2 | completed-runtime-parity | _none_ |
@@ -881,6 +882,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT4 | completed-runtime-parity | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19` |
 | QMBT5 | completed-runtime-parity | `spell.invocation-damage-save-or-attack`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | QMBT6 | completed-runtime-parity | `stat-block.attack-control` |
+| QMBT18 | completed-runtime-parity | `unit-feature.passive-armor-class-bonus` |
 
 ## Supported Profiles Lacking Runtime Parity
 

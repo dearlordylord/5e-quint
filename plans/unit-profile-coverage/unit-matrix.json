@@ -63,8 +63,8 @@
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 15,
-      "numerator": 14,
-      "percent": "93.3%"
+      "numerator": 15,
+      "percent": "100%"
     },
     "profileClassificationCoverage": {
       "denominator": 49,
@@ -340,6 +340,7 @@
         "packages/battle-runtime/src/unit-feature-support.ts"
       ],
       "taskRefs": [
+        "QCORE9",
         "QMBT18"
       ],
       "title": "Unit feature passively adds to Armor Class while wearing armor",
@@ -603,6 +604,7 @@
         "unit-feature.attack-damage-rider",
         "unit-feature.bonus-action-ongoing-rage",
         "unit-feature.first-attack-roll-reckless-advantage",
+        "unit-feature.passive-armor-class-bonus",
         "unit-feature.reaction-roll-or-damage-reduction",
         "unit-feature.save-damage-replacement",
         "unit-feature.self-bonus-action-healing",
@@ -676,6 +678,14 @@
         "stat-block.attack-control"
       ],
       "taskId": "QMBT6"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused passive Armor Class bonus runtime parity.",
+      "profileIds": [
+        "unit-feature.passive-armor-class-bonus"
+      ],
+      "taskId": "QMBT18"
     }
   ],
   "units": [
@@ -1543,6 +1553,7 @@
             "packages/battle-runtime/src/unit-feature-support.ts"
           ],
           "taskRefs": [
+            "QCORE9",
             "QMBT18"
           ],
           "title": "Unit feature passively adds to Armor Class while wearing armor",
@@ -2253,7 +2264,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "classic-2024-non-srd-mechanics",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT17"
+        }
+      ],
       "executableMechanics": true,
       "kind": "classic-non-srd-mechanics-fixture",
       "profiles": [

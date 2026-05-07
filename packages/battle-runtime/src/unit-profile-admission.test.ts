@@ -1,10 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT17 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
+import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -47,6 +49,7 @@ import {
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
   parseSupportedUnitFeatureProfile,
+  type ClassicNonSrdMechanicsUnit,
 } from "./unit-feature-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
@@ -66,6 +69,7 @@ const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const defenseUnitId = "defense";
+const myceliumStepUnitId = "mycelium_step";
 const archeryUnitId = "feat_archery";
 const acidSplashUnitId = "acid_splash";
 const fireBoltUnitId = "fire_bolt";
@@ -422,6 +426,30 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
   });
 });
 
+describe("QMBT17 Classic non-SRD deterministic feature profile slice", () => {
+  test("mycelium_step is admitted and projected through production alternate action cost support", () => {
+    const unit = mechanicsOnlyClassicUnit(myceliumStepInput);
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: myceliumStepUnitId,
+        supportProfiles: [
+          {
+            kind: "alternateActionCost",
+            from: {
+              kind: "standardAction",
+              actions: ["dash"],
+            },
+            to: { kind: "bonusAction" },
+          },
+        ],
+      }),
+    );
+  });
+});
+
 describe("QMBT14 deterministic Spell Unit admission tracer", () => {
   test("magic_missile is admitted through catalog spell access and projected as a prepared slot spell", () => {
     const spell = spellRecord(magicMissileUnitId);
@@ -684,6 +712,35 @@ function maybeSpellAct(input: {
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.spellId === input.spellId,
   );
+}
+
+function mechanicsOnlyClassicUnit(
+  input: typeof myceliumStepInput,
+): ClassicNonSrdMechanicsUnit {
+  if (
+    input.id !== myceliumStepUnitId ||
+    input.syntheticLabel !== "Mycelium Step" ||
+    input.provenance.kind !== "classic-2024-mechanics-source-lane" ||
+    input.mechanics.family !== "alternate_action_cost" ||
+    input.mechanics.from.kind !== "standard_action" ||
+    input.mechanics.from.actions.length !== 1 ||
+    input.mechanics.from.actions[0] !== "dash" ||
+    input.mechanics.to.kind !== "bonus_action"
+  ) {
+    throw new Error("Classic mycelium_step fixture shape drifted.");
+  }
+
+  return {
+    id: myceliumStepUnitId,
+    syntheticLabel: "Mycelium Step",
+    provenance: { kind: "classic-2024-mechanics-source-lane" },
+    kind: "class_feature",
+    mechanics: {
+      family: "alternate_action_cost",
+      from: { kind: "standard_action", actions: ["dash"] },
+      to: { kind: "bonus_action" },
+    },
+  };
 }
 
 function spellActInvocation(act: ActionSpellAct): SupportedSpellAct {
