@@ -334,6 +334,12 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 137,
       "id": "QMBT42",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Runtime Tests by RAW and Ubiquitous Boundaries"
+    },
+    {
+      "number": 138,
+      "id": "QMBT43",
       "status": "blocked",
       "title": "Recursive Unit Profile Planning Review"
     }
@@ -417,10 +423,11 @@ Keep it synchronized with the DAG table and task details.
 | 131   | QMBT36 - Recursive Unit Profile Planning Review | done | QMBT34-QMBT35 | QMBT37-QMBT39 | [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Completed QMBT34-QMBT35 review, refreshed PRD status notes, and appended QMBT37-QMBT39 because the matrix lane is not complete. |
 | 132   | QMBT37 - Promote Level 5 Extra Attack Sequencing | done | QMBT35-QMBT36 | QMBT38-QMBT39 | [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed level-5 Fighter, Paladin, and Ranger Extra Attack as `unit-feature.attack-action-attack-count-scaling` with QNT profile, runtime sequencing, deterministic evidence, focused runtime parity, and refreshed matrix artifacts. |
 | 133   | QMBT38 - Select Next SRD Feature Widening Slice After Extra Attack | done | QMBT37 | QMBT39 | [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `barbarian_fast_movement` as the next SRD feature widening slice, with a red/green plan for `unit-feature.passive-speed-bonus` and a proposed QMBT40 implementation task. |
-| 134   | QMBT39 - Recursive Unit Profile Planning Review | done | QMBT37-QMBT38 | QMBT40-QMBT42 | [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT37-QMBT38 review, refreshed PRD status notes, and appended QMBT40-QMBT42 because the matrix lane is not complete. |
-| 135   | QMBT40 - Promote Fast Movement Passive Speed Bonus | ready-for-implementation-after-light-research | QMBT38-QMBT39 | QMBT41-QMBT42 | [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `barbarian_fast_movement` as `unit-feature.passive-speed-bonus`, including QNT profile, runtime projection from authored mechanics, deterministic admission evidence, focused parity as needed, and refreshed matrix artifacts. |
-| 136   | QMBT41 - Select Next SRD Feature Widening Slice After Fast Movement | blocked | QMBT40 | QMBT42 | [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After Fast Movement refreshes the matrix, select the next narrow SRD feature-style widening slice without mixing speed special kinds, AC base alternatives, healing pools, Temporary Hit Points, resistance, attack replacement, or Weapon Mastery properties. |
-| 137   | QMBT42 - Recursive Unit Profile Planning Review | blocked | QMBT40-QMBT41 | QMBT43+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT40-QMBT41 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly declared complete. |
+| 134   | QMBT39 - Recursive Unit Profile Planning Review | done | QMBT37-QMBT38 | QMBT40-QMBT43 | [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT37-QMBT38 review, refreshed PRD status notes, and appended QMBT40-QMBT43 because the matrix lane is not complete. |
+| 135   | QMBT40 - Promote Fast Movement Passive Speed Bonus | ready-for-implementation-after-light-research | QMBT38-QMBT39 | QMBT41, QMBT43 | [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `barbarian_fast_movement` as `unit-feature.passive-speed-bonus`, including QNT profile, runtime projection from authored mechanics, deterministic admission evidence, focused parity as needed, and refreshed matrix artifacts. |
+| 136   | QMBT41 - Select Next SRD Feature Widening Slice After Fast Movement | blocked | QMBT40 | QMBT43 | [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After Fast Movement refreshes the matrix, select the next narrow SRD feature-style widening slice without mixing speed special kinds, AC base alternatives, healing pools, Temporary Hit Points, resistance, attack replacement, or Weapon Mastery properties. |
+| 137   | QMBT42 - Split Runtime Tests by RAW and Ubiquitous Boundaries | ready-for-implementation-after-light-research | QMBT22, QMBT39 | QMBT43 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md), [SRD Shield](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRD Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md) | Split Shield runtime behavior tests out of Unit profile admission, establish RAW/ubiquitous naming guidance for deterministic battle-runtime test files, and leave support-profile admission tests narrow. |
+| 138   | QMBT43 - Recursive Unit Profile Planning Review | blocked | QMBT40-QMBT42 | QMBT44+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT40-QMBT42 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -1639,7 +1646,7 @@ Status: `done`
 
 Depends on: QMBT37-QMBT38
 
-Blocks: QMBT40-QMBT42
+Blocks: QMBT40-QMBT43
 
 Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
@@ -1657,7 +1664,7 @@ Out of scope: implementation work not captured by the new task batch.
 
 Completed scope: reviewed QMBT37's Extra Attack implementation closeout and
 QMBT38's Fast Movement selection, confirmed the generated matrix lane is not
-complete, refreshed PRD status notes, and appended QMBT40-QMBT42.
+complete, refreshed PRD status notes, and appended QMBT40-QMBT43.
 
 Verification: active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
@@ -1670,7 +1677,7 @@ Status: `ready-for-implementation-after-light-research`
 
 Depends on: QMBT38-QMBT39
 
-Blocks: QMBT41-QMBT42
+Blocks: QMBT41, QMBT43
 
 Research / plan:
 [QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md),
@@ -1704,7 +1711,7 @@ Status: `blocked`
 
 Depends on: QMBT40
 
-Blocks: QMBT42
+Blocks: QMBT43
 
 Research / plan:
 [QMBT39_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md),
@@ -1727,18 +1734,84 @@ generated artifacts change; `/simplify` convergence, minimum two rounds unless
 the final changeset is trivial. MBT is not expected for this research-only
 task.
 
-### Task 137 - QMBT42 - Recursive Unit Profile Planning Review
+### Task 137 - QMBT42 - Split Runtime Tests by RAW and Ubiquitous Boundaries
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT22, QMBT39
+
+Blocks: QMBT43
+
+Research / plan:
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md),
+[Spells/Descriptions-S-Z.md Shield](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Rules-Glossary.md Reaction and Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Playing-the-Game.md Reactions and Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md)
+
+Scope: split deterministic battle-runtime tests that assert runtime behavior
+out of `unit-profile-admission.test.ts` and into RAW/ubiquitous-language
+boundaries. Start with the Shield cluster: create
+`packages/battle-runtime/src/shield-reaction-spell.test.ts` with
+`describe("Shield Reaction spell")`; move Shield runtime behavior tests there,
+including attack-hit Reaction offer, +5 Armor Class against the triggering
+Attack Roll, later attacks before expiration, expiration at the start of the
+caster's next turn, spell attack roll hits, Magic Missile named-spell negation,
+and Spell Slot constraints. Keep only a narrow Shield support-profile /
+Spell Access projection smoke test in `unit-profile-admission.test.ts`.
+
+Guidance: use RAW concepts as deterministic runtime test boundaries:
+`shield-reaction-spell.test.ts` for Shield's own Spell Effect and Reaction
+spell obligations; future `reactions.test.ts` for shared Reaction
+Offer/Decline/Resolve, Reaction reset, and continuation protocol;
+`opportunity-attacks.test.ts` for reach-exit, melee attack requirement,
+Disengage suppression, and movement resume; `spell-support-profiles.test.ts`,
+`unit-feature-support-profiles.test.ts`, and `feat-support-profiles.test.ts`
+for support-profile boundary checks. The Opportunity Attack in the Shield
+duration scenario should remain in the Shield file because it observes Shield
+expiration rather than proving generic Opportunity Attack rules.
+
+Naming guidance: prefer `Reaction`, `Opportunity Attack`, `Armor Class`,
+`Attack Roll`, `Spell Slot`, `Spell Access`, `Spell Invocation`,
+`Spell Effect`, `Duration`, `Magic Action`, and `Hit Point restoration`.
+Avoid implementation-history terms such as `admission`, `candidate`, `slice`,
+`tracer`, `expansion`, `re-triage`, and `profile projection` outside the
+support-profile boundary where they are literally the rule under test.
+
+Helper guidance: keep helper names layer-honest. Authored/catalog helpers
+should name SRD provenance explicitly, e.g. `srdSpellRecord` and
+`srdUnitRecord`; structured-input-only fixtures should not be named as SRD
+provenance; runtime builders should use battle/runtime names such as
+`battleWithShieldReactionSpell` and `battleWithAttackers`; resolution helpers
+may use names such as `resolveAttackRollOnly`, `resolveShieldReactionChoice`,
+and `endTurnByActor`. Do not collapse provenance, structured input, and runtime
+projection in generic helper names.
+
+Out of scope: changing production battle-runtime behavior, broad test-suite
+renames, moving all `index.test.ts` clusters in one task, changing unit profile
+matrix semantics, or altering `UNIT-IDENTITY-EVIDENCE` comments beyond moving
+them with the tests they describe.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Shield, Reaction,
+Opportunity Attack, Armor Class, Attack Roll, Spell Slot, Spell Access, Spell
+Invocation, and Spell Effect; focused package tests for all files touched by
+the move; `pnpm --filter @dnd/battle-runtime typecheck`; active-plan
+consistency across Ralph index, DAG table, and task details; `/simplify`
+convergence, minimum two rounds. MBT is not expected because this is a
+test-organization task unless production behavior changes.
+
+### Task 138 - QMBT43 - Recursive Unit Profile Planning Review
 
 Status: `blocked`
 
-Depends on: QMBT40-QMBT41
+Depends on: QMBT40-QMBT42
 
-Blocks: QMBT43+
+Blocks: QMBT44+
 
 Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: review QMBT40-QMBT41 findings, update the PRD and plan docs, and append
+Scope: review QMBT40-QMBT42 findings, update the PRD and plan docs, and append
 the next implementation/research batch. This task must include a new recursive
 planning-review task at the end of the appended batch unless the Unit profile
 matrix lane is explicitly declared complete.
