@@ -162,7 +162,7 @@ Only then add QMBT8+ expansion tasks to `ACTIVE_PLAN`.
 
 Expansion should proceed by matrix-derived supported Unit identities, grouped
 first by Unit feature profiles and then by spell profiles. The deterministic
-admission/projection denominator is supported Unit claims, currently 17 Units.
+admission/projection denominator is supported Unit claims, currently 16 Units.
 Selected identity MBT uses the same denominator for reporting but should remain
 selective: add identities where the authored Unit shape is representative or
 high-risk, not one random-walk fixture for every Unit.
@@ -183,6 +183,24 @@ Follow-on boundaries:
   unit-profile checker/report pipeline so authored catalog discovery, claim
   validation, evidence validation, metrics, and report rendering do not all
   evolve inside one catch-all script.
+
+### QMBT12 Reconciliation Notes
+
+After QMBT10 tightened selected identity evidence semantics and QMBT11 finished
+checker modularization, QMBT8 and QMBT9 remain correctly closed. QMBT8's
+deterministic admission/projection evidence still covers the six additional
+supported feature identities it claimed, and the modular checker keeps the
+same evidence rows and report metrics. QMBT9's selected identity MBT rows now
+have executable replay-marker validation rather than owner-file membership
+alone: every selected row is paired with a `UNIT-IDENTITY-MBT-REPLAY` marker,
+a declared driver action, a reachable Quint step action, and a Unit-bearing
+runtime boundary.
+
+No evidence rows were downgraded or reclassified. The generated report labels
+remain accurate under the corrected semantics: deterministic
+admission/projection coverage is 9/16, and selected identity MBT coverage is
+9/16. The remaining seven supported Unit claims are spell or Classic
+mechanics-only identities that stay in later QMBT13-QMBT18 planning lanes.
 
 ## Verification
 

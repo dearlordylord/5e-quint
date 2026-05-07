@@ -155,13 +155,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 107,
       "id": "QMBT12",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile QMBT8-QMBT9 Closeout"
     },
     {
       "number": 108,
       "id": "QMBT13",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify Authored Catalog Admission Gaps"
     },
     {
@@ -255,12 +255,12 @@ Keep it synchronized with the DAG table and task details.
 | 100   | QMBT5 - Spell Procedure Runtime Parity | done | QMBT1, QCORE10 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE10 spell procedure profiles through production spell reducers and projections. |
 | 101   | QMBT6 - Stat-Block Control Runtime Parity | done | QMBT1, QCORE11 | none | [QMBT1-QMBT6 pre-research](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md) | Completed focused runtime MBT parity for QCORE11 Stat Block Multiattack dispatch through production reducers. Legendary Actions remain a separate later tracer. |
 | 102   | QMBT7 - Specific Unit Parity MBT and Matrix Integration | done | QMBT4-QMBT6, Unit profile matrix | QMBT8-QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed methodology contract, deterministic admission/projection tracer for three Unit feature identities, selected identity MBT citation for `fighter_second_wind`, and expansion boundaries. |
-| 103   | QMBT8 - Expand Unit Feature Admission Evidence | done | QMBT7 | QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed unit-profile checker/report modularization and deterministic admission/projection evidence expansion for remaining supported Unit feature identities. |
-| 104   | QMBT9 - Select Specific Unit Identity MBT Expansion | done | QMBT7-QMBT8 | none | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed selected identity MBT evidence for eight additional supported SRD Unit feature identities with production reducer state changes; selected identity MBT coverage is now 9/16. |
+| 103   | QMBT8 - Expand Unit Feature Admission Evidence | done | QMBT7 | QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed deterministic admission/projection evidence expansion for remaining supported Unit feature identities; QMBT12 confirmed the rows remain valid after QMBT10 evidence semantics and QMBT11 modularization. |
+| 104   | QMBT9 - Select Specific Unit Identity MBT Expansion | done | QMBT7-QMBT8 | none | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed selected identity MBT evidence for eight additional supported SRD Unit feature identities; QMBT12 confirmed all selected rows now satisfy replay-marker semantics, and coverage remains 9/16. |
 | 105   | QMBT10 - Tighten Unit Identity Evidence Semantics | done | QMBT7-QMBT9 | QMBT12, QMBT16, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Research and fix whether `selected-identity-mbt` evidence proves executable Unit-specific replay or only owner-file membership; downgrade or strengthen evidence before expanding MBT metrics. |
 | 106   | QMBT11 - Finish Unit Profile Checker Modularization | done | QMBT8 | QMBT12-QMBT15, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed checker split into CLI orchestration, shared config, IO, installed/authored Unit discovery, owner-marker scanning, claim/evidence validation, self-test, and report rendering modules without changing matrix semantics or evidence rows. |
-| 107   | QMBT12 - Reconcile QMBT8-QMBT9 Closeout | ready-for-research | QMBT10-QMBT11 | QMBT13-QMBT20 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Review QMBT8-QMBT9 findings, repair closeout notes/statuses/metrics, and decide whether any evidence must be reclassified. |
-| 108   | QMBT13 - Classify Authored Catalog Admission Gaps | blocked | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Turn `not-in-unit-catalog` into actionable categories: intentional backlog, SRD candidate, Classic/private pressure, non-runtime authored data, duplicate/content issue, or other explicit disposition. |
+| 107   | QMBT12 - Reconcile QMBT8-QMBT9 Closeout | done | QMBT10-QMBT11 | QMBT13-QMBT20 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed reconciliation: QMBT8-QMBT9 remain closed, no evidence rows were reclassified, deterministic and selected identity coverage remain 9/16, and QMBT13 is unblocked. |
+| 108   | QMBT13 - Classify Authored Catalog Admission Gaps | ready-for-research | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Turn `not-in-unit-catalog` into actionable categories: intentional backlog, SRD candidate, Classic/private pressure, non-runtime authored data, duplicate/content issue, or other explicit disposition. |
 | 109   | QMBT14 - Trace Spell Unit Admission Evidence | blocked | QMBT11-QMBT13 | QMBT15-QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Add a small deterministic spell Unit admission/projection tracer before broad spell expansion. |
 | 110   | QMBT15 - Expand Spell Unit Admission Evidence | blocked | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Expand deterministic spell Unit evidence if QMBT14 proves the methodology and denominators are clear. |
 | 111   | QMBT16 - Decide Selected Spell Identity MBT | blocked | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether any spell identities need selected MBT beyond QMBT5 Procedure Parity, and add only high-risk selected identities. |
@@ -533,6 +533,10 @@ authored Units through the production Unit catalog and production feature
 projection/support boundaries. Keep profile ids single-source through
 `unit-claims.jsonl`.
 
+QMBT12 closeout: these deterministic evidence rows remain valid after QMBT10
+and QMBT11. No deterministic admission/projection evidence was downgraded or
+reclassified; the generated report still counts 9/16 supported Unit claims.
+
 Out of scope: selected identity MBT expansion; QNT catalog enumeration; spell
 identity expansion.
 
@@ -554,7 +558,9 @@ Completed scope: selected identity MBT evidence for
 `fighter_action_surge`, `fighter_improved_critical`, `barbarian_rage`,
 `barbarian_reckless_attack`, `rogue_cunning_action`, `rogue_evasion`,
 `rogue_uncanny_dodge`, and `rogue_sneak_attack`, recorded separately from
-deterministic evidence. Selected identity MBT coverage is now 9/16.
+deterministic evidence. QMBT12 confirmed those rows now satisfy QMBT10's
+replay-marker semantics, not just owner-file membership. Selected identity MBT
+coverage remains 9/16.
 
 Out of scope: one MBT trace per shipped Unit; broad battle MBT; QNT Unit
 catalog loops.
@@ -612,7 +618,7 @@ quality`; generated matrix/report stayed stable.
 
 ### Task 107 - QMBT12 - Reconcile QMBT8-QMBT9 Closeout
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT10-QMBT11
 
@@ -627,12 +633,20 @@ reclassification.
 
 Out of scope: new profile implementation and broad evidence expansion.
 
+Completed scope: reviewed QMBT8 deterministic evidence, QMBT9 selected identity
+evidence, QMBT10 replay-marker semantics, QMBT11 modularization notes, and the
+generated matrix/report. QMBT8 and QMBT9 remain closed. No evidence rows,
+report labels, or generated metrics required reclassification; deterministic
+admission/projection coverage and selected identity MBT coverage both remain
+9/16. QMBT13 is now ready for research; QMBT14-QMBT20 remain blocked by their
+other dependencies.
+
 Verification: `pnpm unit-profile-coverage:check`; active-plan consistency
 check across Ralph index, DAG row, and task detail.
 
 ### Task 108 - QMBT13 - Classify Authored Catalog Admission Gaps
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT11-QMBT12
 
