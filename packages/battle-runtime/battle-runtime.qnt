@@ -141,6 +141,7 @@ module battleRuntime {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
 
   type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | HealingWord | CureWounds | MassHealingWord | Shield
+  type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
@@ -177,7 +178,7 @@ module battleRuntime {
     | ResumeSpell
     | ResumeSaveGateDamage
     | ResumeAfterDamage
-    | ResumeMovement({ movementCost: int })
+    | ResumeMovement({ speedKind: MovementSpeedKind, movementCost: int })
 
   type PendingReactionFrame = {
     trigger: ReactionTrigger,
@@ -249,6 +250,7 @@ module battleRuntime {
     lifecycle: ZeroHpLifecycle,
     reactionAvailable: bool,
     speed: int,
+    hasRovingSpeedKindGrants: bool,
     movementSpent: int,
     hidden: HiddenState,
     dodging: bool,
@@ -343,6 +345,7 @@ module battleRuntime {
       lifecycle: UsesDeathSavingThrows,
       reactionAvailable: true,
       speed: 30,
+      hasRovingSpeedKindGrants: false,
       movementSpent: 0,
       hidden: NotHidden,
       dodging: false,
@@ -370,6 +373,7 @@ module battleRuntime {
       lifecycle: DiesAtZeroHp,
       reactionAvailable: true,
       speed: 30,
+      hasRovingSpeedKindGrants: false,
       movementSpent: 0,
       hidden: NotHidden,
       dodging: false,
@@ -866,7 +870,7 @@ module battleRuntime {
       | ResumeSpell => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
-      | ResumeMovement(movement) => applyFighterMovement(state, movement.movementCost)
+      | ResumeMovement(movement) => applyFighterMovementWithSpeedKind(state, movement.speedKind, movement.movementCost)
     }
 
   pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
@@ -1222,8 +1226,11 @@ module battleRuntime {
       state
 
   pure def dashFighter(state: BattleState): BattleState =
+    dashFighterWithSpeedKind(state, WalkSpeedKind)
+
+  pure def dashFighterWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind): BattleState =
     if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
-      { ...state, actionAvailable: false, dashMovementBonus: state.dashMovementBonus + state.fighter.speed }
+      { ...state, actionAvailable: false, dashMovementBonus: state.dashMovementBonus + movementSpeed(state.fighter, speedKind) }
     else
       state
 
@@ -1258,12 +1265,23 @@ module battleRuntime {
       state
 
   pure def movementRemainingForFighter(state: BattleState): int = {
-    val remaining = state.fighter.speed + state.dashMovementBonus - state.fighter.movementSpent
+    movementRemainingForFighterWithSpeedKind(state, WalkSpeedKind)
+  }
+
+  pure def movementRemainingForFighterWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind): int = {
+    val remaining = movementSpeed(state.fighter, speedKind) + state.dashMovementBonus - state.fighter.movementSpent
     if (remaining < 0) 0 else remaining
   }
 
   pure def movementRemaining(combatant: Combatant): int =
     if (combatant.speed - combatant.movementSpent < 0) 0 else combatant.speed - combatant.movementSpent
+
+  pure def movementSpeed(combatant: Combatant, speedKind: MovementSpeedKind): int =
+    match speedKind {
+      | WalkSpeedKind => combatant.speed
+      | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants) combatant.speed else 0
+      | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants) combatant.speed else 0
+    }
 
   pure def fighterGoblinGrappleExists(state: BattleState): bool =
     match state.grapple {
@@ -1278,11 +1296,14 @@ module battleRuntime {
     }
 
   pure def fighterCanMove(state: BattleState, movementCost: int): bool =
+    fighterCanMoveWithSpeedKind(state, WalkSpeedKind, movementCost)
+
+  pure def fighterCanMoveWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind, movementCost: int): bool =
     currentActor(state) == Fighter and
     not(state.fighter.unconscious) and
     not(state.fighter.incapacitated) and
     movementCost > 0 and
-    movementCost <= movementRemainingForFighter(state)
+    movementCost <= movementRemainingForFighterWithSpeedKind(state, speedKind)
 
   pure def fighterCanGrappleGoblin(state: BattleState): bool =
     currentActor(state) == Fighter and
@@ -1358,7 +1379,10 @@ module battleRuntime {
     provokedByTable
 
   pure def applyFighterMovement(state: BattleState, movementCost: int): BattleState =
-    if (fighterCanMove(state, movementCost))
+    applyFighterMovementWithSpeedKind(state, WalkSpeedKind, movementCost)
+
+  pure def applyFighterMovementWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind, movementCost: int): BattleState =
+    if (fighterCanMoveWithSpeedKind(state, speedKind, movementCost))
       {
         ...state,
         fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + movementCost },
@@ -1367,17 +1391,20 @@ module battleRuntime {
       state
 
   pure def moveFighter(state: BattleState, movementCost: int, provokedByTable: bool): BattleState =
-    if (not(fighterCanMove(state, movementCost)))
+    moveFighterWithSpeedKind(state, WalkSpeedKind, movementCost, provokedByTable)
+
+  pure def moveFighterWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind, movementCost: int, provokedByTable: bool): BattleState =
+    if (not(fighterCanMoveWithSpeedKind(state, speedKind, movementCost)))
       state
     else if (goblinCanOpportunityAttack(state, provokedByTable))
       openReactionWindow(state, {
         trigger: OpportunityAttack,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
-        continuation: ResumeMovement({ movementCost: movementCost }),
+        continuation: ResumeMovement({ speedKind: speedKind, movementCost: movementCost }),
       })
     else
-      applyFighterMovement(state, movementCost)
+      applyFighterMovementWithSpeedKind(state, speedKind, movementCost)
 
   pure def applyHealing(target: Combatant, healing: int): Combatant = {
     val effectiveHealing = if (healing < 0) 0 else healing
@@ -2569,6 +2596,29 @@ module battleRuntime {
     }
   }
 
+  run test_roving_speed_kind_movement_and_dash_use_chosen_speed = {
+    val roving = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        speed: 40,
+        hasRovingSpeedKindGrants: true,
+      },
+    }
+    val climbed = moveFighterWithSpeedKind(roving, ClimbSpeedKind, 15, false)
+    val swam = moveFighterWithSpeedKind(climbed, SwimSpeedKind, 25, false)
+    val dashed = dashFighterWithSpeedKind(roving, SwimSpeedKind)
+    val unsupportedClimb = moveFighterWithSpeedKind(initialState, ClimbSpeedKind, 1, false)
+    all {
+      assert(movementSpeed(roving.fighter, ClimbSpeedKind) == 40),
+      assert(climbed.fighter.movementSpent == 15),
+      assert(movementRemainingForFighterWithSpeedKind(climbed, SwimSpeedKind) == 25),
+      assert(swam.fighter.movementSpent == 40),
+      assert(dashed.dashMovementBonus == 40),
+      assert(unsupportedClimb == initialState),
+    }
+  }
+
   run test_generic_combat_actions_update_turn_state = {
     val dashed = dashFighter(initialState)
     val disengaged = disengageFighter(initialState)
@@ -2660,7 +2710,7 @@ module battleRuntime {
         trigger: OpportunityAttack,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
-        continuation: ResumeMovement({ movementCost: 5 }),
+        continuation: ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 5 }),
       })),
     }
   }

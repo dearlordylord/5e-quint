@@ -1,7 +1,6 @@
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { CombatantId } from "./identity.ts";
-import { ALTERNATE_ACTION_COST_ACTIONS } from "./unit-feature-support.ts";
 import {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -40,6 +39,13 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "opportunityAttack",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
+export const BATTLE_MOVEMENT_SPEED_KINDS = [
+  "walk",
+  "climb",
+  "swim",
+] as const;
+export type BattleMovementSpeedKind =
+  (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
 
 export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
 
@@ -66,6 +72,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("dash"),
+    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -151,7 +158,14 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("bonusActionStandardAction"),
     actorId: CombatantId,
     sourceUnitId: BattleSubjectTextSchema,
-    action: Schema.Literal(...ALTERNATE_ACTION_COST_ACTIONS),
+    action: Schema.Literal("dash"),
+    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("bonusActionStandardAction"),
+    actorId: CombatantId,
+    sourceUnitId: BattleSubjectTextSchema,
+    action: Schema.Literal("disengage", "hide"),
   }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
@@ -240,8 +254,15 @@ export type BonusActionStandardActionSubject = {
   readonly tag: "bonusActionStandardAction";
   readonly actorId: CombatantId;
   readonly sourceUnitId: string;
-  readonly action: (typeof ALTERNATE_ACTION_COST_ACTIONS)[number];
-};
+} & (
+  | {
+      readonly action: "dash";
+      readonly speedKind: BattleMovementSpeedKind;
+    }
+  | {
+      readonly action: "disengage" | "hide";
+    }
+);
 
 export function sameBattleSubject(
   left: BattleSubject,
@@ -262,7 +283,12 @@ function battleSubjectKey(subject: BattleSubject): string {
       ]),
     ),
     Match.when({ tag: "action", action: "dash" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
+      JSON.stringify([
+        action.tag,
+        action.actorId,
+        action.action,
+        action.speedKind,
+      ]),
     ),
     Match.when({ tag: "action", action: "disengage" }, (action) =>
       JSON.stringify([action.tag, action.actorId, action.action]),
@@ -338,6 +364,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         action.actorId,
         action.sourceUnitId,
         action.action,
+        "speedKind" in action ? action.speedKind : null,
       ]),
     ),
     Match.when({ tag: "actionSpell" }, (spell) =>

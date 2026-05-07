@@ -39,11 +39,13 @@ export {
 } from "./battle-reaction-triggers.ts";
 export {
   BATTLE_RUNTIME_COMMANDS,
+  BATTLE_MOVEMENT_SPEED_KINDS,
   BATTLE_SUBJECT_ACTIONS,
   BATTLE_SUBJECT_BONUS_ACTIONS,
   BattleSubjectSchema,
   sameBattleSubject,
   type BattleRuntimeCommand,
+  type BattleMovementSpeedKind,
   type BattleSubject,
   type BattleSubjectAction,
   type BattleSubjectBonusAction,

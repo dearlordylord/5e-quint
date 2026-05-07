@@ -39,6 +39,7 @@ import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
+import rangerRovingInput from "../../content/ranger_roving.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
@@ -194,6 +195,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featSavageAttackerInput,
     paladinExtraAttackInput,
     rangerExtraAttackInput,
+    rangerRovingInput,
     masterySapInput,
     orcAdrenalineRushInput,
     orcDarkvisionInput,

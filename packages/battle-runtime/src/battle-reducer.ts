@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -161,11 +161,13 @@ import {
 } from "./battle-reaction-triggers.ts";
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
 import {
+  BATTLE_MOVEMENT_SPEED_KINDS,
   BattleSubjectTextSchema,
   BattleSubjectSchema,
   sameBattleSubject,
   type ActionHideSubject,
   type ActionSearchSubject,
+  type BattleMovementSpeedKind,
   type BattleSubject,
   type BonusActionStandardActionSubject,
 } from "./battle-subjects.ts";
@@ -198,8 +200,12 @@ import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
+  PASSIVE_SPEED_KIND_GRANT_KINDS,
+  PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   type AlternateActionCostAction,
+  type BattlePassiveSpeedBonusSupportProfile,
+  type BattlePassiveSpeedKindGrantsSupportProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
@@ -212,12 +218,16 @@ import {
   type OngoingFeatureRollModifier,
   type ReactionRollOrDamageReductionProfile,
   type SupportedUnitFeatureProfile,
+  type PassiveSpeedKindGrantKind,
 } from "./unit-feature-support.ts";
 
 const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 const SHIELD_MAGIC_MISSILE_SPELL_ID =
   "magic_missile" satisfies SpellRecord["id"];
 type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
+type BattlePassiveSpeedProfile =
+  | BattlePassiveSpeedBonusSupportProfile
+  | BattlePassiveSpeedKindGrantsSupportProfile;
 
 export type BattleActiveEffectExpiration = {
   readonly kind: "startOfTurn";
@@ -573,6 +583,7 @@ export type BattleHidePrerequisite =
       readonly cover: "threeQuarters" | "total";
     };
 export type BattleMovementFillValue = {
+  readonly speedKind: BattleMovementSpeedKind;
   readonly movementCostFeet: MovementFeet;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
 };
@@ -626,6 +637,7 @@ export type BattleTargetSpatialFact =
     };
 type BattleResolvedMovement = {
   readonly moverId: CombatantId;
+  readonly speedKind: BattleMovementSpeedKind;
   readonly movementCostFeet: MovementFeet;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly spendsTurnMovement: boolean;
@@ -1240,6 +1252,10 @@ export type BattleMovementHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly movementBudgetFeet: MovementFeet;
+  readonly speedKinds: readonly {
+    readonly kind: BattleMovementSpeedKind;
+    readonly movementBudgetFeet: MovementFeet;
+  }[];
 };
 export type BattleAbilityCheckHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -1573,6 +1589,12 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     actorId: CombatantId,
     movementBudgetFeet: MovementFeet,
+    speedKinds: Schema.Array(
+      Schema.Struct({
+        kind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+        movementBudgetFeet: MovementFeet,
+      }),
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1932,6 +1954,7 @@ type BattleFillEncoded =
       readonly kind: "movement";
       readonly holeId: string;
       readonly value: {
+        readonly speedKind: BattleMovementSpeedKind;
         readonly movementCostFeet: number;
         readonly provokedOpportunityAttacks: readonly {
           readonly reactorId: string;
@@ -2190,6 +2213,7 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("movement"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
+        speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
         movementCostFeet: MovementFeet,
         provokedOpportunityAttacks: Schema.Array(
           Schema.Struct({
@@ -2368,6 +2392,11 @@ export type BattleCreatureSnapshot = {
     readonly speedFeet: MovementFeet;
     readonly spentFeet: MovementFeet;
     readonly remainingFeet: MovementFeet;
+    readonly speedKinds: readonly {
+      readonly kind: BattleMovementSpeedKind;
+      readonly speedFeet: MovementFeet;
+      readonly remainingFeet: MovementFeet;
+    }[];
   };
 };
 
@@ -2627,6 +2656,13 @@ const BattleCreatureSnapshotSchema = Schema.Struct({
     speedFeet: Schema.Number,
     spentFeet: Schema.Number,
     remainingFeet: Schema.Number,
+    speedKinds: Schema.Array(
+      Schema.Struct({
+        kind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+        speedFeet: Schema.Number,
+        remainingFeet: Schema.Number,
+      }),
+    ),
   }),
 });
 
@@ -3086,12 +3122,7 @@ export function discoverBattleActs(
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "dash")
   ) {
-    acts.push({
-      subject: { tag: "action", actorId, action: "dash" },
-      label: "Dash",
-      summary: "Gain extra Movement equal to Speed for the current turn.",
-      initialHoles: [],
-    });
+    acts.push(...dashActsForActor(state, actorId));
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
@@ -3282,7 +3313,7 @@ function movementActs(
   if (
     !combatantCanMoveInState(state, actorId) ||
     state.combatants.size <= 1 ||
-    Number(movementHoleForActor.movementBudgetFeet) <= 0
+    !movementHoleHasRemainingBudget(movementHoleForActor)
   ) {
     return [];
   }
@@ -3295,6 +3326,44 @@ function movementActs(
       initialHoles: [movementHoleForActor],
     },
   ];
+}
+
+function dashActsForActor(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) return [];
+  const speedKinds = representedMovementSpeedKinds(actor);
+
+  return speedKinds.map((speedKind) => ({
+    subject: dashSubjectForSpeedKind(actorId, speedKind),
+    label: "Dash",
+    summary:
+      "Gain extra Movement equal to the chosen Speed for the current turn.",
+    initialHoles: [],
+  }));
+}
+
+function dashSubjectForSpeedKind(
+  actorId: CombatantId,
+  speedKind: BattleMovementSpeedKind,
+): Extract<BattleSubject, { readonly tag: "action"; readonly action: "dash" }> {
+  return { tag: "action", actorId, action: "dash", speedKind };
+}
+
+function bonusActionDashSubjectForSpeedKind(
+  actorId: CombatantId,
+  sourceUnitId: string,
+  speedKind: BattleMovementSpeedKind,
+): BonusActionStandardActionSubject {
+  return {
+    tag: "bonusActionStandardAction",
+    actorId,
+    sourceUnitId,
+    action: "dash",
+    speedKind,
+  };
 }
 
 type SupportedStatBlockBonusActionOption = {
@@ -7467,6 +7536,17 @@ function resolveDash(input: BattleResolutionInput): BattleResolutionResult {
       "Dash actor is not in this battle.",
     );
   }
+  const speedKind =
+    input.subject.tag === "action" && input.subject.action === "dash"
+      ? input.subject.speedKind
+      : "walk";
+  if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Dash speed kind is not represented for this combatant.",
+    );
+  }
   const spent = spendAction(input.state.currentTurnResources, "dash");
   if (Either.isLeft(spent)) {
     return invalidResult(
@@ -7475,7 +7555,12 @@ function resolveDash(input: BattleResolutionInput): BattleResolutionResult {
       "Dash is no longer available.",
     );
   }
-  const nextState = applyDashToActor(input.state, actor, spent.right);
+  const nextState = applyDashToActor(
+    input.state,
+    actor,
+    speedKind,
+    spent.right,
+  );
   return {
     tag: "resolved",
     state: nextState,
@@ -7486,10 +7571,12 @@ function resolveDash(input: BattleResolutionInput): BattleResolutionResult {
 function applyDashToActor(
   state: BattleState,
   actor: BattleCreatureState,
+  speedKind: BattleMovementSpeedKind,
   spentResources: BattleTurnResources,
 ): BattleState {
-  const speed = effectiveWalkSpeed(
+  const speed = effectiveMovementSpeed(
     actor,
+    speedKind,
     state.grapples.some((grapple) => grapple.targetId === actor.combatantId),
   );
   return {
@@ -7574,6 +7661,15 @@ function resolveBonusActionDash(
       "Dash actor is not in this battle.",
     );
   }
+  const speedKind =
+    input.subject.action === "dash" ? input.subject.speedKind : "walk";
+  if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Dash speed kind is not represented for this combatant.",
+    );
+  }
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
@@ -7584,7 +7680,12 @@ function resolveBonusActionDash(
       "Dash is no longer available.",
     );
   }
-  const nextState = applyDashToActor(input.state, actor, spent.right);
+  const nextState = applyDashToActor(
+    input.state,
+    actor,
+    speedKind,
+    spent.right,
+  );
   return {
     tag: "resolved",
     state: nextState,
@@ -10358,9 +10459,14 @@ function movementHole(
   state: BattleState,
   actorId: CombatantId,
 ): BattleMovementHole {
+  const budget = battleMovementBudgetForActor(state, actorId);
   return movementHoleWithBudget(
     actorId,
-    battleMovementBudgetForActor(state, actorId).remainingFeet,
+    budget.remainingFeet,
+    budget.speedKinds.map((speedKind) => ({
+      kind: speedKind.kind,
+      movementBudgetFeet: speedKind.remainingFeet,
+    })),
   );
 }
 
@@ -10368,15 +10474,31 @@ function readiedMovementHole(
   state: BattleState,
   actorId: CombatantId,
 ): BattleMovementHole {
+  const actor = state.combatants.get(actorId);
+  const isGrappled = state.grapples.some(
+    (grapple) => grapple.targetId === actorId,
+  );
+  const speedKinds =
+    actor === undefined
+      ? []
+      : representedMovementSpeedKinds(actor).map((kind) => ({
+          kind,
+          movementBudgetFeet: effectiveMovementSpeed(actor, kind, isGrappled),
+        }));
   return movementHoleWithBudget(
     actorId,
     readiedMovementBudgetForActor(state, actorId),
+    speedKinds,
   );
 }
 
 function movementHoleWithBudget(
   actorId: CombatantId,
   movementBudgetFeet: MovementFeet,
+  speedKinds: readonly {
+    readonly kind: BattleMovementSpeedKind;
+    readonly movementBudgetFeet: MovementFeet;
+  }[] = [{ kind: "walk", movementBudgetFeet }],
 ): BattleMovementHole {
   return {
     kind: "movement",
@@ -10385,18 +10507,21 @@ function movementHoleWithBudget(
     label: "Movement",
     actorId,
     movementBudgetFeet,
+    speedKinds,
   };
 }
 
 function readiedMovementBudgetForActor(
   state: BattleState,
   actorId: CombatantId,
+  speedKind: BattleMovementSpeedKind = "walk",
 ): MovementFeet {
   const actor = state.combatants.get(actorId);
   return actor === undefined
     ? movementFeet(0)
-    : effectiveWalkSpeed(
+    : effectiveMovementSpeed(
         actor,
+        speedKind,
         state.grapples.some((grapple) => grapple.targetId === actorId),
       );
 }
@@ -10414,7 +10539,18 @@ function parseBattleMovement(
   | { readonly tag: "invalid"; readonly message: string } {
   const movementBudgetFeet =
     options.movementBudgetFeet ??
-    battleMovementBudgetForActor(state, moverId).remainingFeet;
+    battleMovementBudgetForActor(state, moverId, fill.value.speedKind)
+      .remainingFeet;
+  const mover = state.combatants.get(moverId);
+  if (
+    mover === undefined ||
+    !representedMovementSpeedKinds(mover).includes(fill.value.speedKind)
+  ) {
+    return {
+      tag: "invalid",
+      message: "Movement speed kind is not represented for this combatant.",
+    };
+  }
   if (!combatantCanMoveWithBudget(state, moverId, movementBudgetFeet)) {
     return { tag: "invalid", message: "Current combatant cannot move." };
   }
@@ -10482,6 +10618,7 @@ function parseBattleMovement(
     tag: "ok",
     movement: {
       moverId,
+      speedKind: fill.value.speedKind,
       movementCostFeet: movementFeet(fill.value.movementCostFeet),
       provokedOpportunityAttacks,
       spendsTurnMovement: options.spendsTurnMovement ?? true,
@@ -10500,8 +10637,16 @@ function applyBattleMovement(
       state,
       movement.moverId,
       movement.spendsTurnMovement
-        ? battleMovementBudgetForActor(state, movement.moverId).remainingFeet
-        : readiedMovementBudgetForActor(state, movement.moverId),
+        ? battleMovementBudgetForActor(
+            state,
+            movement.moverId,
+            movement.speedKind,
+          ).remainingFeet
+        : readiedMovementBudgetForActor(
+            state,
+            movement.moverId,
+            movement.speedKind,
+          ),
     )
   ) {
     return state;
@@ -10556,10 +10701,8 @@ function readiedMovementInitialHoles(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleHole[] {
-  const movementBudget = readiedMovementBudgetForActor(state, actorId);
-  return Number(movementBudget) > 0
-    ? [readiedMovementHole(state, actorId)]
-    : [];
+  const hole = readiedMovementHole(state, actorId);
+  return movementHoleHasRemainingBudget(hole) ? [hole] : [];
 }
 
 function resolveReleaseReadiedSpellCommand(
@@ -10691,6 +10834,7 @@ function resolveReleaseReadiedMovementCommand(
       movementBudgetFeet: readiedMovementBudgetForActor(
         input.state,
         readiedMovementActorId,
+        fill.value.speedKind,
       ),
       spendsTurnMovement: true,
     },
@@ -15832,19 +15976,28 @@ function bonusActionStandardActionActs(
       if (!alternateActionCostActionAvailable(state, actorId, action)) {
         return [];
       }
-      return [
-        {
-          subject: {
-            tag: "bonusActionStandardAction" as const,
-            actorId,
-            sourceUnitId: entry.unitId,
-            action,
-          },
-          label: alternateActionCostActionLabel(action),
-          summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
-          initialHoles: action === "hide" ? [hideAbilityCheckHole()] : [],
-        },
-      ];
+      const speedKinds =
+        action === "dash"
+          ? representedMovementSpeedKinds(actor)
+          : ["walk" as const];
+      return speedKinds.map((speedKind) => ({
+        subject:
+          action === "dash"
+            ? bonusActionDashSubjectForSpeedKind(
+                actorId,
+                entry.unitId,
+                speedKind,
+              )
+            : {
+                tag: "bonusActionStandardAction" as const,
+                actorId,
+                sourceUnitId: entry.unitId,
+                action,
+              },
+        label: alternateActionCostActionLabel(action),
+        summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
+        initialHoles: action === "hide" ? [hideAbilityCheckHole()] : [],
+      }));
     }),
   );
 }
@@ -15943,36 +16096,60 @@ function battleMovementBudget(
   combatant: BattleCreatureState | undefined,
   grapples: readonly BattleGrappleLink[] = [],
   movementBonusFeet: MovementFeet = movementFeet(0),
+  speedKind: BattleMovementSpeedKind = "walk",
 ): {
   readonly speedFeet: MovementFeet;
   readonly spentFeet: MovementFeet;
   readonly remainingFeet: MovementFeet;
+  readonly speedKinds: readonly {
+    readonly kind: BattleMovementSpeedKind;
+    readonly speedFeet: MovementFeet;
+    readonly remainingFeet: MovementFeet;
+  }[];
 } {
   if (combatant === undefined) {
     return {
       speedFeet: movementFeet(0),
       spentFeet: movementFeet(0),
       remainingFeet: movementFeet(0),
+      speedKinds: [],
     };
   }
-  const speedFeet = effectiveWalkSpeed(
-    combatant,
-    grapples.some((grapple) => grapple.targetId === combatant.combatantId),
+  const isGrappled = grapples.some(
+    (grapple) => grapple.targetId === combatant.combatantId,
   );
+  const speedFeet = effectiveMovementSpeed(combatant, speedKind, isGrappled);
   const movementBudgetFeet = Number(speedFeet) + Number(movementBonusFeet);
   const remainingFeet = movementFeet(
     Math.max(0, movementBudgetFeet - Number(combatant.movementSpentFeet)),
   );
+  const speedKinds = representedMovementSpeedKinds(combatant).map((kind) => {
+    const kindSpeedFeet = effectiveMovementSpeed(combatant, kind, isGrappled);
+    return {
+      kind,
+      speedFeet: kindSpeedFeet,
+      remainingFeet: movementFeet(
+        Math.max(
+          0,
+          Number(kindSpeedFeet) +
+            Number(movementBonusFeet) -
+            Number(combatant.movementSpentFeet),
+        ),
+      ),
+    };
+  });
   return {
     speedFeet,
     spentFeet: combatant.movementSpentFeet,
     remainingFeet,
+    speedKinds,
   };
 }
 
 function battleMovementBudgetForActor(
   state: BattleState,
   actorId: CombatantId,
+  speedKind: BattleMovementSpeedKind = "walk",
 ): ReturnType<typeof battleMovementBudget> {
   const bonus =
     actorId === currentActorId(state)
@@ -15982,11 +16159,26 @@ function battleMovementBudgetForActor(
     state.combatants.get(actorId),
     state.grapples,
     bonus,
+    speedKind,
+  );
+}
+
+function movementHoleHasRemainingBudget(hole: BattleMovementHole): boolean {
+  return hole.speedKinds.some(
+    (speedKind) => Number(speedKind.movementBudgetFeet) > 0,
   );
 }
 
 function effectiveWalkSpeed(
   combatant: BattleCreatureState,
+  isGrappled = false,
+): MovementFeet {
+  return effectiveMovementSpeed(combatant, "walk", isGrappled);
+}
+
+function effectiveMovementSpeed(
+  combatant: BattleCreatureState,
+  speedKind: BattleMovementSpeedKind,
   isGrappled = false,
 ): MovementFeet {
   if (
@@ -15999,12 +16191,39 @@ function effectiveWalkSpeed(
   ) {
     return movementFeet(0);
   }
-  const base = baseWalkSpeed(combatant);
+  const base = baseMovementSpeed(combatant, speedKind);
+  if (base === null) {
+    return movementFeet(0);
+  }
   const passiveFeatureDelta = passiveSpeedBonusDelta(combatant);
   const delta = combatant.activeEffects
     .filter((effect) => effect.kind === "speedDelta")
     .reduce((total, effect) => total + effect.deltaFeet, 0);
   return movementFeet(base + passiveFeatureDelta + delta);
+}
+
+function baseMovementSpeed(
+  combatant: BattleCreatureState,
+  speedKind: BattleMovementSpeedKind,
+): number | null {
+  if (speedKind === "walk") {
+    return baseWalkSpeed(combatant);
+  }
+  if (
+    combatant.origin.kind === "character" &&
+    passiveSpeedKindGrantKinds(combatant).includes(speedKind)
+  ) {
+    return baseWalkSpeed(combatant);
+  }
+  if (combatant.origin.kind === "statBlock") {
+    const specialSpeed = combatant.origin.statBlock.statBlock.speeds.find(
+      (speed) => speed.kind === speedKind && speed.feet.kind === "literal",
+    );
+    return specialSpeed?.feet.kind === "literal"
+      ? specialSpeed.feet.value
+      : null;
+  }
+  return null;
 }
 
 function baseWalkSpeed(combatant: BattleCreatureState): number {
@@ -16017,6 +16236,48 @@ function baseWalkSpeed(combatant: BattleCreatureState): number {
   return walkSpeed?.feet.kind === "literal" ? walkSpeed.feet.value : 0;
 }
 
+function representedMovementSpeedKinds(
+  combatant: BattleCreatureState,
+): readonly BattleMovementSpeedKind[] {
+  const kinds = new Set<BattleMovementSpeedKind>(["walk"]);
+  for (const kind of passiveSpeedKindGrantKinds(combatant)) {
+    kinds.add(kind);
+  }
+  if (combatant.origin.kind === "statBlock") {
+    for (const speed of combatant.origin.statBlock.statBlock.speeds) {
+      if (
+        (speed.kind === "climb" || speed.kind === "swim") &&
+        speed.feet.kind === "literal"
+      ) {
+        kinds.add(speed.kind);
+      }
+    }
+  }
+  return BATTLE_MOVEMENT_SPEED_KINDS.filter((kind) => kinds.has(kind));
+}
+
+function passiveSpeedKindGrantKinds(
+  combatant: BattleCreatureState,
+): readonly PassiveSpeedKindGrantKind[] {
+  if (combatant.origin.kind !== "character") {
+    return [];
+  }
+  const kinds = new Set<PassiveSpeedKindGrantKind>();
+  for (const unitRef of combatant.origin.characterUnitRefs) {
+    for (const profile of unitRef.supportProfiles) {
+      if (
+        typeof profile === "object" &&
+        profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE
+      ) {
+        for (const grant of profile.grants) {
+          kinds.add(grant.speedKind);
+        }
+      }
+    }
+  }
+  return PASSIVE_SPEED_KIND_GRANT_KINDS.filter((kind) => kinds.has(kind));
+}
+
 function passiveSpeedBonusDelta(combatant: BattleCreatureState): number {
   if (combatant.origin.kind !== "character") {
     return 0;
@@ -16025,26 +16286,52 @@ function passiveSpeedBonusDelta(combatant: BattleCreatureState): number {
     .flatMap((unitRef) =>
       unitRef.supportProfiles.flatMap((profile) =>
         typeof profile === "object" &&
-        profile.kind === PASSIVE_SPEED_BONUS_SUPPORT_PROFILE &&
-        profile.condition.kind === "notWearingArmor" &&
-        !profile.condition.categories.some((category) =>
-          combatantWearingArmorCategory(combatant, category),
-        )
-          ? [Number(profile.deltaFeet)]
+        (profile.kind === PASSIVE_SPEED_BONUS_SUPPORT_PROFILE ||
+          profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE)
+          ? speedBonusDeltaForProfile(combatant, profile)
           : [],
       ),
     )
     .reduce((total, delta) => total + delta, 0);
 }
 
+function speedBonusDeltaForProfile(
+  combatant: BattleCreatureState,
+  profile: BattlePassiveSpeedProfile,
+): readonly number[] {
+  const condition = profileSpeedBonusCondition(profile);
+  return condition.kind === "notWearingArmor" &&
+    !condition.categories.some((category) =>
+      combatantWearingArmorCategory(combatant, category),
+    )
+    ? [Number(profileSpeedBonusDeltaFeet(profile))]
+    : [];
+}
+
+function profileSpeedBonusCondition(profile: BattlePassiveSpeedProfile): {
+  readonly kind: "notWearingArmor";
+  readonly categories: readonly ["heavy"];
+} {
+  return profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE
+    ? profile.speed.condition
+    : profile.condition;
+}
+
+function profileSpeedBonusDeltaFeet(
+  profile: BattlePassiveSpeedProfile,
+): MovementDeltaFeet {
+  return profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE
+    ? profile.speed.deltaFeet
+    : profile.deltaFeet;
+}
+
 function combatantCanMoveInState(
   state: BattleState,
   combatantId: CombatantId,
 ): boolean {
-  return combatantCanMoveWithBudget(
-    state,
-    combatantId,
-    battleMovementBudgetForActor(state, combatantId).remainingFeet,
+  return battleMovementBudgetForActor(state, combatantId).speedKinds.some(
+    (speedKind) =>
+      combatantCanMoveWithBudget(state, combatantId, speedKind.remainingFeet),
   );
 }
 

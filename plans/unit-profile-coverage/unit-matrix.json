@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 334,
-      "numerator": 43,
-      "percent": "12.9%"
+      "numerator": 44,
+      "percent": "13.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 391,
-      "numerator": 57,
-      "percent": "14.6%"
+      "numerator": 58,
+      "percent": "14.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 58
+      "value": 59
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 26,
-      "numerator": 26,
+      "denominator": 27,
+      "numerator": 27,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 58,
-      "numerator": 58,
+      "denominator": 59,
+      "numerator": 59,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 19,
-      "numerator": 19,
+      "denominator": 20,
+      "numerator": 20,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 19,
-      "numerator": 19,
+      "denominator": 20,
+      "numerator": 20,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 19,
-      "numerator": 19,
+      "denominator": 20,
+      "numerator": 20,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 19,
-      "numerator": 19,
+      "denominator": 20,
+      "numerator": 20,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 26,
+      "denominator": 27,
       "numerator": 10,
-      "percent": "38.5%"
+      "percent": "37%"
     },
     "supportedProfileCoverage": {
-      "denominator": 44,
-      "numerator": 26,
-      "percent": "59.1%"
+      "denominator": 45,
+      "numerator": 27,
+      "percent": "60%"
     }
   },
   "metricSemantics": [
@@ -435,6 +435,32 @@
       ]
     },
     {
+      "id": "unit-feature.passive-speed-kind-grants",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT44"
+      ],
+      "title": "Unit feature passively grants Climb and Swim Speeds equal to effective Speed",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "unit-feature.weapon-damage-dice-roll-choice",
       "profileKind": "persistent-effect",
       "qntOwners": [
@@ -740,6 +766,7 @@
         "unit-feature.passive-armor-class-bonus",
         "unit-feature.passive-ranged-attack-roll-bonus",
         "unit-feature.passive-speed-bonus",
+        "unit-feature.passive-speed-kind-grants",
         "unit-feature.reaction-roll-or-damage-reduction",
         "unit-feature.save-damage-replacement",
         "unit-feature.self-bonus-action-healing",
@@ -872,6 +899,14 @@
         "unit-feature.passive-speed-bonus"
       ],
       "taskId": "QMBT40"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Roving passive Speed-kind grants runtime parity.",
+      "profileIds": [
+        "unit-feature.passive-speed-kind-grants"
+      ],
+      "taskId": "QMBT44"
     }
   ],
   "units": [
@@ -2101,6 +2136,62 @@
       ],
       "sourceRecordPath": "packages/surface/content/ranger_extra_attack.json",
       "unitId": "ranger_extra_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.passive-speed-kind-grants"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT44"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.passive-speed-kind-grants",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT44"
+          ],
+          "title": "Unit feature passively grants Climb and Swim Speeds equal to effective Speed",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ranger_roving.json",
+      "unitId": "ranger_roving"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -7444,24 +7535,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/ranger_feral_senses.json",
       "unitId": "ranger_feral_senses"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/ranger_roving.json",
-      "unitId": "ranger_roving"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

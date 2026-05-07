@@ -922,6 +922,10 @@ function attackRollFill(
 function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
+    readonly speedKind?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["speedKind"];
     readonly movementCostFeet: number;
     readonly provokedOpportunityAttacks: readonly {
       readonly reactorId: CombatantId;
@@ -933,6 +937,7 @@ function movementFill(
     kind: "movement",
     holeId: hole.holeId,
     value: {
+      speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },

@@ -1267,6 +1267,7 @@ function movementFill(
     kind: "movement",
     holeId: hole.holeId,
     value: {
+      speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: [],
     },

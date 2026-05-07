@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -235,6 +235,27 @@ module unitFeatureProcedureProfiles {
     dashMovementBonusFeet: int,
   }
 
+  type MovementSpeedKind =
+    | WalkSpeedKind
+    | ClimbSpeedKind
+    | SwimSpeedKind
+
+  type PassiveSpeedKindGrantsFacts = {
+    baseSpeedFeet: int,
+    wearingHeavyArmor: bool,
+    movementSpentFeet: int,
+    chosenSpeedKind: MovementSpeedKind,
+  }
+
+  type PassiveSpeedKindGrantsResult = {
+    chosenSpeedKind: MovementSpeedKind,
+    walkSpeedFeet: int,
+    climbSpeedFeet: int,
+    swimSpeedFeet: int,
+    movementRemainingFeet: int,
+    dashMovementBonusFeet: int,
+  }
+
   type PassiveRangedAttackRollBonusResult = {
     bonus: int,
     effectiveAttackRollTotal: int,
@@ -322,6 +343,38 @@ module unitFeatureProcedureProfiles {
     val speed = fastMovementEffectiveSpeed(facts)
     val dashed = resolveDash(turn, speed, StandardActionCost(DashAction))
     resolveFastMovementBudget(dashed, facts)
+  }
+
+  pure def rovingEffectiveSpeed(facts: PassiveSpeedKindGrantsFacts): int =
+    fastMovementEffectiveSpeed({
+      baseSpeedFeet: facts.baseSpeedFeet,
+      wearingHeavyArmor: facts.wearingHeavyArmor,
+      movementSpentFeet: facts.movementSpentFeet,
+    })
+
+  pure def resolveRovingSpeedKindBudget(
+    turn: TurnProcedureState,
+    facts: PassiveSpeedKindGrantsFacts
+  ): PassiveSpeedKindGrantsResult = {
+    val speed = rovingEffectiveSpeed(facts)
+    {
+      chosenSpeedKind: facts.chosenSpeedKind,
+      walkSpeedFeet: speed,
+      climbSpeedFeet: speed,
+      swimSpeedFeet: speed,
+      movementRemainingFeet:
+        nonnegative(speed + turn.dashMovementBonusFeet - facts.movementSpentFeet),
+      dashMovementBonusFeet: turn.dashMovementBonusFeet,
+    }
+  }
+
+  pure def resolveRovingSpeedKindDash(
+    turn: TurnProcedureState,
+    facts: PassiveSpeedKindGrantsFacts
+  ): PassiveSpeedKindGrantsResult = {
+    val speed = rovingEffectiveSpeed(facts)
+    val dashed = resolveDash(turn, speed, StandardActionCost(DashAction))
+    resolveRovingSpeedKindBudget(dashed, facts)
   }
 
   pure def resolveArcheryAttackRoll(
@@ -1328,6 +1381,43 @@ module unitFeatureProcedureProfiles {
       assert(budget.movementRemainingFeet == 25),
       assert(dashed.dashMovementBonusFeet == 30),
       assert(dashed.movementRemainingFeet == 55),
+    }
+  }
+
+  run test_roving_grants_walk_climb_and_swim_equal_effective_speed = {
+    val facts = {
+      baseSpeedFeet: 30,
+      wearingHeavyArmor: false,
+      movementSpentFeet: 5,
+      chosenSpeedKind: ClimbSpeedKind,
+    }
+    val budget = resolveRovingSpeedKindBudget(initialTurnProcedureState, facts)
+    val dashed =
+      resolveRovingSpeedKindDash(initialTurnProcedureState, facts.with("chosenSpeedKind", SwimSpeedKind))
+    all {
+      assert(budget.walkSpeedFeet == 40),
+      assert(budget.climbSpeedFeet == 40),
+      assert(budget.swimSpeedFeet == 40),
+      assert(budget.movementRemainingFeet == 35),
+      assert(dashed.chosenSpeedKind == SwimSpeedKind),
+      assert(dashed.dashMovementBonusFeet == 40),
+      assert(dashed.movementRemainingFeet == 75),
+    }
+  }
+
+  run test_roving_heavy_armor_removes_speed_increase_but_keeps_special_speeds_equal = {
+    val facts = {
+      baseSpeedFeet: 30,
+      wearingHeavyArmor: true,
+      movementSpentFeet: 10,
+      chosenSpeedKind: SwimSpeedKind,
+    }
+    val budget = resolveRovingSpeedKindBudget(initialTurnProcedureState, facts)
+    all {
+      assert(budget.walkSpeedFeet == 30),
+      assert(budget.climbSpeedFeet == 30),
+      assert(budget.swimSpeedFeet == 30),
+      assert(budget.movementRemainingFeet == 20),
     }
   }
 

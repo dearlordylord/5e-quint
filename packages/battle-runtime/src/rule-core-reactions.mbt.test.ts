@@ -527,6 +527,7 @@ function movementFill(
     kind: "movement",
     holeId: hole.holeId,
     value: {
+      speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
@@ -632,10 +633,7 @@ function normalizeRuleCoreReactionQuintState(
       state["qInterruptedMovementSpentFeet"],
       "qInterruptedMovementSpentFeet",
     ),
-    reactorReactionAvailable: booleanField(
-      state,
-      "qReactorReactionAvailable",
-    ),
+    reactorReactionAvailable: booleanField(state, "qReactorReactionAvailable"),
     reactorReadiedMovementHeld: booleanField(
       state,
       "qReactorReadiedMovementHeld",
@@ -645,10 +643,7 @@ function normalizeRuleCoreReactionQuintState(
       state["qReactorMovementSpentFeet"],
       "qReactorMovementSpentFeet",
     ),
-    interruptedConcentration: booleanField(
-      state,
-      "qInterruptedConcentration",
-    ),
+    interruptedConcentration: booleanField(state, "qInterruptedConcentration"),
     reactorConcentration: booleanField(state, "qReactorConcentration"),
     pendingTrigger: pendingTrigger(state["qPendingTrigger"]),
     pendingStackDepth: reactionWindowDepth(state["qReactionWindow"]),
@@ -706,9 +701,7 @@ function reactionResult(raw: unknown): RuleCoreReactionResult {
   throw new Error(`Unknown Quint rule-core Reaction result: ${String(raw)}.`);
 }
 
-function isRuleCoreReactionResult(
-  raw: unknown,
-): raw is RuleCoreReactionResult {
+function isRuleCoreReactionResult(raw: unknown): raw is RuleCoreReactionResult {
   return ruleCoreReactionResults.some((result) => result === raw);
 }
 
@@ -727,9 +720,7 @@ function isRuleCoreReactionInvalidReason(
 
 function pendingTrigger(raw: unknown): RuleCoreReactionTrigger {
   if (isRuleCoreReactionTrigger(raw)) return raw;
-  throw new Error(
-    `Unknown Quint rule-core Reaction trigger: ${String(raw)}.`,
-  );
+  throw new Error(`Unknown Quint rule-core Reaction trigger: ${String(raw)}.`);
 }
 
 function isRuleCoreReactionTrigger(

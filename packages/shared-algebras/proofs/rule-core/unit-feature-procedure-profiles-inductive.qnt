@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 
 module unitFeatureProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"
@@ -489,6 +489,33 @@ module unitFeatureProcedureProfilesInductive {
     }
   }
 
+  action doRovingSpeedKindGrants = {
+    nondet wearingHeavyArmor = Set(true, false).oneOf()
+    nondet movementSpentFeet = 0.to(10).oneOf()
+    nondet chosenSpeedKind = Set(WalkSpeedKind, ClimbSpeedKind, SwimSpeedKind).oneOf()
+    val result = resolveRovingSpeedKindDash(qTurn, {
+      baseSpeedFeet: 30,
+      wearingHeavyArmor: wearingHeavyArmor,
+      movementSpentFeet: movementSpentFeet,
+      chosenSpeedKind: chosenSpeedKind,
+    })
+    all {
+      qLastDamageAmount' = result.movementRemainingFeet,
+      qLastArmorClass' = result.walkSpeedFeet,
+      qFeatureUsesRemaining' = qFeatureUsesRemaining,
+      qFeatureMaximumUses' = qFeatureMaximumUses,
+      qActionSurgeGrant' = qActionSurgeGrant,
+      qRageOccurrence' = qRageOccurrence,
+      qInterruptedConcentration' = qInterruptedConcentration,
+      qReactorConcentration' = qReactorConcentration,
+      qRecklessOccurrence' = qRecklessOccurrence,
+      qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
+      qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+      qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      recordTurn(resolveDash(qTurn, result.walkSpeedFeet, StandardActionCost(DashAction))),
+    }
+  }
+
   action doStartTurn = all {
     recordTurn(startTurn(qTurn)),
     qActionSurgeGrant' = NoActionSurgeActionGrant,
@@ -520,6 +547,7 @@ module unitFeatureProcedureProfilesInductive {
     doDefenseArmorClass,
     doArcheryAttackRollBonus,
     doFastMovementSpeedBonus,
+    doRovingSpeedKindGrants,
     doWeaponDamageDiceRollChoice,
     doStartTurn,
   }

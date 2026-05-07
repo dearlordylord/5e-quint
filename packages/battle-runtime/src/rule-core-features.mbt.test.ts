@@ -1538,6 +1538,15 @@ function unitFeatureSubject(
 function bonusActionStandardActionSubject(
   action: "dash" | "disengage" | "hide",
 ): Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> {
+  if (action === "dash") {
+    return {
+      tag: "bonusActionStandardAction",
+      actorId,
+      sourceUnitId: recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
+      action,
+      speedKind: "walk",
+    };
+  }
   return {
     tag: "bonusActionStandardAction",
     actorId,

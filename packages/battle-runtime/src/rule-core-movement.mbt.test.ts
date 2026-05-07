@@ -221,11 +221,22 @@ function createRuleCoreMovementDriver() {
           costFeet: movementOverspendCostFeet,
           provokesOpportunityAttack: false,
         }),
-      doDash: () => resolveSubject({ tag: "action", actorId, action: "dash" }),
+      doDash: () =>
+        resolveSubject({
+          tag: "action",
+          actorId,
+          action: "dash",
+          speedKind: "walk",
+        }),
       doDisengage: () =>
         resolveSubject({ tag: "action", actorId, action: "disengage" }),
       doRejectDashAfterActionSpent: () =>
-        resolveSubject({ tag: "action", actorId, action: "dash" }),
+        resolveSubject({
+          tag: "action",
+          actorId,
+          action: "dash",
+          speedKind: "walk",
+        }),
       doStandFromProne: () =>
         resolveSubject({
           tag: "runtimeCommand",
@@ -453,6 +464,7 @@ function movementFill(
     kind: "movement",
     holeId: hole.holeId,
     value: {
+      speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },

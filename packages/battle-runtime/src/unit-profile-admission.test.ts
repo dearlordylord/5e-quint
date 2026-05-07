@@ -11,7 +11,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT37 fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT44 ranger_roving
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -67,6 +68,8 @@ import {
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
+  PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
+  battlePassiveSpeedKindGrantsSupportForUnit,
   parseSupportedUnitFeatureProfile,
   type ClassicNonSrdMechanicsUnit,
 } from "./unit-feature-support.ts";
@@ -85,6 +88,7 @@ const fighterExtraAttackUnitId = "fighter_extra_attack";
 const barbarianRageUnitId = "barbarian_rage";
 const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
 const barbarianFastMovementUnitId = "barbarian_fast_movement";
+const rangerRovingUnitId = "ranger_roving";
 const rogueCunningActionUnitId = "rogue_cunning_action";
 const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
@@ -1768,7 +1772,12 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
 
     const dashed = resolveBattleSubject({
       state,
-      subject: { tag: "action", actorId: spellCasterId, action: "dash" },
+      subject: {
+        tag: "action",
+        actorId: spellCasterId,
+        action: "dash",
+        speedKind: "walk",
+      },
       fills: [],
     });
     expect(dashed).toMatchObject({ tag: "resolved" });
@@ -1852,6 +1861,228 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
           { className: "barbarian", level: classLevel(5) },
         ]),
       ).toBeNull();
+    }
+  });
+});
+
+describe("QMBT44 deterministic Roving admission", () => {
+  test("ranger_roving is admitted as passive Speed-kind grants", () => {
+    const unit = unitLibrary.requireUnit(rangerRovingUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, [
+      { className: "ranger", level: classLevel(6) },
+    ]);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: rangerRovingUnitId,
+        supportProfiles: [rovingSupportProfile()],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "passiveSpeedKindGrants",
+        unit,
+        speedKindGrants: {
+          speed: rovingSpeedBonusProfile(),
+          grants: rovingSpeedKindGrants(),
+        },
+      }),
+    );
+  });
+
+  test("Roving projects walk, Climb, and Swim Speeds equal to effective Speed", () => {
+    const state = rovingBattle();
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 40,
+          remainingFeet: 40,
+          speedKinds: [
+            { kind: "walk", speedFeet: 40, remainingFeet: 40 },
+            { kind: "climb", speedFeet: 40, remainingFeet: 40 },
+            { kind: "swim", speedFeet: 40, remainingFeet: 40 },
+          ],
+        }),
+      }),
+    );
+  });
+
+  test("Roving special Speeds track unmodified Speed while wearing Heavy armor", () => {
+    const state = rovingBattle({ armorClass: heavyArmorClassState() });
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 30,
+          remainingFeet: 30,
+          speedKinds: [
+            { kind: "walk", speedFeet: 30, remainingFeet: 30 },
+            { kind: "climb", speedFeet: 30, remainingFeet: 30 },
+            { kind: "swim", speedFeet: 30, remainingFeet: 30 },
+          ],
+        }),
+      }),
+    );
+  });
+
+  test("Roving Movement can choose a represented Speed kind and subtracts distance already moved", () => {
+    const state = rovingBattle();
+    const firstMove = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "move",
+      },
+      fills: [
+        movementFill(rovingMovementHole(state), {
+          speedKind: "climb",
+          movementCostFeet: 15,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+    expect(firstMove).toMatchObject({ tag: "resolved" });
+    if (firstMove.tag !== "resolved") {
+      throw new Error("Expected Roving climb Movement to resolve.");
+    }
+    expect(firstMove.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          spentFeet: 15,
+          speedKinds: [
+            { kind: "walk", speedFeet: 40, remainingFeet: 25 },
+            { kind: "climb", speedFeet: 40, remainingFeet: 25 },
+            { kind: "swim", speedFeet: 40, remainingFeet: 25 },
+          ],
+        }),
+      }),
+    );
+
+    const secondMove = resolveBattleSubject({
+      state: firstMove.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "move",
+      },
+      fills: [
+        movementFill(rovingMovementHole(firstMove.state), {
+          speedKind: "swim",
+          movementCostFeet: 25,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+    expect(secondMove).toMatchObject({ tag: "resolved" });
+  });
+
+  test("Roving Dash uses the effective Speed shared by represented Speed kinds", () => {
+    const state = rovingBattle();
+    const dashed = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: spellCasterId,
+        action: "dash",
+        speedKind: "swim",
+      },
+      fills: [],
+    });
+    expect(dashed).toMatchObject({ tag: "resolved" });
+    if (dashed.tag !== "resolved") {
+      throw new Error("Expected Roving Dash to resolve.");
+    }
+    expect(dashed.snapshot.turn.dashMovementBonusFeet).toBe(40);
+    expect(dashed.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedKinds: [
+            { kind: "walk", speedFeet: 40, remainingFeet: 80 },
+            { kind: "climb", speedFeet: 40, remainingFeet: 80 },
+            { kind: "swim", speedFeet: 40, remainingFeet: 80 },
+          ],
+        }),
+      }),
+    );
+  });
+
+  test("Roving support gate rejects adjacent passive Speed-kind grant shapes", () => {
+    const unit = unitLibrary.requireUnit(rangerRovingUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "composite"
+    ) {
+      throw new Error("Expected Roving composite class feature.");
+    }
+    const [speedPart, specialSpeedPart] = unit.mechanics.parts;
+    if (
+      speedPart?.family !== "passive" ||
+      specialSpeedPart?.family !== "passive"
+    ) {
+      throw new Error("Expected Roving passive component mechanics.");
+    }
+    const [speedEffect] = speedPart.grants;
+    const [climbEffect, swimEffect] = specialSpeedPart.grants;
+    if (
+      speedEffect?.kind !== "modify_speed" ||
+      climbEffect?.kind !== "grant_speed" ||
+      swimEffect?.kind !== "grant_speed"
+    ) {
+      throw new Error("Expected Roving Speed mechanics.");
+    }
+
+    const adjacentUnits = [
+      {
+        ...unit,
+        id: "test_roving_only_climb",
+        mechanics: {
+          ...unit.mechanics,
+          parts: [speedPart, { ...specialSpeedPart, grants: [climbEffect] }],
+        },
+      },
+      {
+        ...unit,
+        id: "test_roving_fixed_swim",
+        mechanics: {
+          ...unit.mechanics,
+          parts: [
+            speedPart,
+            {
+              ...specialSpeedPart,
+              grants: [climbEffect, { ...swimEffect, feet: 40 }],
+            },
+          ],
+        },
+      },
+      {
+        ...unit,
+        id: "test_roving_wrong_delta",
+        mechanics: {
+          ...unit.mechanics,
+          parts: [
+            {
+              ...speedPart,
+              grants: [{ ...speedEffect, delta: 5 }],
+            },
+            specialSpeedPart,
+          ],
+        },
+      },
+    ] as const satisfies readonly UnitRecord[];
+
+    for (const adjacentUnit of adjacentUnits) {
+      expect(battlePassiveSpeedKindGrantsSupportForUnit(adjacentUnit)).toBe(
+        "unsupported",
+      );
     }
   });
 });
@@ -2067,6 +2298,43 @@ function fastMovementBattle(
   return result.right;
 }
 
+function rovingBattle(
+  input: {
+    readonly armorClass?: Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["armorClass"];
+  } = {},
+): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-roving-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Roving Ranger",
+        initiative: 20,
+        side: partySide,
+        characterUnitRefs: [rovingBattleUnitRef()],
+        classLevels: [{ className: "ranger", level: classLevel(6) }],
+        ...(input.armorClass === undefined
+          ? {}
+          : { armorClass: input.armorClass }),
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function resolveWeaponAttack(
   state: BattleState,
   attackName: "Longsword" | "Shortbow",
@@ -2217,6 +2485,27 @@ function fastMovementBattleUnitRef(): Extract<
   return unitRef.right;
 }
 
+function rovingBattleUnitRef(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = unitLibrary.requireUnit(rangerRovingUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: rangerRovingUnitId,
+      supportProfiles: [rovingSupportProfile()],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
 function fastMovementSupportProfile() {
   return {
     kind: PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
@@ -2226,6 +2515,46 @@ function fastMovementSupportProfile() {
       categories: ["heavy"],
     },
   } as const;
+}
+
+function rovingSupportProfile() {
+  return {
+    kind: PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
+    speed: rovingSpeedBonusProfile(),
+    grants: rovingSpeedKindGrants(),
+  } as const;
+}
+
+function rovingSpeedBonusProfile() {
+  return {
+    deltaFeet: movementDeltaFeet(10),
+    condition: {
+      kind: "notWearingArmor",
+      categories: ["heavy"],
+    },
+  } as const;
+}
+
+function rovingSpeedKindGrants() {
+  return [
+    { speedKind: "climb", feet: { kind: "walkSpeed" } },
+    { speedKind: "swim", feet: { kind: "walkSpeed" } },
+  ] as const;
+}
+
+function rovingMovementHole(
+  state: BattleState,
+): Extract<BattleHole, { readonly kind: "movement" }> {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.actorId === spellCasterId &&
+      candidate.subject.command === "move",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Roving Movement act.");
+  }
+  return requireHole(act.initialHoles, "movement");
 }
 
 function archeryFeatureUnit(): PassiveFeatUnit {
@@ -2521,6 +2850,10 @@ function attackRollFill(
 function movementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
+    readonly speedKind?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["speedKind"];
     readonly movementCostFeet: number;
     readonly provokedOpportunityAttacks: readonly {
       readonly reactorId: CombatantId;
@@ -2532,6 +2865,7 @@ function movementFill(
     kind: "movement",
     holeId: hole.holeId,
     value: {
+      speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },

@@ -550,7 +550,12 @@ describe("battle runtime", () => {
     const dashed = requireResolved(
       resolveBattleSubject({
         state,
-        subject: { tag: "action", actorId: fighterId, action: "dash" },
+        subject: {
+          tag: "action",
+          actorId: fighterId,
+          action: "dash",
+          speedKind: "walk",
+        },
         fills: [],
       }),
     );
@@ -933,11 +938,11 @@ describe("battle runtime", () => {
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: fighterId,
-            movement: {
+            movement: expect.objectContaining({
               speedFeet: 30,
               spentFeet: 10,
               remainingFeet: 20,
-            },
+            }),
           }),
         ]),
       },
@@ -974,6 +979,81 @@ describe("battle runtime", () => {
       tag: "invalid",
       reason: "invalidFill",
     });
+  });
+
+  test("movement discovery stays available when only a special Speed has remaining budget", () => {
+    const climberId = combatantId("unequal-speed-climber");
+    const base = statBlockRecord();
+    const state = startBattleRight({
+      battleId: battleId("battle-unequal-special-speed"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: climberId,
+          displayName: "Unequal Speed Climber",
+          initiative: 20,
+          statBlock: {
+            ...base,
+            id: "stat_block_unequal_speed_climber",
+            name: "Unequal Speed Climber",
+            statBlock: {
+              ...base.statBlock,
+              displayName: "Unequal Speed Climber",
+              speeds: [
+                { kind: "walk", feet: { kind: "literal", value: 30 } },
+                { kind: "climb", feet: { kind: "literal", value: 40 } },
+              ],
+            },
+          },
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: climberId,
+      command: "move",
+    };
+    const initialMoveHole = findHole(
+      findAct(state, subject).initialHoles,
+      "movement",
+    );
+    const walked = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          movementFill(initialMoveHole, {
+            speedKind: "walk",
+            movementCostFeet: 30,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).state;
+
+    const remainingMoveHole = findHole(
+      findAct(walked, subject).initialHoles,
+      "movement",
+    );
+    expect(remainingMoveHole).toMatchObject({
+      speedKinds: [
+        { kind: "walk", movementBudgetFeet: 0 },
+        { kind: "climb", movementBudgetFeet: 10 },
+      ],
+    });
+    expect(
+      resolveBattleSubject({
+        state: walked,
+        subject,
+        fills: [
+          movementFill(remainingMoveHole, {
+            speedKind: "climb",
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
   });
 
   test("battle state projects typed Grapple links", () => {
@@ -1700,6 +1780,7 @@ describe("battle runtime", () => {
       actorId: fighterId,
       sourceUnitId: "rogue_cunning_action",
       action: "dash",
+      speedKind: "walk",
     };
     const disengageSubject: BattleSubject = {
       tag: "bonusActionStandardAction",
@@ -12044,7 +12125,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("96 passing");
+  expect(quintOutput).toContain("97 passing");
 }
 
 function hidePrerequisites(
@@ -12834,6 +12915,10 @@ function reactionDecisionFill(
 function movementFill(
   hole: BattleHole,
   value: {
+    readonly speedKind?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["speedKind"];
     readonly movementCostFeet: number;
     readonly provokedOpportunityAttacks: readonly {
       readonly reactorId: CombatantId;
@@ -12848,6 +12933,7 @@ function movementFill(
     kind: "movement",
     holeId: hole.holeId,
     value: {
+      speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },

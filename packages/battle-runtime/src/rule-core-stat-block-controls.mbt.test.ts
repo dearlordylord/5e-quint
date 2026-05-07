@@ -197,7 +197,12 @@ function createRuleCoreStatBlockControlDriver() {
         });
       },
       doRejectOrdinaryActionDuringDispatch: () => {
-        resolveSubject({ tag: "action", actorId, action: "dash" });
+        resolveSubject({
+          tag: "action",
+          actorId,
+          action: "dash",
+          speedKind: "walk",
+        });
       },
       doResolvePrimaryDispatch: () => resolveDispatch(primaryAttackName),
       doResolveSecondaryDispatch: () => resolveDispatch(secondaryAttackName),
@@ -411,6 +416,7 @@ function movementFill(
     kind: "movement",
     holeId: hole.holeId,
     value: {
+      speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
