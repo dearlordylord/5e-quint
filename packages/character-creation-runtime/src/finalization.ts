@@ -1,6 +1,7 @@
 import { Either, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import { abilityScore, hp } from "@dnd/shared/types";
 import {
   readBackgroundCreationFacts,
@@ -2012,14 +2013,23 @@ function decodedClassFeatureProficiencySubjects(
 export function resourceForFeature(
   unit: UnitRecord,
 ): readonly CharacterBuildResource[] {
-  if (unit.kind !== "class_feature") {
-    return [];
-  }
-
-  return unit.mechanics.family === "activation" &&
+  if (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "activation" &&
     unit.mechanics.resource !== undefined
-    ? [{ unitId: unit.id, resource: unit.mechanics.resource }]
-    : [];
+  ) {
+    return [{ unitId: unit.id, resource: unit.mechanics.resource }];
+  }
+  const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
+  if (zeroHitPointReplacement !== null) {
+    return [
+      {
+        unitId: unit.id,
+        resource: zeroHitPointReplacement.resource,
+      },
+    ];
+  }
+  return [];
 }
 
 export function unitRefs(

@@ -376,6 +376,33 @@ module ruleCoreFeaturesMbt {
     }
   }
 
+  action doZeroHitPointReplacement = {
+    val result = resolveZeroHitPointReplacement(
+      {
+        kind: PlayerCharacter,
+        hitPoints: 3,
+        hitPointMaximum: 12,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: false,
+      },
+      resetDeathSavingThrowLifecycle,
+      { usesRemaining: 1, maximumUses: 1 },
+      { incomingDamage: 4, choosesFeature: true }
+    )
+    all {
+      qHoles == Set(),
+      recordProjection(
+        qActionAvailable, qBonusActionAvailable, qReactionAvailable,
+        result.pool.usesRemaining, NoActionSurgeActionGrant, qActorHp,
+        result.vitals.hitPoints, qDashBonusFeet, qDisengaged, qHidden,
+        qRageActive, qRecklessActive, qIncomingAttackAdvantage,
+        qSneakAttackUsedThisTurn, result.vitals.hitPoints, false,
+        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
   action doEvasionSuccess = {
     val damage = saveDamageAfterEvasionReplacement({
       savingThrowAbility: DexteritySavingThrowFact,
@@ -499,5 +526,6 @@ module ruleCoreFeaturesMbt {
     doDefenseArmorClass,
     doArcheryAttackRollBonus,
     doSavageAttackerDamage,
+    doZeroHitPointReplacement,
   }
 }

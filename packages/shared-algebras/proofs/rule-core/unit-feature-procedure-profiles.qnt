@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -17,8 +17,10 @@ module unitFeatureProcedureProfiles {
   // - Classes/Barbarian.md: Rage, Reckless Attack.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
   // - Feats.md: Archery, Defense, Savage Attacker.
+  // - Character-Origins.md: Orc Relentless Endurance.
   // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
-  //   Damage Rolls, Saving Throws and Damage, Resistance and Vulnerability.
+  //   Damage Rolls, Dropping to 0 Hit Points, Instant Death, Saving Throws and
+  //   Damage, Resistance and Vulnerability.
 
   type FeatureUsePool = {
     usesRemaining: int,
@@ -283,6 +285,18 @@ module unitFeatureProcedureProfiles {
     effectiveDamage: int,
   }
 
+  type ZeroHitPointReplacementFacts = {
+    incomingDamage: int,
+    choosesFeature: bool,
+  }
+
+  type ZeroHitPointReplacementResult = {
+    admitted: bool,
+    pool: FeatureUsePool,
+    vitals: CreatureVitals,
+    deathSavingThrows: DeathSavingThrowLifecycle,
+  }
+
   type AttackActionAttackCountState = {
     actionAvailable: bool,
     extraAttackSlotOpen: bool,
@@ -432,6 +446,56 @@ module unitFeatureProcedureProfiles {
       weaponDamageDiceRolledPerCandidate: savageAttackerCandidateDiceCount(facts),
       selectedWeaponDamageDiceTotal: selectedTotal,
       effectiveDamage: nonnegative(selectedTotal + facts.damageModifier),
+    }
+  }
+
+  pure def damageWouldKillOutright(
+    before: CreatureVitals,
+    damageResult: DamageResult
+  ): bool =
+    before.kind == PlayerCharacter
+      and before.hitPoints > 0
+      and damageResult.vitals.hitPoints == 0
+      and damageResult.remainingDamageAtZero >= before.hitPointMaximum
+
+  pure def resolveZeroHitPointReplacement(
+    before: CreatureVitals,
+    lifecycle: DeathSavingThrowLifecycle,
+    pool: FeatureUsePool,
+    facts: ZeroHitPointReplacementFacts
+  ): ZeroHitPointReplacementResult = {
+    val damaged = applyResolvedDamageToPositiveHitPoints(
+      before,
+      facts.incomingDamage
+    )
+    val admitted = all {
+      legalVitals(before),
+      legalDeathSavingThrowLifecycle(lifecycle),
+      before.kind == PlayerCharacter,
+      before.hitPoints > 0,
+      damaged.vitals.hitPoints == 0,
+      not(damageWouldKillOutright(before, damaged)),
+      facts.choosesFeature,
+      pool.usesRemaining > 0,
+    }
+    {
+      admitted: admitted,
+      pool: if (admitted) spendFeatureUsePool(pool) else pool,
+      vitals:
+        if (admitted) {
+          kind: before.kind,
+          hitPoints: 1,
+          hitPointMaximum: before.hitPointMaximum,
+          temporaryHitPoints: damaged.vitals.temporaryHitPoints,
+          dead: false,
+          unconscious: false,
+        } else damaged.vitals,
+      deathSavingThrows:
+        if (admitted) lifecycle
+        else deathSavingThrowLifecycleAfterPositiveHitPointDamage(
+          lifecycle,
+          damaged
+        ),
     }
   }
 

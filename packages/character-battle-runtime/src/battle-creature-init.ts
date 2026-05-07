@@ -252,9 +252,12 @@ function characterBattleResources(
     if (Either.isLeft(unit)) {
       return battleCreatureInitIssue(unit.left.message);
     }
-    if (unit.right.kind !== "class_feature") {
+    if (
+      unit.right.kind !== "class_feature" &&
+      unit.right.kind !== "species_trait"
+    ) {
       return battleCreatureInitIssue(
-        `Expected class feature Unit for resource: ${unit.right.id}`,
+        `Expected feature Unit for resource: ${unit.right.id}`,
       );
     }
 
@@ -279,7 +282,10 @@ function characterBattleFeatures(
     if (Either.isLeft(unit)) {
       return battleCreatureInitIssue(unit.left.message);
     }
-    if (unit.right.kind !== "class_feature") {
+    if (
+      unit.right.kind !== "class_feature" &&
+      unit.right.kind !== "species_trait"
+    ) {
       continue;
     }
     features.push({ unit: unit.right });

@@ -8,6 +8,7 @@ import {
   spellSlotLevel,
   type ProficiencyBonus,
 } from "@dnd/shared/types";
+import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import type {
   ActivationResource,
   ClassName,
@@ -153,6 +154,10 @@ export function characterResourceState(
 export function characterBattleResourceForUnit(
   unit: UnitRecord,
 ): ActivationResource {
+  const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
+  if (zeroHitPointReplacement !== null) {
+    return zeroHitPointReplacement.resource;
+  }
   if (
     unit.kind !== "class_feature" ||
     (unit.mechanics.family !== "activation" &&
@@ -161,7 +166,7 @@ export function characterBattleResourceForUnit(
     unit.mechanics.resource === undefined
   ) {
     throw new Error(
-      "Character battle resources must be activation class features.",
+      "Character battle resources must be supported limited-use Units.",
     );
   }
   return unit.mechanics.resource;

@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 58/391 | 14.8% |
 | Authored Surface executable catalog admission | 44/334 | 13.2% |
 | Installed Unit profile classification coverage | 59/59 | 100% |
-| Supported executable Unit coverage | 27/45 | 60% |
-| QNT profile modeling coverage | 20/20 | 100% |
-| QNT proof coverage | 20/20 | 100% |
-| Runtime mapping coverage | 20/20 | 100% |
-| Runtime parity coverage | 20/20 | 100% |
-| Deterministic admission/projection coverage | 27/27 | 100% |
-| Selected identity MBT coverage | 10/27 | 37% |
+| Supported executable Unit coverage | 28/45 | 62.2% |
+| QNT profile modeling coverage | 21/21 | 100% |
+| QNT proof coverage | 21/21 | 100% |
+| Runtime mapping coverage | 21/21 | 100% |
+| Runtime parity coverage | 21/21 | 100% |
+| Deterministic admission/projection coverage | 28/28 | 100% |
+| Selected identity MBT coverage | 10/28 | 35.7% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -64,6 +64,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `paladin_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `ranger_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `ranger_roving` | srd-5.2.1 | `unit-feature.passive-speed-kind-grants` |
+| `orc_relentless_endurance` | srd-5.2.1 | `unit-feature.zero-hit-point-replacement` |
 | `acid_splash` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `cure_wounds` | srd-5.2.1 | `spell.hit-point-restoration` |
 | `ray_of_frost` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -798,6 +799,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ranger_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ranger_roving` | `unit-feature.passive-speed-kind-grants` | QMBT44 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | QMBT47 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `cure_wounds` | `spell.hit-point-restoration` | QMBT32 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -846,7 +848,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `mastery_sap` | unsupported-profile | Weapon mastery rider is authored but not yet a stable Unit profile row. |
 | `orc_adrenaline_rush` | needs-surface-widening | Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
-| `orc_relentless_endurance` | unsupported-profile | Zero-hit-point replacement profile exists in rule core but is not yet a stable Unit profile row. |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
 | `light` | unsupported-profile | Object light effect is authored but not promoted as an execution profile yet. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
@@ -867,9 +868,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 24 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 4 | `fighter_tactical_mind`, `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`, `thunderwave` |
-| srd-5.2.1 | QCORE9 | unsupported-profile | 2 | `monk_deflect_attacks`, `orc_relentless_endurance` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | QCORE9 | needs-surface-widening | 1 | `bard_cutting_words` |
+| srd-5.2.1 | QCORE9 | unsupported-profile | 1 | `monk_deflect_attacks` |
 
 ## Profile Claims By Task
 
@@ -877,7 +878,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- |
 | QCORE7 | qnt-proof | _none_ |
 | QCORE8 | qnt-proof | `unit-feature.reaction-roll-or-damage-reduction`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
-| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-action-attack-count-scaling`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.passive-speed-bonus`, `unit-feature.passive-speed-kind-grants`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice` |
+| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-action-attack-count-scaling`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.passive-speed-bonus`, `unit-feature.passive-speed-kind-grants`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.zero-hit-point-replacement` |
 | QCORE10 | qnt-proof | `spell.invocation-damage-save-or-attack`, `spell.hit-point-restoration`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | QCORE11 | qnt-proof | `stat-block.attack-control` |
 | QMBT2 | completed-runtime-parity | _none_ |
@@ -893,6 +894,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT37 | completed-runtime-parity | `unit-feature.attack-action-attack-count-scaling` |
 | QMBT40 | completed-runtime-parity | `unit-feature.passive-speed-bonus` |
 | QMBT44 | completed-runtime-parity | `unit-feature.passive-speed-kind-grants` |
+| QMBT47 | completed-runtime-parity | `unit-feature.zero-hit-point-replacement` |
 
 ## Supported Profiles Lacking Runtime Parity
 

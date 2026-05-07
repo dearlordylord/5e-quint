@@ -62,8 +62,8 @@
       "value": 59
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 27,
-      "numerator": 27,
+      "denominator": 28,
+      "numerator": 28,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 20,
-      "numerator": 20,
+      "denominator": 21,
+      "numerator": 21,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 20,
-      "numerator": 20,
+      "denominator": 21,
+      "numerator": 21,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 20,
-      "numerator": 20,
+      "denominator": 21,
+      "numerator": 21,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 20,
-      "numerator": 20,
+      "denominator": 21,
+      "numerator": 21,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 27,
+      "denominator": 28,
       "numerator": 10,
-      "percent": "37%"
+      "percent": "35.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 45,
-      "numerator": 27,
-      "percent": "60%"
+      "numerator": 28,
+      "percent": "62.2%"
     }
   },
   "metricSemantics": [
@@ -487,6 +487,32 @@
       ]
     },
     {
+      "id": "unit-feature.zero-hit-point-replacement",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT47"
+      ],
+      "title": "Unit feature replaces a non-outright drop to 0 Hit Points with 1 Hit Point",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "unit-feature.reaction-roll-or-damage-reduction",
       "profileKind": "reaction",
       "qntOwners": [
@@ -771,7 +797,8 @@
         "unit-feature.save-damage-replacement",
         "unit-feature.self-bonus-action-healing",
         "unit-feature.weapon-critical-range-19",
-        "unit-feature.weapon-damage-dice-roll-choice"
+        "unit-feature.weapon-damage-dice-roll-choice",
+        "unit-feature.zero-hit-point-replacement"
       ],
       "taskId": "QCORE9"
     },
@@ -907,6 +934,14 @@
         "unit-feature.passive-speed-kind-grants"
       ],
       "taskId": "QMBT44"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Relentless Endurance zero-Hit-Point replacement runtime parity.",
+      "profileIds": [
+        "unit-feature.zero-hit-point-replacement"
+      ],
+      "taskId": "QMBT47"
     }
   ],
   "units": [
@@ -2254,15 +2289,52 @@
         "status": "installed"
       },
       "claim": {
-        "futureProfileOwner": "QCORE9",
-        "reason": "Zero-hit-point replacement profile exists in rule core but is not yet a stable Unit profile row.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.zero-hit-point-replacement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT47"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.zero-hit-point-replacement",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT47"
+          ],
+          "title": "Unit feature replaces a non-outright drop to 0 Hit Points with 1 Hit Point",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/orc_relentless_endurance.json",
       "unitId": "orc_relentless_endurance"
     },

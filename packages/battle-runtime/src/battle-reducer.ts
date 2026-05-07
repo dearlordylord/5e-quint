@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -426,7 +426,11 @@ type BattleAttackDamageEvent =
     };
 export type BattleAttackDamageDisposition =
   | { readonly kind: "ordinaryDamage" }
-  | { readonly kind: "knockOut" };
+  | { readonly kind: "knockOut" }
+  | {
+      readonly kind: "zeroHitPointReplacement";
+      readonly unitId: UnitRecord["id"];
+    };
 type BattleReactionProcedureModifierChoice = {
   readonly kind: "reactionRollOrDamageReduction";
   readonly reactorId: CombatantId;
@@ -1623,6 +1627,10 @@ export const BattleHoleSchema = Schema.Union(
       Schema.Union(
         Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
         Schema.Struct({ kind: Schema.Literal("knockOut") }),
+        Schema.Struct({
+          kind: Schema.Literal("zeroHitPointReplacement"),
+          unitId: Schema.String,
+        }),
       ),
     ),
   }),
@@ -1904,7 +1912,11 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value:
         | { readonly kind: "ordinaryDamage" }
-        | { readonly kind: "knockOut" };
+        | { readonly kind: "knockOut" }
+        | {
+            readonly kind: "zeroHitPointReplacement";
+            readonly unitId: string;
+          };
     }
   | {
       readonly kind: "reactionDecision";
@@ -2160,6 +2172,10 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Union(
         Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
         Schema.Struct({ kind: Schema.Literal("knockOut") }),
+        Schema.Struct({
+          kind: Schema.Literal("zeroHitPointReplacement"),
+          unitId: Schema.String,
+        }),
       ),
     }),
     Schema.Struct({
@@ -7162,18 +7178,24 @@ function resolveAttack(
       target,
       damageAmount: reducedFixedDamageAmount,
     });
+    const damageDispositionValidation = damageDispositionFillValidation({
+      hole: damageDispositionHole,
+      filled: fillSet.damageDispositionFilled,
+      value: fillSet.damageDisposition,
+    });
+    if (damageDispositionValidation !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageDispositionValidation,
+      );
+    }
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
         return needsHolesResult(attackRolledState, input.subject, [
           damageDispositionHole,
         ]);
       }
-    } else if (fillSet.damageDispositionFilled) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
-      );
     }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
       attackRolledState,
@@ -7352,18 +7374,24 @@ function resolveAttack(
       target,
       damageAmount: reducedDamageAmount,
     });
+    const damageDispositionValidation = damageDispositionFillValidation({
+      hole: damageDispositionHole,
+      filled: fillSet.damageDispositionFilled,
+      value: fillSet.damageDisposition,
+    });
+    if (damageDispositionValidation !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageDispositionValidation,
+      );
+    }
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
         return needsHolesResult(attackRolledState, input.subject, [
           damageDispositionHole,
         ]);
       }
-    } else if (fillSet.damageDispositionFilled) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
-      );
     }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
       attackRolledState,
@@ -8478,18 +8506,24 @@ function resolveOffHandAttack(
       target,
       damageAmount,
     });
+    const damageDispositionValidation = damageDispositionFillValidation({
+      hole: damageDispositionHole,
+      filled: fillSet.damageDispositionFilled,
+      value: fillSet.damageDisposition,
+    });
+    if (damageDispositionValidation !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageDispositionValidation,
+      );
+    }
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
         return needsHolesResult(attackRolledState, input.subject, [
           damageDispositionHole,
         ]);
       }
-    } else if (fillSet.damageDispositionFilled) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
-      );
     }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
       attackRolledState,
@@ -10211,18 +10245,24 @@ function resolveOpportunityAttackCommand(
       target,
       damageAmount: reducedFixedDamageAmount,
     });
+    const damageDispositionValidation = damageDispositionFillValidation({
+      hole: damageDispositionHole,
+      filled: fillSet.damageDispositionFilled,
+      value: fillSet.damageDisposition,
+    });
+    if (damageDispositionValidation !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageDispositionValidation,
+      );
+    }
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
         return needsHolesResult(attackRolledState, input.subject, [
           damageDispositionHole,
         ]);
       }
-    } else if (fillSet.damageDispositionFilled) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
-      );
     }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
       attackRolledState,
@@ -10365,18 +10405,24 @@ function resolveOpportunityAttackCommand(
     target,
     damageAmount: reducedDamageAmount,
   });
+  const damageDispositionValidation = damageDispositionFillValidation({
+    hole: damageDispositionHole,
+    filled: fillSet.damageDispositionFilled,
+    value: fillSet.damageDisposition,
+  });
+  if (damageDispositionValidation !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      damageDispositionValidation,
+    );
+  }
   if (damageDispositionHole !== null) {
     if (!fillSet.damageDispositionFilled) {
       return needsHolesResult(attackRolledState, input.subject, [
         damageDispositionHole,
       ]);
     }
-  } else if (fillSet.damageDispositionFilled) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Attack damage disposition is only valid when melee attack damage can Knock Out the target.",
-    );
   }
   const attackDamageReactionWindow = maybeOpenReactionWindow(
     attackRolledState,
@@ -12027,7 +12073,10 @@ function resolveSpellAct(
         spellDamageHole(invocation, critical),
       ]);
     }
-    if (!hit && fillSet.damageRoll != null) {
+    if (
+      !hit &&
+      (fillSet.damageRoll != null || fillSet.damageDispositions.length > 0)
+    ) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -12107,6 +12156,31 @@ function resolveSpellAct(
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
+  const damageDispositionHole = zeroHitPointReplacementDispositionHole({
+    damageSourceId: subject.actorId,
+    target,
+    damageAmount: spellDamageAmount,
+  });
+  const damageDispositionValidation = damageDispositionFillsValidation({
+    holes: damageDispositionHole === null ? [] : [damageDispositionHole],
+    fills: fillSet.damageDispositions,
+  });
+  if (damageDispositionValidation !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      damageDispositionValidation,
+    );
+  }
+  if (
+    damageDispositionHole !== null &&
+    damageDispositionFillFor(fillSet.damageDispositions, damageDispositionHole) ===
+      undefined
+  ) {
+    return needsHolesResult(spellResolutionState, input.subject, [
+      damageDispositionHole,
+    ]);
+  }
   const damaged = applySpellDamage(
     spellResolutionState,
     target.combatantId,
@@ -12114,6 +12188,12 @@ function resolveSpellAct(
     fillSet.damageRoll,
     critical,
     concentrationFill,
+    "full",
+    damageDispositionForTarget(
+      damageDispositionHole === null ? [] : [damageDispositionHole],
+      fillSet.damageDispositions,
+      target.combatantId,
+    ),
   );
   const effected = applySpellActiveEffects(
     damaged,
@@ -12239,6 +12319,7 @@ function resolvePreparedHealingSpellAct(input: {
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.targetAllocation !== undefined ||
     input.fillSet.damageRoll !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0
   ) {
@@ -12641,7 +12722,10 @@ function resolveSpellRelease(
         spellDamageHole(invocation, critical),
       ]);
     }
-    if (!hit && fillSet.damageRoll != null) {
+    if (
+      !hit &&
+      (fillSet.damageRoll != null || fillSet.damageDispositions.length > 0)
+    ) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -12680,9 +12764,14 @@ function resolveSpellRelease(
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
+  const spellDamageAmount = spellDamageAmountForTarget(
+    target,
+    invocation,
+    fillSet.damageRoll,
+  );
   const concentrationSave = concentrationSavingThrowHole(
     target,
-    spellDamageAmountForTarget(target, invocation, fillSet.damageRoll),
+    spellDamageAmount,
   );
   const concentrationFill =
     concentrationSave === null
@@ -12709,6 +12798,31 @@ function resolveSpellRelease(
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
+  const damageDispositionHole = zeroHitPointReplacementDispositionHole({
+    damageSourceId: input.subject.actorId,
+    target,
+    damageAmount: spellDamageAmount,
+  });
+  const damageDispositionValidation = damageDispositionFillsValidation({
+    holes: damageDispositionHole === null ? [] : [damageDispositionHole],
+    fills: fillSet.damageDispositions,
+  });
+  if (damageDispositionValidation !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      damageDispositionValidation,
+    );
+  }
+  if (
+    damageDispositionHole !== null &&
+    damageDispositionFillFor(fillSet.damageDispositions, damageDispositionHole) ===
+      undefined
+  ) {
+    return needsHolesResult(input.state, input.subject, [
+      damageDispositionHole,
+    ]);
+  }
   const releaseResolutionState =
     invocation.kind === "cantripSpellAttack" && fillSet.attackRoll != null
       ? recordAttackRollOngoingFeatures(
@@ -12725,6 +12839,12 @@ function resolveSpellRelease(
     fillSet.damageRoll,
     critical,
     concentrationFill,
+    "full",
+    damageDispositionForTarget(
+      damageDispositionHole === null ? [] : [damageDispositionHole],
+      fillSet.damageDispositions,
+      target.combatantId,
+    ),
   );
   const effected = applySpellActiveEffects(
     damaged,
@@ -12791,6 +12911,10 @@ type SpellFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
+      readonly damageDispositions: readonly Extract<
+        BattleFill,
+        { readonly kind: "attackDamageDisposition" }
+      >[];
       readonly damageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
@@ -12826,6 +12950,10 @@ function spellFillSet(
   const concentrationSavingThrows: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
+  >[] = [];
+  const damageDispositions: Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
   >[] = [];
   let damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
@@ -12962,6 +13090,21 @@ function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "attackDamageDisposition") {
+      if (
+        damageDispositions.some(
+          (candidate) => candidate.holeId === fill.holeId,
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Damage disposition was filled twice.",
+        };
+      }
+      damageDispositions.push(fill);
+      continue;
+    }
+
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the spell replay holes.`,
@@ -12977,6 +13120,7 @@ function spellFillSet(
     attackRoll,
     savingThrowOutcomes,
     concentrationSavingThrows,
+    damageDispositions,
     damageRoll,
     healingRoll,
   };
@@ -13149,6 +13293,49 @@ function resolvePreparedSlotSpellAct(input: {
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
+  const damageDispositionHoles =
+    input.fillSet.targetAllocation.allocations.flatMap(
+      (allocation, allocationIndex) => {
+        const target = input.input.state.combatants.get(allocation.targetId);
+        if (target === undefined) {
+          return [];
+        }
+        const damageAmount = preparedSlotSpellDamageAmountForAllocation(
+          target,
+          input.invocation,
+          input.fillSet.damageRoll!,
+          allocationIndex,
+          allocation.count,
+        );
+        const hole = zeroHitPointReplacementDispositionHole({
+          damageSourceId: input.actorId,
+          target,
+          damageAmount,
+        });
+        return hole === null ? [] : [hole];
+      },
+    );
+  const damageDispositionValidation = damageDispositionFillsValidation({
+    holes: damageDispositionHoles,
+    fills: input.fillSet.damageDispositions,
+  });
+  if (damageDispositionValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      damageDispositionValidation,
+    );
+  }
+  const missingDamageDispositionHoles = damageDispositionHoles.filter(
+    (hole) =>
+      damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
+      undefined,
+  );
+  if (missingDamageDispositionHoles.length > 0) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      ...missingDamageDispositionHoles,
+    ]);
+  }
 
   const damaged = input.fillSet.targetAllocation.allocations.reduce(
     (state, allocation, allocationIndex) => {
@@ -13177,6 +13364,11 @@ function resolvePreparedSlotSpellAct(input: {
               input.fillSet.concentrationSavingThrows,
               concentrationSave,
             ),
+        damageDispositionForTarget(
+          damageDispositionHoles,
+          input.fillSet.damageDispositions,
+          allocation.targetId,
+        ),
       );
     },
     input.input.state,
@@ -13350,7 +13542,10 @@ function resolveSaveGateDamageSpellAct(input: {
     }
   }
   if (damageTargets.length === 0) {
-    if (input.fillSet.damageRoll !== undefined) {
+    if (
+      input.fillSet.damageRoll !== undefined ||
+      input.fillSet.damageDispositions.length > 0
+    ) {
       return invalidResult(
         input.input.state,
         "invalidFill",
@@ -13432,6 +13627,45 @@ function resolveSaveGateDamageSpellAct(input: {
       ),
     ]),
   );
+  const damageDispositionHoles = damageTargets.flatMap((targetId) => {
+      const target = input.input.state.combatants.get(targetId);
+      if (target === undefined) {
+        return [];
+      }
+      const damageAmount = spellDamageAmountForTarget(
+        target,
+        input.invocation,
+        damageRoll,
+        saveDamageResultForTarget(targetId),
+      );
+      const hole = zeroHitPointReplacementDispositionHole({
+        damageSourceId: input.actorId,
+        target,
+        damageAmount,
+      });
+      return hole === null ? [] : [hole];
+    });
+  const damageDispositionValidation = damageDispositionFillsValidation({
+    holes: damageDispositionHoles,
+    fills: input.fillSet.damageDispositions,
+  });
+  if (damageDispositionValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      damageDispositionValidation,
+    );
+  }
+  const missingDamageDispositionHoles = damageDispositionHoles.filter(
+    (hole) =>
+      damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
+      undefined,
+  );
+  if (missingDamageDispositionHoles.length > 0) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      ...missingDamageDispositionHoles,
+    ]);
+  }
   const damaged = damageTargets.reduce(
     (state, targetId) =>
       applySpellDamage(
@@ -13442,6 +13676,11 @@ function resolveSaveGateDamageSpellAct(input: {
         false,
         concentrationSaveByTargetId.get(targetId),
         saveDamageResultForTarget(targetId),
+        damageDispositionForTarget(
+          damageDispositionHoles,
+          input.fillSet.damageDispositions,
+          targetId,
+        ),
       ),
     input.input.state,
   );
@@ -13720,6 +13959,21 @@ function applyHpDamage(
     return applyKnockOut(damaged);
   }
 
+  if (
+    context.damageDisposition?.kind === "zeroHitPointReplacement" &&
+    zeroHitPointReplacementCanApply(
+      combatant,
+      projection,
+      context.damageDisposition.unitId,
+    )
+  ) {
+    return applyZeroHitPointReplacement(
+      combatant,
+      projection,
+      context.damageDisposition.unitId,
+    );
+  }
+
   return projection.massiveDamageKills
     ? applyInstantDeath(damaged)
     : applyDropToZeroHpLifecycle(damaged);
@@ -13755,6 +14009,66 @@ function damageAllowsKnockOut(
 ): boolean {
   const projection = hpDamageProjection(combatant, damageAmount);
   return projection.currentHp > 0 && Number(projection.nextHp) === 0;
+}
+
+function zeroHitPointReplacementCanApply(
+  combatant: BattleCreatureState,
+  projection: HpDamageProjection,
+  unitId: UnitRecord["id"],
+): boolean {
+  return (
+    projection.currentHp > 0 &&
+    Number(projection.nextHp) === 0 &&
+    !projection.massiveDamageKills &&
+    zeroHitPointReplacementResource(combatant, unitId) !== null
+  );
+}
+
+function zeroHitPointReplacementResource(
+  combatant: BattleCreatureState,
+  unitId: UnitRecord["id"],
+): CharacterBattleResourceState | null {
+  if (combatant.origin.kind !== "character") return null;
+  const resource = combatant.origin.resources.find(
+    (candidate) => candidate.unit.id === unitId,
+  );
+  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+    return null;
+  }
+  const profile = parseSupportedUnitFeatureProfile(
+    resource.unit,
+    combatant.origin.classLevels,
+  );
+  return profile?.kind === "zeroHitPointReplacement" ? resource : null;
+}
+
+function applyZeroHitPointReplacement(
+  combatant: BattleCreatureState,
+  projection: HpDamageProjection,
+  unitId: UnitRecord["id"],
+): BattleCreatureState {
+  const nextCombatant = {
+    ...battleCreatureStateWithoutKnockOut(
+      combatant,
+      Hp(1),
+      combatant.conditions,
+    ),
+    tempHp: Hp(projection.currentTempHp - projection.tempHpAbsorbed),
+  };
+  if (nextCombatant.origin.kind !== "character") {
+    return nextCombatant;
+  }
+  return {
+    ...nextCombatant,
+    origin: {
+      ...nextCombatant.origin,
+      resources: nextCombatant.origin.resources.map((resource) =>
+        resource.unit.id === unitId
+          ? spendCharacterResourceUse(resource)
+          : resource,
+      ),
+    },
+  };
 }
 
 function battleCreatureStateWithKnockedOutUnconsciousFields(
@@ -15458,6 +15772,9 @@ function applySpellDamage(
     { readonly kind: "concentrationSavingThrow" }
   >,
   saveDamageResult: SaveDamageResult = "full",
+  damageDisposition: BattleAttackDamageDisposition = {
+    kind: "ordinaryDamage",
+  },
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
@@ -15471,7 +15788,7 @@ function applySpellDamage(
       damageRoll,
       saveDamageResult,
     ),
-    { deathFailuresAtZeroHp: critical ? 2 : 1 },
+    { deathFailuresAtZeroHp: critical ? 2 : 1, damageDisposition },
   );
   const nextState = {
     ...state,
@@ -15495,6 +15812,9 @@ function applyPreparedSlotSpellDamage(
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >,
+  damageDisposition: BattleAttackDamageDisposition = {
+    kind: "ordinaryDamage",
+  },
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
@@ -15502,6 +15822,7 @@ function applyPreparedSlotSpellDamage(
   }
   const damaged = applyHpDamage(target, damageAmount, {
     deathFailuresAtZeroHp: 1,
+    damageDisposition,
   });
   const nextState = {
     ...state,
@@ -17083,8 +17404,15 @@ function attackDamageDispositionHole(input: {
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
 }): BattleAttackDamageDispositionHole | null {
-  return attackCanCarryKnockOutChoice(input.attack) &&
+  const choices: BattleAttackDamageDisposition[] = [
+    { kind: "ordinaryDamage" },
+    ...zeroHitPointReplacementChoices(input.target, input.damageAmount),
+    ...(attackCanCarryKnockOutChoice(input.attack) &&
     damageAllowsKnockOut(input.target, input.damageAmount)
+      ? [{ kind: "knockOut" } as const]
+      : []),
+  ];
+  return choices.length > 1
     ? {
         kind: "attackDamageDisposition",
         holeId: ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
@@ -17092,9 +17420,143 @@ function attackDamageDispositionHole(input: {
         label: "Attack damage disposition",
         attackerId: input.attackerId,
         targetId: input.target.combatantId,
-        choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+        choices,
       }
     : null;
+}
+
+function zeroHitPointReplacementDispositionHole(input: {
+  readonly damageSourceId: CombatantId;
+  readonly target: BattleCreatureState;
+  readonly damageAmount: number;
+}): BattleAttackDamageDispositionHole | null {
+  const choices: BattleAttackDamageDisposition[] = [
+    { kind: "ordinaryDamage" },
+    ...zeroHitPointReplacementChoices(input.target, input.damageAmount),
+  ];
+  return choices.length > 1
+    ? {
+        kind: "attackDamageDisposition",
+        holeId: damageDispositionHoleIdForTarget(input.target.combatantId),
+        holeInstanceKey: damageDispositionHoleInstanceForTarget(
+          input.target.combatantId,
+        ),
+        label: "Damage disposition",
+        attackerId: input.damageSourceId,
+        targetId: input.target.combatantId,
+        choices,
+      }
+    : null;
+}
+
+function damageDispositionHoleIdForTarget(
+  targetId: CombatantId,
+): BattleHoleId {
+  return holeId(`battle:damage-disposition:${targetId}`);
+}
+
+function damageDispositionHoleInstanceForTarget(
+  targetId: CombatantId,
+): HoleInstanceKey {
+  return holeInstanceKey(`battle:damage-disposition:${targetId}`);
+}
+
+type BattleDamageDispositionFill = Extract<
+  BattleFill,
+  { readonly kind: "attackDamageDisposition" }
+>;
+
+function damageDispositionFillFor(
+  fills: readonly BattleDamageDispositionFill[],
+  hole: BattleAttackDamageDispositionHole,
+): BattleDamageDispositionFill | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function damageDispositionFillsValidation(input: {
+  readonly holes: readonly BattleAttackDamageDispositionHole[];
+  readonly fills: readonly BattleDamageDispositionFill[];
+}): string | null {
+  const holeIds = new Set(input.holes.map((hole) => hole.holeId));
+  if (input.fills.some((fill) => !holeIds.has(fill.holeId))) {
+    return "Damage disposition is only valid when damage offers a disposition choice.";
+  }
+  const invalidFill = input.holes.some((hole) => {
+    const fill = damageDispositionFillFor(input.fills, hole);
+    return (
+      fill !== undefined &&
+      !hole.choices.some((choice) =>
+        damageDispositionChoicesEqual(choice, fill.value),
+      )
+    );
+  });
+  return invalidFill
+    ? "Damage disposition must match one of the currently offered choices."
+    : null;
+}
+
+function damageDispositionForTarget(
+  holes: readonly BattleAttackDamageDispositionHole[],
+  fills: readonly BattleDamageDispositionFill[],
+  targetId: CombatantId,
+): BattleAttackDamageDisposition {
+  const hole = holes.find((candidate) => candidate.targetId === targetId);
+  return hole === undefined
+    ? { kind: "ordinaryDamage" }
+    : (damageDispositionFillFor(fills, hole)?.value ?? {
+        kind: "ordinaryDamage",
+      });
+}
+
+function damageDispositionFillValidation(input: {
+  readonly hole: BattleAttackDamageDispositionHole | null;
+  readonly filled: boolean;
+  readonly value: BattleAttackDamageDisposition;
+}): string | null {
+  if (input.hole === null) {
+    return input.filled
+      ? "Damage disposition is only valid when damage offers a disposition choice."
+      : null;
+  }
+  if (!input.filled) {
+    return null;
+  }
+  return input.hole.choices.some((choice) =>
+    damageDispositionChoicesEqual(choice, input.value),
+  )
+    ? null
+    : "Damage disposition must match one of the currently offered choices.";
+}
+
+function damageDispositionChoicesEqual(
+  a: BattleAttackDamageDisposition,
+  b: BattleAttackDamageDisposition,
+): boolean {
+  if (a.kind !== b.kind) return false;
+  return a.kind === "zeroHitPointReplacement" &&
+    b.kind === "zeroHitPointReplacement"
+    ? a.unitId === b.unitId
+    : true;
+}
+
+function zeroHitPointReplacementChoices(
+  target: BattleCreatureState,
+  damageAmount: number,
+): readonly BattleAttackDamageDisposition[] {
+  const projection = hpDamageProjection(target, damageAmount);
+  if (
+    projection.currentHp <= 0 ||
+    Number(projection.nextHp) > 0 ||
+    projection.massiveDamageKills ||
+    target.origin.kind !== "character"
+  ) {
+    return [];
+  }
+  return target.origin.resources.flatMap((resource) =>
+    zeroHitPointReplacementResource(target, resource.unit.id) === null
+      ? []
+      : [{ kind: "zeroHitPointReplacement", unitId: resource.unit.id }],
+  );
 }
 
 function attackDamageHoleId(

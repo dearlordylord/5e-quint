@@ -1,9 +1,10 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import {
   CONDITIONS as ALL_CONDITIONS,
   ClassLevel,
@@ -45,6 +46,8 @@ export const WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE =
   "weaponDamageDiceRollChoice";
 export const ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE =
   "attackActionAttackCountScaling";
+export const ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE =
+  "zeroHitPointReplacement";
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -64,6 +67,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 ] as const;
 export type BattlePassiveSpeedBonusSupportProfile = {
   readonly kind: typeof PASSIVE_SPEED_BONUS_SUPPORT_PROFILE;
@@ -284,6 +288,17 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE);
   }
 
+  const zeroHitPointReplacementSupport =
+    battleZeroHitPointReplacementSupportForUnit(input.unit);
+  if (zeroHitPointReplacementSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle zero-Hit-Point replacement Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (zeroHitPointReplacementSupport === "zeroHitPointReplacement") {
+    supportProfiles.push(ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE);
+  }
+
   return Either.right(supportProfiles);
 }
 
@@ -498,6 +513,14 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "attackActionAttackCountScaling";
       readonly unit: UnitRecord;
       readonly additionalAttacks: 1;
+    }
+  | {
+      readonly kind: "zeroHitPointReplacement";
+      readonly unit: UnitRecord;
+      readonly optional: true;
+      readonly trigger: "reducedToZeroHitPointsNotKilledOutright";
+      readonly replacementHp: 1;
+      readonly resetCadence: "longRest";
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -755,6 +778,11 @@ export type BattleAttackActionAttackCountScalingSupport =
   | "unsupported"
   | null;
 
+export type BattleZeroHitPointReplacementSupport =
+  | "zeroHitPointReplacement"
+  | "unsupported"
+  | null;
+
 export function battlePassiveArmorClassBonusSupportForUnit(
   unit: UnitRecord,
 ): BattlePassiveArmorClassBonusSupport {
@@ -826,6 +854,17 @@ export function battleAttackActionAttackCountScalingSupportForUnit(
     : "attackActionAttackCountScaling";
 }
 
+export function battleZeroHitPointReplacementSupportForUnit(
+  unit: UnitRecord,
+): BattleZeroHitPointReplacementSupport {
+  if (!hasZeroHitPointReplacementMechanics(unit)) {
+    return null;
+  }
+  return zeroHitPointReplacementProfileForUnit(unit) === null
+    ? "unsupported"
+    : "zeroHitPointReplacement";
+}
+
 function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
@@ -882,6 +921,31 @@ function hasAttackActionAttackCountScalingMechanics(unit: UnitRecord): boolean {
   return unit.mechanics.grants.some(
     (effect) => effect.kind === "scale_attack_count",
   );
+}
+
+function hasZeroHitPointReplacementMechanics(unit: UnitRecord): boolean {
+  return (
+    unit.kind === "species_trait" &&
+    unit.mechanics.family === "triggered_replacement"
+  );
+}
+
+export function zeroHitPointReplacementProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "zeroHitPointReplacement" }
+> | null {
+  const profile = zeroHitPointReplacementUnitProfile(unit);
+  if (profile === null) return null;
+  return {
+    kind: "zeroHitPointReplacement",
+    unit: profile.unit,
+    optional: profile.optional,
+    trigger: profile.trigger,
+    replacementHp: profile.replacementHp,
+    resetCadence: profile.resetCadence,
+  };
 }
 
 export function attackActionAttackCountScalingProfileForUnit(
@@ -1058,8 +1122,7 @@ function passiveSpeedKindGrantsForPassiveMechanics(
     return null;
   }
   const climb = grants.find(
-    (grant): grant is ClimbSpeedKindGrantProfile =>
-      grant.speedKind === "climb",
+    (grant): grant is ClimbSpeedKindGrantProfile => grant.speedKind === "climb",
   );
   const swim = grants.find(
     (grant): grant is SwimSpeedKindGrantProfile => grant.speedKind === "swim",
@@ -1210,7 +1273,8 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
-    attackActionAttackCountScalingProfileForUnit(unit)
+    attackActionAttackCountScalingProfileForUnit(unit) ??
+    zeroHitPointReplacementProfileForUnit(unit)
   );
 }
 

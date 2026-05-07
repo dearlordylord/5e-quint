@@ -12,7 +12,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT37 fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT44 ranger_roving
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT47 orc_relentless_endurance
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -56,6 +57,7 @@ import {
   startBattle,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
@@ -65,6 +67,7 @@ import {
   type CombatantId,
   type SupportedSpellAct,
 } from "./index.ts";
+import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
@@ -89,6 +92,7 @@ const barbarianRageUnitId = "barbarian_rage";
 const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
 const barbarianFastMovementUnitId = "barbarian_fast_movement";
 const rangerRovingUnitId = "ranger_roving";
+const orcRelentlessEnduranceUnitId = "orc_relentless_endurance";
 const rogueCunningActionUnitId = "rogue_cunning_action";
 const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
@@ -2087,6 +2091,370 @@ describe("QMBT44 deterministic Roving admission", () => {
   });
 });
 
+describe("QMBT47 deterministic Relentless Endurance admission", () => {
+  test("orc_relentless_endurance is admitted as zero-Hit-Point replacement", () => {
+    const unit = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, []);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: orcRelentlessEnduranceUnitId,
+        supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "zeroHitPointReplacement",
+        unit,
+        optional: true,
+        trigger: "reducedToZeroHitPointsNotKilledOutright",
+        replacementHp: 1,
+        resetCadence: "longRest",
+      }),
+    );
+    expect(characterBattleResourceForUnit(unit)).toEqual({
+      kind: "use_count",
+      cap: { kind: "fixed", uses: 1 },
+    });
+  });
+
+  test("Relentless Endurance replaces a non-outright drop to 0 with 1 Hit Point and spends its use", () => {
+    const state = relentlessEnduranceBattle({ targetHp: 3 });
+    const disposition = relentlessEnduranceDisposition(state, 4);
+
+    expect(disposition.choices).toContainEqual({
+      kind: "zeroHitPointReplacement",
+      unitId: orcRelentlessEnduranceUnitId,
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject: weaponAttackSubject("Longsword"),
+      fills: [
+        ...disposition.prefixFills,
+        attackDamageDispositionFill(disposition, {
+          kind: "zeroHitPointReplacement",
+          unitId: orcRelentlessEnduranceUnitId,
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 1,
+            conditions: expect.not.arrayContaining(["unconscious"]),
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 0 },
+              stable: false,
+              dead: false,
+            },
+          }),
+        ]),
+      },
+    });
+    if (result.tag !== "resolved") {
+      throw new Error("Expected Relentless Endurance damage to resolve.");
+    }
+    const target = result.state.combatants.get(spellTargetId);
+    if (target?.origin.kind !== "character") {
+      throw new Error("Expected Relentless Endurance target character.");
+    }
+    expect(target.origin.resources[0]?.usesRemaining).toBe(0);
+  });
+
+  test("Relentless Endurance replaces non-attack spell damage that drops the target to 0", () => {
+    const unit = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId);
+    const spell = spellRecord(rayOfFrostUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      targetHp: 3,
+      targetResources: [{ unit }],
+      targetUnitRefs: [
+        {
+          unitId: orcRelentlessEnduranceUnitId,
+          supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+        },
+      ],
+    });
+    const act = spellAct({ state, spellId: rayOfFrostUnitId });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      target,
+      rayOfFrostUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, rollFill],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[4]]);
+    const disposition = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, rollFill, damageFill],
+      }),
+      "attackDamageDisposition",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        rollFill,
+        damageFill,
+        attackDamageDispositionFill(disposition, {
+          kind: "zeroHitPointReplacement",
+          unitId: orcRelentlessEnduranceUnitId,
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 1,
+            conditions: expect.not.arrayContaining(["unconscious"]),
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("Relentless Endurance replaces failed save damage that drops the target to 0", () => {
+    const unit = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId);
+    const spell = spellRecord(acidSplashUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      targetHp: 3,
+      targetResources: [{ unit }],
+      targetUnitRefs: [
+        {
+          unitId: orcRelentlessEnduranceUnitId,
+          supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+        },
+      ],
+    });
+    const act = spellAct({ state, spellId: acidSplashUnitId });
+    const save = requireHole(act.initialHoles, "savingThrowOutcome");
+    const saveFill = savingThrowOutcomeFill(save, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const damage = requireResultHole(
+      resolveBattleSubject({ state, subject: act.subject, fills: [saveFill] }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[4]]);
+    const disposition = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [saveFill, damageFill],
+      }),
+      "attackDamageDisposition",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        saveFill,
+        damageFill,
+        attackDamageDispositionFill(disposition, {
+          kind: "zeroHitPointReplacement",
+          unitId: orcRelentlessEnduranceUnitId,
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 1,
+            conditions: expect.not.arrayContaining(["unconscious"]),
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("declining Relentless Endurance follows the ordinary zero-HP lifecycle", () => {
+    const state = relentlessEnduranceBattle({ targetHp: 3 });
+    const disposition = relentlessEnduranceDisposition(state, 4);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: weaponAttackSubject("Longsword"),
+      fills: [
+        ...disposition.prefixFills,
+        attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 0,
+            conditions: expect.arrayContaining(["unconscious"]),
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 0 },
+              stable: false,
+              dead: false,
+            },
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("Relentless Endurance is not offered for outright death or spent uses", () => {
+    const killedOutright = relentlessEnduranceBattle({
+      targetHp: 1,
+      targetMaxHp: 6,
+    });
+    expect(relentlessEnduranceDamageResult(killedOutright, 7)).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 0,
+            zeroHpLifecycle: expect.objectContaining({ dead: true }),
+          }),
+        ]),
+      },
+    });
+
+    const spent = relentlessEnduranceBattle({ targetHp: 3, usesRemaining: 0 });
+    expect(relentlessEnduranceDamageResult(spent, 4)).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 0,
+            conditions: expect.arrayContaining(["unconscious"]),
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("invalid zero-Hit-Point replacement disposition fills are rejected", () => {
+    const state = relentlessEnduranceBattle({ targetHp: 3 });
+    const disposition = relentlessEnduranceDisposition(state, 4);
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: weaponAttackSubject("Longsword"),
+        fills: [
+          ...disposition.prefixFills,
+          attackDamageDispositionFill(disposition, {
+            kind: "zeroHitPointReplacement",
+            unitId: "wrong_relentless_endurance",
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Damage disposition must match one of the currently offered choices.",
+    });
+  });
+
+  test("malformed zero-Hit-Point replacement mechanics remain unsupported", () => {
+    const base = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId) as UnitRecord & {
+      readonly mechanics: {
+        readonly family: "triggered_replacement";
+        readonly trigger: object;
+        readonly effect: object;
+        readonly optional: boolean;
+        readonly resetCadence: object;
+      };
+    };
+    const malformedUnits = [
+      relentlessEnduranceMechanicsVariant(base, {
+        id: "relentless_endurance_wrong_replacement_hp",
+        mechanics: {
+          ...base.mechanics,
+          effect: { ...base.mechanics.effect, replacementHp: 2 },
+        },
+      }),
+      relentlessEnduranceMechanicsVariant(base, {
+        id: "relentless_endurance_required",
+        mechanics: { ...base.mechanics, optional: false },
+      }),
+      relentlessEnduranceMechanicsVariant(base, {
+        id: "relentless_endurance_wrong_trigger",
+        mechanics: {
+          ...base.mechanics,
+          trigger: { kind: "creature_makes_damage_roll" },
+        },
+      }),
+      relentlessEnduranceMechanicsVariant(base, {
+        id: "relentless_endurance_wrong_reset",
+        mechanics: {
+          ...base.mechanics,
+          resetCadence: { kind: "short_or_long_rest" },
+        },
+      }),
+      {
+        ...base,
+        id: "relentless_endurance_spell_source",
+        kind: "spell",
+      } as UnitRecord,
+    ];
+
+    for (const unit of malformedUnits) {
+      expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
+      const supportResult = battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      });
+      expect(supportResult).toEqual(
+        unit.kind === "species_trait"
+          ? Either.left({
+              tag: "battleUnitSupportProfileIssue",
+              message: `Unsupported battle zero-Hit-Point replacement Unit hook: ${unit.id}.`,
+            })
+          : Either.right({ unitId: unit.id, supportProfiles: [] }),
+      );
+    }
+  });
+});
+
 function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
@@ -2101,6 +2469,16 @@ function spellBattle(input: {
     readonly count: number;
   }[];
   readonly extraTargetIds?: readonly CombatantId[];
+  readonly targetHp?: number;
+  readonly targetMaxHp?: number;
+  readonly targetResources?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"];
+  readonly targetUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
 }): BattleState {
   const result = startBattle({
     battleId: battleId("unit-profile-spell-admission"),
@@ -2124,6 +2502,16 @@ function spellBattle(input: {
         displayName: "Target",
         initiative: 10,
         side: oppositionSide,
+        ...(input.targetHp === undefined ? {} : { currentHp: input.targetHp }),
+        ...(input.targetMaxHp === undefined
+          ? {}
+          : { maxHp: input.targetMaxHp }),
+        ...(input.targetResources === undefined
+          ? {}
+          : { resources: input.targetResources }),
+        ...(input.targetUnitRefs === undefined
+          ? {}
+          : { characterUnitRefs: input.targetUnitRefs }),
       }),
       ...(input.extraTargetIds ?? []).map((combatantId, index) =>
         characterCreature({
@@ -2190,6 +2578,12 @@ function savageAttackerBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly currentHp?: number;
+  readonly maxHp?: number;
+  readonly resources?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"];
   readonly unitFeatures?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -2333,6 +2727,160 @@ function rovingBattle(
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function relentlessEnduranceBattle(input: {
+  readonly targetHp: number;
+  readonly targetMaxHp?: number;
+  readonly usesRemaining?: number;
+}): BattleState {
+  const unit = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId);
+  const result = startBattle({
+    battleId: battleId("unit-profile-relentless-endurance-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Attacker",
+        initiative: 20,
+        side: partySide,
+        attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Orc Target",
+        initiative: 10,
+        side: oppositionSide,
+        currentHp: input.targetHp,
+        maxHp: input.targetMaxHp ?? 12,
+        resources: [
+          input.usesRemaining === undefined
+            ? { unit }
+            : { unit, usesRemaining: input.usesRemaining },
+        ],
+        characterUnitRefs: [
+          {
+            unitId: orcRelentlessEnduranceUnitId,
+            supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+          },
+        ],
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function relentlessEnduranceDisposition(
+  state: BattleState,
+  damageRoll: number,
+): Extract<BattleHole, { readonly kind: "attackDamageDisposition" }> & {
+  readonly prefixFills: readonly BattleFill[];
+} {
+  const subject = weaponAttackSubject("Longsword");
+  const target = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(
+    target,
+    spellCasterId,
+    spellTargetId,
+    "Longsword",
+  );
+  const roll = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [targetFill] }),
+    "attackRoll",
+  );
+  const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+  const damage = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [targetFill, rollFill] }),
+    "rolledDice",
+  );
+  const damageFill = damageRollFillWithGroups(damage, [[damageRoll]]);
+  const awaitingDisposition = resolveBattleSubject({
+    state,
+    subject,
+    fills: [targetFill, rollFill, damageFill],
+  });
+  const disposition = requireResultHole(
+    awaitingDisposition,
+    "attackDamageDisposition",
+  );
+  return {
+    ...disposition,
+    prefixFills: [targetFill, rollFill, damageFill],
+  };
+}
+
+function relentlessEnduranceDamageResult(
+  state: BattleState,
+  damageRoll: number,
+): ReturnType<typeof resolveBattleSubject> {
+  const subject = weaponAttackSubject("Longsword");
+  const target = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(
+    target,
+    spellCasterId,
+    spellTargetId,
+    "Longsword",
+  );
+  const roll = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [targetFill] }),
+    "attackRoll",
+  );
+  const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+  const damage = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [targetFill, rollFill] }),
+    "rolledDice",
+  );
+  const damageFill = damageRollFillWithGroups(damage, [[damageRoll]]);
+  const withoutDisposition = resolveBattleSubject({
+    state,
+    subject,
+    fills: [targetFill, rollFill, damageFill],
+  });
+  if (
+    withoutDisposition.tag !== "needsHoles" ||
+    !withoutDisposition.holes.some(
+      (hole) => hole.kind === "attackDamageDisposition",
+    )
+  ) {
+    return withoutDisposition;
+  }
+  const disposition = requireResultHole(
+    withoutDisposition,
+    "attackDamageDisposition",
+  );
+  return resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      targetFill,
+      rollFill,
+      damageFill,
+      attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+    ],
+  });
+}
+
+function relentlessEnduranceMechanicsVariant(
+  base: UnitRecord,
+  overrides: {
+    readonly id: string;
+    readonly mechanics: unknown;
+  },
+): UnitRecord {
+  return {
+    ...base,
+    id: overrides.id,
+    mechanics: overrides.mechanics,
+  } as UnitRecord;
 }
 
 function resolveWeaponAttack(
@@ -2603,6 +3151,12 @@ function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly currentHp?: number;
+  readonly maxHp?: number;
+  readonly resources?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"];
   readonly armorClass?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -2631,8 +3185,8 @@ function characterCreature(input: {
             : { ...defaultArmorClassState(), rightHandUse: "mainWeapon" },
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
-      currentHp: Hp(12),
-      maxHp: Hp(12),
+      currentHp: Hp(input.currentHp ?? 12),
+      maxHp: Hp(input.maxHp ?? 12),
       tempHp: Hp(0),
       selectedLoadout:
         attack === null
@@ -2648,6 +3202,7 @@ function characterCreature(input: {
       ...(input.unitFeatures === undefined
         ? {}
         : { unitFeatures: input.unitFeatures }),
+      ...(input.resources === undefined ? {} : { resources: input.resources }),
       unarmedStrike: {
         kind: "unarmedStrike",
         effect: {
@@ -2929,6 +3484,26 @@ function spellTargetListFill(
   };
 }
 
+function savingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        originAnchorId: spellCasterId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+      },
+      outcomes,
+    },
+  };
+}
+
 function damageRollFillWithGroups(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
   groups: readonly (readonly number[])[],
@@ -2955,6 +3530,20 @@ function damageRollFillWithGroups(
       rolledDiceGroup(firstGroup),
       ...restGroups.map((group) => rolledDiceGroup(group)),
     ],
+  };
+}
+
+function attackDamageDispositionFill(
+  hole: Extract<BattleHole, { readonly kind: "attackDamageDisposition" }>,
+  value: Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >["value"],
+): Extract<BattleFill, { readonly kind: "attackDamageDisposition" }> {
+  return {
+    kind: "attackDamageDisposition",
+    holeId: hole.holeId,
+    value,
   };
 }
 

@@ -30,6 +30,7 @@
 {"unitId":"ranger_extra_attack","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT37","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"barbarian_fast_movement","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT40","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"ranger_roving","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT44","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"orc_relentless_endurance","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT47","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"shield","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT22","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"healing_word","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT25","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"cure_wounds","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT32","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"
@@ -464,6 +464,41 @@ module unitFeatureProcedureProfilesInductive {
     }
   }
 
+  action doZeroHitPointReplacement = {
+    nondet choosesFeature = Set(true, false).oneOf()
+    nondet incomingDamage = Set(5, 16).oneOf()
+    val result = resolveZeroHitPointReplacement(
+      {
+        kind: PlayerCharacter,
+        hitPoints: 5,
+        hitPointMaximum: 12,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: false,
+      },
+      resetDeathSavingThrowLifecycle,
+      qFeaturePool,
+      {
+        incomingDamage: incomingDamage,
+        choosesFeature: choosesFeature,
+      }
+    )
+    all {
+      recordFeaturePool(result.pool),
+      qLastDamageAmount' = result.vitals.hitPoints,
+      qLastArmorClass' = result.deathSavingThrows.failures,
+      qActionSurgeGrant' = qActionSurgeGrant,
+      qRageOccurrence' = qRageOccurrence,
+      qInterruptedConcentration' = qInterruptedConcentration,
+      qReactorConcentration' = qReactorConcentration,
+      qRecklessOccurrence' = qRecklessOccurrence,
+      qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
+      qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+      qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      recordTurn(qTurn),
+    }
+  }
+
   action doFastMovementSpeedBonus = {
     nondet wearingHeavyArmor = Set(true, false).oneOf()
     nondet movementSpentFeet = 0.to(10).oneOf()
@@ -533,7 +568,7 @@ module unitFeatureProcedureProfilesInductive {
   }
 
   action step = any {
-    // Branch budget: 13 feature-profile branches plus turn refresh. Each branch
+    // Branch budget: 14 feature-profile branches plus turn refresh. Each branch
     // samples at most three bounded booleans or small fixture values.
     doActionSurge,
     doSecondWind,
@@ -549,6 +584,7 @@ module unitFeatureProcedureProfilesInductive {
     doFastMovementSpeedBonus,
     doRovingSpeedKindGrants,
     doWeaponDamageDiceRollChoice,
+    doZeroHitPointReplacement,
     doStartTurn,
   }
 

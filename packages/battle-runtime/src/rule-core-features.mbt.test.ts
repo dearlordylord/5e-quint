@@ -1,5 +1,5 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT31 feat_savage_attacker
@@ -45,6 +45,7 @@ import {
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   battleCombatantSide,
   battleId,
   characterBattleResourceUsage,
@@ -169,6 +170,7 @@ const driverSchema = {
   doDefenseArmorClass: {},
   doArcheryAttackRollBonus: {},
   doSavageAttackerDamage: {},
+  doZeroHitPointReplacement: {},
   step: {},
 } as const;
 type RuleCoreFeatureDriverAction = Exclude<
@@ -763,6 +765,70 @@ function createRuleCoreFeatureDriver() {
         });
         lastDamageAmount = 8;
       },
+      doZeroHitPointReplacement: () => {
+        state = relentlessEnduranceBattle();
+        resetProjection();
+        const subject = actorAttackSubject("Longsword");
+        const target = requireHole(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "targetChoice",
+        );
+        const targetFill = attackTargetFill(
+          target,
+          actorId,
+          targetId,
+          "Longsword",
+        );
+        const attackRoll = requireHole(
+          resolveBattleSubject({ state, subject, fills: [targetFill] }),
+          "attackRoll",
+        );
+        const attackRollFilled = attackRollFill(attackRoll, {
+          total: 15,
+          naturalD20: 10,
+        });
+        const damage = requireHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [targetFill, attackRollFilled],
+          }),
+          "rolledDice",
+        );
+        const damageFill = damageRollFillWithGroups(damage, [[4]]);
+        const awaitingDisposition = resolveBattleSubject({
+          state,
+          subject,
+          fills: [targetFill, attackRollFilled, damageFill],
+        });
+        const disposition = requireHole(
+          awaitingDisposition,
+          "attackDamageDisposition",
+        );
+        if (disposition.kind !== "attackDamageDisposition") {
+          throw new Error("Expected attack damage disposition.");
+        }
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              targetFill,
+              attackRollFilled,
+              damageFill,
+              attackDamageDispositionFill(disposition, {
+                kind: "zeroHitPointReplacement",
+                unitId: "orc_relentless_endurance",
+              }),
+            ],
+          }),
+        );
+        featureUsesRemaining = resourceUsesRemaining(
+          state,
+          "orc_relentless_endurance",
+        );
+        lastDamageAmount = 1;
+      },
       doEvasionSuccess: () => resolveDexHalfCantrip(true),
       doEvasionFailure: () => resolveDexHalfCantrip(false),
       doCuttingWordsDamage: () => {
@@ -1293,6 +1359,33 @@ function savageAttackerBattle(): BattleState {
   });
 }
 
+function relentlessEnduranceBattle(): BattleState {
+  const unit = unitLibrary.requireUnit("orc_relentless_endurance");
+  return startBattleRight({
+    battleId: battleId("rule-core-relentless-endurance"),
+    combatants: [
+      featureActor({ initiative: 20 }),
+      {
+        ...featureActor({
+          combatantId: targetId,
+          displayName: "Relentless Endurance Target",
+          initiative: 10,
+          currentHp: 3,
+          attack: zeroAbilityWeaponAttack("weapon_shortsword"),
+          resources: [{ unit, usesRemaining: 1 }],
+          characterUnitRefs: [
+            {
+              unitId: "orc_relentless_endurance",
+              supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+            },
+          ],
+        }),
+        side: oppositionSide,
+      },
+    ],
+  });
+}
+
 function evasionBattle(): BattleState {
   return startBattleRight({
     battleId: battleId("rule-core-evasion"),
@@ -1713,6 +1806,20 @@ function damageRollFillWithGroups(
       ? {}
       : { weaponDamageDiceRollChoice }),
     value: rolledDiceGroups(groups),
+  };
+}
+
+function attackDamageDispositionFill(
+  hole: Extract<BattleHole, { readonly kind: "attackDamageDisposition" }>,
+  value: Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >["value"],
+): Extract<BattleFill, { readonly kind: "attackDamageDisposition" }> {
+  return {
+    kind: "attackDamageDisposition",
+    holeId: hole.holeId,
+    value,
   };
 }
 
