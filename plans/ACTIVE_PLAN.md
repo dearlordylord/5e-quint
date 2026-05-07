@@ -466,7 +466,19 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 159,
       "id": "QMBT64",
-      "status": "ready-for-research",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 160,
+      "id": "QMBT65",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Cutting Words Ability Check Reaction Reduction"
+    },
+    {
+      "number": 161,
+      "id": "QMBT66",
+      "status": "blocked",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -574,7 +586,9 @@ Keep it synchronized with the DAG table and task details.
 | 156   | QMBT61 - Recursive Unit Profile Planning Review | done | QMBT59-QMBT60 | QMBT62-QMBT64 | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT59-QMBT60 review, refreshed PRD status notes, unblocked QMBT62, and appended QMBT63-QMBT64 because the matrix lane is not complete. |
 | 157   | QMBT62 - Promote Tactical Mind Failed Ability Check Second Wind Boost | done | QMBT61 | QMBT63-QMBT64 | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `fighter_tactical_mind` as `unit-feature.failed-ability-check-second-wind-boost`, with authored mechanics admission, an already-rolled failed ability-check outcome boundary, shared Second Wind pool spend/no-spend behavior, QNT proof coverage, runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
 | 158   | QMBT63 - Select Next SRD Feature Widening Slice After Tactical Mind | done | QMBT62 | QMBT64 | [Cutting Words feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `bard_cutting_words` as the next SRD feature widening slice, with a red/green plan for the missing Ability Check branch of `unit-feature.reaction-roll-or-damage-reduction`. |
-| 159   | QMBT64 - Recursive Unit Profile Planning Review | ready-for-research | QMBT62-QMBT63 | none | [Cutting Words feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT62-QMBT63 findings, update PRD and plan docs, and append the next bounded batch unless the Unit profile matrix lane is explicitly complete. |
+| 159   | QMBT64 - Recursive Unit Profile Planning Review | done | QMBT62-QMBT63 | QMBT65-QMBT66 | [QMBT64 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT64_RECURSIVE_PLANNING_REVIEW.md), [Cutting Words feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT62-QMBT63 review, refreshed PRD status notes, preserved the already-landed removal of the class catalog task from the Ralph queue, and appended QMBT65-QMBT66 because the matrix lane is not complete. |
+| 160   | QMBT65 - Promote Cutting Words Ability Check Reaction Reduction | ready-for-implementation-after-light-research | QMBT63-QMBT64 | QMBT66 | [Cutting Words feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT64 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT64_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement the missing Ability Check branch of `unit-feature.reaction-roll-or-damage-reduction` for `bard_cutting_words`, reusing the existing Bardic Inspiration pool and caller-supplied already-rolled Ability Check facts. |
+| 161   | QMBT66 - Recursive Unit Profile Planning Review | blocked | QMBT65 | none | [QMBT64 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT64_RECURSIVE_PLANNING_REVIEW.md), [Cutting Words feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT65 findings, update PRD and plan docs, and append the next bounded batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -2752,13 +2766,14 @@ selection task.
 
 ### Task 159 - QMBT64 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT62-QMBT63
 
-Blocks: none
+Blocks: QMBT65-QMBT66
 
 Research / plan:
+[QMBT64_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT64_RECURSIVE_PLANNING_REVIEW.md),
 [QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md),
 [QMBT61_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
@@ -2774,5 +2789,91 @@ Out of scope: implementation work not captured by the new task batch.
 Verification: RAW/source review for QMBT62-QMBT63 findings and any appended
 rule slices; active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
+
+Completed scope: reviewed QMBT62-QMBT63 findings, refreshed PRD status notes,
+preserved the already-landed removal of the class catalog planning task from
+the runnable Ralph queue, and appended QMBT65-QMBT66 because the Unit profile
+matrix lane remains active at 32/45 supported executable Unit coverage. The
+appended batch implements the selected `bard_cutting_words` Ability Check
+Reaction reduction slice, then runs another recursive planning review.
+
+Out of scope honored: no production implementation work was started in
+QMBT64.
+
+Verification: RAW/source review checked the QMBT62-QMBT63 anchors captured in
+the QMBT64 review artifact; active-plan consistency checked across Ralph
+index, DAG table, and task details in this workspace plan; `pnpm
+unit-profile-coverage:check` was not run because no matrix docs or generated
+artifacts changed; `/simplify` convergence recorded in the QMBT64 review
+artifact. MBT was not required for this planning-only task.
+
+### Task 160 - QMBT65 - Promote Cutting Words Ability Check Reaction Reduction
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT63-QMBT64
+
+Blocks: QMBT66
+
+Research / plan:
+[QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT64_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT64_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: implement the QMBT63 red/green plan for `bard_cutting_words` only.
+Promote the missing Ability Check branch of
+`unit-feature.reaction-roll-or-damage-reduction` by adding an already-rolled
+successful Ability Check outcome boundary, parsing the existing Surface
+`reaction_roll_or_damage_reduction` mechanics shape for
+`ability_check_reduction`, and threading the existing Bardic Inspiration pool
+and die-size derivation so resolving the reaction spends one Reaction and one
+Bardic Inspiration use.
+
+Out of scope: a Cutting Words-only profile, duplicate Bardic Inspiration
+resource state, generic D20 Test reaction reduction, GM ability-check decision
+logic, DC calculation, proficiency calculation, Lay On Hands, Tireless, AC base
+formulas, resistance traits, Breath Weapon, Weapon Mastery, spells, magic
+items, content cleanup, checker metric changes, and class catalog backlog
+planning.
+
+Verification: RAW check for Bardic Inspiration, Cutting Words, Ability Checks,
+D20 Tests, Difficulty Class, Reactions, and Bardic Inspiration rest recovery;
+`UBIQUITOUS_LANGUAGE.md` check for Ability Check, D20 Test, Difficulty Class,
+Reaction, Pool, Spend, Proficiency Bonus, Attack Roll, and any boundary terms
+added by the implementation; focused QNT proof for the added Ability Check
+reduction branch; focused runtime tests for converted-success-to-failure and
+still-successful reduction behavior; focused runtime tests that malformed
+Ability Check reduction shapes remain unsupported; Tier 1 battle-runtime MBT
+with the mandatory timed background protocol if promoted battle-runtime
+reaction behavior changes; `pnpm unit-profile-coverage:check`; relevant
+package typecheck/tests; `pnpm quality`; `/simplify` convergence, minimum two
+rounds.
+
+### Task 161 - QMBT66 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT65
+
+Blocks: none
+
+Research / plan:
+[QMBT64_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT64_RECURSIVE_PLANNING_REVIEW.md),
+[QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT63_CUTTING_WORDS_FEATURE_WIDENING_SLICE_PLAN.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: review QMBT65 findings, update the PRD and plan docs, refine the next
+implementation or research task if needed, and append the next bounded batch.
+This task must include a new recursive planning-review task at the end of the
+appended batch unless the Unit profile matrix lane is explicitly declared
+complete.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Verification: RAW/source review for QMBT65 findings and any appended rule
+slices; active-plan consistency check across Ralph index, DAG table, and task
+details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change; `/simplify` convergence, minimum two rounds unless the final
 changeset is trivial.

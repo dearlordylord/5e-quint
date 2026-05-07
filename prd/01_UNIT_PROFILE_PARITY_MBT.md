@@ -173,7 +173,7 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT62:
+Current matrix status after QMBT64:
 
 - 59 authored Units classified in the installed coverage collections.
 - 25 stable executable profiles.
@@ -197,9 +197,9 @@ Current matrix status after QMBT62:
   report and matrix.
 - class catalog admission remains a known gap: the SRD has 12 class files, but
   only `class_fighter` and `class_wizard` are currently installed class
-  container Units. QMBT65 is planned to make this a generated level-prioritized
-  backlog, including durable `needs-surface-widening` rows and coarse Ralph
-  batches.
+  container Units. This pressure remains visible in generated matrix/report
+  artifacts, but the class catalog planning task was removed from the
+  QMBT64-time Ralph queue.
 - `shield` is now counted as a supported `spell.reaction-shield` Unit with
   deterministic admission/projection evidence.
 - `fire_bolt` is intentionally not counted as a supported spell Unit until
@@ -273,13 +273,17 @@ Current matrix status after QMBT62:
   `unit-feature.attack-damage-reduction-zero-damage-redirect` Unit with
   focused runtime parity, deterministic admission/projection evidence, and
   refreshed matrix artifacts.
-- QMBT60 selected `fighter_tactical_mind` as the next SRD feature widening
-  slice under a planned failed ability-check Second Wind boost profile.
 - QMBT62 counted `fighter_tactical_mind` as a supported
   `unit-feature.failed-ability-check-second-wind-boost` Unit with focused
   runtime parity, deterministic admission/projection evidence, and refreshed
   matrix artifacts.
+- QMBT63 selected `bard_cutting_words` as the next SRD feature widening slice
+  under the existing `unit-feature.reaction-roll-or-damage-reduction` profile,
+  specifically for the missing successful Ability Check reduction branch.
+- QMBT64 kept the matrix lane open, preserved the already-landed removal of the
+  class catalog task from the Ralph queue, and appended QMBT65-QMBT66 so the
+  Cutting Words implementation can proceed before the next recursive review.
 
-QMBT61 appended QMBT62-QMBT64 rather than declaring the matrix lane complete.
-After QMBT62, the next open tasks are QMBT63 next-slice selection, QMBT64
-recursive planning review, and QMBT65 class/catalog admission backlog planning.
+QMBT64 appended QMBT65-QMBT66 rather than declaring the matrix lane complete.
+The next open tasks are QMBT65 Cutting Words Ability Check Reaction reduction
+and QMBT66 recursive planning review.
