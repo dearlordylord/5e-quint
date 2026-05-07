@@ -388,7 +388,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 146,
       "id": "QMBT51",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Structure Spell Invocation Identity and Resource Access"
     },
     {
@@ -489,7 +489,7 @@ Keep it synchronized with the DAG table and task details.
 | 143   | QMBT48 - Select Next SRD Feature Widening Slice After Relentless Endurance | done | QMBT47 | QMBT49-QMBT52 | [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `orc_adrenaline_rush` as the next SRD feature widening slice, with a red/green plan for a Bonus Action Dash coupled Temporary Hit Point Unit-feature profile. |
 | 144   | QMBT49 - Extract Shared Speed and Movement Cost Algebras | done | QMBT44, QMBT48 | QMBT52 | [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md) | Completed shared Speed capacity and Movement cost algebras in `@dnd/shared-algebras`, documented `"walk"` as ordinary SRD Speed, and refactored battle Roving/Fast Movement speed-kind behavior to call the shared algebras while keeping battle legality and spatial facts local. |
 | 145   | QMBT50 - Carry Unit Feature Support Profile Payloads | done | QMBT27, QMBT37 | QMBT52 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Completed structured support-profile payloads for Archery `+2` and level-5 Extra Attack `additionalAttacks: 1`, updated reducer consumers to read those payloads, preserved duplicate Archery non-stacking, and verified with RAW/UL review, focused battle-runtime tests, typecheck, `pnpm quality`, and `/simplify` convergence. |
-| 146   | QMBT51 - Structure Spell Invocation Identity and Resource Access | ready-for-implementation-after-light-research | QMBT5, QMBT22, QMBT28, QMBT42 | QMBT52 | [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Refactor promoted battle-runtime spell acts so subjects and supported invocations use structured domain refs, constrained access/resource/procedure unions, and branded boundary types instead of encoded `spellActId` strings and mixed variant names. |
+| 146   | QMBT51 - Structure Spell Invocation Identity and Resource Access | done | QMBT5, QMBT22, QMBT28, QMBT42 | QMBT52 | [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed structured spell invocation refs, cast/Ready subject modes, branded `SpellId`, and access/resource/procedure-shaped supported spell invocations for the promoted prepared Spell Slot, Shield, and class cantrip lanes. |
 | 147   | QMBT52 - Recursive Unit Profile Planning Review | ready-for-research | QMBT47-QMBT51 | QMBT53+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Adrenaline Rush feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT48_ADRENALINE_RUSH_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT46 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT46_RECURSIVE_PLANNING_REVIEW.md), [Speed and movement cost algebras plan](/workspace/typescript/dnd/plans/SPEED_MOVEMENT_ALGEBRAS_PLAN.md), [Structured spell invocation identity plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT51_STRUCTURED_SPELL_INVOCATION_IDENTITY_PLAN.md) | Review QMBT47-QMBT51 findings, update PRD and plan docs, and append the next task batch, including the selected Adrenaline Rush implementation task if the Unit profile matrix lane remains active. |
 
 ## Task Details
@@ -2179,7 +2179,7 @@ authoritative Quint model did not change.
 
 ### Task 146 - QMBT51 - Structure Spell Invocation Identity and Resource Access
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT5, QMBT22, QMBT28, QMBT42
 

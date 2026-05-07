@@ -20,6 +20,7 @@ import {
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
   battleId,
+  cantripSpellInvocationRef,
   breakBattleConcentration,
   characterBattleResourceUsage,
   characterId,
@@ -33,7 +34,9 @@ import {
   resolveBattleReaction,
   resolveBattleConcentrationDamage,
   removeBattleCombatants,
+  sameBattleSubject,
   snapshotBattle,
+  spellSlotInvocationRef,
   startBattle,
   type BattleFill,
   type BattleHole,
@@ -1683,9 +1686,11 @@ describe("battle runtime", () => {
       subject: {
         tag: "actionSpell",
         actorId: wizardId,
-        spellId: "ray_of_frost",
-        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-        readyTrigger: "spellCast",
+        invocation: cantripSpellInvocationRef(
+          "ray_of_frost",
+          "spellAttackDamage",
+        ),
+        mode: { tag: "ready", trigger: "spellCast" },
       },
       fills: [],
     });
@@ -3977,9 +3982,11 @@ describe("battle runtime", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: trigger,
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger },
         },
         fills: [],
       });
@@ -3992,41 +3999,78 @@ describe("battle runtime", () => {
     }
   });
 
-  test("Ready trigger selection is rejected for non-Ready spell subjects", () => {
+  test("structured spell subjects reject Ready mode without a trigger", () => {
     expect(
-      resolveBattleSubject({
-        state: wizardVsSkeletonBattle(),
-        subject: {
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSubjectSchema)({
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "cantripSpellAttack:ray_of_frost",
-          readyTrigger: "afterDamage",
-        },
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "unsupportedSubject",
-    });
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready" },
+        }),
+      ),
+    ).toBe(true);
   });
 
-  test("Ready Spell rejects readied spell subjects without a selected trigger", () => {
+  test("structured spell subjects keep cast mode separate from Ready mode", () => {
     expect(
-      resolveBattleSubject({
-        state: wizardVsSkeletonBattle(),
-        subject: {
+      sameBattleSubject(
+        {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "cast" },
         },
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "unsupportedSubject",
-    });
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "spellCast" },
+        },
+      ),
+    ).toBe(false);
+  });
+
+  test("structured spell subject equality ignores object insertion order", () => {
+    const invocation = spellSlotInvocationRef(
+      "magic_missile",
+      1,
+      "repeatedDamageAllocation",
+    );
+    if (invocation.tag !== "spellSlot") {
+      throw new Error("Expected a Spell Slot invocation ref.");
+    }
+
+    expect(
+      sameBattleSubject(
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          invocation,
+          mode: { tag: "cast" },
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          invocation: {
+            procedure: invocation.procedure,
+            slotLevel: invocation.slotLevel,
+            spellId: invocation.spellId,
+            tag: invocation.tag,
+          },
+          mode: { tag: "cast" },
+        },
+      ),
+    ).toBe(true);
   });
 
   test("after-damage reactions observe the post-damage battle state", () => {
@@ -5001,7 +5045,7 @@ describe("battle runtime", () => {
     const healingWordAct = discoverBattleActs(state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.spellId === "healing_word",
+        candidate.subject.invocation.spellId === "healing_word",
     );
     if (healingWordAct === undefined) {
       throw new Error("Expected Healing Word bonus action spell act.");
@@ -7889,8 +7933,11 @@ describe("battle runtime", () => {
         {
           tag: "actionSpell",
           actorId: fighterId,
-          spellId: "ray_of_frost",
-          spellActId: "cantripSpellAttack:ray_of_frost",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "cast" },
         },
       ]),
     );
@@ -7900,7 +7947,11 @@ describe("battle runtime", () => {
         subject: {
           tag: "actionSpell",
           actorId: fighterId,
-          spellId: "ray_of_frost",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "cast" },
         },
         fills: [],
       }),
@@ -7929,9 +7980,11 @@ describe("battle runtime", () => {
         subject: {
           tag: "actionSpell",
           actorId: fighterId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "attackHit",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
         },
         fills: [],
       }),
@@ -7973,14 +8026,18 @@ describe("battle runtime", () => {
     const spellSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
-      spellId: "ray_of_frost",
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
     };
     const spellAct = discoverBattleActs(state).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
         act.subject.actorId === fighterId &&
-        act.subject.spellId === "ray_of_frost" &&
-        act.subject.spellActId === "cantripSpellAttack:ray_of_frost",
+        act.subject.invocation.spellId === "ray_of_frost" &&
+        act.subject.invocation.procedure === "spellAttackDamage",
     );
     const target = spellAct?.initialHoles[0];
     if (target?.kind !== "targetChoice") {
@@ -10001,104 +10058,142 @@ describe("battle runtime", () => {
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "preparedSlotSpell:magic_missile:slot:1",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "attackHit",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "spellCast",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "saveFailed",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "afterDamage",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "afterDamage" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "cantripSpellAttack:ray_of_frost",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "attackHit",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "spellCast",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "saveFailed",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "afterDamage",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "afterDamage" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "acid_splash",
-          spellActId: "cantripSaveGateDamage:acid_splash",
+          invocation: cantripSpellInvocationRef(
+            "acid_splash",
+            "saveGatedDamage",
+          ),
+          mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "acid_splash",
-          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-          readyTrigger: "attackHit",
+          invocation: cantripSpellInvocationRef(
+            "acid_splash",
+            "saveGatedDamage",
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "acid_splash",
-          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-          readyTrigger: "spellCast",
+          invocation: cantripSpellInvocationRef(
+            "acid_splash",
+            "saveGatedDamage",
+          ),
+          mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "acid_splash",
-          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-          readyTrigger: "saveFailed",
+          invocation: cantripSpellInvocationRef(
+            "acid_splash",
+            "saveGatedDamage",
+          ),
+          mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "acid_splash",
-          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-          readyTrigger: "afterDamage",
+          invocation: cantripSpellInvocationRef(
+            "acid_splash",
+            "saveGatedDamage",
+          ),
+          mode: { tag: "ready", trigger: "afterDamage" },
         },
         { tag: "runtimeCommand", actorId: wizardId, command: "move" },
         { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
@@ -10216,14 +10311,18 @@ describe("battle runtime", () => {
     const healingWordAct = discoverBattleActs(healingWordState).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.spellId === "healing_word",
+        candidate.subject.invocation.spellId === "healing_word",
     );
     expect(healingWordAct).toMatchObject({
       subject: {
         tag: "bonusActionSpell",
         actorId: wizardId,
-        spellId: "healing_word",
-        spellActId: "preparedHealingSpell:healing_word:slot:1",
+        invocation: spellSlotInvocationRef(
+          "healing_word",
+          1,
+          "directHitPointRestoration",
+        ),
+        mode: { tag: "cast" },
       },
       initialHoles: [{ kind: "targetChoice" }],
     });
@@ -10281,8 +10380,12 @@ describe("battle runtime", () => {
         subject: {
           tag: "bonusActionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "preparedSlotSpell:magic_missile:slot:1",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "cast" },
         },
         fills: [],
       }),
@@ -10365,8 +10468,12 @@ describe("battle runtime", () => {
         subject: {
           tag: "bonusActionSpell",
           actorId: wizardId,
-          spellId: "healing_word",
-          spellActId: "preparedHealingSpell:healing_word:slot:1",
+          invocation: spellSlotInvocationRef(
+            "healing_word",
+            1,
+            "directHitPointRestoration",
+          ),
+          mode: { tag: "cast" },
         },
         fills: [],
       }),
@@ -10383,7 +10490,7 @@ describe("battle runtime", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        candidate.subject.spellId === "healing_word",
+        candidate.subject.invocation.spellId === "healing_word",
     );
     if (healingWordReactionAct === undefined) {
       throw new Error("Expected Healing Word Bonus Action spell act.");
@@ -10465,16 +10572,24 @@ describe("battle runtime", () => {
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "preparedSlotSpell:magic_missile:slot:2",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            2,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "cast" },
         },
       ]),
     );
     const levelTwoSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      spellId: "magic_missile",
-      spellActId: "preparedSlotSpell:magic_missile:slot:2",
+      invocation: spellSlotInvocationRef(
+        "magic_missile",
+        2,
+        "repeatedDamageAllocation",
+      ),
+      mode: { tag: "cast" },
     };
     const levelTwoTargets = requireHole(
       resolveBattleSubject({
@@ -10541,9 +10656,11 @@ describe("battle runtime", () => {
         subject: {
           tag: "actionSpell",
           actorId: secondWizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "afterDamage",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "afterDamage" },
         },
         fills: [],
       }),
@@ -10853,36 +10970,52 @@ describe("battle runtime", () => {
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "preparedSlotSpell:magic_missile:slot:1",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "attackHit",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "spellCast",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "saveFailed",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "afterDamage",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "afterDamage" },
         },
         { tag: "runtimeCommand", actorId: wizardId, command: "move" },
         { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
@@ -10921,8 +11054,12 @@ describe("battle runtime", () => {
     expect(discoverBattleActs(state).map((act) => act.subject)).toContainEqual({
       tag: "actionSpell",
       actorId: wizardId,
-      spellId: "mage_armor",
-      spellActId: "preparedPersistentSpell:mage_armor:slot:1",
+      invocation: spellSlotInvocationRef(
+        "mage_armor",
+        1,
+        "persistentArmorEffect",
+      ),
+      mode: { tag: "cast" },
     });
 
     const target = requireHole(
@@ -11090,9 +11227,11 @@ describe("battle runtime", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "spellCast",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "spellCast" },
         },
         fills: [],
       }),
@@ -11169,9 +11308,11 @@ describe("battle runtime", () => {
     const readySubject = {
       tag: "actionSpell" as const,
       actorId: wizardId,
-      spellId: "ray_of_frost",
-      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-      readyTrigger: "spellCast" as const,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "ready" as const, trigger: "spellCast" as const },
     };
     const readied = resolveBattleSubject({
       state,
@@ -11265,9 +11406,11 @@ describe("battle runtime", () => {
     const readySubject = {
       tag: "actionSpell" as const,
       actorId: wizardId,
-      spellId: "ray_of_frost",
-      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-      readyTrigger: "spellCast" as const,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "ready" as const, trigger: "spellCast" as const },
     };
     const readied = requireResolved(
       resolveBattleSubject({
@@ -11370,9 +11513,11 @@ describe("battle runtime", () => {
       subject: {
         tag: "actionSpell",
         actorId: wizardId,
-        spellId: "ray_of_frost",
-        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-        readyTrigger: "attackHit",
+        invocation: cantripSpellInvocationRef(
+          "ray_of_frost",
+          "spellAttackDamage",
+        ),
+        mode: { tag: "ready", trigger: "attackHit" },
       },
       fills: [],
     });
@@ -11467,9 +11612,12 @@ describe("battle runtime", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "attackHit",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
         },
         fills: [],
       }),
@@ -11556,9 +11704,11 @@ describe("battle runtime", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "spellCast",
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "spellCast" },
         },
         fills: [],
       }),
@@ -11572,9 +11722,11 @@ describe("battle runtime", () => {
         subject: {
           tag: "actionSpell",
           actorId: secondWizardId,
-          spellId: "acid_splash",
-          spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-          readyTrigger: "saveFailed",
+          invocation: cantripSpellInvocationRef(
+            "acid_splash",
+            "saveGatedDamage",
+          ),
+          mode: { tag: "ready", trigger: "saveFailed" },
         },
         fills: [],
       }),
@@ -12235,9 +12387,11 @@ function fighterTurnWithReadiedRay(
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
-      spellId: "ray_of_frost",
-      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-      readyTrigger: trigger,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "ready", trigger },
     },
     fills: [],
   });
@@ -12282,9 +12436,11 @@ function fighterTurnWithReadiedRayAndHealer(
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
-      spellId: "ray_of_frost",
-      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-      readyTrigger: trigger,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "ready", trigger },
     },
     fills: [],
   });
@@ -12325,9 +12481,8 @@ function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
       subject: {
         tag: "actionSpell",
         actorId: wizardId,
-        spellId: "acid_splash",
-        spellActId: "readiedSpell:cantripSaveGateDamage:acid_splash",
-        readyTrigger: "attackHit",
+        invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+        mode: { tag: "ready", trigger: "attackHit" },
       },
       fills: [],
     }),
@@ -12341,9 +12496,11 @@ function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
       subject: {
         tag: "actionSpell",
         actorId: secondWizardId,
-        spellId: "ray_of_frost",
-        spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-        readyTrigger: "saveFailed",
+        invocation: cantripSpellInvocationRef(
+          "ray_of_frost",
+          "spellAttackDamage",
+        ),
+        mode: { tag: "ready", trigger: "saveFailed" },
       },
       fills: [],
     }),
@@ -12362,9 +12519,11 @@ function wizardTurnWithReadiedRay(
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
-      spellId: "ray_of_frost",
-      spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-      readyTrigger: trigger,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "ready", trigger },
     },
     fills: [],
   });
@@ -14472,7 +14631,15 @@ function magicSubject(
   return {
     tag: "actionSpell",
     actorId: wizardId,
-    spellId,
+    invocation:
+      spellId === "magic_missile"
+        ? spellSlotInvocationRef(spellId, 1, "repeatedDamageAllocation")
+        : spellId === "mage_armor"
+          ? spellSlotInvocationRef(spellId, 1, "persistentArmorEffect")
+          : spellId === "ray_of_frost"
+            ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
+            : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
+    mode: { tag: "cast" },
   };
 }
 

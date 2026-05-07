@@ -48,6 +48,7 @@ import {
   battleUnitRefWithSupportProfiles,
   battleCombatantSide,
   battleId,
+  cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
   combatantId,
@@ -986,7 +987,11 @@ function createRuleCoreFeatureDriver() {
       const subject: BattleSubject = {
         tag: "actionSpell",
         actorId: combatantId("rule-core-feature-wizard"),
-        spellId: "dex_half_cantrip",
+        invocation: cantripSpellInvocationRef(
+          "dex_half_cantrip",
+          "saveGatedDamage",
+        ),
+        mode: { tag: "cast" },
       };
       const savingThrow = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),

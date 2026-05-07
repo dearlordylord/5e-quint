@@ -798,7 +798,7 @@ function spellAct(input: {
   const act = discoverBattleActs(input.state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.spellId === input.spellId,
+      candidate.subject.invocation.spellId === input.spellId,
   );
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -1031,7 +1031,11 @@ function resolveShieldReactionChoice(
     expect.objectContaining({
       kind: "castTriggeredReactionSpell",
       reactorId: spellCasterId,
-      spellId: shieldUnitId,
+      invocation: expect.objectContaining({
+        tag: "spellSlot",
+        spellId: shieldUnitId,
+        procedure: "shieldReaction",
+      }),
     }),
   );
   if (
@@ -1050,8 +1054,7 @@ function resolveShieldReactionChoice(
         reactorId: spellCasterId,
         choice: {
           kind: "castTriggeredReactionSpell",
-          spellId: shieldUnitId,
-          spellActId: reactionChoice.spellActId,
+          invocation: reactionChoice.invocation,
           fills: [],
         },
       },

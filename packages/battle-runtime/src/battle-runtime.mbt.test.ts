@@ -41,6 +41,7 @@ import {
   initiativeScore,
   resolveBattleSubject,
   snapshotBattle,
+  spellSlotInvocationRef,
   startBattle,
   type BattleCreatureInit,
   type BattleFill,
@@ -858,7 +859,7 @@ function discoverMagicMissileHoles(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      candidate.subject.spellId === subject.spellId,
+      candidate.subject.invocation.spellId === subject.invocation.spellId,
   );
   if (act == null) {
     throw new Error("Expected Magic Missile spell act.");
@@ -926,8 +927,12 @@ function magicMissileSubject(): Extract<
   return {
     tag: "actionSpell",
     actorId: fighterId,
-    spellId: "magic_missile",
-    spellActId: "preparedSlotSpell:magic_missile:slot:1",
+    invocation: spellSlotInvocationRef(
+      "magic_missile",
+      1,
+      "repeatedDamageAllocation",
+    ),
+    mode: { tag: "cast" },
   };
 }
 

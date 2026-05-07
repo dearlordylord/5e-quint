@@ -5,6 +5,12 @@ export const CombatantId = CreatureId.pipe(Schema.brand("CombatantId"));
 export type CombatantId = typeof CombatantId.Type;
 export const combatantId: (value: string) => CombatantId = CombatantId.make;
 
+export const SpellId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("SpellId"),
+);
+export type SpellId = typeof SpellId.Type;
+export const spellId: (value: string) => SpellId = SpellId.make;
+
 export const BattleId = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("BattleId"),
 );

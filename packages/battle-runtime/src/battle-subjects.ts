@@ -1,6 +1,7 @@
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
-import { CombatantId } from "./identity.ts";
+import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
+import { CombatantId, SpellId, spellId as makeSpellId } from "./identity.ts";
 import {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -39,15 +40,76 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "opportunityAttack",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
-export const BATTLE_MOVEMENT_SPEED_KINDS = [
-  "walk",
-  "climb",
-  "swim",
-] as const;
+export const BATTLE_MOVEMENT_SPEED_KINDS = ["walk", "climb", "swim"] as const;
 export type BattleMovementSpeedKind =
   (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
 
 export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
+
+export const CANTRIP_SPELL_PROCEDURES = [
+  "spellAttackDamage",
+  "saveGatedDamage",
+] as const;
+export type CantripSpellProcedure = (typeof CANTRIP_SPELL_PROCEDURES)[number];
+
+export const SPELL_SLOT_PROCEDURES = [
+  "repeatedDamageAllocation",
+  "directHitPointRestoration",
+  "persistentArmorEffect",
+  "shieldReaction",
+] as const;
+export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];
+
+export const SpellInvocationRefSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("cantrip"),
+    spellId: SpellId,
+    procedure: Schema.Literal(...CANTRIP_SPELL_PROCEDURES),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("spellSlot"),
+    spellId: SpellId,
+    slotLevel: SpellSlotLevel,
+    procedure: Schema.Literal(...SPELL_SLOT_PROCEDURES),
+  }),
+);
+export type SpellInvocationRef = typeof SpellInvocationRefSchema.Type;
+export type SpellInvocationRefEncoded = typeof SpellInvocationRefSchema.Encoded;
+
+export function cantripSpellInvocationRef(
+  rawSpellId: string,
+  procedure: CantripSpellProcedure,
+): SpellInvocationRef {
+  return {
+    tag: "cantrip",
+    spellId: makeSpellId(rawSpellId),
+    procedure,
+  };
+}
+
+export function spellSlotInvocationRef(
+  rawSpellId: string,
+  rawSlotLevel: number,
+  procedure: SpellSlotProcedure,
+): SpellInvocationRef {
+  return {
+    tag: "spellSlot",
+    spellId: makeSpellId(rawSpellId),
+    slotLevel: spellSlotLevel(rawSlotLevel),
+    procedure,
+  };
+}
+
+export const SpellSubjectModeSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("cast"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("ready"),
+    trigger: Schema.Literal(...BATTLE_READIED_SPELL_TRIGGERS),
+  }),
+);
+export type SpellSubjectMode = typeof SpellSubjectModeSchema.Type;
 
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
@@ -170,18 +232,16 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
     actorId: CombatantId,
-    spellId: BattleSubjectTextSchema,
-    spellActId: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
-    readyTrigger: Schema.optionalWith(
-      Schema.Literal(...BATTLE_READIED_SPELL_TRIGGERS),
-      { exact: true },
-    ),
+    invocation: SpellInvocationRefSchema,
+    mode: SpellSubjectModeSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionSpell"),
     actorId: CombatantId,
-    spellId: BattleSubjectTextSchema,
-    spellActId: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
+    invocation: SpellInvocationRefSchema,
+    mode: Schema.Struct({
+      tag: Schema.Literal("cast"),
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("unitFeature"),
@@ -220,8 +280,7 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("castTriggeredReactionSpell"),
     reactorId: CombatantId,
-    spellId: BattleSubjectTextSchema,
-    spellActId: BattleSubjectTextSchema,
+    invocation: SpellInvocationRefSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -269,6 +328,16 @@ export function sameBattleSubject(
   right: BattleSubject,
 ): boolean {
   return battleSubjectKey(left) === battleSubjectKey(right);
+}
+
+function spellInvocationRefKey(ref: SpellInvocationRef): readonly unknown[] {
+  return ref.tag === "cantrip"
+    ? [ref.tag, ref.spellId, ref.procedure]
+    : [ref.tag, ref.spellId, ref.slotLevel, ref.procedure];
+}
+
+function spellSubjectModeKey(mode: SpellSubjectMode): readonly unknown[] {
+  return mode.tag === "cast" ? [mode.tag] : [mode.tag, mode.trigger];
 }
 
 function battleSubjectKey(subject: BattleSubject): string {
@@ -371,15 +440,16 @@ function battleSubjectKey(subject: BattleSubject): string {
       JSON.stringify([
         spell.tag,
         spell.actorId,
-        spell.spellActId ?? spell.spellId,
-        spell.readyTrigger ?? null,
+        spellInvocationRefKey(spell.invocation),
+        spellSubjectModeKey(spell.mode),
       ]),
     ),
     Match.when({ tag: "bonusActionSpell" }, (spell) =>
       JSON.stringify([
         spell.tag,
         spell.actorId,
-        spell.spellActId ?? spell.spellId,
+        spellInvocationRefKey(spell.invocation),
+        spellSubjectModeKey(spell.mode),
       ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>
@@ -397,7 +467,9 @@ function battleSubjectKey(subject: BattleSubject): string {
         "targetId" in command ? command.targetId : null,
         "reactorId" in command ? command.reactorId : null,
         "targetId" in command ? command.targetId : null,
-        "spellActId" in command ? command.spellActId : null,
+        "invocation" in command
+          ? spellInvocationRefKey(command.invocation)
+          : null,
         "attackName" in command ? command.attackName : null,
       ]),
     ),

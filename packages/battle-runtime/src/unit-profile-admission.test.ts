@@ -46,6 +46,7 @@ import {
   battleCombatantSide,
   battleId,
   battleUnitRefWithSupportProfiles,
+  cantripSpellInvocationRef,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -54,6 +55,7 @@ import {
   resolveBattleSubject,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   snapshotBattle,
+  spellSlotInvocationRef,
   startBattle,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -65,7 +67,7 @@ import {
   type BattleState,
   type BattleSubject,
   type CombatantId,
-  type SupportedSpellAct,
+  type SupportedSpellInvocation,
 } from "./index.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import {
@@ -1066,14 +1068,18 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      spellId: magicMissileUnitId,
-      spellActId: "preparedSlotSpell:magic_missile:slot:1",
+      invocation: spellSlotInvocationRef(
+        "magic_missile",
+        1,
+        "repeatedDamageAllocation",
+      ),
+      mode: { tag: "cast" },
     });
     expect(spellActInvocation(act)).toEqual(
       expect.objectContaining({
-        kind: "preparedSlotSpell",
+        procedure: "repeatedDamageAllocation",
         spell,
-        slotLevel: 1,
+        resource: { tag: "spellSlot", slotLevel: 1 },
         targeting: {
           kind: "repeatedEffectTargetAllocation",
           repeatedEffectCount: 3,
@@ -1104,8 +1110,11 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      spellId: rayOfFrostUnitId,
-      spellActId: "cantripSpellAttack:ray_of_frost",
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
     });
     expect(spell.mechanics.family).toBe("activation");
     expect(spell.mechanics.level).toBe(0);
@@ -1127,12 +1136,12 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      spellId: acidSplashUnitId,
-      spellActId: "cantripSaveGateDamage:acid_splash",
+      invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+      mode: { tag: "cast" },
     });
     expect(spellActInvocation(act)).toEqual(
       expect.objectContaining({
-        kind: "cantripSaveGateDamage",
+        procedure: "saveGatedDamage",
         spell,
         ability: "dex",
         area: {
@@ -1166,8 +1175,12 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      spellId: mageArmorUnitId,
-      spellActId: "preparedPersistentSpell:mage_armor:slot:1",
+      invocation: spellSlotInvocationRef(
+        "mage_armor",
+        1,
+        "persistentArmorEffect",
+      ),
+      mode: { tag: "cast" },
     });
     expect(spell.mechanics.family).toBe("ongoing_effect");
     expect(spell.mechanics.level).toBe(1);
@@ -1221,8 +1234,12 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
     expect(act.subject).toEqual({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      spellId: healingWordUnitId,
-      spellActId: "preparedHealingSpell:healing_word:slot:1",
+      invocation: spellSlotInvocationRef(
+        "healing_word",
+        1,
+        "directHitPointRestoration",
+      ),
+      mode: { tag: "cast" },
     });
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
@@ -1250,9 +1267,9 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
 
     expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
       expect.objectContaining({
-        kind: "preparedHealingSpell",
+        procedure: "directHitPointRestoration",
         spell,
-        slotLevel: 1,
+        resource: { tag: "spellSlot", slotLevel: 1 },
         healing: {
           expr: { dice: 2, dieSize: 4, flat: 3 },
         },
@@ -1274,8 +1291,12 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      spellId: cureWoundsUnitId,
-      spellActId: "preparedHealingSpell:cure_wounds:slot:1",
+      invocation: spellSlotInvocationRef(
+        "cure_wounds",
+        1,
+        "directHitPointRestoration",
+      ),
+      mode: { tag: "cast" },
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const awaitingHealingRoll = resolveBattleSubject({
@@ -1296,11 +1317,11 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     }
     expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
       expect.objectContaining({
-        kind: "preparedHealingSpell",
+        procedure: "directHitPointRestoration",
         spell,
         actionCost: "magicAction",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-        slotLevel: 1,
+        resource: { tag: "spellSlot", slotLevel: 1 },
         healing: {
           expr: { dice: 2, dieSize: 8, flat: 3 },
         },
@@ -1324,8 +1345,12 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     expect(act.subject).toEqual({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
-      spellId: massHealingWordUnitId,
-      spellActId: "preparedHealingSpell:mass_healing_word:slot:3",
+      invocation: spellSlotInvocationRef(
+        "mass_healing_word",
+        3,
+        "directHitPointRestoration",
+      ),
+      mode: { tag: "cast" },
     });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
     expect(targetListHole).toEqual(
@@ -1336,10 +1361,10 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     );
     expect(spellHoleInvocation(act.initialHoles)).toEqual(
       expect.objectContaining({
-        kind: "preparedHealingSpell",
+        procedure: "directHitPointRestoration",
         actionCost: "bonusAction",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 6 },
-        slotLevel: 3,
+        resource: { tag: "spellSlot", slotLevel: 3 },
         healing: {
           expr: { dice: 2, dieSize: 4, flat: 3 },
         },
@@ -1391,8 +1416,12 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      spellId: massCureWoundsUnitId,
-      spellActId: "preparedHealingSpell:mass_cure_wounds:slot:5",
+      invocation: spellSlotInvocationRef(
+        "mass_cure_wounds",
+        5,
+        "directHitPointRestoration",
+      ),
+      mode: { tag: "cast" },
     });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
     expect(targetListHole).toEqual(
@@ -1403,7 +1432,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     );
     expect(spellHoleInvocation(act.initialHoles)).toEqual(
       expect.objectContaining({
-        kind: "preparedHealingSpell",
+        procedure: "directHitPointRestoration",
         spell,
         actionCost: "magicAction",
         targeting: {
@@ -1412,7 +1441,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
           maxTargets: 6,
           area: { kind: "pointOriginSphere", radiusFeet: 30 },
         },
-        slotLevel: 5,
+        resource: { tag: "spellSlot", slotLevel: 5 },
         healing: {
           expr: { dice: 5, dieSize: 8, flat: 3 },
         },
@@ -1503,8 +1532,8 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     }
     expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
       expect.objectContaining({
-        kind: "preparedHealingSpell",
-        slotLevel: 6,
+        procedure: "directHitPointRestoration",
+        resource: { tag: "spellSlot", slotLevel: 6 },
         healing: {
           expr: { dice: 6, dieSize: 8, flat: 3 },
         },
@@ -2230,7 +2259,11 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
       spellTargetId,
     );
     const roll = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
       "attackRoll",
     );
     const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
@@ -2425,12 +2458,15 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Damage disposition must match one of the currently offered choices.",
+      message:
+        "Damage disposition must match one of the currently offered choices.",
     });
   });
 
   test("malformed zero-Hit-Point replacement mechanics remain unsupported", () => {
-    const base = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId) as UnitRecord & {
+    const base = unitLibrary.requireUnit(
+      orcRelentlessEnduranceUnitId,
+    ) as UnitRecord & {
       readonly mechanics: {
         readonly family: "triggered_replacement";
         readonly trigger: object;
@@ -3356,10 +3392,10 @@ function maybeSpellAct(input: {
   return discoverBattleActs(input.state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.spellId === input.spellId &&
+      candidate.subject.invocation.spellId === input.spellId &&
       (input.slotLevel === undefined ||
-        candidate.subject.spellActId?.endsWith(`:slot:${input.slotLevel}`) ===
-          true),
+        (candidate.subject.invocation.tag === "spellSlot" &&
+          Number(candidate.subject.invocation.slotLevel) === input.slotLevel)),
   );
 }
 
@@ -3370,7 +3406,7 @@ function bonusSpellAct(input: {
   const act = discoverBattleActs(input.state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.spellId === input.spellId,
+      candidate.subject.invocation.spellId === input.spellId,
   );
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -3627,12 +3663,14 @@ function mechanicsOnlyClassicUnit(
   };
 }
 
-function spellActInvocation(act: ActionSpellAct): SupportedSpellAct {
+function spellActInvocation(act: ActionSpellAct): SupportedSpellInvocation {
   const hole = act.initialHoles[0];
   return spellHoleInvocation(hole === undefined ? [] : [hole]);
 }
 
-function spellHoleInvocation(holes: readonly BattleHole[]): SupportedSpellAct {
+function spellHoleInvocation(
+  holes: readonly BattleHole[],
+): SupportedSpellInvocation {
   const hole = holes[0];
   if (hole === undefined || !("spell" in hole)) {
     throw new Error("Expected spell hole to carry invocation.");

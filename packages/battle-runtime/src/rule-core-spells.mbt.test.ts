@@ -32,6 +32,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleCombatantSide,
   battleId,
+  cantripSpellInvocationRef,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -40,6 +41,7 @@ import {
   resolveBattleReaction,
   resolveBattleSubject,
   snapshotBattle,
+  spellSlotInvocationRef,
   startBattle,
   type BattleCreatureInit,
   type BattleFill,
@@ -49,6 +51,7 @@ import {
   type BattleState,
   type BattleSubject,
   type CombatantId,
+  type SpellInvocationRef,
 } from "./index.ts";
 
 const ruleCoreSpellMbtHoles = [
@@ -210,8 +213,11 @@ function createRuleCoreSpellDriver() {
           resolveBattleSubject({
             state,
             subject: actionSpellSubject(
-              "magic_missile",
-              "preparedSlotSpell:magic_missile:slot:1",
+              spellSlotInvocationRef(
+                "magic_missile",
+                1,
+                "repeatedDamageAllocation",
+              ),
             ),
             fills: [],
           }),
@@ -221,8 +227,11 @@ function createRuleCoreSpellDriver() {
         state = spellBattle();
         resetProjection();
         const subject = actionSpellSubject(
-          "magic_missile",
-          "preparedSlotSpell:magic_missile:slot:1",
+          spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
         );
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
@@ -363,8 +372,7 @@ function createRuleCoreSpellDriver() {
         });
         resetProjection();
         const subject = actionSpellSubject(
-          "mage_armor",
-          "preparedPersistentSpell:mage_armor:slot:1",
+          spellSlotInvocationRef("mage_armor", 1, "persistentArmorEffect"),
         );
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
@@ -384,8 +392,7 @@ function createRuleCoreSpellDriver() {
           resolveBattleSubject({
             state,
             subject: actionSpellSubject(
-              "mage_armor",
-              "preparedPersistentSpell:mage_armor:slot:1",
+              spellSlotInvocationRef("mage_armor", 1, "persistentArmorEffect"),
             ),
             fills: [],
           }),
@@ -400,8 +407,11 @@ function createRuleCoreSpellDriver() {
         });
         resetProjection();
         const subject = actionSpellSubject(
-          "magic_missile",
-          "preparedSlotSpell:magic_missile:slot:1",
+          spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
         );
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
@@ -430,8 +440,12 @@ function createRuleCoreSpellDriver() {
             subject: {
               tag: "bonusActionSpell",
               actorId: casterId,
-              spellId: "healing_word",
-              spellActId: "preparedHealingSpell:healing_word:slot:1",
+              invocation: spellSlotInvocationRef(
+                "healing_word",
+                1,
+                "directHitPointRestoration",
+              ),
+              mode: { tag: "cast" },
             },
             fills: [],
           }),
@@ -443,9 +457,12 @@ function createRuleCoreSpellDriver() {
         resolveSubject({
           tag: "actionSpell",
           actorId: casterId,
-          spellId: "magic_missile",
-          spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-          readyTrigger: "attackHit",
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
         });
       },
       doReleaseReadiedSpell: () => {
@@ -456,9 +473,12 @@ function createRuleCoreSpellDriver() {
           subject: {
             tag: "actionSpell",
             actorId: casterId,
-            spellId: "magic_missile",
-            spellActId: "readiedSpell:preparedSlotSpell:magic_missile:slot:1",
-            readyTrigger: "attackHit",
+            invocation: spellSlotInvocationRef(
+              "magic_missile",
+              1,
+              "repeatedDamageAllocation",
+            ),
+            mode: { tag: "ready", trigger: "attackHit" },
           },
           fills: [],
         });
@@ -577,8 +597,7 @@ function createRuleCoreSpellDriver() {
       state = spellBattle();
       resetProjection();
       const subject = actionSpellSubject(
-        "ray_of_frost",
-        "cantripSpellAttack:ray_of_frost",
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       );
       const target = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
@@ -635,8 +654,7 @@ function createRuleCoreSpellDriver() {
       state = spellBattle();
       resetProjection();
       const subject = actionSpellSubject(
-        "ray_of_frost",
-        "cantripSpellAttack:ray_of_frost",
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       );
       const targetResult = resolveBattleSubject({ state, subject, fills: [] });
       if (stopAt === "target") {
@@ -682,8 +700,7 @@ function createRuleCoreSpellDriver() {
       state = spellBattle({ includeSecondTarget: true });
       resetProjection();
       const subject = actionSpellSubject(
-        "acid_splash",
-        "cantripSaveGateDamage:acid_splash",
+        cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
       );
       const savingThrow = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
@@ -724,8 +741,7 @@ function createRuleCoreSpellDriver() {
       state = spellBattle({ includeSecondTarget: true });
       resetProjection();
       const subject = actionSpellSubject(
-        "acid_splash",
-        "cantripSaveGateDamage:acid_splash",
+        cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
       );
       const saveResult = resolveBattleSubject({ state, subject, fills: [] });
       if (stopAt === "save") {
@@ -1197,16 +1213,17 @@ type DirectHitPointRestorationSpellId =
   | "mass_healing_word";
 
 function actionSpellSubject(
-  spellId:
-    | "magic_missile"
-    | "mage_armor"
-    | "ray_of_frost"
-    | "acid_splash"
-    | "cure_wounds"
-    | "mass_cure_wounds",
-  spellActId: string,
+  invocation: SpellInvocationRef,
+  mode: Extract<BattleSubject, { readonly tag: "actionSpell" }>["mode"] = {
+    tag: "cast",
+  },
 ): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
-  return { tag: "actionSpell", actorId: casterId, spellId, spellActId };
+  return {
+    tag: "actionSpell",
+    actorId: casterId,
+    invocation,
+    mode,
+  };
 }
 
 function targetAttackSubject(): Extract<
@@ -1232,8 +1249,12 @@ function healingSpellSubject(
   return {
     tag: subjectTag,
     actorId: casterId,
-    spellId,
-    spellActId: `preparedHealingSpell:${spellId}:slot:${slotLevel}`,
+    invocation: spellSlotInvocationRef(
+      spellId,
+      slotLevel,
+      "directHitPointRestoration",
+    ),
+    mode: { tag: "cast" },
   };
 }
 
