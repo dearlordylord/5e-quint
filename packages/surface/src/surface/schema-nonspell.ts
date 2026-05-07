@@ -807,13 +807,34 @@ export const HitPointReplacementEffectSchema = Schema.Struct({
   replacementHp: Schema.Number,
 });
 
-export const TriggeredReplacementMechanicsSchema = Schema.Struct({
+export const AttackRollMissReplacementTriggerSchema = strictStruct({
+  kind: Schema.Literal("miss_with_attack_roll"),
+});
+
+export const AttackRollMissReplacementEffectSchema = strictStruct({
+  kind: Schema.Literal("replace_miss_with_hit"),
+});
+
+export const HitPointTriggeredReplacementMechanicsSchema = Schema.Struct({
   family: Schema.Literal("triggered_replacement"),
   trigger: HitPointReplacementTriggerSchema,
   effect: HitPointReplacementEffectSchema,
   optional: Schema.Boolean,
   resetCadence: RestResetCadenceSchema,
 });
+
+export const AttackRollMissToHitReplacementMechanicsSchema = strictStruct({
+  family: Schema.Literal("triggered_replacement"),
+  trigger: AttackRollMissReplacementTriggerSchema,
+  effect: AttackRollMissReplacementEffectSchema,
+  optional: Schema.Literal(true),
+  resetCadence: strictStruct({ kind: Schema.Literal("start_of_next_turn") }),
+});
+
+export const TriggeredReplacementMechanicsSchema = Schema.Union(
+  HitPointTriggeredReplacementMechanicsSchema,
+  AttackRollMissToHitReplacementMechanicsSchema,
+);
 
 const UnitMetadataSchema = Schema.Struct({
   id: NonEmptyStringSchema,
@@ -1085,6 +1106,7 @@ export const FeatMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  TriggeredReplacementMechanicsSchema,
 );
 
 export const FeatRecordSchema = Schema.Struct({

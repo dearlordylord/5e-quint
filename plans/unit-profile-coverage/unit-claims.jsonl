@@ -23,7 +23,7 @@
 {"unitId":"wizard_ritual_adept","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Ritual casting is character/spell access pressure, not a promoted battle execution profile yet."}}
 {"unitId":"wizard_arcane_recovery","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Spell slot recovery outside battle is not a promoted Unit profile yet."}}
 {"unitId":"feat_ability_score_improvement","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Character-creation ability score mutation is outside promoted battle Unit profile scope."}}
-{"unitId":"feat_boon_of_combat_prowess","collectionId":"srd-5.2.1","claim":{"tag":"needs-surface-widening","issue":"Miss-to-hit conversion profile is not represented by the promoted Unit profile taxonomy."}}
+{"unitId":"feat_boon_of_combat_prowess","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.attack-roll-miss-to-hit-replacement"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"defense","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.passive-armor-class-bonus"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"feat_archery","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.passive-ranged-attack-roll-bonus"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"feat_savage_attacker","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.weapon-damage-dice-roll-choice"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}

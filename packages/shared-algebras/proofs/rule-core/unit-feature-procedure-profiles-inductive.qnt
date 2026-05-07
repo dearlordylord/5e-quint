@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"
@@ -34,6 +34,7 @@ module unitFeatureProcedureProfilesInductive {
   var qAttackRollMadeThisTurn: bool
   var qSneakAttackUsedThisTurn: bool
   var qWeaponDamageDiceRollChoiceUsedThisTurn: bool
+  var qAttackRollMissToHitReplacementUsedSinceTurnStart: bool
   var qLastDamageAmount: int
   var qLastArmorClass: int
 
@@ -89,6 +90,7 @@ module unitFeatureProcedureProfilesInductive {
     qAttackRollMadeThisTurn' = false,
     qSneakAttackUsedThisTurn' = false,
     qWeaponDamageDiceRollChoiceUsedThisTurn' = false,
+    qAttackRollMissToHitReplacementUsedSinceTurnStart' = false,
     qLastDamageAmount' = 0,
     qLastArmorClass' = 16,
   }
@@ -142,6 +144,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       recordTurn(qTurn),
     }
   }
@@ -180,6 +183,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
     }
   }
 
@@ -204,6 +208,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
     }
   }
 
@@ -229,6 +234,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
     }
   }
 
@@ -250,6 +256,7 @@ module unitFeatureProcedureProfilesInductive {
       qReactorConcentration' = qReactorConcentration,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       qLastDamageAmount' = qLastDamageAmount,
       qLastArmorClass' = qLastArmorClass,
       recordTurn(qTurn),
@@ -273,6 +280,7 @@ module unitFeatureProcedureProfilesInductive {
     all {
       qSneakAttackUsedThisTurn' = result.usedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       qLastDamageAmount' = result.damageDice,
       qLastArmorClass' = qLastArmorClass,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
@@ -323,6 +331,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
     }
   }
 
@@ -353,6 +362,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       recordTurn(qTurn),
     }
   }
@@ -378,6 +388,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       recordTurn(qTurn),
     }
   }
@@ -403,6 +414,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       recordTurn(qTurn),
     }
   }
@@ -428,6 +440,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       recordTurn(qTurn),
     }
   }
@@ -460,6 +473,35 @@ module unitFeatureProcedureProfilesInductive {
       qRecklessOccurrence' = qRecklessOccurrence,
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
+      recordTurn(qTurn),
+    }
+  }
+
+  action doAttackRollMissToHitReplacement = {
+    nondet naturalD20 = Set(1, 2, 10).oneOf()
+    nondet choosesFeature = Set(true, false).oneOf()
+    val result = resolveAttackRollMissToHitReplacement({
+      naturalD20: naturalD20,
+      total: if (naturalD20 == 10) 16 else 10,
+      armorClass: 16,
+      usedSinceTurnStart: qAttackRollMissToHitReplacementUsedSinceTurnStart,
+      choosesFeature: choosesFeature,
+    })
+    all {
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = result.usedSinceTurnStart,
+      qLastDamageAmount' = if (result.effectiveHits) 1 else 0,
+      qLastArmorClass' = 16,
+      qFeatureUsesRemaining' = qFeatureUsesRemaining,
+      qFeatureMaximumUses' = qFeatureMaximumUses,
+      qActionSurgeGrant' = qActionSurgeGrant,
+      qRageOccurrence' = qRageOccurrence,
+      qInterruptedConcentration' = qInterruptedConcentration,
+      qReactorConcentration' = qReactorConcentration,
+      qRecklessOccurrence' = qRecklessOccurrence,
+      qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
+      qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+      qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
       recordTurn(qTurn),
     }
   }
@@ -495,6 +537,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       recordTurn(qTurn),
     }
   }
@@ -520,6 +563,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       recordTurn(resolveDash(qTurn, result.effectiveSpeedFeet, StandardActionCost(DashAction))),
     }
   }
@@ -547,6 +591,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
       recordTurn(resolveDash(qTurn, result.walkSpeedFeet, StandardActionCost(DashAction))),
     }
   }
@@ -574,6 +619,7 @@ module unitFeatureProcedureProfilesInductive {
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
     }
   }
 
@@ -584,6 +630,7 @@ module unitFeatureProcedureProfilesInductive {
     qAttackRollMadeThisTurn' = false,
     qSneakAttackUsedThisTurn' = false,
     qWeaponDamageDiceRollChoiceUsedThisTurn' = false,
+    qAttackRollMissToHitReplacementUsedSinceTurnStart' = false,
     qFeatureUsesRemaining' = qFeatureUsesRemaining,
     qFeatureMaximumUses' = qFeatureMaximumUses,
     qRageOccurrence' = qRageOccurrence,
@@ -611,6 +658,7 @@ module unitFeatureProcedureProfilesInductive {
     doRovingSpeedKindGrants,
     doBonusActionDashTemporaryHitPoints,
     doWeaponDamageDiceRollChoice,
+    doAttackRollMissToHitReplacement,
     doZeroHitPointReplacement,
     doStartTurn,
   }
@@ -650,6 +698,7 @@ module unitFeatureProcedureProfilesInductive {
     qAttackRollMadeThisTurn.in(Set(true, false)),
     qSneakAttackUsedThisTurn.in(Set(true, false)),
     qWeaponDamageDiceRollChoiceUsedThisTurn.in(Set(true, false)),
+    qAttackRollMissToHitReplacementUsedSinceTurnStart.in(Set(true, false)),
     qLastDamageAmount.in(0.to(120)),
     qLastArmorClass.in(0.to(40)),
     legalTurnProcedureState(qTurn),

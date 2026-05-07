@@ -9,12 +9,21 @@
     ]
   },
   "category": "epic_boon",
-  "description": "Increase one ability score of your choice by 1, to a maximum of 30. Peerless Aim battle behavior is promoted separately.",
+  "description": "Increase one ability score of your choice by 1, to a maximum of 30. When you miss with an attack roll, you can hit instead; once used, this benefit cannot be used again until the start of your next turn.",
   "id": "feat_boon_of_combat_prowess",
   "kind": "feat",
   "mechanics": {
-    "family": "passive",
-    "grants": []
+    "effect": {
+      "kind": "replace_miss_with_hit"
+    },
+    "family": "triggered_replacement",
+    "optional": true,
+    "resetCadence": {
+      "kind": "start_of_next_turn"
+    },
+    "trigger": {
+      "kind": "miss_with_attack_roll"
+    }
   },
   "name": "Boon of Combat Prowess",
   "provenance": {

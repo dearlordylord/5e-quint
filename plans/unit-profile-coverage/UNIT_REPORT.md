@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 58/391 | 14.8% |
 | Authored Surface executable catalog admission | 44/334 | 13.2% |
 | Installed Unit profile classification coverage | 59/59 | 100% |
-| Supported executable Unit coverage | 29/45 | 64.4% |
-| QNT profile modeling coverage | 22/22 | 100% |
-| QNT proof coverage | 22/22 | 100% |
-| Runtime mapping coverage | 22/22 | 100% |
-| Runtime parity coverage | 22/22 | 100% |
-| Deterministic admission/projection coverage | 29/29 | 100% |
-| Selected identity MBT coverage | 10/29 | 34.5% |
+| Supported executable Unit coverage | 30/45 | 66.7% |
+| QNT profile modeling coverage | 23/23 | 100% |
+| QNT proof coverage | 23/23 | 100% |
+| Runtime mapping coverage | 23/23 | 100% |
+| Runtime parity coverage | 23/23 | 100% |
+| Deterministic admission/projection coverage | 30/30 | 100% |
+| Selected identity MBT coverage | 10/30 | 33.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -59,6 +59,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `rogue_uncanny_dodge` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
 | `feat_archery` | srd-5.2.1 | `unit-feature.passive-ranged-attack-roll-bonus` |
+| `feat_boon_of_combat_prowess` | srd-5.2.1 | `unit-feature.attack-roll-miss-to-hit-replacement` |
 | `defense` | srd-5.2.1 | `unit-feature.passive-armor-class-bonus` |
 | `feat_savage_attacker` | srd-5.2.1 | `unit-feature.weapon-damage-dice-roll-choice` |
 | `paladin_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
@@ -795,6 +796,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | QMBT27 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `feat_boon_of_combat_prowess` | `unit-feature.attack-roll-miss-to-hit-replacement` | QMBT56 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | QMBT18 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -846,7 +848,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `wizard_ritual_adept` | unsupported-profile | Ritual casting is character/spell access pressure, not a promoted battle execution profile yet. |
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
-| `feat_boon_of_combat_prowess` | needs-surface-widening | Miss-to-hit conversion profile is not represented by the promoted Unit profile taxonomy. |
 | `mastery_sap` | unsupported-profile | Weapon mastery rider is authored but not yet a stable Unit profile row. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
@@ -868,7 +869,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 24 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
-| srd-5.2.1 | unassigned | needs-surface-widening | 3 | `fighter_tactical_mind`, `feat_boon_of_combat_prowess`, `thunderwave` |
+| srd-5.2.1 | unassigned | needs-surface-widening | 2 | `fighter_tactical_mind`, `thunderwave` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | QCORE9 | needs-surface-widening | 1 | `bard_cutting_words` |
 | srd-5.2.1 | QCORE9 | unsupported-profile | 1 | `monk_deflect_attacks` |
@@ -897,6 +898,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT44 | completed-runtime-parity | `unit-feature.passive-speed-kind-grants` |
 | QMBT47 | completed-runtime-parity | `unit-feature.zero-hit-point-replacement` |
 | QMBT53 | completed-runtime-parity | `unit-feature.bonus-action-dash-temporary-hit-points` |
+| QMBT56 | qnt-proof | `unit-feature.attack-roll-miss-to-hit-replacement` |
+| QMBT56 | completed-runtime-parity | `unit-feature.attack-roll-miss-to-hit-replacement` |
 
 ## Supported Profiles Lacking Runtime Parity
 

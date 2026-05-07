@@ -62,8 +62,8 @@
       "value": 59
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 29,
-      "numerator": 29,
+      "denominator": 30,
+      "numerator": 30,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 22,
-      "numerator": 22,
+      "denominator": 23,
+      "numerator": 23,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 22,
-      "numerator": 22,
+      "denominator": 23,
+      "numerator": 23,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 22,
-      "numerator": 22,
+      "denominator": 23,
+      "numerator": 23,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 22,
-      "numerator": 22,
+      "denominator": 23,
+      "numerator": 23,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 29,
+      "denominator": 30,
       "numerator": 10,
-      "percent": "34.5%"
+      "percent": "33.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 45,
-      "numerator": 29,
-      "percent": "64.4%"
+      "numerator": 30,
+      "percent": "66.7%"
     }
   },
   "metricSemantics": [
@@ -436,6 +436,31 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.attack-roll-miss-to-hit-replacement",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QMBT56"
+      ],
+      "title": "Unit feature can replace one missed attack roll with a hit until start of next turn",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
         }
       ]
     },
@@ -982,6 +1007,22 @@
         "unit-feature.bonus-action-dash-temporary-hit-points"
       ],
       "taskId": "QMBT53"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Attack-roll miss-to-hit replacement profile proof.",
+      "profileIds": [
+        "unit-feature.attack-roll-miss-to-hit-replacement"
+      ],
+      "taskId": "QMBT56"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Peerless Aim miss-to-hit replacement runtime parity.",
+      "profileIds": [
+        "unit-feature.attack-roll-miss-to-hit-replacement"
+      ],
+      "taskId": "QMBT56"
     }
   ],
   "units": [
@@ -1971,14 +2012,51 @@
         "status": "installed"
       },
       "claim": {
-        "issue": "Miss-to-hit conversion profile is not represented by the promoted Unit profile taxonomy.",
-        "tag": "needs-surface-widening"
+        "profileIds": [
+          "unit-feature.attack-roll-miss-to-hit-replacement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT56"
+        }
+      ],
       "executableMechanics": true,
       "kind": "feat",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.attack-roll-miss-to-hit-replacement",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QMBT56"
+          ],
+          "title": "Unit feature can replace one missed attack roll with a hit until start of next turn",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/feat_boon_of_combat_prowess.json",
       "unitId": "feat_boon_of_combat_prowess"
     },

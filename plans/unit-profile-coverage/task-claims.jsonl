@@ -18,3 +18,5 @@
 {"taskId":"QMBT44","claimKind":"completed-runtime-parity","profileIds":["unit-feature.passive-speed-kind-grants"],"note":"Focused Roving passive Speed-kind grants runtime parity."}
 {"taskId":"QMBT47","claimKind":"completed-runtime-parity","profileIds":["unit-feature.zero-hit-point-replacement"],"note":"Focused Relentless Endurance zero-Hit-Point replacement runtime parity."}
 {"taskId":"QMBT53","claimKind":"completed-runtime-parity","profileIds":["unit-feature.bonus-action-dash-temporary-hit-points"],"note":"Focused Adrenaline Rush Bonus Action Dash Temporary Hit Points runtime parity."}
+{"taskId":"QMBT56","claimKind":"qnt-proof","profileIds":["unit-feature.attack-roll-miss-to-hit-replacement"],"note":"Attack-roll miss-to-hit replacement profile proof."}
+{"taskId":"QMBT56","claimKind":"completed-runtime-parity","profileIds":["unit-feature.attack-roll-miss-to-hit-replacement"],"note":"Focused Peerless Aim miss-to-hit replacement runtime parity."}

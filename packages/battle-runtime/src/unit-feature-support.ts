@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -39,6 +39,8 @@ export const PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE =
   "passiveArmorClassBonus";
 export const PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE =
   "passiveRangedAttackRollBonus";
+export const ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE =
+  "attackRollMissToHitReplacement";
 export const PASSIVE_SPEED_BONUS_SUPPORT_PROFILE = "passiveSpeedBonus";
 export const PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE =
   "passiveSpeedKindGrants";
@@ -65,6 +67,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+  ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
@@ -90,6 +93,16 @@ export type PassiveRangedAttackRollBonusProfile = {
 export type BattlePassiveRangedAttackRollBonusSupportProfile = {
   readonly kind: typeof PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE;
   readonly attackRoll: PassiveRangedAttackRollBonusProfile;
+};
+export type AttackRollMissToHitReplacementProfile = {
+  readonly optional: true;
+  readonly trigger: "missWithAttackRoll";
+  readonly effect: "replaceMissWithHit";
+  readonly resetCadence: "startOfNextTurn";
+};
+export type BattleAttackRollMissToHitReplacementSupportProfile = {
+  readonly kind: typeof ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE;
+  readonly replacement: AttackRollMissToHitReplacementProfile;
 };
 export type BattleAttackActionAttackCountScalingSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
@@ -150,6 +163,7 @@ export type BattleAlternateActionCostSupportProfile = {
 export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
   | BattlePassiveRangedAttackRollBonusSupportProfile
+  | BattleAttackRollMissToHitReplacementSupportProfile
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
   | BattleAttackActionAttackCountScalingSupportProfile
@@ -158,6 +172,7 @@ export type BattleUnitSupportProfile =
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
       | "alternateActionCost"
       | "passiveRangedAttackRollBonus"
+      | "attackRollMissToHitReplacement"
       | "passiveSpeedBonus"
       | "passiveSpeedKindGrants"
       | "attackActionAttackCountScaling"
@@ -282,6 +297,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (passiveRangedAttackRollBonusSupport !== null) {
     supportProfiles.push(passiveRangedAttackRollBonusSupport);
+  }
+
+  const attackRollMissToHitReplacementSupport =
+    battleAttackRollMissToHitReplacementSupportForUnit(input.unit);
+  if (attackRollMissToHitReplacementSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle attack-roll miss-to-hit replacement Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (attackRollMissToHitReplacementSupport !== null) {
+    supportProfiles.push(attackRollMissToHitReplacementSupport);
   }
 
   const passiveSpeedBonusSupport = battlePassiveSpeedBonusSupportForUnit(
@@ -537,6 +563,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "passiveRangedAttackRollBonus";
       readonly unit: UnitRecord;
       readonly attackRoll: PassiveRangedAttackRollBonusProfile;
+    }
+  | {
+      readonly kind: "attackRollMissToHitReplacement";
+      readonly unit: UnitRecord;
+      readonly replacement: AttackRollMissToHitReplacementProfile;
     }
   | {
       readonly kind: "passiveSpeedBonus";
@@ -807,6 +838,11 @@ export type BattlePassiveRangedAttackRollBonusSupport =
   | "unsupported"
   | null;
 
+export type BattleAttackRollMissToHitReplacementSupport =
+  | BattleAttackRollMissToHitReplacementSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattlePassiveSpeedBonusSupport =
   | BattlePassiveSpeedBonusSupportProfile
   | "unsupported"
@@ -858,6 +894,21 @@ export function battlePassiveRangedAttackRollBonusSupportForUnit(
   return attackRoll === null
     ? "unsupported"
     : { kind: PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE, attackRoll };
+}
+
+export function battleAttackRollMissToHitReplacementSupportForUnit(
+  unit: UnitRecord,
+): BattleAttackRollMissToHitReplacementSupport {
+  if (!hasAttackRollMissToHitReplacementMechanics(unit)) {
+    return null;
+  }
+  const replacement = attackRollMissToHitReplacementProfileForUnit(unit);
+  return replacement === null
+    ? "unsupported"
+    : {
+        kind: ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+        replacement,
+      };
 }
 
 export function battlePassiveSpeedBonusSupportForUnit(
@@ -956,6 +1007,16 @@ function hasPassiveRangedAttackRollBonusMechanics(unit: UnitRecord): boolean {
   }
   const [effect] = unit.mechanics.grants;
   return effect?.kind === "modify_roll_numeric";
+}
+
+function hasAttackRollMissToHitReplacementMechanics(
+  unit: UnitRecord,
+): boolean {
+  return (
+    unit.kind === "feat" &&
+    unit.mechanics.family === "triggered_replacement" &&
+    unit.mechanics.trigger.kind === "miss_with_attack_roll"
+  );
 }
 
 function hasPassiveSpeedBonusMechanics(unit: UnitRecord): boolean {
@@ -1170,6 +1231,32 @@ export function passiveRangedAttackRollBonusProfileForUnit(
         },
       }
     : null;
+}
+
+export function attackRollMissToHitReplacementProfileForUnit(
+  unit: UnitRecord,
+): AttackRollMissToHitReplacementProfile | null {
+  if (
+    unit.kind !== "feat" ||
+    unit.mechanics.family !== "triggered_replacement"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.trigger.kind !== "miss_with_attack_roll" ||
+    mechanics.effect.kind !== "replace_miss_with_hit" ||
+    mechanics.optional !== true ||
+    mechanics.resetCadence.kind !== "start_of_next_turn"
+  ) {
+    return null;
+  }
+  return {
+    optional: true,
+    trigger: "missWithAttackRoll",
+    effect: "replaceMissWithHit",
+    resetCadence: "startOfNextTurn",
+  };
 }
 
 export function passiveSpeedBonusProfileForUnit(
@@ -1408,6 +1495,7 @@ export function parseSupportedUnitFeatureProfile(
     parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels) ??
     parsePassiveArmorClassBonusUnitFeatureProfile(unit) ??
     parsePassiveRangedAttackRollBonusUnitFeatureProfile(unit) ??
+    parseAttackRollMissToHitReplacementUnitFeatureProfile(unit) ??
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
@@ -1738,6 +1826,22 @@ function parsePassiveSpeedKindGrantsUnitFeatureProfile(
         kind: "passiveSpeedKindGrants",
         unit,
         speedKindGrants,
+      };
+}
+
+function parseAttackRollMissToHitReplacementUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "attackRollMissToHitReplacement" }
+> | null {
+  const replacement = attackRollMissToHitReplacementProfileForUnit(unit);
+  return replacement === null
+    ? null
+    : {
+        kind: "attackRollMissToHitReplacement",
+        unit,
+        replacement,
       };
 }
 

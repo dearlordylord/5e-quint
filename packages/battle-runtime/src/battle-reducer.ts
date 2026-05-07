@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -211,6 +211,7 @@ import type {
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANT_KINDS,
@@ -797,6 +798,19 @@ type WeaponDamageDiceRollChoiceUsage = {
   readonly attackerId: CombatantId;
   readonly unitId: UnitRecord["id"];
 };
+type AttackRollMissToHitReplacementUsage = {
+  readonly unitId: UnitRecord["id"];
+};
+type PendingAttackRollMissToHitReplacementContext = {
+  readonly subject: BattleSubject;
+  readonly targetId: CombatantId;
+  readonly attackRoll: BattleAttackRollResult;
+};
+type PendingAttackRollMissToHitReplacementSelection = {
+  readonly attackerId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly context: PendingAttackRollMissToHitReplacementContext;
+};
 
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
@@ -805,6 +819,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
+  readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
   };
@@ -1006,6 +1021,7 @@ type BattleCreatureStateCommon = {
     OngoingFeatureSourceKey,
     ActiveOngoingFeatureOccurrence
   >;
+  readonly attackRollMissToHitReplacementsUsedSinceTurnStart: readonly AttackRollMissToHitReplacementUsage[];
   readonly concentration: BattleConcentration | null;
   readonly dodging: boolean;
   readonly hidden: BattleHiddenState | null;
@@ -1161,11 +1177,16 @@ export type BattleAttackRollHole = Extract<
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
   readonly ongoingFeatureActivations?: readonly AttackRollFeatureActivation[];
+  readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
 };
 export type AttackRollFeatureActivation = {
   readonly unitId: UnitRecord["id"];
   readonly label: UnitRecord["name"];
   readonly rollMode: AttackRollMode;
+};
+export type AttackRollMissToHitReplacement = {
+  readonly unitId: UnitRecord["id"];
+  readonly label: UnitRecord["name"];
 };
 export type BattleSpellAttackRollHole = Extract<
   RuntimeHole,
@@ -1174,6 +1195,7 @@ export type BattleSpellAttackRollHole = Extract<
   readonly spell: SupportedSpellInvocation;
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
+  readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
 };
 export type BattleDamageRollHole = Extract<
   RuntimeHole,
@@ -1546,6 +1568,15 @@ export const BattleHoleSchema = Schema.Union(
       ),
       { exact: true },
     ),
+    missToHitReplacements: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          unitId: Schema.String,
+          label: Schema.String,
+        }),
+      ),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1555,6 +1586,15 @@ export const BattleHoleSchema = Schema.Union(
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
     }),
+    missToHitReplacements: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          unitId: Schema.String,
+          label: Schema.String,
+        }),
+      ),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1690,6 +1730,7 @@ export const BattleHoleSchema = Schema.Union(
 
 export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
+  readonly missToHitReplacementUnitId?: UnitRecord["id"];
 };
 export type BattleRolledDiceFill = Extract<
   FilledHoleValue,
@@ -1801,6 +1842,9 @@ const BattleAttackRollResultSchema = Schema.Struct({
     exact: true,
   }),
   activatedOngoingFeatureUnitId: Schema.optionalWith(Schema.String, {
+    exact: true,
+  }),
+  missToHitReplacementUnitId: Schema.optionalWith(Schema.String, {
     exact: true,
   }),
 });
@@ -6076,6 +6120,7 @@ function battleCreatureStateFromInit(
     ...initialKnockOutLifecycleFields(creatureInit, initialConditions),
     activeEffects: [],
     activeOngoingFeatureOccurrences: new Map(),
+    attackRollMissToHitReplacementsUsedSinceTurnStart: [],
     concentration: null,
     dodging: false,
     hidden: null,
@@ -7105,24 +7150,52 @@ function resolveAttack(
     );
   }
 
-  const criticalThreshold = criticalThresholdForAttack(
-    input.state.combatants.get(input.subject.actorId),
-    attack,
-  );
-  const hit = attackRollHitsWithCriticalThreshold(
+  const attacker = input.state.combatants.get(input.subject.actorId);
+  const criticalThreshold = criticalThresholdForAttack(attacker, attack);
+  const ordinaryHit = attackRollHitsWithCriticalThreshold(
     fillSet.attackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
     criticalThreshold,
   );
-  const attackRolledState = consumeHelpAttackForAttackRoll(
-    recordAttackRollOngoingFeatures(
-      revealHidden(input.state, input.subject.actorId),
+  const missToHitReplacement = selectedAttackRollMissToHitReplacement({
+    state: input.state,
+    subject: input.subject,
+    attackerId: input.subject.actorId,
+    targetId: target.combatantId,
+    attackRoll: fillSet.attackRoll,
+    ordinaryHit,
+  });
+  if (
+    fillSet.attackRoll.missToHitReplacementUnitId !== undefined &&
+    missToHitReplacement === null
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      ordinaryHit
+        ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
+        : "Attack-roll miss-to-hit replacement is not available for this attack roll.",
+    );
+  }
+  const hit = ordinaryHit || missToHitReplacement !== null;
+  const attackRolledState = recordAttackRollMissToHitReplacementUsed(
+    consumeHelpAttackForAttackRoll(
+      recordAttackRollOngoingFeatures(
+        revealHidden(input.state, input.subject.actorId),
+        input.subject.actorId,
+        target.combatantId,
+        activatedOngoingFeatureProfile,
+      ),
       input.subject.actorId,
       target.combatantId,
-      activatedOngoingFeatureProfile,
     ),
     input.subject.actorId,
-    target.combatantId,
+    missToHitReplacement,
+    {
+      subject: input.subject,
+      targetId: target.combatantId,
+      attackRoll: fillSet.attackRoll,
+    },
   );
   const critical = attackRollIsCriticalHit(
     fillSet.attackRoll,
@@ -9720,11 +9793,16 @@ function spendAttackAction(
           },
         }
       : afterExtraAttackResource;
+  const nextTurnResourcesWithoutPendingReplacement =
+    clearPendingAttackRollMissToHitReplacementSelection(
+      nextTurnResources,
+      actorId,
+    );
 
   const nextState = spendStatBlockAttackResources({
     state: {
       ...state,
-      currentTurnResources: nextTurnResources,
+      currentTurnResources: nextTurnResourcesWithoutPendingReplacement,
     },
     actorId,
     attack,
@@ -11053,6 +11131,7 @@ function resetStartOfTurnCombatant(
     dodging: false,
     reactionAvailable: true,
     movementSpentFeet: movementFeet(0),
+    attackRollMissToHitReplacementsUsedSinceTurnStart: [],
   };
   if (resetCombatant.origin.kind !== "statBlock") {
     return resetCombatant;
@@ -12121,7 +12200,12 @@ function resolveSpellAct(
     );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(castingState, input.subject, [
-        spellAttackRollHole(invocation, requiredRollMode),
+        spellAttackRollHole(
+          castingState,
+          subject.actorId,
+          invocation,
+          requiredRollMode,
+        ),
       ]);
     }
     if (!attackRollResultIsValid(fillSet.attackRoll)) {
@@ -12138,16 +12222,46 @@ function resolveSpellAct(
         "Spell attack roll mode does not match the current attack-roll rule.",
       );
     }
-    const hit = attackRollHits(
+    const ordinaryHit = attackRollHits(
       fillSet.attackRoll,
       currentArmorClass(activeEffectArmorClass(target)),
     );
+    const missToHitReplacement = selectedAttackRollMissToHitReplacement({
+      state: castingState,
+      subject: input.subject,
+      attackerId: subject.actorId,
+      targetId: target.combatantId,
+      attackRoll: fillSet.attackRoll,
+      ordinaryHit,
+    });
+    if (
+      fillSet.attackRoll.missToHitReplacementUnitId !== undefined &&
+      missToHitReplacement === null
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        ordinaryHit
+          ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
+          : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
+      );
+    }
+    const hit = ordinaryHit || missToHitReplacement !== null;
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
-    const attackRolledState = recordAttackRollOngoingFeatures(
-      castingState,
+    const attackRolledState = recordAttackRollMissToHitReplacementUsed(
+      recordAttackRollOngoingFeatures(
+        castingState,
+        subject.actorId,
+        target.combatantId,
+        null,
+      ),
       subject.actorId,
-      target.combatantId,
-      null,
+      missToHitReplacement,
+      {
+        subject: input.subject,
+        targetId: target.combatantId,
+        attackRoll: fillSet.attackRoll,
+      },
     );
     if (hit && input.suppressedReactionTrigger !== "attackHit") {
       const reactionWindow = maybeOpenReactionWindow(
@@ -12201,13 +12315,36 @@ function resolveSpellAct(
       spellDamageHole(invocation),
     ]);
   }
+  const spellAttackMissToHitReplacement =
+    invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
+      ? selectedAttackRollMissToHitReplacement({
+          state: castingState,
+          subject: input.subject,
+          attackerId: subject.actorId,
+          targetId: target.combatantId,
+          attackRoll: fillSet.attackRoll,
+          ordinaryHit: attackRollHits(
+            fillSet.attackRoll,
+            currentArmorClass(activeEffectArmorClass(target)),
+          ),
+        })
+      : null;
   const spellResolutionState =
     invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
-      ? recordAttackRollOngoingFeatures(
-          castingState,
+      ? recordAttackRollMissToHitReplacementUsed(
+          recordAttackRollOngoingFeatures(
+            castingState,
+            subject.actorId,
+            target.combatantId,
+            null,
+          ),
           subject.actorId,
-          target.combatantId,
-          null,
+          spellAttackMissToHitReplacement,
+          {
+            subject: input.subject,
+            targetId: target.combatantId,
+            attackRoll: fillSet.attackRoll,
+          },
         )
       : castingState;
   const critical =
@@ -12313,7 +12450,13 @@ function resolveSpellAct(
       "Magic action is no longer available for the current actor.",
     );
   }
-  const nextState = { ...effected, currentTurnResources: spent.right };
+  const nextState = {
+    ...effected,
+    currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+      spent.right,
+      subject.actorId,
+    ),
+  };
   const afterDamageReactionWindow = maybeOpenReactionWindow(
     nextState,
     {
@@ -12791,7 +12934,12 @@ function resolveSpellRelease(
     );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(input.state, input.subject, [
-        spellAttackRollHole(invocation, requiredRollMode),
+        spellAttackRollHole(
+          input.state,
+          input.subject.actorId,
+          invocation,
+          requiredRollMode,
+        ),
       ]);
     }
     if (!attackRollResultIsValid(fillSet.attackRoll)) {
@@ -12808,16 +12956,46 @@ function resolveSpellRelease(
         "Readied spell attack roll mode does not match the current attack-roll rule.",
       );
     }
-    const releaseAttackRolledState = recordAttackRollOngoingFeatures(
-      input.state,
-      input.subject.actorId,
-      target.combatantId,
-      null,
-    );
-    const hit = attackRollHits(
+    const ordinaryHit = attackRollHits(
       fillSet.attackRoll,
       currentArmorClass(activeEffectArmorClass(target)),
     );
+    const missToHitReplacement = selectedAttackRollMissToHitReplacement({
+      state: input.state,
+      subject: input.subject,
+      attackerId: input.subject.actorId,
+      targetId: target.combatantId,
+      attackRoll: fillSet.attackRoll,
+      ordinaryHit,
+    });
+    if (
+      fillSet.attackRoll.missToHitReplacementUnitId !== undefined &&
+      missToHitReplacement === null
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        ordinaryHit
+          ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
+          : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
+      );
+    }
+    const releaseAttackRolledState = recordAttackRollMissToHitReplacementUsed(
+      recordAttackRollOngoingFeatures(
+        input.state,
+        input.subject.actorId,
+        target.combatantId,
+        null,
+      ),
+      input.subject.actorId,
+      missToHitReplacement,
+      {
+        subject: input.subject,
+        targetId: target.combatantId,
+        attackRoll: fillSet.attackRoll,
+      },
+    );
+    const hit = ordinaryHit || missToHitReplacement !== null;
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
     if (hit && fillSet.damageRoll == null) {
       return needsHolesResult(releaseAttackRolledState, input.subject, [
@@ -12929,11 +13107,30 @@ function resolveSpellRelease(
   }
   const releaseResolutionState =
     invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
-      ? recordAttackRollOngoingFeatures(
-          input.state,
+      ? recordAttackRollMissToHitReplacementUsed(
+          recordAttackRollOngoingFeatures(
+            input.state,
+            input.subject.actorId,
+            target.combatantId,
+            null,
+          ),
           input.subject.actorId,
-          target.combatantId,
-          null,
+          selectedAttackRollMissToHitReplacement({
+            state: input.state,
+            subject: input.subject,
+            attackerId: input.subject.actorId,
+            targetId: target.combatantId,
+            attackRoll: fillSet.attackRoll,
+            ordinaryHit: attackRollHits(
+              fillSet.attackRoll,
+              currentArmorClass(activeEffectArmorClass(target)),
+            ),
+          }),
+          {
+            subject: input.subject,
+            targetId: target.combatantId,
+            attackRoll: fillSet.attackRoll,
+          },
         )
       : input.state;
   const damaged = applySpellDamage(
@@ -12956,10 +13153,17 @@ function resolveSpellRelease(
     target.combatantId,
     invocation,
   );
+  const resolvedState = {
+    ...effected,
+    currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+      effected.currentTurnResources,
+      input.subject.actorId,
+    ),
+  };
   return {
     tag: "resolved",
-    state: effected,
-    snapshot: snapshotBattle(effected),
+    state: resolvedState,
+    snapshot: snapshotBattle(resolvedState),
   };
 }
 
@@ -13009,7 +13213,7 @@ type SpellFillSet =
             readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
           }
         | undefined;
-      readonly attackRoll: AttackRollResult | undefined;
+      readonly attackRoll: BattleAttackRollResult | undefined;
       readonly savingThrowOutcomes: BattleSavingThrowOutcomeValue | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,
@@ -13799,7 +14003,13 @@ function resolveSaveGateDamageSpellAct(input: {
       "Magic action is no longer available for the current actor.",
     );
   }
-  const nextState = { ...extended, currentTurnResources: spent.right };
+  const nextState = {
+    ...extended,
+    currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+      spent.right,
+      input.actorId,
+    ),
+  };
   const afterDamageReactionWindow = maybeOpenReactionWindow(
     nextState,
     {
@@ -13882,7 +14092,13 @@ function spendMagicAction(
     );
   }
 
-  const nextState = { ...state, currentTurnResources: spent.right };
+  const nextState = {
+    ...state,
+    currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+      spent.right,
+      currentActorId(state),
+    ),
+  };
   return {
     tag: "resolved",
     state: nextState,
@@ -15732,6 +15948,8 @@ function supportedSpellInvocationMatchesRef(
 }
 
 function spellAttackRollHole(
+  state: BattleState,
+  attackerId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "spellAttackDamage" }
@@ -15746,6 +15964,7 @@ function spellAttackRollHole(
     spell: invocation,
     attackBonus: invocation.attackBonus,
     ...(rollMode === undefined ? {} : { rollMode }),
+    ...attackRollMissToHitReplacementHolePayload(state, attackerId),
   };
 }
 
@@ -16454,22 +16673,24 @@ function bonusActionStandardActionActs(
       }),
   );
   const dashTemporaryHitPointActs =
-    bonusActionDashTemporaryHitPointsProfilesForActor(actor).flatMap((entry) => {
-      if (!alternateActionCostActionAvailable(state, actorId, "dash")) {
-        return [];
-      }
-      return representedMovementSpeedKinds(actor).map((speedKind) => ({
-        subject: bonusActionDashSubjectForSpeedKind(
-          actorId,
-          entry.unitId,
-          speedKind,
-        ),
-        label: entry.resource.unit.name,
-        summary:
-          "Spend a Bonus Action and one use to Dash and gain Temporary Hit Points.",
-        initialHoles: [],
-      }));
-    });
+    bonusActionDashTemporaryHitPointsProfilesForActor(actor).flatMap(
+      (entry) => {
+        if (!alternateActionCostActionAvailable(state, actorId, "dash")) {
+          return [];
+        }
+        return representedMovementSpeedKinds(actor).map((speedKind) => ({
+          subject: bonusActionDashSubjectForSpeedKind(
+            actorId,
+            entry.unitId,
+            speedKind,
+          ),
+          label: entry.resource.unit.name,
+          summary:
+            "Spend a Bonus Action and one use to Dash and gain Temporary Hit Points.",
+          initialHoles: [],
+        }));
+      },
+    );
   return [...alternateCostActs, ...dashTemporaryHitPointActs];
 }
 
@@ -17116,6 +17337,9 @@ function attackRollHole(
     ongoingFeatureActivations.length === 0
       ? {}
       : { ongoingFeatureActivations }),
+    ...(attacker === undefined
+      ? {}
+      : attackRollMissToHitReplacementHolePayloadForAttacker(attacker)),
   };
 }
 
@@ -18984,6 +19208,186 @@ function eligibleWeaponDamageDiceRollChoiceUnitIds(
       ? [unitRef.unitId]
       : [],
   );
+}
+
+function attackRollMissToHitReplacementHolePayload(
+  state: BattleState,
+  attackerId: CombatantId,
+): Pick<BattleAttackRollHole, "missToHitReplacements"> {
+  const attacker = state.combatants.get(attackerId);
+  return attacker === undefined
+    ? {}
+    : attackRollMissToHitReplacementHolePayloadForAttacker(attacker);
+}
+
+function attackRollMissToHitReplacementHolePayloadForAttacker(
+  attacker: BattleCreatureState,
+): Pick<BattleAttackRollHole, "missToHitReplacements"> {
+  const missToHitReplacements =
+    eligibleAttackRollMissToHitReplacements(attacker);
+  return missToHitReplacements.length === 0 ? {} : { missToHitReplacements };
+}
+
+function eligibleAttackRollMissToHitReplacements(
+  attacker: BattleCreatureState | undefined,
+): readonly AttackRollMissToHitReplacement[] {
+  if (attacker?.origin.kind !== "character") {
+    return [];
+  }
+  return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
+    unitRef.supportProfiles.some(
+      (profile) =>
+        typeof profile === "object" &&
+        profile.kind === ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+    ) &&
+    !attacker.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
+      (usage) => usage.unitId === unitRef.unitId,
+    )
+      ? [{ unitId: unitRef.unitId, label: unitRef.unitId }]
+      : [],
+  );
+}
+
+function selectedAttackRollMissToHitReplacement(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly ordinaryHit: boolean;
+}): AttackRollMissToHitReplacement | null {
+  if (input.attackRoll.missToHitReplacementUnitId === undefined) {
+    return null;
+  }
+  if (input.ordinaryHit) {
+    return null;
+  }
+  return attackRollMissToHitReplacementForUnit(
+    input.state,
+    input.attackerId,
+    input.attackRoll.missToHitReplacementUnitId,
+    {
+      subject: input.subject,
+      targetId: input.targetId,
+      attackRoll: input.attackRoll,
+    },
+  );
+}
+
+function attackRollMissToHitReplacementForUnit(
+  state: BattleState,
+  attackerId: CombatantId,
+  unitId: UnitRecord["id"],
+  context: PendingAttackRollMissToHitReplacementContext,
+): AttackRollMissToHitReplacement | null {
+  const attacker = state.combatants.get(attackerId);
+  if (attacker?.origin.kind !== "character") {
+    return null;
+  }
+  const hasReplacementProfile = attacker.origin.characterUnitRefs.some(
+    (unitRef) =>
+      unitRef.unitId === unitId &&
+      unitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile === "object" &&
+          profile.kind === ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+      ),
+  );
+  if (!hasReplacementProfile) {
+    return null;
+  }
+  const pendingSelection =
+    state.currentTurnResources.pendingAttackRollMissToHitReplacementSelection;
+  return (pendingSelection?.attackerId === attackerId &&
+    pendingSelection.unitId === unitId &&
+    samePendingAttackRollMissToHitReplacementContext(
+      pendingSelection.context,
+      context,
+    )) ||
+    eligibleAttackRollMissToHitReplacements(attacker).some(
+      (replacement) => replacement.unitId === unitId,
+    )
+    ? { unitId, label: unitId }
+    : null;
+}
+
+function recordAttackRollMissToHitReplacementUsed(
+  state: BattleState,
+  attackerId: CombatantId,
+  replacement: AttackRollMissToHitReplacement | null,
+  context: PendingAttackRollMissToHitReplacementContext,
+): BattleState {
+  if (replacement === null) {
+    return state;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) {
+    return state;
+  }
+  const alreadyUsed =
+    attacker.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
+      (usage) => usage.unitId === replacement.unitId,
+    );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(attackerId, {
+      ...attacker,
+      attackRollMissToHitReplacementsUsedSinceTurnStart: alreadyUsed
+        ? attacker.attackRollMissToHitReplacementsUsedSinceTurnStart
+        : [
+            ...attacker.attackRollMissToHitReplacementsUsedSinceTurnStart,
+            { unitId: replacement.unitId },
+          ],
+    }),
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      pendingAttackRollMissToHitReplacementSelection: {
+        attackerId,
+        unitId: replacement.unitId,
+        context,
+      },
+    },
+  };
+}
+
+function samePendingAttackRollMissToHitReplacementContext(
+  left: PendingAttackRollMissToHitReplacementContext,
+  right: PendingAttackRollMissToHitReplacementContext,
+): boolean {
+  return (
+    left.targetId === right.targetId &&
+    sameBattleSubject(left.subject, right.subject) &&
+    sameAttackRollMissToHitReplacementRoll(left.attackRoll, right.attackRoll)
+  );
+}
+
+function sameAttackRollMissToHitReplacementRoll(
+  left: BattleAttackRollResult,
+  right: BattleAttackRollResult,
+): boolean {
+  return (
+    left.total === right.total &&
+    left.naturalD20 === right.naturalD20 &&
+    left.rollMode === right.rollMode &&
+    left.activatedOngoingFeatureUnitId ===
+      right.activatedOngoingFeatureUnitId &&
+    left.missToHitReplacementUnitId === right.missToHitReplacementUnitId
+  );
+}
+
+function clearPendingAttackRollMissToHitReplacementSelection(
+  resources: BattleTurnResources,
+  attackerId: CombatantId,
+): BattleTurnResources {
+  const pending = resources.pendingAttackRollMissToHitReplacementSelection;
+  if (pending?.attackerId !== attackerId) {
+    return resources;
+  }
+  const {
+    pendingAttackRollMissToHitReplacementSelection: _completedSelection,
+    ...withoutPendingSelection
+  } = resources;
+  return withoutPendingSelection;
 }
 
 function selectedWeaponDamageDiceRollChoice(

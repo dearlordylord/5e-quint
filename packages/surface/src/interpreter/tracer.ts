@@ -5528,7 +5528,10 @@ function traceTriggeredReplacementMechanics(
     id: effectId,
     category: "effect",
     atomKind: m.effect.kind,
-    label: `${m.effect.kind}\nreplacement HP ${m.effect.replacementHp}`,
+    label:
+      m.effect.kind === "prevent_drop_to_0_hp"
+        ? `${m.effect.kind}\nreplacement HP ${m.effect.replacementHp}`
+        : m.effect.kind,
   });
   edges.push({ from: triggerId, to: effectId, relation: "replaces_with" });
 
@@ -5615,6 +5618,8 @@ function traceFeatUnit(feat: FeatRecord): Trace {
   const procId =
     feat.mechanics.family === "on_hit_trigger"
       ? traceOnHitTriggerMechanics(feat.mechanics, nodes, edges, ids)
+      : feat.mechanics.family === "triggered_replacement"
+        ? traceTriggeredReplacementMechanics(feat.mechanics, nodes, edges, ids)
       : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 

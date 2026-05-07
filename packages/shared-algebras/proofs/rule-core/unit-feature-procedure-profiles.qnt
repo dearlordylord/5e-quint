@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -16,7 +16,7 @@ module unitFeatureProcedureProfiles {
   // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
   // - Classes/Barbarian.md: Rage, Reckless Attack.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
-  // - Feats.md: Archery, Defense, Savage Attacker.
+  // - Feats.md: Archery, Defense, Savage Attacker, Boon of Combat Prowess.
   // - Character-Origins.md: Orc Adrenaline Rush and Relentless Endurance.
   // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
   //   Damage Rolls, Dropping to 0 Hit Points, Instant Death, Saving Throws and
@@ -298,6 +298,22 @@ module unitFeatureProcedureProfiles {
     effectiveDamage: int,
   }
 
+  type AttackRollMissToHitReplacementFacts = {
+    naturalD20: int,
+    total: int,
+    armorClass: int,
+    usedSinceTurnStart: bool,
+    choosesFeature: bool,
+  }
+
+  type AttackRollMissToHitReplacementResult = {
+    admitted: bool,
+    usedSinceTurnStart: bool,
+    ordinaryHits: bool,
+    effectiveHits: bool,
+    critical: bool,
+  }
+
   type ZeroHitPointReplacementFacts = {
     incomingDamage: int,
     choosesFeature: bool,
@@ -494,6 +510,35 @@ module unitFeatureProcedureProfiles {
       weaponDamageDiceRolledPerCandidate: savageAttackerCandidateDiceCount(facts),
       selectedWeaponDamageDiceTotal: selectedTotal,
       effectiveDamage: nonnegative(selectedTotal + facts.damageModifier),
+    }
+  }
+
+  pure def resolveAttackRollMissToHitReplacement(
+    facts: AttackRollMissToHitReplacementFacts
+  ): AttackRollMissToHitReplacementResult = {
+    val ordinaryOutcome = resolveAttackRoll({
+      naturalD20: facts.naturalD20,
+      total: facts.total,
+      armorClass: facts.armorClass,
+      criticalThreshold: 20,
+    })
+    val admitted = all {
+      legalAttackRollProcedureFacts({
+        naturalD20: facts.naturalD20,
+        total: facts.total,
+        armorClass: facts.armorClass,
+        criticalThreshold: 20,
+      }),
+      not(ordinaryOutcome.hits),
+      not(facts.usedSinceTurnStart),
+      facts.choosesFeature,
+    }
+    {
+      admitted: admitted,
+      usedSinceTurnStart: facts.usedSinceTurnStart or admitted,
+      ordinaryHits: ordinaryOutcome.hits,
+      effectiveHits: ordinaryOutcome.hits or admitted,
+      critical: ordinaryOutcome.critical,
     }
   }
 
@@ -1460,6 +1505,51 @@ module unitFeatureProcedureProfiles {
       assert(nonRanged.bonus == 0),
       assert(nonRanged.effectiveAttackRollTotal == 14),
       assert(not(nonRanged.hits)),
+    }
+  }
+
+  run test_attack_roll_miss_to_hit_replacement_turns_one_miss_into_hit = {
+    val replaced = resolveAttackRollMissToHitReplacement({
+      naturalD20: 2,
+      total: 10,
+      armorClass: 16,
+      usedSinceTurnStart: false,
+      choosesFeature: true,
+    })
+    val declined = resolveAttackRollMissToHitReplacement({
+      naturalD20: 2,
+      total: 10,
+      armorClass: 16,
+      usedSinceTurnStart: false,
+      choosesFeature: false,
+    })
+    val reused = resolveAttackRollMissToHitReplacement({
+      naturalD20: 2,
+      total: 10,
+      armorClass: 16,
+      usedSinceTurnStart: true,
+      choosesFeature: true,
+    })
+    val ordinaryHit = resolveAttackRollMissToHitReplacement({
+      naturalD20: 10,
+      total: 16,
+      armorClass: 16,
+      usedSinceTurnStart: false,
+      choosesFeature: true,
+    })
+    all {
+      assert(replaced.admitted),
+      assert(not(replaced.ordinaryHits)),
+      assert(replaced.effectiveHits),
+      assert(replaced.usedSinceTurnStart),
+      assert(not(replaced.critical)),
+      assert(not(declined.effectiveHits)),
+      assert(not(declined.usedSinceTurnStart)),
+      assert(not(reused.admitted)),
+      assert(not(reused.effectiveHits)),
+      assert(ordinaryHit.ordinaryHits),
+      assert(ordinaryHit.effectiveHits),
+      assert(not(ordinaryHit.admitted)),
     }
   }
 
