@@ -268,7 +268,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 126,
       "id": "QMBT31",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Savage Attacker Weapon Damage Dice Choice"
     },
     {
@@ -355,7 +355,7 @@ Keep it synchronized with the DAG table and task details.
 | 123   | QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word | done | QMBT22-QMBT23, QMBT25-QMBT26 | QMBT30 | [QMBT28 spell admission triage](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT28_SPELL_ADMISSION_TRIAGE.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT23 Fire Bolt decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md) | Completed decision: select direct Hit Point restoration for `cure_wounds` and `mass_healing_word` as the next spell admission batch, with `fire_bolt` still excluded behind the QMBT23 object-target/object-ignition boundary. |
 | 124   | QMBT29 - Select Next SRD Feature Widening Slice After Archery | done | QMBT27 | QMBT30 | [Savage Attacker feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `feat_savage_attacker` as the next SRD feature widening slice, with a red/green plan for `unit-feature.weapon-damage-dice-roll-choice`. |
 | 125   | QMBT30 - Recursive Unit Profile Planning Review | done | QMBT27-QMBT29 | QMBT31-QMBT33 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT27-QMBT29 review, refreshed PRD status notes, and appended QMBT31-QMBT33 because the matrix lane is not complete. |
-| 126   | QMBT31 - Promote Savage Attacker Weapon Damage Dice Choice | ready-for-implementation-after-light-research | QMBT29-QMBT30 | QMBT33 | [Savage Attacker feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md) | Implement `feat_savage_attacker` as `unit-feature.weapon-damage-dice-roll-choice` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
+| 126   | QMBT31 - Promote Savage Attacker Weapon Damage Dice Choice | done | QMBT29-QMBT30 | QMBT33 | [Savage Attacker feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `feat_savage_attacker` as `unit-feature.weapon-damage-dice-roll-choice` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
 | 127   | QMBT32 - Promote Direct Hit Point Restoration Spell Batch | ready-for-implementation-after-light-research | QMBT28-QMBT30 | QMBT33 | [QMBT28 spell admission triage](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT28_SPELL_ADMISSION_TRIAGE.md) | Implement direct Hit Point restoration spell admission for `cure_wounds` and `mass_healing_word` without Fire Bolt object-targeting or condition-removal scope. |
 | 128   | QMBT33 - Recursive Unit Profile Planning Review | ready-for-research | QMBT31-QMBT32 | QMBT34+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT31-QMBT32 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
@@ -1260,7 +1260,7 @@ planning documentation only and did not change battle-runtime behavior.
 
 ### Task 126 - QMBT31 - Promote Savage Attacker Weapon Damage Dice Choice
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT29-QMBT30
 
@@ -1282,14 +1282,12 @@ calculation alternatives, species resource mixtures, weapon masteries, magic
 items, and general damage-reroll families beyond the Savage Attacker-shaped
 weapon damage dice choice.
 
-Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Savage Attacker,
-weapon hits, Damage Rolls, Critical Hits, Attack Damage Riders, and
-once-per-turn resource wording. Confirm whether Savage Attacker plus Critical
-Hit is resolved by RAW or needs an `ASSUMPTIONS.md` entry before executable
-modeling. Focused QNT proof; focused QMBT feature parity with the mandatory
-timed background protocol if production battle behavior changes; `pnpm
-unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm quality`;
-`/simplify` convergence, minimum two rounds.
+Verification completed: RAW and `UBIQUITOUS_LANGUAGE.md` checked for Savage
+Attacker, weapon hits, Damage Rolls, Critical Hits, Attack Damage Riders, and
+once-per-turn resource wording. `ASSUMPTIONS.md` A46 records the Savage
+Attacker plus Critical Hit modeling decision. Focused QNT proof, timed focused
+QMBT feature parity, `pnpm unit-profile-coverage:check`, package
+typecheck/tests, `pnpm quality`, and two simplify review rounds passed.
 
 ### Task 127 - QMBT32 - Promote Direct Hit Point Restoration Spell Batch
 

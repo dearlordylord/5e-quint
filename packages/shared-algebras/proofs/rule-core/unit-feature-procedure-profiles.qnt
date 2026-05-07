@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -16,7 +16,7 @@ module unitFeatureProcedureProfiles {
   // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
   // - Classes/Barbarian.md: Rage, Reckless Attack.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
-  // - Feats.md: Archery, Defense.
+  // - Feats.md: Archery, Defense, Savage Attacker.
   // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
   //   Damage Rolls, Saving Throws and Damage, Resistance and Vulnerability.
 
@@ -229,6 +229,27 @@ module unitFeatureProcedureProfiles {
     hits: bool,
   }
 
+  type WeaponDamageDiceRollChoiceFacts = {
+    hitWithWeapon: bool,
+    criticalHit: bool,
+    usedThisTurn: bool,
+    choosesFeature: bool,
+    weaponDamageDice: int,
+    weaponDamageDieSize: int,
+    firstCandidateTotal: int,
+    secondCandidateTotal: int,
+    chooseSecondCandidate: bool,
+    damageModifier: int,
+  }
+
+  type WeaponDamageDiceRollChoiceResult = {
+    admitted: bool,
+    usedThisTurn: bool,
+    weaponDamageDiceRolledPerCandidate: int,
+    selectedWeaponDamageDiceTotal: int,
+    effectiveDamage: int,
+  }
+
   pure def legalFeatureUsePool(pool: FeatureUsePool): bool = all {
     pool.maximumUses >= 0,
     pool.maximumUses <= 6,
@@ -260,6 +281,46 @@ module unitFeatureProcedureProfiles {
       bonus: bonus,
       effectiveAttackRollTotal: total,
       hits: outcome.hits,
+    }
+  }
+
+  pure def savageAttackerCandidateDiceCount(facts: WeaponDamageDiceRollChoiceFacts): int =
+    if (facts.criticalHit) facts.weaponDamageDice * 2 else facts.weaponDamageDice
+
+  pure def legalWeaponDamageDiceRollChoiceFacts(
+    facts: WeaponDamageDiceRollChoiceFacts
+  ): bool = all {
+    facts.weaponDamageDice >= 1,
+    facts.weaponDamageDice <= 4,
+    facts.weaponDamageDieSize >= 4,
+    facts.weaponDamageDieSize <= 12,
+    facts.firstCandidateTotal >= savageAttackerCandidateDiceCount(facts),
+    facts.secondCandidateTotal >= savageAttackerCandidateDiceCount(facts),
+    facts.firstCandidateTotal <= savageAttackerCandidateDiceCount(facts) * facts.weaponDamageDieSize,
+    facts.secondCandidateTotal <= savageAttackerCandidateDiceCount(facts) * facts.weaponDamageDieSize,
+  }
+
+  pure def resolveWeaponDamageDiceRollChoice(
+    facts: WeaponDamageDiceRollChoiceFacts,
+    ordinaryWeaponDamageDiceTotal: int
+  ): WeaponDamageDiceRollChoiceResult = {
+    val admitted = all {
+      legalWeaponDamageDiceRollChoiceFacts(facts),
+      facts.hitWithWeapon,
+      not(facts.usedThisTurn),
+      facts.choosesFeature,
+    }
+    val selectedTotal =
+      if (admitted) {
+        if (facts.chooseSecondCandidate) facts.secondCandidateTotal
+        else facts.firstCandidateTotal
+      } else ordinaryWeaponDamageDiceTotal
+    {
+      admitted: admitted,
+      usedThisTurn: facts.usedThisTurn or admitted,
+      weaponDamageDiceRolledPerCandidate: savageAttackerCandidateDiceCount(facts),
+      selectedWeaponDamageDiceTotal: selectedTotal,
+      effectiveDamage: nonnegative(selectedTotal + facts.damageModifier),
     }
   }
 

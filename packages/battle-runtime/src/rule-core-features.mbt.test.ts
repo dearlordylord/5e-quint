@@ -1,7 +1,8 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
@@ -11,6 +12,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_evasion doEvasionSuccess doEvasionFailure
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_uncanny_dodge doUncannyDodge
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_sneak_attack doSneakAttack
+// UNIT-IDENTITY-MBT-REPLAY: QMBT31 feat_savage_attacker doSavageAttackerDamage
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -41,6 +43,7 @@ import {
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   battleCombatantSide,
   battleId,
@@ -165,6 +168,7 @@ const driverSchema = {
   doUncannyDodge: {},
   doDefenseArmorClass: {},
   doArcheryAttackRollBonus: {},
+  doSavageAttackerDamage: {},
   step: {},
 } as const;
 type RuleCoreFeatureDriverAction = Exclude<
@@ -177,7 +181,7 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: RuleCoreFeatureProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "QMBT7" | "QMBT9";
+  readonly taskId: "QMBT7" | "QMBT9" | "QMBT31";
   readonly unitId: string;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -405,6 +409,23 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "QMBT31",
+    unitId: "feat_savage_attacker",
+    actions: ["doSavageAttackerDamage"],
+    sequences: [
+      {
+        name: "choose-second-weapon-damage-roll",
+        actions: ["doSavageAttackerDamage"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          targetHp: 4,
+          lastDamageAmount: 8,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 function expectedProjection(
@@ -493,7 +514,7 @@ function createRuleCoreFeatureDriver() {
       }
       if (!isRuleCoreFeatureInvalidReason(result.reason)) {
         throw new Error(
-          `Unexpected rule-core Feature MBT invalid reason: ${result.reason}`,
+          `Unexpected rule-core Feature MBT invalid reason: ${result.reason}: ${result.message}`,
         );
       }
       lastResult = "invalid";
@@ -521,6 +542,10 @@ function createRuleCoreFeatureDriver() {
       readonly rollMode?: AttackRollMode;
       readonly activatedOngoingFeatureUnitId?: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
+      readonly weaponDamageDiceRollChoice?: Extract<
+        BattleFill,
+        { readonly kind: "rolledDice" }
+      >["weaponDamageDiceRollChoice"];
     }): void {
       const subject = input.subject ?? actorAttackSubject("Longsword");
       const target = requireHole(
@@ -586,6 +611,7 @@ function createRuleCoreFeatureDriver() {
               ? (input.damageGroups ?? [[input.damageRoll]])
               : [[input.damageRoll], [6]],
             input.selectedAttackDamageRiderUnitIds,
+            input.weaponDamageDiceRollChoice,
           ),
         ],
       });
@@ -723,6 +749,20 @@ function createRuleCoreFeatureDriver() {
         critical = true;
         lastDamageAmount = 8;
       },
+      doSavageAttackerDamage: () => {
+        state = savageAttackerBattle();
+        resetProjection();
+        resolveActorAttack({
+          state,
+          damageRoll: 8,
+          weaponDamageDiceRollChoice: {
+            unitId: recordSelectedUnitRuntimeBoundaryId("feat_savage_attacker"),
+            selection: "second",
+            candidates: [rolledDiceGroup([2]), rolledDiceGroup([8])],
+          },
+        });
+        lastDamageAmount = 8;
+      },
       doEvasionSuccess: () => resolveDexHalfCantrip(true),
       doEvasionFailure: () => resolveDexHalfCantrip(false),
       doCuttingWordsDamage: () => {
@@ -739,10 +779,10 @@ function createRuleCoreFeatureDriver() {
           unitId: cuttingWords.id,
           modifierKind: "damageRollReduction",
           reductionRoll: 4,
-          damageRoll: 9,
+          damageRoll: 6,
         });
         featureUsesRemaining = resourceUsesRemaining(state, cuttingWords.id);
-        lastDamageAmount = 5;
+        lastDamageAmount = 2;
       },
       doUncannyDodge: () => {
         state = reactionModifierBattle({
@@ -1235,6 +1275,24 @@ function improvedCriticalBattle(): BattleState {
   });
 }
 
+function savageAttackerBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("rule-core-savage-attacker"),
+    combatants: [
+      featureActor({
+        initiative: 20,
+        characterUnitRefs: [
+          {
+            unitId: recordSelectedUnitRuntimeBoundaryId("feat_savage_attacker"),
+            supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
+          },
+        ],
+      }),
+      featureTarget(10),
+    ],
+  });
+}
+
 function evasionBattle(): BattleState {
   return startBattleRight({
     battleId: battleId("rule-core-evasion"),
@@ -1630,6 +1688,10 @@ function damageRollFillWithGroups(
   hole: Pick<BattleHole, "kind" | "holeId">,
   groups: readonly (readonly number[])[],
   selectedAttackDamageRiderUnitIds?: readonly string[],
+  weaponDamageDiceRollChoice?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["weaponDamageDiceRollChoice"],
 ): BattleRolledDiceFill {
   if (hole.kind !== "rolledDice") throw new Error("Expected rolledDice.");
   return {
@@ -1638,6 +1700,9 @@ function damageRollFillWithGroups(
     ...(selectedAttackDamageRiderUnitIds === undefined
       ? {}
       : { selectedAttackDamageRiderUnitIds }),
+    ...(weaponDamageDiceRollChoice === undefined
+      ? {}
+      : { weaponDamageDiceRollChoice }),
     value: rolledDiceGroups(groups),
   };
 }

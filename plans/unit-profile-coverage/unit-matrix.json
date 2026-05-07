@@ -62,8 +62,8 @@
       "value": 51
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 18,
-      "numerator": 18,
+      "denominator": 19,
+      "numerator": 19,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 16,
-      "numerator": 16,
+      "denominator": 17,
+      "numerator": 17,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 16,
-      "numerator": 16,
+      "denominator": 17,
+      "numerator": 17,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 16,
-      "numerator": 16,
+      "denominator": 17,
+      "numerator": 17,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 16,
-      "numerator": 16,
+      "denominator": 17,
+      "numerator": 17,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 18,
-      "numerator": 9,
-      "percent": "50%"
+      "denominator": 19,
+      "numerator": 10,
+      "percent": "52.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 37,
-      "numerator": 18,
-      "percent": "48.6%"
+      "numerator": 19,
+      "percent": "51.4%"
     }
   },
   "metricSemantics": [
@@ -370,6 +370,32 @@
         "QMBT27"
       ],
       "title": "Unit feature passively adds to attack rolls made with Ranged weapons",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.weapon-damage-dice-roll-choice",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT31"
+      ],
+      "title": "Unit feature chooses between two weapon damage dice rolls after a weapon hit",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -660,7 +686,8 @@
         "unit-feature.reaction-roll-or-damage-reduction",
         "unit-feature.save-damage-replacement",
         "unit-feature.self-bonus-action-healing",
-        "unit-feature.weapon-critical-range-19"
+        "unit-feature.weapon-critical-range-19",
+        "unit-feature.weapon-damage-dice-roll-choice"
       ],
       "taskId": "QCORE9"
     },
@@ -748,6 +775,14 @@
         "unit-feature.passive-ranged-attack-roll-bonus"
       ],
       "taskId": "QMBT27"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused weapon hit damage dice roll choice runtime parity.",
+      "profileIds": [
+        "unit-feature.weapon-damage-dice-roll-choice"
+      ],
+      "taskId": "QMBT31"
     }
   ],
   "units": [
@@ -1697,14 +1732,57 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Weapon damage dice reroll is authored but not yet a stable Unit profile row.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.weapon-damage-dice-roll-choice"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT31"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "QMBT31"
+        }
+      ],
       "executableMechanics": true,
       "kind": "feat",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.weapon-damage-dice-roll-choice",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT31"
+          ],
+          "title": "Unit feature chooses between two weapon damage dice rolls after a weapon hit",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
       "unitId": "feat_savage_attacker"
     },

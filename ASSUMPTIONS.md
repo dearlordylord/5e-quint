@@ -379,3 +379,11 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rules basis:** SRD 5.2.1 says a Reaction is an instant response to a trigger, a creature cannot take another Reaction until the start of its next turn, a Reaction normally occurs immediately after its trigger, and an interrupted creature continues its turn right after the Reaction. Ready says the reacting creature can take its Reaction after the trigger finishes or ignore the trigger. The SRD does not specify a general-purpose queue, stack, or replay policy for multiple nested reaction windows.
 
 **Changes:** `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` encodes Offer, Decline, matching Reaction spend, Advance, bounded nested windows with suspended-window restoration, Opportunity Attack and guarded damage-interruption shallow integrations, reactor-owned Readied Movement Response release gated by the held Readied Movement fact, and actor-owned Concentration break/prevent/damage-save procedures.
+
+## A46: Savage Attacker chooses between full critical weapon damage dice pools
+
+**Assumption:** When Savage Attacker is used on a Critical Hit, each Savage Attacker candidate is the full weapon damage dice pool after Critical Hit doubling. The player chooses either complete candidate pool, then adds relevant modifiers as normal. Extra damage dice from other features, such as Sneak Attack, are not part of the Savage Attacker candidates.
+
+**Rules basis:** SRD 5.2.1 Feats, "Savage Attacker" says once per turn when a creature hits with a weapon, it can roll the weapon's damage dice twice and use either roll. Playing the Game, "Critical Hits" says a Critical Hit rolls the attack's damage dice twice and adds them together, and separately says other damage dice such as Sneak Attack are also rolled twice. The SRD does not explicitly define ordering for Savage Attacker plus Critical Hit, so the promoted model treats the Critical Hit rule as defining the weapon damage dice pool for the hit, and Savage Attacker as choosing between two rolls of that weapon pool only.
+
+**Changes:** `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` and `packages/battle-runtime/src/battle-reducer.ts` model Savage Attacker's weapon damage dice choice this way.

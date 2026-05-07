@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing spell.invocation-damage-save-or-attack spell.bonus-action-healing spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.bonus-action-healing spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -198,6 +198,7 @@ import {
   type AlternateActionCostAction,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
   type BattleUnitSupportProfile,
@@ -311,6 +312,7 @@ export type BattleInterruptedProcedure =
       readonly deathFailuresAtZeroHp: 1 | 2;
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly attackDamageRiders: readonly AttackDamageRider[];
+      readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
     };
 type BattleAttackHostSubject =
   | Extract<
@@ -699,12 +701,32 @@ type SupportedDamageSpellAct = Exclude<
   }
 >;
 
+type WeaponDamageDiceRollChoiceSelection = "first" | "second";
+type WeaponDamageDiceRollChoiceFill = {
+  readonly unitId: UnitRecord["id"];
+  readonly selection: WeaponDamageDiceRollChoiceSelection;
+  readonly candidates: readonly [RolledDiceGroup, RolledDiceGroup];
+};
+type WeaponDamageDiceRollChoiceFillEncoded = {
+  readonly unitId: string;
+  readonly selection: WeaponDamageDiceRollChoiceSelection;
+  readonly candidates: readonly [
+    { readonly results: readonly [number, ...number[]] },
+    { readonly results: readonly [number, ...number[]] },
+  ];
+};
+type WeaponDamageDiceRollChoiceUsage = {
+  readonly attackerId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+};
+
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
   readonly spellSlotExpendedThisTurn: boolean;
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
   };
@@ -1057,6 +1079,7 @@ export type BattleDamageRollHole = Extract<
   readonly attack: SupportedAttackActionOption;
   readonly critical: boolean;
   readonly attackDamageRiders?: readonly AttackDamageRider[];
+  readonly weaponDamageDiceRollChoiceUnitIds?: readonly UnitRecord["id"][];
 };
 export type BattleSpellDamageRollHole = Extract<
   RuntimeHole,
@@ -1398,6 +1421,10 @@ export const BattleHoleSchema = Schema.Union(
       ),
       { exact: true },
     ),
+    weaponDamageDiceRollChoiceUnitIds: Schema.optionalWith(
+      Schema.Array(Schema.String),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1504,6 +1531,7 @@ export type BattleRolledDiceFill = Extract<
   { readonly kind: "rolledDice" }
 > & {
   readonly selectedAttackDamageRiderUnitIds?: readonly UnitRecord["id"][];
+  readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
 };
 export type BattleFill =
   | {
@@ -1694,6 +1722,7 @@ type BattleFillEncoded =
       readonly kind: "rolledDice";
       readonly holeId: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
+      readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFillEncoded;
       readonly value: readonly [
         {
           readonly results: readonly [number, ...number[]];
@@ -1902,6 +1931,17 @@ export const BattleFillSchema: Schema.Schema<
       holeId: BattleHoleIdSchema,
       selectedAttackDamageRiderUnitIds: Schema.optionalWith(
         Schema.Array(Schema.String),
+        { exact: true },
+      ),
+      weaponDamageDiceRollChoice: Schema.optionalWith(
+        Schema.Struct({
+          unitId: Schema.String,
+          selection: Schema.Literal("first", "second"),
+          candidates: Schema.Tuple(
+            BattleRolledDiceGroupSchema,
+            BattleRolledDiceGroupSchema,
+          ),
+        }),
         { exact: true },
       ),
       value: Schema.NonEmptyArray(BattleRolledDiceGroupSchema),
@@ -2182,6 +2222,7 @@ export type BattleTurnSnapshot = {
   readonly spellSlotExpendedThisTurn: boolean;
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
   };
@@ -2305,6 +2346,12 @@ const BattleTurnSnapshotSchema = Schema.Struct({
   spellSlotExpendedThisTurn: Schema.Boolean,
   attackRollMadeThisTurn: Schema.Boolean,
   attackDamageRidersUsedThisTurn: Schema.Array(
+    Schema.Struct({
+      attackerId: CombatantId,
+      unitId: Schema.String,
+    }),
+  ),
+  weaponDamageDiceRollChoicesUsedThisTurn: Schema.Array(
     Schema.Struct({
       attackerId: CombatantId,
       unitId: Schema.String,
@@ -2539,6 +2586,7 @@ const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   spellSlotExpendedThisTurn: false,
   attackRollMadeThisTurn: false,
   attackDamageRidersUsedThisTurn: [],
+  weaponDamageDiceRollChoicesUsedThisTurn: [],
   dashMovementBonusFeet: movementFeet(0),
   disengaged: false,
 });
@@ -4681,6 +4729,7 @@ function resumeInterruptedProcedure(
       continuation.deathFailuresAtZeroHp,
       continuation.damageDisposition,
       continuation.attackDamageRiders,
+      continuation.weaponDamageDiceRollChoice,
       continuation.concentrationSavingThrow,
     );
     const reactionWindow = maybeOpenReactionWindow(
@@ -5116,6 +5165,8 @@ function battleTurnSnapshot(
     spellSlotExpendedThisTurn: resources.spellSlotExpendedThisTurn,
     attackRollMadeThisTurn: resources.attackRollMadeThisTurn,
     attackDamageRidersUsedThisTurn: resources.attackDamageRidersUsedThisTurn,
+    weaponDamageDiceRollChoicesUsedThisTurn:
+      resources.weaponDamageDiceRollChoicesUsedThisTurn,
     ...(resources.lightWeaponAttackMade === undefined
       ? {}
       : { lightWeaponAttackMade: resources.lightWeaponAttackMade }),
@@ -6759,6 +6810,13 @@ function resolveAttack(
         fillSet.targetSpatialFacts,
       )
     : [];
+  const eligibleDamageDiceChoiceUnitIds = hit
+    ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+        attackRolledState,
+        input.subject.actorId,
+        attack,
+      )
+    : [];
   const selectedDamageRiders =
     fillSet.damageRoll === undefined
       ? []
@@ -6932,6 +6990,7 @@ function resolveAttack(
         critical ? 2 : 1,
         fillSet.damageDisposition,
         [],
+        undefined,
         fillSet.concentrationSavingThrow,
       ),
       input.subject.actorId,
@@ -6970,6 +7029,7 @@ function resolveAttack(
           attackRolledState.combatants.get(input.subject.actorId),
           attack,
         ),
+        eligibleDamageDiceChoiceUnitIds,
       ),
     ]);
   }
@@ -6981,6 +7041,10 @@ function resolveAttack(
     );
   }
   if (hit && fillSet.damageRoll != null) {
+    const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
+      eligibleDamageDiceChoiceUnitIds,
+      fillSet.damageRoll.weaponDamageDiceRollChoice,
+    );
     const damageValidation = validateAttackDamageFill(
       fillSet.damageRoll,
       attack,
@@ -6991,6 +7055,7 @@ function resolveAttack(
         attackRolledState.combatants.get(input.subject.actorId),
         attack,
       ),
+      eligibleDamageDiceChoiceUnitIds,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
@@ -7048,6 +7113,9 @@ function resolveAttack(
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
           attackDamageRiders: selectedDamageRiders,
+          ...(selectedDamageDiceChoice === null
+            ? {}
+            : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
         },
       },
       input.suppressedReactionTrigger,
@@ -7086,6 +7154,9 @@ function resolveAttack(
             deathFailuresAtZeroHp: critical ? 2 : 1,
             damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: selectedDamageRiders,
+            ...(selectedDamageDiceChoice === null
+              ? {}
+              : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
           },
           concentrationSave,
         });
@@ -7115,6 +7186,7 @@ function resolveAttack(
         critical ? 2 : 1,
         fillSet.damageDisposition,
         selectedDamageRiders,
+        selectedDamageDiceChoice ?? undefined,
         fillSet.concentrationSavingThrow,
       ),
       input.subject.actorId,
@@ -7997,6 +8069,13 @@ function resolveOffHandAttack(
         fillSet.targetSpatialFacts,
       )
     : [];
+  const eligibleDamageDiceChoiceUnitIds = hit
+    ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+        attackRolledState,
+        input.subject.actorId,
+        attack,
+      )
+    : [];
   const selectedDamageRiders =
     fillSet.damageRoll === undefined
       ? []
@@ -8041,6 +8120,7 @@ function resolveOffHandAttack(
           attackRolledState.combatants.get(input.subject.actorId),
           attack,
         ),
+        eligibleDamageDiceChoiceUnitIds,
       ),
     ]);
   }
@@ -8055,6 +8135,10 @@ function resolveOffHandAttack(
     return spendOffHandBonusAction(attackRolledState);
   }
   if (hit && fillSet.damageRoll != null) {
+    const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
+      eligibleDamageDiceChoiceUnitIds,
+      fillSet.damageRoll.weaponDamageDiceRollChoice,
+    );
     const damageValidation = validateAttackDamageFill(
       fillSet.damageRoll,
       attack,
@@ -8065,6 +8149,7 @@ function resolveOffHandAttack(
         attackRolledState.combatants.get(input.subject.actorId),
         attack,
       ),
+      eligibleDamageDiceChoiceUnitIds,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
@@ -8122,6 +8207,9 @@ function resolveOffHandAttack(
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
           attackDamageRiders: selectedDamageRiders,
+          ...(selectedDamageDiceChoice === null
+            ? {}
+            : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
         },
       },
       input.suppressedReactionTrigger,
@@ -8170,6 +8258,7 @@ function resolveOffHandAttack(
       critical ? 2 : 1,
       fillSet.damageDisposition,
       selectedDamageRiders,
+      selectedDamageDiceChoice ?? undefined,
       fillSet.concentrationSavingThrow,
     );
     const spent = spendOffHandBonusAction(damaged);
@@ -8805,6 +8894,7 @@ function validateAttackDamageFill(
   attackRoll: AttackRollResult,
   eligibleAttackDamageRiders: readonly AttackDamageRider[],
   ongoingDamageModifier = 0,
+  eligibleWeaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): string | null {
   const selectedRiders = selectedAttackDamageRiders(
     eligibleAttackDamageRiders,
@@ -8822,12 +8912,24 @@ function validateAttackDamageFill(
       : "Attack damage must use the normal hit damage hole.";
   }
 
+  const weaponDamageDiceRollChoice = selectedWeaponDamageDiceRollChoice(
+    eligibleWeaponDamageDiceRollChoiceUnitIds,
+    fill.weaponDamageDiceRollChoice,
+  );
+  if (
+    fill.weaponDamageDiceRollChoice !== undefined &&
+    weaponDamageDiceRollChoice === null
+  ) {
+    return "Weapon damage dice roll choice is not eligible for this attack.";
+  }
+
   return validateRolledDiceForWeaponAttack(
     fill.value,
     attack,
     critical,
     attackRoll,
     selectedRiders,
+    weaponDamageDiceRollChoice ?? undefined,
   );
 }
 
@@ -8837,6 +8939,7 @@ function validateRolledDiceForWeaponAttack(
   critical: boolean,
   attackRoll: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[],
+  weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill,
 ): string | null {
   const components = attackDamageComponents(
     attack,
@@ -8856,6 +8959,33 @@ function validateRolledDiceForWeaponAttack(
     const validation = validateRolledDiceForDiceExpr([group], component.expr);
     if (validation !== null) {
       return validation.reason;
+    }
+  }
+
+  if (weaponDamageDiceRollChoice !== undefined) {
+    const weaponDamage = weaponDamageComponent(attack, critical);
+    if (weaponDamage === null) {
+      return "Weapon damage dice roll choice requires weapon damage dice.";
+    }
+    const candidateValidation = validateRolledDiceForDiceExpr(
+      weaponDamageDiceRollChoice.candidates,
+      {
+        dice: weaponDamage.expr.dice * 2,
+        dieSize: weaponDamage.expr.dieSize,
+      },
+    );
+    if (candidateValidation !== null) {
+      return candidateValidation.reason;
+    }
+    const selectedCandidate =
+      weaponDamageDiceRollChoice.selection === "first"
+        ? weaponDamageDiceRollChoice.candidates[0]
+        : weaponDamageDiceRollChoice.candidates[1];
+    if (
+      JSON.stringify(groups[0]?.results) !==
+      JSON.stringify(selectedCandidate.results)
+    ) {
+      return "Selected weapon damage dice roll choice must match the base weapon damage group.";
     }
   }
 
@@ -9197,6 +9327,7 @@ function resetBattleTurnResources(
     spellSlotExpendedThisTurn: false,
     attackRollMadeThisTurn: false,
     attackDamageRidersUsedThisTurn: [],
+    weaponDamageDiceRollChoicesUsedThisTurn: [],
     dashMovementBonusFeet: movementFeet(0),
     disengaged: false,
   };
@@ -9563,6 +9694,13 @@ function resolveOpportunityAttackCommand(
         [],
       )
     : [];
+  const eligibleDamageDiceChoiceUnitIds = hit
+    ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+        attackRolledState,
+        subject.reactorId,
+        attack,
+      )
+    : [];
   const selectedDamageRiders =
     fillSet.damageRoll === undefined
       ? []
@@ -9722,6 +9860,7 @@ function resolveOpportunityAttackCommand(
       critical ? 2 : 1,
       fillSet.damageDisposition,
       [],
+      undefined,
       fillSet.concentrationSavingThrow,
     );
     const reactionWindow = maybeOpenReactionWindow(
@@ -9758,9 +9897,14 @@ function resolveOpportunityAttackCommand(
           attackRolledState.combatants.get(subject.reactorId),
           attack,
         ),
+        eligibleDamageDiceChoiceUnitIds,
       ),
     ]);
   }
+  const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
+    eligibleDamageDiceChoiceUnitIds,
+    fillSet.damageRoll.weaponDamageDiceRollChoice,
+  );
   const damageValidation = validateAttackDamageFill(
     fillSet.damageRoll,
     attack,
@@ -9771,6 +9915,7 @@ function resolveOpportunityAttackCommand(
       attackRolledState.combatants.get(subject.reactorId),
       attack,
     ),
+    eligibleDamageDiceChoiceUnitIds,
   );
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
@@ -9828,6 +9973,9 @@ function resolveOpportunityAttackCommand(
         deathFailuresAtZeroHp: critical ? 2 : 1,
         damageDisposition: fillSet.damageDisposition,
         attackDamageRiders: selectedDamageRiders,
+        ...(selectedDamageDiceChoice === null
+          ? {}
+          : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
       },
     },
     input.suppressedReactionTrigger,
@@ -9861,6 +10009,7 @@ function resolveOpportunityAttackCommand(
     critical ? 2 : 1,
     fillSet.damageDisposition,
     selectedDamageRiders,
+    selectedDamageDiceChoice ?? undefined,
     fillSet.concentrationSavingThrow,
   );
   const reactionWindow = maybeOpenReactionWindow(
@@ -12822,7 +12971,7 @@ function applyAttackDamage(
         })
       : nextState;
   return normalizeBattleGrapples(
-    recordAttackDamageRidersUsed(concentrated, attackDamageRiders),
+    recordAttackDamageUnitsUsed(concentrated, attackDamageRiders),
   );
 }
 
@@ -12834,6 +12983,7 @@ function applyAttackDamageAmount(
   deathFailuresAtZeroHp: 1 | 2,
   damageDisposition: BattleAttackDamageDisposition,
   attackDamageRiders: readonly AttackDamageRider[],
+  weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill,
   concentrationSavingThrow?: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
@@ -12863,18 +13013,25 @@ function applyAttackDamageAmount(
         })
       : nextState;
   return normalizeBattleGrapples(
-    recordAttackDamageRidersUsed(
+    recordAttackDamageUnitsUsed(
       concentrated,
       attackDamageRiders.map((rider) => ({ ...rider, attackerId })),
+      weaponDamageDiceRollChoice === undefined
+        ? []
+        : [{ attackerId, unitId: weaponDamageDiceRollChoice.unitId }],
     ),
   );
 }
 
-function recordAttackDamageRidersUsed(
+function recordAttackDamageUnitsUsed(
   state: BattleState,
   attackDamageRiders: readonly AttackDamageRider[],
+  weaponDamageDiceRollChoices: readonly WeaponDamageDiceRollChoiceUsage[] = [],
 ): BattleState {
-  if (attackDamageRiders.length === 0) {
+  if (
+    attackDamageRiders.length === 0 &&
+    weaponDamageDiceRollChoices.length === 0
+  ) {
     return state;
   }
   return {
@@ -12887,6 +13044,10 @@ function recordAttackDamageRidersUsed(
           attackerId: rider.attackerId,
           unitId: rider.unitId,
         })),
+      ],
+      weaponDamageDiceRollChoicesUsedThisTurn: [
+        ...state.currentTurnResources.weaponDamageDiceRollChoicesUsedThisTurn,
+        ...weaponDamageDiceRollChoices,
       ],
     },
   };
@@ -15866,6 +16027,7 @@ function attackDamageHole(
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
   ongoingDamageModifier = 0,
+  weaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(
     attack,
@@ -15890,6 +16052,9 @@ function attackDamageHole(
     attack,
     critical,
     ...(attackDamageRiders.length === 0 ? {} : { attackDamageRiders }),
+    ...(weaponDamageDiceRollChoiceUnitIds.length === 0
+      ? {}
+      : { weaponDamageDiceRollChoiceUnitIds }),
   };
 }
 
@@ -16981,6 +17146,23 @@ function attackDamageComponents(
   return [...baseComponents, ...riderComponents];
 }
 
+function weaponDamageComponent(
+  attack: SupportedAttackActionOption,
+  critical: boolean,
+): AttackDamageComponent | null {
+  if (attack.kind !== "weapon") {
+    return null;
+  }
+  const damage = selectedWeaponDamage(attack.weapon);
+  return {
+    expr: {
+      dice: critical ? damage.dice * 2 : damage.dice,
+      dieSize: damage.dieSize,
+    },
+    damageType: damage.damageType,
+  };
+}
+
 function attackPotentialDamageTypes(
   attack: SupportedAttackActionOption,
   critical: boolean,
@@ -17063,12 +17245,43 @@ function passiveRangedAttackRollBonus(
   }
   return attacker.origin.characterUnitRefs.some((unitRef) =>
     unitRef.supportProfiles.some(
-      (profile) =>
-        profile === PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+      (profile) => profile === PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
     ),
   )
     ? 2
     : 0;
+}
+
+function eligibleWeaponDamageDiceRollChoiceUnitIds(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+): readonly UnitRecord["id"][] {
+  const attacker = state.combatants.get(attackerId);
+  if (attacker?.origin.kind !== "character" || attack.kind !== "weapon") {
+    return [];
+  }
+  return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
+    unitRef.supportProfiles.includes(
+      WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
+    ) &&
+    !state.currentTurnResources.weaponDamageDiceRollChoicesUsedThisTurn.some(
+      (usage) =>
+        usage.attackerId === attackerId && usage.unitId === unitRef.unitId,
+    )
+      ? [unitRef.unitId]
+      : [],
+  );
+}
+
+function selectedWeaponDamageDiceRollChoice(
+  eligibleUnitIds: readonly UnitRecord["id"][],
+  choice: WeaponDamageDiceRollChoiceFill | undefined,
+): WeaponDamageDiceRollChoiceFill | null {
+  if (choice === undefined) {
+    return null;
+  }
+  return eligibleUnitIds.includes(choice.unitId) ? choice : null;
 }
 
 function weaponAttackDamageExpression(

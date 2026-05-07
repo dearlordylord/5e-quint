@@ -352,6 +352,30 @@ module ruleCoreFeaturesMbt {
     }
   }
 
+  action doSavageAttackerDamage = {
+    val result = resolveWeaponDamageDiceRollChoice({
+      hitWithWeapon: true,
+      criticalHit: false,
+      usedThisTurn: false,
+      choosesFeature: true,
+      weaponDamageDice: 1,
+      weaponDamageDieSize: 8,
+      firstCandidateTotal: 2,
+      secondCandidateTotal: 8,
+      chooseSecondCandidate: true,
+      damageModifier: 0,
+    }, 2)
+    all {
+      qHoles == Set(),
+      recordProjection(
+        false, true, true, 1, NoActionSurgeActionGrant, 12,
+        12 - result.effectiveDamage, 0, false, false, false, false, false,
+        false, result.effectiveDamage, false, featureMbtBaselineArmorClass,
+        Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
   action doEvasionSuccess = {
     val damage = saveDamageAfterEvasionReplacement({
       savingThrowAbility: DexteritySavingThrowFact,
@@ -390,7 +414,7 @@ module ruleCoreFeaturesMbt {
       { usesRemaining: 1, maximumUses: 1 },
       {
         trigger: { creatureSeen: true, creatureWithinSixtyFeet: true },
-        damageRoll: 9,
+        damageRoll: 6,
         bardicDieRoll: 4,
       }
     )
@@ -474,5 +498,6 @@ module ruleCoreFeaturesMbt {
     doUncannyDodge,
     doDefenseArmorClass,
     doArcheryAttackRollBonus,
+    doSavageAttackerDamage,
   }
 }

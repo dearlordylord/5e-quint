@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 50/391 | 12.8% |
 | Authored Surface executable catalog admission | 36/334 | 10.8% |
 | Installed Unit profile classification coverage | 51/51 | 100% |
-| Supported executable Unit coverage | 18/37 | 48.6% |
-| QNT profile modeling coverage | 16/16 | 100% |
-| QNT proof coverage | 16/16 | 100% |
-| Runtime mapping coverage | 16/16 | 100% |
-| Runtime parity coverage | 16/16 | 100% |
-| Deterministic admission/projection coverage | 18/18 | 100% |
-| Selected identity MBT coverage | 9/18 | 50% |
+| Supported executable Unit coverage | 19/37 | 51.4% |
+| QNT profile modeling coverage | 17/17 | 100% |
+| QNT proof coverage | 17/17 | 100% |
+| Runtime mapping coverage | 17/17 | 100% |
+| Runtime parity coverage | 17/17 | 100% |
+| Deterministic admission/projection coverage | 19/19 | 100% |
+| Selected identity MBT coverage | 10/19 | 52.6% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -58,6 +58,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
 | `feat_archery` | srd-5.2.1 | `unit-feature.passive-ranged-attack-roll-bonus` |
 | `defense` | srd-5.2.1 | `unit-feature.passive-armor-class-bonus` |
+| `feat_savage_attacker` | srd-5.2.1 | `unit-feature.weapon-damage-dice-roll-choice` |
 | `acid_splash` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `ray_of_frost` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `mage_armor` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -799,6 +800,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | QMBT27 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | QMBT18 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -820,6 +822,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 
 ## Unsupported And Widening Pressure
 
@@ -840,7 +843,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
 | `feat_boon_of_combat_prowess` | needs-surface-widening | Miss-to-hit conversion profile is not represented by the promoted Unit profile taxonomy. |
-| `feat_savage_attacker` | unsupported-profile | Weapon damage dice reroll is authored but not yet a stable Unit profile row. |
 | `mastery_sap` | unsupported-profile | Weapon mastery rider is authored but not yet a stable Unit profile row. |
 | `orc_adrenaline_rush` | needs-surface-widening | Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
@@ -863,7 +865,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 25 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `feat_savage_attacker`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 24 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 4 | `fighter_tactical_mind`, `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`, `thunderwave` |
 | srd-5.2.1 | QCORE9 | unsupported-profile | 2 | `monk_deflect_attacks`, `orc_relentless_endurance` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
@@ -875,7 +877,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- |
 | QCORE7 | qnt-proof | _none_ |
 | QCORE8 | qnt-proof | `unit-feature.reaction-roll-or-damage-reduction`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
-| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19` |
+| QCORE9 | qnt-proof | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice` |
 | QCORE10 | qnt-proof | `spell.invocation-damage-save-or-attack`, `spell.bonus-action-healing`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | QCORE11 | qnt-proof | `stat-block.attack-control` |
 | QMBT2 | completed-runtime-parity | _none_ |
@@ -885,6 +887,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT6 | completed-runtime-parity | `stat-block.attack-control` |
 | QMBT18 | completed-runtime-parity | `unit-feature.passive-armor-class-bonus` |
 | QMBT27 | completed-runtime-parity | `unit-feature.passive-ranged-attack-roll-bonus` |
+| QMBT31 | completed-runtime-parity | `unit-feature.weapon-damage-dice-roll-choice` |
 
 ## Supported Profiles Lacking Runtime Parity
 
