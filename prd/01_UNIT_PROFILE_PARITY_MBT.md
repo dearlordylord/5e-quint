@@ -168,20 +168,21 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT39's recursive planning review:
+Current matrix status after QMBT43's recursive planning review:
 
-- 57 authored Units classified in the installed coverage collections.
-- 18 stable executable profiles.
-- 25 of 43 installed executable Units mapped to supported profiles.
+- 58 authored Units classified in the installed coverage collections.
+- 19 stable executable profiles.
+- 26 of 44 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
-- deterministic admission/projection evidence covers all 25 supported Unit
+- deterministic admission/projection evidence covers all 26 supported Unit
   identities, including the QMBT21 Classic non-SRD mechanics-only
   `mycelium_step` row, QMBT22 `shield`, QMBT25 `healing_word`, and QMBT27
   `feat_archery`, QMBT31 `feat_savage_attacker`, and QMBT32 `cure_wounds` and
   `mass_healing_word`, plus QMBT34 `mass_cure_wounds` and QMBT37
-  `fighter_extra_attack`, `paladin_extra_attack`, and `ranger_extra_attack`.
-- selected identity MBT covers 10 of 25 supported Unit identities. QMBT16
+  `fighter_extra_attack`, `paladin_extra_attack`, and `ranger_extra_attack`,
+  plus QMBT40 `barbarian_fast_movement`.
+- selected identity MBT covers 10 of 26 supported Unit identities. QMBT16
   explicitly decided not to add selected identity MBT for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
@@ -214,8 +215,15 @@ Current matrix status after QMBT39's recursive planning review:
   artifacts.
 - QMBT38 selected `barbarian_fast_movement` as the next SRD feature widening
   slice under the planned `unit-feature.passive-speed-bonus` profile.
+- QMBT40 counted `barbarian_fast_movement` as a supported
+  `unit-feature.passive-speed-bonus` Unit with focused runtime parity,
+  deterministic admission/projection evidence, and refreshed matrix artifacts.
+- QMBT41 selected `ranger_roving` as the next SRD feature widening slice under
+  the planned `unit-feature.passive-speed-kind-grants` profile.
+- QMBT42 split Shield runtime behavior tests out of Unit profile admission and
+  into RAW/ubiquitous-language deterministic test boundaries.
 
-QMBT39 appended QMBT40-QMBT42 rather than declaring the matrix lane complete.
-The next batch promotes Fast Movement's passive Speed bonus, selects the next
-SRD feature widening slice after Fast Movement, and then runs another recursive
+QMBT43 appended QMBT44-QMBT46 rather than declaring the matrix lane complete.
+The next batch promotes Roving's passive Speed-kind grants, selects the next
+SRD feature widening slice after Roving, and then runs another recursive
 planning review.

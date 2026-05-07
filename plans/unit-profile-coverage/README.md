@@ -226,6 +226,13 @@ QMBT37 promoted level-5 Fighter, Paladin, and Ranger Extra Attack as
 `unit-feature.passive-speed-bonus`. QMBT39 reviewed those closeouts and
 appended QMBT40-QMBT42 because the matrix lane is not complete.
 
+QMBT40 promoted `barbarian_fast_movement` as
+`unit-feature.passive-speed-bonus`. QMBT41 selected `ranger_roving` as the next
+feature widening slice under `unit-feature.passive-speed-kind-grants`. QMBT42
+split Shield runtime behavior tests out of Unit profile admission. QMBT43
+reviewed those closeouts and appended QMBT44-QMBT46 because the matrix lane is
+not complete.
+
 Run:
 
 ```sh
