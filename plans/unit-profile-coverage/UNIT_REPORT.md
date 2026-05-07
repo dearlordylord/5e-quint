@@ -845,7 +845,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `orc_adrenaline_rush` | needs-surface-widening | Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
 | `orc_relentless_endurance` | unsupported-profile | Zero-hit-point replacement profile exists in rule core but is not yet a stable Unit profile row. |
-| `fire_bolt` | needs-surface-widening | SRD Fire Bolt can target creatures or objects and ignites eligible flammable objects; promoted spell projection has creature combatant targeting and no object-burning runtime boundary. |
+| `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
 | `light` | unsupported-profile | Object light effect is authored but not promoted as an execution profile yet. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
 | `sleep` | unsupported-profile | Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. |

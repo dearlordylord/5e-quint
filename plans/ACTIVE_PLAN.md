@@ -220,7 +220,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 118,
       "id": "QMBT23",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Decide Fire Bolt Object-Targeting Spell Boundary"
     },
     {
@@ -232,7 +232,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 120,
       "id": "QMBT25",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Re-triage Spell Catalog Admission After Boundary Slices"
     },
     {
@@ -305,9 +305,9 @@ Keep it synchronized with the DAG table and task details.
 | 115   | QMBT20 - Recursive Unit Profile Planning Review | done | QMBT10-QMBT19 | QMBT21-QMBT26 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT10-QMBT19 review, refreshed PRD status notes, and appended QMBT21-QMBT26 because the matrix lane is not complete. |
 | 116   | QMBT21 - Close Classic Mechanics Deterministic Admission Gap | done | QMBT17-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed deterministic admission/projection evidence for the Classic non-SRD mechanics-only Unit `mycelium_step` through the policy fixture boundary and production alternate-action-cost support projection. |
 | 117   | QMBT22 - Promote Shield Triggered Reaction Spell Boundary | done | QMBT10, QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and implement the triggered Reaction Spell Access boundary needed before `shield` can return to supported spell Unit evidence. |
-| 118   | QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary | ready-for-research | QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether and how promoted spell projection represents Fire Bolt's object targeting and object ignition before reclassifying `fire_bolt`. |
+| 118   | QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary | done | QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed decision: `fire_bolt` remains `needs-surface-widening` until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; QMBT25 should treat it as a spell-boundary blocker, not a supported spell-admission candidate. |
 | 119   | QMBT24 - Select Next SRD Feature Widening Slice | ready-for-research | QMBT18-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one high-value SRD feature-style unsupported/widening pressure row and drive a Defense-style red/green slice plan. |
-| 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | blocked | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After triggered-Reaction and object-targeting boundary decisions land, re-run spell admission triage and append the next deterministic spell evidence batch. |
+| 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | ready-for-research | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Triggered-Reaction and object-targeting boundary decisions have landed; re-run spell admission triage, keep `fire_bolt` out of supported evidence until object-target invocation/effect projection exists, and append the next deterministic spell evidence batch from unambiguous SRD spell candidates. |
 | 121   | QMBT26 - Recursive Unit Profile Planning Review | blocked | QMBT21-QMBT25 | QMBT27+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT21-QMBT25 findings, update PRD/plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
@@ -941,7 +941,7 @@ unless the final changeset is trivial.
 
 ### Task 118 - QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT15-QMBT20
 
@@ -955,6 +955,12 @@ flammable-object ignition as table-supplied facts, an explicit spell projection
 boundary, or an assumption-backed unsupported state. If implemented, reclassify
 `fire_bolt` only after QNT, runtime, deterministic admission, and matrix
 evidence agree.
+
+Completed decision: [QMBT23 Fire Bolt Object Target Boundary Decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md)
+keeps `fire_bolt` classified as `needs-surface-widening`. Promoted support
+requires an explicit object-target Spell Invocation branch and object-ignition
+Spell Effect outcome; table-supplied object facts are necessary inputs, but not
+a complete runtime boundary.
 
 Out of scope: grid state, pathfinding, cover/line-of-sight derivation, and a
 general object simulation model beyond the Fire Bolt boundary decision.
@@ -992,7 +998,7 @@ minimum two rounds unless the final changeset is trivial.
 
 ### Task 120 - QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT22-QMBT23
 

@@ -202,6 +202,11 @@ supported spell Units. The rationale is recorded in
 QMBT5 already replays the supported spell procedures with concrete spell ids,
 and QMBT14 covers catalog/access/invocation admission for those identities.
 
+QMBT23 decided that `fire_bolt` still needs an explicit object-target Spell
+Invocation and object-ignition Spell Effect projection before it can be counted
+as a supported spell Unit. The decision is recorded in
+[QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md](QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md).
+
 Run:
 
 ```sh
