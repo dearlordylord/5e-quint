@@ -1218,6 +1218,184 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     });
   });
 
+  test("shield bonus applies to later attacks and expires before the caster's next turn", () => {
+    const shield = spellRecord(shieldUnitId);
+    const attackerOneId = combatantId("unit-profile-shield-attacker-1");
+    const attackerTwoId = combatantId("unit-profile-shield-attacker-2");
+    const attackerThreeId = combatantId("unit-profile-shield-attacker-3");
+    const state = shieldReactionBattleWithAttackers({
+      shield,
+      attackerIds: [attackerOneId, attackerTwoId, attackerThreeId],
+    });
+
+    const firstHit = resolveAttackRollOnly({
+      state,
+      attackerId: attackerOneId,
+      targetId: spellCasterId,
+      total: 14,
+      naturalD20: 10,
+    });
+    if (firstHit.tag !== "needsHoles") {
+      throw new Error("Expected first hit to open Shield Reaction window.");
+    }
+    const shielded = resolveShieldReactionChoice(firstHit);
+    if (shielded.tag !== "resolved") {
+      throw new Error(
+        "Expected Shield Reaction to turn first hit into a miss.",
+      );
+    }
+    expect(shielded.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellCasterId,
+          armorClass: 15,
+          hp: 12,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+
+    const attackerTwoTurn = endTurnByActor(shielded.state, attackerOneId);
+    const secondAttack = resolveAttackRollOnly({
+      state: attackerTwoTurn,
+      attackerId: attackerTwoId,
+      targetId: spellCasterId,
+      total: 14,
+      naturalD20: 10,
+    });
+    expect(secondAttack).toMatchObject({ tag: "resolved" });
+    if (secondAttack.tag !== "resolved") {
+      throw new Error("Expected second attack against Shield AC to miss.");
+    }
+    expect(secondAttack.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellCasterId,
+          armorClass: 15,
+          hp: 12,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+
+    const attackerThreeTurn = endTurnByActor(secondAttack.state, attackerTwoId);
+    const thirdAttack = resolveAttackRollOnly({
+      state: attackerThreeTurn,
+      attackerId: attackerThreeId,
+      targetId: spellCasterId,
+      total: 14,
+      naturalD20: 10,
+    });
+    expect(thirdAttack).toMatchObject({ tag: "resolved" });
+    if (thirdAttack.tag !== "resolved") {
+      throw new Error("Expected third attack against Shield AC to miss.");
+    }
+    expect(thirdAttack.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellCasterId,
+          armorClass: 15,
+          hp: 12,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+
+    const casterTurn = endTurnByActor(thirdAttack.state, attackerThreeId);
+    expect(casterTurn.combatants.get(spellCasterId)).toMatchObject({
+      activeEffects: [],
+      reactionAvailable: true,
+    });
+    expect(casterTurn.combatants.get(spellCasterId)?.armorClass).toMatchObject({
+      bonuses: [],
+    });
+
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: spellCasterId,
+      command: "move",
+    };
+    const awaitingMovement = resolveBattleSubject({
+      state: casterTurn,
+      subject: moveSubject,
+      fills: [],
+    });
+    if (awaitingMovement.tag !== "needsHoles") {
+      throw new Error("Expected movement to request a Movement fill.");
+    }
+    const moveHole = requireHole(awaitingMovement.holes, "movement");
+    const awaitingOpportunityAttack = resolveBattleSubject({
+      state: casterTurn,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            { reactorId: attackerThreeId, attackName: "Unarmed Strike" },
+          ],
+        }),
+      ],
+    });
+    if (awaitingOpportunityAttack.tag !== "needsHoles") {
+      throw new Error("Expected movement to provoke an Opportunity Attack.");
+    }
+    const opportunityAttackChoice =
+      awaitingOpportunityAttack.snapshot.pendingReaction?.choices.find(
+        (choice) => choice.kind === "opportunityAttack",
+      );
+    if (
+      opportunityAttackChoice === undefined ||
+      opportunityAttackChoice.kind !== "opportunityAttack"
+    ) {
+      throw new Error("Expected Opportunity Attack Reaction choice.");
+    }
+    const startedOpportunityAttack = resolveBattleReaction({
+      state: awaitingOpportunityAttack.state,
+      fill: {
+        kind: "reactionDecision",
+        holeId: awaitingOpportunityAttack.holes[0]!.holeId,
+        value: {
+          kind: "resolve",
+          reactorId: attackerThreeId,
+          choice: {
+            kind: "opportunityAttack",
+            reactorId: attackerThreeId,
+            fills: [],
+          },
+        },
+      },
+    });
+    if (startedOpportunityAttack.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack to ask for an attack roll.");
+    }
+    const opportunityAttackRoll = requireHole(
+      startedOpportunityAttack.holes,
+      "attackRoll",
+    );
+    const completedOpportunityAttack = resolveBattleSubject({
+      state: startedOpportunityAttack.state,
+      subject: opportunityAttackChoice.subject,
+      fills: [
+        attackRollFill(opportunityAttackRoll, {
+          total: 14,
+          naturalD20: 10,
+        }),
+      ],
+    });
+    if (completedOpportunityAttack.tag !== "resolved") {
+      throw new Error("Expected expired Shield AC to allow the attack to hit.");
+    }
+    expect(completedOpportunityAttack.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellCasterId,
+          armorClass: 10,
+          hp: 11,
+        }),
+      ]),
+    );
+  });
+
   test("shield is offered against a spell attack roll hit before spell damage", () => {
     const shield = spellRecord(shieldUnitId);
     const rayOfFrost = spellRecord(rayOfFrostUnitId);
@@ -2090,6 +2268,54 @@ function shieldReactionBattle(spell: SpellRecord): BattleState {
   return result.right;
 }
 
+function shieldReactionBattleWithAttackers(input: {
+  readonly shield: SpellRecord;
+  readonly attackerIds: readonly [CombatantId, CombatantId, CombatantId];
+}): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-shield-reaction-duration"),
+    combatants: [
+      characterCreature({
+        combatantId: input.attackerIds[0],
+        displayName: "Attacker 1",
+        initiative: 30,
+        side: oppositionSide,
+      }),
+      characterCreature({
+        combatantId: input.attackerIds[1],
+        displayName: "Attacker 2",
+        initiative: 20,
+        side: oppositionSide,
+      }),
+      characterCreature({
+        combatantId: input.attackerIds[2],
+        displayName: "Attacker 3",
+        initiative: 15,
+        side: oppositionSide,
+      }),
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Shield caster",
+        initiative: 10,
+        side: partySide,
+        spellcasting: {
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [input.shield],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function shieldSpellAttackBattle(input: {
   readonly shield: SpellRecord;
   readonly spellAttack: SpellRecord;
@@ -2648,6 +2874,67 @@ function requireHole<K extends BattleHole["kind"]>(
     throw new Error(`Expected ${kind} hole.`);
   }
   return hole;
+}
+
+function resolveAttackRollOnly(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly total: number;
+  readonly naturalD20: number;
+}): ReturnType<typeof resolveBattleSubject> {
+  const attackAct = discoverBattleActs(input.state).find(
+    (act): act is AttackAct =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === input.attackerId &&
+      act.subject.attackName === "Unarmed Strike",
+  );
+  if (attackAct === undefined) {
+    throw new Error("Expected Unarmed Strike attack act.");
+  }
+  const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
+  const targetFillForAttack = attackTargetFill(
+    targetHole,
+    input.attackerId,
+    input.targetId,
+  );
+  const awaitingAttackRoll = resolveBattleSubject({
+    state: input.state,
+    subject: attackAct.subject,
+    fills: [targetFillForAttack],
+  });
+  if (awaitingAttackRoll.tag !== "needsHoles") {
+    throw new Error("Expected attack target to request an attack roll.");
+  }
+  const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
+  return resolveBattleSubject({
+    state: input.state,
+    subject: attackAct.subject,
+    fills: [
+      targetFillForAttack,
+      attackRollFill(attackRollHole, {
+        total: input.total,
+        naturalD20: input.naturalD20,
+      }),
+    ],
+  });
+}
+
+function endTurnByActor(state: BattleState, actorId: CombatantId): BattleState {
+  const ended = resolveBattleSubject({
+    state,
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "endTurn",
+    },
+    fills: [],
+  });
+  if (ended.tag !== "resolved") {
+    throw new Error("Expected End Turn to resolve.");
+  }
+  return ended.state;
 }
 
 function attackTargetFill(
