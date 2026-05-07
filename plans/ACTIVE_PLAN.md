@@ -238,6 +238,30 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 121,
       "id": "QMBT26",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 122,
+      "id": "QMBT27",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Archery Passive Ranged Attack-Roll Bonus"
+    },
+    {
+      "number": 123,
+      "id": "QMBT28",
+      "status": "ready-for-research",
+      "title": "Re-triage Spell Admission Candidates After Shield and Healing Word"
+    },
+    {
+      "number": 124,
+      "id": "QMBT29",
+      "status": "ready-for-research",
+      "title": "Select Next SRD Feature Widening Slice After Archery"
+    },
+    {
+      "number": 125,
+      "id": "QMBT30",
       "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
     }
@@ -304,11 +328,15 @@ Keep it synchronized with the DAG table and task details.
 | 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | done | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed metric semantics review: generated JSON/report now define each metric's planning question, measure, and denominator; installed inventory is report health rather than coverage; passive production profiles count in executable evidence denominators. |
 | 115   | QMBT20 - Recursive Unit Profile Planning Review | done | QMBT10-QMBT19 | QMBT21-QMBT26 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT10-QMBT19 review, refreshed PRD status notes, and appended QMBT21-QMBT26 because the matrix lane is not complete. |
 | 116   | QMBT21 - Close Classic Mechanics Deterministic Admission Gap | done | QMBT17-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed deterministic admission/projection evidence for the Classic non-SRD mechanics-only Unit `mycelium_step` through the policy fixture boundary and production alternate-action-cost support projection. |
-| 117   | QMBT22 - Promote Shield Triggered Reaction Spell Boundary | done | QMBT10, QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and implement the triggered Reaction Spell Access boundary needed before `shield` can return to supported spell Unit evidence. |
+| 117   | QMBT22 - Promote Shield Triggered Reaction Spell Boundary | done | QMBT10, QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed triggered Reaction Spell Access for `shield`, including attack-hit and Magic Missile trigger evidence, and returned `shield` to supported spell Unit evidence. |
 | 118   | QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary | done | QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed decision: `fire_bolt` remains `needs-surface-widening` until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; QMBT25 should treat it as a spell-boundary blocker, not a supported spell-admission candidate. |
 | 119   | QMBT24 - Select Next SRD Feature Widening Slice | done | QMBT18-QMBT20 | QMBT26 | [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md) | Completed decision: select `feat_archery` as the next Defense-style SRD feature widening slice, with a red/green plan for `unit-feature.passive-ranged-attack-roll-bonus`. |
 | 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | done | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed spell admission re-triage by admitting `healing_word` as `spell.bonus-action-healing`, adding deterministic admission/projection evidence, refreshing matrix metrics, and keeping `fire_bolt` out of supported evidence behind the object-targeting boundary. |
-| 121   | QMBT26 - Recursive Unit Profile Planning Review | ready-for-research | QMBT21-QMBT25 | QMBT27+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT21-QMBT25 findings, update the PRD and plan docs, and append the next batch starting with `QMBT27 - Promote Archery Passive Ranged Attack-Roll Bonus` unless the Unit profile matrix lane is explicitly declared complete. |
+| 121   | QMBT26 - Recursive Unit Profile Planning Review | done | QMBT21-QMBT25 | QMBT27-QMBT30 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT21-QMBT25 review, refreshed PRD status notes, and appended QMBT27-QMBT30 because the matrix lane is not complete. |
+| 122   | QMBT27 - Promote Archery Passive Ranged Attack-Roll Bonus | ready-for-implementation-after-light-research | QMBT24-QMBT26 | QMBT29-QMBT30 | [Archery feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md) | Implement the selected `feat_archery` slice as `unit-feature.passive-ranged-attack-roll-bonus` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
+| 123   | QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word | ready-for-research | QMBT22-QMBT23, QMBT25-QMBT26 | QMBT30 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT23 Fire Bolt decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md) | Review the post-QMBT25 spell inventory and choose the next deterministic spell admission batch or explicit spell-boundary slice without re-admitting `fire_bolt` before its object-target/effect boundary exists. |
+| 124   | QMBT29 - Select Next SRD Feature Widening Slice After Archery | ready-for-research | QMBT27 | QMBT30 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After Archery lands, review remaining SRD feature/species/mastery widening pressure and select one next narrow battle-executable feature slice, or document why the lane should pivot. |
+| 125   | QMBT30 - Recursive Unit Profile Planning Review | ready-for-research | QMBT27-QMBT29 | QMBT31+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT27-QMBT29 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -939,6 +967,12 @@ unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm quality`
 for production behavior changes; `/simplify` convergence, minimum two rounds
 unless the final changeset is trivial.
 
+Completed scope: promoted the triggered Reaction Spell Access boundary for
+`shield`, including attack-hit and Magic Missile trigger coverage, production
+Reaction spell offering/execution, and deterministic catalog/access/invocation
+evidence. `shield` is now a supported `spell.reaction-shield` Unit in the
+matrix.
+
 ### Task 118 - QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary
 
 Status: `done`
@@ -1021,13 +1055,19 @@ chosen spell changes procedure behavior; active-plan consistency for any new
 batch appended from the triage; `/simplify` convergence, minimum two rounds
 unless the final changeset is trivial.
 
+Completed scope: refreshed spell admission after QMBT22 and QMBT23 by admitting
+`healing_word` as `spell.bonus-action-healing` with deterministic
+admission/projection evidence. `shield` remained supported from QMBT22, and
+`fire_bolt` remained out of supported evidence behind the QMBT23 object-target
+and object-ignition boundary.
+
 ### Task 121 - QMBT26 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT21-QMBT25
 
-Blocks: QMBT27+
+Blocks: QMBT27-QMBT30
 
 Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
@@ -1037,6 +1077,121 @@ Ranged Attack-Roll Bonus` from QMBT24's selected Archery widening slice. This
 task must include a new recursive planning-review task at the end of the
 appended batch unless the Unit profile matrix lane is explicitly declared
 complete.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Completed scope: reviewed QMBT21-QMBT25 closeout and the generated Unit
+profile report. At QMBT26 closeout, the lane is not complete: supported
+executable Unit coverage is 17/36, deterministic admission/projection evidence
+is complete for the supported Unit denominator at 17/17, selected identity MBT
+coverage remains intentionally selective at 9/17, `fire_bolt` remains a
+spell-boundary blocker, and SRD feature/spell widening pressure remains.
+Appended QMBT27-QMBT30 to implement Archery, re-triage spell admission
+candidates, select the next feature widening slice after Archery, and run the
+next recursive planning review.
+
+Verification: active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
+
+### Task 122 - QMBT27 - Promote Archery Passive Ranged Attack-Roll Bonus
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT24-QMBT26
+
+Blocks: QMBT29-QMBT30
+
+Research / plan: [QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT24_ARCHERY_FEATURE_WIDENING_SLICE_PLAN.md)
+
+Scope: implement the QMBT24 red/green plan for `feat_archery`. Promote the
+domain profile `unit-feature.passive-ranged-attack-roll-bonus` for the SRD
+Archery Fighting Style feat's passive +2 bonus to attack rolls made with
+Ranged weapons. Update the SRD Unit catalog boundary, QNT procedure profile and
+proof, focused feature MBT projection, production support parser/projection,
+weapon attack-roll execution boundary, deterministic admission/projection
+evidence, and generated matrix artifacts as one coherent slice.
+
+Out of scope: Fast Movement/Roving, Extra Attack, weapon masteries, Temporary
+Hit Point traits, general roll-modifier families beyond the Archery-shaped
+passive ranged weapon attack-roll bonus, and authored-id dispatch registries.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Archery, Fighting
+Style, Attack Rolls, Ranged weapons, and attack modifier timing; update QNT
+before runtime behavior; focused QNT proof; focused QMBT feature parity with
+the mandatory timed background protocol because runtime behavior changes;
+`pnpm unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm
+quality`; `/simplify` convergence, minimum two rounds.
+
+### Task 123 - QMBT28 - Re-triage Spell Admission Candidates After Shield and Healing Word
+
+Status: `ready-for-research`
+
+Depends on: QMBT22-QMBT23, QMBT25-QMBT26
+
+Blocks: QMBT30
+
+Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md)
+
+Scope: review the spell catalog after QMBT22 admitted `shield`, QMBT25 admitted
+`healing_word`, and QMBT23 kept `fire_bolt` behind the explicit object-target
+and object-ignition boundary. Select the next deterministic spell admission
+batch whose SRD profile is already unambiguous, or append a focused boundary
+task when every high-value candidate needs a new spell effect family. Keep
+`fire_bolt` out of supported evidence until the QMBT23 conditions are met.
+
+Out of scope: implementing the selected spell batch, one MBT trace per spell,
+QNT catalog enumeration, broad authored spell import, and object-target support
+for Fire Bolt unless this task explicitly selects that as the next boundary
+task.
+
+Verification: local SRD and `UBIQUITOUS_LANGUAGE.md` checks for candidate spell
+rules being selected; active-plan consistency if a follow-on task is appended
+or revised; `pnpm unit-profile-coverage:check` only if matrix docs or generated
+artifacts change; no MBT for research-only triage; `/simplify` convergence,
+minimum two rounds unless the final changeset is trivial.
+
+### Task 124 - QMBT29 - Select Next SRD Feature Widening Slice After Archery
+
+Status: `ready-for-research`
+
+Depends on: QMBT27
+
+Blocks: QMBT30
+
+Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT27 lands and the generated matrix reflects Archery, review
+remaining SRD feature, species trait, feat, and mastery pressure. Select one
+next narrow battle-executable feature-style widening slice, with source checks
+and a red/green plan comparable to QMBT24, or document why the next batch
+should pivot away from feature widening.
+
+Out of scope: implementing the selected slice; solving all unsupported
+features, species traits, feats, or masteries at once; widening movement,
+attack-count, reaction, and resource families in a single mixed task.
+
+Verification: local SRD and `UBIQUITOUS_LANGUAGE.md` checks for candidate rows;
+`pnpm unit-profile-coverage:check`; active-plan consistency across Ralph index,
+DAG table, and task details if new tasks are appended or revised; no MBT for
+research-only slice selection; `/simplify` convergence, minimum two rounds
+unless the final changeset is trivial.
+
+### Task 125 - QMBT30 - Recursive Unit Profile Planning Review
+
+Status: `ready-for-research`
+
+Depends on: QMBT27-QMBT29
+
+Blocks: QMBT31+
+
+Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review QMBT27-QMBT29 findings, update the PRD and plan docs, and append
+the next batch of QMBT31+ tasks. This task must include a new recursive
+planning-review task at the end of the appended batch unless the Unit profile
+matrix lane is explicitly declared complete.
 
 Out of scope: implementation work not captured by the new task batch.
 

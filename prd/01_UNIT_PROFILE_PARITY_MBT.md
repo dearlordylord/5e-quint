@@ -168,27 +168,32 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT20's recursive planning review:
+Current matrix status after QMBT26's recursive planning review:
 
-- 49 authored Units classified.
-- 14 stable executable profiles.
-- 15 of 35 installed executable Units mapped to supported profiles.
+- 50 authored Units classified in the installed coverage collections.
+- 15 stable executable profiles.
+- 17 of 36 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
-- deterministic admission/projection evidence covers 14 of 15 supported Unit
-  identities; the remaining gap is the Classic non-SRD mechanics-only
-  `mycelium_step` row.
-- selected identity MBT covers 9 of 15 supported Unit identities. QMBT16
+- deterministic admission/projection evidence covers all 17 supported Unit
+  identities, including the QMBT21 Classic non-SRD mechanics-only
+  `mycelium_step` row, QMBT22 `shield`, and QMBT25 `healing_word`.
+- selected identity MBT covers 9 of 17 supported Unit identities. QMBT16
   explicitly decided not to add selected identity MBT for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
   report and matrix.
-- `shield` and `fire_bolt` are intentionally not counted as supported spell
-  Units until triggered Reaction Spell Access and object-targeting/object
-  ignition boundaries are represented or explicitly closed.
+- `shield` is now counted as a supported `spell.reaction-shield` Unit with
+  deterministic admission/projection evidence.
+- `fire_bolt` is intentionally not counted as a supported spell Unit until
+  object-targeting/object-ignition boundaries are represented or explicitly
+  closed.
+- `feat_archery` is the selected next SRD feature widening slice and remains
+  authored not-in-catalog pressure until QMBT27 promotes
+  `unit-feature.passive-ranged-attack-roll-bonus`.
 
-QMBT20 appended QMBT21-QMBT26 rather than declaring the matrix lane complete.
-The next batch closes the Classic deterministic evidence gap, settles the two
-known spell-boundary blockers, selects the next SRD feature-style widening
-slice, re-triages spell catalog admission after those decisions, and then runs
-another recursive planning review.
+QMBT26 appended QMBT27-QMBT30 rather than declaring the matrix lane complete.
+The next batch promotes Archery's passive ranged attack-roll bonus, re-triages
+spell admission candidates after Shield and Healing Word, selects the next SRD
+feature-style widening slice after Archery, and then runs another recursive
+planning review.
