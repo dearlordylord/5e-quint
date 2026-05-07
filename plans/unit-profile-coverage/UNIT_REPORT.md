@@ -17,7 +17,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | QNT proof coverage | 11/11 | 100% |
 | Runtime mapping coverage | 11/11 | 100% |
 | Runtime parity coverage | 11/11 | 100% |
-| Deterministic admission/projection coverage | 9/16 | 56.3% |
+| Deterministic admission/projection coverage | 13/16 | 81.3% |
 | Selected identity MBT coverage | 9/16 | 56.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
@@ -777,6 +777,10 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 
 ## Selected Identity MBT Evidence
 

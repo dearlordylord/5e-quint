@@ -64,8 +64,8 @@
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 16,
-      "numerator": 9,
-      "percent": "56.3%"
+      "numerator": 13,
+      "percent": "81.3%"
     },
     "profileClassificationCoverage": {
       "denominator": 49,
@@ -1512,7 +1512,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT14"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1684,7 +1690,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT14"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1779,7 +1791,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT14"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -1856,7 +1874,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT14"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [

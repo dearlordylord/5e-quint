@@ -1,20 +1,45 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
+import {
+  abilityModifier,
+  defaultArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
 import { classLevel } from "@dnd/shared/types";
+import {
+  attackBonus,
+  Hp,
+  movementFeet,
+  proficiencyBonus,
+} from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  battleCombatantSide,
+  battleId,
   battleUnitRefWithSupportProfiles,
+  characterId,
+  combatantId,
+  discoverBattleActs,
+  initiativeScore,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  startBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  type AvailableBattleAct,
+  type BattleCreatureInit,
+  type BattleState,
+  type BattleSubject,
+  type CombatantId,
+  type SupportedSpellAct,
 } from "./index.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
@@ -37,6 +62,17 @@ const rogueCunningActionUnitId = "rogue_cunning_action";
 const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
+const acidSplashUnitId = "acid_splash";
+const mageArmorUnitId = "mage_armor";
+const magicMissileUnitId = "magic_missile";
+const rayOfFrostUnitId = "ray_of_frost";
+const spellCasterId = combatantId("unit-profile-spell-caster");
+const spellTargetId = combatantId("unit-profile-spell-target");
+const partySide = battleCombatantSide("party");
+const oppositionSide = battleCombatantSide("opposition");
+type ActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
 
 describe("QMBT7 deterministic Unit profile admission", () => {
   test("fighter_second_wind is admitted and projected through production feature support", () => {
@@ -310,3 +346,240 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     );
   });
 });
+
+describe("QMBT14 deterministic Spell Unit admission tracer", () => {
+  test("magic_missile is admitted through catalog spell access and projected as a prepared slot spell", () => {
+    const spell = spellRecord(magicMissileUnitId);
+    const act = spellAct({
+      state: spellBattle({ preparedSpells: [spell] }),
+      spellId: magicMissileUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      spellId: magicMissileUnitId,
+      spellActId: "preparedSlotSpell:magic_missile:slot:1",
+    });
+    expect(spellActInvocation(act)).toEqual(
+      expect.objectContaining({
+        kind: "preparedSlotSpell",
+        spell,
+        slotLevel: 1,
+        targeting: {
+          kind: "repeatedEffectTargetAllocation",
+          repeatedEffectCount: 3,
+        },
+        damage: {
+          expr: { dice: 1, dieSize: 4, flat: 1 },
+          damageType: "force",
+        },
+        rangeFeet: 120,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "spellTargetAllocation",
+        allocationCount: 3,
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+  });
+
+  test("ray_of_frost is admitted through catalog spell access and projected as a cantrip spell attack", () => {
+    const spell = spellRecord(rayOfFrostUnitId);
+    const act = spellAct({
+      state: spellBattle({ cantrips: [spell] }),
+      spellId: rayOfFrostUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      spellId: rayOfFrostUnitId,
+      spellActId: "cantripSpellAttack:ray_of_frost",
+    });
+    expect(spell.mechanics.family).toBe("activation");
+    expect(spell.mechanics.level).toBe(0);
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+  });
+
+  test("acid_splash is admitted through catalog spell access and projected as a save-gated cantrip", () => {
+    const spell = spellRecord(acidSplashUnitId);
+    const act = spellAct({
+      state: spellBattle({ cantrips: [spell] }),
+      spellId: acidSplashUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      spellId: acidSplashUnitId,
+      spellActId: "cantripSaveGateDamage:acid_splash",
+    });
+    expect(spellActInvocation(act)).toEqual(
+      expect.objectContaining({
+        kind: "cantripSaveGateDamage",
+        spell,
+        ability: "dex",
+        area: {
+          kind: "pointOriginSphere",
+          radiusFeet: 5,
+        },
+        damage: {
+          expr: { dice: 1, dieSize: 6 },
+          damageType: "acid",
+        },
+        successDamage: "none",
+        rangeFeet: 60,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+        targetRollModes: [],
+      }),
+    ]);
+  });
+
+  test("mage_armor is admitted through catalog spell access and projected as a persistent prepared spell", () => {
+    const spell = spellRecord(mageArmorUnitId);
+    const act = spellAct({
+      state: spellBattle({ preparedSpells: [spell] }),
+      spellId: mageArmorUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      spellId: mageArmorUnitId,
+      spellActId: "preparedPersistentSpell:mage_armor:slot:1",
+    });
+    expect(spell.mechanics.family).toBe("ongoing_effect");
+    expect(spell.mechanics.level).toBe(1);
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId],
+      }),
+    ]);
+  });
+});
+
+function spellRecord(unitId: string): SpellRecord {
+  const unit = unitLibrary.requireUnit(unitId);
+  expect(unit.kind).toBe("spell");
+  return unit as SpellRecord;
+}
+
+function spellBattle(input: {
+  readonly cantrips?: readonly SpellRecord[];
+  readonly preparedSpells?: readonly SpellRecord[];
+}): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-spell-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Spellcaster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: input.cantrips ?? [],
+          preparedSpells: input.preparedSpells ?? [],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        },
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function characterCreature(input: {
+  readonly combatantId: CombatantId;
+  readonly displayName: string;
+  readonly initiative: number;
+  readonly side: typeof partySide | typeof oppositionSide;
+  readonly spellcasting?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"];
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScore(input.initiative),
+    side: input.side,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId(`${input.combatantId}-character`),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 1 }],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: {
+        kind: "unarmedStrike",
+        effect: {
+          kind: "damage",
+          damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+        },
+        attackAbility: "str",
+        attackAbilityModifier: abilityModifier(0),
+        attackBonus: attackBonus(2),
+        damageAbilityModifier: abilityModifier(0),
+      },
+      ...(input.spellcasting === undefined
+        ? {}
+        : { spellcasting: input.spellcasting }),
+    },
+  };
+}
+
+function spellAct(input: {
+  readonly state: BattleState;
+  readonly spellId: string;
+}): ActionSpellAct {
+  const act = discoverBattleActs(input.state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.spellId === input.spellId,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected ${input.spellId} spell act.`);
+  }
+  return act;
+}
+
+function spellActInvocation(act: ActionSpellAct): SupportedSpellAct {
+  const hole = act.initialHoles[0];
+  if (hole === undefined || !("spell" in hole)) {
+    throw new Error("Expected spell act initial hole to carry invocation.");
+  }
+  return hole.spell;
+}

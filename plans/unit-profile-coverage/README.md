@@ -144,6 +144,15 @@ support gates, or not yet mapped to a stable profile. A matrix gap may also
 exist before the TypeScript implementation. The matrix must keep those states
 distinct instead of treating them as the same kind of missing work.
 
+Spell deterministic admission differs from feature deterministic admission.
+Feature Units are admitted directly through battle-runtime feature support
+profiles. Spell Units are first loaded as Spell Definitions from the production
+Unit catalog, then installed as creature-owned Spell Access, and finally
+projected by `discoverBattleActs` into runtime Spell Invocation subjects,
+initial holes, and spell-act ids. Evidence for a spell Unit should exercise
+that full catalog/access/invocation path rather than call a spell-shape helper
+or copy a parallel list of supported spell ids.
+
 ## Workflow
 
 This matrix has two verification layers:
