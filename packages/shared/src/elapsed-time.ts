@@ -15,6 +15,10 @@ export type TimeSpanUnit = (typeof TIME_SPAN_UNITS)[number];
 export type ElapsedTimeTicks = number & Brand.Brand<"ElapsedTimeTicks">;
 const ElapsedTimeTicks = Brand.nominal<ElapsedTimeTicks>();
 
+export type PositiveElapsedTimeTicks = ElapsedTimeTicks &
+  Brand.Brand<"PositiveElapsedTimeTicks">;
+const PositiveElapsedTimeTicks = Brand.nominal<PositiveElapsedTimeTicks>();
+
 export type PositiveInt = number & Brand.Brand<"PositiveInt">;
 const PositiveInt = Brand.nominal<PositiveInt>();
 
@@ -60,6 +64,22 @@ export function parseElapsedTimeTicks(
 
 export function elapsedTimeTicks(value: number): ElapsedTimeTicks {
   return ElapsedTimeTicks(value);
+}
+
+function positiveElapsedTimeTicks(value: number): PositiveElapsedTimeTicks {
+  return PositiveElapsedTimeTicks(ElapsedTimeTicks(value));
+}
+
+export function parsePositiveElapsedTimeTicks(
+  value: number,
+): Either.Either<PositiveElapsedTimeTicks, ElapsedTimeParseError> {
+  if (!Number.isInteger(value)) {
+    return Either.left({ kind: "fractionalAmount", amount: value });
+  }
+  if (value <= 0) {
+    return Either.left({ kind: "nonPositiveAmount", amount: value });
+  }
+  return Either.right(positiveElapsedTimeTicks(value));
 }
 
 export function boundaryCrossingsRemaining(

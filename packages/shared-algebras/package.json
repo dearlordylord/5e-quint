@@ -12,6 +12,7 @@
     "./ability-score-algebra": "./src/ability-score-algebra.ts",
     "./attack-roll-algebra": "./src/attack-roll-algebra.ts",
     "./elapsed-time-algebra": "./src/elapsed-time-algebra.ts",
+    "./stable-recovery-algebra": "./src/stable-recovery-algebra.ts",
     "./runtime-dice-algebra": "./src/runtime-dice-algebra.ts",
     "./runtime-hole-algebra": "./src/runtime-hole-algebra.ts",
     "./validation-algebra": "./src/validation-algebra.ts",

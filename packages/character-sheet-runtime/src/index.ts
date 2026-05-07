@@ -16,11 +16,38 @@ import {
   type CharacterBuildSpellcastingSource,
 } from "@dnd/character-creation-runtime";
 import { ABILITIES, SKILLS, type Ability } from "@dnd/shared/game-facts";
-import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  resourceCount,
+  spellSlotLevel,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+  parseElapsedTimeTicks,
+  parsePositiveElapsedTimeTicks,
+  type ElapsedTimeTicks,
+  type PositiveElapsedTimeTicks,
+  type TimeSpanDuration,
+} from "@dnd/shared/elapsed-time";
 import type {
   DeathSaveCount,
   DeathSaves,
 } from "@dnd/shared-algebras/death-saves-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+  type FilledHoleValue,
+  type RuntimeHole,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
+import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
+import {
+  STABLE_RECOVERY_ROLL_DICE_EXPR,
+  advanceStableRecovery,
+  advanceStableRecoveryWithRoll,
+  type StableRecovery,
+} from "@dnd/shared-algebras/stable-recovery-algebra";
 import type {
   Hp as HpType,
   ResourceCount,
@@ -113,8 +140,10 @@ export type CharacterSheetDeadDeathSaves = {
 
 type CharacterSheetStableZeroHpLifecycle = {
   readonly tag: "stable";
-  readonly recovery: { readonly kind: "regains1HpAfter1d4Hours" };
+  readonly recovery: CharacterSheetStableRecovery;
 };
+
+export type CharacterSheetStableRecovery = StableRecovery;
 
 export type CharacterSheetZeroHpLifecycle =
   | {
@@ -155,6 +184,32 @@ export type CharacterSheetHitPointsInput = {
 export type CharacterSheetIssue = {
   readonly tag: "characterSheetIssue";
   readonly message: string;
+};
+
+export type CharacterSheetElapsedTimeResult =
+  | {
+      readonly tag: "resolved";
+      readonly sheet: CharacterSheet;
+      readonly elapsedTicks: ElapsedTimeTicks;
+    }
+  | {
+      readonly tag: "needsHoles";
+      readonly sheet: CharacterSheet;
+      readonly holes: ReadonlyNonEmptyArray<RuntimeHole>;
+      readonly elapsedTicks: ElapsedTimeTicks;
+      readonly remainingTicks: PositiveElapsedTimeTicks;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly sheet: CharacterSheet;
+      readonly reason: "invalidFill";
+      readonly message: string;
+    };
+
+export type CharacterSheetTimePassedInput = {
+  readonly sheet: CharacterSheet;
+  readonly duration: TimeSpanDuration;
+  readonly fills: readonly FilledHoleValue[];
 };
 
 export function characterSheetIssue(
@@ -329,6 +384,32 @@ export function characterSheetSpellSlots(
   });
 }
 
+export function timePassed(
+  input: CharacterSheetTimePassedInput,
+): CharacterSheetElapsedTimeResult {
+  // Future ASSUMPTIONS.md work: out-of-battle elapsed rounds may imply
+  // turn-boundary Death Saving Throws, but this operation currently only
+  // handles calendar-time Stable recovery.
+  const totalTicks = elapsedTimeTicksFromTimeSpanDuration(input.duration);
+  if (Either.isLeft(totalTicks)) {
+    return invalidElapsedTimeResult(
+      input.sheet,
+      `Invalid elapsed-time duration: ${totalTicks.left.kind}.`,
+    );
+  }
+  const consumed = passStableRecoveryTime({
+    sheet: input.sheet,
+    ticks: totalTicks.right,
+    fills: input.fills,
+  });
+  if (consumed.tag !== "resolved") return consumed;
+  return {
+    tag: "resolved",
+    sheet: consumed.sheet,
+    elapsedTicks: consumed.elapsedTicks,
+  };
+}
+
 function requireSpellSlotExpenditure(
   expenditures: readonly CharacterSpellSlotExpenditure[],
   spellLevel: SpellSlotLevel,
@@ -458,10 +539,10 @@ function parseStoredZeroHpLifecycle(
   if (!isRecord(value))
     return characterSheetIssue("Expected zero-HP lifecycle.");
   if (value.tag === "stable") {
-    return Either.right({
-      tag: "stable",
-      recovery: { kind: "regains1HpAfter1d4Hours" },
-    });
+    const recovery = parseStoredStableRecovery(value.recovery);
+    return Either.isLeft(recovery)
+      ? Either.left(recovery.left)
+      : Either.right({ tag: "stable", recovery: recovery.right });
   }
   if (value.tag !== "unstable" && value.tag !== "dead") {
     return characterSheetIssue("Expected zero-HP lifecycle state.");
@@ -470,6 +551,46 @@ function parseStoredZeroHpLifecycle(
   return Either.isLeft(deathSaves)
     ? Either.left(deathSaves.left)
     : Either.right({ tag: value.tag, deathSaves: deathSaves.right });
+}
+
+function parseStoredStableRecovery(
+  value: unknown,
+): Either.Either<CharacterSheetStableRecovery, CharacterSheetIssue> {
+  if (!isRecord(value)) {
+    return characterSheetIssue("Expected Stable recovery state.");
+  }
+  if (value.kind === "regains1HpAfter1d4Hours") {
+    if (typeof value.elapsedBeforeRecoveryRoll !== "number") {
+      return characterSheetIssue(
+        "Stable recovery elapsed time must be elapsed-time ticks.",
+      );
+    }
+    const elapsedBeforeRecoveryRoll = parseElapsedTimeTicks(
+      value.elapsedBeforeRecoveryRoll,
+    );
+    return Either.isLeft(elapsedBeforeRecoveryRoll)
+      ? characterSheetIssue(
+          "Stable recovery elapsed time must be elapsed-time ticks.",
+        )
+      : Either.right({
+          kind: "regains1HpAfter1d4Hours",
+          elapsedBeforeRecoveryRoll: elapsedBeforeRecoveryRoll.right,
+        });
+  }
+  if (value.kind !== "regains1HpAfter") {
+    return characterSheetIssue("Expected Stable recovery state.");
+  }
+  if (typeof value.remaining !== "number") {
+    return characterSheetIssue(
+      "Stable recovery remaining time must be positive elapsed-time ticks.",
+    );
+  }
+  const remaining = parsePositiveElapsedTimeTicks(value.remaining);
+  return Either.isLeft(remaining)
+    ? characterSheetIssue(
+        "Stable recovery remaining time must be positive elapsed-time ticks.",
+      )
+    : Either.right({ kind: "regains1HpAfter", remaining: remaining.right });
 }
 
 function parseStoredDeathSaves(
@@ -525,6 +646,246 @@ function parseStoredSpellSlots(
     });
   }
   return Either.right(parsed);
+}
+
+function passStableRecoveryTime(input: {
+  readonly sheet: CharacterSheet;
+  readonly ticks: ElapsedTimeTicks;
+  readonly fills: readonly FilledHoleValue[];
+}): CharacterSheetElapsedTimeResult {
+  if (input.sheet.hitPoints.tag !== "zero") {
+    return {
+      tag: "resolved",
+      sheet: input.sheet,
+      elapsedTicks: input.ticks,
+    };
+  }
+  const lifecycle = input.sheet.hitPoints.lifecycle;
+  if (lifecycle.tag !== "stable") {
+    return {
+      tag: "resolved",
+      sheet: input.sheet,
+      elapsedTicks: input.ticks,
+    };
+  }
+  if (lifecycle.recovery.kind === "regains1HpAfter") {
+    if (input.fills.length !== 0) {
+      return invalidElapsedTimeResult(
+        input.sheet,
+        "Elapsed-time recovery received fills when no roll is pending.",
+      );
+    }
+    return passStableRecoveryRule({
+      sheet: input.sheet,
+      ticks: input.ticks,
+    });
+  }
+  const hole = stableRecoveryRollHole(input.sheet.characterId);
+  const fill = stableRecoveryFillFor(input.fills, hole);
+  if (fill === undefined && input.fills.length !== 0) {
+    return invalidElapsedTimeResult(
+      input.sheet,
+      "Elapsed-time recovery received a fill for a different hole.",
+    );
+  }
+  if (fill !== undefined && input.fills.length !== 1) {
+    return invalidElapsedTimeResult(
+      input.sheet,
+      "Elapsed-time recovery accepts exactly one matching fill.",
+    );
+  }
+  if (fill === undefined) {
+    return passStableRecoveryRule({
+      sheet: input.sheet,
+      ticks: input.ticks,
+      hole,
+    });
+  }
+  const roll = stableRecoveryRollFromFill(fill);
+  return Either.isLeft(roll)
+    ? invalidElapsedTimeResult(input.sheet, roll.left.message)
+    : passStableRecoveryRuleWithRoll({
+        sheet: input.sheet,
+        ticks: input.ticks,
+        roll: roll.right,
+        hole,
+      });
+}
+
+function passStableRecoveryRule(input: {
+  readonly sheet: CharacterSheet;
+  readonly ticks: ElapsedTimeTicks;
+  readonly hole?: RuntimeHole;
+}): CharacterSheetElapsedTimeResult {
+  const sheet = input.sheet;
+  if (
+    sheet.hitPoints.tag !== "zero" ||
+    sheet.hitPoints.lifecycle.tag !== "stable"
+  ) {
+    return { tag: "resolved", sheet, elapsedTicks: input.ticks };
+  }
+  const recovery = sheet.hitPoints.lifecycle.recovery;
+  const advanced =
+    recovery.kind === "regains1HpAfter"
+      ? advanceStableRecovery({ recovery, ticks: input.ticks })
+      : advanceStableRecovery({ recovery, ticks: input.ticks });
+  if (Either.isLeft(advanced)) {
+    return invalidElapsedTimeResult(sheet, advanced.left.message);
+  }
+  if (advanced.right.tag === "needsStableRecoveryRoll") {
+    return {
+      tag: "needsHoles",
+      sheet,
+      holes: [input.hole ?? stableRecoveryRollHole(sheet.characterId)],
+      elapsedTicks: advanced.right.elapsedTicks,
+      remainingTicks: advanced.right.remainingTicks,
+    };
+  }
+  if (advanced.right.tag === "recovered") {
+    return {
+      tag: "resolved",
+      sheet: replaceCharacterSheetHitPoints(sheet, {
+        tag: "positive",
+        currentHp: Hp(1),
+        tempHp: sheet.hitPoints.tempHp,
+      }),
+      elapsedTicks: advanced.right.elapsedTicks,
+    };
+  }
+  return {
+    tag: "resolved",
+    sheet: replaceCharacterSheetHitPoints(sheet, {
+      ...sheet.hitPoints,
+      lifecycle: {
+        tag: "stable",
+        recovery: advanced.right.recovery,
+      },
+    }),
+    elapsedTicks: advanced.right.elapsedTicks,
+  };
+}
+
+function passStableRecoveryRuleWithRoll(input: {
+  readonly sheet: CharacterSheet;
+  readonly ticks: ElapsedTimeTicks;
+  readonly roll: DieRollResult;
+  readonly hole: RuntimeHole;
+}): CharacterSheetElapsedTimeResult {
+  const sheet = input.sheet;
+  if (
+    sheet.hitPoints.tag !== "zero" ||
+    sheet.hitPoints.lifecycle.tag !== "stable" ||
+    sheet.hitPoints.lifecycle.recovery.kind !== "regains1HpAfter1d4Hours"
+  ) {
+    return invalidElapsedTimeResult(
+      sheet,
+      "Elapsed-time recovery received a roll when no roll is pending.",
+    );
+  }
+  const advanced = advanceStableRecoveryWithRoll({
+    recovery: sheet.hitPoints.lifecycle.recovery,
+    ticks: input.ticks,
+    roll: input.roll,
+  });
+  if (Either.isLeft(advanced)) {
+    return invalidElapsedTimeResult(sheet, advanced.left.message);
+  }
+  if (advanced.right.tag === "needsStableRecoveryRoll") {
+    return {
+      tag: "needsHoles",
+      sheet,
+      holes: [input.hole],
+      elapsedTicks: advanced.right.elapsedTicks,
+      remainingTicks: advanced.right.remainingTicks,
+    };
+  }
+  if (advanced.right.tag === "recovered") {
+    return {
+      tag: "resolved",
+      sheet: replaceCharacterSheetHitPoints(sheet, {
+        tag: "positive",
+        currentHp: Hp(1),
+        tempHp: sheet.hitPoints.tempHp,
+      }),
+      elapsedTicks: advanced.right.elapsedTicks,
+    };
+  }
+  return {
+    tag: "resolved",
+    sheet: replaceCharacterSheetHitPoints(sheet, {
+      ...sheet.hitPoints,
+      lifecycle: {
+        tag: "stable",
+        recovery: advanced.right.recovery,
+      },
+    }),
+    elapsedTicks: advanced.right.elapsedTicks,
+  };
+}
+
+function stableRecoveryRollHole(characterId: CharacterSheetId): RuntimeHole {
+  return {
+    kind: "rolledDice",
+    holeId: holeId(`character-sheet:${characterId}:stable-recovery-roll`),
+    holeInstanceKey: holeInstanceKey(
+      `character-sheet:${characterId}:stable-recovery-roll`,
+    ),
+    label: "Stable recovery 1d4 hours",
+  };
+}
+
+function stableRecoveryFillFor(
+  fills: readonly FilledHoleValue[],
+  hole: RuntimeHole,
+): Extract<FilledHoleValue, { readonly kind: "rolledDice" }> | undefined {
+  return fills.find(
+    (
+      candidate,
+    ): candidate is Extract<FilledHoleValue, { readonly kind: "rolledDice" }> =>
+      candidate.kind === "rolledDice" && candidate.holeId === hole.holeId,
+  );
+}
+
+function stableRecoveryRollFromFill(
+  fill: Extract<FilledHoleValue, { readonly kind: "rolledDice" }>,
+): Either.Either<DieRollResult, CharacterSheetIssue> {
+  const validation = validateRolledDiceForDiceExpr(fill.value, {
+    dice: STABLE_RECOVERY_ROLL_DICE_EXPR.dice,
+    dieSize: STABLE_RECOVERY_ROLL_DICE_EXPR.dieSize,
+  });
+  if (validation !== null) {
+    return characterSheetIssue(validation.reason);
+  }
+  const group = fill.value[0];
+  const roll = group?.results[0];
+  return roll === undefined
+    ? characterSheetIssue("Stable recovery requires one d4 roll.")
+    : Either.right(roll);
+}
+
+function invalidElapsedTimeResult(
+  sheet: CharacterSheet,
+  message: string,
+): CharacterSheetElapsedTimeResult {
+  return {
+    tag: "invalid",
+    sheet,
+    reason: "invalidFill",
+    message,
+  };
+}
+
+function replaceCharacterSheetHitPoints(
+  sheet: CharacterSheet,
+  hitPoints: CharacterSheetHitPoints,
+): CharacterSheet {
+  return "spellSlotExpenditures" in sheet
+    ? {
+        ...sheet,
+        hitPoints,
+        spellSlotExpenditures: sheet.spellSlotExpenditures,
+      }
+    : { ...sheet, hitPoints };
 }
 
 function parseHp(value: unknown): Either.Either<HpType, CharacterSheetIssue> {

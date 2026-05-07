@@ -9,6 +9,7 @@ import {
   ELAPSED_TIME_TICKS_PER_MINUTE,
   formatElapsedTimeTicks,
   formatTimeSpanDuration,
+  parsePositiveElapsedTimeTicks,
   timeSpanDuration,
 } from "./elapsed-time.ts";
 
@@ -47,6 +48,11 @@ describe("elapsed time algebra", () => {
         elapsedTimeTicksFromTimeSpanDuration({ unit: "second", amount: 6 }),
       ),
     ).toBe(true);
+  });
+
+  test("parses positive elapsed-time ticks without admitting expired timers", () => {
+    expect(Number(requireRight(parsePositiveElapsedTimeTicks(1)))).toBe(1);
+    expect(Either.isLeft(parsePositiveElapsedTimeTicks(0))).toBe(true);
   });
 
   test("formats the largest exact elapsed-time unit", () => {

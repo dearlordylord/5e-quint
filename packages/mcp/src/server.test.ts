@@ -39,6 +39,7 @@ import {
   type CharacterEquipmentItemSlot,
   type CharacterBuildSpellcasting,
 } from "@dnd/character-creation-runtime";
+import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -2812,7 +2813,10 @@ describe("MCP server route", () => {
           tempHp: 0,
           lifecycle: {
             tag: "stable",
-            recovery: { kind: "regains1HpAfter1d4Hours" },
+            recovery: {
+              kind: "regains1HpAfter1d4Hours",
+              elapsedBeforeRecoveryRoll: 0,
+            },
           },
         },
       }),
@@ -2830,7 +2834,10 @@ describe("MCP server route", () => {
                 tempHp: 0,
                 lifecycle: {
                   tag: "stable",
-                  recovery: { kind: "regains1HpAfter1d4Hours" },
+                  recovery: {
+                    kind: "regains1HpAfter1d4Hours",
+                    elapsedBeforeRecoveryRoll: 0,
+                  },
                 },
               },
             }),
@@ -3122,7 +3129,10 @@ describe("MCP server route", () => {
         tempHp: Hp(0),
         zeroHpLifecycle: {
           tag: "stable",
-          recovery: { kind: "regains1HpAfter1d4Hours" },
+          recovery: {
+            kind: "regains1HpAfter1d4Hours",
+            elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+          },
         },
       }),
     );

@@ -13,8 +13,10 @@ import {
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetPositiveHpUnconscious,
+  type CharacterSheetStableRecovery,
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
+import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 
@@ -22,6 +24,7 @@ import {
   battleCreatureInitFromCharacterBuild,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
+import { battleCreatureInitIssue } from "./battle-character-build-projection.ts";
 
 export {
   battleCreatureInitFromCharacterBuild,
@@ -68,6 +71,10 @@ export type CharacterSheetBattleHandoffIssue =
 
 export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   const { sheet, unitLibrary, ...battleInput } = input;
+  const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(sheet);
+  if (stableRecoveryIssue !== null) {
+    return battleCreatureInitIssue(stableRecoveryIssue);
+  }
   return battleCreatureInitFromCharacterBuild({
     ...battleInput,
     unitLibrary,
@@ -106,7 +113,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
 
   const zeroHpLifecycle =
     input.combatant.hp === 0
-      ? characterZeroHpLifecycleFromBattle(input.combatant)
+      ? characterZeroHpLifecycleFromBattle(input)
       : undefined;
   if (zeroHpLifecycle !== undefined && Either.isLeft(zeroHpLifecycle)) {
     return Either.left(zeroHpLifecycle.left);
@@ -213,25 +220,35 @@ function characterSheetZeroHpLifecycle(
   };
 }
 
-function characterZeroHpLifecycleFromBattle(
-  combatant: BattleCreatureState,
-): Either.Either<
+function characterZeroHpLifecycleFromBattle(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: BattleCreatureState;
+}): Either.Either<
   CharacterSheetZeroHpLifecycleInput,
   CharacterSheetBattleHandoffIssue
 > {
-  if (combatant.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
+  if (input.combatant.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
     return characterSheetBattleHandoffIssue(
       "Battle character has unsupported zero-HP lifecycle.",
     );
   }
-  const lifecycle = combatant.zeroHpLifecycle.deathSaves;
+  const lifecycle = input.combatant.zeroHpLifecycle.deathSaves;
   if (lifecycle.dead) {
     return Either.right({ tag: "dead", deathSaves: lifecycle.deathSaves });
   }
   if (lifecycle.stable) {
+    const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(
+      input.sheet,
+    );
+    if (stableRecoveryIssue !== null) {
+      return characterSheetBattleHandoffIssue(stableRecoveryIssue);
+    }
     return Either.right({
       tag: "stable",
-      recovery: { kind: "regains1HpAfter1d4Hours" },
+      recovery: {
+        kind: "regains1HpAfter1d4Hours",
+        elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+      },
     });
   }
   return Either.right({ tag: "unstable", deathSaves: lifecycle.deathSaves });
@@ -244,4 +261,25 @@ function characterSheetBattleHandoffIssue(
     tag: "characterSheetBattleHandoffIssue",
     message,
   });
+}
+
+function unsupportedStableRecoveryBattleBoundary(
+  sheet: CharacterSheet,
+): string | null {
+  if (
+    sheet.hitPoints.tag !== "zero" ||
+    sheet.hitPoints.lifecycle.tag !== "stable"
+  ) {
+    return null;
+  }
+  return freshStableRecovery(sheet.hitPoints.lifecycle.recovery)
+    ? null
+    : "Battle handoff cannot preserve in-progress Stable recovery timers.";
+}
+
+function freshStableRecovery(recovery: CharacterSheetStableRecovery): boolean {
+  return (
+    recovery.kind === "regains1HpAfter1d4Hours" &&
+    Number(recovery.elapsedBeforeRecoveryRoll) === 0
+  );
 }
