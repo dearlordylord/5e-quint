@@ -168,18 +168,19 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT30's recursive planning review:
+Current matrix status after QMBT33's recursive planning review:
 
-- 51 authored Units classified in the installed coverage collections.
-- 16 stable executable profiles.
-- 18 of 37 installed executable Units mapped to supported profiles.
+- 53 authored Units classified in the installed coverage collections.
+- 17 stable executable profiles.
+- 21 of 39 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
-- deterministic admission/projection evidence covers all 18 supported Unit
+- deterministic admission/projection evidence covers all 21 supported Unit
   identities, including the QMBT21 Classic non-SRD mechanics-only
   `mycelium_step` row, QMBT22 `shield`, QMBT25 `healing_word`, and QMBT27
-  `feat_archery`.
-- selected identity MBT covers 9 of 18 supported Unit identities. QMBT16
+  `feat_archery`, QMBT31 `feat_savage_attacker`, and QMBT32 `cure_wounds` and
+  `mass_healing_word`.
+- selected identity MBT covers 10 of 21 supported Unit identities. QMBT16
   explicitly decided not to add selected identity MBT for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
@@ -192,12 +193,14 @@ Current matrix status after QMBT30's recursive planning review:
 - `feat_archery` is now counted as a supported
   `unit-feature.passive-ranged-attack-roll-bonus` Unit with deterministic
   admission/projection evidence.
-- QMBT28 selected direct Hit Point restoration for `cure_wounds` and
-  `mass_healing_word` as the next spell admission batch.
-- QMBT29 selected `feat_savage_attacker` as the next SRD feature widening
-  slice for `unit-feature.weapon-damage-dice-roll-choice`.
+- QMBT31 counted `feat_savage_attacker` as a supported
+  `unit-feature.weapon-damage-dice-roll-choice` Unit with deterministic
+  admission/projection evidence and selected identity MBT evidence.
+- QMBT32 counted `cure_wounds` and `mass_healing_word` as supported
+  `spell.hit-point-restoration` Units with deterministic admission/projection
+  evidence.
 
-QMBT30 appended QMBT31-QMBT33 rather than declaring the matrix lane complete.
-The next batch promotes Savage Attacker's weapon damage dice choice, promotes
-direct Hit Point restoration spell admission for Cure Wounds and Mass Healing
-Word, and then runs another recursive planning review.
+QMBT33 appended QMBT34-QMBT36 rather than declaring the matrix lane complete.
+The next batch promotes Mass Cure Wounds as area Hit Point restoration, selects
+the next SRD feature widening slice after Savage Attacker, and then runs
+another recursive planning review.

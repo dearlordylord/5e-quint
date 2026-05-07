@@ -280,7 +280,25 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 128,
       "id": "QMBT33",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 129,
+      "id": "QMBT34",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Mass Cure Wounds Area Hit Point Restoration"
+    },
+    {
+      "number": 130,
+      "id": "QMBT35",
       "status": "ready-for-research",
+      "title": "Select Next SRD Feature Widening Slice After Savage Attacker"
+    },
+    {
+      "number": 131,
+      "id": "QMBT36",
+      "status": "blocked",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -357,7 +375,10 @@ Keep it synchronized with the DAG table and task details.
 | 125   | QMBT30 - Recursive Unit Profile Planning Review | done | QMBT27-QMBT29 | QMBT31-QMBT33 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT27-QMBT29 review, refreshed PRD status notes, and appended QMBT31-QMBT33 because the matrix lane is not complete. |
 | 126   | QMBT31 - Promote Savage Attacker Weapon Damage Dice Choice | done | QMBT29-QMBT30 | QMBT33 | [Savage Attacker feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT29_SAVAGE_ATTACKER_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `feat_savage_attacker` as `unit-feature.weapon-damage-dice-roll-choice` across QNT, focused QMBT, runtime projection/support, deterministic admission evidence, and matrix artifacts. |
 | 127   | QMBT32 - Promote Direct Hit Point Restoration Spell Batch | done | QMBT28-QMBT30 | QMBT33 | [QMBT28 spell admission triage](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT28_SPELL_ADMISSION_TRIAGE.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `cure_wounds` and `mass_healing_word` as `spell.hit-point-restoration` across QNT procedure facts, runtime projection/support, focused QMBT, deterministic admission evidence, and matrix artifacts. |
-| 128   | QMBT33 - Recursive Unit Profile Planning Review | ready-for-research | QMBT31-QMBT32 | QMBT34+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT31-QMBT32 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
+| 128   | QMBT33 - Recursive Unit Profile Planning Review | done | QMBT31-QMBT32 | QMBT34-QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT31-QMBT32 review, refreshed PRD status notes, and appended QMBT34-QMBT36 because the matrix lane is not complete. |
+| 129   | QMBT34 - Promote Mass Cure Wounds Area Hit Point Restoration | ready-for-implementation-after-light-research | QMBT32-QMBT33 | QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `mass_cure_wounds` as the next `spell.hit-point-restoration` widening by adding point-origin Sphere target selection to the direct HP restoration boundary. |
+| 130   | QMBT35 - Select Next SRD Feature Widening Slice After Savage Attacker | ready-for-research | QMBT31-QMBT33 | QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Triage remaining SRD feature-style executable pressure and select the next narrow feature widening slice after Savage Attacker. |
+| 131   | QMBT36 - Recursive Unit Profile Planning Review | blocked | QMBT34-QMBT35 | QMBT37+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT34-QMBT35 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -1323,16 +1344,124 @@ typecheck/tests, `pnpm quality`, and two simplify review rounds passed.
 
 ### Task 128 - QMBT33 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT31-QMBT32
 
-Blocks: QMBT34+
+Blocks: QMBT34-QMBT36
 
-Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+Research / plan:
+[QMBT33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
 Scope: review QMBT31-QMBT32 findings, update the PRD and plan docs, and append
 the next batch of QMBT34+ tasks. This task must include a new recursive
+planning-review task at the end of the appended batch unless the Unit profile
+matrix lane is explicitly declared complete.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Verification: active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
+
+Completed scope: reviewed QMBT31-QMBT32. QMBT31 promoted
+`feat_savage_attacker` as
+`unit-feature.weapon-damage-dice-roll-choice`, raising selected identity MBT
+coverage to 10/21. QMBT32 promoted `cure_wounds` and
+`mass_healing_word` as `spell.hit-point-restoration`, raising generated
+matrix status to 53 installed Units, 17 executable profiles, 21/39 supported
+executable Unit coverage, and 21/21 deterministic admission/projection
+coverage. The matrix lane is not complete, so QMBT34-QMBT36 were appended.
+
+Completed verification: active-plan consistency was checked across the Ralph
+index, DAG table, and task details for QMBT33-QMBT36 with no scoped
+mismatches. `pnpm unit-profile-coverage:check` passed; matrix docs and
+generated artifacts were not changed. `/simplify` convergence ran two review
+rounds: round 1 found that Mass Cure Wounds should be the next spell widening
+because QMBT32 already proved direct HP restoration but left point-origin
+Sphere targeting out of scope; round 2 found no important changes after the
+next batch was narrowed to one spell implementation task, one feature
+selection task, and the recursive review. `git diff --check` passed for the
+reviewed planning files. No MBT was run because QMBT33 changed planning
+documentation only and did not change battle-runtime behavior.
+
+### Task 129 - QMBT34 - Promote Mass Cure Wounds Area Hit Point Restoration
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT32-QMBT33
+
+Blocks: QMBT36
+
+Research / plan:
+[QMBT33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: promote `mass_cure_wounds` as a supported SRD spell Unit under
+`spell.hit-point-restoration`. Extend the QMBT32 direct HP restoration boundary
+with explicit point-origin 30-foot-radius Sphere target selection, up to six
+creature targets in the area, Action casting, minimum level-5 Spell Slot spend,
+slot scaling, deterministic admission/projection evidence, and refreshed
+matrix artifacts.
+
+Out of scope: `heal`, `mass_heal`, `power_word_heal`, condition removal,
+max-HP modification, heal-to-max allocation, target Reaction stand-up,
+Fire Bolt object targeting/ignition, general area damage, concentration
+condition lifecycle, and magic item spell-grant admission.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Mass Cure Wounds,
+Area of Effect, Sphere, Target, Spell Definition, Spell Access, Spell
+Invocation, Spell Effect, Casting Time, Spell Slots, and Hit Points; focused
+QNT proof for the area HP restoration procedure facts; focused QMBT spell
+parity with the mandatory timed background protocol if production battle
+behavior changes; `pnpm unit-profile-coverage:check`; relevant package
+typecheck/tests; `pnpm quality`; `/simplify` convergence, minimum two rounds.
+
+### Task 130 - QMBT35 - Select Next SRD Feature Widening Slice After Savage Attacker
+
+Status: `ready-for-research`
+
+Depends on: QMBT31-QMBT33
+
+Blocks: QMBT36
+
+Research / plan:
+[QMBT33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: review remaining SRD feature-style executable pressure after Savage
+Attacker and select one narrow next feature widening slice. Candidate lanes
+include Extra Attack sequencing, Fast Movement/Roving Speed projection,
+Unarmored Defense base AC calculation selection, Lay on Hands/Tireless/
+Adrenaline Rush healing or Temporary Hit Point resources, Dragonborn Breath
+Weapon attack replacement, damage resistance traits, and Weapon Mastery
+properties. Produce a task-specific decision doc and suggested implementation
+task if a slice is selected.
+
+Out of scope: implementing the selected feature slice; selecting spell,
+magic-item, or catalog-cleanup work; broad feature-family widening; solving all
+unsupported feature rows in one task.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` checks for every candidate
+boundary seriously considered; active-plan consistency check for any appended
+tasks; `pnpm unit-profile-coverage:check` only if matrix docs or generated
+artifacts change; no MBT for this research-only task; `/simplify` convergence,
+minimum two rounds.
+
+### Task 131 - QMBT36 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT34-QMBT35
+
+Blocks: QMBT37+
+
+Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review QMBT34-QMBT35 findings, update the PRD and plan docs, and append
+the next batch of QMBT37+ tasks. This task must include a new recursive
 planning-review task at the end of the appended batch unless the Unit profile
 matrix lane is explicitly declared complete.
 

@@ -213,6 +213,13 @@ triage is recorded in
 [QMBT28_SPELL_ADMISSION_TRIAGE.md](QMBT28_SPELL_ADMISSION_TRIAGE.md), and
 keeps `fire_bolt` excluded until the QMBT23 object-target boundary lands.
 
+QMBT31 promoted `feat_savage_attacker` as
+`unit-feature.weapon-damage-dice-roll-choice`. QMBT32 promoted `cure_wounds`
+and `mass_healing_word` as `spell.hit-point-restoration`. QMBT33 reviewed
+those closeouts and appended QMBT34-QMBT36 because the matrix lane is not
+complete; the next spell implementation target is `mass_cure_wounds`, whose
+new boundary over QMBT32 is point-origin Sphere target selection.
+
 Run:
 
 ```sh
