@@ -3235,7 +3235,7 @@ export function discoverBattleActs(
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
-    canSpendNonExtraAttackActionResource(state, actorId) &&
+    canSpendEscapeGrappleActionResource(state, actorId) &&
     grappledBy(state, actorId) !== undefined
   ) {
     const grapple = grappledBy(state, actorId);
@@ -3635,7 +3635,7 @@ function actorHasClassFeatureExtraAttackActionResource(
   );
 }
 
-function canSpendNonExtraAttackActionResource(
+function canSpendEscapeGrappleActionResource(
   state: BattleState,
   actorId: CombatantId,
 ): boolean {
