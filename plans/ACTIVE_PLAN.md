@@ -340,7 +340,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 138,
       "id": "QMBT43",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -427,7 +427,7 @@ Keep it synchronized with the DAG table and task details.
 | 135   | QMBT40 - Promote Fast Movement Passive Speed Bonus | done | QMBT38-QMBT39 | QMBT41, QMBT43 | [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `barbarian_fast_movement` as `unit-feature.passive-speed-bonus`, including QNT profile, runtime projection from authored mechanics, deterministic admission evidence, focused parity as needed, and refreshed matrix artifacts. |
 | 136   | QMBT41 - Select Next SRD Feature Widening Slice After Fast Movement | done | QMBT40 | QMBT43 | [Roving feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `ranger_roving` as the next SRD feature widening slice, with a red/green plan for `unit-feature.passive-speed-kind-grants` and a proposed QMBT44 implementation task. |
 | 137   | QMBT42 - Split Runtime Tests by RAW and Ubiquitous Boundaries | done | QMBT22, QMBT39 | QMBT43 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md), [SRD Shield](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRD Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md) | Split Shield runtime behavior tests out of Unit profile admission, establish RAW/ubiquitous naming guidance for deterministic battle-runtime test files, and leave support-profile admission tests narrow. |
-| 138   | QMBT43 - Recursive Unit Profile Planning Review | blocked | QMBT40-QMBT42 | QMBT44+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT40-QMBT42 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly declared complete. |
+| 138   | QMBT43 - Recursive Unit Profile Planning Review | ready-for-research | QMBT40-QMBT42 | QMBT44+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT40-QMBT42 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -1812,7 +1812,7 @@ test-organization task unless production behavior changes.
 
 ### Task 138 - QMBT43 - Recursive Unit Profile Planning Review
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT40-QMBT42
 
