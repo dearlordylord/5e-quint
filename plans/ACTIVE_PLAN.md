@@ -430,7 +430,25 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 153,
       "id": "QMBT58",
-      "status": "ready-for-research",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 154,
+      "id": "QMBT59",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Deflect Attacks Zero-Damage Redirect"
+    },
+    {
+      "number": 155,
+      "id": "QMBT60",
+      "status": "blocked",
+      "title": "Select Next SRD Feature Widening Slice After Deflect Attacks"
+    },
+    {
+      "number": 156,
+      "id": "QMBT61",
+      "status": "blocked",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -532,7 +550,10 @@ Keep it synchronized with the DAG table and task details.
 | 150   | QMBT55 - Recursive Unit Profile Planning Review | done | QMBT53-QMBT54 | QMBT56-QMBT58 | [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT53-QMBT54 review, refreshed PRD status notes, and appended QMBT56-QMBT58 because the matrix lane is not complete. |
 | 151   | QMBT56 - Promote Boon of Combat Prowess Peerless Aim Miss-to-Hit Replacement | done | QMBT54-QMBT55 | QMBT57-QMBT58 | [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed Peerless Aim as `unit-feature.attack-roll-miss-to-hit-replacement` through the existing attack-roll outcome boundary, with Surface mechanics widening, QNT proof coverage, runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
 | 152   | QMBT57 - Select Next SRD Feature Widening Slice After Combat Prowess | done | QMBT56 | QMBT58 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `monk_deflect_attacks` redirect-on-zero as the next SRD feature widening slice, with a red/green plan for one attack-damage reduction zero-damage redirect Unit-feature profile. |
-| 153   | QMBT58 - Recursive Unit Profile Planning Review | ready-for-research | QMBT56-QMBT57 | QMBT59+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT56-QMBT57 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
+| 153   | QMBT58 - Recursive Unit Profile Planning Review | done | QMBT56-QMBT57 | QMBT59-QMBT61 | [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT56-QMBT57 review, refreshed PRD status notes, and appended QMBT59-QMBT61 because the matrix lane is not complete. |
+| 154   | QMBT59 - Promote Deflect Attacks Zero-Damage Redirect | ready-for-implementation-after-light-research | QMBT57-QMBT58 | QMBT60-QMBT61 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `monk_deflect_attacks` redirect-on-zero as one attack-damage reduction zero-damage redirect Unit-feature profile. |
+| 155   | QMBT60 - Select Next SRD Feature Widening Slice After Deflect Attacks | blocked | QMBT59 | QMBT61 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT59 refreshes matrix pressure, select the next narrow SRD feature widening slice without mixing spell or magic-item intake. |
+| 156   | QMBT61 - Recursive Unit Profile Planning Review | blocked | QMBT59-QMBT60 | QMBT62+ | [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT59-QMBT60 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -2472,26 +2493,129 @@ MBT was not required because this task changed planning docs only.
 
 ### Task 153 - QMBT58 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT56-QMBT57
 
-Blocks: QMBT59+
+Blocks: QMBT59-QMBT61
 
 Research / plan:
-[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[QMBT58_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md),
 [QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md),
 [QMBT55_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
-Scope: review QMBT56-QMBT57 findings, update the PRD and plan docs, and append
+Completed scope: reviewed QMBT56-QMBT57 findings, refreshed the PRD status
+notes, and appended QMBT59-QMBT61 because the Unit profile matrix lane remains
+active at 30/45 supported executable Unit coverage. The appended batch starts
+with the selected `monk_deflect_attacks` implementation slice, then reopens
+SRD feature-slice selection against the refreshed matrix, then runs another
+recursive planning review.
+
+Out of scope honored: no production implementation work was started in QMBT58.
+
+Verification: RAW/source review checked the QMBT56-QMBT57 anchors captured in
+the QMBT58 review artifact; active-plan consistency checked across Ralph index,
+DAG table, and task details; `pnpm unit-profile-coverage:check` was not run
+because no matrix docs or generated artifacts changed; `/simplify` convergence
+recorded in the QMBT58 review artifact.
+
+### Task 154 - QMBT59 - Promote Deflect Attacks Zero-Damage Redirect
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT57-QMBT58
+
+Blocks: QMBT60-QMBT61
+
+Research / plan:
+[QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT58_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: implement the QMBT57 red/green plan for `monk_deflect_attacks`.
+Promote the Deflect Attacks redirect-on-zero follow-up as a Unit feature
+profile such as
+`unit-feature.attack-damage-reduction-zero-damage-redirect`: after the Monk
+takes the already modeled attack-damage Reaction reduction and reduces damage
+to 0, the Monk can spend 1 Focus Point to redirect the attack's force to an
+eligible visible target, force a Dexterity saving throw, and deal same-type
+redirected damage on a failed save. The implementation must parse support from
+the authored mechanics shape rather than Unit id, execute through the existing
+attack-damage Reaction boundary, and keep redirect target, attack kind, save
+result, redirected damage roll, and original damage type as named facts rather
+than positional conventions.
+
+Out of scope: Tactical Mind ability-check resource augmentation, Cutting Words
+ability-check Reaction support, Lay On Hands healing pools, Tireless Temporary
+Hit Points, AC base formula alternatives, resistance traits, Dragonborn Breath
+Weapon, Weapon Mastery properties, spell admission, magic-item intake, broad
+Monk support, broad Focus Point support, Deflect Energy, and generic redirect
+families.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Deflect Attacks,
+Monk's Focus, Martial Arts, Attack Roll, Reaction, Damage Rolls, Damage Types,
+Saving Throw, Dexterity saving throw, Monk Focus save DC, Focus Point spend,
+Resistance, target-side damage adjustment order, Total Cover, and same-type
+redirected damage; focused QNT proof for the new attack-damage reduction
+zero-damage redirect profile; focused runtime parity with the mandatory timed
+background MBT protocol if promoted battle behavior changes; `pnpm
+unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm
+quality`; `/simplify` convergence, minimum two rounds.
+
+### Task 155 - QMBT60 - Select Next SRD Feature Widening Slice After Deflect Attacks
+
+Status: `blocked`
+
+Depends on: QMBT59
+
+Blocks: QMBT61
+
+Research / plan:
+[QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT58_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT59 refreshes matrix pressure, select the next narrow SRD
+feature-style widening slice. Re-triage the remaining installed feature and
+species pressure against local RAW and `UBIQUITOUS_LANGUAGE.md`, including
+ability-check resource augmentation, ability-check Reaction reduction, healing
+pools, Temporary Hit Point features, AC base formulas, resistance traits,
+Breath Weapon attack replacement, and Weapon Mastery properties. Produce a
+task-specific decision artifact with candidate triage, a red/green plan for
+the selected slice, and active-plan updates for the next implementation task.
+
+Out of scope: implementing the selected slice; solving all unsupported feature
+rows in one task; spell admission; magic-item intake; content cleanup; and
+changing the Unit profile checker metrics.
+
+Verification: RAW/source review for all seriously considered candidate
+boundaries; `UBIQUITOUS_LANGUAGE.md` check for domain terms used in the
+decision; active-plan consistency check across Ralph index, DAG table, and
+task details; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial. MBT is not required for this research-only selection
+task.
+
+### Task 156 - QMBT61 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT59-QMBT60
+
+Blocks: QMBT62+
+
+Research / plan:
+[QMBT58_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: review QMBT59-QMBT60 findings, update the PRD and plan docs, and append
 the next implementation/research batch. This task must include a new recursive
 planning-review task at the end of the appended batch unless the Unit profile
 matrix lane is explicitly declared complete.
 
 Out of scope: implementation work not captured by the new task batch.
 
-Verification: RAW/source review for QMBT56-QMBT57 findings and any appended
+Verification: RAW/source review for QMBT59-QMBT60 findings and any appended
 rule slices; active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change; `/simplify` convergence, minimum two rounds unless the final
