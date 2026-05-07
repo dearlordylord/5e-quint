@@ -35,6 +35,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "standFromProne",
   "releaseReadiedSpell",
   "releaseReadiedMovement",
+  "castTriggeredReactionSpell",
   "releaseGrapple",
   "opportunityAttack",
 ] as const;
@@ -203,6 +204,14 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
+    command: Schema.Literal("castTriggeredReactionSpell"),
+    reactorId: CombatantId,
+    spellId: BattleSubjectTextSchema,
+    spellActId: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
     command: Schema.Literal("releaseGrapple"),
     targetId: CombatantId,
   }),
@@ -361,6 +370,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         "targetId" in command ? command.targetId : null,
         "reactorId" in command ? command.reactorId : null,
         "targetId" in command ? command.targetId : null,
+        "spellActId" in command ? command.spellActId : null,
         "attackName" in command ? command.attackName : null,
       ]),
     ),

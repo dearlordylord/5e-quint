@@ -62,8 +62,8 @@
       "value": 49
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 15,
-      "numerator": 15,
+      "denominator": 16,
+      "numerator": 16,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 15,
+      "denominator": 16,
       "numerator": 9,
-      "percent": "60%"
+      "percent": "56.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 35,
-      "numerator": 15,
-      "percent": "42.9%"
+      "numerator": 16,
+      "percent": "45.7%"
     }
   },
   "metricSemantics": [
@@ -2057,15 +2057,60 @@
         "status": "installed"
       },
       "claim": {
-        "futureProfileOwner": "QCORE10",
-        "issue": "SRD Shield is authored as a triggered Reaction spell, but promoted battle-runtime Spell Access admission projects action, bonus-action, cantrip, and ongoing-effect spell acts rather than triggered Reaction spell choices.",
-        "tag": "needs-surface-widening"
+        "profileIds": [
+          "spell.reaction-shield"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT22"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.reaction-shield",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reaction-triggers.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT3",
+            "QMBT5"
+          ],
+          "title": "Reaction spell profile that interrupts an incoming attack",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/shield.json",
       "unitId": "shield"
     },

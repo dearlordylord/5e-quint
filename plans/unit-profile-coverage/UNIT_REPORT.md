@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 48/391 | 12.3% |
 | Authored Surface executable catalog admission | 34/334 | 10.2% |
 | Installed Unit profile classification coverage | 49/49 | 100% |
-| Supported executable Unit coverage | 15/35 | 42.9% |
+| Supported executable Unit coverage | 16/35 | 45.7% |
 | QNT profile modeling coverage | 14/14 | 100% |
 | QNT proof coverage | 14/14 | 100% |
 | Runtime mapping coverage | 14/14 | 100% |
 | Runtime parity coverage | 14/14 | 100% |
-| Deterministic admission/projection coverage | 15/15 | 100% |
-| Selected identity MBT coverage | 9/15 | 60% |
+| Deterministic admission/projection coverage | 16/16 | 100% |
+| Selected identity MBT coverage | 9/16 | 56.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -61,6 +61,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `ray_of_frost` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `mage_armor` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `magic_missile` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
+| `shield` | srd-5.2.1 | `spell.reaction-shield` |
 | `mycelium_step` | classic-2024-non-srd-mechanics | `unit-feature.alternate-action-cost` |
 
 ## Authored Surface Units Not In Unit Catalog
@@ -803,6 +804,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `shield` | `spell.reaction-shield` | QMBT22 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mycelium_step` | `unit-feature.alternate-action-cost` | QMBT21 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 
 ## Selected Identity MBT Evidence
@@ -846,7 +848,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fire_bolt` | needs-surface-widening | SRD Fire Bolt can target creatures or objects and ignites eligible flammable objects; promoted spell projection has creature combatant targeting and no object-burning runtime boundary. |
 | `light` | unsupported-profile | Object light effect is authored but not promoted as an execution profile yet. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
-| `shield` | needs-surface-widening | SRD Shield is authored as a triggered Reaction spell, but promoted battle-runtime Spell Access admission projects action, bonus-action, cantrip, and ongoing-effect spell acts rather than triggered Reaction spell choices. |
 | `sleep` | unsupported-profile | Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. |
 | `thunderwave` | needs-surface-widening | Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice. |
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
@@ -864,8 +865,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 25 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `feat_savage_attacker`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 4 | `fighter_tactical_mind`, `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`, `thunderwave` |
-| srd-5.2.1 | QCORE10 | needs-surface-widening | 2 | `fire_bolt`, `shield` |
 | srd-5.2.1 | QCORE9 | unsupported-profile | 2 | `monk_deflect_attacks`, `orc_relentless_endurance` |
+| srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | QCORE9 | needs-surface-widening | 1 | `bard_cutting_words` |
 
 ## Profile Claims By Task

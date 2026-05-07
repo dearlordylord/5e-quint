@@ -27,6 +27,7 @@ import {
 } from "@dnd/shared-algebras/initiative-algebra";
 import {
   armorClass,
+  armorClassDelta,
   currentArmorClass,
   statBlockArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
@@ -208,6 +209,8 @@ import {
 } from "./unit-feature-support.ts";
 
 const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
+const SHIELD_MAGIC_MISSILE_SPELL_ID =
+  "magic_missile" satisfies SpellRecord["id"];
 type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
 
 export type BattleActiveEffectExpiration = {
@@ -225,6 +228,12 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "speedDelta";
       readonly deltaFeet: MovementDeltaFeet;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellArmorClassBonus";
+      readonly bonus: number;
+      readonly negatedSpellIds: readonly SpellRecord["id"][];
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -354,6 +363,11 @@ type BattleReactionProcedureChoiceWithSubject = {
       readonly readiedMovementActorId: CombatantId;
     }
   | {
+      readonly kind: "castTriggeredReactionSpell";
+      readonly spellId: SpellRecord["id"];
+      readonly spellActId: string;
+    }
+  | {
       readonly kind: "opportunityAttack";
     }
 );
@@ -417,6 +431,11 @@ export type BattleReactionProcedureSelection = {
       readonly readiedMovementActorId: CombatantId;
     }
   | {
+      readonly kind: "castTriggeredReactionSpell";
+      readonly spellId: SpellRecord["id"];
+      readonly spellActId: string;
+    }
+  | {
       readonly kind: "opportunityAttack";
       readonly reactorId: CombatantId;
     }
@@ -460,6 +479,7 @@ export type BattleReactionFrame =
       readonly trigger: "spellCast";
       readonly casterId: CombatantId;
       readonly spellId: SpellRecord["id"];
+      readonly targetIds: readonly CombatantId[];
     })
   | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "saveFailed";
@@ -652,6 +672,13 @@ export type SupportedSpellAct =
       >;
     }
   | {
+      readonly kind: "preparedShieldReactionSpell";
+      readonly spell: SpellRecord;
+      readonly slotLevel: SpellSlotLevel;
+      readonly armorClassBonus: number;
+      readonly negatedSpellIds: readonly SpellRecord["id"][];
+    }
+  | {
       readonly kind: "preparedHealingSpell";
       readonly spell: SpellRecord;
       readonly slotLevel: SpellSlotLevel;
@@ -663,7 +690,12 @@ export type SupportedSpellAct =
 
 type SupportedDamageSpellAct = Exclude<
   SupportedSpellAct,
-  { readonly kind: "preparedPersistentSpell" | "preparedHealingSpell" }
+  {
+    readonly kind:
+      | "preparedPersistentSpell"
+      | "preparedHealingSpell"
+      | "preparedShieldReactionSpell";
+  }
 >;
 
 export type BattleTurnResources = ActionEconomyState & {
@@ -1290,6 +1322,13 @@ const SupportedSpellActSchema = Schema.Union(
     rangeFeet: MovementFeet,
     activeEffect: BattleRuntimeObjectSchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("preparedShieldReactionSpell"),
+    spell: BattleRuntimeObjectSchema,
+    slotLevel: SpellSlotLevel,
+    armorClassBonus: Schema.Number,
+    negatedSpellIds: Schema.Array(Schema.String),
+  }),
   SupportedHealingSpellActSchema,
 );
 
@@ -1716,6 +1755,12 @@ type BattleFillEncoded =
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
+                  readonly kind: "castTriggeredReactionSpell";
+                  readonly spellId: string;
+                  readonly spellActId: string;
+                  readonly fills: readonly BattleFillEncoded[];
+                }
+              | {
                   readonly kind: "opportunityAttack";
                   readonly reactorId: string;
                   readonly fills: readonly BattleFillEncoded[];
@@ -1918,6 +1963,12 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("releaseReadiedMovement"),
               readiedMovementActorId: CombatantId,
+              fills: Schema.Array(BattleFillSchema),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("castTriggeredReactionSpell"),
+              spellId: Schema.String,
+              spellActId: Schema.String,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
@@ -2431,6 +2482,14 @@ const BattleReactionProcedureChoiceSchema = Schema.Union(
     subject: BattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
     readiedMovementActorId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("castTriggeredReactionSpell"),
+    reactorId: CombatantId,
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+    spellId: Schema.String,
+    spellActId: Schema.String,
   }),
   Schema.Struct({
     kind: Schema.Literal("opportunityAttack"),
@@ -3669,6 +3728,12 @@ function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "castTriggeredReactionSpell"
+    ) {
+      return resolveCastTriggeredReactionSpellCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "releaseGrapple"
     ) {
       return resolveReleaseGrappleCommand({ ...input, subject });
@@ -4061,6 +4126,122 @@ function resolveReactionRollOrDamageReduction(input: {
       };
 }
 
+function resolveCastTriggeredReactionSpellCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "castTriggeredReactionSpell";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const frame = currentReactionFrame(input.state);
+  const activeReaction = frame?.activeReaction;
+  const reactor = input.state.combatants.get(input.subject.reactorId);
+  const invocation =
+    reactor?.origin.kind === "character"
+      ? supportedSpellActs(reactor).find(
+          (candidate) =>
+            candidate.kind === "preparedShieldReactionSpell" &&
+            candidate.spell.id === input.subject.spellId &&
+            supportedSpellActId(candidate) === input.subject.spellActId,
+        )
+      : undefined;
+  if (
+    (frame?.trigger !== "attackHit" && frame?.trigger !== "spellCast") ||
+    activeReaction === undefined ||
+    activeReaction.reactorId !== input.subject.reactorId ||
+    !sameBattleSubject(activeReaction.subject, input.subject)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Triggered Reaction spell casting requires an active matching Reaction window.",
+    );
+  }
+  if (
+    reactor?.origin.kind !== "character" ||
+    invocation?.kind !== "preparedShieldReactionSpell"
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Triggered Reaction spell command requires a supported prepared Reaction spell.",
+    );
+  }
+  if (!spellHasAvailableSpend(reactor, invocation)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Triggered Reaction spell no longer has its required runtime spell resource.",
+    );
+  }
+  if (activeOngoingFeaturesPreventSpellcasting(reactor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Triggered Reaction spell is unavailable while an active ongoing feature prevents spellcasting.",
+    );
+  }
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Triggered Reaction Shield spell does not accept table fills.",
+    );
+  }
+  if (
+    !triggeredReactionSpellTurnResourceAvailable(
+      input.state,
+      input.subject.reactorId,
+      invocation,
+      frame,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+
+  const castingState = spellRequiresVerbal(invocation.spell)
+    ? revealHidden(input.state, input.subject.reactorId)
+    : input.state;
+  const effected = applyShieldReactionSpellActiveEffect(
+    castingState,
+    input.subject.reactorId,
+    invocation,
+  );
+  const slotted = expendSpellSlot(
+    effected,
+    input.subject.reactorId,
+    invocation.slotLevel,
+  );
+  const nextTurnResources =
+    input.subject.reactorId === currentActorId(slotted)
+      ? markSpellSlotExpendedThisTurn(slotted.currentTurnResources)
+      : Either.right(slotted.currentTurnResources);
+  if (Either.isLeft(nextTurnResources)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const nextState = {
+    ...slotted,
+    currentTurnResources: nextTurnResources.right,
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function completeResolvedActiveReactionIfPending(
   result: BattleResolutionResult,
 ): BattleResolutionResult {
@@ -4341,6 +4522,15 @@ function sameReactionProcedureChoice(
   ) {
     return (
       choice.readiedMovementActorId === decisionChoice.readiedMovementActorId
+    );
+  }
+  if (
+    choice.kind === "castTriggeredReactionSpell" &&
+    decisionChoice.kind === "castTriggeredReactionSpell"
+  ) {
+    return (
+      choice.spellId === decisionChoice.spellId &&
+      choice.spellActId === decisionChoice.spellActId
     );
   }
   return (
@@ -5121,6 +5311,130 @@ function readiedMovementReactionChoices(
   );
 }
 
+function triggeredReactionSpellChoices(
+  state: BattleState,
+  frame: BattleReactionFrameInput,
+): readonly BattleReactionProcedureChoice[] {
+  if (frame.trigger !== "attackHit" && frame.trigger !== "spellCast") {
+    return [];
+  }
+  const reactorIds =
+    frame.trigger === "attackHit" ? [frame.targetId] : frame.targetIds;
+  return reactorIds.flatMap(
+    (reactorId): readonly BattleReactionProcedureChoice[] => {
+      const reactor = state.combatants.get(reactorId);
+      if (
+        reactor?.origin.kind !== "character" ||
+        !combatantCanTakeReactions(reactor) ||
+        activeOngoingFeaturesPreventSpellcasting(reactor)
+      ) {
+        return [];
+      }
+      return supportedSpellActs(reactor).flatMap(
+        (invocation): readonly BattleReactionProcedureChoice[] => {
+          if (
+            invocation.kind !== "preparedShieldReactionSpell" ||
+            !spellHasAvailableSpend(reactor, invocation) ||
+            !triggeredReactionSpellTurnResourceAvailable(
+              state,
+              reactorId,
+              invocation,
+              frame,
+            ) ||
+            !shieldReactionSpellMatchesTrigger(invocation, frame)
+          ) {
+            return [];
+          }
+          const spellActId = supportedSpellActId(invocation);
+          return [
+            {
+              kind: "castTriggeredReactionSpell" as const,
+              reactorId,
+              spellId: invocation.spell.id,
+              spellActId,
+              initialHoles: [],
+              subject: {
+                tag: "runtimeCommand" as const,
+                actorId: currentActorId(state),
+                command: "castTriggeredReactionSpell" as const,
+                reactorId,
+                spellId: invocation.spell.id,
+                spellActId,
+              },
+            },
+          ];
+        },
+      );
+    },
+  );
+}
+
+function triggeredReactionSpellTurnResourceAvailable(
+  state: BattleState,
+  reactorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedShieldReactionSpell" }
+  >,
+  frame: BattleReactionFrameInput,
+): boolean {
+  if (reactorId !== currentActorId(state)) {
+    return true;
+  }
+  if (state.currentTurnResources.spellSlotExpendedThisTurn) {
+    return false;
+  }
+  return !currentActorHasPendingSlottedSpellCast(state, invocation, frame);
+}
+
+function currentActorHasPendingSlottedSpellCast(
+  state: BattleState,
+  reactionInvocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedShieldReactionSpell" }
+  >,
+  frame: BattleReactionFrameInput,
+): boolean {
+  if (
+    frame.trigger !== "spellCast" ||
+    frame.casterId !== currentActorId(state)
+  ) {
+    return false;
+  }
+  const caster = state.combatants.get(frame.casterId);
+  if (caster?.origin.kind !== "character") {
+    return false;
+  }
+  return supportedSpellActs(caster).some(
+    (candidate) =>
+      candidate.spell.id === frame.spellId &&
+      candidate.spell.id !== reactionInvocation.spell.id &&
+      spellActExpendsSpellSlot(candidate),
+  );
+}
+
+function shieldReactionSpellMatchesTrigger(
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedShieldReactionSpell" }
+  >,
+  frame: BattleReactionFrameInput,
+): boolean {
+  const castingTime = invocation.spell.mechanics.castingTime;
+  if (castingTime.kind !== "reaction") {
+    return false;
+  }
+  if (frame.trigger === "attackHit") {
+    return reactionTriggerIncludesHitByAttackRoll(castingTime);
+  }
+  const namedSpellTriggerIds = reactionTriggerNamedSpellIds(castingTime);
+  return (
+    frame.trigger === "spellCast" &&
+    namedSpellTriggerIds.includes(frame.spellId) &&
+    invocation.negatedSpellIds.includes(frame.spellId)
+  );
+}
+
 function reactionChoices(
   state: BattleState,
   frame: BattleReactionFrameInput,
@@ -5129,10 +5443,12 @@ function reactionChoices(
     ...readiedSpellReactionChoices(state, frame.trigger),
     ...readiedMovementReactionChoices(state, frame.trigger),
   ];
+  const triggeredSpellChoices = triggeredReactionSpellChoices(state, frame);
   const modifierChoices = reactionRollOrDamageReductionChoices(state, frame);
   return frame.trigger === "opportunityAttack"
     ? [
         ...readiedChoices,
+        ...triggeredSpellChoices,
         ...modifierChoices,
         ...opportunityAttackReactionChoices(
           state,
@@ -5140,7 +5456,7 @@ function reactionChoices(
           frame.threats,
         ),
       ]
-    : [...readiedChoices, ...modifierChoices];
+    : [...readiedChoices, ...triggeredSpellChoices, ...modifierChoices];
 }
 
 function reactionRollOrDamageReductionChoices(
@@ -5730,18 +6046,35 @@ function activeEffectArmorClass(
   const mageArmor = combatant.activeEffects.find(
     (effect) => effect.kind === "spellBaseArmorClass",
   );
-  if (mageArmor === undefined || combatant.armorClass.base.kind === "armor") {
-    return combatant.armorClass;
-  }
-  return {
-    ...combatant.armorClass,
-    base: {
-      kind: "ability_sum",
-      base: armorClass(mageArmor.base),
-      abilityModifiers: [mageArmor.ability],
-      source: "spell_base_plus_ability",
-    },
-  };
+  const withBase =
+    mageArmor === undefined || combatant.armorClass.base.kind === "armor"
+      ? combatant.armorClass
+      : {
+          ...combatant.armorClass,
+          base: {
+            kind: "ability_sum" as const,
+            base: armorClass(mageArmor.base),
+            abilityModifiers: [mageArmor.ability] as const,
+            source: "spell_base_plus_ability" as const,
+          },
+        };
+  const spellArmorClassBonuses = combatant.activeEffects.flatMap((effect) =>
+    effect.kind === "spellArmorClassBonus"
+      ? [
+          {
+            kind: "flat" as const,
+            bonus: armorClassDelta(effect.bonus),
+            sourceUnitId: effect.sourceSpellId,
+          },
+        ]
+      : [],
+  );
+  return spellArmorClassBonuses.length === 0
+    ? withBase
+    : {
+        ...withBase,
+        bonuses: [...withBase.bonuses, ...spellArmorClassBonuses],
+      };
 }
 
 function initialZeroHpLifecycleForCreatureOrigin(
@@ -8798,7 +9131,7 @@ function expireStartOfTurnEffects(
         ...combatant,
         activeEffects: combatant.activeEffects.filter(
           (effect) =>
-            effect.kind !== "speedDelta" ||
+            !("expiresAt" in effect) ||
             effect.expiresAt.combatantId !== actorId,
         ),
       },
@@ -10677,6 +11010,9 @@ function discoverSupportedSpellActs(
   }
   return supportedSpellActs(actor).flatMap(
     (invocation): readonly AvailableBattleAct[] => {
+      if (invocation.kind === "preparedShieldReactionSpell") {
+        return [];
+      }
       if (!spellHasAvailableSpend(actor, invocation)) {
         return [];
       }
@@ -10757,9 +11093,7 @@ function activeOngoingFeaturesPreventSpellcasting(
 }
 
 function spellRequiresVerbal(spell: SpellRecord): boolean {
-  return (
-    spell.mechanics.family === "activation" && spell.mechanics.components.v
-  );
+  return "components" in spell.mechanics && spell.mechanics.components.v;
 }
 
 function readiedSpellAct(
@@ -10770,6 +11104,7 @@ function readiedSpellAct(
   if (
     invocation.kind === "preparedPersistentSpell" ||
     invocation.kind === "preparedHealingSpell" ||
+    invocation.kind === "preparedShieldReactionSpell" ||
     state.readiedSpells.has(actorId)
   ) {
     return [];
@@ -10843,6 +11178,13 @@ function resolveSpellAct(
       input.state,
       "unsupportedSubject",
       "Prepared Bonus Action healing spells must use the Bonus Action spell subject.",
+    );
+  }
+  if (invocation.kind === "preparedShieldReactionSpell") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Triggered Reaction spells must use the pending Reaction decision.",
     );
   }
   if (
@@ -10977,6 +11319,7 @@ function resolveSpellAct(
       trigger: "spellCast",
       casterId: subject.actorId,
       spellId: invocation.spell.id,
+      targetIds: [target.combatantId],
       continuation: {
         kind: "replay",
         subject: input.subject,
@@ -11019,17 +11362,37 @@ function resolveSpellAct(
       currentArmorClass(activeEffectArmorClass(target)),
     );
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
-    if (hit && fillSet.damageRoll == null) {
-      return needsHolesResult(
-        recordAttackRollOngoingFeatures(
-          castingState,
-          subject.actorId,
-          target.combatantId,
-          null,
-        ),
-        input.subject,
-        [spellDamageHole(invocation, critical)],
+    const attackRolledState = recordAttackRollOngoingFeatures(
+      castingState,
+      subject.actorId,
+      target.combatantId,
+      null,
+    );
+    if (hit && input.suppressedReactionTrigger !== "attackHit") {
+      const reactionWindow = maybeOpenReactionWindow(
+        attackRolledState,
+        {
+          trigger: "attackHit",
+          attackerId: subject.actorId,
+          targetId: target.combatantId,
+          attackRoll: fillSet.attackRoll,
+          damageTypes: spellDamageTypes(invocation),
+          continuation: {
+            kind: "replay",
+            subject: input.subject,
+            fills: input.fills,
+          },
+        },
+        input.suppressedReactionTrigger,
       );
+      if (reactionWindow !== null) {
+        return reactionWindow;
+      }
+    }
+    if (hit && fillSet.damageRoll == null) {
+      return needsHolesResult(attackRolledState, input.subject, [
+        spellDamageHole(invocation, critical),
+      ]);
     }
     if (!hit && fillSet.damageRoll != null) {
       return invalidResult(
@@ -11039,14 +11402,7 @@ function resolveSpellAct(
       );
     }
     if (!hit) {
-      return spendMagicAction(
-        recordAttackRollOngoingFeatures(
-          castingState,
-          subject.actorId,
-          target.combatantId,
-          null,
-        ),
-      );
+      return spendMagicAction(attackRolledState);
     }
   } else if (fillSet.attackRoll != null) {
     return invalidResult(
@@ -11264,6 +11620,7 @@ function resolveBonusActionSpellAct(
       trigger: "spellCast",
       casterId: subject.actorId,
       spellId: invocation.spell.id,
+      targetIds: [target.combatantId],
       continuation: {
         kind: "replay",
         subject: input.subject,
@@ -11348,6 +11705,13 @@ function resolveReadySpellAct(
       input.state,
       "unsupportedActOption",
       "Bonus Action healing spells cannot be readied by this runtime lane.",
+    );
+  }
+  if (invocation.kind === "preparedShieldReactionSpell") {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Reaction spells cannot be readied by this runtime lane.",
     );
   }
   if (input.fills.length > 0) {
@@ -11925,6 +12289,9 @@ function resolvePreparedSlotSpellAct(input: {
         trigger: "spellCast",
         casterId: input.actorId,
         spellId: input.invocation.spell.id,
+        targetIds: input.fillSet.targetAllocation.allocations.map(
+          (allocation) => allocation.targetId,
+        ),
         continuation: {
           kind: "replay",
           subject: input.input.subject,
@@ -12542,7 +12909,10 @@ function applyHpDamage(
     return combatant;
   }
 
-  const damaged = battleCreatureStateWithDamageProjection(combatant, projection);
+  const damaged = battleCreatureStateWithDamageProjection(
+    combatant,
+    projection,
+  );
 
   if (projection.currentHp <= 0) {
     return projection.massiveDamageKills
@@ -12592,10 +12962,7 @@ function damageAllowsKnockOut(
   damageAmount: number,
 ): boolean {
   const projection = hpDamageProjection(combatant, damageAmount);
-  return (
-    projection.currentHp > 0 &&
-    Number(projection.nextHp) === 0
-  );
+  return projection.currentHp > 0 && Number(projection.nextHp) === 0;
 }
 
 function battleCreatureStateWithKnockedOutUnconsciousFields(
@@ -12654,7 +13021,11 @@ function applyHpHealing(
   }
 
   return regainedHitPoints
-    ? battleCreatureStateWithoutKnockOut(combatant, nextHp, combatant.conditions)
+    ? battleCreatureStateWithoutKnockOut(
+        combatant,
+        nextHp,
+        combatant.conditions,
+      )
     : combatant;
 }
 
@@ -13209,6 +13580,12 @@ function supportedSpellActs(
         spellcasting.spellcastingAbilityModifier,
       ),
     ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedShieldReactionSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
     ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripSpellAttackProfile(
         spell,
@@ -13220,6 +13597,125 @@ function supportedSpellActs(
       supportedCantripSaveGateDamageProfile(spell),
     ),
   ];
+}
+
+function supportedPreparedShieldReactionSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellAct[] {
+  if (spell.mechanics.family !== "triggered_reaction") {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
+  const acDeltas = effects.flatMap((effect) =>
+    effect.kind === "modify_ac" ? [effect.delta] : [],
+  );
+  const acDelta = acDeltas[0];
+  const negatedSpellIds = effects.flatMap((effect) =>
+    effect.kind === "negate_named_effect" &&
+    effect.scope === "damage_only" &&
+    typeof effect.spellId === "string"
+      ? [effect.spellId]
+      : [],
+  );
+  const namedSpellTriggerIds =
+    spell.mechanics.castingTime.kind === "reaction"
+      ? reactionTriggerNamedSpellIds(spell.mechanics.castingTime)
+      : [];
+  if (
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "reaction" ||
+    !reactionTriggerIncludesHitByAttackRoll(spell.mechanics.castingTime) ||
+    !sameStringSet(namedSpellTriggerIds, [SHIELD_MAGIC_MISSILE_SPELL_ID]) ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "round" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    effects.length !== 2 ||
+    acDeltas.length !== 1 ||
+    acDelta?.kind !== "fixed_dice" ||
+    acDelta.sign !== "+" ||
+    acDelta.dice !== 5 ||
+    acDelta.dieSize !== 1 ||
+    !sameStringSet(negatedSpellIds, namedSpellTriggerIds)
+  ) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellAct[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            kind: "preparedShieldReactionSpell",
+            spell,
+            slotLevel: slot.spellLevel,
+            armorClassBonus: acDelta.dice,
+            negatedSpellIds,
+          },
+        ],
+  );
+}
+
+function reactionTriggerIncludesHitByAttackRoll(
+  castingTime: Extract<
+    SpellRecord["mechanics"]["castingTime"],
+    { kind: "reaction" }
+  >,
+): boolean {
+  const trigger = castingTime.trigger;
+  return trigger.kind === "hit_by_attack_roll"
+    ? true
+    : trigger.kind === "any_of" &&
+        trigger.triggers.some(
+          (candidate) => candidate.kind === "hit_by_attack_roll",
+        );
+}
+
+function reactionTriggerNamedSpellIds(
+  castingTime: Extract<
+    SpellRecord["mechanics"]["castingTime"],
+    { kind: "reaction" }
+  >,
+): readonly string[] {
+  return reactionTriggerNamedSpellIdsFromTrigger(castingTime.trigger);
+}
+
+type ReactionTrigger = Extract<
+  SpellRecord["mechanics"]["castingTime"],
+  { kind: "reaction" }
+>["trigger"];
+
+function reactionTriggerNamedSpellIdsFromTrigger(
+  trigger: ReactionTrigger,
+): readonly string[] {
+  return Match.value(trigger).pipe(
+    Match.when({ kind: "hit_by_attack_roll" }, () => []),
+    Match.when({ kind: "takes_damage_from_creature" }, () => []),
+    Match.when({ kind: "targeted_by_named_spell" }, (namedSpell) => [
+      namedSpell.spellId,
+    ]),
+    Match.when({ kind: "creature_casts_spell" }, () => []),
+    Match.when({ kind: "spell_save_outcome" }, () => []),
+    Match.when({ kind: "any_of" }, (anyOf) =>
+      anyOf.triggers.flatMap(reactionTriggerNamedSpellIdsFromTrigger),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function sameStringSet(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((value) => right.includes(value)) &&
+    right.every((value) => left.includes(value))
+  );
 }
 
 function supportedPreparedHealingSpellProfile(
@@ -13547,10 +14043,7 @@ function spellHasAvailableSpend(
   if (actor.origin.kind !== "character") {
     return false;
   }
-  if (
-    invocation.kind === "cantripSpellAttack" ||
-    invocation.kind === "cantripSaveGateDamage"
-  ) {
+  if (!spellActExpendsSpellSlot(invocation)) {
     return true;
   }
   return (
@@ -13561,14 +14054,25 @@ function spellHasAvailableSpend(
   );
 }
 
+function spellActExpendsSpellSlot(
+  invocation: SupportedSpellAct,
+): invocation is Exclude<
+  SupportedSpellAct,
+  {
+    readonly kind: "cantripSpellAttack" | "cantripSaveGateDamage";
+  }
+> {
+  return (
+    invocation.kind !== "cantripSpellAttack" &&
+    invocation.kind !== "cantripSaveGateDamage"
+  );
+}
+
 function spellActTurnResourceAvailable(
   resources: BattleTurnResources,
   invocation: SupportedSpellAct,
 ): boolean {
-  if (
-    invocation.kind === "cantripSpellAttack" ||
-    invocation.kind === "cantripSaveGateDamage"
-  ) {
+  if (!spellActExpendsSpellSlot(invocation)) {
     return canSpendAction(resources, "magic");
   }
   if (resources.spellSlotExpendedThisTurn) {
@@ -13746,6 +14250,11 @@ function supportedSpellActId(invocation: SupportedSpellAct): string {
         `${persistent.kind}:${persistent.spell.id}:slot:${persistent.slotLevel}`,
     ),
     Match.when(
+      { kind: "preparedShieldReactionSpell" },
+      (reactionSpell) =>
+        `${reactionSpell.kind}:${reactionSpell.spell.id}:slot:${reactionSpell.slotLevel}`,
+    ),
+    Match.when(
       { kind: "preparedHealingSpell" },
       (healing) =>
         `${healing.kind}:${healing.spell.id}:slot:${healing.slotLevel}`,
@@ -13770,6 +14279,15 @@ function spellAttackRollHole(
     attackBonus: invocation.attackBonus,
     ...(rollMode === undefined ? {} : { rollMode }),
   };
+}
+
+function spellDamageTypes(
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "cantripSpellAttack" }
+  >,
+): readonly DamageType[] {
+  return [invocation.damage.damageType];
 }
 
 function spellDamageHole(
@@ -14017,6 +14535,9 @@ function preparedSlotSpellDamageAmountForAllocation(
   allocationIndex: number,
   repeatedEffectCount: number,
 ): number {
+  if (spellDamageNegatedForTarget(target, invocation.spell.id)) {
+    return 0;
+  }
   const group = damageRoll.value[allocationIndex];
   const diceTotal =
     group?.results.reduce(
@@ -14028,6 +14549,17 @@ function preparedSlotSpellDamageAmountForAllocation(
     target,
     diceTotal + flat,
     invocation.damage.damageType,
+  );
+}
+
+function spellDamageNegatedForTarget(
+  target: BattleCreatureState,
+  spellId: SpellRecord["id"],
+): boolean {
+  return target.activeEffects.some(
+    (effect) =>
+      effect.kind === "spellArmorClassBonus" &&
+      effect.negatedSpellIds.includes(spellId),
   );
 }
 
@@ -14158,6 +14690,47 @@ function applyPersistentSpellActiveEffect(
             ),
         ),
         { ...invocation.activeEffect, sourceCombatantId: actorId },
+      ],
+    }),
+  };
+}
+
+function applyShieldReactionSpellActiveEffect(
+  state: BattleState,
+  reactorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellAct,
+    { readonly kind: "preparedShieldReactionSpell" }
+  >,
+): BattleState {
+  const reactor = state.combatants.get(reactorId);
+  if (reactor === undefined) {
+    return state;
+  }
+
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(reactorId, {
+      ...reactor,
+      activeEffects: [
+        ...reactor.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "spellArmorClassBonus" &&
+              effect.sourceSpellId === invocation.spell.id
+            ),
+        ),
+        {
+          kind: "spellArmorClassBonus",
+          sourceSpellId: invocation.spell.id,
+          sourceCombatantId: reactorId,
+          bonus: invocation.armorClassBonus,
+          negatedSpellIds: invocation.negatedSpellIds,
+          expiresAt: {
+            kind: "startOfTurn",
+            combatantId: reactorId,
+          },
+        },
       ],
     }),
   };

@@ -54,6 +54,12 @@ module battleRuntime {
   //   healing spell; Magic Missile can allocate darts to one creature or
   //   several and gains one dart per slot level above 1; Ray of Frost reduces
   //   Speed until the start of the caster's next turn.
+  // - Spells/Descriptions-S-Z.md lines 215-224, Playing-the-Game.md lines
+  //   326-332 and 582-589, and Rules-Glossary.md lines 112 and 918: Shield is
+  //   a Reaction spell when hit by an attack roll, including a spell attack
+  //   roll, or targeted by Magic Missile; it grants +5 AC against the
+  //   triggering attack until the start of the caster's next turn and negates
+  //   Magic Missile damage to that target.
   // - Spells/Descriptions-M-P.md lines 5-15 and
   //   Spells/Gaining-and-Casting.md lines 142-149: Mage Armor is a timed
   //   ongoing spell effect whose target's base AC becomes 13 + Dexterity
@@ -121,9 +127,9 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | HealingWord
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | HealingWord | Shield
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus
 
   type CreatureSize = Tiny | Small | Medium | Large | Huge | Gargantuan
 
@@ -471,6 +477,18 @@ module battleRuntime {
     else
       state
 
+  pure def expireStartOfTurnSpellEffects(state: BattleState, nextActor: Actor): BattleState =
+    match nextActor {
+      | Fighter => {
+          ...state,
+          fighter: { ...state.fighter, activeEffects: state.fighter.activeEffects.exclude(Set(ShieldArmorClassBonus)) },
+        }
+      | Goblin => {
+          ...state,
+          goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(Set(ShieldArmorClassBonus)) },
+        }
+    }
+
   pure def normalizeFighterEarlyEndedOngoingFeatures(state: BattleState): BattleState =
     if (state.fighter.wearingHeavyArmor)
       removeFighterBonusActionOngoingFeature(state)
@@ -520,10 +538,14 @@ module battleRuntime {
     if (currentActor(state) == Fighter) combatantArmorClass(state.goblin) else combatantArmorClass(state.fighter)
 
   pure def activeEffectArmorClass(baseAc: int, dexMod: int, effects: Set[ActiveEffect]): int =
-    if (effects.exists(effect => match effect {
-      | MageArmor => true
-      | RayOfFrostSpeedDelta => false
-    })) 13 + dexMod else baseAc
+    {
+      val base = if (effects.exists(effect => match effect {
+        | MageArmor => true
+        | RayOfFrostSpeedDelta => false
+        | ShieldArmorClassBonus => false
+      })) 13 + dexMod else baseAc
+      if (effects.contains(ShieldArmorClassBonus)) base + 5 else base
+    }
 
   pure def openHoles(state: BattleState): Set[Hole] =
     if (currentActor(state) == Goblin and not(state.goblinRechargeAvailable))
@@ -631,7 +653,7 @@ module battleRuntime {
     val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(state))
     val advancedInitiative = nextInitiative(featureChecked.initiative)
     val nextActor = advancedInitiative.stillToAct[0]
-    val featureAdvanced = expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor)
+    val featureAdvanced = expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor)
     {
       ...featureAdvanced,
       initiative: advancedInitiative,
@@ -695,6 +717,27 @@ module battleRuntime {
       | Goblin => { ...state, goblin: { ...state.goblin, reactionAvailable: false } }
     }
 
+  pure def applyShieldReactionSpell(state: BattleState, reactor: Actor): BattleState =
+    match reactor {
+      | Fighter => {
+          ...state,
+          fighter: { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(ShieldArmorClassBonus)) },
+        }
+      | Goblin => {
+          ...state,
+          goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(ShieldArmorClassBonus)) },
+        }
+    }
+
+  pure def castShieldReactionSpell(state: BattleState, reactor: Actor): BattleState =
+    if (canExpendSpellSlotThisTurn(state))
+      { ...applyShieldReactionSpell(state, reactor), spellSlotExpendedThisTurn: true }
+    else
+      state
+
+  pure def reactionResolvesShieldSpell(state: BattleState, frame: PendingReactionFrame, reactor: Actor): bool =
+    frame.trigger == SpellCast or (frame.trigger == AttackHit and not(state.fighterReadiedSpellHeld and reactor == Fighter))
+
   pure def declineReaction(state: BattleState, reactor: Actor): BattleState = {
     if (state.interruptStack.length() == 0)
       state
@@ -746,11 +789,16 @@ module battleRuntime {
             val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
             if (not(validReactor))
               state
+            else if (reactionResolvesShieldSpell(state, frame, reactor) and not(canExpendSpellSlotThisTurn(state)))
+              state
             else {
+              val afterReactionSpend = spendReaction(state, reactor)
               val afterReactionProcedure =
                 match frame.trigger {
-                  | OpportunityAttack => resolveGoblinOpportunityAttack(spendReaction(state, reactor), 20, 18, 4, true)
-                  | _ => releaseReadiedSpell(spendReaction(state, reactor))
+                  | OpportunityAttack => resolveGoblinOpportunityAttack(afterReactionSpend, 20, 18, 4, true)
+                  | AttackHit => if (state.fighterReadiedSpellHeld and reactor == Fighter) releaseReadiedSpell(afterReactionSpend) else castShieldReactionSpell(afterReactionSpend, reactor)
+                  | SpellCast => castShieldReactionSpell(afterReactionSpend, reactor)
+                  | _ => releaseReadiedSpell(afterReactionSpend)
                 }
               val afterDecision = declineReaction(afterReactionProcedure, reactor)
               if (afterDecision.interruptStack.length() < state.interruptStack.length())
@@ -1059,6 +1107,14 @@ module battleRuntime {
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
+    }
+    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeSpell,
+      })
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
@@ -1527,6 +1583,7 @@ module battleRuntime {
       | RayOfFrost => expendedLevelOneSlots
       | AcidSplash => expendedLevelOneSlots
       | HealingWord => expendedLevelOneSlots + 1
+      | Shield => expendedLevelOneSlots + 1
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -1558,6 +1615,17 @@ module battleRuntime {
     flatPerDart: int,
   ): int =
     dieTotal + (dartCount * flatPerDart)
+
+  pure def magicMissileTargetDamage(
+    target: Combatant,
+    dieTotal: int,
+    dartCount: int,
+    flatPerDart: int,
+  ): int =
+    if (target.activeEffects.contains(ShieldArmorClassBonus))
+      0
+    else
+      magicMissileAllocatedDamage(dieTotal, dartCount, flatPerDart)
 
   pure def rayOfFrostSpeedEffectActive(
     hit: bool,
@@ -1999,6 +2067,57 @@ module battleRuntime {
       assert(afterSpellAttack.attackRollMadeThisTurn),
       assert(not(fighterHasRecklessAttack(recklessAfterSpell))),
     }
+  }
+
+  run test_shield_reaction_spell_interrupts_spell_attack_hit = {
+    val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
+    val resolved = resolveReaction(awaiting, Goblin)
+    all {
+      assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeSpell,
+      })),
+      assert(resolved.goblin.activeEffects.contains(ShieldArmorClassBonus)),
+      assert(not(resolved.goblin.reactionAvailable)),
+      assert(resolved.goblin.hp == 10),
+      assert(not(resolved.actionAvailable)),
+    }
+  }
+
+  run test_shield_reaction_spell_negates_magic_missile_damage_to_target = {
+    val shielded = applyShieldReactionSpell(initialState, Fighter)
+    all {
+      assert(magicMissileTargetDamage(initialState.fighter, 3, 3, 1) == 6),
+      assert(magicMissileTargetDamage(shielded.fighter, 3, 3, 1) == 0),
+      assert(expendedSlotsAfterInvocation(Shield, 0) == 1),
+    }
+  }
+
+  run test_shield_reaction_spell_spends_turn_spell_slot = {
+    val awaiting = openReactionWindow(initialState, {
+      trigger: SpellCast,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeSpell,
+    })
+    val resolved = resolveReaction(awaiting, Fighter)
+    all {
+      assert(resolved.fighter.activeEffects.contains(ShieldArmorClassBonus)),
+      assert(not(resolved.fighter.reactionAvailable)),
+      assert(resolved.spellSlotExpendedThisTurn),
+    }
+  }
+
+  run test_shield_reaction_spell_rejects_second_slot_spell_in_same_turn = {
+    val awaiting = openReactionWindow({ ...initialState, spellSlotExpendedThisTurn: true }, {
+      trigger: SpellCast,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeSpell,
+    })
+    assert(resolveReaction(awaiting, Fighter) == awaiting)
   }
 
   run test_normal_rage_ends_when_drop_to_zero_sets_unconscious = {

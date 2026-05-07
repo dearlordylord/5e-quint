@@ -107,7 +107,10 @@ const ROGUE_CUNNING_ACTION_SUPPORT_PROFILE = {
 } as const;
 
 function testBattleCreatureStateWithConditions(
-  combatant: BattleState["combatants"] extends ReadonlyMap<CombatantId, infer Creature>
+  combatant: BattleState["combatants"] extends ReadonlyMap<
+    CombatantId,
+    infer Creature
+  >
     ? Creature
     : never,
   conditions: ConditionState,
@@ -11995,6 +11998,7 @@ function subjectName(
   | "releaseGrapple"
   | "releaseReadiedSpell"
   | "releaseReadiedMovement"
+  | "castTriggeredReactionSpell"
   | "opportunityAttack" {
   if (subject.tag === "action") {
     return subject.action;
@@ -12032,7 +12036,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("88 passing");
+  expect(quintOutput).toContain("92 passing");
 }
 
 function hidePrerequisites(

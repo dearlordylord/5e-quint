@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 import * as Either from "effect/Either";
@@ -14,6 +15,7 @@ import {
 import { classLevel } from "@dnd/shared/types";
 import {
   attackBonus,
+  DieRollResult,
   Hp,
   movementFeet,
   proficiencyBonus,
@@ -36,11 +38,15 @@ import {
   discoverBattleActs,
   initiativeScore,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  resolveBattleReaction,
+  resolveBattleSubject,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   startBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type BattleFill,
+  type BattleHole,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -83,6 +89,12 @@ const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
+type AttackAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
 };
 
 describe("QMBT7 deterministic Unit profile admission", () => {
@@ -589,17 +601,298 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     ).toBeUndefined();
   });
 
-  test("shield is not counted as deterministic admission before triggered reaction Spell Access projection exists", () => {
+  test("shield is admitted through catalog Spell Access and projected as an attack-hit Reaction spell", () => {
     const spell = spellRecord(shieldUnitId);
+    const state = shieldReactionBattle(spell);
+    const attackAct = discoverBattleActs(state).find(
+      (act): act is AttackAct =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Unarmed Strike",
+    );
+    expect(attackAct).toBeDefined();
+    if (attackAct === undefined) {
+      throw new Error("Expected an Unarmed Strike attack act.");
+    }
+    const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: attackAct.subject,
+      fills: [attackTargetFill(targetHole, spellTargetId, spellCasterId)],
+    });
+    expect(awaitingAttackRoll).toMatchObject({ tag: "needsHoles" });
+    if (awaitingAttackRoll.tag !== "needsHoles") {
+      throw new Error("Expected attack roll hole after target selection.");
+    }
+    const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
 
     expect(spell.mechanics.family).toBe("triggered_reaction");
     expect(spell.mechanics.castingTime.kind).toBe("reaction");
-    expect(
-      maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
-        spellId: shieldUnitId,
-      }),
-    ).toBeUndefined();
+    expect(maybeSpellAct({ state, spellId: shieldUnitId })).toBeUndefined();
+
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: attackAct.subject,
+      fills: [
+        attackTargetFill(targetHole, spellTargetId, spellCasterId),
+        attackRollFill(attackRollHole, { total: 14, naturalD20: 10 }),
+      ],
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Shield to open an attack-hit Reaction window.");
+    }
+    const resolved = resolveShieldReactionChoice(awaitingReaction);
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingReaction: null },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Shield Reaction to resolve.");
+    }
+    const shieldCaster = resolved.snapshot.combatants.find(
+      (combatant) => combatant.combatantId === spellCasterId,
+    );
+    expect(shieldCaster).toMatchObject({
+      armorClass: 15,
+      reactionAvailable: false,
+    });
+    expect(shieldCaster?.origin).toMatchObject({
+      spellcasting: {
+        spellSlots: [expect.objectContaining({ spellLevel: 1, expended: 1 })],
+      },
+    });
+  });
+
+  test("shield is offered against a spell attack roll hit before spell damage", () => {
+    const shield = spellRecord(shieldUnitId);
+    const rayOfFrost = spellRecord(rayOfFrostUnitId);
+    const state = shieldSpellAttackBattle({ shield, spellAttack: rayOfFrost });
+    const act = spellAct({ state, spellId: rayOfFrostUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      rayOfFrostUnitId,
+      spellTargetId,
+      spellCasterId,
+    );
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    expect(awaitingAttackRoll).toMatchObject({ tag: "needsHoles" });
+    if (awaitingAttackRoll.tag !== "needsHoles") {
+      throw new Error("Expected Ray of Frost attack roll hole.");
+    }
+    const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
+
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        attackRollFill(attackRollHole, { total: 14, naturalD20: 10 }),
+      ],
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected spell attack hit to open Shield window.");
+    }
+
+    const resolved = resolveShieldReactionChoice(awaitingReaction);
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingReaction: null },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Shielded spell attack to resolve as a miss.");
+    }
+    expect(resolved.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellCasterId,
+          armorClass: 15,
+          hp: 12,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+  });
+
+  test("shield is offered from Magic Missile target selection and negates target damage", () => {
+    const shield = spellRecord(shieldUnitId);
+    const magicMissile = spellRecord(magicMissileUnitId);
+    const state = shieldMagicMissileBattle({ shield, magicMissile });
+    const act = spellAct({ state, spellId: magicMissileUnitId });
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      spellTargetId,
+      magicMissileUnitId,
+      [{ targetId: spellCasterId, count: 3 }],
+    );
+
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [allocationFill],
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "spellCast" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile to open Shield window.");
+    }
+
+    const awaitingDamage = resolveShieldReactionChoice(awaitingReaction);
+    expect(awaitingDamage).toMatchObject({ tag: "needsHoles" });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile damage hole after Shield.");
+    }
+    const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state: awaitingDamage.state,
+      subject: act.subject,
+      fills: [
+        allocationFill,
+        damageRollFillWithGroups(damageHole, [[4, 4, 4]]),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingReaction: null },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Shielded Magic Missile to resolve.");
+    }
+    expect(resolved.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellCasterId,
+          armorClass: 15,
+          hp: 12,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+  });
+
+  test("shield-shaped Magic Missile negation is not offered without the named-spell Reaction trigger", () => {
+    const shield = spellRecord(shieldUnitId);
+    const attackHitOnlyShield: SpellRecord = {
+      ...shield,
+      mechanics: {
+        ...shield.mechanics,
+        castingTime: {
+          kind: "reaction",
+          trigger: { kind: "hit_by_attack_roll" },
+        },
+      },
+    };
+    const magicMissile = spellRecord(magicMissileUnitId);
+    const state = shieldMagicMissileBattle({
+      shield: attackHitOnlyShield,
+      magicMissile,
+    });
+    const act = spellAct({ state, spellId: magicMissileUnitId });
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      spellTargetId,
+      magicMissileUnitId,
+      [{ targetId: spellCasterId, count: 3 }],
+    );
+
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [allocationFill],
+    });
+
+    expect(awaitingDamage).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("shield is not offered to spend a second Spell Slot during the current actor's Magic Missile", () => {
+    const shield = spellRecord(shieldUnitId);
+    const magicMissile = spellRecord(magicMissileUnitId);
+    const state = spellBattle({ preparedSpells: [magicMissile, shield] });
+    const act = spellAct({ state, spellId: magicMissileUnitId });
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      spellCasterId,
+      magicMissileUnitId,
+      [{ targetId: spellCasterId, count: 3 }],
+    );
+
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [allocationFill],
+    });
+    expect(awaitingDamage).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: null },
+    });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile damage hole without Shield.");
+    }
+
+    const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state: awaitingDamage.state,
+      subject: act.subject,
+      fills: [
+        allocationFill,
+        damageRollFillWithGroups(damageHole, [[4, 4, 4]]),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        pendingReaction: null,
+        turn: { spellSlotExpendedThisTurn: true },
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Magic Missile to spend one Spell Slot.");
+    }
+    expect(resolved.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellCasterId,
+          armorClass: 10,
+          hp: 0,
+          origin: expect.objectContaining({
+            spellcasting: expect.objectContaining({
+              spellSlots: [
+                expect.objectContaining({ spellLevel: 1, expended: 1 }),
+              ],
+            }),
+          }),
+        }),
+      ]),
+    );
   });
 });
 
@@ -635,6 +928,127 @@ function spellBattle(input: {
         displayName: "Target",
         initiative: 10,
         side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function shieldReactionBattle(spell: SpellRecord): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-shield-reaction-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Attacker",
+        initiative: 20,
+        side: oppositionSide,
+      }),
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Shield caster",
+        initiative: 10,
+        side: partySide,
+        spellcasting: {
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [spell],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        },
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function shieldSpellAttackBattle(input: {
+  readonly shield: SpellRecord;
+  readonly spellAttack: SpellRecord;
+}): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-shield-spell-attack-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Ray caster",
+        initiative: 20,
+        side: oppositionSide,
+        spellcasting: {
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [input.spellAttack],
+          preparedSpells: [],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        },
+      }),
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Shield caster",
+        initiative: 10,
+        side: partySide,
+        spellcasting: {
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [input.shield],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        },
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function shieldMagicMissileBattle(input: {
+  readonly shield: SpellRecord;
+  readonly magicMissile: SpellRecord;
+}): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-shield-magic-missile-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Magic Missile caster",
+        initiative: 20,
+        side: oppositionSide,
+        spellcasting: {
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [input.magicMissile],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        },
+      }),
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Shield caster",
+        initiative: 10,
+        side: partySide,
+        spellcasting: {
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [input.shield],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        },
       }),
     ],
   });
@@ -712,6 +1126,166 @@ function maybeSpellAct(input: {
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.spellId === input.spellId,
   );
+}
+
+function requireHole<K extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
+      candidate.kind === kind,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
+}
+
+function attackTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  actorId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId,
+        targetId,
+        attackName: "Unarmed Strike",
+      },
+    ],
+  };
+}
+
+function attackRollFill(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+  value: { readonly total: number; readonly naturalD20: number },
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
+  return {
+    kind: "attackRoll",
+    holeId: hole.holeId,
+    value: { total: value.total, naturalD20: DieRollResult(value.naturalD20) },
+  };
+}
+
+function spellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        spellId,
+      },
+    ],
+  };
+}
+
+function spellTargetAllocationFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
+  casterId: CombatantId,
+  spellId: string,
+  allocations: readonly {
+    readonly targetId: CombatantId;
+    readonly count: number;
+  }[],
+): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
+  return {
+    kind: "spellTargetAllocation",
+    holeId: hole.holeId,
+    value: { allocations },
+    spatialFacts: allocations.map((allocation) => ({
+      kind: "spellTarget",
+      casterId,
+      targetId: allocation.targetId,
+      spellId,
+    })),
+  };
+}
+
+function damageRollFillWithGroups(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+  groups: readonly (readonly number[])[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  const [firstGroup, ...restGroups] = groups;
+  if (firstGroup === undefined) {
+    throw new Error("Expected at least one rolled dice group.");
+  }
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    value: [
+      rolledDiceGroup(firstGroup),
+      ...restGroups.map((group) => rolledDiceGroup(group)),
+    ],
+  };
+}
+
+function rolledDiceGroup(
+  group: readonly number[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }>["value"][number] {
+  const [firstResult, ...restResults] = group;
+  if (firstResult === undefined) {
+    throw new Error("Expected at least one die roll result.");
+  }
+  return {
+    results: [DieRollResult(firstResult), ...restResults.map(DieRollResult)],
+  };
+}
+
+function resolveShieldReactionChoice(
+  awaitingReaction: Extract<
+    ReturnType<typeof resolveBattleSubject>,
+    { readonly tag: "needsHoles" }
+  >,
+): ReturnType<typeof resolveBattleReaction> {
+  const reactionChoice =
+    awaitingReaction.snapshot.pendingReaction?.choices.find(
+      (choice) => choice.kind === "castTriggeredReactionSpell",
+    );
+  expect(reactionChoice).toEqual(
+    expect.objectContaining({
+      kind: "castTriggeredReactionSpell",
+      reactorId: spellCasterId,
+      spellId: shieldUnitId,
+    }),
+  );
+  if (
+    reactionChoice === undefined ||
+    reactionChoice.kind !== "castTriggeredReactionSpell"
+  ) {
+    throw new Error("Expected Shield Reaction spell choice.");
+  }
+  return resolveBattleReaction({
+    state: awaitingReaction.state,
+    fill: {
+      kind: "reactionDecision",
+      holeId: awaitingReaction.holes[0]!.holeId,
+      value: {
+        kind: "resolve",
+        reactorId: spellCasterId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          spellId: shieldUnitId,
+          spellActId: reactionChoice.spellActId,
+          fills: [],
+        },
+      },
+    },
+  });
 }
 
 function mechanicsOnlyClassicUnit(
