@@ -178,7 +178,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 111,
       "id": "QMBT16",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Decide Selected Spell Identity MBT"
     },
     {
