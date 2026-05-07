@@ -172,13 +172,15 @@ Additional candidate RAW checked:
 
 ## Active Plan Updates
 
-The active plan records:
+QMBT61 reviewed this decision and updated the active plan to record:
 
 - QMBT60 as done with this decision artifact.
-- QMBT61 as ready for recursive planning review and responsible for refining
-  QMBT62 if needed, then appending the rest of the next batch.
-- QMBT62 as a blocked implementation task for
+- QMBT61 as done with
+  `QMBT61_RECURSIVE_PLANNING_REVIEW.md`.
+- QMBT62 as the next ready implementation task for
   `Promote Tactical Mind Failed Ability Check Second Wind Boost`.
+- QMBT63 as the post-Tactical-Mind SRD feature-slice selection task.
+- QMBT64 as the next recursive planning review task.
 
 QMBT62 scope: implement the red/green plan above for `fighter_tactical_mind`
 only. Out of scope: Bard Cutting Words ability-check Reaction reduction,
@@ -186,9 +188,9 @@ generic D20 Test augmentation, GM ability-check decision logic, Lay On Hands,
 Tireless, AC base formulas, resistance traits, Breath Weapon, Weapon Mastery,
 spells, magic items, and checker metric changes.
 
-QMBT61 should keep a later feature-selection task and a recursive planning
-review task in the appended batch unless the matrix lane is explicitly declared
-complete.
+QMBT63 should re-triage the remaining feature/species/mastery pressure after
+QMBT62 refreshes the matrix. QMBT64 should keep the recursive review cadence
+unless the matrix lane is explicitly declared complete.
 
 ## Verification For Implementation Task
 

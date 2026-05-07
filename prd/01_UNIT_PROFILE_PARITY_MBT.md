@@ -168,14 +168,14 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT58's recursive planning review:
+Current matrix status after QMBT61's recursive planning review:
 
 - 59 authored Units classified in the installed coverage collections.
-- 23 stable executable profiles.
-- 30 of 45 installed executable Units mapped to supported profiles.
+- 24 stable executable profiles.
+- 31 of 45 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
-- deterministic admission/projection evidence covers all 30 supported Unit
+- deterministic admission/projection evidence covers all 31 supported Unit
   identities, including the QMBT21 Classic non-SRD mechanics-only
   `mycelium_step` row, QMBT22 `shield`, QMBT25 `healing_word`, and QMBT27
   `feat_archery`, QMBT31 `feat_savage_attacker`, and QMBT32 `cure_wounds` and
@@ -183,8 +183,8 @@ Current matrix status after QMBT58's recursive planning review:
   `fighter_extra_attack`, `paladin_extra_attack`, and `ranger_extra_attack`,
   plus QMBT40 `barbarian_fast_movement`, QMBT44 `ranger_roving`, QMBT47
   `orc_relentless_endurance`, QMBT53 `orc_adrenaline_rush`, and QMBT56
-  `feat_boon_of_combat_prowess`.
-- selected identity MBT covers 10 of 30 supported Unit identities. QMBT16
+  `feat_boon_of_combat_prowess`, plus QMBT59 `monk_deflect_attacks`.
+- selected identity MBT covers 10 of 31 supported Unit identities. QMBT16
   explicitly decided not to add selected identity MBT for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
@@ -258,9 +258,14 @@ Current matrix status after QMBT58's recursive planning review:
 - QMBT57 selected `monk_deflect_attacks` redirect-on-zero as the next SRD
   feature widening slice under a planned attack-damage reduction zero-damage
   redirect profile.
+- QMBT59 counted `monk_deflect_attacks` as a supported
+  `unit-feature.attack-damage-reduction-zero-damage-redirect` Unit with
+  focused runtime parity, deterministic admission/projection evidence, and
+  refreshed matrix artifacts.
+- QMBT60 selected `fighter_tactical_mind` as the next SRD feature widening
+  slice under a planned failed ability-check Second Wind boost profile.
 
-QMBT58 appended QMBT59-QMBT61 rather than declaring the matrix lane complete.
-The next batch promotes Monk `Deflect Attacks` redirect-on-zero as an
-attack-damage reduction zero-damage redirect profile, selects the next SRD
-feature widening slice after Deflect Attacks, and then runs another recursive
-planning review.
+QMBT61 appended QMBT62-QMBT64 rather than declaring the matrix lane complete.
+The next batch promotes Fighter `Tactical Mind` as a failed ability-check
+Second Wind boost profile, selects the next SRD feature widening slice after
+Tactical Mind, and then runs another recursive planning review.

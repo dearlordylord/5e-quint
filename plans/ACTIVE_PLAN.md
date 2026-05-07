@@ -448,14 +448,26 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 156,
       "id": "QMBT61",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive Unit Profile Planning Review"
     },
     {
       "number": 157,
       "id": "QMBT62",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Tactical Mind Failed Ability Check Second Wind Boost"
+    },
+    {
+      "number": 158,
+      "id": "QMBT63",
+      "status": "blocked",
+      "title": "Select Next SRD Feature Widening Slice After Tactical Mind"
+    },
+    {
+      "number": 159,
+      "id": "QMBT64",
+      "status": "blocked",
+      "title": "Recursive Unit Profile Planning Review"
     }
   ]
 }
@@ -559,8 +571,10 @@ Keep it synchronized with the DAG table and task details.
 | 153   | QMBT58 - Recursive Unit Profile Planning Review | done | QMBT56-QMBT57 | QMBT59-QMBT61 | [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT56-QMBT57 review, refreshed PRD status notes, and appended QMBT59-QMBT61 because the matrix lane is not complete. |
 | 154   | QMBT59 - Promote Deflect Attacks Zero-Damage Redirect | done | QMBT57-QMBT58 | QMBT60-QMBT61 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `monk_deflect_attacks` redirect-on-zero as `unit-feature.attack-damage-reduction-zero-damage-redirect`, with authored mechanics admission, attack-damage Reaction execution, named redirect facts, pre-Resistance zero-damage gating, Focus spend, Dexterity saving throw, same-type redirected damage, QNT proof coverage, runtime parity, and refreshed matrix artifacts. |
 | 155   | QMBT60 - Select Next SRD Feature Widening Slice After Deflect Attacks | done | QMBT59 | QMBT61 | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `fighter_tactical_mind` as the next SRD feature widening slice, with a red/green plan for `unit-feature.failed-ability-check-second-wind-boost` and a concrete blocked QMBT62 implementation task. |
-| 156   | QMBT61 - Recursive Unit Profile Planning Review | ready-for-research | QMBT59-QMBT60 | QMBT62+ | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT59-QMBT60 findings, update PRD and plan docs, refine QMBT62 if needed, and append the rest of the next batch unless the Unit profile matrix lane is explicitly complete. |
-| 157   | QMBT62 - Promote Tactical Mind Failed Ability Check Second Wind Boost | blocked | QMBT61 | none | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Promote `fighter_tactical_mind` as `unit-feature.failed-ability-check-second-wind-boost` after QMBT61 reviews and finalizes the next batch. |
+| 156   | QMBT61 - Recursive Unit Profile Planning Review | done | QMBT59-QMBT60 | QMBT62-QMBT64 | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT59-QMBT60 review, refreshed PRD status notes, unblocked QMBT62, and appended QMBT63-QMBT64 because the matrix lane is not complete. |
+| 157   | QMBT62 - Promote Tactical Mind Failed Ability Check Second Wind Boost | ready-for-implementation-after-light-research | QMBT61 | QMBT63-QMBT64 | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Promote `fighter_tactical_mind` as `unit-feature.failed-ability-check-second-wind-boost` after a light RAW/UL re-check of QMBT61's refined boundaries. |
+| 158   | QMBT63 - Select Next SRD Feature Widening Slice After Tactical Mind | blocked | QMBT62 | QMBT64 | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT62 refreshes the matrix, select the next narrow SRD feature/species/mastery widening slice without mixing spell, magic-item, content-cleanup, or checker-metric ownership. |
+| 159   | QMBT64 - Recursive Unit Profile Planning Review | blocked | QMBT62-QMBT63 | none | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT62-QMBT63 findings, update PRD and plan docs, and append the next bounded batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -2604,41 +2618,46 @@ for this research-only selection task.
 
 ### Task 156 - QMBT61 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT59-QMBT60
 
-Blocks: QMBT62+
+Blocks: QMBT62-QMBT64
 
 Research / plan:
+[QMBT61_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md),
 [QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md),
 [QMBT58_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
-Scope: review QMBT59-QMBT60 findings, update the PRD and plan docs, refine
-QMBT62 if needed, and append the rest of the next implementation/research
-batch. This task must include a new recursive planning-review task at the end
-of the appended batch unless the Unit profile matrix lane is explicitly
-declared complete.
+Completed scope: reviewed QMBT59-QMBT60 findings, refreshed the PRD status
+notes, refined and unblocked QMBT62, and appended QMBT63-QMBT64 because the
+Unit profile matrix lane remains active at 31/45 supported executable Unit
+coverage. The appended batch starts with the selected
+`fighter_tactical_mind` implementation slice, then reopens SRD feature-slice
+selection against the refreshed matrix, then runs another recursive planning
+review.
 
-Out of scope: implementation work not captured by the new task batch.
+Out of scope honored: no production implementation work was started in QMBT61.
 
-Verification: RAW/source review for QMBT59-QMBT60 findings and any appended
-rule slices; active-plan consistency check across Ralph index, DAG table, and
-task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
-artifacts change; `/simplify` convergence, minimum two rounds unless the final
-changeset is trivial.
+Verification: RAW/source review checked the QMBT59-QMBT60 anchors captured in
+the QMBT61 review artifact; active-plan consistency checked across Ralph index,
+DAG table, and task details in this workspace plan; `pnpm
+unit-profile-coverage:check` was not run because no matrix docs or generated
+artifacts changed; `/simplify` convergence recorded in the QMBT61 review
+artifact.
 
 ### Task 157 - QMBT62 - Promote Tactical Mind Failed Ability Check Second Wind Boost
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: QMBT61
 
-Blocks: none
+Blocks: QMBT63-QMBT64
 
 Research / plan:
 [QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT61_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
 Scope: implement the QMBT60 red/green plan for `fighter_tactical_mind` only.
@@ -2663,3 +2682,60 @@ behavior; `pnpm unit-profile-coverage:check`; relevant package tests and
 typecheck; Tier 1 battle-runtime MBT with the mandatory timed background
 protocol if promoted battle behavior changes; `pnpm quality`; `/simplify`
 convergence, minimum two rounds.
+
+### Task 158 - QMBT63 - Select Next SRD Feature Widening Slice After Tactical Mind
+
+Status: `blocked`
+
+Depends on: QMBT62
+
+Blocks: QMBT64
+
+Research / plan:
+[QMBT61_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT62 refreshes the matrix, re-triage the remaining SRD
+feature/species/mastery pressure and select exactly one next narrow widening
+slice. Keep candidate lanes distinct: ability-check Reaction reduction,
+healing pools, Temporary Hit Point features, AC base formulas, resistance
+traits, Breath Weapon attack replacement, Weapon Mastery properties, spells,
+magic items, content cleanup, and checker metric changes must not be collapsed
+into one task.
+
+Out of scope: production implementation work, spell admission, magic-item
+intake, content cleanup, checker metric changes, and broad feature-family
+framework design.
+
+Verification: RAW/source review for all seriously considered candidate
+boundaries; `UBIQUITOUS_LANGUAGE.md` check for domain terms used in the
+decision; active-plan consistency across Ralph index, DAG table, and task
+details; `pnpm unit-profile-coverage:check` only if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
+
+### Task 159 - QMBT64 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT62-QMBT63
+
+Blocks: none
+
+Research / plan:
+[QMBT61_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: review QMBT62-QMBT63 findings, update the PRD and plan docs, refine the
+next implementation task if needed, and append the rest of the next
+implementation/research batch. This task must include a new recursive
+planning-review task at the end of the appended batch unless the Unit profile
+matrix lane is explicitly declared complete.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Verification: RAW/source review for QMBT62-QMBT63 findings and any appended
+rule slices; active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
