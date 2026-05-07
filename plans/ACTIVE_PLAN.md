@@ -143,7 +143,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 105,
       "id": "QMBT10",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Tighten Unit Identity Evidence Semantics"
     },
     {
@@ -257,7 +257,7 @@ Keep it synchronized with the DAG table and task details.
 | 102   | QMBT7 - Specific Unit Parity MBT and Matrix Integration | done | QMBT4-QMBT6, Unit profile matrix | QMBT8-QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed methodology contract, deterministic admission/projection tracer for three Unit feature identities, selected identity MBT citation for `fighter_second_wind`, and expansion boundaries. |
 | 103   | QMBT8 - Expand Unit Feature Admission Evidence | done | QMBT7 | QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed unit-profile checker/report modularization and deterministic admission/projection evidence expansion for remaining supported Unit feature identities. |
 | 104   | QMBT9 - Select Specific Unit Identity MBT Expansion | done | QMBT7-QMBT8 | none | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed selected identity MBT evidence for eight additional supported SRD Unit feature identities with production reducer state changes; selected identity MBT coverage is now 9/16. |
-| 105   | QMBT10 - Tighten Unit Identity Evidence Semantics | ready-for-research | QMBT7-QMBT9 | QMBT12, QMBT16, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Research and fix whether `selected-identity-mbt` evidence proves executable Unit-specific replay or only owner-file membership; downgrade or strengthen evidence before expanding MBT metrics. |
+| 105   | QMBT10 - Tighten Unit Identity Evidence Semantics | done | QMBT7-QMBT9 | QMBT12, QMBT16, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Research and fix whether `selected-identity-mbt` evidence proves executable Unit-specific replay or only owner-file membership; downgrade or strengthen evidence before expanding MBT metrics. |
 | 106   | QMBT11 - Finish Unit Profile Checker Modularization | ready-for-research | QMBT8 | QMBT12-QMBT15, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and finish splitting authored discovery, installed inventory discovery, claim/evidence validation, matrix construction, report rendering, and CLI orchestration so all-Unit growth does not concentrate in one script. |
 | 107   | QMBT12 - Reconcile QMBT8-QMBT9 Closeout | blocked | QMBT10-QMBT11 | QMBT13-QMBT20 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | After QMBT10-QMBT11, review QMBT8-QMBT9 findings, repair closeout notes/statuses/metrics, and decide whether any evidence must be reclassified. |
 | 108   | QMBT13 - Classify Authored Catalog Admission Gaps | blocked | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Turn `not-in-unit-catalog` into actionable categories: intentional backlog, SRD candidate, Classic/private pressure, non-runtime authored data, duplicate/content issue, or other explicit disposition. |
@@ -566,7 +566,7 @@ typecheck; `pnpm quality`; two `/simplify` rounds.
 
 ### Task 105 - QMBT10 - Tighten Unit Identity Evidence Semantics
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT7-QMBT9
 
