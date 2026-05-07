@@ -2,6 +2,15 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
+// UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
+// UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
+// UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
+// UNIT-IDENTITY-MBT-REPLAY: QMBT9 barbarian_rage doRageActivateAndDamage
+// UNIT-IDENTITY-MBT-REPLAY: QMBT9 barbarian_reckless_attack doRecklessAttack
+// UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_cunning_action doCunningDash doCunningDisengage doCunningHide
+// UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_evasion doEvasionSuccess doEvasionFailure
+// UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_uncanny_dodge doUncannyDodge
+// UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_sneak_attack doSneakAttack
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 

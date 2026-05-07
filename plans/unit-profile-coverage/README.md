@@ -52,14 +52,33 @@ UNIT-IDENTITY-EVIDENCE marker fields:
 <evidence-tag> <task-id> <unit-id> [<unit-id> ...]
 ```
 
+Selected identity MBT evidence also requires owner-local replay markers:
+
+```text
+UNIT-IDENTITY-MBT-REPLAY marker fields:
+<task-id> <unit-id> <driver-action> [<driver-action> ...]
+```
+
+The checker treats these replay markers as the executable witness for
+`selected-identity-mbt`: every selected evidence row must name at least one MBT
+driver action for that Unit id, every replay action must be declared in the
+same file's `driverSchema`, every replay action must be reachable from the
+Quint `step` action passed to that fixture's `run()` call, and each replay
+action's driver body must bind the claimed Unit id at an explicit Unit-bearing
+runtime boundary directly or through a local helper. Replay markers are
+bidirectional with `unit-evidence.jsonl`. If a driver action name changes, falls
+out of the executable Quint action set, or stops binding the claimed Unit id,
+the marker must change with it or the coverage check fails.
+
 Current evidence tags are:
 
 - `deterministic-admission-projection`: a focused catalog/runtime test loads the
   authored Unit through the production Unit catalog and proves the production
   support/projection boundary admits it.
 - `selected-identity-mbt`: a focused MBT fixture binds a concrete authored Unit
-  id into production runtime entrypoints and compares QCORE-observable
-  projections.
+  id into production runtime entrypoints, names the identity-bearing driver
+  replay actions with `UNIT-IDENTITY-MBT-REPLAY`, and compares
+  QCORE-observable projections.
 
 ## Classic Non-SRD Authoring Lane
 
