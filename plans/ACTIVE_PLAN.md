@@ -292,13 +292,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 130,
       "id": "QMBT35",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Select Next SRD Feature Widening Slice After Savage Attacker"
     },
     {
       "number": 131,
       "id": "QMBT36",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -377,8 +377,8 @@ Keep it synchronized with the DAG table and task details.
 | 127   | QMBT32 - Promote Direct Hit Point Restoration Spell Batch | done | QMBT28-QMBT30 | QMBT33 | [QMBT28 spell admission triage](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT28_SPELL_ADMISSION_TRIAGE.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `cure_wounds` and `mass_healing_word` as `spell.hit-point-restoration` across QNT procedure facts, runtime projection/support, focused QMBT, deterministic admission evidence, and matrix artifacts. |
 | 128   | QMBT33 - Recursive Unit Profile Planning Review | done | QMBT31-QMBT32 | QMBT34-QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT31-QMBT32 review, refreshed PRD status notes, and appended QMBT34-QMBT36 because the matrix lane is not complete. |
 | 129   | QMBT34 - Promote Mass Cure Wounds Area Hit Point Restoration | done | QMBT32-QMBT33 | QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `mass_cure_wounds` as `spell.hit-point-restoration` with point-origin Sphere target selection, focused runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
-| 130   | QMBT35 - Select Next SRD Feature Widening Slice After Savage Attacker | ready-for-research | QMBT31-QMBT33 | QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Triage remaining SRD feature-style executable pressure and select the next narrow feature widening slice after Savage Attacker. |
-| 131   | QMBT36 - Recursive Unit Profile Planning Review | blocked | QMBT34-QMBT35 | QMBT37+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT34-QMBT35 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
+| 130   | QMBT35 - Select Next SRD Feature Widening Slice After Savage Attacker | done | QMBT31-QMBT33 | QMBT36 | [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select level-5 Fighter, Paladin, and Ranger Extra Attack as the next SRD feature widening slice, with a red/green plan for `unit-feature.attack-action-attack-count-scaling`. |
+| 131   | QMBT36 - Recursive Unit Profile Planning Review | ready-for-research | QMBT34-QMBT35 | QMBT37+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Review QMBT34-QMBT35 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -1426,13 +1426,14 @@ parity; `pnpm unit-profile-coverage:check`; package typecheck/tests;
 
 ### Task 130 - QMBT35 - Select Next SRD Feature Widening Slice After Savage Attacker
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT31-QMBT33
 
 Blocks: QMBT36
 
 Research / plan:
+[QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md),
 [QMBT33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
@@ -1455,15 +1456,35 @@ tasks; `pnpm unit-profile-coverage:check` only if matrix docs or generated
 artifacts change; no MBT for this research-only task; `/simplify` convergence,
 minimum two rounds.
 
+Completed scope: selected level-5 `fighter_extra_attack`,
+`paladin_extra_attack`, and `ranger_extra_attack` as the next bounded SRD
+feature widening slice. The chosen implementation boundary is the authored
+passive `scale_attack_count` / `additional: 1` shape projected as
+`unit-feature.attack-action-attack-count-scaling`, kept distinct from Stat
+Block Multiattack, Fighter higher-tier Extra Attacks, Dragonborn Breath
+Weapon, Weapon Mastery, speed projection, AC base calculation alternatives,
+healing/temp-HP resources, resistance traits, spells, and magic items.
+
+Verification: RAW checked against the SRD 5.2.1 class Extra Attack passages,
+Attack action, movement between attacks, turn action/movement rules, and
+multiclass Extra Attack non-stacking; `UBIQUITOUS_LANGUAGE.md` checked for
+Multiattack, Speed/Movement, Unarmored Defense/Armor Class, Hit
+Points/Temporary Hit Points, Pool/Quota/Spend, Resistance/Damage Type, and
+Weapon Mastery terms; `/simplify` converged in two rounds; no MBT was run
+because this was research-only; `pnpm unit-profile-coverage:check` was not run
+because matrix docs and generated artifacts did not change.
+
 ### Task 131 - QMBT36 - Recursive Unit Profile Planning Review
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT34-QMBT35
 
 Blocks: QMBT37+
 
-Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+Research / plan:
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md)
 
 Scope: review QMBT34-QMBT35 findings, update the PRD and plan docs, and append
 the next batch of QMBT37+ tasks. This task must include a new recursive
