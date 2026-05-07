@@ -5,9 +5,9 @@ const {
   selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
-  extractDriverActionUnitIds,
   extractDriverSchemaActionNames,
   extractMbtFixtureActionSet,
+  extractSelectedUnitIdentityReplays,
 } = require("./unit-profile-coverage-claim-scan.cjs");
 const {
   hasExecutableMechanics,
@@ -43,22 +43,27 @@ function runSelfTest(root) {
     );
     const testText = [
       "const driverSchema = {",
-      "  doReachableBareString: {},",
       "  doReachableAction: {},",
       "  doDriverOnly: {},",
-      "  doReachableWrongUnit: {},",
       "} as const;",
-      "function helper() {",
-      '  return "other_unit";',
-      "}",
-      "function bareStringHelper() {",
-      '  return "fixture_unit";',
-      "}",
+      "const selectedUnitIdentityReplays = [",
+      "  {",
+      '    taskId: "QMBT10",',
+      '    unitId: "fixture_unit",',
+      '    actions: ["doReachableAction"],',
+      "    sequences: [],",
+      "  },",
+      "] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;",
       "const driver = defineDriver(driverSchema, () => ({",
-      "  doReachableBareString: () => bareStringHelper(),",
       '  doReachableAction: () => unitFeatureSubject("fixture_unit"),',
-      "  doReachableWrongUnit: () => helper(),",
       "}));",
+      'it("replays selected Unit identities deterministically", () => {',
+      "  for (const replay of selectedUnitIdentityReplays) {",
+      "    for (const sequence of replay.sequences) {",
+      "      void sequence;",
+      "    }",
+      "  }",
+      "});",
       "await run({",
       '  spec: path.resolve(import.meta.dirname, "./fixture.mbt.qnt"),',
       '  step: "step",',
@@ -84,7 +89,6 @@ function runSelfTest(root) {
             unitId: "fixture_unit",
             actionNames: ["doDriverOnly"],
             declaredActions: extractDriverSchemaActionNames(testText),
-            driverActionUnitIds: extractDriverActionUnitIds(testText),
             stepActionNames: fixtureActionSet.actionNames,
             stepDescription: fixtureActionSet.description,
           },
@@ -93,9 +97,8 @@ function runSelfTest(root) {
             line: 2,
             taskId: "QMBT10",
             unitId: "fixture_unit",
-            actionNames: ["doReachableBareString"],
+            actionNames: ["doReachableAction"],
             declaredActions: extractDriverSchemaActionNames(testText),
-            driverActionUnitIds: extractDriverActionUnitIds(testText),
             stepActionNames: fixtureActionSet.actionNames,
             stepDescription: fixtureActionSet.description,
           },
@@ -104,23 +107,20 @@ function runSelfTest(root) {
             line: 3,
             taskId: "QMBT10",
             unitId: "fixture_unit",
-            actionNames: ["doReachableAction"],
+            actionNames: ["doReachableAction", "doDriverOnly"],
             declaredActions: extractDriverSchemaActionNames(testText),
-            driverActionUnitIds: extractDriverActionUnitIds(testText),
             stepActionNames: fixtureActionSet.actionNames,
             stepDescription: fixtureActionSet.description,
           },
-          {
-            ownerPath: "fixture/rule-core-features.mbt.test.ts",
-            line: 4,
-            taskId: "QMBT10",
-            unitId: "fixture_unit",
-            actionNames: ["doReachableWrongUnit"],
-            declaredActions: extractDriverSchemaActionNames(testText),
-            driverActionUnitIds: extractDriverActionUnitIds(testText),
-            stepActionNames: fixtureActionSet.actionNames,
-            stepDescription: fixtureActionSet.description,
-          },
+        ],
+        selectedUnitIdentityReplays: extractSelectedUnitIdentityReplays(
+          testText,
+        ).map((replay) => ({
+          ownerPath: "fixture/rule-core-features.mbt.test.ts",
+          ...replay,
+        })),
+        selectedUnitIdentityReplayConsumers: [
+          { ownerPath: "fixture/rule-core-features.mbt.test.ts" },
         ],
       },
       [
@@ -140,26 +140,21 @@ function runSelfTest(root) {
         `Self-test failed: expected unreachable Quint step action issue, got ${JSON.stringify(issues)}`,
       );
     }
-    const wrongUnitExpected =
-      "fixture/rule-core-features.mbt.test.ts:4 cites Unit identity MBT replay action doReachableWrongUnit that does not bind Unit id fixture_unit.";
-    if (!issues.includes(wrongUnitExpected)) {
+    const actionMismatchExpected =
+      "fixture/rule-core-features.mbt.test.ts:3 claims selected identity MBT replay actions for fixture_unit that do not match deterministic replay data.";
+    if (!issues.includes(actionMismatchExpected)) {
       fail(
-        `Self-test failed: expected wrong Unit binding issue, got ${JSON.stringify(issues)}`,
+        `Self-test failed: expected deterministic replay action mismatch issue, got ${JSON.stringify(issues)}`,
       );
     }
-    const bareStringExpected =
-      "fixture/rule-core-features.mbt.test.ts:2 cites Unit identity MBT replay action doReachableBareString that does not bind Unit id fixture_unit.";
-    if (!issues.includes(bareStringExpected)) {
-      fail(
-        `Self-test failed: expected bare string literal issue, got ${JSON.stringify(issues)}`,
-      );
-    }
-    const boundaryIssue = issues.find((issue) =>
-      issue.includes("doReachableAction"),
+    const boundaryIssue = issues.find(
+      (issue) =>
+        issue ===
+        "fixture/rule-core-features.mbt.test.ts:2 claims selected identity MBT replay actions for fixture_unit that do not match deterministic replay data.",
     );
     if (boundaryIssue !== undefined) {
       fail(
-        `Self-test failed: expected explicit Unit boundary action to pass, got ${JSON.stringify(issues)}`,
+        `Self-test failed: expected matching deterministic replay action marker to pass, got ${JSON.stringify(issues)}`,
       );
     }
     if (

@@ -316,6 +316,19 @@ function validateUnitEvidence(
         `Selected identity MBT evidence for ${row.unitId} lacks matching UNIT-IDENTITY-MBT-REPLAY action marker in ${row.evidence.ownerPath}.`,
       );
     }
+    if (
+      row.evidence.tag === selectedIdentityMbtEvidenceTag &&
+      !hasSelectedUnitIdentityReplay(
+        scannedUnitEvidence,
+        row.evidence.ownerPath,
+        row.evidence.taskId,
+        row.unitId,
+      )
+    ) {
+      issues.push(
+        `Selected identity MBT evidence for ${row.unitId} lacks deterministic replay data in ${row.evidence.ownerPath}.`,
+      );
+    }
   }
 
   return issues;
@@ -355,8 +368,26 @@ function hasUnitIdentityMbtReplay(scannedClaims, ownerPath, taskId, unitId) {
   );
 }
 
+function hasSelectedUnitIdentityReplay(
+  scannedClaims,
+  ownerPath,
+  taskId,
+  unitId,
+) {
+  return scannedClaims.selectedUnitIdentityReplays.some(
+    (claim) =>
+      claim.ownerPath === ownerPath &&
+      claim.taskId === taskId &&
+      claim.unitId === unitId,
+  );
+}
+
 function unitEvidenceRowKey(ownerPath, evidenceTag, taskId, unitId) {
   return `${ownerPath}\u0000${evidenceTag}\u0000${taskId}\u0000${unitId}`;
+}
+
+function actionSetKey(actionNames) {
+  return [...new Set(actionNames)].sort().join("\u0000");
 }
 
 function validateOwnerClaims(
@@ -390,6 +421,75 @@ function validateOwnerClaims(
         ),
       ),
   );
+  const selectedReplayRowsByMarker = new Set(
+    scannedUnitEvidence.selectedUnitIdentityReplays.map((row) =>
+      unitEvidenceRowKey(
+        row.ownerPath,
+        selectedIdentityMbtEvidenceTag,
+        row.taskId,
+        row.unitId,
+      ),
+    ),
+  );
+  const selectedReplayRowsByMarkerAndActions = new Set(
+    scannedUnitEvidence.selectedUnitIdentityReplays.map(
+      (row) =>
+        `${unitEvidenceRowKey(
+          row.ownerPath,
+          selectedIdentityMbtEvidenceTag,
+          row.taskId,
+          row.unitId,
+        )}\u0000${actionSetKey(row.actionNames)}`,
+    ),
+  );
+  const selectedReplayConsumerOwnerPaths = new Set(
+    scannedUnitEvidence.selectedUnitIdentityReplayConsumers.map(
+      (consumer) => consumer.ownerPath,
+    ),
+  );
+  for (const replay of scannedUnitEvidence.selectedUnitIdentityReplays) {
+    if (!selectedReplayConsumerOwnerPaths.has(replay.ownerPath)) {
+      issues.push(
+        `${replay.ownerPath} has selected Unit identity replay data but no deterministic replay test consumer.`,
+      );
+    }
+    if (replay.actionNames.length === 0) {
+      issues.push(
+        `${replay.ownerPath} has selected Unit identity replay data for ${replay.unitId} with no actions.`,
+      );
+    }
+    if (
+      !selectedUnitEvidenceRowsByMarker.has(
+        unitEvidenceRowKey(
+          replay.ownerPath,
+          selectedIdentityMbtEvidenceTag,
+          replay.taskId,
+          replay.unitId,
+        ),
+      )
+    ) {
+      issues.push(
+        `${replay.ownerPath} has selected Unit identity replay data for ${replay.unitId} without a matching unit-evidence.jsonl row.`,
+      );
+    }
+    const marker = scannedUnitEvidence.unitIdentityMbtReplays.find(
+      (claim) =>
+        claim.ownerPath === replay.ownerPath &&
+        claim.taskId === replay.taskId &&
+        claim.unitId === replay.unitId,
+    );
+    if (marker === undefined) {
+      issues.push(
+        `${replay.ownerPath} has selected Unit identity replay data for ${replay.unitId} without a matching UNIT-IDENTITY-MBT-REPLAY marker.`,
+      );
+      continue;
+    }
+    if (actionSetKey(marker.actionNames) !== actionSetKey(replay.actionNames)) {
+      issues.push(
+        `${replay.ownerPath} selected Unit identity replay data for ${replay.unitId} does not match UNIT-IDENTITY-MBT-REPLAY actions.`,
+      );
+    }
+  }
   for (const claim of scannedUnitEvidence.unitIdentityMbtReplays) {
     if (claim.taskId.length === 0) {
       issues.push(
@@ -417,11 +517,6 @@ function validateOwnerClaims(
           `${claim.ownerPath}:${claim.line} cites Unit identity MBT replay action ${actionName} that is not reachable from ${claim.stepDescription}.`,
         );
       }
-      if (!claim.driverActionUnitIds.get(actionName)?.has(claim.unitId)) {
-        issues.push(
-          `${claim.ownerPath}:${claim.line} cites Unit identity MBT replay action ${actionName} that does not bind Unit id ${claim.unitId}.`,
-        );
-      }
     }
     if (claim.declaredActions.size === 0) {
       issues.push(
@@ -445,6 +540,33 @@ function validateOwnerClaims(
     ) {
       issues.push(
         `${claim.ownerPath}:${claim.line} claims selected identity MBT replay for ${claim.unitId} without a matching unit-evidence.jsonl row.`,
+      );
+    }
+    if (
+      !selectedReplayRowsByMarker.has(
+        unitEvidenceRowKey(
+          claim.ownerPath,
+          selectedIdentityMbtEvidenceTag,
+          claim.taskId,
+          claim.unitId,
+        ),
+      )
+    ) {
+      issues.push(
+        `${claim.ownerPath}:${claim.line} claims selected identity MBT replay for ${claim.unitId} without deterministic replay data.`,
+      );
+    } else if (
+      !selectedReplayRowsByMarkerAndActions.has(
+        `${unitEvidenceRowKey(
+          claim.ownerPath,
+          selectedIdentityMbtEvidenceTag,
+          claim.taskId,
+          claim.unitId,
+        )}\u0000${actionSetKey(claim.actionNames)}`,
+      )
+    ) {
+      issues.push(
+        `${claim.ownerPath}:${claim.line} claims selected identity MBT replay actions for ${claim.unitId} that do not match deterministic replay data.`,
       );
     }
   }

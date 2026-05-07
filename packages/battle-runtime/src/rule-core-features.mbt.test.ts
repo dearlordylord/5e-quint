@@ -16,7 +16,7 @@ import { isDeepStrictEqual } from "node:util";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -161,6 +161,284 @@ const driverSchema = {
   doUncannyDodge: {},
   step: {},
 } as const;
+type RuleCoreFeatureDriverAction = Exclude<
+  keyof typeof driverSchema,
+  "init" | "step"
+>;
+type SelectedUnitIdentityReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly RuleCoreFeatureDriverAction[];
+  readonly expected: RuleCoreFeatureProjection;
+};
+type SelectedUnitIdentityReplay = {
+  readonly taskId: "QMBT7" | "QMBT9";
+  readonly unitId: string;
+  readonly actions: readonly RuleCoreFeatureDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
+const selectedUnitRuntimeBoundaryIds = new Set<string>();
+
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "QMBT7",
+    unitId: "fighter_second_wind",
+    actions: [
+      "doDiscoverSecondWind",
+      "doResolveSecondWindLow",
+      "doResolveSecondWindHigh",
+    ],
+    sequences: [
+      {
+        name: "discover",
+        actions: ["doDiscoverSecondWind"],
+        expected: expectedProjection({
+          actorHp: 4,
+          holes: ["DamageRoll"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "low-roll",
+        actions: ["doDiscoverSecondWind", "doResolveSecondWindLow"],
+        expected: expectedProjection({
+          bonusActionAvailable: false,
+          featureUsesRemaining: 0,
+          actorHp: 7,
+          lastDamageAmount: 3,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "high-roll",
+        actions: ["doDiscoverSecondWind", "doResolveSecondWindHigh"],
+        expected: expectedProjection({
+          bonusActionAvailable: false,
+          featureUsesRemaining: 0,
+          actorHp: 12,
+          lastDamageAmount: 8,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "fighter_action_surge",
+    actions: ["doActionSurgeActivate", "doActionSurgeRejectTwice"],
+    sequences: [
+      {
+        name: "activate",
+        actions: ["doActionSurgeActivate"],
+        expected: expectedProjection({
+          featureUsesRemaining: 0,
+          actionSurgeGrant: "ActionSurgeActionAvailable",
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "reject-stale",
+        actions: ["doActionSurgeActivate", "doActionSurgeRejectTwice"],
+        expected: expectedProjection({
+          featureUsesRemaining: 0,
+          actionSurgeGrant: "ActionSurgeActionAvailable",
+          lastResult: "invalid",
+          lastInvalidReason: "staleSubject",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "fighter_improved_critical",
+    actions: ["doImprovedCritical"],
+    sequences: [
+      {
+        name: "critical-threshold",
+        actions: ["doImprovedCritical"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          targetHp: 4,
+          lastDamageAmount: 8,
+          critical: true,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "barbarian_rage",
+    actions: ["doRageActivateAndDamage"],
+    sequences: [
+      {
+        name: "activate-and-damage",
+        actions: ["doRageActivateAndDamage"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          bonusActionAvailable: false,
+          featureUsesRemaining: 0,
+          targetHp: 5,
+          rageActive: true,
+          lastDamageAmount: 7,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "barbarian_reckless_attack",
+    actions: ["doRecklessAttack"],
+    sequences: [
+      {
+        name: "strength-attack",
+        actions: ["doRecklessAttack"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          targetHp: 5,
+          recklessActive: true,
+          incomingAttackAdvantage: true,
+          lastDamageAmount: 7,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "rogue_cunning_action",
+    actions: ["doCunningDash", "doCunningDisengage", "doCunningHide"],
+    sequences: [
+      {
+        name: "dash",
+        actions: ["doCunningDash"],
+        expected: expectedProjection({
+          bonusActionAvailable: false,
+          dashBonusFeet: 30,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "disengage",
+        actions: ["doCunningDisengage"],
+        expected: expectedProjection({
+          bonusActionAvailable: false,
+          disengaged: true,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "hide",
+        actions: ["doCunningHide"],
+        expected: expectedProjection({
+          bonusActionAvailable: false,
+          hidden: true,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "rogue_evasion",
+    actions: ["doEvasionSuccess", "doEvasionFailure"],
+    sequences: [
+      {
+        name: "success",
+        actions: ["doEvasionSuccess"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "failure",
+        actions: ["doEvasionFailure"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          actorHp: 9,
+          lastDamageAmount: 3,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "rogue_uncanny_dodge",
+    actions: ["doUncannyDodge"],
+    sequences: [
+      {
+        name: "halve-damage",
+        actions: ["doUncannyDodge"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          reactionAvailable: false,
+          actorHp: 9,
+          lastDamageAmount: 3,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "rogue_sneak_attack",
+    actions: ["doSneakAttack"],
+    sequences: [
+      {
+        name: "advantage-attack",
+        actions: ["doSneakAttack"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          targetHp: 2,
+          sneakAttackUsedThisTurn: true,
+          lastDamageAmount: 1,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+
+function expectedProjection(
+  overrides: Partial<RuleCoreFeatureProjection> = {},
+): RuleCoreFeatureProjection {
+  return {
+    actionAvailable: true,
+    bonusActionAvailable: true,
+    reactionAvailable: true,
+    featureUsesRemaining: 1,
+    actionSurgeGrant: "NoActionSurgeActionGrant",
+    actorHp: 12,
+    targetHp: 12,
+    dashBonusFeet: 0,
+    disengaged: false,
+    hidden: false,
+    rageActive: false,
+    recklessActive: false,
+    incomingAttackAdvantage: false,
+    sneakAttackUsedThisTurn: false,
+    lastDamageAmount: 0,
+    critical: false,
+    holes: [],
+    pendingReaction: false,
+    lastResult: "init",
+    lastInvalidReason: "none",
+    ...overrides,
+  };
+}
+
+function resetSelectedUnitRuntimeBoundaryIds(): void {
+  selectedUnitRuntimeBoundaryIds.clear();
+}
+
+function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
+  unitId: UnitId,
+): UnitId {
+  selectedUnitRuntimeBoundaryIds.add(unitId);
+  return unitId;
+}
 
 function createRuleCoreFeatureDriver() {
   return defineDriver(driverSchema, () => {
@@ -310,7 +588,11 @@ function createRuleCoreFeatureDriver() {
       doActionSurgeActivate: () => {
         state = actionSurgeBattle();
         resetProjection();
-        resolveSubject(unitFeatureSubject("fighter_action_surge"));
+        resolveSubject(
+          unitFeatureSubject(
+            recordSelectedUnitRuntimeBoundaryId("fighter_action_surge"),
+          ),
+        );
         featureUsesRemaining = resourceUsesRemaining(
           state,
           "fighter_action_surge",
@@ -327,7 +609,9 @@ function createRuleCoreFeatureDriver() {
       doActionSurgeRejectTwice: () => {
         const result = resolveBattleSubject({
           state,
-          subject: unitFeatureSubject("fighter_action_surge"),
+          subject: unitFeatureSubject(
+            recordSelectedUnitRuntimeBoundaryId("fighter_action_surge"),
+          ),
           fills: [],
         });
         recordResult(result);
@@ -339,7 +623,12 @@ function createRuleCoreFeatureDriver() {
       doDiscoverSecondWind: () => {
         state = secondWindBattle();
         resetProjection();
-        const act = findAct(state, unitFeatureSubject("fighter_second_wind"));
+        const act = findAct(
+          state,
+          unitFeatureSubject(
+            recordSelectedUnitRuntimeBoundaryId("fighter_second_wind"),
+          ),
+        );
         holes = act.initialHoles;
         lastResult = "needsHoles";
         lastInvalidReason = "none";
@@ -375,7 +664,9 @@ function createRuleCoreFeatureDriver() {
         resetProjection();
         const raging = resolveBattleSubject({
           state,
-          subject: unitFeatureSubject("barbarian_rage"),
+          subject: unitFeatureSubject(
+            recordSelectedUnitRuntimeBoundaryId("barbarian_rage"),
+          ),
           fills: [],
         });
         recordResult(raging);
@@ -391,7 +682,9 @@ function createRuleCoreFeatureDriver() {
           state,
           damageRoll: 7,
           rollMode: "advantage",
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureUnitId: recordSelectedUnitRuntimeBoundaryId(
+            "barbarian_reckless_attack",
+          ),
         });
         lastDamageAmount = 7;
       },
@@ -403,7 +696,9 @@ function createRuleCoreFeatureDriver() {
           subject: actorAttackSubject("Dagger"),
           damageRoll: 4,
           rollMode: "advantage",
-          selectedAttackDamageRiderUnitIds: ["rogue_sneak_attack"],
+          selectedAttackDamageRiderUnitIds: [
+            recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
+          ],
         });
         lastDamageAmount = 1;
       },
@@ -475,7 +770,9 @@ function createRuleCoreFeatureDriver() {
       recordResult(
         resolveBattleSubject({
           state,
-          subject: unitFeatureSubject("fighter_second_wind"),
+          subject: unitFeatureSubject(
+            recordSelectedUnitRuntimeBoundaryId("fighter_second_wind"),
+          ),
           fills: [damageRollFillWithGroups(hole, [[roll]])],
         }),
       );
@@ -646,6 +943,42 @@ const featureStateCheck = stateCheck(
 const ruleCoreFeatureDefaultMbtSteps = 6;
 
 describe("rule-core Feature focused MBT", () => {
+  it("replays selected Unit identities deterministically", async () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      const replayedActions = new Set<RuleCoreFeatureDriverAction>();
+
+      for (const sequence of replay.sequences) {
+        const driver = createRuleCoreFeatureDriver()();
+
+        for (const actionName of sequence.actions) {
+          resetSelectedUnitRuntimeBoundaryIds();
+          replayedActions.add(actionName);
+          const action = driver.actions[actionName];
+          if (action === undefined) {
+            throw new Error(
+              `Missing rule-core Feature driver action ${actionName}.`,
+            );
+          }
+          await action.handler({});
+          expect(
+            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
+            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
+          ).toBe(true);
+        }
+
+        const runtime = driver.getState?.();
+        if (runtime === undefined) {
+          throw new Error("Rule-core Feature driver must expose getState.");
+        }
+        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
   it("replays QCORE9 feature procedure parity through battle-runtime reducers", async () => {
     await run({
       spec: path.resolve(import.meta.dirname, "../rule-core-features.mbt.qnt"),
@@ -723,7 +1056,7 @@ function cunningActionBattle(): BattleState {
         initiative: 20,
         characterUnitRefs: [
           {
-            unitId: "rogue_cunning_action",
+            unitId: recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
             supportProfiles: [cunningActionSupportProfile],
           },
         ],
@@ -761,7 +1094,11 @@ function recklessBattle(): BattleState {
         initiative: 20,
         classLevels: [{ className: "barbarian", level: 2 }],
         unitFeatures: [
-          { unit: unitLibrary.requireUnit("barbarian_reckless_attack") },
+          {
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId("barbarian_reckless_attack"),
+            ),
+          },
         ],
       }),
       featureTarget(10),
@@ -777,10 +1114,16 @@ function sneakAttackBattle(): BattleState {
         initiative: 20,
         classLevels: [{ className: "rogue", level: 1 }],
         attack: zeroAbilityWeaponAttack("weapon_dagger"),
-        unitFeatures: [{ unit: unitLibrary.requireUnit("rogue_sneak_attack") }],
+        unitFeatures: [
+          {
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
+            ),
+          },
+        ],
         characterUnitRefs: [
           {
-            unitId: "rogue_sneak_attack",
+            unitId: recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
             supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
           },
         ],
@@ -798,7 +1141,9 @@ function improvedCriticalBattle(): BattleState {
         initiative: 20,
         characterUnitRefs: [
           {
-            unitId: "fighter_improved_critical",
+            unitId: recordSelectedUnitRuntimeBoundaryId(
+              "fighter_improved_critical",
+            ),
             supportProfiles: [
               WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
             ],
@@ -833,10 +1178,16 @@ function evasionBattle(): BattleState {
         currentHp: 12,
         classLevels: [{ className: "rogue", level: 7 }],
         attack: null,
-        unitFeatures: [{ unit: unitLibrary.requireUnit("rogue_evasion") }],
+        unitFeatures: [
+          {
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId("rogue_evasion"),
+            ),
+          },
+        ],
         characterUnitRefs: [
           {
-            unitId: "rogue_evasion",
+            unitId: recordSelectedUnitRuntimeBoundaryId("rogue_evasion"),
             supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
           },
         ],
@@ -855,8 +1206,9 @@ function reactionModifierBattle(input: {
     { readonly kind: "character" }
   >["resources"];
 }): BattleState {
+  const unitId = recordSelectedUnitRuntimeBoundaryId(input.unitId);
   return startBattleRight({
-    battleId: battleId(`rule-core-${input.unitId}`),
+    battleId: battleId(`rule-core-${unitId}`),
     combatants: [
       featureTarget(20),
       featureActor({
@@ -867,7 +1219,7 @@ function reactionModifierBattle(input: {
         unitFeatures: [{ unit: input.unit }],
         characterUnitRefs: [
           {
-            unitId: input.unitId,
+            unitId,
             supportProfiles: [
               REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
             ],
@@ -1006,7 +1358,9 @@ function unitResource(
     { readonly kind: "character" }
   >["resources"]
 >[number] {
-  const unit = unitLibrary.requireUnit(unitId);
+  const unit = unitLibrary.requireUnit(
+    recordSelectedUnitRuntimeBoundaryId(unitId),
+  );
   if (unit.kind !== "class_feature" || !("resource" in unit.mechanics)) {
     throw new Error(`Expected ${unitId} resource Unit.`);
   }
@@ -1032,7 +1386,11 @@ function actorAttackSubject(
 function unitFeatureSubject(
   unitId: string,
 ): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
-  return { tag: "unitFeature", actorId, unitId };
+  return {
+    tag: "unitFeature",
+    actorId,
+    unitId: recordSelectedUnitRuntimeBoundaryId(unitId),
+  };
 }
 
 function bonusActionStandardActionSubject(
@@ -1041,7 +1399,7 @@ function bonusActionStandardActionSubject(
   return {
     tag: "bonusActionStandardAction",
     actorId,
-    sourceUnitId: "rogue_cunning_action",
+    sourceUnitId: recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
     action,
   };
 }
