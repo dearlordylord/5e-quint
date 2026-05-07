@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -81,11 +81,13 @@ import {
   holeInstanceKey,
   type AttackRollResult,
   type AttackRollMode,
-  type FilledHoleValue,
   type RolledDiceGroup,
   type RuntimeHole,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
+import {
+  rolledDiceTotal,
+  validateRolledDiceForDiceExpr,
+} from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   CONDITIONS as ALL_CONDITIONS,
   AbilityModifier,
@@ -109,6 +111,7 @@ import {
   resourceCount,
   spellSlotLevel,
   type Condition,
+  type DamageDieSize,
   type DieRollResult,
   type HandUse,
   type ProficiencyBonus as ProficiencyBonusType,
@@ -139,7 +142,11 @@ import type {
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
-import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
+import {
+  AbilitySchema,
+  DamageTypeSchema,
+  DcSourceSchema,
+} from "@dnd/surface/surface/schema";
 import {
   BattleCombatantSide,
   BattleId,
@@ -221,10 +228,13 @@ import {
   type BattlePassiveSpeedBonusSupportProfile,
   type BattlePassiveSpeedKindGrantsSupportProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  battleReactionRollOrDamageReductionSupportForUnit,
   parseSupportedUnitFeatureProfile,
+  requireCharacterClassLevel,
   type BattleUnitSupportProfile,
   type BattleBonusActionDashTemporaryHitPointsSupportProfile,
   type OngoingFeatureDamageModifier,
@@ -239,6 +249,24 @@ import {
 const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 const SHIELD_MAGIC_MISSILE_SPELL_ID =
   "magic_missile" satisfies SpellRecord["id"];
+const DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_ID = holeId(
+  "battle:deflect-attacks:redirect-target",
+);
+const DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_INSTANCE = holeInstanceKey(
+  "battle:deflect-attacks:redirect-target",
+);
+const DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_ID = holeId(
+  "battle:deflect-attacks:redirect-save",
+);
+const DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:deflect-attacks:redirect-save",
+);
+const DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_ID = holeId(
+  "battle:deflect-attacks:redirect-damage",
+);
+const DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:deflect-attacks:redirect-damage",
+);
 const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
   "swim",
@@ -384,6 +412,26 @@ type BattlePendingAttackDamageReduction = {
     { readonly kind: "attackDamageReduction" }
   >["reduction"];
   readonly reductionAmount: number;
+  readonly zeroDamageRedirect?: DeflectAttacksZeroDamageRedirectOffer;
+};
+type DeflectAttacksZeroDamageRedirectAvailableOffer = {
+  readonly reactorId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly label: string;
+  readonly redirect: DeflectAttacksZeroDamageRedirectOffer;
+};
+type BattleAttackKindForRedirect = "melee" | "ranged";
+type DeflectAttacksZeroDamageRedirectOffer = {
+  readonly saveDc: DifficultyClass;
+  readonly martialArtsDieSize: DamageDieSize;
+  readonly attackKind: BattleAttackKindForRedirect;
+  readonly damageAbilityModifier: AbilityModifier;
+  readonly originalDamageType: DamageType;
+};
+type DeflectAttacksZeroDamageRedirectSelection = {
+  readonly targetId: CombatantId;
+  readonly savingThrowSucceeded: boolean;
+  readonly redirectedDamageRoll: number;
 };
 type BattleReactionProcedureChoiceWithSubject = {
   readonly reactorId: CombatantId;
@@ -431,7 +479,20 @@ type BattleReactionModifierChoice =
       readonly kind: "attackDamageReduction";
       readonly unitId: UnitRecord["id"];
       readonly label: string;
-      readonly reduction: { readonly kind: "halfDamage" };
+      readonly reduction:
+        | { readonly kind: "halfDamage" }
+        | {
+            readonly kind: "rolled";
+            readonly flatModifier: number;
+            readonly dieSize: 10;
+          };
+      readonly zeroDamageRedirect?: {
+        readonly saveDc: DifficultyClass;
+        readonly martialArtsDieSize: DamageDieSize;
+        readonly damageAbilityModifier: AbilityModifier;
+        readonly attackKind: BattleAttackKindForRedirect;
+        readonly originalDamageType: DamageType;
+      };
     };
 type BattleAttackDamageEvent =
   | {
@@ -507,6 +568,7 @@ export type BattleReactionFrame =
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly attackRoll: AttackRollResult;
+      readonly attackKind: BattleAttackKindForRedirect;
       readonly damageTypes: readonly DamageType[];
     })
   | (BattleReactionFrameBase & {
@@ -644,6 +706,16 @@ export type BattleTargetSpatialFact =
       readonly kind: "helpAttackTargetWithin5Feet";
       readonly helperId: CombatantId;
       readonly targetEnemyId: CombatantId;
+    }
+  | {
+      readonly kind: "deflectAttacksMeleeRedirectTargetWithin5Feet";
+      readonly monkId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "deflectAttacksRangedRedirectTargetWithin60FeetWithoutTotalCover";
+      readonly monkId: CombatantId;
+      readonly targetId: CombatantId;
     }
   | {
       readonly kind: "grappleTargetWithinReach";
@@ -1226,10 +1298,16 @@ export type BattleSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
 };
-export type BattleSavingThrowOutcomeValue = {
+export type BattleSpellSavingThrowOutcomeValue = {
   readonly area: BattleSpellAreaChoice;
   readonly outcomes: readonly BattleSavingThrowOutcome[];
 };
+export type BattleUnitFeatureSavingThrowOutcomeValue = {
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
+};
+export type BattleSavingThrowOutcomeValue =
+  | BattleSpellSavingThrowOutcomeValue
+  | BattleUnitFeatureSavingThrowOutcomeValue;
 const SAVE_DAMAGE_RESULTS = ["none", "half", "full"] as const;
 type SaveDamageResult = (typeof SAVE_DAMAGE_RESULTS)[number];
 export type BattleSpellAreaChoice = {
@@ -1249,6 +1327,20 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly ability: Ability;
   readonly dc: DcSource;
   readonly areaChoices: readonly BattleSpellAreaChoice[];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+};
+export type BattleUnitFeatureSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly unitFeature: {
+    readonly unitId: UnitRecord["id"];
+    readonly label: string;
+  };
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly targetIds: readonly CombatantId[];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
 };
 export type BattleUnitFeatureRollHole = Extract<
@@ -1352,6 +1444,7 @@ export type BattleHole =
   | BattleSpellDamageRollHole
   | BattleSpellHealingRollHole
   | BattleSpellSavingThrowOutcomeHole
+  | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole
   | BattleStatBlockRechargeRollHole
@@ -1648,6 +1741,21 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    unitFeature: BattleRuntimeObjectSchema,
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    targetIds: Schema.Array(CombatantId),
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+      }),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     unitFeature: BattleRuntimeObjectSchema,
   }),
@@ -1732,10 +1840,10 @@ export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
   readonly missToHitReplacementUnitId?: UnitRecord["id"];
 };
-export type BattleRolledDiceFill = Extract<
-  FilledHoleValue,
-  { readonly kind: "rolledDice" }
-> & {
+export type BattleRolledDiceFill = {
+  readonly kind: "rolledDice";
+  readonly holeId: BattleHoleId;
+  readonly value: readonly [RolledDiceGroup, ...RolledDiceGroup[]];
   readonly selectedAttackDamageRiderUnitIds?: readonly UnitRecord["id"][];
   readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
 };
@@ -1891,6 +1999,16 @@ type BattleFillEncoded =
             readonly targetEnemyId: string;
           }
         | {
+            readonly kind: "deflectAttacksMeleeRedirectTargetWithin5Feet";
+            readonly monkId: string;
+            readonly targetId: string;
+          }
+        | {
+            readonly kind: "deflectAttacksRangedRedirectTargetWithin60FeetWithoutTotalCover";
+            readonly monkId: string;
+            readonly targetId: string;
+          }
+        | {
             readonly kind: "grappleTargetWithinReach";
             readonly grapplerId: string;
             readonly targetId: string;
@@ -1955,16 +2073,23 @@ type BattleFillEncoded =
   | {
       readonly kind: "savingThrowOutcome";
       readonly holeId: string;
-      readonly value: {
-        readonly area: {
-          readonly originAnchorId: string;
-          readonly affectedTargetIds: readonly string[];
-        };
-        readonly outcomes: readonly {
-          readonly targetId: string;
-          readonly succeeded: boolean;
-        }[];
-      };
+      readonly value:
+        | {
+            readonly area: {
+              readonly originAnchorId: string;
+              readonly affectedTargetIds: readonly string[];
+            };
+            readonly outcomes: readonly {
+              readonly targetId: string;
+              readonly succeeded: boolean;
+            }[];
+          }
+        | {
+            readonly outcomes: readonly {
+              readonly targetId: string;
+              readonly succeeded: boolean;
+            }[];
+          };
     }
   | {
       readonly kind: "rolledDice";
@@ -2130,6 +2255,20 @@ export const BattleFillSchema: Schema.Schema<
               targetEnemyId: CombatantId,
             }),
             Schema.Struct({
+              kind: Schema.Literal(
+                "deflectAttacksMeleeRedirectTargetWithin5Feet",
+              ),
+              monkId: CombatantId,
+              targetId: CombatantId,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal(
+                "deflectAttacksRangedRedirectTargetWithin60FeetWithoutTotalCover",
+              ),
+              monkId: CombatantId,
+              targetId: CombatantId,
+            }),
+            Schema.Struct({
               kind: Schema.Literal("grappleTargetWithinReach"),
               grapplerId: CombatantId,
               targetId: CombatantId,
@@ -2198,18 +2337,28 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("savingThrowOutcome"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Struct({
-        area: Schema.Struct({
-          originAnchorId: CombatantId,
-          affectedTargetIds: Schema.Array(CombatantId),
-        }),
-        outcomes: Schema.Array(
-          Schema.Struct({
-            targetId: CombatantId,
-            succeeded: Schema.Boolean,
+      value: Schema.Union(
+        Schema.Struct({
+          area: Schema.Struct({
+            originAnchorId: CombatantId,
+            affectedTargetIds: Schema.Array(CombatantId),
           }),
-        ),
-      }),
+          outcomes: Schema.Array(
+            Schema.Struct({
+              targetId: CombatantId,
+              succeeded: Schema.Boolean,
+            }),
+          ),
+        }),
+        Schema.Struct({
+          outcomes: Schema.Array(
+            Schema.Struct({
+              targetId: CombatantId,
+              succeeded: Schema.Boolean,
+            }),
+          ),
+        }),
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("rolledDice"),
@@ -2818,9 +2967,26 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
     kind: Schema.Literal("attackDamageReduction"),
     unitId: Schema.String,
     label: Schema.String,
-    reduction: Schema.Struct({
-      kind: Schema.Literal("halfDamage"),
-    }),
+    reduction: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("halfDamage"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("rolled"),
+        flatModifier: Schema.Number,
+        dieSize: Schema.Literal(10),
+      }),
+    ),
+    zeroDamageRedirect: Schema.optionalWith(
+      Schema.Struct({
+        saveDc: DifficultyClass,
+        martialArtsDieSize: DamageDieSizeSchema,
+        damageAbilityModifier: AbilityModifier,
+        attackKind: Schema.Literal("melee", "ranged"),
+        originalDamageType: DamageTypeSchema,
+      }),
+      { exact: true },
+    ),
   }),
 );
 
@@ -4426,10 +4592,16 @@ function spendReaction(
 function spendReactionModifierResource(
   state: BattleState,
   reactorId: CombatantId,
-  unitId: UnitRecord["id"],
+  choice: BattleReactionModifierChoice,
 ): BattleState {
   const reactor = state.combatants.get(reactorId);
   if (reactor?.origin.kind !== "character") return state;
+  if (
+    choice.kind === "attackDamageReduction" &&
+    choice.zeroDamageRedirect !== undefined
+  ) {
+    return state;
+  }
   return {
     ...state,
     combatants: new Map(state.combatants).set(reactorId, {
@@ -4437,7 +4609,7 @@ function spendReactionModifierResource(
       origin: {
         ...reactor.origin,
         resources: reactor.origin.resources.map((resource) =>
-          resource.unit.id === unitId
+          resource.unit.id === choice.unitId
             ? spendCharacterResourceUse(resource)
             : resource,
         ),
@@ -4510,7 +4682,7 @@ function resolveReactionRollOrDamageReduction(input: {
   const spent = spendReactionModifierResource(
     spendReaction(input.state, input.choice.reactorId),
     input.choice.reactorId,
-    input.choice.choice.unitId,
+    input.choice.choice,
   );
   const updatedFrame = reactionFrameAfterModifier(
     input.frame,
@@ -4689,24 +4861,36 @@ function reactionModifierReductionRoll(
       readonly message: string;
     } {
   if (choice.reduction.kind === "halfDamage") {
-    return fills.length === 0
+    const unexpectedRollFill = fills.find((fill) => fill.kind === "rolledDice");
+    return unexpectedRollFill === undefined
       ? { tag: "ok", value: 0 }
       : {
           tag: "invalid",
           message: "This Reaction modifier does not accept a roll fill.",
         };
   }
-  if (fills.length !== 1 || fills[0]?.kind !== "rolledDice") {
+  const fill = fills.find(
+    (candidate): candidate is BattleRolledDiceFill =>
+      isBattleRolledDiceFill(candidate) &&
+      candidate.holeId === REACTION_MODIFIER_ROLL_HOLE_ID,
+  );
+  if (fill === undefined) {
     return {
       tag: "invalid",
       message: "This Reaction modifier requires one reduction roll fill.",
     };
   }
-  const fill = fills[0];
-  if (fill.holeId !== REACTION_MODIFIER_ROLL_HOLE_ID) {
+  if (
+    fills.some(
+      (candidate) =>
+        isBattleRolledDiceFill(candidate) &&
+        candidate.holeId === REACTION_MODIFIER_ROLL_HOLE_ID &&
+        candidate !== fill,
+    )
+  ) {
     return {
       tag: "invalid",
-      message: "Reaction modifier roll fill does not match the requested hole.",
+      message: "Reaction modifier reduction roll was filled twice.",
     };
   }
   if (
@@ -4716,8 +4900,7 @@ function reactionModifierReductionRoll(
   ) {
     return {
       tag: "invalid",
-      message:
-        "Reaction modifier roll must provide one Bardic Inspiration die result.",
+      message: reactionModifierRollValidationMessage(choice),
     };
   }
   const value = fill.value.reduce(
@@ -4730,6 +4913,120 @@ function reactionModifierReductionRoll(
     0,
   );
   return { tag: "ok", value };
+}
+
+function reactionModifierRollValidationMessage(
+  choice: BattleReactionModifierChoice,
+): string {
+  return choice.kind === "attackDamageReduction"
+    ? "Reaction modifier roll must provide one valid reduction die result."
+    : "Reaction modifier roll must provide one Bardic Inspiration die result.";
+}
+
+function isBattleRolledDiceFill(
+  fill: BattleFill,
+): fill is BattleRolledDiceFill {
+  return fill.kind === "rolledDice";
+}
+
+function deflectAttacksRedirectSelection(input: {
+  readonly state: BattleState;
+  readonly reactorId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly offer: DeflectAttacksZeroDamageRedirectOffer;
+  readonly target:
+    | Extract<BattleFill, { readonly kind: "targetChoice" }>
+    | undefined;
+  readonly save:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  readonly damage: BattleRolledDiceFill | undefined;
+}):
+  | {
+      readonly tag: "ok";
+      readonly value: DeflectAttacksZeroDamageRedirectSelection | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const { damage, offer, reactorId, save, state, target, unitId } = input;
+  if (target === undefined && save === undefined && damage === undefined) {
+    return { tag: "ok", value: undefined };
+  }
+  if (target === undefined || save === undefined || damage === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "Deflect Attacks redirect requires target, save, and damage facts.",
+    };
+  }
+  if (!deflectAttacksFocusAvailable(state, reactorId, unitId, offer)) {
+    return {
+      tag: "invalid",
+      message: "Deflect Attacks redirect requires an available Focus Point.",
+    };
+  }
+  if (
+    !deflectAttacksRedirectTargetChoices(state, reactorId).includes(
+      target.value,
+    ) ||
+    !hasDeflectAttacksRedirectTargetSpatialFact(
+      target.spatialFacts ?? [],
+      reactorId,
+      target.value,
+      offer.attackKind,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message: "Deflect Attacks redirect target is not eligible.",
+    };
+  }
+  const outcome = save.value.outcomes.find(
+    (candidate) => candidate.targetId === target.value,
+  );
+  if ("area" in save.value) {
+    return {
+      tag: "invalid",
+      message:
+        "Deflect Attacks redirect save must not include spell area facts.",
+    };
+  }
+  if (outcome === undefined || save.value.outcomes.length !== 1) {
+    return {
+      tag: "invalid",
+      message:
+        "Deflect Attacks redirect save must name the redirect target once.",
+    };
+  }
+  const redirectedDamageRoll = rolledDiceFillTotal(damage, {
+    dice: 2,
+    dieSize: offer.martialArtsDieSize,
+  });
+  if (redirectedDamageRoll === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Deflect Attacks redirect damage must roll two Martial Arts dice.",
+    };
+  }
+  return {
+    tag: "ok",
+    value: {
+      targetId: target.value,
+      savingThrowSucceeded: outcome.succeeded,
+      redirectedDamageRoll,
+    },
+  };
+}
+
+function rolledDiceFillTotal(
+  fill: BattleRolledDiceFill,
+  expr: { readonly dice: number; readonly dieSize: DamageDieSize },
+): number | null {
+  const validation = validateRolledDiceForDiceExpr(fill.value, expr);
+  if (validation !== null) {
+    return null;
+  }
+  return rolledDiceTotal(fill.value);
 }
 
 function bardicInspirationDieSize(classLevel: ClassLevel): 6 | 8 | 10 | 12 {
@@ -4781,6 +5078,9 @@ function reactionFrameAfterModifier(
             label: choice.label,
             reduction: choice.reduction,
             reductionAmount: reduction,
+            ...(choice.zeroDamageRedirect === undefined
+              ? {}
+              : { zeroDamageRedirect: choice.zeroDamageRedirect }),
           },
         ],
       },
@@ -4836,6 +5136,17 @@ function attackDamageEventAmountForTarget(
   );
 }
 
+function attackDamageEventAmountBeforeTargetAdjustments(
+  event: BattleAttackDamageEvent,
+): DamageAmount {
+  return toDamageAmount(
+    attackDamageEventEntries(event).reduce(
+      (total, entry) => total + entry.amount,
+      0,
+    ),
+  );
+}
+
 function attackDamageEventAfterPendingReductions(
   event: BattleAttackDamageEvent,
   reductions: readonly BattlePendingAttackDamageReduction[],
@@ -4859,6 +5170,130 @@ function attackDamageEventAfterPendingReduction(
   return event.kind === "rolledDamage"
     ? { ...event, damageRollByType: nextEntries }
     : { ...event, damageByTypeBeforeTargetAdjustments: nextEntries };
+}
+
+function resolveDeflectAttacksRedirectAfterReduction(input: {
+  readonly state: BattleState;
+  readonly reductions: readonly BattlePendingAttackDamageReduction[];
+  readonly reducedDamageBeforeTargetAdjustments: DamageAmount;
+  readonly redirectTarget:
+    | Extract<BattleFill, { readonly kind: "targetChoice" }>
+    | undefined;
+  readonly redirectSave:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  readonly redirectDamage:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+}):
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | {
+      readonly tag: "needsHoles";
+      readonly state: BattleState;
+      readonly holes: readonly BattleHole[];
+    }
+  | {
+      readonly tag: "invalid";
+      readonly message: string;
+    } {
+  const offers = input.reductions.flatMap((reduction) =>
+    reduction.zeroDamageRedirect === undefined
+      ? []
+      : [
+          {
+            reactorId: reduction.reactorId,
+            unitId: reduction.unitId,
+            label: reduction.label,
+            redirect: reduction.zeroDamageRedirect,
+          } satisfies DeflectAttacksZeroDamageRedirectAvailableOffer,
+        ],
+  );
+  if (offers.length === 0) {
+    return { tag: "ok", state: input.state };
+  }
+  if (offers.length > 1) {
+    return {
+      tag: "invalid",
+      message:
+        "Deflect Attacks redirect expects exactly one zero-damage redirect offer.",
+    };
+  }
+  if (Number(input.reducedDamageBeforeTargetAdjustments) !== 0) {
+    if (
+      input.redirectTarget === undefined &&
+      input.redirectSave === undefined &&
+      input.redirectDamage === undefined
+    ) {
+      return { tag: "ok", state: input.state };
+    }
+    return {
+      tag: "invalid",
+      message:
+        "Deflect Attacks redirect is only available when the reduction makes the attack damage 0.",
+    };
+  }
+  const offer = offers[0];
+  const selection = deflectAttacksRedirectSelection({
+    state: input.state,
+    reactorId: offer.reactorId,
+    unitId: offer.unitId,
+    offer: offer.redirect,
+    target: input.redirectTarget,
+    save: input.redirectSave,
+    damage: input.redirectDamage,
+  });
+  if (selection.tag === "invalid") {
+    return selection;
+  }
+  if (selection.value === undefined) {
+    const holes = deflectAttacksRedirectHoles(input.state, offer);
+    if (holes.length === 0) {
+      return { tag: "ok", state: input.state };
+    }
+    return {
+      tag: "needsHoles",
+      state: input.state,
+      holes,
+    };
+  }
+  const focusSpent = spendDeflectAttacksFocusPoint(
+    input.state,
+    offer.reactorId,
+    offer.unitId,
+    offer.redirect,
+  );
+  if (selection.value.savingThrowSucceeded) {
+    return { tag: "ok", state: focusSpent };
+  }
+  const redirectTarget = focusSpent.combatants.get(selection.value.targetId);
+  if (redirectTarget === undefined) {
+    return { tag: "ok", state: focusSpent };
+  }
+  const redirectedDamage = attackDamageEventAmountForTarget(redirectTarget, {
+    kind: "aggregateDamage",
+    damageByTypeBeforeTargetAdjustments: [
+      {
+        damageType: offer.redirect.originalDamageType,
+        amount: Math.max(
+          0,
+          selection.value.redirectedDamageRoll +
+            Number(offer.redirect.damageAbilityModifier),
+        ),
+      },
+    ],
+  });
+  return {
+    tag: "ok",
+    state: applyAttackDamageAmount(
+      focusSpent,
+      offer.reactorId,
+      selection.value.targetId,
+      redirectedDamage,
+      1,
+      { kind: "ordinaryDamage" },
+      [],
+    ),
+  };
 }
 
 function damageAmountByTypeEntriesAfterScalarReduction(
@@ -5923,7 +6358,7 @@ function reactionRollOrDamageReductionChoiceForProfile(
   >,
   modifier: ReactionRollOrDamageReductionProfile,
 ): readonly BattleReactionProcedureChoice[] {
-  if (!reactionModifierResourceAvailable(state, reactorId, profile.unit.id)) {
+  if (!reactionModifierResourceAvailable(state, reactorId, profile, modifier)) {
     return [];
   }
   if (
@@ -5940,13 +6375,19 @@ function reactionRollOrDamageReductionChoiceForProfile(
           ))))
   ) {
     if (modifier.kind === "attackDamageReduction") {
-      const reactorOrigin = state.combatants.get(reactorId)?.origin;
+      const reactor = state.combatants.get(reactorId);
       if (
-        reactorOrigin?.kind !== "character" ||
+        reactor?.origin.kind !== "character" ||
         profile.unit.kind !== "class_feature"
       ) {
         return [];
       }
+      const characterReactor = reactor as BattleCreatureState & {
+        readonly origin: Extract<
+          BattleCreatureState["origin"],
+          { readonly kind: "character" }
+        >;
+      };
       return [
         {
           kind: "reactionRollOrDamageReduction",
@@ -5955,9 +6396,40 @@ function reactionRollOrDamageReductionChoiceForProfile(
             kind: "attackDamageReduction",
             unitId: profile.unit.id,
             label: profile.unit.name,
-            reduction: { kind: "halfDamage" },
+            reduction:
+              modifier.reduction.kind === "halfDamage"
+                ? { kind: "halfDamage" }
+                : {
+                    kind: "rolled",
+                    flatModifier:
+                      Number(
+                        characterAbilityModifier(characterReactor, "dex"),
+                      ) + Number(profile.classLevel),
+                    dieSize: modifier.reduction.dieSize,
+                  },
+            ...(modifier.zeroDamageRedirect === undefined
+              ? {}
+              : {
+                  zeroDamageRedirect: {
+                    saveDc: monkFocusSaveDc(characterReactor),
+                    martialArtsDieSize: monkMartialArtsDieSize(
+                      profile.classLevel,
+                    ),
+                    damageAbilityModifier: characterAbilityModifier(
+                      characterReactor,
+                      "dex",
+                    ),
+                    attackKind: frame.attackKind,
+                    originalDamageType: deflectAttacksOriginalDamageType(
+                      frame.damageTypes,
+                    ),
+                  },
+                }),
           },
-          initialHoles: [],
+          initialHoles:
+            modifier.reduction.kind === "halfDamage"
+              ? []
+              : [reactionModifierRollHole(profile, "attackDamageReduction")],
         },
       ];
     }
@@ -6048,15 +6520,236 @@ function reactionModifierRollHole(
   };
 }
 
-function reactionModifierResourceAvailable(
+function deflectAttacksRedirectHoles(
+  state: BattleState,
+  offer: DeflectAttacksZeroDamageRedirectAvailableOffer,
+): readonly BattleHole[] {
+  if (
+    deflectAttacksFocusAvailable(
+      state,
+      offer.reactorId,
+      offer.unitId,
+      offer.redirect,
+    ) === false
+  ) {
+    return [];
+  }
+  const targetChoices = deflectAttacksRedirectTargetChoices(
+    state,
+    offer.reactorId,
+  );
+  return [
+    {
+      kind: "targetChoice",
+      holeId: DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_ID,
+      holeInstanceKey: DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_INSTANCE,
+      label: "Deflect Attacks redirect target",
+      choices: targetChoices,
+      requiresTableSpatialFact: true,
+    },
+    {
+      kind: "savingThrowOutcome",
+      holeId: DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_ID,
+      holeInstanceKey: DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_INSTANCE,
+      label: "Deflect Attacks Dexterity saving throw",
+      unitFeature: {
+        unitId: offer.unitId,
+        label: offer.label,
+      },
+      ability: "dex",
+      dc: { kind: "fixed", dc: offer.redirect.saveDc },
+      targetIds: targetChoices,
+      targetRollModes: savingThrowRollModeProjections(state, "dex"),
+    },
+    {
+      kind: "rolledDice",
+      holeId: DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_ID,
+      holeInstanceKey: DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_INSTANCE,
+      label: "Deflect Attacks redirected damage",
+      unitFeature: {
+        unitId: offer.unitId,
+        label: offer.label,
+        modifierKind: "attackDamageReduction",
+      },
+    },
+  ];
+}
+
+function deflectAttacksRedirectTargetChoices(
+  state: BattleState,
+  reactorId: CombatantId,
+): readonly CombatantId[] {
+  return [...state.combatants]
+    .filter(
+      ([targetId, target]) =>
+        targetId !== reactorId &&
+        !zeroHpLifecycleIsTerminal(target) &&
+        combatantCanSee(state, reactorId, targetId),
+    )
+    .map(([targetId]) => targetId);
+}
+
+function deflectAttacksFocusAvailable(
   state: BattleState,
   reactorId: CombatantId,
   unitId: UnitRecord["id"],
+  offer: DeflectAttacksZeroDamageRedirectOffer,
 ): boolean {
+  const reactor = state.combatants.get(reactorId);
+  return deflectAttacksFocusResource(reactor, unitId, offer) !== undefined;
+}
+
+function spendDeflectAttacksFocusPoint(
+  state: BattleState,
+  reactorId: CombatantId,
+  unitId: UnitRecord["id"],
+  offer: DeflectAttacksZeroDamageRedirectOffer,
+): BattleState {
+  const reactor = state.combatants.get(reactorId);
+  if (reactor?.origin.kind !== "character") {
+    return state;
+  }
+  const resource = deflectAttacksFocusResource(reactor, unitId, offer);
+  if (resource === undefined) return state;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(reactorId, {
+      ...reactor,
+      origin: {
+        ...reactor.origin,
+        resources: reactor.origin.resources.map((candidate) =>
+          candidate === resource
+            ? spendCharacterResourceUse(candidate)
+            : candidate,
+        ),
+      },
+    }),
+  };
+}
+
+function deflectAttacksFocusResource(
+  reactor: BattleCreatureState | undefined,
+  unitId: UnitRecord["id"],
+  offer: DeflectAttacksZeroDamageRedirectOffer,
+): CharacterBattleResourceState | undefined {
+  if (reactor?.origin.kind !== "character") return undefined;
+  const characterOrigin = reactor.origin;
+  return characterOrigin.resources.find(
+    (resource) =>
+      resource.unit.id === unitId &&
+      resource.unit.kind === "class_feature" &&
+      resource.unit.mechanics.family === "reaction_roll_or_damage_reduction" &&
+      battleReactionRollOrDamageReductionSupportForUnit(resource.unit) ===
+        "attackDamageReductionZeroDamageRedirect" &&
+      offer.martialArtsDieSize ===
+        monkMartialArtsDieSize(
+          requireCharacterClassLevel(
+            characterOrigin.classLevels,
+            resource.unit.className,
+          ),
+        ) &&
+      resourceHasUsesRemaining(resource),
+  );
+}
+
+function hasDeflectAttacksRedirectTargetSpatialFact(
+  facts: readonly BattleTargetSpatialFact[],
+  monkId: CombatantId,
+  targetId: CombatantId,
+  attackKind: BattleAttackKindForRedirect,
+): boolean {
+  return Match.value(attackKind).pipe(
+    Match.when("melee", () =>
+      facts.some(
+        (fact) =>
+          fact.kind === "deflectAttacksMeleeRedirectTargetWithin5Feet" &&
+          fact.monkId === monkId &&
+          fact.targetId === targetId,
+      ),
+    ),
+    Match.when("ranged", () =>
+      facts.some(
+        (fact) =>
+          fact.kind ===
+            "deflectAttacksRangedRedirectTargetWithin60FeetWithoutTotalCover" &&
+          fact.monkId === monkId &&
+          fact.targetId === targetId,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function characterAbilityModifier(
+  combatant: BattleCreatureState & {
+    readonly origin: Extract<
+      BattleCreatureState["origin"],
+      { readonly kind: "character" }
+    >;
+  },
+  ability: "dex" | "wis",
+): AbilityModifier {
+  return combatant.armorClass.abilityModifiers[ability];
+}
+
+function monkFocusSaveDc(
+  combatant: BattleCreatureState & {
+    readonly origin: Extract<
+      BattleCreatureState["origin"],
+      { readonly kind: "character" }
+    >;
+  },
+): DifficultyClass {
+  const characterLevel = combatant.origin.classLevels.reduce(
+    (total, classLevel) => total + Number(classLevel.level),
+    0,
+  );
+  return difficultyClass(
+    8 +
+      Number(characterAbilityModifier(combatant, "wis")) +
+      Number(proficiencyBonus(Math.floor((characterLevel - 1) / 4) + 2)),
+  );
+}
+
+function monkMartialArtsDieSize(classLevel: ClassLevel): DamageDieSize {
+  if (classLevel >= 17) return 12;
+  if (classLevel >= 11) return 10;
+  if (classLevel >= 5) return 8;
+  return 6;
+}
+
+function deflectAttacksOriginalDamageType(
+  damageTypes: readonly DamageType[],
+): DamageType {
+  return (
+    damageTypes.find(
+      (damageType) =>
+        damageType === "bludgeoning" ||
+        damageType === "piercing" ||
+        damageType === "slashing",
+    ) ?? "bludgeoning"
+  );
+}
+
+function reactionModifierResourceAvailable(
+  state: BattleState,
+  reactorId: CombatantId,
+  profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >,
+  modifier: ReactionRollOrDamageReductionProfile,
+): boolean {
+  if (
+    modifier.kind === "attackDamageReduction" &&
+    modifier.zeroDamageRedirect !== undefined
+  ) {
+    return true;
+  }
   const reactor = state.combatants.get(reactorId);
   if (reactor?.origin.kind !== "character") return false;
   const resource = reactor.origin.resources.find(
-    (candidate) => candidate.unit.id === unitId,
+    (candidate) => candidate.unit.id === profile.unit.id,
   );
   return resource === undefined || resourceHasUsesRemaining(resource);
 }
@@ -6883,11 +7576,16 @@ function characterReactionRollOrDamageReductionProfiles(
     units.flatMap((unit) => {
       const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
       return profile?.kind === "reactionRollOrDamageReduction" &&
-        unitRefSupportsProfile(
+        (unitRefSupportsProfile(
           unitRefs,
           unit.id,
           REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-        )
+        ) ||
+          unitRefSupportsProfile(
+            unitRefs,
+            unit.id,
+            ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+          ))
         ? [[unit.id, profile] as const]
         : [];
     }),
@@ -7248,6 +7946,7 @@ function resolveAttack(
         attackerId: input.subject.actorId,
         targetId: target.combatantId,
         attackRoll: fillSet.attackRoll,
+        attackKind: attackKindForDeflectRedirect(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,
@@ -7291,6 +7990,25 @@ function resolveAttack(
       target,
       reducedDamageEvent,
     );
+    const reducedFixedDamageBeforeTargetAdjustments =
+      attackDamageEventAmountBeforeTargetAdjustments(reducedDamageEvent);
+    const redirectState = resolveDeflectAttacksRedirectAfterReduction({
+      state: attackRolledState,
+      reductions: pendingAttackDamageReductions,
+      reducedDamageBeforeTargetAdjustments:
+        reducedFixedDamageBeforeTargetAdjustments,
+      redirectTarget: fillSet.deflectAttacksRedirectTarget,
+      redirectSave: fillSet.deflectAttacksRedirectSave,
+      redirectDamage: fillSet.deflectAttacksRedirectDamage,
+    });
+    if (redirectState.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", redirectState.message);
+    }
+    if (redirectState.tag === "needsHoles") {
+      return needsHolesResult(redirectState.state, input.subject, [
+        ...redirectState.holes,
+      ]);
+    }
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: input.subject.actorId,
@@ -7311,13 +8029,13 @@ function resolveAttack(
     }
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
-        return needsHolesResult(attackRolledState, input.subject, [
+        return needsHolesResult(redirectState.state, input.subject, [
           damageDispositionHole,
         ]);
       }
     }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
-      attackRolledState,
+      redirectState.state,
       {
         trigger: "attackDamage",
         continuation: {
@@ -7355,7 +8073,7 @@ function resolveAttack(
     if (concentrationSave !== null) {
       if (fillSet.concentrationSavingThrow === undefined) {
         return needsAttackDamageConcentrationResult({
-          state: attackRolledState,
+          state: redirectState.state,
           subject: input.subject,
           attack,
           continuation: {
@@ -7390,7 +8108,7 @@ function resolveAttack(
     }
     const spent = spendAttackAction(
       applyAttackDamageAmount(
-        attackRolledState,
+        redirectState.state,
         input.subject.actorId,
         target.combatantId,
         toDamageAmount(reducedFixedDamageAmount),
@@ -7487,6 +8205,24 @@ function resolveAttack(
       target,
       reducedDamageEvent,
     );
+    const reducedDamageBeforeTargetAdjustments =
+      attackDamageEventAmountBeforeTargetAdjustments(reducedDamageEvent);
+    const redirectState = resolveDeflectAttacksRedirectAfterReduction({
+      state: attackRolledState,
+      reductions: pendingAttackDamageReductions,
+      reducedDamageBeforeTargetAdjustments,
+      redirectTarget: fillSet.deflectAttacksRedirectTarget,
+      redirectSave: fillSet.deflectAttacksRedirectSave,
+      redirectDamage: fillSet.deflectAttacksRedirectDamage,
+    });
+    if (redirectState.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", redirectState.message);
+    }
+    if (redirectState.tag === "needsHoles") {
+      return needsHolesResult(redirectState.state, input.subject, [
+        ...redirectState.holes,
+      ]);
+    }
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: input.subject.actorId,
@@ -7507,13 +8243,13 @@ function resolveAttack(
     }
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
-        return needsHolesResult(attackRolledState, input.subject, [
+        return needsHolesResult(redirectState.state, input.subject, [
           damageDispositionHole,
         ]);
       }
     }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
-      attackRolledState,
+      redirectState.state,
       {
         trigger: "attackDamage",
         continuation: {
@@ -7554,7 +8290,7 @@ function resolveAttack(
     if (concentrationSave !== null) {
       if (fillSet.concentrationSavingThrow === undefined) {
         return needsAttackDamageConcentrationResult({
-          state: attackRolledState,
+          state: redirectState.state,
           subject: input.subject,
           attack,
           continuation: {
@@ -7592,7 +8328,7 @@ function resolveAttack(
     }
     const spent = spendAttackAction(
       applyAttackDamageAmount(
-        attackRolledState,
+        redirectState.state,
         input.subject.actorId,
         target.combatantId,
         toDamageAmount(reducedDamageAmount),
@@ -8602,6 +9338,7 @@ function resolveOffHandAttack(
         attackerId: input.subject.actorId,
         targetId: target.combatantId,
         attackRoll: fillSet.attackRoll,
+        attackKind: attackKindForDeflectRedirect(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,
@@ -9193,9 +9930,14 @@ type AttackFillSet =
         | undefined;
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly damageDispositionFilled: boolean;
-      readonly damageRoll:
-        | Extract<BattleFill, { readonly kind: "rolledDice" }>
+      readonly damageRoll: BattleRolledDiceFill | undefined;
+      readonly deflectAttacksRedirectTarget:
+        | Extract<BattleFill, { readonly kind: "targetChoice" }>
         | undefined;
+      readonly deflectAttacksRedirectSave:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
+      readonly deflectAttacksRedirectDamage: BattleRolledDiceFill | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
 type GrappleFillSet =
@@ -9220,9 +9962,14 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     kind: "ordinaryDamage",
   };
   let damageDispositionFilled = false;
-  let damageRoll:
-    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+  let damageRoll: BattleRolledDiceFill | undefined;
+  let deflectAttacksRedirectTarget:
+    | Extract<BattleFill, { readonly kind: "targetChoice" }>
     | undefined;
+  let deflectAttacksRedirectSave:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  let deflectAttacksRedirectDamage: BattleRolledDiceFill | undefined;
   for (const fill of fills) {
     if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
       if (targetId !== undefined) {
@@ -9238,11 +9985,53 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       continue;
     }
 
+    if (
+      fill.kind === "targetChoice" &&
+      fill.holeId === DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_ID
+    ) {
+      if (deflectAttacksRedirectTarget !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Deflect Attacks redirect target was filled twice.",
+        };
+      }
+      deflectAttacksRedirectTarget = fill;
+      continue;
+    }
+
     if (fill.kind === "attackRoll" && fill.holeId === ATTACK_ROLL_HOLE_ID) {
       if (attackRoll !== undefined) {
         return { tag: "invalid", message: "Attack roll was filled twice." };
       }
       attackRoll = fill.value;
+      continue;
+    }
+
+    if (
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId === DEFLECT_ATTACKS_REDIRECT_SAVE_HOLE_ID
+    ) {
+      if (deflectAttacksRedirectSave !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Deflect Attacks redirect save was filled twice.",
+        };
+      }
+      deflectAttacksRedirectSave = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "rolledDice" &&
+      fill.holeId === DEFLECT_ATTACKS_REDIRECT_DAMAGE_HOLE_ID
+    ) {
+      if (deflectAttacksRedirectDamage !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Deflect Attacks redirect damage was filled twice.",
+        };
+      }
+      deflectAttacksRedirectDamage = fill;
       continue;
     }
 
@@ -9298,6 +10087,9 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     damageDisposition,
     damageDispositionFilled,
     damageRoll,
+    deflectAttacksRedirectTarget,
+    deflectAttacksRedirectSave,
+    deflectAttacksRedirectDamage,
   };
 }
 
@@ -10368,6 +11160,7 @@ function resolveOpportunityAttackCommand(
         attackerId: subject.reactorId,
         targetId: subject.targetId,
         attackRoll: fillSet.attackRoll,
+        attackKind: attackKindForDeflectRedirect(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,
@@ -12271,6 +13064,7 @@ function resolveSpellAct(
           attackerId: subject.actorId,
           targetId: target.combatantId,
           attackRoll: fillSet.attackRoll,
+          attackKind: "ranged",
           damageTypes: spellDamageTypes(invocation),
           continuation: {
             kind: "replay",
@@ -13214,7 +14008,9 @@ type SpellFillSet =
           }
         | undefined;
       readonly attackRoll: BattleAttackRollResult | undefined;
-      readonly savingThrowOutcomes: BattleSavingThrowOutcomeValue | undefined;
+      readonly savingThrowOutcomes:
+        | BattleSpellSavingThrowOutcomeValue
+        | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
@@ -13254,7 +14050,7 @@ function spellFillSet(
       }
     | undefined;
   let attackRoll: AttackRollResult | undefined;
-  let savingThrowOutcomes: BattleSavingThrowOutcomeValue | undefined;
+  let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
   const concentrationSavingThrows: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
@@ -13362,6 +14158,12 @@ function spellFillSet(
         return {
           tag: "invalid",
           message: "Spell saving throw outcomes were filled twice.",
+        };
+      }
+      if (!("area" in fill.value)) {
+        return {
+          tag: "invalid",
+          message: "Spell saving throw outcomes require area facts.",
         };
       }
       savingThrowOutcomes = fill.value;
@@ -14043,7 +14845,7 @@ function resolveSaveGateDamageSpellAct(input: {
 }
 
 function validateSavingThrowOutcomes(
-  value: BattleSavingThrowOutcomeValue,
+  value: BattleSpellSavingThrowOutcomeValue,
   _hole: BattleSpellSavingThrowOutcomeHole,
   state: BattleState,
 ): string | null {
@@ -17177,6 +17979,14 @@ function attackTargetIsLegal(
         )
       : attackTargetRangeBand(facts, actorId, targetId, attack) !== null)
   );
+}
+
+function attackKindForDeflectRedirect(
+  attack: SupportedAttackActionOption,
+): BattleAttackKindForRedirect {
+  return attackTargetConstraint(attack).kind === "meleeReach"
+    ? "melee"
+    : "ranged";
 }
 
 function attackTargetRangeBand(

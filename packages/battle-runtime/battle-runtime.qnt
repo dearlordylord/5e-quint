@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.bonus-action-dash-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -1049,6 +1049,44 @@ module battleRuntime {
     if (reduced < 0) 0 else reduced
   }
 
+  pure def deflectAttacksRedirectTargetEligible(
+    targetSeen: bool,
+    attackWasMelee: bool,
+    targetWithinFiveFeet: bool,
+    targetWithinSixtyFeet: bool,
+    targetBehindTotalCover: bool,
+  ): bool =
+    all {
+      targetSeen,
+      if (attackWasMelee)
+        targetWithinFiveFeet
+      else
+        all { targetWithinSixtyFeet, not(targetBehindTotalCover) },
+    }
+
+  pure def deflectAttacksRedirectDamage(
+    reducedDamage: int,
+    focusUsesRemaining: int,
+    targetEligible: bool,
+    savingThrowSucceeded: bool,
+    firstMartialArtsRoll: int,
+    secondMartialArtsRoll: int,
+    dexMod: int,
+  ): int =
+    if (all { reducedDamage == 0, focusUsesRemaining > 0, targetEligible, not(savingThrowSucceeded) }) {
+      val redirected = firstMartialArtsRoll + secondMartialArtsRoll + dexMod
+      if (redirected < 0) 0 else redirected
+    } else 0
+
+  pure def deflectAttacksRedirectFocusRemaining(
+    reducedDamage: int,
+    focusUsesRemaining: int,
+    targetEligible: bool,
+  ): int =
+    if (all { reducedDamage == 0, focusUsesRemaining > 0, targetEligible })
+      focusUsesRemaining - 1
+    else focusUsesRemaining
+
   pure def resolveAttackRecklessly(
     state: BattleState,
     attackTotal: int,
@@ -2048,6 +2086,20 @@ module battleRuntime {
       assert(not(attackHits(cuttingWordsAttackRollTotal(12, 3), 10, 10, 20))),
       assert(uncannyDodgeDamage(9) == 4),
       assert(deflectAttacksDamage(8, 2, 3, 3) == 0),
+    }
+  }
+
+  run test_deflect_attacks_zero_damage_redirect = {
+    val reduced = deflectAttacksDamage(8, 5, 0, 3)
+    val meleeTarget = deflectAttacksRedirectTargetEligible(true, true, true, false, true)
+    val rangedBehindTotalCover = deflectAttacksRedirectTargetEligible(true, false, false, true, true)
+    all {
+      assert(reduced == 0),
+      assert(meleeTarget),
+      assert(not(rangedBehindTotalCover)),
+      assert(deflectAttacksRedirectDamage(reduced, 3, meleeTarget, false, 5, 5, 0) == 10),
+      assert(deflectAttacksRedirectFocusRemaining(reduced, 3, meleeTarget) == 2),
+      assert(deflectAttacksRedirectDamage(1, 3, meleeTarget, false, 5, 5, 0) == 0),
     }
   }
 

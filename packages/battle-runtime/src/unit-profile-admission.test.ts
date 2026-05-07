@@ -15,7 +15,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT47 orc_relentless_endurance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT53 orc_adrenaline_rush
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT56 feat_boon_of_combat_prowess
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -4563,13 +4564,16 @@ function savingThrowOutcomeFill(
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
-    value: {
-      area: {
-        originAnchorId: spellCasterId,
-        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
-      },
-      outcomes,
-    },
+    value:
+      "spell" in hole
+        ? {
+            area: {
+              originAnchorId: spellCasterId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes,
+          }
+        : { outcomes },
   };
 }
 

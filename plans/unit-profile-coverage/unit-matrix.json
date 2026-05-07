@@ -62,8 +62,8 @@
       "value": 59
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 30,
-      "numerator": 30,
+      "denominator": 31,
+      "numerator": 31,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 23,
-      "numerator": 23,
+      "denominator": 24,
+      "numerator": 24,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 23,
-      "numerator": 23,
+      "denominator": 24,
+      "numerator": 24,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 23,
-      "numerator": 23,
+      "denominator": 24,
+      "numerator": 24,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 23,
-      "numerator": 23,
+      "denominator": 24,
+      "numerator": 24,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 30,
+      "denominator": 31,
       "numerator": 10,
-      "percent": "33.3%"
+      "percent": "32.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 45,
-      "numerator": 30,
-      "percent": "66.7%"
+      "numerator": 31,
+      "percent": "68.9%"
     }
   },
   "metricSemantics": [
@@ -272,6 +272,36 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.attack-damage-reduction-zero-damage-redirect",
+      "profileKind": "reaction",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QMBT59"
+      ],
+      "title": "Unit feature reacts to reduce attack damage and can redirect force when reduced to 0",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -1023,6 +1053,22 @@
         "unit-feature.attack-roll-miss-to-hit-replacement"
       ],
       "taskId": "QMBT56"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Deflect Attacks zero-damage redirect profile proof.",
+      "profileIds": [
+        "unit-feature.attack-damage-reduction-zero-damage-redirect"
+      ],
+      "taskId": "QMBT59"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Deflect Attacks zero-damage redirect runtime parity.",
+      "profileIds": [
+        "unit-feature.attack-damage-reduction-zero-damage-redirect"
+      ],
+      "taskId": "QMBT59"
     }
   ],
   "units": [
@@ -1631,15 +1677,57 @@
         "status": "installed"
       },
       "claim": {
-        "futureProfileOwner": "QCORE9",
-        "reason": "Damage reduction is partially promoted, but redirect-on-zero follow-up is not yet fully represented as a supported profile.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.attack-damage-reduction-zero-damage-redirect"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT59"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.attack-damage-reduction-zero-damage-redirect",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QMBT59"
+          ],
+          "title": "Unit feature reacts to reduce attack damage and can redirect force when reduced to 0",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/monk_deflect_attacks.json",
       "unitId": "monk_deflect_attacks"
     },

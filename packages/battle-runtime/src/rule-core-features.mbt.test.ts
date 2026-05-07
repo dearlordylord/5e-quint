@@ -1782,13 +1782,16 @@ function savingThrowOutcomeFill(
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
-    value: {
-      area: {
-        originAnchorId: combatantId("rule-core-feature-wizard"),
-        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
-      },
-      outcomes,
-    },
+    value:
+      "spell" in hole
+        ? {
+            area: {
+              originAnchorId: combatantId("rule-core-feature-wizard"),
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes,
+          }
+        : { outcomes },
   };
 }
 

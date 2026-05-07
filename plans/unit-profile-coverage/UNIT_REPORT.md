@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 58/391 | 14.8% |
 | Authored Surface executable catalog admission | 44/334 | 13.2% |
 | Installed Unit profile classification coverage | 59/59 | 100% |
-| Supported executable Unit coverage | 30/45 | 66.7% |
-| QNT profile modeling coverage | 23/23 | 100% |
-| QNT proof coverage | 23/23 | 100% |
-| Runtime mapping coverage | 23/23 | 100% |
-| Runtime parity coverage | 23/23 | 100% |
-| Deterministic admission/projection coverage | 30/30 | 100% |
-| Selected identity MBT coverage | 10/30 | 33.3% |
+| Supported executable Unit coverage | 31/45 | 68.9% |
+| QNT profile modeling coverage | 24/24 | 100% |
+| QNT proof coverage | 24/24 | 100% |
+| Runtime mapping coverage | 24/24 | 100% |
+| Runtime parity coverage | 24/24 | 100% |
+| Deterministic admission/projection coverage | 31/31 | 100% |
+| Selected identity MBT coverage | 10/31 | 32.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -54,6 +54,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `barbarian_rage` | srd-5.2.1 | `unit-feature.bonus-action-ongoing-rage` |
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
 | `barbarian_fast_movement` | srd-5.2.1 | `unit-feature.passive-speed-bonus` |
+| `monk_deflect_attacks` | srd-5.2.1 | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 | `rogue_cunning_action` | srd-5.2.1 | `unit-feature.alternate-action-cost` |
 | `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
 | `rogue_uncanny_dodge` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
@@ -791,6 +792,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -844,7 +846,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `fighter_tactical_mind` | needs-surface-widening | Ability-check resource augmentation is not represented by a promoted battle Unit profile. |
 | `bard_cutting_words` | needs-surface-widening | Full SRD Cutting Words includes ability-check reduction, and the promoted production reaction support boundary still gates authored ability-check reaction branches. |
-| `monk_deflect_attacks` | unsupported-profile | Damage reduction is partially promoted, but redirect-on-zero follow-up is not yet fully represented as a supported profile. |
 | `wizard_ritual_adept` | unsupported-profile | Ritual casting is character/spell access pressure, not a promoted battle execution profile yet. |
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
@@ -872,7 +873,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | srd-5.2.1 | unassigned | needs-surface-widening | 2 | `fighter_tactical_mind`, `thunderwave` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | QCORE9 | needs-surface-widening | 1 | `bard_cutting_words` |
-| srd-5.2.1 | QCORE9 | unsupported-profile | 1 | `monk_deflect_attacks` |
 
 ## Profile Claims By Task
 
@@ -900,6 +900,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT53 | completed-runtime-parity | `unit-feature.bonus-action-dash-temporary-hit-points` |
 | QMBT56 | qnt-proof | `unit-feature.attack-roll-miss-to-hit-replacement` |
 | QMBT56 | completed-runtime-parity | `unit-feature.attack-roll-miss-to-hit-replacement` |
+| QMBT59 | qnt-proof | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
+| QMBT59 | completed-runtime-parity | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 
 ## Supported Profiles Lacking Runtime Parity
 

@@ -7,6 +7,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   battleBonusActionStandardActionSupportForUnit,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -9259,7 +9260,6 @@ describe("battle runtime", () => {
   test("class riders without admitted support profiles remain gated", () => {
     const oldClassRiders = [
       ["rogue_evasion", "Rogue Evasion"],
-      ["monk_deflect_attacks", "Deflect Attacks"],
       ["rogue_uncanny_dodge", "Uncanny Dodge"],
       ["bard_cutting_words", "Cutting Words"],
     ] as const;
@@ -9304,12 +9304,586 @@ describe("battle runtime", () => {
     ).toBe("unsupported");
   });
 
-  test("full SRD Deflect Attacks remains gated until redirect-on-zero is supported", () => {
-    expect(
-      battleReactionRollOrDamageReductionSupportForUnit(
-        unitLibrary.requireUnit("monk_deflect_attacks"),
+  test("Deflect Attacks redirect support comes from authored mechanics", () => {
+    const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+
+    expect(battleReactionRollOrDamageReductionSupportForUnit(unit)).toBe(
+      "attackDamageReductionZeroDamageRedirect",
+    );
+    expect(battleUnitSupportProfilesForUnit({ unit })).toEqual(
+      Either.right([
+        ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+      ]),
+    );
+  });
+
+  test("Deflect Attacks asks for redirect facts after reducing attack damage to 0", () => {
+    const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+    const state = startBattleRight({
+      battleId: battleId("battle-deflect-attacks-redirect-holes"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        resistantSkeletonCreatureInit({ initiative: 15 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 10,
+          classLevels: [{ className: "monk", level: 3 }],
+          attack: null,
+          resources: [monkDeflectAttacksFocusResource()],
+          unitFeatures: [{ unit }],
+          characterUnitRefs: [
+            reactionModifierUnitRefWithProfile(
+              unit.id,
+              ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+            ),
+          ],
+        }),
+      ],
+    });
+    const setup = goblinScimitarHitReactionSetup(state);
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      setup.result.snapshot.pendingReaction!.choices,
+      unit.id,
+      "attackDamageReduction",
+    );
+    const afterReaction = resolveBattleReaction({
+      state: setup.result.state,
+      fill: reactionDecisionFill(
+        findHole(setup.result.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: unit.id,
+            modifierKind: "attackDamageReduction",
+            fills: [reactionModifierReductionRollFill(choice, 10)],
+          },
+        },
       ),
-    ).toBe("unsupported");
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected attack damage roll.");
+    }
+    const damage = requireHole(afterReaction, "rolledDice");
+    const awaitingRedirect = resolveBattleSubject({
+      state: afterReaction.state,
+      subject: setup.subject,
+      fills: [...setup.prefixFills, damageRollFill(damage, 6)],
+    });
+
+    expect(awaitingRedirect).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        { kind: "targetChoice", label: "Deflect Attacks redirect target" },
+        {
+          kind: "savingThrowOutcome",
+          label: "Deflect Attacks Dexterity saving throw",
+        },
+        { kind: "rolledDice", label: "Deflect Attacks redirected damage" },
+      ],
+    });
+  });
+
+  test("Deflect Attacks does not redirect when Resistance alone lowers reduced damage to 0", () => {
+    const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+    const rage = barbarianRageUnit();
+    const state = startBattleRight({
+      battleId: battleId("battle-deflect-attacks-redirect-pre-resistance"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Raging Monk",
+          initiative: 20,
+          classLevels: [
+            { className: "monk", level: 3 },
+            { className: "barbarian", level: 1 },
+          ],
+          attack: null,
+          resources: [monkDeflectAttacksFocusResource(), rageResource()],
+          unitFeatures: [{ unit }, { unit: rage }],
+          characterUnitRefs: [
+            reactionModifierUnitRefWithProfile(
+              unit.id,
+              ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+            ),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        resistantSkeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const raging = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "barbarian_rage",
+        },
+        fills: [],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: raging.state, actorId: fighterId }),
+    ).state;
+    const setup = goblinScimitarHitReactionSetup(goblinTurn);
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      setup.result.snapshot.pendingReaction!.choices,
+      unit.id,
+      "attackDamageReduction",
+    );
+    const afterReaction = resolveBattleReaction({
+      state: setup.result.state,
+      fill: reactionDecisionFill(
+        findHole(setup.result.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: unit.id,
+            modifierKind: "attackDamageReduction",
+            fills: [reactionModifierReductionRollFill(choice, 4)],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected attack damage roll.");
+    }
+    const damage = requireHole(afterReaction, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state: afterReaction.state,
+      subject: setup.subject,
+      fills: [...setup.prefixFills, damageRollFill(damage, 6)],
+    });
+
+    if (resolved.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${resolved.tag}.`);
+    }
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(12));
+    const monk = resolved.state.combatants.get(fighterId);
+    if (monk?.origin.kind !== "character") {
+      throw new Error("Expected character Monk.");
+    }
+    expect(
+      monk.origin.resources.find(
+        (resource) => resource.unit.id === "monk_deflect_attacks",
+      )?.usesRemaining,
+    ).toBe(3);
+  });
+
+  test("Deflect Attacks spends a Focus Point and deals same-type redirected damage on a failed save", () => {
+    const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+    const state = startBattleRight({
+      battleId: battleId("battle-deflect-attacks-redirect-damage"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        resistantSkeletonCreatureInit({ initiative: 15 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 10,
+          classLevels: [{ className: "monk", level: 3 }],
+          attack: null,
+          resources: [monkDeflectAttacksFocusResource()],
+          unitFeatures: [{ unit }],
+          characterUnitRefs: [
+            reactionModifierUnitRefWithProfile(
+              unit.id,
+              ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+            ),
+          ],
+        }),
+      ],
+    });
+    const setup = goblinScimitarHitReactionSetup(state);
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      setup.result.snapshot.pendingReaction!.choices,
+      unit.id,
+      "attackDamageReduction",
+    );
+    const afterReaction = resolveBattleReaction({
+      state: setup.result.state,
+      fill: reactionDecisionFill(
+        findHole(setup.result.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: unit.id,
+            modifierKind: "attackDamageReduction",
+            fills: [reactionModifierReductionRollFill(choice, 10)],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected attack damage roll.");
+    }
+    const damage = requireHole(afterReaction, "rolledDice");
+    const awaitingRedirect = resolveBattleSubject({
+      state: afterReaction.state,
+      subject: setup.subject,
+      fills: [...setup.prefixFills, damageRollFill(damage, 6)],
+    });
+    if (awaitingRedirect.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks redirect holes.");
+    }
+    const redirectTarget = findHole(awaitingRedirect.holes, "targetChoice");
+    const redirectSave = findHole(awaitingRedirect.holes, "savingThrowOutcome");
+    const redirectDamage = findHole(awaitingRedirect.holes, "rolledDice");
+    const redirectSaveFill = savingThrowOutcomeFill(redirectSave, [
+      { targetId: skeletonId, succeeded: false },
+    ]);
+    expect("area" in redirectSaveFill.value).toBe(false);
+    const resolved = resolveBattleSubject({
+      state: awaitingRedirect.state,
+      subject: setup.subject,
+      fills: [
+        ...setup.prefixFills,
+        damageRollFill(damage, 6),
+        targetFill(redirectTarget, skeletonId, [
+          {
+            kind: "deflectAttacksMeleeRedirectTargetWithin5Feet",
+            monkId: fighterId,
+            targetId: skeletonId,
+          },
+        ]),
+        redirectSaveFill,
+        damageRollFillWithGroups(redirectDamage, [[5, 5]]),
+      ],
+    });
+
+    if (resolved.tag !== "resolved") throw new Error("Expected resolved.");
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(12));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(8));
+    const monk = resolved.state.combatants.get(fighterId);
+    if (monk?.origin.kind !== "character") {
+      throw new Error("Expected character Monk.");
+    }
+    expect(monk.origin.resources[0]?.usesRemaining).toBe(2);
+  });
+
+  test("Deflect Attacks rejects redirected damage dice outside the Martial Arts die", () => {
+    const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+    const state = startBattleRight({
+      battleId: battleId("battle-deflect-attacks-redirect-damage-invalid"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        resistantSkeletonCreatureInit({ initiative: 15 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 10,
+          classLevels: [{ className: "monk", level: 3 }],
+          attack: null,
+          resources: [monkDeflectAttacksFocusResource()],
+          unitFeatures: [{ unit }],
+          characterUnitRefs: [
+            reactionModifierUnitRefWithProfile(
+              unit.id,
+              ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+            ),
+          ],
+        }),
+      ],
+    });
+    const setup = goblinScimitarHitReactionSetup(state);
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      setup.result.snapshot.pendingReaction!.choices,
+      unit.id,
+      "attackDamageReduction",
+    );
+    const afterReaction = resolveBattleReaction({
+      state: setup.result.state,
+      fill: reactionDecisionFill(
+        findHole(setup.result.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: unit.id,
+            modifierKind: "attackDamageReduction",
+            fills: [reactionModifierReductionRollFill(choice, 10)],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected attack damage roll.");
+    }
+    const damage = requireHole(afterReaction, "rolledDice");
+    const awaitingRedirect = resolveBattleSubject({
+      state: afterReaction.state,
+      subject: setup.subject,
+      fills: [...setup.prefixFills, damageRollFill(damage, 6)],
+    });
+    if (awaitingRedirect.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks redirect holes.");
+    }
+    const rejected = resolveBattleSubject({
+      state: awaitingRedirect.state,
+      subject: setup.subject,
+      fills: [
+        ...setup.prefixFills,
+        damageRollFill(damage, 6),
+        targetFill(
+          findHole(awaitingRedirect.holes, "targetChoice"),
+          skeletonId,
+          [
+            {
+              kind: "deflectAttacksMeleeRedirectTargetWithin5Feet",
+              monkId: fighterId,
+              targetId: skeletonId,
+            },
+          ],
+        ),
+        savingThrowOutcomeFill(
+          findHole(awaitingRedirect.holes, "savingThrowOutcome"),
+          [{ targetId: skeletonId, succeeded: false }],
+        ),
+        damageRollFillWithGroups(
+          findHole(awaitingRedirect.holes, "rolledDice"),
+          [[99, 99]],
+        ),
+      ],
+    });
+
+    expect(rejected).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Deflect Attacks redirect damage must roll two Martial Arts dice.",
+    });
+  });
+
+  test("Deflect Attacks successful redirected save spends Focus and applies no redirected damage", () => {
+    const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+    const state = startBattleRight({
+      battleId: battleId("battle-deflect-attacks-redirect-save-success"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        resistantSkeletonCreatureInit({ initiative: 15 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 10,
+          classLevels: [{ className: "monk", level: 3 }],
+          attack: null,
+          resources: [monkDeflectAttacksFocusResource()],
+          unitFeatures: [{ unit }],
+          characterUnitRefs: [
+            reactionModifierUnitRefWithProfile(
+              unit.id,
+              ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+            ),
+          ],
+        }),
+      ],
+    });
+    const setup = goblinScimitarHitReactionSetup(state);
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      setup.result.snapshot.pendingReaction!.choices,
+      unit.id,
+      "attackDamageReduction",
+    );
+    const afterReaction = resolveBattleReaction({
+      state: setup.result.state,
+      fill: reactionDecisionFill(
+        findHole(setup.result.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: unit.id,
+            modifierKind: "attackDamageReduction",
+            fills: [reactionModifierReductionRollFill(choice, 10)],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected attack damage roll.");
+    }
+    const damage = requireHole(afterReaction, "rolledDice");
+    const awaitingRedirect = resolveBattleSubject({
+      state: afterReaction.state,
+      subject: setup.subject,
+      fills: [...setup.prefixFills, damageRollFill(damage, 6)],
+    });
+    if (awaitingRedirect.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks redirect holes.");
+    }
+    const resolved = resolveBattleSubject({
+      state: awaitingRedirect.state,
+      subject: setup.subject,
+      fills: [
+        ...setup.prefixFills,
+        damageRollFill(damage, 6),
+        targetFill(
+          findHole(awaitingRedirect.holes, "targetChoice"),
+          skeletonId,
+          [
+            {
+              kind: "deflectAttacksMeleeRedirectTargetWithin5Feet",
+              monkId: fighterId,
+              targetId: skeletonId,
+            },
+          ],
+        ),
+        savingThrowOutcomeFill(
+          findHole(awaitingRedirect.holes, "savingThrowOutcome"),
+          [{ targetId: skeletonId, succeeded: true }],
+        ),
+        damageRollFillWithGroups(
+          findHole(awaitingRedirect.holes, "rolledDice"),
+          [[5, 5]],
+        ),
+      ],
+    });
+
+    if (resolved.tag !== "resolved") throw new Error("Expected resolved.");
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(12));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(
+      state.combatants.get(skeletonId)?.hp,
+    );
+    const monk = resolved.state.combatants.get(fighterId);
+    if (monk?.origin.kind !== "character") {
+      throw new Error("Expected character Monk.");
+    }
+    expect(monk.origin.resources[0]?.usesRemaining).toBe(2);
+  });
+
+  test("Deflect Attacks rejects redirect targets without the required attack-kind spatial fact", () => {
+    const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+    const state = startBattleRight({
+      battleId: battleId("battle-deflect-attacks-redirect-target-invalid"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 10,
+          classLevels: [{ className: "monk", level: 3 }],
+          attack: null,
+          resources: [monkDeflectAttacksFocusResource()],
+          unitFeatures: [{ unit }],
+          characterUnitRefs: [
+            reactionModifierUnitRefWithProfile(
+              unit.id,
+              ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+            ),
+          ],
+        }),
+      ],
+    });
+    const subject = goblinAttackSubject("Shortbow");
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      state,
+      target,
+      subject,
+      fighterId,
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, fighterId),
+        attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      awaitingReaction.snapshot.pendingReaction!.choices,
+      unit.id,
+      "attackDamageReduction",
+    );
+    const afterReaction = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        findHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: unit.id,
+            modifierKind: "attackDamageReduction",
+            fills: [reactionModifierReductionRollFill(choice, 10)],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected shortbow damage roll.");
+    }
+    const damage = requireHole(afterReaction, "rolledDice");
+    const awaitingRedirect = resolveBattleSubject({
+      state: afterReaction.state,
+      subject,
+      fills: [
+        targetFill(target, fighterId),
+        attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+        damageRollFill(damage, 6),
+      ],
+    });
+    if (awaitingRedirect.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks redirect holes.");
+    }
+    const rejected = resolveBattleSubject({
+      state: awaitingRedirect.state,
+      subject,
+      fills: [
+        targetFill(target, fighterId),
+        attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+        damageRollFill(damage, 6),
+        targetFill(findHole(awaitingRedirect.holes, "targetChoice"), goblinId, [
+          {
+            kind: "deflectAttacksMeleeRedirectTargetWithin5Feet",
+            monkId: fighterId,
+            targetId: goblinId,
+          },
+        ]),
+        savingThrowOutcomeFill(
+          findHole(awaitingRedirect.holes, "savingThrowOutcome"),
+          [{ targetId: goblinId, succeeded: false }],
+        ),
+        damageRollFillWithGroups(
+          findHole(awaitingRedirect.holes, "rolledDice"),
+          [[5, 5]],
+        ),
+      ],
+    });
+
+    expect(rejected).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Deflect Attacks redirect target is not eligible.",
+    });
   });
 
   test("Cutting Words attack-roll reduction can turn a hit into a miss and ignores stale damage fills", () => {
@@ -12277,7 +12851,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("97 passing");
+  expect(quintOutput).toContain("99 passing");
 }
 
 function hidePrerequisites(
@@ -13119,20 +13693,23 @@ function savingThrowOutcomeFill(
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
   }[],
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   if (hole.kind !== "savingThrowOutcome") {
     throw new Error("Expected savingThrowOutcome hole.");
   }
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
-    value: {
-      area: {
-        originAnchorId: wizardId,
-        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
-      },
-      outcomes,
-    },
+    value:
+      "spell" in hole
+        ? {
+            area: {
+              originAnchorId: wizardId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes,
+          }
+        : { outcomes },
   };
 }
 
@@ -13830,6 +14407,39 @@ function reactionModifierUnitRef(
   };
 }
 
+function reactionModifierUnitRefWithProfile(
+  unitId: string,
+  profile:
+    | typeof REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
+    | typeof ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"]
+>[number] {
+  return {
+    unitId,
+    supportProfiles: [profile],
+  };
+}
+
+function monkDeflectAttacksFocusResource(input?: {
+  readonly usesRemaining?: number;
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  return {
+    unit: unitLibrary.requireUnit("monk_deflect_attacks"),
+    ...(input?.usesRemaining === undefined
+      ? {}
+      : { usesRemaining: input.usesRemaining }),
+  };
+}
+
 function cuttingWordsResource(input?: {
   readonly unit?: Extract<UnitRecord, { readonly kind: "class_feature" }>;
 }): NonNullable<
@@ -14005,6 +14615,17 @@ function reactionModifierChoice(
     );
   }
   return choice;
+}
+
+function reactionModifierReductionRollFill(
+  choice: ReturnType<typeof reactionModifierChoice>,
+  roll: number,
+): BattleFill {
+  const hole = choice.initialHoles[0];
+  if (hole?.kind !== "rolledDice") {
+    throw new Error("Expected Reaction modifier roll hole.");
+  }
+  return damageRollFill(hole, roll);
 }
 
 function reactionChoiceWithSubject(

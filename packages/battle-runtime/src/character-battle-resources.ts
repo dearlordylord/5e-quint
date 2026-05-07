@@ -20,6 +20,7 @@ import {
   type CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
 import {
+  battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
 } from "./unit-feature-support.ts";
@@ -175,6 +176,22 @@ export function characterBattleResourceForUnit(
   ) {
     const resource = unit.mechanics.resource;
     if (resource !== undefined) return resource;
+  }
+  if (
+    unit.kind === "class_feature" &&
+    battleReactionRollOrDamageReductionSupportForUnit(unit) ===
+      "attackDamageReductionZeroDamageRedirect"
+  ) {
+    return {
+      kind: "use_count",
+      cap: {
+        kind: "linear_per_level",
+        axis: "class",
+        base: 0,
+        perLevel: 1,
+        startingAtLevel: 1,
+      },
+    };
   }
   if (
     unit.kind !== "class_feature" ||
@@ -334,9 +351,16 @@ function supportedUseCountCapForLevel(
   if (resource.cap.kind === "proficiency_bonus") {
     return resourceCount(Math.max(2, Math.floor((level - 1) / 4) + 2));
   }
+  if (resource.cap.kind === "linear_per_level") {
+    return resourceCount(
+      resource.cap.base +
+        Math.max(0, level - resource.cap.startingAtLevel + 1) *
+          resource.cap.perLevel,
+    );
+  }
   if (resource.cap.kind !== "threshold_tiers") {
     throw new Error(
-      "Battle runtime supports only fixed, proficiency-bonus, unlimited, or threshold-tier use-count resources.",
+      "Battle runtime supports only fixed, proficiency-bonus, unlimited, linear-per-level, or threshold-tier use-count resources.",
     );
   }
 

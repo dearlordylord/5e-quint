@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -35,6 +35,8 @@ export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
 export const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE = "saveDamageReplacement";
 export const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE =
   "reactionRollOrDamageReduction";
+export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE =
+  "attackDamageReductionZeroDamageRedirect";
 export const PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE =
   "passiveArmorClassBonus";
 export const PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE =
@@ -65,6 +67,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
@@ -276,6 +279,14 @@ export function battleUnitSupportProfilesForUnit(input: {
   ) {
     supportProfiles.push(REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE);
   }
+  if (
+    reactionRollOrDamageReductionSupport ===
+    "attackDamageReductionZeroDamageRedirect"
+  ) {
+    supportProfiles.push(
+      ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+    );
+  }
 
   const passiveArmorClassBonusSupport =
     battlePassiveArmorClassBonusSupportForUnit(input.unit);
@@ -461,7 +472,27 @@ export type ReactionRollOrDamageReductionProfile =
       readonly kind: "attackDamageReduction";
       readonly requiresVisibleAttacker?: true;
       readonly damageIncludes?: readonly DamageType[];
-      readonly reduction: { readonly kind: "halfDamage" };
+      readonly reduction:
+        | { readonly kind: "halfDamage" }
+        | {
+            readonly kind: "dicePlusAbilityModifierPlusClassLevel";
+            readonly dieSize: 10;
+            readonly ability: "dex";
+          };
+      readonly zeroDamageRedirect?: {
+        readonly focusPointCost: 1;
+        readonly saveAbility: "dex";
+        readonly saveDc: {
+          readonly base: 8;
+          readonly ability: "wis";
+          readonly proficiencyBonus: true;
+        };
+        readonly damage: {
+          readonly dice: 2;
+          readonly dieSize: "martialArts";
+          readonly ability: "dex";
+        };
+      };
     };
 
 export type PassiveArmorClassBonusProfile = {
@@ -811,6 +842,7 @@ function saveDamageReplacementMechanicsProjection(
 
 export type BattleReactionRollOrDamageReductionSupport =
   | "reactionRollOrDamageReduction"
+  | "attackDamageReductionZeroDamageRedirect"
   | "unsupported"
   | null;
 
@@ -823,8 +855,14 @@ export function battleReactionRollOrDamageReductionSupportForUnit(
   ) {
     return null;
   }
-  return reactionRollOrDamageReductionMechanicsProjection(unit) === null
-    ? "unsupported"
+  const projection = reactionRollOrDamageReductionMechanicsProjection(unit);
+  if (projection === null) return "unsupported";
+  return projection.some(
+    (modifier) =>
+      modifier.kind === "attackDamageReduction" &&
+      modifier.zeroDamageRedirect !== undefined,
+  )
+    ? "attackDamageReductionZeroDamageRedirect"
     : "reactionRollOrDamageReduction";
 }
 
@@ -1009,9 +1047,7 @@ function hasPassiveRangedAttackRollBonusMechanics(unit: UnitRecord): boolean {
   return effect?.kind === "modify_roll_numeric";
 }
 
-function hasAttackRollMissToHitReplacementMechanics(
-  unit: UnitRecord,
-): boolean {
+function hasAttackRollMissToHitReplacementMechanics(unit: UnitRecord): boolean {
   return (
     unit.kind === "feat" &&
     unit.mechanics.family === "triggered_replacement" &&
@@ -1459,6 +1495,45 @@ function reactionRollOrDamageReductionMechanicsProjection(
               ? { requiresVisibleAttacker: true as const }
               : {}),
             reduction: { kind: "halfDamage" },
+          },
+        ];
+      }
+      if (
+        modifier.kind === "attack_damage_reduction" &&
+        modifier.trigger.kind === "hit_by_attack_roll" &&
+        modifier.reduction.kind ===
+          "dice_plus_ability_modifier_plus_class_level" &&
+        modifier.reduction.dice.dice === 1 &&
+        modifier.reduction.dice.dieSize === 10 &&
+        modifier.reduction.ability === "dex" &&
+        "zeroDamageRedirect" in modifier &&
+        modifier.zeroDamageRedirect === true
+      ) {
+        return [
+          {
+            kind: "attackDamageReduction",
+            ...("damageIncludes" in modifier.trigger
+              ? { damageIncludes: modifier.trigger.damageIncludes }
+              : {}),
+            reduction: {
+              kind: "dicePlusAbilityModifierPlusClassLevel",
+              dieSize: 10,
+              ability: "dex",
+            },
+            zeroDamageRedirect: {
+              focusPointCost: 1,
+              saveAbility: "dex",
+              saveDc: {
+                base: 8,
+                ability: "wis",
+                proficiencyBonus: true,
+              },
+              damage: {
+                dice: 2,
+                dieSize: "martialArts",
+                ability: "dex",
+              },
+            },
           },
         ];
       }

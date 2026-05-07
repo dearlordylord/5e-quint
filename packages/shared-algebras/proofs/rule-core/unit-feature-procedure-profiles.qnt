@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -201,6 +201,30 @@ module unitFeatureProcedureProfiles {
     incomingDamage: int,
   }
 
+  type DeflectAttacksReductionFacts = {
+    incomingDamage: int,
+    damageIncludesBludgeoningPiercingOrSlashing: bool,
+    deflectRoll: int,
+    dexterityModifier: int,
+    monkLevel: int,
+  }
+
+  type DeflectAttacksRedirectTargetFacts = {
+    targetSeen: bool,
+    attackWasMelee: bool,
+    targetWithinFiveFeet: bool,
+    targetWithinSixtyFeet: bool,
+    targetBehindTotalCover: bool,
+  }
+
+  type DeflectAttacksRedirectFacts = {
+    target: DeflectAttacksRedirectTargetFacts,
+    savingThrowSucceeded: bool,
+    firstMartialArtsRoll: int,
+    secondMartialArtsRoll: int,
+    dexterityModifier: int,
+  }
+
   type CuttingWordsReductionResult = {
     turn: TurnProcedureState,
     pool: FeatureUsePool,
@@ -210,6 +234,16 @@ module unitFeatureProcedureProfiles {
   type UncannyDodgeReductionResult = {
     turn: TurnProcedureState,
     reducedAmount: int,
+  }
+
+  type DeflectAttacksReductionResult = {
+    turn: TurnProcedureState,
+    reducedAmount: int,
+  }
+
+  type DeflectAttacksRedirectResult = {
+    pool: FeatureUsePool,
+    redirectedDamage: int,
   }
 
   type PassiveArmorClassBonusFacts = {
@@ -962,6 +996,59 @@ module unitFeatureProcedureProfiles {
     if (facts.attackerSeen and facts.hitWithAttackRoll) nonnegative(facts.incomingDamage) / 2
     else nonnegative(facts.incomingDamage)
 
+  pure def deflectAttacksDamageAfterReduction(facts: DeflectAttacksReductionFacts): int =
+    nonnegative(facts.incomingDamage - (facts.deflectRoll + facts.dexterityModifier + facts.monkLevel))
+
+  pure def deflectAttacksRedirectTargetEligible(facts: DeflectAttacksRedirectTargetFacts): bool =
+    all {
+      facts.targetSeen,
+      if (facts.attackWasMelee)
+        facts.targetWithinFiveFeet
+      else
+        all { facts.targetWithinSixtyFeet, not(facts.targetBehindTotalCover) },
+    }
+
+  pure def deflectAttacksRedirectDamage(facts: DeflectAttacksRedirectFacts): int =
+    if (facts.savingThrowSucceeded) 0
+    else nonnegative(facts.firstMartialArtsRoll + facts.secondMartialArtsRoll + facts.dexterityModifier)
+
+  pure def resolveDeflectAttacksReductionReaction(
+    turn: TurnProcedureState,
+    facts: DeflectAttacksReductionFacts
+  ): DeflectAttacksReductionResult = {
+    val admitted = all {
+      turn.reactionAvailable,
+      facts.damageIncludesBludgeoningPiercingOrSlashing,
+      facts.deflectRoll >= 1,
+      facts.deflectRoll <= 10,
+      facts.monkLevel >= 3,
+    }
+    {
+      turn: if (admitted) spendReaction(turn) else turn,
+      reducedAmount:
+        if (admitted) deflectAttacksDamageAfterReduction(facts)
+        else nonnegative(facts.incomingDamage),
+    }
+  }
+
+  pure def resolveDeflectAttacksZeroDamageRedirect(
+    pool: FeatureUsePool,
+    reducedDamage: int,
+    facts: DeflectAttacksRedirectFacts
+  ): DeflectAttacksRedirectResult = {
+    val admitted = all {
+      reducedDamage == 0,
+      pool.usesRemaining > 0,
+      deflectAttacksRedirectTargetEligible(facts.target),
+      facts.firstMartialArtsRoll >= 1,
+      facts.secondMartialArtsRoll >= 1,
+    }
+    {
+      pool: if (admitted) spendFeatureUsePool(pool) else pool,
+      redirectedDamage: if (admitted) deflectAttacksRedirectDamage(facts) else 0,
+    }
+  }
+
   pure def resolveCuttingWordsDamageReaction(
     turn: TurnProcedureState,
     pool: FeatureUsePool,
@@ -1453,6 +1540,66 @@ module unitFeatureProcedureProfiles {
     all {
       assert(not(result.turn.reactionAvailable)),
       assert(result.reducedAmount == 4),
+    }
+  }
+
+  run test_deflect_attacks_zero_damage_redirect_spends_focus_and_deals_failed_save_damage = {
+    val reduction = resolveDeflectAttacksReductionReaction(
+      initialTurnProcedureState,
+      {
+        incomingDamage: 8,
+        damageIncludesBludgeoningPiercingOrSlashing: true,
+        deflectRoll: 5,
+        dexterityModifier: 0,
+        monkLevel: 3,
+      }
+    )
+    val redirect = resolveDeflectAttacksZeroDamageRedirect(
+      { usesRemaining: 3, maximumUses: 3 },
+      reduction.reducedAmount,
+      {
+        target: {
+          targetSeen: true,
+          attackWasMelee: true,
+          targetWithinFiveFeet: true,
+          targetWithinSixtyFeet: false,
+          targetBehindTotalCover: true,
+        },
+        savingThrowSucceeded: false,
+        firstMartialArtsRoll: 5,
+        secondMartialArtsRoll: 5,
+        dexterityModifier: 0,
+      }
+    )
+    all {
+      assert(not(reduction.turn.reactionAvailable)),
+      assert(reduction.reducedAmount == 0),
+      assert(redirect.pool.usesRemaining == 2),
+      assert(redirect.redirectedDamage == 10),
+    }
+  }
+
+  run test_deflect_attacks_ranged_redirect_requires_no_total_cover = {
+    val blocked = resolveDeflectAttacksZeroDamageRedirect(
+      { usesRemaining: 3, maximumUses: 3 },
+      0,
+      {
+        target: {
+          targetSeen: true,
+          attackWasMelee: false,
+          targetWithinFiveFeet: false,
+          targetWithinSixtyFeet: true,
+          targetBehindTotalCover: true,
+        },
+        savingThrowSucceeded: false,
+        firstMartialArtsRoll: 5,
+        secondMartialArtsRoll: 5,
+        dexterityModifier: 0,
+      }
+    )
+    all {
+      assert(blocked.pool.usesRemaining == 3),
+      assert(blocked.redirectedDamage == 0),
     }
   }
 

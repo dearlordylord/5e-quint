@@ -436,13 +436,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 154,
       "id": "QMBT59",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Deflect Attacks Zero-Damage Redirect"
     },
     {
       "number": 155,
       "id": "QMBT60",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Select Next SRD Feature Widening Slice After Deflect Attacks"
     },
     {
@@ -551,8 +551,8 @@ Keep it synchronized with the DAG table and task details.
 | 151   | QMBT56 - Promote Boon of Combat Prowess Peerless Aim Miss-to-Hit Replacement | done | QMBT54-QMBT55 | QMBT57-QMBT58 | [Combat Prowess feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT54_COMBAT_PROWESS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed Peerless Aim as `unit-feature.attack-roll-miss-to-hit-replacement` through the existing attack-roll outcome boundary, with Surface mechanics widening, QNT proof coverage, runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
 | 152   | QMBT57 - Select Next SRD Feature Widening Slice After Combat Prowess | done | QMBT56 | QMBT58 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `monk_deflect_attacks` redirect-on-zero as the next SRD feature widening slice, with a red/green plan for one attack-damage reduction zero-damage redirect Unit-feature profile. |
 | 153   | QMBT58 - Recursive Unit Profile Planning Review | done | QMBT56-QMBT57 | QMBT59-QMBT61 | [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT55 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT55_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT56-QMBT57 review, refreshed PRD status notes, and appended QMBT59-QMBT61 because the matrix lane is not complete. |
-| 154   | QMBT59 - Promote Deflect Attacks Zero-Damage Redirect | ready-for-implementation-after-light-research | QMBT57-QMBT58 | QMBT60-QMBT61 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `monk_deflect_attacks` redirect-on-zero as one attack-damage reduction zero-damage redirect Unit-feature profile. |
-| 155   | QMBT60 - Select Next SRD Feature Widening Slice After Deflect Attacks | blocked | QMBT59 | QMBT61 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT59 refreshes matrix pressure, select the next narrow SRD feature widening slice without mixing spell or magic-item intake. |
+| 154   | QMBT59 - Promote Deflect Attacks Zero-Damage Redirect | done | QMBT57-QMBT58 | QMBT60-QMBT61 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `monk_deflect_attacks` redirect-on-zero as `unit-feature.attack-damage-reduction-zero-damage-redirect`, with authored mechanics admission, attack-damage Reaction execution, named redirect facts, pre-Resistance zero-damage gating, Focus spend, Dexterity saving throw, same-type redirected damage, QNT proof coverage, runtime parity, and refreshed matrix artifacts. |
+| 155   | QMBT60 - Select Next SRD Feature Widening Slice After Deflect Attacks | ready-for-research | QMBT59 | QMBT61 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT59 refreshes matrix pressure, select the next narrow SRD feature widening slice without mixing spell or magic-item intake. |
 | 156   | QMBT61 - Recursive Unit Profile Planning Review | blocked | QMBT59-QMBT60 | QMBT62+ | [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT59-QMBT60 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
@@ -2522,7 +2522,7 @@ recorded in the QMBT58 review artifact.
 
 ### Task 154 - QMBT59 - Promote Deflect Attacks Zero-Damage Redirect
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT57-QMBT58
 
@@ -2533,18 +2533,15 @@ Research / plan:
 [QMBT58_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
-Scope: implement the QMBT57 red/green plan for `monk_deflect_attacks`.
-Promote the Deflect Attacks redirect-on-zero follow-up as a Unit feature
-profile such as
-`unit-feature.attack-damage-reduction-zero-damage-redirect`: after the Monk
-takes the already modeled attack-damage Reaction reduction and reduces damage
-to 0, the Monk can spend 1 Focus Point to redirect the attack's force to an
-eligible visible target, force a Dexterity saving throw, and deal same-type
-redirected damage on a failed save. The implementation must parse support from
-the authored mechanics shape rather than Unit id, execute through the existing
-attack-damage Reaction boundary, and keep redirect target, attack kind, save
-result, redirected damage roll, and original damage type as named facts rather
-than positional conventions.
+Completed scope: implemented the QMBT57 red/green plan for
+`monk_deflect_attacks` as
+`unit-feature.attack-damage-reduction-zero-damage-redirect`. The promoted
+profile parses from the authored mechanics shape rather than Unit id, executes
+through the existing attack-damage Reaction boundary, keeps redirect target,
+attack kind, save result, redirected damage roll, and original damage type as
+named facts, gates redirect availability on the pre-Resistance reduced attack
+damage being 0, spends 1 Focus Point, forces a Dexterity saving throw, and
+deals same-type redirected damage on a failed save.
 
 Out of scope: Tactical Mind ability-check resource augmentation, Cutting Words
 ability-check Reaction support, Lay On Hands healing pools, Tireless Temporary
@@ -2553,19 +2550,20 @@ Weapon, Weapon Mastery properties, spell admission, magic-item intake, broad
 Monk support, broad Focus Point support, Deflect Energy, and generic redirect
 families.
 
-Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Deflect Attacks,
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` checked for Deflect Attacks,
 Monk's Focus, Martial Arts, Attack Roll, Reaction, Damage Rolls, Damage Types,
 Saving Throw, Dexterity saving throw, Monk Focus save DC, Focus Point spend,
 Resistance, target-side damage adjustment order, Total Cover, and same-type
 redirected damage; focused QNT proof for the new attack-damage reduction
-zero-damage redirect profile; focused runtime parity with the mandatory timed
-background MBT protocol if promoted battle behavior changes; `pnpm
-unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm
-quality`; `/simplify` convergence, minimum two rounds.
+zero-damage redirect profile passed; `pnpm unit-profile-coverage:check`
+passed; focused Deflect Attacks runtime tests and package admission tests
+passed; battle-runtime Tier 1 MBT passed with `MBT_TRACES=1 MBT_STEPS=6`;
+`pnpm quality` passed. `/simplify` convergence was satisfied by decider review
+plus the candidate review finding fix; no follow-up task split was required.
 
 ### Task 155 - QMBT60 - Select Next SRD Feature Widening Slice After Deflect Attacks
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT59
 
