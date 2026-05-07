@@ -46,6 +46,7 @@ const requiredFirstVerticalUnitIds = [
   "detect_magic",
   "mage_armor",
   "magic_missile",
+  "healing_word",
   "shield",
   "sleep",
   "thunderwave",

@@ -232,7 +232,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 120,
       "id": "QMBT25",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Re-triage Spell Catalog Admission After Boundary Slices"
     },
     {
@@ -307,7 +307,7 @@ Keep it synchronized with the DAG table and task details.
 | 117   | QMBT22 - Promote Shield Triggered Reaction Spell Boundary | done | QMBT10, QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and implement the triggered Reaction Spell Access boundary needed before `shield` can return to supported spell Unit evidence. |
 | 118   | QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary | done | QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed decision: `fire_bolt` remains `needs-surface-widening` until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; QMBT25 should treat it as a spell-boundary blocker, not a supported spell-admission candidate. |
 | 119   | QMBT24 - Select Next SRD Feature Widening Slice | ready-for-research | QMBT18-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one high-value SRD feature-style unsupported/widening pressure row and drive a Defense-style red/green slice plan. |
-| 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | ready-for-research | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Triggered-Reaction and object-targeting boundary decisions have landed; re-run spell admission triage, keep `fire_bolt` out of supported evidence until object-target invocation/effect projection exists, and append the next deterministic spell evidence batch from unambiguous SRD spell candidates. |
+| 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | done | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed spell admission re-triage by admitting `healing_word` as `spell.bonus-action-healing`, adding deterministic admission/projection evidence, refreshing matrix metrics, and keeping `fire_bolt` out of supported evidence behind the object-targeting boundary. |
 | 121   | QMBT26 - Recursive Unit Profile Planning Review | blocked | QMBT21-QMBT25 | QMBT27+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT21-QMBT25 findings, update PRD/plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
@@ -998,7 +998,7 @@ minimum two rounds unless the final changeset is trivial.
 
 ### Task 120 - QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT22-QMBT23
 

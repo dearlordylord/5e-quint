@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 334,
-      "numerator": 34,
-      "percent": "10.2%"
+      "numerator": 35,
+      "percent": "10.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 391,
-      "numerator": 48,
-      "percent": "12.3%"
+      "numerator": 49,
+      "percent": "12.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 49
+      "value": 50
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 16,
-      "numerator": 16,
+      "denominator": 17,
+      "numerator": 17,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 49,
-      "numerator": 49,
+      "denominator": 50,
+      "numerator": 50,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 14,
-      "numerator": 14,
+      "denominator": 15,
+      "numerator": 15,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 14,
-      "numerator": 14,
+      "denominator": 15,
+      "numerator": 15,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 14,
-      "numerator": 14,
+      "denominator": 15,
+      "numerator": 15,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 14,
-      "numerator": 14,
+      "denominator": 15,
+      "numerator": 15,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 16,
+      "denominator": 17,
       "numerator": 9,
-      "percent": "56.3%"
+      "percent": "52.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 35,
-      "numerator": 16,
-      "percent": "45.7%"
+      "denominator": 36,
+      "numerator": 17,
+      "percent": "47.2%"
     }
   },
   "metricSemantics": [
@@ -492,6 +492,31 @@
       ]
     },
     {
+      "id": "spell.bonus-action-healing",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE10",
+        "QMBT5"
+      ],
+      "title": "Spell spends a Bonus Action and Spell Slot to restore Hit Points",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.reaction-shield",
       "profileKind": "reaction",
       "qntOwners": [
@@ -617,6 +642,7 @@
       "note": "Spell procedure profile family.",
       "profileIds": [
         "spell.invocation-damage-save-or-attack",
+        "spell.bonus-action-healing",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -666,6 +692,7 @@
       "note": "Focused spell procedure runtime parity.",
       "profileIds": [
         "spell.invocation-damage-save-or-attack",
+        "spell.bonus-action-healing",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -2049,6 +2076,61 @@
       ],
       "sourceRecordPath": "packages/surface/content/magic_missile.json",
       "unitId": "magic_missile"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.bonus-action-healing"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT25"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.bonus-action-healing",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell spends a Bonus Action and Spell Slot to restore Hit Points",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/healing_word.json",
+      "unitId": "healing_word"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -4436,24 +4518,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/heal.json",
       "unitId": "heal"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/healing_word.json",
-      "unitId": "healing_word"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

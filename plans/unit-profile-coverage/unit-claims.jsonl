@@ -35,6 +35,7 @@
 {"unitId":"detect_magic","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Detection/concentration search semantics are not promoted as a battle Unit profile."}}
 {"unitId":"mage_armor","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-damage-save-or-attack","spell.readied-action-time-spell"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"magic_missile","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-damage-save-or-attack","spell.readied-action-time-spell"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
+{"unitId":"healing_word","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.bonus-action-healing"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"shield","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.reaction-shield"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001","RAW-PTG-REACTIONS-002"]}}
 {"unitId":"sleep","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row."}}
 {"unitId":"thunderwave","collectionId":"srd-5.2.1","claim":{"tag":"needs-surface-widening","issue":"Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."}}

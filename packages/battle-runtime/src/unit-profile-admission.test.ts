@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 import * as Either from "effect/Either";
@@ -81,6 +82,7 @@ const acidSplashUnitId = "acid_splash";
 const fireBoltUnitId = "fire_bolt";
 const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
+const healingWordUnitId = "healing_word";
 const rayOfFrostUnitId = "ray_of_frost";
 const shieldUnitId = "shield";
 const spellCasterId = combatantId("unit-profile-spell-caster");
@@ -89,6 +91,12 @@ const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
+type BonusActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusActionSpell" }
+  >;
 };
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -896,6 +904,59 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
   });
 });
 
+describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
+  test("healing_word is admitted through catalog spell access and projected as a Bonus Action healing spell", () => {
+    const spell = spellRecord(healingWordUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = bonusSpellAct({
+      state,
+      spellId: healingWordUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: spellCasterId,
+      spellId: healingWordUnitId,
+      spellActId: "preparedHealingSpell:healing_word:slot:1",
+    });
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const awaitingHealingRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          healingWordUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(awaitingHealingRoll).toMatchObject({ tag: "needsHoles" });
+    if (awaitingHealingRoll.tag !== "needsHoles") {
+      throw new Error("Expected Healing Word healing roll hole.");
+    }
+
+    expect(spellHoleInvocation(awaitingHealingRoll.holes)).toEqual(
+      expect.objectContaining({
+        kind: "preparedHealingSpell",
+        spell,
+        slotLevel: 1,
+        healing: {
+          expr: { dice: 2, dieSize: 4, flat: 3 },
+        },
+        rangeFeet: 60,
+      }),
+    );
+  });
+});
+
 function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
@@ -1128,6 +1189,22 @@ function maybeSpellAct(input: {
   );
 }
 
+function bonusSpellAct(input: {
+  readonly state: BattleState;
+  readonly spellId: string;
+}): BonusActionSpellAct {
+  const act = discoverBattleActs(input.state).find(
+    (candidate): candidate is BonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.spellId === input.spellId,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected ${input.spellId} Bonus Action spell act.`);
+  }
+  return act;
+}
+
 function requireHole<K extends BattleHole["kind"]>(
   holes: readonly BattleHole[],
   kind: K,
@@ -1319,8 +1396,13 @@ function mechanicsOnlyClassicUnit(
 
 function spellActInvocation(act: ActionSpellAct): SupportedSpellAct {
   const hole = act.initialHoles[0];
+  return spellHoleInvocation(hole === undefined ? [] : [hole]);
+}
+
+function spellHoleInvocation(holes: readonly BattleHole[]): SupportedSpellAct {
+  const hole = holes[0];
   if (hole === undefined || !("spell" in hole)) {
-    throw new Error("Expected spell act initial hole to carry invocation.");
+    throw new Error("Expected spell hole to carry invocation.");
   }
   return hole.spell;
 }

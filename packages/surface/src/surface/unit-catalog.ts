@@ -22,6 +22,7 @@ import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
 import detectMagicInput from "../../content/detect_magic.json";
 import fireBoltInput from "../../content/fire_bolt.json";
+import healingWordInput from "../../content/healing_word.json";
 import lightInput from "../../content/light.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
@@ -191,6 +192,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     detectMagicInput,
     mageArmorInput,
     magicMissileInput,
+    healingWordInput,
     shieldInput,
     sleepInput,
     thunderwaveInput,
