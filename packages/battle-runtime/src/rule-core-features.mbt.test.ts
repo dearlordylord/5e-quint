@@ -1,5 +1,5 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
@@ -61,6 +61,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
 
 const ruleCoreFeatureMbtHoles = [
   "DamageRoll",
@@ -103,6 +104,7 @@ type RuleCoreFeatureProjection = {
   readonly sneakAttackUsedThisTurn: boolean;
   readonly lastDamageAmount: number;
   readonly critical: boolean;
+  readonly actorArmorClass: number;
   readonly holes: readonly RuleCoreFeatureMbtHole[];
   readonly pendingReaction: boolean;
   readonly lastResult: RuleCoreFeatureResult;
@@ -121,6 +123,7 @@ const actorId = combatantId("rule-core-feature-actor");
 const targetId = combatantId("rule-core-feature-target");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
+const featureMbtBaselineArmorClass = 10;
 const cunningActionSupportProfile = {
   kind: "alternateActionCost",
   from: { kind: "standardAction", actions: ["dash", "disengage", "hide"] },
@@ -159,6 +162,7 @@ const driverSchema = {
   doEvasionFailure: {},
   doCuttingWordsDamage: {},
   doUncannyDodge: {},
+  doDefenseArmorClass: {},
   step: {},
 } as const;
 type RuleCoreFeatureDriverAction = Exclude<
@@ -421,6 +425,7 @@ function expectedProjection(
     sneakAttackUsedThisTurn: false,
     lastDamageAmount: 0,
     critical: false,
+    actorArmorClass: featureMbtBaselineArmorClass,
     holes: [],
     pendingReaction: false,
     lastResult: "init",
@@ -449,6 +454,7 @@ function createRuleCoreFeatureDriver() {
       "none";
     let lastDamageAmount = 0;
     let critical = false;
+    let actorArmorClass = featureMbtBaselineArmorClass;
     let featureUsesRemaining = 1;
     let targetHpFallback = 12;
 
@@ -463,6 +469,7 @@ function createRuleCoreFeatureDriver() {
       lastInvalidReason = "none";
       lastDamageAmount = 0;
       critical = false;
+      actorArmorClass = featureMbtBaselineArmorClass;
       featureUsesRemaining = 1;
       targetHpFallback = 12;
     }
@@ -751,6 +758,20 @@ function createRuleCoreFeatureDriver() {
         featureUsesRemaining = 1;
         lastDamageAmount = 3;
       },
+      doDefenseArmorClass: () => {
+        state = featureBattle();
+        resetProjection();
+        const profile = parseSupportedUnitFeatureProfile(
+          unitLibrary.requireUnit("defense"),
+          [],
+        );
+        if (profile?.kind !== "passiveArmorClassBonus") {
+          throw new Error("Expected Defense passive Armor Class profile.");
+        }
+        actorArmorClass = 16 + profile.armorClass.bonus;
+        lastResult = "resolved";
+        lastInvalidReason = "none";
+      },
       step: () => {},
       getState: () =>
         projectRuleCoreFeatureState({
@@ -758,6 +779,7 @@ function createRuleCoreFeatureDriver() {
           holes,
           lastDamageAmount,
           critical,
+          actorArmorClass,
           featureUsesRemaining,
           targetHpFallback,
           lastResult,
@@ -851,7 +873,7 @@ function createRuleCoreFeatureDriver() {
       );
       const prefixFills = [
         attackTargetFill(target, targetId, actorId, "Shortsword"),
-        attackRollFill(attackRoll, { total: 12, naturalD20: 10 }),
+        attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
       ];
       const awaited =
         input.modifierKind === "attackDamageReduction" ||
@@ -1629,6 +1651,7 @@ function projectRuleCoreFeatureState(input: {
   readonly holes: readonly BattleHole[];
   readonly lastDamageAmount: number;
   readonly critical: boolean;
+  readonly actorArmorClass: number;
   readonly featureUsesRemaining: number;
   readonly targetHpFallback: number;
   readonly lastResult: RuleCoreFeatureProjection["lastResult"];
@@ -1673,6 +1696,7 @@ function projectRuleCoreFeatureState(input: {
       ),
     lastDamageAmount: input.lastDamageAmount,
     critical: input.critical,
+    actorArmorClass: input.actorArmorClass,
     holes: input.holes.map(projectFeatureHole),
     pendingReaction: snapshot.pendingReaction !== null,
     lastResult: input.lastResult,
@@ -1772,6 +1796,10 @@ function normalizeRuleCoreFeatureQuintState(
       "qLastDamageAmount",
     ),
     critical: booleanField(state, "qCritical"),
+    actorArmorClass: numberFromQuintInt(
+      state["qActorArmorClass"],
+      "qActorArmorClass",
+    ),
     holes: quintHoleSet(state["qHoles"]).map(featureHoleName),
     pendingReaction: booleanField(state, "qPendingReaction"),
     lastResult: featureResult(state["qLastResult"]),

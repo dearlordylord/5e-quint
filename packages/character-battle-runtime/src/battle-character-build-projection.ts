@@ -5,6 +5,7 @@ import {
   type CharacterWeaponAttackActionOption,
   type BattleCreatureInit,
   type CharacterBattleLoadoutRef,
+  passiveArmorClassBonusProfileForUnit,
 } from "@dnd/battle-runtime";
 import {
   characterBuildArmorTraining,
@@ -32,7 +33,7 @@ import {
 } from "@dnd/shared/types";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Match, Option } from "effect";
+import { Either, Option } from "effect";
 
 export type BattleCreatureInitIssue = {
   readonly tag: "battleCreatureInitIssue";
@@ -126,38 +127,20 @@ export function characterArmorClassState(
   });
 }
 
-function armorDefenseBonus(unit: UnitRecord): ArmorClassState["bonuses"] {
-  if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
-    return [];
-  }
-
-  if (
-    unit.mechanics.condition?.kind !== "wearing_armor" ||
-    unit.mechanics.grants.length !== 1
-  ) {
-    return [];
-  }
-
-  const grant = unit.mechanics.grants[0];
-  if (grant?.kind !== "modify_ac" || grant.delta.kind !== "fixed_dice") {
-    return [];
-  }
-  const fixedDelta = grant.delta;
-
-  return [
-    {
-      kind: "wearing_armor",
-      bonus: armorClassDelta(
-        Match.value(fixedDelta.sign).pipe(
-          Match.when("+", () => fixedDelta.dice * fixedDelta.dieSize),
-          Match.when("-", () => -(fixedDelta.dice * fixedDelta.dieSize)),
-          Match.exhaustive,
-        ),
-      ),
-      categories: unit.mechanics.condition.categories,
-      sourceUnitId: unit.id,
-    },
-  ];
+function armorDefenseBonus(
+  unit: Parameters<typeof passiveArmorClassBonusProfileForUnit>[0],
+): ArmorClassState["bonuses"] {
+  const profile = passiveArmorClassBonusProfileForUnit(unit);
+  return profile === null
+    ? []
+    : [
+        {
+          kind: "wearing_armor",
+          bonus: armorClassDelta(profile.bonus),
+          categories: profile.condition.categories,
+          sourceUnitId: unit.id,
+        },
+      ];
 }
 
 export function characterAttackActionOption(

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -16,6 +16,7 @@ module unitFeatureProcedureProfiles {
   // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
   // - Classes/Barbarian.md: Rage, Reckless Attack.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
+  // - Feats.md: Defense.
   // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
   //   Damage Rolls, Saving Throws and Damage, Resistance and Vulnerability.
 
@@ -209,12 +210,24 @@ module unitFeatureProcedureProfiles {
     reducedAmount: int,
   }
 
+  type PassiveArmorClassBonusFacts = {
+    wearingLightArmor: bool,
+    wearingMediumArmor: bool,
+    wearingHeavyArmor: bool,
+  }
+
   pure def legalFeatureUsePool(pool: FeatureUsePool): bool = all {
     pool.maximumUses >= 0,
     pool.maximumUses <= 6,
     pool.usesRemaining >= 0,
     pool.usesRemaining <= pool.maximumUses,
   }
+
+  pure def wearingArmorForDefense(facts: PassiveArmorClassBonusFacts): bool =
+    facts.wearingLightArmor or facts.wearingMediumArmor or facts.wearingHeavyArmor
+
+  pure def defenseArmorClass(baseArmorClass: int, facts: PassiveArmorClassBonusFacts): int =
+    if (wearingArmorForDefense(facts)) baseArmorClass + 1 else baseArmorClass
 
   pure def spendFeatureUsePool(pool: FeatureUsePool): FeatureUsePool =
     if (pool.usesRemaining <= 0) pool
@@ -1014,6 +1027,35 @@ module unitFeatureProcedureProfiles {
     all {
       assert(not(result.turn.reactionAvailable)),
       assert(result.reducedAmount == 4),
+    }
+  }
+
+  run test_defense_adds_armor_class_while_wearing_armor = {
+    val light = defenseArmorClass(16, {
+      wearingLightArmor: true,
+      wearingMediumArmor: false,
+      wearingHeavyArmor: false,
+    })
+    val medium = defenseArmorClass(16, {
+      wearingLightArmor: false,
+      wearingMediumArmor: true,
+      wearingHeavyArmor: false,
+    })
+    val heavy = defenseArmorClass(16, {
+      wearingLightArmor: false,
+      wearingMediumArmor: false,
+      wearingHeavyArmor: true,
+    })
+    val unarmored = defenseArmorClass(16, {
+      wearingLightArmor: false,
+      wearingMediumArmor: false,
+      wearingHeavyArmor: false,
+    })
+    all {
+      assert(light == 17),
+      assert(medium == 17),
+      assert(heavy == 17),
+      assert(unarmored == 16),
     }
   }
 }

@@ -190,13 +190,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 113,
       "id": "QMBT18",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Drive Unsupported Feature Profile Red-Green Slice"
     },
     {
       "number": 114,
       "id": "QMBT19",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Review Unit Profile Matrix Metrics Semantics"
     },
     {
@@ -264,8 +264,8 @@ Keep it synchronized with the DAG table and task details.
 | 110   | QMBT15 - Expand Spell Unit Admission Evidence | done | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed candidate narrowing: `fire_bolt` and `shield` are no longer counted as supported spell Unit profiles until their SRD-required object-burning and triggered-Reaction boundaries are represented at the matrix/runtime boundary. |
 | 111   | QMBT16 - Decide Selected Spell Identity MBT | done | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT16 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md) | Completed decision: no currently supported spell Unit identity justifies selected identity MBT beyond QMBT5 procedure parity plus QMBT14 deterministic admission/projection evidence. |
 | 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | done | QMBT12-QMBT13 | QMBT18-QMBT20 | [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed private PHB/XPHB mechanics pressure intake policy plus executable checker coverage for private-source identity markers, protected-expression fields, provenance, synthetic naming, and SRD mechanics overlap. |
-| 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | ready-for-research | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Pick one unsupported/widening feature profile by mechanics pressure, not private-source identity, and drive it matrix/QNT-MBT-first into TypeScript implementation and evidence. |
-| 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | blocked | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Review denominators, labels, and report sections after the corrective and expansion slices so percentages still mean what they claim. |
+| 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | done | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed Defense as a passive Armor Class bonus profile with QNT procedure profile, focused feature MBT projection, runtime admission/projection, character AC projection reuse, deterministic evidence, and refreshed matrix metrics. |
+| 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | ready-for-research | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Review denominators, labels, and report sections after QMBT18's Defense expansion so percentages still mean what they claim. |
 | 115   | QMBT20 - Recursive Unit Profile Planning Review | blocked | QMBT10-QMBT19 | QMBT21+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT10-QMBT19 findings, update PRD/plan docs, and append QMBT21+ tasks plus a new recursive planning-review task unless the matrix lane is explicitly declared complete. |
 
 ## Task Details
@@ -763,7 +763,7 @@ Verification: `pnpm unit-profile-coverage:check`; `pnpm quality`.
 
 ### Task 113 - QMBT18 - Drive Unsupported Feature Profile Red-Green Slice
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT10-QMBT13, QMBT17
 
@@ -771,22 +771,23 @@ Blocks: QMBT19-QMBT20
 
 Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md)
 
-Scope: pick one unsupported or widening feature profile from mechanics pressure
-without private-source identity, then drive it through the red/green flow:
-matrix gap or public mechanics-only pressure, QNT Procedure Parity profile,
-focused Procedure Parity MBT expectation,
-TypeScript implementation, deterministic evidence, and selected identity MBT
-only if identity risk justifies it.
+Completed scope: promoted Defense from an unsupported SRD authored Unit to
+`unit-feature.passive-armor-class-bonus`, modeled the Defense Armor Class
+procedure in QNT, added focused feature MBT projection coverage, admitted the
+profile in battle-runtime support parsing, reused the same projection for
+character Armor Class state, added deterministic admission/projection evidence,
+and refreshed the unit profile matrix/report.
 
 Out of scope: solving every unsupported feature profile.
 
-Verification: RAW/source check for the selected feature; QNT/proof or focused
-QMBT as needed; `pnpm unit-profile-coverage:check`; runtime tests; MBT only
-after behavior is complete.
+Verification: RAW/source check for `.references/srd-5.2.1/Feats.md` Defense
+and `UBIQUITOUS_LANGUAGE.md` Armor Class / Armor Category terminology; focused
+QNT/QMBT feature checks; `pnpm unit-profile-coverage:check`; runtime admission
+and typecheck coverage; `pnpm quality`; two `/simplify` review rounds.
 
 ### Task 114 - QMBT19 - Review Unit Profile Matrix Metrics Semantics
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT10-QMBT18
 

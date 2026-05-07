@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
 
 module unitFeatureProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"
@@ -34,6 +34,7 @@ module unitFeatureProcedureProfilesInductive {
   var qAttackRollMadeThisTurn: bool
   var qSneakAttackUsedThisTurn: bool
   var qLastDamageAmount: int
+  var qLastArmorClass: int
 
   pure def qTurn: TurnProcedureState = {
     actionQuota: qActionQuota,
@@ -87,6 +88,7 @@ module unitFeatureProcedureProfilesInductive {
     qAttackRollMadeThisTurn' = false,
     qSneakAttackUsedThisTurn' = false,
     qLastDamageAmount' = 0,
+    qLastArmorClass' = 16,
   }
 
   action recordTurn(turn: TurnProcedureState): bool = all {
@@ -130,6 +132,7 @@ module unitFeatureProcedureProfilesInductive {
     all {
       recordActionSurge(spent.actionSurge),
       qLastDamageAmount' = qLastDamageAmount,
+      qLastArmorClass' = qLastArmorClass,
       qRageOccurrence' = qRageOccurrence,
       qInterruptedConcentration' = qInterruptedConcentration,
       qReactorConcentration' = qReactorConcentration,
@@ -165,6 +168,7 @@ module unitFeatureProcedureProfilesInductive {
       recordTurn(result.turn),
       recordFeaturePool(result.pool),
       qLastDamageAmount' = result.recovery.vitals.hitPoints,
+      qLastArmorClass' = qLastArmorClass,
       qActionSurgeGrant' = qActionSurgeGrant,
       qRageOccurrence' = qRageOccurrence,
       qInterruptedConcentration' = qInterruptedConcentration,
@@ -187,6 +191,7 @@ module unitFeatureProcedureProfilesInductive {
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
       qLastDamageAmount' = qLastDamageAmount,
+      qLastArmorClass' = qLastArmorClass,
       qActionSurgeGrant' = qActionSurgeGrant,
       qRageOccurrence' = qRageOccurrence,
       qInterruptedConcentration' = qInterruptedConcentration,
@@ -213,6 +218,7 @@ module unitFeatureProcedureProfilesInductive {
         dealsDamage: true,
         attackForm: RageWeaponAttack,
       }, 9, 4),
+      qLastArmorClass' = qLastArmorClass,
       qActionSurgeGrant' = qActionSurgeGrant,
       qRecklessOccurrence' = qRecklessOccurrence,
       qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
@@ -238,6 +244,7 @@ module unitFeatureProcedureProfilesInductive {
       qReactorConcentration' = qReactorConcentration,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qLastDamageAmount' = qLastDamageAmount,
+      qLastArmorClass' = qLastArmorClass,
       recordTurn(qTurn),
     }
   }
@@ -259,6 +266,7 @@ module unitFeatureProcedureProfilesInductive {
     all {
       qSneakAttackUsedThisTurn' = result.usedThisTurn,
       qLastDamageAmount' = result.damageDice,
+      qLastArmorClass' = qLastArmorClass,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
       qActionSurgeGrant' = qActionSurgeGrant,
@@ -298,6 +306,7 @@ module unitFeatureProcedureProfilesInductive {
       qLastDamageAmount' =
         if (useCuttingWords) cuttingWords.reducedAmount
         else uncannyDodge.reducedAmount,
+      qLastArmorClass' = qLastArmorClass,
       qActionSurgeGrant' = qActionSurgeGrant,
       qRageOccurrence' = qRageOccurrence,
       qInterruptedConcentration' = qInterruptedConcentration,
@@ -324,6 +333,7 @@ module unitFeatureProcedureProfilesInductive {
     })
     all {
       qLastDamageAmount' = if (outcome.critical) 1 else 0,
+      qLastArmorClass' = qLastArmorClass,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
       qActionSurgeGrant' = qActionSurgeGrant,
@@ -347,6 +357,31 @@ module unitFeatureProcedureProfilesInductive {
         savingThrowSucceeded: savingThrowSucceeded,
         incapacitated: incapacitated,
       }, 20),
+      qLastArmorClass' = qLastArmorClass,
+      qFeatureUsesRemaining' = qFeatureUsesRemaining,
+      qFeatureMaximumUses' = qFeatureMaximumUses,
+      qActionSurgeGrant' = qActionSurgeGrant,
+      qRageOccurrence' = qRageOccurrence,
+      qInterruptedConcentration' = qInterruptedConcentration,
+      qReactorConcentration' = qReactorConcentration,
+      qRecklessOccurrence' = qRecklessOccurrence,
+      qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
+      qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+      recordTurn(qTurn),
+    }
+  }
+
+  action doDefenseArmorClass = {
+    nondet wearingLightArmor = Set(true, false).oneOf()
+    nondet wearingMediumArmor = Set(true, false).oneOf()
+    nondet wearingHeavyArmor = Set(true, false).oneOf()
+    all {
+      qLastArmorClass' = defenseArmorClass(16, {
+        wearingLightArmor: wearingLightArmor,
+        wearingMediumArmor: wearingMediumArmor,
+        wearingHeavyArmor: wearingHeavyArmor,
+      }),
+      qLastDamageAmount' = qLastDamageAmount,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
       qActionSurgeGrant' = qActionSurgeGrant,
@@ -372,10 +407,11 @@ module unitFeatureProcedureProfilesInductive {
     qInterruptedConcentration' = qInterruptedConcentration,
     qReactorConcentration' = qReactorConcentration,
     qLastDamageAmount' = qLastDamageAmount,
+    qLastArmorClass' = qLastArmorClass,
   }
 
   action step = any {
-    // Branch budget: 10 feature-profile branches plus turn refresh. Each branch
+    // Branch budget: 11 feature-profile branches plus turn refresh. Each branch
     // samples at most three bounded booleans or small fixture values.
     doActionSurge,
     doSecondWind,
@@ -386,6 +422,7 @@ module unitFeatureProcedureProfilesInductive {
     doReactionReduction,
     doCriticalThreshold,
     doEvasionReplacement,
+    doDefenseArmorClass,
     doStartTurn,
   }
 
@@ -424,6 +461,7 @@ module unitFeatureProcedureProfilesInductive {
     qAttackRollMadeThisTurn.in(Set(true, false)),
     qSneakAttackUsedThisTurn.in(Set(true, false)),
     qLastDamageAmount.in(0.to(40)),
+    qLastArmorClass.in(0.to(40)),
     legalTurnProcedureState(qTurn),
     legalFeatureUsePool(qFeaturePool),
     legalActionSurgeState(qActionSurgeState),

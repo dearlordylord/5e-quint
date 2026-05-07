@@ -321,6 +321,8 @@ Scope:
 - Evasion-style save damage replacement applies to Dexterity Saving Throw
   damage whose ordinary success result is half damage and is blocked by
   Incapacitated;
+- Defense-style passive Armor Class bonus adds 1 AC while the character is
+  wearing Light, Medium, or Heavy armor;
 - Cutting Words and Uncanny Dodge spend Reaction quota, with Cutting Words also
   spending Bardic Inspiration Pool uses. Cutting Words covers visible,
   within-60-feet attack-roll, ability-check, and damage-roll reduction facts,
@@ -339,8 +341,9 @@ Out of scope for QCORE9:
 
 `unit-feature-procedure-profiles-inductive.qnt` is the owned proof machine. It
 samples bounded feature Pool uses, ordinary/Bonus Action and Reaction quota
-spends, Rage/Reckless/Sneak occurrence state, and representative damage or
-healing amounts while keeping feature facts projection-shaped and Surface-free.
+spends, Rage/Reckless/Sneak occurrence state, passive Armor Class bonus facts,
+and representative damage or healing amounts while keeping feature facts
+projection-shaped and Surface-free.
 
 ## QCORE10: Spell Procedure Profiles
 

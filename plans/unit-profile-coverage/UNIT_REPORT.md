@@ -12,13 +12,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 48/391 | 12.3% |
 | Authored Surface executable catalog admission | 34/334 | 10.2% |
 | Profile classification coverage | 49/49 | 100% |
-| Supported profile coverage | 14/35 | 40% |
+| Supported profile coverage | 15/35 | 42.9% |
 | QNT profile modeling coverage | 11/11 | 100% |
 | QNT proof coverage | 11/11 | 100% |
 | Runtime mapping coverage | 11/11 | 100% |
 | Runtime parity coverage | 11/11 | 100% |
-| Deterministic admission/projection coverage | 13/14 | 92.9% |
-| Selected identity MBT coverage | 9/14 | 64.3% |
+| Deterministic admission/projection coverage | 14/15 | 93.3% |
+| Selected identity MBT coverage | 9/15 | 60% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Supported Unit Claims
@@ -34,6 +34,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
 | `rogue_uncanny_dodge` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
+| `defense` | srd-5.2.1 | `unit-feature.passive-armor-class-bonus` |
 | `acid_splash` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `ray_of_frost` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `mage_armor` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -775,6 +776,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `defense` | `unit-feature.passive-armor-class-bonus` | QMBT18 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -813,7 +815,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
 | `feat_boon_of_combat_prowess` | needs-surface-widening | Miss-to-hit conversion profile is not represented by the promoted Unit profile taxonomy. |
-| `defense` | unsupported-profile | Passive armor-class modification is authored but not yet a promoted Unit profile row. |
 | `feat_savage_attacker` | unsupported-profile | Weapon damage dice reroll is authored but not yet a stable Unit profile row. |
 | `mastery_sap` | unsupported-profile | Weapon mastery rider is authored but not yet a stable Unit profile row. |
 | `orc_adrenaline_rush` | needs-surface-widening | Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile. |
@@ -838,7 +839,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 26 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `defense`, `feat_savage_attacker`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 25 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `feat_savage_attacker`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 4 | `fighter_tactical_mind`, `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`, `thunderwave` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 2 | `fire_bolt`, `shield` |
 | srd-5.2.1 | QCORE9 | unsupported-profile | 2 | `monk_deflect_attacks`, `orc_relentless_endurance` |

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -30,6 +30,8 @@ export const ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE = "attackDamageRider";
 export const SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE = "saveDamageReplacement";
 export const REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE =
   "reactionRollOrDamageReduction";
+export const PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE =
+  "passiveArmorClassBonus";
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -43,13 +45,14 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
 ] as const;
 export type BattleAlternateActionCostSupportProfile = {
-    readonly kind: "alternateActionCost";
-    readonly from: {
-      readonly kind: "standardAction";
+  readonly kind: "alternateActionCost";
+  readonly from: {
+    readonly kind: "standardAction";
     readonly actions: typeof ALTERNATE_ACTION_COST_ACTIONS;
-    };
+  };
   readonly to: { readonly kind: "bonusAction" };
 };
 export type BattleUnitSupportProfile =
@@ -134,6 +137,17 @@ export function battleUnitSupportProfilesForUnit(input: {
     reactionRollOrDamageReductionSupport === "reactionRollOrDamageReduction"
   ) {
     supportProfiles.push(REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE);
+  }
+
+  const passiveArmorClassBonusSupport =
+    battlePassiveArmorClassBonusSupportForUnit(input.unit);
+  if (passiveArmorClassBonusSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle passive Armor Class bonus Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (passiveArmorClassBonusSupport === "passiveArmorClassBonus") {
+    supportProfiles.push(PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE);
   }
 
   return Either.right(supportProfiles);
@@ -223,6 +237,14 @@ export type ReactionRollOrDamageReductionProfile =
       readonly reduction: { readonly kind: "halfDamage" };
     };
 
+export type PassiveArmorClassBonusProfile = {
+  readonly bonus: 1;
+  readonly condition: {
+    readonly kind: "wearingArmor";
+    readonly categories: readonly ["light", "medium", "heavy"];
+  };
+};
+
 export type SupportedUnitFeatureProfile =
   | {
       readonly kind: "extraActionGrant";
@@ -280,6 +302,11 @@ export type SupportedUnitFeatureProfile =
       readonly unit: UnitRecord;
       readonly classLevel: ClassLevel;
       readonly modifiers: readonly ReactionRollOrDamageReductionProfile[];
+    }
+  | {
+      readonly kind: "passiveArmorClassBonus";
+      readonly unit: UnitRecord;
+      readonly armorClass: PassiveArmorClassBonusProfile;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -308,22 +335,22 @@ export function battleBonusActionStandardActionSupportForUnit(
   }
 
   if (
-      unit.mechanics.from.kind !== "standard_action" ||
-      !sameStringSet(
-        unit.mechanics.from.actions,
+    unit.mechanics.from.kind !== "standard_action" ||
+    !sameStringSet(
+      unit.mechanics.from.actions,
       ALTERNATE_ACTION_COST_ACTIONS,
-      ) ||
+    ) ||
     unit.mechanics.to.kind !== "bonus_action"
   ) {
     return "unsupported";
   }
 
   return {
-      kind: "alternateActionCost",
-      from: {
-        kind: "standardAction",
+    kind: "alternateActionCost",
+    from: {
+      kind: "standardAction",
       actions: ALTERNATE_ACTION_COST_ACTIONS,
-      },
+    },
     to: { kind: "bonusAction" },
   };
 }
@@ -482,6 +509,81 @@ export function battleReactionRollOrDamageReductionSupportForUnit(
     : "reactionRollOrDamageReduction";
 }
 
+export type BattlePassiveArmorClassBonusSupport =
+  | "passiveArmorClassBonus"
+  | "unsupported"
+  | null;
+
+export function battlePassiveArmorClassBonusSupportForUnit(
+  unit: UnitRecord,
+): BattlePassiveArmorClassBonusSupport {
+  if (!hasPassiveArmorClassBonusMechanics(unit)) {
+    return null;
+  }
+  return passiveArmorClassBonusProfileForUnit(unit) === null
+    ? "unsupported"
+    : "passiveArmorClassBonus";
+}
+
+function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
+    return false;
+  }
+  const [effect] = unit.mechanics.grants;
+  return (
+    effect?.kind === "modify_ac" ||
+    unit.mechanics.condition?.kind === "wearing_armor"
+  );
+}
+
+export function passiveArmorClassBonusProfileForUnit(
+  unit: UnitRecord,
+): PassiveArmorClassBonusProfile | null {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
+    return null;
+  }
+  const [effect, ...extraEffects] = unit.mechanics.grants;
+  if (
+    effect?.kind !== "modify_ac" ||
+    extraEffects.length > 0 ||
+    unit.mechanics.condition?.kind !== "wearing_armor" ||
+    !sameStringSet(unit.mechanics.condition.categories, [
+      "light",
+      "medium",
+      "heavy",
+    ])
+  ) {
+    return null;
+  }
+  const bonus = fixedDiceDeltaValue(effect.delta);
+  return bonus === 1
+    ? {
+        bonus: 1,
+        condition: {
+          kind: "wearingArmor",
+          categories: ["light", "medium", "heavy"],
+        },
+      }
+    : null;
+}
+
+function fixedDiceDeltaValue(delta: {
+  readonly kind: string;
+  readonly dice?: number;
+  readonly dieSize?: number;
+  readonly sign?: string;
+}): number | null {
+  if (
+    delta.kind !== "fixed_dice" ||
+    delta.dice === undefined ||
+    delta.dieSize === undefined
+  ) {
+    return null;
+  }
+  const value = delta.dice * delta.dieSize;
+  return delta.sign === "-" ? -value : value;
+}
+
 function reactionRollOrDamageReductionMechanicsProjection(
   unit: UnitRecord,
 ): readonly ReactionRollOrDamageReductionProfile[] | null {
@@ -567,7 +669,8 @@ export function parseSupportedUnitFeatureProfile(
     parseOngoingFeatureUnitFeatureProfile(unit, classLevels) ??
     parseAttackDamageRiderUnitFeatureProfile(unit, classLevels) ??
     parseSaveDamageReplacementUnitFeatureProfile(unit, classLevels) ??
-    parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels)
+    parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels) ??
+    parsePassiveArmorClassBonusUnitFeatureProfile(unit)
   );
 }
 
@@ -829,6 +932,22 @@ function parseReactionRollOrDamageReductionUnitFeatureProfile(
     classLevel,
     modifiers,
   };
+}
+
+function parsePassiveArmorClassBonusUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "passiveArmorClassBonus" }
+> | null {
+  const armorClass = passiveArmorClassBonusProfileForUnit(unit);
+  return armorClass === null
+    ? null
+    : {
+        kind: "passiveArmorClassBonus",
+        unit,
+        armorClass,
+      };
 }
 
 export function findCharacterClassLevel(

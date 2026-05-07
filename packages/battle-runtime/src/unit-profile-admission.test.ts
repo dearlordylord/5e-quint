@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -19,10 +20,12 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   battleCombatantSide,
   battleId,
   battleUnitRefWithSupportProfiles,
@@ -62,6 +65,8 @@ const rogueCunningActionUnitId = "rogue_cunning_action";
 const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
+const defenseUnitId = "defense";
+const archeryUnitId = "feat_archery";
 const acidSplashUnitId = "acid_splash";
 const fireBoltUnitId = "fire_bolt";
 const mageArmorUnitId = "mage_armor";
@@ -346,6 +351,74 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         ],
       }),
     );
+  });
+});
+
+describe("QMBT18 deterministic unsupported feature profile slice", () => {
+  test("defense is admitted and projected as a passive Armor Class bonus while wearing armor", () => {
+    const unit = unitLibrary.requireUnit(defenseUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, []);
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: defenseUnitId,
+        supportProfiles: [PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "passiveArmorClassBonus",
+        unit,
+        armorClass: {
+          bonus: 1,
+          condition: {
+            kind: "wearingArmor",
+            categories: ["light", "medium", "heavy"],
+          },
+        },
+      }),
+    );
+  });
+
+  test("archery remains outside the passive Armor Class support gate", () => {
+    const unit = decodeUnitRecordSync({
+      category: "fighting_style",
+      description:
+        "You gain a +2 bonus to attack rolls you make with Ranged weapons.",
+      id: archeryUnitId,
+      kind: "feat",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            delta: {
+              dice: 2,
+              dieSize: 1,
+              kind: "fixed_dice",
+              sign: "+",
+            },
+            kind: "modify_roll_numeric",
+            on: ["attack_roll"],
+            weaponFilter: {
+              category: "ranged",
+              kind: "weapon_category",
+            },
+          },
+        ],
+      },
+      name: "Archery",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats#Archery",
+      },
+    });
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(Either.right({ unitId: archeryUnitId, supportProfiles: [] }));
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
   });
 });
 
