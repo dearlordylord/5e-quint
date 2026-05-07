@@ -149,13 +149,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 106,
       "id": "QMBT11",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Finish Unit Profile Checker Modularization"
     },
     {
       "number": 107,
       "id": "QMBT12",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Reconcile QMBT8-QMBT9 Closeout"
     },
     {
@@ -258,8 +258,8 @@ Keep it synchronized with the DAG table and task details.
 | 103   | QMBT8 - Expand Unit Feature Admission Evidence | done | QMBT7 | QMBT9 | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed unit-profile checker/report modularization and deterministic admission/projection evidence expansion for remaining supported Unit feature identities. |
 | 104   | QMBT9 - Select Specific Unit Identity MBT Expansion | done | QMBT7-QMBT8 | none | [QMBT7 specific Unit parity plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed selected identity MBT evidence for eight additional supported SRD Unit feature identities with production reducer state changes; selected identity MBT coverage is now 9/16. |
 | 105   | QMBT10 - Tighten Unit Identity Evidence Semantics | done | QMBT7-QMBT9 | QMBT12, QMBT16, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Research and fix whether `selected-identity-mbt` evidence proves executable Unit-specific replay or only owner-file membership; downgrade or strengthen evidence before expanding MBT metrics. |
-| 106   | QMBT11 - Finish Unit Profile Checker Modularization | ready-for-research | QMBT8 | QMBT12-QMBT15, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and finish splitting authored discovery, installed inventory discovery, claim/evidence validation, matrix construction, report rendering, and CLI orchestration so all-Unit growth does not concentrate in one script. |
-| 107   | QMBT12 - Reconcile QMBT8-QMBT9 Closeout | blocked | QMBT10-QMBT11 | QMBT13-QMBT20 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | After QMBT10-QMBT11, review QMBT8-QMBT9 findings, repair closeout notes/statuses/metrics, and decide whether any evidence must be reclassified. |
+| 106   | QMBT11 - Finish Unit Profile Checker Modularization | done | QMBT8 | QMBT12-QMBT15, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed checker split into CLI orchestration, shared config, IO, installed/authored Unit discovery, owner-marker scanning, claim/evidence validation, self-test, and report rendering modules without changing matrix semantics or evidence rows. |
+| 107   | QMBT12 - Reconcile QMBT8-QMBT9 Closeout | ready-for-research | QMBT10-QMBT11 | QMBT13-QMBT20 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Review QMBT8-QMBT9 findings, repair closeout notes/statuses/metrics, and decide whether any evidence must be reclassified. |
 | 108   | QMBT13 - Classify Authored Catalog Admission Gaps | blocked | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Turn `not-in-unit-catalog` into actionable categories: intentional backlog, SRD candidate, Classic/private pressure, non-runtime authored data, duplicate/content issue, or other explicit disposition. |
 | 109   | QMBT14 - Trace Spell Unit Admission Evidence | blocked | QMBT11-QMBT13 | QMBT15-QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Add a small deterministic spell Unit admission/projection tracer before broad spell expansion. |
 | 110   | QMBT15 - Expand Spell Unit Admission Evidence | blocked | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Expand deterministic spell Unit evidence if QMBT14 proves the methodology and denominators are clear. |
@@ -590,7 +590,7 @@ driver behavior or evidence must be validated by an actual focused run.
 
 ### Task 106 - QMBT11 - Finish Unit Profile Checker Modularization
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT8
 
@@ -598,23 +598,21 @@ Blocks: QMBT12-QMBT15, QMBT19
 
 Research / plan: [01_UNIT_PROFILE_PARITY_MBT.md](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md)
 
-Scope: research and finish the checker modularization started by QMBT8. Report
-rendering is now separate, but `scripts/unit-profile-coverage-check.cjs` still
-owns authored discovery, installed inventory discovery, claim validation,
-evidence validation, owner-marker scanning, and CLI orchestration. Split or
-otherwise isolate these responsibilities enough that adding all Units does not
-concentrate every matrix concern in one temporal catch-all script.
+Completed scope: finished the checker modularization started by QMBT8.
+`scripts/unit-profile-coverage-check.cjs` is now CLI orchestration, with shared
+config, IO, installed/authored Unit discovery, owner-marker scanning,
+claim/evidence validation, self-test, and report rendering owned by separate
+modules.
 
 Out of scope: changing matrix semantics; adding new Unit evidence; selected MBT
 expansion.
 
-Verification: `pnpm unit-profile-coverage:check`; generated matrix/report stay
-stable unless intentionally changed; focused script-level regression checks if
-new module boundaries make them practical.
+Verification: `pnpm unit-profile-coverage:check`; checker self-test; `pnpm
+quality`; generated matrix/report stayed stable.
 
 ### Task 107 - QMBT12 - Reconcile QMBT8-QMBT9 Closeout
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT10-QMBT11
 

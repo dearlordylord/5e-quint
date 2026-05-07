@@ -170,11 +170,14 @@ Run:
 pnpm unit-profile-coverage:check
 ```
 
-The check command is split between pipeline orchestration/validation in
-`scripts/unit-profile-coverage-check.cjs` and matrix/report projection in
-`scripts/unit-profile-coverage-report.cjs`. Keep catalog discovery and
-validation rules in the command script until they have another repeated owner;
-put metrics and Markdown rendering changes in the report module.
+The check command keeps `scripts/unit-profile-coverage-check.cjs` as the CLI
+orchestrator and splits the matrix pipeline into owned modules:
+`unit-profile-coverage-discovery.cjs` for installed/authored Unit discovery,
+`unit-profile-coverage-claim-scan.cjs` for owner marker scanning,
+`unit-profile-coverage-validation.cjs` for claim/evidence gates,
+`unit-profile-coverage-report.cjs` for matrix metrics and Markdown rendering,
+and `unit-profile-coverage-config.cjs` for shared coverage vocabulary. Add new
+rules to the module that owns that boundary instead of growing the CLI script.
 
 When intentionally changing claims or installed collection inventory, regenerate
 the matrix and report with:
