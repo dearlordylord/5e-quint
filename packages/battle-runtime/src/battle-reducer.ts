@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-second-wind-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -220,6 +220,7 @@ import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+  FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANT_KINDS,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
@@ -1142,6 +1143,13 @@ type BattleCreatureStateCommon = {
             { readonly kind: "reactionRollOrDamageReduction" }
           >
         >;
+        readonly failedAbilityCheckSecondWindBoostProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "failedAbilityCheckSecondWindBoost" }
+          >
+        >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
       }
     | {
@@ -1172,6 +1180,30 @@ export type BattleState = {
   readonly interruptStack: readonly BattleInterruptFrame[];
   readonly legendaryActionWindow: LegendaryActionWindow | null;
 };
+
+export type BattleFailedAbilityCheckFacts = {
+  readonly actorId: CombatantId;
+  readonly ability: Ability;
+  readonly skillOrToolLabel?: string;
+  readonly originalTotal: number;
+  readonly dc: DifficultyClass;
+};
+
+export type FailedAbilityCheckSecondWindBoostResolutionInput = {
+  readonly state: BattleState;
+  readonly unitId: UnitRecord["id"];
+  readonly abilityCheck: BattleFailedAbilityCheckFacts;
+  readonly boostRoll: number;
+};
+
+export type FailedAbilityCheckSecondWindBoostResolutionResult =
+  | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
+      readonly abilityCheckBoost: {
+        readonly boostedTotal: number;
+        readonly boostedSucceeded: boolean;
+      };
+    })
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
 export type BattleStateInitIssue = {
   readonly tag: "battleStateInitIssue";
@@ -6874,6 +6906,13 @@ function battleCreatureStateFromInit(
             creatureInit.characterUnitRefs,
             classLevels,
           ),
+        failedAbilityCheckSecondWindBoostProfiles:
+          characterFailedAbilityCheckSecondWindBoostProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
         ...(creatureInit.spellcasting === undefined
           ? {}
           : {
@@ -7592,6 +7631,37 @@ function characterReactionRollOrDamageReductionProfiles(
   );
 }
 
+function characterFailedAbilityCheckSecondWindBoostProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "failedAbilityCheckSecondWindBoost" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "failedAbilityCheckSecondWindBoost" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
 function unitRefSupportsProfile(
   unitRefs: readonly BattleUnitRef[],
   unitId: UnitRecord["id"],
@@ -7602,6 +7672,21 @@ function unitRefSupportsProfile(
       unitRef.unitId === unitId &&
       unitRef.supportProfiles.some((profile) => profile === supportProfile) ===
         true,
+  );
+}
+
+function unitRefSupportsProfileKind(
+  unitRefs: readonly BattleUnitRef[],
+  unitId: UnitRecord["id"],
+  supportProfileKind: Exclude<BattleUnitSupportProfile, string>["kind"],
+): boolean {
+  return unitRefs.some(
+    (unitRef) =>
+      unitRef.unitId === unitId &&
+      unitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile === "object" && profile.kind === supportProfileKind,
+      ),
   );
 }
 
@@ -12152,6 +12237,88 @@ function resolveUnitFeature(
     "staleSubject",
     "Unit feature is no longer available for the current actor.",
   );
+}
+
+export function resolveFailedAbilityCheckSecondWindBoost(
+  input: FailedAbilityCheckSecondWindBoostResolutionInput,
+): FailedAbilityCheckSecondWindBoostResolutionResult {
+  const actor = input.state.combatants.get(input.abilityCheck.actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Failed ability-check Second Wind boost is no longer available for the current actor.",
+    );
+  }
+
+  const profile =
+    actor.origin.failedAbilityCheckSecondWindBoostProfiles.get(input.unitId);
+  const secondWindResource = actor.origin.resources.find(
+    (resource) =>
+      resource.unit.id === profile?.abilityCheck.spends.resourceUnitId,
+  );
+  if (
+    profile === undefined ||
+    secondWindResource === undefined ||
+    !resourceHasUsesRemaining(secondWindResource)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Failed ability-check Second Wind boost is no longer available for the current actor.",
+    );
+  }
+
+  if (
+    input.boostRoll < 1 ||
+    input.boostRoll > profile.abilityCheck.bonus.dieSize ||
+    !Number.isInteger(input.boostRoll)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${profile.unit.name} boost roll must be a 1d10 result.`,
+    );
+  }
+
+  if (input.abilityCheck.originalTotal >= input.abilityCheck.dc) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${profile.unit.name} requires an already-failed ability check.`,
+    );
+  }
+
+  const boostedTotal = input.abilityCheck.originalTotal + input.boostRoll;
+  const boostedSucceeded = boostedTotal >= input.abilityCheck.dc;
+  const nextActor: BattleCreatureState = {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((resource) =>
+        boostedSucceeded &&
+        resource.unit.id === profile.abilityCheck.spends.resourceUnitId
+          ? spendCharacterResourceUse(resource)
+          : resource,
+      ),
+    },
+  };
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.abilityCheck.actorId,
+      nextActor,
+    ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+    abilityCheckBoost: {
+      boostedTotal,
+      boostedSucceeded,
+    },
+  };
 }
 
 function resolveExtraActionGrantUnitFeature(

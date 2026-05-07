@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-second-wind-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -54,6 +54,8 @@ export const ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE =
   "zeroHitPointReplacement";
 export const BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
   "bonusActionDashTemporaryHitPoints";
+export const FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE =
+  "failedAbilityCheckSecondWindBoost";
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -76,6 +78,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+  FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 ] as const;
 export type BattlePassiveSpeedBonusSupportProfile = {
@@ -128,6 +131,21 @@ export type BattleBonusActionDashTemporaryHitPointsSupportProfile = {
   readonly kind: typeof BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE;
   readonly dashTemporaryHitPoints: BonusActionDashTemporaryHitPointsProfile;
 };
+export type FailedAbilityCheckSecondWindBoostProfile = {
+  readonly trigger: "failedAbilityCheck";
+  readonly bonus: {
+    readonly dice: 1;
+    readonly dieSize: 10;
+  };
+  readonly spends: {
+    readonly resourceUnitId: "fighter_second_wind";
+  };
+  readonly refundSpendOnStillFailed: true;
+};
+export type BattleFailedAbilityCheckSecondWindBoostSupportProfile = {
+  readonly kind: typeof FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE;
+  readonly abilityCheck: FailedAbilityCheckSecondWindBoostProfile;
+};
 export const PASSIVE_SPEED_KIND_GRANT_KINDS = [
   "climb",
   "swim",
@@ -171,6 +189,7 @@ export type BattleUnitSupportProfile =
   | BattlePassiveSpeedKindGrantsSupportProfile
   | BattleAttackActionAttackCountScalingSupportProfile
   | BattleBonusActionDashTemporaryHitPointsSupportProfile
+  | BattleFailedAbilityCheckSecondWindBoostSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
       | "alternateActionCost"
@@ -180,6 +199,7 @@ export type BattleUnitSupportProfile =
       | "passiveSpeedKindGrants"
       | "attackActionAttackCountScaling"
       | "bonusActionDashTemporaryHitPoints"
+      | "failedAbilityCheckSecondWindBoost"
     >;
 
 export type BattleUnitSupportProfileIssue = {
@@ -386,6 +406,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (bonusActionDashTemporaryHitPointsSupport !== null) {
     supportProfiles.push(bonusActionDashTemporaryHitPointsSupport);
+  }
+
+  const failedAbilityCheckSecondWindBoostSupport =
+    battleFailedAbilityCheckSecondWindBoostSupportForUnit(input.unit);
+  if (failedAbilityCheckSecondWindBoostSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle failed ability-check Second Wind boost Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (failedAbilityCheckSecondWindBoostSupport !== null) {
+    supportProfiles.push(failedAbilityCheckSecondWindBoostSupport);
   }
 
   return Either.right(supportProfiles);
@@ -632,6 +663,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "bonusActionDashTemporaryHitPoints";
       readonly unit: UnitRecord;
       readonly dashTemporaryHitPoints: BonusActionDashTemporaryHitPointsProfile;
+    }
+  | {
+      readonly kind: "failedAbilityCheckSecondWindBoost";
+      readonly unit: UnitRecord;
+      readonly abilityCheck: FailedAbilityCheckSecondWindBoostProfile;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -911,6 +947,11 @@ export type BattleBonusActionDashTemporaryHitPointsSupport =
   | "unsupported"
   | null;
 
+export type BattleFailedAbilityCheckSecondWindBoostSupport =
+  | BattleFailedAbilityCheckSecondWindBoostSupportProfile
+  | "unsupported"
+  | null;
+
 export function battlePassiveArmorClassBonusSupportForUnit(
   unit: UnitRecord,
 ): BattlePassiveArmorClassBonusSupport {
@@ -1028,6 +1069,21 @@ export function battleBonusActionDashTemporaryHitPointsSupportForUnit(
       };
 }
 
+export function battleFailedAbilityCheckSecondWindBoostSupportForUnit(
+  unit: UnitRecord,
+): BattleFailedAbilityCheckSecondWindBoostSupport {
+  if (!hasFailedAbilityCheckSecondWindBoostMechanics(unit)) {
+    return null;
+  }
+  const profile = failedAbilityCheckSecondWindBoostProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE,
+        abilityCheck: profile.abilityCheck,
+      };
+}
+
 function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
@@ -1120,6 +1176,15 @@ function hasBonusActionDashTemporaryHitPointsMechanics(
   );
 }
 
+function hasFailedAbilityCheckSecondWindBoostMechanics(
+  unit: UnitRecord,
+): boolean {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "failed_ability_check_second_wind_boost"
+  );
+}
+
 export function zeroHitPointReplacementProfileForUnit(
   unit: UnitRecord,
 ): Extract<
@@ -1181,6 +1246,45 @@ export function bonusActionDashTemporaryHitPointsProfileForUnit(
       },
     },
   };
+}
+
+export function failedAbilityCheckSecondWindBoostProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "failedAbilityCheckSecondWindBoost" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "failed_ability_check_second_wind_boost"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.trigger.kind !== "failed_ability_check" ||
+    mechanics.bonus.kind !== "dice" ||
+    mechanics.bonus.expr.dice !== 1 ||
+    mechanics.bonus.expr.dieSize !== 10 ||
+    mechanics.spends.resourceUnitId !== tacticalMindSecondWindResourceUnitId() ||
+    mechanics.refundSpendOnStillFailed !== true
+  ) {
+    return null;
+  }
+  return {
+    kind: "failedAbilityCheckSecondWindBoost",
+    unit,
+    abilityCheck: {
+      trigger: "failedAbilityCheck",
+      bonus: { dice: 1, dieSize: 10 },
+      spends: { resourceUnitId: "fighter_second_wind" },
+      refundSpendOnStillFailed: true,
+    },
+  };
+}
+
+function tacticalMindSecondWindResourceUnitId(): "fighter_second_wind" {
+  return "fighter_second_wind";
 }
 
 export function attackActionAttackCountScalingProfileForUnit(
@@ -1576,7 +1680,8 @@ export function parseSupportedUnitFeatureProfile(
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
     attackActionAttackCountScalingProfileForUnit(unit) ??
     zeroHitPointReplacementProfileForUnit(unit) ??
-    bonusActionDashTemporaryHitPointsProfileForUnit(unit)
+    bonusActionDashTemporaryHitPointsProfileForUnit(unit) ??
+    failedAbilityCheckSecondWindBoostProfileForUnit(unit)
   );
 }
 

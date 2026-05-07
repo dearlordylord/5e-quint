@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-second-wind-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -51,6 +51,19 @@ module unitFeatureProcedureProfiles {
     turn: TurnProcedureState,
     pool: FeatureUsePool,
     recovery: HitPointRecoveryResult,
+  }
+
+  type FailedAbilityCheckSecondWindBoostFacts = {
+    originalTotal: int,
+    dc: int,
+    boostRoll: int,
+  }
+
+  type FailedAbilityCheckSecondWindBoostResult = {
+    pool: FeatureUsePool,
+    originalSucceeded: bool,
+    boostedTotal: int,
+    boostedSucceeded: bool,
   }
 
   type CunningActionChoice =
@@ -773,6 +786,35 @@ module unitFeatureProcedureProfiles {
     }
   }
 
+  pure def legalFailedAbilityCheckSecondWindBoostFacts(
+    facts: FailedAbilityCheckSecondWindBoostFacts
+  ): bool = all {
+    facts.boostRoll >= 1,
+    facts.boostRoll <= 10,
+  }
+
+  pure def resolveFailedAbilityCheckSecondWindBoost(
+    pool: FeatureUsePool,
+    facts: FailedAbilityCheckSecondWindBoostFacts
+  ): FailedAbilityCheckSecondWindBoostResult = {
+    val originalSucceeded = facts.originalTotal >= facts.dc
+    val boostedTotal = facts.originalTotal + facts.boostRoll
+    val boostedSucceeded = boostedTotal >= facts.dc
+    val admitted = all {
+      legalFeatureUsePool(pool),
+      legalFailedAbilityCheckSecondWindBoostFacts(facts),
+      pool.usesRemaining > 0,
+      not(originalSucceeded),
+    }
+    val spend = admitted and boostedSucceeded
+    {
+      pool: if (spend) spendFeatureUsePool(pool) else pool,
+      originalSucceeded: originalSucceeded,
+      boostedTotal: boostedTotal,
+      boostedSucceeded: boostedSucceeded,
+    }
+  }
+
   pure def resolveCunningAction(
     turn: TurnProcedureState,
     facts: CunningActionFacts
@@ -1192,6 +1234,46 @@ module unitFeatureProcedureProfiles {
       assert(result.recovery.deathSavingThrows == lifecycle),
       assert(result.recovery.positiveHitPointUnconsciousRecovery == EndsWhenHitPointsRegained),
       assert(result.recovery.hitPointsRegained == 0),
+    }
+  }
+
+  run test_tactical_mind_spends_second_wind_only_on_converted_success = {
+    val converted = resolveFailedAbilityCheckSecondWindBoost(
+      { usesRemaining: 2, maximumUses: 2 },
+      { originalTotal: 13, dc: 15, boostRoll: 3 }
+    )
+    val stillFailed = resolveFailedAbilityCheckSecondWindBoost(
+      { usesRemaining: 2, maximumUses: 2 },
+      { originalTotal: 10, dc: 15, boostRoll: 4 }
+    )
+    all {
+      assert(not(converted.originalSucceeded)),
+      assert(converted.boostedSucceeded),
+      assert(converted.boostedTotal == 16),
+      assert(converted.pool.usesRemaining == 1),
+      assert(not(stillFailed.originalSucceeded)),
+      assert(not(stillFailed.boostedSucceeded)),
+      assert(stillFailed.boostedTotal == 14),
+      assert(stillFailed.pool.usesRemaining == 2),
+    }
+  }
+
+  run test_tactical_mind_requires_failed_ability_check_and_second_wind_use = {
+    val originalSuccess = resolveFailedAbilityCheckSecondWindBoost(
+      { usesRemaining: 2, maximumUses: 2 },
+      { originalTotal: 15, dc: 15, boostRoll: 1 }
+    )
+    val depleted = resolveFailedAbilityCheckSecondWindBoost(
+      { usesRemaining: 0, maximumUses: 2 },
+      { originalTotal: 14, dc: 15, boostRoll: 1 }
+    )
+    all {
+      assert(originalSuccess.originalSucceeded),
+      assert(originalSuccess.boostedSucceeded),
+      assert(originalSuccess.pool.usesRemaining == 2),
+      assert(not(depleted.originalSucceeded)),
+      assert(depleted.boostedSucceeded),
+      assert(depleted.pool.usesRemaining == 0),
     }
   }
 

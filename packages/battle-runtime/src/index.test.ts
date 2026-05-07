@@ -39,6 +39,7 @@ import {
   snapshotBattle,
   spellSlotInvocationRef,
   startBattle,
+  resolveFailedAbilityCheckSecondWindBoost,
   type BattleFill,
   type BattleHole,
   type BattleHidePrerequisite,
@@ -48,6 +49,7 @@ import {
   type BattleSubject,
   type CombatantId,
   type BattleCreatureInit,
+  type BattleUnitRef,
 } from "./index.ts";
 import {
   abilityModifier,
@@ -8157,6 +8159,175 @@ describe("battle runtime", () => {
     );
   });
 
+  test("Tactical Mind spends Second Wind only when a failed ability check becomes successful", () => {
+    const tacticalMindUnit = unitLibrary.requireUnit("fighter_tactical_mind");
+    const state = startBattleRight({
+      battleId: battleId("battle-tactical-mind-converted-success"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 2,
+          resources: [secondWindResource({ usesRemaining: 2 })],
+          unitFeatures: [{ unit: tacticalMindUnit }],
+          characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const converted = resolveFailedAbilityCheckSecondWindBoost({
+      state,
+      unitId: tacticalMindUnit.id,
+      abilityCheck: {
+        actorId: fighterId,
+        ability: "int",
+        skillOrToolLabel: "Investigation",
+        originalTotal: 13,
+        dc: difficultyClass(15),
+      },
+      boostRoll: 3,
+    });
+
+    expect(converted).toMatchObject({
+      tag: "resolved",
+      abilityCheckBoost: {
+        boostedTotal: 16,
+        boostedSucceeded: true,
+      },
+      snapshot: {
+        turn: {
+          bonusActionAvailable: true,
+        },
+      },
+    });
+    if (converted.tag !== "resolved") {
+      throw new Error(`Expected resolved Tactical Mind, got ${converted.tag}.`);
+    }
+    expect(converted.state.combatants.get(fighterId)?.origin).toMatchObject({
+      resources: [
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: "fighter_second_wind" }),
+          usesRemaining: 1,
+        }),
+      ],
+    });
+
+    const stillFailed = resolveFailedAbilityCheckSecondWindBoost({
+      state,
+      unitId: tacticalMindUnit.id,
+      abilityCheck: {
+        actorId: fighterId,
+        ability: "wis",
+        originalTotal: 10,
+        dc: difficultyClass(15),
+      },
+      boostRoll: 4,
+    });
+
+    expect(stillFailed).toMatchObject({
+      tag: "resolved",
+      abilityCheckBoost: {
+        boostedTotal: 14,
+        boostedSucceeded: false,
+      },
+    });
+    if (stillFailed.tag !== "resolved") {
+      throw new Error(`Expected resolved Tactical Mind, got ${stillFailed.tag}.`);
+    }
+    expect(stillFailed.state.combatants.get(fighterId)?.origin).toMatchObject({
+      resources: [
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: "fighter_second_wind" }),
+          usesRemaining: 2,
+        }),
+      ],
+    });
+  });
+
+  test("Tactical Mind rejects successful checks, depleted Second Wind, and unsupported Unit projection", () => {
+    const tacticalMindUnit = unitLibrary.requireUnit("fighter_tactical_mind");
+    const baseState = startBattleRight({
+      battleId: battleId("battle-tactical-mind-invalid"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 2,
+          resources: [secondWindResource({ usesRemaining: 1 })],
+          unitFeatures: [{ unit: tacticalMindUnit }],
+          characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(
+      resolveFailedAbilityCheckSecondWindBoost({
+        state: baseState,
+        unitId: tacticalMindUnit.id,
+        abilityCheck: {
+          actorId: fighterId,
+          ability: "str",
+          originalTotal: 15,
+          dc: difficultyClass(15),
+        },
+        boostRoll: 1,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    const depletedState = startBattleRight({
+      battleId: battleId("battle-tactical-mind-depleted"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 2,
+          resources: [secondWindResource({ usesRemaining: 0 })],
+          unitFeatures: [{ unit: tacticalMindUnit }],
+          characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(
+      resolveFailedAbilityCheckSecondWindBoost({
+        state: depletedState,
+        unitId: tacticalMindUnit.id,
+        abilityCheck: {
+          actorId: fighterId,
+          ability: "dex",
+          originalTotal: 14,
+          dc: difficultyClass(15),
+        },
+        boostRoll: 1,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const unsupportedState = startBattleRight({
+      battleId: battleId("battle-tactical-mind-unsupported"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 2,
+          resources: [secondWindResource({ usesRemaining: 1 })],
+          unitFeatures: [{ unit: tacticalMindUnit }],
+          characterUnitRefs: [],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(
+      resolveFailedAbilityCheckSecondWindBoost({
+        state: unsupportedState,
+        unitId: tacticalMindUnit.id,
+        abilityCheck: {
+          actorId: fighterId,
+          ability: "cha",
+          originalTotal: 14,
+          dc: difficultyClass(15),
+        },
+        boostRoll: 1,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
   test("Rage is unavailable in Heavy armor", () => {
     const state = startBattleRight({
       battleId: battleId("battle-rage-heavy-armor-gated"),
@@ -14336,6 +14507,17 @@ function secondWindResource(input?: {
     ...(input?.usesRemaining === undefined
       ? {}
       : { usesRemaining: input.usesRemaining }),
+  };
+}
+
+function supportedBattleUnitRef(unit: UnitRecord): BattleUnitRef {
+  const profiles = battleUnitSupportProfilesForUnit({ unit });
+  if (Either.isLeft(profiles)) {
+    throw new Error(profiles.left.message);
+  }
+  return {
+    unitId: unit.id,
+    supportProfiles: profiles.right,
   };
 }
 

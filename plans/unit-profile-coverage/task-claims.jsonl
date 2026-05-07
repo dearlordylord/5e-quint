@@ -22,3 +22,5 @@
 {"taskId":"QMBT56","claimKind":"completed-runtime-parity","profileIds":["unit-feature.attack-roll-miss-to-hit-replacement"],"note":"Focused Peerless Aim miss-to-hit replacement runtime parity."}
 {"taskId":"QMBT59","claimKind":"qnt-proof","profileIds":["unit-feature.attack-damage-reduction-zero-damage-redirect"],"note":"Deflect Attacks zero-damage redirect profile proof."}
 {"taskId":"QMBT59","claimKind":"completed-runtime-parity","profileIds":["unit-feature.attack-damage-reduction-zero-damage-redirect"],"note":"Focused Deflect Attacks zero-damage redirect runtime parity."}
+{"taskId":"QMBT62","claimKind":"qnt-proof","profileIds":["unit-feature.failed-ability-check-second-wind-boost"],"note":"Tactical Mind failed ability-check Second Wind boost profile proof."}
+{"taskId":"QMBT62","claimKind":"completed-runtime-parity","profileIds":["unit-feature.failed-ability-check-second-wind-boost"],"note":"Focused Tactical Mind failed ability-check Second Wind boost runtime parity."}

@@ -16,7 +16,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT53 orc_adrenaline_rush
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT56 feat_boon_of_combat_prowess
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-second-wind-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -45,6 +46,7 @@ import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+  FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   battleCombatantSide,
@@ -80,6 +82,7 @@ import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
+  battleFailedAbilityCheckSecondWindBoostSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   battlePassiveSpeedKindGrantsSupportForUnit,
   parseSupportedUnitFeatureProfile,
@@ -95,6 +98,7 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const fighterSecondWindUnitId = "fighter_second_wind";
 const fighterActionSurgeUnitId = "fighter_action_surge";
+const fighterTacticalMindUnitId = "fighter_tactical_mind";
 const fighterImprovedCriticalUnitId = "fighter_improved_critical";
 const fighterExtraAttackUnitId = "fighter_extra_attack";
 const barbarianRageUnitId = "barbarian_rage";
@@ -272,6 +276,76 @@ describe("QMBT7 deterministic Unit profile admission", () => {
         suppressedByCondition: "incapacitated",
       }),
     );
+  });
+});
+
+describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
+  test("fighter_tactical_mind is admitted from failed ability-check Second Wind boost mechanics", () => {
+    const unit = unitLibrary.requireUnit(fighterTacticalMindUnitId);
+    const supportProfile = {
+      kind: FAILED_ABILITY_CHECK_SECOND_WIND_BOOST_SUPPORT_PROFILE,
+      abilityCheck: {
+        trigger: "failedAbilityCheck",
+        bonus: { dice: 1, dieSize: 10 },
+        spends: { resourceUnitId: fighterSecondWindUnitId },
+        refundSpendOnStillFailed: true,
+      },
+    } as const;
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: fighterTacticalMindUnitId,
+        supportProfiles: [supportProfile],
+      }),
+    );
+    expect(
+      battleFailedAbilityCheckSecondWindBoostSupportForUnit(unit),
+    ).toEqual(supportProfile);
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "fighter", level: classLevel(2) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "failedAbilityCheckSecondWindBoost",
+        unit,
+        abilityCheck: supportProfile.abilityCheck,
+      }),
+    );
+  });
+
+  test("fighter_tactical_mind rejects malformed dice and unrelated ability-check feature shapes", () => {
+    const unit = unitLibrary.requireUnit(fighterTacticalMindUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "failed_ability_check_second_wind_boost"
+    ) {
+      throw new Error("Expected Tactical Mind Unit mechanics.");
+    }
+    const malformedDice = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        bonus: {
+          kind: "dice" as const,
+          expr: { dice: 1 as const, dieSize: 8 as const },
+        },
+      },
+      // Cast justification: this fixture intentionally violates the authored
+      // Tactical Mind d10 mechanics invariant; the guard above keeps every
+      // other field sourced from a real UnitRecord fixture.
+    } as unknown as UnitRecord;
+
+    expect(
+      battleFailedAbilityCheckSecondWindBoostSupportForUnit(malformedDice),
+    ).toBe("unsupported");
+    expect(
+      battleFailedAbilityCheckSecondWindBoostSupportForUnit(
+        unitLibrary.requireUnit(fighterSecondWindUnitId),
+      ),
+    ).toBeNull();
   });
 });
 

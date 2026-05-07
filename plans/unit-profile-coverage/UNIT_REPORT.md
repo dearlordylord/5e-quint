@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 58/391 | 14.8% |
 | Authored Surface executable catalog admission | 44/334 | 13.2% |
 | Installed Unit profile classification coverage | 59/59 | 100% |
-| Supported executable Unit coverage | 31/45 | 68.9% |
-| QNT profile modeling coverage | 24/24 | 100% |
-| QNT proof coverage | 24/24 | 100% |
-| Runtime mapping coverage | 24/24 | 100% |
-| Runtime parity coverage | 24/24 | 100% |
-| Deterministic admission/projection coverage | 31/31 | 100% |
-| Selected identity MBT coverage | 10/31 | 32.3% |
+| Supported executable Unit coverage | 32/45 | 71.1% |
+| QNT profile modeling coverage | 25/25 | 100% |
+| QNT proof coverage | 25/25 | 100% |
+| Runtime mapping coverage | 25/25 | 100% |
+| Runtime parity coverage | 25/25 | 100% |
+| Deterministic admission/projection coverage | 32/32 | 100% |
+| Selected identity MBT coverage | 10/32 | 31.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -50,6 +50,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `fighter_second_wind` | srd-5.2.1 | `unit-feature.self-bonus-action-healing` |
 | `fighter_action_surge` | srd-5.2.1 | `unit-feature.action-surge-resource` |
 | `fighter_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
+| `fighter_tactical_mind` | srd-5.2.1 | `unit-feature.failed-ability-check-second-wind-boost` |
 | `fighter_improved_critical` | srd-5.2.1 | `unit-feature.weapon-critical-range-19` |
 | `barbarian_rage` | srd-5.2.1 | `unit-feature.bonus-action-ongoing-rage` |
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
@@ -788,6 +789,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `fighter_tactical_mind` | `unit-feature.failed-ability-check-second-wind-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -844,7 +846,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `subclass_wizard_evoker` | unsupported-profile | Subclass container record; no promoted execution profile yet. |
 | `fighter_fighting_style` | unsupported-profile | Choice/grant container; selected Fighting Style feat carries executable pressure. |
 | `fighter_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
-| `fighter_tactical_mind` | needs-surface-widening | Ability-check resource augmentation is not represented by a promoted battle Unit profile. |
 | `bard_cutting_words` | needs-surface-widening | Full SRD Cutting Words includes ability-check reduction, and the promoted production reaction support boundary still gates authored ability-check reaction branches. |
 | `wizard_ritual_adept` | unsupported-profile | Ritual casting is character/spell access pressure, not a promoted battle execution profile yet. |
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
@@ -870,9 +871,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 24 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
-| srd-5.2.1 | unassigned | needs-surface-widening | 2 | `fighter_tactical_mind`, `thunderwave` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | QCORE9 | needs-surface-widening | 1 | `bard_cutting_words` |
+| srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
 
 ## Profile Claims By Task
 
@@ -902,6 +903,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT56 | completed-runtime-parity | `unit-feature.attack-roll-miss-to-hit-replacement` |
 | QMBT59 | qnt-proof | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 | QMBT59 | completed-runtime-parity | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
+| QMBT62 | qnt-proof | `unit-feature.failed-ability-check-second-wind-boost` |
+| QMBT62 | completed-runtime-parity | `unit-feature.failed-ability-check-second-wind-boost` |
 
 ## Supported Profiles Lacking Runtime Parity
 

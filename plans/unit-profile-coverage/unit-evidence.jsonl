@@ -39,3 +39,4 @@
 {"unitId":"mass_cure_wounds","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT34","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"feat_boon_of_combat_prowess","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT56","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"monk_deflect_attacks","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT59","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"fighter_tactical_mind","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT62","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

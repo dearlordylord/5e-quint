@@ -454,13 +454,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 157,
       "id": "QMBT62",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Tactical Mind Failed Ability Check Second Wind Boost"
     },
     {
       "number": 158,
       "id": "QMBT63",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Select Next SRD Feature Widening Slice After Tactical Mind"
     },
     {
@@ -572,8 +572,8 @@ Keep it synchronized with the DAG table and task details.
 | 154   | QMBT59 - Promote Deflect Attacks Zero-Damage Redirect | done | QMBT57-QMBT58 | QMBT60-QMBT61 | [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `monk_deflect_attacks` redirect-on-zero as `unit-feature.attack-damage-reduction-zero-damage-redirect`, with authored mechanics admission, attack-damage Reaction execution, named redirect facts, pre-Resistance zero-damage gating, Focus spend, Dexterity saving throw, same-type redirected damage, QNT proof coverage, runtime parity, and refreshed matrix artifacts. |
 | 155   | QMBT60 - Select Next SRD Feature Widening Slice After Deflect Attacks | done | QMBT59 | QMBT61 | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [Deflect Attacks feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT57_DEFLECT_ATTACKS_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `fighter_tactical_mind` as the next SRD feature widening slice, with a red/green plan for `unit-feature.failed-ability-check-second-wind-boost` and a concrete blocked QMBT62 implementation task. |
 | 156   | QMBT61 - Recursive Unit Profile Planning Review | done | QMBT59-QMBT60 | QMBT62-QMBT64 | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT58 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT58_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT59-QMBT60 review, refreshed PRD status notes, unblocked QMBT62, and appended QMBT63-QMBT64 because the matrix lane is not complete. |
-| 157   | QMBT62 - Promote Tactical Mind Failed Ability Check Second Wind Boost | ready-for-implementation-after-light-research | QMBT61 | QMBT63-QMBT64 | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Promote `fighter_tactical_mind` as `unit-feature.failed-ability-check-second-wind-boost` after a light RAW/UL re-check of QMBT61's refined boundaries. |
-| 158   | QMBT63 - Select Next SRD Feature Widening Slice After Tactical Mind | blocked | QMBT62 | QMBT64 | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT62 refreshes the matrix, select the next narrow SRD feature/species/mastery widening slice without mixing spell, magic-item, content-cleanup, or checker-metric ownership. |
+| 157   | QMBT62 - Promote Tactical Mind Failed Ability Check Second Wind Boost | done | QMBT61 | QMBT63-QMBT64 | [Tactical Mind feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT60_TACTICAL_MIND_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `fighter_tactical_mind` as `unit-feature.failed-ability-check-second-wind-boost`, with authored mechanics admission, an already-rolled failed ability-check outcome boundary, shared Second Wind pool spend/no-spend behavior, QNT proof coverage, runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
+| 158   | QMBT63 - Select Next SRD Feature Widening Slice After Tactical Mind | ready-for-research | QMBT62 | QMBT64 | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT62 refreshed the matrix, select the next narrow SRD feature/species/mastery widening slice without mixing spell, magic-item, content-cleanup, or checker-metric ownership. |
 | 159   | QMBT64 - Recursive Unit Profile Planning Review | blocked | QMBT62-QMBT63 | none | [QMBT61 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT61_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Review QMBT62-QMBT63 findings, update PRD and plan docs, and append the next bounded batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
@@ -2649,7 +2649,7 @@ artifact.
 
 ### Task 157 - QMBT62 - Promote Tactical Mind Failed Ability Check Second Wind Boost
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT61
 
@@ -2673,6 +2673,19 @@ Test augmentation, GM ability-check decision logic, Lay On Hands, Tireless, AC
 base formulas, resistance traits, Breath Weapon, Weapon Mastery, spells, magic
 items, content cleanup, and checker metric changes.
 
+Completed scope: promoted `fighter_tactical_mind` as
+`unit-feature.failed-ability-check-second-wind-boost` by parsing the authored
+Surface mechanics shape, adding an already-rolled failed ability-check outcome
+boundary, and reusing the existing `fighter_second_wind` pool so converted
+success spends one use while still-failed boosted checks leave the pool
+unchanged.
+
+Out of scope honored: Bard Cutting Words ability-check Reaction reduction,
+generic D20 Test augmentation, GM ability-check decision logic, Lay On Hands,
+Tireless, AC base formulas, resistance traits, Breath Weapon, Weapon Mastery,
+spells, magic items, content cleanup, and checker metric changes were not
+implemented.
+
 Verification: RAW check for Fighter Second Wind, Tactical Mind, ability
 checks, D20 Tests, Short Rest, and Long Rest; `UBIQUITOUS_LANGUAGE.md` check
 for Ability Check, Pool, Spend, Refund, Proficiency Bonus, Hit Points, and
@@ -2680,12 +2693,11 @@ implementation boundary terms; focused QNT proof for the new feature profile;
 focused runtime tests for converted-success spend and still-failed no-spend
 behavior; `pnpm unit-profile-coverage:check`; relevant package tests and
 typecheck; Tier 1 battle-runtime MBT with the mandatory timed background
-protocol if promoted battle behavior changes; `pnpm quality`; `/simplify`
-convergence, minimum two rounds.
+protocol; `pnpm quality`; `/simplify` convergence, minimum two rounds.
 
 ### Task 158 - QMBT63 - Select Next SRD Feature Widening Slice After Tactical Mind
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT62
 
