@@ -220,6 +220,12 @@ those closeouts and appended QMBT34-QMBT36 because the matrix lane is not
 complete; the next spell implementation target is `mass_cure_wounds`, whose
 new boundary over QMBT32 is point-origin Sphere target selection.
 
+QMBT37 promoted level-5 Fighter, Paladin, and Ranger Extra Attack as
+`unit-feature.attack-action-attack-count-scaling`. QMBT38 selected
+`barbarian_fast_movement` as the next feature widening slice under
+`unit-feature.passive-speed-bonus`. QMBT39 reviewed those closeouts and
+appended QMBT40-QMBT42 because the matrix lane is not complete.
+
 Run:
 
 ```sh

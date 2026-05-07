@@ -316,7 +316,25 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 134,
       "id": "QMBT39",
-      "status": "ready-for-research",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 135,
+      "id": "QMBT40",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Fast Movement Passive Speed Bonus"
+    },
+    {
+      "number": 136,
+      "id": "QMBT41",
+      "status": "blocked",
+      "title": "Select Next SRD Feature Widening Slice After Fast Movement"
+    },
+    {
+      "number": 137,
+      "id": "QMBT42",
+      "status": "blocked",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -399,7 +417,10 @@ Keep it synchronized with the DAG table and task details.
 | 131   | QMBT36 - Recursive Unit Profile Planning Review | done | QMBT34-QMBT35 | QMBT37-QMBT39 | [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Completed QMBT34-QMBT35 review, refreshed PRD status notes, and appended QMBT37-QMBT39 because the matrix lane is not complete. |
 | 132   | QMBT37 - Promote Level 5 Extra Attack Sequencing | done | QMBT35-QMBT36 | QMBT38-QMBT39 | [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed level-5 Fighter, Paladin, and Ranger Extra Attack as `unit-feature.attack-action-attack-count-scaling` with QNT profile, runtime sequencing, deterministic evidence, focused runtime parity, and refreshed matrix artifacts. |
 | 133   | QMBT38 - Select Next SRD Feature Widening Slice After Extra Attack | done | QMBT37 | QMBT39 | [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select `barbarian_fast_movement` as the next SRD feature widening slice, with a red/green plan for `unit-feature.passive-speed-bonus` and a proposed QMBT40 implementation task. |
-| 134   | QMBT39 - Recursive Unit Profile Planning Review | ready-for-research | QMBT37-QMBT38 | QMBT40+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md) | Review QMBT37-QMBT38 findings, update the PRD and plan docs, append `QMBT40 - Promote Fast Movement Passive Speed Bonus`, and append any additional QMBT41+ batch tasks unless the Unit profile matrix lane is explicitly declared complete. |
+| 134   | QMBT39 - Recursive Unit Profile Planning Review | done | QMBT37-QMBT38 | QMBT40-QMBT42 | [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed QMBT37-QMBT38 review, refreshed PRD status notes, and appended QMBT40-QMBT42 because the matrix lane is not complete. |
+| 135   | QMBT40 - Promote Fast Movement Passive Speed Bonus | ready-for-implementation-after-light-research | QMBT38-QMBT39 | QMBT41-QMBT42 | [Fast Movement feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement `barbarian_fast_movement` as `unit-feature.passive-speed-bonus`, including QNT profile, runtime projection from authored mechanics, deterministic admission evidence, focused parity as needed, and refreshed matrix artifacts. |
+| 136   | QMBT41 - Select Next SRD Feature Widening Slice After Fast Movement | blocked | QMBT40 | QMBT42 | [QMBT39 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After Fast Movement refreshes the matrix, select the next narrow SRD feature-style widening slice without mixing speed special kinds, AC base alternatives, healing pools, Temporary Hit Points, resistance, attack replacement, or Weapon Mastery properties. |
+| 137   | QMBT42 - Recursive Unit Profile Planning Review | blocked | QMBT40-QMBT41 | QMBT43+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT40-QMBT41 findings, update PRD and plan docs, and append the next task batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -1614,21 +1635,113 @@ review batch continues broad feature-family widening.
 
 ### Task 134 - QMBT39 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT37-QMBT38
 
-Blocks: QMBT40+
+Blocks: QMBT40-QMBT42
 
 Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
-[QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md)
+[QMBT39_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md),
+[QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
 Scope: review QMBT37-QMBT38 findings, update the PRD and plan docs, append
 `QMBT40 - Promote Fast Movement Passive Speed Bonus`, and append any additional
 QMBT41+ batch tasks. This task must include a new recursive planning-review
 task at the end of the appended batch unless the Unit profile matrix lane is
 explicitly declared complete.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Completed scope: reviewed QMBT37's Extra Attack implementation closeout and
+QMBT38's Fast Movement selection, confirmed the generated matrix lane is not
+complete, refreshed PRD status notes, and appended QMBT40-QMBT42.
+
+Verification: active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence in two rounds. MBT was not run
+because QMBT39 changed planning documentation only.
+
+### Task 135 - QMBT40 - Promote Fast Movement Passive Speed Bonus
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT38-QMBT39
+
+Blocks: QMBT41-QMBT42
+
+Research / plan:
+[QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT38_FAST_MOVEMENT_FEATURE_WIDENING_SLICE_PLAN.md),
+[QMBT39_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: implement the QMBT38 red/green plan for `barbarian_fast_movement`.
+Promote a new `unit-feature.passive-speed-bonus` profile for the SRD Barbarian
+Fast Movement feature: a +10-foot Speed increase while not wearing Heavy
+armor. The implementation must derive movement budget and Dash bonus from the
+effective Speed, use authored mechanics shape parsing rather than authored-id
+dispatch, and refresh deterministic admission/projection evidence and matrix
+artifacts.
+
+Out of scope: Ranger Roving Climb and Swim Speed grants, Dash-as-Bonus-Action
+traits, Temporary Hit Point features, Unarmored Defense AC base calculation
+alternatives, Dragonborn Breath Weapon, resistance traits, Weapon Mastery
+properties, spell admission, magic items, general movement feature families,
+and per-Unit Speed caches that duplicate canonical build/equipment facts.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Fast Movement, Speed,
+Movement, Dash, Heavy armor predicates, and Speed capacity vs movement spent;
+focused QNT proof for the passive Speed bonus profile; focused runtime parity
+with the mandatory timed background MBT protocol if promoted battle behavior
+changes; `pnpm unit-profile-coverage:check`; relevant package typecheck/tests;
+`pnpm quality`; `/simplify` convergence, minimum two rounds.
+
+### Task 136 - QMBT41 - Select Next SRD Feature Widening Slice After Fast Movement
+
+Status: `blocked`
+
+Depends on: QMBT40
+
+Blocks: QMBT42
+
+Research / plan:
+[QMBT39_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT39_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT40 refreshes matrix pressure, select the next narrow SRD
+feature-style widening slice. Candidate lanes should remain domain-distinct:
+Roving's special Speed grants, AC base calculation alternatives, healing pools,
+Temporary Hit Points, resistance traits, attack replacement, and Weapon Mastery
+properties should not be mixed into one implementation task.
+
+Out of scope: implementing the selected slice, selecting spell or magic-item
+work, catalog cleanup unrelated to feature widening, and broad feature-family
+widening.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for every seriously
+considered candidate boundary; active-plan consistency across Ralph index, DAG
+table, and task details; `pnpm unit-profile-coverage:check` if matrix docs or
+generated artifacts change; `/simplify` convergence, minimum two rounds unless
+the final changeset is trivial. MBT is not expected for this research-only
+task.
+
+### Task 137 - QMBT42 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT40-QMBT41
+
+Blocks: QMBT43+
+
+Research / plan:
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review QMBT40-QMBT41 findings, update the PRD and plan docs, and append
+the next implementation/research batch. This task must include a new recursive
+planning-review task at the end of the appended batch unless the Unit profile
+matrix lane is explicitly declared complete.
 
 Out of scope: implementation work not captured by the new task batch.
 
