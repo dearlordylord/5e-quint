@@ -18,6 +18,7 @@
 
 Runtime logs, prompts, review reports, chooser outputs, and diffs are written under ignored `.ralph/runs/<run-id>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
+When auto-unblocking dependency-blocked tasks, the harness expands same-prefix dependency ranges such as `QMBT40-QMBT42` into their concrete task IDs before checking whether all dependencies are `done`.
 
 If `OPENROUTER_API_KEY` is not already exported in the shell, the harness loads it from repo-root `.env` before launching agents.
 

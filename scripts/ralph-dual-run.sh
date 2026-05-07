@@ -578,6 +578,27 @@ const canonicalDep = (value) => {
     .replace(/\s+/g, " ")
 }
 
+const expandDependency = (value) => {
+  const dep = canonicalDep(value)
+  const range = dep.match(/^([A-Z]+)([0-9]+)-([A-Z]+)([0-9]+)$/)
+  if (!range || range[1] !== range[3]) {
+    return [dep]
+  }
+
+  const prefix = range[1]
+  const start = Number(range[2])
+  const end = Number(range[4])
+  if (!Number.isInteger(start) || !Number.isInteger(end) || end < start) {
+    return [dep]
+  }
+
+  const expanded = []
+  for (let number = start; number <= end; number += 1) {
+    expanded.push(`${prefix}${number}`)
+  }
+  return expanded
+}
+
 const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
 if (!indexMatch) {
   throw new Error(`missing ralph-task-index block in ${path}`)
@@ -648,6 +669,7 @@ for (let i = 0; i < lines.length; i += 1) {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean)
+    .flatMap(expandDependency)
     .filter((dep) => {
       const normalized = dep.toLowerCase()
       return normalized !== "none" && normalized !== "completed baseline"
