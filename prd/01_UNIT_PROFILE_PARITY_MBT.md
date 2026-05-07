@@ -168,16 +168,27 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT7 and authored catalog admission-gap reporting:
+Current matrix status after QMBT20's recursive planning review:
 
 - 49 authored Units classified.
-- 13 stable profiles.
-- 17 of 35 executable Units mapped to supported profiles.
+- 14 stable executable profiles.
+- 15 of 35 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
+- deterministic admission/projection evidence covers 14 of 15 supported Unit
+  identities; the remaining gap is the Classic non-SRD mechanics-only
+  `mycelium_step` row.
+- selected identity MBT covers 9 of 15 supported Unit identities. QMBT16
+  explicitly decided not to add selected identity MBT for currently supported
+  spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
   report and matrix.
+- `shield` and `fire_bolt` are intentionally not counted as supported spell
+  Units until triggered Reaction Spell Access and object-targeting/object
+  ignition boundaries are represented or explicitly closed.
 
-QMBT7 completed the first Specific Unit Parity tracer. Follow-on planning must
-decide how to expand evidence while keeping the checker/report pipeline
-maintainable as the authored Unit count grows.
+QMBT20 appended QMBT21-QMBT26 rather than declaring the matrix lane complete.
+The next batch closes the Classic deterministic evidence gap, settles the two
+known spell-boundary blockers, selects the next SRD feature-style widening
+slice, re-triages spell catalog admission after those decisions, and then runs
+another recursive planning review.

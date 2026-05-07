@@ -202,7 +202,43 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 115,
       "id": "QMBT20",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 116,
+      "id": "QMBT21",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Close Classic Mechanics Deterministic Admission Gap"
+    },
+    {
+      "number": 117,
+      "id": "QMBT22",
       "status": "ready-for-research",
+      "title": "Promote Shield Triggered Reaction Spell Boundary"
+    },
+    {
+      "number": 118,
+      "id": "QMBT23",
+      "status": "ready-for-research",
+      "title": "Decide Fire Bolt Object-Targeting Spell Boundary"
+    },
+    {
+      "number": 119,
+      "id": "QMBT24",
+      "status": "ready-for-research",
+      "title": "Select Next SRD Feature Widening Slice"
+    },
+    {
+      "number": 120,
+      "id": "QMBT25",
+      "status": "blocked",
+      "title": "Re-triage Spell Catalog Admission After Boundary Slices"
+    },
+    {
+      "number": 121,
+      "id": "QMBT26",
+      "status": "blocked",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -266,7 +302,13 @@ Keep it synchronized with the DAG table and task details.
 | 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | done | QMBT12-QMBT13 | QMBT18-QMBT20 | [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed private PHB/XPHB mechanics pressure intake policy plus executable checker coverage for private-source identity markers, protected-expression fields, provenance, synthetic naming, and SRD mechanics overlap. |
 | 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | done | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed Defense as a passive Armor Class bonus profile with QNT procedure profile, focused feature MBT projection, runtime admission/projection, character AC projection reuse, deterministic evidence, and refreshed matrix metrics. |
 | 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | done | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed metric semantics review: generated JSON/report now define each metric's planning question, measure, and denominator; installed inventory is report health rather than coverage; passive production profiles count in executable evidence denominators. |
-| 115   | QMBT20 - Recursive Unit Profile Planning Review | ready-for-research | QMBT10-QMBT19 | QMBT21+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT10-QMBT19 findings, update PRD/plan docs, and append QMBT21+ tasks plus a new recursive planning-review task unless the matrix lane is explicitly declared complete. |
+| 115   | QMBT20 - Recursive Unit Profile Planning Review | done | QMBT10-QMBT19 | QMBT21-QMBT26 | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed QMBT10-QMBT19 review, refreshed PRD status notes, and appended QMBT21-QMBT26 because the matrix lane is not complete. |
+| 116   | QMBT21 - Close Classic Mechanics Deterministic Admission Gap | ready-for-implementation-after-light-research | QMBT17-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Add deterministic admission/projection evidence for the supported Classic non-SRD mechanics-only Unit `mycelium_step`, or reclassify the claim if production admission is intentionally out of scope. |
+| 117   | QMBT22 - Promote Shield Triggered Reaction Spell Boundary | ready-for-research | QMBT10, QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Research and implement the triggered Reaction Spell Access boundary needed before `shield` can return to supported spell Unit evidence. |
+| 118   | QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary | ready-for-research | QMBT15-QMBT20 | QMBT25-QMBT26 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether and how promoted spell projection represents Fire Bolt's object targeting and object ignition before reclassifying `fire_bolt`. |
+| 119   | QMBT24 - Select Next SRD Feature Widening Slice | ready-for-research | QMBT18-QMBT20 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one high-value SRD feature-style unsupported/widening pressure row and drive a Defense-style red/green slice plan. |
+| 120   | QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices | blocked | QMBT22-QMBT23 | QMBT26 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After triggered-Reaction and object-targeting boundary decisions land, re-run spell admission triage and append the next deterministic spell evidence batch. |
+| 121   | QMBT26 - Recursive Unit Profile Planning Review | blocked | QMBT21-QMBT25 | QMBT27+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT21-QMBT25 findings, update PRD/plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -808,11 +850,11 @@ goals and active-plan task semantics.
 
 ### Task 115 - QMBT20 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT10-QMBT19
 
-Blocks: QMBT21+
+Blocks: QMBT21-QMBT26
 
 Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
@@ -823,6 +865,168 @@ matrix lane is explicitly declared complete.
 
 Out of scope: implementation work not captured by the new task batch.
 
+Completed scope: reviewed QMBT10-QMBT19 closeout and the generated Unit
+profile report. The lane is not complete: deterministic admission/projection is
+14/15 because `mycelium_step` lacks identity evidence, supported executable
+Unit coverage is 15/35, `shield` and `fire_bolt` remain intentionally narrowed
+behind runtime-boundary decisions, and the authored catalog still has SRD
+feature-style widening pressure. Appended QMBT21-QMBT26 to cover the next
+focused batch and the next recursive review.
+
 Verification: active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change.
+
+### Task 116 - QMBT21 - Close Classic Mechanics Deterministic Admission Gap
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT17-QMBT20
+
+Blocks: QMBT26
+
+Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md)
+
+Scope: close the only supported-Unit deterministic admission gap by adding
+production admission/projection evidence for `mycelium_step`, the Classic
+non-SRD mechanics-only Unit that shares the supported
+`unit-feature.alternate-action-cost` profile. If production admission is not a
+valid boundary for Classic mechanics-only fixtures, reclassify the claim or
+evidence denominator explicitly so the missing 1/15 state is not ambiguous.
+
+Out of scope: importing private-source identity, adding protected expression,
+or broadening Classic non-SRD policy beyond the existing public mechanics-only
+contract.
+
+Verification: re-read QMBT17 policy before edits; RAW/ubiquitous check only if
+the task touches SRD mechanics; focused deterministic admission/projection test
+if evidence is added; `pnpm unit-profile-coverage:check`; package typecheck if
+runtime test code changes; no MBT unless focused driver behavior changes;
+`/simplify` convergence, minimum two rounds unless the final changeset is
+trivial.
+
+### Task 117 - QMBT22 - Promote Shield Triggered Reaction Spell Boundary
+
+Status: `ready-for-research`
+
+Depends on: QMBT10, QMBT15-QMBT20
+
+Blocks: QMBT25-QMBT26
+
+Research / plan: [01_UNIT_PROFILE_PARITY_MBT.md](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md)
+
+Scope: research local SRD Shield, Reaction, Spellcasting, and Spell Access
+terminology, then model the promoted boundary needed for triggered Reaction
+spell choices. The target outcome is either reclassifying `shield` back to
+supported with deterministic catalog/access/invocation evidence, or recording a
+precise assumption/widening blocker that keeps it out of the supported
+denominator.
+
+Out of scope: broad spell catalog admission, generic Counterspell-style
+reaction chains, and selected identity MBT unless QMBT10 replay-marker criteria
+show identity risk after deterministic evidence exists.
+
+Verification: local SRD and `UBIQUITOUS_LANGUAGE.md` check before rules edits;
+update QNT before runtime if behavior changes; focused QMBT for changed spell
+or reaction procedure behavior with the mandatory timed protocol; `pnpm
+unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm quality`
+for production behavior changes; `/simplify` convergence, minimum two rounds
+unless the final changeset is trivial.
+
+### Task 118 - QMBT23 - Decide Fire Bolt Object-Targeting Spell Boundary
+
+Status: `ready-for-research`
+
+Depends on: QMBT15-QMBT20
+
+Blocks: QMBT25-QMBT26
+
+Research / plan: [01_UNIT_PROFILE_PARITY_MBT.md](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md)
+
+Scope: research local SRD Fire Bolt, Objects, targeting, and spell effect text,
+then decide whether promoted battle-runtime should represent object targets and
+flammable-object ignition as table-supplied facts, an explicit spell projection
+boundary, or an assumption-backed unsupported state. If implemented, reclassify
+`fire_bolt` only after QNT, runtime, deterministic admission, and matrix
+evidence agree.
+
+Out of scope: grid state, pathfinding, cover/line-of-sight derivation, and a
+general object simulation model beyond the Fire Bolt boundary decision.
+
+Verification: local SRD and `UBIQUITOUS_LANGUAGE.md` check before rules edits;
+update QNT before runtime for behavior changes; focused spell QMBT with the
+mandatory timed protocol if procedure behavior changes; `pnpm
+unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm quality`
+for production behavior changes; `/simplify` convergence, minimum two rounds
+unless the final changeset is trivial.
+
+### Task 119 - QMBT24 - Select Next SRD Feature Widening Slice
+
+Status: `ready-for-research`
+
+Depends on: QMBT18-QMBT20
+
+Blocks: QMBT26
+
+Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: choose one high-value SRD feature-style pressure row from the generated
+unsupported/widening inventory and turn it into a Defense-style red/green
+implementation plan. The selection should prefer a narrow executable profile
+that reduces current installed pressure without conflating character-creation,
+passive data, action economy, and battle reaction semantics.
+
+Out of scope: implementing the selected feature in this planning task; solving
+all class features, species traits, masteries, or feats at once.
+
+Verification: local SRD and `UBIQUITOUS_LANGUAGE.md` check for candidate rows;
+`pnpm unit-profile-coverage:check`; active-plan consistency if this task
+appends or revises follow-on implementation tasks; `/simplify` convergence,
+minimum two rounds unless the final changeset is trivial.
+
+### Task 120 - QMBT25 - Re-triage Spell Catalog Admission After Boundary Slices
+
+Status: `blocked`
+
+Depends on: QMBT22-QMBT23
+
+Blocks: QMBT26
+
+Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
+
+Scope: after QMBT22 and QMBT23 settle the two known spell-boundary blockers,
+refresh spell Unit admission triage. Append the next deterministic spell
+evidence batch from SRD spell candidates whose projection profile is now
+unambiguous, and keep spell rows that require new effect families out of the
+supported denominator.
+
+Out of scope: one MBT trace per spell, QNT catalog enumeration, and broad
+authored spell import.
+
+Verification: `pnpm unit-profile-coverage:check`; focused deterministic spell
+admission/projection tests for any new evidence rows; focused MBT only if a
+chosen spell changes procedure behavior; active-plan consistency for any new
+batch appended from the triage; `/simplify` convergence, minimum two rounds
+unless the final changeset is trivial.
+
+### Task 121 - QMBT26 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT21-QMBT25
+
+Blocks: QMBT27+
+
+Research / plan: [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review QMBT21-QMBT25 findings, update the PRD and plan docs, and append
+the next batch of QMBT27+ tasks. This task must include a new recursive
+planning-review task at the end of the appended batch unless the Unit profile
+matrix lane is explicitly declared complete.
+
+Out of scope: implementation work not captured by the new task batch.
+
+Verification: active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
