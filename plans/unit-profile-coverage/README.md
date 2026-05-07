@@ -284,3 +284,18 @@ separate from planning pressure:
 - `non-runtime-authored-data` for records without a mechanics payload.
 - `duplicate-content-issue` for repeated authored Surface Unit ids that should
   be cleaned up before admission planning.
+
+## Class Catalog Admission
+
+The broad content survey and this Unit profile matrix are intentionally not the
+same artifact. The survey inventories SRD pressure; this matrix tracks authored
+Surface Unit records, installed catalog admission, support profiles, and
+evidence. Class coverage therefore needs an explicit catalog-admission backlog,
+not a memory of having surveyed class text once.
+
+QMBT65 owns the next planning step:
+[QMBT65_SRD_CLASS_CATALOG_ADMISSION_PLAN.md](QMBT65_SRD_CLASS_CATALOG_ADMISSION_PLAN.md).
+That task should preserve generated `needs-surface-widening` and
+`unsupported-widening-pressure` rows, make all 12 SRD class containers
+trackable, attach class-feature gaps to class/level priority, and recommend
+coarse Ralph batches rather than one task per Unit id.

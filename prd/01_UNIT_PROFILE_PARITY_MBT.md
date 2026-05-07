@@ -138,6 +138,11 @@ and runtime projection remain separate throughout the flow.
 - The unit-profile checker/report pipeline must stay modular enough to add all
   authored Units without turning one script or one generated report section into
   the only place where every matrix concern changes.
+- Broad SRD content survey coverage is not the same as catalog admission.
+  Class and class-feature coverage need a generated class/catalog backlog that
+  preserves missing class containers, not-in-catalog authored features,
+  unsupported installed Units, `needs-surface-widening` rows, and level-priority
+  ordering.
 
 ## Testing Decisions
 
@@ -168,14 +173,14 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT61's recursive planning review:
+Current matrix status after QMBT62:
 
 - 59 authored Units classified in the installed coverage collections.
-- 24 stable executable profiles.
-- 31 of 45 installed executable Units mapped to supported profiles.
+- 25 stable executable profiles.
+- 32 of 45 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
-- deterministic admission/projection evidence covers all 31 supported Unit
+- deterministic admission/projection evidence covers all 32 supported Unit
   identities, including the QMBT21 Classic non-SRD mechanics-only
   `mycelium_step` row, QMBT22 `shield`, QMBT25 `healing_word`, and QMBT27
   `feat_archery`, QMBT31 `feat_savage_attacker`, and QMBT32 `cure_wounds` and
@@ -183,12 +188,18 @@ Current matrix status after QMBT61's recursive planning review:
   `fighter_extra_attack`, `paladin_extra_attack`, and `ranger_extra_attack`,
   plus QMBT40 `barbarian_fast_movement`, QMBT44 `ranger_roving`, QMBT47
   `orc_relentless_endurance`, QMBT53 `orc_adrenaline_rush`, and QMBT56
-  `feat_boon_of_combat_prowess`, plus QMBT59 `monk_deflect_attacks`.
-- selected identity MBT covers 10 of 31 supported Unit identities. QMBT16
+  `feat_boon_of_combat_prowess`, QMBT59 `monk_deflect_attacks`, and QMBT62
+  `fighter_tactical_mind`.
+- selected identity MBT covers 10 of 32 supported Unit identities. QMBT16
   explicitly decided not to add selected identity MBT for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
   report and matrix.
+- class catalog admission remains a known gap: the SRD has 12 class files, but
+  only `class_fighter` and `class_wizard` are currently installed class
+  container Units. QMBT65 is planned to make this a generated level-prioritized
+  backlog, including durable `needs-surface-widening` rows and coarse Ralph
+  batches.
 - `shield` is now counted as a supported `spell.reaction-shield` Unit with
   deterministic admission/projection evidence.
 - `fire_bolt` is intentionally not counted as a supported spell Unit until
@@ -264,8 +275,11 @@ Current matrix status after QMBT61's recursive planning review:
   refreshed matrix artifacts.
 - QMBT60 selected `fighter_tactical_mind` as the next SRD feature widening
   slice under a planned failed ability-check Second Wind boost profile.
+- QMBT62 counted `fighter_tactical_mind` as a supported
+  `unit-feature.failed-ability-check-second-wind-boost` Unit with focused
+  runtime parity, deterministic admission/projection evidence, and refreshed
+  matrix artifacts.
 
 QMBT61 appended QMBT62-QMBT64 rather than declaring the matrix lane complete.
-The next batch promotes Fighter `Tactical Mind` as a failed ability-check
-Second Wind boost profile, selects the next SRD feature widening slice after
-Tactical Mind, and then runs another recursive planning review.
+After QMBT62, the next open tasks are QMBT63 next-slice selection, QMBT64
+recursive planning review, and QMBT65 class/catalog admission backlog planning.
