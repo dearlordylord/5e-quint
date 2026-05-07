@@ -55,6 +55,21 @@ provenance-bearing authored content, not a projected executable IR.
 Detailed record-family rules live next to the code that owns them. For monster
 Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
 
+## Why Surface Is Not Runtime Code
+
+Surface is the authored rules vocabulary, not a reducer and not executable IR.
+That split exists so the repo can encode rules content once, with provenance,
+then let each runtime project the authored record into its own execution facts.
+
+Surface must describe the rule in reusable domain language. Runtime packages may
+decide whether they support a shape, and they own replay, state transitions,
+holes, and parity tests. They must not recover missing rule facts from a concrete
+Unit id, Spell id, feature name, or authored slug.
+
+If a runtime needs a fact to execute a rule, that fact belongs either in the
+authored Surface record or in table/runtime input. It must not be hidden in a
+runtime branch such as "if this is Fireball, do Fireball things."
+
 ## Unit Catalog Boundary
 
 SRD Units are installed through `SrdUnitCollection` in `surface/unit-catalog`.
@@ -155,6 +170,48 @@ authored record before runtime integration consumes it.
 Authoring is evidence-driven: encode one record, regenerate its trace, review
 the graph, and widen Surface only when a concrete SRD pressure case requires it.
 No speculative atoms; the vocabulary grows one variant at a time.
+
+## No Authored Names In Surface Taxonomy
+
+Surface discriminators name reusable rules concepts, never individual authored
+content. A `kind`, `family`, schema/type name, helper function name, or support
+profile name must not contain a Unit name, Spell name, feature name, magic item
+name, class-specific feature slug, or authored id.
+
+Bad:
+
+```ts
+export const FireballMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("fireball_area_damage"),
+});
+
+export function parseFireballProfile(unit: UnitRecord) {
+  // ...
+}
+```
+
+Good:
+
+```ts
+export const AreaDamageSaveMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("area_damage_save"),
+  area: AreaShapeSchema,
+  save: SavingThrowSchema,
+  damage: DamageAmountSchema,
+});
+```
+
+Concrete authored ids may appear only as data in fields whose domain is
+explicitly "reference another authored record" (`spellId`, `unitId`,
+`resourceUnitId`, etc.). Such references are allowed only when the source rule
+actually names that other content.
+
+When an SRD rule necessarily references another SRD-authored record, use the SRD
+id as data and add a nearby comment citing the RAW line that requires the
+cross-record reference. When a licensed/private source requires such a reference,
+do not copy the protected name into this repository; use the established
+mushroom/fungi synthetic name policy and comment that the masked reference is
+required by the source rule.
 
 ## Relationship to the sub-agent survey corpus
 

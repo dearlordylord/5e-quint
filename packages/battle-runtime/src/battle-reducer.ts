@@ -248,6 +248,8 @@ import {
 } from "./unit-feature-support.ts";
 
 const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
+// Required SRD cross-record reference: Shield explicitly also triggers when
+// targeted by the Magic Missile spell.
 const SHIELD_MAGIC_MISSILE_SPELL_ID =
   "magic_missile" satisfies SpellRecord["id"];
 const DEFLECT_ATTACKS_REDIRECT_TARGET_HOLE_ID = holeId(

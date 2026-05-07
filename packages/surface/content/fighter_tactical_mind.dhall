@@ -13,6 +13,8 @@ let tacticalMind =
       , mechanics =
           { family = "failed_ability_check_second_wind_boost"
           , trigger = { kind = "failed_ability_check" }
+          -- Required SRD cross-record reference: Classes/Fighter.md:82-84
+          -- names Second Wind as the resource Tactical Mind expends.
           , spends = { resourceUnitId = "fighter_second_wind" }
           , bonus = { kind = "dice", expr = { dice = 1, dieSize = 10 } }
           , refundSpendOnStillFailed = True
