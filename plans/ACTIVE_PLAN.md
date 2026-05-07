@@ -400,7 +400,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 148,
       "id": "QMBT53",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Adrenaline Rush Bonus Action Dash Temporary Hit Points"
     },
     {
