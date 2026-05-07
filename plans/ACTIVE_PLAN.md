@@ -196,13 +196,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 114,
       "id": "QMBT19",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Review Unit Profile Matrix Metrics Semantics"
     },
     {
       "number": 115,
       "id": "QMBT20",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -265,8 +265,8 @@ Keep it synchronized with the DAG table and task details.
 | 111   | QMBT16 - Decide Selected Spell Identity MBT | done | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT16 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md) | Completed decision: no currently supported spell Unit identity justifies selected identity MBT beyond QMBT5 procedure parity plus QMBT14 deterministic admission/projection evidence. |
 | 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | done | QMBT12-QMBT13 | QMBT18-QMBT20 | [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed private PHB/XPHB mechanics pressure intake policy plus executable checker coverage for private-source identity markers, protected-expression fields, provenance, synthetic naming, and SRD mechanics overlap. |
 | 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | done | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [Classic non-SRD intake policy](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md) | Completed Defense as a passive Armor Class bonus profile with QNT procedure profile, focused feature MBT projection, runtime admission/projection, character AC projection reuse, deterministic evidence, and refreshed matrix metrics. |
-| 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | ready-for-research | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Review denominators, labels, and report sections after QMBT18's Defense expansion so percentages still mean what they claim. |
-| 115   | QMBT20 - Recursive Unit Profile Planning Review | blocked | QMBT10-QMBT19 | QMBT21+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT10-QMBT19 findings, update PRD/plan docs, and append QMBT21+ tasks plus a new recursive planning-review task unless the matrix lane is explicitly declared complete. |
+| 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | done | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed metric semantics review: generated JSON/report now define each metric's planning question, measure, and denominator; installed inventory is report health rather than coverage; passive production profiles count in executable evidence denominators. |
+| 115   | QMBT20 - Recursive Unit Profile Planning Review | ready-for-research | QMBT10-QMBT19 | QMBT21+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT10-QMBT19 findings, update PRD/plan docs, and append QMBT21+ tasks plus a new recursive planning-review task unless the matrix lane is explicitly declared complete. |
 
 ## Task Details
 
@@ -787,7 +787,7 @@ and typecheck coverage; `pnpm quality`; two `/simplify` review rounds.
 
 ### Task 114 - QMBT19 - Review Unit Profile Matrix Metrics Semantics
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT10-QMBT18
 
@@ -795,10 +795,11 @@ Blocks: QMBT20
 
 Research / plan: [01_UNIT_PROFILE_PARITY_MBT.md](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md)
 
-Scope: review all matrix denominators, labels, report sections, and evidence
-categories after the corrective and expansion slices. Confirm that each
-percentage still answers a concrete planning question and does not overclaim
-coverage.
+Completed scope: reviewed matrix denominators, labels, report sections, and
+evidence categories after the corrective and expansion slices. The generated
+JSON/report now define each metric's planning question, measure, and
+denominator; installed inventory is report health rather than coverage; passive
+production profiles count in executable evidence denominators.
 
 Out of scope: new runtime behavior.
 
@@ -807,7 +808,7 @@ goals and active-plan task semantics.
 
 ### Task 115 - QMBT20 - Recursive Unit Profile Planning Review
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT10-QMBT19
 

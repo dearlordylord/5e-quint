@@ -24,6 +24,120 @@ function percent(numerator, denominator) {
   return `${Math.round((numerator / denominator) * 1000) / 10}%`;
 }
 
+const metricDefinitions = [
+  {
+    key: "collectionInventoryCount",
+    label: "Installed collection inventory count",
+    kind: "count",
+    planningQuestion:
+      "How many Unit records did the checker discover in the configured installed coverage collections?",
+    value: "installed Unit records discovered from configured collections",
+    denominator: "n/a; no independent expected-inventory boundary exists",
+  },
+  {
+    key: "authoredSurfaceUnitCatalogAdmissionCoverage",
+    label: "Authored Surface Unit catalog admission",
+    kind: "coverage",
+    planningQuestion:
+      "How much authored Surface Unit-shaped content is admitted to an installed Unit collection?",
+    numerator: "authored Surface records whose source path is installed",
+    denominator: "all authored Surface Unit-shaped records discovered",
+  },
+  {
+    key: "authoredSurfaceExecutableCatalogAdmissionCoverage",
+    label: "Authored Surface executable catalog admission",
+    kind: "coverage",
+    planningQuestion:
+      "How much authored Surface content with executable mechanics is admitted to an installed Unit collection?",
+    numerator:
+      "authored Surface executable records whose source path is installed",
+    denominator: "authored Surface Unit-shaped records with executable mechanics",
+  },
+  {
+    key: "profileClassificationCoverage",
+    label: "Installed Unit profile classification coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Does every installed Unit have exactly one supported, unsupported, widening, or assumption disposition?",
+    numerator: "installed Unit records with a profile disposition claim",
+    denominator: "installed Unit records discovered from configured collections",
+  },
+  {
+    key: "supportedProfileCoverage",
+    label: "Supported executable Unit coverage",
+    kind: "coverage",
+    planningQuestion:
+      "How much installed executable Unit pressure is mapped to supported mechanics profiles?",
+    numerator: "installed Units with supported-profile claims",
+    denominator: "installed Units with executable mechanics",
+  },
+  {
+    key: "qntProfileModelingCoverage",
+    label: "QNT profile modeling coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Do supported rule profiles that require executable semantics have QNT model owners?",
+    numerator: "executable profile records with at least one QNT owner",
+    denominator: "profile records whose kind requires executable evidence",
+  },
+  {
+    key: "qntProofCoverage",
+    label: "QNT proof coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Do supported executable profiles have proof evidence?",
+    numerator: "executable profile records with qnt-proof verification owners",
+    denominator: "profile records whose kind requires executable evidence",
+  },
+  {
+    key: "runtimeMappingCoverage",
+    label: "Runtime mapping coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Do supported executable profiles have production runtime owners?",
+    numerator: "executable profile records with runtime owners",
+    denominator: "profile records whose kind requires executable evidence",
+  },
+  {
+    key: "runtimeParityCoverage",
+    label: "Runtime parity coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Do supported executable profiles have focused MBT or runtime-test parity evidence?",
+    numerator:
+      "executable profile records with focused-mbt or runtime-test verification owners",
+    denominator: "profile records whose kind requires executable evidence",
+  },
+  {
+    key: "deterministicAdmissionProjectionCoverage",
+    label: "Deterministic admission/projection coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Which supported Unit identities have deterministic production catalog/support/projection evidence?",
+    numerator:
+      "supported Unit ids with deterministic-admission-projection evidence",
+    denominator: "installed Units with supported-profile claims",
+  },
+  {
+    key: "selectedIdentityMbtCoverage",
+    label: "Selected identity MBT coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Which supported Unit identities have intentionally selected concrete identity MBT evidence?",
+    numerator: "supported Unit ids with selected-identity-mbt evidence",
+    denominator: "installed Units with supported-profile claims",
+  },
+  {
+    key: "classicNonSrdExpressionGate",
+    label: "Classic non-SRD expression gate",
+    kind: "coverage",
+    planningQuestion:
+      "Did every installed Classic non-SRD mechanics-only Unit pass the public-expression gate?",
+    numerator: "installed Classic non-SRD records passing validation",
+    denominator: "installed Classic non-SRD records",
+  },
+];
+
 function groupUnitEvidence(unitEvidence) {
   const grouped = new Map();
   for (const row of unitEvidence) {
@@ -32,6 +146,33 @@ function groupUnitEvidence(unitEvidence) {
     grouped.set(row.unitId, current);
   }
   return grouped;
+}
+
+function assertMetricDefinitionCoverage(matrixMetrics) {
+  const metricKeys = new Set(Object.keys(matrixMetrics));
+  const definitionKeys = new Set(
+    metricDefinitions.map((definition) => definition.key),
+  );
+  const missingDefinitions = Array.from(metricKeys)
+    .filter((key) => !definitionKeys.has(key))
+    .sort();
+  const missingMetrics = Array.from(definitionKeys)
+    .filter((key) => !metricKeys.has(key))
+    .sort();
+  if (missingDefinitions.length > 0 || missingMetrics.length > 0) {
+    fail(
+      [
+        missingDefinitions.length > 0
+          ? `Metric definitions missing for: ${missingDefinitions.join(", ")}.`
+          : undefined,
+        missingMetrics.length > 0
+          ? `Metrics missing for definitions: ${missingMetrics.join(", ")}.`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
+  }
 }
 
 function metrics({
@@ -98,10 +239,9 @@ function metrics({
     ),
   );
   return {
-    collectionInventoryCoverage: {
-      numerator: inventory.length,
-      denominator: inventory.length,
-      percent: percent(inventory.length, inventory.length),
+    collectionInventoryCount: {
+      value: inventory.length,
+      unit: "Units",
     },
     authoredSurfaceUnitCatalogAdmissionCoverage: {
       numerator: authoredSurfaceAdmitted.length,
@@ -316,30 +456,43 @@ function buildMatrix(
   const executableProfiles = profiles.filter((profile) =>
     executableProfileKinds.has(profile.profileKind),
   );
+  const matrixMetrics = metrics({
+    inventory,
+    authoredSurfaceUnits,
+    profiles,
+    unitClaims,
+    unitEvidence,
+    executableProfiles,
+    deterministicAdmissionProjectionEvidenceTag,
+    selectedIdentityMbtEvidenceTag,
+  });
+  assertMetricDefinitionCoverage(matrixMetrics);
   return stable({
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     collectionBoundaryNote:
       "SRD 5.2.1 is conceptually part of Classic, but stored separately for SRD provenance and distribution policy; the Classic 2024 library is a derived view.",
     collections: collections.collections,
     derivedViews: collections.derivedViews,
-    metrics: metrics({
-      inventory,
-      authoredSurfaceUnits,
-      profiles,
-      unitClaims,
-      unitEvidence,
-      executableProfiles,
-      deterministicAdmissionProjectionEvidenceTag,
-      selectedIdentityMbtEvidenceTag,
-    }),
+    metrics: matrixMetrics,
+    metricSemantics: metricDefinitions,
     units,
     profiles,
     taskClaims,
   });
 }
 
-function renderMetric(label, metric) {
-  return `| ${label} | ${metric.numerator}/${metric.denominator} | ${metric.percent} |`;
+function renderMetric(definition, metric) {
+  return `| ${definition.label} | ${metric.numerator}/${metric.denominator} | ${metric.percent} |`;
+}
+
+function renderCountMetric(definition, metric) {
+  return `| ${definition.label} | ${metric.value} ${metric.unit} |`;
+}
+
+function renderMetricSemantics(definition) {
+  const measure =
+    definition.kind === "count" ? definition.value : definition.numerator;
+  return `| ${definition.label} | ${definition.planningQuestion} | ${measure} | ${definition.denominator} |`;
 }
 
 function groupAuthoredNotInCatalogByDisposition(units) {
@@ -469,6 +622,12 @@ function renderReport(
         : "_none_";
     return `| ${claim.taskId} | ${claim.claimKind} | ${profiles} |`;
   });
+  const countMetricDefinitions = matrix.metricSemantics.filter(
+    (definition) => definition.kind === "count",
+  );
+  const coverageMetricDefinitions = matrix.metricSemantics.filter(
+    (definition) => definition.kind === "coverage",
+  );
 
   return `${[
     "# Unit Profile Coverage Report",
@@ -477,55 +636,27 @@ function renderReport(
     "",
     "SRD 5.2.1 is conceptually part of Classic, but it is stored separately because the SRD collection has Creative Commons SRD provenance and distribution policy. The Classic 2024 library is a derived view from the SRD collection plus the Classic non-SRD mechanics-only collection; mixed authored provenance is not a valid collection state.",
     "",
-    "## Metrics",
+    "## Report Health",
+    "",
+    "| Metric | Value |",
+    "| --- | ---: |",
+    ...countMetricDefinitions.map((definition) =>
+      renderCountMetric(definition, matrix.metrics[definition.key]),
+    ),
+    "",
+    "## Coverage Metrics",
     "",
     "| Metric | Covered | Percent |",
     "| --- | ---: | ---: |",
-    renderMetric(
-      "Collection inventory coverage",
-      matrix.metrics.collectionInventoryCoverage,
+    ...coverageMetricDefinitions.map((definition) =>
+      renderMetric(definition, matrix.metrics[definition.key]),
     ),
-    renderMetric(
-      "Authored Surface Unit catalog admission",
-      matrix.metrics.authoredSurfaceUnitCatalogAdmissionCoverage,
-    ),
-    renderMetric(
-      "Authored Surface executable catalog admission",
-      matrix.metrics.authoredSurfaceExecutableCatalogAdmissionCoverage,
-    ),
-    renderMetric(
-      "Profile classification coverage",
-      matrix.metrics.profileClassificationCoverage,
-    ),
-    renderMetric(
-      "Supported profile coverage",
-      matrix.metrics.supportedProfileCoverage,
-    ),
-    renderMetric(
-      "QNT profile modeling coverage",
-      matrix.metrics.qntProfileModelingCoverage,
-    ),
-    renderMetric("QNT proof coverage", matrix.metrics.qntProofCoverage),
-    renderMetric(
-      "Runtime mapping coverage",
-      matrix.metrics.runtimeMappingCoverage,
-    ),
-    renderMetric(
-      "Runtime parity coverage",
-      matrix.metrics.runtimeParityCoverage,
-    ),
-    renderMetric(
-      "Deterministic admission/projection coverage",
-      matrix.metrics.deterministicAdmissionProjectionCoverage,
-    ),
-    renderMetric(
-      "Selected identity MBT coverage",
-      matrix.metrics.selectedIdentityMbtCoverage,
-    ),
-    renderMetric(
-      "Classic non-SRD expression gate",
-      matrix.metrics.classicNonSrdExpressionGate,
-    ),
+    "",
+    "## Metric Semantics",
+    "",
+    "| Metric | Planning question | Measure | Denominator |",
+    "| --- | --- | --- | --- |",
+    ...matrix.metricSemantics.map(renderMetricSemantics),
     "",
     "## Supported Unit Claims",
     "",

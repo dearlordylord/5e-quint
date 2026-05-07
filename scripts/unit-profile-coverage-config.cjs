@@ -48,6 +48,7 @@ const unitProfileOwnerClaimKinds = new Set([
   "verification-owner:runtime-test",
 ]);
 const executableProfileKinds = new Set([
+  "passive",
   "action",
   "bonus-action",
   "reaction",

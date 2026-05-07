@@ -186,6 +186,15 @@ Selected identity MBT coverage counts supported Unit ids with evidence tagged
 this matrix; unsupported and widening rows remain closure dispositions, not
 test omissions.
 
+The generated report includes a `Metric Semantics` section, and
+`unit-matrix.json` includes the same definitions under `metricSemantics`.
+Those definitions are the local authority for each metric's planning question,
+measure, and denominator. The installed collection inventory row is a
+report-health count, not coverage, because the checker has no independent
+expected-inventory boundary. Passive profiles count in the executable profile
+evidence denominator when they have production runtime semantics, even though
+they do not create a player-selectable action.
+
 QMBT16 decided not to add selected spell identity MBT rows for the currently
 supported spell Units. The rationale is recorded in
 [QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md](QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md):

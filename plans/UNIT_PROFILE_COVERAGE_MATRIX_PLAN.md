@@ -161,24 +161,37 @@ Invalid states to reject:
 - A Unit with executable mechanics that is neither profile-mapped nor explicitly
   closed by unsupported/widening/assumption disposition.
 
-## Coverage Metrics
+## Report Health And Coverage Metrics
 
 The report must separate:
 
-- **Collection inventory coverage**: authored Units discovered / authored Units
-  expected by installed collections.
-- **Profile classification coverage**: Units with profile/disposition claims /
-  authored Units.
-- **Supported profile coverage**: Units mapped to supported profiles / Units
-  with executable mechanics.
+- **Installed collection inventory count**: installed Units discovered from
+  configured collections. This is report health, not coverage, because the
+  checker does not have an independent expected-inventory boundary.
+- **Authored Surface Unit catalog admission**: authored Surface Unit-shaped
+  records admitted to installed collections / authored Surface Unit-shaped
+  records discovered.
+- **Authored Surface executable catalog admission**: authored Surface
+  Unit-shaped records with executable mechanics admitted to installed
+  collections / authored Surface Unit-shaped records with executable mechanics.
+- **Installed Unit profile classification coverage**: installed Units with
+  profile/disposition claims / installed Units discovered.
+- **Supported executable Unit coverage**: installed Units mapped to supported
+  profiles / installed Units with executable mechanics.
 - **QNT profile modeling coverage**: executable profiles with QNT owners /
-  executable profiles.
+  profiles whose kind requires executable evidence. Passive profiles count here
+  when they have production runtime semantics.
 - **QNT proof coverage**: executable profiles with proof evidence / executable
-  profiles.
+  profiles whose kind requires executable evidence.
 - **Runtime mapping coverage**: executable profiles with runtime owners /
-  executable profiles.
+  profiles whose kind requires executable evidence.
 - **Runtime parity coverage**: executable profiles with focused MBT or runtime
-  tests / executable profiles.
+  tests / profiles whose kind requires executable evidence.
+- **Deterministic admission/projection coverage**: supported Unit ids with
+  deterministic admission/projection evidence / installed Units with
+  supported-profile claims.
+- **Selected identity MBT coverage**: supported Unit ids with selected identity
+  MBT evidence / installed Units with supported-profile claims.
 - **Classic non-SRD expression gate**: Classic non-SRD records passing the
   no-protected-expression checker / Classic non-SRD records.
 
