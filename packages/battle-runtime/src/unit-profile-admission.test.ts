@@ -9,6 +9,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT31 feat_savage_attacker
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT37 fighter_extra_attack paladin_extra_attack ranger_extra_attack
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -20,6 +21,7 @@ import {
 import { classLevel } from "@dnd/shared/types";
 import {
   attackBonus,
+  difficultyClass,
   DieRollResult,
   Hp,
   movementFeet,
@@ -33,6 +35,7 @@ import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   battleCombatantSide,
@@ -74,6 +77,7 @@ const unitLibrary = unitCatalogResult.catalog;
 const fighterSecondWindUnitId = "fighter_second_wind";
 const fighterActionSurgeUnitId = "fighter_action_surge";
 const fighterImprovedCriticalUnitId = "fighter_improved_critical";
+const fighterExtraAttackUnitId = "fighter_extra_attack";
 const barbarianRageUnitId = "barbarian_rage";
 const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
 const rogueCunningActionUnitId = "rogue_cunning_action";
@@ -94,6 +98,8 @@ const massCureWoundsUnitId = "mass_cure_wounds";
 const massHealingWordUnitId = "mass_healing_word";
 const rayOfFrostUnitId = "ray_of_frost";
 const shieldUnitId = "shield";
+const paladinExtraAttackUnitId = "paladin_extra_attack";
+const rangerExtraAttackUnitId = "ranger_extra_attack";
 const spellCasterId = combatantId("unit-profile-spell-caster");
 const spellTargetId = combatantId("unit-profile-spell-target");
 const massHealingTargetIds = [
@@ -1699,7 +1705,8 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Area healing targets must share one selected point-origin Sphere.",
+      message:
+        "Area healing targets must share one selected point-origin Sphere.",
     });
   });
 
@@ -1739,6 +1746,257 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
         healing: {
           expr: { dice: 6, dieSize: 8, flat: 3 },
         },
+      }),
+    );
+  });
+});
+
+describe("QMBT37 deterministic Extra Attack admission", () => {
+  test.each([
+    [fighterExtraAttackUnitId, "fighter", 5],
+    [paladinExtraAttackUnitId, "paladin", 5],
+    [rangerExtraAttackUnitId, "ranger", 5],
+  ] as const)(
+    "%s is admitted as Attack action attack-count scaling",
+    (unitId, className, level) => {
+      const unit = unitLibrary.requireUnit(unitId);
+      const profile = parseSupportedUnitFeatureProfile(unit, [
+        { className, level: classLevel(level) },
+      ]);
+
+      expect(
+        battleUnitRefWithSupportProfiles({
+          unitRef: { unitId: unit.id },
+          unit,
+        }),
+      ).toEqual(
+        Either.right({
+          unitId,
+          supportProfiles: [ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE],
+        }),
+      );
+      expect(profile).toEqual(
+        expect.objectContaining({
+          kind: "attackActionAttackCountScaling",
+          unit,
+          additionalAttacks: 1,
+        }),
+      );
+    },
+  );
+
+  test("one Attack action resolves two attack slots and spends the action once", () => {
+    const state = extraAttackBattle([extraAttackBattleUnitRef()]);
+    const first = resolveWeaponAttack(state, "Longsword");
+
+    expect(first).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          actionResources: [
+            expect.objectContaining({
+              source: "classFeatureExtraAttack",
+              sourceUnitId: fighterExtraAttackUnitId,
+            }),
+          ],
+        },
+      },
+    });
+    if (first.tag !== "resolved") {
+      throw new Error("Expected first Extra Attack slot to resolve.");
+    }
+
+    const second = resolveWeaponAttack(first.state, "Longsword");
+    expect(second).toMatchObject({
+      tag: "resolved",
+      snapshot: { turn: { actionResources: [] } },
+    });
+  });
+
+  test("multiclass Extra Attack features do not stack into more than one added slot", () => {
+    const state = extraAttackBattle([
+      extraAttackBattleUnitRef(fighterExtraAttackUnitId),
+      extraAttackBattleUnitRef(paladinExtraAttackUnitId),
+    ]);
+    const first = resolveWeaponAttack(state, "Longsword");
+    expect(first).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          actionResources: [
+            expect.objectContaining({
+              source: "classFeatureExtraAttack",
+            }),
+          ],
+        },
+      },
+    });
+    if (first.tag !== "resolved") {
+      throw new Error("Expected first Extra Attack slot to resolve.");
+    }
+
+    const second = resolveWeaponAttack(first.state, "Longsword");
+    expect(second).toMatchObject({
+      tag: "resolved",
+      snapshot: { turn: { actionResources: [] } },
+    });
+    if (second.tag !== "resolved") {
+      throw new Error("Expected second Extra Attack slot to resolve.");
+    }
+    expect(discoverBattleActs(second.state)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: expect.objectContaining({
+            tag: "action",
+            action: "attack",
+          }),
+        }),
+      ]),
+    );
+  });
+
+  test("Movement may occur between Extra Attack attack slots", () => {
+    const state = extraAttackBattle([extraAttackBattleUnitRef()]);
+    const first = resolveWeaponAttack(state, "Longsword");
+    expect(first.tag).toBe("resolved");
+    if (first.tag !== "resolved") {
+      throw new Error("Expected first Extra Attack slot to resolve.");
+    }
+
+    const moveAct = discoverBattleActs(first.state).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "move" &&
+        candidate.subject.actorId === spellCasterId,
+    );
+    expect(moveAct).toBeDefined();
+    if (moveAct === undefined) {
+      throw new Error("Expected Movement between Extra Attack slots.");
+    }
+
+    const moved = resolveBattleSubject({
+      state: first.state,
+      subject: moveAct.subject,
+      fills: [
+        movementFill(requireHole(moveAct.initialHoles, "movement"), {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+    expect(moved).toMatchObject({ tag: "resolved" });
+    if (moved.tag !== "resolved") {
+      throw new Error("Expected Movement to resolve.");
+    }
+
+    expect(resolveWeaponAttack(moved.state, "Longsword")).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            movement: expect.objectContaining({ spentFeet: 5 }),
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+  });
+
+  test("an Extra Attack slot does not pay the action cost to escape a grapple", () => {
+    const state = extraAttackBattle([extraAttackBattleUnitRef()]);
+    const first = resolveWeaponAttack(state, "Longsword");
+    expect(first.tag).toBe("resolved");
+    if (first.tag !== "resolved") {
+      throw new Error("Expected first Extra Attack slot to resolve.");
+    }
+    const grappledState: BattleState = {
+      ...first.state,
+      grapples: [
+        {
+          grapplerId: spellTargetId,
+          targetId: spellCasterId,
+          escapeDc: difficultyClass(12),
+          reachFeet: movementFeet(5),
+          hand: "left",
+          targetExemptFromDragCost: false,
+        },
+      ],
+    };
+
+    expect(discoverBattleActs(first.state)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: expect.objectContaining({
+            tag: "action",
+            action: "grapple",
+          }),
+        }),
+      ]),
+    );
+    expect(discoverBattleActs(grappledState)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: expect.objectContaining({
+            tag: "action",
+            action: "escapeGrapple",
+          }),
+        }),
+      ]),
+    );
+    expect(resolveWeaponAttack(grappledState, "Longsword")).toMatchObject({
+      tag: "resolved",
+    });
+  });
+
+  test("End Turn closes an unspent Extra Attack slot", () => {
+    const state = extraAttackBattle([extraAttackBattleUnitRef()]);
+    const first = resolveWeaponAttack(state, "Longsword");
+    expect(first.tag).toBe("resolved");
+    if (first.tag !== "resolved") {
+      throw new Error("Expected first Extra Attack slot to resolve.");
+    }
+
+    const ended = resolveBattleSubject({
+      state: first.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    expect(ended).toMatchObject({
+      tag: "resolved",
+      snapshot: { turn: { actionResources: [{ source: "turn" }] } },
+    });
+  });
+
+  test("adjacent scale_attack_count additional values stay unsupported", () => {
+    const unit = unitLibrary.requireUnit(fighterExtraAttackUnitId);
+    expect(unit.kind).toBe("class_feature");
+    if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected passive Fighter Extra Attack Unit.");
+    }
+    const adjacentUnit: UnitRecord = {
+      ...unit,
+      id: "test_extra_attack_additional_2",
+      mechanics: {
+        ...unit.mechanics,
+        grants: [{ kind: "scale_attack_count", additional: 2 }],
+      },
+    };
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: adjacentUnit.id },
+        unit: adjacentUnit,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleUnitSupportProfileIssue",
+        message:
+          "Unsupported battle Attack action attack-count scaling Unit hook: test_extra_attack_additional_2.",
       }),
     );
   });
@@ -2004,6 +2262,105 @@ function savageAttackerBattle(input: {
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function extraAttackBattle(
+  characterUnitRefs: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"],
+): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-extra-attack-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Extra Attacker",
+        initiative: 20,
+        side: partySide,
+        attack: zeroAbilityWeaponAttack("weapon_longsword"),
+        characterUnitRefs,
+        classLevels: [{ className: "fighter", level: classLevel(5) }],
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function resolveWeaponAttack(
+  state: BattleState,
+  attackName: "Longsword" | "Shortbow",
+): ReturnType<typeof resolveBattleSubject> {
+  const subject = weaponAttackSubject(attackName);
+  const target = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const roll = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        attackTargetFill(target, spellCasterId, spellTargetId, attackName),
+      ],
+    }),
+    "attackRoll",
+  );
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        attackTargetFill(target, spellCasterId, spellTargetId, attackName),
+        attackRollFill(roll, { total: 15, naturalD20: 10 }),
+      ],
+    }),
+    "rolledDice",
+  );
+  return resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      attackTargetFill(target, spellCasterId, spellTargetId, attackName),
+      attackRollFill(roll, { total: 15, naturalD20: 10 }),
+      damageRollFillWithGroups(damage, [[4]]),
+    ],
+  });
+}
+
+function extraAttackBattleUnitRef(
+  unitId:
+    | typeof fighterExtraAttackUnitId
+    | typeof paladinExtraAttackUnitId = fighterExtraAttackUnitId,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = unitLibrary.requireUnit(unitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId,
+      supportProfiles: [ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
 }
 
 function attackDamageRiderBattleUnitRef(): Extract<
@@ -2337,6 +2694,26 @@ function attackRollFill(
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
       ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+    },
+  };
+}
+
+function movementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  value: {
+    readonly movementCostFeet: number;
+    readonly provokedOpportunityAttacks: readonly {
+      readonly reactorId: CombatantId;
+      readonly attackName: string;
+    }[];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
     },
   };
 }

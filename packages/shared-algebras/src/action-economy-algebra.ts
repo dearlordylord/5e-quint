@@ -28,6 +28,13 @@ export type RuntimeActionResource =
         readonly name: string;
       };
       readonly restriction: ActionRestriction;
+    }
+  | {
+      readonly kind: "action";
+      readonly source: "classFeatureExtraAttack";
+      readonly sourceOwnerId: CreatureId;
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly restriction: ActionRestriction;
     };
 
 export type ActionEconomyState = {

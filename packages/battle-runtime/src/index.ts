@@ -166,6 +166,7 @@ export {
 } from "./battle-reducer.ts";
 export {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   BATTLE_UNIT_SUPPORT_PROFILES,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
@@ -174,6 +175,7 @@ export {
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   battleAttackDamageRiderSupportForUnit,
+  battleAttackActionAttackCountScalingSupportForUnit,
   battleBonusActionStandardActionSupportForUnit,
   battlePassiveArmorClassBonusSupportForUnit,
   battlePassiveRangedAttackRollBonusSupportForUnit,
@@ -183,9 +185,11 @@ export {
   battleUnitSupportProfilesForUnit,
   battleWeaponDamageDiceRollChoiceSupportForUnit,
   battleWeaponOrUnarmedCriticalRange19SupportForUnit,
+  attackActionAttackCountScalingProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
   passiveRangedAttackRollBonusProfileForUnit,
   type BattleAttackDamageRiderSupport,
+  type BattleAttackActionAttackCountScalingSupport,
   type BattleBonusActionStandardActionSupport,
   type BattlePassiveArmorClassBonusSupport,
   type BattlePassiveRangedAttackRollBonusSupport,

@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -23,10 +24,14 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type {
+  SpellRecord,
+  StatBlockRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 
 import {
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   battleId,
   battleCombatantSide,
@@ -92,6 +97,15 @@ type DeathSavingThrowMbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
+type ExtraAttackMbtProjection = {
+  readonly skeletonHp: number;
+  readonly actionAvailable: boolean;
+  readonly extraAttackSlotsAvailable: number;
+  readonly movementSpentFeet: number;
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
 const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
@@ -151,6 +165,16 @@ const magicMissileDriverSchema = {
   doFillMagicMissileAllocation: {},
   doFillMagicMissileDamageLow: {},
   doFillMagicMissileDamageHigh: {},
+  step: {},
+} as const;
+
+const extraAttackDriverSchema = {
+  init: {},
+  doResolveFirstExtraAttackMiss: {},
+  doMoveBetweenExtraAttackSlots: {},
+  doResolveSecondExtraAttackMiss: {},
+  doRejectThirdExtraAttack: {},
+  doEndTurnClosesExtraAttackSlot: {},
   step: {},
 } as const;
 
@@ -291,6 +315,97 @@ function createBattleRuntimeDriver() {
         projectMbtState({
           state,
           holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
+function createExtraAttackDriver() {
+  return defineDriver(extraAttackDriverSchema, () => {
+    let state = extraAttackBattle();
+    let subject: BattleSubject = fighterAttackSubject();
+    let lastResult: ExtraAttackMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"] = "";
+
+    function reset(): void {
+      state = extraAttackBattle();
+      subject = fighterAttackSubject();
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    function resolveAttackMiss(): void {
+      subject = fighterAttackSubject();
+      const target = requireHole(
+        discoverAttackHoles(state, subject),
+        "targetChoice",
+      );
+      const targetChoice = targetFill(target, skeletonId);
+      const attackRoll = requireHole(
+        holesAfterFills(state, subject, [targetChoice]),
+        "attackRoll",
+      );
+      recordResult(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            targetChoice,
+            attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+          ],
+        }),
+      );
+    }
+
+    return {
+      init: reset,
+      doResolveFirstExtraAttackMiss: resolveAttackMiss,
+      doMoveBetweenExtraAttackSlots: () => {
+        subject = moveSubject();
+        const result = resolveBattleSubject({ state, subject, fills: [] });
+        if (result.tag !== "needsHoles") {
+          recordResult(result);
+          return;
+        }
+        const movement = requireHole(result.holes, "movement");
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [movementFill(movement, { movementCostFeet: 5 })],
+          }),
+        );
+      },
+      doResolveSecondExtraAttackMiss: resolveAttackMiss,
+      doRejectThirdExtraAttack: () => {
+        subject = fighterAttackSubject();
+        recordResult(resolveBattleSubject({ state, subject, fills: [] }));
+      },
+      doEndTurnClosesExtraAttackSlot: () => {
+        subject = endTurnSubject();
+        recordResult(resolveBattleSubject({ state, subject, fills: [] }));
+      },
+      step: () => {},
+      getState: () =>
+        projectExtraAttackMbtState({
+          state,
           lastResult,
           lastInvalidReason,
         }),
@@ -487,6 +602,27 @@ function normalizeDeathSavingThrowQuintState(
   };
 }
 
+function normalizeExtraAttackQuintState(
+  raw: unknown,
+): ExtraAttackMbtProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    extraAttackSlotsAvailable: numberFromQuintInt(
+      state["qExtraAttackSlotsAvailable"],
+      "qExtraAttackSlotsAvailable",
+    ),
+    movementSpentFeet: numberFromQuintInt(
+      state["qMovementSpentFeet"],
+      "qMovementSpentFeet",
+    ),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+  };
+}
+
 function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
   expect(impl).toEqual(spec);
   return true;
@@ -522,6 +658,13 @@ const deathSavingThrowStateCheck = stateCheck(
   normalizeDeathSavingThrowQuintState,
   compareDeathSavingThrowState,
 );
+const extraAttackStateCheck = stateCheck(
+  normalizeExtraAttackQuintState,
+  (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 
 describe("battle-runtime MBT", () => {
   it("replays Rogue weapon Attack and Sneak Attack traces against a Skeleton target", async () => {
@@ -550,6 +693,22 @@ describe("battle-runtime MBT", () => {
       nTraces: Number(process.env["MBT_TRACES"] ?? 1),
       maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
       stateCheck: battleRuntimeStateCheck,
+    });
+  }, 120_000);
+
+  it("replays Extra Attack action spend, interleaved Movement, and slot closure", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../battle-runtime-extra-attack.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createExtraAttackDriver(),
+      backend: "typescript",
+      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
+      stateCheck: extraAttackStateCheck,
     });
   }, 120_000);
 
@@ -634,6 +793,38 @@ function projectDeathSavingThrowMbtState(input: {
     targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
     targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
     holes: input.holes.map(projectHole).sort(),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function projectExtraAttackMbtState(input: {
+  readonly state: BattleState;
+  readonly lastResult: ExtraAttackMbtProjection["lastResult"];
+  readonly lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"];
+}): ExtraAttackMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const skeleton = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  const fighter = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  if (skeleton == null || fighter == null) {
+    throw new Error("Expected Extra Attack MBT combatants.");
+  }
+
+  return {
+    skeletonHp: skeleton.hp,
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    extraAttackSlotsAvailable: snapshot.turn.actionResources.filter(
+      (resource) =>
+        resource.source === "classFeatureExtraAttack" &&
+        resource.sourceOwnerId === fighterId,
+    ).length,
+    movementSpentFeet: Number(fighter.movement.spentFeet),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -740,11 +931,28 @@ function magicMissileSubject(): Extract<
   };
 }
 
+function moveSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "move" }
+> {
+  return { tag: "runtimeCommand", actorId: fighterId, command: "move" };
+}
+
 function fighterVsSkeletonBattle(): BattleState {
   return startBattleRight({
     battleId: battleId("battle-runtime-mbt-fighter-skeleton"),
     combatants: [
       rogueCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function extraAttackBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-extra-attack"),
+    combatants: [
+      extraAttackCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -880,6 +1088,55 @@ function rogueCreatureInit(input: {
   };
 }
 
+function extraAttackCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("fighter_extra_attack");
+  return {
+    combatantId: fighterId,
+    displayName: "Fighter",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("extra-attack-fighter-character"),
+      characterUnitRefs: [extraAttackUnitRef(unit)],
+      classLevels: [{ className: "fighter", level: 5 }],
+      armorClass: {
+        ...defaultArmorClassState(),
+        rightHandUse: "mainWeapon",
+      },
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {
+        weapon: {
+          itemId: "main:weapon_dagger",
+          unitId: "weapon_dagger",
+          grip: "one_handed",
+        },
+      },
+      attack: daggerAttack(),
+      unarmedStrike: baseUnarmedStrike(),
+      unitFeatures: [{ unit }],
+    },
+  };
+}
+
+function extraAttackUnitRef(
+  unit: UnitRecord,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  return {
+    unitId: unit.id,
+    supportProfiles: [ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE],
+  };
+}
+
 function daggerAttack(): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -995,6 +1252,24 @@ function targetFill(
         allyId: combatantId("ally"),
       },
     ],
+  };
+}
+
+function movementFill(
+  hole: BattleHole,
+  value: { readonly movementCostFeet: number },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected movement hole.");
+  }
+
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: [],
+    },
   };
 }
 

@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 334,
-      "numerator": 39,
-      "percent": "11.7%"
+      "numerator": 42,
+      "percent": "12.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 391,
-      "numerator": 53,
-      "percent": "13.6%"
+      "numerator": 56,
+      "percent": "14.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 54
+      "value": 57
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 22,
-      "numerator": 22,
+      "denominator": 25,
+      "numerator": 25,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 54,
-      "numerator": 54,
+      "denominator": 57,
+      "numerator": 57,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 17,
-      "numerator": 17,
+      "denominator": 18,
+      "numerator": 18,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 17,
-      "numerator": 17,
+      "denominator": 18,
+      "numerator": 18,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 17,
-      "numerator": 17,
+      "denominator": 18,
+      "numerator": 18,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 17,
-      "numerator": 17,
+      "denominator": 18,
+      "numerator": 18,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 22,
+      "denominator": 25,
       "numerator": 10,
-      "percent": "45.5%"
+      "percent": "40%"
     },
     "supportedProfileCoverage": {
-      "denominator": 40,
-      "numerator": 22,
-      "percent": "55%"
+      "denominator": 43,
+      "numerator": 25,
+      "percent": "58.1%"
     }
   },
   "metricSemantics": [
@@ -249,6 +249,33 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.attack-action-attack-count-scaling",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "QMBT37"
+      ],
+      "title": "Unit feature adds ordinary attack slots inside the Attack action",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
         }
       ]
     },
@@ -680,6 +707,7 @@
       "profileIds": [
         "unit-feature.alternate-action-cost",
         "unit-feature.action-surge-resource",
+        "unit-feature.attack-action-attack-count-scaling",
         "unit-feature.attack-damage-rider",
         "unit-feature.bonus-action-ongoing-rage",
         "unit-feature.first-attack-roll-reckless-advantage",
@@ -801,6 +829,14 @@
         "spell.hit-point-restoration"
       ],
       "taskId": "QMBT34"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused level-5 Extra Attack runtime parity.",
+      "profileIds": [
+        "unit-feature.attack-action-attack-count-scaling"
+      ],
+      "taskId": "QMBT37"
     }
   ],
   "units": [
@@ -1069,6 +1105,63 @@
       ],
       "sourceRecordPath": "packages/surface/content/fighter_action_surge.json",
       "unitId": "fighter_action_surge"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.attack-action-attack-count-scaling"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT37"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-action-attack-count-scaling",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT37"
+          ],
+          "title": "Unit feature adds ordinary attack slots inside the Attack action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fighter_extra_attack.json",
+      "unitId": "fighter_extra_attack"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -1803,6 +1896,120 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
       "unitId": "feat_savage_attacker"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.attack-action-attack-count-scaling"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT37"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-action-attack-count-scaling",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT37"
+          ],
+          "title": "Unit feature adds ordinary attack slots inside the Attack action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_extra_attack.json",
+      "unitId": "paladin_extra_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.attack-action-attack-count-scaling"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT37"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-action-attack-count-scaling",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT37"
+          ],
+          "title": "Unit feature adds ordinary attack slots inside the Attack action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ranger_extra_attack.json",
+      "unitId": "ranger_extra_attack"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -4469,24 +4676,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/fighter_extra_attack.json",
-      "unitId": "fighter_extra_attack"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "srd-candidate",
           "planningLane": "QMBT14-QMBT16",
           "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
@@ -6892,24 +7081,6 @@
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/paladin_extra_attack.json",
-      "unitId": "paladin_extra_attack"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
       "unitId": "paladin_fighting_style"
     },
@@ -7182,24 +7353,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/ranger_ability_score_improvement_l4.json",
       "unitId": "ranger_ability_score_improvement_l4"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/ranger_extra_attack.json",
-      "unitId": "ranger_extra_attack"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

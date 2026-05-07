@@ -17,6 +17,7 @@ import featBoonOfCombatProwessInput from "../../content/feat_boon_of_combat_prow
 import featDefenseInput from "../../content/feat_defense.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
 import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
+import fighterExtraAttackInput from "../../content/fighter_extra_attack.json";
 import fighterFightingStyleInput from "../../content/fighter_fighting_style.json";
 import fighterImprovedCriticalInput from "../../content/fighter_improved_critical.json";
 import fighterSecondWindInput from "../../content/fighter_second_wind.json";
@@ -35,6 +36,8 @@ import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
+import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
+import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
@@ -169,6 +172,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterSecondWindInput,
     fighterWeaponMasteryInput,
     fighterActionSurgeInput,
+    fighterExtraAttackInput,
     fighterTacticalMindInput,
     fighterImprovedCriticalInput,
     barbarianRageInput,
@@ -186,6 +190,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featBoonOfCombatProwessInput,
     featDefenseInput,
     featSavageAttackerInput,
+    paladinExtraAttackInput,
+    rangerExtraAttackInput,
     masterySapInput,
     orcAdrenalineRushInput,
     orcDarkvisionInput,

@@ -304,13 +304,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 132,
       "id": "QMBT37",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Level 5 Extra Attack Sequencing"
     },
     {
       "number": 133,
       "id": "QMBT38",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Select Next SRD Feature Widening Slice After Extra Attack"
     },
     {
@@ -397,8 +397,8 @@ Keep it synchronized with the DAG table and task details.
 | 129   | QMBT34 - Promote Mass Cure Wounds Area Hit Point Restoration | done | QMBT32-QMBT33 | QMBT36 | [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed `mass_cure_wounds` as `spell.hit-point-restoration` with point-origin Sphere target selection, focused runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
 | 130   | QMBT35 - Select Next SRD Feature Widening Slice After Savage Attacker | done | QMBT31-QMBT33 | QMBT36 | [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT33 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT33_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed decision: select level-5 Fighter, Paladin, and Ranger Extra Attack as the next SRD feature widening slice, with a red/green plan for `unit-feature.attack-action-attack-count-scaling`. |
 | 131   | QMBT36 - Recursive Unit Profile Planning Review | done | QMBT34-QMBT35 | QMBT37-QMBT39 | [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md) | Completed QMBT34-QMBT35 review, refreshed PRD status notes, and appended QMBT37-QMBT39 because the matrix lane is not complete. |
-| 132   | QMBT37 - Promote Level 5 Extra Attack Sequencing | ready-for-implementation-after-light-research | QMBT35-QMBT36 | QMBT38-QMBT39 | [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Implement level-5 Fighter, Paladin, and Ranger Extra Attack as `unit-feature.attack-action-attack-count-scaling` with QNT profile, runtime sequencing, deterministic evidence, and refreshed matrix artifacts. |
-| 133   | QMBT38 - Select Next SRD Feature Widening Slice After Extra Attack | blocked | QMBT37 | QMBT39 | [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | After QMBT37 lands, re-read remaining SRD feature-style pressure and select one narrow next feature widening slice without mixing speed, AC, healing/temp-HP, resistance, mastery, spell, or magic-item boundaries. |
+| 132   | QMBT37 - Promote Level 5 Extra Attack Sequencing | done | QMBT35-QMBT36 | QMBT38-QMBT39 | [Extra Attack feature widening slice plan](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT35_EXTRA_ATTACK_FEATURE_WIDENING_SLICE_PLAN.md), [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed level-5 Fighter, Paladin, and Ranger Extra Attack as `unit-feature.attack-action-attack-count-scaling` with QNT profile, runtime sequencing, deterministic evidence, focused runtime parity, and refreshed matrix artifacts. |
+| 133   | QMBT38 - Select Next SRD Feature Widening Slice After Extra Attack | ready-for-research | QMBT37 | QMBT39 | [QMBT36 planning review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT36_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Re-read remaining SRD feature-style pressure after QMBT37 and select one narrow next feature widening slice without mixing speed, AC, healing/temp-HP, resistance, mastery, spell, or magic-item boundaries. |
 | 134   | QMBT39 - Recursive Unit Profile Planning Review | blocked | QMBT37-QMBT38 | QMBT40+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT37-QMBT38 findings, update the PRD and plan docs, and append the next batch unless the Unit profile matrix lane is explicitly declared complete. |
 
 ## Task Details
@@ -1536,7 +1536,7 @@ two rounds. MBT was not run because QMBT36 changed planning documentation only.
 
 ### Task 132 - QMBT37 - Promote Level 5 Extra Attack Sequencing
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: QMBT35-QMBT36
 
@@ -1563,17 +1563,24 @@ speed projection, AC base calculation alternatives, healing or Temporary Hit
 Point resource features, resistance traits, spell admission, magic items, and
 authored-id dispatch registries.
 
-Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check for Extra Attack, Attack
-action, Movement between attacks, action spending, multiclass Extra Attack
-non-stacking, and the Multiattack distinction; focused QNT proof for the new
-attack-count scaling profile; focused feature runtime parity with the mandatory
-timed background protocol because promoted battle behavior changes; `pnpm
-unit-profile-coverage:check`; relevant package typecheck/tests; `pnpm
-quality`; `/simplify` convergence, minimum two rounds.
+Completed scope: promoted level-5 Fighter, Paladin, and Ranger Extra Attack as
+`unit-feature.attack-action-attack-count-scaling`, using the authored
+`scale_attack_count` / `additional: 1` mechanics projection to open one
+ordinary attack slot after spending the Attack action once. The implementation
+allows Movement between attack slots, closes unspent slots at End Turn, keeps
+multiclass Extra Attack non-stacking to one added slot for this slice, and
+keeps class-feature Extra Attack distinct from Stat Block Multiattack.
+
+Verification: RAW and `UBIQUITOUS_LANGUAGE.md` check completed through the
+QMBT35/QMBT36 source anchors; focused QNT proof for the new attack-count
+scaling profile passed; focused Extra Attack runtime parity passed with the
+mandatory timed background MBT protocol; `pnpm unit-profile-coverage:check`
+passed; relevant battle-runtime typecheck/tests passed; `pnpm quality` passed;
+`/simplify` converged after two rounds.
 
 ### Task 133 - QMBT38 - Select Next SRD Feature Widening Slice After Extra Attack
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT37
 

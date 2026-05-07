@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -106,6 +107,13 @@ module battleRuntime {
   //   runtime, Movement can interleave between dispatch attacks, and dispatches
   //   close when spent or when the turn ends. Stat Block Bonus Action options
   //   spend the one per-turn Bonus Action.
+  // - Classes/Fighter.md lines 94-96, Classes/Paladin.md lines 126-128,
+  //   Classes/Ranger.md lines 110-112, Playing-the-Game.md lines 501-503,
+  //   Rules-Glossary.md lines 102-108, and UBIQUITOUS_LANGUAGE.md:
+  //   level-5 Extra Attack changes the
+  //   Attack action to produce one additional ordinary attack slot. It spends
+  //   the Action once, permits Movement between the attacks, and any unspent
+  //   class-feature attack slot closes when the turn ends.
   // - Rules-Glossary.md lines 102-106, 496-514, and 1074 plus
   //   Equipment.md lines 54-56 and ASSUMPTIONS.md A8/A37: the battle-owned
   //   held/wielded hand state, Light-property Off-Hand Attack damage modifier
@@ -296,6 +304,8 @@ module battleRuntime {
     fighterCriticalRange: FighterCriticalRange,
     fighterSneakAttackSupported: bool,
     fighterSneakAttackUsedThisTurn: bool,
+    fighterExtraAttackSupported: bool,
+    fighterExtraAttackSlotsRemaining: int,
   }
 
   type ActionSurgeResult = {
@@ -392,6 +402,8 @@ module battleRuntime {
     fighterCriticalRange: DefaultCriticalRange,
     fighterSneakAttackSupported: false,
     fighterSneakAttackUsedThisTurn: false,
+    fighterExtraAttackSupported: false,
+    fighterExtraAttackSlotsRemaining: 0,
   }
 
   // The battle runtime receives Initiative counts and the caller-resolved
@@ -406,7 +418,7 @@ module battleRuntime {
     state.initiative.stillToAct[0]
 
   pure def currentActorCanAttack(state: BattleState): bool =
-    state.actionAvailable and
+    (state.actionAvailable or (currentActor(state) == Fighter and state.fighterExtraAttackSlotsRemaining > 0)) and
     (
       (currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated)) or
       (currentActor(state) == Goblin and state.goblin.hp > 0)
@@ -681,6 +693,7 @@ module battleRuntime {
       lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
       fighterSneakAttackUsedThisTurn: false,
+      fighterExtraAttackSlotsRemaining: 0,
     }
   }
 
@@ -888,6 +901,21 @@ module battleRuntime {
   pure def withFighterSneakAttack(state: BattleState): BattleState =
     { ...state, fighterSneakAttackSupported: true }
 
+  pure def withFighterExtraAttack(state: BattleState): BattleState =
+    { ...state, fighterExtraAttackSupported: true }
+
+  pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState =
+    if (state.fighterExtraAttackSlotsRemaining > 0)
+      { ...state, fighterExtraAttackSlotsRemaining: state.fighterExtraAttackSlotsRemaining - 1 }
+    else if (state.actionAvailable)
+      {
+        ...state,
+        actionAvailable: false,
+        fighterExtraAttackSlotsRemaining: if (state.fighterExtraAttackSupported) 1 else 0,
+      }
+    else
+      state
+
   pure def withGoblinHp(state: BattleState, hp: int, tempHp: int): BattleState =
     { ...state, goblin: { ...state.goblin, hp: hp, tempHp: tempHp } }
 
@@ -941,15 +969,16 @@ module battleRuntime {
     barbarianLevel: int,
     damageDisposition: DamageDisposition,
   ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+    if (not(currentActorCanAttack(state)) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
       state
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
+      val spent = spendFighterAttackActionOrExtraAttackSlot(revealed)
       val rageDamage = if (fighterHasRage(revealed)) fighterRageDamageBonus(barbarianLevel) else 0
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
-        { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
+        { ...spent, lightWeaponAttackMade: true }
       else
-        { ...revealed, goblin: applyDamageWithDisposition(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), actionAvailable: false, lightWeaponAttackMade: true }
+        { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
     }
 
   pure def fighterSneakAttackEligible(
@@ -974,21 +1003,21 @@ module battleRuntime {
     rollHasDisadvantage: bool,
     concentrationSaveSucceeded: bool,
   ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+    if (not(currentActorCanAttack(state)) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
       state
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
+      val spent = spendFighterAttackActionOrExtraAttackSlot(revealed)
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
-        { ...revealed, actionAvailable: false, lightWeaponAttackMade: true }
+        { ...spent, lightWeaponAttackMade: true }
       else {
         val sneakSelectedAndEligible =
           selectedSneakAttack and
           fighterSneakAttackEligible(revealed, rollHasAdvantage, allyAdjacent, rollHasDisadvantage)
         val damage = weaponDamageRoll + 3 + (if (sneakSelectedAndEligible) sneakAttackDamageRoll else 0)
         {
-          ...revealed,
+          ...spent,
           goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded),
-          actionAvailable: false,
           lightWeaponAttackMade: true,
           fighterSneakAttackUsedThisTurn: sneakSelectedAndEligible or revealed.fighterSneakAttackUsedThisTurn,
         }
@@ -1863,6 +1892,38 @@ module battleRuntime {
       assert(secondDispatch.goblinMultiattackDispatchesRemaining == 0),
       assert(not(goblinMultiattackDispatchContinuationOpen(secondDispatch))),
       assert(ended.goblinMultiattackDispatchesRemaining == 0),
+    }
+  }
+
+  run test_class_feature_extra_attack_spends_one_action_and_grants_one_slot = {
+    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, 0, true)
+    val second = resolveAttack(first, 1, 1, 0, true)
+    val third = resolveAttack(second, 1, 1, 0, true)
+    all {
+      assert(not(first.actionAvailable)),
+      assert(first.fighterExtraAttackSlotsRemaining == 1),
+      assert(second.fighterExtraAttackSlotsRemaining == 0),
+      assert(third == second),
+    }
+  }
+
+  run test_class_feature_extra_attack_allows_movement_between_slots = {
+    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, 0, true)
+    val moved = moveFighter(first, 5, false)
+    val second = resolveAttack(moved, 1, 1, 0, true)
+    all {
+      assert(moved.fighterExtraAttackSlotsRemaining == 1),
+      assert(moved.fighter.movementSpent == 5),
+      assert(second.fighterExtraAttackSlotsRemaining == 0),
+    }
+  }
+
+  run test_class_feature_extra_attack_end_turn_closes_unspent_slot = {
+    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, 0, true)
+    val ended = endTurn(first)
+    all {
+      assert(first.fighterExtraAttackSlotsRemaining == 1),
+      assert(ended.fighterExtraAttackSlotsRemaining == 0),
     }
   }
 

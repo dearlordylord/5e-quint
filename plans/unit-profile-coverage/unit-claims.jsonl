@@ -8,6 +8,7 @@
 {"unitId":"fighter_second_wind","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.self-bonus-action-healing"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"fighter_weapon_mastery","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon mastery grant container; mastery Unit carries executable pressure."}}
 {"unitId":"fighter_action_surge","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.action-surge-resource"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
+{"unitId":"fighter_extra_attack","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.attack-action-attack-count-scaling"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"fighter_tactical_mind","collectionId":"srd-5.2.1","claim":{"tag":"needs-surface-widening","issue":"Ability-check resource augmentation is not represented by a promoted battle Unit profile."}}
 {"unitId":"fighter_improved_critical","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.weapon-critical-range-19"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"barbarian_rage","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.bonus-action-ongoing-rage"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
@@ -25,6 +26,8 @@
 {"unitId":"defense","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.passive-armor-class-bonus"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"feat_archery","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.passive-ranged-attack-roll-bonus"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"feat_savage_attacker","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.weapon-damage-dice-roll-choice"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
+{"unitId":"paladin_extra_attack","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.attack-action-attack-count-scaling"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
+{"unitId":"ranger_extra_attack","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.attack-action-attack-count-scaling"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"mastery_sap","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon mastery rider is authored but not yet a stable Unit profile row."}}
 {"unitId":"orc_adrenaline_rush","collectionId":"srd-5.2.1","claim":{"tag":"needs-surface-widening","issue":"Dash plus temporary hit points from a species trait is not represented by a promoted Unit profile."}}
 {"unitId":"orc_darkvision","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Sense grant is authored data with no promoted execution profile."}}

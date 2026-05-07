@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -250,6 +250,24 @@ module unitFeatureProcedureProfiles {
     effectiveDamage: int,
   }
 
+  type AttackActionAttackCountState = {
+    actionAvailable: bool,
+    extraAttackSlotOpen: bool,
+    attacksResolved: int,
+    movementSegmentsTaken: int,
+    turnEnded: bool,
+  }
+
+  type AttackActionAttackCountFacts = {
+    additionalAttacks: int,
+  }
+
+  type AttackActionAttackCountResult = {
+    state: AttackActionAttackCountState,
+    actionWasSpent: bool,
+    attackWasResolved: bool,
+  }
+
   pure def legalFeatureUsePool(pool: FeatureUsePool): bool = all {
     pool.maximumUses >= 0,
     pool.maximumUses <= 6,
@@ -323,6 +341,69 @@ module unitFeatureProcedureProfiles {
       effectiveDamage: nonnegative(selectedTotal + facts.damageModifier),
     }
   }
+
+  pure def initialAttackActionAttackCountState: AttackActionAttackCountState = {
+    actionAvailable: true,
+    extraAttackSlotOpen: false,
+    attacksResolved: 0,
+    movementSegmentsTaken: 0,
+    turnEnded: false,
+  }
+
+  pure def legalAttackActionAttackCountFacts(
+    facts: AttackActionAttackCountFacts
+  ): bool = facts.additionalAttacks == 1
+
+  pure def takeAttackActionWithAttackCountScaling(
+    state: AttackActionAttackCountState,
+    facts: AttackActionAttackCountFacts
+  ): AttackActionAttackCountResult = {
+    val admitted = all {
+      legalAttackActionAttackCountFacts(facts),
+      state.actionAvailable,
+      not(state.extraAttackSlotOpen),
+      not(state.turnEnded),
+    }
+    {
+      state:
+        if (admitted) {
+          state.with("actionAvailable", false)
+            .with("extraAttackSlotOpen", true)
+            .with("attacksResolved", state.attacksResolved + 1)
+        } else state,
+      actionWasSpent: admitted,
+      attackWasResolved: admitted,
+    }
+  }
+
+  pure def resolveExtraAttackSlot(
+    state: AttackActionAttackCountState
+  ): AttackActionAttackCountResult = {
+    val admitted = all {
+      state.extraAttackSlotOpen,
+      not(state.turnEnded),
+    }
+    {
+      state:
+        if (admitted) {
+          state.with("extraAttackSlotOpen", false)
+            .with("attacksResolved", state.attacksResolved + 1)
+        } else state,
+      actionWasSpent: false,
+      attackWasResolved: admitted,
+    }
+  }
+
+  pure def moveDuringAttackActionAttackCount(
+    state: AttackActionAttackCountState
+  ): AttackActionAttackCountState =
+    if (state.turnEnded) state
+    else state.with("movementSegmentsTaken", state.movementSegmentsTaken + 1)
+
+  pure def endTurnDuringAttackActionAttackCount(
+    state: AttackActionAttackCountState
+  ): AttackActionAttackCountState =
+    state.with("extraAttackSlotOpen", false).with("turnEnded", true)
 
   pure def spendFeatureUsePool(pool: FeatureUsePool): FeatureUsePool =
     if (pool.usesRemaining <= 0) pool
@@ -1174,6 +1255,70 @@ module unitFeatureProcedureProfiles {
       assert(nonRanged.bonus == 0),
       assert(nonRanged.effectiveAttackRollTotal == 14),
       assert(not(nonRanged.hits)),
+    }
+  }
+
+  run test_extra_attack_spends_one_action_and_resolves_two_attack_slots = {
+    val first = takeAttackActionWithAttackCountScaling(
+      initialAttackActionAttackCountState,
+      { additionalAttacks: 1 }
+    )
+    val second = resolveExtraAttackSlot(first.state)
+    all {
+      assert(first.actionWasSpent),
+      assert(first.attackWasResolved),
+      assert(not(first.state.actionAvailable)),
+      assert(first.state.extraAttackSlotOpen),
+      assert(not(second.actionWasSpent)),
+      assert(second.attackWasResolved),
+      assert(not(second.state.extraAttackSlotOpen)),
+      assert(second.state.attacksResolved == 2),
+    }
+  }
+
+  run test_extra_attack_allows_movement_between_attack_slots = {
+    val first = takeAttackActionWithAttackCountScaling(
+      initialAttackActionAttackCountState,
+      { additionalAttacks: 1 }
+    )
+    val moved = moveDuringAttackActionAttackCount(first.state)
+    val second = resolveExtraAttackSlot(moved)
+    all {
+      assert(moved.extraAttackSlotOpen),
+      assert(moved.movementSegmentsTaken == 1),
+      assert(second.attackWasResolved),
+      assert(second.state.attacksResolved == 2),
+    }
+  }
+
+  run test_extra_attack_end_turn_closes_unspent_slot = {
+    val first = takeAttackActionWithAttackCountScaling(
+      initialAttackActionAttackCountState,
+      { additionalAttacks: 1 }
+    )
+    val ended = endTurnDuringAttackActionAttackCount(first.state)
+    val rejected = resolveExtraAttackSlot(ended)
+    all {
+      assert(not(ended.extraAttackSlotOpen)),
+      assert(ended.turnEnded),
+      assert(not(rejected.attackWasResolved)),
+      assert(rejected.state.attacksResolved == 1),
+    }
+  }
+
+  run test_extra_attack_profile_rejects_adjacent_additional_counts = {
+    val admitted = takeAttackActionWithAttackCountScaling(
+      initialAttackActionAttackCountState,
+      { additionalAttacks: 1 }
+    )
+    val rejected = takeAttackActionWithAttackCountScaling(
+      initialAttackActionAttackCountState,
+      { additionalAttacks: 2 }
+    )
+    all {
+      assert(admitted.attackWasResolved),
+      assert(not(rejected.attackWasResolved)),
+      assert(rejected.state.actionAvailable),
     }
   }
 }

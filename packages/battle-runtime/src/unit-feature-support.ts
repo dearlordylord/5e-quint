@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -37,6 +37,8 @@ export const PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE =
   "passiveRangedAttackRollBonus";
 export const WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE =
   "weaponDamageDiceRollChoice";
+export const ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE =
+  "attackActionAttackCountScaling";
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -53,6 +55,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
 ] as const;
 export type BattleAlternateActionCostSupportProfile = {
   readonly kind: "alternateActionCost";
@@ -198,6 +201,19 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (weaponDamageDiceRollChoiceSupport === "weaponDamageDiceRollChoice") {
     supportProfiles.push(WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE);
+  }
+
+  const attackActionAttackCountScalingSupport =
+    battleAttackActionAttackCountScalingSupportForUnit(input.unit);
+  if (attackActionAttackCountScalingSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Attack action attack-count scaling Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (
+    attackActionAttackCountScalingSupport === "attackActionAttackCountScaling"
+  ) {
+    supportProfiles.push(ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE);
   }
 
   return Either.right(supportProfiles);
@@ -383,6 +399,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "weaponDamageDiceRollChoice";
       readonly unit: UnitRecord;
       readonly damageDiceChoice: WeaponDamageDiceRollChoiceProfile;
+    }
+  | {
+      readonly kind: "attackActionAttackCountScaling";
+      readonly unit: UnitRecord;
+      readonly additionalAttacks: 1;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -625,6 +646,11 @@ export type BattleWeaponDamageDiceRollChoiceSupport =
   | "unsupported"
   | null;
 
+export type BattleAttackActionAttackCountScalingSupport =
+  | "attackActionAttackCountScaling"
+  | "unsupported"
+  | null;
+
 export function battlePassiveArmorClassBonusSupportForUnit(
   unit: UnitRecord,
 ): BattlePassiveArmorClassBonusSupport {
@@ -658,6 +684,17 @@ export function battleWeaponDamageDiceRollChoiceSupportForUnit(
     : "weaponDamageDiceRollChoice";
 }
 
+export function battleAttackActionAttackCountScalingSupportForUnit(
+  unit: UnitRecord,
+): BattleAttackActionAttackCountScalingSupport {
+  if (!hasAttackActionAttackCountScalingMechanics(unit)) {
+    return null;
+  }
+  return attackActionAttackCountScalingProfileForUnit(unit) === null
+    ? "unsupported"
+    : "attackActionAttackCountScaling";
+}
+
 function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
@@ -683,6 +720,42 @@ function hasWeaponDamageDiceRollChoiceMechanics(unit: UnitRecord): boolean {
     unit.mechanics.family === "on_hit_trigger" &&
     unit.mechanics.effect.kind === "reroll_weapon_damage_dice"
   );
+}
+
+function hasAttackActionAttackCountScalingMechanics(unit: UnitRecord): boolean {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    return false;
+  }
+  return unit.mechanics.grants.some(
+    (effect) => effect.kind === "scale_attack_count",
+  );
+}
+
+export function attackActionAttackCountScalingProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "attackActionAttackCountScaling" }
+> | null {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    return null;
+  }
+  const [effect, ...extraEffects] = unit.mechanics.grants;
+  if (
+    effect?.kind !== "scale_attack_count" ||
+    effect.additional !== 1 ||
+    extraEffects.length > 0 ||
+    unit.mechanics.condition !== undefined ||
+    unit.mechanics.operations !== undefined ||
+    unit.mechanics.suppressedBy !== undefined
+  ) {
+    return null;
+  }
+  return {
+    kind: "attackActionAttackCountScaling",
+    unit,
+    additionalAttacks: 1,
+  };
 }
 
 export function passiveArmorClassBonusProfileForUnit(
@@ -878,7 +951,8 @@ export function parseSupportedUnitFeatureProfile(
     parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels) ??
     parsePassiveArmorClassBonusUnitFeatureProfile(unit) ??
     parsePassiveRangedAttackRollBonusUnitFeatureProfile(unit) ??
-    parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit)
+    parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
+    attackActionAttackCountScalingProfileForUnit(unit)
   );
 }
 

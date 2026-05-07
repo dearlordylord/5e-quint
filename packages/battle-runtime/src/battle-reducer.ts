@@ -1,10 +1,11 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 import {
+  actionRestrictionAllows,
   canSpendAction,
   grantUnitActionResource,
   resetTurnActionEconomy,
@@ -195,6 +196,7 @@ import type {
 } from "./battle-init.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   type AlternateActionCostAction,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
@@ -2490,6 +2492,13 @@ const RuntimeActionResourceSchema = Schema.Union(
     }),
     restriction: BattleActionRestrictionSchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    source: Schema.Literal("classFeatureExtraAttack"),
+    sourceOwnerId: Schema.String,
+    sourceUnitId: Schema.String,
+    restriction: BattleActionRestrictionSchema,
+  }),
 );
 
 const BattleTurnSnapshotSchema = Schema.Struct({
@@ -2758,7 +2767,7 @@ const SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS = [
 ] as const satisfies ReadonlyArray<StandardActionKind>;
 type SupportedStatBlockBonusActionStandardAction =
   (typeof SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS)[number];
-const STAT_BLOCK_MULTIATTACK_RESOURCE_EXCLUDED_ACTIONS = [
+const ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS = [
   "dash",
   "disengage",
   "dodge",
@@ -2774,6 +2783,10 @@ const STAT_BLOCK_MULTIATTACK_RESOURCE_EXCLUDED_ACTIONS = [
 type StatBlockMultiattackActionResource = Extract<
   RuntimeActionResource,
   { readonly source: "statBlockMultiattack" }
+>;
+type ClassFeatureExtraAttackActionResource = Extract<
+  RuntimeActionResource,
+  { readonly source: "classFeatureExtraAttack" }
 >;
 const HELP_ATTACK_ALLY_HOLE_ID = holeId("battle:help-attack:ally");
 const HELP_ATTACK_TARGET_HOLE_ID = holeId("battle:help-attack:target");
@@ -3174,7 +3187,7 @@ export function discoverBattleActs(
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
-    canSpendAction(state.currentTurnResources, "attack") &&
+    canSpendNonExtraAttackActionResource(state, actorId) &&
     grappledBy(state, actorId) !== undefined
   ) {
     const grapple = grappledBy(state, actorId);
@@ -3499,6 +3512,16 @@ function isStatBlockMultiattackActionResource(
   );
 }
 
+function isClassFeatureExtraAttackActionResource(
+  resource: RuntimeActionResource,
+  actorId: CombatantId,
+): resource is ClassFeatureExtraAttackActionResource {
+  return (
+    resource.source === "classFeatureExtraAttack" &&
+    resource.sourceOwnerId === actorId
+  );
+}
+
 function actorHasStatBlockMultiattackActionResource(
   state: BattleState,
   actorId: CombatantId,
@@ -3514,6 +3537,27 @@ function currentActorHasOpenStatBlockMultiattackDispatch(
   return actorHasStatBlockMultiattackActionResource(
     state,
     currentActorId(state),
+  );
+}
+
+function actorHasClassFeatureExtraAttackActionResource(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  return state.currentTurnResources.actionResources.some((resource) =>
+    isClassFeatureExtraAttackActionResource(resource, actorId),
+  );
+}
+
+function canSpendNonExtraAttackActionResource(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  return state.currentTurnResources.actionResources.some(
+    (resource) =>
+      !isClassFeatureExtraAttackActionResource(resource, actorId) &&
+      (resource.source === "turn" ||
+        actionRestrictionAllows(resource.restriction, "attack")),
   );
 }
 
@@ -7904,7 +7948,7 @@ function resolveMultiattack(
           attackPart: { section: "actions" as const, name: dispatch.part.name },
           restriction: {
             kind: "exclude" as const,
-            actions: STAT_BLOCK_MULTIATTACK_RESOURCE_EXCLUDED_ACTIONS,
+            actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
           },
         })),
       ],
@@ -8750,7 +8794,12 @@ function resolveEscapeGrapple(
       "Escape Grapple is not available during a Stat Block Multiattack dispatch.",
     );
   }
-  const spent = spendAction(input.state.currentTurnResources, "attack");
+  const spent = spendMatchingActionResource(
+    input.state.currentTurnResources,
+    "attack",
+    (resource) =>
+      !isClassFeatureExtraAttackActionResource(resource, input.subject.actorId),
+  );
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -9240,6 +9289,96 @@ function attackUsesWeaponOrUnarmedStrikeCriticalRange(
   );
 }
 
+function compatibleAttackActionResource(
+  resources: readonly RuntimeActionResource[],
+): { readonly resource: RuntimeActionResource; readonly index: number } | null {
+  const compatible = resources
+    .map((resource, index) => ({ resource, index }))
+    .filter(({ resource }) =>
+      resource.source === "turn"
+        ? true
+        : actionRestrictionAllows(resource.restriction, "attack"),
+    );
+  const extraAttack = compatible.find(
+    ({ resource }) => resource.source === "classFeatureExtraAttack",
+  );
+  if (extraAttack !== undefined) return extraAttack;
+  const restricted = compatible.find(
+    ({ resource }) => resource.source !== "turn",
+  );
+  return restricted ?? compatible[0] ?? null;
+}
+
+function spendAttackActionResource<T extends ActionEconomyState>(
+  state: T,
+): Either.Either<
+  { readonly state: T; readonly spentResource: RuntimeActionResource },
+  "no action resource available"
+> {
+  const actionResource = compatibleAttackActionResource(state.actionResources);
+  if (actionResource === null) {
+    return Either.left("no action resource available");
+  }
+  return Either.right({
+    state: {
+      ...state,
+      actionResources: state.actionResources.filter(
+        (_, index) => index !== actionResource.index,
+      ),
+    },
+    spentResource: actionResource.resource,
+  });
+}
+
+function classFeatureExtraAttackUnitIdForActor(
+  actor: BattleCreatureState | undefined,
+): UnitRecord["id"] | null {
+  if (actor?.origin.kind !== "character") return null;
+  return (
+    actor.origin.characterUnitRefs.find((unitRef) =>
+      unitRef.supportProfiles.some(
+        (profile) =>
+          profile === ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+      ),
+    )?.unitId ?? null
+  );
+}
+
+function openClassFeatureExtraAttackResource(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly spentResource: RuntimeActionResource;
+}): BattleTurnResources {
+  if (
+    input.spentResource.source === "classFeatureExtraAttack" ||
+    actorHasClassFeatureExtraAttackActionResource(input.state, input.actorId)
+  ) {
+    return input.state.currentTurnResources;
+  }
+  const sourceUnitId = classFeatureExtraAttackUnitIdForActor(
+    input.state.combatants.get(input.actorId),
+  );
+  if (sourceUnitId === null) {
+    return input.state.currentTurnResources;
+  }
+  return {
+    ...input.state.currentTurnResources,
+    actionResources: [
+      ...input.state.currentTurnResources.actionResources,
+      {
+        kind: "action",
+        source: "classFeatureExtraAttack",
+        sourceOwnerId: input.actorId,
+        sourceUnitId,
+        restriction: {
+          kind: "exclude",
+          actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
+        },
+      },
+    ],
+  };
+}
+
 function spendAttackAction(
   state: BattleState,
   actorId: CombatantId,
@@ -9268,36 +9407,62 @@ function spendAttackAction(
             isStatBlockMultiattackActionResource(resource, actorId),
         )
       : [];
-  const spent =
+  let spentTurnResources: BattleTurnResources;
+  let spentResource: RuntimeActionResource | null;
+  if (
     multiattackResources.length > 0 &&
     attack.kind === "statBlockAttack" &&
     attack.part.section === "actions"
-      ? spendMatchingActionResource(
-          state.currentTurnResources,
-          "attack",
-          (resource) =>
-            isStatBlockMultiattackActionResource(resource, actorId) &&
-            resource.attackPart.section === attack.part.section &&
-            resource.attackPart.name === attack.part.name,
-        )
-      : spendAction(state.currentTurnResources, "attack");
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      state,
-      "staleSubject",
-      "Attack is no longer available for the current actor.",
+  ) {
+    const spent = spendMatchingActionResource(
+      state.currentTurnResources,
+      "attack",
+      (resource) =>
+        isStatBlockMultiattackActionResource(resource, actorId) &&
+        resource.attackPart.section === attack.part.section &&
+        resource.attackPart.name === attack.part.name,
     );
+    if (Either.isLeft(spent)) {
+      return invalidResult(
+        state,
+        "staleSubject",
+        "Attack is no longer available for the current actor.",
+      );
+    }
+    spentTurnResources = spent.right;
+    spentResource = null;
+  } else {
+    const spent = spendAttackActionResource(state.currentTurnResources);
+    if (Either.isLeft(spent)) {
+      return invalidResult(
+        state,
+        "staleSubject",
+        "Attack is no longer available for the current actor.",
+      );
+    }
+    spentTurnResources = spent.right.state;
+    spentResource = spent.right.spentResource;
   }
-
+  const afterExtraAttackResource =
+    spentResource === null
+      ? spentTurnResources
+      : openClassFeatureExtraAttackResource({
+          state: {
+            ...state,
+            currentTurnResources: spentTurnResources,
+          },
+          actorId,
+          spentResource,
+        });
   const nextTurnResources =
     attack.kind === "weapon" && isLightMeleeWeapon(attack.weapon)
       ? {
-          ...spent.right,
+          ...afterExtraAttackResource,
           lightWeaponAttackMade: {
             weaponItemId: heldWeaponItemIdForAttack(state, actorId, attack),
           },
         }
-      : spent.right;
+      : afterExtraAttackResource;
 
   const nextState = spendStatBlockAttackResources({
     state: {
