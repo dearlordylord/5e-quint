@@ -3,6 +3,18 @@ const path = require("node:path");
 const { surfaceUnitKinds } = require("./unit-profile-coverage-config.cjs");
 const { fail, readJson } = require("./unit-profile-coverage-io.cjs");
 
+function hasExecutableMechanics(record) {
+  if (Boolean(record.mechanics)) return true;
+  return hasVariantMagicMechanics(record);
+}
+
+function hasVariantMagicMechanics(record) {
+  return (
+    Array.isArray(record.variants) &&
+    record.variants.some((variant) => Boolean(variant?.magic?.mechanics))
+  );
+}
+
 function discoverSrdUnits(root, collection) {
   const catalogPath = path.join(root, collection.discovery.sourcePath);
   const source = fs.readFileSync(catalogPath, "utf8");
@@ -36,7 +48,7 @@ function discoverSrdUnits(root, collection) {
       sourceRecordPath,
       kind: record.kind,
       provenance: record.provenance,
-      executableMechanics: Boolean(record.mechanics),
+      executableMechanics: hasExecutableMechanics(record),
       rawRecord: record,
     };
   });
@@ -58,7 +70,7 @@ function discoverClassicFixtureUnits(root, collection) {
         sourceRecordPath,
         kind: "classic-non-srd-mechanics-fixture",
         provenance: record.provenance,
-        executableMechanics: Boolean(record.mechanics),
+        executableMechanics: hasExecutableMechanics(record),
         rawRecord: record,
       };
     });
@@ -92,7 +104,7 @@ function discoverAuthoredSurfaceUnits(root) {
           sourceRecordPath,
           kind: record.kind,
           provenance: record.provenance,
-          executableMechanics: Boolean(record.mechanics),
+          executableMechanics: hasExecutableMechanics(record),
           rawRecord: record,
         },
       ];
@@ -102,4 +114,6 @@ function discoverAuthoredSurfaceUnits(root) {
 module.exports = {
   discoverAuthoredSurfaceUnits,
   discoverInventory,
+  hasExecutableMechanics,
+  hasVariantMagicMechanics,
 };

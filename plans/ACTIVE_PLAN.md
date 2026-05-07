@@ -161,13 +161,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 108,
       "id": "QMBT13",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Authored Catalog Admission Gaps"
     },
     {
       "number": 109,
       "id": "QMBT14",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Trace Spell Unit Admission Evidence"
     },
     {
@@ -185,7 +185,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 112,
       "id": "QMBT17",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Define Classic Non-SRD Mechanics Intake Policy"
     },
     {
@@ -260,11 +260,11 @@ Keep it synchronized with the DAG table and task details.
 | 105   | QMBT10 - Tighten Unit Identity Evidence Semantics | done | QMBT7-QMBT9 | QMBT12, QMBT16, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md), [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Research and fix whether `selected-identity-mbt` evidence proves executable Unit-specific replay or only owner-file membership; downgrade or strengthen evidence before expanding MBT metrics. |
 | 106   | QMBT11 - Finish Unit Profile Checker Modularization | done | QMBT8 | QMBT12-QMBT15, QMBT19 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Completed checker split into CLI orchestration, shared config, IO, installed/authored Unit discovery, owner-marker scanning, claim/evidence validation, self-test, and report rendering modules without changing matrix semantics or evidence rows. |
 | 107   | QMBT12 - Reconcile QMBT8-QMBT9 Closeout | done | QMBT10-QMBT11 | QMBT13-QMBT20 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Completed reconciliation: QMBT8-QMBT9 remain closed, no evidence rows were reclassified, deterministic and selected identity coverage remain 9/16, and QMBT13 is unblocked. |
-| 108   | QMBT13 - Classify Authored Catalog Admission Gaps | ready-for-research | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Turn `not-in-unit-catalog` into actionable categories: intentional backlog, SRD candidate, Classic/private pressure, non-runtime authored data, duplicate/content issue, or other explicit disposition. |
-| 109   | QMBT14 - Trace Spell Unit Admission Evidence | blocked | QMBT11-QMBT13 | QMBT15-QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Add a small deterministic spell Unit admission/projection tracer before broad spell expansion. |
+| 108   | QMBT13 - Classify Authored Catalog Admission Gaps | done | QMBT11-QMBT12 | QMBT14-QMBT18 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Completed generated catalog-admission dispositions and report triage for authored not-in-catalog Surface Units. |
+| 109   | QMBT14 - Trace Spell Unit Admission Evidence | ready-for-implementation-after-light-research | QMBT11-QMBT13 | QMBT15-QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Add a small deterministic spell Unit admission/projection tracer before broad spell expansion. |
 | 110   | QMBT15 - Expand Spell Unit Admission Evidence | blocked | QMBT14 | QMBT16 | [QMBT7 plan](/workspace/typescript/dnd/plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md) | Expand deterministic spell Unit evidence if QMBT14 proves the methodology and denominators are clear. |
 | 111   | QMBT16 - Decide Selected Spell Identity MBT | blocked | QMBT10, QMBT14-QMBT15 | QMBT19-QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Decide whether any spell identities need selected MBT beyond QMBT5 Procedure Parity, and add only high-risk selected identities. |
-| 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | blocked | QMBT12-QMBT13 | QMBT18-QMBT20 | [Unit profile coverage matrix plan](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md) | Make private PHB/XPHB mechanics pressure intake explicit: public renamed mechanics-only records, matrix gaps, evidence expectations, and protected-expression gates. |
+| 112   | QMBT17 - Define Classic Non-SRD Mechanics Intake Policy | ready-for-research | QMBT12-QMBT13 | QMBT18-QMBT20 | [Unit profile coverage matrix plan](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md) | Make private PHB/XPHB mechanics pressure intake explicit: public renamed mechanics-only records, matrix gaps, evidence expectations, and protected-expression gates. |
 | 113   | QMBT18 - Drive Unsupported Feature Profile Red-Green Slice | blocked | QMBT10-QMBT13, QMBT17 | QMBT19-QMBT20 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md) | Pick one unsupported/widening feature profile and drive it matrix/QNT-MBT-first into TypeScript implementation and evidence. |
 | 114   | QMBT19 - Review Unit Profile Matrix Metrics Semantics | blocked | QMBT10-QMBT18 | QMBT20 | [Unit profile parity PRD](/workspace/typescript/dnd/prd/01_UNIT_PROFILE_PARITY_MBT.md) | Review denominators, labels, and report sections after the corrective and expansion slices so percentages still mean what they claim. |
 | 115   | QMBT20 - Recursive Unit Profile Planning Review | blocked | QMBT10-QMBT19 | QMBT21+ | [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT10-QMBT19 findings, update PRD/plan docs, and append QMBT21+ tasks plus a new recursive planning-review task unless the matrix lane is explicitly declared complete. |
@@ -638,15 +638,14 @@ evidence, QMBT10 replay-marker semantics, QMBT11 modularization notes, and the
 generated matrix/report. QMBT8 and QMBT9 remain closed. No evidence rows,
 report labels, or generated metrics required reclassification; deterministic
 admission/projection coverage and selected identity MBT coverage both remain
-9/16. QMBT13 is now ready for research; QMBT14-QMBT20 remain blocked by their
-other dependencies.
+9/16. QMBT13 was unblocked for research.
 
 Verification: `pnpm unit-profile-coverage:check`; active-plan consistency
 check across Ralph index, DAG row, and task detail.
 
 ### Task 108 - QMBT13 - Classify Authored Catalog Admission Gaps
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT11-QMBT12
 
@@ -654,20 +653,21 @@ Blocks: QMBT14-QMBT18
 
 Research / plan: [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 
-Scope: turn `catalogAdmission.status = "not-in-unit-catalog"` from a raw gap
-list into actionable categories. Candidate dispositions include intentional
-backlog, SRD candidate, Classic/private pressure, non-runtime authored data,
-duplicate/content issue, and explicit unsupported/widening pressure.
+Completed scope: turned `catalogAdmission.status = "not-in-unit-catalog"` from
+a raw gap list into generated actionable dispositions. The report now separates
+SRD spell candidates, intentional magic-item backlog, unsupported/widening
+pressure, non-runtime authored data, duplicate content issues, and the
+Classic/private pressure category.
 
 Out of scope: implementing every missing Unit; admitting all authored content
 to the catalog.
 
-Verification: `pnpm unit-profile-coverage:check`; generated report separates
-raw not-in-catalog inventory from triaged planning pressure.
+Verification: `pnpm unit-profile-coverage:check`; checker self-test; generated
+report separates raw not-in-catalog inventory from triaged planning pressure.
 
 ### Task 109 - QMBT14 - Trace Spell Unit Admission Evidence
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: QMBT11-QMBT13
 
@@ -728,7 +728,7 @@ identities, one run at a time with the standard timed protocol.
 
 ### Task 112 - QMBT17 - Define Classic Non-SRD Mechanics Intake Policy
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QMBT12-QMBT13
 

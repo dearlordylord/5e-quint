@@ -194,4 +194,18 @@ The generated matrix also audits every authored Unit-shaped JSON record under
 `packages/surface/content/`. Records that are not installed through
 `packages/surface/src/surface/unit-catalog.ts` are retained in the matrix with
 `catalogAdmission.status = "not-in-unit-catalog"` so the gap between authored
-content and shipped catalog inventory is explicit.
+content and shipped catalog inventory is explicit. Those rows also carry a
+single generated `catalogAdmission.disposition` so the raw inventory remains
+separate from planning pressure:
+
+- `srd-candidate` for SRD spell records with executable mechanics that belong
+  in the spell admission evidence lane.
+- `unsupported-widening-pressure` for executable SRD feature-style records that
+  need an explicit unsupported profile or widening slice.
+- `intentional-backlog` for authored executable data outside the active QMBT
+  feature/spell lane, such as magic items.
+- `classic-private-pressure` for non-SRD pressure that must enter through the
+  Classic non-SRD policy lane.
+- `non-runtime-authored-data` for records without a mechanics payload.
+- `duplicate-content-issue` for repeated authored Surface Unit ids that should
+  be cleaned up before admission planning.

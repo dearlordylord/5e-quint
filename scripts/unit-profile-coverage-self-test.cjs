@@ -9,6 +9,10 @@ const {
   extractDriverSchemaActionNames,
   extractMbtFixtureActionSet,
 } = require("./unit-profile-coverage-claim-scan.cjs");
+const {
+  hasExecutableMechanics,
+  hasVariantMagicMechanics,
+} = require("./unit-profile-coverage-discovery.cjs");
 const { fail, toRepoPath } = require("./unit-profile-coverage-io.cjs");
 const {
   validateOwnerClaims,
@@ -156,6 +160,28 @@ function runSelfTest(root) {
     if (boundaryIssue !== undefined) {
       fail(
         `Self-test failed: expected explicit Unit boundary action to pass, got ${JSON.stringify(issues)}`,
+      );
+    }
+    if (
+      !hasVariantMagicMechanics({
+        id: "fixture_magic_template",
+        kind: "weapon_template",
+        variants: [{ magic: { mechanics: { family: "passive" } } }],
+      })
+    ) {
+      fail(
+        "Self-test failed: expected variant magic mechanics to count as executable mechanics.",
+      );
+    }
+    if (
+      !hasExecutableMechanics({
+        id: "fixture_magic_template",
+        kind: "weapon_template",
+        variants: [{ magic: { mechanics: { family: "passive" } } }],
+      })
+    ) {
+      fail(
+        "Self-test failed: expected variant magic mechanics to count toward executable mechanics.",
       );
     }
   } finally {

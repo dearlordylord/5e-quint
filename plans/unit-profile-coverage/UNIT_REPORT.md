@@ -10,7 +10,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | --- | ---: | ---: |
 | Collection inventory coverage | 49/49 | 100% |
 | Authored Surface Unit catalog admission | 48/391 | 12.3% |
-| Authored Surface executable catalog admission | 34/326 | 10.4% |
+| Authored Surface executable catalog admission | 34/334 | 10.2% |
 | Profile classification coverage | 49/49 | 100% |
 | Supported profile coverage | 16/35 | 45.7% |
 | QNT profile modeling coverage | 11/11 | 100% |
@@ -44,6 +44,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 ## Authored Surface Units Not In Unit Catalog
 
+This raw inventory lists authored Surface records that are absent from the installed Unit catalog. The triage section below is the planning-pressure view; non-runtime data and duplicate content issues are not counted as runtime implementation pressure.
+
 | Kind | Count | Units |
 | --- | ---: | --- |
 | spell | 171 | `acid_arrow`, `aid`, `alarm`, `alter_self`, `animal_friendship`, `animal_shapes`, `animate_dead`, `animate_objects`, `antilife_shell`, `antimagic_field`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `bane`, `banishment`, `barkskin`, `beacon_of_hope`, `blade_barrier`, `bless`, `blight`, `blindness_deafness`, `blur`, `burning_hands`, `call_lightning`, `chain_lightning`, `charm_monster`, `charm_person`, `chill_touch`, `chromatic_orb`, `circle_of_death`, `clairvoyance`, `cloudkill`, `color_spray`, `comprehend_languages`, `compulsion`, `cone_of_cold`, `conjure_minor_elementals`, `conjure_woodland_beings`, `continual_flame`, `counterspell`, `create_food_and_water`, `create_undead`, `cure_wounds`, `dancing_lights`, `daylight`, `death_ward`, `dimension_door`, `disintegrate`, `dispel_magic`, `divine_favor`, `divine_smite`, `dominate_beast`, `dominate_monster`, `dominate_person`, `earthquake`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `fabricate`, `faerie_fire`, `false_life`, `fear`, `find_familiar`, `find_steed`, `finger_of_death`, `fire_shield`, `fire_storm`, `fireball`, `flame_blade`, `flame_strike`, `flesh_to_stone`, `fly`, `forcecage`, `freedom_of_movement`, `geas`, `gentle_repose`, `grease`, `greater_invisibility`, `guidance`, `guiding_bolt`, `harm`, `heal`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hold_monster`, `hold_person`, `holy_aura`, `hunters_mark`, `hypnotic_pattern`, `ice_knife`, `ice_storm`, `identify`, `incendiary_cloud`, `inflict_wounds`, `insect_plague`, `invisibility`, `lesser_restoration`, `lightning_bolt`, `longstrider`, `magic_weapon`, `major_image`, `mass_cure_wounds`, `mass_healing_word`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `mind_spike`, `minor_illusion`, `misty_step`, `moonbeam`, `pass_without_trace`, `poison_spray`, `polymorph`, `power_word_heal`, `power_word_kill`, `power_word_stun`, `prayer_of_healing`, `prismatic_wall`, `produce_flame`, `protection_from_energy`, `protection_from_evil_and_good`, `protection_from_poison`, `ray_of_enfeeblement`, `ray_of_sickness`, `resistance`, `reverse_gravity`, `sacred_flame`, `scorching_ray`, `searing_smite`, `see_invisibility`, `sequester`, `shatter`, `shield_of_faith`, `shining_smite`, `shocking_grasp`, `silent_image`, `speak_with_animals`, `spider_climb`, `spike_growth`, `spirit_guardians`, `spiritual_weapon`, `starry_wisp`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `summon_dragon`, `sunbeam`, `sunburst`, `telekinesis`, `tongues`, `true_polymorph`, `true_seeing`, `true_strike`, `tsunami`, `vampiric_touch`, `vicious_mockery`, `wall_of_fire`, `wall_of_force`, `wall_of_ice`, `wall_of_stone`, `wall_of_thorns`, `warding_bond`, `water_breathing`, `web`, `weird`, `wind_walk`, `wind_wall` |
@@ -57,6 +59,364 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | weapon_template | 3 | `magic_item_ammunition_1_2_or_3`, `magic_item_defender`, `magic_item_weapon_1_2_or_3` |
 | mastery | 2 | `mastery_cleave`, `mastery_topple` |
 | shield_template | 2 | `magic_item_sentinel_shield`, `magic_item_shield_1_2_or_3` |
+
+## Authored Catalog Admission Triage
+
+| Disposition | Planning lane | Count | Kind counts | Reason |
+| --- | --- | ---: | --- | --- |
+| srd-candidate | QMBT14-QMBT16 | 171 | spell: 171 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
+| intentional-backlog | future magic item profile intake | 79 | magic_item: 71, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
+| unsupported-widening-pressure | QMBT18 | 48 | class_feature: 37, species_trait: 8, mastery: 2, feat: 1 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
+| non-runtime-authored-data | no promoted runtime lane | 43 | weapon: 32, armor: 11 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
+| duplicate-content-issue | content cleanup | 2 | feat: 2 | More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure. |
+
+| Unit | Disposition | Planning lane | Kind | Mechanics | Source |
+| --- | --- | --- | --- | --- | --- |
+| `acid_arrow` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/acid_arrow.json` |
+| `aid` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/aid.json` |
+| `alarm` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/alarm.json` |
+| `alert` | duplicate-content-issue | content cleanup | feat | yes | `packages/surface/content/alert.json` |
+| `alter_self` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/alter_self.json` |
+| `animal_friendship` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animal_friendship.json` |
+| `animal_shapes` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animal_shapes.json` |
+| `animate_dead` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animate_dead.json` |
+| `animate_objects` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animate_objects.json` |
+| `antilife_shell` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/antilife_shell.json` |
+| `antimagic_field` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/antimagic_field.json` |
+| `arcane_eye` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/arcane_eye.json` |
+| `arcane_lock` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/arcane_lock.json` |
+| `arcane_sword` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/arcane_sword.json` |
+| `armor_breastplate` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_breastplate.json` |
+| `armor_chain_shirt` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_chain_shirt.json` |
+| `armor_half_plate_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_half_plate_armor.json` |
+| `armor_hide_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_hide_armor.json` |
+| `armor_leather` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_leather.json` |
+| `armor_padded_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_padded_armor.json` |
+| `armor_plate` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_plate.json` |
+| `armor_ring_mail` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_ring_mail.json` |
+| `armor_scale_mail` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_scale_mail.json` |
+| `armor_splint_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_splint_armor.json` |
+| `armor_studded_leather_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_studded_leather_armor.json` |
+| `aura_of_life` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/aura_of_life.json` |
+| `bane` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/bane.json` |
+| `banishment` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/banishment.json` |
+| `barbarian_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/barbarian_ability_score_improvement_l4.json` |
+| `barbarian_danger_sense` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/barbarian_danger_sense.json` |
+| `barbarian_fast_movement` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/barbarian_fast_movement.json` |
+| `barbarian_primal_champion` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/barbarian_primal_champion.json` |
+| `barbarian_unarmored_defense` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/barbarian_unarmored_defense.json` |
+| `bard_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/bard_ability_score_improvement_l4.json` |
+| `bard_bonus_proficiencies` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/bard_bonus_proficiencies.json` |
+| `bard_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/bard_epic_boon.json` |
+| `bard_jack_of_all_trades` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/bard_jack_of_all_trades.json` |
+| `bard_words_of_creation` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/bard_words_of_creation.json` |
+| `barkskin` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/barkskin.json` |
+| `beacon_of_hope` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/beacon_of_hope.json` |
+| `blade_barrier` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/blade_barrier.json` |
+| `bless` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/bless.json` |
+| `blight` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/blight.json` |
+| `blindness_deafness` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/blindness_deafness.json` |
+| `blur` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/blur.json` |
+| `burning_hands` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/burning_hands.json` |
+| `call_lightning` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/call_lightning.json` |
+| `chain_lightning` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/chain_lightning.json` |
+| `charm_monster` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/charm_monster.json` |
+| `charm_person` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/charm_person.json` |
+| `chill_touch` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/chill_touch.json` |
+| `chromatic_orb` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/chromatic_orb.json` |
+| `circle_of_death` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/circle_of_death.json` |
+| `clairvoyance` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/clairvoyance.json` |
+| `cleric_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/cleric_ability_score_improvement_l4.json` |
+| `cleric_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/cleric_epic_boon.json` |
+| `cloak_of_protection` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/cloak_of_protection.json` |
+| `cloudkill` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/cloudkill.json` |
+| `color_spray` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/color_spray.json` |
+| `comprehend_languages` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/comprehend_languages.json` |
+| `compulsion` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/compulsion.json` |
+| `cone_of_cold` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/cone_of_cold.json` |
+| `conjure_minor_elementals` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/conjure_minor_elementals.json` |
+| `conjure_woodland_beings` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/conjure_woodland_beings.json` |
+| `continual_flame` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/continual_flame.json` |
+| `counterspell` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/counterspell.json` |
+| `create_food_and_water` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/create_food_and_water.json` |
+| `create_undead` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/create_undead.json` |
+| `cure_wounds` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/cure_wounds.json` |
+| `dancing_lights` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dancing_lights.json` |
+| `elf_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/darkvision_elf.json` |
+| `daylight` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/daylight.json` |
+| `death_ward` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/death_ward.json` |
+| `dimension_door` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dimension_door.json` |
+| `disintegrate` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/disintegrate.json` |
+| `dispel_magic` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dispel_magic.json` |
+| `divine_favor` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/divine_favor.json` |
+| `divine_smite` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/divine_smite.json` |
+| `dominate_beast` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dominate_beast.json` |
+| `dominate_monster` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dominate_monster.json` |
+| `dominate_person` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dominate_person.json` |
+| `druid_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/druid_ability_score_improvement_l4.json` |
+| `druid_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/druid_epic_boon.json` |
+| `druid_natures_ward` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/druid_natures_ward.json` |
+| `earthquake` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/earthquake.json` |
+| `eldritch_blast` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/eldritch_blast.json` |
+| `ensnaring_strike` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/ensnaring_strike.json` |
+| `entangle` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/entangle.json` |
+| `fabricate` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fabricate.json` |
+| `faerie_fire` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/faerie_fire.json` |
+| `false_life` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/false_life.json` |
+| `fear` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fear.json` |
+| `alert` | duplicate-content-issue | content cleanup | feat | yes | `packages/surface/content/feat_alert.json` |
+| `feat_archery` | unsupported-widening-pressure | QMBT18 | feat | yes | `packages/surface/content/feat_archery.json` |
+| `fighter_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/fighter_epic_boon.json` |
+| `fighter_extra_attack` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/fighter_extra_attack.json` |
+| `find_familiar` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/find_familiar.json` |
+| `find_steed` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/find_steed.json` |
+| `finger_of_death` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/finger_of_death.json` |
+| `fire_shield` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fire_shield.json` |
+| `fire_storm` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fire_storm.json` |
+| `fireball` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fireball.json` |
+| `flame_blade` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/flame_blade.json` |
+| `flame_strike` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/flame_strike.json` |
+| `flesh_to_stone` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/flesh_to_stone.json` |
+| `fly` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fly.json` |
+| `forcecage` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/forcecage.json` |
+| `freedom_of_movement` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/freedom_of_movement.json` |
+| `geas` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/geas.json` |
+| `gentle_repose` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/gentle_repose.json` |
+| `grease` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/grease.json` |
+| `greater_invisibility` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/greater_invisibility.json` |
+| `guidance` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/guidance.json` |
+| `guiding_bolt` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/guiding_bolt.json` |
+| `harm` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/harm.json` |
+| `heal` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/heal.json` |
+| `healing_word` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/healing_word.json` |
+| `heat_metal` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/heat_metal.json` |
+| `hellish_rebuke` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/hellish_rebuke.json` |
+| `heroism` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/heroism.json` |
+| `hold_monster` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/hold_monster.json` |
+| `hold_person` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/hold_person.json` |
+| `holy_aura` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/holy_aura.json` |
+| `hunters_mark` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/hunters_mark.json` |
+| `hypnotic_pattern` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/hypnotic_pattern.json` |
+| `ice_knife` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/ice_knife.json` |
+| `ice_storm` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/ice_storm.json` |
+| `identify` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/identify.json` |
+| `incendiary_cloud` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/incendiary_cloud.json` |
+| `inflict_wounds` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/inflict_wounds.json` |
+| `insect_plague` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/insect_plague.json` |
+| `invisibility` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/invisibility.json` |
+| `lesser_restoration` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/lesser_restoration.json` |
+| `lightning_bolt` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/lightning_bolt.json` |
+| `longstrider` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/longstrider.json` |
+| `magic_item_adamantine_armor` | intentional-backlog | future magic item profile intake | armor_template | yes | `packages/surface/content/magic_item_adamantine_armor.json` |
+| `magic_item_ammunition_1_2_or_3` | intentional-backlog | future magic item profile intake | weapon_template | yes | `packages/surface/content/magic_item_ammunition_1_2_or_3.json` |
+| `magic_item_amulet_of_health` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_amulet_of_health.json` |
+| `magic_item_armor_1_2_or_3` | intentional-backlog | future magic item profile intake | armor_template | yes | `packages/surface/content/magic_item_armor_1_2_or_3.json` |
+| `magic_item_bag_of_holding` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_bag_of_holding.json` |
+| `magic_item_bracers_of_defense` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_bracers_of_defense.json` |
+| `magic_item_brazier_of_commanding_fire_elementals` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json` |
+| `magic_item_brooch_of_shielding` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_brooch_of_shielding.json` |
+| `magic_item_censer_of_controlling_air_elementals` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_censer_of_controlling_air_elementals.json` |
+| `magic_item_chime_of_opening` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_chime_of_opening.json` |
+| `magic_item_cloak_of_arachnida` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_cloak_of_arachnida.json` |
+| `magic_item_cloak_of_protection` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_cloak_of_protection.json` |
+| `magic_item_crystal_ball_of_mind_reading` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_crystal_ball_of_mind_reading.json` |
+| `magic_item_cube_of_force` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_cube_of_force.json` |
+| `magic_item_defender` | intentional-backlog | future magic item profile intake | weapon_template | yes | `packages/surface/content/magic_item_defender.json` |
+| `magic_item_eyes_of_minute_seeing` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_eyes_of_minute_seeing.json` |
+| `magic_item_folding_boat` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_folding_boat.json` |
+| `magic_item_gauntlets_of_ogre_power` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_gauntlets_of_ogre_power.json` |
+| `magic_item_gem_of_seeing` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_gem_of_seeing.json` |
+| `magic_item_goggles_of_night` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_goggles_of_night.json` |
+| `magic_item_hat_of_disguise` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_hat_of_disguise.json` |
+| `magic_item_headband_of_intellect` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_headband_of_intellect.json` |
+| `magic_item_helm_of_comprehending_languages` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_helm_of_comprehending_languages.json` |
+| `magic_item_helm_of_teleportation` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_helm_of_teleportation.json` |
+| `magic_item_instant_fortress` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_instant_fortress.json` |
+| `magic_item_javelin_of_lightning` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_javelin_of_lightning.json` |
+| `magic_item_manual_of_gainful_exercise` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_manual_of_gainful_exercise.json` |
+| `magic_item_manual_of_quickness_of_action` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_manual_of_quickness_of_action.json` |
+| `magic_item_medallion_of_thoughts` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_medallion_of_thoughts.json` |
+| `magic_item_mithral_armor` | intentional-backlog | future magic item profile intake | armor_template | yes | `packages/surface/content/magic_item_mithral_armor.json` |
+| `magic_item_necklace_of_fireballs` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_necklace_of_fireballs.json` |
+| `magic_item_periapt_of_proof_against_poison` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_periapt_of_proof_against_poison.json` |
+| `magic_item_potion_of_animal_friendship` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_animal_friendship.json` |
+| `magic_item_potion_of_clairvoyance` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_clairvoyance.json` |
+| `magic_item_potion_of_climbing` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_climbing.json` |
+| `magic_item_potion_of_flying` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_flying.json` |
+| `magic_item_potion_of_giant_strength` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_giant_strength.json` |
+| `magic_item_potion_of_heroism` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_heroism.json` |
+| `magic_item_potion_of_invisibility` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_invisibility.json` |
+| `magic_item_potion_of_invulnerability` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_invulnerability.json` |
+| `magic_item_potion_of_water_breathing` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potion_of_water_breathing.json` |
+| `potion_of_healing` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_potions_of_healing.json` |
+| `magic_item_quarterstaff_of_the_acrobat` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_quarterstaff_of_the_acrobat.json` |
+| `magic_item_ring_of_invisibility` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_invisibility.json` |
+| `magic_item_ring_of_jumping` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_jumping.json` |
+| `magic_item_ring_of_protection` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_protection.json` |
+| `magic_item_ring_of_resistance` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_resistance.json` |
+| `ring_of_swimming` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_swimming.json` |
+| `ring_of_telekinesis` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_telekinesis.json` |
+| `ring_of_three_wishes` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_three_wishes.json` |
+| `magic_item_ring_of_warmth` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_warmth.json` |
+| `magic_item_ring_of_water_walking` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_ring_of_water_walking.json` |
+| `magic_item_robe_of_the_archmagi` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_robe_of_the_archmagi.json` |
+| `magic_item_rod_of_alertness` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_rod_of_alertness.json` |
+| `magic_item_rod_of_resurrection` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_rod_of_resurrection.json` |
+| `magic_item_rod_of_rulership` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_rod_of_rulership.json` |
+| `magic_item_sentinel_shield` | intentional-backlog | future magic item profile intake | shield_template | yes | `packages/surface/content/magic_item_sentinel_shield.json` |
+| `magic_item_shield_1_2_or_3` | intentional-backlog | future magic item profile intake | shield_template | yes | `packages/surface/content/magic_item_shield_1_2_or_3.json` |
+| `magic_item_slippers_of_spider_climbing` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_slippers_of_spider_climbing.json` |
+| `magic_item_sovereign_glue` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_sovereign_glue.json` |
+| `magic_item_staff_of_charming` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_staff_of_charming.json` |
+| `magic_item_staff_of_fire` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_staff_of_fire.json` |
+| `magic_item_staff_of_healing` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_staff_of_healing.json` |
+| `magic_item_staff_of_power` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_staff_of_power.json` |
+| `magic_item_staff_of_the_woodlands` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_staff_of_the_woodlands.json` |
+| `magic_item_stone_of_controlling_earth_elementals` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_stone_of_controlling_earth_elementals.json` |
+| `magic_item_stone_of_good_luck_luckstone` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_stone_of_good_luck_luckstone.json` |
+| `magic_item_tome_of_clear_thought` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_tome_of_clear_thought.json` |
+| `magic_item_tome_of_leadership_and_influence` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_tome_of_leadership_and_influence.json` |
+| `magic_item_tome_of_understanding` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_tome_of_understanding.json` |
+| `magic_item_wand_of_fear` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_wand_of_fear.json` |
+| `magic_item_wand_of_fireballs` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_wand_of_fireballs.json` |
+| `magic_item_wand_of_lightning_bolts` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_wand_of_lightning_bolts.json` |
+| `magic_item_wand_of_magic_detection` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_wand_of_magic_detection.json` |
+| `magic_item_wand_of_magic_missiles` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_wand_of_magic_missiles.json` |
+| `magic_item_wand_of_paralysis` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_wand_of_paralysis.json` |
+| `magic_item_wand_of_polymorph` | intentional-backlog | future magic item profile intake | magic_item | yes | `packages/surface/content/magic_item_wand_of_polymorph.json` |
+| `magic_item_weapon_1_2_or_3` | intentional-backlog | future magic item profile intake | weapon_template | yes | `packages/surface/content/magic_item_weapon_1_2_or_3.json` |
+| `magic_weapon` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/magic_weapon.json` |
+| `major_image` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/major_image.json` |
+| `mass_cure_wounds` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/mass_cure_wounds.json` |
+| `mass_healing_word` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/mass_healing_word.json` |
+| `mass_suggestion` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/mass_suggestion.json` |
+| `mastery_cleave` | unsupported-widening-pressure | QMBT18 | mastery | yes | `packages/surface/content/mastery_cleave.json` |
+| `mastery_topple` | unsupported-widening-pressure | QMBT18 | mastery | yes | `packages/surface/content/mastery_topple.json` |
+| `maze` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/maze.json` |
+| `meteor_swarm` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/meteor_swarm.json` |
+| `mind_blank` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/mind_blank.json` |
+| `mind_spike` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/mind_spike.json` |
+| `minor_illusion` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/minor_illusion.json` |
+| `misty_step` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/misty_step.json` |
+| `monk_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/monk_ability_score_improvement_l4.json` |
+| `monk_body_and_mind` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/monk_body_and_mind.json` |
+| `monk_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/monk_epic_boon.json` |
+| `monk_unarmored_defense` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/monk_unarmored_defense.json` |
+| `moonbeam` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/moonbeam.json` |
+| `paladin_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/paladin_epic_boon.json` |
+| `paladin_extra_attack` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/paladin_extra_attack.json` |
+| `paladin_fighting_style` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/paladin_fighting_style.json` |
+| `paladin_lay_on_hands` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/paladin_lay_on_hands.json` |
+| `paladin_paladins_smite` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/paladin_paladins_smite.json` |
+| `pass_without_trace` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/pass_without_trace.json` |
+| `poison_spray` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/poison_spray.json` |
+| `polymorph` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/polymorph.json` |
+| `power_word_heal` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/power_word_heal.json` |
+| `power_word_kill` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/power_word_kill.json` |
+| `power_word_stun` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/power_word_stun.json` |
+| `prayer_of_healing` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/prayer_of_healing.json` |
+| `prismatic_wall` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/prismatic_wall.json` |
+| `produce_flame` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/produce_flame.json` |
+| `protection_from_energy` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/protection_from_energy.json` |
+| `protection_from_evil_and_good` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/protection_from_evil_and_good.json` |
+| `protection_from_poison` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/protection_from_poison.json` |
+| `ranger_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/ranger_ability_score_improvement_l4.json` |
+| `ranger_extra_attack` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/ranger_extra_attack.json` |
+| `ranger_feral_senses` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/ranger_feral_senses.json` |
+| `ranger_roving` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/ranger_roving.json` |
+| `ranger_tireless` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/ranger_tireless.json` |
+| `ray_of_enfeeblement` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/ray_of_enfeeblement.json` |
+| `ray_of_sickness` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/ray_of_sickness.json` |
+| `resistance` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/resistance.json` |
+| `reverse_gravity` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/reverse_gravity.json` |
+| `rogue_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/rogue_ability_score_improvement_l4.json` |
+| `sacred_flame` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/sacred_flame.json` |
+| `scorching_ray` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/scorching_ray.json` |
+| `searing_smite` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/searing_smite.json` |
+| `see_invisibility` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/see_invisibility.json` |
+| `sequester` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/sequester.json` |
+| `shatter` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/shatter.json` |
+| `shield_of_faith` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/shield_of_faith.json` |
+| `shining_smite` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/shining_smite.json` |
+| `shocking_grasp` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/shocking_grasp.json` |
+| `silent_image` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/silent_image.json` |
+| `sorcerer_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/sorcerer_ability_score_improvement_l4.json` |
+| `speak_with_animals` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/speak_with_animals.json` |
+| `species_dragonborn_breath_weapon` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_breath_weapon.json` |
+| `species_dragonborn_damage_resistance` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_damage_resistance.json` |
+| `species_dragonborn_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_darkvision.json` |
+| `dwarf_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dwarf_darkvision.json` |
+| `dwarf_dwarven_resilience` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dwarf_dwarven_resilience.json` |
+| `species_goliath_powerful_build` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_goliath_powerful_build.json` |
+| `species_tiefling_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_tiefling_darkvision.json` |
+| `spider_climb` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spider_climb.json` |
+| `spike_growth` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spike_growth.json` |
+| `spirit_guardians` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spirit_guardians.json` |
+| `spiritual_weapon` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spiritual_weapon.json` |
+| `starry_wisp` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/starry_wisp.json` |
+| `stinking_cloud` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/stinking_cloud.json` |
+| `stoneskin` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/stoneskin.json` |
+| `storm_of_vengeance` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/storm_of_vengeance.json` |
+| `summon_dragon` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/summon_dragon.json` |
+| `sunbeam` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/sunbeam.json` |
+| `sunburst` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/sunburst.json` |
+| `telekinesis` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/telekinesis.json` |
+| `tongues` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/tongues.json` |
+| `true_polymorph` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/true_polymorph.json` |
+| `true_seeing` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/true_seeing.json` |
+| `true_strike` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/true_strike.json` |
+| `tsunami` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/tsunami.json` |
+| `vampiric_touch` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/vampiric_touch.json` |
+| `vicious_mockery` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/vicious_mockery.json` |
+| `wall_of_fire` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/wall_of_fire.json` |
+| `wall_of_force` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/wall_of_force.json` |
+| `wall_of_ice` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/wall_of_ice.json` |
+| `wall_of_stone` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/wall_of_stone.json` |
+| `wall_of_thorns` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/wall_of_thorns.json` |
+| `warding_bond` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/warding_bond.json` |
+| `warlock_contact_patron` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/warlock_contact_patron.json` |
+| `warlock_fiend_spells` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/warlock_fiend_spells.json` |
+| `water_breathing` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/water_breathing.json` |
+| `weapon_battleaxe` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_battleaxe.json` |
+| `weapon_blowgun` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_blowgun.json` |
+| `weapon_club` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_club.json` |
+| `weapon_dart` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_dart.json` |
+| `weapon_glaive` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_glaive.json` |
+| `weapon_greataxe` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_greataxe.json` |
+| `weapon_greatclub` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_greatclub.json` |
+| `weapon_greatsword` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_greatsword.json` |
+| `weapon_halberd` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_halberd.json` |
+| `weapon_hand_crossbow` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_hand_crossbow.json` |
+| `weapon_handaxe` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_handaxe.json` |
+| `weapon_heavy_crossbow` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_heavy_crossbow.json` |
+| `weapon_javelin` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_javelin.json` |
+| `weapon_lance` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_lance.json` |
+| `weapon_light_crossbow` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_light_crossbow.json` |
+| `weapon_light_hammer` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_light_hammer.json` |
+| `weapon_longbow` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_longbow.json` |
+| `weapon_mace` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_mace.json` |
+| `weapon_maul` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_maul.json` |
+| `weapon_morningstar` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_morningstar.json` |
+| `weapon_musket` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_musket.json` |
+| `weapon_pike` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_pike.json` |
+| `weapon_pistol` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_pistol.json` |
+| `weapon_quarterstaff` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_quarterstaff.json` |
+| `weapon_rapier` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_rapier.json` |
+| `weapon_scimitar` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_scimitar.json` |
+| `weapon_sickle` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_sickle.json` |
+| `weapon_sling` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_sling.json` |
+| `weapon_trident` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_trident.json` |
+| `weapon_war_pick` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_war_pick.json` |
+| `weapon_warhammer` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_warhammer.json` |
+| `weapon_whip` | non-runtime-authored-data | no promoted runtime lane | weapon | no | `packages/surface/content/weapon_whip.json` |
+| `web` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/web.json` |
+| `weird` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/weird.json` |
+| `wind_walk` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/wind_walk.json` |
+| `wind_wall` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/wind_wall.json` |
+| `wizard_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/wizard_ability_score_improvement_l4.json` |
+| `wizard_scholar` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/wizard_scholar.json` |
+
+## Authored Catalog Admission Raw Inventory
 
 | Unit | Kind | Mechanics | Source |
 | --- | --- | --- | --- |
@@ -195,10 +555,10 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `lesser_restoration` | spell | yes | `packages/surface/content/lesser_restoration.json` |
 | `lightning_bolt` | spell | yes | `packages/surface/content/lightning_bolt.json` |
 | `longstrider` | spell | yes | `packages/surface/content/longstrider.json` |
-| `magic_item_adamantine_armor` | armor_template | no | `packages/surface/content/magic_item_adamantine_armor.json` |
-| `magic_item_ammunition_1_2_or_3` | weapon_template | no | `packages/surface/content/magic_item_ammunition_1_2_or_3.json` |
+| `magic_item_adamantine_armor` | armor_template | yes | `packages/surface/content/magic_item_adamantine_armor.json` |
+| `magic_item_ammunition_1_2_or_3` | weapon_template | yes | `packages/surface/content/magic_item_ammunition_1_2_or_3.json` |
 | `magic_item_amulet_of_health` | magic_item | yes | `packages/surface/content/magic_item_amulet_of_health.json` |
-| `magic_item_armor_1_2_or_3` | armor_template | no | `packages/surface/content/magic_item_armor_1_2_or_3.json` |
+| `magic_item_armor_1_2_or_3` | armor_template | yes | `packages/surface/content/magic_item_armor_1_2_or_3.json` |
 | `magic_item_bag_of_holding` | magic_item | yes | `packages/surface/content/magic_item_bag_of_holding.json` |
 | `magic_item_bracers_of_defense` | magic_item | yes | `packages/surface/content/magic_item_bracers_of_defense.json` |
 | `magic_item_brazier_of_commanding_fire_elementals` | magic_item | yes | `packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json` |
@@ -209,7 +569,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `magic_item_cloak_of_protection` | magic_item | yes | `packages/surface/content/magic_item_cloak_of_protection.json` |
 | `magic_item_crystal_ball_of_mind_reading` | magic_item | yes | `packages/surface/content/magic_item_crystal_ball_of_mind_reading.json` |
 | `magic_item_cube_of_force` | magic_item | yes | `packages/surface/content/magic_item_cube_of_force.json` |
-| `magic_item_defender` | weapon_template | no | `packages/surface/content/magic_item_defender.json` |
+| `magic_item_defender` | weapon_template | yes | `packages/surface/content/magic_item_defender.json` |
 | `magic_item_eyes_of_minute_seeing` | magic_item | yes | `packages/surface/content/magic_item_eyes_of_minute_seeing.json` |
 | `magic_item_folding_boat` | magic_item | yes | `packages/surface/content/magic_item_folding_boat.json` |
 | `magic_item_gauntlets_of_ogre_power` | magic_item | yes | `packages/surface/content/magic_item_gauntlets_of_ogre_power.json` |
@@ -224,7 +584,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `magic_item_manual_of_gainful_exercise` | magic_item | yes | `packages/surface/content/magic_item_manual_of_gainful_exercise.json` |
 | `magic_item_manual_of_quickness_of_action` | magic_item | yes | `packages/surface/content/magic_item_manual_of_quickness_of_action.json` |
 | `magic_item_medallion_of_thoughts` | magic_item | yes | `packages/surface/content/magic_item_medallion_of_thoughts.json` |
-| `magic_item_mithral_armor` | armor_template | no | `packages/surface/content/magic_item_mithral_armor.json` |
+| `magic_item_mithral_armor` | armor_template | yes | `packages/surface/content/magic_item_mithral_armor.json` |
 | `magic_item_necklace_of_fireballs` | magic_item | yes | `packages/surface/content/magic_item_necklace_of_fireballs.json` |
 | `magic_item_periapt_of_proof_against_poison` | magic_item | yes | `packages/surface/content/magic_item_periapt_of_proof_against_poison.json` |
 | `magic_item_potion_of_animal_friendship` | magic_item | yes | `packages/surface/content/magic_item_potion_of_animal_friendship.json` |
@@ -251,8 +611,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `magic_item_rod_of_alertness` | magic_item | yes | `packages/surface/content/magic_item_rod_of_alertness.json` |
 | `magic_item_rod_of_resurrection` | magic_item | yes | `packages/surface/content/magic_item_rod_of_resurrection.json` |
 | `magic_item_rod_of_rulership` | magic_item | yes | `packages/surface/content/magic_item_rod_of_rulership.json` |
-| `magic_item_sentinel_shield` | shield_template | no | `packages/surface/content/magic_item_sentinel_shield.json` |
-| `magic_item_shield_1_2_or_3` | shield_template | no | `packages/surface/content/magic_item_shield_1_2_or_3.json` |
+| `magic_item_sentinel_shield` | shield_template | yes | `packages/surface/content/magic_item_sentinel_shield.json` |
+| `magic_item_shield_1_2_or_3` | shield_template | yes | `packages/surface/content/magic_item_shield_1_2_or_3.json` |
 | `magic_item_slippers_of_spider_climbing` | magic_item | yes | `packages/surface/content/magic_item_slippers_of_spider_climbing.json` |
 | `magic_item_sovereign_glue` | magic_item | yes | `packages/surface/content/magic_item_sovereign_glue.json` |
 | `magic_item_staff_of_charming` | magic_item | yes | `packages/surface/content/magic_item_staff_of_charming.json` |
@@ -272,7 +632,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `magic_item_wand_of_magic_missiles` | magic_item | yes | `packages/surface/content/magic_item_wand_of_magic_missiles.json` |
 | `magic_item_wand_of_paralysis` | magic_item | yes | `packages/surface/content/magic_item_wand_of_paralysis.json` |
 | `magic_item_wand_of_polymorph` | magic_item | yes | `packages/surface/content/magic_item_wand_of_polymorph.json` |
-| `magic_item_weapon_1_2_or_3` | weapon_template | no | `packages/surface/content/magic_item_weapon_1_2_or_3.json` |
+| `magic_item_weapon_1_2_or_3` | weapon_template | yes | `packages/surface/content/magic_item_weapon_1_2_or_3.json` |
 | `magic_weapon` | spell | yes | `packages/surface/content/magic_weapon.json` |
 | `major_image` | spell | yes | `packages/surface/content/major_image.json` |
 | `mass_cure_wounds` | spell | yes | `packages/surface/content/mass_cure_wounds.json` |

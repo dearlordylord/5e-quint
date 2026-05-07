@@ -1,6 +1,17 @@
 const path = require("node:path");
 
 const collectionIds = new Set(["srd-5.2.1", "classic-2024-non-srd-mechanics"]);
+const catalogAdmissionDispositionCategory = {
+  intentionalBacklog: "intentional-backlog",
+  srdCandidate: "srd-candidate",
+  classicPrivatePressure: "classic-private-pressure",
+  nonRuntimeAuthoredData: "non-runtime-authored-data",
+  duplicateContentIssue: "duplicate-content-issue",
+  unsupportedWideningPressure: "unsupported-widening-pressure",
+};
+const catalogAdmissionDispositionCategories = new Set(
+  Object.values(catalogAdmissionDispositionCategory),
+);
 const profileKinds = new Set([
   "character-creation",
   "passive",
@@ -128,6 +139,8 @@ function coveragePaths(root) {
 }
 
 module.exports = {
+  catalogAdmissionDispositionCategories,
+  catalogAdmissionDispositionCategory,
   claimTags,
   collectionIds,
   completedRuntimeParityKinds,

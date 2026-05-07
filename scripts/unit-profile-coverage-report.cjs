@@ -1,3 +1,12 @@
+const {
+  catalogAdmissionDispositionCategories,
+  catalogAdmissionDispositionCategory,
+} = require("./unit-profile-coverage-config.cjs");
+const {
+  hasVariantMagicMechanics,
+} = require("./unit-profile-coverage-discovery.cjs");
+const { fail } = require("./unit-profile-coverage-io.cjs");
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === "object") {
@@ -161,6 +170,64 @@ function metrics({
   };
 }
 
+function notInCatalogDisposition(unit, duplicateCount) {
+  const srdCandidate = {
+    category: catalogAdmissionDispositionCategory.srdCandidate,
+    planningLane: "QMBT14-QMBT16",
+    reason: "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane.",
+  };
+  const magicItemBacklog = {
+    category: catalogAdmissionDispositionCategory.intentionalBacklog,
+    planningLane: "future magic item profile intake",
+    reason: "SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission.",
+  };
+
+  if (duplicateCount > 1) {
+    return {
+      category: catalogAdmissionDispositionCategory.duplicateContentIssue,
+      planningLane: "content cleanup",
+      reason: "More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure.",
+    };
+  }
+
+  if (unit.provenance?.kind !== "srd-5.2.1") {
+    return {
+      category: catalogAdmissionDispositionCategory.classicPrivatePressure,
+      planningLane: "QMBT17",
+      reason: "Non-SRD authored mechanics pressure must enter through the Classic non-SRD policy lane before catalog admission.",
+    };
+  }
+
+  if (!unit.executableMechanics) {
+    return {
+      category: catalogAdmissionDispositionCategory.nonRuntimeAuthoredData,
+      planningLane: "no promoted runtime lane",
+      reason: "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure.",
+    };
+  }
+
+  if (unit.kind === "spell") return srdCandidate;
+
+  if (unit.kind === "magic_item" || hasVariantMagicMechanics(unit.rawRecord)) {
+    return magicItemBacklog;
+  }
+
+  return {
+    category: catalogAdmissionDispositionCategory.unsupportedWideningPressure,
+    planningLane: "QMBT18",
+    reason: "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice.",
+  };
+}
+
+function assertCatalogAdmissionDisposition(disposition) {
+  if (!catalogAdmissionDispositionCategories.has(disposition.category)) {
+    fail(
+      `Unknown catalog admission disposition category: ${disposition.category}`,
+    );
+  }
+  return disposition;
+}
+
 function buildMatrix(
   {
     collections,
@@ -225,6 +292,12 @@ function buildMatrix(
             unitId: unit.unitId,
             collectionId: undefined,
             catalogAdmission: {
+              disposition: assertCatalogAdmissionDisposition(
+                notInCatalogDisposition(
+                  unit,
+                  authoredUnitIdCounts.get(unit.unitId) ?? 1,
+                ),
+              ),
               status: "not-in-unit-catalog",
               expectedCollectionId:
                 unit.provenance?.kind === "srd-5.2.1" ? "srd-5.2.1" : undefined,
@@ -269,6 +342,44 @@ function renderMetric(label, metric) {
   return `| ${label} | ${metric.numerator}/${metric.denominator} | ${metric.percent} |`;
 }
 
+function groupAuthoredNotInCatalogByDisposition(units) {
+  return Array.from(
+    units
+      .reduce((groups, unit) => {
+        const disposition = unit.catalogAdmission.disposition;
+        const current = groups.get(disposition.category) ?? {
+          category: disposition.category,
+          planningLane: disposition.planningLane,
+          reason: disposition.reason,
+          units: [],
+        };
+        current.units.push(unit);
+        groups.set(disposition.category, current);
+        return groups;
+      }, new Map())
+      .values(),
+  ).sort(
+    (a, b) =>
+      b.units.length - a.units.length || a.category.localeCompare(b.category),
+  );
+}
+
+function summarizeKindCounts(units) {
+  return Array.from(
+    units
+      .reduce((counts, unit) => {
+        counts.set(unit.kind, (counts.get(unit.kind) ?? 0) + 1);
+        return counts;
+      }, new Map())
+      .entries(),
+  )
+    .sort(([kindA, countA], [kindB, countB]) => {
+      return countB - countA || kindA.localeCompare(kindB);
+    })
+    .map(([kind, count]) => `${kind}: ${count}`)
+    .join(", ");
+}
+
 function renderReport(
   matrix,
   {
@@ -302,6 +413,8 @@ function renderReport(
     ([kindA, unitsA], [kindB, unitsB]) =>
       unitsB.length - unitsA.length || kindA.localeCompare(kindB),
   );
+  const authoredNotInCatalogByDisposition =
+    groupAuthoredNotInCatalogByDisposition(authoredNotInCatalog);
   const deterministicEvidence = supported.flatMap((unit) =>
     (unit.evidence ?? [])
       .filter(
@@ -425,6 +538,8 @@ function renderReport(
     "",
     "## Authored Surface Units Not In Unit Catalog",
     "",
+    "This raw inventory lists authored Surface records that are absent from the installed Unit catalog. The triage section below is the planning-pressure view; non-runtime data and duplicate content issues are not counted as runtime implementation pressure.",
+    "",
     "| Kind | Count | Units |",
     "| --- | ---: | --- |",
     ...(authoredNotInCatalogByKind.length === 0
@@ -433,6 +548,28 @@ function renderReport(
           ([kind, units]) =>
             `| ${kind} | ${units.length} | ${units.map((unitId) => `\`${unitId}\``).join(", ")} |`,
         )),
+    "",
+    "## Authored Catalog Admission Triage",
+    "",
+    "| Disposition | Planning lane | Count | Kind counts | Reason |",
+    "| --- | --- | ---: | --- | --- |",
+    ...(authoredNotInCatalogByDisposition.length === 0
+      ? ["| _none_ | _none_ | 0 | _none_ | _none_ |"]
+      : authoredNotInCatalogByDisposition.map(
+          (group) =>
+            `| ${group.category} | ${group.planningLane} | ${group.units.length} | ${summarizeKindCounts(group.units)} | ${group.reason} |`,
+        )),
+    "",
+    "| Unit | Disposition | Planning lane | Kind | Mechanics | Source |",
+    "| --- | --- | --- | --- | --- | --- |",
+    ...(authoredNotInCatalog.length === 0
+      ? ["| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |"]
+      : authoredNotInCatalog.map((unit) => {
+          const disposition = unit.catalogAdmission.disposition;
+          return `| \`${unit.unitId}\` | ${disposition.category} | ${disposition.planningLane} | ${unit.kind} | ${unit.executableMechanics ? "yes" : "no"} | \`${unit.sourceRecordPath}\` |`;
+        })),
+    "",
+    "## Authored Catalog Admission Raw Inventory",
     "",
     "| Unit | Kind | Mechanics | Source |",
     "| --- | --- | --- | --- |",
