@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 
 module unitFeatureProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"
@@ -464,6 +464,31 @@ module unitFeatureProcedureProfilesInductive {
     }
   }
 
+  action doFastMovementSpeedBonus = {
+    nondet wearingHeavyArmor = Set(true, false).oneOf()
+    nondet movementSpentFeet = 0.to(10).oneOf()
+    val result = resolveFastMovementDash(qTurn, {
+      baseSpeedFeet: 30,
+      wearingHeavyArmor: wearingHeavyArmor,
+      movementSpentFeet: movementSpentFeet,
+    })
+    all {
+      qLastDamageAmount' = result.movementRemainingFeet,
+      qLastArmorClass' = result.effectiveSpeedFeet,
+      qFeatureUsesRemaining' = qFeatureUsesRemaining,
+      qFeatureMaximumUses' = qFeatureMaximumUses,
+      qActionSurgeGrant' = qActionSurgeGrant,
+      qRageOccurrence' = qRageOccurrence,
+      qInterruptedConcentration' = qInterruptedConcentration,
+      qReactorConcentration' = qReactorConcentration,
+      qRecklessOccurrence' = qRecklessOccurrence,
+      qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
+      qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+      qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      recordTurn(resolveDash(qTurn, result.effectiveSpeedFeet, StandardActionCost(DashAction))),
+    }
+  }
+
   action doStartTurn = all {
     recordTurn(startTurn(qTurn)),
     qActionSurgeGrant' = NoActionSurgeActionGrant,
@@ -481,7 +506,7 @@ module unitFeatureProcedureProfilesInductive {
   }
 
   action step = any {
-    // Branch budget: 12 feature-profile branches plus turn refresh. Each branch
+    // Branch budget: 13 feature-profile branches plus turn refresh. Each branch
     // samples at most three bounded booleans or small fixture values.
     doActionSurge,
     doSecondWind,
@@ -494,6 +519,7 @@ module unitFeatureProcedureProfilesInductive {
     doEvasionReplacement,
     doDefenseArmorClass,
     doArcheryAttackRollBonus,
+    doFastMovementSpeedBonus,
     doWeaponDamageDiceRollChoice,
     doStartTurn,
   }
@@ -533,7 +559,7 @@ module unitFeatureProcedureProfilesInductive {
     qAttackRollMadeThisTurn.in(Set(true, false)),
     qSneakAttackUsedThisTurn.in(Set(true, false)),
     qWeaponDamageDiceRollChoiceUsedThisTurn.in(Set(true, false)),
-    qLastDamageAmount.in(0.to(40)),
+    qLastDamageAmount.in(0.to(120)),
     qLastArmorClass.in(0.to(40)),
     legalTurnProcedureState(qTurn),
     legalFeatureUsePool(qFeaturePool),

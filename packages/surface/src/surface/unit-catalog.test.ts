@@ -27,6 +27,7 @@ const requiredFirstVerticalUnitIds = [
   "fighter_action_surge",
   "fighter_tactical_mind",
   "fighter_improved_critical",
+  "barbarian_fast_movement",
   "subclass_fighter_champion",
   "subclass_wizard_evoker",
   "rogue_evasion",

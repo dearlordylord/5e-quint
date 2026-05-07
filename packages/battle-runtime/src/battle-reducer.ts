@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -197,6 +197,7 @@ import type {
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   type AlternateActionCostAction,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
@@ -15999,10 +16000,11 @@ function effectiveWalkSpeed(
     return movementFeet(0);
   }
   const base = baseWalkSpeed(combatant);
+  const passiveFeatureDelta = passiveSpeedBonusDelta(combatant);
   const delta = combatant.activeEffects
     .filter((effect) => effect.kind === "speedDelta")
     .reduce((total, effect) => total + effect.deltaFeet, 0);
-  return movementFeet(base + delta);
+  return movementFeet(base + passiveFeatureDelta + delta);
 }
 
 function baseWalkSpeed(combatant: BattleCreatureState): number {
@@ -16013,6 +16015,26 @@ function baseWalkSpeed(combatant: BattleCreatureState): number {
     (speed) => speed.kind === "walk" && speed.feet.kind === "literal",
   );
   return walkSpeed?.feet.kind === "literal" ? walkSpeed.feet.value : 0;
+}
+
+function passiveSpeedBonusDelta(combatant: BattleCreatureState): number {
+  if (combatant.origin.kind !== "character") {
+    return 0;
+  }
+  return combatant.origin.characterUnitRefs
+    .flatMap((unitRef) =>
+      unitRef.supportProfiles.flatMap((profile) =>
+        typeof profile === "object" &&
+        profile.kind === PASSIVE_SPEED_BONUS_SUPPORT_PROFILE &&
+        profile.condition.kind === "notWearingArmor" &&
+        !profile.condition.categories.some((category) =>
+          combatantWearingArmorCategory(combatant, category),
+        )
+          ? [Number(profile.deltaFeet)]
+          : [],
+      ),
+    )
+    .reduce((total, delta) => total + delta, 0);
 }
 
 function combatantCanMoveInState(

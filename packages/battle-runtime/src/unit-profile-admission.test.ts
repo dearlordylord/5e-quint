@@ -10,6 +10,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT37 fighter_extra_attack paladin_extra_attack ranger_extra_attack
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -24,6 +26,7 @@ import {
   difficultyClass,
   DieRollResult,
   Hp,
+  movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
@@ -49,6 +52,7 @@ import {
   resolveBattleReaction,
   resolveBattleSubject,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  snapshotBattle,
   startBattle,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -63,6 +67,7 @@ import {
 } from "./index.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
+  PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
   type ClassicNonSrdMechanicsUnit,
 } from "./unit-feature-support.ts";
@@ -80,6 +85,7 @@ const fighterImprovedCriticalUnitId = "fighter_improved_critical";
 const fighterExtraAttackUnitId = "fighter_extra_attack";
 const barbarianRageUnitId = "barbarian_rage";
 const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
+const barbarianFastMovementUnitId = "barbarian_fast_movement";
 const rogueCunningActionUnitId = "rogue_cunning_action";
 const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
@@ -2180,6 +2186,141 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
   });
 });
 
+describe("QMBT40 deterministic Fast Movement admission", () => {
+  test("barbarian_fast_movement is admitted as a passive Speed bonus while not wearing Heavy armor", () => {
+    const unit = unitLibrary.requireUnit(barbarianFastMovementUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, [
+      { className: "barbarian", level: classLevel(5) },
+    ]);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: barbarianFastMovementUnitId,
+        supportProfiles: [fastMovementSupportProfile()],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "passiveSpeedBonus",
+        unit,
+        speed: {
+          deltaFeet: movementDeltaFeet(10),
+          condition: {
+            kind: "notWearingArmor",
+            categories: ["heavy"],
+          },
+        },
+      }),
+    );
+  });
+
+  test("Fast Movement increases movement budget and Dash bonus while not wearing Heavy armor", () => {
+    const state = fastMovementBattle();
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 40,
+          remainingFeet: 40,
+        }),
+      }),
+    );
+
+    const dashed = resolveBattleSubject({
+      state,
+      subject: { tag: "action", actorId: spellCasterId, action: "dash" },
+      fills: [],
+    });
+    expect(dashed).toMatchObject({ tag: "resolved" });
+    if (dashed.tag !== "resolved") {
+      throw new Error("Expected Fast Movement Dash to resolve.");
+    }
+    expect(dashed.snapshot.turn.dashMovementBonusFeet).toBe(40);
+    expect(dashed.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 40,
+          remainingFeet: 80,
+        }),
+      }),
+    );
+  });
+
+  test("Fast Movement does not increase Speed while wearing Heavy armor", () => {
+    const state = fastMovementBattle({ armorClass: heavyArmorClassState() });
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 30,
+          remainingFeet: 30,
+        }),
+      }),
+    );
+  });
+
+  test("Fast Movement support gate rejects adjacent passive Speed bonus shapes", () => {
+    const unit = unitLibrary.requireUnit(barbarianFastMovementUnitId);
+    if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Fast Movement passive class feature.");
+    }
+    const [effect] = unit.mechanics.grants;
+    if (effect?.kind !== "modify_speed") {
+      throw new Error("Expected Fast Movement Speed modifier.");
+    }
+    const { condition: _condition, ...mechanicsWithoutCondition } =
+      unit.mechanics;
+    const adjacentSpeedUnits = [
+      {
+        ...unit,
+        id: "test_fast_movement_wrong_delta",
+        mechanics: {
+          ...unit.mechanics,
+          grants: [{ ...effect, delta: 5 }],
+        },
+      },
+      {
+        ...unit,
+        id: "test_fast_movement_multiple_grants",
+        mechanics: {
+          ...unit.mechanics,
+          grants: [effect, effect],
+        },
+      },
+      {
+        ...unit,
+        id: "test_fast_movement_missing_heavy_predicate",
+        mechanics: mechanicsWithoutCondition,
+      },
+    ] as const satisfies readonly UnitRecord[];
+
+    for (const adjacentUnit of adjacentSpeedUnits) {
+      expect(
+        battleUnitRefWithSupportProfiles({
+          unitRef: { unitId: adjacentUnit.id },
+          unit: adjacentUnit,
+        }),
+      ).toEqual(
+        Either.left({
+          tag: "battleUnitSupportProfileIssue",
+          message: `Unsupported battle passive Speed bonus Unit hook: ${adjacentUnit.id}.`,
+        }),
+      );
+      expect(
+        parseSupportedUnitFeatureProfile(adjacentUnit, [
+          { className: "barbarian", level: classLevel(5) },
+        ]),
+      ).toBeNull();
+    }
+  });
+});
+
 function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
@@ -2523,6 +2664,41 @@ function extraAttackBattle(
   return result.right;
 }
 
+function fastMovementBattle(input: {
+  readonly armorClass?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["armorClass"];
+} = {}): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-fast-movement-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Fast Barbarian",
+        initiative: 20,
+        side: partySide,
+        characterUnitRefs: [fastMovementBattleUnitRef()],
+        classLevels: [{ className: "barbarian", level: classLevel(5) }],
+        ...(input.armorClass === undefined
+          ? {}
+          : { armorClass: input.armorClass }),
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function resolveWeaponAttack(
   state: BattleState,
   attackName: "Longsword" | "Shortbow",
@@ -2652,6 +2828,38 @@ function archeryBattleUnitRef(): Extract<
   return unitRef.right;
 }
 
+function fastMovementBattleUnitRef(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = unitLibrary.requireUnit(barbarianFastMovementUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: barbarianFastMovementUnitId,
+      supportProfiles: [fastMovementSupportProfile()],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+function fastMovementSupportProfile() {
+  return {
+    kind: PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
+    deltaFeet: movementDeltaFeet(10),
+    condition: {
+      kind: "notWearingArmor",
+      categories: ["heavy"],
+    },
+  } as const;
+}
+
 function archeryFeatureUnit(): PassiveFeatUnit {
   const unit = unitLibrary.requireUnit(archeryUnitId);
   expect(isPassiveFeatUnit(unit)).toBe(true);
@@ -2663,6 +2871,18 @@ function archeryFeatureUnit(): PassiveFeatUnit {
 
 function isPassiveFeatUnit(unit: UnitRecord): unit is PassiveFeatUnit {
   return unit.kind === "feat" && unit.mechanics.family === "passive";
+}
+
+function heavyArmorClassState(): ReturnType<typeof defaultArmorClassState> {
+  return {
+    ...defaultArmorClassState(),
+    base: {
+      kind: "armor",
+      category: "heavy",
+      formula: { kind: "heavy_fixed", ac: 16 },
+    },
+    armorTraining: new Set(["heavy"]),
+  };
 }
 
 function characterCreature(input: {
@@ -2686,6 +2906,10 @@ function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly armorClass?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["armorClass"];
   readonly unitFeatures?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -2703,7 +2927,9 @@ function characterCreature(input: {
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: input.classLevels ?? [{ className: "wizard", level: 1 }],
       armorClass:
-        attack === null
+        input.armorClass !== undefined
+          ? input.armorClass
+          : attack === null
           ? defaultArmorClassState()
           : { ...defaultArmorClassState(), rightHandUse: "mainWeapon" },
       size: "medium",

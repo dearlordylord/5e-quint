@@ -6,6 +6,7 @@ import armorChainMailInput from "../../content/armor_chain_mail.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
+import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import classFighterInput from "../../content/class_fighter.json";
 import classWizardInput from "../../content/class_wizard.json";
@@ -177,6 +178,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterImprovedCriticalInput,
     barbarianRageInput,
     barbarianRecklessAttackInput,
+    barbarianFastMovementInput,
     bardCuttingWordsInput,
     monkDeflectAttacksInput,
     rogueCunningActionInput,

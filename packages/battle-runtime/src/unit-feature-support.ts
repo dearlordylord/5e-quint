@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -7,8 +7,10 @@ import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   CONDITIONS as ALL_CONDITIONS,
   ClassLevel,
+  movementDeltaFeet,
   movementFeet,
   type Condition,
+  type MovementDeltaFeet,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -35,6 +37,7 @@ export const PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE =
   "passiveArmorClassBonus";
 export const PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE =
   "passiveRangedAttackRollBonus";
+export const PASSIVE_SPEED_BONUS_SUPPORT_PROFILE = "passiveSpeedBonus";
 export const WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE =
   "weaponDamageDiceRollChoice";
 export const ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE =
@@ -54,9 +57,18 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+  PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
 ] as const;
+export type BattlePassiveSpeedBonusSupportProfile = {
+  readonly kind: typeof PASSIVE_SPEED_BONUS_SUPPORT_PROFILE;
+  readonly deltaFeet: MovementDeltaFeet;
+  readonly condition: {
+    readonly kind: "notWearingArmor";
+    readonly categories: readonly ["heavy"];
+  };
+};
 export type BattleAlternateActionCostSupportProfile = {
   readonly kind: "alternateActionCost";
   readonly from: {
@@ -67,9 +79,10 @@ export type BattleAlternateActionCostSupportProfile = {
 };
 export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
+  | BattlePassiveSpeedBonusSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
-      "alternateActionCost"
+      "alternateActionCost" | "passiveSpeedBonus"
     >;
 
 export type BattleUnitSupportProfileIssue = {
@@ -190,6 +203,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (passiveRangedAttackRollBonusSupport === "passiveRangedAttackRollBonus") {
     supportProfiles.push(PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE);
+  }
+
+  const passiveSpeedBonusSupport =
+    battlePassiveSpeedBonusSupportForUnit(input.unit);
+  if (passiveSpeedBonusSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle passive Speed bonus Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (passiveSpeedBonusSupport !== null) {
+    supportProfiles.push(passiveSpeedBonusSupport);
   }
 
   const weaponDamageDiceRollChoiceSupport =
@@ -319,6 +343,14 @@ export type PassiveRangedAttackRollBonusProfile = {
   };
 };
 
+export type PassiveSpeedBonusProfile = {
+  readonly deltaFeet: MovementDeltaFeet;
+  readonly condition: {
+    readonly kind: "notWearingArmor";
+    readonly categories: readonly ["heavy"];
+  };
+};
+
 export type WeaponDamageDiceRollChoiceProfile = {
   readonly optional: true;
   readonly trigger: "weaponHit";
@@ -394,6 +426,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "passiveRangedAttackRollBonus";
       readonly unit: UnitRecord;
       readonly attackRoll: PassiveRangedAttackRollBonusProfile;
+    }
+  | {
+      readonly kind: "passiveSpeedBonus";
+      readonly unit: UnitRecord;
+      readonly speed: PassiveSpeedBonusProfile;
     }
   | {
       readonly kind: "weaponDamageDiceRollChoice";
@@ -641,6 +678,11 @@ export type BattlePassiveRangedAttackRollBonusSupport =
   | "unsupported"
   | null;
 
+export type BattlePassiveSpeedBonusSupport =
+  | BattlePassiveSpeedBonusSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattleWeaponDamageDiceRollChoiceSupport =
   | "weaponDamageDiceRollChoice"
   | "unsupported"
@@ -671,6 +713,18 @@ export function battlePassiveRangedAttackRollBonusSupportForUnit(
   return passiveRangedAttackRollBonusProfileForUnit(unit) === null
     ? "unsupported"
     : "passiveRangedAttackRollBonus";
+}
+
+export function battlePassiveSpeedBonusSupportForUnit(
+  unit: UnitRecord,
+): BattlePassiveSpeedBonusSupport {
+  if (!hasPassiveSpeedBonusMechanics(unit)) {
+    return null;
+  }
+  const speed = passiveSpeedBonusProfileForUnit(unit);
+  return speed === null
+    ? "unsupported"
+    : { kind: PASSIVE_SPEED_BONUS_SUPPORT_PROFILE, ...speed };
 }
 
 export function battleWeaponDamageDiceRollChoiceSupportForUnit(
@@ -712,6 +766,17 @@ function hasPassiveRangedAttackRollBonusMechanics(unit: UnitRecord): boolean {
   }
   const [effect] = unit.mechanics.grants;
   return effect?.kind === "modify_roll_numeric";
+}
+
+function hasPassiveSpeedBonusMechanics(unit: UnitRecord): boolean {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    return false;
+  }
+  const [effect] = unit.mechanics.grants;
+  return (
+    effect?.kind === "modify_speed" ||
+    unit.mechanics.condition?.kind === "not_wearing_armor"
+  );
 }
 
 function hasWeaponDamageDiceRollChoiceMechanics(unit: UnitRecord): boolean {
@@ -815,6 +880,34 @@ export function passiveRangedAttackRollBonusProfileForUnit(
         },
       }
     : null;
+}
+
+export function passiveSpeedBonusProfileForUnit(
+  unit: UnitRecord,
+): PassiveSpeedBonusProfile | null {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    return null;
+  }
+  const [effect, ...extraEffects] = unit.mechanics.grants;
+  if (
+    effect?.kind !== "modify_speed" ||
+    effect.delta !== 10 ||
+    effect.unit !== "feet" ||
+    extraEffects.length > 0 ||
+    unit.mechanics.condition?.kind !== "not_wearing_armor" ||
+    !sameStringSet(unit.mechanics.condition.categories, ["heavy"]) ||
+    unit.mechanics.operations !== undefined ||
+    unit.mechanics.suppressedBy !== undefined
+  ) {
+    return null;
+  }
+  return {
+    deltaFeet: movementDeltaFeet(effect.delta),
+    condition: {
+      kind: "notWearingArmor",
+      categories: ["heavy"],
+    },
+  };
 }
 
 export function weaponDamageDiceRollChoiceProfileForUnit(
@@ -951,6 +1044,7 @@ export function parseSupportedUnitFeatureProfile(
     parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels) ??
     parsePassiveArmorClassBonusUnitFeatureProfile(unit) ??
     parsePassiveRangedAttackRollBonusUnitFeatureProfile(unit) ??
+    parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
     attackActionAttackCountScalingProfileForUnit(unit)
   );
@@ -1245,6 +1339,22 @@ function parsePassiveRangedAttackRollBonusUnitFeatureProfile(
         kind: "passiveRangedAttackRollBonus",
         unit,
         attackRoll,
+      };
+}
+
+function parsePassiveSpeedBonusUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "passiveSpeedBonus" }
+> | null {
+  const speed = passiveSpeedBonusProfileForUnit(unit);
+  return speed === null
+    ? null
+    : {
+        kind: "passiveSpeedBonus",
+        unit,
+        speed,
       };
 }
 

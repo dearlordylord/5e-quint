@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -223,6 +223,18 @@ module unitFeatureProcedureProfiles {
     naturalD20: int,
   }
 
+  type PassiveSpeedBonusFacts = {
+    baseSpeedFeet: int,
+    wearingHeavyArmor: bool,
+    movementSpentFeet: int,
+  }
+
+  type PassiveSpeedBonusResult = {
+    effectiveSpeedFeet: int,
+    movementRemainingFeet: int,
+    dashMovementBonusFeet: int,
+  }
+
   type PassiveRangedAttackRollBonusResult = {
     bonus: int,
     effectiveAttackRollTotal: int,
@@ -283,6 +295,34 @@ module unitFeatureProcedureProfiles {
 
   pure def archeryAttackRollBonus(facts: PassiveRangedAttackRollBonusFacts): int =
     if (facts.weaponKind == RangedWeapon) 2 else 0
+
+  pure def fastMovementSpeedBonus(facts: PassiveSpeedBonusFacts): int =
+    if (facts.wearingHeavyArmor) 0 else 10
+
+  pure def fastMovementEffectiveSpeed(facts: PassiveSpeedBonusFacts): int =
+    facts.baseSpeedFeet + fastMovementSpeedBonus(facts)
+
+  pure def resolveFastMovementBudget(
+    turn: TurnProcedureState,
+    facts: PassiveSpeedBonusFacts
+  ): PassiveSpeedBonusResult = {
+    val speed = fastMovementEffectiveSpeed(facts)
+    {
+      effectiveSpeedFeet: speed,
+      movementRemainingFeet:
+        nonnegative(speed + turn.dashMovementBonusFeet - facts.movementSpentFeet),
+      dashMovementBonusFeet: turn.dashMovementBonusFeet,
+    }
+  }
+
+  pure def resolveFastMovementDash(
+    turn: TurnProcedureState,
+    facts: PassiveSpeedBonusFacts
+  ): PassiveSpeedBonusResult = {
+    val speed = fastMovementEffectiveSpeed(facts)
+    val dashed = resolveDash(turn, speed, StandardActionCost(DashAction))
+    resolveFastMovementBudget(dashed, facts)
+  }
 
   pure def resolveArcheryAttackRoll(
     facts: PassiveRangedAttackRollBonusFacts
@@ -1255,6 +1295,39 @@ module unitFeatureProcedureProfiles {
       assert(nonRanged.bonus == 0),
       assert(nonRanged.effectiveAttackRollTotal == 14),
       assert(not(nonRanged.hits)),
+    }
+  }
+
+  run test_fast_movement_adds_ten_to_speed_budget_and_dash_when_not_wearing_heavy_armor = {
+    val facts = {
+      baseSpeedFeet: 30,
+      wearingHeavyArmor: false,
+      movementSpentFeet: 5,
+    }
+    val budget = resolveFastMovementBudget(initialTurnProcedureState, facts)
+    val dashed = resolveFastMovementDash(initialTurnProcedureState, facts)
+    all {
+      assert(budget.effectiveSpeedFeet == 40),
+      assert(budget.movementRemainingFeet == 35),
+      assert(dashed.effectiveSpeedFeet == 40),
+      assert(dashed.dashMovementBonusFeet == 40),
+      assert(dashed.movementRemainingFeet == 75),
+    }
+  }
+
+  run test_fast_movement_does_not_add_speed_when_wearing_heavy_armor = {
+    val facts = {
+      baseSpeedFeet: 30,
+      wearingHeavyArmor: true,
+      movementSpentFeet: 5,
+    }
+    val budget = resolveFastMovementBudget(initialTurnProcedureState, facts)
+    val dashed = resolveFastMovementDash(initialTurnProcedureState, facts)
+    all {
+      assert(budget.effectiveSpeedFeet == 30),
+      assert(budget.movementRemainingFeet == 25),
+      assert(dashed.dashMovementBonusFeet == 30),
+      assert(dashed.movementRemainingFeet == 55),
     }
   }
 
