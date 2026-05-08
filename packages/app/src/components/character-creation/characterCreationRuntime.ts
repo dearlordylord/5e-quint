@@ -64,6 +64,7 @@ export function createCharacterSheetFromDraft(draft: CharacterDraft): Either.Eit
     maximumHp: Hp(hitPoints.right.maximum),
     currentHp: Hp(hitPoints.right.maximum),
     tempHp: Hp(0),
+    conditions: [],
     unitLibrary: characterCreationUnitLibrary
   })
   return Either.isLeft(sheet) ? Either.left(sheet.left.message) : Either.right(sheet.right)

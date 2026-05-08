@@ -116,14 +116,6 @@ const catalogOnlyClosures = new Map([
     },
   ],
   [
-    "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
-    {
-      owner: "catalog-only/dead-for-now",
-      reason:
-        "Lay On Hands is a character-sheet healing pool and Bonus Action healing/Poisoned-condition removal feature outside current character-creation and battle-runtime owners.",
-    },
-  ],
-  [
     "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
     {
       owner: "catalog-only/dead-for-now",

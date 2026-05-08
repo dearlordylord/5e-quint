@@ -20,7 +20,8 @@ import {
   characterSheetSpellSlots,
   characterSheetId,
   characterSheetTempHp,
-  createFreshCharacterSheet,
+  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  type CharacterSheetInput,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -53,6 +54,16 @@ if (unitCatalogResult.tag !== "ok") {
   throw new Error("Character battle runtime test Unit catalog must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+
+function createFreshCharacterSheet(
+  input: Omit<CharacterSheetInput, "conditions"> &
+    Partial<Pick<CharacterSheetInput, "conditions">>,
+) {
+  return createFreshCharacterSheetCore({
+    conditions: [],
+    ...input,
+  });
+}
 
 describe("Character Sheet battle handoff", () => {
   test("rejects mismatched battle character identity", () => {
@@ -188,7 +199,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isLeft(handoff)).toBe(true);
   });
 
-  test("preserves non-battle rest state while settling battle-owned HP and Spell Slots", () => {
+  test("preserves non-battle sheet state while settling battle-owned HP and Spell Slots", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:rest-state"),
       build: wizardWarlockBuild(),
@@ -246,6 +257,42 @@ describe("Character Sheet battle handoff", () => {
       { spellLevel: 1, count: 2, expended: 2 },
     ]);
     expect(characterSheetTempHp(settled)).toBe(3);
+  });
+
+  test("preserves sheet-owned healing resource expenditures", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:paladin-handoff"),
+      build: paladinBuild(),
+      maximumHp: Hp(12),
+      currentHp: Hp(12),
+      tempHp: Hp(0),
+      unitLibrary,
+      resourceExpenditures: [
+        { tag: "layOnHandsHealingPool", expended: resourceCount(3) },
+      ],
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:paladin-handoff"),
+        },
+        hp: Hp(9),
+        maxHp: Hp(12),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    const settled = expectRight(handoff);
+    expect(settled.resourceExpenditures).toEqual([
+      { tag: "layOnHandsHealingPool", expended: 3 },
+    ]);
   });
 });
 
@@ -308,6 +355,26 @@ describe("Character Build battle projection", () => {
       sourceUnitId: "monk_unarmored_defense",
     });
     expect(currentArmorClass(init.creatureInit.armorClass)).toBe(15);
+  });
+
+  test("does not project sheet-owned charge-pool resources into battle init", () => {
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("fighter-lay-on-hands"),
+        characterId: characterId("character:fighter-lay-on-hands"),
+        displayName: "Fighter With Sheet Resource",
+        build: fighterWithLayOnHandsResourceBuild(),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(
+      (init.creatureInit.resources ?? []).map((resource) => resource.unit.id),
+    ).not.toContain("paladin_lay_on_hands");
   });
 });
 
@@ -453,6 +520,49 @@ function wizardWarlockBuild(): CharacterBuild {
         },
       },
     },
+  };
+}
+
+function paladinBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_paladin"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 15,
+        dex: 10,
+        con: 13,
+        int: 8,
+        wis: 12,
+        cha: 14,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
+}
+
+function fighterWithLayOnHandsResourceBuild(): CharacterBuild {
+  return {
+    ...build,
+    features: [
+      ...build.features,
+      {
+        selectedFromUnitId: "class_paladin",
+        kind: "selectedClassChoice",
+        unitId: "paladin_lay_on_hands",
+      },
+    ],
   };
 }
 

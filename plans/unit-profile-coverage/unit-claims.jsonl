@@ -87,3 +87,4 @@
 {"unitId":"mycelium_step","collectionId":"classic-2024-non-srd-mechanics","syntheticLabel":"Mycelium Step","claim":{"tag":"supported-profile","profileIds":["unit-feature.alternate-action-cost"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"barbarian_unarmored_defense","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["character-sheet.armor-class-base-formula"],"rawRequirementIds":[]}}
 {"unitId":"monk_unarmored_defense","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["character-sheet.armor-class-base-formula"],"rawRequirementIds":[]}}
+{"unitId":"paladin_lay_on_hands","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["character-sheet.healing-resource-action"],"rawRequirementIds":[]}}

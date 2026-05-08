@@ -23,6 +23,7 @@ export type {
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
 export {
+  characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,

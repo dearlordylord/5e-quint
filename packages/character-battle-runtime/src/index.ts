@@ -18,6 +18,11 @@ import {
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import { CONDITIONS, type Condition } from "@dnd/shared/types";
+import {
+  EMPTY_CONDITION_STATE,
+  hasCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 
@@ -132,6 +137,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
     maximumHp: input.sheet.maximumHp,
     currentHp: input.combatant.hp,
     tempHp: input.combatant.tempHp,
+    conditions: characterSheetConditionsFromBattle(input.combatant),
     unitLibrary: input.unitLibrary,
     ...(knockedOut.right === null
       ? {}
@@ -148,13 +154,27 @@ export function applyBattleHandoffToCharacterSheet(input: {
     ...(pactSlots === undefined ? {} : { pactSlots }),
     spentHitDice: input.sheet.spentHitDice,
     restFeatureUses: input.sheet.restFeatureUses,
+    resourceExpenditures: input.sheet.resourceExpenditures,
   });
 }
 
 function characterSheetInitialConditions(
   sheet: CharacterSheet,
 ): CharacterBuildCreatureInput["conditions"] {
-  return sheet.hitPoints.tag === "knockedOut" ? ["unconscious"] : [];
+  return [
+    ...sheet.conditions,
+    ...(sheet.hitPoints.tag === "knockedOut" ? (["unconscious"] as const) : []),
+  ];
+}
+
+function characterSheetConditionsFromBattle(
+  combatant: BattleCreatureState,
+): CharacterSheet["conditions"] {
+  const conditions = combatant.conditions ?? EMPTY_CONDITION_STATE;
+  return CONDITIONS.filter(
+    (condition): condition is Exclude<Condition, "unconscious"> =>
+      condition !== "unconscious" && hasCondition(conditions, condition),
+  );
 }
 
 function withDefinedCharacterBattleSheetState(

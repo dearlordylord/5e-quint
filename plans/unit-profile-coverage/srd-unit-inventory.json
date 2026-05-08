@@ -138,9 +138,12 @@
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+        "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery"
       ],
-      "issues": []
+      "issues": [
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery runtimeProjection evidence reference points to missing symbol arcaneRecoveryMechanics: packages/character-sheet-runtime/src/index.ts:arcaneRecoveryMechanics"
+      ]
     },
     "sharedAlgebraOwnerEvidence": {
       "schema": "dnd.srd-shared-algebra-owner-evidence.v1",
@@ -196,7 +199,7 @@
       "title": "Classify Installed Level-1 Owner Evidence",
       "suggestedStatus": "done",
       "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
-      "rowCount": 143,
+      "rowCount": 144,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
@@ -271,6 +274,7 @@
         "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
         "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
         "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
         "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
         "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
@@ -759,7 +763,6 @@
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
-        "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
@@ -773,6 +776,7 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
@@ -7992,12 +7996,23 @@
         "sourceRecordPath": "packages/surface/content/paladin_lay_on_hands.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_lay_on_hands"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Lay On Hands is a character-sheet healing pool and Bonus Action healing/Poisoned-condition removal feature outside current character-creation and battle-runtime owners."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_lay_on_hands is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; SRDINV25 Character Sheet healing resource action runtime; Paladin Lay On Hands is read from the installed Surface class-feature record and projected as a Character Sheet healing pool action. The runtime derives pool capacity from the character's Paladin level, stores only spent resource state, applies one spend to HP restoration plus the SRD 5 HP Poisoned-removal cost, rejects overspending, and restores the pool on Long Rest.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-table-summary:paladin_level_1_feature_table_row",
@@ -13517,7 +13532,7 @@
         "state": "installed",
         "unitId": "wizard_arcane_recovery"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13525,12 +13540,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; SRDINV24 Character Sheet Rest and Spell Slot Recovery runtime; Character Sheet rest completion models Short Rest Hit Dice spending, Long Rest spent Hit Dice recovery, Pact Slot recovery, ordinary Spell Slot recovery, and Wizard Arcane Recovery as distinct runtime facts. Wizard Arcane Recovery is read from the installed Surface class-feature record and applied during Short Rest completion as a distinct ordinary Spell Slot refund; the runtime enforces feature ownership, the Short Rest trigger, once-per-Long-Rest feature use, half-Wizard-level rounded-up recovery budget, level 6+ exclusion, and expended-slot ceiling.",
-          "status": "owner evidence present"
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Spell Slot recovery after a Short Rest belongs to a future character-sheet/rest runtime, not the current character-creation or battle-runtime boundary.",
+          "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Owner-specific operational evidence is classified and present."
+      "nextAction": "Spell Slot recovery after a Short Rest belongs to a future character-sheet/rest runtime, not the current character-creation or battle-runtime boundary."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",

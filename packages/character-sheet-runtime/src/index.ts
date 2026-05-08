@@ -5,6 +5,7 @@ import {
   characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
+  characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   classLevelForUnit,
   classUnitId,
@@ -19,17 +20,24 @@ import {
   type CharacterBuildHitDiePool,
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencyChoiceSubject,
+  type CharacterBuildResource,
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingFocus,
   type CharacterBuildSpellcastingSource,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
-import { ABILITIES, SKILLS, type Ability } from "@dnd/shared/game-facts";
+import {
+  ABILITIES,
+  CONDITIONS,
+  SKILLS,
+  type Ability,
+} from "@dnd/shared/game-facts";
 import {
   DieRollResult,
   Hp,
   resourceCount,
   spellSlotLevel,
+  type Condition,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -74,6 +82,7 @@ import type {
   SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
+  ChargePoolResource,
   ClassFeatureComponentMechanics,
   EquipmentPredicate,
   UnitRecord,
@@ -81,6 +90,7 @@ import type {
 import { Brand, Either, Option } from "effect";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.armor-class-base-formula
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -89,6 +99,11 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "heavy",
   "shield",
 ] as const;
+const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
+const CHARACTER_SHEET_CONDITIONS = CONDITIONS.filter(
+  (condition): condition is CharacterSheetCondition =>
+    condition !== "unconscious",
+);
 
 export type CharacterSheetId = string & Brand.Brand<"CharacterId">;
 const CharacterSheetId = Brand.nominal<CharacterSheetId>();
@@ -117,8 +132,10 @@ export type CharacterSheet =
       readonly build: SpellcastingCharacterBuild;
       readonly maximumHp: HpType;
       readonly hitPoints: CharacterSheetHitPoints;
+      readonly conditions: readonly CharacterSheetCondition[];
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
+      readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
       readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
       readonly pactSlotExpenditure: CharacterPactSlotExpenditure | undefined;
     }
@@ -128,11 +145,15 @@ export type CharacterSheet =
       readonly build: NonSpellcastingCharacterBuild;
       readonly maximumHp: HpType;
       readonly hitPoints: CharacterSheetHitPoints;
+      readonly conditions: readonly CharacterSheetCondition[];
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
+      readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
       readonly spellSlotExpenditures?: never;
       readonly pactSlotExpenditure?: never;
     };
+
+export type CharacterSheetCondition = Exclude<Condition, "unconscious">;
 
 export type CharacterSpellSlotExpenditure = {
   readonly spellLevel: SpellSlotLevel;
@@ -172,6 +193,21 @@ export type CharacterSheetRestFeatureUse = {
   readonly usedSinceLongRest: true;
 };
 
+export type CharacterSheetResourceExpenditure = {
+  readonly tag: "layOnHandsHealingPool";
+  readonly expended: ResourceCount;
+};
+
+type CharacterSheetLayOnHandsResource = CharacterBuildResource & {
+  readonly unitId: UnitRecord["id"];
+  readonly resource: ChargePoolResource;
+};
+
+export type CharacterSheetResourceState = CharacterSheetLayOnHandsResource & {
+  readonly count: ResourceCount;
+  readonly expended: ResourceCount;
+};
+
 export type CharacterSheetArcaneRecoverySlotRefund = {
   readonly spellLevel: SpellSlotLevel;
   readonly count: ResourceCount;
@@ -190,12 +226,26 @@ export type CharacterSheetLongRestInput = {
   readonly sheet: CharacterSheet;
 };
 
+export type CharacterSheetLayOnHandsInput = {
+  readonly source: CharacterSheet;
+  readonly target: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly restoreHp: HpType;
+  readonly removePoisoned: boolean;
+};
+
+export type CharacterSheetLayOnHandsResult = {
+  readonly source: CharacterSheet;
+  readonly target: CharacterSheet;
+};
+
 export type CharacterSheetInput = {
   readonly characterId: CharacterSheetId;
   readonly build: CharacterBuild;
   readonly maximumHp: HpType;
   readonly currentHp: HpType;
   readonly tempHp: HpType;
+  readonly conditions: readonly CharacterSheetCondition[];
   readonly unitLibrary: UnitCatalog;
   readonly positiveHpUnconscious?: CharacterSheetPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
@@ -203,6 +253,7 @@ export type CharacterSheetInput = {
   readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
   readonly pactSlots?: CharacterSheetPactSlotState;
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
+  readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
 };
 
 export type CharacterSheetPositiveHpUnconscious = {
@@ -325,6 +376,12 @@ export function createFreshCharacterSheet(
   if (Either.isLeft(spentHitDice)) return Either.left(spentHitDice.left);
   const restFeatureUses = restFeatureUsesFromInput(input);
   if (Either.isLeft(restFeatureUses)) return Either.left(restFeatureUses.left);
+  const conditions = conditionsFromInput(input.conditions);
+  if (Either.isLeft(conditions)) return Either.left(conditions.left);
+  const resourceExpenditures = resourceExpendituresFromInput(input);
+  if (Either.isLeft(resourceExpenditures)) {
+    return Either.left(resourceExpenditures.left);
+  }
 
   if (isNonSpellcastingBuild(input.build)) {
     if (input.spellSlots !== undefined) {
@@ -345,8 +402,10 @@ export function createFreshCharacterSheet(
       build: input.build,
       maximumHp: input.maximumHp,
       hitPoints: hitPoints.right,
+      conditions: conditions.right,
       spentHitDice: spentHitDice.right,
       restFeatureUses: restFeatureUses.right,
+      resourceExpenditures: resourceExpenditures.right,
     });
   }
 
@@ -379,8 +438,10 @@ export function createFreshCharacterSheet(
     build,
     maximumHp: input.maximumHp,
     hitPoints: hitPoints.right,
+    conditions: conditions.right,
     spentHitDice: spentHitDice.right,
     restFeatureUses: restFeatureUses.right,
+    resourceExpenditures: resourceExpenditures.right,
     spellSlotExpenditures: spellSlotExpenditures.right,
     pactSlotExpenditure: pactSlotExpenditure.right,
   });
@@ -403,8 +464,16 @@ export function parseCharacterSheet(
   if (Either.isLeft(maximumHp)) return Either.left(maximumHp.left);
   const hitPoints = parseStoredHitPoints(value.hitPoints);
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  const conditions = parseStoredConditions(value.conditions);
+  if (Either.isLeft(conditions)) return Either.left(conditions.left);
   const spentHitDice = parseStoredSpentHitDice(value.spentHitDice);
   if (Either.isLeft(spentHitDice)) return Either.left(spentHitDice.left);
+  const resourceExpenditures = parseStoredResourceExpenditures(
+    value.resourceExpenditures,
+  );
+  if (Either.isLeft(resourceExpenditures)) {
+    return Either.left(resourceExpenditures.left);
+  }
   const spellSlots = parseStoredSpellSlots(build.right, value);
   if (Either.isLeft(spellSlots)) return Either.left(spellSlots.left);
   const pactSlots = parseStoredPactSlots(build.right, value);
@@ -422,6 +491,7 @@ export function parseCharacterSheet(
     maximumHp: maximumHp.right,
     currentHp: hitPoints.right.currentHp,
     tempHp: hitPoints.right.tempHp,
+    conditions: conditions.right,
     unitLibrary,
     ...(hitPoints.right.positiveHpUnconscious === undefined
       ? {}
@@ -433,6 +503,7 @@ export function parseCharacterSheet(
     ...(pactSlots.right === undefined ? {} : { pactSlots: pactSlots.right }),
     spentHitDice: spentHitDice.right,
     restFeatureUses: restFeatureUses.right,
+    resourceExpenditures: resourceExpenditures.right,
   });
 }
 
@@ -536,6 +607,33 @@ export function characterSheetHitDice(
   );
 }
 
+export function characterSheetResources(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): Either.Either<readonly CharacterSheetResourceState[], CharacterSheetIssue> {
+  const resource = layOnHandsResourceForBuild(sheet.build, unitLibrary);
+  if (Either.isLeft(resource)) return Either.left(resource.left);
+  if (resource.right === null) {
+    return Either.right([]);
+  }
+  const count = characterSheetResourceCapacity({
+    build: sheet.build,
+    unitLibrary,
+    resource: resource.right,
+  });
+  if (Either.isLeft(count)) return Either.left(count.left);
+  return Either.right([
+    {
+      ...resource.right,
+      count: count.right,
+      expended:
+        sheet.resourceExpenditures.find(
+          (expenditure) => expenditure.tag === "layOnHandsHealingPool",
+        )?.expended ?? resourceCount(0),
+    },
+  ]);
+}
+
 export function completeShortRest(
   input: CharacterSheetShortRestInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
@@ -551,7 +649,8 @@ export function completeShortRest(
     spendHitDice: input.spendHitDice,
   });
   if (Either.isLeft(hitDiceSpent)) return Either.left(hitDiceSpent.left);
-  if (input.arcaneRecovery === undefined) return Either.right(hitDiceSpent.right);
+  if (input.arcaneRecovery === undefined)
+    return Either.right(hitDiceSpent.right);
   return applyArcaneRecovery({
     sheet: hitDiceSpent.right,
     unitLibrary: input.unitLibrary,
@@ -578,6 +677,7 @@ export function completeLongRest(
       hitPoints: hitPoints.right,
       spentHitDice: [],
       restFeatureUses: [],
+      resourceExpenditures: [],
       spellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
         (expenditure) => ({
           ...expenditure,
@@ -595,7 +695,46 @@ export function completeLongRest(
     hitPoints: hitPoints.right,
     spentHitDice: [],
     restFeatureUses: [],
+    resourceExpenditures: [],
   });
+}
+
+export function applyLayOnHands(
+  input: CharacterSheetLayOnHandsInput,
+): Either.Either<CharacterSheetLayOnHandsResult, CharacterSheetIssue> {
+  const spend = layOnHandsSpend(input);
+  if (Either.isLeft(spend)) return Either.left(spend.left);
+
+  const sourceAfterSpend = spendCharacterSheetResource({
+    sheet: input.source,
+    unitLibrary: input.unitLibrary,
+    amount: spend.right,
+  });
+  if (Either.isLeft(sourceAfterSpend))
+    return Either.left(sourceAfterSpend.left);
+
+  const sourceIsTarget = input.source.characterId === input.target.characterId;
+  const targetBase = sourceIsTarget ? sourceAfterSpend.right : input.target;
+  const targetAfterHealing = applyLayOnHandsTargetEffects({
+    sheet: targetBase,
+    restoreHp: input.restoreHp,
+    removePoisoned: input.removePoisoned,
+  });
+  if (Either.isLeft(targetAfterHealing)) {
+    return Either.left(targetAfterHealing.left);
+  }
+
+  return Either.right(
+    sourceIsTarget
+      ? {
+          source: targetAfterHealing.right,
+          target: targetAfterHealing.right,
+        }
+      : {
+          source: sourceAfterSpend.right,
+          target: targetAfterHealing.right,
+        },
+  );
 }
 
 export function characterSheetArmorClassState(
@@ -1054,11 +1193,11 @@ function pactSlotExpenditureFromInput(
 }
 
 function spentHitDiceFromInput(
-  input: Pick<
-    CharacterSheetInput,
-    "build" | "spentHitDice" | "unitLibrary"
-  >,
-): Either.Either<readonly CharacterSheetSpentHitDiePool[], CharacterSheetIssue> {
+  input: Pick<CharacterSheetInput, "build" | "spentHitDice" | "unitLibrary">,
+): Either.Either<
+  readonly CharacterSheetSpentHitDiePool[],
+  CharacterSheetIssue
+> {
   const capacity = characterBuildHitDice(input.build, input.unitLibrary);
   if (Either.isLeft(capacity)) return Either.left(capacity.left);
   const spentHitDice = input.spentHitDice ?? [];
@@ -1123,6 +1262,204 @@ function restFeatureUsesFromInput(
     usedFeatureTags.add(use.tag);
   }
   return Either.right([...uses]);
+}
+
+function conditionsFromInput(
+  conditions: readonly CharacterSheetCondition[],
+): Either.Either<readonly CharacterSheetCondition[], CharacterSheetIssue> {
+  const active = new Set<CharacterSheetCondition>();
+  for (const condition of conditions) {
+    if (!CHARACTER_SHEET_CONDITIONS.some((allowed) => allowed === condition)) {
+      return characterSheetIssue(
+        "Character Sheet condition state must contain supported non-Unconscious conditions.",
+      );
+    }
+    if (active.has(condition)) {
+      return characterSheetIssue(
+        "Character Sheet condition state must not duplicate.",
+      );
+    }
+    active.add(condition);
+  }
+  return Either.right([...conditions]);
+}
+
+function resourceExpendituresFromInput(
+  input: Pick<
+    CharacterSheetInput,
+    "build" | "resourceExpenditures" | "unitLibrary"
+  >,
+): Either.Either<
+  readonly CharacterSheetResourceExpenditure[],
+  CharacterSheetIssue
+> {
+  const expenditures = input.resourceExpenditures ?? [];
+  const layOnHandsResource = layOnHandsResourceForBuild(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(layOnHandsResource)) {
+    return Either.left(layOnHandsResource.left);
+  }
+  const seen = new Set<CharacterSheetResourceExpenditure["tag"]>();
+  const result: CharacterSheetResourceExpenditure[] = [];
+  for (const expenditure of expenditures) {
+    if (seen.has(expenditure.tag)) {
+      return characterSheetIssue(
+        "Character Sheet resource expenditure state must not duplicate.",
+      );
+    }
+    seen.add(expenditure.tag);
+    if (layOnHandsResource.right === null) {
+      return characterSheetIssue(
+        "Lay On Hands healing pool expenditure requires the Paladin Lay On Hands feature.",
+      );
+    }
+    const count = characterSheetResourceCapacity({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      resource: layOnHandsResource.right,
+    });
+    if (Either.isLeft(count)) return Either.left(count.left);
+    if (
+      !Number.isInteger(expenditure.expended) ||
+      expenditure.expended < 0 ||
+      expenditure.expended > count.right
+    ) {
+      return characterSheetIssue(
+        "Character Sheet resource expenditure cannot exceed build resource capacity.",
+      );
+    }
+    if (expenditure.expended > 0) {
+      result.push({
+        tag: "layOnHandsHealingPool",
+        expended: resourceCount(expenditure.expended),
+      });
+    }
+  }
+  return Either.right(result);
+}
+
+function layOnHandsResourceForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<CharacterSheetLayOnHandsResource | null, CharacterSheetIssue> {
+  for (const resource of characterBuildResources(build, unitLibrary)) {
+    const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    const layOnHandsResource = layOnHandsHealingPoolResourceForUnit(unit.right);
+    if (layOnHandsResource !== null) {
+      return Either.right({
+        unitId: resource.unitId,
+        resource: layOnHandsResource,
+      });
+    }
+  }
+  return Either.right(null);
+}
+
+function layOnHandsHealingPoolResourceForUnit(
+  unit: UnitRecord,
+): ChargePoolResource | null {
+  if (unit.kind !== "class_feature" || unit.className !== "paladin") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "activation" ||
+    mechanics.activationCost?.kind !== "bonus_action" ||
+    mechanics.resetCadence?.kind !== "long_rest" ||
+    mechanics.resource?.kind !== "charge_pool" ||
+    mechanics.resource.cap.kind !== "linear_per_level" ||
+    mechanics.resource.cap.axis !== "class" ||
+    mechanics.resource.cap.base !== 5 ||
+    mechanics.resource.cap.perLevel !== 5 ||
+    mechanics.resource.cap.startingAtLevel !== 1
+  ) {
+    return null;
+  }
+  const healsFromSpentPool = mechanics.phases.some(
+    (phase) =>
+      phase.kind === "direct" &&
+      (phase.effects?.some(
+        (effect) =>
+          effect.kind === "heal_hp" &&
+          effect.amount.kind === "resource_spent" &&
+          effect.target === "target_creature",
+      ) ??
+        false),
+  );
+  return healsFromSpentPool ? mechanics.resource : null;
+}
+
+type CharacterSheetResourceCapacityInput = {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly resource: CharacterBuildResource;
+};
+
+function characterSheetResourceCapacity(
+  input: CharacterSheetResourceCapacityInput,
+): Either.Either<ResourceCount, CharacterSheetIssue> {
+  const unit = getRequiredUnit(input.unitLibrary, input.resource.unitId);
+  if (Either.isLeft(unit)) return Either.left(unit.left);
+  const cap = input.resource.resource.cap;
+  if (cap.kind === "fixed") return Either.right(resourceCount(cap.uses));
+  if (cap.kind === "linear_per_level") {
+    if (cap.axis !== "class") {
+      return characterSheetIssue(
+        "Character Sheet resource level scaling must use class level.",
+      );
+    }
+    if (unit.right.kind !== "class_feature") {
+      return characterSheetIssue(
+        "Class-level resource scaling requires a class feature Unit.",
+      );
+    }
+    const level = classFeatureOwnerLevel(input, unit.right);
+    if (Either.isLeft(level)) return Either.left(level.left);
+    return Either.right(
+      resourceCount(
+        cap.base +
+          Math.max(0, level.right - cap.startingAtLevel) * cap.perLevel,
+      ),
+    );
+  }
+  if (cap.kind === "proficiency_bonus") {
+    return Either.right(
+      resourceCount(
+        proficiencyBonusForCharacterLevel(
+          input.build.progression.advancements.length + 1,
+        ),
+      ),
+    );
+  }
+  return characterSheetIssue(
+    "Character Sheet resource capacity is not supported by this runtime.",
+  );
+}
+
+function classFeatureOwnerLevel(
+  input: Pick<CharacterSheetResourceCapacityInput, "build" | "unitLibrary">,
+  feature: CharacterSheetClassFeatureRecord,
+): Either.Either<number, CharacterSheetIssue> {
+  for (const classId of progressionClassUnitIds(input.build.progression)) {
+    const classUnit = getRequiredUnit(input.unitLibrary, classId);
+    if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+    if (
+      classUnit.right.kind === "class" &&
+      classUnit.right.className === feature.className
+    ) {
+      return Either.right(classLevelForUnit(input.build.progression, classId));
+    }
+  }
+  return characterSheetIssue(
+    "Class-feature resource requires the owning class in progression.",
+  );
+}
+
+function proficiencyBonusForCharacterLevel(totalLevel: number): number {
+  return 2 + Math.floor((totalLevel - 1) / 4);
 }
 
 function characterBuildHitDice(
@@ -1218,7 +1555,9 @@ function spendHitDice(input: {
     } else {
       nextSpentHitDice[existingIndex] = {
         classUnitId,
-        spent: resourceCount(nextSpentHitDice[existingIndex].spent + spentCount),
+        spent: resourceCount(
+          nextSpentHitDice[existingIndex].spent + spentCount,
+        ),
       };
     }
   }
@@ -1236,6 +1575,101 @@ function spendHitDice(input: {
     hitPoints: hitPoints.right,
     spentHitDice: nextSpentHitDice,
   });
+}
+
+function layOnHandsSpend(
+  input: Pick<CharacterSheetLayOnHandsInput, "restoreHp" | "removePoisoned">,
+): Either.Either<ResourceCount, CharacterSheetIssue> {
+  if (!Number.isInteger(input.restoreHp) || input.restoreHp < 0) {
+    return characterSheetIssue(
+      "Lay On Hands HP restoration must be nonnegative.",
+    );
+  }
+  const spend = resourceCount(
+    input.restoreHp +
+      (input.removePoisoned ? LAY_ON_HANDS_POISONED_REMOVAL_COST : 0),
+  );
+  return spend === 0
+    ? characterSheetIssue("Lay On Hands must restore HP or remove Poisoned.")
+    : Either.right(spend);
+}
+
+function spendCharacterSheetResource(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly amount: ResourceCount;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  if (Either.isLeft(resources)) return Either.left(resources.left);
+  const resource = resources.right[0];
+  if (resource === undefined) {
+    return characterSheetIssue(
+      "Lay On Hands requires the Paladin Lay On Hands feature.",
+    );
+  }
+  if (resource.expended + input.amount > resource.count) {
+    return characterSheetIssue(
+      "Lay On Hands cannot spend more healing pool than remains.",
+    );
+  }
+
+  const nextExpenditures = input.sheet.resourceExpenditures.filter(
+    (expenditure) => expenditure.tag !== "layOnHandsHealingPool",
+  );
+  nextExpenditures.push({
+    tag: "layOnHandsHealingPool",
+    expended: resourceCount(resource.expended + input.amount),
+  });
+  return Either.right({
+    ...input.sheet,
+    resourceExpenditures: nextExpenditures,
+  });
+}
+
+function applyLayOnHandsTargetEffects(input: {
+  readonly sheet: CharacterSheet;
+  readonly restoreHp: HpType;
+  readonly removePoisoned: boolean;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (input.removePoisoned) {
+    if (!input.sheet.conditions.some((condition) => condition === "poisoned")) {
+      return characterSheetIssue(
+        "Lay On Hands Poisoned removal requires a Poisoned target.",
+      );
+    }
+  }
+  const conditions = input.removePoisoned
+    ? input.sheet.conditions.filter((condition) => condition !== "poisoned")
+    : input.sheet.conditions;
+
+  if (input.restoreHp === 0) {
+    return Either.right({ ...input.sheet, conditions });
+  }
+  if (
+    input.sheet.hitPoints.tag === "zero" &&
+    input.sheet.hitPoints.lifecycle.tag === "dead"
+  ) {
+    return characterSheetIssue(
+      "Lay On Hands cannot restore HP to a dead target.",
+    );
+  }
+  const currentHp = characterSheetCurrentHp(input.sheet);
+  if (currentHp + input.restoreHp > input.sheet.maximumHp) {
+    return characterSheetIssue(
+      "Lay On Hands HP restoration cannot exceed the target's missing HP.",
+    );
+  }
+  const hitPoints = characterSheetHitPoints({
+    currentHp: Hp(currentHp + input.restoreHp),
+    tempHp: characterSheetTempHp(input.sheet),
+  });
+  return Either.isLeft(hitPoints)
+    ? Either.left(hitPoints.left)
+    : Either.right({
+        ...input.sheet,
+        hitPoints: hitPoints.right,
+        conditions,
+      });
 }
 
 function applyArcaneRecovery(input: {
@@ -1644,9 +2078,14 @@ function parseStoredPactSlots(
 
 function parseStoredSpentHitDice(
   value: unknown,
-): Either.Either<readonly CharacterSheetSpentHitDiePool[], CharacterSheetIssue> {
+): Either.Either<
+  readonly CharacterSheetSpentHitDiePool[],
+  CharacterSheetIssue
+> {
   if (!Array.isArray(value)) {
-    return characterSheetIssue("Character Sheet requires spent Hit Dice state.");
+    return characterSheetIssue(
+      "Character Sheet requires spent Hit Dice state.",
+    );
   }
   const spentHitDice = [];
   for (const spent of value) {
@@ -1661,6 +2100,61 @@ function parseStoredSpentHitDice(
     });
   }
   return Either.right(spentHitDice);
+}
+
+function parseStoredConditions(
+  value: unknown,
+): Either.Either<readonly CharacterSheetCondition[], CharacterSheetIssue> {
+  if (!Array.isArray(value)) {
+    return characterSheetIssue("Character Sheet requires condition state.");
+  }
+  const conditions: CharacterSheetCondition[] = [];
+  for (const condition of value) {
+    if (typeof condition !== "string") {
+      return characterSheetIssue("Expected Character Sheet condition.");
+    }
+    const supportedCondition = CHARACTER_SHEET_CONDITIONS.find(
+      (allowed) => allowed === condition,
+    );
+    if (supportedCondition === undefined) {
+      return characterSheetIssue(
+        "Character Sheet condition state must contain supported non-Unconscious conditions.",
+      );
+    }
+    conditions.push(supportedCondition);
+  }
+  return conditionsFromInput(conditions);
+}
+
+function parseStoredResourceExpenditures(
+  value: unknown,
+): Either.Either<
+  readonly CharacterSheetResourceExpenditure[],
+  CharacterSheetIssue
+> {
+  if (!Array.isArray(value)) {
+    return characterSheetIssue(
+      "Character Sheet requires resource expenditure state.",
+    );
+  }
+  const expenditures = [];
+  for (const expenditure of value) {
+    if (
+      !isRecord(expenditure) ||
+      expenditure.tag !== "layOnHandsHealingPool"
+    ) {
+      return characterSheetIssue(
+        "Expected Character Sheet resource expenditure.",
+      );
+    }
+    const expended = parseResourceCount(expenditure.expended);
+    if (Either.isLeft(expended)) return Either.left(expended.left);
+    expenditures.push({
+      tag: "layOnHandsHealingPool" as const,
+      expended: expended.right,
+    });
+  }
+  return Either.right(expenditures);
 }
 
 function parseStoredRestFeatureUses(
@@ -1685,7 +2179,11 @@ function parseStoredRestFeatureUses(
       usedSinceLongRest: true,
     });
   }
-  return restFeatureUsesFromInput({ build, unitLibrary, restFeatureUses: uses });
+  return restFeatureUsesFromInput({
+    build,
+    unitLibrary,
+    restFeatureUses: uses,
+  });
 }
 
 function passStableRecoveryTime(input: {

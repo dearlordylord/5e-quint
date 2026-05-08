@@ -60,6 +60,7 @@ import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
+import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
@@ -246,6 +247,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featBoonOfCombatProwessInput,
     featDefenseInput,
     featSavageAttackerInput,
+    paladinLayOnHandsInput,
     paladinExtraAttackInput,
     paladinWeaponMasteryInput,
     rangerExtraAttackInput,

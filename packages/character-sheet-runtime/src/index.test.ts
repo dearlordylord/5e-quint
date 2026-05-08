@@ -21,21 +21,25 @@ import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  applyLayOnHands,
   characterSheetArmorClassState,
   characterSheetHitDice,
   characterSheetPactSlots,
+  characterSheetResources,
   characterSheetSpellSlots,
   completeLongRest,
   completeShortRest,
+  createFreshCharacterSheet as createFreshCharacterSheetCore,
   characterSheetId,
   characterSheetTempHp,
-  createFreshCharacterSheet,
   parseCharacterSheet,
   timePassed,
   type CharacterSheet,
+  type CharacterSheetInput,
 } from "./index.ts";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.armor-class-base-formula
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.healing-resource-action
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -46,6 +50,23 @@ if (unitCatalogResult.tag !== "ok") {
   throw new Error("Character Sheet runtime test Unit catalog must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+
+const layOnHandsSpendsHealingPoolTestName =
+  "Lay On Hands spends one healing pool for HP restoration and Poisoned removal";
+const layOnHandsRejectsDivergentPoolsTestName =
+  "Lay On Hands cannot split HP and Poisoned costs across divergent pools";
+const layOnHandsLongRestRecoveryTestName =
+  "Long Rest restores the Lay On Hands healing pool";
+
+function createFreshCharacterSheet(
+  input: Omit<CharacterSheetInput, "conditions"> &
+    Partial<Pick<CharacterSheetInput, "conditions">>,
+) {
+  return createFreshCharacterSheetCore({
+    conditions: [],
+    ...input,
+  });
+}
 
 describe("Character Sheet runtime", () => {
   test("creates a fresh non-spellcasting Character Sheet at current HP", () => {
@@ -440,7 +461,9 @@ describe("Character Sheet runtime", () => {
         currentHp: Hp(4),
         tempHp: Hp(3),
         unitLibrary,
-        spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
+        spentHitDice: [
+          { classUnitId: "class_wizard", spent: resourceCount(1) },
+        ],
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -481,6 +504,125 @@ describe("Character Sheet runtime", () => {
       expended: 0,
     });
     expect(rested.restFeatureUses).toEqual([]);
+  });
+
+  test(layOnHandsSpendsHealingPoolTestName, () => {
+    const source = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:paladin"),
+        build: armorClassBuild({
+          startingClass: "class_paladin",
+          advancements: ["class_paladin"],
+        }),
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const target = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:target"),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        maximumHp: Hp(10),
+        currentHp: Hp(3),
+        tempHp: Hp(0),
+        conditions: ["poisoned"],
+        unitLibrary,
+      }),
+    );
+
+    const result = requireRight(
+      applyLayOnHands({
+        source,
+        target,
+        unitLibrary,
+        restoreHp: Hp(2),
+        removePoisoned: true,
+      }),
+    );
+
+    expect(result.target.hitPoints).toEqual({
+      tag: "positive",
+      currentHp: 5,
+      tempHp: 0,
+    });
+    expect(result.target.conditions).toEqual([]);
+    expect(characterSheetResources(result.source, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: [
+        {
+          unitId: "paladin_lay_on_hands",
+          count: 10,
+          expended: 7,
+        },
+      ],
+    });
+  });
+
+  test(layOnHandsRejectsDivergentPoolsTestName, () => {
+    const target = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:paladin-self"),
+        build: armorClassBuild({ startingClass: "class_paladin" }),
+        maximumHp: Hp(12),
+        currentHp: Hp(6),
+        tempHp: Hp(0),
+        conditions: ["poisoned"],
+        unitLibrary,
+      }),
+    );
+
+    expect(
+      applyLayOnHands({
+        source: target,
+        target,
+        unitLibrary,
+        restoreHp: Hp(1),
+        removePoisoned: true,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Lay On Hands cannot spend more healing pool than remains.",
+      },
+    });
+  });
+
+  test(layOnHandsLongRestRecoveryTestName, () => {
+    const source = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:paladin-rest"),
+        build: armorClassBuild({ startingClass: "class_paladin" }),
+        maximumHp: Hp(12),
+        currentHp: Hp(6),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const spent = requireRight(
+      applyLayOnHands({
+        source,
+        target: source,
+        unitLibrary,
+        restoreHp: Hp(4),
+        removePoisoned: false,
+      }),
+    ).source;
+
+    const rested = requireRight(completeLongRest({ sheet: spent }));
+
+    expect(rested.resourceExpenditures).toEqual([]);
+    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: [
+        {
+          unitId: "paladin_lay_on_hands",
+          count: 5,
+          expended: 0,
+        },
+      ],
+    });
   });
 
   test("Short Rest restores Pact Slots without touching ordinary Spell Slots", () => {
@@ -542,9 +684,7 @@ describe("Character Sheet runtime", () => {
       completeShortRest({
         sheet,
         unitLibrary,
-        spendHitDice: [
-          { classUnitId: "class_wizard", roll: DieRollResult(4) },
-        ],
+        spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
       }),
     );
 
@@ -640,9 +780,7 @@ describe("Character Sheet runtime", () => {
       completeShortRest({
         sheet,
         unitLibrary,
-        spendHitDice: [
-          { classUnitId: "class_wizard", roll: DieRollResult(4) },
-        ],
+        spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
       }),
     ).toMatchObject({
       _tag: "Left",
@@ -796,7 +934,7 @@ function stableSheet(characterIdText: string): CharacterSheet {
 
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
-  throw new Error("Expected Either.right.");
+  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
 }
 
 function armorClassBuild(input: {

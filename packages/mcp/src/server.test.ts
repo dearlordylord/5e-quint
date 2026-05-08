@@ -184,9 +184,12 @@ function testCharacterEquipmentItemId<
 }
 
 function availableCharacterSessionRight(
-  input: Parameters<typeof availableCharacterSession>[0],
+  input: Omit<Parameters<typeof availableCharacterSession>[0], "conditions"> &
+    Partial<
+      Pick<Parameters<typeof availableCharacterSession>[0], "conditions">
+    >,
 ) {
-  const result = availableCharacterSession(input);
+  const result = availableCharacterSession({ conditions: [], ...input });
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
@@ -629,7 +632,9 @@ describe("MCP server route", () => {
     const buildWithoutCunningAction: CharacterBuild = {
       ...rogueBuild,
       features: rogueBuild.features.filter(
-        (feature) => feature.unitId !== "rogue_cunning_action",
+        (feature) =>
+          feature.kind !== "selectedClassChoice" ||
+          feature.unitId !== "rogue_cunning_action",
       ),
     };
     const state = startBattleFromCharacterBuildAndStatBlockRight({
@@ -2466,8 +2471,10 @@ describe("MCP server route", () => {
       build: finalized.finalization.build,
       maximumHp: 12,
       hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
+      conditions: [],
       spentHitDice: [],
       restFeatureUses: [],
+      resourceExpenditures: [],
     });
     expect(finalized.session).toMatchObject({
       draftIds: [],
@@ -3108,6 +3115,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(6),
         tempHp: Hp(0),
+        conditions: [],
         unitLibrary: root.unitLibrary,
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),

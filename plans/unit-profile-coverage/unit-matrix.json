@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 64,
-      "percent": "18.4%"
+      "numerator": 65,
+      "percent": "18.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 88,
-      "percent": "21.2%"
+      "numerator": 89,
+      "percent": "21.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 89
+      "value": 90
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 35,
+      "denominator": 36,
       "numerator": 33,
-      "percent": "94.3%"
+      "percent": "91.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 89,
-      "numerator": 89,
+      "denominator": 90,
+      "numerator": 90,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 35,
+      "denominator": 36,
       "numerator": 10,
-      "percent": "28.6%"
+      "percent": "27.8%"
     },
     "supportedProfileCoverage": {
-      "denominator": 65,
-      "numerator": 35,
-      "percent": "53.8%"
+      "denominator": 66,
+      "numerator": 36,
+      "percent": "54.5%"
     }
   },
   "metricSemantics": [
@@ -716,6 +716,24 @@
       ]
     },
     {
+      "id": "character-sheet.healing-resource-action",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "taskRefs": [
+        "SRDINV25"
+      ],
+      "title": "Character Sheet feature spends one healing pool for HP restoration and condition-removal costs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "unit-feature.weapon-critical-range-19",
       "profileKind": "passive",
       "qntOwners": [
@@ -1159,6 +1177,14 @@
         "character-sheet.armor-class-base-formula"
       ],
       "taskId": "SRDINV23"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet Lay On Hands runtime tests for pool-derived HP restoration, Poisoned removal cost coupling, over-spend rejection, and Long Rest pool recovery.",
+      "profileIds": [
+        "character-sheet.healing-resource-action"
+      ],
+      "taskId": "SRDINV25"
     }
   ],
   "units": [
@@ -2908,6 +2934,46 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
       "unitId": "feat_savage_attacker"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-sheet.healing-resource-action"
+        ],
+        "rawRequirementIds": [],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.healing-resource-action",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "taskRefs": [
+            "SRDINV25"
+          ],
+          "title": "Character Sheet feature spends one healing pool for HP restoration and condition-removal costs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_lay_on_hands.json",
+      "unitId": "paladin_lay_on_hands"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -8231,24 +8297,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
       "unitId": "paladin_fighting_style"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/paladin_lay_on_hands.json",
-      "unitId": "paladin_lay_on_hands"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

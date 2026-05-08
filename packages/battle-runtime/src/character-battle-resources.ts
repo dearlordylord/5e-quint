@@ -38,21 +38,28 @@ type UseCountActivationResource = Extract<
   ActivationResource,
   { readonly kind: "use_count" }
 >;
-type ChargePoolActivationResource = Extract<
-  ActivationResource,
-  { readonly kind: "charge_pool" }
->;
-type UnlimitedActivationResource = UseCountActivationResource & {
+type SupportedUseCountActivationResource = UseCountActivationResource & {
+  readonly cap: Extract<
+    UseCountActivationResource["cap"],
+    | { readonly kind: "fixed" }
+    | { readonly kind: "proficiency_bonus" }
+    | { readonly kind: "linear_per_level" }
+    | { readonly kind: "threshold_tiers" }
+    | { readonly kind: "unlimited" }
+  >;
+};
+type LimitedUseCountActivationResource = SupportedUseCountActivationResource & {
+  readonly cap: Exclude<
+    SupportedUseCountActivationResource["cap"],
+    { readonly kind: "unlimited" }
+  >;
+};
+type UnlimitedActivationResource = SupportedUseCountActivationResource & {
   readonly cap: { readonly kind: "unlimited" };
 };
-type LimitedActivationResource =
-  | ChargePoolActivationResource
-  | (UseCountActivationResource & {
-      readonly cap: Exclude<
-        UseCountActivationResource["cap"],
-        { readonly kind: "unlimited" }
-      >;
-    });
+type CharacterBattleActivationResource =
+  | LimitedUseCountActivationResource
+  | UnlimitedActivationResource;
 
 type CharacterBattleResourceStateBase = {
   readonly unit: UnitRecord;
@@ -61,7 +68,7 @@ type CharacterBattleResourceStateBase = {
 
 export type CharacterBattleResourceState =
   | (CharacterBattleResourceStateBase & {
-      readonly resource: LimitedActivationResource;
+      readonly resource: LimitedUseCountActivationResource;
       readonly usesRemaining: ResourceCount;
     })
   | (CharacterBattleResourceStateBase & {
@@ -164,10 +171,32 @@ export function characterResourceState(
 
 export function characterBattleResourceForUnit(
   unit: UnitRecord,
-): ActivationResource {
+): CharacterBattleActivationResource {
+  const resource = characterBattleActivationResourceForUnit(unit);
+  if (resource === null) {
+    throw new Error(
+      "Character battle resources must be supported limited-use Units.",
+    );
+  }
+  return resource;
+}
+
+export function characterBattleResourceSupportedForUnit(
+  unit: UnitRecord,
+): boolean {
+  return characterBattleActivationResourceForUnit(unit) !== null;
+}
+
+function characterBattleActivationResourceForUnit(
+  unit: UnitRecord,
+): CharacterBattleActivationResource | null {
   const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
   if (zeroHitPointReplacement !== null) {
-    return zeroHitPointReplacement.resource;
+    return activationResourceIsSupportedByBattle(
+      zeroHitPointReplacement.resource,
+    )
+      ? zeroHitPointReplacement.resource
+      : null;
   }
   if (
     unit.kind === "species_trait" &&
@@ -175,7 +204,9 @@ export function characterBattleResourceForUnit(
     bonusActionDashTemporaryHitPointsProfileForUnit(unit) !== null
   ) {
     const resource = unit.mechanics.resource;
-    if (resource !== undefined) return resource;
+    if (resource !== undefined) {
+      return activationResourceIsSupportedByBattle(resource) ? resource : null;
+    }
   }
   if (
     unit.kind === "class_feature" &&
@@ -200,11 +231,11 @@ export function characterBattleResourceForUnit(
     !("resource" in unit.mechanics) ||
     unit.mechanics.resource === undefined
   ) {
-    throw new Error(
-      "Character battle resources must be supported limited-use Units.",
-    );
+    return null;
   }
-  return unit.mechanics.resource;
+  return activationResourceIsSupportedByBattle(unit.mechanics.resource)
+    ? unit.mechanics.resource
+    : null;
 }
 
 export function characterBattleResourceUsage(
@@ -232,9 +263,22 @@ function activationResourceIsUnlimited(
 }
 
 function activationResourceIsLimited(
-  resource: ActivationResource,
-): resource is LimitedActivationResource {
+  resource: CharacterBattleActivationResource,
+): resource is LimitedUseCountActivationResource {
   return !activationResourceIsUnlimited(resource);
+}
+
+function activationResourceIsSupportedByBattle(
+  resource: ActivationResource,
+): resource is CharacterBattleActivationResource {
+  return (
+    resource.kind === "use_count" &&
+    (resource.cap.kind === "fixed" ||
+      resource.cap.kind === "proficiency_bonus" ||
+      resource.cap.kind === "linear_per_level" ||
+      resource.cap.kind === "threshold_tiers" ||
+      resource.cap.kind === "unlimited")
+  );
 }
 
 export function resourceHasUsesRemaining(
@@ -337,14 +381,9 @@ export function characterSpellcastingState(
 }
 
 function supportedUseCountCapForLevel(
-  resource: ActivationResource,
+  resource: LimitedUseCountActivationResource,
   level: number,
 ): ResourceCount {
-  if (resource.kind !== "use_count") {
-    throw new Error(
-      "Battle runtime supports only use-count character resources.",
-    );
-  }
   if (resource.cap.kind === "fixed") {
     return resourceCount(resource.cap.uses);
   }
@@ -356,11 +395,6 @@ function supportedUseCountCapForLevel(
       resource.cap.base +
         Math.max(0, level - resource.cap.startingAtLevel + 1) *
           resource.cap.perLevel,
-    );
-  }
-  if (resource.cap.kind !== "threshold_tiers") {
-    throw new Error(
-      "Battle runtime supports only fixed, proficiency-bonus, unlimited, linear-per-level, or threshold-tier use-count resources.",
     );
   }
 

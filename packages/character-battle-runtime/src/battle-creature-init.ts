@@ -1,5 +1,6 @@
 import {
   battleCreatureInitFromStatBlock,
+  characterBattleResourceSupportedForUnit,
   startBattle,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
@@ -267,6 +268,9 @@ function characterBattleResources(
       return battleCreatureInitIssue(
         `Expected feature Unit for resource: ${unit.right.id}`,
       );
+    }
+    if (!characterBattleResourceSupportedForUnit(unit.right)) {
+      continue;
     }
 
     resources.push({ unit: unit.right });
