@@ -15,6 +15,7 @@ import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   Ability,
   ArmorTrainingCategory,
+  ProficiencyGrant,
   ProficiencyGrantSubject,
   Skill,
   StartingEquipmentChoice,
@@ -521,11 +522,22 @@ function fixedMulticlassProficiencySubjects(
 ): readonly ProficiencyGrantSubject[] {
   const startingUnitId = startingClassUnitId(selections.progression);
   return [...classFactsByUnitId].flatMap(([classUnitId, facts]) =>
-    classUnitId !== startingUnitId &&
-    facts.multiclassProficiencies.kind === "fixed"
-      ? facts.multiclassProficiencies.proficiencies
+    classUnitId !== startingUnitId
+      ? fixedProficiencySubjects(facts.multiclassProficiencies)
       : [],
   );
+}
+
+function fixedProficiencySubjects(
+  proficiency: ProficiencyGrant,
+): readonly ProficiencyGrantSubject[] {
+  if (proficiency.kind === "fixed") {
+    return proficiency.proficiencies;
+  }
+  if (proficiency.kind === "mixed") {
+    return proficiency.fixed;
+  }
+  return [];
 }
 
 export function sameBackgroundAbilityScoreIncreaseSelection(
@@ -766,7 +778,9 @@ export function characterBuildProficiencies(
       ),
     ]),
     weapon: uniqueValues([
-      ...startingClassFacts.weaponProficiencies,
+      ...startingClassFacts.weaponProficiencies.flatMap((proficiency) =>
+        proficiency.kind === "weapon_category" ? [proficiency.category] : [],
+      ),
       ...multiclassSubjects.flatMap((subject) =>
         subject.kind === "weapon_category" ? [subject.category] : [],
       ),

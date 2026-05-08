@@ -33,6 +33,17 @@ const classRecordWithSpellcasting = (
   spellcasting,
 });
 
+const nonSpellcastingClassRecord = (className: string, input: object) => {
+  const { spellcasting: _spellcasting, ...base } = classWarlockInput;
+  return {
+    ...base,
+    className,
+    id: `class_${className}`,
+    name: className,
+    ...input,
+  };
+};
+
 const listPreparedSpellcasting = (input: {
   readonly className: string;
   readonly spellcastingAbility: "cha" | "wis";
@@ -230,6 +241,191 @@ describe("character-creation Surface records", () => {
           spellcastingFocus: "arcane_focus",
         },
       },
+    });
+  });
+
+  test("decodes class-container tool, filtered weapon, and mixed multiclass proficiency source facts", () => {
+    const bard = decodeClassRecordSync({
+      ...classRecordWithSpellcasting(
+        "bard",
+        listPreparedSpellcasting({
+          className: "bard",
+          spellcastingAbility: "cha",
+          spellcastingFocus: "musical_instrument",
+          preparedChangeOn: "class_level",
+          preparedReplacementCount: 1,
+          preparedCount: 4,
+          preparedSpells: [
+            "charm_person",
+            "color_spray",
+            "dissonant_whispers",
+            "healing_word",
+          ],
+          cantrips: ["dancing_lights", "vicious_mockery"],
+        }),
+      ),
+      toolProficiencies: {
+        count: 3,
+        kind: "choice",
+        options: [{ category: "musical_instrument", kind: "tool_category" }],
+      },
+    });
+
+    const druid = decodeClassRecordSync({
+      ...classRecordWithSpellcasting(
+        "druid",
+        listPreparedSpellcasting({
+          className: "druid",
+          spellcastingAbility: "wis",
+          spellcastingFocus: "druidic_focus",
+          preparedChangeOn: "long_rest",
+          preparedReplacementCount: "any",
+          preparedCount: 4,
+          preparedSpells: [
+            "animal_friendship",
+            "cure_wounds",
+            "faerie_fire",
+            "thunderwave",
+          ],
+          cantrips: ["druidcraft", "produce_flame"],
+        }),
+      ),
+      toolProficiencies: {
+        kind: "fixed",
+        proficiencies: [{ kind: "tool", toolId: "herbalism_kit" }],
+      },
+    });
+
+    const monk = decodeClassRecordSync(
+      nonSpellcastingClassRecord("monk", {
+        primaryAbilities: { abilities: ["dex", "wis"], kind: "all_of" },
+        savingThrowProficiencies: ["str", "dex"],
+        skillProficiencyChoice: {
+          choose: 2,
+          options: [
+            "acrobatics",
+            "athletics",
+            "history",
+            "insight",
+            "religion",
+            "stealth",
+          ],
+        },
+        toolProficiencies: {
+          count: 1,
+          kind: "choice",
+          options: [
+            { category: "artisan_tool", kind: "tool_category" },
+            { category: "musical_instrument", kind: "tool_category" },
+          ],
+        },
+        weaponProficiencies: [
+          { category: "simple", kind: "weapon_category" },
+          {
+            category: "martial",
+            kind: "weapon_category_with_properties",
+            anyOfProperties: ["light"],
+          },
+        ],
+      }),
+    );
+
+    const ranger = decodeClassRecordSync({
+      ...classRecordWithSpellcasting(
+        "ranger",
+        listPreparedSpellcasting({
+          className: "ranger",
+          spellcastingAbility: "wis",
+          spellcastingFocus: "druidic_focus",
+          preparedChangeOn: "long_rest",
+          preparedReplacementCount: 1,
+          preparedCount: 2,
+          preparedSpells: ["cure_wounds", "ensnaring_strike"],
+        }),
+      ),
+      multiclassProficiencies: {
+        choice: {
+          choiceKey: "ranger_multiclass_skill_proficiency",
+          count: 1,
+          options: [
+            { kind: "skill", skill: "animal_handling" },
+            { kind: "skill", skill: "athletics" },
+            { kind: "skill", skill: "insight" },
+            { kind: "skill", skill: "investigation" },
+            { kind: "skill", skill: "nature" },
+            { kind: "skill", skill: "perception" },
+            { kind: "skill", skill: "stealth" },
+            { kind: "skill", skill: "survival" },
+          ],
+        },
+        fixed: [
+          { category: "martial", kind: "weapon_category" },
+          { category: "light", kind: "armor_category" },
+          { category: "medium", kind: "armor_category" },
+          { category: "shield", kind: "armor_category" },
+        ],
+        kind: "mixed",
+      },
+    });
+
+    const rogue = decodeClassRecordSync(
+      nonSpellcastingClassRecord("rogue", {
+        primaryAbilities: { abilities: ["dex"], kind: "all_of" },
+        savingThrowProficiencies: ["dex", "int"],
+        skillProficiencyChoice: {
+          choose: 4,
+          options: [
+            "acrobatics",
+            "athletics",
+            "deception",
+            "insight",
+            "intimidation",
+            "investigation",
+            "perception",
+            "persuasion",
+            "sleight_of_hand",
+            "stealth",
+          ],
+        },
+        toolProficiencies: {
+          kind: "fixed",
+          proficiencies: [{ kind: "tool", toolId: "thieves_tools" }],
+        },
+        weaponProficiencies: [
+          { category: "simple", kind: "weapon_category" },
+          {
+            category: "martial",
+            kind: "weapon_category_with_properties",
+            anyOfProperties: ["finesse", "light"],
+          },
+        ],
+      }),
+    );
+
+    expect(bard.toolProficiencies).toMatchObject({
+      kind: "choice",
+      options: [{ category: "musical_instrument", kind: "tool_category" }],
+    });
+    expect(druid.toolProficiencies).toEqual({
+      kind: "fixed",
+      proficiencies: [{ kind: "tool", toolId: "herbalism_kit" }],
+    });
+    expect(monk.weaponProficiencies).toContainEqual({
+      category: "martial",
+      kind: "weapon_category_with_properties",
+      anyOfProperties: ["light"],
+    });
+    expect(ranger.multiclassProficiencies).toMatchObject({
+      choice: { choiceKey: "ranger_multiclass_skill_proficiency" },
+      fixed: expect.arrayContaining([
+        { category: "martial", kind: "weapon_category" },
+      ]),
+      kind: "mixed",
+    });
+    expect(rogue.weaponProficiencies).toContainEqual({
+      category: "martial",
+      kind: "weapon_category_with_properties",
+      anyOfProperties: ["finesse", "light"],
     });
   });
 

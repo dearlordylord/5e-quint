@@ -26,7 +26,17 @@ export const RollKindSchema = Schema.Literal(
   "death_saving_throw",
 );
 
-export const WeaponPropertySchema = Schema.Literal("thrown");
+export const WeaponPropertySchema = Schema.Literal(
+  "ammunition",
+  "finesse",
+  "heavy",
+  "light",
+  "loading",
+  "reach",
+  "thrown",
+  "two_handed",
+  "versatile",
+);
 
 export const WeaponFilterSchema = Schema.Union(
   Schema.Struct({
@@ -266,6 +276,15 @@ export const WeaponProficiencyCategorySchema = Schema.Literal(
   ...WEAPON_PROFICIENCY_CATEGORIES,
 );
 
+export const TOOL_PROFICIENCY_CATEGORIES = [
+  "artisan_tool",
+  "gaming_set",
+  "musical_instrument",
+] as const;
+export const ToolProficiencyCategorySchema = Schema.Literal(
+  ...TOOL_PROFICIENCY_CATEGORIES,
+);
+
 export const ARMOR_TRAINING_CATEGORIES = [
   "light",
   "medium",
@@ -300,6 +319,18 @@ export const ArmorAcFormulaSchema = Schema.Union(
 );
 
 export const WeaponCategorySchema = Schema.Literal("simple", "martial");
+
+export const WeaponProficiencySchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("weapon_category"),
+    category: WeaponProficiencyCategorySchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("weapon_category_with_properties"),
+    category: WeaponProficiencyCategorySchema,
+    anyOfProperties: Schema.NonEmptyArray(WeaponPropertySchema),
+  }),
+);
 
 export const WeaponUsageSchema = Schema.Literal("melee", "ranged");
 
@@ -382,8 +413,36 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
   }),
 );
 
+export const ToolProficiencyGrantSubjectSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("tool"),
+    toolId: Schema.NonEmptyTrimmedString,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("tool_category"),
+    category: ToolProficiencyCategorySchema,
+  }),
+);
+
 export const ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema =
   Schema.NonEmptyArray(ProficiencyGrantSubjectSchema);
+export const ReadonlyNonEmptyArrayToolProficiencyGrantSubjectSchema =
+  Schema.NonEmptyArray(ToolProficiencyGrantSubjectSchema);
+
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
+
+const ProficiencyGrantChoiceSchema = Schema.Struct({
+  count: PositiveIntegerSchema,
+  options: ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,
+});
+
+const NamedProficiencyGrantChoiceSchema = Schema.Struct({
+  choiceKey: Schema.NonEmptyTrimmedString,
+  ...ProficiencyGrantChoiceSchema.fields,
+});
 
 export const ProficiencyGrantSchema = Schema.Union(
   Schema.Struct({
@@ -395,8 +454,31 @@ export const ProficiencyGrantSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("choice"),
-    count: Schema.Number,
-    options: ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,
+    ...ProficiencyGrantChoiceSchema.fields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("mixed"),
+    fixed: ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,
+    choice: NamedProficiencyGrantChoiceSchema,
+  }),
+);
+
+const ToolProficiencyGrantChoiceSchema = Schema.Struct({
+  count: PositiveIntegerSchema,
+  options: ReadonlyNonEmptyArrayToolProficiencyGrantSubjectSchema,
+});
+
+export const ToolProficiencyGrantSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("none"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    proficiencies: ReadonlyNonEmptyArrayToolProficiencyGrantSubjectSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("choice"),
+    ...ToolProficiencyGrantChoiceSchema.fields,
   }),
 );
 

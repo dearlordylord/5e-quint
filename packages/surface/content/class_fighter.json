@@ -165,8 +165,17 @@
       ]
     }
   ],
+  "toolProficiencies": {
+    "kind": "none"
+  },
   "weaponProficiencies": [
-    "simple",
-    "martial"
+    {
+      "category": "simple",
+      "kind": "weapon_category"
+    },
+    {
+      "category": "martial",
+      "kind": "weapon_category"
+    }
   ]
 }

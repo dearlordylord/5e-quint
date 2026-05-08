@@ -69,7 +69,8 @@ let warlock =
           }
         , { coinsGp = 100, id = "option_b", items = None (List StartingItem), kind = "coin_grant" }
         ] : List StartingEquipmentOption
-      , weaponProficiencies = [ "simple" ]
+      , toolProficiencies = { kind = "none" }
+      , weaponProficiencies = [ { category = "simple", kind = "weapon_category" } ]
       }
 
 in  warlock

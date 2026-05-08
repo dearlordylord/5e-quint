@@ -7,6 +7,7 @@ import {
 } from "@dnd/shared/game-facts";
 import {
   ARMOR_TRAINING_CATEGORIES as SCHEMA_ARMOR_TRAINING_CATEGORIES,
+  TOOL_PROFICIENCY_CATEGORIES as SCHEMA_TOOL_PROFICIENCY_CATEGORIES,
   WEAPON_PROFICIENCY_CATEGORIES as SCHEMA_WEAPON_PROFICIENCY_CATEGORIES,
 } from "./schema-base.ts";
 import * as SurfaceSchema from "./schema.ts";
@@ -17,6 +18,8 @@ export const WEAPON_PROFICIENCY_CATEGORIES =
   SCHEMA_WEAPON_PROFICIENCY_CATEGORIES satisfies ReadonlyArray<WeaponProficiencyCategory>;
 export const ARMOR_TRAINING_CATEGORIES =
   SCHEMA_ARMOR_TRAINING_CATEGORIES satisfies ReadonlyArray<ArmorTrainingCategory>;
+export const TOOL_PROFICIENCY_CATEGORIES =
+  SCHEMA_TOOL_PROFICIENCY_CATEGORIES satisfies ReadonlyArray<ToolProficiencyCategory>;
 export const CONDITIONS = SURFACE_CONDITIONS satisfies ReadonlyArray<Condition>;
 export const AREA_SHAPES = [
   "sphere",
@@ -173,6 +176,18 @@ export type SkillFilter = Schema.Schema.Type<
 >;
 export type WeaponProficiencyCategory = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponProficiencyCategorySchema
+>;
+export type ToolProficiencyCategory = Schema.Schema.Type<
+  typeof SurfaceSchema.ToolProficiencyCategorySchema
+>;
+export type ToolProficiencyGrantSubject = Schema.Schema.Type<
+  typeof SurfaceSchema.ToolProficiencyGrantSubjectSchema
+>;
+export type ToolProficiencyGrant = Schema.Schema.Type<
+  typeof SurfaceSchema.ToolProficiencyGrantSchema
+>;
+export type WeaponProficiency = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponProficiencySchema
 >;
 export type ArmorTrainingCategory = Schema.Schema.Type<
   typeof SurfaceSchema.ArmorTrainingCategorySchema

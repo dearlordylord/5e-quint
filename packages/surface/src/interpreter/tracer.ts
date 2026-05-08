@@ -45,6 +45,8 @@ import type {
   StandardActionKind,
   ProficiencyGrant,
   ProficiencyGrantSubject,
+  ToolProficiencyGrant,
+  ToolProficiencyGrantSubject,
   ClassFeatureMechanics,
   ActivatedAbilityMechanics,
   PassiveMechanics,
@@ -112,6 +114,7 @@ import type {
   ShieldTemplateRecord,
   WeaponRecord,
   WeaponTemplateRecord,
+  WeaponProficiency,
   ArmorAcFormula,
   WeaponDamage,
   WeaponPropertyDetail,
@@ -5277,9 +5280,22 @@ function traceClassUnit(unit: ClassRecord): Trace {
     id: weaponId,
     category: "source",
     atomKind: "class_weapon_proficiencies",
-    label: `class_weapon_proficiencies\n${unit.weaponProficiencies.join(", ")}`,
+    label: `class_weapon_proficiencies\n${unit.weaponProficiencies
+      .map(describeClassWeaponProficiency)
+      .join(", ")}`,
   });
   edges.push({ from: rootId, to: weaponId, relation: "grants" });
+
+  const toolId = ids("tool");
+  nodes.push({
+    id: toolId,
+    category: "source",
+    atomKind: "class_tool_proficiencies",
+    label: `class_tool_proficiencies\n${describeToolProficiencyGrant(
+      unit.toolProficiencies,
+    )}`,
+  });
+  edges.push({ from: rootId, to: toolId, relation: "grants" });
 
   const armorId = ids("armor");
   nodes.push({
@@ -6673,8 +6689,51 @@ function describeProficiencyGrant(grant: ProficiencyGrant): string {
       return `choose ${grant.count}: ${grant.options
         .map(describeProficiencyGrantSubject)
         .join(", ")}`;
+    case "mixed":
+      return [
+        grant.fixed.map(describeProficiencyGrantSubject).join(", "),
+        `choose ${grant.choice.count}: ${grant.choice.options
+          .map(describeProficiencyGrantSubject)
+          .join(", ")}`,
+      ].join("; ");
     default: {
       const _exhaustive: never = grant;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeToolProficiencyGrant(grant: ToolProficiencyGrant): string {
+  switch (grant.kind) {
+    case "none":
+      return "none";
+    case "fixed":
+      return grant.proficiencies
+        .map(describeToolProficiencyGrantSubject)
+        .join(", ");
+    case "choice":
+      return `choose ${grant.count}: ${grant.options
+        .map(describeToolProficiencyGrantSubject)
+        .join(", ")}`;
+    default: {
+      const _exhaustive: never = grant;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeClassWeaponProficiency(
+  proficiency: WeaponProficiency,
+): string {
+  switch (proficiency.kind) {
+    case "weapon_category":
+      return `${proficiency.category} weapons`;
+    case "weapon_category_with_properties":
+      return `${proficiency.category} weapons with ${proficiency.anyOfProperties.join(
+        " or ",
+      )}`;
+    default: {
+      const _exhaustive: never = proficiency;
       return _exhaustive;
     }
   }
@@ -6692,6 +6751,21 @@ function describeProficiencyGrantSubject(
       return `${subject.category} armor`;
     case "tool":
       return `${subject.toolId} tool`;
+    default: {
+      const _exhaustive: never = subject;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeToolProficiencyGrantSubject(
+  subject: ToolProficiencyGrantSubject,
+): string {
+  switch (subject.kind) {
+    case "tool":
+      return `${subject.toolId} tool`;
+    case "tool_category":
+      return `${subject.category} tool`;
     default: {
       const _exhaustive: never = subject;
       return _exhaustive;

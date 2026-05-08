@@ -1,6 +1,8 @@
 {
   "armorTraining": {
-    "categories": ["light"],
+    "categories": [
+      "light"
+    ],
     "kind": "trained"
   },
   "className": "warlock",
@@ -29,14 +31,19 @@
   },
   "name": "Warlock",
   "primaryAbilities": {
-    "abilities": ["cha"],
+    "abilities": [
+      "cha"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Warlock.md:3-24,35"
   },
-  "savingThrowProficiencies": ["wis", "cha"],
+  "savingThrowProficiencies": [
+    "wis",
+    "cha"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -57,7 +64,10 @@
       },
       "choose": 2,
       "kind": "known_cantrips_from_class_spell_list",
-      "spellIds": ["eldritch_blast", "minor_illusion"]
+      "spellIds": [
+        "eldritch_blast",
+        "minor_illusion"
+      ]
     },
     "kind": "pact_magic_spellcasting_creation",
     "pactSlotProjection": {
@@ -129,5 +139,13 @@
     }
   ],
   "subclassChoices": [],
-  "weaponProficiencies": ["simple"]
+  "toolProficiencies": {
+    "kind": "none"
+  },
+  "weaponProficiencies": [
+    {
+      "category": "simple",
+      "kind": "weapon_category"
+    }
+  ]
 }

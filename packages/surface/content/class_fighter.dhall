@@ -64,6 +64,7 @@ let fighter =
         }
       , subclassChoices =
         [ { level = 3, options = [ "subclass_fighter_champion" ] } ]
+      , toolProficiencies = { kind = "none" }
       , startingEquipment =
         [ { coinsGp = 4
           , id = "option_a"
@@ -143,7 +144,10 @@ let fighter =
           , kind = "coin_grant"
           }
         ] : List StartingEquipmentOption
-      , weaponProficiencies = [ "simple", "martial" ]
+      , weaponProficiencies =
+        [ { category = "simple", kind = "weapon_category" }
+        , { category = "martial", kind = "weapon_category" }
+        ]
       }
 
 in  fighter

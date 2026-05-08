@@ -85,6 +85,7 @@ let wizard =
           }
       , subclassChoices =
         [ { level = 3, options = [ "subclass_wizard_evoker" ] } ]
+      , toolProficiencies = { kind = "none" }
       , startingEquipment =
         [ { coinsGp = 5
           , id = "option_a"
@@ -123,7 +124,7 @@ let wizard =
           , kind = "coin_grant"
           }
         ] : List StartingEquipmentOption
-      , weaponProficiencies = [ "simple" ]
+      , weaponProficiencies = [ { category = "simple", kind = "weapon_category" } ]
       }
 
 in  wizard

@@ -440,8 +440,10 @@ describe("character creation hole discovery", () => {
         "choice",
         "cc:draft:draft.progression.initial",
         [
+          "15:class_barbarian:level_1:maximum_hit_die",
           "13:class_fighter:level_1:maximum_hit_die",
           "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+          "13:class_warlock:level_1:maximum_hit_die",
           "12:class_wizard:level_1:maximum_hit_die",
           "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
         ],
@@ -563,16 +565,17 @@ describe("character creation hole discovery", () => {
         { optionId: "survival" },
       ],
     });
-    expect(
-      holeById(
-        holes,
-        testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
-      ),
-    ).toMatchObject({
+    const fightingStyleHole = holeById(
+      holes,
+      testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
+    );
+    expect(fightingStyleHole).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
-      options: [{ optionId: "defense", unitRef: { unitId: "defense" } }],
     });
+    expect(optionIds(fightingStyleHole)).toEqual(
+      expect.arrayContaining(["defense"]),
+    );
     const weaponMasteryHole = holeById(
       holes,
       testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),

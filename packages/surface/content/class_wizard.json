@@ -166,7 +166,13 @@
       ]
     }
   ],
+  "toolProficiencies": {
+    "kind": "none"
+  },
   "weaponProficiencies": [
-    "simple"
+    {
+      "category": "simple",
+      "kind": "weapon_category"
+    }
   ]
 }
