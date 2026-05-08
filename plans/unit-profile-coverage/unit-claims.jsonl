@@ -1,4 +1,6 @@
 {"unitId":"class_fighter","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; battle/runtime executable mechanics live on granted feature Units."}}
+{"unitId":"class_barbarian","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; battle/runtime executable mechanics live on granted feature Units."}}
+{"unitId":"class_warlock","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; battle/runtime executable mechanics live on granted feature Units."}}
 {"unitId":"class_wizard","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container and spell access record; executable pressure is carried by spell Units and class features."}}
 {"unitId":"background_soldier","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Character-creation authored data only; no promoted execution profile yet."}}
 {"unitId":"species_orc","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Species container record; executable pressure lives on species trait Units."}}

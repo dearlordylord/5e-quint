@@ -42,6 +42,7 @@ let fighter =
             ]
           }
       , name = "Fighter"
+      , primaryAbilities = { abilities = [ "str", "dex" ], kind = "any_of" }
       , provenance =
         { kind = "srd-5.2.1"
         , section = "Classes/Fighter.md:3-24,29-32,56-92"

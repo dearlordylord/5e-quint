@@ -877,9 +877,35 @@ const UnitMetadataSchema = Schema.Struct({
   description: Schema.String,
 });
 
-const distinctAbilities = (
-  abilities: readonly [unknown, unknown, unknown],
-): boolean => new Set(abilities).size === abilities.length;
+const distinctAbilities = (abilities: readonly unknown[]): boolean =>
+  new Set(abilities).size === abilities.length;
+
+export const PrimaryAbilityExpressionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("all_of"),
+    abilities: Schema.NonEmptyArray(AbilitySchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("any_of"),
+    abilities: Schema.NonEmptyArray(AbilitySchema),
+  }),
+).pipe(
+  Schema.filter(
+    (primaryAbilities) => distinctAbilities(primaryAbilities.abilities),
+    {
+      message: () => "Class Primary Ability entries must be distinct.",
+    },
+  ),
+  Schema.filter(
+    (primaryAbilities) =>
+      primaryAbilities.kind !== "any_of" ||
+      primaryAbilities.abilities.length > 1,
+    {
+      message: () =>
+        "Class Primary Ability any_of entries must contain multiple alternatives.",
+    },
+  ),
+);
 
 export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
   abilities: Schema.Tuple(AbilitySchema, AbilitySchema, AbilitySchema).pipe(
@@ -1051,6 +1077,7 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
 const ClassRecordBaseFields = {
   ...UnitMetadataSchema.fields,
   kind: ClassRecordKindSchema,
+  primaryAbilities: PrimaryAbilityExpressionSchema,
   hitPointDie: PositiveIntegerSchema,
   savingThrowProficiencies: Schema.NonEmptyArray(AbilitySchema),
   skillProficiencyChoice: Schema.Struct({

@@ -21,11 +21,20 @@
     "kind": "none"
   },
   "name": "Wizard",
+  "primaryAbilities": {
+    "abilities": [
+      "int"
+    ],
+    "kind": "all_of"
+  },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Wizard.md:3-25,31-35,56-82,94-114,134-190"
   },
-  "savingThrowProficiencies": ["int", "wis"],
+  "savingThrowProficiencies": [
+    "int",
+    "wis"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -46,7 +55,11 @@
       },
       "choose": 3,
       "kind": "known_cantrips",
-      "spellIds": ["light", "fire_bolt", "ray_of_frost"]
+      "spellIds": [
+        "light",
+        "fire_bolt",
+        "ray_of_frost"
+      ]
     },
     "kind": "wizard_spellcasting_creation",
     "preparedAccess": {
@@ -55,7 +68,12 @@
       },
       "choose": 4,
       "kind": "prepared_from_spellbook",
-      "spellIds": ["detect_magic", "mage_armor", "magic_missile", "sleep"]
+      "spellIds": [
+        "detect_magic",
+        "mage_armor",
+        "magic_missile",
+        "sleep"
+      ]
     },
     "spellSlotProjection": {
       "kind": "leveled_spell_slots",
@@ -100,16 +118,11 @@
       ]
     },
     "spellcastingAbility": "int",
-    "spellcastingFocuses": ["arcane_focus", "spellbook"]
+    "spellcastingFocuses": [
+      "arcane_focus",
+      "spellbook"
+    ]
   },
-  "subclassChoices": [
-    {
-      "level": 3,
-      "options": [
-        "subclass_wizard_evoker"
-      ]
-    }
-  ],
   "startingEquipment": [
     {
       "coinsGp": 5,
@@ -145,5 +158,15 @@
       "kind": "coin_grant"
     }
   ],
-  "weaponProficiencies": ["simple"]
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_wizard_evoker"
+      ]
+    }
+  ],
+  "weaponProficiencies": [
+    "simple"
+  ]
 }

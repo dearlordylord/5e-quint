@@ -118,6 +118,7 @@ import type {
   MagicEquipmentVariant,
   TriggeredReplacementMechanics,
   StatBlockRecord,
+  PrimaryAbilityExpression,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -5253,6 +5254,15 @@ function traceClassUnit(unit: ClassRecord): Trace {
     label: `class_root\n${unit.name}\nhit die d${unit.hitPointDie}`,
   });
 
+  const primaryAbilityId = ids("primary_ability");
+  nodes.push({
+    id: primaryAbilityId,
+    category: "source",
+    atomKind: "class_primary_abilities",
+    label: `class_primary_abilities\n${formatPrimaryAbilityExpression(unit.primaryAbilities)}`,
+  });
+  edges.push({ from: rootId, to: primaryAbilityId, relation: "grants" });
+
   const savesId = ids("save");
   nodes.push({
     id: savesId,
@@ -5318,6 +5328,21 @@ function traceClassUnit(unit: ClassRecord): Trace {
   traceStartingEquipment(rootId, unit.startingEquipment, nodes, edges, ids);
 
   return traceFromNodes(unit, nodes, edges);
+}
+
+function formatPrimaryAbilityExpression(
+  primaryAbilities: PrimaryAbilityExpression,
+): string {
+  if (primaryAbilities.kind === "all_of") {
+    return primaryAbilities.abilities.join(" and ");
+  }
+
+  if (primaryAbilities.kind === "any_of") {
+    return primaryAbilities.abilities.join(" or ");
+  }
+
+  const exhaustive: never = primaryAbilities;
+  throw new Error(`Unhandled primary ability expression: ${exhaustive}`);
 }
 
 function traceSubclassUnit(
@@ -5620,7 +5645,7 @@ function traceFeatUnit(feat: FeatRecord): Trace {
       ? traceOnHitTriggerMechanics(feat.mechanics, nodes, edges, ids)
       : feat.mechanics.family === "triggered_replacement"
         ? traceTriggeredReplacementMechanics(feat.mechanics, nodes, edges, ids)
-      : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
+        : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {

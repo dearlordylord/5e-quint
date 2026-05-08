@@ -30,6 +30,7 @@ let wizard =
       , kind = "class"
       , multiclassProficiencies = { kind = "none" }
       , name = "Wizard"
+      , primaryAbilities = { abilities = [ "int" ], kind = "all_of" }
       , provenance =
         { kind = "srd-5.2.1"
         , section = "Classes/Wizard.md:3-25,31-35,56-82,94-114,134-190"

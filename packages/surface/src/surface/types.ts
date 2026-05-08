@@ -641,6 +641,9 @@ export type StartingEquipmentItemRef = Schema.Schema.Type<
 export type ClassFeatureGrant = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureGrantSchema
 >;
+export type PrimaryAbilityExpression = Schema.Schema.Type<
+  typeof SurfaceSchema.PrimaryAbilityExpressionSchema
+>;
 export type ArmorTraining = Schema.Schema.Type<
   typeof SurfaceSchema.ArmorTrainingSchema
 >;

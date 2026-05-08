@@ -187,6 +187,7 @@ export {
   NonWizardClassRecordSchema,
   OtherClassFeatureRecordSchema,
   CompositeClassFeatureMechanicsSchema,
+  PrimaryAbilityExpressionSchema,
   RestSpellSlotRecoveryMechanicsSchema,
   CompositeMagicItemMechanicsSchema,
   EquipmentPredicateSchema,

@@ -8,7 +8,9 @@ import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
+import classBarbarianInput from "../../content/class_barbarian.json";
 import classFighterInput from "../../content/class_fighter.json";
+import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
@@ -164,7 +166,9 @@ export function defineSrdUnitCollection(input: {
 
 export const srdUnitCollection = defineSrdUnitCollection({
   units: [
+    classBarbarianInput,
     classFighterInput,
+    classWarlockInput,
     classWizardInput,
     backgroundSoldierInput,
     speciesOrcInput,

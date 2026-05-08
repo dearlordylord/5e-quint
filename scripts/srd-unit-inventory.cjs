@@ -103,6 +103,41 @@ const catalogOnlyClosures = new Map([
   ],
 ]);
 
+const classContainerSurfaceBlockers = new Map([
+  [
+    "srd521:classes/bard:level-1:class-container:bard_class_container",
+    "ClassRecord.toolProficiencies for Bard's Musical Instrument choice",
+  ],
+  [
+    "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+    "ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus",
+  ],
+  [
+    "srd521:classes/druid:level-1:class-container:druid_class_container",
+    "ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency",
+  ],
+  [
+    "srd521:classes/monk:level-1:class-container:monk_class_container",
+    "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk",
+  ],
+  [
+    "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+    "ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus",
+  ],
+  [
+    "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+    "ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice",
+  ],
+  [
+    "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+    "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue",
+  ],
+  [
+    "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+    "ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus",
+  ],
+]);
+
 function slug(text) {
   return text
     .toLowerCase()
@@ -245,6 +280,13 @@ function rowCategory(rowKind) {
 }
 
 function surfaceGate(row) {
+  const classContainerBlocker = classContainerSurfaceBlockers.get(row.id);
+  if (classContainerBlocker !== undefined) {
+    return {
+      state: "current-surface-cannot-express-mechanics-yet",
+      missingConstruct: classContainerBlocker,
+    };
+  }
   if (nonRuntimeKinds.has(row.rowKind)) {
     return {
       state: "outside-surface-runtime-mechanics",
@@ -271,6 +313,7 @@ function surfaceGate(row) {
 
 function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (nonRuntimeKinds.has(row.rowKind)) return "non-runtime";
+  if (classContainerSurfaceBlockers.has(row.id)) return "needs-surface-widening";
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
   if (!installedIds.has(row.candidateUnitId))
@@ -357,6 +400,14 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
     return {
       kind: "catalog-only-closure",
       ...closure,
+    };
+  }
+  if (row.rowKind === "class-container") {
+    return {
+      kind: "evidence-required",
+      owner: "Surface class container plus character-creation-runtime",
+      requirement:
+        "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
     };
   }
   if (characterCreationEvidenceRequiredRowKinds.has(row.rowKind)) {
@@ -1096,7 +1147,7 @@ function buildSrdUnitInventory({
       missingClassContainers: levelOneRows.filter(
         (row) =>
           row.rowKind === "class-container" &&
-          row.catalogAdmission.state !== "installed",
+          row.finalDisposition === "missing-authored-record",
       ).length,
     },
     recommendedBatches: buildRecommendedBatches(rows),
@@ -1183,9 +1234,13 @@ function renderSrdUnitInventory(report) {
     .filter(
       (row) =>
         row.rowKind === "class-container" &&
-        row.catalogAdmission.state !== "installed",
+        row.finalDisposition === "missing-authored-record",
     )
     .map((row) => row.concept.replace(/ class container$/, ""));
+  const missingClassContainerDetail =
+    missingClassContainers.length === 0
+      ? ""
+      : ` (${missingClassContainers.join(", ")})`;
   const lines = [
     "# SRD Unit Inventory",
     "",
@@ -1198,7 +1253,7 @@ function renderSrdUnitInventory(report) {
     `- Total generated rows: ${report.metrics.totalRows}`,
     `- Level-1 rows: ${report.metrics.levelOneRows}`,
     `- Spell-list pressure rows for cantrips and level-1 spells: ${report.metrics.spellPressureRows}`,
-    `- Missing level-1 class containers: ${report.metrics.missingClassContainers} (${missingClassContainers.join(", ")})`,
+    `- Missing level-1 class containers: ${report.metrics.missingClassContainers}${missingClassContainerDetail}`,
     "",
     "### Level-1 Rows by Disposition",
     "",

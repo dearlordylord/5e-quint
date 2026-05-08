@@ -1,0 +1,102 @@
+{
+  "armorTraining": {
+    "categories": [
+      "light"
+    ],
+    "kind": "trained"
+  },
+  "className": "warlock",
+  "description": "SRD Warlock class creation facts for a level-1 character.",
+  "featureGrants": [
+    {
+      "level": 1,
+      "unitId": "warlock_eldritch_invocations"
+    },
+    {
+      "level": 1,
+      "unitId": "warlock_pact_magic"
+    }
+  ],
+  "hitPointDie": 8,
+  "id": "class_warlock",
+  "kind": "class",
+  "multiclassProficiencies": {
+    "kind": "fixed",
+    "proficiencies": [
+      {
+        "category": "light",
+        "kind": "armor_category"
+      }
+    ]
+  },
+  "name": "Warlock",
+  "primaryAbilities": {
+    "abilities": [
+      "cha"
+    ],
+    "kind": "all_of"
+  },
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Warlock.md:3-24,35"
+  },
+  "savingThrowProficiencies": [
+    "wis",
+    "cha"
+  ],
+  "skillProficiencyChoice": {
+    "choose": 2,
+    "options": [
+      "arcana",
+      "deception",
+      "history",
+      "intimidation",
+      "investigation",
+      "nature",
+      "religion"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "coinsGp": 15,
+      "id": "option_a",
+      "items": [
+        {
+          "itemName": "Leather Armor",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Sickle",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Dagger",
+          "kind": "draft_owned_item",
+          "quantity": 2
+        },
+        {
+          "itemName": "Arcane Focus (orb)",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Book (occult lore)",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Scholar's Pack",
+          "kind": "draft_owned_item"
+        }
+      ],
+      "kind": "item_bundle"
+    },
+    {
+      "coinsGp": 100,
+      "id": "option_b",
+      "kind": "coin_grant"
+    }
+  ],
+  "subclassChoices": [],
+  "weaponProficiencies": [
+    "simple"
+  ]
+}

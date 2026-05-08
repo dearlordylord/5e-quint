@@ -57,6 +57,13 @@
     ]
   },
   "name": "Fighter",
+  "primaryAbilities": {
+    "abilities": [
+      "str",
+      "dex"
+    ],
+    "kind": "any_of"
+  },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Fighter.md:3-24,29-32,56-92"
@@ -79,14 +86,6 @@
       "survival"
     ]
   },
-  "subclassChoices": [
-    {
-      "level": 3,
-      "options": [
-        "subclass_fighter_champion"
-      ]
-    }
-  ],
   "startingEquipment": [
     {
       "coinsGp": 4,
@@ -156,6 +155,14 @@
       "coinsGp": 155,
       "id": "option_c",
       "kind": "coin_grant"
+    }
+  ],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_fighter_champion"
+      ]
     }
   ],
   "weaponProficiencies": [

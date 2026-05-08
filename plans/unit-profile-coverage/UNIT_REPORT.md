@@ -8,15 +8,15 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 59 Units |
+| Installed collection inventory count | 61 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 58/391 | 14.8% |
+| Authored Surface Unit catalog admission | 60/393 | 15.3% |
 | Authored Surface executable catalog admission | 44/334 | 13.2% |
-| Installed Unit profile classification coverage | 59/59 | 100% |
+| Installed Unit profile classification coverage | 61/61 | 100% |
 | Supported executable Unit coverage | 33/45 | 73.3% |
 | QNT profile modeling coverage | 25/25 | 100% |
 | QNT proof coverage | 25/25 | 100% |
@@ -840,7 +840,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Unit | Disposition | Detail |
 | --- | --- | --- |
+| `class_barbarian` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
 | `class_fighter` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
+| `class_warlock` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
 | `class_wizard` | unsupported-profile | Class container and spell access record; executable pressure is carried by spell Units and class features. |
 | `background_soldier` | unsupported-profile | Character-creation authored data only; no promoted execution profile yet. |
 | `species_orc` | unsupported-profile | Species container record; executable pressure lives on species trait Units. |
@@ -871,7 +873,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 24 | `class_fighter`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 26 | `class_barbarian`, `class_fighter`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
 

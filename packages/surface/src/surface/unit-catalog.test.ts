@@ -17,7 +17,9 @@ import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
 import type { WeaponRecord } from "./types.ts";
 
 const requiredFirstVerticalUnitIds = [
+  "class_barbarian",
   "class_fighter",
+  "class_warlock",
   "class_wizard",
   "background_soldier",
   "species_orc",
@@ -89,6 +91,43 @@ describe("SRD Unit catalog boundary", () => {
         "sap",
         "sap",
         "sap",
+      ]);
+    }
+  });
+
+  test("installs expressible SRD level-1 class containers", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(
+        [
+          "class_barbarian",
+          "class_fighter",
+          "class_warlock",
+          "class_wizard",
+        ].map((unitId) => result.catalog.requireUnit(unitId)),
+      ).toEqual([
+        expect.objectContaining({
+          className: "barbarian",
+          hitPointDie: 12,
+          primaryAbilities: { abilities: ["str"], kind: "all_of" },
+        }),
+        expect.objectContaining({
+          className: "fighter",
+          hitPointDie: 10,
+          primaryAbilities: { abilities: ["str", "dex"], kind: "any_of" },
+        }),
+        expect.objectContaining({
+          className: "warlock",
+          hitPointDie: 8,
+          primaryAbilities: { abilities: ["cha"], kind: "all_of" },
+        }),
+        expect.objectContaining({
+          className: "wizard",
+          hitPointDie: 6,
+          primaryAbilities: { abilities: ["int"], kind: "all_of" },
+        }),
       ]);
     }
   });

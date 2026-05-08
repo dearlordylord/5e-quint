@@ -48,9 +48,9 @@
       "percent": "13.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 391,
-      "numerator": 58,
-      "percent": "14.8%"
+      "denominator": 393,
+      "numerator": 60,
+      "percent": "15.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 59
+      "value": 61
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 33,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 59,
-      "numerator": 59,
+      "denominator": 61,
+      "numerator": 61,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -1150,8 +1150,44 @@
       "executableMechanics": false,
       "kind": "class",
       "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_barbarian.json",
+      "unitId": "class_barbarian"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; battle/runtime executable mechanics live on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
       "sourceRecordPath": "packages/surface/content/class_fighter.json",
       "unitId": "class_fighter"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; battle/runtime executable mechanics live on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_warlock.json",
+      "unitId": "class_warlock"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

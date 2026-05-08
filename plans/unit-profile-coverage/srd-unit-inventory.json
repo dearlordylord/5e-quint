@@ -32,19 +32,21 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "missing-authored-record": 115,
+      "catalog-installed-owner-evidence-required": 24,
       "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 6
+      "missing-authored-record": 89,
+      "needs-surface-widening": 8
     },
     "allRowsByDisposition": {
-      "missing-authored-record": 187,
+      "catalog-installed-owner-evidence-required": 24,
       "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 104,
       "non-runtime": 12,
-      "catalog-installed-needs-owner-evidence": 39,
-      "catalog-installed-owner-evidence-required": 6
+      "missing-authored-record": 161,
+      "needs-surface-widening": 8,
+      "catalog-installed-needs-owner-evidence": 39
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 100,
@@ -59,7 +61,7 @@
       "mastery pressure": 5,
       "spell access/list pressure": 7
     },
-    "missingClassContainers": 10
+    "missingClassContainers": 0
   },
   "recommendedBatches": [
     {
@@ -67,9 +69,18 @@
       "title": "Classify Installed Level-1 Owner Evidence",
       "suggestedStatus": "ready-for-research",
       "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
-      "rowCount": 26,
+      "rowCount": 44,
       "rowIds": [
+        "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+        "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+        "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
         "srd521:classes/fighter:level-1:class-container:fighter_class_container",
         "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
         "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
@@ -83,6 +94,15 @@
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
         "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+        "srd521:classes/warlock:level-1:class-container:warlock_class_container",
+        "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
+        "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
+        "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
+        "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
+        "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
+        "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
         "srd521:classes/wizard:level-1:class-container:wizard_class_container",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
@@ -104,19 +124,8 @@
       "title": "Author Missing Level-1 Class Containers",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Create or explicitly close the ten missing SRD level-1 class container records.",
-      "rowCount": 10,
-      "rowIds": [
-        "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
-        "srd521:classes/bard:level-1:class-container:bard_class_container",
-        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
-        "srd521:classes/druid:level-1:class-container:druid_class_container",
-        "srd521:classes/monk:level-1:class-container:monk_class_container",
-        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
-        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
-        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
-        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
-        "srd521:classes/warlock:level-1:class-container:warlock_class_container"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Add SRD-provenance class container records where Surface already expresses the facts, or record explicit closure for any deferred container.",
       "acceptance": "Missing class container count reaches zero or each remaining row has explicit closure; no PHB/private content enters this pass."
     },
@@ -147,15 +156,8 @@
       "title": "Classify Level-1 Character Creation Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Separate class-container-owned creation/progression facts from rows that require standalone authored records.",
-      "rowCount": 74,
+      "rowCount": 60,
       "rowIds": [
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
-        "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
         "srd521:classes/bard:level-1:core-trait:bard_armor_training",
         "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
         "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
@@ -215,14 +217,7 @@
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
-        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
-        "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
-        "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
-        "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
-        "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
-        "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
-        "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
-        "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits"
+        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits"
       ],
       "nextAction": "Group hit dice, proficiencies, equipment, multiclass, and table-summary rows by whether the class container should own the evidence.",
       "acceptance": "Character-creation rows distinguish class-container ownership from missing standalone records."
@@ -493,11 +488,19 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
-      "rowCount": 4,
+      "rowCount": 12,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+        "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/monk:level-1:class-container:monk_class_container",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery"
       ],
       "nextAction": "Either keep nonspell rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
@@ -690,15 +693,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
@@ -789,10 +805,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
       "finalDisposition": "non-runtime",
@@ -817,15 +835,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
@@ -845,15 +876,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
@@ -873,15 +917,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
@@ -901,15 +958,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
@@ -929,15 +999,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
@@ -957,15 +1040,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
@@ -985,15 +1081,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
@@ -1041,15 +1150,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_barbarian is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:class-container:bard_class_container",
@@ -1066,7 +1188,8 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_bard",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassRecord.toolProficiencies for Bard's Musical Instrument choice"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1075,9 +1198,9 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -2434,7 +2557,8 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_cleric",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2443,9 +2567,9 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
@@ -3436,7 +3560,8 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_druid",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3445,9 +3570,9 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
@@ -5220,7 +5345,8 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_monk",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -5229,9 +5355,9 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
@@ -5586,7 +5712,8 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_paladin",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -5595,9 +5722,9 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
@@ -6346,7 +6473,8 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_ranger",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -6355,9 +6483,9 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
@@ -7104,7 +7232,8 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_rogue",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7113,9 +7242,9 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
@@ -7537,7 +7666,8 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_sorcerer",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7546,9 +7676,9 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
@@ -9024,15 +9154,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
@@ -9108,10 +9251,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
       "finalDisposition": "non-runtime",
@@ -9136,15 +9281,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
@@ -9164,15 +9322,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
@@ -9192,15 +9363,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
@@ -9220,15 +9404,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
@@ -9248,15 +9445,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
@@ -9276,15 +9486,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
@@ -9304,15 +9527,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
@@ -9332,15 +9568,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",

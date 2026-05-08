@@ -33,6 +33,7 @@ describe("character-creation Surface records", () => {
       value: {
         recordId: "class_fighter",
         className: "fighter",
+        primaryAbilities: { abilities: ["str", "dex"], kind: "any_of" },
         hitPointDie: 10,
         skillProficiencyChoice: { choose: 2 },
         featureGrants: expect.arrayContaining([
@@ -55,6 +56,7 @@ describe("character-creation Surface records", () => {
       value: {
         recordId: "class_wizard",
         className: "wizard",
+        primaryAbilities: { abilities: ["int"], kind: "all_of" },
         hitPointDie: 6,
         armorTraining: [],
         savingThrowProficiencies: ["int", "wis"],
@@ -317,6 +319,30 @@ describe("character-creation Surface records", () => {
       classFighterInput;
     expect(
       Either.isLeft(decodeUnitRecordEither(fighterWithoutArmorTraining)),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...classFighterInput,
+          primaryAbilities: {
+            abilities: ["str", "str"],
+            kind: "any_of",
+          },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...classFighterInput,
+          primaryAbilities: {
+            abilities: ["str"],
+            kind: "any_of",
+          },
+        }),
+      ),
     ).toBe(true);
 
     expect(

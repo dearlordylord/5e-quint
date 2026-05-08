@@ -8,6 +8,7 @@ import type {
   ClassRecord,
   NonWizardClassRecord,
   OrcSpeciesRecord,
+  PrimaryAbilityExpression,
   SpeciesRecord,
   StartingEquipmentChoice,
   UnitRecord,
@@ -36,6 +37,7 @@ export type UnitReaderResult<T> =
 type CommonClassCreationFacts<TClassRecord extends ClassRecord> = {
   readonly recordId: TClassRecord["id"];
   readonly className: TClassRecord["className"];
+  readonly primaryAbilities: PrimaryAbilityExpression;
   readonly hitPointDie: TClassRecord["hitPointDie"];
   readonly savingThrowProficiencies: readonly Ability[];
   readonly skillProficiencyChoice: {
@@ -123,6 +125,7 @@ function readCommonClassCreationFacts<TClassRecord extends ClassRecord>(
   return {
     recordId: unit.id,
     className: unit.className,
+    primaryAbilities: unit.primaryAbilities,
     hitPointDie: unit.hitPointDie,
     savingThrowProficiencies: unit.savingThrowProficiencies,
     skillProficiencyChoice: unit.skillProficiencyChoice,
