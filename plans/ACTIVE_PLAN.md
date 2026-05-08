@@ -226,7 +226,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 188,
       "id": "SRDINV19",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Character-Creation Spell Access Evidence"
     },
     {
